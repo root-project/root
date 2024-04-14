@@ -1272,3 +1272,20 @@ class TestREGRESSION:
         assert foo.values[1].as_string() == world
         assert foo.pointers[0] == 'hello'
         assert foo.pointers[1] == 'world!'
+
+    def test43_static_with_default(self):
+        """Call a static method with default args on an instance"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace StaticWithDefault {
+        struct MyClass {
+            void static smethod(const std::string& s1, const std::string& s2="") {}
+        }; }""")
+
+        ns = cppyy.gbl.StaticWithDefault
+        obj = ns.MyClass()
+
+        obj.smethod("one", "two")
+        obj.smethod("one")        # used to fail with vectorcall
