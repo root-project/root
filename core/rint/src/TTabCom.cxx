@@ -1385,7 +1385,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
       }
 
       // insert match
-      strncpy(fBuf + start, match, match_len);
+      memcpy(fBuf + start, match, match_len);
 
       // the "get"->"Get" case of TString::kIgnore sets pos to -2
       // and falls through to update the buffer; we need to return
