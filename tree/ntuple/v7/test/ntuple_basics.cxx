@@ -345,6 +345,36 @@ TEST(RNTuple, ClusterEntriesAuto)
    EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
 }
 
+TEST(RNTuple, ClusterEntriesAutoStatus)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries_auto_status.root");
+   {
+      auto model = RNTupleModel::CreateBare();
+      auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+      int CommitClusterCalled = 0;
+      RNTupleFillStatus status;
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetApproxZippedClusterSize(5 * sizeof(float));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto entry = ntuple->CreateEntry();
+      for (int i = 0; i < 100; i++) {
+         ntuple->FillNoCommit(*entry, status);
+         if (status.ShouldCommitCluster()) {
+            ntuple->CommitCluster();
+            CommitClusterCalled++;
+         }
+      }
+      EXPECT_EQ(20, CommitClusterCalled);
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
+
 TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
