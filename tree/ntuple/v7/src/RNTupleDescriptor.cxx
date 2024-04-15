@@ -295,11 +295,12 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) c
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const
 {
-   for (const auto &cd : fColumnDescriptors) {
-      if (cd.second.GetFieldId() == fieldId && cd.second.GetIndex() == columnIndex)
-         return cd.second.GetLogicalId();
-   }
-   return kInvalidDescriptorId;
+   decltype(fFieldDescriptors)::const_iterator itr = fFieldDescriptors.find(fieldId);
+   if (itr == fFieldDescriptors.cend())
+      return kInvalidDescriptorId;
+   if (itr->second.GetLogicalColumnIds().size() <= columnIndex)
+      return kInvalidDescriptorId;
+   return itr->second.GetLogicalColumnIds().at(columnIndex);
 }
 
 ROOT::Experimental::DescriptorId_t
