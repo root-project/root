@@ -20,6 +20,7 @@
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleFillContext.hxx>
+#include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -106,6 +107,9 @@ public:
    /// a light check whether the entry comes from the ntuple's own model.
    /// \return The number of uncompressed bytes written.
    std::size_t Fill(REntry &entry) { return fFillContext.Fill(entry); }
+   /// Fill an entry into this ntuple, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
+   /// and check RNTupleFillStatus::ShouldCommitCluster.
+   void FillNoCommit(REntry &entry, RNTupleFillStatus &status) { fFillContext.FillNoCommit(entry, status); }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster(bool commitClusterGroup = false)
    {
