@@ -16,7 +16,7 @@
 // for toupper
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of tolower defined here
+#include <cctype>   // need to use c version of tolower defined here
 #include <string>
 
 namespace ROOT {
@@ -41,7 +41,7 @@ namespace GenAlgoOptUtil {
       if (pos !=  gOpts.end() ) {
          return &(pos->second);
       }
-      return 0;
+      return nullptr;
    }
 }
 
@@ -57,12 +57,10 @@ namespace GenAlgoOptUtil {
       std::string algoname(algo);
       OptionsMap & gOpts = GenAlgoOptUtil::gAlgoOptions;
       IOptions * opt = GenAlgoOptUtil::DoFindDefault(algoname, gOpts);
-      if (opt == 0) {
-         // create new extra options for the given type
-         std::pair<OptionsMap::iterator,bool> ret = gOpts.insert( OptionsMap::value_type(algoname, ROOT::Math::GenAlgoOptions()) );
-         assert(ret.second);
-         opt = &((ret.first)->second);
-      }
+      if (opt) return *opt;
+      // if not existing create new extra options for the given type
+      std::pair<OptionsMap::iterator,bool> ret = gOpts.insert( OptionsMap::value_type(algoname, ROOT::Math::GenAlgoOptions()) );
+      if (ret.second) return gOpts[algoname];
       return *opt;
    }
 

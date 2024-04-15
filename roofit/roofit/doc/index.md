@@ -1,7 +1,8 @@
-\defgroup Roofit Roofit
-\brief RooFit toolkit classes.
+\defgroup Roofit RooFit
+\brief RooFit main classes for building likelihood models, mainly PDFs.
+\ingroup Roofitmain
 
 For an introduction check the [user's guides](https://root.cern.ch/root-user-guides-and-manuals),
-[courses](https://root.cern.ch/courses) or [RooFit in 20 minutes](https://root.cern.ch/roofit-20-minutes).
+[courses](https://root.cern.ch/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 
-For tutorials see \ref tutorial_roofit. 
+For tutorials see \ref tutorial_roofit.

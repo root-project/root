@@ -25,14 +25,14 @@ Begin_Macro(source)
 End_Macro
 */
 
-#include "Riostream.h"
 #include "TCurlyLine.h"
 #include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TMath.h"
-#include "TLine.h"
 #include "TPoint.h"
+
+#include <iostream>
 
 Double_t TCurlyLine::fgDefaultWaveLength = 0.02;
 Double_t TCurlyLine::fgDefaultAmplitude  = 0.01;
@@ -463,7 +463,8 @@ Bool_t TCurlyLine::GetDefaultIsCurly()
 
 Rectangle_t TCurlyLine::GetBBox()
 {
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
    px2 = gPad->XtoPixel(fX2);
@@ -487,7 +488,8 @@ Rectangle_t TCurlyLine::GetBBox()
 
 TPoint TCurlyLine::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
@@ -498,24 +500,22 @@ TPoint TCurlyLine::GetBBoxCenter()
 
 void TCurlyLine::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    Double_t x1, x2, y1, y2;
-   x1 = x2 = y1 = y2 = 0;
 
-   if (fX2>fX1) {
+   if (fX2 > fX1) {
       x1 = gPad->PixeltoX(p.GetX())-0.5*w;
       x2 = gPad->PixeltoX(p.GetX())+0.5*w;
-   }
-   else {
+   } else {
       x2 = gPad->PixeltoX(p.GetX())-0.5*w;
       x1 = gPad->PixeltoX(p.GetX())+0.5*w;
    }
-   if (fY2>fY1) {
+   if (fY2 > fY1) {
       y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
       y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
-   }
-   else {
+   } else {
       y2 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))-0.5*h;
       y1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0))+0.5*h;
    }
@@ -528,6 +528,7 @@ void TCurlyLine::SetBBoxCenter(const TPoint &p)
 
 void TCurlyLine::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
       this->SetStartPoint(gPad->PixeltoX(x)-0.5*w, fY1);
@@ -544,6 +545,7 @@ void TCurlyLine::SetBBoxCenterX(const Int_t x)
 
 void TCurlyLine::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
       this->SetStartPoint(fX1, gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
@@ -561,6 +563,7 @@ void TCurlyLine::SetBBoxCenterY(const Int_t y)
 
 void TCurlyLine::SetBBoxX1(const Int_t x)
 {
+   if (!gPad) return;
    if (fX2>fX1)
       this->SetStartPoint(gPad->PixeltoX(x), fY1);
    else
@@ -573,6 +576,7 @@ void TCurlyLine::SetBBoxX1(const Int_t x)
 
 void TCurlyLine::SetBBoxX2(const Int_t x)
 {
+   if (!gPad) return;
    if (fX2>fX1)
       this->SetEndPoint(gPad->PixeltoX(x), fY2);
    else
@@ -584,6 +588,7 @@ void TCurlyLine::SetBBoxX2(const Int_t x)
 
 void TCurlyLine::SetBBoxY1(const Int_t y)
 {
+   if (!gPad) return;
    if (fY2>fY1)
       this->SetEndPoint(fX2, gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else
@@ -596,6 +601,7 @@ void TCurlyLine::SetBBoxY1(const Int_t y)
 
 void TCurlyLine::SetBBoxY2(const Int_t y)
 {
+   if (!gPad) return;
    if (fY2>fY1)
       this->SetStartPoint(fX1, gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else

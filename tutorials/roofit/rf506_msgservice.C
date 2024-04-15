@@ -3,14 +3,15 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: tuning and customizing the RooFit message logging facility
 ///
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "TCanvas.h"
@@ -39,7 +40,7 @@ void rf506_msgservice()
    RooRealVar f("f", "f", 0.5, 0., 1.);
    RooAddPdf model("model", "model", RooArgSet(gauss, poly), f);
 
-   RooDataSet *data = model.generate(x, 10);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 10)};
 
    // P r i n t   c o n f i g u r a t i o n   o f   m e s s a g e   s e r v i c e
    // ---------------------------------------------------------------------------
@@ -59,7 +60,7 @@ void rf506_msgservice()
    RooMsgService::instance().getStream(1).addTopic(Integration);
 
    // Construct integral over gauss to demonstrate new message stream
-   RooAbsReal *igauss = gauss.createIntegral(x);
+   std::unique_ptr<RooAbsReal> igauss{gauss.createIntegral(x)};
    igauss->Print();
 
    // Print streams configuration in verbose, which also shows inactive streams
@@ -77,7 +78,7 @@ void rf506_msgservice()
    RooMsgService::instance().addStream(DEBUG, Topic(Tracing), ClassName("RooGaussian"));
 
    // Perform a fit to generate some tracing messages
-   model.fitTo(*data, Verbose(kTRUE));
+   model.fitTo(*data, Verbose(true));
 
    // Reset message service to default stream configuration
    RooMsgService::instance().reset();
@@ -86,7 +87,7 @@ void rf506_msgservice()
    RooMsgService::instance().addStream(DEBUG, Topic(Tracing), OutputFile("rf506_debug.log"));
 
    // Perform a fit to generate some tracing messages
-   model.fitTo(*data, Verbose(kTRUE));
+   model.fitTo(*data, Verbose(true));
 
    // Reset message service to default stream configuration
    RooMsgService::instance().reset();

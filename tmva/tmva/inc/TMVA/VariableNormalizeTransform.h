@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableNormalizeTransform                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Decorrelation of input variables                                          *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_VariableNormalizeTransform
@@ -41,12 +41,14 @@
 
 #include "TMVA/VariableTransformBase.h"
 
+#include <vector>
+
 namespace TMVA {
 
    class VariableNormalizeTransform : public VariableTransformBase {
 
    public:
-  
+
       typedef std::vector<Float_t>       FloatVector;
       typedef std::vector< FloatVector > VectorOfFloatVectors;
       VariableNormalizeTransform( DataSetInfo& dsi );
@@ -79,12 +81,12 @@ namespace TMVA {
 
       //      mutable Event*           fTransformedEvent;
 
-      VectorOfFloatVectors                   fMin;       //! Min of source range
-      VectorOfFloatVectors                   fMax;       //! Max of source range
+      VectorOfFloatVectors                   fMin;       ///<! Min of source range
+      VectorOfFloatVectors                   fMax;       ///<! Max of source range
 
       ClassDef(VariableNormalizeTransform,0); // Variable transformation: normalization
    };
 
 } // namespace TMVA
 
-#endif 
+#endif

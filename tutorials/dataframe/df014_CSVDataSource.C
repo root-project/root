@@ -1,8 +1,10 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
+/// Process a CSV file with RDataFrame and the CSV data source.
+///
 /// This tutorial illustrates how use the RDataFrame in combination with a
-/// RDataSource. In this case we use a TCsvDS. This data source allows to read
+/// RDataSource. In this case we use a RCsvDS. This data source allows to read
 /// a CSV file from a RDataFrame.
 /// As a result of running this tutorial, we will produce plots of the dimuon
 /// spectrum starting from a subset of the CMS collision events of Run2010B.
@@ -15,17 +17,17 @@
 /// \macro_image
 ///
 /// \date October 2017
-/// \author Enric Tejedor
+/// \author Enric Tejedor (CERN)
 
 int df014_CSVDataSource()
 {
    // Let's first create a RDF that will read from the CSV file.
    // The types of the columns will be automatically inferred.
-   auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
-   auto df = ROOT::RDF::MakeCsvDataFrame(fileName);
+   auto df = ROOT::RDF::FromCSV(fileName);
 
    // Now we will apply a first filter based on two columns of the CSV,
    // and we will define a new column that will contain the invariant mass.
@@ -45,7 +47,7 @@ int df014_CSVDataSource()
    invMass->DrawClone();
 
    // We will now produce a plot also for the J/Psi particle. We will plot
-   // on the same canvas the full spectrum and the zoom in the J/psi particle.
+   // on the same canvas the full spectrum and the zoom in on the J/psi particle.
    // First we will create the full spectrum histogram from the invariant mass
    // column, using a different histogram model than before.
    auto fullSpectrum =
@@ -69,6 +71,7 @@ int df014_CSVDataSource()
    leftPad->SetLogy();
    fullSpectrum->DrawClone("Hist");
    dualCanvas->cd(2);
+   jpsi->SetMarkerStyle(20);
    jpsi->DrawClone("HistP");
 
    return 0;

@@ -25,18 +25,16 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TPSocket.h"
 #include "TServerSocket.h"
-
-class TPSocket;
-
 
 class TPServerSocket : public TServerSocket {
 
 private:
    Int_t  fTcpWindowSize; // size of tcp window (for window scaling)
 
-   TPServerSocket(const TPServerSocket &);  // not implemented
-   void operator=(const TPServerSocket &);  // idem
+   TPServerSocket(const TPServerSocket &) = delete;
+   void operator=(const TPServerSocket &) = delete;
 
 public:
    TPServerSocket(Int_t port, Bool_t reuse = kFALSE,
@@ -46,11 +44,11 @@ public:
                   Int_t backlog = kDefaultBacklog,
                   Int_t tcpwindowsize = -1);
 
-   virtual ~TPServerSocket() { }
+   virtual ~TPServerSocket() {}
 
-   virtual TSocket *Accept(UChar_t Opt = kSrvNoAuth);
+   TPSocket *Accept(UChar_t Opt = kSrvNoAuth) override;
 
-   ClassDef(TPServerSocket,0)  // Parallel server socket
+   ClassDefOverride(TPServerSocket,0)  // Parallel server socket
 };
 
 #endif

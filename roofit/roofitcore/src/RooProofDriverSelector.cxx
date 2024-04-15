@@ -23,10 +23,7 @@
 // Root > T->Process("RooProofDriverSelector.C+")
 //
 
-// #include <unistd.h>
 #include "RooProofDriverSelector.h"
-#include <TH2.h>
-#include <TStyle.h>
 #include "RooDataSet.h"
 #include "RooWorkspace.h"
 #include "RooAbsPdf.h"
@@ -35,52 +32,46 @@
 #include "TRandom.h"
 #include "RooRandom.h"
 #include "RooAbsStudy.h"
-#include "TSystem.h"
 #include "RooStudyPackage.h"
-#ifndef __CINT__
 #include "RooGlobalFunc.h"
-#endif
- 
-using namespace RooFit ;
-using namespace std ;
 
-void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/) 
-{  
-  // Retrieve study pack 
-  _pkg=0 ;
-  if (fInput) { 
-    TIterator* iter = fInput->MakeIterator() ;
-    TObject* obj ;
-    while((obj=iter->Next())) {
-      RooStudyPackage* tmp = dynamic_cast<RooStudyPackage*>(obj) ;
+using namespace RooFit;
+using std::cout, std::endl;
+
+void RooProofDriverSelector::SlaveBegin(TTree * /*tree*/)
+{
+  // Retrieve study pack
+  _pkg=nullptr ;
+  if (fInput) {
+    for (auto * tmp : dynamic_range_cast<RooStudyPackage*>(*fInput)) {
       if (tmp) {
-	_pkg = tmp ;
+        _pkg = tmp ;
       }
-     }
+    }
   }
-  if (_pkg==0) {
+  if (_pkg==nullptr) {
     cout << "RooProofDriverSelector::SlaveBegin() no RooStudyPackage found, aborting process" << endl ;
     fStatus = kAbortProcess ;
   } else {
     cout << "workspace contents = " << endl ;
     _pkg->wspace().Print() ;
-    
+
     // Initialize study pack
     seed = _pkg->initRandom() ;
     _pkg->initialize() ;
   }
-    
+
 }
 
-Bool_t RooProofDriverSelector::Process(Long64_t entry)
+bool RooProofDriverSelector::Process(Long64_t entry)
 {
   cout << "RooProofDriverSelector::Process(" << entry << ")" << endl ;
   _pkg->runOne() ;
-  return kTRUE;
+  return true;
 }
 
 
-void RooProofDriverSelector::SlaveTerminate() 
+void RooProofDriverSelector::SlaveTerminate()
 {
   _pkg->finalize() ;
   _pkg->exportData(fOutput,seed) ;
@@ -97,8 +88,8 @@ void RooProofDriverSelector::Init(TTree *tree)
    fChain->SetBranchAddress("i", &i, &b_i);
 }
 
-Bool_t RooProofDriverSelector::Notify()
+bool RooProofDriverSelector::Notify()
 {
-   return kTRUE;
+   return true;
 }
 

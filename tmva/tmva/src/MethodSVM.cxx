@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodSVM                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
@@ -34,7 +34,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodSVM
@@ -68,11 +68,11 @@ SMO Platt's SVM classifier with Keerthi & Shavade improvements
 #include "TMVA/ResultsClassification.h"
 #include "TMVA/VariableInfo.h"
 
-#include "Riostream.h"
 #include "TFile.h"
 #include "TVectorD.h"
 #include "TMath.h"
 
+#include <iostream>
 #include <string>
 
 using std::vector;

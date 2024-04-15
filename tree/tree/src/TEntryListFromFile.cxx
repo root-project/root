@@ -32,7 +32,6 @@ list.
 */
 
 #include "TEntryListFromFile.h"
-#include "TBuffer.h"
 #include "TObjArray.h"
 #include "TFile.h"
 #include "TKey.h"
@@ -42,7 +41,7 @@ list.
 ClassImp(TEntryListFromFile);
 
 TEntryListFromFile::TEntryListFromFile(): TEntryList(),
-   fListFileName(""), fListName(""), fNFiles(0), fListOffset(0), fFile(0), fFileNames(0)
+   fListFileName(""), fListName(""), fNFiles(0), fListOffset(nullptr), fFile(nullptr), fFileNames(nullptr)
 {
    // default constructor.
 
@@ -63,7 +62,7 @@ TEntryListFromFile::TEntryListFromFile(): TEntryList(),
 /// nfiles is the total number of files to process
 
 TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listname, Int_t nfiles) : TEntryList(),
-   fListFileName(filename), fListName(listname), fNFiles(nfiles), fListOffset(0), fFile(0), fFileNames(0)
+   fListFileName(filename), fListName(listname), fNFiles(nfiles), fListOffset(nullptr), fFile(nullptr), fFileNames(nullptr)
 {
    fListOffset = new Long64_t[fNFiles+1];
    fListOffset[0]=0;
@@ -79,16 +78,16 @@ TEntryListFromFile::TEntryListFromFile(const char *filename, const char *listnam
 TEntryListFromFile::~TEntryListFromFile()
 {
    delete [] fListOffset;
-   fListOffset = 0;
+   fListOffset = nullptr;
    delete fFile;
-   fFile = 0;
+   fFile = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns entry \#index
 /// See also Next() for a faster alternative
 
-Long64_t TEntryListFromFile::GetEntry(Int_t index)
+Long64_t TEntryListFromFile::GetEntry(Long64_t index)
 {
    if (index<0) return -1;
 
@@ -153,7 +152,7 @@ Long64_t TEntryListFromFile::GetEntry(Int_t index)
 /// Return the entry corresponding to the index parameter and the
 /// number of the tree, where this entry is
 
-Long64_t TEntryListFromFile::GetEntryAndTree(Int_t index, Int_t &treenum)
+Long64_t TEntryListFromFile::GetEntryAndTree(Long64_t index, Int_t &treenum)
 {
    Long64_t result = GetEntry(index);
    treenum = fTreeNumber;
@@ -213,7 +212,7 @@ Long64_t TEntryListFromFile::Next()
          }
          retentry = fCurrent->Next();
       } else {
-         Error("Next", "Something wrong with reading the current list, even though thefile #%d and the list exist\n", fTreeNumber);
+         Error("Next", "Something wrong with reading the current list, even though the file #%d and the list exist\n", fTreeNumber);
          return -1;
       }
 
@@ -235,8 +234,8 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
    if (fCurrent){
       if (fFile) {
          delete fFile;
-         fFile = 0;
-         fCurrent = 0;
+         fFile = nullptr;
+         fCurrent = nullptr;
       }
    }
 
@@ -264,9 +263,9 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
    if (!fFile || fFile->IsZombie()){
       if (fFile) {
          delete fFile;
-         fFile = 0;
+         fFile = nullptr;
       }
-      fCurrent = 0;
+      fCurrent = nullptr;
       fListOffset[listnumber+1] = fListOffset[listnumber];
       return -1;
    }
@@ -286,7 +285,7 @@ Int_t TEntryListFromFile::LoadList(Int_t listnumber)
 
    if (!fCurrent){
       Error("LoadList", "List %s not found in the file\n", fListName.Data());
-      fCurrent = 0;
+      fCurrent = nullptr;
       fListOffset[listnumber+1]=fListOffset[listnumber];
       return -1;
    }
@@ -307,8 +306,8 @@ void TEntryListFromFile::Print(const Option_t* option) const
 {
    printf("total number of files: %d\n", fNFiles);
    TFile *f;
-   TEntryList *el=0;
-   if (fFileNames==0) {
+   TEntryList *el=nullptr;
+   if (fFileNames==nullptr) {
       Error("Print","fFileNames was not set properly.");
    } else {
       for (Int_t listnumber=0; listnumber<fNFiles; listnumber++){

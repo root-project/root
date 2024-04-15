@@ -23,10 +23,8 @@
 #include "TROOT.h"
 
 #include <string>
-#include <fstream>
 #include <vector>
 #include <map>
-#include <iostream>
 
 /** \class TSimpleAnalysis
 
@@ -101,7 +99,7 @@ std::string TSimpleAnalysis::HandleExpressionConfig(const std::string& line)
 {
    static const std::string kCutIntr = " if ";
 
-   std::size_t equal = line.find("=");
+   std::size_t equal = line.find('=');
    if (equal == std::string::npos)
       return "Error: missing '='";
 
@@ -252,7 +250,7 @@ bool TSimpleAnalysis::SetTreeName()
    }
    // If fTreeName is empty we try to find the name of the tree through reading
    // of the first input file
-   if (fTreeName.empty())
+   if (fTreeName.empty() && !fInputFiles.empty())
       fTreeName = ExtractTreeName(fInputFiles[0]);
    if (fTreeName.empty())  // No tree name found
       return false;
@@ -385,7 +383,7 @@ bool TSimpleAnalysis::Run()
 
 bool TSimpleAnalysis::HandleInputFileNameConfig(const std::string& line)
 {
-   if (line.find("=") == std::string::npos) {
+   if (line.find('=') == std::string::npos) {
       fInputFiles.push_back(line);
       return true;
    }

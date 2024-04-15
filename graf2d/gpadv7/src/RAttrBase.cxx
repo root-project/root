@@ -12,162 +12,67 @@
 
 #include <utility>
 
+using namespace ROOT::Experimental;
 
-///////////////////////////////////////////////////////////////////////////////
-/// Return default values for attributes, empty for base class
-
-const ROOT::Experimental::RAttrMap &ROOT::Experimental::RAttrBase::GetDefaults() const
+RLogChannel &ROOT::Experimental::GPadLog()
 {
-   static RAttrMap empty;
-   return empty;
+   static RLogChannel sLog("ROOT.GPad");
+   return sLog;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes from other object
+/// Clear internal data
 
-bool ROOT::Experimental::RAttrBase::CopyValue(const std::string &name, const RAttrMap::Value_t &value, bool check_type)
+void RAttrBase::ClearData()
 {
-   if (check_type) {
-      const auto *dvalue = GetDefaults().Find(name);
-      if (!dvalue || !dvalue->CanConvertFrom(value.Kind()))
-         return false;
-   }
-
-   if (auto access = EnsureAttr(name)) {
-      access.attr->Add(access.fullname, value.Copy());
-      return true;
-   }
-
-   return false;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Check if provided value equal to attribute in the map
-
-bool ROOT::Experimental::RAttrBase::IsValueEqual(const std::string &name, const RAttrMap::Value_t &value, bool use_style) const
-{
-   if (auto v = AccessValue(name, use_style))
-      return v.value->CanConvertFrom(value.Kind()) && v.value->IsEqual(value);
-
-   return value.Kind() == RAttrMap::kNoValue;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Copy attributes into target object
-
-void ROOT::Experimental::RAttrBase::CopyTo(RAttrBase &tgt, bool use_style) const
-{
-   for (const auto &entry : GetDefaults()) {
-      if (auto v = AccessValue(entry.first, use_style))
-         tgt.CopyValue(entry.first, *v.value);
+   if ((fKind == kOwnAttr) && fD.ownattr) {
+      delete fD.ownattr;
+      fD.ownattr = nullptr;
    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Move all fields into target object
+/// Creates own attribute - only if no drawable and no parent are assigned
 
-void ROOT::Experimental::RAttrBase::MoveTo(RAttrBase &tgt)
+RAttrMap *RAttrBase::CreateOwnAttr()
 {
-   std::swap(fOwnAttr, tgt.fOwnAttr);
-   std::swap(fPrefix, tgt.fPrefix);
-   std::swap(fDrawable, tgt.fDrawable);
-   std::swap(fParent, tgt.fParent);
-}
+   if (((fKind == kParent) && !fD.parent) || ((fKind == kDrawable) && !fD.drawable))
+      fKind = kOwnAttr;
 
-///////////////////////////////////////////////////////////////////////////////
-/// Check if all values which are evaluated in this object are exactly the same as in tgt object
+   if (fKind != kOwnAttr)
+      return nullptr;
 
-bool ROOT::Experimental::RAttrBase::IsSame(const RAttrBase &tgt, bool use_style) const
-{
-   for (const auto &entry : GetDefaults()) {
-      if (auto v = AccessValue(entry.first, use_style))
-         if (!tgt.IsValueEqual(entry.first, *v.value, use_style)) return false;
-   }
-   return true;
-}
+   if (!fD.ownattr)
+      fD.ownattr = new RAttrMap();
 
-///////////////////////////////////////////////////////////////////////////////
-/// Return value from attributes container - no style or defaults are used
-
-void ROOT::Experimental::RAttrBase::AssignDrawable(RDrawable *drawable, const std::string &prefix)
-{
-   fDrawable = drawable;
-   fOwnAttr.reset();
-   fPrefix = prefix;
-   fParent = nullptr;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Assign parent object for this RAttrBase
-
-void ROOT::Experimental::RAttrBase::AssignParent(RAttrBase *parent, const std::string &prefix)
-{
-   fDrawable = nullptr;
-   fOwnAttr.reset();
-   fPrefix = prefix;
-   fParent = parent;
+   return fD.ownattr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 /// Clear value if any with specified name
 
-void ROOT::Experimental::RAttrBase::ClearValue(const std::string &name)
+void RAttrBase::ClearValue(const std::string &name)
 {
    if (auto access = AccessAttr(name))
        access.attr->Clear(access.fullname);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set <NoValue> for attribute. Ensure that value can not be configured via style - defaults will be used
+/// Set `<NoValue>` for attribute. Ensure that value can not be configured via style - defaults will be used
 /// Equivalent to css syntax { attrname:; }
 
-void ROOT::Experimental::RAttrBase::SetNoValue(const std::string &name)
+void RAttrBase::SetNoValue(const std::string &name)
 {
    if (auto access = AccessAttr(name))
        access.attr->AddNoValue(access.fullname);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set boolean value
+/// Move all fields into target object
 
-void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, bool value)
+void RAttrBase::MoveTo(RAttrBase &tgt)
 {
-   if (auto access = EnsureAttr(name))
-      access.attr->AddBool(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set integer value
-
-void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, int value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddInt(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set double value
-
-void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, double value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddDouble(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Set string value
-
-void ROOT::Experimental::RAttrBase::SetValue(const std::string &name, const std::string &value)
-{
-   if (auto access = EnsureAttr(name))
-      access.attr->AddString(access.fullname, value);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// Clear all respective values from drawable. Only defaults can be used
-
-void ROOT::Experimental::RAttrBase::Clear()
-{
-   for (const auto &entry : GetDefaults())
-      ClearValue(entry.first);
+   std::swap(fKind, tgt.fKind);
+   std::swap(fD, tgt.fD);
+   std::swap(fPrefix, tgt.fPrefix);
 }

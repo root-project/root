@@ -29,5 +29,4 @@
 #pragma link C++ class TParallelCoordSelect+;
 #pragma link C++ class TParallelCoordEditor;
 #pragma link C++ class TGTreeTable;
-#pragma link C++ class TMemStatShow;
 #endif

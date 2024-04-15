@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -13,6 +15,7 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+
 #ifndef ROO_TOBJ_WRAP
 #define ROO_TOBJ_WRAP
 
@@ -23,28 +26,34 @@
 class RooTObjWrap : public TNamed {
 public:
 
-  RooTObjWrap(Bool_t isArray=kFALSE) : _isArray(isArray), _owning(kFALSE) {} ;
-  RooTObjWrap(TObject* inObj, Bool_t isArray=kFALSE) : TNamed(), _isArray(isArray), _owning(kFALSE) { if (inObj) _list.Add(inObj) ; } 
-  RooTObjWrap(const RooTObjWrap& other) : TNamed(other),  _isArray(other._isArray), _owning(kFALSE), _list(other._list) {}
-  virtual ~RooTObjWrap() { if (_owning) _list.Delete() ; } ;
+  RooTObjWrap(bool isArray=false) : _isArray(isArray), _owning(false) {} ;
+  RooTObjWrap(TObject *inObj, bool isArray = false) : _isArray(isArray), _owning(false)
+  {
+     if (inObj)
+        _list.Add(inObj);
+  }
+  RooTObjWrap(const RooTObjWrap& other) : TNamed(other),  _isArray(other._isArray), _owning(false), _list(other._list) {}
+  ~RooTObjWrap() override { if (_owning) _list.Delete() ; } ;
 
-  void setOwning(Bool_t flag) { _owning = flag ; }
+  void setOwning(bool flag) { _owning = flag ; }
   TObject* obj() const { return _list.At(0) ; }
   const RooLinkedList& objList() const { return _list ; }
 
-  void setObj(TObject* inObj) { 
+  void setObj(TObject* inObj) {
      if (!_isArray) {
          _list.Clear() ;
      }
-    if (inObj) _list.Add(inObj) ; 
+    if (inObj) _list.Add(inObj) ;
    }
 
 protected:
 
-  Bool_t _isArray ;
-  Bool_t _owning ;
+  bool _isArray ;
+  bool _owning ;
   RooLinkedList _list ;
-  ClassDef(RooTObjWrap,2) // Container class for Int_t
+  ClassDefOverride(RooTObjWrap,2) // Container class for Int_t
 };
 
 #endif
+
+/// \endcond

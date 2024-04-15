@@ -11,7 +11,8 @@
 #ifndef ROOT_RDATASOURCE
 #define ROOT_RDATASOURCE
 
-#include "ROOT/RStringView.hxx"
+#include "RDF/RColumnReaderBase.hxx"
+#include <string_view>
 #include "RtypesCore.h" // ULong64_t
 #include "TString.h"
 
@@ -59,7 +60,7 @@ class TTypedPointerHolder final : public TPointerHolder {
 public:
    TTypedPointerHolder(T *ptr) : TPointerHolder((void *)ptr) {}
 
-   virtual TPointerHolder *GetDeepCopy()
+   TPointerHolder *GetDeepCopy() final
    {
       const auto typedPtr = static_cast<T *>(fPointer);
       return new TTypedPointerHolder(new T(*typedPtr));
@@ -88,19 +89,22 @@ The sequence of calls that RDataFrame (or any other client of a RDataSource) per
 
  - SetNSlots() : inform RDataSource of the desired level of parallelism
  - GetColumnReaders() : retrieve from RDataSource per-thread readers for the desired columns
- - Initialise() : inform RDataSource that an event-loop is about to start
+ - Initialize() : inform RDataSource that an event-loop is about to start
  - GetEntryRanges() : retrieve from RDataSource a set of ranges of entries that can be processed concurrently
  - InitSlot() : inform RDataSource that a certain thread is about to start working on a certain range of entries
  - SetEntry() : inform RDataSource that a certain thread is about to start working on a certain entry
- - FinaliseSlot() : inform RDataSource that a certain thread finished working on a certain range of entries
- - Finalise() : inform RDataSource that an event-loop finished
+ - FinalizeSlot() : inform RDataSource that a certain thread finished working on a certain range of entries
+ - Finalize() : inform RDataSource that an event-loop finished
 
 RDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
  - \b SetNSlots() is called once per RDataSource object, typically when it is associated to a RDataFrame.
  - \b GetColumnReaders() can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
  - \b GetEntryRanges() will be called several times, including during an event loop, as additional ranges are needed.  It will not be called concurrently.
- - \b Initialise() and \b Finalise() are called once per event-loop,  right before starting and right after finishing.
- - \b InitSlot(), \b SetEntry(), and \b FinaliseSlot() can be called concurrently from multiple threads, multiple times per event-loop.
+ - \b Initialize() and \b Finalize() are called once per event-loop,  right before starting and right after finishing.
+ - \b InitSlot(), \b SetEntry(), and \b FinalizeSlot() can be called concurrently from multiple threads, multiple times per event-loop.
+
+ Advanced users that plan to implement a custom RDataSource can check out existing implementations, e.g. RCsvDS or RNTupleDS.
+ See the inheritance diagram below for the full list of existing concrete implementations.
 */
 class RDataSource {
    // clang-format on
@@ -126,14 +130,14 @@ public:
    virtual const std::vector<std::string> &GetColumnNames() const = 0;
 
    /// \brief Checks if the dataset has a certain column
-   /// \param[in] columnName The name of the column
-   virtual bool HasColumn(std::string_view) const = 0;
+   /// \param[in] colName The name of the column
+   virtual bool HasColumn(std::string_view colName) const = 0;
 
    // clang-format off
    /// \brief Type of a column as a string, e.g. `GetTypeName("x") == "double"`. Required for jitting e.g. `df.Filter("x>0")`.
-   /// \param[in] columnName The name of the column
+   /// \param[in] colName The name of the column
    // clang-format on
-   virtual std::string GetTypeName(std::string_view) const = 0;
+   virtual std::string GetTypeName(std::string_view colName) const = 0;
 
    // clang-format off
    /// Called at most once per column by RDF. Return vector of pointers to pointers to column values - one per slot.
@@ -151,6 +155,17 @@ public:
       std::transform(typeErasedVec.begin(), typeErasedVec.end(), typedVec.begin(),
                      [](void *p) { return static_cast<T **>(p); });
       return typedVec;
+   }
+
+   /// If the other GetColumnReaders overload returns an empty vector, this overload will be called instead.
+   /// \param[in] slot The data processing slot that needs to be considered
+   /// \param[in] name The name of the column for which a column reader needs to be returned
+   /// \param[in] tid A type_info
+   /// At least one of the two must return a non-empty/non-null value.
+   virtual std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &)
+   {
+      return {};
    }
 
    // clang-format off
@@ -178,14 +193,14 @@ public:
    /// \brief Convenience method called before starting an event-loop.
    /// This method might be called multiple times over the lifetime of a RDataSource, since
    /// users can run multiple event-loops with the same RDataFrame.
-   /// Ideally, `Initialise` should set the state of the RDataSource so that multiple identical event-loops
+   /// Ideally, `Initialize` should set the state of the RDataSource so that multiple identical event-loops
    /// will produce identical results.
    // clang-format on
-   virtual void Initialise() {}
+   virtual void Initialize() {}
 
    // clang-format off
    /// \brief Convenience method called at the start of the data processing associated to a slot.
-   /// \param[in] slot The data processing slot wihch needs to be initialised
+   /// \param[in] slot The data processing slot wihch needs to be initialized
    /// \param[in] firstEntry The first entry of the range that the task will process.
    /// This method might be called multiple times per thread per event-loop.
    // clang-format on
@@ -193,16 +208,16 @@ public:
 
    // clang-format off
    /// \brief Convenience method called at the end of the data processing associated to a slot.
-   /// \param[in] slot The data processing slot wihch needs to be finalised
+   /// \param[in] slot The data processing slot wihch needs to be finalized
    /// This method might be called multiple times per thread per event-loop.
    // clang-format on
-   virtual void FinaliseSlot(unsigned int /*slot*/) {}
+   virtual void FinalizeSlot(unsigned int /*slot*/) {}
 
    // clang-format off
    /// \brief Convenience method called after concluding an event-loop.
-   /// See Initialise for more details.
+   /// See Initialize for more details.
    // clang-format on
-   virtual void Finalise() {}
+   virtual void Finalize() {}
 
    /// \brief Return a string representation of the datasource type.
    /// The returned string will be used by ROOT::RDF::SaveGraph() to represent

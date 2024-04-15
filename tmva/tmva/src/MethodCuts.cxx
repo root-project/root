@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::MethodCuts                                                      *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodCuts
@@ -103,7 +103,6 @@
 #include "TMVA/TSpline1.h"
 #include "TMVA/VariableTransformBase.h"
 
-#include "Riostream.h"
 #include "TH1F.h"
 #include "TObjString.h"
 #include "TDirectory.h"
@@ -114,6 +113,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 
 using std::atof;
 
@@ -301,20 +301,20 @@ TMVA::MethodCuts::~MethodCuts( void )
 /// define the options (their key words) that can be set in the option string.
 ///
 /// know options:
-///  - Method <string> Minimisation method. Available values are:
-///    - MC Monte Carlo <default>
+///  - Method `<string>` Minimisation method. Available values are:
+///    - MC Monte Carlo `<default>`
 ///    - GA Genetic Algorithm
 ///    - SA Simulated annealing
 ///
-///  - EffMethod <string> Efficiency selection method. Available values are:
-///    - EffSel <default>
+///  - EffMethod `<string>` Efficiency selection method. Available values are:
+///    - EffSel `<default>`
 ///    - EffPDF
 ///
-///  - VarProp <string> Property of variable 1 for the MC method (taking precedence over the
+///  - VarProp `<string>` Property of variable 1 for the MC method (taking precedence over the
 ///    globale setting. The same values as for the global option are available. Variables 1..10 can be
 ///    set this way
 ///
-///  - CutRangeMin/Max <float>  user-defined ranges in which cuts are varied
+///  - CutRangeMin/Max `<float>`  user-defined ranges in which cuts are varied
 
 void TMVA::MethodCuts::DeclareOptions()
 {
@@ -623,7 +623,7 @@ void  TMVA::MethodCuts::Train( void )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    // init
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 );
@@ -669,16 +669,16 @@ void  TMVA::MethodCuts::Train( void )
 
       switch (fFitMethod) {
       case kUseGeneticAlgorithm:
-         fitter = new GeneticFitter( *this, Form("%sFitter_GA",     GetName()), ranges, GetOptions() );
+         fitter = new GeneticFitter( *this, TString::Format("%sFitter_GA",     GetName()), ranges, GetOptions() );
          break;
       case kUseMonteCarlo:
-         fitter = new MCFitter     ( *this, Form("%sFitter_MC",     GetName()), ranges, GetOptions() );
+         fitter = new MCFitter     ( *this, TString::Format("%sFitter_MC",     GetName()), ranges, GetOptions() );
          break;
       case kUseMinuit:
-         fitter = new MinuitFitter ( *this, Form("%sFitter_MINUIT", GetName()), ranges, GetOptions() );
+         fitter = new MinuitFitter ( *this, TString::Format("%sFitter_MINUIT", GetName()), ranges, GetOptions() );
          break;
       case kUseSimulatedAnnealing:
-         fitter = new SimulatedAnnealingFitter( *this, Form("%sFitter_SA", GetName()), ranges, GetOptions() );
+         fitter = new SimulatedAnnealingFitter( *this, TString::Format("%sFitter_SA", GetName()), ranges, GetOptions() );
          break;
       default:
          Log() << kFATAL << "Wrong fit method: " << fFitMethod << Endl;
@@ -1265,7 +1265,7 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
    if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    for (Int_t ibin=0; ibin<fNbins; ibin++) {
       istr >> tmpbin >> tmpeffS >> tmpeffB;
@@ -1294,7 +1294,7 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "OptimisationMethod", (Int_t)fEffMethod);
    gTools().AddAttr( wght, "FitMethod",          (Int_t)fFitMethod );
    gTools().AddAttr( wght, "nbins",              fNbins );
-   gTools().AddComment( wght, Form( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
+   gTools().AddComment( wght, TString::Format( "Below are the optimised cuts for %i variables: Format: ibin(hist) effS effB cutMin[ivar=0] cutMax[ivar=0] ... cutMin[ivar=n-1] cutMax[ivar=n-1]", GetNvar() ) );
 
    // NOTE: The signal efficiency written out into
    //       the weight file does not correspond to the center of the bin within which the
@@ -1315,8 +1315,8 @@ void TMVA::MethodCuts::AddWeightsXMLTo( void* parent ) const
       gTools().AddAttr( binxml, "effB", fEffBvsSLocal->GetBinContent( ibin + 1 ) );
       void* cutsxml = gTools().AddChild( binxml, "Cuts" );
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         gTools().AddAttr( cutsxml, Form( "cutMin_%i", ivar ), cutsMin[ivar] );
-         gTools().AddAttr( cutsxml, Form( "cutMax_%i", ivar ), cutsMax[ivar] );
+         gTools().AddAttr( cutsxml, TString::Format( "cutMin_%i", ivar ), cutsMin[ivar] );
+         gTools().AddAttr( cutsxml, TString::Format( "cutMax_%i", ivar ), cutsMax[ivar] );
       }
    }
 }
@@ -1366,7 +1366,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); // Init
 
    fCutMin = new Double_t*[GetNvar()];
@@ -1398,8 +1398,8 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
       fEffBvsSLocal->SetBinContent( tmpbin, tmpeffB );
       void* ct = gTools().GetChild(ch);
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-         gTools().ReadAttr( ct, Form( "cutMin_%i", ivar ), fCutMin[ivar][tmpbin-1] );
-         gTools().ReadAttr( ct, Form( "cutMax_%i", ivar ), fCutMax[ivar][tmpbin-1] );
+         gTools().ReadAttr( ct, TString::Format( "cutMin_%i", ivar ), fCutMin[ivar][tmpbin-1] );
+         gTools().ReadAttr( ct, TString::Format( "cutMax_%i", ivar ), fCutMax[ivar][tmpbin-1] );
       }
       ch = gTools().GetNextChild(ch, "Bin");
    }

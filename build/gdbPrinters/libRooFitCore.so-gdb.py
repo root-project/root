@@ -48,28 +48,6 @@ class RooCollectionPrinter(object):
 
 
         
-class RooSpanPrinter(object):
-   "Print a RooSpan"
-
-   def __init__(self, val):
-      self.val = val
-      
-   def to_string(self):
-      return "span of length " + str(self.val['_span']['length_'])
-      
-   def children(self):
-      length = self.val['_span']['length_']
-      values = ""
-      for i in range(0, min(length, 10)):
-         values += ' ' + str((self.val['_span']['data_']+i).dereference())
-      yield 'Values', values + '...'
-      yield 'Aux storage', self.val['_auxStorage']
-
-   def display_hint(self):
-      return 'RooSpan printer'
-
-
-        
 class RooAbsArgPrinter(object):
    "Print a RooAbsArg"
 
@@ -124,7 +102,6 @@ class NonePrinter(object):
 
 def build_pretty_printer():
    pp = gdb.printing.RegexpCollectionPrettyPrinter("libRooFitCore")
-   pp.add_printer('RooSpan', '^RooSpan.*$', RooSpanPrinter)
    pp.add_printer('Collections', '^Roo(AbsCollection|ArgList|ArgSet)$', RooCollectionPrinter)
    pp.add_printer('RooSTLRefCountList', '^RooSTLRefCountList.*$', RooSTLRefCountListPrinter)
    pp.add_printer('RooPrintable', '^RooPrintable$', NonePrinter)

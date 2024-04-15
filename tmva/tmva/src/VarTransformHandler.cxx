@@ -2,7 +2,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VarTransformHandler                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *       Implementation of unsupervised variable transformation methods           *
@@ -15,7 +15,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #include "TMVA/VarTransformHandler.h"
@@ -35,16 +35,9 @@
 
 #include "TMath.h"
 #include "TVectorD.h"
-#include "TFile.h"
-#include "TTree.h"
 #include "TMatrix.h"
 #include "TMatrixTSparse.h"
 #include "TMatrixDSparsefwd.h"
-#include "TCanvas.h"
-#include "TGraph.h"
-#include "TStyle.h"
-#include "TLegend.h"
-#include "TH2.h"
 
 #include <algorithm>
 #include <iomanip>

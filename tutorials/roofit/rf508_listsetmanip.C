@@ -3,14 +3,15 @@
 /// \notebook -nodraw
 /// Organization and simultaneous fits: RooArgSet and RooArgList tools and tricks
 ///
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -74,7 +75,7 @@ void rf508_listsetmanip()
    RooArgSet *subset1 = (RooArgSet *)s.selectByName("a,b,c");
 
    // Construct asubset by attribute
-   RooArgSet *subset2 = (RooArgSet *)s.selectByAttrib("Constant", kTRUE);
+   RooArgSet *subset2 = (RooArgSet *)s.selectByAttrib("Constant", true);
 
    // Construct the subset of overlapping contents with another set
    RooArgSet s1(a, b, c);
@@ -116,7 +117,7 @@ void rf508_listsetmanip()
    // dependencies, that together form a self-consistent
    // set that is free of external dependencies
 
-   RooArgSet *sclone3 = (RooArgSet *)s3.snapshot(kTRUE);
+   RooArgSet *sclone3 = (RooArgSet *)s3.snapshot(true);
 
    // S e t   p r i n t i n g
    // ------------------------

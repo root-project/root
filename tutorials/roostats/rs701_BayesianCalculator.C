@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// Bayesian calculator: basic exmple
+/// Bayesian calculator: basic example
 ///
 /// \macro_image
 /// \macro_output
@@ -25,7 +25,7 @@ using namespace RooStats;
 void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 {
 
-   RooWorkspace *w = new RooWorkspace("w", true);
+   RooWorkspace *w = new RooWorkspace("w");
    w->factory("SUM::pdf(s[0.001,15]*Uniform(x[0,1]),b[1,0,2]*Uniform(x))");
    w->factory("Gaussian::prior_b(b,1,1)");
    w->factory("PROD::model(pdf,prior_b)");
@@ -38,13 +38,13 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
    w->factory("n[3]"); // observed number of events
    // create a data set with n observed events
-   RooDataSet data("data", "", RooArgSet(*(w->var("x")), *(w->var("n"))), "n");
-   data.add(RooArgSet(*(w->var("x"))), w->var("n")->getVal());
+   RooDataSet data("data", "", {*w->var("x"), *w->var("n")}, RooFit::WeightVar("n"));
+   data.add({*(w->var("x"))}, w->var("n")->getVal());
 
    // to suppress messages when pdf goes to zero
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
-   RooArgSet *nuisPar = 0;
+   RooArgSet *nuisPar = nullptr;
    if (useBkg)
       nuisPar = &nuisanceParameters;
    // if (!useBkg) ((RooRealVar *)w->var("b"))->setVal(0);

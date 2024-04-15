@@ -12,17 +12,8 @@
 #ifndef ROOT_TAttMarkerEditor
 #define ROOT_TAttMarkerEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttMarkerEditor                                                    //
-//                                                                      //
-//  Implements GUI for editing marker attributes.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
-
-#include "TGSlider.h"
 
 class TGNumberEntry;
 class TGColorSelect;
@@ -33,26 +24,26 @@ class TGNumberEntryField;
 class TAttMarkerEditor : public TGedFrame {
 
 protected:
-   TAttMarker          *fAttMarker;       // marker attribute object
-   TGNumberEntry       *fMarkerSize;      // marker size combo box
-   TGColorSelect       *fColorSelect;     // marker color
-   TGedMarkerSelect    *fMarkerType;      // marker type
-   Bool_t              fSizeForText;      // true if "text" draw option uses marker size
-   TGHSlider           *fAlpha;           // fill opacity
+   TAttMarker          *fAttMarker;       ///< marker attribute object
+   TGNumberEntry       *fMarkerSize;      ///< marker size combo box
+   TGColorSelect       *fColorSelect;     ///< marker color
+   TGedMarkerSelect    *fMarkerType;      ///< marker type
+   Bool_t              fSizeForText;      ///< true if "text" draw option uses marker size
+   TGHSlider           *fAlpha;           ///< fill opacity
    TGNumberEntryField  *fAlphaField;
 
    virtual void        ConnectSignals2Slots();
 
 public:
-   TAttMarkerEditor(const TGWindow *p = 0,
+   TAttMarkerEditor(const TGWindow *p = nullptr,
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttMarkerEditor();
+   ~TAttMarkerEditor() override;
 
-   virtual void     SetModel(TObject* obj);
+   void     SetModel(TObject* obj) override;
    virtual void     DoMarkerColor(Pixel_t color);
-   virtual void     DoMarkerAlphaColor(ULong_t p);
+   virtual void     DoMarkerAlphaColor(ULongptr_t p);
    virtual void     DoMarkerSize();
    virtual void     DoMarkerStyle(Style_t style);
    virtual void     DoAlpha();
@@ -60,7 +51,7 @@ public:
    virtual void     DoLiveAlpha(Int_t a);
    virtual void     GetCurAlpha();
 
-   ClassDef(TAttMarkerEditor,0)  // GUI for editing marker attributes
+   ClassDefOverride(TAttMarkerEditor,0)  // GUI for editing marker attributes
 };
 
 #endif

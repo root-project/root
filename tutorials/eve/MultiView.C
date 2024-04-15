@@ -1,6 +1,7 @@
 /// \file
 /// \ingroup tutorial_eve
 /// Multi-view (3d, rphi, rhoz) service class using EVE Window Manager.
+/// Used together with alice_esd.C macro
 ///
 /// \macro_code
 ///
@@ -26,8 +27,7 @@
 //
 // Should be used in compiled mode.
 
-struct MultiView
-{
+struct MultiView {
    TEveProjectionManager *fRPhiMgr;
    TEveProjectionManager *fRhoZMgr;
 
@@ -93,8 +93,8 @@ struct MultiView
       // Viewers
       //=========
 
-      TEveWindowSlot *slot = 0;
-      TEveWindowPack *pack = 0;
+      TEveWindowSlot *slot = nullptr;
+      TEveWindowPack *pack = nullptr;
 
       slot = TEveWindow::CreateWindowInTab(gEve->GetBrowser()->GetTabRight());
       pack = slot->MakePack();
@@ -165,3 +165,4 @@ struct MultiView
       fRhoZEventScene->DestroyElements();
    }
 };
+

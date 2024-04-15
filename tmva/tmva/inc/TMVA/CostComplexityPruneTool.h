@@ -2,7 +2,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::DecisionTree                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of a Decision Tree                                         *
@@ -55,25 +55,26 @@
 #include "TMVA/DecisionTree.h"
 #include "TMVA/Event.h"
 #include "TMVA/IPruneTool.h"
+#include <vector>
 
 namespace TMVA {
 
    class CostComplexityPruneTool : public IPruneTool {
    public:
-      CostComplexityPruneTool( SeparationBase* qualityIndex = NULL );
+      CostComplexityPruneTool( SeparationBase* qualityIndex = nullptr );
       virtual ~CostComplexityPruneTool( );
 
       // calculate the prune sequence for a given tree
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = NULL, Bool_t isAutomatic = kFALSE );
+      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const IPruneTool::EventSample* testEvents = nullptr, Bool_t isAutomatic = kFALSE );
 
    private:
-      SeparationBase* fQualityIndexTool; //! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
+      SeparationBase* fQualityIndexTool;             ///<! the quality index used to calculate R(t), R(T) = sum[t in ~T]{ R(t) }
 
-      std::vector<DecisionTreeNode*> fPruneSequence; //! map of weakest links (i.e., branches to prune) -> pruning index
-      std::vector<Double_t> fPruneStrengthList; //! map of alpha -> pruning index
-      std::vector<Double_t> fQualityIndexList; //! map of R(T) -> pruning index
+      std::vector<DecisionTreeNode*> fPruneSequence; ///<! map of weakest links (i.e., branches to prune) -> pruning index
+      std::vector<Double_t> fPruneStrengthList;      ///<! map of alpha -> pruning index
+      std::vector<Double_t> fQualityIndexList;       ///<! map of R(T) -> pruning index
 
-      Int_t fOptimalK; //! the optimal index of the prune sequence
+      Int_t fOptimalK;                               ///<! the optimal index of the prune sequence
 
    private:
       // set the meta data used for cost complexity pruning

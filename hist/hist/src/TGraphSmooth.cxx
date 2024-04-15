@@ -10,16 +10,11 @@
  *************************************************************************/
 
 /******************************************************************************
-* Copyright(c) 2001-    , Dr. Christian Stratowa, Vienna, Austria.            *
+* Copyright(c) 2001-2006, Dr. Christian Stratowa, Vienna, Austria.            *
 * Author: Christian Stratowa with help from Rene Brun.                        *
 *                                                                             *
 * Algorithms for smooth regression adapted from:                              *
 * R: A Computer Language for Statistical Data Analysis                        *
-* Copyright (C) 1996 Robert Gentleman and Ross Ihaka                          *
-* Copyright (C) 1999-2001 Robert Gentleman, Ross Ihaka and the                *
-* R Development Core Team                                                     *
-* R is free software, for licensing see the GNU General Public License        *
-* http://www.ci.tuwien.ac.at/R-project/welcome.html                           *
 *                                                                             *
 ******************************************************************************/
 
@@ -33,7 +28,7 @@ ClassImp(TGraphSmooth);
 
 //______________________________________________________________________
 /** \class TGraphSmooth
-    \ingroup Hist
+    \ingroup Graph
 A helper class to smooth TGraph.
 see examples in $ROOTSYS/tutorials/graphs/motorcycle.C and approx.C
 */
@@ -42,8 +37,8 @@ TGraphSmooth::TGraphSmooth(): TNamed()
 {
    fNin  = 0;
    fNout = 0;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
    fMinX = 0;
    fMaxX = 0;
 }
@@ -55,8 +50,8 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 {
    fNin  = 0;
    fNout = 0;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
    fMinX = 0;
    fMaxX = 0;
 }
@@ -67,8 +62,8 @@ TGraphSmooth::TGraphSmooth(const char *name): TNamed(name,"")
 TGraphSmooth::~TGraphSmooth()
 {
    if (fGout) delete fGout;
-   fGin  = 0;
-   fGout = 0;
+   fGin  = nullptr;
+   fGout = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -76,7 +71,7 @@ TGraphSmooth::~TGraphSmooth()
 
 void TGraphSmooth::Smoothin(TGraph *grin)
 {
-   if (fGout) {delete fGout; fGout = 0;}
+   if (fGout) {delete fGout; fGout = nullptr;}
    fGin = grin;
 
    fNin = fGin->GetN();
@@ -125,8 +120,8 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
    Smoothin(grin);
 
    Double_t delta = 0;
-   Int_t *index = 0;
-   if (xout == 0) {
+   Int_t *index = nullptr;
+   if (xout == nullptr) {
       fNout = TMath::Max(nout, fNin);
       delta = (fMaxX - fMinX)/(fNout - 1);
    } else {
@@ -137,14 +132,14 @@ TGraph *TGraphSmooth::SmoothKern(TGraph *grin, Option_t *option,
 
    fGout = new TGraph(fNout);
    for (Int_t i=0;i<fNout;i++) {
-      if (xout == 0) fGout->SetPoint(i,fMinX + i*delta, 0);
+      if (xout == nullptr) fGout->SetPoint(i,fMinX + i*delta, 0);
       else           fGout->SetPoint(i,xout[index[i]], 0);
    }
 
    BDRksmooth(fGin->GetX(), fGin->GetY(), fNin, fGout->GetX(),
                  fGout->GetY(), fNout, kernel, bandwidth);
 
-   if (index) {delete [] index; index = 0;}
+   if (index) {delete [] index; index = nullptr;}
 
    return fGout;
 }
@@ -204,6 +199,7 @@ void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
 /// x and y which give the coordinates of the smooth.
 ///
 /// \param[in] grin Input graph
+/// \param[in] option specific options
 /// \param[in] span the smoother span. This gives the proportion of points in the plot
 ///     which influence the smooth at each value. Larger values give more smoothness.
 /// \param[in] iter the number of robustifying iterations which should be performed.
@@ -446,6 +442,7 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
 /// Smooth the (x, y) values by Friedman's ``super smoother''.
 ///
 /// \param[in] grin graph for smoothing
+/// \param[in] option specific options
 /// \param[in] span the fraction of the observations in the span of the running lines
 ///    smoother, or 0 to choose this by leave-one-out cross-validation.
 /// \param[in] bass controls the smoothness of the fitted curve.
@@ -479,13 +476,15 @@ void TGraphSmooth::Lowest(Double_t *x, Double_t *y, Int_t n, Double_t &xs,
 ///           Laboratory for Computational Statistics,
 ///           Stanford University Technical Report No. 5.
 
-TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
+TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t * option,
         Double_t bass, Double_t span, Bool_t isPeriodic, Double_t *w)
 {
    if (span < 0 || span > 1) {
       std::cout << "Error: Span must be between 0 and 1" << std::endl;
-      return 0;
+      return nullptr;
    }
+   TString opt = option;
+   opt.ToLower();
 
    Smoothin(grin);
 
@@ -494,7 +493,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
       iper = 2;
       if (fMinX < 0 || fMaxX > 1) {
          std::cout << "Error: x must be between 0 and 1 for periodic smooth" << std::endl;
-         return 0;
+         return nullptr;
       }
    }
 
@@ -509,7 +508,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 // weights
    Double_t *weight = new Double_t[fNin];
    for (i=0; i<fNin; i++) {
-      if (w == 0) weight[i] = 1;
+      if (w == nullptr) weight[i] = 1;
       else        weight[i] = w[i];
    }
 
@@ -532,7 +531,7 @@ TGraph *TGraphSmooth::SmoothSuper(TGraph *grin, Option_t *,
 /// Friedmanns super smoother (Friedman, 1984).
 ///
 ///  version 10/10/84
-///  coded and copywrite (c) 1984 by:
+///  coded and copyright (c) 1984 by:
 ///
 ///                         Jerome H. Friedman
 ///                      department of statistics
@@ -859,7 +858,7 @@ void TGraphSmooth::BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
 void TGraphSmooth::Approxin(TGraph *grin, Int_t /*iKind*/, Double_t &ylow,
      Double_t &yhigh, Int_t rule, Int_t iTies)
 {
-   if (fGout) {delete fGout; fGout = 0;}
+   if (fGout) {delete fGout; fGout = nullptr;}
    fGin = grin;
 
    fNin = fGin->GetN();
@@ -1006,7 +1005,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 
    if (f < 0 || f > 1) {
       std::cout << "Error: Invalid f value" << std::endl;
-      return 0;
+      return nullptr;
    }
 
    opt = ties;
@@ -1022,7 +1021,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
       iTies = 3;
    } else {
       std::cout << "Error: Method not known: " << ties << std::endl;
-      return 0;
+      return nullptr;
    }
 
 // input X, Y
@@ -1033,7 +1032,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 // output X, Y
    Double_t delta = 0;
    fNout = nout;
-   if (xout == 0) {
+   if (xout == nullptr) {
       fNout = TMath::Max(nout, fNin);
       delta = (fMaxX - fMinX)/(fNout - 1);
    }
@@ -1042,7 +1041,7 @@ TGraph *TGraphSmooth::Approx(TGraph *grin, Option_t *option, Int_t nout, Double_
 
    Double_t x;
    for (Int_t i=0;i<fNout;i++) {
-      if (xout == 0) x = fMinX + i*delta;
+      if (xout == nullptr) x = fMinX + i*delta;
       else           x = xout[i];
       Double_t yout = Approx1(x, f, fGin->GetX(), fGin->GetY(), fNin, iKind, ylow, yhigh);
       fGout->SetPoint(i,x, yout);

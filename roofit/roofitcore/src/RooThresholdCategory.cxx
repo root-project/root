@@ -19,21 +19,20 @@
 \class RooThresholdCategory
 \ingroup Roofitcore
 
-Class RooThresholdCategory provides a real-to-category mapping defined
-by a series of thresholds.
+A real-to-category mapping defined by a series of thresholds.
 **/
 
 
 #include "RooThresholdCategory.h"
 #include "RooMsgService.h"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooThresholdCategory);
 
 namespace {
-bool threshListSorter(const std::pair<double,RooCatType>& lhs, const std::pair<double,RooCatType>& rhs) {
-  return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second.getVal() < rhs.second.getVal());
+bool threshListSorter(const std::pair<double,RooAbsCategory::value_type>& lhs, const std::pair<double,RooAbsCategory::value_type>& rhs) {
+  return lhs.first < rhs.first || (lhs.first == rhs.first && lhs.second < rhs.second);
 }
 }
 
@@ -43,11 +42,13 @@ bool threshListSorter(const std::pair<double,RooCatType>& lhs, const std::pair<d
 /// Constructor with input function to be mapped and name and index of default
 /// output state of unmapped values
 
-RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, 
-					   const char* defOut, Int_t defIdx) :
-  RooAbsCategory(name, title), _inputVar("inputVar","Input category",this,inputVar)
+RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
+                  const char* defOut, Int_t defIdx) :
+  RooAbsCategory(name, title),
+  _inputVar("inputVar","Input category",this,inputVar),
+  _defIndex(defIdx)
 {
-  _defCat = defineType(defOut,defIdx);
+  defineState(defOut, defIdx);
 }
 
 
@@ -56,10 +57,10 @@ RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, 
 /// Copy constructor
 
 RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, const char *name) :
-  RooAbsCategory(other,name), _inputVar("inputVar",this,other._inputVar)
+  RooAbsCategory(other,name),
+  _inputVar("inputVar",this,other._inputVar),
+  _defIndex(other._defIndex)
 {
-  _defCat = lookupType(other._defCat->GetName());
-
   for (const auto& cat : other._threshList){
     _threshList.push_back(cat);
   }
@@ -71,31 +72,31 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 /// Insert threshold at value upperLimit. All values below upper limit (and above any lower
 /// thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
 
-Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx) 
-{  
+bool RooThresholdCategory::addThreshold(double upperLimit, const char* catName, Int_t catIdx)
+{
   // Check if identical threshold values is not defined yet
   for (const auto& thresh : _threshList) {
     if (thresh.first == upperLimit) {
-      coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName() 
-			    << ") threshold at " << upperLimit << " already defined" << endl ;
-      return kTRUE ;
-    }    
-  }
-
-  // Add a threshold entry
-  const RooCatType* type = lookupType(catName,kFALSE) ;
-  if (!type) {
-    if (catIdx==-99999) {
-      type=defineType(catName) ;
-    } else {
-      type=defineType(catName,catIdx) ;      
+      coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName()
+             << ") threshold at " << upperLimit << " already defined" << endl ;
+      return true;
     }
   }
 
-  _threshList.emplace_back(upperLimit, *type);
+  // Add a threshold entry
+  value_type newIdx = lookupIndex(catName);
+  if (newIdx == std::numeric_limits<value_type>::min()) {
+    if (catIdx == -99999) {
+      newIdx = defineState(catName).second;
+    } else {
+      newIdx = defineState(catName, catIdx).second;
+    }
+  }
+
+  _threshList.emplace_back(upperLimit, newIdx);
   std::sort(_threshList.begin(), _threshList.end(), threshListSorter);
-     
-  return kFALSE ;
+
+  return false;
 }
 
 
@@ -103,16 +104,16 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return the value of the mapping function
 
-RooCatType RooThresholdCategory::evaluate() const
+RooAbsCategory::value_type RooThresholdCategory::evaluate() const
 {
   // Scan the threshold list
   for (const auto& thresh : _threshList) {
-    if (_inputVar<thresh.first)
+    if (_inputVar < thresh.first)
       return thresh.second;
   }
 
   // Return default if nothing found
-  return *_defCat;
+  return _defIndex;
 }
 
 
@@ -120,19 +121,19 @@ RooCatType RooThresholdCategory::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooThresholdCategory::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     // Write value only
-    os << getLabel() ;
+    os << getCurrentLabel() ;
   } else {
     // Write mapping expression
 
     // Scan list of threshold
     for (const auto& thresh : _threshList) {
-      os << thresh.second.GetName() << ":<" << thresh.first << " " ;
+      os << lookupName(thresh.second) << '[' << thresh.second << "]:<" << thresh.first << " ";
     }
-    os << _defCat->GetName() << ":*" ;
+    os << lookupName(_defIndex) << '[' << _defIndex << "]:*" ;
   }
 }
 
@@ -146,24 +147,21 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 ///     Shape : default value
 ///   Verbose : list of thresholds
 
-void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooThresholdCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 
    if (verbose) {
      os << indent << "--- RooThresholdCategory ---" << endl
-	<< indent << "  Maps from " ;
+   << indent << "  Maps from " ;
      _inputVar.arg().printStream(os,0,kStandard);
-     
+
      os << indent << "  Threshold list" << endl ;
      for (const auto& thresh : _threshList) {
        os << indent << "    input < " << thresh.first << " --> " ;
-       thresh.second.printStream(os,kName|kValue,kSingleLine) ;
+       os << lookupName(thresh.second) << '[' << thresh.second << "]\n";
      }
-     os << indent << "  Default value is " ;
-     _defCat->printStream(os,kValue,kSingleLine);
-
-
+     os << indent << "  Default value is " << lookupName(_defIndex) << '[' << _defIndex << ']' << std::endl;
    }
 }
 

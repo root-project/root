@@ -19,6 +19,7 @@
 #include "TAtt3D.h"
 #include "TAttBBox.h"
 #include "TEveCaloData.h"
+#include <vector>
 
 class TClass;
 class TEveRGBAPalette;
@@ -32,8 +33,8 @@ class TEveCaloViz : public TEveElement,
    friend class TEveCaloVizEditor;
 
 private:
-   TEveCaloViz(const TEveCaloViz&);        // Not implemented
-   TEveCaloViz& operator=(const TEveCaloViz&); // Not implemented
+   TEveCaloViz(const TEveCaloViz&) = delete;
+   TEveCaloViz& operator=(const TEveCaloViz&) = delete;
 
 protected:
    TEveCaloData* fData;           // event data reference
@@ -68,16 +69,16 @@ protected:
    virtual void BuildCellIdCache() = 0;
 
 public:
-   TEveCaloViz(TEveCaloData* data=0, const char* n="TEveCaloViz", const char* t="");
+   TEveCaloViz(TEveCaloData* data=nullptr, const char* n="TEveCaloViz", const char* t="");
 
-   virtual ~TEveCaloViz();
+   ~TEveCaloViz() override;
 
-   virtual TEveElement* ForwardSelection();
-   virtual TEveElement* ForwardEdit();
+   TEveElement* ForwardSelection() override;
+   TEveElement* ForwardEdit() override;
 
-   virtual void Paint(Option_t* option="");
+   void Paint(Option_t* option="") override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
    virtual Float_t GetValToHeight() const;
    virtual void    CellSelectionChanged() {}
 
@@ -147,7 +148,7 @@ public:
 
    Bool_t  CellInEtaPhiRng (TEveCaloData::CellData_t&) const;
 
-   ClassDef(TEveCaloViz, 0); // Base-class for visualization of calorimeter eventdata.
+   ClassDefOverride(TEveCaloViz, 0); // Base-class for visualization of calorimeter eventdata.
 };
 
 /**************************************************************************/
@@ -157,8 +158,8 @@ class TEveCalo3D : public TEveCaloViz
 {
    friend class TEveCalo3DGL;
 private:
-   TEveCalo3D(const TEveCalo3D&);            // Not implemented
-   TEveCalo3D& operator=(const TEveCalo3D&); // Not implemented
+   TEveCalo3D(const TEveCalo3D&) = delete;
+   TEveCalo3D& operator=(const TEveCalo3D&) = delete;
 
 protected:
    TEveCaloData::vCellId_t fCellList;
@@ -170,12 +171,12 @@ protected:
    Color_t   fFrameColor;
    Char_t    fFrameTransparency;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
 public:
-   TEveCalo3D(TEveCaloData* d=0, const char* n="TEveCalo3D", const char* t="xx");
-   virtual ~TEveCalo3D() {}
-   virtual void ComputeBBox();
+   TEveCalo3D(TEveCaloData* d=nullptr, const char* n="TEveCalo3D", const char* t="xx");
+   ~TEveCalo3D() override {}
+   void ComputeBBox() override;
 
    void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
    Float_t GetFrameWidth() const    { return fFrameWidth; }
@@ -190,7 +191,7 @@ public:
    void   SetFrameTransparency(Char_t x) { fFrameTransparency = x; }
    Char_t GetFrameTransparency() const { return fFrameTransparency; }
 
-   ClassDef(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
+   ClassDefOverride(TEveCalo3D, 0); // Class for 3D visualization of calorimeter event data.
 };
 
 /**************************************************************************/
@@ -206,8 +207,8 @@ public:
    typedef std::vector<TEveCaloData::vCellId_t*>::iterator vBinCells_i;
 
 private:
-   TEveCalo2D(const TEveCalo2D&);            // Not implemented
-   TEveCalo2D& operator=(const TEveCalo2D&); // Not implemented
+   TEveCalo2D(const TEveCalo2D&) = delete;
+   TEveCalo2D& operator=(const TEveCalo2D&) = delete;
 
    TEveProjection::EPType_e  fOldProjectionType;
    void CellSelectionChangedInternal(TEveCaloData::vCellId_t& cells, std::vector<TEveCaloData::vCellId_t*>& cellLists);
@@ -221,27 +222,27 @@ protected:
    Float_t                                 fMaxESumBin;
    Float_t                                 fMaxEtSumBin;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
-   virtual void SetDepthLocal(Float_t x) { fDepth = x; }
+   void SetDepthLocal(Float_t x) override { fDepth = x; }
 
 public:
    TEveCalo2D(const char* n="TEveCalo2D", const char* t="");
-   virtual ~TEveCalo2D();
+   ~TEveCalo2D() override;
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection();
-   virtual void ComputeBBox();
+   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
+   void UpdateProjection() override;
+   void ComputeBBox() override;
 
-   virtual void CellSelectionChanged();
+   void CellSelectionChanged() override;
 
-   virtual void    SetScaleAbs(Bool_t);
+   void    SetScaleAbs(Bool_t) override;
 
-   virtual Float_t GetValToHeight() const;
+   Float_t GetValToHeight() const override;
 
    const TEveCalo2D::vBinCells_t& GetBinLists() const { return fCellLists; }
 
-   ClassDef(TEveCalo2D, 0); // Class for visualization of projected calorimeter event data.
+   ClassDefOverride(TEveCalo2D, 0); // Class for visualization of projected calorimeter event data.
 };
 /**************************************************************************/
 /**************************************************************************/
@@ -257,8 +258,8 @@ public:
    enum EBoxMode_e    { kNone, kFrontBack, kBack};
 
 private:
-   TEveCaloLego(const TEveCaloLego&);            // Not implemented
-   TEveCaloLego& operator=(const TEveCaloLego&); // Not implemented
+   TEveCaloLego(const TEveCaloLego&) = delete;
+   TEveCaloLego& operator=(const TEveCaloLego&) = delete;
 
 protected:
    TEveCaloData::vCellId_t fCellList;
@@ -288,13 +289,13 @@ protected:
    Int_t                   fDrawNumberCellPixels;
    Int_t                   fCellPixelFontSize;
 
-   virtual void BuildCellIdCache();
+   void BuildCellIdCache() override;
 
 public:
-   TEveCaloLego(TEveCaloData* data=0, const char* n="TEveCaloLego", const char* t="");
-   virtual ~TEveCaloLego(){}
+   TEveCaloLego(TEveCaloData* data=nullptr, const char* n="TEveCaloLego", const char* t="");
+   ~TEveCaloLego() override{}
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
    virtual void  SetData(TEveCaloData* d);
 
    Color_t  GetFontColor() const { return fFontColor; }
@@ -347,7 +348,7 @@ public:
    Int_t    GetCellPixelFontSize() { return fCellPixelFontSize; }
    void     SetCellPixelFontSize(Int_t x) { fCellPixelFontSize = x; }
 
-   ClassDef(TEveCaloLego, 0);  // Class for visualization of calorimeter histogram data.
+   ClassDefOverride(TEveCaloLego, 0);  // Class for visualization of calorimeter histogram data.
 };
 
 #endif

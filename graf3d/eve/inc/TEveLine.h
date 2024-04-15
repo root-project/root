@@ -41,13 +41,13 @@ protected:
 public:
    TEveLine(Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
    TEveLine(const char* name, Int_t n_points=0, ETreeVarType_e tv_type=kTVT_XYZ);
-   virtual ~TEveLine() {}
+   ~TEveLine() override {}
 
-   virtual void SetMarkerColor(Color_t col);
+   void SetMarkerColor(Color_t col) override;
 
-   virtual void SetLineColor(Color_t col)   { SetMainColor(col); }
-   virtual void SetLineStyle(Style_t lstyle);
-   virtual void SetLineWidth(Width_t lwidth);
+   void SetLineColor(Color_t col) override   { SetMainColor(col); }
+   void SetLineStyle(Style_t lstyle) override;
+   void SetLineWidth(Width_t lwidth) override;
 
    Bool_t GetRnrLine() const     { return fRnrLine;   }
    Bool_t GetRnrPoints() const   { return fRnrPoints; }
@@ -62,17 +62,17 @@ public:
    TEveVector GetLineStart() const;
    TEveVector GetLineEnd()   const;
 
-   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const TEveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
    static Bool_t GetDefaultSmooth();
    static void   SetDefaultSmooth(Bool_t r);
 
-   ClassDef(TEveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
+   ClassDefOverride(TEveLine, 0); // An arbitrary polyline with fixed line and marker attributes.
 };
 
 
@@ -88,17 +88,17 @@ private:
    TEveLineProjected& operator=(const TEveLineProjected&); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveLineProjected();
-   virtual ~TEveLineProjected() {}
+   ~TEveLineProjected() override {}
 
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   ClassDef(TEveLineProjected, 0); // Projected replica of a TEveLine.
+   ClassDefOverride(TEveLineProjected, 0); // Projected replica of a TEveLine.
 };
 
 #endif

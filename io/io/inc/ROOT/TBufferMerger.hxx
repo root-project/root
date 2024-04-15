@@ -14,6 +14,7 @@
 
 #include "TFileMerger.h"
 #include "TMemFile.h"
+#include "ROOT/RConfig.hxx"
 
 #include <functional>
 #include <memory>
@@ -21,7 +22,6 @@
 #include <queue>
 
 namespace ROOT {
-namespace Experimental {
 
 class TBufferMergerFile;
 
@@ -43,9 +43,10 @@ public:
    /** Constructor
     * @param name Output file name
     * @param option Output file creation options
-    * @param compression Output file compression level
+    * @param compress Output file compression level
     */
-   TBufferMerger(const char *name, Option_t *option = "RECREATE", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TBufferMerger(const char *name, Option_t *option = "RECREATE",
+                 Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
    /** Constructor
     * @param output Output \c TFile
@@ -67,24 +68,20 @@ public:
     */
    std::shared_ptr<TBufferMergerFile> GetFile();
 
-   /** Returns the number of buffers currently in the queue. */
-   size_t GetQueueSize() const;
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   size_t GetQueueSize() const { return 0; }
 
-   /** Returns the current value of the auto save setting in bytes (default = 0). */
-   size_t GetAutoSave() const;
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   size_t GetBuffered() const { return 0; }
+
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   size_t GetAutoSave() const { return 0; }
 
    /** Returns the current merge options. */
    const char* GetMergeOptions();
 
-   /** By default, TBufferMerger will call TFileMerger::PartialMerge() for each
-    *  buffer pushed onto its merge queue. This function lets the user change
-    *  this behaviour by telling TBufferMerger to accumulate at least size
-    *  bytes in memory before performing a partial merge and flushing to disk.
-    *  This can be useful to avoid an excessive amount of work to happen in the
-    *  output thread, as the number of TTree headers (which require compression)
-    *  written to disk can be reduced.
-    */
-   void SetAutoSave(size_t size);
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   void SetAutoSave(size_t /*size*/) {}
 
    /** Sets the merge options. SetMergeOptions("fast") will disable
     * recompression of input data into the output if they have different
@@ -92,6 +89,26 @@ public:
     * @param options TFileMerger/TFileMergeInfo merge options
     */
    void SetMergeOptions(const TString& options);
+
+   /** Indicates that any TTree objects in the file should be skipped
+    * and thus that steps that are specific to TTree can be skipped */
+   void SetNotrees(Bool_t notrees=kFALSE)
+   {
+      fMerger.SetNotrees(notrees);
+   }
+
+   /** Returns whether the file has been marked as not containing any TTree objects
+    * and thus that steps that are specific to TTree can be skipped */
+   Bool_t GetNotrees() const
+   {
+      return fMerger.GetNotrees();
+   }
+
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   void SetCompressTemporaryKeys(Bool_t /*request_compression*/ = true) {}
+
+   _R__DEPRECATED_LATER("The queuing mechanism in TBufferMerger was removed in ROOT v6.32")
+   Bool_t GetCompressTemporaryKeys() const { return false; }
 
    friend class TBufferMergerFile;
 
@@ -107,20 +124,15 @@ private:
 
    void Init(std::unique_ptr<TFile>);
 
-   void Merge();
-   void Push(TBufferFile *buffer);
+   void Merge(TBufferMergerFile *memfile);
 
-   size_t fAutoSave{0};                                          //< AutoSave only every fAutoSave bytes
-   size_t fBuffered{0};                                          //< Number of bytes currently buffered
    TFileMerger fMerger{false, false};                            //< TFileMerger used to merge all buffers
    std::mutex fMergeMutex;                                       //< Mutex used to lock fMerger
-   std::mutex fQueueMutex;                                       //< Mutex used to lock fQueue
-   std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
 };
 
 /**
- * \class TBufferMerger TBufferMerger.hxx
+ * \class TBufferMergerFile TBufferMerger.hxx
  * \ingroup IO
  *
  * A TBufferMergerFile is similar to a TMemFile, but when data
@@ -149,7 +161,7 @@ private:
 
 public:
    /** Destructor */
-   ~TBufferMergerFile();
+   ~TBufferMergerFile() override;
 
    using TMemFile::Write;
 
@@ -160,12 +172,11 @@ public:
     * This function must be called before the TBufferMergerFile gets destroyed,
     * or no data is appended to the TBufferMerger.
     */
-   virtual Int_t Write(const char *name = nullptr, Int_t opt = 0, Int_t bufsize = 0) override;
+   Int_t Write(const char *name = nullptr, Int_t opt = 0, Int_t bufsize = 0) override;
 
    ClassDefOverride(TBufferMergerFile, 0);
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

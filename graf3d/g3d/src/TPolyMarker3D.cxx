@@ -9,20 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TView.h"
 #include "TPolyMarker3D.h"
 #include "TVirtualPad.h"
-#include "TH3.h"
 #include "TRandom.h"
+#include "TBuffer.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
+#include "TH1.h"
 #include "TROOT.h"
 #include "TMath.h"
 
-#include <assert.h>
+#include <cassert>
+#include <iostream>
 
 ClassImp(TPolyMarker3D);
 
@@ -73,9 +74,6 @@ Example:
 
 TPolyMarker3D::TPolyMarker3D()
 {
-   fN = 0;
-   fP = 0;
-   fLastPoint = -1;
    fName = "TPolyMarker3D";
 }
 
@@ -88,12 +86,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
    fOption = option;
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -110,12 +104,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -138,12 +128,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -160,16 +146,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
 
 TPolyMarker3D& TPolyMarker3D::operator=(const TPolyMarker3D& tp3)
 {
-   if(this!=&tp3) {
-      TObject::operator=(tp3);
-      TAttMarker::operator=(tp3);
-      TAtt3D::operator=(tp3);
-      fN=tp3.fN;
-      fP=tp3.fP;
-      fOption=tp3.fOption;
-      fLastPoint=tp3.fLastPoint;
-      fName=tp3.fName;
-   }
+   if(this != &tp3)
+      tp3.TPolyMarker3D::Copy(*this);
    return *this;
 }
 
@@ -186,13 +164,9 @@ TPolyMarker3D::~TPolyMarker3D()
 ////////////////////////////////////////////////////////////////////////////////
 /// 3-D polymarker copy ctor.
 
-TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
-   TObject(p), TAttMarker(p), TAtt3D(p)
+TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) : TObject(p), TAttMarker(p), TAtt3D(p)
 {
-   fN = 0;
-   fP = 0;
-   fLastPoint = -1;
-   p.Copy(*this);
+   p.TPolyMarker3D::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,18 +174,22 @@ TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
 
 void TPolyMarker3D::Copy(TObject &obj) const
 {
+   auto &tgt = static_cast<TPolyMarker3D &>(obj);
    TObject::Copy(obj);
-   ((TPolyMarker3D&)obj).fN = fN;
+   TAttMarker::Copy(tgt);
+   tgt.fN = fN;
+   if (tgt.fP)
+      delete [] tgt.fP;
    if (fN > 0) {
-      ((TPolyMarker3D&)obj).fP = new Float_t [kDimension*fN];
-      for (Int_t i = 0; i < kDimension*fN; i++)  ((TPolyMarker3D&)obj).fP[i] = fP[i];
+      tgt.fP = new Float_t [kDimension*fN];
+      for (Int_t i = 0; i < kDimension*fN; i++)
+         tgt.fP[i] = fP[i];
    } else {
-      ((TPolyMarker3D&)obj).fP = 0;
+      tgt.fP = nullptr;
    }
-   ((TPolyMarker3D&)obj).SetMarkerStyle(GetMarkerStyle());
-   ((TPolyMarker3D&)obj).fOption = fOption;
-   ((TPolyMarker3D&)obj).fLastPoint = fLastPoint;
-   ((TPolyMarker3D&)obj).fName   = fName;
+   tgt.fOption = fOption;
+   tgt.fLastPoint = fLastPoint;
+   tgt.fName   = fName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -439,7 +417,7 @@ void TPolyMarker3D::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1,nullptr,nullptr);
       if (!view) return;
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),
@@ -587,7 +565,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -617,7 +595,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;

@@ -29,6 +29,7 @@ It contains information on the real remote object as:
 #include "TSystemDirectory.h"
 #include "TApplication.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TBrowser.h"
 #include "TList.h"
 #include "TClass.h"
@@ -59,7 +60,7 @@ TRemoteObject::TRemoteObject(const char *name, const char *title,
        !strcmp(classname, "TSystemFile")) {
       gSystem->GetPathInfo(name, fFileStat);
    }
-   Long_t raddr = (Long_t) this;
+   Long64_t raddr = (Long64_t) this;
    fRemoteAddress = raddr;
 }
 
@@ -88,10 +89,10 @@ void TRemoteObject::Browse(TBrowser *b)
       if (b->GetRefreshFlag())
          b->SetRefreshFlag(kFALSE);
       gApplication->SetBit(TApplication::kProcessRemotely);
-      TObject *obj = (TObject *)gROOT->ProcessLine(Form("((TApplicationServer *)gApplication)->BrowseKey(\"%s\");", GetName()));
+      TObject *obj = (TObject *)gROOT->ProcessLine(TString::Format("((TApplicationServer *)gApplication)->BrowseKey(\"%s\");", GetName()));
       if (obj) {
          if (obj->IsA()->GetMethodWithPrototype("SetDirectory", "TDirectory*"))
-            gROOT->ProcessLine(Form("((%s *)0x%lx)->SetDirectory(0);", obj->ClassName(), (ULong_t)obj));
+            gROOT->ProcessLine(TString::Format("((%s *)0x%zx)->SetDirectory(0);", obj->ClassName(), (size_t)obj));
          obj->Browse(b);
          b->SetRefreshFlag(kTRUE);
       }
@@ -100,7 +101,7 @@ void TRemoteObject::Browse(TBrowser *b)
       if (b->GetRefreshFlag())
          b->SetRefreshFlag(kFALSE);
       gApplication->SetBit(TApplication::kProcessRemotely);
-      ret = (TList *)gROOT->ProcessLine(Form("((TApplicationServer *)gApplication)->BrowseDirectory(\"%s\");", GetTitle()));
+      ret = (TList *)gROOT->ProcessLine(TString::Format("((TApplicationServer *)gApplication)->BrowseDirectory(\"%s\");", GetTitle()));
       if (ret) {
          TIter next(ret);
          while ((robj = (TRemoteObject *)next())) {
@@ -116,7 +117,7 @@ void TRemoteObject::Browse(TBrowser *b)
       if (b->GetRefreshFlag())
          b->SetRefreshFlag(kFALSE);
       gApplication->SetBit(TApplication::kProcessRemotely);
-      ret = (TList *)gROOT->ProcessLine(Form("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");", GetName()));
+      ret = (TList *)gROOT->ProcessLine(TString::Format("((TApplicationServer *)gApplication)->BrowseFile(\"%s\");", GetName()));
       if (ret) {
          TIter next(ret);
          while ((robj = (TRemoteObject *)next())) {
@@ -138,7 +139,6 @@ TList *TRemoteObject::Browse()
    // allocations of new objects with the same names during browsing.
    TList *objects  = new TList;
 
-   static Int_t level = 0;
    const char *name = GetTitle();
    TRemoteObject *sdir;
 
@@ -156,7 +156,6 @@ TList *TRemoteObject::Browse()
       while ((file=(TSystemFile*)next())) {
          fname = file->GetName();
          if (file->IsDirectory()) {
-            level++;
             TString sdirpath;
             if (!strcmp(fname.Data(), "."))
                sdirpath = name;
@@ -170,7 +169,6 @@ TList *TRemoteObject::Browse()
             }
             sdir = new TRemoteObject(fname.Data(), sdirpath.Data(), "TSystemDirectory");
             objects->Add(sdir);
-            level--;
          }
       }
       // then files...

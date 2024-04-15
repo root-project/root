@@ -4,14 +4,17 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-project(minuit2_tests)
-find_package(ROOT REQUIRED)
+if(NOT DEFINED ROOT_SOURCE_DIR)
+   cmake_minimum_required(VERSION 3.10)
+   project(minuit2_tests)
+   find_package(ROOT REQUIRED)
+   include(${ROOT_USE_FILE})
+endif()
 
-include_directories(${ROOT_INCLUDE_DIRS})
-
-set(TestSource
-      testMinimizer.cxx
-)
+set(TestSource testMinimizer.cxx)
+if (clad)
+  list(APPEND TestSource testADMinim.cxx)
+endif()
 
 set(TestSourceMnTutorial
     MnTutorial/Quad1FMain.cxx
@@ -53,7 +56,7 @@ configure_file(MnSim/paul4.txt paul4.txt COPYONLY)
 
 foreach(file ${TestSourceMnSim})
   get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES Minuit2 Minuit2TestMnSim)
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES Minuit2 Minuit2TestMnSim MathCore)
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()
 
@@ -64,6 +67,6 @@ set(RootLibraries Core RIO Net Hist Graf Graf3d Gpad Tree
 
 foreach(file ${TestSource})
   get_filename_component(testname ${file} NAME_WE)
-  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} )
+  ROOT_EXECUTABLE(${testname} ${file} LIBRARIES ${RootLibraries} Minuit2 )
   ROOT_ADD_TEST(minuit2_${testname} COMMAND ${testname})
 endforeach()

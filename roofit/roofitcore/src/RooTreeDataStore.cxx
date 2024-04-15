@@ -19,7 +19,7 @@
 \class RooTreeDataStore
 \ingroup Roofitcore
 
-RooTreeDataStore is a TTree-backed data storage. When a file is opened before
+TTree-backed data storage. When a file is opened before
 creating the data storage, the storage will be file-backed. This reduces memory
 pressure because it allows storing the data in the file and reading it on demand.
 For a completely memory-backed storage, which is faster than the file-backed storage,
@@ -44,21 +44,23 @@ RooAbsData::convertToVectorStore().
 
 #include "RooTreeDataStore.h"
 
-#include "RooFit.h"
 #include "RooMsgService.h"
 #include "RooFormulaVar.h"
 #include "RooRealVar.h"
 #include "RooHistError.h"
-#include "RooHelpers.h"
+
+#include "ROOT/StringUtils.hxx"
 
 #include "TTree.h"
 #include "TFile.h"
 #include "TChain.h"
 #include "TDirectory.h"
+#include "TBuffer.h"
+#include "TBranch.h"
 #include "TROOT.h"
 
 #include <iomanip>
-using namespace std ;
+using std::endl, std::list, std::string;
 
 ClassImp(RooTreeDataStore);
 
@@ -69,18 +71,7 @@ Int_t RooTreeDataStore::_defTreeBufSize = 10*1024*1024;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore() :
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
-  _wgtVar(0),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
-{
-}
+RooTreeDataStore::RooTreeDataStore() : _defCtor(true) {}
 
 
 
@@ -90,12 +81,9 @@ RooTreeDataStore::RooTreeDataStore() :
 RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore("blah","blah",varsNoWeight(vars,wgtVarName)),
   _tree(t),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kTRUE),
+  _defCtor(true),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
 }
 
@@ -104,66 +92,27 @@ RooTreeDataStore::RooTreeDataStore(TTree* t, const RooArgSet& vars, const char* 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0), 
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
-  initialize() ;  
+  initialize() ;
 }
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const RooFormulaVar& select, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
-  initialize() ;  
-  loadValues(&t,&select) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, TTree& t, const char* selExpr, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
-{
-  initialize() ;  
+  initialize() ;
 
   if (selExpr && *selExpr) {
     // Create a RooFormulaVar cut from given cut expression
-    RooFormulaVar select(selExpr,selExpr,_vars) ;
+    RooFormulaVar select(selExpr, selExpr, _vars, /*checkVariables=*/false);
     loadValues(&t,&select);
   } else {
     loadValues(&t);
@@ -171,48 +120,18 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& tds, const RooFormulaVar& select, const char* wgtVarName) :
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
   RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
   _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+  _wgtVar(weightVar(vars,wgtVarName))
 {
-  initialize() ;  
-  loadValues(&tds,&select) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const RooArgSet& vars, const RooAbsDataStore& ads, const char* selExpr, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)),
-  _tree(0),
-  _cacheTree(0),
-  _cacheOwner(0),
-  _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
-{
-  initialize() ;  
+  initialize() ;
 
   if (selExpr && *selExpr) {
     // Create a RooFormulaVar cut from given cut expression
-    RooFormulaVar select(selExpr,selExpr,_vars) ;
+    RooFormulaVar select(selExpr, selExpr, _vars, /*checkVariables=*/false);
     loadValues(&ads,&select);
   } else {
     loadValues(&ads);
@@ -224,58 +143,62 @@ RooTreeDataStore::RooTreeDataStore(const char* name, const char* title, const Ro
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTreeDataStore::RooTreeDataStore(const char *name, const char *title, RooAbsDataStore& tds, 
-			 const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
-			 Int_t nStart, Int_t nStop, Bool_t /*copyCache*/, const char* wgtVarName) :
-  RooAbsDataStore(name,title,varsNoWeight(vars,wgtVarName)), _defCtor(kFALSE),
-  _varsww(vars),
-  _wgtVar(weightVar(vars,wgtVarName)),
-  _curWgt(1),
-  _curWgtErrLo(0),
-  _curWgtErrHi(0),
-  _curWgtErr(0)
+RooTreeDataStore::RooTreeDataStore(RooStringView name, RooStringView title, RooAbsDataStore &tds, const RooArgSet &vars,
+                                   const RooFormulaVar *cutVar, const char *cutRange, Int_t nStart, Int_t nStop,
+                                   const char *wgtVarName)
+   : RooAbsDataStore(name, title, varsNoWeight(vars, wgtVarName)),
+     _varsww(vars),
+     _wgtVar(weightVar(vars, wgtVarName))
 {
   // WVE NEED TO ADJUST THIS FOR WEIGHTS
 
   // Protected constructor for internal use only
-  _tree = 0 ;
-  _cacheTree = 0 ;
-  createTree(makeTreeName().c_str(), title);
+
+  createTree(makeTreeName(), title);
 
   // Deep clone cutVar and attach clone to this dataset
-  RooFormulaVar* cloneVar = 0;
-  if (cutVar) {    
-    cloneVar = (RooFormulaVar*) cutVar->cloneTree() ;
+  std::unique_ptr<RooFormulaVar> cloneVar;
+  if (cutVar) {
+    cloneVar.reset(static_cast<RooFormulaVar*>(cutVar->cloneTree()));
     cloneVar->attachDataStore(tds) ;
   }
 
   // Constructor from existing data set with list of variables that preserves the cache
   initialize();
 
-  attachCache(0,((RooTreeDataStore&)tds)._cachedVars) ;
+  attachCache(nullptr,(static_cast<RooTreeDataStore&>(tds))._cachedVars) ;
 
   // WVE copy values of cached variables here!!!
-  _cacheTree->CopyEntries(((RooTreeDataStore&)tds)._cacheTree) ;
-  _cacheOwner = 0 ;
-  
-  loadValues(&tds,cloneVar,cutRange,nStart,nStop);
+  _cacheTree->CopyEntries((static_cast<RooTreeDataStore&>(tds))._cacheTree) ;
+  _cacheOwner = nullptr ;
 
-  if (cloneVar) delete cloneVar ;
+  loadValues(&tds,cloneVar.get(),cutRange,nStart,nStop);
 }
 
+
+std::unique_ptr<RooAbsDataStore> RooTreeDataStore::reduce(RooStringView name, RooStringView title,
+                        const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
+                        std::size_t nStart, std::size_t nStop) {
+  RooArgSet tmp(vars) ;
+  if(_wgtVar && !tmp.contains(*_wgtVar)) {
+    tmp.add(*_wgtVar) ;
+  }
+  const char* wgtVarName = _wgtVar ? _wgtVar->GetName() : nullptr;
+  return std::make_unique<RooTreeDataStore>(name, title, *this, tmp, cutVar, cutRange, nStart, nStop, wgtVarName);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Utility function for constructors
 /// Return RooArgSet that is copy of allVars minus variable matching wgtName if specified
 
-RooArgSet RooTreeDataStore::varsNoWeight(const RooArgSet& allVars, const char* wgtName) 
+RooArgSet RooTreeDataStore::varsNoWeight(const RooArgSet& allVars, const char* wgtName)
 {
   RooArgSet ret(allVars) ;
   if(wgtName) {
     RooAbsArg* wgt = allVars.find(wgtName) ;
     if (wgt) {
-      ret.remove(*wgt,kTRUE,kTRUE) ;
+      ret.remove(*wgt,true,true) ;
     }
   }
   return ret ;
@@ -287,13 +210,13 @@ RooArgSet RooTreeDataStore::varsNoWeight(const RooArgSet& allVars, const char* w
 /// Utility function for constructors
 /// Return pointer to weight variable if it is defined
 
-RooRealVar* RooTreeDataStore::weightVar(const RooArgSet& allVars, const char* wgtName) 
+RooRealVar* RooTreeDataStore::weightVar(const RooArgSet& allVars, const char* wgtName)
 {
   if(wgtName) {
     RooRealVar* wgt = dynamic_cast<RooRealVar*>(allVars.find(wgtName)) ;
     return wgt ;
-  } 
-  return 0 ;
+  }
+  return nullptr ;
 }
 
 
@@ -303,17 +226,14 @@ RooRealVar* RooTreeDataStore::weightVar(const RooArgSet& allVars, const char* wg
 /// Initialize cache of dataset: attach variables of cache ArgSet
 /// to the corresponding TTree branches
 
-void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVarsIn) 
+void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& cachedVarsIn)
 {
   // iterate over the cache variables for this dataset
   _cachedVars.removeAll() ;
-  TIterator* iter = cachedVarsIn.createIterator() ;
-  RooAbsArg *var;
-  while((0 != (var= (RooAbsArg*)iter->Next()))) {    
+  for (RooAbsArg * var : cachedVarsIn) {
     var->attachToTree(*_cacheTree,_defTreeBufSize) ;
     _cachedVars.add(*var) ;
   }
-  delete iter ;
   _cacheOwner = newOwner ;
 
 }
@@ -327,9 +247,6 @@ void RooTreeDataStore::attachCache(const RooAbsArg* newOwner, const RooArgSet& c
 
 RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* newname) :
   RooAbsDataStore(other,newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
   _varsww(other._varsww),
   _wgtVar(other._wgtVar),
   _extWgtArray(other._extWgtArray),
@@ -341,7 +258,7 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* ne
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr)
 {
-  initialize() ;  
+  initialize() ;
   loadValues(&other) ;
 }
 
@@ -349,12 +266,9 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const char* ne
 ////////////////////////////////////////////////////////////////////////////////
 
 RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const RooArgSet& vars, const char* newname) :
-  RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():0),newname),
-  _tree(0),
-  _cacheTree(0),
-  _defCtor(kFALSE),
+  RooAbsDataStore(other,varsNoWeight(vars,other._wgtVar?other._wgtVar->GetName():nullptr),newname),
   _varsww(vars),
-  _wgtVar(other._wgtVar?weightVar(vars,other._wgtVar->GetName()):0),
+  _wgtVar(other._wgtVar?weightVar(vars,other._wgtVar->GetName()):nullptr),
   _extWgtArray(other._extWgtArray),
   _extWgtErrLoArray(other._extWgtErrLoArray),
   _extWgtErrHiArray(other._extWgtErrHiArray),
@@ -364,7 +278,7 @@ RooTreeDataStore::RooTreeDataStore(const RooTreeDataStore& other, const RooArgSe
   _curWgtErrHi(other._curWgtErrHi),
   _curWgtErr(other._curWgtErr)
 {
-  initialize() ;  
+  initialize() ;
   loadValues(&other) ;
 }
 
@@ -390,10 +304,10 @@ RooTreeDataStore::~RooTreeDataStore()
 /// One-time initialization common to all constructor forms.  Attach
 /// variables of internal ArgSet to the corresponding TTree branches
 
-void RooTreeDataStore::initialize() 
+void RooTreeDataStore::initialize()
 {
   // Recreate (empty) cache tree
-  createTree(makeTreeName().c_str(), GetTitle());
+  createTree(makeTreeName(), GetTitle());
 
   // Attach each variable to the dataset
   for (auto var : _varsww) {
@@ -409,10 +323,10 @@ void RooTreeDataStore::initialize()
 /// Create TTree object that lives in memory, independent of current
 /// location of gDirectory
 
-void RooTreeDataStore::createTree(const char* name, const char* title)
+void RooTreeDataStore::createTree(RooStringView name, RooStringView title)
 {
   if (!_tree) {
-    _tree = new TTree(name,title);
+    _tree = new TTree(name.c_str(),title.c_str());
     _tree->ResetBit(kCanDelete);
     _tree->ResetBit(kMustCleanup);
     _tree->SetDirectory(nullptr);
@@ -421,7 +335,7 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
   TString pwd(gDirectory->GetPath()) ;
   TString memDir(gROOT->GetName()) ;
   memDir.Append(":/") ;
-  Bool_t notInMemNow= (pwd!=memDir) ;
+  bool notInMemNow= (pwd!=memDir) ;
 
   // cout << "RooTreeData::createTree pwd=" << pwd << " memDir=" << memDir << " notInMemNow = " << (notInMemNow?"T":"F") << endl ;
 
@@ -430,15 +344,15 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
   }
 
   if (!_cacheTree) {
-    _cacheTree = new TTree((std::string(name) + "_cacheTree").c_str(), title);
-    _cacheTree->SetDirectory(0) ;
+    _cacheTree = new TTree(TString{name.c_str()} + "_cacheTree", TString{title.c_str()});
+    _cacheTree->SetDirectory(nullptr) ;
     gDirectory->RecursiveRemove(_cacheTree) ;
   }
 
   if (notInMemNow) {
     gDirectory->cd(pwd) ;
   }
-  
+
 }
 
 
@@ -446,84 +360,84 @@ void RooTreeDataStore::createTree(const char* name, const char* title)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load values from tree 't' into this data collection, optionally
-/// selecting events using 'select' RooFormulaVar.
+/// selecting events using the RooFormulaVar 'select'.
 ///
-/// The source tree 't' is first clone as not disturb its branch
+/// The source tree 't' is cloned to not disturb its branch
 /// structure when retrieving information from it.
-
-void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/) 
+void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, const char* /*rangeName*/, Int_t /*nStart*/, Int_t /*nStop*/)
 {
-  // Clone source tree
-  // WVE Clone() crashes on trees, CloneTree() crashes on tchains :-(
+  // Make our local copy of the tree, so we can safely loop through it.
+  // We need a custom deleter, because if we don't deregister the Tree from the directory
+  // of the original, it tears it down at destruction time!
+  auto deleter = [](TTree* tree){tree->SetDirectory(nullptr); delete tree;};
+  std::unique_ptr<TTree, decltype(deleter)> tClone(static_cast<TTree*>(t->Clone()), deleter);
+  tClone->SetDirectory(t->GetDirectory());
 
-  // Change directory to memory dir before cloning tree to avoid ROOT errors
-  TString pwd(gDirectory->GetPath()) ;
-  TString memDir(gROOT->GetName()) ;
-  memDir.Append(":/") ;
-  Bool_t notInMemNow= (pwd!=memDir) ;
+  // Clone list of variables
+  RooArgSet sourceArgSet;
+  _varsww.snapshot(sourceArgSet, false);
 
-  if (notInMemNow) {
-    gDirectory->cd(memDir) ;
-  }
-
-  TTree* tClone ;
-  if (dynamic_cast<const TChain*>(t)) {
-    tClone = (TTree*) t->Clone() ; 
-  } else {
-    tClone = ((TTree*)t)->CloneTree() ;
-  }
-
-  // Change directory back to original directory
-  tClone->SetDirectory(0) ;
-
-  if (notInMemNow) {
-    gDirectory->cd(pwd) ;
-  }
-    
-  // Clone list of variables  
-  RooArgSet *sourceArgSet = (RooArgSet*) _varsww.snapshot(kFALSE) ;
-  
   // Check that we have the branches:
-  for (const auto var : *sourceArgSet) {
-    if (!tClone->GetBranch(var->GetName())) {
-      coutE(InputArguments) << "Didn't find a branch in Tree '" << tClone->GetName()
-          << "' to read variable '" << var->GetName() << "' from."
-          << "\n\tNote: Name the RooFit variable the same as the branch." << std::endl;
-    }
+  bool missingBranches = false;
+  for (const auto var : sourceArgSet) {
+     if (!tClone->GetBranch(var->GetName())) {
+        missingBranches = true;
+        coutE(InputArguments) << "Didn't find a branch in Tree '" << tClone->GetName() << "' to read variable '"
+                              << var->GetName() << "' from."
+                              << "\n\tNote: Name the RooFit variable the same as the branch." << std::endl;
+     }
+  }
+  if (missingBranches) {
+     coutE(InputArguments) << "Cannot import data from TTree '" << tClone->GetName()
+                           << "' because some branches are missing !" << std::endl;
+     return;
   }
 
   // Attach args in cloned list to cloned source tree
-  for (const auto sourceArg : *sourceArgSet) {
+  for (const auto sourceArg : sourceArgSet) {
     sourceArg->attachToTree(*tClone,_defTreeBufSize) ;
   }
 
   // Redirect formula servers to sourceArgSet
-  RooFormulaVar* selectClone(0) ;
+  std::unique_ptr<RooFormulaVar> selectClone;
   if (select) {
-    selectClone = (RooFormulaVar*) select->cloneTree() ;
-    selectClone->recursiveRedirectServers(*sourceArgSet) ;
-    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+    selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
+    selectClone->recursiveRedirectServers(sourceArgSet) ;
+    selectClone->setOperMode(RooAbsArg::ADirty,true) ;
   }
 
-  // Loop over events in source tree   
+  // Loop over events in source tree
   Int_t numInvalid(0) ;
-  Int_t nevent= (Int_t)tClone->GetEntries();
-  for(Int_t i=0; i < nevent; ++i) {
-    Int_t entryNumber=tClone->GetEntryNumber(i);
+  const Long64_t nevent = tClone->GetEntries();
+  for(Long64_t i=0; i < nevent; ++i) {
+    const auto entryNumber = tClone->GetEntryNumber(i);
     if (entryNumber<0) break;
     tClone->GetEntry(entryNumber,1);
 
     // Copy from source to destination
-    Bool_t allOK(kTRUE) ;
-    for (unsigned int j=0; j < sourceArgSet->size(); ++j) {
+    bool allOK(true) ;
+    for (unsigned int j=0; j < sourceArgSet.size(); ++j) {
       auto destArg = _varsww[j];
-      const auto sourceArg = (*sourceArgSet)[j];
+      const auto sourceArg = sourceArgSet[j];
 
       destArg->copyCache(sourceArg) ;
       sourceArg->copyCache(destArg) ;
       if (!destArg->isValid()) {
         numInvalid++ ;
-        allOK=kFALSE ;
+        allOK=false ;
+        if (numInvalid < 5) {
+          auto& log = coutI(DataHandling);
+          log << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping event #" << i << " because " << destArg->GetName()
+              << " cannot accommodate the value ";
+          if(sourceArg->isCategory()) {
+            log << static_cast<RooAbsCategory*>(sourceArg)->getCurrentIndex();
+          } else {
+            log << static_cast<RooAbsReal*>(sourceArg)->getVal();
+          }
+          log << std::endl;
+        } else if (numInvalid == 5) {
+          coutI(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Skipping ..." << std::endl;
+        }
         break ;
       }
     }
@@ -537,14 +451,10 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
   }
 
   if (numInvalid>0) {
-    coutI(Eval) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out of range events" << endl ;
+    coutW(DataHandling) << "RooTreeDataStore::loadValues(" << GetName() << ") Ignored " << numInvalid << " out-of-range events" << endl ;
   }
 
   SetTitle(t->GetTitle());
-
-  delete sourceArgSet ;
-  delete selectClone ;
-  delete tClone ;
 }
 
 
@@ -557,22 +467,23 @@ void RooTreeDataStore::loadValues(const TTree *t, const RooFormulaVar* select, c
 /// selecting events using 'select' RooFormulaVar
 ///
 
-void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select, 
-				  const char* rangeName, Int_t nStart, Int_t nStop)  
+void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVar* select,
+              const char* rangeName, std::size_t nStart, std::size_t nStop)
 {
   // Redirect formula servers to source data row
   std::unique_ptr<RooFormulaVar> selectClone;
   if (select) {
     selectClone.reset( static_cast<RooFormulaVar*>(select->cloneTree()) );
     selectClone->recursiveRedirectServers(*ads->get()) ;
-    selectClone->setOperMode(RooAbsArg::ADirty,kTRUE) ;
+    selectClone->setOperMode(RooAbsArg::ADirty,true) ;
   }
 
   // Force RDS internal initialization
   ads->get(0) ;
 
-  // Loop over events in source tree   
-  Int_t nevent = nStop < ads->numEntries() ? nStop : ads->numEntries() ;
+  // Loop over events in source tree
+  const auto numEntr = static_cast<std::size_t>(ads->numEntries());
+  std::size_t nevent = nStop < numEntr ? nStop : numEntr;
 
   auto TDS = dynamic_cast<const RooTreeDataStore*>(ads) ;
   if (TDS) {
@@ -581,15 +492,15 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
 
   std::vector<std::string> ranges;
   if (rangeName) {
-   ranges = RooHelpers::tokenise(rangeName, ",");
+   ranges = ROOT::Split(rangeName, ",");
   }
 
-  for(Int_t i=nStart; i < nevent ; ++i) {
+  for (auto i=nStart; i < nevent ; ++i) {
     ads->get(i) ;
 
     // Does this event pass the cuts?
     if (selectClone && selectClone->getVal()==0) {
-      continue ; 
+      continue ;
     }
 
 
@@ -612,7 +523,7 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
       continue ;
     }
 
-    _cachedVars = ((RooTreeDataStore*)ads)->_cachedVars ;
+    _cachedVars.assign(static_cast<RooTreeDataStore const*>(ads)->_cachedVars) ;
     fill() ;
   }
 
@@ -624,19 +535,6 @@ void RooTreeDataStore::loadValues(const RooAbsDataStore *ads, const RooFormulaVa
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return true if currently loaded coordinate is considered valid within
-/// the current range definitions of all observables
-
-Bool_t RooTreeDataStore::valid() const 
-{
-  return kTRUE ;
-}
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to TTree::Fill
 
@@ -644,7 +542,7 @@ Int_t RooTreeDataStore::fill()
 {
    return _tree->Fill() ;
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -652,34 +550,34 @@ Int_t RooTreeDataStore::fill()
 /// and return a pointer to the internal RooArgSet
 /// holding its coordinates.
 
-const RooArgSet* RooTreeDataStore::get(Int_t index) const 
+const RooArgSet* RooTreeDataStore::get(Int_t index) const
 {
   checkInit() ;
 
-  Int_t ret = ((RooTreeDataStore*)this)->GetEntry(index, 1) ;
+  Int_t ret = const_cast<RooTreeDataStore*>(this)->GetEntry(index, 1);
 
-  if(!ret) return 0;
+  if(!ret) return nullptr;
 
   if (_doDirtyProp) {
-    // Raise all dirty flags 
+    // Raise all dirty flags
     for (auto var : _vars) {
       var->setValueDirty(); // This triggers recalculation of all clients
-    } 
-    
+    }
+
     for (auto var : _cachedVars) {
       var->setValueDirty(); // This triggers recalculation of all clients, but doesn't recalculate self
       var->clearValueDirty();
-    } 
+    }
   }
-  
+
   // Update current weight cache
   if (_extWgtArray) {
 
-    // If external array is specified use that  
+    // If external array is specified use that
     _curWgt = _extWgtArray[index] ;
-    _curWgtErrLo = _extWgtErrLoArray[index] ;
-    _curWgtErrHi = _extWgtErrHiArray[index] ;
-    _curWgtErr   = sqrt(_extSumW2Array[index]) ;
+    _curWgtErrLo = _extWgtErrLoArray ? _extWgtErrLoArray[index] : -1.;
+    _curWgtErrHi = _extWgtErrHiArray ? _extWgtErrHiArray[index] : -1.;
+    _curWgtErr   = sqrt( _extSumW2Array ? _extSumW2Array[index] : _extWgtArray[index] );
 
   } else if (_wgtVar) {
 
@@ -691,34 +589,22 @@ const RooArgSet* RooTreeDataStore::get(Int_t index) const
 
   } else {
 
-    // Otherwise return 1 
+    // Otherwise return 1
     _curWgt=1.0 ;
     _curWgtErrLo = 0 ;
     _curWgtErrHi = 0 ;
     _curWgtErr = 0 ;
-    
+
   }
 
   return &_vars;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the weight of the n-th data point (n='index') in memory
 
-Double_t RooTreeDataStore::weight(Int_t index) const 
-{
-  get(index) ;
-  return weight() ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the weight of the n-th data point (n='index') in memory
-
-Double_t RooTreeDataStore::weight() const 
+double RooTreeDataStore::weight() const
 {
   return _curWgt ;
 }
@@ -726,24 +612,25 @@ Double_t RooTreeDataStore::weight() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const 
+double RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
 
     // We have a weight array, use that info
 
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    Double_t lo,hi ;
+    double lo = 0;
+    double hi = 0;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
 
    } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       return ( _wgtVar->getAsymErrorHi() - _wgtVar->getAsymErrorLo() ) / 2 ;
     } else {
-      return _wgtVar->getError() ;    
+      return _wgtVar->getError() ;
     }
 
   } else {
@@ -758,57 +645,58 @@ Double_t RooTreeDataStore::weightError(RooAbsData::ErrorType etype) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::ErrorType etype) const
+void RooTreeDataStore::weightError(double& lo, double& hi, RooAbsData::ErrorType etype) const
 {
   if (_extWgtArray) {
-    
+
     // We have a weight array, use that info
     switch (etype) {
-      
+
     case RooAbsData::Auto:
       throw string(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
       break ;
-      
+
     case RooAbsData::Expected:
       throw string(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
       break ;
-      
+
     case RooAbsData::Poisson:
-      // Weight may be preset or precalculated    
+      // Weight may be preset or precalculated
       if (_curWgtErrLo>=0) {
-	lo = _curWgtErrLo ;
-	hi = _curWgtErrHi ;
-	return ;
+         lo = _curWgtErrLo ;
+         hi = _curWgtErrHi ;
+         return ;
       }
-      
+
       // Otherwise Calculate poisson errors
-      Double_t ym,yp ;  
+      double ym;
+      double yp;
       RooHistError::instance().getPoissonInterval(Int_t(weight()+0.5),ym,yp,1) ;
       lo = weight()-ym ;
       hi = yp-weight() ;
       return ;
-      
+
     case RooAbsData::SumW2:
       lo = _curWgtErr ;
       hi = _curWgtErr ;
       return ;
-      
+
     case RooAbsData::None:
       lo = 0 ;
       hi = 0 ;
       return ;
-    }    
-    
+    }
+
   } else if (_wgtVar) {
 
-    // We have a a weight variable, use that info
+    // We have a weight variable, use that info
     if (_wgtVar->hasAsymError()) {
       hi = _wgtVar->getAsymErrorHi() ;
       lo = _wgtVar->getAsymErrorLo() ;
     } else {
       hi = _wgtVar->getError() ;
       lo = _wgtVar->getError() ;
-    }  
+    }
 
   } else {
 
@@ -823,7 +711,7 @@ void RooTreeDataStore::weightError(Double_t& lo, Double_t& hi, RooAbsData::Error
 ////////////////////////////////////////////////////////////////////////////////
 /// Change name of internal observable named 'from' into 'to'
 
-Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to) 
+bool RooTreeDataStore::changeObservableName(const char* from, const char* to)
 {
   // Find observable to be changed
   RooAbsArg* var = _vars.find(from) ;
@@ -831,14 +719,14 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
   // Check that we found it
   if (!var) {
     coutE(InputArguments) << "RooTreeDataStore::changeObservableName(" << GetName() << " no observable " << from << " in this dataset" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Process name change
   TString oldBranchName = var->cleanBranchName() ;
-  var->SetName(to) ;  
+  var->SetName(to) ;
 
-  // Change the branch name as well 
+  // Change the branch name as well
   if (_tree->GetBranch(oldBranchName.Data())) {
 
     // Simple case varName = branchName
@@ -864,13 +752,13 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
     if (_tree->GetBranch(Form("%s_lbl",oldBranchName.Data()))) {
       _tree->GetBranch(Form("%s_lbl",oldBranchName.Data()))->SetName(Form("%s_lb",var->cleanBranchName().Data())) ;
     }
-    
+
   }
 
-  return kFALSE ;
+  return false ;
 }
 
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a new column to the data set which holds the pre-calculated values
@@ -885,33 +773,33 @@ Bool_t RooTreeDataStore::changeObservableName(const char* from, const char* to)
 ///       opportunity for the user. Components of complex PDFs that can be
 ///       precalculated with the dataset are automatically identified as such
 ///       and will be precalculated when fitting to a dataset
-/// 
+///
 ///       By forcibly precalculating functions with non-trivial Jacobians,
 ///       or functions of multiple variables occurring in the data set,
-///       using addColumn(), you may alter the outcome of the fit. 
+///       using addColumn(), you may alter the outcome of the fit.
 ///
-///       Only in cases where such a modification of fit behaviour is intentional, 
-///       this function should be used. 
+///       Only in cases where such a modification of fit behaviour is intentional,
+///       this function should be used.
 
-RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
+RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, bool adjustRange)
 {
   checkInit() ;
 
   // Create a fundamental object of the right type to hold newVar values
-  RooAbsArg* valHolder= newVar.createFundamental();
+  auto valHolder = std::unique_ptr<RooAbsArg>{newVar.createFundamental()}.release();
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-	 << valHolder->GetName() << "\"" << endl;
-    return 0;
+    << valHolder->GetName() << "\"" << endl;
+    return nullptr;
   }
 
   // WVE need to reset TTRee buffers to original datamembers here
   resetBuffers() ;
 
-  // Clone variable and attach to cloned tree 
+  // Clone variable and attach to cloned tree
   RooAbsArg* newVarClone = newVar.cloneTree() ;
-  newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
+  newVarClone->recursiveRedirectServers(_vars,false) ;
 
   // Attach value place holder to this tree
   ((RooAbsArg*)valHolder)->attachToTree(*_tree,_defTreeBufSize) ;
@@ -919,7 +807,7 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
   _varsww.add(*valHolder) ;
 
 
-  // Fill values of of placeholder
+  // Fill values of placeholder
   for (int i=0 ; i<GetEntries() ; i++) {
     get(i) ;
 
@@ -933,103 +821,19 @@ RooAbsArg* RooTreeDataStore::addColumn(RooAbsArg& newVar, Bool_t adjustRange)
 
   if (adjustRange) {
 //     // Set range of valHolder to (just) bracket all values stored in the dataset
-//     Double_t vlo,vhi ;
+//     double vlo,vhi ;
 //     RooRealVar* rrvVal = dynamic_cast<RooRealVar*>(valHolder) ;
 //     if (rrvVal) {
 //       getRange(*rrvVal,vlo,vhi,0.05) ;
-//       rrvVal->setRange(vlo,vhi) ;  
+//       rrvVal->setRange(vlo,vhi) ;
 //     }
   }
 
 
 
-  delete newVarClone ;  
+  delete newVarClone ;
   return valHolder ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Utility function to add multiple columns in one call
-/// See addColumn() for details
-
-RooArgSet* RooTreeDataStore::addColumns(const RooArgList& varList)
-{
-  TIterator* vIter = varList.createIterator() ;
-  RooAbsArg* var ;
-
-  checkInit() ;
-
-  TList cloneSetList ;
-  RooArgSet cloneSet ;
-  RooArgSet* holderSet = new RooArgSet ;
-
-  // WVE need to reset TTRee buffers to original datamembers here
-  resetBuffers() ;
-
-
-  while((var=(RooAbsArg*)vIter->Next())) {
-    // Create a fundamental object of the right type to hold newVar values
-    RooAbsArg* valHolder= var->createFundamental();
-    holderSet->add(*valHolder) ;
-
-    // Sanity check that the holder really is fundamental
-    if(!valHolder->isFundamental()) {
-      coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""
-	   << valHolder->GetName() << "\"" << endl;
-      return 0;
-    }
-    
-    // Clone variable and attach to cloned tree 
-    RooArgSet* newVarCloneList = (RooArgSet*) RooArgSet(*var).snapshot() ;  
-    if (!newVarCloneList) {
-      coutE(InputArguments) << "RooTreeDataStore::RooTreeData(" << GetName() 
-			    << ") Couldn't deep-clone variable " << var->GetName() << ", abort." << endl ;
-      return 0 ;
-    }
-    RooAbsArg* newVarClone = newVarCloneList->find(var->GetName()) ;   
-    newVarClone->recursiveRedirectServers(_vars,kFALSE) ;
-    newVarClone->recursiveRedirectServers(*holderSet,kFALSE) ;
-
-    cloneSetList.Add(newVarCloneList) ;
-    cloneSet.add(*newVarClone) ;
-
-    // Attach value place holder to this tree
-    ((RooAbsArg*)valHolder)->attachToTree(*_tree,_defTreeBufSize) ;
-    _vars.addOwned(*valHolder) ;
-  }
-  delete vIter ;
-
-
-  TIterator* cIter = cloneSet.createIterator() ;
-  TIterator* hIter = holderSet->createIterator() ;
-  RooAbsArg *cloneArg, *holder ;
-  // Fill values of of placeholder
-  for (int i=0 ; i<GetEntries() ; i++) {
-    get(i) ;
-
-    cIter->Reset() ;
-    hIter->Reset() ;
-    while((cloneArg=(RooAbsArg*)cIter->Next())) {
-      holder = (RooAbsArg*)hIter->Next() ;
-
-      cloneArg->syncCache(&_vars) ;
-      holder->copyCache(cloneArg) ;
-      holder->fillTreeBranch(*_tree) ;
-    }
-  }
-
-  // WVE need to restore TTRee buffers to previous values here
-  restoreAlternateBuffers() ;
-  
-  delete cIter ;
-  delete hIter ;
-
-  cloneSetList.Delete() ;
-  return holderSet ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1046,12 +850,12 @@ RooAbsDataStore* RooTreeDataStore::merge(const RooArgSet& allVars, list<RooAbsDa
   for (int i=0 ; i<nevt ; i++) {
 
     // Cope data from self
-    mergedStore->_vars = *get(i) ;
-      
+    mergedStore->_vars.assign(*get(i)) ;
+
     // Copy variables from merge sets
     for (list<RooAbsDataStore*>::iterator iter = dstoreList.begin() ; iter!=dstoreList.end() ; ++iter) {
       const RooArgSet* partSet = (*iter)->get(i) ;
-      mergedStore->_vars = *partSet ;
+      mergedStore->_vars.assign(*partSet) ;
     }
 
     mergedStore->fill() ;
@@ -1065,15 +869,15 @@ RooAbsDataStore* RooTreeDataStore::merge(const RooArgSet& allVars, list<RooAbsDa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::append(RooAbsDataStore& other) 
+void RooTreeDataStore::append(RooAbsDataStore& other)
 {
   Int_t nevt = other.numEntries() ;
-  for (int i=0 ; i<nevt ; i++) {  
-    _vars = *other.get(i) ;
+  for (int i=0 ; i<nevt ; i++) {
+    _vars.assign(*other.get(i)) ;
     if (_wgtVar) {
       _wgtVar->setVal(other.weight()) ;
     }
-    
+
     fill() ;
   }
 }
@@ -1081,35 +885,37 @@ void RooTreeDataStore::append(RooAbsDataStore& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooTreeDataStore::sumEntries() const 
+double RooTreeDataStore::sumEntries() const
 {
   if (_wgtVar) {
 
-    Double_t sum(0), carry(0);
+    double sum(0);
+    double carry(0);
     Int_t nevt = numEntries() ;
-    for (int i=0 ; i<nevt ; i++) {  
+    for (int i=0 ; i<nevt ; i++) {
       get(i) ;
       // Kahan's algorithm for summing to avoid loss of precision
-      Double_t y = _wgtVar->getVal() - carry;
-      Double_t t = sum + y;
+      double y = _wgtVar->getVal() - carry;
+      double t = sum + y;
       carry = (t - sum) - y;
       sum = t;
-    }    
+    }
     return sum ;
 
   } else if (_extWgtArray) {
-    
-    Double_t sum(0) , carry(0);
+
+    double sum(0);
+    double carry(0);
     Int_t nevt = numEntries() ;
-    for (int i=0 ; i<nevt ; i++) {  
+    for (int i=0 ; i<nevt ; i++) {
       // Kahan's algorithm for summing to avoid loss of precision
-      Double_t y = _extWgtArray[i] - carry;
-      Double_t t = sum + y;
+      double y = _extWgtArray[i] - carry;
+      double t = sum + y;
       carry = (t - sum) - y;
       sum = t;
-    }    
+    }
     return sum ;
-    
+
   } else {
 
     return numEntries() ;
@@ -1122,7 +928,7 @@ Double_t RooTreeDataStore::sumEntries() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooTreeDataStore::numEntries() const 
+Int_t RooTreeDataStore::numEntries() const
 {
   return _tree->GetEntries() ;
 }
@@ -1131,7 +937,7 @@ Int_t RooTreeDataStore::numEntries() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::reset() 
+void RooTreeDataStore::reset()
 {
   Reset() ;
 }
@@ -1146,19 +952,17 @@ void RooTreeDataStore::reset()
 /// internal cache of 'newVar' will be loaded with the
 /// precalculated value and it's dirty flag will be cleared.
 
-void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, Bool_t /*skipZeroWeights*/) 
+void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, const RooArgSet* nset, bool /*skipZeroWeights*/)
 {
   checkInit() ;
 
   _cacheOwner = owner ;
 
-  RooArgSet* constExprVarSet = (RooArgSet*) newVarSet.selectByAttrib("ConstantExpression",kTRUE) ;
-  TIterator *iter = constExprVarSet->createIterator() ;
-  RooAbsArg *arg ;
+  std::unique_ptr<RooArgSet> constExprVarSet{static_cast<RooArgSet*>(newVarSet.selectByAttrib("ConstantExpression",true))};
 
-  Bool_t doTreeFill = (_cachedVars.getSize()==0) ;
+  bool doTreeFill = (_cachedVars.empty()) ;
 
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : *constExprVarSet) {
     // Attach original newVar to this tree
     arg->attachToTree(*_cacheTree,_defTreeBufSize) ;
     //arg->recursiveRedirectServers(_vars) ;
@@ -1171,14 +975,13 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
   // Refill regular and cached variables of current tree from clone
   for (int i=0 ; i<GetEntries() ; i++) {
     get(i) ;
-    
+
     // Evaluate the cached variables and store the results
-    iter->Reset() ;
-    while ((arg=(RooAbsArg*)iter->Next())) {
+    for (RooAbsArg * arg : *constExprVarSet) {
       arg->setValueDirty() ;
       arg->syncCache(nset) ;
       if (!doTreeFill) {
-	arg->fillTreeBranch(*_cacheTree) ;
+        arg->fillTreeBranch(*_cacheTree) ;
       }
     }
 
@@ -1189,9 +992,6 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 
   // WVE need to restore TTRee buffers to previous values here
   //restoreAlternateBuffers() ;
-
-  delete iter ;
-  delete constExprVarSet ;
 }
 
 
@@ -1201,20 +1001,17 @@ void RooTreeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet, c
 /// Activate or deactivate the branch status of the TTree branch associated
 /// with the given set of dataset observables
 
-void RooTreeDataStore::setArgStatus(const RooArgSet& set, Bool_t active) 
+void RooTreeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
-  TIterator* iter = set.createIterator() ;
-  RooAbsArg* arg ;
-  while ((arg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * arg : set) {
     RooAbsArg* depArg = _vars.find(arg->GetName()) ;
     if (!depArg) {
-      coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName() 
-			    << ") dataset doesn't contain variable " << arg->GetName() << endl ;
+      coutE(InputArguments) << "RooTreeDataStore::setArgStatus(" << GetName()
+             << ") dataset doesn't contain variable " << arg->GetName() << endl ;
       continue ;
     }
     depArg->setTreeBranchStatus(*_tree,active) ;
   }
-  delete iter ;
 }
 
 
@@ -1223,14 +1020,14 @@ void RooTreeDataStore::setArgStatus(const RooArgSet& set, Bool_t active)
 /// Remove tree with values of cached observables
 /// and clear list of cached observables
 
-void RooTreeDataStore::resetCache() 
+void RooTreeDataStore::resetCache()
 {
   // Empty list of cached functions
   _cachedVars.removeAll() ;
 
-  // Delete & recreate cache tree 
+  // Delete & recreate cache tree
   delete _cacheTree ;
-  _cacheTree = 0 ;
+  _cacheTree = nullptr ;
   createTree(makeTreeName().c_str(), GetTitle());
 
   return ;
@@ -1241,17 +1038,17 @@ void RooTreeDataStore::resetCache()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::attachBuffers(const RooArgSet& extObs) 
+void RooTreeDataStore::attachBuffers(const RooArgSet& extObs)
 {
   _attachedBuffers.removeAll() ;
   for (const auto arg : _varsww) {
     RooAbsArg* extArg = extObs.find(arg->GetName()) ;
     if (extArg) {
       if (arg->getAttribute("StoreError")) {
-	extArg->setAttribute("StoreError") ;
+   extArg->setAttribute("StoreError") ;
       }
       if (arg->getAttribute("StoreAsymError")) {
-	extArg->setAttribute("StoreAsymError") ;
+   extArg->setAttribute("StoreAsymError") ;
       }
       extArg->attachToTree(*_tree) ;
       _attachedBuffers.add(*extArg) ;
@@ -1263,27 +1060,23 @@ void RooTreeDataStore::attachBuffers(const RooArgSet& extObs)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::resetBuffers() 
-{ 
-  RooFIter iter = _varsww.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+void RooTreeDataStore::resetBuffers()
+{
+  for(RooAbsArg * arg : _varsww) {
     arg->attachToTree(*_tree) ;
   }
-}  
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::restoreAlternateBuffers() 
-{ 
-  RooFIter iter = _attachedBuffers.fwdIterator() ;
-  RooAbsArg* arg ;
-  while((arg=iter.next())) {
+void RooTreeDataStore::restoreAlternateBuffers()
+{
+  for(RooAbsArg * arg : _attachedBuffers) {
     arg->attachToTree(*_tree) ;
   }
-}  
+}
 
 
 
@@ -1293,7 +1086,7 @@ void RooTreeDataStore::checkInit() const
 {
   if (_defCtor) {
     const_cast<RooTreeDataStore*>(this)->initialize() ;
-    _defCtor = kFALSE ;    
+    _defCtor = false ;
   }
 }
 
@@ -1308,7 +1101,7 @@ Stat_t RooTreeDataStore::GetEntries() const
 {
    return _tree->GetEntries() ;
 }
- 
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to TTree::Reset
@@ -1317,7 +1110,7 @@ void RooTreeDataStore::Reset(Option_t* option)
 {
    _tree->Reset(option) ;
 }
- 
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to TTree::Fill
@@ -1326,25 +1119,25 @@ Int_t RooTreeDataStore::Fill()
 {
    return _tree->Fill() ;
 }
- 
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface function to TTree::GetEntry
 
 Int_t RooTreeDataStore::GetEntry(Int_t entry, Int_t getall)
 {
-   Int_t ret1 = _tree->GetEntry(entry,getall) ; 
+   Int_t ret1 = _tree->GetEntry(entry,getall) ;
    if (!ret1) return 0 ;
-   _cacheTree->GetEntry(entry,getall) ; 
+   _cacheTree->GetEntry(entry,getall) ;
    return ret1 ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTreeDataStore::Draw(Option_t* option) 
-{ 
-  _tree->Draw(option) ; 
+void RooTreeDataStore::Draw(Option_t* option)
+{
+  _tree->Draw(option) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1353,7 +1146,8 @@ void RooTreeDataStore::Draw(Option_t* option)
 void RooTreeDataStore::Streamer(TBuffer &R__b)
 {
   if (R__b.IsReading()) {
-    UInt_t R__s, R__c;
+    UInt_t R__s;
+    UInt_t R__c;
     const Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
     R__b.ReadClassBuffer(RooTreeDataStore::Class(), this, R__v, R__s, R__c);
@@ -1371,13 +1165,12 @@ void RooTreeDataStore::Streamer(TBuffer &R__b)
   } else {
 
     TTree* tmpTree = _tree;
-    if (_tree) {
+    auto parent = dynamic_cast<TDirectory*>(R__b.GetParent());
+    if (_tree && parent) {
       // Large trees cannot be written because of the 1Gb I/O limitation.
       // Here, we take the tree away from our instance, write it, and continue
       // to write the rest of the class normally
       auto tmpDir = _tree->GetDirectory();
-      TFile* parent = dynamic_cast<TFile*>(R__b.GetParent());
-      assert(parent);
 
       _tree->SetDirectory(parent);
       _tree->FlushBaskets(false);
@@ -1401,3 +1194,25 @@ std::string RooTreeDataStore::makeTreeName() const {
   return std::string("RooTreeDataStore_") + GetName() + "_" + title;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get the weights of the events in the range [first, first+len).
+/// This implementation will fill a vector with every event retrieved one by one
+/// (even if the weight is constant). Then, it returns a span.
+std::span<const double> RooTreeDataStore::getWeightBatch(std::size_t first, std::size_t len) const {
+
+  if (_extWgtArray) {
+    return {_extWgtArray + first, len};
+  }
+
+  if (!_weightBuffer) {
+    _weightBuffer = std::make_unique<std::vector<double>>();
+    _weightBuffer->reserve(len);
+
+    for (std::size_t i = 0; i < GetEntries(); ++i) {
+      _weightBuffer->push_back(weight(i));
+    }
+  }
+
+  return {_weightBuffer->data() + first, len};
+}

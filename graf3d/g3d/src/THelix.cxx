@@ -67,11 +67,10 @@ End_Macro
 This initializes a helix with its axis in Z direction (rtype=kHelixZ).
 */
 
-#include "Riostream.h"
+#include <iostream>
+#include "TBuffer.h"
 #include "TROOT.h"
-#include "TVirtualPad.h"
 #include "THelix.h"
-#include "TClass.h"
 #include "TMath.h"
 
 Int_t THelix::fgMinNSeg=5;        // at least 5 line segments in TPolyLine3D
@@ -81,9 +80,9 @@ ClassImp(THelix);
 ////////////////////////////////////////////////////////////////////////////////
 /// Set all helix parameters.
 
-void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
-                       Double_t *range, EHelixRangeType rType,
-                       Double_t *axis )
+void  THelix::SetHelix(Double_t const* xyz,  Double_t const* v,  Double_t w,
+                       Double_t const* range, EHelixRangeType rType,
+                       Double_t const* axis )
 {
    // Define the helix frame by setting the helix axis and rotation matrix
    SetAxis(axis);
@@ -98,9 +97,9 @@ void  THelix::SetHelix(Double_t *p,  Double_t *v,  Double_t w,
    fVt   = TMath::Sqrt(vx0*vx0 + vy0*vy0);
    fPhi0 = TMath::ATan2(vy0,vx0);
    fVz   = vz0;
-   fX0   = p[0] * m[0] +  p[1] * m[1] +  p[2] * m[2];
-   fY0   = p[0] * m[3] +  p[1] * m[4] +  p[2] * m[5];
-   fZ0   = p[0] * m[6] +  p[1] * m[7] +  p[2] * m[8];
+   fX0   = xyz[0] * m[0] +  xyz[1] * m[1] +  xyz[2] * m[2];
+   fY0   = xyz[0] * m[3] +  xyz[1] * m[4] +  xyz[2] * m[5];
+   fZ0   = xyz[0] * m[6] +  xyz[1] * m[7] +  xyz[2] * m[8];
    if (fW != 0) {
       fX0 += fVt / fW * TMath::Sin(fPhi0);
       fY0 -= fVt / fW * TMath::Cos(fPhi0);
@@ -126,7 +125,7 @@ THelix::THelix()
    fW        = 1.5E7;   // roughly the cyclon frequency of proton in AMS
    fRange[0] = 0.0;
    fRange[1] = 1.0;
-   fRotMat   = 0;
+   fRotMat   = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,8 +143,8 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
    v[0] = vx;
    v[1] = vy;
    v[2] = vz;
-   Double_t *range = 0;
-   fRotMat   = 0;
+   Double_t *range = nullptr;
+   fRotMat   = nullptr;
 
    SetHelix(p, v, w, range, kHelixZ);
    fOption = "";
@@ -154,8 +153,8 @@ THelix::THelix(Double_t x,  Double_t y,  Double_t z,
 ////////////////////////////////////////////////////////////////////////////////
 /// Helix normal constructor.
 
-THelix::THelix(Double_t * p, Double_t * v, Double_t w,
-               Double_t * range, EHelixRangeType rType, Double_t * axis)
+THelix::THelix(Double_t const* xyz, Double_t const* v, Double_t w,
+               Double_t const* range, EHelixRangeType rType, Double_t const* axis)
         : TPolyLine3D()
 {
    Double_t r[2];
@@ -165,11 +164,11 @@ THelix::THelix(Double_t * p, Double_t * v, Double_t w,
       r[0] = 0.0;        r[1] = 1.0;
    }
 
-   fRotMat   = 0;
+   fRotMat   = nullptr;
    if ( axis ) {                        // specify axis
-      SetHelix(p, v, w, r, rType, axis);
+      SetHelix(xyz, v, w, r, rType, axis);
    } else {                             // default axis
-      SetHelix(p, v, w, r, rType);
+      SetHelix(xyz, v, w, r, rType);
    }
 
    fOption = "";
@@ -214,7 +213,8 @@ THelix& THelix::operator=(const THelix& hx)
       fW=hx.fW;
       for(Int_t i=0; i<3; i++)
          fAxis[i]=hx.fAxis[i];
-      fRotMat=hx.fRotMat;
+      delete fRotMat;
+      fRotMat = hx.fRotMat ? new TRotMatrix(*hx.fRotMat) : nullptr;
       for(Int_t i=0; i<2; i++)
          fRange[i]=hx.fRange[i];
    }
@@ -235,7 +235,7 @@ THelix::~THelix()
 
 THelix::THelix(const THelix &helix) : TPolyLine3D(helix)
 {
-   fRotMat=0;
+   fRotMat = nullptr;
    ((THelix&)helix).THelix::Copy(*this);
 }
 
@@ -260,7 +260,8 @@ void THelix::Copy(TObject &obj) const
 
    if (((THelix&)obj).fRotMat)
       delete ((THelix&)obj).fRotMat;
-   ((THelix&)obj).fRotMat    = new TRotMatrix(*fRotMat);
+
+   ((THelix&)obj).fRotMat    = fRotMat ? new TRotMatrix(*fRotMat) : nullptr;
 
    ((THelix&)obj).fRange[0]  = fRange[0];
    ((THelix&)obj).fRange[1]  = fRange[1];
@@ -319,7 +320,7 @@ void THelix::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a new axis for the helix.  This will make a new rotation matrix.
 
-void THelix::SetAxis(Double_t * axis)
+void THelix::SetAxis(Double_t const* axis)
 {
    if (axis) {
       Double_t len = TMath::Sqrt(axis[0]*axis[0] + axis[1]*axis[1] + axis[2]*axis[2]);

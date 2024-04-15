@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
@@ -12,9 +12,11 @@
 
 #include "Minuit2/FCNBase.h"
 
+#include <vector>
+
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
 //________________________________________________________________________
 /** Extension of the FCNBase for providing the analytical Gradient of the
@@ -29,20 +31,43 @@ namespace ROOT {
     "false".
  */
 
+enum class GradientParameterSpace {
+  External, Internal
+};
+
 class FCNGradientBase : public FCNBase {
 
 public:
+   ~FCNGradientBase() override {}
 
-   virtual ~FCNGradientBase() {}
+   virtual std::vector<double> Gradient(const std::vector<double> &) const = 0;
+   virtual std::vector<double> GradientWithPrevResult(const std::vector<double> &parameters, double * /*previous_grad*/,
+                                                      double * /*previous_g2*/, double * /*previous_gstep*/) const
+   {
+      return Gradient(parameters);
+   };
 
-   virtual std::vector<double> Gradient(const std::vector<double>&) const = 0;
+   virtual bool CheckGradient() const { return true; }
 
-   virtual bool CheckGradient() const {return true;}
+   virtual GradientParameterSpace gradParameterSpace() const {
+      return GradientParameterSpace::External;
+   };
+
+   /// return second derivatives (diagonal of the Hessian matrix)
+   virtual std::vector<double> G2(const std::vector<double> &) const { return std::vector<double>();}
+
+   /// return Hessian
+   virtual std::vector<double> Hessian(const std::vector<double> &) const { return std::vector<double>();}
+
+   virtual bool HasHessian() const { return false; }
+
+   virtual bool HasG2() const { return false; }
+
 
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_FCNGradientBase
+#endif // ROOT_Minuit2_FCNGradientBase

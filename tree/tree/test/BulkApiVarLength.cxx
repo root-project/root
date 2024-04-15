@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "Bytes.h"
 #include "TBranch.h"
@@ -22,7 +22,7 @@ public:
    const std::string fFileName = "BulkApiTestVarLength.root";
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       auto hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree float micro benchmark ROOT file");
       hfile->SetCompressionLevel(0); // No compression at all.
@@ -44,9 +44,9 @@ protected:
       auto branch2 = tree->Branch("f", &f, "f[myLen]/F", 32000);
       auto branch3 = tree->Branch("d", &d, "d[myLen]/D", 32000);
       auto branch4 = tree->Branch("i", &i, "i[myLen]/I", 32000);
-      branch2->SetAutoDelete(kFALSE);
-      branch3->SetAutoDelete(kFALSE);
-      branch4->SetAutoDelete(kFALSE);
+      branch2->SetAutoDelete(false);
+      branch3->SetAutoDelete(false);
+      branch4->SetAutoDelete(false);
       for (Long64_t ev = 1; ev < fEventCount + 1; ev++) {
 
          for (Int_t idx = 0; idx < (ev % 10); idx++) {
@@ -127,6 +127,7 @@ TEST_F(BulkApiVariableTest, stdRead)
       ev++;
    }
    ASSERT_EQ(ev, events+1);
+   delete hfile;
 
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");

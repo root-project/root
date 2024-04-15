@@ -42,11 +42,11 @@ protected:
    TGCheckButton       *fAutoLighting;
 
 public:
-   TEveTextEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveTextEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                   UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveTextEditor() {}
+   ~TEveTextEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoText(const char*);
 
@@ -58,7 +58,7 @@ public:
    void DoAutoLighting();
    void DoExtrude();
 
-   ClassDef(TEveTextEditor, 0); // GUI editor for TEveText.
+   ClassDefOverride(TEveTextEditor, 0); // GUI editor for TEveText.
 };
 
 #endif

@@ -404,7 +404,12 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
          // special case for TObject::fBits in case of a referenced object
          case TStreamerInfo::kBits: { DOLOOP {
-            UInt_t *x=(UInt_t*)(arr[k]+ioffset); b << *x;
+            UInt_t *x=(UInt_t*)(arr[k]+ioffset);
+            const auto parent = b.GetParent();
+            if (R__unlikely(parent && parent->TestBit(TFile::k630forwardCompatibility)))
+               b << *x;
+            else
+               b << (*x & (~kIsOnHeap & ~kNotDeleted));
             if ((*x & kIsReferenced) != 0) {
                TObject *obj = (TObject*)(arr[k]+eoffset);
                TProcessID *pid = TProcessID::GetProcessWithUID(obj->GetUniqueID(),obj);
@@ -513,7 +518,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
                   b.WriteVersion( vClass, kFALSE );
-                  TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
                   DOLOOP {
                      char **contp = (char**)(arr[k]+ioffset);
                      for(int j=0;j<compinfo[i]->fLength;++j) {
@@ -521,7 +525,23 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                         TVirtualCollectionProxy::TPushPop helper( proxy, cont );
                         Int_t nobjects = cont ? proxy->Size() : 0;
                         b << nobjects;
-                        subinfo->WriteBufferSTL(b,proxy,nobjects);
+                        if (nobjects) {
+                           auto actions = proxy->GetWriteMemberWiseActions();
+
+                           char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                           char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                           void *begin = &(startbuf[0]);
+                           void *end = &(endbuf[0]);
+                           proxy->GetFunctionCreateIterators(/* read = */ kFALSE)(cont, &begin, &end, proxy);
+                           // We can not get here with a split vector of pointer, so we can indeed assume
+                           // that actions->fConfiguration != null.
+                           b.ApplySequence(*actions, begin, end);
+
+                           if (begin != &(startbuf[0])) {
+                              // assert(end != endbuf);
+                              proxy->GetFunctionDeleteTwoIterators()(begin,end);
+                           }
+                        }
                      }
                   }
                   b.SetByteCount(pos,kTRUE);
@@ -559,7 +579,6 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
                   b.WriteVersion( vClass, kFALSE );
-                  TStreamerInfo *subinfo = (TStreamerInfo*)vClass->GetStreamerInfo();
                   DOLOOP {
                      char *obj = (char*)(arr[k]+ioffset);
                      Int_t n = compinfo[i]->fLength;
@@ -570,7 +589,22 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                         TVirtualCollectionProxy::TPushPop helper( proxy, obj );
                         Int_t nobjects = proxy->Size();
                         b << nobjects;
-                        subinfo->WriteBufferSTL(b,proxy,nobjects);
+                        if (nobjects) {
+                           auto actions = proxy->GetWriteMemberWiseActions();
+
+                           char startbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                           char endbuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+                           void *begin = &(startbuf[0]);
+                           void *end = &(endbuf[0]);
+                           proxy->GetFunctionCreateIterators(/*read = */ kFALSE)(obj, &begin, &end, proxy);
+                           // We can not get here with a split vector of pointer, so we can indeed assume
+                           // that actions->fConfiguration != null.
+                           b.ApplySequence(*actions, begin, end);
+                           if (begin != &(startbuf[0])) {
+                              // assert(end != endbuf);
+                              proxy->GetFunctionDeleteTwoIterators()(begin,end);
+                           }
+                        }
                      }
                   }
                   b.SetByteCount(pos,kTRUE);

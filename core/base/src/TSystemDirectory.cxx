@@ -29,8 +29,6 @@ ClassImp(TSystemDirectory);
 
 TSystemDirectory::TSystemDirectory()
 {
-   fDirsInBrowser  = 0;
-   fFilesInBrowser = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,31 +37,6 @@ TSystemDirectory::TSystemDirectory()
 TSystemDirectory::TSystemDirectory(const char *dirname, const char *path) :
    TSystemFile(dirname, path)
 {
-   fDirsInBrowser  = 0;
-   fFilesInBrowser = 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-TSystemDirectory::TSystemDirectory(const TSystemDirectory& sd) :
-  TSystemFile(sd),
-  fDirsInBrowser(sd.fDirsInBrowser),
-  fFilesInBrowser(sd.fFilesInBrowser)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
-
-TSystemDirectory& TSystemDirectory::operator=(const TSystemDirectory& sd)
-{
-   if(this!=&sd) {
-      TSystemFile::operator=(sd);
-      fDirsInBrowser=sd.fDirsInBrowser;
-      fFilesInBrowser=sd.fFilesInBrowser;
-   }
-   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,9 +57,9 @@ TSystemDirectory::~TSystemDirectory()
 TList *TSystemDirectory::GetListOfFiles() const
 {
    void *dir = gSystem->OpenDirectory(GetTitle());
-   if (!dir) return 0;
+   if (!dir) return nullptr;
 
-   const char *file = 0;
+   const char *file = nullptr;
    TList *contents  = new TList;
    contents->SetOwner();
    while ((file = gSystem->GetDirEntry(dir))) {
@@ -201,13 +174,13 @@ void TSystemDirectory::Browse(TBrowser *b)
 
 TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
 {
-   int size = fDirsInBrowser->GetSize();
+   int size = fDirsInBrowser ? fDirsInBrowser->GetSize() : 0;
    for (int i = 0; i < size; i++) {
       TSystemDirectory *obj = (TSystemDirectory *) fDirsInBrowser->At(i);
       if (!strcmp(name, obj->GetTitle()))
          return obj;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,11 +189,11 @@ TSystemDirectory *TSystemDirectory::FindDirObj(const char *name)
 
 TSystemFile *TSystemDirectory::FindFileObj(const char *name, const char *dir)
 {
-   int size = fFilesInBrowser->GetSize();
+   int size = fFilesInBrowser ? fFilesInBrowser->GetSize() : 0;
    for (int i = 0; i < size; i++) {
       TSystemFile *obj = (TSystemFile *) fFilesInBrowser->At(i);
       if (!strcmp(name, obj->GetName()) && !strcmp(dir, obj->GetTitle()))
          return obj;
    }
-   return 0;
+   return nullptr;
 }

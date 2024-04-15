@@ -62,7 +62,7 @@ void mergeSelective(Int_t nfiles=5)
    fm->OutputFile("exclusive.root");
    fm->AddObjectNames("hprof folder");
    for (i=0; i<nfiles; i++) fm->AddFile(Form("tomerge%03d.root",i));
-   // Must add new merging flag on top of the the default ones
+   // Must add new merging flag on top of the default ones
    Int_t default_mode = TFileMerger::kAll | TFileMerger::kIncremental;
    Int_t mode = default_mode | TFileMerger::kOnlyListed;
    fm->PartialMerge(mode);
@@ -74,7 +74,7 @@ void mergeSelective(Int_t nfiles=5)
    fm->OutputFile("skipped.root");
    fm->AddObjectNames("hprof folder");
    for (i=0; i<nfiles; i++) fm->AddFile(Form("tomerge%03d.root",i));
-   // Must add new merging flag on top of the the default ones
+   // Must add new merging flag on top of the default ones
    mode = default_mode | TFileMerger::kSkipListed;
    fm->PartialMerge(mode);
    delete fm;

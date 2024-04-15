@@ -5,42 +5,37 @@
 
 #include <algorithm>
 #include <cstdlib>
-#include <errno.h>
+#include <cerrno>
 
 #include "TMath.h"
 #include "TString.h"
 #include "TTree.h"
 #include "TLeaf.h"
 #include "TH1.h"
-#include "TH2.h"
 #include "TList.h"
 #include "TSpline.h"
 #include "TVector.h"
 #include "TMatrixD.h"
 #include "TMatrixDSymEigen.h"
-#include "TVectorD.h"
 #include "TTreeFormula.h"
 #include "TXMLEngine.h"
 #include "TROOT.h"
-#include "TMatrixDSymEigen.h"
 #include "TColor.h"
+#include "TGraph.h"
+
 #include "TMVA/Config.h"
-
-
 #include "TMVA/Tools.h"
 #include "TMVA/ROCCalc.h"
-#include "TMVA/Config.h"
 #include "TMVA/Event.h"
 #include "TMVA/Version.h"
 #include "TMVA/PDF.h"
 #include "TMVA/MsgLogger.h"
 
-#include "TMVA/PDF.h"
 #include "TMVA/TSpline1.h"
 #include "TMVA/TSpline2.h"
 #include "TMVA/Types.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -489,10 +484,10 @@ TH1* TMVA::ROCCalc::GetSignificance( Int_t nStot, Int_t nBtot)
         tl.SetNDC();
         tl.SetTextSize( 0.033 );
         Int_t maxbin = fSignificance->GetMaximumBin();
-        line1 = tl.DrawLatex( 0.15, 0.23, Form("For %1.0f signal and %1.0f background", nStot, nBtot));
+        line1 = tl.DrawLatex( 0.15, 0.23, TString::Format("For %1.0f signal and %1.0f background", nStot, nBtot));
         tl.DrawLatex( 0.15, 0.19, "events the maximum S/Sqrt(S+B) is");
 
-        line2 = tl.DrawLatex( 0.15, 0.15, Form("%4.2f when cutting at %5.2f",
+        line2 = tl.DrawLatex( 0.15, 0.15, TString::Format("%4.2f when cutting at %5.2f",
         maxSig,
         fSignificance->GetXaxis()->GetBinCenter(maxbin)) );
    */

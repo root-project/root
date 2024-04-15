@@ -116,7 +116,7 @@ typedef gint	(*GPollFunc)	(GPollFD *ufds,
 
 struct _GPollFD
 {
-  gint		fd;
+  glong		fd;
   gushort 	events;
   gushort 	revents;
 };

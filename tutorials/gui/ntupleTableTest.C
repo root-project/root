@@ -50,20 +50,20 @@ private:
 public:
    TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
              UInt_t w = 100, UInt_t h = 100) ;
-   virtual ~TableTest() ;
+   ~TableTest() override ;
 
    void DoExit() ;
 
    TGTable *GetTable() { return fTable; }
    TTreeTableInterface *GetInterface() { return fInterface; }
 
-   ClassDef(TableTest, 0)
+   ClassDefOverride(TableTest, 0)
 };
 
 TableTest::TableTest(const TGWindow *p, UInt_t ntrows, UInt_t ntcols,
                      UInt_t w, UInt_t h)
    : TGMainFrame(p, w, h),  fNTableRows(ntrows), fNTableColumns(ntcols),
-     fTable(0)
+     fTable(nullptr)
 {
    SetCleanup(kDeepCleanup) ;
    Connect("CloseWindow()", "TableTest", this, "DoExit()") ;
@@ -124,6 +124,6 @@ TableTest::~TableTest()
 }
 
 TGTable *ntupleTableTest(UInt_t ntrows = 50, UInt_t ntcols = 10) {
-   TableTest *test = new TableTest(0, ntrows, ntcols, 500, 200);
+   TableTest *test = new TableTest(nullptr, ntrows, ntcols, 500, 200);
    return test->GetTable();
 }

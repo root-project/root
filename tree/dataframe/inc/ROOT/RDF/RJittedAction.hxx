@@ -1,7 +1,7 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,6 +20,14 @@
 class TTreeReader;
 
 namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RMergeableValueBase;
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
+
+namespace ROOT {
 namespace Internal {
 namespace RDF {
 
@@ -33,8 +41,9 @@ private:
    std::unique_ptr<RActionBase> fConcreteAction;
 
 public:
-   RJittedAction(RLoopManager &lm);
-   ~RJittedAction() { fLoopManager->Deregister(this); }
+   RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns, const RColumnRegister &colRegister,
+                 const std::vector<std::string> &prevVariations);
+   ~RJittedAction();
 
    void SetAction(std::unique_ptr<RActionBase> a) { fConcreteAction = std::move(a); }
 
@@ -47,9 +56,17 @@ public:
    void *PartialUpdate(unsigned int slot) final;
    bool HasRun() const final;
    void SetHasRun() final;
-   void ClearValueReaders(unsigned int slot) final;
 
-   std::shared_ptr<GraphDrawing::GraphNode> GetGraph();
+   std::shared_ptr<GraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<GraphDrawing::GraphNode>> &visitedMap) final;
+
+   // Helper for RMergeableValue
+   std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> GetMergeableValue() const final;
+
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final;
+
+   std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&results) final;
+   std::unique_ptr<ROOT::Internal::RDF::RActionBase> CloneAction(void *newResult) final;
 };
 
 } // ns RDF

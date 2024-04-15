@@ -28,8 +28,8 @@ class TGLContextIdentity;
 class TGLScene : public TGLSceneBase
 {
 private:
-   TGLScene(const TGLScene&);            // Not implemented
-   TGLScene& operator=(const TGLScene&); // Not implemented
+   TGLScene(const TGLScene&) = delete;
+   TGLScene& operator=(const TGLScene&) = delete;
 
    // Compare physical-shape volumes/diagonals -- for draw-vec sorting
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape* shape1,
@@ -58,7 +58,7 @@ public:
       Short_t    fPixelLOD;  // Size in LOD units.
       Short_t    fFinalLOD;  // Corrected with SceneLOD and quantized.
 
-      DrawElement_t(const TGLPhysicalShape* pshp=0) :
+      DrawElement_t(const TGLPhysicalShape* pshp=nullptr) :
          fPhysical(pshp), fPixelSize(0), fPixelLOD(0), fFinalLOD(0) {}
    };
 
@@ -95,8 +95,8 @@ public:
       DrawElementPtrVec_t fSelOpaqueElements;
       DrawElementPtrVec_t fSelTranspElements;
 
-      TSceneInfo(TGLViewerBase* view=0, TGLScene* scene=0);
-      virtual ~TSceneInfo();
+      TSceneInfo(TGLViewerBase* view=nullptr, TGLScene* scene=nullptr);
+      ~TSceneInfo() override;
 
       void ClearAfterRebuild();
       void ClearAfterUpdate();
@@ -144,32 +144,32 @@ protected:
 
 public:
    TGLScene();
-   virtual ~TGLScene();
+   ~TGLScene() override;
 
-   virtual void CalcBoundingBox() const;
+   void CalcBoundingBox() const override;
 
-   virtual TSceneInfo* CreateSceneInfo(TGLViewerBase* view);
-   virtual void        RebuildSceneInfo(TGLRnrCtx& rnrCtx);
-   virtual void        UpdateSceneInfo(TGLRnrCtx& rnrCtx);
-   virtual void        LodifySceneInfo(TGLRnrCtx& rnrCtx);
+   TSceneInfo* CreateSceneInfo(TGLViewerBase* view) override;
+   void        RebuildSceneInfo(TGLRnrCtx& rnrCtx) override;
+   void        UpdateSceneInfo(TGLRnrCtx& rnrCtx) override;
+   void        LodifySceneInfo(TGLRnrCtx& rnrCtx) override;
 
 
    // Rendering
-   virtual void PreDraw        (TGLRnrCtx& rnrCtx);
+   void PreDraw        (TGLRnrCtx& rnrCtx) override;
    // virtual void PreRender   (TGLRnrCtx& rnrCtx);
    // virtual void Render      (TGLRnrCtx& rnrCtx);
-   virtual void RenderOpaque   (TGLRnrCtx& rnrCtx);
-   virtual void RenderTransp   (TGLRnrCtx& rnrCtx);
-   virtual void RenderSelOpaque(TGLRnrCtx& rnrCtx);
-   virtual void RenderSelTransp(TGLRnrCtx& rnrCtx);
-   virtual void RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx);
-   virtual void RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx);
+   void RenderOpaque   (TGLRnrCtx& rnrCtx) override;
+   void RenderTransp   (TGLRnrCtx& rnrCtx) override;
+   void RenderSelOpaque(TGLRnrCtx& rnrCtx) override;
+   void RenderSelTransp(TGLRnrCtx& rnrCtx) override;
+   void RenderSelOpaqueForHighlight(TGLRnrCtx& rnrCtx) override;
+   void RenderSelTranspForHighlight(TGLRnrCtx& rnrCtx) override;
 
    virtual void RenderHighlight(TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec);
 
    // virtual void PostRender(TGLRnrCtx& rnrCtx);
-   virtual void PostDraw       (TGLRnrCtx& rnrCtx);
+   void PostDraw       (TGLRnrCtx& rnrCtx) override;
 
    virtual void RenderAllPasses(TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec,
@@ -179,16 +179,16 @@ public:
    virtual void RenderElements (TGLRnrCtx&           rnrCtx,
                                 DrawElementPtrVec_t& elVec,
                                 Bool_t               check_timeout,
-                                const TGLPlaneSet_t* clipPlanes = 0);
+                                const TGLPlaneSet_t* clipPlanes = nullptr);
 
    // Selection
-   virtual Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx);
+   Bool_t ResolveSelectRecord(TGLSelectRecord& rec, Int_t curIdx) override;
 
    // Basic logical shape management
    virtual void              AdoptLogical(TGLLogicalShape& shape);
    virtual Bool_t            DestroyLogical(TObject* logid, Bool_t mustFind=kTRUE);
    virtual Int_t             DestroyLogicals();
-   virtual TGLLogicalShape*  FindLogical(TObject* logid)  const;
+   TGLLogicalShape*  FindLogical(TObject* logid)  const override;
 
    // Basic physical shape management
    virtual void              AdoptPhysical(TGLPhysicalShape& shape);
@@ -241,7 +241,7 @@ public:
    static Bool_t IsOutside(const TGLBoundingBox& box,
                            const TGLPlaneSet_t& planes);
 
-   ClassDef(TGLScene, 0); // Standard ROOT OpenGL scene with logial/physical shapes.
+   ClassDefOverride(TGLScene, 0); // Standard ROOT OpenGL scene with logial/physical shapes.
 };
 
 

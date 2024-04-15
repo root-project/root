@@ -7,7 +7,7 @@
 
 
 #include "TString.h"
-
+#include <vector>
 
 #include "TMVA/Configurable.h"
 #include "TMVA/Types.h"
@@ -40,7 +40,6 @@ namespace TMVA {
 
        TCanvas* Draw(const TString name="VariableImportance") const;
    };
-
 
    class VariableImportance : public Envelope {
    private:

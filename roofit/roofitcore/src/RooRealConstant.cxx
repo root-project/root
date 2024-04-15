@@ -19,7 +19,7 @@
 \class RooRealConstant
 \ingroup Roofitcore
 
-RooRealConstant provides static functions to create and keep track
+Provides static functions to create and keep track
 of RooRealVar constants. Instead of creating such constants by
 hand (e.g. RooRealVar one("one","one",1)), simply use
 ~~~{.cpp}
@@ -30,16 +30,11 @@ RooRealConstant keeps an internal database of previously created
 RooRealVar objects and will recycle them as appropriate.
 **/
 
-#include "RooFit.h"
-
-#include <math.h>
+#include <cmath>
 #include <sstream>
-#include "RooRealConstant.h"
 #include "RooRealConstant.h"
 #include "RooConstVar.h"
 #include "RooArgList.h"
-
-using namespace std;
 
 ClassImp(RooRealConstant);
 
@@ -50,7 +45,7 @@ ClassImp(RooRealConstant);
 /// Return previously created object if available,
 /// otherwise create a new one on the fly.
 
-RooConstVar& RooRealConstant::value(Double_t value)
+RooConstVar& RooRealConstant::value(double value)
 {
   // Lookup existing constant
   for (auto varArg : constDB()) {
@@ -62,11 +57,12 @@ RooConstVar& RooRealConstant::value(Double_t value)
   std::ostringstream s ;
   s << value ;
 
-  auto var = new RooConstVar(s.str().c_str(),s.str().c_str(),value) ;
-  var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
-  constDB().addOwned(*var) ;
+  auto var = std::make_unique<RooConstVar>(s.str().c_str(),s.str().c_str(),value);
+  var->setAttribute("RooRealConstant_Factory_Object",true) ;
+  RooConstVar &varRef = *var;
+  constDB().addOwned(std::move(var));
 
-  return *var ;
+  return varRef;
 }
 
 
@@ -75,12 +71,13 @@ RooConstVar& RooRealConstant::value(Double_t value)
 
 RooConstVar& RooRealConstant::removalDummy()
 {
-  RooConstVar* var = new RooConstVar("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
-  var->setAttribute("RooRealConstant_Factory_Object",kTRUE) ;
+  auto var = std::make_unique<RooConstVar>("REMOVAL_DUMMY","REMOVAL_DUMMY",1) ;
+  var->setAttribute("RooRealConstant_Factory_Object",true) ;
   var->setAttribute("REMOVAL_DUMMY") ;
-  constDB().addOwned(*var) ;
+  RooConstVar &varRef = *var;
+  constDB().addOwned(std::move(var));
 
-  return *var ;
+  return varRef;
 }
 
 

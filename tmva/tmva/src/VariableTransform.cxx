@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableTransformBase                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -22,11 +22,10 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #include "TMVA/VariableTransformBase.h"
-#include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableIdentityTransform.h"
 #include "TMVA/VariableDecorrTransform.h"
 #include "TMVA/VariableInfo.h"
@@ -40,23 +39,16 @@
 #include "TMVA/Ranking.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
-#include "TMVA/VariableInfo.h"
 #include "TMVA/Version.h"
 #include "TMVA/TransformationHandler.h"
-#include "TMVA/MsgLogger.h"
 
-#include "TH1.h"
-#include "TH2.h"
 #include "THashTable.h"
 #include "TList.h"
-#include "TMath.h"
-#include "TProfile.h"
-#include "TVectorD.h"
+#include "TObjString.h"
 
 #include <algorithm>
 #include <cassert>
 #include <exception>
-#include <iomanip>
 #include <stdexcept>
 #include <set>
 
@@ -75,11 +67,10 @@ void CreateVariableTransforms(const TString& trafoDefinitionIn,
    // workaround for transformations to complicated to be handled by makeclass
    // count number of transformations with incomplete set of variables
    TString trafoDefinitionCheck(trafoDefinitionIn);
-   int npartial = 0, ntrafo = 0;
+   int npartial = 0;
    for (Int_t pos = 0, siz = trafoDefinition.Sizeof(); pos < siz; ++pos) {
       TString ch = trafoDefinition(pos,1);
       if ( ch == "(" ) npartial++;
-      if ( ch == "+" || ch == ",") ntrafo++;
    }
    if (npartial>1) {
       log << kWARNING

@@ -1,5 +1,5 @@
-/// \file ROOT/RHistView.h
-/// \ingroup Hist ROOT7
+/// \file ROOT/RHistView.hxx
+/// \ingroup HistV
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -60,7 +60,7 @@ public:
 
    bool IsBinOutOfRange(int idx) const noexcept
    {
-      // RODO: use fRange!
+      // TODO: use fRange!
       return idx < 0 || idx > fNBins;
    }
 

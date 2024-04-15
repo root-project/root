@@ -12,13 +12,6 @@
 #ifndef ROOT_TF1Editor
 #define ROOT_TF1Editor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TF1Editor                                                           //
-//                                                                      //
-// GUI for TF1 attributes and parameters.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -34,26 +27,26 @@ class TF1;
 class TF1Editor : public TGedFrame {
 
 protected:
-   TF1                 *fF1;              // selected TF1 object
-   TGTextEntry         *fTitle;           // function title
-   Int_t                fNP;              // number of function parameters
-   TGLabel             *fParLabel;        // label for number of parameters
-   TGCheckButton       *fDrawMode;        // immediate function redraw (if selected)
-   TGTextButton        *fSetPars;         // open 'Set Parameters' dialog
-   TGNumberEntry       *fNXpoints;        // number of points along x-axis
-   TGDoubleHSlider     *fSliderX;         // slider to set x-axis range
-   TGNumberEntryField  *fSldMinX;         // contains minimum value of x-axis
-   TGNumberEntryField  *fSldMaxX;         // contains maximum value of x-axis
+   TF1                 *fF1;              ///< selected TF1 object
+   TGTextEntry         *fTitle;           ///< function title
+   Int_t                fNP;              ///< number of function parameters
+   TGLabel             *fParLabel;        ///< label for number of parameters
+   TGCheckButton       *fDrawMode;        ///< immediate function redraw (if selected)
+   TGTextButton        *fSetPars;         ///< open 'Set Parameters' dialog
+   TGNumberEntry       *fNXpoints;        ///< number of points along x-axis
+   TGDoubleHSlider     *fSliderX;         ///< slider to set x-axis range
+   TGNumberEntryField  *fSldMinX;         ///< contains minimum value of x-axis
+   TGNumberEntryField  *fSldMaxX;         ///< contains maximum value of x-axis
 
    virtual void ConnectSignals2Slots();   //connect signals to slots
 
 public:
-   TF1Editor(const TGWindow *p = 0,  Int_t width = 140, Int_t height = 30,
+   TF1Editor(const TGWindow *p = nullptr,  Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TF1Editor();
+   ~TF1Editor() override;
 
-   virtual void   SetModel(TObject* obj);
-   virtual void   ActivateBaseClassEditors(TClass* cl);
+   void   SetModel(TObject* obj) override;
+   void   ActivateBaseClassEditors(TClass* cl) override;
 
    virtual void   DoParameterSettings();
    virtual void   DoXPoints();
@@ -62,7 +55,7 @@ public:
    virtual void   DoSliderXReleased();
    virtual void   DoXRange();
 
-   ClassDef(TF1Editor,0)  // user interface for TF1 objects
+   ClassDefOverride(TF1Editor,0)  // user interface for TF1 objects
 };
 
 #endif

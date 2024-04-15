@@ -17,9 +17,13 @@ if(NOT MSVC)
 endif()
 
 if(imt)
-  list(APPEND TREEPLAYER_EXTRA_HEADERS
-    ROOT/TTreeProcessorMT.hxx
-  )
+  list(APPEND TREEPLAYER_EXTRA_HEADERS ROOT/TTreeProcessorMT.hxx)
+  list(APPEND TREEPLAYER_EXTRA_DEPENDENCIES Imt)
+endif()
+
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
@@ -94,10 +98,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
     Graf
     Graf3d
     Hist
-    Imt
+    ${TREEPLAYER_EXTRA_DEPENDENCIES}
     MathCore
     RIO
     Tree
+  ${EXTRA_DICT_OPTS}
 )
 
 if(NOT MSVC)

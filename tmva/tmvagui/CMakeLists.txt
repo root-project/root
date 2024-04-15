@@ -9,6 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
   HEADERS
     TMVA/BDT.h
@@ -96,5 +101,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVAGui
     XMLIO
     TMVA
     Gui
+    HistPainter
     Core
+   ${EXTRA_DICT_OPTS}
 )

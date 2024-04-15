@@ -11,8 +11,9 @@
 
 #include <ROOT/Browsable/RItem.hxx>
 
+class TObject;
+
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TObjectItem
@@ -25,7 +26,6 @@ namespace Browsable {
 
 class TObjectItem : public RItem {
    std::string className; ///< class name
-
 public:
 
    TObjectItem() = default;
@@ -36,10 +36,10 @@ public:
    virtual ~TObjectItem() = default;
 
    void SetClassName(const std::string &_className) { className = _className; }
+   const std::string &GetClassName() const { return className; }
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

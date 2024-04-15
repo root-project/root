@@ -42,14 +42,14 @@ class Shape : public TObject
 {
 public:
    Shape(Int_t color, Double_t x, Double_t y, Double_t z);
-   ~Shape() {};
+   ~Shape() override {};
    virtual TBuffer3D & GetBuffer3D(UInt_t reqSections) = 0;
 
 protected:
    Double_t fX, fY, fZ;    // Origin
    Int_t fColor;
 
-   ClassDef(Shape,0);
+   ClassDefOverride(Shape,0);
 };
 
 ClassImp(Shape);
@@ -62,14 +62,14 @@ class Sphere : public Shape
 {
 public:
    Sphere(Int_t color, Double_t x, Double_t y, Double_t z, Double_t radius);
-   ~Sphere() {};
+   ~Sphere() override {};
 
-   virtual TBuffer3D & GetBuffer3D(UInt_t reqSections);
+   TBuffer3D & GetBuffer3D(UInt_t reqSections) override;
 
 private:
    Double_t fRadius;
 
-   ClassDef(Sphere,0);
+   ClassDefOverride(Sphere,0);
 };
 
 ClassImp(Sphere);
@@ -138,14 +138,14 @@ class Box : public Shape
 public:
    Box(Int_t color, Double_t x, Double_t y, Double_t z,
        Double_t dX, Double_t dY, Double_t dZ);
-   ~Box() {};
+   ~Box() override {};
 
-   virtual TBuffer3D & GetBuffer3D(UInt_t reqSections);
+   TBuffer3D & GetBuffer3D(UInt_t reqSections) override;
 
 private:
    Double_t fDX, fDY, fDZ; // Half lengths
 
-   ClassDef(Box,0);
+   ClassDefOverride(Box,0);
 };
 
 ClassImp(Box);
@@ -251,15 +251,15 @@ class SBPyramid : public Shape
 public:
    SBPyramid(Int_t color, Double_t d, Double_t y, Double_t z,
              Double_t dX, Double_t dY, Double_t dZ);
-   ~SBPyramid() {};
+   ~SBPyramid() override {};
 
-   virtual TBuffer3D & GetBuffer3D(UInt_t reqSections);
+   TBuffer3D & GetBuffer3D(UInt_t reqSections) override;
 
 private:
    Double_t fDX, fDY, fDZ; // Base half lengths dX,dY
                            // Pyr. height dZ
 
-   ClassDef(SBPyramid,0);
+   ClassDefOverride(SBPyramid,0);
 };
 
 ClassImp(SBPyramid);
@@ -357,15 +357,15 @@ class MyGeom : public TObject, public TAtt3D
 {
 public:
    MyGeom();
-   ~MyGeom();
+   ~MyGeom() override;
 
-   void Draw(Option_t *option);
-   void Paint(Option_t *option);
+   void Draw(Option_t *option) override;
+   void Paint(Option_t *option) override;
 
 private:
    std::vector<Shape *> fShapes;
 
-   ClassDef(MyGeom,0);
+   ClassDefOverride(MyGeom,0);
 };
 
 ClassImp(MyGeom);

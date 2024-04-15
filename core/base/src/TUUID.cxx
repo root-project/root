@@ -21,6 +21,14 @@ originally used in the Network Computing System (NCS) and
 later in the Open Software Foundation's (OSF) Distributed Computing
 Environment (DCE).
 
+\note In the way this UUID is constructed, when used outside of
+their original concept (NCS), they are actually not Globally unique
+and indeed multiple distinct concurrent processes are actually likely
+to generate the same UUID.  Technically this is because the UUID is
+constructed only from the node information and time information.
+To make a globally unique number, this needs to be combined with
+TProcessUUID.
+
 Structure of universal unique IDs (UUIDs).
 
 Depending on the network data representation, the multi-
@@ -106,7 +114,9 @@ system clock catches up.
 */
 
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TUUID.h"
+#include "TBuffer.h"
 #include "TError.h"
 #include "TSystem.h"
 #include "TInetAddress.h"
@@ -125,6 +135,7 @@ system clock catches up.
 #define random() rand()
 #else
 #include <unistd.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #if defined(R__LINUX) && !defined(R__WINGCC)
 #include <sys/sysinfo.h>
@@ -397,7 +408,7 @@ void TUUID::GetSystemTime(uuid_time_t *timestamp)
    timestamp->low  = time.LowPart;
 #else
    struct timeval tp;
-   gettimeofday(&tp, 0);
+   gettimeofday(&tp, nullptr);
    // Offset between UUID formatted times and Unix formatted times.
    // UUID UTC base time is October 15, 1582.
    // Unix base time is January 1, 1970.
@@ -427,7 +438,7 @@ void TUUID::GetNodeIdentifier()
          if (getifaddrs(&ifAddrStruct) != 0) {
             adr = 1;
          } else {
-            for (ifa = ifAddrStruct; ifa != NULL; ifa = ifa->ifa_next) {
+            for (ifa = ifAddrStruct; ifa != nullptr; ifa = ifa->ifa_next) {
                if (!ifa->ifa_addr) {
                   continue;
                }
@@ -538,7 +549,7 @@ void TUUID::GetRandomInfo(UChar_t seed[16])
 #if defined(R__LINUX) && !defined(R__WINGCC)
    sysinfo(&r.s);
 #endif
-   gettimeofday(&r.t, 0);
+   gettimeofday(&r.t, nullptr);
    gethostname(r.hostname, 256);
 #endif
    TMD5 md5;

@@ -29,7 +29,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TFitResultPtr.h
     TFormula.h
     TFractionFitter.h
+    THistRange.h
     TGraph2DErrors.h
+    TGraph2DAsymmErrors.h
     TGraph2D.h
     TGraphAsymmErrors.h
     TGraphMultiErrors.h
@@ -40,18 +42,21 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraph.h
     TGraphSmooth.h
     TGraphTime.h
+    TScatter.h
     TH1C.h
     TH1D.h
     TH1F.h
     TH1.h
     TH1I.h
     TH1K.h
+    TH1L.h
     TH1S.h
     TH2C.h
     TH2D.h
     TH2F.h
     TH2.h
     TH2I.h
+    TH2L.h
     TH2Poly.h
     TH2S.h
     TH3C.h
@@ -59,6 +64,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TH3F.h
     TH3.h
     TH3I.h
+    TH3L.h
     TH3S.h
     THLimitsFinder.h
     THnBase.h
@@ -84,6 +90,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TVirtualFitter.h
     TVirtualGraphPainter.h
     TVirtualHistPainter.h
+    TVirtualPaveStats.h
     Math/WrappedMultiTF1.h
     Math/WrappedTF1.h
     v5/TF1Data.h
@@ -115,6 +122,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TFormulaPrimitive_v5.cxx
     TFormula_v5.cxx
     TFractionFitter.cxx
+    THistRange.cxx
     TGraph2D.cxx
     TGraph2DErrors.cxx
     TGraphAsymmErrors.cxx
@@ -124,8 +132,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraphDelaunay2D.cxx
     TGraphDelaunay.cxx
     TGraphErrors.cxx
+    TGraph2DAsymmErrors.cxx
     TGraphSmooth.cxx
     TGraphTime.cxx
+    TScatter.cxx
     TH1.cxx
     TH1K.cxx
     TH1Merger.cxx

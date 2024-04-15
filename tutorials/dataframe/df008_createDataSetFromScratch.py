@@ -1,12 +1,14 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
+## Create data from scratch with RDataFrame.
+##
 ## This tutorial shows how to create a dataset from scratch with RDataFrame
 ##
 ## \macro_code
 ##
 ## \date June 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 

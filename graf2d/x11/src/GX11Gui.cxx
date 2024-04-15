@@ -9,18 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGX11
-*/
-
 // This file contains the implementation of the GUI methods of the
 // TGX11 class. Most of the methods are used by the machine independent
 // GUI classes (libGUI.so).
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
+#include <climits>
 #include <unistd.h>
 
 #include <X11/Xlib.h>
@@ -172,16 +169,6 @@ static Int_t RootX11ErrorHandler(Display *disp, XErrorEvent *err)
 {
    char msg[80];
    XGetErrorText(disp, err->error_code, msg, 80);
-
-   // force segV. to allow backtracing the error with gdb
-   if (gDebug == (Long_t)gVirtualX) {
-      gSystem->ProcessEvents();
-      ::Error("RootX11ErrorHandler", "%s (XID: %u, XREQ: %u)", msg,
-               (UInt_t)err->resourceid, err->request_code);
-      int *kil = (int*)1;
-      delete kil;
-      return 0;
-   }
 
    if (!err->resourceid) return 0;
 
@@ -393,7 +380,7 @@ Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
 
    if (depth == 0)
       depth = fDepth;
-   if (visual == 0)
+   if (!visual)
       visual = fVisual;
    if (fColormap && !(xmask & CWColormap)) {
       xmask |= CWColormap;
@@ -821,7 +808,6 @@ void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 
 Int_t TGX11::OpenDisplay(const char *dpyName)
 {
-#ifdef _REENTRANT
    // In some cases there can be problems due to XInitThreads, like when
    // using Qt, so we allow for it to be turned off
    if (gEnv->GetValue("X11.XInitThread", 1)) {
@@ -829,7 +815,6 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
       if (!XInitThreads())
          Warning("OpenDisplay", "system has no X11 thread support");
    }
-#endif
 
    Display *dpy;
    if (!(dpy = XOpenDisplay(dpyName)))
@@ -855,7 +840,7 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
 void TGX11::CloseDisplay()
 {
    XCloseDisplay((Display*)fDisplay);
-   fDisplay = 0;
+   fDisplay = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -937,7 +922,7 @@ Window_t TGX11::GetParent(Window_t id) const
    if (!id) return (Window_t)0;
 
    Window  root, parent;
-   Window *children = 0;
+   Window *children = nullptr;
    UInt_t  nchildren;
 
    XQueryTree((Display*)fDisplay, (Window) id, &root, &parent, &children, &nchildren);
@@ -1141,7 +1126,7 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpma
       }
       if ((mask & kPAReturnPixels)) {
          xmask |= XpmReturnPixels;
-         xpmattr.pixels  = 0;  // output parameters
+         xpmattr.pixels  = nullptr;  // output parameters
          xpmattr.npixels = 0;
       }
       if ((mask & kPACloseness)) {
@@ -1153,7 +1138,7 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpma
       ULong_t xmask = xpmattr.valuemask;
       Mask_t  mask  = 0;
 
-      attr.fPixels  = 0;
+      attr.fPixels  = nullptr;
       attr.fNpixels = 0;
 
       if ((xmask & XpmColormap)) {
@@ -1779,7 +1764,7 @@ Bool_t TGX11::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
    tev.fCount = 0;
    tev.fFormat = 0;
    tev.fHandle = 0;
-   tev.fSendEvent = 0;
+   tev.fSendEvent = false;
    tev.fTime = 0;
    tev.fX = tev.fY = 0;
    tev.fXRoot = tev.fYRoot = 0;
@@ -1822,6 +1807,9 @@ void TGX11::WMDeleteNotify(Window_t id)
 
 void TGX11::SetKeyAutoRepeat(Bool_t on)
 {
+   if (!fDisplay)
+      return;
+
    if (on)
       XAutoRepeatOn((Display*)fDisplay);
    else
@@ -2145,7 +2133,7 @@ void TGX11::FreeFontStruct(FontStruct_t fs)
    }
 
    if (xfree86_400 == 0)
-      XFreeFontInfo(0, (XFontStruct *) fs, 1);
+      XFreeFontInfo(nullptr, (XFontStruct *) fs, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2297,7 +2285,7 @@ void TGX11::LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym
 
    MapEvent(*event, &xev);
 
-   int n = XLookupString(&xev.xkey, buf, buflen-1, &xkeysym, 0);
+   int n = XLookupString(&xev.xkey, buf, buflen-1, &xkeysym, nullptr);
    if (n >= buflen)
       Error("LookupString", "buf too small, must be at least %d", n+1);
    else
@@ -2634,7 +2622,7 @@ Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
       bitmap_pad = 32;
 
    XImage *xim = XCreateImage((Display*)fDisplay, fVisual, fDepth, ZPixmap,
-                              0, 0, width, height, bitmap_pad, 0);
+                              0, nullptr, width, height, bitmap_pad, 0);
 
    // use calloc since Xlib will use free() in XDestroyImage
    if (xim) xim->data = (char *) calloc(xim->bytes_per_line * xim->height, 1);
@@ -2815,9 +2803,9 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
                             int x, int y, int maxd)
 {
    WindowAttributes_t wattr;
-   static Atom_t *dndTypeList = 0;
+   static Atom_t *dndTypeList = nullptr;
 
-   if (dndTypeList == 0) {
+   if (!dndTypeList) {
       dndTypeList = new Atom_t[3];
       dndTypeList[0] = InternAtom("application/root", kFALSE);
       dndTypeList[1] = InternAtom("text/uri-list", kFALSE);
@@ -2867,7 +2855,7 @@ Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
    Atom_t  actual;
    Int_t   format;
    ULong_t count, remaining;
-   unsigned char *data = 0;
+   unsigned char *data = nullptr;
    Atom_t *types, *t;
    Int_t   result = kTRUE;
    static Atom_t dndaware = kNone;

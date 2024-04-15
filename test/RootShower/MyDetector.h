@@ -44,7 +44,7 @@ private:
 
 public:
     MyDetector();
-    virtual ~MyDetector();
+    ~MyDetector() override;
     void        Init();
     Double_t    GetI(Int_t idx) { return fI[idx]; }
     Double_t    GetPreconst(Int_t idx) { return fPreconst[idx]; }
@@ -75,7 +75,7 @@ public:
     void        AddELoss(Double_t val) { fTotalELoss += val; }
     void        ClearELoss() { fTotalELoss = 0.0; }
 
-    ClassDef(MyDetector,1)   // Detector structure
+    ClassDefOverride(MyDetector,1)   // Detector structure
 };
 
 #endif // MYDETECTOR_H

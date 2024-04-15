@@ -349,7 +349,6 @@ Int_t TMessage::Compress()
    fBufComp       = new char[buflen];
    char *messbuf  = Buffer() + hdrlen;
    char *bufcur   = fBufComp + chdrlen;
-   Int_t noutot   = 0;
    Int_t nzip     = 0;
    Int_t nout, bufmax;
    for (Int_t i = 0; i < nbuffers; ++i) {
@@ -368,7 +367,6 @@ Int_t TMessage::Compress()
          return -1;
       }
       bufcur  += nout;
-      noutot  += nout;
       messbuf += kMAXZIPBUF;
       nzip    += kMAXZIPBUF;
    }

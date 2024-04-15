@@ -35,9 +35,11 @@ namespace Math {
 //__________________________________________________________________________________________
    /**
       Rotation class representing a 3D rotation about the X axis by the angle of rotation.
-      For efficiency reason, in addition to the the angle, the sine and cosine of the angle are held
+      For efficiency reason, in addition to the angle, the sine and cosine of the angle are held
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 
 class RotationX {
@@ -64,7 +66,7 @@ public:
       Rectify();
    }
 
-   // The compiler-generated copy ctor, copy assignment, and dtor are OK.
+   // The compiler-generated copy ctor, copy assignment, and destructor are OK.
 
    /**
       Rectify makes sure the angle is in (-pi,pi]
@@ -94,13 +96,13 @@ public:
    /**
       Get the angle
    */
-   void GetAngle(Scalar &angle) const { angle = atan2(fSin, fCos); }
+   void GetAngle(Scalar &angle) const { using std::atan2; angle = atan2(fSin, fCos); }
    void GetComponents ( Scalar & angle ) const { GetAngle(angle); }
 
    /**
       Angle of rotation
    */
-   Scalar Angle() const { return atan2(fSin, fCos); }
+   Scalar Angle() const { using std::atan2; return atan2(fSin, fCos); }
 
    /**
       Sine or Cosine of the rotation angle
@@ -220,7 +222,7 @@ private:
 
    Scalar fAngle;   // rotation angle
    Scalar fSin;     // sine of the rotation angle
-   Scalar fCos;     // cosine of the rotaiton angle
+   Scalar fCos;     // cosine of the rotation angle
 
 };  // RotationX
 

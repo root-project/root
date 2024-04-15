@@ -133,7 +133,7 @@ scheme consists of two two-dimensional distributions, signal and background.
 
 // #define DEBUG
 
-using namespace std;
+using std::ofstream, std::stringstream;
 
 ClassImp(TUnfoldBinningXML);
 
@@ -189,9 +189,9 @@ void TUnfoldBinningXML::WriteDTD(const char *file) {
 
 TUnfoldBinningXML *TUnfoldBinningXML::ImportXML
 (const TXMLDocument *document,const char *name) {
-   TUnfoldBinningXML *r=0;
+   TUnfoldBinningXML *r=nullptr;
    TXMLNode *root=document->GetRootNode();
-   TXMLNode *binningNode=0;
+   TXMLNode *binningNode=nullptr;
    if(root && (!TString(root->GetNodeName()).CompareTo("TUnfoldBinning")) &&
       (root->GetNodeType()==TXMLNode::kXMLElementNode)) {
       // loop over all "BinningNode" entities
@@ -201,9 +201,9 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXML
             !TString(node->GetNodeName()).CompareTo("BinningNode") &&
             node->GetAttributes()) {
             // localize the BinningNode with the given name
-            TIterator *i=node->GetAttributes()->MakeIterator();
+            TIter i = node->GetAttributes()->MakeIterator();
             TXMLAttr *attr;
-            while((attr=(TXMLAttr *)i->Next())) {
+            while((attr=(TXMLAttr *)i.Next())) {
                if((!TString(attr->GetName()).CompareTo("name")) &&
                   ((!TString(attr->GetValue()).CompareTo(name)) ||
                    !name)) {
@@ -231,15 +231,15 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXML
 
 TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
 (TXMLNode *node) {
-   const char *name=0;
+   const char *name=nullptr;
    Double_t factor=1.0;
-   TUnfoldBinningXML *r=0;
+   TUnfoldBinningXML *r=nullptr;
    Int_t nBins=0;
-   const char *binNames=0;
-   TIterator *i=node->GetAttributes()->MakeIterator();
+   const char *binNames=nullptr;
+   TIter i1 = node->GetAttributes()->MakeIterator();
    TXMLAttr *attr;
    // extract name and global factor
-   while((attr=(TXMLAttr *)i->Next())) {
+   while((attr=(TXMLAttr *)i1.Next())) {
       TString attName(attr->GetName());
       if(!attName.CompareTo("name")) {
          name=attr->GetValue();
@@ -259,8 +259,8 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
             // this node has unconnected bins, no axes
             // extract number of bins
             if(child->GetAttributes()) {
-               i=child->GetAttributes()->MakeIterator();
-               while((attr=(TXMLAttr *)i->Next())) {
+               TIter i2 = child->GetAttributes()->MakeIterator();
+               while((attr=(TXMLAttr *)i2.Next())) {
                   TString attName(attr->GetName());
                   if(!attName.CompareTo("nbin")) {
                      // number of unconnected bins
@@ -274,10 +274,10 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
                 binName=binName->GetNextNode()) {
                if(binName->GetNodeType()==TXMLNode::kXMLElementNode &&
                   !TString(binName->GetNodeName()).CompareTo("BinLabel")) {
-                  i=binName->GetAttributes()->MakeIterator();
-                  const char *binLabelName=0;
+                  TIter i3 = binName->GetAttributes()->MakeIterator();
+                  const char *binLabelName=nullptr;
                   Int_t index=0;
-                  while((attr=(TXMLAttr *)i->Next())) {
+                  while((attr=(TXMLAttr *)i3.Next())) {
                      TString attName(attr->GetName());
                      if(!attName.CompareTo("index")) {
                         index=TString(attr->GetValue()).Atoi();
@@ -315,15 +315,15 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
       r->AddAxisXML(node);
 
       // import per-bin normalisation factors if there are any
-      TVectorD *perBinFactors=0;
+      TVectorD *perBinFactors=nullptr;
       for(TXMLNode *child=node->GetChildren();child;
           child=child->GetNextNode()) {
          // unconnected bins: children are of type "Bins"
          if(child->GetNodeType()==TXMLNode::kXMLElementNode &&
             !TString(child->GetNodeName()).CompareTo("Binfactorlist")) {
             int length=0;
-            i=child->GetAttributes()->MakeIterator();
-            while((attr=(TXMLAttr *)i->Next())) {
+            TIter i4 = child->GetAttributes()->MakeIterator();
+            while((attr=(TXMLAttr *)i4.Next())) {
                TString attName(attr->GetName());
                if(!attName.CompareTo("length")) {
                   length=TString(attr->GetValue()).Atoi();
@@ -350,7 +350,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
                             " TUnfoldBinning=%s expected %d found %d",
                             r->GetName(),length,nread);
                delete perBinFactors;
-               perBinFactors=0;
+               perBinFactors=nullptr;
             }
          }
       }
@@ -380,7 +380,7 @@ TUnfoldBinningXML *TUnfoldBinningXML::ImportXMLNode
 /// find axis if there is one
 
 void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
-   TXMLNode *axis=0;
+   TXMLNode *axis=nullptr;
    for(TXMLNode *child=node->GetChildren();child;
        child=child->GetNextNode()) {
       if(child->GetNodeType()==TXMLNode::kXMLElementNode) {
@@ -389,11 +389,11 @@ void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
       }
    }
    if(axis) {
-      const char *axisName=0;
+      const char *axisName=nullptr;
       TArrayD binEdges(1);
-      TIterator *i=axis->GetAttributes()->MakeIterator();
+      TIter i1 = axis->GetAttributes()->MakeIterator();
       TXMLAttr *attr;
-      while((attr=(TXMLAttr *)i->Next())) {
+      while((attr=(TXMLAttr *)i1.Next())) {
          TString attName(attr->GetName());
          if(!attName.CompareTo("name")) {
             axisName=attr->GetValue();
@@ -412,8 +412,8 @@ void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
             if(!nodeName.CompareTo("Bin")) {
                Bool_t isUnderflow=kFALSE,isOverflow=kFALSE;
                Int_t repeat=1;
-               i=child->GetAttributes()->MakeIterator();
-               while((attr=(TXMLAttr *)i->Next())) {
+               TIter i2 = child->GetAttributes()->MakeIterator();
+               while((attr=(TXMLAttr *)i2.Next())) {
                   TString attName(attr->GetName());
                   TString attText(attr->GetValue());
                   if(!attName.CompareTo("location")) {
@@ -442,8 +442,8 @@ void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
                   Int_t iBin1=iBin0+repeat;
                   Double_t binWidth=0.0;
                   binEdges.Set(iBin1);
-                  i=child->GetAttributes()->MakeIterator();
-                  while((attr=(TXMLAttr *)i->Next())) {
+                  TIter i3 = child->GetAttributes()->MakeIterator();
+                  while((attr=(TXMLAttr *)i3.Next())) {
                      TString attName(attr->GetName());
                      if(!attName.CompareTo("width")) {
                         binWidth=TString(attr->GetValue()).Atof();
@@ -472,7 +472,7 @@ void TUnfoldBinningXML::AddAxisXML(TXMLNode *node) {
 /// Export a binning scheme to a stream in XML format.
 ///
 /// \param[in] binning the binning scheme to export
-/// \param[out] stream to write to
+/// \param[in] out stream to write to
 /// \param[in] writeHeader set true when writing the first binning
 /// scheme to this stream
 /// \param[in] writeFooter  set true when writing the last binning

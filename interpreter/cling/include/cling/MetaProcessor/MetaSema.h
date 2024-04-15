@@ -11,13 +11,12 @@
 #define CLING_META_SEMA_H
 
 #include "cling/MetaProcessor/MetaProcessor.h"
-
 #include "cling/Interpreter/Transaction.h"
 
 #include "clang/Basic/FileManager.h" // for DenseMap<FileEntry*>
 
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Optional.h"
+#include <optional>
 
 namespace llvm {
   class StringRef;
@@ -36,36 +35,33 @@ namespace cling {
     Interpreter& m_Interpreter;
     MetaProcessor& m_MetaProcessor;
     bool m_IsQuitRequested;
-    typedef llvm::DenseMap<const clang::FileEntry*, const Transaction*> Watermarks;
-    typedef llvm::DenseMap<const Transaction*, const clang::FileEntry*> ReverseWatermarks;
-    Watermarks m_Watermarks;
-    ReverseWatermarks m_ReverseWatermarks;
 
+    llvm::DenseMap<const clang::FileEntry*, const Transaction*> m_FEToTransaction;
+    llvm::DenseMap<const Transaction*, const clang::FileEntry*> m_TransactionToFE;
   public:
     enum SwitchMode {
       kOff = 0,
       kOn = 1,
       kToggle = 2
     };
-
     enum ActionResult {
       AR_Failure = 0,
       AR_Success = 1
     };
 
-  public:
     MetaSema(Interpreter& interp, MetaProcessor& meta);
 
     const Interpreter& getInterpreter() const { return m_Interpreter; }
     bool isQuitRequested() const { return m_IsQuitRequested; }
 
-    ///\brief L command includes the given file or loads the given library.
+    ///\brief L command includes the given file or loads the given library. If
+    /// \c file is empty print the list of library paths.
     ///
     ///\param[in] file - The file/library to be loaded.
     ///\param[out] transaction - Transaction containing the loaded file.
     ///
     ActionResult actOnLCommand(llvm::StringRef file,
-                               Transaction** transaction = 0);
+                               Transaction** transaction = nullptr);
 
     ///\brief O command sets the optimization level.
     ///
@@ -139,7 +135,8 @@ namespace cling {
     ActionResult actOnUCommand(llvm::StringRef file);
 
     ///\brief Actions to be performed on add include path. It registers new
-    /// folder where header files can be searched.
+    /// folder where header files can be searched. If \c path is empty print the
+    /// list of include paths.
     ///
     ///\param[in] path - The path to add to header search.
     ///
@@ -156,7 +153,7 @@ namespace cling {
     ///
     ///\param[in] mode - either on/off or toggle.
     ///
-    void actOndebugCommand(llvm::Optional<int> mode) const;
+    void actOndebugCommand(std::optional<int> mode) const;
 
     ///\brief Prints out the the Debug information of the state changes.
     ///
@@ -207,12 +204,10 @@ namespace cling {
     ///\brief Prints out class CINT-like style.
     ///
     ///\param[in] className - the specific class to be printed.
+    ///\param[in] verbose - set to true for more verbosity
+    ///\note if empty class name, all classes are printed
     ///
-    void actOnclassCommand(llvm::StringRef className) const;
-
-    ///\brief Prints out class CINT-like style more verbosely.
-    ///
-    void actOnClassCommand() const;
+    void actOnClassCommand(llvm::StringRef className, bool verbose) const;
 
     ///\brief Prints out namespace names.
     ///

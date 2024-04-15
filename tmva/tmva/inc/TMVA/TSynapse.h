@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::TSynapse                                                        *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Synapse class for use in derivatives of MethodANNBase                     *
@@ -18,7 +18,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSynapse
@@ -32,9 +32,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TString.h"
-#include "TFormula.h"
-
+#include "TObject.h"
 
 namespace TMVA {
 
@@ -90,13 +88,13 @@ namespace TMVA {
 
    private:
 
-      Double_t fWeight;            // weight of the synapse
-      Double_t fLearnRate;         // learning rate parameter
-      Double_t fDelta;             // local error field
-      Double_t fDEDw;              // sum of deltas
-      Int_t    fCount;             // number of updates contributing to error field
-      TNeuron* fPreNeuron;         // pointer to pre-neuron
-      TNeuron* fPostNeuron;        // pointer to post-neuron
+      Double_t fWeight;            ///< weight of the synapse
+      Double_t fLearnRate;         ///< learning rate parameter
+      Double_t fDelta;             ///< local error field
+      Double_t fDEDw;              ///< sum of deltas
+      Int_t    fCount;             ///< number of updates contributing to error field
+      TNeuron* fPreNeuron;         ///< pointer to pre-neuron
+      TNeuron* fPostNeuron;        ///< pointer to post-neuron
 
       MsgLogger& Log() const;
 

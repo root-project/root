@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DataInputHandler                                                      *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Contains all the data information                                         *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_DataInputHandler
@@ -39,7 +39,6 @@
 #include <vector>
 #include <map>
 #include <string>
-#include <fstream>
 
 #include "TTree.h"
 #include "TCut.h"
@@ -49,14 +48,14 @@
 namespace TMVA {
 
    class MsgLogger;
-   
+
    class TreeInfo:public TObject {
 
    public:
 
-      TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE ) 
+      TreeInfo( TTree* tr, const TString& className, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType, Bool_t own=kFALSE )
       : fTree(tr), fClassName(className), fWeight(weight), fTreeType(tt), fOwner(own) {}
-      TreeInfo():fTree(0),fClassName(""),fWeight(1.0), fTreeType(Types::kMaxTreeType), fOwner(kFALSE) {}
+      TreeInfo():fTree(nullptr),fClassName(""),fWeight(1.0), fTreeType(Types::kMaxTreeType), fOwner(kFALSE) {}
       ~TreeInfo() { if (fOwner) delete fTree; }
 
       TTree*           GetTree()      const { return fTree; }
@@ -67,13 +66,13 @@ namespace TMVA {
 
    private:
 
-      TTree*           fTree;     // pointer to the tree
-      TString          fClassName;// name of the class the tree belongs to
-      Double_t         fWeight;   // weight for the tree
-      Types::ETreeType fTreeType; // tree is for training/testing/both
-      Bool_t           fOwner;    // true if created from file
+      TTree*           fTree;      ///< pointer to the tree
+      TString          fClassName; ///< name of the class the tree belongs to
+      Double_t         fWeight;    ///< weight for the tree
+      Types::ETreeType fTreeType;  ///< tree is for training/testing/both
+      Bool_t           fOwner;     ///< true if created from file
    protected:
-       ClassDef(TreeInfo,1);      
+       ClassDef(TreeInfo,1);
    };
 
    class DataInputHandler :public TObject {
@@ -90,9 +89,9 @@ namespace TMVA {
       void     AddBackgroundTree( const TString& tr, Double_t weight=1.0, Types::ETreeType tt = Types::kMaxTreeType );
       void     AddInputTrees    ( TTree* inputTree, const TCut& SigCut, const TCut& BgCut);
 
-      void     AddTree          ( TTree* tree, const TString& className, Double_t weight=1.0, 
+      void     AddTree          ( TTree* tree, const TString& className, Double_t weight=1.0,
                                   const TCut& cut = "", Types::ETreeType tt = Types::kMaxTreeType );
-      void     AddTree          ( const TString& tr, const TString& className, Double_t weight=1.0, 
+      void     AddTree          ( const TString& tr, const TString& className, Double_t weight=1.0,
                                   const TCut& cut = "", Types::ETreeType tt = Types::kMaxTreeType );
 
       // accessors
@@ -126,10 +125,10 @@ namespace TMVA {
       UInt_t GetEntries(const std::vector<TreeInfo>& tiV) const;
 
       TTree * ReadInputTree( const TString& dataFile );
-      
-      mutable std::map< TString, std::vector<TreeInfo> > fInputTrees;        // list of input trees per class (classname is given as first parameter in the map)
-      std::map< std::string, Bool_t   >                  fExplicitTrainTest; // if set to true the user has specified training and testing data explicitly
-      mutable MsgLogger*                                 fLogger;            //! message logger
+
+      mutable std::map< TString, std::vector<TreeInfo> > fInputTrees;        ///< list of input trees per class (classname is given as first parameter in the map)
+      std::map< std::string, Bool_t   >                  fExplicitTrainTest; ///< if set to true the user has specified training and testing data explicitly
+      mutable MsgLogger*                                 fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    protected:
        ClassDef(DataInputHandler,1);

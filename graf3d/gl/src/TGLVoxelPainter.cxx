@@ -5,8 +5,7 @@
 #include "Buttons.h"
 #include "TString.h"
 #include "TROOT.h"
-#include "TClass.h"
-#include "TColor.h"
+#include "TList.h"
 #include "TStyle.h"
 #include "TH3.h"
 #include "TF1.h"
@@ -28,7 +27,7 @@ ClassImp(TGLVoxelPainter);
 
 TGLVoxelPainter::TGLVoxelPainter(TH1 *hist, TGLPlotCamera *cam, TGLPlotCoordinates *coord)
                   : TGLPlotPainter(hist, cam, coord, kFALSE, kFALSE, kFALSE),
-                    fTransferFunc(0)
+                    fTransferFunc(nullptr)
 {
    fDrawPalette = kTRUE;
 }
@@ -182,7 +181,7 @@ void TGLVoxelPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", ULong_t(this)));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%zx)->Paint()", (size_t)this));
       else
          Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
@@ -401,7 +400,7 @@ void TGLVoxelPainter::PreparePalette()const
             fLevels.push_back(level);
          }
          //sort levels
-         if (fLevels.size()) {
+         if (!fLevels.empty()) {
             std::sort(fLevels.begin(), fLevels.end());
             fLevels.push_back(fMinMaxVal.second);
             fLevels.insert(fLevels.begin(), fMinMaxVal.first);

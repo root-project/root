@@ -1,16 +1,17 @@
-cmake_minimum_required(VERSION 3.4.3)
+if(WIN32)
+  # We need cmake to support exporting of symbols not only from libraries but
+  # from executables too. This way cling can find symbols from its own
+  # executable during runtime.
+  cmake_minimum_required(VERSION 3.6.2)
+else(WIN32)
+  # support of earlier cmake versions will be removed soon
+  cmake_minimum_required(VERSION 3.5)
+endif(WIN32)
 
 # If we are not building as a part of LLVM, build Cling as an
 # standalone project, using LLVM as an external library:
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   project(Cling)
-
-  if(WIN32)
-    # We need cmake to support exporting of symbols not only from libraries but
-    # from executables too. This way cling can find symbols from its own
-    # executable during runtime.
-    cmake_minimum_required(VERSION 3.6.2)
-  endif(WIN32)
 
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -22,8 +23,7 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
       "--bindir"
       "--libdir"
       "--includedir"
-      "--prefix"
-      "--src-root")
+      "--prefix")
     execute_process(
       COMMAND ${CONFIG_COMMAND}
       RESULT_VARIABLE HAD_ERROR
@@ -47,7 +47,6 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   list(GET CONFIG_OUTPUT 2 LIBRARY_DIR)
   list(GET CONFIG_OUTPUT 3 INCLUDE_DIR)
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
-  list(GET CONFIG_OUTPUT 5 MAIN_SRC_DIR)
 
   if(NOT MSVC_IDE)
     set(LLVM_ENABLE_ASSERTIONS ${ENABLE_ASSERTIONS}
@@ -60,7 +59,6 @@ if( CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR )
   set(LLVM_LIBRARY_DIR ${LIBRARY_DIR} CACHE PATH "Path to llvm/lib")
   set(LLVM_MAIN_INCLUDE_DIR ${INCLUDE_DIR} CACHE PATH "Path to llvm/include")
   set(LLVM_BINARY_DIR ${LLVM_OBJ_ROOT} CACHE PATH "Path to LLVM build tree")
-  set(LLVM_MAIN_SRC_DIR ${MAIN_SRC_DIR} CACHE PATH "Path to LLVM source tree")
 
   find_program(LLVM_TABLEGEN_EXE "llvm-tblgen" ${LLVM_TOOLS_BINARY_DIR}
     NO_DEFAULT_PATH)
@@ -170,8 +168,31 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
 
   set( CLING_BUILT_STANDALONE 1 )
   set(BACKEND_PACKAGE_STRING "LLVM ${LLVM_PACKAGE_VERSION}")
+elseif(DEFINED CLING_ROOT_BUILD)
+  message(STATUS "Building Cling as part of ROOT")
+  # we do not need to include LLVMConfig again, already done
 else()
+  message(STATUS "Building Cling as part of LLVM")
   set(BACKEND_PACKAGE_STRING "${PACKAGE_STRING}")
+  # Try finding the LLVMConfig.cmake if we build against prebuilt LLVM
+  set(LLVM_CMAKE_PATH "${LLVM_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/llvm")
+  set(LLVMCONFIG_FILE "${LLVM_CMAKE_PATH}/LLVMConfig.cmake")
+  if(EXISTS ${LLVMCONFIG_FILE})
+    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_PATH}")
+    include(${LLVMCONFIG_FILE})
+  endif()
+  if (NOT CLANG_INCLUDE_DIRS)
+    set (CLANG_INCLUDE_DIRS "${LLVM_MAIN_SRC_DIR}/tools/clang/include")
+    if (NOT EXISTS ${CLANG_INCLUDE_DIRS})
+      # Otherwise assume the monorepo layout.
+      set (CLANG_INCLUDE_DIRS ${LLVM_MAIN_SRC_DIR}/../clang/include )
+    endif()
+    set (CLANG_INCLUDE_DIRS "${CLANG_INCLUDE_DIRS}"
+      "${LLVM_BINARY_DIR}/tools/clang/include")
+  endif()
+  if (NOT LLVM_INCLUDE_DIRS)
+    set (LLVM_INCLUDE_DIRS "${LLVM_MAIN_SRC_DIR}/include" "${LLVM_BINARY_DIR}/include")
+  endif()
 endif()
 
 if( NOT "NVPTX" IN_LIST LLVM_TARGETS_TO_BUILD)
@@ -181,6 +202,10 @@ endif()
 
 set(CLING_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(CLING_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
+set(LLVM_TOOLS_BINARY_DIR "${LLVM_BINARY_DIR}/bin")
+if(DEFINED CLING_ROOT_BUILD)
+  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${LLVM_TOOLS_BINARY_DIR}")
+endif()
 
 if( CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT MSVC_IDE )
   message(FATAL_ERROR "In-source builds are not allowed. CMake would overwrite "
@@ -235,7 +260,7 @@ if(CLING_ENABLE_WARNINGS AND NOT LLVM_ENABLE_WARNINGS AND (LLVM_COMPILER_IS_GCC_
   # Release() (PR32286).
   if (NOT CMAKE_COMPILER_IS_GNUCXX AND NOT WIN32)
     set(OLD_CMAKE_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++11 -Werror=non-virtual-dtor")
+    set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -std=c++14 -Werror=non-virtual-dtor")
     CHECK_CXX_SOURCE_COMPILES("class base {public: virtual void anchor();protected: ~base();};
                                class derived final : public base { public: ~derived();};
                                int main() { return 0; }"
@@ -275,16 +300,18 @@ if (LLVM_COMPILER_IS_GCC_COMPATIBLE)
   endforeach ()
 endif ()
 
-# Lots of cling is needed at runtime (e.g. Value, or Interpreter::Evaluate()).
-# The JIT needs to be able to resolve these symbols from cling; unhide them.
-string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 # The package needs to be compiler without RTTI information
 if(MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
-  if(NOT (MSVC_VERSION LESS 1910))
-    # Add the /std:c++14 flag for Visual Studio 2017 (and up)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -GR-")
+  if(NOT DEFINED CLING_ROOT_BUILD)
+    # Add the /std:c++XX flag for Visual Studio if not building as part of ROOT
+    if(MSVC_VERSION GREATER_EQUAL 1920)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++17")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING")
+    elseif(MSVC_VERSION GREATER_EQUAL 1910)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std:c++14")
+    endif()
   endif()
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
@@ -308,9 +335,12 @@ file (STRINGS "VERSION" CLING_VERSION)
 string(REGEX REPLACE "([0-9]).[0-9]+~[a-zA-Z]+" "\\1" CLING_VERSION_MAJOR ${CLING_VERSION})
 string(REGEX REPLACE "[0-9].([0-9]+)~[a-zA-Z]+" "\\1" CLING_VERSION_MINOR ${CLING_VERSION})
 
-if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT.
+if(DEFINED CLING_ROOT_BUILD)
+  # Building as part of ROOT; visibility is "inherited" from ROOT/interpreter.
   set(CLING_VERSION ROOT_${CLING_VERSION})
+else()
+  # Lots of cling is needed at runtime (e.g. Value, or Interpreter::Evaluate()).
+  # The JIT needs to be able to resolve these symbols from cling; unhide them.
   set(CMAKE_CXX_VISIBILITY_PRESET default)
   set(CMAKE_C_VISIBILITY_PRESET default)
   set(CMAKE_VISIBILITY_INLINES_HIDDEN "ON")
@@ -329,6 +359,8 @@ macro(set_cling_windows_version_resource_properties name)
       PRODUCT_NAME "cling")
   endif()
 endmacro()
+
+include_directories(BEFORE SYSTEM ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS})
 
 macro(add_cling_library name)
   cmake_parse_arguments(ARG
@@ -393,7 +425,8 @@ macro(add_cling_library name)
     endif()
   endif()
 
-  llvm_add_library(${name} ${ARG_ENABLE_SHARED} ${ARG_UNPARSED_ARGUMENTS} ${srcs})
+  # Set DISABLE_LLVM_LINK_LLVM_DYLIB to disable linking against shared LLVM
+  llvm_add_library(${name} ${ARG_ENABLE_SHARED} DISABLE_LLVM_LINK_LLVM_DYLIB ${ARG_UNPARSED_ARGUMENTS} ${srcs})
 
   if (MSVC AND cling_ex_file_match)
     # /EHs because cling_runtime_internal_throwIfInvalidPointer is extern “C”
@@ -447,28 +480,6 @@ endmacro(add_cling_executable)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-option(ROOT_CLASSIC "Building as part of the ROOT (classic)." OFF)
-
-if(DEFINED ROOT_BINARY_DIR)
-  # Building as part of ROOT (CMake)
-  include_directories(BEFORE
-    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
-    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
-    )
-elseif(ROOT_CLASSIC)
-  # Building as part of ROOT (classic)
-  include_directories(BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}/../llvm/obj/tools/clang/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
-    )
-else()
-  # and this when building Cling standalone:
-  include_directories(BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}/../clang/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../clang/include
-    )
-endif()
-
 include_directories(BEFORE
   ${CMAKE_CURRENT_BINARY_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -490,6 +501,7 @@ if (NOT LLVM_INSTALL_TOOLCHAIN_ONLY)
     PATTERN "CMakeFiles" EXCLUDE
     PATTERN "*.inc"
     PATTERN "*.h"
+    PATTERN "*.modulemap"
     )
 endif()
 
@@ -534,6 +546,7 @@ if (TARGET clang-headers)
   list(APPEND LLVM_COMMON_DEPENDS clang-headers)
 endif()
 
+add_subdirectory(include/cling/Interpreter)
 add_subdirectory(lib)
 
 if( CLING_INCLUDE_TESTS )
@@ -576,31 +589,4 @@ endif()
 set(CLING_ORDER_FILE "" CACHE FILEPATH
   "Order file to use when compiling cling in order to improve startup time.")
 
-if (CLING_BUILT_STANDALONE OR CMAKE_VERSION VERSION_EQUAL 3 OR
-    CMAKE_VERSION VERSION_GREATER 3)
-  # Generate a list of CMake library targets so that other CMake projects can
-  # link against them. LLVM calls its version of this file LLVMExports.cmake, but
-  # the usual CMake convention seems to be ${Project}Targets.cmake.
-  set(CLING_INSTALL_PACKAGE_DIR lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
-  set(cling_cmake_builddir "${CMAKE_BINARY_DIR}/${CLING_INSTALL_PACKAGE_DIR}")
-  get_property(CLING_EXPORTS GLOBAL PROPERTY CLING_EXPORTS)
-  export(TARGETS ${CLING_EXPORTS} FILE ${cling_cmake_builddir}/ClingTargets.cmake)
-
-  # Install a <prefix>/lib/cmake/cling/ClingConfig.cmake file so that
-  # find_package(Cling) works. Install the target list with it.
-  install(EXPORT ClingTargets DESTINATION ${CLING_INSTALL_PACKAGE_DIR})
-
-  install(FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClingConfig.cmake
-    DESTINATION lib${LLVM_LIBDIR_SUFFIX}/cmake/cling)
-
-  install(DIRECTORY tools/Jupyter/kernel DESTINATION share/cling/Jupyter)
-
-
-  # Also copy ClingConfig.cmake to the build directory so that dependent projects
-  # can build against a build directory of Cling more easily.
-  configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/ClingConfig.cmake
-    ${CLING_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX}/cmake/cling/ClingConfig.cmake
-    COPYONLY)
-endif ()
+add_subdirectory(cmake/modules)

@@ -228,7 +228,7 @@ void TEveSelection::RecheckImpliedSetForElement(TEveElement* el)
 
 void TEveSelection::SelectionAdded(TEveElement* el)
 {
-   Emit("SelectionAdded(TEveElement*)", (Long_t)el);
+   Emit("SelectionAdded(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -236,7 +236,7 @@ void TEveSelection::SelectionAdded(TEveElement* el)
 
 void TEveSelection::SelectionRemoved(TEveElement* el)
 {
-   Emit("SelectionRemoved(TEveElement*)", (Long_t)el);
+   Emit("SelectionRemoved(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ void TEveSelection::SelectionCleared()
 
 void TEveSelection::SelectionRepeated(TEveElement* el)
 {
-   Emit("SelectionRepeated(TEveElement*)", (Long_t)el);
+   Emit("SelectionRepeated(TEveElement*)", (Longptr_t)el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -282,8 +282,8 @@ void TEveSelection::DeactivateSelection()
 
 TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
 {
-   if (el == 0)
-      return 0;
+   if (el == nullptr)
+      return nullptr;
 
    if (el->ForwardSelection())
    {
@@ -294,7 +294,7 @@ TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
    {
       case kPS_Ignore:
       {
-         return 0;
+         return nullptr;
       }
       case kPS_Element:
       {
@@ -343,7 +343,7 @@ TEveElement* TEveSelection::MapPickedToSelected(TEveElement* el)
 
 void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
 {
-   TEveElement *edit_el = el ? el->ForwardEdit() : 0;
+   TEveElement *edit_el = el ? el->ForwardEdit() : nullptr;
 
    el = MapPickedToSelected(el);
 

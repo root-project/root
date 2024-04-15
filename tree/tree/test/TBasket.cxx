@@ -7,6 +7,7 @@
 #include "TMemFile.h"
 #include "TTree.h"
 
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 #include <vector>
@@ -62,7 +63,7 @@ TEST(TBasket, IOBits)
    ASSERT_NE(eIOBits, nullptr);
 
    Int_t supported = static_cast<Int_t>(TBasket::EIOBits::kSupported);
-   Bool_t foundSupported = false;
+   bool foundSupported = false;
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kSupported")) {
@@ -78,7 +79,7 @@ TEST(TBasket, IOBits)
    TEnum *eUnsupportedIOBits = (TEnum *)cl->GetListOfEnums()->FindObject("EUnsupportedIOBits");
    ASSERT_NE(eUnsupportedIOBits, nullptr);
    Int_t unsupported = static_cast<Int_t>(TBasket::EUnsupportedIOBits::kUnsupported);
-   Bool_t foundUnsupported = false;
+   bool foundUnsupported = false;
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eUnsupportedIOBits->GetConstants())) {
 
       if (!strcmp(constant->GetName(), "kUnsupported")) {
@@ -141,6 +142,10 @@ TEST(TBasket, CreateAndGetBasket)
 
 TEST(TBasket, TestUnsupportedIO)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TBasket::Streamer", "indicating this was written with a newer version of ROOT utilizing critical IO features this version of ROOT does not support", /*matchFullMessage=*/false);
+   diags.requiredDiag(kError, "TBranch::GetBasket", "File: tbasket_test.root at byte:", /*matchFullMessage=*/false);
+
    TMemFile *f;
    // Create a file; not using the CreateSampleFile helper as
    // we must corrupt the basket here.
@@ -164,7 +169,7 @@ TEST(TBasket, TestUnsupportedIO)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
 
@@ -249,7 +254,7 @@ TEST(TBasket, TestVarLengthArrays)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
    EXPECT_EQ(*ioBits, 0);
@@ -283,6 +288,9 @@ UChar_t GetFeatures(const ROOT::TIOFeatures &settings) {
 
 TEST(TBasket, TestSettingIOBits)
 {
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kError, "TestFeature", "A feature is being tested for that is not supported or known.");
+
    TMemFile *f;
    // Create a file; not using the CreateSampleFile helper as
    // we want to change around the IOBits
@@ -366,7 +374,7 @@ TEST(TBasket, TestSettingIOBits)
 
    TClass *cl = basket->IsA();
    ASSERT_NE(cl, nullptr);
-   Long_t offset = cl->GetDataMemberOffset("fIOBits");
+   Longptr_t offset = cl->GetDataMemberOffset("fIOBits");
    ASSERT_GT(offset, 0); // 0 can be returned on error
    UChar_t *ioBits = reinterpret_cast<UChar_t *>(reinterpret_cast<char *>(basket) + offset);
    EXPECT_EQ(*ioBits, static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
@@ -398,8 +406,8 @@ TEST(TBasket, TestSettingIOBits)
 
    offset = cl->GetDataMemberOffset("fReadEntryOffset");
    ASSERT_GT(offset, 0);
-   Bool_t *readEntryOffset = reinterpret_cast<Bool_t *>(reinterpret_cast<char *>(basket) + offset);
-   EXPECT_EQ(*readEntryOffset, kFALSE);
-   readEntryOffset = reinterpret_cast<Bool_t *>(reinterpret_cast<char *>(basket2) + offset);
-   EXPECT_EQ(*readEntryOffset, kTRUE);
+   bool *readEntryOffset = reinterpret_cast<bool *>(reinterpret_cast<char *>(basket) + offset);
+   EXPECT_EQ(*readEntryOffset, false);
+   readEntryOffset = reinterpret_cast<bool *>(reinterpret_cast<char *>(basket2) + offset);
+   EXPECT_EQ(*readEntryOffset, true);
 }

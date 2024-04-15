@@ -114,8 +114,8 @@ TEveCaloData::TEveCaloData(const char* n, const char* t):
    TEveElement(),
    TNamed(n, t),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
+   fEtaAxis(nullptr),
+   fPhiAxis(nullptr),
 
    fWrapTwoPi(kTRUE),
 
@@ -739,7 +739,7 @@ ClassImp(TEveCaloDataHist);
 TEveCaloDataHist::TEveCaloDataHist():
    TEveCaloData(),
 
-   fHStack(0)
+   fHStack(nullptr)
 {
    fHStack = new THStack();
    fEps    = 1e-5;

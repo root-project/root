@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DataSetInfo                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Contains all the data information                                         *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_DataSetInfo
@@ -36,6 +36,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <iosfwd>
+#include <vector>
+#include <map>
 
 #include "TObject.h"
 #include "TString.h"
@@ -75,22 +77,22 @@ namespace TMVA {
       // ---
       // the variable data
       // ---
-      VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "", 
-                                     Double_t min = 0, Double_t max = 0, char varType='F', 
-                                     Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "",
+                                     Double_t min = 0, Double_t max = 0, char varType='F',
+                                     Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddVariable( const VariableInfo& varInfo );
 
       // NEW: add an array of variables (e.g. for image data)
       void AddVariablesArray(const TString &expression, Int_t size, const TString &title = "", const TString &unit = "",
                              Double_t min = 0, Double_t max = 0, char type = 'F', Bool_t normalized = kTRUE,
-                             void *external = 0 );
+                             void *external = nullptr );
 
-      VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit, 
-                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit,
+                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddTarget  ( const VariableInfo& varInfo );
 
-      VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit, 
-                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = 0 );
+      VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit,
+                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddSpectator ( const VariableInfo& varInfo );
 
       ClassInfo*        AddClass   ( const TString& className );
@@ -103,7 +105,7 @@ namespace TMVA {
       VariableInfo&                    GetVariableInfo( Int_t i ) { return fVariables.at(i); }
       const VariableInfo&              GetVariableInfo( Int_t i ) const { return fVariables.at(i); }
 
-      Int_t GetVarArraySize(const TString &expression) const { 
+      Int_t GetVarArraySize(const TString &expression) const {
          auto element = fVarArrays.find(expression);
          return (element != fVarArrays.end()) ? element->second : -1;
        }
@@ -196,28 +198,29 @@ namespace TMVA {
       void                       SetDataSetManager( DataSetManager* dsm ) { fDataSetManager = dsm; } // DSMTEST
       friend class DataSetManager;  // DSMTEST (datasetmanager test)
 
-   DataSetInfo( const DataSetInfo& ) : TObject() {}
+      DataSetInfo(const DataSetInfo &) = delete;
+      DataSetInfo & operator= (const DataSetInfo &) = delete;
 
       void PrintCorrelationMatrix( TTree* theTree );
 
-      TString                    fName;              // name of the dataset info object
+      TString                    fName;              ///< name of the dataset info object
 
-      mutable DataSet*           fDataSet;           // dataset, owned by this datasetinfo object
-      mutable Bool_t             fNeedsRebuilding;   // flag if rebuilding of dataset is needed (after change of cuts, vars, etc.)
+      mutable DataSet*           fDataSet;           ///< dataset, owned by this datasetinfo object
+      mutable Bool_t             fNeedsRebuilding;   ///< flag if rebuilding of dataset is needed (after change of cuts, vars, etc.)
 
       // expressions/formulas
-      std::vector<VariableInfo>  fVariables;         // list of variable expressions/internal names
-      std::vector<VariableInfo>  fTargets;           // list of targets expressions/internal names
-      std::vector<VariableInfo>  fSpectators;        // list of spectators expressions/internal names
+      std::vector<VariableInfo>  fVariables;         ///< list of variable expressions/internal names
+      std::vector<VariableInfo>  fTargets;           ///< list of targets expressions/internal names
+      std::vector<VariableInfo>  fSpectators;        ///< list of spectators expressions/internal names
 
       // variable arrays
       std::map<TString, int> fVarArrays;
 
       // the classes
-      mutable std::vector<ClassInfo*> fClasses;      // name and other infos of the classes
+      mutable std::vector<ClassInfo*> fClasses;      ///< name and other infos of the classes
 
-      TString                    fNormalization;     //
-      TString                    fSplitOptions;      //
+      TString                    fNormalization;
+      TString                    fSplitOptions;
 
       Double_t                   fTrainingSumSignalWeights;
       Double_t                   fTrainingSumBackgrWeights;
@@ -225,19 +228,19 @@ namespace TMVA {
       Double_t                   fTestingSumBackgrWeights ;
 
 
-      
-      TDirectory*                fOwnRootDir;        // ROOT output dir
-      Bool_t                     fVerbose;           // Verbosity
 
-      UInt_t                     fSignalClass;       // index of the class with the name signal
+      TDirectory*                fOwnRootDir;        ///< ROOT output dir
+      Bool_t                     fVerbose;           ///< Verbosity
 
-      std::vector<Float_t>*      fTargetsForMulticlass;//-> all targets 0 except the one with index==classNumber
-      
-      mutable MsgLogger*         fLogger;            //! message logger
+      UInt_t                     fSignalClass;       ///< index of the class with the name signal
+
+      std::vector<Float_t>*      fTargetsForMulticlass;///<-> all targets 0 except the one with index==classNumber
+
+      mutable MsgLogger*         fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    public:
-       
+
        ClassDef(DataSetInfo,1);
    };
 }

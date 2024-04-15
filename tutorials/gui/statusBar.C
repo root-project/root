@@ -35,13 +35,13 @@ private:
 
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~MyMainFrame();
+   ~MyMainFrame() override;
    void DoExit();
    void DoDraw();
    void SetStatusText(const char *txt, Int_t pi);
    void EventInfo(Int_t event, Int_t px, Int_t py, TObject *selected);
 
-   ClassDef(MyMainFrame, 0)
+   ClassDefOverride(MyMainFrame, 0)
 };
 
 void MyMainFrame::DoDraw()
@@ -113,7 +113,7 @@ MyMainFrame::MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h) :
    TGMainFrame(p, w, h)
 {
    // Create the embedded canvas
-   fEcan = new TRootEmbeddedCanvas(0,this,500,400);
+   fEcan = new TRootEmbeddedCanvas(nullptr,this,500,400);
    Int_t wid = fEcan->GetCanvasWindowId();
    TCanvas *myc = new TCanvas("MyCanvas", 10,10,wid);
    fEcan->AdoptCanvas(myc);

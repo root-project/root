@@ -20,6 +20,11 @@
 
 #undef R__DLLEXPORT
 
+#ifdef __FreeBSD__
+char*  __progname;
+char** environ;
+#endif
+
 #include "TROOT.h"
 #include "TCling.h"
 

@@ -14,15 +14,19 @@
 //    stressGraphics
 //
 // To get a short help:
+//
 //    stressGraphics -h
 //
-// To run interactively, do
-// root
-//  Root > .L stressGraphics.cxx
-//  Root > stressGraphics()
-
-
-#ifndef __CINT__
+// To run interactively, do:
+//
+//    root -b
+//    root [0] .L stressGraphics.cxx
+//    root [1] stressGraphics()
+//
+// or:
+//
+//    root -b
+//    root [0] .x  stressGraphics.cxx
 
 #include <stdlib.h>
 #include <Riostream.h>
@@ -145,7 +149,6 @@ void     patterns_box   (Int_t pat, Double_t x1, Double_t y1, Double_t x2, Doubl
 Double_t interference   (Double_t *x, Double_t *par);
 Double_t result         (Double_t *x, Double_t *par);
 void     cleanup        ();
-#endif
 
 // Global variables.
 Int_t     gVerbose;
@@ -155,8 +158,6 @@ Int_t     gPS1RefNb[60];
 Int_t     gPS1ErrNb[60];
 Int_t     gPDFRefNb[60];
 Int_t     gPDFErrNb[60];
-Int_t     gGIFRefNb[60];
-Int_t     gGIFErrNb[60];
 Int_t     gJPGRefNb[60];
 Int_t     gJPGErrNb[60];
 Int_t     gPNGRefNb[60];
@@ -168,12 +169,15 @@ Bool_t    gOptionK;
 TH2F     *gH2;
 TFile    *gHsimple;
 TFile    *gCernstaff;
-char      gCfile[16];
-char      outfile[16];
-char      gLine[80];
+constexpr std::size_t gCfileSize = 16;
+constexpr std::size_t outfileSize = 16;
+constexpr std::size_t gLineSize = 80;
+char      gCfile[gCfileSize];
+char      outfile[outfileSize];
+char      gLine[gLineSize];
 
 
-#ifndef __CINT__
+#ifndef __CLING__
 ////////////////////////////////////////////////////////////////////////////////
 
 int main(int argc, char *argv[])
@@ -297,14 +301,12 @@ void stressGraphics(Int_t verbose = 0)
          sscanf(&line[18] ,"%d",&gPS1ErrNb[i]);
          sscanf(&line[28] ,"%d",&gPDFRefNb[i]);
          sscanf(&line[38] ,"%d",&gPDFErrNb[i]);
-         sscanf(&line[48] ,"%d",&gGIFRefNb[i]);
-         sscanf(&line[58] ,"%d",&gGIFErrNb[i]);
-         sscanf(&line[68] ,"%d",&gJPGRefNb[i]);
-         sscanf(&line[78] ,"%d",&gJPGErrNb[i]);
-         sscanf(&line[88] ,"%d",&gPNGRefNb[i]);
-         sscanf(&line[98] ,"%d",&gPNGErrNb[i]);
-         sscanf(&line[107],"%d",&gPS2RefNb[i]);
-         sscanf(&line[118],"%d",&gPS2ErrNb[i]);
+         sscanf(&line[48] ,"%d",&gJPGRefNb[i]);
+         sscanf(&line[58] ,"%d",&gJPGErrNb[i]);
+         sscanf(&line[68] ,"%d",&gPNGRefNb[i]);
+         sscanf(&line[78] ,"%d",&gPNGErrNb[i]);
+         sscanf(&line[87] ,"%d",&gPS2RefNb[i]);
+         sscanf(&line[98] ,"%d",&gPS2ErrNb[i]);
       }
       i++;
    }
@@ -313,7 +315,7 @@ void stressGraphics(Int_t verbose = 0)
    gRandom->SetSeed(65539);
 
    if (gOptionR) {
-      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   GIFRef#   GIFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
+      std::cout << "Test#   PS1Ref#   PS1Err#   PDFRef#   PDFErr#   JPGRef#   JPGErr#   PNGRef#   PNGErr#   PS2Ref#   PS2Err#" <<std::endl;
    } else {
       std::cout << "**********************************************************************" <<std::endl;
       std::cout << "*  Starting  Graphics - S T R E S S suite                            *" <<std::endl;
@@ -413,10 +415,6 @@ void stressGraphics(Int_t verbose = 0)
          TString sp = gSystem->GetFromPipe("uname -a");
          sp.Resize(60);
          printf("*  SYS: %s\n",sp.Data());
-         if (strstr(gSystem->GetBuildNode(),"Linux")) {
-            sp = gSystem->GetFromPipe("lsb_release -d -s");
-            printf("*  SYS: %s\n",sp.Data());
-         }
          if (strstr(gSystem->GetBuildNode(),"Darwin")) {
             sp  = gSystem->GetFromPipe("sw_vers -productVersion");
             sp += " Mac OS X ";
@@ -452,9 +450,9 @@ Int_t StatusPrint(TString &filename, Int_t id, const TString &title,
 {
    if (!gOptionR) {
       if (id>0) {
-         sprintf(gLine,"Test %2d: %s",id,title.Data());
+         snprintf(gLine, gLineSize, "Test %2d: %s",id,title.Data());
       } else {
-         sprintf(gLine,"       %s",title.Data());
+         snprintf(gLine, gLineSize, "       %s",title.Data());
       }
 
       const Int_t nch = strlen(gLine);
@@ -512,24 +510,18 @@ Int_t AnalysePS(const TString &filename)
    Bool_t counting = kFALSE;
    Int_t count = 0;
 
-   FILE *fp;
-   Int_t status;
-   if ((fp=fopen(filename.Data(), "r"))==NULL) {
+   TString line;
+   std::ifstream in(filename.Data());
+   if (!in.is_open()) {
       printf("ERROR1 : File can not open !..\n");
       return 0;
    }
-
-   char *line = new char[251];
-   TString l;
-   while((status=fscanf(fp, "%s", line)) != EOF) {
-      l = line;
-      if (l.Contains("%!PS-Adobe"))  counting = kFALSE;
-      if (l.Contains("%%EndProlog")) counting = kTRUE;
-      if (counting) count = count+l.Length();
+   while (in >> line) {
+      if (line.Contains("%!PS-Adobe"))  counting = kFALSE;
+      if (line.Contains("%%EndProlog")) counting = kTRUE;
+      if (counting) count = count+line.Length();
    }
    if (gVerbose==1) printf(">>>>>>>>> Number of characters found in %s: %d\n",filename.Data(),count);
-   fclose(fp);
-   delete [] line;
    return count;
 }
 
@@ -559,7 +551,7 @@ TCanvas *StartTest(Int_t w, Int_t h)
 void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
 {
    gErrorIgnoreLevel = 9999;
-   sprintf(outfile,"sg1_%2.2d.ps",gTestNum);
+   snprintf(outfile, outfileSize, "sg1_%2.2d.ps",gTestNum);
 
    TPostScript *ps1 = new TPostScript(outfile, 111);
    C->Draw();
@@ -575,7 +567,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                             gPS1ErrNb[gTestNum-1]);
    }
 
-   sprintf(outfile,"sg%2.2d.pdf",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.pdf",gTestNum);
    C->cd(0);
    TPDF *pdf = new TPDF(outfile,111);
    C->Draw();
@@ -585,15 +577,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gPDFRefNb[gTestNum-1],
                                            gPDFErrNb[gTestNum-1]);
 
-   sprintf(outfile,"sg%2.2d.gif",gTestNum);
-   C->cd(0);
-   C->SaveAs(outfile);
-   TString giffile = outfile;
-   StatusPrint(giffile, 0, "  GIF output", FileSize(outfile),
-                                           gGIFRefNb[gTestNum-1],
-                                           gGIFErrNb[gTestNum-1]);
-
-   sprintf(outfile,"sg%2.2d.jpg",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.jpg",gTestNum);
    C->cd(0);
    C->SaveAs(outfile);
    TString jpgfile = outfile;
@@ -601,7 +585,7 @@ void TestReport1(TCanvas *C, const TString &title, Int_t IPS)
                                            gJPGRefNb[gTestNum-1],
                                            gJPGErrNb[gTestNum-1]);
 
-   sprintf(outfile,"sg%2.2d.png",gTestNum);
+   snprintf(outfile, outfileSize, "sg%2.2d.png",gTestNum);
    C->cd(0);
    C->SaveAs(outfile);
    TString pngfile = outfile;
@@ -622,7 +606,7 @@ void DoCcode(TCanvas *C)
 {
    gErrorIgnoreLevel = 9999;
 
-   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
 
    if (C) {
       C->SaveAs(gCfile);
@@ -643,10 +627,10 @@ void DoCcode(TCanvas *C)
 
 void TestReport2(Int_t IPS)
 {
-   sprintf(outfile,"sg2_%2.2d.ps",gTestNum);
+   snprintf(outfile, outfileSize, "sg2_%2.2d.ps",gTestNum);
 
    gErrorIgnoreLevel = 9999;
-   sprintf(gCfile,".x sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, ".x sg%2.2d.C",gTestNum);
    gROOT->ProcessLine(gCfile);
    gPad->SaveAs(outfile);
    gErrorIgnoreLevel = 0;
@@ -663,7 +647,7 @@ void TestReport2(Int_t IPS)
                                                     gPS2ErrNb[gTestNum-1]);
    }
 
-   sprintf(gCfile,"sg%2.2d.C",gTestNum);
+   snprintf(gCfile, gCfileSize, "sg%2.2d.C",gTestNum);
 #ifndef ClingWorkAroundDeletedSourceFile
    if (!gOptionK && !i) gSystem->Unlink(gCfile);
 #endif
@@ -1532,22 +1516,22 @@ void tgaxis5()
 
    double f = 1.8;
 
-   TLatex* tex1 = new TLatex;
-   tex1->SetNDC();
-   tex1->SetTextFont(102);
-   tex1->SetTextSize(0.07*f);
+   TLatex tex1;
+   tex1.SetNDC();
+   tex1.SetTextFont(102);
+   tex1.SetTextSize(0.07*f);
 
-   TLatex* tex3 = new TLatex;
-   tex3->SetNDC();
-   tex3->SetTextFont(102);
-   tex3->SetTextSize(0.07*f);
-   tex3->SetTextColor(kBlue+2);
+   TLatex tex3;
+   tex3.SetNDC();
+   tex3.SetTextFont(102);
+   tex3.SetTextSize(0.07*f);
+   tex3.SetTextColor(kBlue+2);
 
-   TLatex* tex2 = new TLatex;
-   tex2->SetNDC();
-   tex2->SetTextFont(102);
-   tex2->SetTextSize(0.07*f);
-   tex2->SetTextColor(kOrange+3);
+   TLatex tex2;
+   tex2.SetNDC();
+   tex2.SetTextFont(102);
+   tex2.SetTextSize(0.07*f);
+   tex2.SetTextColor(kOrange+3);
 
    time_t offset[] = {0,                   0, 1325376000, 1341100800};
    time_t t[]      = {1331150400, 1336417200,          0, 36000};
@@ -1584,22 +1568,23 @@ void tgaxis5()
          a.SetTimeOffset(offset[i], opt);
          const char* offsettimeformat = a.GetTimeFormat();
 
-         char buf[256];
+         constexpr std::size_t bufSize = 256;
+         char buf[bufSize];
          if (offset[i] < t[i]) {
-            sprintf(buf, "#splitline{%s, %s}{offset: %ld, option %s}",
+            snprintf(buf, bufSize, "#splitline{%s, %s}{offset: %ld, option %s}",
                     stime(t+i).Data(), stime(t+i, true).Data(), (long) offset[i], opt);
          } else {
             int h = t[i] / 3600;
             int m = (t[i] - 3600 * h) / 60 ;
             int s = (t[i] - h * 3600 - m * 60);
-            sprintf(buf, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
+            snprintf(buf, bufSize, "#splitline{%d h %d m %d s}{offset: %s, option %s}",
                     h, m, s, stime(offset + i, gmt).Data(), opt);
          }
-         tex1->DrawLatex(.01, .75, buf);
-         tex2->DrawLatex(.01, .50, offsettimeformat);
+         tex1.DrawLatex(.01, .75, buf);
+         tex2.DrawLatex(.01, .50, offsettimeformat);
          time_t t_ = t[i] + offset[i];
-         sprintf(buf, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
-         tex3->DrawLatex(.01, .24, buf);
+         snprintf(buf, bufSize, "Expecting:    #color[2]{%s}", stime(&t_, gmt, false).Data());
+         tex3.DrawLatex(.01, .24, buf);
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
@@ -2006,7 +1991,7 @@ void th2poly()
    TH2Poly *p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
    gErrorIgnoreLevel = 9999;
    TFile::SetCacheFileDir(".");
-   TFile *f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
+   TFile *f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
 
    if (!f) {
       printf("Cannot access usa.root. Is internet working ?\n");
@@ -2217,7 +2202,7 @@ void options2d1()
    C->Divide(2,2);
    C->SetFillColor(17);
    C->cd(1);
-   gH2->Draw();       pl1.DrawPaveLabel(x1,y1,x2,y2,"SCAT","brNDC");
+   gH2->Draw("text"); pl1.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
    C->cd(2);
    gH2->Draw("box");  pl1.DrawPaveLabel(x1,y1,x2,y2,"BOX","brNDC");
    C->cd(3);
@@ -2977,19 +2962,19 @@ void waves()
    finter->SetContour(colNum-2);
    finter->Draw("samecolorz");
 
-   TArc *arc = new TArc();;
-   arc->SetFillStyle(0);
-   arc->SetLineWidth(2);
-   arc->SetLineColor(5);
+   TArc arc;
+   arc.SetFillStyle(0);
+   arc.SetLineWidth(2);
+   arc.SetLineColor(5);
    Float_t r = 0.5 * lambda, dr = lambda;
-      for (Int_t i = 0; i < 15; i++) {
-      arc->DrawArc(0,  0.5*d, r, 0., 360., "only");
-      arc->DrawArc(0, -0.5*d, r, 0., 360., "only");
+   for (Int_t i = 0; i < 15; i++) {
+      arc.DrawArc(0,  0.5*d, r, 0., 360., "only");
+      arc.DrawArc(0, -0.5*d, r, 0., 360., "only");
       r += dr;
    }
 
-   pad ->cd();
-   TF2 * fresult = new TF2("result",result, 14, 15, -10, 10, 4);
+   pad->cd();
+   TF2 *fresult = new TF2("result",result, 14, 15, -10, 10, 4);
 
    fresult->SetParameters(amp, lambda, d, 1);
    fresult->SetNpx(300);

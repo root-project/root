@@ -2,17 +2,18 @@
 /// \ingroup tutorial_roofit
 /// \notebook -js
 /// Multidimensional models: working with parametrized ranges in a fit.
-///
 /// This an example of a fit with an acceptance that changes per-event
 ///
-///   pdf = exp(-t/tau) with t[tmin,5]
+/// `pdf = exp(-t/tau)` with `t[tmin,5]`
 ///
-/// where t and tmin are both observables in the dataset
+/// where `t` and `tmin` are both observables in the dataset
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -47,18 +48,18 @@ void rf314_paramfitrange()
    // ------------------------------------
 
    // Generate complete dataset without acceptance cuts (for reference)
-   RooDataSet *dall = model.generate(t, 10000);
+   std::unique_ptr<RooDataSet> dall{model.generate(t, 10000)};
 
    // Generate a (fake) prototype dataset for acceptance limit values
-   RooDataSet *tmp = RooGaussian("gmin", "gmin", tmin, RooConst(0), RooConst(0.5)).generate(tmin, 5000);
+   std::unique_ptr<RooDataSet> tmp{RooGaussian("gmin", "gmin", tmin, 0.0, 0.5).generate(tmin, 5000)};
 
    // Generate dataset with t values that observe (t>tmin)
-   RooDataSet *dacc = model.generate(t, ProtoData(*tmp));
+   std::unique_ptr<RooDataSet> dacc{model.generate(t, ProtoData(*tmp))};
 
    // F i t   p d f   t o   d a t a   i n   a c c e p t a n c e   r e g i o n
    // -----------------------------------------------------------------------
 
-   RooFitResult *r = model.fitTo(*dacc, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*dacc, Save(), PrintLevel(-1))};
 
    // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a
    // ---------------------------------------------------------------------------------

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodCompositeBase                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Virtual base class for all MVA method                                     *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodCategory
@@ -88,15 +88,22 @@ namespace TMVA {
       void AddWeightsXMLTo( void* parent ) const;
       void ReadWeightsFromXML( void* wghtnode );
 
-      Double_t GetMvaValue( Double_t* err=0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // regression response
       virtual const std::vector<Float_t>& GetRegressionValues();
 
+      // multi class response
+      virtual const std::vector<Float_t> &GetMulticlassValues();
+
       virtual void MakeClass( const TString& = TString("") ) const {};
 
-   private :
+   protected :
 
+      // signal/background classification response for all current set of data
+      virtual std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
+
+   private:
       // initializing mostly monitoring tools of the category process
       void Init();
 

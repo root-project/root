@@ -12,7 +12,7 @@
 extern "C" int printf(const char*,...);
 
 class TestDecl { public: int methodDefLater(); } t
-// CHECK: (class TestDecl &) @0x{{.*}}
+// CHECK: (TestDecl &) @0x{{.*}}
 int TestDecl::methodDefLater() { return 2; }
 t.methodDefLater()
 // CHECK: (int) 2
@@ -59,6 +59,89 @@ localFun(0)
 localFun(5, 6, 7)
 // CHECK: localFun(5, 6, 7)
 // CHECK: (int) 3
+
+
+unsigned uFun(int a) {
+  printf("uFun(%d)\n", a);
+  return 7;
+}
+
+unsigned int uiFun(int a, int b) {
+  printf("uiFun(%d, %d)\n", a, b);
+  return 9;
+}
+
+uFun(6)
+// CHECK: uFun(6)
+// CHECK: (unsigned int) 7
+
+uiFun(7, 8)
+// CHECK: uiFun(7, 8)
+// CHECK: (unsigned int) 9
+
+
+static unsigned suFun(int a) {
+  printf("suFun(%d)\n", a);
+  return 11;
+}
+
+static unsigned int suiFun(int a, int b) {
+  printf("suiFun(%d, %d)\n", a, b);
+  return 13;
+}
+
+suFun(10)
+// CHECK: suFun(10)
+// CHECK: (unsigned int) 11
+
+suiFun(11, 12)
+// CHECK: suiFun(11, 12)
+// CHECK: (unsigned int) 13
+
+long lFun(int a) {
+  printf("lFun(%d)\n", a);
+  return 15;
+}
+
+long int liFun(int a, int b) {
+  printf("liFun(%d, %d)\n", a, b);
+  return 17;
+}
+
+lFun(13)
+// CHECK: lFun(13)
+// CHECK: (long) 15
+
+liFun(14, 15)
+// CHECK: liFun(14, 15)
+// CHECK: (long) 17
+
+
+static long slFun(int a) {
+  printf("slFun(%d)\n", a);
+  return 19;
+}
+
+static long int sliFun(int a, int b) {
+  printf("sliFun(%d, %d)\n", a, b);
+  return 21;
+}
+
+slFun(16)
+// CHECK: slFun(16)
+// CHECK: (long) 19
+
+sliFun(17, 18)
+// CHECK: sliFun(17, 18)
+// CHECK: (long) 21
+
+long double ldFun(long double x) {
+  return x * x;
+}
+
+ldFun(2.0)
+// CHECK: (long double) 4.0
+
   
 class Test {
 public:
@@ -177,11 +260,11 @@ Nest2.simpleAdd(3)
 class Test2 classReturn() { return Test2(10, 11); }
 classReturn()
 // CHECK: Test2::Test2(10,11)
-// CHECK: (class Test2) @0x{{.*}}
+// CHECK: (Test2) @0x{{.*}}
 
 class Test2* classReturnPtr() { return nullptr; }
 classReturnPtr()
-// CHECK: (class Test2 *) nullptr
+// CHECK: (Test2 *) nullptr
 
 int Ref = 42;
 const int& cIntRef(const int &val) {

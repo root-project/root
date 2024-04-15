@@ -30,10 +30,11 @@ ClassImp(ROOT::Internal::TBranchProxyClassDescriptor);
 namespace ROOT {
 namespace Internal {
 
-   void TBranchProxyClassDescriptor::NameToSymbol() {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Make the typename a proper class name without having the really deal with
+   /// namespace and templates.
 
-      // Make the typename a proper class name without having the really deal with
-      // namespace and templates.
+   void TBranchProxyClassDescriptor::NameToSymbol() {
 
       fRawSymbol = TClassEdit::ShortType(GetName(),2); // Drop default allocator from the name.
       fRawSymbol.ReplaceAll(":","_");
@@ -55,6 +56,9 @@ namespace Internal {
       SetName(fRawSymbol);
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Constructor.
+
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type,
                                                             TVirtualStreamerInfo *info,
                                                             const char *branchname,
@@ -71,12 +75,13 @@ namespace Internal {
       fInfo(info),
       fMaxDatamemberType(3)
    {
-      // Constructor.
-
       R__ASSERT( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Constructor for a branch constructed from a leaf list.
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *branchname) :
       TNamed(branchname,branchname),
@@ -86,14 +91,15 @@ namespace Internal {
       fSplitLevel(0),
       fBranchName(branchname),
       fSubBranchPrefix(branchname),
-      fInfo(0),
+      fInfo(nullptr),
       fMaxDatamemberType(3)
    {
-      // Constructor for a branch constructed from a leaf list.
-
       NameToSymbol();
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Constructor.
 
    TBranchProxyClassDescriptor::TBranchProxyClassDescriptor(const char *type, TVirtualStreamerInfo *info,
                                                             const char *branchname,
@@ -110,70 +116,76 @@ namespace Internal {
       fInfo(info),
       fMaxDatamemberType(3)
    {
-      // Constructor.
-
       R__ASSERT( strcmp(fInfo->GetName(), type)==0 );
       NameToSymbol();
       if (fSubBranchPrefix.Length() && fSubBranchPrefix[fSubBranchPrefix.Length()-1]=='.') fSubBranchPrefix.Remove(fSubBranchPrefix.Length()-1);
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the branch name
+
    const char* TBranchProxyClassDescriptor::GetBranchName() const
    {
-      // Get the branch name
       return fBranchName.Data();
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the prefix from the branch name
+
    const char* TBranchProxyClassDescriptor::GetSubBranchPrefix() const
    {
-      // Get the prefix from the branch name
       return fSubBranchPrefix.Data();
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Get the real symbol name
+
    const char* TBranchProxyClassDescriptor::GetRawSymbol() const
    {
-      // Get the real symbol name
-
       return fRawSymbol;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return the split level of the branch.
+
    UInt_t TBranchProxyClassDescriptor::GetSplitLevel() const {
-      // Return the split level of the branch.
       return fSplitLevel;
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other)
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if this description is the 'same' as the other decription.
+
+   bool TBranchProxyClassDescriptor::IsEquivalent(const TBranchProxyClassDescriptor* other)
    {
-      // Return true if this description is the 'same' as the other decription.
-
-      if ( !other ) return kFALSE;
+      if ( !other ) return false;
       // Purposely do not test on the name!
-      if ( strcmp(GetTitle(),other->GetTitle()) ) return kFALSE;
-      // if ( fBranchName != other->fBranchName ) return kFALSE;
-      // if ( fSubBranchPrefix != other->fSubBranchPrefix ) return kFALSE;
+      if ( strcmp(GetTitle(),other->GetTitle()) ) return false;
+      // if ( fBranchName != other->fBranchName ) return false;
+      // if ( fSubBranchPrefix != other->fSubBranchPrefix ) return false;
 
-      if (fIsClones != other->fIsClones) return kFALSE;
+      if (fIsClones != other->fIsClones) return false;
       if (fIsClones != kOut) {
-         if (fContainerName != other->fContainerName) return kFALSE;
+         if (fContainerName != other->fContainerName) return false;
       }
 
       TBranchProxyDescriptor *desc;
       TBranchProxyDescriptor *othdesc;
 
-      if ( fListOfBaseProxies.GetSize() != other->fListOfBaseProxies.GetSize() ) return kFALSE;
+      if ( fListOfBaseProxies.GetSize() != other->fListOfBaseProxies.GetSize() ) return false;
       TIter next(&fListOfBaseProxies);
       TIter othnext(&other->fListOfBaseProxies);
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEquivalent(othdesc,kTRUE) ) return kFALSE;
+         if (!desc->IsEquivalent(othdesc,true) ) return false;
       }
 
-      if ( fListOfSubProxies.GetSize() != other->fListOfSubProxies.GetSize() ) return kFALSE;
+      if ( fListOfSubProxies.GetSize() != other->fListOfSubProxies.GetSize() ) return false;
       next = &fListOfSubProxies;
       othnext = &(other->fListOfSubProxies);
 
       while ( (desc=(TBranchProxyDescriptor*)next()) ) {
          othdesc=(TBranchProxyDescriptor*)othnext();
-         if (!desc->IsEquivalent(othdesc,kTRUE)) return kFALSE;
+         if (!desc->IsEquivalent(othdesc,true)) return false;
          if (desc->IsSplit()) {
             TString leftname (  desc->GetBranchName() );
             TString rightname(  othdesc->GetBranchName() );
@@ -182,16 +194,17 @@ namespace Internal {
             if (leftname.Length() && leftname[0]=='.') leftname.Remove(0,1);
             if (rightname.Index(other->GetBranchName())==0) rightname.Remove(0,strlen(other->GetBranchName()));
             if (rightname.Length() && rightname[0]=='.') rightname.Remove(0,1);
-            if (leftname != rightname ) return kFALSE;
+            if (leftname != rightname ) return false;
          }
       }
       return true;
    }
 
-   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, Bool_t isBase)
-   {
-      // Add a descriptor to this proxy.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Add a descriptor to this proxy.
 
+   void TBranchProxyClassDescriptor::AddDescriptor(TBranchProxyDescriptor *desc, bool isBase)
+   {
       if (desc) {
          if (isBase) {
             fListOfBaseProxies.Add(desc);
@@ -203,53 +216,66 @@ namespace Internal {
       }
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsLoaded() const
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if the class needed by the branch is loaded
+
+   bool TBranchProxyClassDescriptor::IsLoaded() const
    {
-      // Return true if the class needed by the branch is loaded
       return IsLoaded(GetTitle());
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsLoaded(const char *classname)
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if the class needed by the branch is loaded
+
+   bool TBranchProxyClassDescriptor::IsLoaded(const char *classname)
    {
-      // Return true if the class needed by the branch is loaded
       TClass *cl = TClass::GetClass(classname);
       while (cl) {
-         if (cl->IsLoaded()) return kTRUE;
-         if (!cl->GetCollectionProxy()) return kFALSE;
-         if (!cl->GetCollectionProxy()->GetValueClass()) return kTRUE; // stl container of simple type are always 'loaded'
+         if (cl->IsLoaded()) return true;
+         if (!cl->GetCollectionProxy()) return false;
+         if (!cl->GetCollectionProxy()->GetValueClass()) return true; // stl container of simple type are always 'loaded'
          cl = cl->GetCollectionProxy()->GetValueClass();
       }
-      return kFALSE;
+      return false;
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsClones() const
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if this proxy is for a TClonesArray.
+
+   bool TBranchProxyClassDescriptor::IsClones() const
    {
-      // Return true if this proxy is for a TClonesArray.
       return fIsClones==kClones || fIsClones==kInsideClones;
    }
 
-   Bool_t TBranchProxyClassDescriptor::IsSTL() const
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return true if this proxy is for a TClonesArray.
+
+   bool TBranchProxyClassDescriptor::IsSTL() const
    {
-      // Return true if this proxy is for a TClonesArray.
       return fIsClones==kSTL || fIsClones==kInsideSTL;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return whether the branch is inside, nested in or outside of a TClonesArray
+
    TBranchProxyClassDescriptor::ELocation TBranchProxyClassDescriptor::GetIsClones() const
    {
-      // Return whether the branch is inside, nested in or outside of a TClonesArray
       return fIsClones;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return the name of the container holding this class, if any.
+
    TString TBranchProxyClassDescriptor::GetContainerName() const
    {
-      // Return the name of the container holding this class, if any.
       return fContainerName;
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Output the declaration and implementation of this emulation class
+
    void TBranchProxyClassDescriptor::OutputDecl(FILE *hf, int offset, UInt_t /* maxVarname */)
    {
-      // Output the declaration and implementation of this emulation class
-
       TBranchProxyDescriptor *desc;
 
 
@@ -277,7 +303,7 @@ namespace Internal {
       fprintf(hf,"%-*s   %s(TBranchProxyDirector* director,const char *top,const char *mid=0) :",
               offset," ", GetName());
 
-      Bool_t wroteFirst = kFALSE;
+      bool wroteFirst = false;
 
       if (fListOfBaseProxies.GetSize()) {
 
@@ -334,7 +360,7 @@ namespace Internal {
       fprintf(hf,"%-*s   %s(TBranchProxyDirector* director, TBranchProxy *parent, const char *membername, const char *top=0, const char *mid=0) :",
               offset," ", GetName());
 
-      wroteFirst = kFALSE;
+      wroteFirst = false;
 
       if (fListOfBaseProxies.GetSize()) {
 

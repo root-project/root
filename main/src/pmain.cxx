@@ -34,6 +34,7 @@
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "strlcpy.h"
 
 
 static Int_t gLogLevel = 0;
@@ -66,8 +67,8 @@ static void ReadPutEnvs(const char *envfile)
       if (!strchr(ln, '=')) continue;
       // Good line
       char *ev = new char[l+1];
-      strcpy(ev, ln);
-      putenv(ev);
+      strlcpy(ev, ln, l+1);
+      putenv(ev); // NOLINT: do not release memory in ev, will be used by environment variable
    }
 
    // Close the file

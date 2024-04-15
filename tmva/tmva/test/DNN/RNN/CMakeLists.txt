@@ -9,15 +9,11 @@
 # @author Saurav Shekhar
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
 
-set(Libraries Core MathCore Matrix TMVA)
+set(Libraries TMVA)
 
-if (CUDA_FOUND AND  tmva-gpu)
-include_directories(${ROOT_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS})
-else()
-include_directories(${ROOT_INCLUDE_DIRS})
+if (tmva-gpu)
+  list(APPEND Libraries CUDA::cuda_driver CUDA::cudart)
 endif()
 
 #---Reference test
@@ -28,10 +24,6 @@ if (Test_Reference)
 ROOT_EXECUTABLE(testRecurrentBackpropagation TestRecurrentBackpropagation.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-RNN-Backpropagation COMMAND testRecurrentBackpropagation)
 #
-## RNN - Initialization Reference
-#ROOT_EXECUTABLE(testRecurrentNetInit TestRecurrentNetInitialization.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-RNN-Init COMMAND testRecurrentNetInit)
-
 # RNN - Forward Reference
 ROOT_EXECUTABLE(testRecurrentForwardPass TestRecurrentForwardPass.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-RNN-Forward COMMAND testRecurrentForwardPass)
@@ -40,37 +32,50 @@ ROOT_ADD_TEST(TMVA-DNN-RNN-Forward COMMAND testRecurrentForwardPass)
 ROOT_EXECUTABLE(testFullRNN TestFullRNN.cxx LIBRARIES ${Libraries})
 ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN COMMAND testFullRNN)
 
-# RNN - Loss Reference
-#ROOT_EXECUTABLE(testRecurrentNetLoss TestRecurrentNetLoss.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-RNN-Loss COMMAND testRecurrentNetLoss)
-#
-## RNN - Prediction Reference
-#ROOT_EXECUTABLE(testRecurrentNetPred TestRecurrentNetPrediction.cxx LIBRARIES ${Libraries})
-#ROOT_ADD_TEST(TMVA-DNN-RNN-Pred COMMAND testRecurrentNetPred)
-
 endif()
 
 #--- CUDA tests. ---------------------------
-if (CUDA_FOUND AND tmva-gpu)
+if (tmva-gpu)
 
-#  SET(DNN_CUDA_LIBRARIES ${CUDA_LIBRARIES} ${CUDA_CUBLAS_LIBRARIES})
+set(DNN_CUDA_LIBRARIES ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES} )
+
+add_executable(testRecurrentBackpropagationCuda TestRecurrentBackpropagationCuda.cxx)
+target_link_libraries(testRecurrentBackpropagationCuda ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCuda COMMAND testRecurrentBackpropagationCuda)
+#mark the native Cuda test failing since RNN are supported only with Cudnn
+set_tests_properties(TMVA-DNN-RNN-BackpropagationCuda PROPERTIES WILL_FAIL true)
+
+if (tmva-cudnn)
+
+add_executable(testRecurrentForwardPassCudnn TestRecurrentForwardPassCudnn.cxx)
+target_link_libraries(testRecurrentForwardPassCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-RNN-Forwaed-Cudnn COMMAND testRecurrentForwardPassCudnn)
+
+add_executable(testRecurrentBackpropagationCudnn TestRecurrentBackpropagationCudnn.cxx)
+target_link_libraries(testRecurrentBackpropagationCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-RNN-BackpropagationCudnn COMMAND testRecurrentBackpropagationCudnn)
+
+# Full Test GPU
+add_executable(testFullRNNCudnn TestFullRNNCudnn.cxx)
+target_link_libraries(testFullRNNCudnn ${Libraries} ${DNN_CUDA_LIBRARIES})
+ROOT_ADD_TEST(TMVA-DNN-RNN-Full-Cudnn COMMAND testFullRNNCudnn)
+
+endif()
 
 endif()
 
 #--- CPU tests. ----------------------------
 if ((BLAS_FOUND OR mathmore) AND imt AND tmva-cpu)
-  include_directories(${TBB_INCLUDE_DIRS})
 
   # DNN - Forward CPU
   ROOT_EXECUTABLE(testRecurrentForwardPassCpu TestRecurrentForwardPassCpu.cxx LIBRARIES ${Libraries})
   ROOT_ADD_TEST(TMVA-DNN-RNN-Forward-Cpu COMMAND testRecurrentForwardPassCpu)
 
- ROOT_EXECUTABLE(testRecurrentBackpropagationCpu TestRecurrentBackpropagationCpu.cxx LIBRARIES ${Libraries})
- ROOT_ADD_TEST(TMVA-DNN-RNN-Backpropagation-Cpu COMMAND testRecurrentBackpropagationCpu)
+  ROOT_EXECUTABLE(testRecurrentBackpropagationCpu TestRecurrentBackpropagationCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-RNN-Backpropagation-Cpu COMMAND testRecurrentBackpropagationCpu)
 
-# RNN - Full Test Reference
-ROOT_EXECUTABLE(testFullRNNCpu TestFullRNNCpu.cxx LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-DNN-RNN-FullRNN-Cpu COMMAND testFullRNNCpu)
-
+  # RNN - Full Test Reference
+  ROOT_EXECUTABLE(testFullRNNCpu TestFullRNNCpu.cxx LIBRARIES ${Libraries})
+  ROOT_ADD_TEST(TMVA-DNN-RNN-Full-Cpu COMMAND testFullRNNCpu)
 
 endif ()

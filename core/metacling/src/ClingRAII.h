@@ -12,7 +12,7 @@
 #include "clang/Sema/Sema.h"
 #include "cling/Utils/ParserStateRAII.h"
 #include "clang/Lex/Preprocessor.h"
-
+#include "clang/Sema/ScopeInfo.h"
 
 namespace ROOT {
  namespace Internal {

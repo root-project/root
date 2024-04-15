@@ -12,13 +12,6 @@
 #ifndef ROOT_TFitEditor
 #define ROOT_TFitEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFitEditor                                                           //
-//                                                                      //
-// Allows to explore and compare various fits.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TGButton.h"
@@ -27,11 +20,8 @@
 #include "Math/MinimizerOptions.h"
 #include "Fit/DataRange.h"
 
-
-
 #include <vector>
 #include <map>
-#include <utility>
 
 //--- Object types
 enum EObjectType {
@@ -64,69 +54,69 @@ class TF1Convolution;
 class TFitEditor : public TGMainFrame {
 
 protected:
-   TGTab               *fTab;              // tab widget holding the editor
-   TGCompositeFrame    *fTabContainer;     // main tab container
-   TGCompositeFrame    *fGeneral;          // general tab
-   TGCompositeFrame    *fMinimization;     // minimization tab
-   TGTextButton        *fUpdateButton;     // updates data from gROOT and gDirectory
-   TGTextButton        *fFitButton;        // performs fitting
-   TGTextButton        *fResetButton;      // resets fit parameters
-   TGTextButton        *fCloseButton;      // close the fit panel
-   TGLabel             *fSelLabel;         // contains selected fit function
-   TGComboBox          *fDataSet;          // contains list of data set to be fitted
-   TGComboBox          *fTypeFit;          // contains the types of functions to be selected
-   TGComboBox          *fFuncList;         // contains function list
-   TGTextEntry         *fEnteredFunc;      // contains user function file name
-   TGTextButton        *fUserButton;       // opens a dialog for user-defined fit method
-   TGRadioButton       *fNone;             // set no operation mode
-   TGRadioButton       *fAdd;              // set addition mode
-   TGRadioButton       *fNormAdd;          // set normalized addition mode
-   TGRadioButton       *fConv;             // set convolution mode
-   TGLayoutHints       *fLayoutNone;       // layout hints of fNone radio button
-   TGLayoutHints       *fLayoutAdd;        // layout hints of fAdd radio button
-   TGLayoutHints       *fLayoutNormAdd;    // layout hints of fNOrmAdd radio button
-   TGLayoutHints       *fLayoutConv;       // layout hints of fConv radio button
-   TGTextButton        *fSetParam;         // open set parameters dialog
-   TGCheckButton       *fIntegral;         // switch on/off option 'integral'
-   TGCheckButton       *fBestErrors;       // switch on/off option 'improve errors'
-   TGCheckButton       *fUseRange;         // switch on/off option 'use function range'
-   TGCheckButton       *fAdd2FuncList;     // switch on/off option 'add to list'
-   TGCheckButton       *fUseGradient ;     // switch on/off option 'use gradient'
-   TGCheckButton       *fAllWeights1;      // switch on/off option 'all weights=1'
-   TGCheckButton       *fImproveResults;   // switch on/off option 'improve fit results'
-   TGCheckButton       *fEmptyBinsWghts1;  // switch on/off option 'include empry bins'
-   TGComboBox          *fMethodList;       // contains method list
-   TGCheckButton       *fLinearFit;        // switch on/off linear fit option
-   TGCheckButton       *fNoChi2;           // switch on/off option 'No Chi-square'
-   TGCheckButton       *fNoStoreDrawing;   // switch on/off 'no store/drwing' option
-   TGCheckButton       *fNoDrawing;        // switch on/off 'no drawing' option
-   TGCheckButton       *fDrawSame;         // switch on/off fit function drawing
-   TGTextButton        *fDrawAdvanced;     // opens a dialog for advanced draw options
-   TGDoubleHSlider     *fSliderX;          // slider to set fit range along x-axis
-   TGNumberEntry       *fSliderXMax;       // entry to set the maximum in the range
-   TGNumberEntry       *fSliderXMin;       // entry to set the minumum in the range
-   TGDoubleHSlider     *fSliderY;          // slider to set fit range along y-axis
-   TGNumberEntry       *fSliderYMax;       // entry to set the maximum in the range
-   TGNumberEntry       *fSliderYMin;       // entry to set the minumum in the range
-   TGDoubleHSlider     *fSliderZ;          // slider to set fit range along z-axis
-   TGHorizontalFrame   *fSliderXParent;    // parent of fSliderX
-   TGHorizontalFrame   *fSliderYParent;    // parent of fSliderY
-   TGHorizontalFrame   *fSliderZParent;    // parent of fSliderZ
-   TGCheckButton       *fEnableRobust;     // switch on/off robust option
-   TGNumberEntry       *fRobustValue;      // contains robust value for linear fit
-   TGRadioButton       *fOptDefault;       // set default printing mode
-   TGRadioButton       *fOptVerbose;       // set printing mode to 'Verbose'
-   TGRadioButton       *fOptQuiet;         // set printing mode to 'Quiet'
-   TVirtualPad         *fParentPad;        // pad containing the object
-   TObject             *fFitObject;        // selected object to fit
-   EObjectType          fType;             // object type info
-   Int_t                fDim;              // object dimension
-   TAxis               *fXaxis;            // x-axis
-   TAxis               *fYaxis;            // y-axis
-   TAxis               *fZaxis;            // z-axis
-   TF1NormSum          *fSumFunc;          //! TF1NormSum object
-   TF1Convolution      *fConvFunc;         //! TF1Convolution object
-   
+   TGTab               *fTab;              ///< tab widget holding the editor
+   TGCompositeFrame    *fTabContainer;     ///< main tab container
+   TGCompositeFrame    *fGeneral;          ///< general tab
+   TGCompositeFrame    *fMinimization;     ///< minimization tab
+   TGTextButton        *fUpdateButton;     ///< updates data from gROOT and gDirectory
+   TGTextButton        *fFitButton;        ///< performs fitting
+   TGTextButton        *fResetButton;      ///< resets fit parameters
+   TGTextButton        *fCloseButton;      ///< close the fit panel
+   TGLabel             *fSelLabel;         ///< contains selected fit function
+   TGComboBox          *fDataSet;          ///< contains list of data set to be fitted
+   TGComboBox          *fTypeFit;          ///< contains the types of functions to be selected
+   TGComboBox          *fFuncList;         ///< contains function list
+   TGTextEntry         *fEnteredFunc;      ///< contains user function file name
+   TGTextButton        *fUserButton;       ///< opens a dialog for user-defined fit method
+   TGRadioButton       *fNone;             ///< set no operation mode
+   TGRadioButton       *fAdd;              ///< set addition mode
+   TGRadioButton       *fNormAdd;          ///< set normalized addition mode
+   TGRadioButton       *fConv;             ///< set convolution mode
+   TGLayoutHints       *fLayoutNone;       ///< layout hints of fNone radio button
+   TGLayoutHints       *fLayoutAdd;        ///< layout hints of fAdd radio button
+   TGLayoutHints       *fLayoutNormAdd;    ///< layout hints of fNOrmAdd radio button
+   TGLayoutHints       *fLayoutConv;       ///< layout hints of fConv radio button
+   TGTextButton        *fSetParam;         ///< open set parameters dialog
+   TGCheckButton       *fIntegral;         ///< switch on/off option 'integral'
+   TGCheckButton       *fBestErrors;       ///< switch on/off option 'improve errors'
+   TGCheckButton       *fUseRange;         ///< switch on/off option 'use function range'
+   TGCheckButton       *fAdd2FuncList;     ///< switch on/off option 'add to list'
+   TGCheckButton       *fUseGradient ;     ///< switch on/off option 'use gradient'
+   TGCheckButton       *fAllWeights1;      ///< switch on/off option 'all weights=1'
+   TGCheckButton       *fImproveResults;   ///< switch on/off option 'improve fit results'
+   TGCheckButton       *fEmptyBinsWghts1;  ///< switch on/off option 'include empry bins'
+   TGComboBox          *fMethodList;       ///< contains method list
+   TGCheckButton       *fLinearFit;        ///< switch on/off linear fit option
+   TGCheckButton       *fNoChi2;           ///< switch on/off option 'No Chi-square'
+   TGCheckButton       *fNoStoreDrawing;   ///< switch on/off 'no store/drwing' option
+   TGCheckButton       *fNoDrawing;        ///< switch on/off 'no drawing' option
+   TGCheckButton       *fDrawSame;         ///< switch on/off fit function drawing
+   TGTextButton        *fDrawAdvanced;     ///< opens a dialog for advanced draw options
+   TGDoubleHSlider     *fSliderX;          ///< slider to set fit range along x-axis
+   TGNumberEntry       *fSliderXMax;       ///< entry to set the maximum in the range
+   TGNumberEntry       *fSliderXMin;       ///< entry to set the minumum in the range
+   TGDoubleHSlider     *fSliderY;          ///< slider to set fit range along y-axis
+   TGNumberEntry       *fSliderYMax;       ///< entry to set the maximum in the range
+   TGNumberEntry       *fSliderYMin;       ///< entry to set the minumum in the range
+   TGDoubleHSlider     *fSliderZ;          ///< slider to set fit range along z-axis
+   TGHorizontalFrame   *fSliderXParent;    ///< parent of fSliderX
+   TGHorizontalFrame   *fSliderYParent;    ///< parent of fSliderY
+   TGHorizontalFrame   *fSliderZParent;    ///< parent of fSliderZ
+   TGCheckButton       *fEnableRobust;     ///< switch on/off robust option
+   TGNumberEntry       *fRobustValue;      ///< contains robust value for linear fit
+   TGRadioButton       *fOptDefault;       ///< set default printing mode
+   TGRadioButton       *fOptVerbose;       ///< set printing mode to 'Verbose'
+   TGRadioButton       *fOptQuiet;         ///< set printing mode to 'Quiet'
+   TVirtualPad         *fParentPad;        ///< pad containing the object
+   TObject             *fFitObject;        ///< selected object to fit
+   EObjectType          fType;             ///< object type info
+   Int_t                fDim;              ///< object dimension
+   TAxis               *fXaxis;            ///< x-axis
+   TAxis               *fYaxis;            ///< y-axis
+   TAxis               *fZaxis;            ///< z-axis
+   TF1NormSum          *fSumFunc;          ///<! TF1NormSum object
+   TF1Convolution      *fConvFunc;         ///<! TF1Convolution object
+
    // structure holding parameter value and limits
    struct FuncParamData_t {
       FuncParamData_t() {
@@ -173,7 +163,7 @@ protected:
    void        CreateMinimizationTab();
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
    TF1*        HasFitFunction();
-   void        SetEditable(Bool_t);
+   void        SetEditable(Bool_t) override;
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
@@ -183,12 +173,12 @@ private:
 
 public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
-   virtual ~TFitEditor();
+   ~TFitEditor() override;
 
-   TList*  GetListOfFittingFunctions(TObject* obj = 0);
+   TList*  GetListOfFittingFunctions(TObject *obj = nullptr);
 
-   static  TFitEditor *GetInstance(TVirtualPad* pad = 0, TObject *obj = 0);
-   virtual Option_t  *GetDrawOption() const;
+   static  TFitEditor *GetInstance(TVirtualPad* pad = nullptr, TObject *obj = nullptr);
+   Option_t  *GetDrawOption() const override;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
 
@@ -197,10 +187,10 @@ public:
    virtual void       Terminate();
            void       UpdateGUI();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   ConnectSlots();
    virtual void   DisconnectSlots();
-   virtual void   RecursiveRemove(TObject* obj);
+   void   RecursiveRemove(TObject* obj) override;
 
 protected:
    virtual void   SetCanvas(TCanvas *c);
@@ -249,7 +239,7 @@ public:
    typedef std::vector<FuncParamData_t > FuncParams_t;
 
    friend class FitEditorUnitTesting;
-   ClassDef(TFitEditor,0)  //Fit Panel interface
+   ClassDefOverride(TFitEditor,0)  //Fit Panel interface
 };
 
 #endif

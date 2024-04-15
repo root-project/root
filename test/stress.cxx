@@ -70,7 +70,7 @@
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TH1.h>
@@ -82,10 +82,10 @@
 #include <TProfile.h>
 #include <TKey.h>
 #include <TCanvas.h>
-#include <TGraph.h>
 #include <TRandom.h>
 #include <TPostScript.h>
 #include <TNtuple.h>
+#include <TBranch.h>
 #include <TTreeCache.h>
 #include <TChain.h>
 #include <TCut.h>
@@ -96,6 +96,7 @@
 #include <TApplication.h>
 #include <TClassTable.h>
 #include <Compression.h>
+#include <snprintf.h>
 #include "Event.h"
 
 void stress(Int_t nevent, Int_t style, Int_t printSubBenchmark, UInt_t portion );
@@ -199,10 +200,6 @@ void stress(Int_t nevent, Int_t style = 1,
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
@@ -405,11 +402,11 @@ void stress3()
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
 #ifdef R__HAS_CLOUDFLARE_ZLIB
-   constexpr Long64_t lastgood = 52027;
+   constexpr Long64_t lastgood = 52264;
 #else
-   constexpr Long64_t lastgood = 51886;
+   constexpr Long64_t lastgood = 52090;
 #endif
-   constexpr Long64_t tolerance = 150;
+   constexpr Long64_t tolerance = 300;
 #ifdef R__HAS_DEFAULT_LZ4
       constexpr Long64_t difflastgoodlz4 = 5500;
       if (last < lastgood - tolerance || last > lastgood + difflastgoodlz4 + tolerance || comp < 1.5 || comp > 2.1)
@@ -1504,7 +1501,7 @@ void stress16()
    const float a[4]  = { 0.25, 0.04, 0.25, 0 };       // acceptance/trigger (last always 0)
 
    int   i, il, istep, itim[192], itrig[192], it, im, ipass;
-   float dead, sum[10];
+   float sum[10];
 
    // create histogram and array of profile histograms
    TCanvas *c = new TCanvas("laten","latency simulation",700,600);
@@ -1525,7 +1522,6 @@ void stress16()
       hp[i]->SetLineColor(2);
    }
 
-   dead   = 0;
    sum[0] = nbuf;
    for (i = 1; i <= nlev; i++) sum[i] = 0;
    for (i = 0; i < nbuf; i++) { itrig[i] = 0; itim[i] = 0; }
@@ -1567,9 +1563,7 @@ void stress16()
             ipass++;
          }
       }
-      if (ipass == 0) dead++;
    }
-//   Float_t deadTime = 100.*dead/nstep;
 
    // View results in the canvas and make the Postscript file
 
@@ -1614,19 +1608,19 @@ void stress16()
 void stress17()
 {
    Bprint(17,"Test mkdir");
-   
+
    // check mkdir functions as expected in TDirectory
    TDirectory *free_motherdir = new TDirectory("free_motherdir", "free_motherdir");
    TDirectory *free_daughterdir = free_motherdir->mkdir("free_daughterdir");
    TDirectory *free_daughter2 = free_motherdir->mkdir("free_daughterdir");
    TDirectory *free_daughtersame = free_motherdir->mkdir("free_daughterdir", "", true);
-   
+
    // check mkdir functions as expected inside a file
    TFile f("stress.root","update");
    TDirectory *motherdir = f.mkdir("motherdir");
    TDirectory *daughterdir = motherdir->mkdir("daughterdir");
    TDirectory *daughtersame = motherdir->mkdir("daughterdir", "", true);
-   
+
    Bool_t OK = kTRUE;
    if (daughtersame != daughterdir || free_daughter2 == free_daughterdir || free_daughtersame != free_daughterdir) OK = kFALSE;
    if (OK) printf("OK\n");

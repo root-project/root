@@ -31,8 +31,8 @@ class TGLLogicalShape
    friend class TGLScene;
 
 private:
-   TGLLogicalShape(const TGLLogicalShape&);            // Not implemented.
-   TGLLogicalShape& operator=(const TGLLogicalShape&); // Not implemented.
+   TGLLogicalShape(const TGLLogicalShape&) = delete;
+   TGLLogicalShape& operator=(const TGLLogicalShape&) = delete;
 
 public:
    enum ELODAxes  { kLODAxesNone = 0,  // LOD will be set to high or pixel.

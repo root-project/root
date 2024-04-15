@@ -92,16 +92,14 @@ void TGraphEdge::CreateGVEdge(GVizAgraph_t *gv)
 
 Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
 {
-   Int_t i,n,a,dist=999;
+   Int_t a = 0, dist = 999;
 
-   TPolyLine *polyline;
-   a = 0;
-
-   for (i=1; i<=fN[0]; i++) {
-      n = fN[i];
-      polyline = new TPolyLine(n, &fX[a], &fY[a], "L");
-      dist = polyline->DistancetoPrimitive(px, py);
-      a = a+n;
+   for (Int_t i = 1; i <= fN[0]; i++) {
+      Int_t n = fN[i];
+      TPolyLine polyline(n, &fX[a], &fY[a], "L");
+      auto d = polyline.DistancetoPrimitive(px, py);
+      if (d < dist) dist = d;
+      a += n;
    }
 
    return dist;
@@ -112,16 +110,13 @@ Int_t TGraphEdge::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TGraphEdge::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   Int_t i,n,a;
+   Int_t a = 0;
 
-   TPolyLine *polyline;
-   a = 0;
-
-   for (i=1; i<=fN[0]; i++) {
-      n = fN[i];
-      polyline = new TPolyLine(n, &fX[a], &fY[a], "L");
-      polyline->ExecuteEvent(event, px, py);
-      a = a+n;
+   for (Int_t i = 1; i <= fN[0]; i++) {
+      Int_t n = fN[i];
+      TPolyLine polyline(n, &fX[a], &fY[a], "L");
+      polyline.ExecuteEvent(event, px, py);
+      a += n;
    }
 }
 

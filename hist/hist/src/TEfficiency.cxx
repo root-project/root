@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
-#include <stdlib.h>
+#include <cstdlib>
 #include <cassert>
 
 //ROOT headers
@@ -14,6 +14,7 @@
 #include "TDirectory.h"
 #include "TF1.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraph2DAsymmErrors.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -46,6 +47,28 @@ ClassImp(TEfficiency);
     \ingroup Hist
     \brief Class to handle efficiency histograms
 
+- [I. Overview](\ref EFF01)
+- [II. Creating a TEfficiency object](\ref EFF02)
+   - [Example 1](\ref EFF02a)
+   - [Example 2](\ref EFF02b)
+- [III. Filling with events](\ref EFF03)
+- [IV. Statistic options](\ref EFF04)
+   - [Frequentist methods](\ref EFF04a)
+   - [Bayesian methods](\ref EFF04b)
+   - [IV.1 Coverage probabilities for different methods](\ref EFF041)
+- [V. Merging and combining TEfficiency objects](\ref EFF05)
+   - [Example](\ref EFF05a)
+   - [V.1 When should I use merging?](\ref EFF051)
+      - [Example](\ref EFF05b)
+   - [V.2 When should I use combining?](\ref EFF052)
+      - [Example](\ref EFF05c)
+- [VI. Further operations](\ref EFF06)
+   - [VI.1 Information about the internal histograms](\ref EFF061)
+   - [VI.2 Fitting](\ref EFF062)
+   - [VI.3 Draw a TEfficiency object](\ref EFF063)
+   - [VI.4 TEfficiency object's axis customisation](\ref EFF064)
+
+\anchor EFF01
 ## I. Overview
 This class handles the calculation of efficiencies and their uncertainties. It
 provides several statistical methods for calculating frequentist and Bayesian
@@ -69,6 +92,7 @@ procedure needs more effort but enables you to re-use the filled object in cases
 where you want to change one or more weights. This would not be possible if all
 events with different weights were filled in the same histogram.
 
+\anchor EFF02
 ## II. Creating a TEfficiency object
 If you start a new analysis, it is highly recommended to use the TEfficiency class
 from the beginning. You can then use one of the constructors for fixed or
@@ -96,7 +120,7 @@ to the current directory to avoid duplication of data. If you want to store the
 new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
 This also applies to TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
 
-
+\anchor EFF02a
 ### Example 1
 
 ~~~~~~~~~~~~~~~{.cpp}
@@ -113,6 +137,7 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
 }
 ~~~~~~~~~~~~~~~
 
+\anchor EFF02b
 ### Example 2
 
 ~~~~~~~~~~~~~~~{.cpp}
@@ -134,6 +159,7 @@ In case you already have two filled histograms and you only want to
 plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)
 to create a graph object.
 
+\anchor EFF03
 ## III. Filling with events
 You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z) method.
 The "bPassed" boolean flag indicates whether the current event is good
@@ -163,21 +189,20 @@ Begin_Macro(source)
    }
 
    pEff->Draw("AP");
-
-   //only for this documentation
-   return c1;
 }
 End_Macro
 
 You can also set the number of passed or total events for a bin directly by
 using the TEfficiency::SetPassedEvents or TEfficiency::SetTotalEvents method.
 
+\anchor EFF04
 ## IV. Statistic options
 The calculation of the estimated efficiency depends on the chosen statistic
 option. Let k denotes the number of passed events and N the number of total
 events.
 
-###Frequentist methods
+\anchor EFF04a
+### Frequentist methods
 The expectation value of the number of passed events is given by the true
 efficiency times the total number of events. One can estimate the efficiency
 by replacing the expected number of passed events by the observed number of
@@ -187,6 +212,7 @@ passed events.
       k = \epsilon \times N    \Rightarrow    \hat{\varepsilon} = \frac{k}{N}
 \f]
 
+\anchor EFF04b
 ### Bayesian methods
 In Bayesian statistics a likelihood-function (how probable is it to get the
 observed data assuming a true efficiency) and a prior probability (what is the
@@ -287,8 +313,8 @@ Begin_Macro(source)
 
    //add legend
    TLegend* leg1 = new TLegend(0.3,0.1,0.7,0.5);
-   leg1->AddEntry(pEff,"95%","F");
-   leg1->AddEntry(pCopy,"68.3%","F");
+   leg1->AddEntry(pEff,"68.3%","F");
+   leg1->AddEntry(pCopy,"90%","F");
 
    pEff->Draw("A4");
    pCopy->Draw("same4");
@@ -317,10 +343,6 @@ Begin_Macro(source)
    pEff2->Draw("a4");
    pCopy2->Draw("same4");
    leg2->Draw("same");
-
-   //only for this documentation
-   c1->cd(0);
-   return c1;
 }
 End_Macro
 
@@ -331,44 +353,42 @@ parameters are shown in the plot below.
 
 Begin_Macro(source)
 {
-      //canvas only needed for the documentation
-      TCanvas* c1 = new TCanvas("c1","",600,400);
-      c1->SetFillStyle(1001);
-      c1->SetFillColor(kWhite);
+   //canvas only needed for the documentation
+   TCanvas* c1 = new TCanvas("c1","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
 
-      //create different beta distributions
-      TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
-      f1->SetLineColor(kBlue);
-      TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
-      f2->SetLineColor(kRed);
-      TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
-      f3->SetLineColor(kGreen+3);
-      f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
-      TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
-      f4->SetLineColor(kViolet);
+   //create different beta distributions
+   TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
+   f1->SetLineColor(kBlue);
+   TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
+   f2->SetLineColor(kRed);
+   TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
+   f3->SetLineColor(kGreen+3);
+   f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
+   TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
+   f4->SetLineColor(kViolet);
 
-      //add legend
-      TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
-      leg->SetFillColor(kWhite);
-      leg->SetFillStyle(1001);
-      leg->AddEntry(f1,"a=1, b=1","L");
-      leg->AddEntry(f2,"a=0.5, b=0.5","L");
-      leg->AddEntry(f3,"a=1, b=5","L");
-      leg->AddEntry(f4,"a=4, b=3","L");
+   //add legend
+   TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
+   leg->SetFillColor(kWhite);
+   leg->SetFillStyle(1001);
+   leg->AddEntry(f1,"a=1, b=1","L");
+   leg->AddEntry(f2,"a=0.5, b=0.5","L");
+   leg->AddEntry(f3,"a=1, b=5","L");
+   leg->AddEntry(f4,"a=4, b=3","L");
 
-      f3->Draw();
-      f1->Draw("same");
-      f2->Draw("Same");
-      f4->Draw("same");
-      leg->Draw("same");
-
-      //only for this documentation
-      return c1;
+   f3->Draw();
+   f1->Draw("same");
+   f2->Draw("Same");
+   f4->Draw("same");
+   leg->Draw("same");
 }
 End_Macro
 
 
-## IV.1 Coverage probabilities for different methods
+\anchor EFF041
+### IV.1 Coverage probabilities for different methods
 The following pictures illustrate the actual coverage probability for the
 different values of the true efficiency and the total number of events when a
 confidence level of 95% is desired.
@@ -392,8 +412,10 @@ confidence level of 95% is desired.
 
 The average (over all possible true efficiencies) coverage probability for
 different number of total events is shown in the next picture.
+
 \image html av_cov.png "Average Coverage"
 
+\anchor EFF05
 ## V. Merging and combining TEfficiency objects
 In many applications, the efficiency should be calculated for an inhomogeneous
 sample in the sense that it contains events with different weights. In order
@@ -409,6 +431,7 @@ histogram. In the case of many different or even continuously distributed
 weights, this approach becomes cumbersome. One possibility to overcome this
 problem is the usage of binned weights.
 
+\anchor EFF05a
 ### Example
 In particle physics weights arises from the fact that you want to
 normalise your results to a certain reference value. A very common formula for
@@ -433,6 +456,7 @@ The reason for different weights can therefore be:
 Depending on the actual meaning of different weights in your case, you
 should either merge or combine them to get the overall efficiency.
 
+\anchor EFF051
 ### V.1 When should I use merging?
 If the weights are artificial and do not represent real alternative hypotheses,
 you should merge the different TEfficiency objects. That means especially for
@@ -452,6 +476,7 @@ changed.
    \frac{1}{w_{new}} = \frac{1}{w_{1}} + \frac{1}{w_{2}}
 \f]
 
+\anchor EFF05b
 ### Example:
 If you use two samples with different numbers of generated events for the same
 process and you want to normalise both to the same integrated luminosity and
@@ -464,6 +489,7 @@ result as if you would have a big sample with all events in it.
    w_{1} = \frac{\sigma L}{\epsilon N_{1}}, w_{2} = \frac{\sigma L}{\epsilon N_{2}} \Rightarrow w_{new} = \frac{\sigma L}{\epsilon (N_{1} + N_{2})} = \frac{1}{\frac{1}{w_{1}} + \frac{1}{w_{2}}}
 \f]
 
+\anchor EFF052
 ### V.2 When should I use combining?
 You should combine TEfficiency objects whenever the weights represent
 alternatives processes for the efficiency. As the combination of two TEfficiency
@@ -494,6 +520,7 @@ confidence\ level = 1 - \alpha \\
 \f}
 
 
+\anchor EFF05c
 ###Example:
 If you use cuts to select electrons which can originate from two different
 processes, you can determine the selection efficiency for each process. The
@@ -506,9 +533,11 @@ p_{1} = \frac{\sigma_{1}}{\sigma_{1} + \sigma_{2}} = \frac{N_{1}w_{1}}{N_{1}w_{1
 p_{2} = \frac{\sigma_{2}}{\sigma_{1} + \sigma_{2}} = \frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
 \f]
 
+\anchor EFF06
 ## VI. Further operations
 
-### VI.Information about the internal histograms
+\anchor EFF061
+### VI.1 Information about the internal histograms
 The methods TEfficiency::GetPassedHistogram and TEfficiency::GetTotalHistogram
 return a constant pointer to the internal histograms. They can be used to
 obtain information about the internal histograms (e.g., the binning, number of passed / total events in a bin, mean values...).
@@ -550,6 +579,7 @@ the replacement by passing the "f" option. Then the user has to ensure that the
 other internal histogram is replaced as well and that the TEfficiency object is
 in a valid state.
 
+\anchor EFF062
 ### VI.2 Fitting
 The efficiency can be fitted using the TEfficiency::Fit function which internally uses
 the TBinomialEfficiencyFitter::Fit method.
@@ -573,8 +603,7 @@ Begin_Macro(source)
 
    bool bPassed;
    double x;
-   for(int i=0; i<10000; ++i)
-   {
+   for (int i=0; i<10000; ++i) {
       //simulate events with variable under investigation
       x = rand3.Uniform(10);
       //check selection: bPassed = DoesEventPassSelection(x)
@@ -595,12 +624,10 @@ Begin_Macro(source)
    pEff->GetListOfFunctions()->AddFirst(f2);
 
    pEff->Draw("AP");
-
-   //only for this documentation
-   return c1;
 }
 End_Macro
 
+\anchor EFF063
 ### VI.3 Draw a TEfficiency object
 A TEfficiency object can be drawn by calling the usual TEfficiency::Draw method.
 At the moment drawing is only supported for 1- and 2-dimensional TEfficiency objects.
@@ -608,25 +635,70 @@ In the 1-dimensional case, you can use the same options as for the TGraphAsymmEr
 method. For 2-dimensional TEfficiency objects, you can pass the same options as
 for a TH2::Draw object.
 
-********************************************************************************/
-//______________________________________________________________________________
+\anchor EFF064
+### VI.4 TEfficiency object's axis customisation
+The axes of a TEfficiency object can be accessed and customised by calling the
+GetPaintedGraph method and then GetXaxis() or GetYaxis() and the corresponding TAxis
+methods.
+Note that in order to access the painted graph via GetPaintedGraph(), one should either
+call Paint or, better, gPad->Update().
+
+Begin_Macro(source)
+{
+   //canvas only needed for this documentation
+   TCanvas* c1 = new TCanvas("example","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
+   c1->Divide(2,1);
+
+   //create one-dimensional TEfficiency object with fixed bin size
+   TEfficiency* pEff = new TEfficiency("eff","my efficiency;x;#epsilon",20,0,10);
+   TRandom3 rand3;
+
+   bool bPassed;
+   double x;
+   for(int i=0; i<10000; ++i)
+   {
+      //simulate events with variable under investigation
+      x = rand3.Uniform(10);
+      //check selection: bPassed = DoesEventPassSelection(x)
+      bPassed = rand3.Rndm() < TMath::Gaus(x,5,4);
+      pEff->Fill(bPassed,x);
+   }
+   c1->cd(1);
+   pEff->Draw("AP");
+   c1->cd(2);
+   pEff->Draw("AP");
+   gPad->Update();
+   pEff->GetPaintedGraph()->GetXaxis()->SetTitleSize(0.05);
+   pEff->GetPaintedGraph()->GetXaxis()->SetLabelFont(42);
+   pEff->GetPaintedGraph()->GetXaxis()->SetLabelSize(0.05);
+   pEff->GetPaintedGraph()->GetYaxis()->SetTitleOffset(0.85);
+   pEff->GetPaintedGraph()->GetYaxis()->SetTitleSize(0.05);
+   pEff->GetPaintedGraph()->GetYaxis()->SetLabelFont(42);
+   pEff->GetPaintedGraph()->GetYaxis()->SetLabelSize(0.05);
+   pEff->GetPaintedGraph()->GetXaxis()->SetRangeUser(3,7);
+}
+End_Macro
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
-///default constructor
+/// Default constructor
 ///
-///should not be used explicitly
+/// Should not be used explicitly
 
 TEfficiency::TEfficiency():
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
-fBoundary(0),
+fBoundary(nullptr),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
-fPassedHistogram(0),
-fTotalHistogram(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
+fPassedHistogram(nullptr),
+fTotalHistogram(nullptr),
 fWeight(kDefWeight)
 {
    SetStatisticOption(kDefStatOpt);
@@ -637,7 +709,7 @@ fWeight(kDefWeight)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///constructor using two existing histograms as input
+/// Constructor using two existing histograms as input
 ///
 ///Input: passed - contains the events fulfilling some criteria
 ///       total  - contains all investigated events
@@ -659,19 +731,20 @@ TEfficiency::TEfficiency(const TH1& passed,const TH1& total):
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    //check consistency of histograms
    if(CheckConsistency(passed,total)) {
-      Bool_t bStatus = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
-      fTotalHistogram = (TH1*)total.Clone();
-      fPassedHistogram = (TH1*)passed.Clone();
-      TH1::AddDirectory(bStatus);
+      // do not add cloned histograms to gDirectory
+      {
+         TDirectory::TContext ctx(nullptr);
+         fTotalHistogram = (TH1*)total.Clone();
+         fPassedHistogram = (TH1*)passed.Clone();
+      }
 
       TString newName = total.GetName();
       newName += TString("_clone");
@@ -688,18 +761,17 @@ fWeight(kDefWeight)
       Error("TEfficiency(const TH1&,const TH1&)","histograms are not consistent -> results are useless");
       Warning("TEfficiency(const TH1&,const TH1&)","using two empty TH1D('h1','h1',10,0,10)");
 
-      Bool_t bStatus = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
+      // do not add new created histograms to gDirectory
+      TDirectory::TContext ctx(nullptr);
       fTotalHistogram = new TH1D("h1_total","h1 (total)",10,0,10);
       fPassedHistogram = new TH1D("h1_passed","h1 (passed)",10,0,10);
-      TH1::AddDirectory(bStatus);
    }
 
    SetBit(kPosteriorMode,false);
    SetBit(kShortestInterval,false);
 
    SetStatisticOption(kDefStatOpt);
-   SetDirectory(0);
+   SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -726,17 +798,19 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbins,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH1D("total","total",nbins,xbins);
-   fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
-   TH1::AddDirectory(bStatus);
+   // do not add new created histograms to gDirectory
+   {
+      // use separate scope for TContext
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH1D("total","total",nbins,xbins);
+      fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
+   }
 
    Build(name,title);
 }
@@ -765,18 +839,18 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH1D("total","total",nbinsx,xlow,xup);
-   fPassedHistogram = new TH1D("passed","passed",nbinsx,xlow,xup);
-   TH1::AddDirectory(bStatus);
-
+   // do not add new created histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH1D("total","total",nbinsx,xlow,xup);
+      fPassedHistogram = new TH1D("passed","passed",nbinsx,xlow,xup);
+   }
    Build(name,title);
 }
 
@@ -808,18 +882,18 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH2D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup);
-   fPassedHistogram = new TH2D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup);
-   TH1::AddDirectory(bStatus);
-
+   // do not add new created histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH2D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup);
+      fPassedHistogram = new TH2D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup);
+   }
    Build(name,title);
 }
 
@@ -851,18 +925,18 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH2D("total","total",nbinsx,xbins,nbinsy,ybins);
-   fPassedHistogram = new TH2D("passed","passed",nbinsx,xbins,nbinsy,ybins);
-   TH1::AddDirectory(bStatus);
-
+   // do not add new created histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH2D("total","total",nbinsx,xbins,nbinsy,ybins);
+      fPassedHistogram = new TH2D("passed","passed",nbinsx,xbins,nbinsy,ybins);
+   }
    Build(name,title);
 }
 
@@ -898,18 +972,18 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH3D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
-   fPassedHistogram = new TH3D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
-   TH1::AddDirectory(bStatus);
-
+   // do not add new created histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH3D("total","total",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
+      fPassedHistogram = new TH3D("passed","passed",nbinsx,xlow,xup,nbinsy,ylow,yup,nbinsz,zlow,zup);
+   }
    Build(name,title);
 }
 
@@ -945,18 +1019,18 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = new TH3D("total","total",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
-   fPassedHistogram = new TH3D("passed","passed",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
-   TH1::AddDirectory(bStatus);
-
+   // do not add new created histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = new TH3D("total","total",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
+      fPassedHistogram = new TH3D("passed","passed",nbinsx,xbins,nbinsy,ybins,nbinsz,zbins);
+   }
    Build(name,title);
 }
 
@@ -978,28 +1052,29 @@ fWeight(kDefWeight)
 ///      by calling Write().
 
 TEfficiency::TEfficiency(const TEfficiency& rEff):
-TNamed(),
-TAttLine(),
-TAttFill(),
-TAttMarker(),
-fBeta_alpha(rEff.fBeta_alpha),
-fBeta_beta(rEff.fBeta_beta),
-fBeta_bin_params(rEff.fBeta_bin_params),
-fConfLevel(rEff.fConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
-fWeight(rEff.fWeight)
+   TNamed(),
+   TAttLine(),
+   TAttFill(),
+   TAttMarker(),
+   fBeta_alpha(rEff.fBeta_alpha),
+   fBeta_beta(rEff.fBeta_beta),
+   fBeta_bin_params(rEff.fBeta_bin_params),
+   fConfLevel(rEff.fConfLevel),
+   fDirectory(nullptr),
+   fFunctions(nullptr),
+   fPaintGraph(nullptr),
+   fPaintHisto(nullptr),
+   fWeight(rEff.fWeight)
 {
    // copy TObject bits
-   ((TObject&)rEff).Copy(*this);
+   rEff.TObject::Copy(*this);
 
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
-   fTotalHistogram = (TH1*)((rEff.fTotalHistogram)->Clone());
-   fPassedHistogram = (TH1*)((rEff.fPassedHistogram)->Clone());
-   TH1::AddDirectory(bStatus);
+   // do not add cloned histograms to gDirectory
+   {
+      TDirectory::TContext ctx(nullptr);
+      fTotalHistogram = (TH1*)((rEff.fTotalHistogram)->Clone());
+      fPassedHistogram = (TH1*)((rEff.fPassedHistogram)->Clone());
+   }
 
    TString name = rEff.GetName();
    name += "_copy";
@@ -1010,7 +1085,7 @@ fWeight(rEff.fWeight)
 
    SetStatisticOption(rEff.GetStatisticOption());
 
-   SetDirectory(0);
+   SetDirectory(nullptr);
 
    //copy style
    rEff.TAttLine::Copy(*this);
@@ -1028,17 +1103,17 @@ TEfficiency::~TEfficiency()
    // (see TH1::~TH1 code in TH1.cxx)
    if(fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      TObject* obj = 0;
+      TObject* obj = nullptr;
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj)) { }
-         if (!obj->TestBit(kNotDeleted)) {
+         if (ROOT::Detail::HasBeenDeleted(obj)) {
             break;
          }
          delete obj;
-         obj = 0;
+         obj = nullptr;
       }
       delete fFunctions;
-      fFunctions = 0;
+      fFunctions = nullptr;
    }
 
    if(fDirectory)
@@ -1452,8 +1527,8 @@ void TEfficiency::Build(const char* name,const char* title)
 Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 {
 
-   const TAxis* ax1 = 0;
-   const TAxis* ax2 = 0;
+   const TAxis* ax1 = nullptr;
+   const TAxis* ax2 = nullptr;
 
    //check binning along axis
    for(Int_t j = 0; j < pass.GetDimension(); ++j) {
@@ -1593,9 +1668,8 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
 {
    if (GetDimension() != 1) {
       Error("CreatePaintingGraph","Call this function only for dimension == 1");
-      return 0;
+      return nullptr;
    }
-
 
    Int_t npoints = fTotalHistogram->GetNbinsX();
    TGraphAsymmErrors * graph = new TGraphAsymmErrors(npoints);
@@ -1605,7 +1679,128 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
    return graph;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Create the graph used be painted (for dim=1 TEfficiency)
+/// The return object is managed by the caller
 
+TGraph2DAsymmErrors * TEfficiency::CreateGraph2D(Option_t * opt) const
+{
+   if (GetDimension() != 2) {
+      Error("CreatePaintingGraph","Call this function only for dimension == 2");
+      return nullptr;
+   }
+
+   Int_t npoints = fTotalHistogram->GetNbinsX()*fTotalHistogram->GetNbinsY();
+   TGraph2DAsymmErrors * graph = new TGraph2DAsymmErrors(npoints);
+   graph->SetName("eff_graph");
+   FillGraph2D(graph,opt);
+
+   return graph;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the graph to be painted with information from TEfficiency
+/// Internal method called by TEfficiency::Paint or TEfficiency::CreateGraph
+
+void TEfficiency::FillGraph2D(TGraph2DAsymmErrors * graph, Option_t * opt) const
+{
+   TString option = opt;
+   option.ToLower();
+
+   Bool_t plot0Bins = false;
+   if (option.Contains("e0") ) plot0Bins = true;
+
+   //point i corresponds to bin i+1 in histogram
+   // point j is point graph index
+   // LM: cannot use TGraph::SetPoint because it deletes the underlying
+   // histogram  each time (see TGraph::SetPoint)
+   // so use it only when extra points are added to the graph
+   int ipoint = 0;
+   double * px = graph->GetX();
+   double * py = graph->GetY();
+   double * pz = graph->GetZ();
+   double * exl = graph->GetEXlow();
+   double * exh = graph->GetEXhigh();
+   double * eyl = graph->GetEYlow();
+   double * eyh = graph->GetEYhigh();
+   double * ezl = graph->GetEZlow();
+   double * ezh = graph->GetEZhigh();
+   for (int i = 0; i < fTotalHistogram->GetNbinsX(); ++i) {
+      double x = fTotalHistogram->GetXaxis()->GetBinCenter(i+1);
+      double xlow = fTotalHistogram->GetXaxis()->GetBinCenter(i+1) - fTotalHistogram->GetXaxis()->GetBinLowEdge(i+1);
+      double xup = fTotalHistogram->GetXaxis()->GetBinWidth(i+1) - xlow;
+      for (int j = 0; j < fTotalHistogram->GetNbinsY(); ++j) {
+         if (!plot0Bins && fTotalHistogram->GetBinContent(i+1,j+1) == 0 )
+            continue;
+         double y = fTotalHistogram->GetYaxis()->GetBinCenter(j+1);
+         double ylow = fTotalHistogram->GetYaxis()->GetBinCenter(j+1) - fTotalHistogram->GetYaxis()->GetBinLowEdge(j+1);
+         double yup = fTotalHistogram->GetYaxis()->GetBinWidth(j+1) - ylow;
+
+         int ibin = GetGlobalBin(i+1,j+1);
+         double z = GetEfficiency(ibin);
+         double zlow = GetEfficiencyErrorLow(ibin);
+         double zup = GetEfficiencyErrorUp(ibin);
+         // in the case the graph already existed and extra points have been added
+         if (ipoint >= graph->GetN() ) {
+            graph->SetPoint(ipoint,x,y,z);
+            graph->SetPointError(ipoint,xlow,xup,ylow,yup,zlow,zup);
+         }
+         else {
+            px[ipoint] = x;
+            py[ipoint] = y;
+            pz[ipoint] = z;
+            exl[ipoint] = xlow;
+            exh[ipoint] = xup;
+            eyl[ipoint] = ylow;
+            eyh[ipoint] = yup;
+            ezl[ipoint] = zlow;
+            ezh[ipoint] = zup;
+         }
+         ipoint++;
+      }
+   }
+
+   // tell the graph the effective number of points
+   graph->Set(ipoint);
+   //refresh title before painting if changed
+   TString oldTitle = graph->GetTitle();
+   TString newTitle = GetTitle();
+   if (oldTitle != newTitle ) {
+      graph->SetTitle(newTitle);
+   }
+
+   // set the axis labels
+   TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+   TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+   TString zlabel = fTotalHistogram->GetZaxis()->GetTitle();
+   if (xlabel) graph->GetXaxis()->SetTitle(xlabel);
+   if (ylabel) graph->GetYaxis()->SetTitle(ylabel);
+   if (zlabel) graph->GetZaxis()->SetTitle(zlabel);
+
+   //copying style information
+   TAttLine::Copy(*graph);
+   TAttFill::Copy(*graph);
+   TAttMarker::Copy(*graph);
+
+   // copy axis bin labels if existing. Assume are there in the total histogram
+   if (fTotalHistogram->GetXaxis()->GetLabels() != nullptr) {
+      for (int ibin = 1; ibin <= fTotalHistogram->GetXaxis()->GetNbins(); ++ibin) {
+         // we need to fnd the right bin for the Histogram representing the xaxis of the graph
+         int grbin = graph->GetXaxis()->FindFixBin(fTotalHistogram->GetXaxis()->GetBinCenter(ibin));
+         graph->GetXaxis()->SetBinLabel(grbin, fTotalHistogram->GetXaxis()->GetBinLabel(ibin));
+      }
+   }
+   if (fTotalHistogram->GetYaxis()->GetLabels() != nullptr) {
+      for (int ibin = 1; ibin <= fTotalHistogram->GetYaxis()->GetNbins(); ++ibin) {
+         // we need to fnd the right bin for the Histogram representing the xaxis of the graph
+         int grbin = graph->GetYaxis()->FindFixBin(fTotalHistogram->GetYaxis()->GetBinCenter(ibin));
+         graph->GetYaxis()->SetBinLabel(grbin, fTotalHistogram->GetYaxis()->GetBinLabel(ibin));
+      }
+   }
+   // this method forces the graph to compute correctly the axis
+   // according to the given points
+   graph->GetHistogram();
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the graph to be painted with information from TEfficiency
 /// Internal method called by TEfficiency::Paint or TEfficiency::CreateGraph
@@ -1698,14 +1893,14 @@ TH2 * TEfficiency::CreateHistogram(Option_t *) const
 {
    if (GetDimension() != 2) {
       Error("CreatePaintingistogram","Call this function only for dimension == 2");
-      return 0;
+      return nullptr;
    }
 
    Int_t nbinsx = fTotalHistogram->GetNbinsX();
    Int_t nbinsy = fTotalHistogram->GetNbinsY();
    TAxis * xaxis = fTotalHistogram->GetXaxis();
    TAxis * yaxis = fTotalHistogram->GetYaxis();
-   TH2 * hist = 0;
+   TH2 * hist = nullptr;
 
    if (xaxis->IsVariableBinSize() && yaxis->IsVariableBinSize() )
       hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
@@ -1721,7 +1916,7 @@ TH2 * TEfficiency::CreateHistogram(Option_t *) const
                       nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
 
 
-   hist->SetDirectory(0);
+   hist->SetDirectory(nullptr);
 
    FillHistogram(hist);
 
@@ -1769,7 +1964,7 @@ void TEfficiency::FillHistogram(TH2 * hist ) const
    TAttLine::Copy(*hist);
    TAttFill::Copy(*hist);
    TAttMarker::Copy(*hist);
-   hist->SetStats(0);
+   hist->SetStats(false);
 
    return;
 
@@ -2053,14 +2248,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
          else {
             gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",w[k]);
             gROOT->Info("TEfficiency::Combine","stop combining");
-            return 0;
+            return nullptr;
          }
       }
    }
 
    TIter next(pList);
-   TObject* obj = 0;
-   TEfficiency* pEff = 0;
+   TObject* obj = nullptr;
+   TEfficiency* pEff = nullptr;
    while((obj = next())) {
       pEff = dynamic_cast<TEfficiency*>(obj);
       //is object a TEfficiency object?
@@ -2105,14 +2300,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    if(vTotal.empty()) {
       gROOT->Error("TEfficiency::Combine","no TEfficiency objects in given list");
       gROOT->Info("TEfficiency::Combine","stop combining");
-      return 0;
+      return nullptr;
    }
 
    //invalid number of custom weights
    if(bWeights && (n != (Int_t)vTotal.size())) {
       gROOT->Error("TEfficiency::Combine","number of weights n=%i differs from number of TEfficiency objects k=%i which should be combined",n,(Int_t)vTotal.size());
       gROOT->Info("TEfficiency::Combine","stop combining");
-      return 0;
+      return nullptr;
    }
 
    Int_t nbins_max = vTotal.at(0)->GetNbinsX();
@@ -2170,7 +2365,7 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
       if(eff[i-1] == -1) {
          gROOT->Error("TEfficiency::Combine","error occurred during combining");
          gROOT->Info("TEfficiency::Combine","stop combining");
-         return 0;
+         return nullptr;
       }
       efflow[i-1]= eff[i-1] - low;
       effhigh[i-1]= up - eff[i-1];
@@ -2203,7 +2398,9 @@ Int_t TEfficiency::DistancetoPrimitive(Int_t px, Int_t py)
 /// \param[in] opt
 ///  - 1-dimensional case: same options as TGraphAsymmErrors::Draw()
 ///     but as default "AP" is used
-///  - 2-dimensional case: same options as TH2::Draw()
+///  - 2-dimensional case: by default use an histogram and in this case same options as TH2::Draw()
+///                        if using instad option "GRAPH" a TGraph2DAsymmErrors is used and
+///                        the same options as for TGraph2D applies
 ///  - 3-dimensional case: not yet supported
 ///
 /// Specific TEfficiency drawing options:
@@ -2215,19 +2412,20 @@ void TEfficiency::Draw(Option_t* opt)
    //check options
    TString option = opt;
    option.ToLower();
-   // use by default "AP"
-   if (option.IsNull() ) option = "ap";
 
    if(gPad && !option.Contains("same"))
       gPad->Clear();
-   else {
+
+   if (GetDimension() == 2) {
+      if (option.IsNull()) option = "colz";
+   } else {
+      // use by default "AP"
+      if (option.IsNull()) option = "ap";
       // add always "a" if not present
-      if (!option.Contains("a") ) option += "a";
+      if (!option.Contains("same") && !option.Contains("a") ) option += "a";
+      // add always p to the option
+      if (!option.Contains("p") ) option += "p";
    }
-
-   // add always p to the option
-   if (!option.Contains("p") ) option += "p";
-
 
    AppendPad(option.Data());
 }
@@ -2343,7 +2541,7 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
    return GetGlobalBin(nx,ny,nz);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Fits the efficiency using the TBinomialEfficiencyFitter class
 ///
 /// The resulting fit function is added to the list of associated functions.
@@ -2351,12 +2549,13 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 /// Options:
 /// - "+": previous fitted functions in the list are kept, by default
 ///   all functions in the list are deleted
+/// - "N": do not store fitted function
 /// - for more fitting options see TBinomialEfficiencyFitter::Fit
 
 TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 {
    TString option = opt;
-   option.ToLower();
+   option.ToUpper();
 
    //replace existing functions in list with same name
    Bool_t bDeleteOld = true;
@@ -2370,24 +2569,26 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
    TFitResultPtr result = Fitter.Fit(f1,option.Data());
 
    //create copy which is appended to the list
-   TF1* pFunc = new TF1(*f1);
+   if (!option.Contains("N")) { // option "N" is not store fit function
+      TF1* pFunc = (TF1*)f1->IsA()->New();
+      f1->Copy(*pFunc);
 
-   if(bDeleteOld) {
-      TIter next(fFunctions);
-      TObject* obj = 0;
-      while((obj = next())) {
-         if(obj->InheritsFrom(TF1::Class())) {
-            fFunctions->Remove(obj);
-            delete obj;
+      if(bDeleteOld) {
+         TIter next(fFunctions);
+         TObject* obj = nullptr;
+         while((obj = next())) {
+            if(obj->InheritsFrom(TF1::Class())) {
+               fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
+      // create list if necessary
+      if(!fFunctions)
+         fFunctions = new TList();
+
+      fFunctions->Add(pFunc);
    }
-
-   // create list if necessary
-   if(!fFunctions)
-      fFunctions = new TList();
-
-   fFunctions->Add(pFunc);
 
    return result;
 }
@@ -2415,10 +2616,9 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 
 TH1* TEfficiency::GetCopyPassedHisto() const
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   // do not add cloned histogram to gDirectory
+   TDirectory::TContext ctx(nullptr);
    TH1* tmp = (TH1*)(fPassedHistogram->Clone());
-   TH1::AddDirectory(bStatus);
 
    return tmp;
 }
@@ -2446,10 +2646,9 @@ TH1* TEfficiency::GetCopyPassedHisto() const
 
 TH1* TEfficiency::GetCopyTotalHisto() const
 {
-   Bool_t bStatus = TH1::AddDirectoryStatus();
-   TH1::AddDirectory(kFALSE);
+   // do not add cloned histogram to gDirectory
+   TDirectory::TContext ctx(nullptr);
    TH1* tmp = (TH1*)(fTotalHistogram->Clone());
-   TH1::AddDirectory(bStatus);
 
    return tmp;
 }
@@ -2717,8 +2916,8 @@ Long64_t TEfficiency::Merge(TCollection* pList)
 {
    if(!pList->IsEmpty()) {
       TIter next(pList);
-      TObject* obj = 0;
-      TEfficiency* pEff = 0;
+      TObject* obj = nullptr;
+      TEfficiency* pEff = nullptr;
       while((obj = next())) {
          pEff = dynamic_cast<TEfficiency*>(obj);
          if(pEff) {
@@ -2780,21 +2979,21 @@ Double_t TEfficiency::Normal(Double_t total,Double_t passed,Double_t level,Bool_
 TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
 {
 
-   if (fTotalHistogram == 0 && fPassedHistogram == 0) {
+   if (fTotalHistogram == nullptr && fPassedHistogram == nullptr) {
       // efficiency is empty just copy it over
       *this = rhs;
       return *this;
    }
-   else if (fTotalHistogram == 0 || fPassedHistogram == 0) {
+   else if (fTotalHistogram == nullptr || fPassedHistogram == nullptr) {
       Fatal("operator+=","Adding to a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
 
-   if (rhs.fTotalHistogram == 0 && rhs.fPassedHistogram == 0 ) {
+   if (rhs.fTotalHistogram == nullptr && rhs.fPassedHistogram == nullptr ) {
       Warning("operator+=","no operation: adding an empty object");
       return *this;
    }
-   else  if (rhs.fTotalHistogram == 0  || rhs.fPassedHistogram == 0 ) {
+   else  if (rhs.fTotalHistogram == nullptr  || rhs.fPassedHistogram == nullptr ) {
       Fatal("operator+=","Adding a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
@@ -2838,17 +3037,19 @@ TEfficiency& TEfficiency::operator=(const TEfficiency& rhs)
       delete fTotalHistogram;
       delete fPassedHistogram;
 
-      Bool_t bStatus = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
-      fTotalHistogram = (TH1*)(rhs.fTotalHistogram->Clone());
-      fPassedHistogram = (TH1*)(rhs.fPassedHistogram->Clone());
-      TH1::AddDirectory(bStatus);
-
+      // do not add cloned histogram to gDirectory
+      {
+         TDirectory::TContext ctx(nullptr);
+         fTotalHistogram = (TH1*)(rhs.fTotalHistogram->Clone());
+         fPassedHistogram = (TH1*)(rhs.fPassedHistogram->Clone());
+      }
       //delete temporary paint objects
       delete fPaintHisto;
       delete fPaintGraph;
-      fPaintHisto = 0;
-      fPaintGraph = 0;
+      delete fPaintGraph2D;
+      fPaintHisto = nullptr;
+      fPaintGraph = nullptr;
+      fPaintGraph2D = nullptr;
 
       //copy style
       rhs.TAttLine::Copy(*this);
@@ -2884,6 +3085,9 @@ void TEfficiency::Paint(const Option_t* opt)
    if(!gPad)
       return;
 
+   TString option(opt);
+   option.ToUpper();
+
 
    //use TGraphAsymmErrors for painting
    if(GetDimension() == 1) {
@@ -2895,37 +3099,51 @@ void TEfficiency::Paint(const Option_t* opt)
          FillGraph(fPaintGraph, opt);
 
       //paint graph
-
       fPaintGraph->Paint(opt);
-
-      //paint all associated functions
-      if(fFunctions) {
-         //paint box with fit parameters
-         //the fit statistics will be painted if gStyle->SetOptFit(1) has been
-         // called by the user
+      // paint all associated functions
+      if (fFunctions) {
+         // paint box with fit parameters
+         // the fit statistics will be painted if gStyle->SetOptFit(1) has been
+         //  called by the user
          TIter next(fFunctions);
-         TObject* obj = 0;
-         while((obj = next())) {
-            if(obj->InheritsFrom(TF1::Class())) {
-               fPaintGraph->PaintStats((TF1*)obj);
-               ((TF1*)obj)->Paint("sameC");
+         TObject *obj = nullptr;
+         while ((obj = next())) {
+            if (obj->InheritsFrom(TF1::Class())) {
+               fPaintGraph->PaintStats((TF1 *)obj);
+               ((TF1 *)obj)->Paint("sameC");
             }
          }
       }
-
       return;
    }
-
-   //use TH2 for painting
+   //use TH2 or optionally a TGraph2DAsymmErrors for painting
    if(GetDimension() == 2) {
-      if(!fPaintHisto) {
-         fPaintHisto = CreateHistogram();
+      bool drawGraph2D = false;
+      if (option.Contains("GRAPH")) {
+         option.ReplaceAll("GRAPH","");
+         drawGraph2D = true;
       }
-      else
-         FillHistogram(fPaintHisto);
-
-      //paint histogram
-      fPaintHisto->Paint(opt);
+      if (drawGraph2D) {
+           //paint a TGraph2DAsymmErrors
+         if(!fPaintGraph2D)
+            fPaintGraph2D = CreateGraph2D(option);
+         else
+            FillGraph2D(fPaintGraph2D, option);
+         // set some sensible marker size and type
+         fPaintGraph2D->SetMarkerStyle(20);
+         fPaintGraph2D->SetMarkerSize(0.6);
+         // use PCOL Z as default option
+         if (option.IsNull()) option += "ERR PCOL Z";
+         fPaintGraph2D->Paint(option);
+      } else {
+         //paint histogram
+         if (!fPaintHisto)
+            fPaintHisto = CreateHistogram();
+         else
+            FillHistogram(fPaintHisto);
+         fPaintHisto->Paint(option);
+      }
+      // should we also paint the functions??
       return;
    }
    Warning("Paint","Painting 3D efficiency is not implemented");
@@ -3045,7 +3263,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
    << std::endl;
    out << indent << name << "->SetBetaBeta(" << fBeta_beta << ");" << std::endl;
    out << indent << name << "->SetWeight(" << fWeight << ");" << std::endl;
-   out << indent << name << "->SetStatisticOption(" << fStatisticOption << ");"
+   out << indent << name << "->SetStatisticOption(static_cast<EStatOption>(" << fStatisticOption << "));"
    << std::endl;
    out << indent << name << "->SetPosteriorMode(" << TestBit(kPosteriorMode) << ");" << std::endl;
    out << indent << name << "->SetShortestInterval(" << TestBit(kShortestInterval) << ");" << std::endl;
@@ -3076,7 +3294,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
 
    //save list of functions
    TIter next(fFunctions);
-   TObject* obj = 0;
+   TObject* obj = nullptr;
    while((obj = next())) {
       obj->SavePrimitive(out,"nodraw");
       if(obj->InheritsFrom(TF1::Class())) {
@@ -3388,11 +3606,12 @@ Bool_t TEfficiency::SetPassedHistogram(const TH1& rPassed,Option_t* opt)
 
    if(bReplace) {
       delete fPassedHistogram;
-      Bool_t bStatus = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
-      fPassedHistogram = (TH1*)(rPassed.Clone());
-      fPassedHistogram->SetNormFactor(0);
-      TH1::AddDirectory(bStatus);
+      // do not add cloned histogram to gDirectory
+      {
+         TDirectory::TContext ctx(nullptr);
+         fPassedHistogram = (TH1*)(rPassed.Clone());
+         fPassedHistogram->SetNormFactor(0);
+      }
 
       if(fFunctions)
          fFunctions->Delete();
@@ -3538,14 +3757,14 @@ void TEfficiency::SetTitle(const char* title)
 ///
 /// Note: - requires: fPassedHistogram->GetBinContent(bin) <= events
 
-Bool_t TEfficiency::SetTotalEvents(Int_t bin,Int_t events)
+Bool_t TEfficiency::SetTotalEvents(Int_t bin, Double_t events)
 {
    if(events >= fPassedHistogram->GetBinContent(bin)) {
       fTotalHistogram->SetBinContent(bin,events);
       return true;
    }
    else {
-      Error("SetTotalEvents(Int_t,Int_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %i",fPassedHistogram->GetBinContent(bin),bin,events);
+      Error("SetTotalEvents(Int_t,Double_t)","passed number of events (%.1lf) in bin %i is bigger than given number of total events %.1lf",fPassedHistogram->GetBinContent(bin),bin,events);
       return false;
    }
 }
@@ -3581,11 +3800,12 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 
    if(bReplace) {
       delete fTotalHistogram;
-      Bool_t bStatus = TH1::AddDirectoryStatus();
-      TH1::AddDirectory(kFALSE);
-      fTotalHistogram = (TH1*)(rTotal.Clone());
+      // do not add cloned histogram to gDirectory
+      {
+         TDirectory::TContext ctx(nullptr);
+         fTotalHistogram = (TH1*)(rTotal.Clone());
+      }
       fTotalHistogram->SetNormFactor(0);
-      TH1::AddDirectory(bStatus);
 
       if(fFunctions)
          fFunctions->Delete();

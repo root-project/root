@@ -23,11 +23,10 @@
 #ifndef ROOT_TMVA_ROCCurve
 #define ROOT_TMVA_ROCCurve
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
-#include <iomanip>
-#include <iostream>
-#include <sstream>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 class TList;
@@ -68,7 +67,7 @@ public:
 
    const std::vector<std::tuple<Float_t, Float_t, Bool_t>> GetMvas() const { return fMva; }
 private:
-   mutable MsgLogger *fLogger; //! message logger
+   mutable MsgLogger *fLogger; ///<! message logger
    MsgLogger &Log() const;
 
    TGraph *fGraph;

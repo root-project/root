@@ -27,8 +27,6 @@ Editor for a TGeoEltu.
 #include "TVirtualGeoPainter.h"
 #include "TVirtualPad.h"
 #include "TView.h"
-#include "TGTab.h"
-#include "TGComboBox.h"
 #include "TGButton.h"
 #include "TGTextEntry.h"
 #include "TGNumberEntry.h"
@@ -36,19 +34,15 @@ Editor for a TGeoEltu.
 
 ClassImp(TGeoEltuEditor);
 
-enum ETGeoEltuWid {
-   kELTU_NAME, kELTU_A, kELTU_B,  kELTU_DZ,
-   kELTU_APPLY, kELTU_UNDO
-};
+enum ETGeoEltuWid { kELTU_NAME, kELTU_A, kELTU_B, kELTU_DZ, kELTU_APPLY, kELTU_UNDO };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for para editor
 
-TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
-                                   Int_t height, UInt_t options, Pixel_t back)
+TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape   = 0;
+   fShape = nullptr;
    fAi = fBi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -70,7 +64,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEA = new TGNumberEntry(f1, 0., 5, kELTU_A);
    fEA->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEA->Resize(100, fEA->GetDefaultHeight());
-   nef = (TGTextEntry*)fEA->GetNumberEntry();
+   nef = (TGTextEntry *)fEA->GetNumberEntry();
    nef->SetToolTipText("Enter the semi-axis of the ellipse along x");
    fEA->Associate(this);
    f1->AddFrame(fEA, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -82,7 +76,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEB = new TGNumberEntry(f1, 0., 5, kELTU_B);
    fEB->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEB->Resize(100, fEB->GetDefaultHeight());
-   nef = (TGTextEntry*)fEB->GetNumberEntry();
+   nef = (TGTextEntry *)fEB->GetNumberEntry();
    nef->SetToolTipText("Enter the semi-axis of the ellipse along y");
    fEB->Associate(this);
    f1->AddFrame(fEB, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -94,7 +88,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEDz = new TGNumberEntry(f1, 0., 5, kELTU_DZ);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
-   nef = (TGTextEntry*)fEDz->GetNumberEntry();
+   nef = (TGTextEntry *)fEDz->GetNumberEntry();
    nef->SetToolTipText("Enter the half-length in Z");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
@@ -103,8 +97,8 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    // Delayed draw
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth | kSunkenFrame);
    fDelayed = new TGCheckButton(f1, "Delayed draw");
-   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft , 2, 2, 4, 4));
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   f1->AddFrame(fDelayed, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
 
    // Buttons
    f1 = new TGCompositeFrame(this, 155, 10, kHorizontalFrame | kFixedWidth);
@@ -112,9 +106,9 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fApply, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
    fApply->Associate(this);
    fUndo = new TGTextButton(f1, "Undo");
-   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight , 2, 2, 4, 4));
+   f1->AddFrame(fUndo, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    fUndo->Associate(this);
-   AddFrame(f1,  new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
+   AddFrame(f1, new TGLayoutHints(kLHintsLeft, 6, 6, 4, 4));
    fUndo->SetSize(fApply->GetSize());
 }
 
@@ -127,7 +121,7 @@ TGeoEltuEditor::~TGeoEltuEditor()
    TIter next(GetList());
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame->IsComposite())
-         TGeoTabManager::Cleanup((TGCompositeFrame*)el->fFrame);
+         TGeoTabManager::Cleanup((TGCompositeFrame *)el->fFrame);
    }
    Cleanup();
 }
@@ -152,18 +146,19 @@ void TGeoEltuEditor::ConnectSignals2Slots()
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect to the selected object.
 
-void TGeoEltuEditor::SetModel(TObject* obj)
+void TGeoEltuEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA()!=TGeoEltu::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoEltu::Class())) {
       SetActive(kFALSE);
       return;
    }
-   fShape = (TGeoEltu*)obj;
+   fShape = (TGeoEltu *)obj;
    fAi = fShape->GetA();
    fBi = fShape->GetB();
    fDzi = fShape->GetDz();
    const char *sname = fShape->GetName();
-   if (!strcmp(sname, fShape->ClassName())) fShapeName->SetText("-no_name");
+   if (!strcmp(sname, fShape->ClassName()))
+      fShapeName->SetText("-no_name");
    else {
       fShapeName->SetText(sname);
       fNamei = sname;
@@ -174,7 +169,8 @@ void TGeoEltuEditor::SetModel(TObject* obj)
    fApply->SetEnabled(kFALSE);
    fUndo->SetEnabled(kFALSE);
 
-   if (fInit) ConnectSignals2Slots();
+   if (fInit)
+      ConnectSignals2Slots();
    SetActive();
 }
 
@@ -200,7 +196,8 @@ Bool_t TGeoEltuEditor::IsDelayed() const
 void TGeoEltuEditor::DoApply()
 {
    const char *name = fShapeName->GetText();
-   if (strcmp(name,fShape->GetName())) fShape->SetName(name);
+   if (strcmp(name, fShape->GetName()))
+      fShape->SetName(name);
    Double_t a = fEA->GetNumber();
    Double_t b = fEB->GetNumber();
    Double_t z = fEDz->GetNumber();
@@ -219,11 +216,12 @@ void TGeoEltuEditor::DoApply()
             fShape->Draw();
             fPad->GetView()->ShowAxis();
          } else {
-            view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(),
-                           fShape->GetDX(), fShape->GetDY(), fShape->GetDZ());
+            view->SetRange(-fShape->GetDX(), -fShape->GetDY(), -fShape->GetDZ(), fShape->GetDX(), fShape->GetDY(),
+                           fShape->GetDZ());
             Update();
          }
-      } else Update();
+      } else
+         Update();
    }
 }
 
@@ -259,7 +257,8 @@ void TGeoEltuEditor::DoA()
       fEA->SetNumber(a);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,7 +272,8 @@ void TGeoEltuEditor::DoB()
       fEB->SetNumber(b);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,6 +287,6 @@ void TGeoEltuEditor::DoDz()
       fEDz->SetNumber(z);
    }
    DoModified();
-   if (!IsDelayed()) DoApply();
+   if (!IsDelayed())
+      DoApply();
 }
-

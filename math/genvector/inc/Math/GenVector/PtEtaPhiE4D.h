@@ -46,6 +46,8 @@ namespace Math {
     Phi is restricted to be in the range [-PI,PI)
 
     @ingroup GenVector
+
+    @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <class ScalarType>
@@ -54,6 +56,7 @@ class PtEtaPhiE4D {
 public :
 
    typedef ScalarType Scalar;
+   static constexpr unsigned int Dimension = 4U;
 
    // --------- Constructors ---------------
 
@@ -73,7 +76,7 @@ public :
       Pt(), Eta(), Phi() and E()
    */
    template <class CoordSystem >
-   explicit PtEtaPhiE4D(const CoordSystem & c) :
+   explicit constexpr PtEtaPhiE4D(const CoordSystem & c) :
       fPt(c.Pt()), fEta(c.Eta()), fPhi(c.Phi()), fE(c.E())  { }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -137,11 +140,12 @@ public :
 
    // other coordinate representation
 
-   Scalar Px() const { return fPt * cos(fPhi); }
+   Scalar Px() const { using std::cos; return fPt * cos(fPhi); }
    Scalar X () const { return Px();         }
-   Scalar Py() const { return fPt * sin(fPhi); }
+   Scalar Py() const { using std::sin; return fPt * sin(fPhi); }
    Scalar Y () const { return Py();         }
    Scalar Pz() const {
+      using std:: sinh;
       return fPt > 0 ? fPt * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<Scalar>() : fEta + etaMax<Scalar>();
    }
    Scalar Z () const { return Pz(); }
@@ -150,6 +154,7 @@ public :
        magnitude of momentum
    */
    Scalar P() const {
+     using std::cosh;
       return fPt > 0 ? fPt * cosh(fEta)
                      : fEta > etaMax<Scalar>() ? fEta - etaMax<Scalar>()
                                                : fEta < -etaMax<Scalar>() ? -fEta - etaMax<Scalar>() : 0;
@@ -181,10 +186,12 @@ public :
    Scalar M() const    {
       const Scalar mm = M2();
       if (mm >= 0) {
+         using std::sqrt;
          return sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::M() - Tachyonic:\n"
                            "    Pt and Eta give P such that P^2 > E^2, so the mass would be imaginary");
+         using std::sqrt;
          return -sqrt(-mm);
       }
    }
@@ -207,10 +214,12 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
+         using std::sqrt;
          return sqrt(mm);
       } else {
          GenVector::Throw ("PtEtaPhiE4D::Mt() - Tachyonic:\n"
                            "    Pt and Eta give Pz such that Pz^2 > E^2, so the mass would be imaginary");
+         using std::sqrt;
          return -sqrt(-mm);
       }
    }
@@ -222,6 +231,7 @@ public :
       transverse energy
    */
    Scalar Et() const {
+      using std::cosh;
       return fE / cosh(fEta); // faster using eta
    }
 
@@ -237,6 +247,7 @@ public :
 private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
+      using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 public:
@@ -244,7 +255,7 @@ public:
    /**
       polar angle
    */
-   Scalar Theta() const { return (fPt > 0 ? Scalar(2) * atan(exp(-fEta)) : fEta >= 0 ? 0 : pi()); }
+   Scalar Theta() const { using std::atan; return (fPt > 0 ? Scalar(2) * atan(exp(-fEta)) : fEta >= 0 ? 0 : pi()); }
 
    // --------- Set Coordinates of this system  ---------------
 
@@ -421,4 +432,3 @@ inline void PtEtaPhiE4D<ScalarType>::SetM(Scalar m) {
 
 
 #endif // ROOT_Math_GenVector_PtEtaPhiE4D
-

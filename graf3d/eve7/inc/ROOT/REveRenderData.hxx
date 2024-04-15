@@ -73,22 +73,24 @@ public:
       PushN(v.fZ);
    }
 
-   void PushI(int i) { fIndexBuffer.emplace_back(i); }
+   void PushI(UInt_t i) { fIndexBuffer.emplace_back(i); }
 
-   void PushI(int i, int j, int k)
+   void PushI(UInt_t i, UInt_t j, UInt_t k)
    {
       PushI(i);
       PushI(j);
       PushI(k);
    }
 
-   void PushI(int *v, int len) { fIndexBuffer.insert(fIndexBuffer.end(), v, v + len); }
+   void PushI(UInt_t *v, int len) { fIndexBuffer.insert(fIndexBuffer.end(), v, v + len); }
 
-   void PushI(std::vector<int> &v) { fIndexBuffer.insert(fIndexBuffer.end(), v.begin(), v.end()); }
+   void PushI(std::vector<UInt_t> &v) { fIndexBuffer.insert(fIndexBuffer.end(), v.begin(), v.end()); }
 
    void SetMatrix(const double *arr);
 
    const std::string GetRnrFunc() const { return fRnrFunc; }
+
+   void ResizeV(int s) { fVertexBuffer.resize(s); }
 
    int SizeV() const { return fVertexBuffer.size(); }
    int SizeN() const { return fNormalBuffer.size(); }
@@ -98,6 +100,8 @@ public:
    int GetBinarySize() { return (SizeV() + SizeN() + SizeT()) * sizeof(float) + SizeI() * sizeof(int); }
 
    int Write(char *msg, int maxlen);
+
+   static void CalcTextureSize(int nel, int align, int &sx, int &sy);
 };
 
 } // namespace Experimental

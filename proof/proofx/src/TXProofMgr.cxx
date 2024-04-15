@@ -31,6 +31,7 @@ Implementation of the functionality provided by TProofMgr in the case of a xproo
 #endif
 
 #include "Getline.h"
+#include "snprintf.h"
 #include "TList.h"
 #include "TObjArray.h"
 #include "TObjString.h"
@@ -300,7 +301,7 @@ void TXProofMgr::DetachSession(TProof *p, Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checks if 'url' refers to the same 'user@host:port' entity as the URL
+/// Checks if 'url' refers to the same `user@host:port` entity as the URL
 /// in memory. TProofMgr::MatchUrl cannot be used here because of the
 /// 'double' default port, implying an additional check on the port effectively
 /// open.

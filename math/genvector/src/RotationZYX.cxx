@@ -20,7 +20,6 @@
 
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/RotationZYX.h"
 #include "Math/GenVector/Rotation3D.h"
 #include "Math/GenVector/Quaternion.h"
 #include "Math/GenVector/RotationX.h"
@@ -150,7 +149,7 @@ void RotationZYX::Invert()
 
 std::ostream & operator<< (std::ostream & os, const RotationZYX & e) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n{phi(Z angle): " << e.Phi() << "   theta(Y angle): " << e.Theta()
    << "   psi(X angle): " << e.Psi() << "}\n";
    return os;

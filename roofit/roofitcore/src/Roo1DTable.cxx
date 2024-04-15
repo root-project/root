@@ -19,39 +19,40 @@
 \class Roo1DTable
 \ingroup Roofitcore
 
-Roo1DTable implements a one-dimensional table. A table is the category
-equivalent of a plot. To create a table use the RooDataSet::table method.
+One-dimensional table. A table is the category
+equivalent of a plot. To create a table use the RooDataSet::table() method.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include <iomanip>
-#include "TString.h"
-#include "TMath.h"
 #include "Roo1DTable.h"
+
 #include "RooMsgService.h"
+#include "RooFitLegacy/RooCatTypeLegacy.h"
+
+#include "TString.h"
 #include "TClass.h"
 
-using namespace std ;
+#include <iostream>
+#include <iomanip>
+
+using std::cout, std::endl, std::ostream, std::setw, std::setfill;
 
 ClassImp(Roo1DTable);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an empty table from abstract category. The number of table entries and 
+/// Create an empty table from abstract category. The number of table entries and
 /// their names are taken from the category state labels at the time of construction,
 /// but not reference to the category is retained after the construction phase.
 /// Use fill() to fill the table.
 
-Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) : 
+Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory& cat) :
   RooTable(name,title), _total(0), _nOverflow(0)
 {
   //Take types from reference category
   Int_t nbin=0 ;
   TIterator* tIter = cat.typeIterator() ;
   RooCatType* type ;
-  while (((type = (RooCatType*)tIter->Next()))) {
+  while (((type = static_cast<RooCatType*>(tIter->Next())))) {
     _types.Add(new RooCatType(*type)) ;
     nbin++ ;
   }
@@ -67,14 +68,14 @@ Roo1DTable::Roo1DTable(const char *name, const char *title, const RooAbsCategory
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-Roo1DTable::Roo1DTable(const Roo1DTable& other) : 
+Roo1DTable::Roo1DTable(const Roo1DTable& other) :
   RooTable(other), _count(other._count), _total(other._total), _nOverflow(other._nOverflow)
-{  
+{
   // Take types from reference category
 
   int i;
   for (i=0 ; i<other._types.GetEntries() ; i++) {
-    _types.Add(new RooCatType(*(RooCatType*)other._types.At(i))) ;
+    _types.Add(new RooCatType(*static_cast<RooCatType*>(other._types.At(i)))) ;
   }
 
 }
@@ -98,21 +99,21 @@ Roo1DTable::~Roo1DTable()
 /// current category state matches no table slot name, the table
 /// overflow counter is incremented.
 
-void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight) 
+void Roo1DTable::fill(RooAbsCategory& cat, double weight)
 {
   if (weight==0) return ;
 
   _total += weight ;
 
-  //Bool_t found(kFALSE) ;
+  //bool found(false) ;
   for (int i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
-    if (cat.getIndex()==entry->getVal()) {
-      _count[i] += weight ; ;
-      //found=kTRUE ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
+    if (cat.getCurrentIndex()==entry->getVal()) {
+      _count[i] += weight ;
+      //found=true ;
       return;
     }
-  }  
+  }
 
   //if (!found) {
   _nOverflow += weight ;
@@ -124,7 +125,7 @@ void Roo1DTable::fill(RooAbsCategory& cat, Double_t weight)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the name of the table
 
-void Roo1DTable::printName(ostream& os) const 
+void Roo1DTable::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -134,7 +135,7 @@ void Roo1DTable::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the title of the table
 
-void Roo1DTable::printTitle(ostream& os) const 
+void Roo1DTable::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -144,9 +145,9 @@ void Roo1DTable::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the class name of the table
 
-void Roo1DTable::printClassName(ostream& os) const 
+void Roo1DTable::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
@@ -154,14 +155,14 @@ void Roo1DTable::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the table value, i.e. the contents, in 'inline' format
 
-void Roo1DTable::printValue(ostream& os) const 
+void Roo1DTable::printValue(ostream& os) const
 {
   os << "(" ;
   for (Int_t i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (_count[i]>0) {
       if (i>0) {
-	os << "," ;
+   os << "," ;
       }
       os << entry->GetName() << "=" << _count[i] ;
     }
@@ -175,7 +176,7 @@ void Roo1DTable::printValue(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Define default contents to print
 
-Int_t Roo1DTable::defaultPrintContents(Option_t* /*opt*/) const 
+Int_t Roo1DTable::defaultPrintContents(Option_t* /*opt*/) const
 {
   return kName|kClassName|kValue|kArgs ;
 }
@@ -185,18 +186,18 @@ Int_t Roo1DTable::defaultPrintContents(Option_t* /*opt*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the formatted table contents on the given stream
 
-void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose, TString indent) const 
+void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, bool verbose, TString indent) const
 {
   os << indent << endl ;
   os << indent << "  Table " << GetName() << " : " << GetTitle() << endl ;
 
   // Determine maximum label and count width
   Int_t labelWidth(0) ;
-  Double_t maxCount(1) ;
+  double maxCount(1) ;
 
   int i;
   for (i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
 
     // Disable warning about a signed/unsigned mismatch by MSCV 6.0 by
     // using the lwidth temporary.
@@ -217,7 +218,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose,
 
   // Contents
   for (i=0 ; i<_types.GetEntries() ; i++) {
-    RooCatType* entry = (RooCatType*) _types.At(i) ;
+    RooCatType* entry = static_cast<RooCatType*>(_types.At(i)) ;
     if (_count[i]>0 || verbose) {
       os << "  | " << setw(labelWidth) << entry->GetName() << " | " << setw(countWidth) << _count[i] << " |" << endl ;
     }
@@ -226,7 +227,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose,
   // Overflow field
   if (_nOverflow) {
     os << indent << "  +-" << setw(labelWidth) << setfill('-') << "-" << "-+-" << setw(countWidth) << "-" << "-+" << endl ;
-    os << indent << "  | " << "Overflow" << " | " << setw(countWidth) << _nOverflow << " |" << endl ;    
+    os << indent << "  | " << "Overflow" << " | " << setw(countWidth) << _nOverflow << " |" << endl ;
   }
 
   // Footer
@@ -241,7 +242,7 @@ void Roo1DTable::printMultiline(ostream& os, Int_t /*contents*/, Bool_t verbose,
 /// Return the table entry named 'label'. Zero is returned if given
 /// label doesn't occur in table.
 
-Double_t Roo1DTable::get(const char* label, Bool_t silent) const 
+double Roo1DTable::get(const char* label, bool silent) const
 {
 
   TObject* cat = _types.FindObject(label) ;
@@ -260,16 +261,16 @@ Double_t Roo1DTable::get(const char* label, Bool_t silent) const
 /// Return the table entry named 'label'. Zero is returned if given
 /// label doesn't occur in table.
 
-Double_t Roo1DTable::get(const int index, Bool_t silent) const 
+double Roo1DTable::get(const int index, bool silent) const
 {
-  const RooCatType* cat = 0;
+  const RooCatType* cat = nullptr;
   int i = 0;
   for (; i < _types.GetEntries(); ++i) {
      cat = static_cast<const RooCatType*>(_types[i]);
      if (cat->getVal() == index) {
         break;
      } else {
-        cat = 0;
+        cat = nullptr;
      }
   }
   if (!cat) {
@@ -286,7 +287,7 @@ Double_t Roo1DTable::get(const int index, Bool_t silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the number of overflow entries in the table.
 
-Double_t Roo1DTable::getOverflow() const 
+double Roo1DTable::getOverflow() const
 {
   return _nOverflow ;
 }
@@ -294,11 +295,11 @@ Double_t Roo1DTable::getOverflow() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the fraction of entries in the table contained in the slot named 'label'. 
+/// Return the fraction of entries in the table contained in the slot named 'label'.
 /// The normalization includes the number of overflows.
-/// Zero is returned if given label doesn't occur in table.   
+/// Zero is returned if given label doesn't occur in table.
 
-Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const 
+double Roo1DTable::getFrac(const char* label, bool silent) const
 {
   if (_total) {
     return get(label,silent) / _total ;
@@ -311,11 +312,11 @@ Double_t Roo1DTable::getFrac(const char* label, Bool_t silent) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the fraction of entries in the table contained in the slot named 'label'. 
+/// Return the fraction of entries in the table contained in the slot named 'label'.
 /// The normalization includes the number of overflows.
-/// Zero is returned if given label doesn't occur in table.   
+/// Zero is returned if given label doesn't occur in table.
 
-Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const 
+double Roo1DTable::getFrac(const int index, bool silent) const
 {
   if (_total) {
     return get(index, silent) / _total ;
@@ -330,20 +331,20 @@ Double_t Roo1DTable::getFrac(const int index, Bool_t silent) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if table is identical in contents to given reference table
 
-Bool_t Roo1DTable::isIdentical(const RooTable& other) 
+bool Roo1DTable::isIdentical(const RooTable& other, bool /*verbose*/)
 {
   const Roo1DTable* other1d = &dynamic_cast<const Roo1DTable&>(other) ;
 
   if (!other1d) {
-    return kFALSE ;
+    return false ;
   }
 
   int i;
   for (i=0 ; i<_types.GetEntries() ; i++) {
-    // RooCatType* entry = (RooCatType*) _types.At(i) ;        
+    // RooCatType* entry = (RooCatType*) _types.At(i) ;
     if (_count[i] != other1d->_count[i]) {
-      return kFALSE ;
+      return false ;
     }
   }
-  return kTRUE ;
+  return true ;
 }

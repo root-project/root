@@ -11,7 +11,6 @@
 
 #include "ASTTransformer.h"
 #include "AutoSynthesizer.h"
-#include "BackendPasses.h"
 #include "CheckEmptyTransactionTransformer.h"
 #include "ClingPragmas.h"
 #include "DeclCollector.h"
@@ -19,7 +18,6 @@
 #include "DefinitionShadower.h"
 #include "DeviceKernelInliner.h"
 #include "DynamicLookup.h"
-#include "IncrementalExecutor.h"
 #include "NullDerefProtectionTransformer.h"
 #include "TransactionPool.h"
 #include "ValueExtractionSynthesizer.h"
@@ -107,8 +105,23 @@ namespace {
     return false;
   }
 
+  /// \brief Overrides the current DiagnosticConsumer to supress many warnings
+  /// issued as a result of incremental compilation (see `HandleDiagnostic()`).
+  ///
+  /// Diagnostics passing the filter are, by default, forwarded to the previous
+  /// DiagnosticConsumer instance.  A different consumer may be specified via
+  /// `setTargetConsumer()`.
+  /// In that case, given that internal state might be updated as part of
+  /// `{Begin,End}SourceFile` (e.g. in TextDiagnosticPrinter), calls to such
+  /// functions will be forwarded to both, the user-specified and the original
+  /// consumer; however `HandleDiagnostic()` calls shall only be seen by the
+  /// former.
+  ///
+  /// On destruction, the original (i.e. overridden consumer) is restored.
+  ///
   class FilteringDiagConsumer : public cling::utils::DiagnosticsOverride {
     std::stack<bool> m_IgnorePromptDiags;
+    llvm::PointerIntPair<DiagnosticConsumer*, 1, bool /*Own*/> m_Target{};
 
     void SyncDiagCountWithTarget() {
       NumWarnings = m_PrevClient.getNumWarnings();
@@ -118,20 +131,28 @@ namespace {
     void BeginSourceFile(const LangOptions &LangOpts,
                          const Preprocessor *PP=nullptr) override {
       m_PrevClient.BeginSourceFile(LangOpts, PP);
+      if (auto C = m_Target.getPointer())
+        C->BeginSourceFile(LangOpts, PP);
     }
 
     void EndSourceFile() override {
       m_PrevClient.EndSourceFile();
+      if (auto C = m_Target.getPointer())
+        C->EndSourceFile();
       SyncDiagCountWithTarget();
     }
 
     void finish() override {
       m_PrevClient.finish();
+      if (auto C = m_Target.getPointer())
+        C->finish();
       SyncDiagCountWithTarget();
     }
 
     void clear() override {
       m_PrevClient.clear();
+      if (auto C = m_Target.getPointer())
+        C->clear();
       SyncDiagCountWithTarget();
     }
 
@@ -141,14 +162,15 @@ namespace {
 
     void HandleDiagnostic(DiagnosticsEngine::Level DiagLevel,
                           const Diagnostic &Info) override {
+      if (Info.getID() == diag::warn_falloff_nonvoid_function) {
+        DiagLevel = DiagnosticsEngine::Error;
+      }
       if (Ignoring()) {
         if (Info.getID() == diag::warn_unused_expr
+            || Info.getID() == diag::warn_unused_result
             || Info.getID() == diag::warn_unused_call
             || Info.getID() == diag::warn_unused_comparison)
           return; // ignore!
-        if (Info.getID() == diag::warn_falloff_nonvoid_function) {
-          DiagLevel = DiagnosticsEngine::Error;
-        }
         if (Info.getID() == diag::ext_return_has_expr) {
           // An error that we need to suppress.
           auto Diags = const_cast<DiagnosticsEngine*>(Info.getDiags());
@@ -159,7 +181,19 @@ namespace {
           return; // ignore!
         }
       }
-      m_PrevClient.HandleDiagnostic(DiagLevel, Info);
+
+      // In principle, for simplicity, we preserve the old behavior of
+      // delivering diagnostics to just one consumer (that is why we don't emit
+      // to both), but we allow the "sink" to be changed.
+      // Note, however, that consumers might update their internal state in
+      // calls to, e.g. `BeginSourceFile()` or `EndSourceFile()` (actually,
+      // `TextDiagnosticPrinter` is an example of this), so in order to be able
+      // to restore the original consumer, we need to keep forwarding these
+      // calls also to `m_PrevClient` (see above).
+      if (auto C = m_Target.getPointer())
+        C->HandleDiagnostic(DiagLevel, Info);
+      else
+        m_PrevClient.HandleDiagnostic(DiagLevel, Info);
       SyncDiagCountWithTarget();
     }
 
@@ -168,9 +202,26 @@ namespace {
     }
 
   public:
-    FilteringDiagConsumer(DiagnosticsEngine& Diags, bool Own) :
-      DiagnosticsOverride(Diags, Own) {
+    FilteringDiagConsumer(DiagnosticsEngine& Diags, bool Own)
+      : DiagnosticsOverride(Diags, Own) {}
+    virtual ~FilteringDiagConsumer() { setTargetConsumer(nullptr); }
+
+    /// \brief Sets the DiagnosticConsumer that sees `HandleDiagnostic()` calls.
+    /// \param[in] Consumer - The target DiagnosticConsumer, or `nullptr` to
+    ///    revert to original client.
+    /// \param[in] Own - Whether we own the pointee
+    ///
+    void setTargetConsumer(DiagnosticConsumer* Consumer, bool Own = false) {
+      if (m_Target.getInt())
+        if (auto C = m_Target.getPointer())
+          delete C;
+
+      m_Target.setPointer(Consumer);
+      m_Target.setInt(Own);
     }
+
+    DiagnosticConsumer* getTargetConsumer() const
+    { return m_Target.getPointer(); }
 
     struct RAAI {
       FilteringDiagConsumer& m_Client;
@@ -223,7 +274,7 @@ static void HandlePlugins(CompilerInstance& CI,
     PluginASTAction::ActionType PluginActionType = P->getActionType();
     assert(PluginActionType != clang::PluginASTAction::ReplaceAction);
 
-    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName()])) {
+    if (P->ParseArgs(CI, CI.getFrontendOpts().PluginArgs[it->getName().str()])) {
       std::unique_ptr<ASTConsumer> PluginConsumer
         = P->CreateASTConsumer(CI, /*InputFile*/ "");
       if (PluginActionType == clang::PluginASTAction::AddBeforeMainAction)
@@ -240,7 +291,7 @@ namespace cling {
       : m_Interpreter(interp) {
     std::unique_ptr<cling::DeclCollector> consumer;
     consumer.reset(m_Consumer = new cling::DeclCollector());
-    m_CI.reset(CIFactory::createCI("", interp->getOptions(), llvmdir,
+    m_CI.reset(CIFactory::createCI("\n", interp->getOptions(), llvmdir,
                                    std::move(consumer), moduleExtensions));
 
     if (!m_CI) {
@@ -266,6 +317,7 @@ namespace cling {
       auto CG
         = std::unique_ptr<clang::CodeGenerator>(CreateLLVMCodeGen(Diag,
                                                                makeModuleName(),
+                                                  &m_CI->getVirtualFileSystem(),
                                                     m_CI->getHeaderSearchOpts(),
                                                     m_CI->getPreprocessorOpts(),
                                                          m_CI->getCodeGenOpts(),
@@ -308,9 +360,9 @@ namespace cling {
       Transaction* PchT = beginTransaction(CO);
       DiagnosticErrorTrap Trap(Diags);
       m_CI->createPCHExternalASTSource(PCHFileName,
-                                       true /*DisablePCHValidation*/,
+                                       DisableValidationForModuleKind::All,
                                        true /*AllowPCHWithCompilerErrors*/,
-                                       0 /*DeserializationListener*/,
+                                       nullptr /*DeserializationListener*/,
                                        true /*OwnsDeserializationListener*/);
       result.push_back(endTransaction(PchT));
       if (Trap.hasErrorOccurred()) {
@@ -389,6 +441,17 @@ namespace cling {
 
   const Transaction* IncrementalParser::getCurrentTransaction() const {
     return m_Consumer->getTransaction();
+  }
+
+  void IncrementalParser::setDiagnosticConsumer(DiagnosticConsumer* Consumer,
+						bool Own) {
+    static_cast<
+      FilteringDiagConsumer&>(*m_DiagConsumer).setTargetConsumer(Consumer, Own);
+  }
+
+  DiagnosticConsumer* IncrementalParser::getDiagnosticConsumer() const {
+    return static_cast<
+      FilteringDiagConsumer&>(*m_DiagConsumer).getTargetConsumer();
   }
 
   SourceLocation IncrementalParser::getNextAvailableUniqueSourceLoc() {
@@ -580,9 +643,11 @@ namespace cling {
       Transaction* prevConsumerT = m_Consumer->getTransaction();
       m_Consumer->setTransaction(T);
       Transaction* nestedT = beginTransaction(T->getCompilationOpts());
+      // Process used vtables and generate implicit bodies.
+      getCI()->getSema().DefineUsedVTables();
       // Pull all template instantiations in that came from the consumers.
       getCI()->getSema().PerformPendingInstantiations();
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
       // Microsoft-specific:
       // Late parsed templates can leave unswallowed "macro"-like tokens.
       // They will seriously confuse the Parser when entering the next
@@ -660,6 +725,14 @@ namespace cling {
       if (InterpreterCallbacks* callbacks = m_Interpreter->getCallbacks())
         callbacks->TransactionCodeGenStarted(*T);
 
+      // Update CodeGen to current optimization level, which might be different
+      // from what it had when constructed.
+      auto &CGOpts = m_CI->getCodeGenOpts();
+      CGOpts.OptimizationLevel = T->getCompilationOpts().OptLevel;
+      CGOpts.setInlining((CGOpts.OptimizationLevel == 0)
+                         ? CodeGenOptions::OnlyAlwaysInlining
+                         : CodeGenOptions::NormalInlining);
+
       // The initializers are emitted to the symbol "_GLOBAL__sub_I_" + filename.
       // Make that unique!
       deserT = beginTransaction(CompilationOptions());
@@ -695,13 +768,20 @@ namespace cling {
 
     if (Transaction* Parent = T.getParent()) {
       Parent->removeNestedTransaction(&T);
-      T.setParent(0);
+      T.setParent(nullptr);
     } else {
-      // Remove from the queue
-      assert(&T == m_Transactions.back() && "Out of order transaction removal");
-      m_Transactions.pop_back();
-      if (!m_Transactions.empty())
-        m_Transactions.back()->setNext(0);
+      if (&T == m_Transactions.back()) {
+        // Remove from the queue
+        m_Transactions.pop_back();
+        if (!m_Transactions.empty())
+          m_Transactions.back()->setNext(nullptr);
+      } else {
+        // If T is not the last transaction it must not be a previous
+        // transaction either, but a "disconnected" one, i.e. one that
+        // was not yet committed.
+        assert(std::find(m_Transactions.begin(), m_Transactions.end(), &T)
+              == m_Transactions.end() && "Out of order transaction removal");
+      }
     }
 
     m_TransactionPool->releaseTransaction(&T);
@@ -787,7 +867,7 @@ namespace cling {
     Preprocessor& PP = m_CI->getPreprocessor();
     if (!PP.getCurrentLexer()) {
        PP.EnterSourceFile(m_CI->getSourceManager().getMainFileID(),
-                          0, SourceLocation());
+             nullptr, SourceLocation());
     }
     assert(PP.isIncrementalProcessingEnabled() && "Not in incremental mode!?");
     PP.enableIncrementalProcessing();
@@ -798,10 +878,10 @@ namespace cling {
     // Create an uninitialized memory buffer, copy code in and append "\n"
     size_t InputSize = input.size(); // don't include trailing 0
     // MemBuffer size should *not* include terminating zero
-    std::unique_ptr<llvm::MemoryBuffer>
-      MB(llvm::MemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
-                                                   source_name.str()));
-    char* MBStart = const_cast<char*>(MB->getBufferStart());
+    std::unique_ptr<llvm::WritableMemoryBuffer>
+      MB(llvm::WritableMemoryBuffer::getNewUninitMemBuffer(InputSize + 1,
+                                                           source_name.str()));
+    char* MBStart = MB->getBufferStart();
     memcpy(MBStart, input.data(), InputSize);
     MBStart[InputSize] = '\n';
 
@@ -832,7 +912,7 @@ namespace cling {
     m_MemoryBuffers.push_back(std::make_pair(MBNonOwn, FID));
 
     // NewLoc only used for diags.
-    PP.EnterSourceFile(FID, /*DirLookup*/0, NewLoc);
+    PP.EnterSourceFile(FID, /*DirLookup*/nullptr, NewLoc);
     m_Consumer->getTransaction()->setBufferFID(FID);
 
     DiagnosticsEngine& Diags = getCI()->getDiagnostics();
@@ -840,10 +920,16 @@ namespace cling {
     FilteringDiagConsumer::RAAI RAAITmp(*m_DiagConsumer, CO.IgnorePromptDiags);
 
     DiagnosticErrorTrap Trap(Diags);
+    // FIXME: SavePendingInstantiationsRAII should be obsolvete as
+    // GlobalEagerInstantiationScope and LocalEagerInstantiationScope do the
+    // same thing.
     Sema::SavePendingInstantiationsRAII SavedPendingInstantiations(S);
+    Sema::GlobalEagerInstantiationScope GlobalInstantiations(S, /*Enabled=*/true);
+    Sema::LocalEagerInstantiationScope LocalInstantiations(S);
 
     Parser::DeclGroupPtrTy ADecl;
-    while (!m_Parser->ParseTopLevelDecl(ADecl)) {
+    Sema::ModuleImportState IS = Sema::ModuleImportState::NotACXX20Module;
+    while (!m_Parser->ParseTopLevelDecl(ADecl, IS)) {
       // If we got a null return and something *was* parsed, ignore it.  This
       // is due to a top-level semicolon, an action override, or a parse error
       // skipping something.
@@ -868,8 +954,9 @@ namespace cling {
 
       return kSuccess;
     }
-
-#ifdef LLVM_ON_WIN32
+    LocalInstantiations.perform();
+    GlobalInstantiations.perform();
+#ifdef _WIN32
     // Microsoft-specific:
     // Late parsed templates can leave unswallowed "macro"-like tokens.
     // They will seriously confuse the Parser when entering the next
@@ -922,10 +1009,10 @@ namespace cling {
       // Don't protect against crashes if we cannot run anything.
       // cling might also be in a PCH-generation mode; don't inject our Sema
       // pointer into the PCH.
-      if (!isCUDADevice)
+      if (!isCUDADevice && m_Interpreter->getOptions().PtrCheck)
         ASTTransformers.emplace_back(
             new NullDerefProtectionTransformer(m_Interpreter));
-      else
+      if (isCUDADevice)
         ASTTransformers.emplace_back(
             new DeviceKernelInliner(TheSema));
     }

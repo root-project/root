@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DataInputHandler                                                      *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::DataInputHandler
@@ -38,14 +38,12 @@ Class that contains all the data information.
 #include "TMVA/Types.h"
 #include "TEventList.h"
 #include "TCut.h"
-#include "TFile.h"
-#include "TROOT.h"
 #include "TTree.h"
 
 #include "TMVA/Configurable.h"
 
 #include <vector>
-#include <iostream>
+#include <fstream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -155,7 +153,8 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
 {
    TTree* tr = new TTree( "tmp", dataFile );
    std::ifstream in(dataFile);
-   tr->SetDirectory(0); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
+   tr->SetDirectory(nullptr); 
+   Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
    if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 

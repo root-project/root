@@ -1,18 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Speecial p.d.f.'s: using a p.d.f defined by a sum of real-valued amplitude components
+/// Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
-#include "RooTruthModel.h"
 #include "RooFormulaVar.h"
 #include "RooRealSumPdf.h"
 #include "RooPolyVar.h"
@@ -32,22 +32,18 @@ void rf704_amplitudefit()
    RooRealVar t("t", "time", -1., 15.);
    RooRealVar cosa("cosa", "cos(alpha)", -1., 1.);
 
-   // Use RooTruthModel to obtain compiled implementation of sinh/cosh modulated decay functions
    RooRealVar tau("tau", "#tau", 1.5);
    RooRealVar deltaGamma("deltaGamma", "deltaGamma", 0.3);
-   RooTruthModel truthModel("tm", "tm", t);
-   RooFormulaVar coshGBasis("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", RooArgList(t, tau, deltaGamma));
-   RooFormulaVar sinhGBasis("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", RooArgList(t, tau, deltaGamma));
-   RooAbsReal *coshGConv = truthModel.convolution(&coshGBasis, &t);
-   RooAbsReal *sinhGConv = truthModel.convolution(&sinhGBasis, &t);
+   RooFormulaVar coshG("coshGBasis", "exp(-@0/ @1)*cosh(@0*@2/2)", {t, tau, deltaGamma});
+   RooFormulaVar sinhG("sinhGBasis", "exp(-@0/ @1)*sinh(@0*@2/2)", {t, tau, deltaGamma});
 
    // Construct polynomial amplitudes in cos(a)
-   RooPolyVar poly1("poly1", "poly1", cosa, RooArgList(RooConst(0.5), RooConst(0.2), RooConst(0.2)), 0);
-   RooPolyVar poly2("poly2", "poly2", cosa, RooArgList(RooConst(1), RooConst(-0.2), RooConst(3)), 0);
+   RooPolyVar poly1("poly1", "poly1", cosa, RooArgList{0.5, 0.2, 0.2}, 0);
+   RooPolyVar poly2("poly2", "poly2", cosa, RooArgList{1.0, -0.2, 3.0}, 0);
 
    // Construct 2D amplitude as uncorrelated product of amp(t)*amp(cosa)
-   RooProduct ampl1("ampl1", "amplitude 1", RooArgSet(poly1, *coshGConv));
-   RooProduct ampl2("ampl2", "amplitude 2", RooArgSet(poly2, *sinhGConv));
+   RooProduct ampl1("ampl1", "amplitude 1", {poly1, coshG});
+   RooProduct ampl2("ampl2", "amplitude 2", {poly2, sinhG});
 
    // C o n s t r u c t   a m p l i t u d e   s u m   p d f
    // -----------------------------------------------------
@@ -60,10 +56,10 @@ void rf704_amplitudefit()
    RooRealSumPdf pdf("pdf", "pdf", RooArgList(ampl1, ampl2), RooArgList(f1, f2));
 
    // Generate some toy data from pdf
-   RooDataSet *data = pdf.generate(RooArgSet(t, cosa), 10000);
+   std::unique_ptr<RooDataSet> data{pdf.generate({t, cosa}, 10000)};
 
    // Fit pdf to toy data with only amplitude strength floating
-   pdf.fitTo(*data);
+   pdf.fitTo(*data, PrintLevel(-1));
 
    // P l o t   a m p l i t u d e   s u m   p d f
    // -------------------------------------------

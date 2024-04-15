@@ -13,7 +13,7 @@
 #define ROOT_TObject
 
 
-#include "RConfigure.h"
+// #include "RConfigure.h"  // included via Rtypes.h
 #include "Rtypes.h"
 #include "TStorage.h"
 #include "TVersionCheck.h"
@@ -33,6 +33,10 @@ class TObjArray;
 class TMethod;
 class TTimer;
 
+namespace ROOT {
+namespace Internal {
+   bool DeleteChangesMemoryImpl();
+}}
 
 class TObject {
 
@@ -40,8 +44,8 @@ private:
    UInt_t         fUniqueID;   ///< object unique identifier
    UInt_t         fBits;       ///< bit field status word
 
-   static Long_t  fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
-   static Bool_t  fgObjectStat;  ///< if true keep track of objects in TObjectTable
+   static Longptr_t fgDtorOnly;    ///< object for which to call dtor only (i.e. no delete)
+   static Bool_t    fgObjectStat;  ///< if true keep track of objects in TObjectTable
 
    static void AddToTObjectTable(TObject *);
 
@@ -86,8 +90,23 @@ public:
    enum {
       kSingleKey     = BIT(0),        ///< write collection with single key
       kOverwrite     = BIT(1),        ///< overwrite existing object with same name
-      kWriteDelete   = BIT(2)         ///< write object, then delete previous key with same name
+      kWriteDelete   = BIT(2),        ///< write object, then delete previous key with same name
    };
+
+protected:
+   enum { // DeprectatedWriteOptions
+      ///< Used to request that the class specific implementation of `TObject::Write`
+      ///< just prepare the objects to be ready to be written but do not actually write
+      ///< them into the TBuffer. This is just for example by TBufferMerger to request
+      ///< that the TTree inside the file calls `TTree::FlushBaskets` (outside of the merging lock)
+      ///< and TBufferMerger will later ask for the write (inside the merging lock).
+      ///< To take advantage of this feature the class needs to overload `TObject::Write`
+      ///< and use this enum value accordingly.  (See `TTree::Write` and `TObject::Write`)
+      ///< Do not use, this feature will be migrate to the Merge function (See TClass and TTree::Merge)
+      kOnlyPrepStep  = BIT(3)
+   };
+
+public:
 
    TObject();
    TObject(const TObject &object);
@@ -108,8 +127,8 @@ public:
    virtual void        DrawClass() const; // *MENU*
    virtual TObject    *DrawClone(Option_t *option="") const; // *MENU*
    virtual void        Dump() const; // *MENU*
-   virtual void        Execute(const char *method,  const char *params, Int_t *error=0);
-   virtual void        Execute(TMethod *method, TObjArray *params, Int_t *error=0);
+   virtual void        Execute(const char *method,  const char *params, Int_t *error = nullptr);
+   virtual void        Execute(TMethod *method, TObjArray *params, Int_t *error = nullptr);
    virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
@@ -145,8 +164,18 @@ public:
    virtual void        SetDrawOption(Option_t *option="");  // *MENU*
    virtual void        SetUniqueID(UInt_t uid);
    virtual void        UseCurrentStyle();
-   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t       Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0);
+   virtual Int_t       Write(const char *name = nullptr, Int_t option = 0, Int_t bufsize = 0) const;
+
+   /// IsDestructed
+   ///
+   /// \note This function must be non-virtual as it can be used on destructed (but
+   /// not yet modified) memory.  This is used for example in TClonesArray to record
+   /// the element that have been destructed but not deleted and thus are ready for
+   /// re-use (by operator new with placement).
+   ///
+   /// \return true if this object's destructor has been run.
+   Bool_t IsDestructed() const { return !TestBit(kNotDeleted); }
 
    //----- operators
    void    *operator new(size_t sz) { return TStorage::ObjectAlloc(sz); }
@@ -175,27 +204,27 @@ public:
 
    //---- error handling
    virtual void     Info(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Warning(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Error(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     SysError(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
    virtual void     Fatal(const char *method, const char *msgfmt, ...) const
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 3, 4)))   /* 1 is the this pointer */
 #endif
    ;
@@ -205,12 +234,13 @@ public:
    void     Obsolete(const char *method, const char *asOfVers, const char *removedFromVers) const;
 
    //---- static functions
-   static Long_t    GetDtorOnly();
+   static Longptr_t GetDtorOnly();
    static void      SetDtorOnly(void *obj);
    static Bool_t    GetObjectStat();
    static void      SetObjectStat(Bool_t stat);
 
    friend class TClonesArray; // needs to reset kNotDeleted in fBits
+   friend bool ROOT::Internal::DeleteChangesMemoryImpl();
 
    ClassDef(TObject,1)  //Basic ROOT object
 };
@@ -219,7 +249,7 @@ public:
 /// TObject constructor. It sets the two data words of TObject to their
 /// initial values. The unique ID is set to 0 and the status word is
 /// set depending if the object is created on the stack or allocated
-/// on the heap. Depending on the ROOT environment variable "Root.MemStat"
+/// on the heap. Depending on the ROOT environment variable "Root.ObjStat"
 /// (see TEnv) the object is added to the global TObjectTable for
 /// bookkeeping.
 
@@ -349,5 +379,32 @@ enum EObjBits {
 namespace cling {
    std::string printValue(TObject *val);
 }
+
+namespace ROOT {
+
+namespace Internal {
+   bool DeleteChangesMemory();
+} // Internal
+
+namespace Detail {
+
+
+/// @brief Check if the TObject's memory has been deleted.
+/// @warning This should be only used for error mitigation as the answer is only
+///    sometimes correct.  It actually just checks whether the object has been
+///    deleted, so this will falsely return true for an object that has
+///    been destructed but its memory has not been deleted.  This will return an
+///    undefined value if the memory is re-used between the deletion and the check.
+///    i.e.  This is useful to prevent a segmentation fault in case where the problem
+///    can be detected when the deletion and the usage are 'close-by'
+/// @warning In enviroment where delete taints (changes) the memory, this function
+///    always returns false as the marker left by ~TObject will be overwritten.
+/// @param obj The memory to check
+/// @return true if the object has been destructed and it can be inferred that it has been deleted
+R__ALWAYS_INLINE bool HasBeenDeleted(const TObject *obj) {
+   return !ROOT::Internal::DeleteChangesMemory() && obj->IsDestructed();
+}
+
+}} // ROOT::Details
 
 #endif

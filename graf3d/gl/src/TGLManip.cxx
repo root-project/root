@@ -14,9 +14,6 @@
 #include "TGLCamera.h"
 #include "TGLPhysicalShape.h"
 #include "TGLIncludes.h"
-#include "TROOT.h"
-
-#include "TVirtualX.h"
 
 /** \class TGLManip
 \ingroup opengl
@@ -37,7 +34,7 @@ ClassImp(TGLManip);
 /// physical shape.
 
 TGLManip::TGLManip() :
-   fShape(0),
+   fShape(nullptr),
    fSelectedWidget(0), fActive(kFALSE),
    fFirstMouse(0, 0),
    fLastMouse(0, 0)

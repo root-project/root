@@ -120,8 +120,17 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    //Check some conditions first.
    if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+         if (!view) {
+            ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+            return;
+         }
+
+         if (![view.fQuartzWindow findXorWindow])
+            [view.fQuartzWindow addXorWindow];
          fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
+      }
       return;
    }
 
@@ -247,8 +256,18 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    // x2,y2        : end of line
 
    if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+         if (!view) {
+             ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+             return;
+         }
+
+         if (![view.fQuartzWindow findXorWindow])
+            [view.fQuartzWindow addXorWindow];
          fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);
+      }
+
       return;
    }
 
@@ -357,11 +376,19 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
    if (drawable.fScaleFactor > 1.)
       CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
 
-   CGContextSetLineJoin(ctx, kCGLineJoinRound);
-   CGContextSetLineCap(ctx, kCGLineCapRound);
+   Style_t markerstyle = TAttMarker::GetMarkerStyleBase(GetMarkerStyle());
+
+   // The fast pixel markers need to be treated separately
+   if (markerstyle == 1 || markerstyle == 6 || markerstyle == 7) {
+       CGContextSetLineJoin(ctx, kCGLineJoinMiter);
+       CGContextSetLineCap(ctx, kCGLineCapButt);
+   } else {
+       CGContextSetLineJoin(ctx, kCGLineJoinRound);
+       CGContextSetLineCap(ctx, kCGLineCapRound);
+   }
 
    Float_t MarkerSizeReduced = GetMarkerSize() - TMath::Floor(TAttMarker::GetMarkerLineWidth(GetMarkerStyle())/2.)/4.;
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, TAttMarker::GetMarkerStyleBase(GetMarkerStyle()));
+   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], MarkerSizeReduced * drawable.fScaleFactor, markerstyle);
 
    CGContextSetLineJoin(ctx, kCGLineJoinMiter);
    CGContextSetLineCap(ctx, kCGLineCapButt);

@@ -64,27 +64,27 @@ protected:
    Int_t  CreateLsFile(const char *group, const char *user, Long_t &mtime, TString &checksum);
    Int_t  FillLsDataSet(const char *group, const char *user, const char *dsName, TList *out, UInt_t option);
 
-   void UpdateUsedSpace();
+   void UpdateUsedSpace() override;
 
 public:
    TDataSetManagerFile() : TDataSetManager(0, 0, 0) { }
    TDataSetManagerFile(const char *group, const char *user, const char *ins);
    TDataSetManagerFile(const char *ins);
-   virtual ~TDataSetManagerFile() { }
+   ~TDataSetManagerFile() override { }
 
-   void             ParseInitOpts(const char *opts);
+   void             ParseInitOpts(const char *opts) override;
 
-   Int_t            ClearCache(const char *uri = 0);
-   TFileCollection *GetDataSet(const char *uri, const char *srv = 0);
-   TMap            *GetDataSets(const char *uri, UInt_t option = TDataSetManager::kExport);
-   Bool_t           ExistsDataSet(const char *uri);
-   Bool_t           RemoveDataSet(const char *uri);
+   Int_t            ClearCache(const char *uri = 0) override;
+   TFileCollection *GetDataSet(const char *uri, const char *srv = 0) override;
+   TMap            *GetDataSets(const char *uri, UInt_t option = TDataSetManager::kExport) override;
+   Bool_t           ExistsDataSet(const char *uri) override;
+   Bool_t           RemoveDataSet(const char *uri) override;
 
-   Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt);
-   Int_t            ScanDataSet(const char *uri, UInt_t option = kReopen | kDebug);
+   Int_t            RegisterDataSet(const char *uri, TFileCollection *dataSet, const char *opt) override;
+   Int_t            ScanDataSet(const char *uri, UInt_t option = kReopen | kDebug) override;
    Int_t            NotifyUpdate(const char *group, const char *user,
-                                 const char *dspath, Long_t mtime, const char *checksum = 0);
-   Int_t            ShowCache(const char *uri = 0);
+                                 const char *dspath, Long_t mtime, const char *checksum = 0) override;
+   Int_t            ShowCache(const char *uri = 0) override;
 
    // These should / could be private but they are used directly by the external daemon
    TFileCollection *GetDataSet(const char *group, const char *user, const char *dsName,
@@ -97,7 +97,7 @@ public:
                                  TFileCollection *dataset, UInt_t option = 0, TMD5 *checksum = 0);
    Long_t           GetModTime(const char *uri);
 
-   ClassDef(TDataSetManagerFile, 0) // DataSet manager for files
+   ClassDefOverride(TDataSetManagerFile, 0) // DataSet manager for files
 };
 
 #endif

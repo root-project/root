@@ -10,114 +10,110 @@
  *************************************************************************/
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TFitEditor                                                           //
-//                                                                      //
-// Allows to perform, explore and compare various fits.                 //
-//                                                                      //
-// To display the new Fit panel interface right click on a histogram    //
-// or a graph to pop up the context menu and then select the menu       //
-// entry 'Fit Panel'.                                                   //
-//                                                                      //
-// "General" Tab                                                        //
-//                                                                      //
-// The first set of GUI elements is related to the function choice      //
-// and settings. The status bar on the bottom provides information      //
-// about the current minimization settings using the following          //
-// abbreviations:                                                       //
-// LIB - shows the current choice between Minuit/Minuit2/Fumili         //
-// MIGRAD or FUMILI points to the current minimization method in use.   //
-// Itr: - shows the maximum number of iterations nnnn set for the fit.  //
-// Prn: - can be DEF/VER/QT and shows the current print option in use.  //
-//                                                                      //
-// "Predefined" combo box - contains a list of predefined functions     //
-// in ROOT. The default one is Gaussian.                                //
-//                                                                      //
-// "Operation" radio button group defines selected operational mode     //
-// between functions: NOP - no operation (default); ADD - addition      //
-// CONV - convolution (will be implemented in the future).              //
-//                                                                      //
-// Users can enter the function expression in a text entry field.       //
-// The entered string is checked after Enter key was pressed. An        //
-// error message shows up if the string is not accepted. The current    //
-// prototype is limited and users have no freedom to enter file/user    //
-// function names in this field.                                        //
-//                                                                      //
-// "Set Parameters" button opens a dialog for parameters settings.      //
-//                                                                      //
-// "Fit Settings" provides user interface elements related to the       //
-// fitter. Currently there are two method choices: Chi-square and       //
-// Binned Likelihood.                                                   //
-//                                                                      //
-// "Linear Fit" check button sets the use of Linear fitter is it is     //
-// selected. Otherwise the option 'F' is applied if polN is selected.   //
-// "Robust" number entry sets the robust value when fitting graphs.     //
-// "No Chi-square" check button sets ON/OFF option 'C' - do not         //
-// calculate Chi-square (for Linear fitter).                            //
-//                                                                      //
-// Fit options:                                                         //
-// "Integral" check button switch ON/OFF option 'I' - use integral      //
-// of function instead of value in bin center.                          //
-// "Best Errors" sets ON/OFF option 'E' - better errors estimation      //
-// using Minos technique.                                               //
-// "All weights = 1" sets ON/OFF option 'W' - all weights set to 1,     //
-// excluding empty bins and ignoring error bars.                        //
-// "Empty bins, weights=1" sets ON/OFF option 'WW' -  all weights       //
-// equal to 1, including  empty bins, error bars ignored.               //
-// "Use range" sets ON/OFF option 'R' - fit only data within the        //
-// specified function range with the slider.                            //
-// "Improve fit results" sets ON/OFF option 'M' - after minimum is      //
-// found, search for a new one.                                         //
-// "Add to list" sets On/Off option '+'- add function to the list       //
-// without deleting the previous.                                       //
-//                                                                      //
-// Draw options:                                                        //
-// "SAME" sets On/Off function drawing on the same pad.                 //
-// "No drawing" sets On/Off option '0'- do not draw function graphics.  //
-// "Do not store/draw" sets On/Off option 'N'- do not store the         //
-// function, do not draw it.                                            //
-//                                                                      //
-// Sliders settings are used if option 'R' - use range is active.       //
-// Users can change min/max values by pressing the left mouse button    //
-// near to the left/right slider edges. It is possible o change both    //
-// values simultaneously by pressing the left mouse button near to its  //
-// center and moving it to a new desire position.                       //
-//                                                                      //
-// "Minimization" Tab                                                   //
-//                                                                      //
-// "Library" group allows you to use Minuit, Minuit2 or Fumili          //
-// minimization packages for your fit.                                  //
-//  "Minuit" - the popular Minuit minimization package.                 //
-//  "Minuit2" - a new object-oriented implementation of Minuit in C++.  //
-//  "Fumili" - the popular Fumili minimization package.                 //
-//                                                                      //
-// "Method" group has currently restricted functionality.               //
-//  "MIGRAD" method is available for Minuit and Minuit2                 //
-//  "FUMILI" method is available for Fumili and Minuit2                 //
-//  "SIMPLEX" method is disabled (will come with the new fitter design) //
-//                                                                      //
-// "Minimization Settings' group allows users to set values for:        //
-//  "Error definition" - between 0.0 and 100.0  (default is 1.0).       //
-//  "Maximum tolerance" - the fit relative precision in use.            //
-//  "Maximum number of iterations" - default is 5000.                   //
-//                                                                      //
-// Print options:                                                       //
-//  "Default" - between Verbose and Quiet.                              //
-//  "Verbose" - prints results after each iteration.                    //
-//  "Quiet" - no fit information is printed.                            //
-//                                                                      //
-// Fit button - performs a fit.                                         //
-// Reset - resets all GUI elements and related fit settings to the      //
-// default ones.                                                        //
-// Close - closes this window.                                          //
-//                                                                      //
-// Begin_Html                                                           //
-/*
-<img src="gif/TFitEditor.gif">
+/** \class TFitEditor
+    \ingroup fitpanel
+
+
+Allows to perform, explore and compare various fits.
+
+To display the new Fit panel interface right click on a histogram
+or a graph to pop up the context menu and then select the menu
+entry 'Fit Panel'.
+
+"General" Tab
+
+The first set of GUI elements is related to the function choice
+and settings. The status bar on the bottom provides information
+about the current minimization settings using the following
+abbreviations:
+LIB - shows the current choice between Minuit/Minuit2/Fumili
+MIGRAD or FUMILI points to the current minimization method in use.
+Itr: - shows the maximum number of iterations nnnn set for the fit.
+Prn: - can be DEF/VER/QT and shows the current print option in use.
+
+"Predefined" combo box - contains a list of predefined functions
+in ROOT. The default one is Gaussian.
+
+"Operation" radio button group defines selected operational mode
+between functions: NOP - no operation (default); ADD - addition
+CONV - convolution (will be implemented in the future).
+
+Users can enter the function expression in a text entry field.
+The entered string is checked after Enter key was pressed. An
+error message shows up if the string is not accepted. The current
+prototype is limited and users have no freedom to enter file/user
+function names in this field.
+
+"Set Parameters" button opens a dialog for parameters settings.
+
+"Fit Settings" provides user interface elements related to the
+fitter. Currently there are two method choices: Chi-square and
+Binned Likelihood.
+
+"Linear Fit" check button sets the use of Linear fitter is it is
+selected. Otherwise the option 'F' is applied if polN is selected.
+"Robust" number entry sets the robust value when fitting graphs.
+"No Chi-square" check button sets ON/OFF option 'C' - do not
+calculate Chi-square (for Linear fitter).
+
+Fit options:
+"Integral" check button switch ON/OFF option 'I' - use integral
+of function instead of value in bin center.
+"Best Errors" sets ON/OFF option 'E' - better errors estimation
+using Minos technique.
+"All weights = 1" sets ON/OFF option 'W' - all weights set to 1,
+excluding empty bins and ignoring error bars.
+"Empty bins, weights=1" sets ON/OFF option 'WW' -  all weights
+equal to 1, including  empty bins, error bars ignored.
+"Use range" sets ON/OFF option 'R' - fit only data within the
+specified function range with the slider.
+"Improve fit results" sets ON/OFF option 'M' - after minimum is
+found, search for a new one.
+"Add to list" sets On/Off option '+'- add function to the list
+without deleting the previous.
+
+Draw options:
+"SAME" sets On/Off function drawing on the same pad.
+"No drawing" sets On/Off option '0'- do not draw function graphics.
+"Do not store/draw" sets On/Off option 'N'- do not store the
+function, do not draw it.
+
+Sliders settings are used if option 'R' - use range is active.
+Users can change min/max values by pressing the left mouse button
+near to the left/right slider edges. It is possible o change both
+values simultaneously by pressing the left mouse button near to its
+center and moving it to a new desire position.
+
+"Minimization" Tab
+
+"Library" group allows you to use Minuit, Minuit2 or Fumili
+minimization packages for your fit.
+ "Minuit" - the popular Minuit minimization package.
+ "Minuit2" - a new object-oriented implementation of Minuit in C++.
+ "Fumili" - the popular Fumili minimization package.
+
+"Method" group has currently restricted functionality.
+ "MIGRAD" method is available for Minuit and Minuit2
+ "FUMILI" method is available for Fumili and Minuit2
+ "SIMPLEX" method is disabled (will come with the new fitter design)
+
+"Minimization Settings' group allows users to set values for:
+ "Error definition" - between 0.0 and 100.0  (default is 1.0).
+ "Maximum tolerance" - the fit relative precision in use.
+ "Maximum number of iterations" - default is 5000.
+
+Print options:
+ "Default" - between Verbose and Quiet.
+ "Verbose" - prints results after each iteration.
+ "Quiet" - no fit information is printed.
+
+Fit button - performs a fit.
+Reset - resets all GUI elements and related fit settings to the
+default ones.
+Close - closes this window.
+
 */
-//End_Html
-//////////////////////////////////////////////////////////////////////////
+
 
 #include "TFitEditor.h"
 #include "TROOT.h"
@@ -128,7 +124,6 @@
 #include "TG3DLine.h"
 #include "TGComboBox.h"
 #include "TGTextEntry.h"
-#include "TGFont.h"
 #include "TGGC.h"
 #include "TGButtonGroup.h"
 #include "TGNumberEntry.h"
@@ -147,18 +142,17 @@
 #include "TF1Convolution.h"
 #include "TF2.h"
 #include "TF3.h"
-#include "TTimer.h"
 #include "THStack.h"
-#include "TMath.h"
 #include "Fit/UnBinData.h"
-#include "Fit/BinData.h"
 #include "Fit/BinData.h"
 #include "TMultiGraph.h"
 #include "TTree.h"
-#include "TTreePlayer.h"
+#include "TVirtualTreePlayer.h"
+#include "TSelectorDraw.h"
 #include "TTreeInput.h"
 #include "TAdvancedGraphicsDialog.h"
 #include "TVirtualX.h"
+#include "strlcpy.h"
 
 #include "RConfigure.h"
 #include "TPluginManager.h"
@@ -2109,13 +2103,13 @@ void TFitEditor::DoFit()
          gROOT->ls();
          tree->Draw(variables,cuts,"goff");
 
-         TTreePlayer * player = (TTreePlayer*) tree->GetPlayer();
+         auto player = tree->GetPlayer();
          if ( !player ) {
             Error("DoFit","Player reference is NULL");
             return;
          }
 
-         TSelectorDraw * selector = (TSelectorDraw* ) player->GetSelector();
+         auto selector = dynamic_cast<TSelectorDraw *>(player->GetSelector());
          if ( !selector ) {
             Error("DoFit","Selector reference is NULL");
             return;
@@ -2501,7 +2495,7 @@ void TFitEditor::DoFunction(Int_t selected)
    }
    else if (fConv->GetState() == kButtonDown)
    {
-      // If the normadd button is down don't replace the fEnteredFunc text
+      // If the conv button is down don't replace the fEnteredFunc text
       Int_t np = 0;
       TString s = "";
       if (!strcmp(fEnteredFunc->GetText(), ""))
@@ -2542,8 +2536,12 @@ void TFitEditor::DoFunction(Int_t selected)
    TF1* fitFunc = GetFitFunction();
    //std::cout << "TFitEditor::DoFunction - using function " << fitFunc->GetName() << "  " << fitFunc << std::endl;
 
-   if ( fitFunc && (unsigned int) fitFunc->GetNpar() != fFuncPars.size() )
-      fFuncPars.clear();
+   if ( fitFunc && (unsigned int) fitFunc->GetNpar() != fFuncPars.size() ) {
+      if (fAdd->GetState() == kButtonDown || fNormAdd->GetState() == kButtonDown || fConv->GetState() == kButtonDown)
+         fFuncPars.resize(fitFunc->GetNpar());
+      else
+         fFuncPars.clear();
+   }
    if ( fitFunc ) {
       //std::cout << "TFitEditor::DoFunction - deleting function " << fitFunc->GetName() << "  " << fitFunc << std::endl;
       delete fitFunc;
@@ -2809,15 +2807,19 @@ void TFitEditor::DoSliderXMoved()
 
 void TFitEditor::DrawSelection(bool restore)
 {
+#ifndef R__HAS_COCOA
    static Int_t  px1old, py1old, px2old, py2old; // to remember the square drawn.
+#endif
 
    if ( !fParentPad ) return;
 
    if (restore) {
+#ifndef R__HAS_COCOA
       px1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
       py1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
       px2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
       py2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
+#endif
       return;
    }
 
@@ -2853,14 +2855,18 @@ void TFitEditor::DrawSelection(bool restore)
    if (gPad->GetCanvas()) gPad->GetCanvas()->FeedbackMode(kTRUE);
    gPad->SetLineWidth(1);
    gPad->SetLineColor(2);
-
+#ifndef R__HAS_COCOA
+   // With Cocoa XOR is fake, so no need in erasing the old box, it's
+   // done by clearing the backing store and repainting inside a special
+   // window.
    gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
 
    px1old = px1;
    py1old = py1;
-   px2old = px2 ;
+   px2old = px2;
    py2old = py2;
+#endif // R__HAS_COCOA
+   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
 
    if(save) gPad = save;
 }

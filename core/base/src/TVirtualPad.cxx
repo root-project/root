@@ -11,7 +11,6 @@
 
 #include "TVirtualPad.h"
 #include "TBuffer.h"
-#include "TClass.h"
 #include "TThreadSlots.h"
 
 /** \class TVirtualPad
@@ -20,14 +19,69 @@
 TVirtualPad is an abstract base class for the Pad and Canvas classes.
 */
 
-Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = 0;
+Int_t (*gThreadXAR)(const char *xact, Int_t nb, void **ar, Int_t *iret) = nullptr;
+
+
+/** \class TVirtualPad::TContext
+\ingroup Base
+
+Small helper class to preserve gPad, which will be restored when TContext object is destroyed
+*/
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor which just store gPad
+/// @param _interactive defines how gPad will be restored: with cd() call (kTRUE) or just by assign gPad back
+
+TVirtualPad::TContext::TContext(Bool_t _interactive)
+{
+   fInteractive = _interactive;
+   fSaved = gPad;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor which stores gPad and set it to new value
+/// @param interactive defines how gPad will be restored: with cd() call (kTRUE) or just by assign gPad back
+/// @param not_null allows to set only pad which is not null
+
+TVirtualPad::TContext::TContext(TVirtualPad *gpad, Bool_t interactive, Bool_t not_null)
+{
+   fInteractive = interactive;
+   fSaved = gPad;
+   if (fInteractive && gpad)
+      gpad->cd();
+   else if (!not_null || gpad)
+      gPad = gpad;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor
+/// Restores previous value of gPad
+
+TVirtualPad::TContext::~TContext()
+{
+   if (!fInteractive || !fSaved)
+      gPad = fSaved;
+   else
+      fSaved->cd();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Inform context that pad deleted or will be deleted soon
+/// Reference on that pad should be cleared
+
+void TVirtualPad::TContext::PadDeleted(TVirtualPad *pad)
+{
+   if (pad == fSaved)
+      fSaved = nullptr;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current pad for the current thread.
 
 TVirtualPad *&TVirtualPad::Pad()
 {
-   static TVirtualPad *currentPad = 0;
+   static TVirtualPad *currentPad = nullptr;
    if (!gThreadTsd)
       return currentPad;
    else

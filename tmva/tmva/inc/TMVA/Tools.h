@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Tools                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Global auxiliary applications and data treatment routines                 *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_Tools
@@ -38,20 +38,16 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <vector>
+#include <string>
 #include <sstream>
 #include <iostream>
-#include <iomanip>
-#if __cplusplus > 199711L
 #include <atomic>
-#endif
 
 #include "TXMLEngine.h"
 
 #include "TMatrixDSymfwd.h"
 
 #include "TMatrixDfwd.h"
-
-#include "TVectorDfwd.h"
 
 #include "TVectorDfwd.h"
 
@@ -130,8 +126,8 @@ namespace TMVA {
 
       // returns the covariance matrix of of the different classes (and the sum)
       // given the event sample
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
-      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=0 );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=nullptr );
+      std::vector<TMatrixDSym*>* CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase=nullptr );
 
 
       // turns covariance into correlation matrix
@@ -154,8 +150,8 @@ namespace TMVA {
 
       // re-arrange a vector of arrays (vectors) in a way such that the first array
       // is ordered, and the other arrays reshuffled accordingly
-      void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
-      void UsefulSortAscending ( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = 0 );
+      void UsefulSortDescending( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = nullptr );
+      void UsefulSortAscending ( std::vector< std::vector<Double_t> >&, std::vector<TString>* vs = nullptr );
 
       void UsefulSortDescending( std::vector<Double_t>& );
       void UsefulSortAscending ( std::vector<Double_t>& );
@@ -230,11 +226,7 @@ namespace TMVA {
       const TString fRegexp;
       mutable MsgLogger*    fLogger;
       MsgLogger& Log() const { return *fLogger; }
-#if __cplusplus > 199711L
       static std::atomic<Tools*> fgTools;
-#else
-      static Tools* fgTools;
-#endif
 
       // xml tools
 
@@ -257,13 +249,13 @@ namespace TMVA {
       template<typename T>
          void        AddAttr     ( void* node, const char* , const T& value, Int_t precision = 16 );
       void        AddAttr     ( void* node, const char* attrname, const char* value );
-      void*       AddChild    ( void* parent, const char* childname, const char* content = 0, bool isRootNode = false );
+      void*       AddChild    ( void* parent, const char* childname, const char* content = nullptr, bool isRootNode = false );
       Bool_t      AddRawLine  ( void* node, const char * raw );
       Bool_t      AddComment  ( void* node, const char* comment );
 
       void*       GetParent( void* child);
-      void*       GetChild    ( void* parent, const char* childname=0 );
-      void*       GetNextChild( void* prevchild, const char* childname=0 );
+      void*       GetChild    ( void* parent, const char* childname=nullptr );
+      void*       GetNextChild( void* prevchild, const char* childname=nullptr );
       const char* GetContent  ( void* node );
       const char* GetName     ( void* node );
 
@@ -276,7 +268,7 @@ namespace TMVA {
 
    private:
 
-      int fXMLBufferSize = 10000000; 
+      int fXMLBufferSize = 10000000;
       // utilities for correlation ratio
       Double_t GetYMean_binX( const TH2& , Int_t bin_x );
 
@@ -338,7 +330,7 @@ template<typename T> void TMVA::Tools::ReadAttr( void* node, const char* attrnam
 {
    // read attribute from xml
    const char *val = xmlengine().GetAttr(node, attrname);
-   if (val == 0) {
+   if (!val) {
       const char *nodename = xmlengine().GetNodeName(node);
       Log() << kFATAL << "Trying to read non-existing attribute '" << attrname << "' from xml node '" << nodename << "'"
             << Endl;

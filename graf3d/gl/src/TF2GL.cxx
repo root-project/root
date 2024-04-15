@@ -14,7 +14,6 @@
 #include <TF2.h>
 #include <TF3.h>
 #include <TH2.h>
-#include <TVirtualPad.h>
 
 #include "TGLSurfacePainter.h"
 #include "TGLTF3Painter.h"
@@ -35,7 +34,7 @@ ClassImp(TF2GL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TF2GL::TF2GL() : TGLPlot3D(), fM(0), fH(0)
+TF2GL::TF2GL() : TGLPlot3D(), fM(nullptr), fH(nullptr)
 {
 }
 
@@ -63,9 +62,9 @@ Bool_t TF2GL::SetModel(TObject* obj, const Option_t* opt)
    fH->GetZaxis()->SetLimits(fH->GetMinimum(), fH->GetMaximum());
 
    if (dynamic_cast<TF3*>(fM))
-      SetPainter( new TGLTF3Painter((TF3*)fM, fH, 0, &fCoord) );
+      SetPainter( new TGLTF3Painter((TF3*)fM, fH, nullptr, &fCoord) );
    else
-      SetPainter( new TGLSurfacePainter(fH, 0, &fCoord) );
+      SetPainter( new TGLSurfacePainter(fH, nullptr, &fCoord) );
 
    if (option.Index("sph") != kNPOS)
       fCoord.SetCoordType(kGLSpherical);

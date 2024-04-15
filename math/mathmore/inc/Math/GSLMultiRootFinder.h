@@ -35,7 +35,7 @@
 #include "Math/WrappedFunction.h"
 
 #include <vector>
-
+#include <utility>
 #include <iostream>
 
 namespace ROOT {
@@ -44,8 +44,8 @@ namespace Math {
 
    class GSLMultiRootBaseSolver;
 
-   /** @defgroup MultiRoot  Multidimensional ROOT finding 
-       Classes for finding the roots of a multi-dimensional system. 
+   /** @defgroup MultiRoot  Multidimensional ROOT finding
+       Classes for finding the roots of a multi-dimensional system.
        @ingroup NumAlgo
    */
 
@@ -69,23 +69,23 @@ namespace Math {
      <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-using-Derivatives.html">documentation</A> )
      are the followings:
      <ul>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <it>"HybridSJ"</it>: modified Powell's hybrid
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridSJ</tt>  with name <i>"HybridSJ"</i>: modified Powell's hybrid
      method as implemented in HYBRJ in MINPACK
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <it>"HybridJ"</it>: unscaled version of the
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridJ</tt>  with name <i>"HybridJ"</i>: unscaled version of the
      previous algorithm</li>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <it>"Newton"</it>: Newton method </li>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <it>"GNewton"</it>: modified Newton method </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kNewton</tt>  with name <i>"Newton"</i>: Newton method </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kGNewton</tt>  with name <i>"GNewton"</i>: modified Newton method </li>
      </ul>
      The algorithms without derivatives (see also the GSL
      <A HREF="http://www.gnu.org/software/gsl/manual/html_node/Algorithms-without-Derivatives.html">documentation</A> )
      are the followings:
      <ul>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <it>"HybridS"</it>: same as HybridSJ but using
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybridS</tt>  with name <i>"HybridS"</i>: same as HybridSJ but using
      finate difference approximation for the derivatives</li>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <it>"Hybrid"</it>: unscaled version of the
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kHybrid</tt>  with name <i>"Hybrid"</i>: unscaled version of the
      previous algorithm</li>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <it>"DNewton"</it>: discrete Newton algorithm </li>
-         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <it>"Broyden"</it>: Broyden algorithm </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kDNewton</tt>  with name <i>"DNewton"</i>: discrete Newton algorithm </li>
+         <li><tt>ROOT::Math::GSLMultiRootFinder::kBroyden</tt>  with name <i>"Broyden"</i>: Broyden algorithm </li>
      </ul>
 
      @ingroup MultiRoot
@@ -133,7 +133,7 @@ namespace Math {
       after having remived the GSL prefix (gsl_multiroot_fsolver).
       Default algorithm  is "hybrids" (without derivative).
     */
-    GSLMultiRootFinder(const char * name = 0);
+    GSLMultiRootFinder(const char * name = nullptr);
 
     /// destructor
     virtual ~GSLMultiRootFinder();
@@ -274,7 +274,7 @@ namespace Math {
 
  private:
 
-    int fIter;           // current numer of iterations
+    int fIter;           // current number of iterations
     int fStatus;         // current status
     int fPrintLevel;     // print level
 

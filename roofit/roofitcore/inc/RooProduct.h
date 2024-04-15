@@ -18,10 +18,9 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
-#include "RooCacheManager.h"
 #include "RooObjCacheManager.h"
 
-#include <utility>
+#include <list>
 
 class RooRealVar;
 class RooArgList;
@@ -31,58 +30,67 @@ class RooProduct : public RooAbsReal {
 public:
 
   RooProduct() ;
-  RooProduct(const char *name, const char *title, const RooArgList& _prodSet) ;
+  RooProduct(const char *name, const char *title, const RooArgList& prodSet) ;
+  RooProduct(const char *name, const char *title, RooAbsReal& real1, RooAbsReal& real2) ;
 
-  RooProduct(const RooProduct& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooProduct(*this, newname); }
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& dep) const ;
-  virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
+  RooProduct(const RooProduct& other, const char *name = nullptr);
+
+  void addTerm(RooAbsArg* term);
+
+  TObject* clone(const char* newname) const override { return new RooProduct(*this, newname); }
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars,
                                                    const RooArgSet* normSet,
-                                                   const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const;
+                                                   const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
 
   RooArgList components() { RooArgList tmp(_compRSet) ; tmp.add(_compCSet) ; return tmp ; }
 
-  virtual ~RooProduct() ;
+  const RooArgList& realComponents() const { return _compRSet; }
+  const RooArgList& categorialComponents() const { return _compCSet; }
+
+  ~RooProduct() override ;
 
   class ProdMap ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
-  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
-  virtual void setCacheAndTrackHints(RooArgSet&) ;
+  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
+  void setCacheAndTrackHints(RooArgSet&) override ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
+
+  void ioStreamerPass2() override ;
 
   RooListProxy _compRSet ;
   RooListProxy _compCSet ;
 
   class CacheElem : public RooAbsCacheElement {
   public:
-      virtual ~CacheElem();
+      ~CacheElem() override;
       // Payload
       RooArgList _prodList ;
       RooArgList _ownedList ;
-      virtual RooArgList containedArgs(Action) ;
+      RooArgList containedArgs(Action) override ;
   };
-  mutable RooObjCacheManager _cacheMgr ; // The cache manager
-                                                                                                                                                             
+  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
 
-  Double_t calculate(const RooArgList& partIntList) const;
-  Double_t evaluate() const;
+
+  double calculate(const RooArgList& partIntList) const;
+  double evaluate() const override;
+  void doEval(RooFit::EvalContext &) const override;
+
   const char* makeFPName(const char *pfx,const RooArgSet& terms) const ;
   ProdMap* groupProductTerms(const RooArgSet&) const;
-  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=0) const;
-    
+  Int_t getPartIntList(const RooArgSet* iset, const char *rangeName=nullptr) const;
 
-
-
-  ClassDef(RooProduct,2) // Product of RooAbsReal and/or RooAbsCategory terms
+  ClassDefOverride(RooProduct,3) // Product of RooAbsReal and/or RooAbsCategory terms
 };
 
 #endif

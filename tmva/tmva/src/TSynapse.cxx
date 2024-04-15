@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TSynapse                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -18,7 +18,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::TSynapse
@@ -35,7 +35,6 @@ Synapse class used by TMVA artificial neural network methods
 #include "TMVA/Types.h"
 
 #include "ThreadLocalStorage.h"
-#include "TObject.h"
 
 static const Int_t fgUNINITIALIZED = -1;
 

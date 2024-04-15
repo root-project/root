@@ -17,10 +17,9 @@
 #include <ROOT/REveClient.hxx>
 #include <ROOT/RWebWindow.hxx>
 
-#include "json.hpp"
-
 #include <cassert>
 
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -55,7 +54,14 @@ REveScene::~REveScene()
    REX::gEve->GetViewers()->SceneDestructing(this);
    REX::gEve->GetScenes()->RemoveElement(this);
 }
+//------------------------------------------------------------------------------
 
+int REveScene::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   j["Mandatory"] = fMandatory;
+
+   return REveElement::WriteCoreJson(j, rnr_offset);
+}
 //------------------------------------------------------------------------------
 
 void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
@@ -71,8 +77,6 @@ void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
 
 void REveScene::RemoveSubscriber(unsigned id)
 {
-   assert(fAcceptingChanges == kFALSE);
-
    auto pred = [&](std::unique_ptr<REveClient> &client) {
       return client->fId == id;
    };
@@ -80,11 +84,32 @@ void REveScene::RemoveSubscriber(unsigned id)
    fSubscribers.erase(std::remove_if(fSubscribers.begin(), fSubscribers.end(), pred), fSubscribers.end());
 }
 
+// Add Button in client gui with this command
+void REveScene::AddCommand(const std::string &name, const std::string &icon, const REveElement *element, const std::string &action)
+{
+   static const REveException eh("REveScene::AddCommand ");
+   if (element->GetElementId() && element->IsA())
+   {
+      fCommands.emplace_back(name, icon, element, action);
+   }
+   else
+   {
+      throw eh + "Element id and dictionary has to be defined";
+   }
+}
+
 void REveScene::BeginAcceptingChanges()
 {
    if (fAcceptingChanges) return;
 
-   if (HasSubscribers()) fAcceptingChanges = kTRUE;
+   if (HasSubscribers()) {
+      fAcceptingChanges = kTRUE;
+      /*
+      for (auto &&client : fSubscribers) {
+         REX::gEve->SceneSubscriberProcessingChanges(client->fId);
+      }
+      */
+   }
 }
 
 void REveScene::SceneElementChanged(REveElement* element)
@@ -106,15 +131,6 @@ void REveScene::EndAcceptingChanges()
    fAcceptingChanges = kFALSE;
 }
 
-void REveScene::ProcessChanges()
-{
-   if (IsChanged())
-   {
-      StreamRepresentationChanges();
-      SendChangesToSubscribers();
-   }
-}
-
 void REveScene::StreamElements()
 {
    fOutputJson.clear();
@@ -129,7 +145,7 @@ void REveScene::StreamElements()
    jhdr["content"]  = "REveScene::StreamElements";
    jhdr["fSceneId"] = fElementId;
 
-   if (fCommands.size() > 0) {
+   if (!fCommands.empty()) {
       jhdr["commands"] = nlohmann::json::array();
       for (auto &&cmd : fCommands) {
          nlohmann::json jcmd = {};
@@ -217,9 +233,6 @@ void REveScene::StreamJsonRecurse(REveElement *el, nlohmann::json &jarr)
 
 void REveScene::StreamRepresentationChanges()
 {
-   fOutputJson.clear();
-   fOutputBinary.clear();
-
    fElsWithBinaryData.clear();
    fTotalBinarySize = 0;
 
@@ -309,15 +322,21 @@ void REveScene::StreamRepresentationChanges()
 void REveScene::SendChangesToSubscribers()
 {
    for (auto && client : fSubscribers) {
-      if (gDebug > 0)
-         printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
-      client->fWebWindow->Send(client->fId, fOutputJson);
+      if (!fOutputJson.empty()) {
+         if (gDebug > 0)
+            printf("   sending json, len = %d --> to conn_id = %d\n", (int) fOutputJson.size(), client->fId);
+         client->fWebWindow->Send(client->fId, fOutputJson);
+      }
       if (fTotalBinarySize) {
          if (gDebug > 0)
             printf("   sending binary, len = %d --> to conn_id = %d\n", fTotalBinarySize, client->fId);
          client->fWebWindow->SendBinary(client->fId, &fOutputBinary[0], fTotalBinarySize);
       }
+      REX::gEve->SceneSubscriberWaitingResponse(client->fId);
    }
+   fOutputJson.clear();
+   fOutputBinary.clear();
+   fTotalBinarySize = 0;
 }
 
 Bool_t REveScene::IsChanged() const
@@ -536,19 +555,12 @@ void REveSceneList::DestroyElementRenderers(REveElement* element)
 
 */
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// Send an update of element representations
-//
-////////////////////////////////////////////////////////////////////////////////
-
-void REveSceneList::ProcessSceneChanges()
+bool REveSceneList::AnyChanges() const
 {
-   if (gDebug > 0)
-      ::Info("REveSceneList::ProcessSceneChanges","processing");
-
    for (auto &el : fChildren)
    {
-      ((REveScene*) el)->ProcessChanges();
+      if (((REveScene*) el)->IsChanged())
+      return true;
    }
+   return false;
 }

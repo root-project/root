@@ -13,7 +13,6 @@
 #define ROOT_TBufferText
 
 #include "TBufferIO.h"
-#include "TString.h"
 
 class TStreamerBase;
 class TExMap;
@@ -25,7 +24,7 @@ protected:
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
 public:
-   virtual ~TBufferText();
+   ~TBufferText() override;
 
    // virtual TBuffer methods, which are generic for all text-based streamers
 
@@ -65,8 +64,8 @@ public:
    void WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele = nullptr) final;
    void WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr) final;
 
-   void WriteFastArrayFloat16(const Float_t *d, Int_t n, TStreamerElement *ele = nullptr) final;
-   void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr) final;
+   void WriteFastArrayFloat16(const Float_t *d, Long64_t n, TStreamerElement *ele = nullptr) final;
+   void WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement *ele = nullptr) final;
 
    // Utilities for TClass
    Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr) override;

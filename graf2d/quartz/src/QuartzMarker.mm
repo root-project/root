@@ -18,10 +18,11 @@ namespace Quartz {
 
 
 //______________________________________________________________________________
-void DrawMarkerDot(CGContextRef ctx, unsigned n, const TPoint *xy)
+void DrawMarkerDot(CGContextRef ctx, unsigned n, const TPoint *xy,
+                   Size_t markerSize)
 {
    for (unsigned i = 0; i < n; ++i)
-      CGContextFillRect(ctx, CGRectMake(xy[i].fX, xy[i].fY, 1.f, 1.f));
+      CGContextFillRect(ctx, CGRectMake(xy[i].fX, xy[i].fY, markerSize, markerSize));
 }
 
 
@@ -909,7 +910,7 @@ void DrawPolyMarker(CGContextRef ctx, unsigned nPoints, const TPoint *xy,
 {
    switch (markerStyle) {
    case kDot:
-      DrawMarkerDot(ctx, nPoints, xy);
+      DrawMarkerDot(ctx, nPoints, xy, markerSize);
       break;
    case kPlus:
       DrawMarkerPlus(ctx, nPoints, xy, markerSize);

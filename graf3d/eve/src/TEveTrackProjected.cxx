@@ -26,7 +26,7 @@ ClassImp(TEveTrackProjected);
 
 TEveTrackProjected::TEveTrackProjected() :
    TEveTrack (),
-   fOrigPnts (0)
+   fOrigPnts (nullptr)
 {
 }
 
@@ -201,7 +201,7 @@ void TEveTrackProjected::MakeTrack(Bool_t recurse)
       else
          SetNextPoint((*i).fX, (*i).fY, (*i).fZ);
    }
-   delete [] fOrigPnts; fOrigPnts = 0;
+   delete [] fOrigPnts; fOrigPnts = nullptr;
 
    // Project path-marks
    for (vPathMark_i pm = fPathMarks.begin(); pm != fPathMarks.end(); ++pm)

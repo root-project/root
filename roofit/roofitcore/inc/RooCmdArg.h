@@ -18,56 +18,61 @@
 #define ROO_CMD_ARG
 
 #include "TNamed.h"
-#include "TString.h"
 #include "RooLinkedList.h"
-
 #include <string>
-class RooAbsData ;
+
 class RooArgSet ;
 
 class RooCmdArg : public TNamed {
 public:
 
   RooCmdArg();
-  RooCmdArg(const char* name, 
-	    Int_t i1=0, Int_t i2=0, 
-	    Double_t d1=0, Double_t d2=0, 
-	    const char* s1=0, const char* s2=0, 
-	    const TObject* o1=0, const TObject* o2=0, const RooCmdArg* ca=0, const char* s3=0,
-	    const RooArgSet* c1=0, const RooArgSet* c2=0) ;
+  /// Constructor from payload parameters. Note that the first payload
+  /// parameter has no default value, because otherwise the implicit creation
+  /// of a RooCmdArg from `const char*` would be possible. This would cause
+  /// ambiguity problems in RooFit code. It is not a problem that the first
+  /// parameter always has to be given, because creating a RooCmdArg with only
+  /// a name and no payload doesn't make sense anyway.
+  RooCmdArg(const char* name,
+            Int_t i1, Int_t i2=0,
+            double d1=0.0, double d2=0.0,
+            const char* s1=nullptr, const char* s2=nullptr,
+            const TObject* o1=nullptr, const TObject* o2=nullptr, const RooCmdArg* ca=nullptr, const char* s3=nullptr,
+            const RooArgSet* c1=nullptr, const RooArgSet* c2=nullptr) ;
   RooCmdArg(const RooCmdArg& other) ;
   RooCmdArg& operator=(const RooCmdArg& other) ;
   void addArg(const RooCmdArg& arg) ;
-  void setProcessRecArgs(Bool_t flag, Bool_t prefix=kTRUE) { 
+  void setProcessRecArgs(bool flag, bool prefix=true) {
     // If true flag this object as containing recursive arguments
-    _procSubArgs = flag ; 
+    _procSubArgs = flag ;
     _prefixSubArgs = prefix ;
   }
 
-  RooLinkedList& subArgs() { 
-    // Return list of sub-arguments in this RooCmdArg
-    return _argList ; 
-  }
+  /// Return list of sub-arguments in this RooCmdArg
+  RooLinkedList const& subArgs() const { return _argList ; }
 
-  virtual TObject* Clone(const char* newName=0) const {
+  /// Return list of sub-arguments in this RooCmdArg
+  RooLinkedList& subArgs() { return _argList ; }
+
+  TObject* Clone(const char* newName=nullptr) const override {
     RooCmdArg* newarg = new RooCmdArg(*this) ;
     if (newName) { newarg->SetName(newName) ; }
     return newarg ;
   }
 
-  virtual ~RooCmdArg();
+  ~RooCmdArg() override;
 
   static const RooCmdArg& none() ;
 
-  const char* opcode() const { 
+  const char* opcode() const {
     // Return operator code
-    return strlen(GetName()) ? GetName() : 0 ; 
+    return strlen(GetName()) ? GetName() : nullptr ;
   }
 
   void setInt(Int_t idx,Int_t value) {
     _i[idx] = value ;
   }
-  void setDouble(Int_t idx,Double_t value) {
+  void setDouble(Int_t idx,double value) {
     _d[idx] = value ;
   }
   void setString(Int_t idx,const char* value) {
@@ -78,49 +83,45 @@ public:
   }
   void setSet(Int_t idx,const RooArgSet& set) ;
 
-  Int_t getInt(Int_t idx) const { 
+  Int_t getInt(Int_t idx) const {
     // Return integer stored in slot idx
-    return _i[idx] ; 
+    return _i[idx] ;
   }
-  Double_t getDouble(Int_t idx) const { 
-    // Return double stored in slot idx
-    return _d[idx] ; 
+  /// Return double stored in slot idx
+  double getDouble(Int_t idx) const {
+    return _d[idx] ;
   }
-  const char* getString(Int_t idx) const { 
-    // Return string stored in slot idx
-      return (_s[idx].size()>0) ? _s[idx].c_str() : 0 ; 
+  /// Return string stored in slot idx
+  const char* getString(Int_t idx) const {
+      return (!_s[idx].empty()) ? _s[idx].c_str() : nullptr ;
   }
-  const TObject* getObject(Int_t idx) const { 
-  // Return TObject stored in slot idx
-    return _o[idx] ; 
+  /// Return TObject stored in slot idx
+  const TObject* getObject(Int_t idx) const {
+    return _o[idx] ;
   }
 
   const RooArgSet* getSet(Int_t idx) const ;
 
-  void Print(const char* = "") const;
+  void Print(const char* = "") const override;
 
-protected:
-
-  static const RooCmdArg _none  ; // Static instance of null object
-  friend class RooCmdConfig ;
+  bool procSubArgs() const { return _procSubArgs; }
+  bool prefixSubArgs() const { return _prefixSubArgs; }
 
 private:
 
-  friend class RooAbsCollection ;
+  static const RooCmdArg _none  ; ///< Static instance of null object
 
   // Payload
-  Double_t _d[2] ;       // Payload doubles
-  Int_t _i[2] ;          // Payload integers
-  std::string _s[3] ;    // Payload strings
-  TObject* _o[2] ;       // Payload objects
-  Bool_t _procSubArgs ;  // If true argument requires recursive processing
-  RooArgSet* _c ;        // Payload RooArgSets 
-  RooLinkedList _argList ; // Payload sub-arguments
-  Bool_t _prefixSubArgs ; // Prefix subarguments with container name?
-  
-  ClassDef(RooCmdArg,2) // Generic named argument container
+  double _d[2] ;         ///< Payload doubles
+  Int_t _i[2] ;            ///< Payload integers
+  std::string _s[3] ;      ///< Payload strings
+  TObject* _o[2] ;         ///< Payload objects
+  bool _procSubArgs = false; ///< If true argument requires recursive processing
+  RooArgSet *_c = nullptr;   ///< Payload RooArgSets
+  RooLinkedList _argList ; ///< Payload sub-arguments
+  bool _prefixSubArgs = true; ///< Prefix sub-arguments with container name?
+
+  ClassDefOverride(RooCmdArg,0) // Generic named argument container
 };
 
 #endif
-
-

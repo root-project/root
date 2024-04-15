@@ -34,11 +34,11 @@ public:
    }
 
    XSGraph( NdbMTReactionXS *reac );
-   ~XSGraph();
+   ~XSGraph() override;
 
    inline TGraph*   GetGraph()   { return graph; }
 
-   //ClassDef(XSGraph,1)
+   //ClassDefOverride(XSGraph,1)
 }; // XSGraph
 
 #endif

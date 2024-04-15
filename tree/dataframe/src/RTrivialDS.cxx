@@ -1,8 +1,17 @@
+/*************************************************************************
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RTrivialDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
-#include <TError.h>
+
+#include <limits>
+#include <memory>
 
 namespace ROOT {
 
@@ -23,6 +32,10 @@ std::vector<void *> RTrivialDS::GetColumnReadersImpl(std::string_view, const std
 }
 
 RTrivialDS::RTrivialDS(ULong64_t size, bool skipEvenEntries) : fSize(size), fSkipEvenEntries(skipEvenEntries)
+{
+}
+
+RTrivialDS::RTrivialDS() : fSize(std::numeric_limits<ULong64_t>::max()), fSkipEvenEntries(false)
 {
 }
 
@@ -47,7 +60,19 @@ std::string RTrivialDS::GetTypeName(std::string_view) const
 
 std::vector<std::pair<ULong64_t, ULong64_t>> RTrivialDS::GetEntryRanges()
 {
-   auto ranges(std::move(fEntryRanges)); // empty fEntryRanges
+   if (fSize == std::numeric_limits<ULong64_t>::max()) {
+      auto currentEntry = *std::max_element(fCounter.begin(), fCounter.end());
+      // infinite source, just make some ranges up
+      std::vector<std::pair<ULong64_t, ULong64_t>> ranges(fNSlots);
+      for (auto &range : ranges) {
+         range = std::make_pair(currentEntry, currentEntry + 10);
+         currentEntry += 10;
+      }
+      return ranges;
+   }
+
+   // empty fEntryRanges so we'll return an empty vector on subsequent calls
+   auto ranges = std::move(fEntryRanges);
    return ranges;
 }
 
@@ -62,15 +87,21 @@ bool RTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
 
 void RTrivialDS::SetNSlots(unsigned int nSlots)
 {
-   R__ASSERT(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
+   assert(0U == fNSlots && "Setting the number of slots even if the number of slots is different from zero.");
 
    fNSlots = nSlots;
    fCounter.resize(fNSlots);
    fCounterAddr.resize(fNSlots);
 }
 
-void RTrivialDS::Initialise()
+void RTrivialDS::Initialize()
 {
+   if (fSize == std::numeric_limits<ULong64_t>::max()) {
+      // infinite source, nothing to do here
+      return;
+   }
+
+   // initialize fEntryRanges
    const auto chunkSize = fSize / fNSlots;
    auto start = 0UL;
    auto end = 0UL;
@@ -89,11 +120,17 @@ std::string RTrivialDS::GetLabel()
    return "TrivialDS";
 }
 
-RInterface<RDFDetail::RLoopManager, RTrivialDS> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame(ULong64_t size, bool skipEvenEntries)
 {
    auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(size, skipEvenEntries),
                                                        RDFInternal::ColumnNames_t{});
-   return RInterface<RDFDetail::RLoopManager, RTrivialDS>(std::move(lm));
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
+}
+
+RInterface<RDFDetail::RLoopManager> MakeTrivialDataFrame()
+{
+   auto lm = std::make_unique<RDFDetail::RLoopManager>(std::make_unique<RTrivialDS>(), RDFInternal::ColumnNames_t{});
+   return RInterface<RDFDetail::RLoopManager>(std::move(lm));
 }
 
 } // ns RDF

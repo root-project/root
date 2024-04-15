@@ -44,7 +44,7 @@ class TBranchCacheInfo {
    Int_t fBasketPedestal{-1}; // Lowest basket we have information for.  Its data is in bits [0-3[.
    TBits fInfo;               // kSize bits per baskets (loaded, used, vetoed)
 
-   // Update the pedestal to be less or equal to basketNumber, shift the bits if needed.
+   /// Update the pedestal to be less or equal to basketNumber, shift the bits if needed.
    void UpdatePedestal(Int_t basketNumber)
    {
       if (fBasketPedestal == -1) {
@@ -56,15 +56,15 @@ class TBranchCacheInfo {
       }
    }
 
-   // Return true if the basket has been marked as having the 'what' state.
-   Bool_t TestState(Int_t basketNumber, EStates what) const
+   /// Return true if the basket has been marked as having the 'what' state.
+   bool TestState(Int_t basketNumber, EStates what) const
    {
       if (basketNumber < fBasketPedestal)
-         return kFALSE;
+         return false;
       return fInfo.TestBitNumber(kSize * (basketNumber - fBasketPedestal) + what);
    }
 
-   // Mark if the basket has been marked has the 'what' state.
+   /// Mark if the basket has been marked has the 'what' state.
    void SetState(Int_t basketNumber, EStates what)
    {
       if (fBasketPedestal <= basketNumber)
@@ -72,53 +72,53 @@ class TBranchCacheInfo {
    }
 
 public:
-   // Return true if the basket has been marked as 'used'
-   Bool_t HasBeenUsed(Int_t basketNumber) const { return TestState(basketNumber, kUsed); }
+   /// Return true if the basket has been marked as 'used'
+   bool HasBeenUsed(Int_t basketNumber) const { return TestState(basketNumber, kUsed); }
 
-   // Mark if the basket has been marked as 'used'
+   /// Mark if the basket has been marked as 'used'
    void SetUsed(Int_t basketNumber)
    {
       UpdatePedestal(basketNumber);
       SetState(basketNumber, kUsed);
    }
 
-   // Return true if the basket is currently in the cache.
-   Bool_t IsInCache(Int_t basketNumber) const { return TestState(basketNumber, kLoaded); }
+   /// Return true if the basket is currently in the cache.
+   bool IsInCache(Int_t basketNumber) const { return TestState(basketNumber, kLoaded); }
 
-   // Mark if the basket is currently in the cache.
+   /// Mark if the basket is currently in the cache.
    void SetIsInCache(Int_t basketNumber)
    {
       UpdatePedestal(basketNumber);
       SetState(basketNumber, kLoaded);
    }
 
-   // Mark if the basket should be vetoed in the next round.
-   // This happens when the basket was loaded in the previous round
-   // and was not used and is overlapping to the next round/cluster
+   /// Mark if the basket should be vetoed in the next round.
+   /// This happens when the basket was loaded in the previous round
+   /// and was not used and is overlapping to the next round/cluster
    void Veto(Int_t basketNumber)
    {
       UpdatePedestal(basketNumber);
       SetState(basketNumber, kVetoed);
    }
 
-   // Return true if the basket is currently vetoed.
-   Bool_t IsVetoed(Int_t basketNumber) const { return TestState(basketNumber, kVetoed); }
+   /// Return true if the basket is currently vetoed.
+   bool IsVetoed(Int_t basketNumber) const { return TestState(basketNumber, kVetoed); }
 
-   // Return true if all the baskets that are marked loaded are also
-   // mark as used.
-   Bool_t AllUsed() const
+   /// Return true if all the baskets that are marked loaded are also
+   /// mark as used.
+   bool AllUsed() const
    {
       auto len = fInfo.GetNbits() / kSize + 1;
       for (UInt_t b = 0; b < len; ++b) {
          if (fInfo[kSize * b + kLoaded] && !fInfo[kSize * b + kUsed]) {
             // Not loaded or (loaded and used)
-            return kFALSE;
+            return false;
          }
       }
-      return kTRUE;
+      return true;
    }
 
-   // Return a set of unused basket, let's not re-read them.
+   /// Return a set of unused basket, let's not re-read them.
    void GetUnused(std::vector<Int_t> &unused)
    {
       unused.clear();
@@ -130,14 +130,14 @@ public:
       }
    }
 
-   // Reset all info.
+   /// Reset all info.
    void Reset()
    {
       fBasketPedestal = -1;
       fInfo.ResetAllBits();
    }
 
-   // Print the infor we have for the baskets.
+   /// Print the info we have for the baskets.
    void Print(const char *owner, Long64_t *entries) const
    {
       if (!owner || !entries)

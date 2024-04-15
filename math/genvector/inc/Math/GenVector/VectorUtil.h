@@ -39,6 +39,8 @@ namespace ROOT {
        based on another precision type
 
        @ingroup GenVector
+
+       @sa Overview of the @ref GenVector "physics vector library"
        */
 
 
@@ -69,7 +71,7 @@ namespace ROOT {
 
 
          /**
-          Find square of the difference in pseudorapidity (Eta) and Phi betwen two generic vectors
+          Find square of the difference in pseudorapidity (Eta) and Phi between two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Eta() method
           \param v1  Vector 1
           \param v2  Vector 2
@@ -83,8 +85,23 @@ namespace ROOT {
             return dphi*dphi + deta*deta;
          }
 
+	 /**
+	  Find square of the difference in true rapidity (y) and Phi between two generic vectors
+	  The only requirements on the Vector classes is that they implement the Phi() and Rapidity() method
+	  \param v1  Vector 1
+	  \param v2  Vector 2
+	  \return   Angle between the two vectors
+	  \f[ \Delta R2 = ( \Delta \phi )^2 + ( \Delta \y )^2  \f]
+	  */
+	 template <class Vector1, class Vector2>
+	 inline typename Vector1::Scalar DeltaR2RapidityPhi( const Vector1 & v1, const Vector2 & v2) {
+	    typename Vector1::Scalar dphi = DeltaPhi(v1,v2);
+	    typename Vector1::Scalar drap = v2.Rapidity() - v1.Rapidity();
+	    return dphi*dphi + drap*drap;
+	 }
+
          /**
-          Find difference in pseudorapidity (Eta) and Phi betwen two generic vectors
+          Find difference in pseudorapidity (Eta) and Phi between two generic vectors
           The only requirements on the Vector classes is that they implement the Phi() and Eta() method
           \param v1  Vector 1
           \param v2  Vector 2
@@ -93,10 +110,23 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline typename Vector1::Scalar DeltaR( const Vector1 & v1, const Vector2 & v2) {
-            return std::sqrt( DeltaR2(v1,v2) );
+            using std::sqrt;
+            return sqrt( DeltaR2(v1,v2) );
          }
 
-
+	/**
+          Find difference in Rapidity (y) and Phi between two generic vectors
+          The only requirements on the Vector classes is that they implement the Phi() and Rapidity() method
+          \param v1  Vector 1
+          \param v2  Vector 2
+          \return   Angle between the two vectors
+          \f[ \Delta R = \sqrt{  ( \Delta \phi )^2 + ( \Delta y )^2 } \f],
+          */
+         template <class Vector1, class Vector2>
+         inline typename Vector1::Scalar DeltaRapidityPhi( const Vector1 & v1, const Vector2 & v2) {
+            using std::sqrt;
+            return sqrt( DeltaR2RapidityPhi(v1,v2) );
+         }
 
          /**
           Find CosTheta Angle between two generic 3D vectors
@@ -118,7 +148,8 @@ namespace ROOT {
                arg = 0.0;
             }else{
                double pdot = v1.X()*v2.X() + v1.Y()*v2.Y() + v1.Z()*v2.Z();
-               arg = pdot/std::sqrt(ptot2);
+               using std::sqrt;
+               arg = pdot/sqrt(ptot2);
                if(arg >  1.0) arg =  1.0;
                if(arg < -1.0) arg = -1.0;
             }
@@ -136,7 +167,8 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline double Angle( const  Vector1 & v1, const Vector2 & v2) {
-            return std::acos( CosTheta(v1, v2) );
+            using std::acos;
+            return acos( CosTheta(v1, v2) );
          }
 
          /**
@@ -194,7 +226,8 @@ namespace ROOT {
           */
          template <class Vector1, class Vector2>
          inline double Perp( const  Vector1 & v, const Vector2 & u) {
-            return std::sqrt(Perp2(v,u) );
+            using std::sqrt;
+            return sqrt(Perp2(v,u) );
          }
 
 
@@ -219,7 +252,8 @@ namespace ROOT {
             Scalar yy = (v1.Y() + v2.Y() );
             Scalar zz = (v1.Z() + v2.Z() );
             Scalar mm2 = ee*ee - xx*xx - yy*yy - zz*zz;
-            return mm2 < 0.0 ? -std::sqrt(-mm2) : std::sqrt(mm2);
+            using std::sqrt;
+            return mm2 < 0.0 ? -sqrt(-mm2) : sqrt(mm2);
             //  PxPyPzE4D<double> q(xx,yy,zz,ee);
             //  return q.M();
             //return ( v1 + v2).mag();
@@ -242,7 +276,6 @@ namespace ROOT {
          // rotation and transformations
 
 
-#ifndef __CINT__
          /**
           rotation along X axis for a generic vector by an Angle alpha
           returning a new vector.
@@ -251,7 +284,9 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateX(const Vector & v, double alpha) {
+            using std::sin;
             double sina = sin(alpha);
+            using std::cos;
             double cosa = cos(alpha);
             double y2 = v.Y() * cosa - v.Z()*sina;
             double z2 = v.Z() * cosa + v.Y() * sina;
@@ -268,7 +303,9 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateY(const Vector & v, double alpha) {
+            using std::sin;
             double sina = sin(alpha);
+            using std::cos;
             double cosa = cos(alpha);
             double x2 = v.X() * cosa + v.Z() * sina;
             double z2 = v.Z() * cosa - v.X() * sina;
@@ -285,7 +322,9 @@ namespace ROOT {
           */
          template <class Vector>
          Vector RotateZ(const Vector & v, double alpha) {
+            using std::sin;
             double sina = sin(alpha);
+            using std::cos;
             double cosa = cos(alpha);
             double x2 = v.X() * cosa - v.Y() * sina;
             double y2 = v.Y() * cosa + v.X() * sina;
@@ -333,7 +372,8 @@ namespace ROOT {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0 / std::sqrt(1.0 - b2);
+            using std::sqrt;
+            double gamma = 1.0 / sqrt(1.0 - b2);
             double bp = bx*v.X() + by*v.Y() + bz*v.Z();
             double gamma2 = b2 > 0 ? (gamma - 1.0)/b2 : 0.0;
             double x2 = v.X() + gamma2*bp*bx + gamma*bx*v.T();
@@ -358,7 +398,8 @@ namespace ROOT {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            T gamma = 1.0/ std::sqrt(1.0 - beta*beta);
+            using std::sqrt;
+            T gamma = 1.0/ sqrt(1.0 - beta*beta);
             typename LVector::Scalar x2 = gamma * v.X() + gamma * beta * v.T();
             typename LVector::Scalar t2 = gamma * beta * v.X() + gamma * v.T();
 
@@ -379,7 +420,8 @@ namespace ROOT {
                GenVector::Throw ("Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0/ std::sqrt(1.0 - beta*beta);
+            using std::sqrt;
+            double gamma = 1.0/ sqrt(1.0 - beta*beta);
             double y2 = gamma * v.Y() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Y() + gamma * v.T();
             LVector lv;
@@ -399,18 +441,14 @@ namespace ROOT {
                GenVector::Throw ( "Beta Vector supplied to set Boost represents speed >= c");
                return LVector();
             }
-            double gamma = 1.0/ std::sqrt(1.0 - beta*beta);
+            using std::sqrt;
+            double gamma = 1.0/ sqrt(1.0 - beta*beta);
             double z2 = gamma * v.Z() + gamma * beta * v.T();
             double t2 = gamma * beta * v.Z() + gamma * v.T();
             LVector lv;
             lv.SetXYZT(v.X(),v.Y(),z2,t2);
             return lv;
          }
-
-#endif
-
-
-
 
          // MATRIX VECTOR MULTIPLICATION
          // cannot define an operator * otherwise conflicts with rotations
@@ -451,7 +489,7 @@ namespace ROOT {
           in any coordinate system.
           Assume that the matrix implements the operator( i,j) and that it has at least         4 columns and 4 rows. There is no check on the matrix size !!
           */
-         // this will not be ambigous with operator*(Scalar, LorentzVector) since that one     // Scalar is passed by value
+         // this will not be ambiguous with operator*(Scalar, LorentzVector) since that one     // Scalar is passed by value
          template<class CoordSystem, class Matrix>
          inline
          LorentzVector<CoordSystem> Mult (const Matrix & m, const LorentzVector<CoordSystem> & v) {

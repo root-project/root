@@ -12,9 +12,9 @@ public:
    NdbEnergyDist()
       : NdbMF(5, "Energy distributions for emitted particles") {}
 
-   ~NdbEnergyDist() {}
+   ~NdbEnergyDist() override {}
 
-   ClassDef(NdbEnergyDist,1)
+   ClassDefOverride(NdbEnergyDist,1)
 
 }; // NdbEnergyDist
 

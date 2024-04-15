@@ -18,73 +18,57 @@
 
 #include "RooResolutionModel.h"
 #include "RooRealProxy.h"
-#include "RooMath.h"
 
 #include <cmath>
 #include <complex>
 
 class RooGaussModel : public RooResolutionModel {
 public:
-
-  enum RooGaussBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
-                                  sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
-                                  cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
-                                                                    linBasisPlus=33,
-                                                                   quadBasisPlus=43,
-              coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
-                 sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63};
-  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-         linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
-  enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
-
   // Constructors, assignment etc
-  inline RooGaussModel() : _flatSFInt(kFALSE), _asympInt(kFALSE) { }
+  RooGaussModel() = default;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma) ;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& msSF) ;
   RooGaussModel(const char *name, const char *title, RooAbsRealLValue& x,
       RooAbsReal& mean, RooAbsReal& sigma, RooAbsReal& meanSF, RooAbsReal& sigmaSF) ;
-  RooGaussModel(const RooGaussModel& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooGaussModel(*this,newname) ; }
-  virtual ~RooGaussModel();
+  RooGaussModel(const RooGaussModel& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooGaussModel(*this,newname) ; }
 
-  virtual Int_t basisCode(const char* name) const ;
-  virtual Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t analyticalIntegral(Int_t code, const char* rangeName) const ;
+  Int_t basisCode(const char* name) const override ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
+  void generateEvent(Int_t code) override;
 
-  void advertiseFlatScaleFactorIntegral(Bool_t flag) { _flatSFInt = flag ; }
+  void advertiseFlatScaleFactorIntegral(bool flag) { _flatSFInt = flag ; }
 
-  void advertiseAymptoticIntegral(Bool_t flag) { _asympInt = flag ; }  // added FMV,07/24/03
+  void advertiseAymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
+
+  void doEval(RooFit::EvalContext &) const override;
+
+  bool canComputeBatchWithCuda() const override;
 
 protected:
 
-  virtual Double_t evaluate() const ;
-  static std::complex<Double_t> evalCerfApprox(Double_t swt, Double_t u, Double_t c);
-
-  // Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-  static inline std::complex<Double_t> evalCerf(Double_t swt, Double_t u, Double_t c)
-  {
-    std::complex<Double_t> z(swt*c,u+c);
-    return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
-  }
+  double evaluate() const override ;
+  static double evaluate(double x, double mean, double sigma, double param1, double param2, int basisCode);
 
   // Calculate common normalization factors
-  std::complex<Double_t> evalCerfInt(Double_t sign, Double_t wt, Double_t tau, Double_t umin, Double_t umax, Double_t c) const;
+  std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const;
 
-  Bool_t _flatSFInt ;
+private:
+  bool _flatSFInt = false;
 
-  Bool_t _asympInt ;  // added FMV,07/24/03
+  bool _asympInt = false;  // added FMV,07/24/03
 
   RooRealProxy mean ;
   RooRealProxy sigma ;
   RooRealProxy msf ;
   RooRealProxy ssf ;
 
-  ClassDef(RooGaussModel,1) // Gaussian Resolution Model
+  ClassDefOverride(RooGaussModel,1) // Gaussian Resolution Model
 };
 
 #endif

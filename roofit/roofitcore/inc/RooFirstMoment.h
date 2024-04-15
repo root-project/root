@@ -22,18 +22,16 @@
 
 
 class RooRealVar;
-class RooArgList ;
 
 class RooFirstMoment : public RooAbsMoment {
 public:
 
-  RooFirstMoment() ;
+  RooFirstMoment() = default;
   RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x) ;
-  RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Bool_t intNSet=kFALSE) ;
-  virtual ~RooFirstMoment() ;
+  RooFirstMoment(const char *name, const char *title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, bool intNSet=false) ;
 
-  RooFirstMoment(const RooFirstMoment& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooFirstMoment(*this, newname); }
+  RooFirstMoment(const RooFirstMoment& other, const char* name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooFirstMoment(*this, newname); }
 
   const RooAbsReal& xF() { return _xf.arg() ; }
   const RooAbsReal& ixF() { return _ixf.arg() ; }
@@ -41,12 +39,12 @@ public:
 
 protected:
 
-  RooRealProxy _xf ;                     // X*F 
-  RooRealProxy _ixf ;                    // Int(X*F(X))dx ;
-  RooRealProxy _if ;                     // Int(F(x))dx ;
-  Double_t evaluate() const;
+  RooRealProxy _xf ;                     ///< X*F
+  RooRealProxy _ixf ;                    ///< Int(X*F(X))dx ;
+  RooRealProxy _if ;                     ///< Int(F(x))dx ;
+  double evaluate() const override;
 
-  ClassDef(RooFirstMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar
+  ClassDefOverride(RooFirstMoment,1) // Representation of moment in a RooAbsReal in a given RooRealVar
 };
 
 #endif

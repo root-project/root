@@ -9,11 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TVirtualPad.h"
 #include "TGraphStruct.h"
 
-#include <stdio.h>
+#include <cstdio>
+#include <iostream>
 
 #include <gvc.h>
 #include <gvplugin.h>

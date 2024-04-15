@@ -30,11 +30,11 @@ protected:
       kWarn = BIT(14)
    };
 
-   // In version of ROOT older then v6.12, kWarn was set to BIT(12)
-   // which overlaps with TBranch::kBranchObject.  Since it stored
-   // in ROOT files as part of the TBranchObject and that we want
-   // to reset in TBranchObject::Streamer, we need to keep track
-   // of the old value.
+   /// In version of ROOT older then v6.12, kWarn was set to BIT(12)
+   /// which overlaps with TBranch::kBranchObject.  Since it stored
+   /// in ROOT files as part of the TBranchObject and that we want
+   /// to reset in TBranchObject::Streamer, we need to keep track
+   /// of the old value.
    enum EStatusBitsOldValues {
       kOldWarn = BIT(12)
    };
@@ -42,33 +42,33 @@ protected:
    TString     fClassName;        ///< Class name of referenced object
    TObject     *fOldObject;       ///< !Pointer to old object
 
-   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, Bool_t isptrptr);
+   void Init(TTree *tree, TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize, Int_t splitlevel, Int_t compress, bool isptrptr);
 
 public:
    TBranchObject();
-   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
-   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, Bool_t isptrptr = kTRUE);
-   virtual ~TBranchObject();
+   TBranchObject(TBranch *parent, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
+   TBranchObject(TTree *tree, const char *name, const char *classname, void *addobj, Int_t basketsize=32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit, bool isptrptr = true);
+   ~TBranchObject() override;
 
-   virtual void        Browse(TBrowser *b);
-   virtual const char* GetClassName() const { return fClassName.Data(); };
+           void        Browse(TBrowser *b) override;
+           const char* GetClassName() const override { return fClassName.Data(); };
    virtual const char* GetObjClassName() { return fClassName.Data(); };
-   virtual Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0);
-   virtual Int_t       GetExpectedType(TClass *&clptr,EDataType &type);
-   Bool_t              IsFolder() const;
-   virtual void        Print(Option_t *option="") const;
-   virtual void        Reset(Option_t *option="");
-   virtual void        ResetAfterMerge(TFileMergeInfo *);
-   virtual void        SetAddress(void *addobj);
-   virtual void        SetAutoDelete(Bool_t autodel=kTRUE);
-   virtual void        SetBasketSize(Int_t buffsize);
-   virtual void        SetupAddresses();
-   virtual void        UpdateAddress();
+           Int_t       GetEntry(Long64_t entry=0, Int_t getall = 0) override;
+           Int_t       GetExpectedType(TClass *&clptr,EDataType &type) override;
+           bool        IsFolder() const override;
+           void        Print(Option_t *option="") const override;
+           void        Reset(Option_t *option="") override;
+           void        ResetAfterMerge(TFileMergeInfo *) override;
+           void        SetAddress(void *addobj) override;
+           void        SetAutoDelete(bool autodel=true) override;
+           void        SetBasketSize(Int_t buffsize) override;
+           void        SetupAddresses() override;
+           void        UpdateAddress() override;
 
 private:
-   virtual Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *);
+           Int_t       FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
-   ClassDef(TBranchObject,1);  //Branch in case of an object
+   ClassDefOverride(TBranchObject,1);  //Branch in case of an object
 };
 
 #endif

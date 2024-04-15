@@ -44,8 +44,8 @@ public:
    virtual Int_t           Locate(const char *u, TString &f);
    virtual Int_t           LocateCollection(TFileCollection *fc, Bool_t addDummyUrl = kFALSE);
    virtual Bool_t          Matches(const char *s) { return ((s && (fName == s)) ? kTRUE : kFALSE); }
-   virtual Bool_t          Stage(const char *, Option_t * = 0) { return kTRUE; }
-   virtual Bool_t          Stage(TCollection *pathlist, Option_t *opt = 0);
+   virtual Bool_t          Stage(const char *, Option_t * = nullptr) { return kTRUE; }
+   virtual Bool_t          Stage(TCollection *pathlist, Option_t *opt = nullptr);
 
    virtual Bool_t          IsValid() const { return kTRUE; }
 
@@ -55,7 +55,7 @@ public:
    //--- Load desired plugin
    static TFileStager *Open(const char *stager);
 
-   ClassDef(TFileStager,0)  // ABC defining interface to a stager
+   ClassDefOverride(TFileStager,0)  // ABC defining interface to a stager
 };
 
 #endif

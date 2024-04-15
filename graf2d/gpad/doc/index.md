@@ -9,11 +9,11 @@
 
 TPad and TPad's related classes' usages are illustrated by the following examples:
 
-  - [The Graphics Pad.](http://root.cern.ch/drupal/content/graphics-pad)
-  - [How to Draw objects.](http://root.cern.ch/drupal/content/how-draw-objects)
-  - [How to Pick objects.](http://root.cern.ch/drupal/content/how-pick-objects)
-  - [Dividing a canvas with no margins between pads.](http://root.cern.ch/root/html/tutorials/graphs/zones.C.html)
-  - [Using transparent pads.](http://root.cern.ch/root/html/tutorials/hist/transpad.C.html)
+  - [The Graphics Pad.](https://root.cern/doc/master/classTPad.html)
+  - [How to Draw objects.](https://root-forum.cern.ch/t/how-to-draw-objects/28249)
+  - [How to Pick objects.](https://root-forum.cern.ch/t/how-to-pick-objects/28251)
+  - [Dividing a canvas with no margins between pads.](https://root.cern/doc/master/zones_8C.html)
+  - [Using transparent pads.](https://root.cern/doc/master/transpad_8C.html)
 
 \defgroup GraphicsAtt Graphics attributes
 \ingroup Graphics

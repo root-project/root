@@ -14,21 +14,18 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
+/// \cond ROOFIT_INTERNAL
+
 /**
 \file RooTObjWrap.cxx
 \class RooTObjWrap
 \ingroup Roofitcore
 
-RooInt is a minimal implementation of a TNamed holding a TObject
+RooTObjWrap is a minimal implementation of a TNamed holding a TObject
 **/
 
-#include "RooFit.h"
-
 #include "RooTObjWrap.h"
-#include "RooTObjWrap.h"
-
-using namespace std;
 
 ClassImp(RooTObjWrap);
-;
 
+/// \endcond

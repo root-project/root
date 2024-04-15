@@ -5,16 +5,17 @@
 ///
 /// Basic import options are demonstrated in rf102_dataimport.C
 ///
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooCategory.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -25,7 +26,7 @@
 
 using namespace RooFit;
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma);
+TH1 *makeTH1(const char *name, double mean, double sigma);
 TTree *makeTTree();
 
 void rf401_importttreethx()
@@ -42,10 +43,7 @@ void rf401_importttreethx()
    RooRealVar x("x", "x", -10, 10);
 
    // Create category observable c that serves as index for the ROOT histograms
-   RooCategory c("c", "c");
-   c.defineType("SampleA");
-   c.defineType("SampleB");
-   c.defineType("SampleC");
+   RooCategory c("c", "c", {{"SampleA",0}, {"SampleB",1}, {"SampleC",2}});
 
    // Create a binned dataset that imports contents of all TH1 mapped by index category c
    RooDataHist *dh = new RooDataHist("dh", "dh", x, Index(c), Import("SampleA", *hh_1), Import("SampleB", *hh_2),
@@ -53,7 +51,7 @@ void rf401_importttreethx()
    dh->Print();
 
    // Alternative constructor form for importing multiple histograms
-   map<string, TH1 *> hmap;
+   std::map<std::string, TH1 *> hmap;
    hmap["SampleA"] = hh_1;
    hmap["SampleB"] = hh_2;
    hmap["SampleC"] = hh_3;
@@ -99,18 +97,18 @@ void rf401_importttreethx()
    // ----------------------------------------------------------------------------------------
 
    // Create three RooDataSets in (y,z)
-   RooDataSet *dsA = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z<-5");
-   RooDataSet *dsB = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "abs(z)<5");
-   RooDataSet *dsC = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z>5");
+   std::unique_ptr<RooAbsData> dsA{ds2.reduce({x, y}, "z<-5")};
+   std::unique_ptr<RooAbsData> dsB{ds2.reduce({x, y}, "abs(z)<5")};
+   std::unique_ptr<RooAbsData> dsC{ds2.reduce({x, y}, "z>5")};
 
    // Create a dataset that imports contents of all the above datasets mapped by index category c
-   RooDataSet *dsABC = new RooDataSet("dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
-                                      Import("SampleB", *dsB), Import("SampleC", *dsC));
+   RooDataSet dsABC{"dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
+                    Import("SampleB", *dsB), Import("SampleC", *dsC)};
 
-   dsABC->Print();
+   dsABC.Print();
 }
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma)
+TH1 *makeTH1(const char *name, double mean, double sigma)
 {
    // Create ROOT TH1 filled with a Gaussian distribution
 
@@ -126,9 +124,9 @@ TTree *makeTTree()
    // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
    TTree *tree = new TTree("tree", "tree");
-   Double_t *px = new Double_t;
-   Double_t *py = new Double_t;
-   Double_t *pz = new Double_t;
+   double *px = new double;
+   double *py = new double;
+   double *pz = new double;
    Int_t *pi = new Int_t;
    tree->Branch("x", px, "x/D");
    tree->Branch("y", py, "y/D");

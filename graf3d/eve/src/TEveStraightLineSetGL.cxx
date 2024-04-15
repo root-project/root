@@ -26,7 +26,7 @@ ClassImp(TEveStraightLineSetGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
+TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(nullptr)
 {
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;
@@ -119,7 +119,6 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
       TEveChunkManager::iterator li(mL.GetLinePlex());
       if (rnrCtx.SecSelection())
       {
-         GLuint name = 0;
          glPushName(1);
          glPushName(0);
          while (li.next())
@@ -132,7 +131,6 @@ void TEveStraightLineSetGL::DirectDraw(TGLRnrCtx& rnrCtx) const
                glVertex3f(l.fV2[0], l.fV2[1], l.fV2[2]);
                glEnd();
             }
-            name ++;
          }
          glPopName();
          glPopName();

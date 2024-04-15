@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TMethodArg.h"
-#include "TROOT.h"
 #include "TInterpreter.h"
 #include "Strlen.h"
 #include "TMethod.h"
@@ -35,7 +34,7 @@ ClassImp(TMethodArg);
 
 TMethodArg::TMethodArg(MethodArgInfo_t *info, TFunction *method) : TDictionary()
 {
-   fDataMember = 0;
+   fDataMember = nullptr;
    fInfo       = info;
    fMethod     = method;
    if (fInfo) {
@@ -97,12 +96,20 @@ Long_t TMethodArg::Property() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the TypeInfo of the method argument.
+
+TypeInfo_t *TMethodArg::GetTypeInfo() const
+{
+   return gCling->MethodArgInfo_TypeInfo(fInfo);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Returns list of possible options - according to pointed datamember.
 /// If there is no datamember field assigned to this methodarg - returns 0.
 
 TList *TMethodArg::GetOptions() const
 {
-   return (TList*)(fDataMember ? fDataMember->GetOptions() : 0);
+   return (TList*)(fDataMember ? fDataMember->GetOptions() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -23,9 +23,9 @@
 
 #include "Compression.h"
 #include "TDirectory.h"
+#include "TDatime.h"
+#include "TList.h"
 
-class TList;
-class TBrowser;
 class TKey;
 class TFile;
 
@@ -55,11 +55,11 @@ private:
 
 public:
    // TDirectory status bits
-   enum EStatusBits { kCloseDirectory = BIT(7) };
+   enum EStatusBits { kCloseDirectory = BIT(7) }; // Unused in ROOT, never set. Maybe only in external code.
 
    TDirectoryFile();
    TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
-   virtual ~TDirectoryFile();
+   ~TDirectoryFile() override;
 
           void        Append(TObject *obj, Bool_t replace = kFALSE) override;
           void        Add(TObject *obj, Bool_t replace = kFALSE) override { Append(obj,replace); }
@@ -69,7 +69,8 @@ public:
           TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE) override;
           void        Close(Option_t *option="") override;
           void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-          Bool_t      cd(const char *path = nullptr) override;
+          Bool_t      cd() override;
+          Bool_t      cd(const char *path) override;
           void        Delete(const char *namecycle="") override;
           void        FillBuffer(char *&buffer) override;
           TKey       *FindKey(const char *keyname) const override;

@@ -7,13 +7,14 @@
 /// if the file containing the geometry is not found in the local
 /// directory, it is automatically read from the ROOT web site.
 ///
+/// \image html geom_geomAlice.png width=800px
 /// \macro_code
 ///
 /// \author Rene Brun
 
 void geomAlice()
 {
-   TGeoManager::Import("http://root.cern.ch/files/alice2.root");
+   TGeoManager::Import("http://root.cern/files/alice2.root");
    gGeoManager->DefaultColors();
 //   gGeoManager->SetVisLevel(4);
    gGeoManager->GetVolume("HALL")->InvisibleAll();

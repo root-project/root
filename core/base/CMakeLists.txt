@@ -8,12 +8,18 @@
 # CMakeLists.txt file for building ROOT core/base package
 ############################################################################
 
-include_directories(res ../foundation/res)
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929)
+  # FIXME: since Visual Studio v16.5.0 the /O2 optimization flag makes most of the roofit/roostats tests failing
+  # Try to re-enable /O2 after the upgrade of llvm & clang, or when upgrading Visual Studio
+  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+endif()
 
 set(BASE_HEADERS
-  ROOT/StringConv.hxx
-  ROOT/TExecutor.hxx
+  ROOT/TErrorDefaultHandler.hxx
+  ROOT/TExecutorCRTP.hxx
   ROOT/TSequentialExecutor.hxx
+  ROOT/StringConv.hxx
   Buttons.h
   Bytes.h
   Byteswap.h
@@ -41,7 +47,6 @@ set(BASE_HEADERS
   TDatime.h
   TDirectory.h
   TEnv.h
-  TError.h
   TException.h
   TExec.h
   TFileCollection.h
@@ -132,7 +137,7 @@ set(BASE_SOURCES
   src/TDatime.cxx
   src/TDirectory.cxx
   src/TEnv.cxx
-  src/TError.cxx
+  src/TErrorDefaultHandler.cxx
   src/TException.cxx
   src/TExec.cxx
   src/TFileCollection.cxx
@@ -161,6 +166,7 @@ set(BASE_SOURCES
   src/TRef.cxx
   src/TRegexp.cxx
   src/TRemoteObject.cxx
+  src/TROOT.cxx
   src/TStopwatch.cxx
   src/TStorage.cxx
   src/TString.cxx
@@ -190,32 +196,26 @@ set(BASE_SOURCES
   src/TVirtualX.cxx
 )
 
-if(CMAKE_CXX_STANDARD GREATER 11)
-  list(APPEND BASE_HEADERS ROOT/RLogger.hxx)
-  list(APPEND BASE_SOURCES v7/src/RLogger.cxx)
-  # TLogger.hxx may be used without root7 flag, but is placed in v7/inc/,
-  # so we need to tell ROOT_INSTALL_HEADERS() where to find it
-  set(BASE_HEADER_DIRS inc/ v7/inc/)
-endif()
-
 if(root7)
+  set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
+      ROOT/RFloat16.hxx
       ROOT/RDirectoryEntry.hxx
       ROOT/RIndexIter.hxx)
+  target_sources(Core PRIVATE v7/src/RDirectory.cxx)
 endif()
 
-
 # only here complete list of headers can be propogated to parent cmake file
-set(Core_dict_headers ${BASE_HEADERS} PARENT_SCOPE)
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ${BASE_HEADERS})
 
-ROOT_OBJECT_LIBRARY(Base ${BASE_SOURCES})
-target_include_directories(Base PRIVATE ${PCRE_INCLUDE_DIR})
+target_sources(Core PRIVATE ${BASE_SOURCES})
 
-#---CreateTApplicationCommandLineOptions------------------------------------------------------------------
-generateHeader(Base
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py
-  ${CMAKE_BINARY_DIR}/include/TApplicationCommandLineOptionsHelp.h
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
+
+target_link_libraries(Core PRIVATE PCRE::PCRE)
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 
@@ -225,7 +225,9 @@ if(NOT MSVC)
 #---addRootC++CmdMan-------------------------------------------------------------------------
 generateManual(rootMan ${CMAKE_CURRENT_SOURCE_DIR}/src/root-argparse.py ${CMAKE_BINARY_DIR}/man/root.1)
 generateManual(haddMan ${CMAKE_SOURCE_DIR}/main/src/hadd-argparse.py ${CMAKE_BINARY_DIR}/man/hadd.1)
+if (roofit)
 generateManual(hist2workspaceMan ${CMAKE_SOURCE_DIR}/roofit/histfactory/src/hist2workspace-argparse.py ${CMAKE_BINARY_DIR}/man/hist2workspace.1)
+endif()
 generateManual(rootclingMan ${CMAKE_SOURCE_DIR}/core/dictgen/src/rootcling-argparse.py ${CMAKE_BINARY_DIR}/man/rootcling.1)
 
 #---addRootPyCmdMan---------------------------------------------------------------------------

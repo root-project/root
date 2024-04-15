@@ -16,7 +16,7 @@
 
 (function(factory){
 
-    var JSROOT_source_dir = "https://root.cern.ch/js/notebook/scripts/";
+    var JSROOT_source_dir = "https://root.cern/js/5.9.1/scripts/";
 
     var url = "";
     if (requirejs.s.contexts.hasOwnProperty("_")) {

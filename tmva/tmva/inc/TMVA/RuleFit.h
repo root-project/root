@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : RuleFit                                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      A class implementing various fits of rule ensembles                       *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_RuleFit
@@ -34,6 +34,7 @@
 
 #include <algorithm>
 #include <random>
+#include <vector>
 
 namespace TMVA {
 
@@ -90,7 +91,7 @@ namespace TMVA {
       // calculate the discriminating variable for the given event
       Double_t EvalEvent( const Event& e );
 
-      // calculate sum of 
+      // calculate sum of
       Double_t CalcWeightSum( const std::vector<const TMVA::Event *> *events, UInt_t neve=0 );
 
       // do the fitting of the coefficients
@@ -156,21 +157,21 @@ namespace TMVA {
       // copy method
       void Copy( const RuleFit & other );
 
-      std::vector<const TMVA::Event *>    fTrainingEvents;      // all training events
-      std::vector<const TMVA::Event *>    fTrainingEventsRndm;  // idem, but randomly shuffled
-      std::vector<Double_t>               fEventWeights;        // original weights of the events - follows fTrainingEvents
-      UInt_t                              fNTreeSample;         // number of events in sub sample = frac*neve
+      std::vector<const TMVA::Event *>    fTrainingEvents;      ///< all training events
+      std::vector<const TMVA::Event *>    fTrainingEventsRndm;  ///< idem, but randomly shuffled
+      std::vector<Double_t>               fEventWeights;        ///< original weights of the events - follows fTrainingEvents
+      UInt_t                              fNTreeSample;         ///< number of events in sub sample = frac*neve
 
-      Double_t                            fNEveEffTrain;    // reweighted number of events = sum(wi)
-      std::vector< const TMVA::DecisionTree *>  fForest;    // the input forest of decision trees
-      RuleEnsemble                        fRuleEnsemble;    // the ensemble of rules
-      RuleFitParams                       fRuleFitParams;   // fit rule parameters
-      const MethodRuleFit                *fMethodRuleFit;   // pointer the method which initialized this RuleFit instance
-      const MethodBase                   *fMethodBase;      // pointer the method base which initialized this RuleFit instance
-      Bool_t                              fVisHistsUseImp;  // if true, use importance as weight; else coef in vis hists
+      Double_t                            fNEveEffTrain;    ///< reweighted number of events = sum(wi)
+      std::vector< const TMVA::DecisionTree *>  fForest;    ///< the input forest of decision trees
+      RuleEnsemble                        fRuleEnsemble;    ///< the ensemble of rules
+      RuleFitParams                       fRuleFitParams;   ///< fit rule parameters
+      const MethodRuleFit                *fMethodRuleFit;   ///< pointer the method which initialized this RuleFit instance
+      const MethodBase                   *fMethodBase;      ///< pointer the method base which initialized this RuleFit instance
+      Bool_t                              fVisHistsUseImp;  ///< if true, use importance as weight; else coef in vis hists
 
-      mutable MsgLogger*                  fLogger;   // message logger
-      MsgLogger& Log() const { return *fLogger; }    
+      mutable MsgLogger*                  fLogger;   ///< message logger
+      MsgLogger& Log() const { return *fLogger; }
 
       static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds
       std::default_random_engine fRNGEngine;

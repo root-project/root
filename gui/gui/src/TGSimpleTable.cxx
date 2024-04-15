@@ -9,37 +9,30 @@
  *************************************************************************/
 
 #include "TGTable.h"
-#include "TClass.h"
 #include "TGWindow.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TSystem.h"
-#include "TImage.h"
-#include "TEnv.h"
-#include "TGToolTip.h"
-#include "TGPicture.h"
 #include "TRandom3.h"
 #include "TGSimpleTableInterface.h"
 #include "TGSimpleTable.h"
 
 ClassImp(TGSimpleTable);
 
-////////////////////////////////////////////////////////////////////////////////
 
-/* Begin_Html
-<center><h2>TGSimpleTable</h2></center>
-<br><br>
+/** \class TGSimpleTable
+    \ingroup guiwidgets
+
 To provide a simple class to visualize an array of doubles, the class
 TGSimpleTable is provided. TGSimpleTable creates it's own
 TGSimpleTableInterface. For more information, see the documentation of
 TGTable
-<br><br>
+
 The interface is accesible through the GetInterface() method.
-End_Html
+
 */
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// TGSimpleTable constuctor.
+/// TGSimpleTable constructor.
 
 TGSimpleTable::TGSimpleTable(TGWindow *p, Int_t id, Double_t **data,
                              UInt_t nrows, UInt_t ncolumns)

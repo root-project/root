@@ -13,7 +13,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
 
@@ -38,14 +38,7 @@
 #include "TMVA/VariableTransformBase.h"
 #include "TMVA/Results.h"
 
-#include "TMath.h"
-#include "Riostream.h"
 #include "TMatrix.h"
-#include "TMatrixD.h"
-#include "TVectorD.h"
-
-#include <iomanip>
-#include <fstream>
 
 using namespace TMVA;
 
@@ -238,7 +231,7 @@ void MethodPyAdaBoost::Train()
    }
 
    // Create classifier object
-   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(base_estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
+   PyRunString("classifier = sklearn.ensemble.AdaBoostClassifier(estimator=baseEstimator, n_estimators=nEstimators, learning_rate=learningRate, algorithm=algorithm, random_state=randomState)",
       "Failed to setup classifier");
 
    // Fit classifier

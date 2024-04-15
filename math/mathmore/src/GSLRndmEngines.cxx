@@ -32,27 +32,56 @@
 
 
 // need to be included later
-#include <time.h>
+#include <ctime>
 #include <cassert>
 
+#include "gsl/gsl_linalg.h"
+#include "gsl/gsl_matrix.h"
 #include "gsl/gsl_rng.h"
 #include "gsl/gsl_randist.h"
-
+#include "gsl/gsl_vector.h"
+#include "gsl/gsl_version.h"
 
 #include "Math/GSLRndmEngines.h"
 #include "GSLRngWrapper.h"
-// for wrapping in GSL ROOT engines 
+// for wrapping in GSL ROOT engines
 #include "GSLRngROOTWrapper.h"
 
 extern double gsl_ran_gaussian_acr(  const gsl_rng * r, const double sigma);
 
-//#include <iostream>
+// gsl_multivarate_gaussian was added in GSL 2.2
+// For older GSL versions (e.g. Ubuntu 16.04 comes with GSL 2.1) we can add it here by hand
+// from: http://git.savannah.gnu.org/cgit/gsl.git/tree/randist/mvgauss.c?h=release-2-6&id=8f0165f5cb2ae02e386cd33ff10e47ffb46ea7da
+#if (GSL_MAJOR_VERSION == 1) || ((GSL_MAJOR_VERSION == 2) && (GSL_MINOR_VERSION < 2))
+#include <gsl/gsl_blas.h>
+extern int
+gsl_ran_multivariate_gaussian(const gsl_rng *r, const gsl_vector *mu, const gsl_matrix *L, gsl_vector *result)
+{
+   const size_t M = L->size1;
+   const size_t N = L->size2;
+
+   if (M != N) {
+      GSL_ERROR("requires square matrix", GSL_ENOTSQR);
+   } else if (mu->size != M) {
+      GSL_ERROR("incompatible dimension of mean vector with variance-covariance matrix", GSL_EBADLEN);
+   } else if (result->size != M) {
+      GSL_ERROR("incompatible dimension of result vector", GSL_EBADLEN);
+   } else {
+      size_t i;
+
+      for (i = 0; i < M; ++i)
+         gsl_vector_set(result, i, gsl_ran_ugaussian(r));
+
+      gsl_blas_dtrmv(CblasLower, CblasNoTrans, CblasNonUnit, L, result);
+      gsl_vector_add(result, mu);
+
+      return GSL_SUCCESS;
+   }
+}
+#endif
 
 namespace ROOT {
 namespace Math {
-
-
-
 
 
   // default constructor (need to call set type later)
@@ -104,7 +133,7 @@ namespace Math {
       if (!fRng) return;
       fRng->Free();
       delete fRng;
-      fRng = 0;
+      fRng = nullptr;
    }
 
 
@@ -131,7 +160,7 @@ namespace Math {
    }
 
    void GSLRandomEngine::RandomArray(double * begin, double * end )  const {
-      // generate array of randoms betweeen 0 and 1. 0 is excluded
+      // generate array of randoms between 0 and 1. 0 is excluded
       // specialization for double * (to be faster)
       for ( double * itr = begin; itr != end; ++itr ) {
          *itr = gsl_rng_uniform_pos(fRng->Rng() );
@@ -162,15 +191,15 @@ namespace Math {
    std::string GSLRandomEngine::Name() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert ( fRng != 0);
-      assert ( fRng->Rng() != 0 );
+      assert ( fRng != nullptr);
+      assert ( fRng->Rng() != nullptr );
       return std::string( gsl_rng_name( fRng->Rng() ) );
    }
 
    unsigned int GSLRandomEngine::Size() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert (fRng != 0);
+      assert (fRng != nullptr);
       return gsl_rng_size( fRng->Rng() );
    }
 
@@ -207,6 +236,40 @@ namespace Math {
    {
       // Gaussian Bivariate distribution, with correlation coefficient rho
       gsl_ran_bivariate_gaussian(  fRng->Rng(), sigmaX, sigmaY, rho, &x, &y);
+   }
+
+   void GSLRandomEngine::GaussianND(size_t dim, const double *pars, const double *covmat, double *genpars, double * ldec) const
+   {
+      // Gaussian Multivariate distribution
+      // assume passed arrays are of correct dimensions
+      // use gsl_matrix_view to avoid copying the data and allocate the arrays
+      // covmat will return
+
+      bool allocateL = false;
+      if (!ldec) {
+         ldec = new double[dim*dim];
+         allocateL = true;
+      }
+
+      gsl_matrix_view L = gsl_matrix_view_array(ldec, dim, dim);
+      gsl_vector_const_view mu = gsl_vector_const_view_array(pars, dim);
+      gsl_vector_view x =  gsl_vector_view_array(genpars, dim);
+
+      if (covmat) {
+         gsl_matrix_const_view A = gsl_matrix_const_view_array(covmat, dim, dim);
+         gsl_matrix_memcpy(&L.matrix, &A.matrix);
+#if ((GSL_MAJOR_VERSION >= 2) && (GSL_MINOR_VERSION > 2))
+         gsl_linalg_cholesky_decomp1(&L.matrix);
+#else
+         gsl_linalg_cholesky_decomp(&L.matrix);
+#endif
+      }
+      // if covMat is not provide we use directly L
+      gsl_ran_multivariate_gaussian(fRng->Rng(), &mu.vector, &L.matrix, &x.vector);
+      if (allocateL) {
+         delete [] ldec;
+         ldec = nullptr;
+      }
    }
 
    double GSLRandomEngine::Exponential(double mu)  const
@@ -332,7 +395,7 @@ namespace Math {
    GSLRngMT::GSLRngMT() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mt19937));
-      Initialize(); 
+      Initialize();
    }
 
 
@@ -340,35 +403,35 @@ namespace Math {
    GSLRngRanLux::GSLRngRanLux() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlux) );
-      Initialize(); 
+      Initialize();
    }
 
    // second generation of Ranlux (single precision version - luxury 1)
    GSLRngRanLuxS1::GSLRngRanLuxS1() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs1) );
-      Initialize(); 
+      Initialize();
    }
 
    // second generation of Ranlux (single precision version - luxury 2)
    GSLRngRanLuxS2::GSLRngRanLuxS2() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxs2) );
-      Initialize(); 
+      Initialize();
    }
 
    // double precision  version - luxury 1
    GSLRngRanLuxD1::GSLRngRanLuxD1() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd1) );
-      Initialize(); 
+      Initialize();
    }
 
    // double precision  version - luxury 2
    GSLRngRanLuxD2::GSLRngRanLuxD2() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranlxd2) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -376,7 +439,7 @@ namespace Math {
    GSLRngTaus::GSLRngTaus() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_taus2) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -384,7 +447,7 @@ namespace Math {
    GSLRngGFSR4::GSLRngGFSR4() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_gfsr4) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -392,7 +455,7 @@ namespace Math {
    GSLRngCMRG::GSLRngCMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_cmrg) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -400,7 +463,7 @@ namespace Math {
    GSLRngMRG::GSLRngMRG() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_mrg) );
-      Initialize(); 
+      Initialize();
    }
 
 
@@ -409,7 +472,7 @@ namespace Math {
    GSLRngRand::GSLRngRand() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_rand) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -417,7 +480,7 @@ namespace Math {
    GSLRngRanMar::GSLRngRanMar() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_ranmar) );
-      Initialize(); 
+      Initialize();
    }
 
    /////////////////////////////////////////////////////////////////////////////
@@ -425,7 +488,7 @@ namespace Math {
    GSLRngMinStd::GSLRngMinStd() : GSLRandomEngine()
    {
       SetType(new GSLRngWrapper(gsl_rng_minstd) );
-      Initialize(); 
+      Initialize();
    }
 
 
@@ -435,8 +498,8 @@ namespace Math {
       SetType(new GSLRngWrapper(gsl_rng_mixmax) );
       Initialize(); // this creates the gsl_rng structure
       //  no real need to call CreateEngine since the underlined MIXMAX engine is created
-      // by calling GSLMixMaxWrapper::Seed(gsl_default_seed) that is called 
-      // when gsl_rng is allocated (in Initialize) 
+      // by calling GSLMixMaxWrapper::Seed(gsl_default_seed) that is called
+      // when gsl_rng is allocated (in Initialize)
       GSLMixMaxWrapper::CreateEngine(Engine()->Rng());
    }
    GSLRngMixMax::~GSLRngMixMax() {
@@ -446,6 +509,3 @@ namespace Math {
 
 } // namespace Math
 } // namespace ROOT
-
-
-

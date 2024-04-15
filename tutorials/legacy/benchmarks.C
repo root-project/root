@@ -43,7 +43,7 @@ void benchmarks() {
    summary->AddText("  graphics/formula1.C");
    summary->AddText("  hist/fillrandom.C");
    summary->AddText("  fit/fit1.C");
-   summary->AddText("  hist/h1draw.C");
+   summary->AddText("  hist/h1ReadAndDraw.C");
    summary->AddText("  graphs/graph.C");
    summary->AddText("  graphs/gerrors.C");
    summary->AddText("  graphics/tornado.C");
@@ -59,7 +59,7 @@ void benchmarks() {
    bexec(dir,"graphics/formula1.C");
    bexec(dir,"hist/fillrandom.C");
    bexec(dir,"fit/fit1.C");
-   bexec(dir,"hist/h1draw.C");
+   bexec(dir,"hist/h1ReadAndDraw.C");
    bexec(dir,"graphs/graph.C");
    bexec(dir,"graphs/gerrors.C");
    bexec(dir,"graphics/tornado.C");

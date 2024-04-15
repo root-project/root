@@ -1,15 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Multidimensional models: multi-dimensional p.d.f.s through composition
-///  e.g. substituting a p.d.f parameter with a function that depends on other observables
+/// Multidimensional models: multi-dimensional pdfs through composition
+/// e.g. substituting a pdf parameter with a function that depends on other observables
 ///
-///  pdf = gauss(x,f(y),s) with f(y) = a0 + a1*y
+///  `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -43,7 +45,7 @@ void rf301_composition()
    // ---------------------------------------------------------------------------------
 
    // Generate 10000 events in x and y from model
-   RooDataSet *data = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
    // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
    RooPlot *xframe = x.frame();

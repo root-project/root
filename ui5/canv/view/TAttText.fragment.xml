@@ -1,0 +1,62 @@
+<core:FragmentDefinition
+       xmlns="sap.m"
+       xmlns:l="sap.ui.layout"
+       xmlns:jsroot="rootui5.canv.controller"
+       xmlns:core="sap.ui.core">
+        <VBox tooltip="TAttText parameters">
+          <HBox renderType="Bare" width="100%">
+             <jsroot:ColorButton text="text" attrcolor="{/atttext/color}" tooltip="Text color"/>
+             <Input visible="{/atttext/size_visible}" value="{/atttext/size}" tooltip="Text size" type="Number">
+               <layoutData>
+                 <FlexItemData growFactor="1"/>
+               </layoutData>
+             </Input>
+             <Select selectedKey="{/atttext/align}" tooltip="Text align" visible="{/atttext/align_used}">
+                <layoutData>
+                   <FlexItemData growFactor="1"/>
+                </layoutData>
+                 <items>
+                   <core:Item text="11: left bottom" key="11"/>
+                   <core:Item text="12: left centered" key="12"/>
+                   <core:Item text="13: left top" key="13"/>
+                   <core:Item text="21: middle bottom" key="21"/>
+                   <core:Item text="22: middle centered" key="22"/>
+                   <core:Item text="23: middle top" key="23"/>
+                   <core:Item text="31: right bottom" key="31"/>
+                   <core:Item text="32: right centered" key="32"/>
+                   <core:Item text="33: right top" key="33"/>
+                 </items>
+             </Select>
+          </HBox>
+          <HBox renderType="Bare" width="100%">
+             <Select selectedKey="{/atttext/font_index}" tooltip="Font style">
+                <layoutData>
+                   <FlexItemData growFactor="5"/>
+                </layoutData>
+                 <items>
+                   <core:Item text="none" key="0"/>
+                   <core:Item text="Times New Roman italic" key="1"/>
+                   <core:Item text="Times New Roman bold" key="2"/>
+                   <core:Item text="Times New Roman bold italic" key="3"/>
+                   <core:Item text="Arial" key="4"/>
+                   <core:Item text="Arial oblique" key="5"/>
+                   <core:Item text="Arial bold" key="6"/>
+                   <core:Item text="Arial bold oblique" key="7"/>
+                   <core:Item text="Courier New" key="8"/>
+                   <core:Item text="Courier New oblique" key="9"/>
+                   <core:Item text="Courier New bold" key="10"/>
+                   <core:Item text="Courier New bold oblique" key="11"/>
+                   <core:Item text="Symbol" key="12"/>
+                   <core:Item text="Times New Roman" key="13"/>
+                   <core:Item text="Wingdings" key="14"/>
+                   <core:Item text="Symbol italic" key="15"/>
+                 </items>
+             </Select>
+             <Input visible="{/atttext/angle_used}" value="{/atttext/angle}" tooltip="Text angle" type="Number">
+               <layoutData>
+                 <FlexItemData growFactor="1"/>
+               </layoutData>
+             </Input>
+          </HBox>
+     </VBox>
+</core:FragmentDefinition>

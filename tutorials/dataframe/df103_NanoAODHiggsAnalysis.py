@@ -1,6 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
+## An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
+##
 ## This tutorial is a simplified but yet complex example of an analysis reconstructing the Higgs boson decaying to two Z
 ## bosons from events with four leptons. The data and simulated events are taken from CERN OpenData representing a
 ## subset of the data recorded in 2012 with the CMS detector at the LHC. The tutorials follows the Higgs to four leptons
@@ -22,12 +24,16 @@
 ## in C++, have been moved to a header that is then declared to the ROOT C++ interpreter. The functions that instead
 ## create nodes of the computational graph (e.g. Filter, Define) remain inside the main Python script.
 ##
+## The tutorial has the fast mode enabled by default, which reads the data from already skimmed
+## datasets with a total size of only 51MB. If the fast mode is disabled, the tutorial runs over
+## the full dataset with a size of 12GB.
+##
 ## \macro_image
 ## \macro_code
 ## \macro_output
 ##
 ## \date July 2019
-## \author Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
+## \authors Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
 
 import ROOT
 import os
@@ -187,7 +193,9 @@ def plot(sig, bkg, data, x_label, filename):
     # Canvas and general style options
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
-    d = ROOT.TCanvas("d", "", 800, 700)
+    d = ROOT.TCanvas("", "", 800, 700)
+    # Make sure the canvas stays in the list of canvases after the macro execution
+    ROOT.SetOwnership(d, False)
     d.SetLeftMargin(0.15)
 
     # Get signal and background histograms and stack them to show Higgs signal
@@ -245,37 +253,28 @@ def plot(sig, bkg, data, x_label, filename):
 
 
 def df103_NanoAODHiggsAnalysis():
+    # In fast mode, take samples from */cms_opendata_2012_nanoaod_skimmed/*, which has
+    # the preselections from the selection_* functions already applied.
+    path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/"
+    run_fast = True # Run on skimmed data, set to False to run on full dataset
+    if run_fast: path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod_skimmed/"
+
     # Create dataframes for signal, background and data samples
 
     # Signal: Higgs -> 4 leptons
-    df_sig_4l = ROOT.RDataFrame("Events",
-                                "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/SMHiggsToZZTo4L.root")
+    df_sig_4l = ROOT.RDataFrame("Events", path + "SMHiggsToZZTo4L.root")
 
     # Background: ZZ -> 4 leptons
     # Note that additional background processes from the original paper
     # with minor contribution were left out for this
     # tutorial.
-    df_bkg_4mu = ROOT.RDataFrame("Events",
-                                 "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4mu.root")
-
-    df_bkg_4el = ROOT.RDataFrame("Events",
-                                 "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo4e.root")
-
-    df_bkg_2el2mu = ROOT.RDataFrame("Events",
-                                    "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/ZZTo2e2mu.root")
+    df_bkg_4mu = ROOT.RDataFrame("Events", path + "ZZTo4mu.root")
+    df_bkg_4el = ROOT.RDataFrame("Events", path + "ZZTo4e.root")
+    df_bkg_2el2mu = ROOT.RDataFrame("Events", path + "ZZTo2e2mu.root")
 
     # CMS data taken in 2012 (11.6 fb^-1 integrated luminosity)
-    doublemu_files = ROOT.std.vector("string")(2)
-    doublemu_files[0] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root"
-    doublemu_files[1] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"
-
-    df_data_doublemu = ROOT.RDataFrame("Events", doublemu_files)
-
-    doubleel_files = ROOT.std.vector("string")(2)
-    doubleel_files[0] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleElectron.root"
-    doubleel_files[1] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleElectron.root"
-
-    df_data_doubleel = ROOT.RDataFrame("Events", doubleel_files)
+    df_data_doublemu = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleMuParked.root", "Run2012C_DoubleMuParked.root"]))
+    df_data_doubleel = ROOT.RDataFrame("Events", (path + f for f in ["Run2012B_DoubleElectron.root", "Run2012C_DoubleElectron.root"]))
 
     # Number of bins for all histograms
     nbins = 36
@@ -353,7 +352,15 @@ def df103_NanoAODHiggsAnalysis():
     df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", "1.0")\
                                           .Histo1D(("h_data_2el2mu_doublemu", "", nbins, 70, 180), "H_mass", "weight")
 
-    # Trigger event loops and retrieve histograms
+    # RunGraphs allows to run the event loops of the separate RDataFrame graphs
+    # concurrently. This results in an improved usage of the available resources
+    # if each separate RDataFrame can not utilize all available resources, e.g.,
+    # because not enough data is available.
+    ROOT.RDF.RunGraphs([df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu,
+                        df_h_sig_4el, df_h_bkg_4el, df_h_data_4el,
+                        df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu])
+
+    # Get histograms (does not rerun the event loop)
     signal_4mu = df_h_sig_4mu.GetValue()
     background_4mu = df_h_bkg_4mu.GetValue()
     data_4mu = df_h_data_4mu.GetValue()

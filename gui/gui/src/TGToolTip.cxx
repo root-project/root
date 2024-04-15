@@ -20,21 +20,24 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGToolTip                                                            //
-//                                                                      //
-// A tooltip can be a one or multiple lines help text that is displayed //
-// in a window when the mouse cursor overs a widget, without clicking   //
-// it. A small box appears with suplementary information regarding the  //
-// item being hovered over.                                             //                               //
-//                                                                      //
-// A multiline tooltip can be created by inserting a new-line character //
-// "\n" in the tooltip string. For example:                             //
-//                                                                      //
-// fButton->SetToolTipText("Go to the ROOT page\n (http://root.cern.ch) //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGToolTip
+    \ingroup guiwidgets
+
+A tooltip can be a one or multiple lines help text that is displayed
+in a window when the mouse cursor overs a widget, without clicking
+it. A small box appears with supplementary information regarding the
+item being hovered over.
+
+A multiline tooltip can be created by inserting a new-line character
+`\n` in the tooltip string. For example:
+
+```
+fButton->SetToolTipText("Go to the ROOT page\n (http://root.cern.ch)
+```
+
+*/
+
 
 #include "TGToolTip.h"
 #include "TGLabel.h"
@@ -55,7 +58,7 @@ private:
    TGToolTip   *fTip;  // tooltip
 public:
    TTipDelayTimer(TGToolTip *tip, Long_t ms) : TTimer(ms, kTRUE) { fTip = tip; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,7 +236,7 @@ void TGToolTip::Show(Int_t x, Int_t y)
    MapWindow();
    RaiseWindow();
 
-   Long_t args[2];
+   Longptr_t args[2];
    args[0] = x;
    args[1] = y;
 

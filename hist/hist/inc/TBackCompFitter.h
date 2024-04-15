@@ -45,7 +45,7 @@ public:
    //TBackCompFitter(ROOT::Fit::Fitter & fitter, ROOT::Fit::FitData * );
    TBackCompFitter( const std::shared_ptr<ROOT::Fit::Fitter> & fitter, const std::shared_ptr<ROOT::Fit::FitData> & data  );
 
-   virtual ~TBackCompFitter();
+   ~TBackCompFitter() override;
 
 public:
 
@@ -54,71 +54,72 @@ public:
    };
 
    // inherited interface
-   virtual Double_t  Chisquare(Int_t npar, Double_t *params) const;
-   virtual void      Clear(Option_t *option="");
-   virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs);
-   virtual void      FixParameter(Int_t ipar);
+   Double_t  Chisquare(Int_t npar, Double_t *params) const override;
+   void      Clear(Option_t *option="") override;
+   Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) override;
+   void      FixParameter(Int_t ipar) override;
 
-   virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
-   virtual void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95);
+   void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95) override;
+   void      GetConfidenceIntervals(TObject *obj, Double_t cl=0.95) override;
 
-   virtual Double_t *GetCovarianceMatrix() const;
-   virtual Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const;
-   virtual Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const;
-   virtual Int_t     GetNumberTotalParameters() const;
-   virtual Int_t     GetNumberFreeParameters() const;
+   Double_t *GetCovarianceMatrix() const override;
+   Double_t  GetCovarianceMatrixElement(Int_t i, Int_t j) const override;
+   Int_t     GetErrors(Int_t ipar,Double_t &eplus, Double_t &eminus, Double_t &eparab, Double_t &globcc) const override;
+   Int_t     GetNumberTotalParameters() const override;
+   Int_t     GetNumberFreeParameters() const override;
 
-   virtual Double_t  GetParError(Int_t ipar) const;
-   virtual Double_t  GetParameter(Int_t ipar) const;
-   virtual Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const;
-   virtual const char *GetParName(Int_t ipar) const;
-   virtual Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const;
-   virtual Double_t  GetSumLog(Int_t i);
+   Double_t  GetParError(Int_t ipar) const override;
+   Double_t  GetParameter(Int_t ipar) const override;
+   Int_t     GetParameter(Int_t ipar,char *name,Double_t &value,Double_t &verr,Double_t &vlow, Double_t &vhigh) const override;
+   const char *GetParName(Int_t ipar) const override;
+   Int_t     GetStats(Double_t &amin, Double_t &edm, Double_t &errdef, Int_t &nvpar, Int_t &nparx) const override;
+   Double_t  GetSumLog(Int_t i) override;
 
-   virtual Bool_t    IsFixed(Int_t ipar) const ;
+   Bool_t    IsFixed(Int_t ipar) const override ;
 
-   virtual void      PrintResults(Int_t level, Double_t amin) const;
-   virtual void      ReleaseParameter(Int_t ipar);
-   virtual void      SetFitMethod(const char *name);
-   virtual Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh);
+   void      PrintResults(Int_t level, Double_t amin) const override;
+   void      ReleaseParameter(Int_t ipar) override;
+   void      SetFitMethod(const char *name) override;
+   Int_t     SetParameter(Int_t ipar,const char *parname,Double_t value,Double_t verr,Double_t vlow, Double_t vhigh) override;
 
-   virtual void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) );
-   // for using interpreted function passed by the user
+   void      SetFCN(void (*fcn)(Int_t &, Double_t *, Double_t &f, Double_t *, Int_t) ) override;
+
+   /// For using interpreted function passed by the user
    virtual void SetMethodCall(TMethodCall * m) { fMethodCall = m; }
 
-   // get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit configuration (NOTE: it will be invalid when class is deleted)
    ROOT::Fit::FitConfig & GetFitConfig()  { return fFitter->Config(); }
 
-   // get reference to Fit Result object (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit Result object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitResult & GetFitResult() const { return fFitter->Result(); }
 
-   // get a copy of the Fit result returning directly a new  TFitResult
+   /// Get a copy of the Fit result returning directly a new  TFitResult
    TFitResult * GetTFitResult() const;
 
-   // get reference to Fit Data object (NOTE: it will be invalid when class is deleted)
+   /// Get reference to Fit Data object (NOTE: it will be invalid when class is deleted)
    const ROOT::Fit::FitData & GetFitData() const { return *fFitData; }
 
-   // return pointer to last used minimizer
+   // Return pointer to last used minimizer
    ROOT::Math::Minimizer * GetMinimizer() const;
 
-   // return pointer to last used objective function
+   // Return pointer to last used objective function
    ROOT::Math::IMultiGenFunction * GetObjFunction() const;
 
-   // scan likelihood value of  parameter and fill the given graph.
+   // Scan likelihood value of  parameter and fill the given graph.
    bool  Scan(unsigned int ipar, TGraph * gr, double xmin = 0, double xmax = 0);
 
    //    scan likelihood value for two  parameters and fill the given graph.
    //    bool  Scan2D(unsigned int ipar, unsigned int jpar, TGraph2D * gr,
    //                         double xmin = 0, double xmax = 0, double ymin = 0, double ymax = 0);
 
-   // create contour of two parameters around the minimum
+   // Create contour of two parameters around the minimum
    // pass as option confidence level:  default is a value of 0.683
    bool  Contour(unsigned int ipar, unsigned int jpar, TGraph * gr , double confLevel = 0.683);
 
-   // set FCN using new interface
+   // Set FCN using new interface
    virtual void SetObjFunction(  ROOT::Math::IMultiGenFunction * f);
 
-   // recreate minimizer and FCN for TMinuit fits and standard printout
+   // Recreate minimizer and FCN for TMinuit fits and standard printout
    void ReCreateMinimizer();
 
 
@@ -130,16 +131,16 @@ protected:
 private:
 
    //ROOT::Fit::FitData * fFitData;
-   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  //! data of the fit
-   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   //! pointer to fitter object
+   std::shared_ptr<ROOT::Fit::FitData>  fFitData;  ///<! Data of the fit
+   std::shared_ptr<ROOT::Fit::Fitter>   fFitter;   ///<! Pointer to fitter object
    ROOT::Math::Minimizer * fMinimizer;
    ROOT::Math::IMultiGenFunction * fObjFunc;
    ROOT::Math::IParamMultiFunction * fModelFunc;
-   mutable std::vector<double> fCovar; // cached covariance matrix (NxN)
+   mutable std::vector<double> fCovar;             ///< Cached covariance matrix (NxN)
 
 
 
-   ClassDef(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
+   ClassDefOverride(TBackCompFitter,1)  // Class providing backward compatibility for fitting by implementing the TVirtualFitter interface
 
 };
 

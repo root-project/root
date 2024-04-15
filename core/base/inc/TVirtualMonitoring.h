@@ -22,8 +22,13 @@
 
 #include "TNamed.h"
 
+#ifdef R__LESS_INCLUDES
+class TList;
+class TMap;
+#else
 #include "TList.h"
 #include "TMap.h"
+#endif
 
 class TFile;
 
@@ -31,8 +36,8 @@ class TVirtualMonitoringWriter : public TNamed {
 
 private:
 
-   TVirtualMonitoringWriter(const TVirtualMonitoringWriter&); // Not implemented
-   TVirtualMonitoringWriter& operator=(const TVirtualMonitoringWriter&); // Not implemented
+   TVirtualMonitoringWriter(const TVirtualMonitoringWriter&) = delete;
+   TVirtualMonitoringWriter& operator=(const TVirtualMonitoringWriter&) = delete;
 
    Double_t fValue;  // double monitor value
 
@@ -40,11 +45,11 @@ protected:
    TList     *fTmpOpenPhases;       // To store open phases when there is not yet an object
 
 public:
-   TVirtualMonitoringWriter() : TNamed(), fValue(0), fTmpOpenPhases(0) { }
+   TVirtualMonitoringWriter() : TNamed(), fValue(0), fTmpOpenPhases(nullptr) { }
    TVirtualMonitoringWriter(const char *name, Double_t value)
-     : TNamed(name, ""), fValue(value), fTmpOpenPhases(0) { }
+     : TNamed(name, ""), fValue(value), fTmpOpenPhases(nullptr) { }
 
-   virtual ~TVirtualMonitoringWriter() { if (fTmpOpenPhases) delete fTmpOpenPhases; }
+   virtual ~TVirtualMonitoringWriter();
 
    // TFile related info. In general they are gathered and sent only sometimes as summaries
    virtual Bool_t SendFileCloseEvent(TFile * /*file*/)
@@ -54,10 +59,10 @@ public:
    virtual Bool_t SendFileWriteProgress(TFile * /*file*/)
       { MayNotUse("SendFileWriteProgress"); return kFALSE; }
 
-   virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = 0)
+   virtual Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = nullptr)
       { MayNotUse("SendParameters"); return kFALSE; }
    virtual Bool_t SendInfoTime() { MayNotUse("SendInfoTime"); return kFALSE; }
-   virtual Bool_t SendInfoUser(const char * /*user*/ = 0) { MayNotUse("SendInfoUser"); return kFALSE; }
+   virtual Bool_t SendInfoUser(const char * /*user*/ = nullptr) { MayNotUse("SendInfoUser"); return kFALSE; }
    virtual Bool_t SendInfoDescription(const char * /*jobtag*/) { MayNotUse("SendInfoDescription"); return kFALSE; }
    virtual Bool_t SendInfoStatus(const char * /*status*/) { MayNotUse("SendInfoStatus"); return kFALSE; }
 
@@ -77,7 +82,7 @@ public:
       { MayNotUse("SetLogLevel"); };
    virtual void   Verbose(Bool_t /*onoff*/) { MayNotUse("Verbose"); }
 
-   ClassDef(TVirtualMonitoringWriter,0)  // ABC for Sending Monitoring Information
+   ClassDefOverride(TVirtualMonitoringWriter,0)  // ABC for Sending Monitoring Information
 };
 
 
@@ -101,10 +106,10 @@ public:
                               Long_t /*min*/, Long_t /*max*/, Long_t /*lifetime*/)
       { MayNotUse("ProxyValues"); }
 
-   virtual TMap *GetMap() { MayNotUse("GetMap"); return 0; }
+   virtual TMap *GetMap() { MayNotUse("GetMap"); return nullptr; }
    virtual void DeleteMap(TMap * /*map*/) { MayNotUse("DeleteMap"); }
 
-   ClassDef(TVirtualMonitoringReader, 1) // ABC for Reading Monitoring Information
+   ClassDefOverride(TVirtualMonitoringReader, 1) // ABC for Reading Monitoring Information
 };
 
 

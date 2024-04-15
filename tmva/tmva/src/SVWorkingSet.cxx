@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : SVWorkingSet                                                          *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::SVWorkingSet
@@ -42,7 +42,6 @@ Working class for Support Vector Machine
 #include "TMath.h"
 #include "TRandom3.h"
 
-#include <iostream>
 #include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -308,9 +307,7 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    Float_t dL_I = type_I * ( newAlpha_I - alpha_I );
    Float_t dL_J = type_J * ( newAlpha_J - alpha_J );
 
-   Int_t k = 0;
    for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
-      k++;
       if((*idIter)->GetIdx()==0){
          Float_t ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());
          Float_t jj = fKMatrix->GetElement(jevt->GetNs(), (*idIter)->GetNs());
@@ -453,16 +450,6 @@ void TMVA::SVWorkingSet::SetIndex( TMVA::SVEvent* event )
       else if( event->GetAlpha() == event->GetCweight() )
          event->SetIdx(1);
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void TMVA::SVWorkingSet::PrintStat()
-{
-   std::vector<TMVA::SVEvent*>::iterator idIter;
-   UInt_t counter = 0;
-   for( idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter)
-      if((*idIter)->GetAlpha() !=0) counter++;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -634,9 +621,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       const Float_t diff_alpha_j = jevt->GetDeltaAlpha()+b_alpha_j_p - jevt->GetAlpha();
 
       //update error cache
-      Int_t k = 0;
       for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
-         k++;
          //there will be some changes in Idx notation
          if((*idIter)->GetIdx()==0){
             Float_t k_ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());

@@ -17,6 +17,7 @@
 #include "TError.h"
 #include "TFile.h"
 #include "TProtoClass.h"
+#include "TDataMember.h"
 #include "TROOT.h"
 #include "TStreamerInfo.h"
 #include "TClassEdit.h"
@@ -26,7 +27,6 @@ std::string gPCMFilename;
 std::vector<std::string> gClassesToStore;
 std::vector<std::string> gTypedefsToStore;
 std::vector<std::string> gEnumsToStore;
-std::vector<std::string> gAncestorPCMNames;
 
 extern "C"
 void InitializeStreamerInfoROOTFile(const char *filename)
@@ -52,12 +52,6 @@ extern "C"
 void AddEnumToROOTFile(const char *enumname)
 {
    gEnumsToStore.emplace_back(enumname);
-}
-
-extern "C"
-void AddAncestorPCMROOTFile(const char *pcmName)
-{
-   gAncestorPCMNames.emplace_back(pcmName);
 }
 
 static bool IsUniquePtrOffsetZero()
@@ -175,6 +169,15 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
          auto dm = (TDataMember *) dmObj;
          if (!dm->IsPersistent() || cl->GetClassVersion()==0) continue;
          if (IsUnsupportedUniquePointer(normName.c_str(), dm)) return false;
+         if (dm->IsEnum()) {
+            const char *enumTypeName = dm->GetTypeName();
+            auto enumType = TEnum::GetEnum(enumTypeName);
+            if (enumType && (!enumType->GetClass() || !enumType->GetClass()->IsLoaded()) &&
+                ((strstr(enumTypeName, "(unnamed)") == nullptr) &&
+                std::find(gEnumsToStore.begin(), gEnumsToStore.end(), enumTypeName) == gEnumsToStore.end()))
+               gEnumsToStore.emplace_back(enumTypeName);
+         }
+
       }
 
       // Never store a proto class for a class which rootcling already has
@@ -194,6 +197,27 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
 //       if (cl->GetCollectionProxy())
 //          continue;
       cl->Property(); // Force initialization of the bits and property fields.
+
+      if (auto pr = cl->GetCollectionProxy()) {
+         auto colltype = pr->GetCollectionType();
+         if (colltype == ROOT::kSTLmap || colltype == ROOT::kSTLmultimap ||
+             colltype == ROOT::kSTLunorderedmap || colltype == ROOT::kSTLunorderedmultimap) {
+            if (auto pcl = pr->GetValueClass()) {
+               if (auto pcl_dms = pcl->GetListOfDataMembers()) {
+                  for (auto dmObj : *pcl_dms) {
+                     auto dm = (TDataMember *) dmObj;
+                     if (dm->IsEnum()) {
+                        const char *enumTypeName = dm->GetTypeName();
+                        auto enumType = TEnum::GetEnum(enumTypeName);
+                        if (enumType && (!enumType->GetClass() || !enumType->GetClass()->IsLoaded()) &&
+                            (std::find(gEnumsToStore.begin(), gEnumsToStore.end(), enumTypeName) == gEnumsToStore.end()))
+                           gEnumsToStore.emplace_back(enumTypeName);
+                     }
+                  }
+               }
+            }
+         }
+      }
 
       protoClasses.AddLast(new TProtoClass(cl));
    }
@@ -217,20 +241,22 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    TObjArray enums(gEnumsToStore.size());
    for (const auto & enumname : gEnumsToStore) {
       TEnum *en = nullptr;
-      const size_t lastSepPos = enumname.find_last_of("::");
+      const size_t lastSepPos = enumname.rfind("::");
       if (lastSepPos != std::string::npos) {
-         const std::string nsName = enumname.substr(0, lastSepPos - 1);
+         const std::string nsName = enumname.substr(0, lastSepPos);
          TClass *tclassInstance = TClass::GetClass(nsName.c_str());
          if (!tclassInstance) {
             Error("CloseStreamerInfoROOTFile", "Cannot find TClass instance for namespace %s.", nsName.c_str());
             return false;
          }
+         if (!(tclassInstance->Property() & kIsNamespace))
+            continue; // Enum will be part of the TClass.
          auto enumListPtr = tclassInstance->GetListOfEnums();
          if (!enumListPtr) {
             Error("CloseStreamerInfoROOTFile", "TClass instance for namespace %s does not have any enum associated. This is an inconsistency.", nsName.c_str());
             return false;
          }
-         const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 1);
+         const std::string unqualifiedEnumName = enumname.substr(lastSepPos + 2);
          en = (TEnum *)enumListPtr->FindObject(unqualifiedEnumName.c_str());
          if (en) en->SetTitle(nsName.c_str());
       } else {
@@ -248,13 +274,10 @@ bool CloseStreamerInfoROOTFile(bool writeEmptyRootPCM)
    if (dictFile.IsZombie())
       return false;
 // Instead of plugins:
-   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
-   protoClasses.Delete();
    typedefs.Write("__Typedefs", TObject::kSingleKey);
    enums.Write("__Enums", TObject::kSingleKey);
-
-   dictFile.WriteObjectAny(&gAncestorPCMNames, "std::vector<std::string>", "__AncestorPCMNames");
-
+   protoClasses.Write("__ProtoClasses", TObject::kSingleKey);
+   protoClasses.Delete();
 
    return true;
 }

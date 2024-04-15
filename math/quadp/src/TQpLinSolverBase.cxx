@@ -48,9 +48,7 @@
 ///
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "Riostream.h"
 #include "TQpLinSolverBase.h"
-#include "TMatrixD.h"
 
 ClassImp(TQpLinSolverBase);
 
@@ -66,7 +64,7 @@ TQpLinSolverBase::TQpLinSolverBase()
    fNxlo = 0;
    fMcup = 0;
    fMclo = 0;
-   fFactory = 0;
+   fFactory = nullptr;
 }
 
 
@@ -309,7 +307,7 @@ void TQpLinSolverBase::SeparateVars(TVectorD &x_in,TVectorD &y_in,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment opeartor
+/// Assignment operator
 
 TQpLinSolverBase &TQpLinSolverBase::operator=(const TQpLinSolverBase &source)
 {

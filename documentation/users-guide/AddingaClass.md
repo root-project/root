@@ -413,26 +413,29 @@ The `TEvent.h` header is:
 #ifndef __TEvent__
 #define __TEvent__
 #include "TObject.h"
-class TCollection;
+#include "TCollection.h"
+
 class TTrack;
 
 class TEvent : public TObject {
-private:
-Int_t        fId;          // event sequential id
-Float_t      fTotalMom;    // total momentum
-TCollection *fTracks;      // collection of tracks
-public:
-TEvent() { fId = 0; fTracks = 0; }
-TEvent(Int_t id);
-~TEvent();
-void    AddTrack(TTrack *t);
-Int_t   GetId() const { return fId; }
-Int_t   GetNoTracks() const;
-void    Print(Option_t *opt="");
-Float_t TotalMomentum();
+   private:
+      Int_t        fId;          // event sequential id
+      Float_t      fTotalMom;    // total momentum
+      TCollection *fTracks;      // collection of tracks
+   public:
+      TEvent() { fId = 0; fTotalMom = 0; fTracks = nullptr; }
+      TEvent(Int_t id);
+      ~TEvent();
+     void    AddTrack(TTrack *t);
+     Int_t   GetId() const { return fId; }
+     Int_t   GetNoTracks() const;
+     void    Print(Option_t *opt="");
+     Float_t TotalMomentum();
 
-ClassDef(TEvent,1);  //Simple event class
+   ClassDef(TEvent,1);  //Simple event class
 };
+
+#endif
 ```
 
 The things to notice in these header files are:
@@ -458,6 +461,7 @@ The `TTrack.h` header is:
 #include "TObject.h"
 
 class TEvent;
+
 class TTrack : public TObject {
    private:
       Int_t    fId;       //track sequential id
@@ -466,8 +470,8 @@ class TTrack : public TObject {
       Float_t  fPy;       //y part of track momentum
       Float_t  fPz;       //z part of track momentum
    public:
-      TTrack() { fId = 0; fEvent = 0; fPx = fPy = fPz = 0; }
-      TTrack(Int_t id, Event *ev, Float_t px,Float_t py,Float_t pz);
+      TTrack() { fId = 0; fEvent = nullptr; fPx = fPy = fPz = 0; }
+      TTrack(Int_t id, TEvent *ev, Float_t px,Float_t py,Float_t pz);
       Float_t  Momentum() const;
       TEvent  *GetEvent() const { return fEvent; }
       void     Print(Option_t *opt="");
@@ -500,8 +504,8 @@ ClassImp(TEvent)
 #include <iostream.h>
 
 #include "TMath.h"
-#include "Track.h"
-#include "Event.h"
+#include "TTrack.h"
+#include "TEvent.h"
 
 ClassImp(TTrack)
 ...
@@ -520,20 +524,25 @@ and` ShowMembers() `methods for the two classes.
 **`TObject`**. Here is the `TEvent::Streamer` method:
 
 ``` {.cpp}
-void TEvent::Streamer(TBuffer &R__b) {
+void TEvent::Streamer(TBuffer &R__b)
+{
    // Stream an object of class TEvent.
+
+   UInt_t R__s, R__c;
    if (R__b.IsReading()) {
-      Version_t R__v = R__b.ReadVersion();
-      TObject::(R__b);
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TObject::Streamer(R__b);
       R__b >> fId;
       R__b >> fTotalMom;
       R__b >> fTracks;
+      R__b.CheckByteCount(R__s, R__c, TEvent::IsA());
    } else {
-      R__b.WriteVersion(TEvent::IsA());
+      R__c = R__b.WriteVersion(TEvent::IsA(), kTRUE);
       TObject::Streamer(R__b);
       R__b << fId;
       R__b << fTotalMom;
       R__b << fTracks;
+      R__b.SetByteCount(R__c, kTRUE);
    }
 }
 ```
@@ -561,7 +570,6 @@ If you want to prevent the generation of `Streamer()`, see the section
 "Adding a Class with a Shared Library".
 
 ### Dictionaries for STL
-
 
 Usually, headers are passed to rootcling at the command line. To generate
 a dictionary for a class from the STL, e.g.

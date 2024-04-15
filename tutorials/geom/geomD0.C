@@ -9,6 +9,7 @@
 ///   - run with `.x geomD0.C`    top level detectors are transparent
 ///   - or       `.x geomD0.C(1)` top level detectors are visible
 ///
+/// \image html geom_geomD0.png width=800px
 /// \macro_code
 ///
 /// \authors Bertrand Bellenot, Rene Brun
@@ -17,7 +18,7 @@ void RecursiveInvisible(TGeoVolume *vol);
 void RecursiveTransparency(TGeoVolume *vol, Int_t transp);
 
 void geomD0(Int_t allVisible=0) {
-   TGeoManager::Import("http://root.cern.ch/files/d0.root");
+   TGeoManager::Import("http://root.cern/files/d0.root");
    gGeoManager->DefaultColors();
    gGeoManager->SetMaxVisNodes(40000);
    //gGeoManager->SetVisLevel(4);

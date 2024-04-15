@@ -15,20 +15,20 @@
 #include <map>
 #include <fstream>
 #include <iostream>
+#include <vector>
 
-#include "TObject.h"
-#include "TFile.h"
-
+#include "TNamed.h"
 
 #include "PreprocessFunction.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Asimov.h"
 
+class TFile;
+
 namespace RooStats{
 namespace HistFactory {
 
 class Measurement : public TNamed {
-
 
 public:
 
@@ -73,7 +73,8 @@ public:
   void SetFunctionObjects( std::vector< RooStats::HistFactory::PreprocessFunction > objects ) { fFunctionObjects = objects; }
   /// get vector of defined function objects
   std::vector< RooStats::HistFactory::PreprocessFunction >& GetFunctionObjects() { return fFunctionObjects; }
-  std::vector< std::string > GetPreprocessFunctions();
+  const std::vector< RooStats::HistFactory::PreprocessFunction >& GetFunctionObjects() const { return fFunctionObjects; }
+  std::vector< std::string > GetPreprocessFunctions() const;
 
   /// get vector of defined Asimov Datasets
   std::vector< RooStats::HistFactory::Asimov >& GetAsimovDatasets() { return fAsimovDatasets; }
@@ -88,21 +89,21 @@ public:
   double GetLumi() { return fLumi; }
   /// retrieve relative uncertainty on luminosity
   double GetLumiRelErr() { return fLumiRelErr; }
-  
+
   void SetBinLow( int BinLow ) { fBinLow = BinLow; }
   void SetBinHigh ( int BinHigh ) { fBinHigh = BinHigh; }
   int GetBinLow() { return fBinLow; }
-  int GetBinHigh() { return fBinHigh; } 
+  int GetBinHigh() { return fBinHigh; }
 
   /// do not produce any plots or tables, just save the model
   void SetExportOnly( bool ExportOnly ) { fExportOnly = ExportOnly; }
   bool GetExportOnly() { return fExportOnly; }
 
-
   void PrintTree( std::ostream& = std::cout ); /// Print to a stream
   void PrintXML( std::string Directory="", std::string NewOutputPrefix="" );
 
   std::vector< RooStats::HistFactory::Channel >& GetChannels() { return fChannels; }
+  const std::vector< RooStats::HistFactory::Channel >& GetChannels() const { return fChannels; }
   RooStats::HistFactory::Channel& GetChannel( std::string );
   /// add a completely configured channel
   void AddChannel( RooStats::HistFactory::Channel chan ) { fChannels.push_back( chan ); }
@@ -123,6 +124,12 @@ public:
   std::map< std::string, double >& GetLogNormSyst() { return fLogNormSyst; }
   std::map< std::string, double >& GetNoSyst() { return fNoSyst; }
 
+  std::map< std::string, double > const& GetGammaSyst() const { return fGammaSyst; }
+  std::map< std::string, double > const& GetUniformSyst() const { return fUniformSyst; }
+  std::map< std::string, double > const& GetLogNormSyst() const { return fLogNormSyst; }
+  std::map< std::string, double > const& GetNoSyst() const { return fNoSyst; }
+
+  std::string GetInterpolationScheme() { return fInterpolationScheme; }
 
 private:
 
@@ -142,7 +149,7 @@ private:
   /// List of Parameters to be set constant
   std::vector< std::string > fConstantParams;
 
-  /// Map of parameter names to inital values to be set
+  /// Map of parameter names to initial values to be set
   std::map< std::string, double > fParamValues;
 
   /// List of Preprocess Function objects
@@ -156,13 +163,13 @@ private:
   std::map< std::string, double > fUniformSyst;
   std::map< std::string, double > fLogNormSyst;
   std::map< std::string, double > fNoSyst;
-  
+
   std::string GetDirPath( TDirectory* dir );
 
-  ClassDef(RooStats::HistFactory::Measurement, 3);
+  ClassDefOverride(RooStats::HistFactory::Measurement, 3);
 
 };
- 
+
 } // namespace HistFactory
 } // namespace RooStats
 

@@ -23,6 +23,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     ROOT/Browsable/RUnique.hxx
     ROOT/Browsable/RWrapper.hxx
     ROOT/Browsable/TKeyItem.hxx
+    ROOT/Browsable/TObjectElement.hxx
     ROOT/Browsable/TObjectHolder.hxx
     ROOT/Browsable/TObjectItem.hxx
   SOURCES
@@ -36,6 +37,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTBrowsable
     src/TObjectHolder.cxx
   DEPENDENCIES
     RIO
+    Hist
 )
 
 # provider for drawing of v7 histograms on RCanvas
@@ -55,6 +57,7 @@ ROOT_LINKER_LIBRARY(ROOTObjectDraw6Provider
   DEPENDENCIES
      ROOTBrowsable
      Gpad
+     Hist
 )
 
 # provider for generic drawing of TObject on RCanvas
@@ -66,6 +69,23 @@ ROOT_LINKER_LIBRARY(ROOTObjectDraw7Provider
      ROOTGpadv7
 )
 
+# provider for browsing of TBranchElement
+
+ROOT_LINKER_LIBRARY(ROOTBranchBrowseProvider
+     src/TBranchBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     Tree
+)
+
+# provider for browsing of TGeo class
+
+ROOT_LINKER_LIBRARY(ROOTGeoBrowseProvider
+     src/TGeoBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     Geom
+)
 
 # provider for drawing of TLeaf on TCanvas
 
@@ -85,6 +105,33 @@ ROOT_LINKER_LIBRARY(ROOTLeafDraw7Provider
   DEPENDENCIES
      ROOTBrowsable
      Tree
+     Hist
+     ROOTGpadv7
+)
+
+# provider for browsing of RNTuple
+
+ROOT_LINKER_LIBRARY(ROOTNTupleBrowseProvider
+     src/RNTupleBrowseProvider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw6Provider
+     src/RNTupleDraw6Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
+     Hist
+     Gpad
+)
+
+ROOT_LINKER_LIBRARY(ROOTNTupleDraw7Provider
+     src/RNTupleDraw7Provider.cxx
+  DEPENDENCIES
+     ROOTBrowsable
+     ROOTNTuple
      Hist
      ROOTGpadv7
 )

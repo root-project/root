@@ -230,7 +230,7 @@ public:
    // Try reconnection after error
    virtual Int_t       Reconnect();
 
-   ClassDef(TXSocket, 0) //A high level connection class for PROOF
+   ClassDefOverride(TXSocket, 0) //A high level connection class for PROOF
 };
 
 

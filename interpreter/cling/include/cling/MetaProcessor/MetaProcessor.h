@@ -24,7 +24,7 @@ namespace cling {
 
   class Interpreter;
   class InputValidator;
-  class MetaParser;
+  class MetaSema;
   class Value;
 
   ///\brief Class that helps processing meta commands, which add extra
@@ -43,7 +43,7 @@ namespace cling {
 
     ///\brief The parser used to parse our tiny "meta" language
     ///
-    std::unique_ptr<MetaParser> m_MetaParser;
+    std::unique_ptr<MetaSema> m_MetaSema;
 
     ///\brief Currently executing file as passed into executeFile
     ///
@@ -122,6 +122,11 @@ namespace cling {
     ///\brief When continuation is requested, this cancels and ignores previous
     /// input, resetting the continuation to a new line.
     void cancelContinuation() const;
+
+    ///\brief Returns whether we are waiting for more input, either because the
+    /// input contains imbalanced braces or a backslash-newline was seen (i.e.,
+    /// the last token was a `\`).
+    bool awaitingMoreInput() const;
 
     ///\brief Returns the number of imbalanced tokens seen in the current input.
     ///

@@ -151,13 +151,14 @@ whichever algorithm is used, the output has to be checked:
 #include "TUnfoldDensity.h"
 #include <TMath.h>
 #include <TVectorD.h>
+#include "TGraph.h"
 #include <iostream>
 #include <map>
 
 //#define DEBUG
 
 #ifdef DEBUG
-using namespace std;
+using std::cout;
 #endif
 
 ClassImp(TUnfoldDensity);
@@ -175,11 +176,11 @@ TUnfoldDensity::~TUnfoldDensity(void)
 
 TUnfoldDensity::TUnfoldDensity(void)
 {
-   fConstOutputBins=0;
-   fConstInputBins=0;
-   fOwnedOutputBins=0;
-   fOwnedInputBins=0;
-   fRegularisationConditions=0;
+   fConstOutputBins=nullptr;
+   fConstInputBins=nullptr;
+   fOwnedOutputBins=nullptr;
+   fOwnedInputBins=nullptr;
+   fRegularisationConditions=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,10 +221,10 @@ TUnfoldDensity::TUnfoldDensity
  const char *regularisationAxisSteering) :
    TUnfoldSys(hist_A,histmap,kRegModeNone,constraint)
 {
-   fRegularisationConditions=0;
+   fRegularisationConditions=nullptr;
    // set up binning schemes
    fConstOutputBins = outputBins;
-   fOwnedOutputBins = 0;
+   fOwnedOutputBins = nullptr;
    TAxis const *genAxis,*detAxis;
    if(histmap==kHistMapOutputHoriz) {
       genAxis=hist_A->GetXaxis();
@@ -245,7 +246,7 @@ TUnfoldDensity::TUnfoldDensity
             "Invalid output binning scheme (node is not the root node)");
    }
    fConstInputBins = inputBins;
-   fOwnedInputBins = 0;
+   fOwnedInputBins = nullptr;
    if(!fConstInputBins) {
       // underflow and overflow are not included in the binning scheme
       // They are still used to count events which have not been reconstructed
@@ -469,10 +470,14 @@ void TUnfoldDensity::RegularizeOneDistribution
    Int_t startBin=binning->GetStartBin();
    Int_t endBin=startBin+ binning->GetDistributionNumberOfBins();
    std::vector<Double_t> factor(endBin-startBin);
+#ifdef DEBUG
    Int_t nbin=0;
+#endif
    for(Int_t bin=startBin;bin<endBin;bin++) {
       factor[bin-startBin]=GetDensityFactor(densityMode,bin);
+#ifdef DEBUG
       if(factor[bin-startBin] !=0.0) nbin++;
+#endif
    }
 #ifdef DEBUG
    cout<<"initial number of bins "<<nbin<<"\n";
@@ -480,13 +485,17 @@ void TUnfoldDensity::RegularizeOneDistribution
    Int_t dimension=binning->GetDistributionDimension();
 
    // decide whether to skip underflow/overflow bins
+#ifdef DEBUG
    nbin=0;
+#endif
    for(Int_t bin=startBin;bin<endBin;bin++) {
       Int_t uStatus,oStatus;
       binning->GetBinUnderflowOverflowStatus(bin,&uStatus,&oStatus);
       if(uStatus & isOptionGiven[1]) factor[bin-startBin]=0.;
       if(oStatus & isOptionGiven[3]) factor[bin-startBin]=0.;
+#ifdef DEBUG
       if(factor[bin-startBin] !=0.0) nbin++;
+#endif
    }
 #ifdef DEBUG
    cout<<"after underflow/overflow bin removal "<<nbin<<"\n";
@@ -652,7 +661,7 @@ TH1 *TUnfoldDensity::GetOutput
  Bool_t useAxisBinning) const
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -684,7 +693,7 @@ TH1 *TUnfoldDensity::GetBias
  Bool_t useAxisBinning) const
 {
   TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -716,13 +725,13 @@ TH1 *TUnfoldDensity::GetFoldedOutput
  Bool_t useAxisBinning,Bool_t addBgr) const
 {
    TUnfoldBinning const *binning=fConstInputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
       TUnfoldSys::GetFoldedOutput(r,binMap);
       if(addBgr) {
-         TUnfoldSys::GetBackground(r,0,binMap,0,kFALSE);
+         TUnfoldSys::GetBackground(r,nullptr,binMap,0,kFALSE);
       }
    }
    if(binMap) delete [] binMap;
@@ -752,7 +761,7 @@ TH1 *TUnfoldDensity::GetBackground
  Int_t includeError) const
 {
    TUnfoldBinning const *binning=fConstInputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -782,7 +791,7 @@ TH1 *TUnfoldDensity::GetInput
  Bool_t useAxisBinning) const
 {
    TUnfoldBinning const *binning=fConstInputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -814,16 +823,16 @@ TH1 *TUnfoldDensity::GetRhoItotal
  const char *distributionName,const char *axisSteering,
  Bool_t useAxisBinning,TH2 **ematInv) {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
-      TH2 *invEmat=0;
+      TH2 *invEmat=nullptr;
       if(ematInv) {
          if(r->GetDimension()==1) {
             TString ematName(histogramName);
             ematName += "_inverseEMAT";
-            Int_t *binMap2D=0;
+            Int_t *binMap2D=nullptr;
             invEmat=binning->CreateErrorMatrixHistogram
                (ematName,useAxisBinning,&binMap2D,histogramTitle,
                 axisSteering);
@@ -865,16 +874,16 @@ TH1 *TUnfoldDensity::GetRhoIstatbgr
  const char *distributionName,const char *axisSteering,
  Bool_t useAxisBinning,TH2 **ematInv) {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
-      TH2 *invEmat=0;
+      TH2 *invEmat=nullptr;
       if(ematInv) {
          if(r->GetDimension()==1) {
             TString ematName(histogramName);
             ematName += "_inverseEMAT";
-            Int_t *binMap2D=0;
+            Int_t *binMap2D=nullptr;
             invEmat=binning->CreateErrorMatrixHistogram
                (ematName,useAxisBinning,&binMap2D,histogramTitle,
                 axisSteering);
@@ -913,13 +922,13 @@ TH1 *TUnfoldDensity::GetDeltaSysSource
  const char *histogramTitle,const char *distributionName,
  const char *axisSteering,Bool_t useAxisBinning) {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
       if(!TUnfoldSys::GetDeltaSysSource(r,source,binMap)) {
          delete r;
-         r=0;
+         r=nullptr;
       }
    }
    if(binMap) delete [] binMap;
@@ -947,13 +956,13 @@ TH1 *TUnfoldDensity::GetDeltaSysBackgroundScale
  const char *histogramTitle,const char *distributionName,
  const char *axisSteering,Bool_t useAxisBinning) {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
       if(!TUnfoldSys::GetDeltaSysBackgroundScale(r,bgrSource,binMap)) {
          delete r;
-         r=0;
+         r=nullptr;
       }
    }
    if(binMap) delete [] binMap;
@@ -980,13 +989,13 @@ TH1 *TUnfoldDensity::GetDeltaSysTau
  const char *distributionName,const char *axisSteering,Bool_t useAxisBinning)
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH1 *r=binning->CreateHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
       if(!TUnfoldSys::GetDeltaSysTau(r,binMap)) {
          delete r;
-         r=0;
+         r=nullptr;
       }
    }
    if(binMap) delete [] binMap;
@@ -1065,7 +1074,7 @@ TH2 *TUnfoldDensity::GetEmatrixSysUncorr
  Bool_t useAxisBinning)
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH2 *r=binning->CreateErrorMatrixHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -1096,7 +1105,7 @@ TH2 *TUnfoldDensity::GetEmatrixSysBackgroundUncorr
  const char *axisSteering,Bool_t useAxisBinning)
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH2 *r=binning->CreateErrorMatrixHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -1127,7 +1136,7 @@ TH2 *TUnfoldDensity::GetEmatrixInput
  Bool_t useAxisBinning)
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH2 *r=binning->CreateErrorMatrixHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -1179,7 +1188,7 @@ TH2 *TUnfoldDensity::GetEmatrixTotal
  Bool_t useAxisBinning)
 {
    TUnfoldBinning const *binning=fConstOutputBins->FindNode(distributionName);
-   Int_t *binMap=0;
+   Int_t *binMap=nullptr;
    TH2 *r=binning->CreateErrorMatrixHistogram
       (histogramName,useAxisBinning,&binMap,histogramTitle,axisSteering);
    if(r) {
@@ -1210,7 +1219,7 @@ TH2 *TUnfoldDensity::GetL
               "remove invalid scheme of regularisation conditions %d %d",
               fRegularisationConditions->GetEndBin(),fL->GetNrows());
       delete fRegularisationConditions;
-      fRegularisationConditions=0;
+      fRegularisationConditions=nullptr;
    }
    if(!fRegularisationConditions) {
       fRegularisationConditions=new TUnfoldBinning("regularisation",fL->GetNrows());
@@ -1250,14 +1259,14 @@ TH1 *TUnfoldDensity::GetLxMinusBias
               "remove invalid scheme of regularisation conditions %d %d",
               fRegularisationConditions->GetEndBin(),fL->GetNrows());
       delete fRegularisationConditions;
-      fRegularisationConditions=0;
+      fRegularisationConditions=nullptr;
    }
    if(!fRegularisationConditions) {
       fRegularisationConditions=new TUnfoldBinning("regularisation",fL->GetNrows());
       Warning("GetLxMinusBias","create flat regularisation conditions scheme");
    }
    TH1 *r=fRegularisationConditions->CreateHistogram
-      (histogramName,kFALSE,0,histogramTitle);
+      (histogramName,kFALSE,nullptr,histogramTitle);
    const Int_t *Ldx_rows=Ldx->GetRowIndexArray();
    const Double_t *Ldx_data=Ldx->GetMatrixArray();
    for(Int_t row=0;row<Ldx->GetNrows();row++) {
@@ -1310,7 +1319,7 @@ const TUnfoldBinning *TUnfoldDensity::GetOutputBinning
 /// \param[out] scanResult the scanned function wrt log(tau)
 /// \param[in] mode 1st parameter for the scan function
 /// \param[in] distribution 2nd parameter for the scan function
-/// \param[in] projectionMode 3rd parameter for the scan function
+/// \param[in] axisSteering 3rd parameter for the scan function
 /// \param[out] lCurvePlot for monitoring, shows the L-curve
 /// \param[out] logTauXPlot for monitoring, L-curve(X) as a function of log(tau)
 /// \param[out] logTauYPlot for monitoring, L-curve(Y) as a function of log(tau)
@@ -1587,7 +1596,7 @@ Int_t TUnfoldDensity::ScanTau
    //       scanResult lCurve logTauX logTauY
 
    Int_t bestChoice=-1;
-   if(curve.size()>0) {
+   if(!curve.empty()) {
       Double_t *y=new Double_t[curve.size()];
       Double_t *logT=new Double_t[curve.size()];
       int n=0;
@@ -1611,7 +1620,7 @@ Int_t TUnfoldDensity::ScanTau
       delete[] y;
       delete[] logT;
    }
-   if(lcurve.size()) {
+   if(!lcurve.empty()) {
       Double_t *logT=new Double_t[lcurve.size()];
       Double_t *x=new Double_t[lcurve.size()];
       Double_t *y=new Double_t[lcurve.size()];
@@ -1673,17 +1682,16 @@ Double_t TUnfoldDensity::GetScanVariable
    name += ",";
    if(axisSteering) name += axisSteering;
    name += ")";
-   TH1 *rhoi=0;
+   TH1 *rhoi=nullptr;
    if((mode==kEScanTauRhoAvg)||(mode==kEScanTauRhoMax)||
       (mode==kEScanTauRhoSquareAvg)) {
-      rhoi=GetRhoIstatbgr(name,0,distribution,axisSteering,kFALSE);
+      rhoi=GetRhoIstatbgr(name,nullptr,distribution,axisSteering,kFALSE);
    } else if((mode==kEScanTauRhoAvgSys)||(mode==kEScanTauRhoMaxSys)||
              (mode==kEScanTauRhoSquareAvgSys)) {
-      rhoi=GetRhoItotal(name,0,distribution,axisSteering,kFALSE);
+      rhoi=GetRhoItotal(name,nullptr,distribution,axisSteering,kFALSE);
    }
    if(rhoi) {
       Double_t sum=0.0;
-      Double_t sumSquare=0.0;
       Double_t rhoMax=0.0;
       Int_t n=0;
       for(Int_t i=0;i<=rhoi->GetNbinsX()+1;i++) {
@@ -1691,7 +1699,6 @@ Double_t TUnfoldDensity::GetScanVariable
          if(c>=0.) {
             if(c>rhoMax) rhoMax=c;
             sum += c;
-            sumSquare += c*c;
             n ++;
          }
       }

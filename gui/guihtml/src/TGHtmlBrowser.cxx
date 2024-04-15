@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TSystem.h"
 #include "TGMenu.h"
 #include "TGComboBox.h"
-#include "TGFrame.h"
 #include "TGButton.h"
 #include "TGTextBuffer.h"
 #include "TGTextEntry.h"
@@ -26,11 +24,11 @@
 #include "TString.h"
 #include "TUrl.h"
 #include "TSocket.h"
-#include "Riostream.h"
 #include "TGHtmlBrowser.h"
 #include "TGText.h"
 #include "TError.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 #ifdef R__SSL
 #include "TSSLSocket.h"
 #endif
@@ -38,14 +36,15 @@
 #include "TWin32SplashThread.h"
 #endif
 
-#include <stdlib.h>
+#include <cstdlib>
 
-//_____________________________________________________________________________
-//
-// TGHtmlBrowser
-//
-// A very simple HTML browser.
-//_____________________________________________________________________________
+/** \class TGHtmlBrowser
+    \ingroup guihtml
+
+A very simple HTML browser.
+
+*/
+
 
 ClassImp(TGHtmlBrowser);
 
@@ -142,7 +141,7 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
    fMenuFavorites->AddEntry("&Add to Favorites", kM_FAVORITES_ADD, 0,
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch", fNbFavorites++, 0,
+   fMenuFavorites->AddEntry("http://root.cern", fNbFavorites++, 0,
                             gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
@@ -193,9 +192,9 @@ TGHtmlBrowser::TGHtmlBrowser(const char *filename, const TGWindow *p, UInt_t w, 
 
    fHome = new TGPictureButton(fHorizontalFrame,gClient->GetPicture("GoHome.gif"));
    fHome->SetStyle(gClient->GetStyle());
-   fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern.ch)");
+   fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern)");
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern.ch\")");
+   fHome->Connect("Clicked()", "TGHtmlBrowser", this, "Selected(=\"http://root.cern\")");
 
    // combo box
    fURLBuf   = new TGTextBuffer(256);
@@ -604,7 +603,7 @@ void TGHtmlBrowser::MouseDown(const char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process Events.
 
-Bool_t TGHtmlBrowser::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGHtmlBrowser::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:

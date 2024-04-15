@@ -23,9 +23,9 @@ class TStopwatch;
 class TGLAutoRotator : public TObject
 {
 private:
-   TGLAutoRotator(const TGLAutoRotator&);            // Not implemented
-   TGLAutoRotator& operator=(const TGLAutoRotator&); // Not implemented
- 
+   TGLAutoRotator(const TGLAutoRotator&) = delete;
+   TGLAutoRotator& operator=(const TGLAutoRotator&) = delete;
+
 protected:
    TGLViewer  *fViewer;
    TGLCamera  *fCamera;
@@ -53,7 +53,7 @@ protected:
 
 public:
    TGLAutoRotator(TGLViewer* v);
-   virtual ~TGLAutoRotator();
+   ~TGLAutoRotator() override;
 
    TGLViewer* GetViewer() const { return fViewer; }
    TGLCamera* GetCamera() const { return fCamera; }
@@ -111,7 +111,7 @@ public:
 
    void     StartImageAutoSaveWithGUISettings();
 
-   ClassDef(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
+   ClassDefOverride(TGLAutoRotator, 0); // Automatic, timer-based, rotation of GL-viewer's camera.
 };
 
 #endif

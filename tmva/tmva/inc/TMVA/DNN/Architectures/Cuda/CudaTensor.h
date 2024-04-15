@@ -25,10 +25,10 @@
 #include <cassert>
 #include <iostream>
 
-#include "RConfigure.h"
+#include "CudaMatrix.h"
 #include "TMatrixT.h"
 #include "CudaBuffers.h"
-#include "CudaMatrix.h"
+
 //#include "TMVA/RTensor.hxx"
 
 #ifdef R__HAS_CUDNN
@@ -166,6 +166,10 @@ public:
 
    TCudaTensor(const TCudaMatrix<AFloat> & m, size_t dim = 2);
 
+   TCudaTensor(const TMatrixT<AFloat> & m, size_t dim = 2) :
+      TCudaTensor( TCudaMatrix<AFloat>(m), dim)
+   {}
+
    TCudaTensor(TCudaDeviceBuffer<AFloat> buffer, size_t n, size_t m) :
          TCudaTensor( buffer, {n,m}, MemoryLayout::ColumnMajor ,0,0) {}
 
@@ -260,11 +264,11 @@ public:
       fElementBuffer.CopyFrom(hostBuffer);
    }
 
-   // have this tensor representatrions
-   // 2-dimensional tensors  :  NW   where N is batch size W is the feature size . Memory layout should be columnwise in this case
-   // 3 -dimensional tensor  : represnetation is NHWC  , tensor should be columnwise storage
-   // 4 -dimensional tensor :   representation is NCHW  ande tensor should be row wose
-   // a rowmajor tensor with dimension less than trhee should not exist but in case consider as a N, (CHW) for 2d, N, C, (HW) for 3d
+   // have this tensor representations
+   // 2-dimensional tensors  :  NW   where N is batch size W is the feature size . Memory layout should be column wise in this case
+   // 3 -dimensional tensor  : representation is NHWC  , tensor should be column wise storage
+   // 4 -dimensional tensor :   representation is NCHW  ande tensor should be row wise
+   // a rowmajor tensor with dimension less than three should not exist but in case consider as a N, (CHW) for 2d, N, C, (HW) for 3d
    // a columnmajor tensor for dimension >=4 should not exist but in case consider as a N,H,W,C  (i.e. with shape C,W,H,N)
 
    size_t GetFirstSize() const {
@@ -298,11 +302,12 @@ public:
 
    // Matrix conversion for tensors of shape 2
    TCudaMatrix<AFloat> GetMatrix() const  {
-      if (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1))
+      // remember TCudaMatrix is always column-major
+      if ( GetLayout() == MemoryLayout::ColumnMajor &&
+           (fNDim == 2 || (fNDim == 3 && GetFirstSize() == 1) ) )
          return TCudaMatrix<AFloat>(fElementBuffer, GetHSize(), GetWSize());
 
 
-      // remember TCudaMatrix is always column-major
       //case of N,M,1,1,..
       bool caseNM11 = true;
       for (size_t i = 2; i < fNDim; ++i)  caseNM11 &= fShape[i] == 1;
@@ -323,6 +328,12 @@ public:
       return TCudaMatrix<AFloat>();
    }
 
+   // for backward compatibility with old tensor
+   TCudaMatrix<AFloat> operator[](size_t i) const {
+      //assert(GetLayout() == MemoryLayout::ColumnMajor );
+      return At(i).GetMatrix();
+   }
+
 
 
    static inline std::vector<std::size_t> ComputeStridesFromShape(const std::vector<std::size_t> &shape,
@@ -341,21 +352,14 @@ public:
    }
 
    TCudaTensor<AFloat> Reshape(const Shape_t & newShape) const {
-      TCudaTensor<AFloat> tmp(*this);
-      // have a new descriptor for reshaped tensor !!!
-#ifdef R__HAS_CUDNN
-      tmp.fTensorDescriptor.reset( new TensorDescriptor() );
-      // t.b.d. need to check if we delete the cudnn object
-      CUDNNCHECK(cudnnCreateTensorDescriptor(&(tmp.fTensorDescriptor->fCudnnDesc)));
-#endif
-      tmp.ReshapeInPlace(newShape);
+      TCudaTensor<AFloat> tmp(this->GetDeviceBuffer(), newShape, this->GetLayout(), fDevice, fStreamIndx);
       return tmp;
    }
 
    void SetTensorDescriptor();
 
    // return slice of tensor
-   // return slices in the first dimension (if row wise) or last dimension if colun wise
+   // return slices in the first dimension (if row wise) or last dimension if column wise
    // so single event slides
    TCudaTensor<AFloat> At(size_t i) const {
       Shape_t sliced_shape = (GetLayout() == MemoryLayout::RowMajor)
@@ -404,7 +408,7 @@ public:
 
     TCudaDeviceReference<AFloat> operator()(size_t i, size_t j, size_t k, size_t l) const
    {
-      // for rowsise
+      // for row wise
       //assert(GetLayout() == MemoryLayout::RowMajor);
       assert( fNDim == 4); // || ( k==0 && fNDim == 2 ) );
 
@@ -416,9 +420,6 @@ public:
 
       return TCudaDeviceReference<AFloat>(elementPointer);
    }
-
-
-
 
 private:
 

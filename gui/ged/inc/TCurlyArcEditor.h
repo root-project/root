@@ -12,13 +12,6 @@
 #ifndef ROOT_TCurlyArcEditor
 #define ROOT_TCurlyArcEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TCurlyArcEditor                                                     //
-//                                                                      //
-//  Implements GUI for editing CurlyArc attributes: radius, phi1, phi2. //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
 
@@ -28,29 +21,29 @@ class TCurlyArc;
 class TCurlyArcEditor : public TGedFrame {
 
 protected:
-   TCurlyArc            *fCurlyArc;         // CurlyArc object
-   TGNumberEntry        *fRadiusEntry;      // radius entry
-   TGNumberEntry        *fPhiminEntry;      // Phimin entry
-   TGNumberEntry        *fPhimaxEntry;      // Phimax entry
-   TGNumberEntry        *fCenterXEntry;     // center x entry
-   TGNumberEntry        *fCenterYEntry;     // center y entry
+   TCurlyArc            *fCurlyArc;         ///< CurlyArc object
+   TGNumberEntry        *fRadiusEntry;      ///< radius entry
+   TGNumberEntry        *fPhiminEntry;      ///< Phimin entry
+   TGNumberEntry        *fPhimaxEntry;      ///< Phimax entry
+   TGNumberEntry        *fCenterXEntry;     ///< center x entry
+   TGNumberEntry        *fCenterYEntry;     ///< center y entry
 
    virtual void   ConnectSignals2Slots();
 
 public:
-   TCurlyArcEditor(const TGWindow *p = 0,
+   TCurlyArcEditor(const TGWindow *p = nullptr,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TCurlyArcEditor();
+   ~TCurlyArcEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoRadius();
    virtual void   DoPhimin();
    virtual void   DoPhimax();
    virtual void   DoCenterXY();
 
-   ClassDef(TCurlyArcEditor,0)  // GUI for editing arrow attributes
+   ClassDefOverride(TCurlyArcEditor,0)  // GUI for editing arrow attributes
 };
 
 #endif

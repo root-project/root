@@ -33,6 +33,7 @@ namespace clang {
   class TemplateDecl;
   class Type;
   class TypedefNameDecl;
+  class UsingShadowDecl;
 }
 
 namespace cling {
@@ -77,9 +78,9 @@ namespace utils {
     ///\returns 0 if the operation wasn't successful.
     ///
     clang::Expr* GetOrCreateLastExpr(clang::FunctionDecl* FD,
-                                     int* FoundAt = 0,
+                                     int* FoundAt = nullptr,
                                      bool omitDeclStmts = true,
-                                     clang::Sema* S = 0);
+                                     clang::Sema* S = nullptr);
 
     ///\brief Return true if the class or template is declared directly in the
     /// std namespace (modulo inline namespace).
@@ -196,7 +197,7 @@ namespace utils {
     ///
     clang::NamespaceDecl* Namespace(clang::Sema* S,
                                     const char* Name,
-                                    const clang::DeclContext* Within = 0);
+                                    const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single named declaration in a given
     /// declaration context.
@@ -209,7 +210,7 @@ namespace utils {
     ///
     clang::NamedDecl* Named(clang::Sema* S,
                             llvm::StringRef Name,
-                            const clang::DeclContext* Within = 0);
+                            const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single named declaration in a given
     /// declaration context.
@@ -222,7 +223,7 @@ namespace utils {
     ///
     clang::NamedDecl* Named(clang::Sema* S,
                             const char* Name,
-                            const clang::DeclContext* Within = 0);
+                            const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single namespace declaration in a given
     /// declaration context.
@@ -236,7 +237,7 @@ namespace utils {
     ///
     clang::NamedDecl* Named(clang::Sema* S,
                             const clang::DeclarationName& Name,
-                            const clang::DeclContext* Within = 0);
+                            const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single named tag declaration ( enums, classes,
     /// structs, and unions) in a given declaration context.
@@ -249,7 +250,7 @@ namespace utils {
     ///
     clang::TagDecl* Tag(clang::Sema* S,
                         llvm::StringRef Name,
-                        const clang::DeclContext* Within = 0);
+                        const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single named tag declaration ( enums, classes,
     /// structs, and unions) in a given declaration context.
@@ -262,7 +263,7 @@ namespace utils {
     ///
     clang::TagDecl* Tag(clang::Sema* S,
                         const char* Name,
-                        const clang::DeclContext* Within = 0);
+                        const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a single named tag declaration ( enums, classes,
     /// structs, and unions) in a given declaration context.
@@ -275,7 +276,7 @@ namespace utils {
     ///
     clang::TagDecl* Tag(clang::Sema* S,
                         const clang::DeclarationName& Name,
-                        const clang::DeclContext* Within = 0);
+                        const clang::DeclContext* Within = nullptr);
 
     ///\brief Quick lookup for a name in possible a declaration context.
     ///
@@ -289,7 +290,7 @@ namespace utils {
     ///\returns the found result if single, -1 if multiple or 0 if not found.
     ///
     void Named(clang::Sema* S, clang::LookupResult& R,
-               const clang::DeclContext* Within = 0);
+               const clang::DeclContext* Within = nullptr);
 
   }
 
@@ -344,6 +345,19 @@ namespace utils {
     clang::NestedNameSpecifier*
     CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
                               const clang::TypedefNameDecl *TD,
+                              bool FullyQualify);
+
+    ///\brief Create a NestedNameSpecifier for UsingShadowDecl and its enclosing
+    /// scopes.
+    ///
+    ///\param[in] Ctx - the AST Context to be used.
+    ///\param[in] USD - the UsingShadowDecl for which a NestedNameSpecifier is
+    /// requested.
+    ///\param[in] FullyQualify - Convert all template arguments (of possible
+    /// parent scopes) into fully qualified names.
+    clang::NestedNameSpecifier*
+    CreateNestedNameSpecifier(const clang::ASTContext& Ctx,
+                              const clang::UsingShadowDecl *USD,
                               bool FullyQualify);
 
   } // end namespace TypeName

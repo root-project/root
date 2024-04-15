@@ -13,6 +13,8 @@
 /** \class TSpectrum2Painter
     \ingroup Spectrumpainter
 
+\legacy{TSpectrum2Painter}
+
 Two-dimensional graphics function
 
 TSpectrum2Painter is a set of graphical functions developed by Miroslav
@@ -35,13 +37,14 @@ Pysica Slovaca Vol. 54/ 4 (2004), pp. 385-400.
 #include "TMath.h"
 #include "TLine.h"
 #include "TEllipse.h"
-#include "TPad.h"
+#include "TVirtualPad.h"
 #include "TBox.h"
 #include "TF1.h"
 #include "TH2.h"
 #include "TGaxis.h"
 #include "THLimitsFinder.h"
 #include "TSpectrum2Painter.h"
+#include "strlcpy.h"
 
 ClassImp (TSpectrum2Painter)
 
@@ -158,7 +161,7 @@ TSpectrum2Painter::TSpectrum2Painter(TH2* h2, Int_t bs)
    fChanlineEnDis   = kChannelGridNotDrawn; // Decides whether the channel lines
                                             // (grid) are shown.
    fChanlineColor   = kRed;                 // Color of channel marks.
-   fNewColor        = 0;
+   fNewColor        = nullptr;
    fEnvelope        = new Short_t [fMaximumXScreenResolution];
    fEnvelopeContour = new Short_t [fMaximumXScreenResolution];
    for (i=0;i<fMaximumXScreenResolution;i++) {

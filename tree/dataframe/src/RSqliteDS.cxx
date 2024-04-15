@@ -8,18 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// clang-format off
-/** \class ROOT::RDF::RSqliteDS
-    \ingroup dataframe
-    \brief RDataFrame data source class for reading SQlite files.
-*/
-
-// clang-format on
-
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RConfig.hxx>
-#include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"
@@ -162,6 +151,31 @@ int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// Set the function pointers of the custom VFS I/O operations in a
+/// forward-compatible way
+sqlite3_io_methods GetSqlite3IoMethods()
+{
+   // The C style initialization is compatible with version 1 and later versions of the struct.
+   // Version 1 was introduced with sqlite 3.6, version 2 with sqlite 3.7.8, version 3 with sqlite 3.7.17
+   sqlite3_io_methods io_methods;
+   memset(&io_methods, 0, sizeof(io_methods));
+   io_methods.iVersion               = 1;
+   io_methods.xClose                 = VfsRdOnlyClose;
+   io_methods.xRead                  = VfsRdOnlyRead;
+   io_methods.xWrite                 = VfsRdOnlyWrite;
+   io_methods.xTruncate              = VfsRdOnlyTruncate;
+   io_methods.xSync                  = VfsRdOnlySync;
+   io_methods.xFileSize              = VfsRdOnlyFileSize;
+   io_methods.xLock                  = VfsRdOnlyLock;
+   io_methods.xUnlock                = VfsRdOnlyUnlock;
+   io_methods.xCheckReservedLock     = VfsRdOnlyCheckReservedLock;
+   io_methods.xFileControl           = VfsRdOnlyFileControl;
+   io_methods.xSectorSize            = VfsRdOnlySectorSize;
+   io_methods.xDeviceCharacteristics = VfsRdOnlyDeviceCharacteristics;
+   return io_methods;
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// Fills a new VfsRootFile struct enclosing a Davix file
 int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile, int flags, int * /*pOutFlags*/)
 {
@@ -171,28 +185,7 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
 
    // This global struct contains the function pointers to all the callback operations that act on an open database.
    // It is passed via the pFile struct back to sqlite so that it can call back to the functions provided above.
-   static const sqlite3_io_methods io_methods = {
-      1, // version
-      VfsRdOnlyClose,
-      VfsRdOnlyRead,
-      VfsRdOnlyWrite,
-      VfsRdOnlyTruncate,
-      VfsRdOnlySync,
-      VfsRdOnlyFileSize,
-      VfsRdOnlyLock,
-      VfsRdOnlyUnlock,
-      VfsRdOnlyCheckReservedLock,
-      VfsRdOnlyFileControl,
-      VfsRdOnlySectorSize,
-      VfsRdOnlyDeviceCharacteristics,
-      // Version 2 and later callbacks
-      nullptr, // xShmMap
-      nullptr, // xShmLock
-      nullptr, // xShmBarrier
-      nullptr, // xShmUnmap
-      nullptr, // xFetch
-      nullptr  // xUnfetch
-   };
+   static const sqlite3_io_methods io_methods = GetSqlite3IoMethods();
 
    if (flags & (SQLITE_OPEN_READWRITE | SQLITE_OPEN_DELETEONCLOSE | SQLITE_OPEN_EXCLUSIVE))
       return SQLITE_IOERR;
@@ -291,34 +284,34 @@ int VfsRdOnlyCurrentTime(sqlite3_vfs *vfs, double *prNow)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// A global struct of function pointers and details on the VfsRootFile class that together constitue a VFS module
-static struct sqlite3_vfs kSqlite3Vfs = {
-   1, // version of the struct
-   sizeof(VfsRootFile),
-   2000,    // maximum URL length
-   nullptr, // pNext, maintained by sqlite
-   gSQliteVfsName,
-   nullptr, // pAppData
-   VfsRdOnlyOpen,
-   VfsRdOnlyDelete,
-   VfsRdOnlyAccess,
-   VfsRdOnlyFullPathname,
-   nullptr, // xDlOpen
-   nullptr, // xDlError
-   nullptr, // xDlSym
-   nullptr, // xDlClose
-   VfsRdOnlyRandomness,
-   VfsRdOnlySleep,
-   VfsRdOnlyCurrentTime,
-   VfsRdOnlyGetLastError,
-   VfsRdOnlyCurrentTimeInt64,
-   // Version 3 and later callbacks
-   nullptr, // xSetSystemCall
-   nullptr, // xGetSystemCall
-   nullptr, // xNextSystemCall
-};
+/// Set the function pointers of the VFS implementation in a
+/// forward-compatible way
+sqlite3_vfs GetSqlite3Vfs()
+{
+   // The C style initialization is compatible with version 1 and later versions of the struct.
+   // Version 1 was introduced with sqlite 3.5, version 2 with sqlite 3.7, version 3 with sqlite 3.7.6
+   sqlite3_vfs vfs;
+   memset(&vfs, 0, sizeof(vfs));
+   vfs.iVersion      = 1;
+   vfs.szOsFile      = sizeof(VfsRootFile);
+   vfs.mxPathname    = 2000;
+   vfs.zName         = gSQliteVfsName;
+   vfs.xOpen         = VfsRdOnlyOpen;
+   vfs.xDelete       = VfsRdOnlyDelete;
+   vfs.xAccess       = VfsRdOnlyAccess;
+   vfs.xFullPathname = VfsRdOnlyFullPathname;
+   vfs.xRandomness   = VfsRdOnlyRandomness;
+   vfs.xSleep        = VfsRdOnlySleep;
+   vfs.xCurrentTime  = VfsRdOnlyCurrentTime;
+   vfs.xGetLastError = VfsRdOnlyGetLastError;
+   return vfs;
+}
 
-static bool RegisterSqliteVfs()
+////////////////////////////////////////////////////////////////////////////
+/// A global struct of function pointers and details on the VfsRootFile class that together constitue a VFS module
+struct sqlite3_vfs kSqlite3Vfs = GetSqlite3Vfs();
+
+bool RegisterSqliteVfs()
 {
    int retval;
    retval = sqlite3_vfs_register(&kSqlite3Vfs, false);
@@ -372,6 +365,15 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
 
    retval = sqlite3_open_v2(fileName.c_str(), &fDataSet->fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
                             gSQliteVfsName);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
+
+   // Certain complex queries trigger creation of temporary tables. Depending on the build options of sqlite,
+   // sqlite may try to store such temporary tables on disk, using our custom VFS module to do so.
+   // Creation of new database files, however, is not supported by the custom VFS module.  Thus we set the behavior
+   // of the database connection to "temp_store=2", meaning that temporary tables should always be maintained
+   // in memory.
+   retval = sqlite3_exec(fDataSet->fDb, "PRAGMA temp_store=2;", nullptr, nullptr, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
@@ -444,7 +446,7 @@ RSqliteDS::~RSqliteDS()
    sqlite3_finalize(fDataSet->fQuery);
    // Closing can possibly fail with SQLITE_BUSY, in which case resources are leaked. This should not happen
    // the way it is used in this class because we cleanup the prepared statement before.
-   sqlite3_close_v2(fDataSet->fDb);
+   sqlite3_close(fDataSet->fDb);
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -521,7 +523,7 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
 
 ////////////////////////////////////////////////////////////////////////////
 /// Resets the SQlite query engine at the beginning of the event loop.
-void RSqliteDS::Initialise()
+void RSqliteDS::Initialize()
 {
    fNRow = 0;
    int retval = sqlite3_reset(fDataSet->fQuery);
@@ -538,7 +540,7 @@ std::string RSqliteDS::GetLabel()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(std::string(fileName), std::string(query)));
    return rdf;
@@ -548,7 +550,8 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 /// Stores the result of the current active sqlite query row as a C++ value.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
-   R__ASSERT(entry + 1 == fNRow);
+   assert(entry + 1 == fNRow);
+   (void)entry;
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fValues[i].fIsActive)
@@ -596,7 +599,11 @@ void RSqliteDS::SetNSlots(unsigned int nSlots)
 void RSqliteDS::SqliteError(int errcode)
 {
    std::string errmsg = "SQlite error: ";
+#if SQLITE_VERSION_NUMBER < 3007015
+   errmsg += std::to_string(errcode);
+#else
    errmsg += sqlite3_errstr(errcode);
+#endif
    throw std::runtime_error(errmsg);
 }
 

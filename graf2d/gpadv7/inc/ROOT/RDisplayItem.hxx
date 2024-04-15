@@ -11,13 +11,12 @@
 
 #include <string>
 
-class TObject;
-
 namespace ROOT {
 namespace Experimental {
 
 class RDrawable;
 class RStyle;
+class RAttrMap;
 
 /** \class RDisplayItem
 \ingroup GpadROOT7
@@ -32,9 +31,11 @@ protected:
    std::string fObjectID;   ///< unique object identifier
    RStyle *fStyle{nullptr}; ///< style object
    unsigned fIndex{0};      ///<! index inside current pad, used to produce fully-qualified id, not send to client
+   bool fDummy{false};      ///< if true, just placeholder for drawable which does not changed
 
 public:
    RDisplayItem() = default;
+   RDisplayItem(bool dummy) : RDisplayItem() { fDummy = dummy; }
    virtual ~RDisplayItem() {}
 
    void SetObjectID(const std::string &id) { fObjectID = id; }
@@ -74,30 +75,33 @@ public:
       fDrawable = &dr;
    }
 
+   const RDrawable *GetDrawable() const { return fDrawable; }
+
+   ~RDrawableDisplayItem() override;
+
 };
 
-/** \class RObjectDisplayItem
+
+/** \class RIndirectDisplayItem
 \ingroup GpadROOT7
-\brief Display item for TObject with drawing options
+\brief Extract (reference) only basic attributes from drawable, but not drawable itself
 \author Sergey Linev <s.linev@gsi.de>
-\date 2017-05-31
+\date 2020-04-02
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RObjectDisplayItem : public RDisplayItem {
+class RIndirectDisplayItem : public RDisplayItem {
 protected:
 
-   const TObject *fObject{nullptr};        ///< ROOT6 object
-   std::string fOption;                    ///< drawing options
+   const RAttrMap *fAttr{nullptr};        ///< pointer on drawable attributes
+   const std::string *fCssClass{nullptr}; ///< pointer on drawable class
+   const std::string *fId{nullptr};       ///< pointer on drawable id
 
 public:
 
-   RObjectDisplayItem(const TObject *obj, const std::string &opt)
-   {
-      fObject = obj;
-      fOption = opt;
-   }
+   RIndirectDisplayItem() = default;
 
+   RIndirectDisplayItem(const RDrawable &dr);
 };
 
 } // namespace Experimental

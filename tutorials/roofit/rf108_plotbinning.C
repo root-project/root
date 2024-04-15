@@ -4,10 +4,11 @@
 /// Basic functionality: plotting unbinned data with alternate and variable binnings
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \author 07/2008 - Wouter Verkerke
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -28,7 +29,7 @@ void rf108_plotbinning()
    // S e t u p   m o d e l
    // ---------------------
 
-   // Build a B decay p.d.f with mixing
+   // Build a B decay pdf with mixing
    RooRealVar dt("dt", "dt", -20, 20);
    RooRealVar dm("dm", "dm", 0.472);
    RooRealVar tau("tau", "tau", 1.547);
@@ -54,7 +55,7 @@ void rf108_plotbinning()
    // --------------------------------------------
 
    // Sample 2000 events in (dt,mixState,tagFlav) from bmix
-   RooDataSet *data = bmix.generate(RooArgSet(dt, mixState, tagFlav), 2000);
+   std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt, mixState, tagFlav), 2000)};
 
    // S h o w   d t   d i s t r i b u t i o n   w i t h   c u s t o m   b i n n i n g
    // -------------------------------------------------------------------------------
@@ -100,7 +101,7 @@ void rf108_plotbinning()
    // Plot mixState asymmetry of data with specified custom binning
    data->plotOn(aframe, Asymmetry(mixState), Binning(abins));
 
-   // Plot corresponding property of p.d.f
+   // Plot corresponding property of pdf
    bmix.plotOn(aframe, Asymmetry(mixState));
 
    // Adjust vertical range of plot to sensible values for an asymmetry

@@ -89,6 +89,7 @@ public:
    Short_t     fTransparency;    // Percentage transparency [0,100]
    Bool_t      fLocalFrame;      // True = Local, False = Master reference frame
    Bool_t      fReflection;      // Matrix is reflection
+   Bool_t      fScaled;          // The shape is scaled
    Double_t    fLocalMaster[16]; // Local->Master Matrix - identity if master frame
 
    // SECTION: kBoundingBox
@@ -118,7 +119,7 @@ public:
    mutable UInt_t fPhysicalID;   // Unique replica ID.
 
 
-   ClassDef(TBuffer3D,0)     // 3D primitives description
+   ClassDefOverride(TBuffer3D,0)     // 3D primitives description
 };
 
 /** \class TBuffer3DSphere

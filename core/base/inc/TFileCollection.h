@@ -49,8 +49,8 @@ private:
    Long64_t    fNStagedFiles;       // number of staged files
    Long64_t    fNCorruptFiles;      // number of corrupt files
 
-   TFileCollection(const TFileCollection&);             // not implemented
-   TFileCollection& operator=(const TFileCollection&);  // not implemented
+   TFileCollection(const TFileCollection&) = delete;
+   TFileCollection& operator=(const TFileCollection&) = delete;
 
    void PrintDetailed(TString &showOnly) const;
    void FormatSize(Long64_t bytes, TString &um, Double_t &size) const;
@@ -59,8 +59,8 @@ public:
    enum EStatusBits {
       kRemoteCollection = BIT(15)   // the collection is not staged
    };
-   TFileCollection(const char *name = 0, const char *title = 0,
-                   const char *file = 0, Int_t nfiles = -1, Int_t firstfile = 1);
+   TFileCollection(const char *name = nullptr, const char *title = nullptr,
+                   const char *file = nullptr, Int_t nfiles = -1, Int_t firstfile = 1);
    virtual ~TFileCollection();
 
    Int_t           Add(TFileInfo *info);
@@ -70,14 +70,14 @@ public:
    THashList      *GetList() { return fList; }
    void            SetList(THashList* list) { fList = list; }
 
-   TObjString     *ExportInfo(const char *name = 0, Int_t popt = 0);
+   TObjString     *ExportInfo(const char *name = nullptr, Int_t popt = 0);
 
    Long64_t        Merge(TCollection* list);
    Int_t           RemoveDuplicates();
    Int_t           Update(Long64_t avgsize = -1);
    void            Sort(Bool_t useindex = kFALSE);
    void            SetAnchor(const char *anchor);
-   void            Print(Option_t *option = "") const;
+   void            Print(Option_t *option = "") const override;
 
    void            SetBitAll(UInt_t f);
    void            ResetBitAll(UInt_t f);
@@ -95,17 +95,17 @@ public:
    void            SetDefaultTreeName(const char* treeName) { fDefaultTree = treeName; }
    Long64_t        GetTotalEntries(const char *tree) const;
 
-   TFileInfoMeta  *GetMetaData(const char *meta = 0) const;
+   TFileInfoMeta  *GetMetaData(const char *meta = nullptr) const;
    void            SetDefaultMetaData(const char *meta);
    Bool_t          AddMetaData(TObject *meta);
-   void            RemoveMetaData(const char *meta = 0);
+   void            RemoveMetaData(const char *meta = nullptr);
 
    TFileCollection *GetStagedSubset();
 
    TFileCollection *GetFilesOnServer(const char *server);
-   TMap            *GetFilesPerServer(const char *exclude = 0, Bool_t curronly =  kFALSE);
+   TMap            *GetFilesPerServer(const char *exclude = nullptr, Bool_t curronly =  kFALSE);
 
-   ClassDef(TFileCollection, 3)  // Collection of TFileInfo objects
+   ClassDefOverride(TFileCollection, 3)  // Collection of TFileInfo objects
 };
 
 #endif

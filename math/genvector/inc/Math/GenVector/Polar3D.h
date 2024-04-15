@@ -36,6 +36,8 @@ namespace Math {
        Phi is restricted to be in the range [-PI,PI)
 
        @ingroup GenVector
+
+       @sa Overview of the @ref GenVector "physics vector library"
    */
 
 
@@ -45,6 +47,7 @@ class Polar3D {
 public :
 
    typedef T Scalar;
+   static constexpr unsigned int Dimension = 3U;
 
    /**
       Default constructor with r=theta=phi=0
@@ -61,7 +64,7 @@ public :
       R(), Theta() and Phi()
    */
    template <class CoordSystem >
-   explicit Polar3D( const CoordSystem & v ) :
+   explicit constexpr Polar3D( const CoordSystem & v ) :
       fR(v.R() ),  fTheta(v.Theta() ),  fPhi(v.Phi() )  { Restrict(); }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -110,10 +113,10 @@ public :
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
    Scalar Theta() const { return fTheta; }
-   Scalar Rho() const { return fR * sin(fTheta); }
-   Scalar X() const { return Rho() * cos(fPhi); }
-   Scalar Y() const { return Rho() * sin(fPhi); }
-   Scalar Z() const { return fR * cos(fTheta); }
+   Scalar Rho() const { using std::sin; return fR * sin(fTheta); }
+   Scalar X() const { using std::cos; return Rho() * cos(fPhi); }
+   Scalar Y() const { using std::sin; return Rho() * sin(fPhi); }
+   Scalar Z() const { using std::cos; return fR * cos(fTheta); }
    Scalar Mag2()  const { return fR*fR;}
    Scalar Perp2() const { return Rho() * Rho(); }
 
@@ -157,6 +160,7 @@ public :
 private:
    inline static Scalar pi()  { return M_PI; }
    inline void Restrict() {
+      using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 

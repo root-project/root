@@ -45,9 +45,9 @@ protected:
 public:
    TEveArrow(Float_t xVec=0, Float_t yVec=0, Float_t zVec=1,
              Float_t xOrg=0, Float_t yOrg=0, Float_t zOrg=0);
-   virtual ~TEveArrow() {}
+   ~TEveArrow() override {}
 
-   virtual TObject* GetObject(const TEveException& ) const
+   TObject* GetObject(const TEveException& ) const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
    void    StampGeom() { ResetBBox(); AddStamp(kCBTransBBox | kCBObjProps); }
@@ -73,10 +73,10 @@ public:
    Int_t GetDrawQuality() const  { return fDrawQuality; }
    void  SetDrawQuality(Int_t q) { fDrawQuality = q;    }
 
-   virtual void ComputeBBox();
-   virtual void Paint(Option_t* option="");
+   void ComputeBBox() override;
+   void Paint(Option_t* option="") override;
 
-   ClassDef(TEveArrow, 0); // Class for gl visualisation of arrow.
+   ClassDefOverride(TEveArrow, 0); // Class for gl visualisation of arrow.
 };
 
 #endif

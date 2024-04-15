@@ -95,7 +95,7 @@ public:
    TQpLinSolverBase(TQpProbBase *factory,TQpDataBase *data);
    TQpLinSolverBase(const TQpLinSolverBase &another);
 
-   virtual ~TQpLinSolverBase() {}
+   ~TQpLinSolverBase() override {}
 
    virtual void Factor          (TQpDataBase *prob,TQpVar *vars);
                                                // sets up the matrix for the main linear system in
@@ -150,6 +150,6 @@ public:
 
    TQpLinSolverBase &operator= (const TQpLinSolverBase &source);
 
-   ClassDef(TQpLinSolverBase,1)                // Qp linear solver base class
+   ClassDefOverride(TQpLinSolverBase,1)                // Qp linear solver base class
 };
 #endif

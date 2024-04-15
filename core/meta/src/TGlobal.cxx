@@ -58,6 +58,10 @@ TGlobal &TGlobal::operator=(const TGlobal &rhs)
          fInfo = gCling->DataMemberInfo_FactoryCopy(rhs.fInfo);
          SetName(gCling->DataMemberInfo_Name(fInfo));
          SetTitle(gCling->DataMemberInfo_Title(fInfo));
+      } else {
+         fInfo = nullptr;
+         SetName(rhs.GetName());
+         SetTitle(rhs.GetTitle());
       }
    }
    return *this;
@@ -132,14 +136,14 @@ Bool_t TGlobal::IsValid()
 {
    // Register the transaction when checking the validity of the object.
    if (!fInfo && UpdateInterpreterStateMarker()) {
-      DeclId_t newId = gInterpreter->GetDataMember(0, fName);
+      DeclId_t newId = gInterpreter->GetDataMember(nullptr, fName);
       if (newId) {
-         DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, 0);
+         DataMemberInfo_t *info = gInterpreter->DataMemberInfo_Factory(newId, nullptr);
          Update(info);
       }
-      return newId != 0;
+      return newId != nullptr;
    }
-   return fInfo != 0;
+   return fInfo != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

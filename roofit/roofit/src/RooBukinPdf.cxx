@@ -28,20 +28,17 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 **/
 
 #include "RooBukinPdf.h"
-#include "RooFit.h"
 #include "RooRealVar.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
 #include "RooHelpers.h"
+#include "RooBatchCompute.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooBukinPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a Bukin PDF.
-/// \param name  The name of the PDF for RooFit's bookeeping.
+/// \param name  The name of the PDF for RooFit's bookkeeping.
 /// \param title The title for e.g. plotting it.
 /// \param _x    The variable.
 /// \param _Xp   The peak position.
@@ -86,11 +83,17 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation
 
-Double_t RooBukinPdf::evaluate() const
+double RooBukinPdf::evaluate() const
 {
   const double consts = 2*sqrt(2*log(2.0));
-  double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;
-  double x1 = 0,x2 = 0;
+  double r1 = 0;
+  double r2 = 0;
+  double r3 = 0;
+  double r4 = 0;
+  double r5 = 0;
+  double hp = 0;
+  double x1 = 0;
+  double x2 = 0;
   double fit_result = 0;
 
   hp=sigp*consts;
@@ -98,7 +101,7 @@ Double_t RooBukinPdf::evaluate() const
   r4=sqrt(xi*xi+1);
   r1=xi/r4;
 
-  if(fabs(xi) > exp(-6.)){
+  if(std::abs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
   }
   else
@@ -115,7 +118,7 @@ Double_t RooBukinPdf::evaluate() const
 
   //--- Center
   else if(x < x2) {
-    if(fabs(xi) > exp(-6.)) {
+    if(std::abs(xi) > exp(-6.)) {
       r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
       r2=-r3*r2*r2;
     }
@@ -130,7 +133,7 @@ Double_t RooBukinPdf::evaluate() const
     r2=rho2*(x-x2)*(x-x2)/(Xp-x2)/(Xp-x2)-r3 - 4 * r3 * (x-x2)/hp * r5 * r4/(r4+xi)/(r4+xi);
   }
 
-  if(fabs(r2) > 100){
+  if(std::abs(r2) > 100){
     fit_result = 0;
   }
   else{
@@ -141,81 +144,10 @@ Double_t RooBukinPdf::evaluate() const
   return fit_result;
 }
 
-////////////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-//Author: Emmanouil Michalainas, CERN 26 JULY 2019  
-
-template<class Tx, class TXp, class TSigp, class Txi, class Trho1, class Trho2>
-void compute(  size_t batchSize,
-               double * __restrict output,
-               Tx X, TXp XP, TSigp SP, Txi XI, Trho1 R1, Trho2 R2)
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Bukin distribution.
+void RooBukinPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  const double r3 = log(2.0);
-  const double r6 = exp(-6.0);
-  const double r7 = 2*sqrt(2*log(2.0));
-  
-  for (size_t i=0; i<batchSize; i++) {
-    const double r1 = XI[i]/sqrt(XI[i]*XI[i]+1);
-    const double r4 = sqrt(XI[i]*XI[i]+1);
-    const double hp = 1 / (SP[i]*r7);
-    const double x1 = XP[i] + 0.5*SP[i]*r7*(r1-1);
-    const double x2 = XP[i] + 0.5*SP[i]*r7*(r1+1);
-    
-    double r5 = 1.0;
-    if (XI[i]>r6 || XI[i]<-r6) r5 = XI[i]/log(r4+XI[i]);
-    
-    double factor=1, y=X[i]-x1, Yp=XP[i]-x1, yi=r4-XI[i], rho=R1[i];
-    if (X[i]>=x2) {
-      factor = -1;
-      y = X[i]-x2;
-      Yp = XP[i]-x2;
-      yi = r4+XI[i];
-      rho = R2[i];
-    }
-    
-    output[i] = rho*y*y/Yp/Yp -r3 + factor*4*r3*y*hp*r5*r4/yi/yi;
-    if (X[i]>=x1 && X[i]<x2) {
-      output[i] = _rf_fast_log(1 + 4*XI[i]*r4*(X[i]-XP[i])*hp) / _rf_fast_log(1 +2*XI[i]*( XI[i]-r4 ));
-      output[i] *= -output[i]*r3;
-    }
-    if (X[i]>=x1 && X[i]<x2 && XI[i]<r6 && XI[i]>-r6) {
-      output[i] = -4*r3*(X[i]-XP[i])*(X[i]-XP[i])*hp*hp;
-    }
-  }
-  for (size_t i=0; i<batchSize; i++) {
-    output[i] = _rf_fast_exp(output[i]);
-  }
-}
-};
-
-
-RooSpan<double> RooBukinPdf::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-
-  EvaluateInfo info = getInfo( {&x, &Xp, &sigp, &xi, &rho1, &rho2}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(),
-    BracketAdapter<double> (Xp),
-    BracketAdapter<double> (sigp),
-    BracketAdapter<double> (xi),
-    BracketAdapter<double> (rho1),
-    BracketAdapter<double> (rho2));
-  }
-  else {
-    compute(info.size, output.data(),
-    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (Xp,Xp.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (sigp,sigp.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (xi,xi.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (rho1,rho1.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (rho2,rho2.getValBatch(begin,info.size)));
-  }
-  return output;
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Bukin, ctx.output(),
+          {ctx.at(x), ctx.at(Xp), ctx.at(sigp), ctx.at(xi), ctx.at(rho1), ctx.at(rho2)});
 }

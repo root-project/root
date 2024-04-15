@@ -47,20 +47,10 @@ public:
       printf("v(%f, %f, %f) B(%f, %f, %f) \n", x, y, z, b.fX, b.fY, b.fZ);
    }
 
-   REveVectorD GetFieldD(const REveVectorD &v) const { return GetFieldD(v.fX, v.fY, v.fZ); }
+   virtual Double_t    GetMaxFieldMag() const = 0;
+   virtual REveVectorD GetField(Double_t x, Double_t y, Double_t z) const = 0;
 
-   // Track propgator uses only GetFieldD() and GetMaxFieldMagD(). Have to keep/reuse
-   // GetField() and GetMaxFieldMag() because of backward compatibility.
-
-   virtual REveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const { return GetField(x, y, z); }
-   virtual Double_t GetMaxFieldMagD() const
-   {
-      return GetMaxFieldMag();
-   } // not abstract because of backward compatibility
-
-   virtual REveVector GetField(Float_t, Float_t, Float_t) const { return REveVector(); }
-   virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
-
+   REveVectorD GetField(const REveVectorD &v) const { return GetField(v.fX, v.fY, v.fZ); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,11 +65,10 @@ protected:
 
 public:
    REveMagFieldConst(Double_t x, Double_t y, Double_t z) : REveMagField(), fB(x, y, z) { fFieldConstant = kTRUE; }
-   virtual ~REveMagFieldConst() {}
+   ~REveMagFieldConst() override {}
 
-   REveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
-
-   Double_t GetMaxFieldMagD() const override { return fB.Mag(); };
+   Double_t    GetMaxFieldMag() const override { return fB.Mag(); };
+   REveVectorD GetField(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,17 +89,17 @@ public:
    {
       fFieldConstant = kFALSE;
    }
-   virtual ~REveMagFieldDuo() {}
+   ~REveMagFieldDuo() override {}
 
-   REveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const override
-   {
-      return ((x * x + y * y) < fR2) ? fBIn : fBOut;
-   }
-
-   Double_t GetMaxFieldMagD() const override
+   Double_t GetMaxFieldMag() const override
    {
       Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag();
       return b1 > b2 ? b1 : b2;
+   }
+
+   REveVectorD GetField(Double_t x, Double_t y, Double_t /*z*/) const override
+   {
+      return ((x * x + y * y) < fR2) ? fBIn : fBOut;
    }
 };
 
@@ -232,7 +221,7 @@ protected:
 
    Bool_t HelixIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
    Bool_t LineIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
-   Bool_t PointOverVertex(const REveVector4D &v0, const REveVector4D &v, Double_t *p = 0);
+   Bool_t PointOverVertex(const REveVector4D &v0, const REveVector4D &v, Double_t *p = nullptr);
 
    void   ClosestPointFromVertexToLineSegment(const REveVectorD &v, const REveVectorD &s, const REveVectorD &r,
                                               Double_t rMagInv, REveVectorD &c);
@@ -242,7 +231,7 @@ protected:
 public:
    REveTrackPropagator(const std::string& n = "REveTrackPropagator", const std::string& t = "", REveMagField *field = nullptr,
                        Bool_t own_field = kTRUE);
-   virtual ~REveTrackPropagator();
+   ~REveTrackPropagator() override;
 
    void OnZeroRefCount() override;
 
@@ -337,9 +326,6 @@ public:
    static Double_t fgDefMagField;        // Default value for constant solenoid magnetic field.
    static const Double_t fgkB2C;         // Constant for conversion of momentum to curvature.
    static REveTrackPropagator fgDefault; // Default track propagator.
-
-   static Double_t fgEditorMaxR; // Max R that can be set in GUI editor.
-   static Double_t fgEditorMaxZ; // Max Z that can be set in GUI editor.
 };
 
 //______________________________________________________________________________

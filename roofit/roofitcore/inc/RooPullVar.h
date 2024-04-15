@@ -16,7 +16,7 @@
 #ifndef ROO_PULL_VAR
 #define ROO_PULL_VAR
 
-#include "RooProxy.h"
+#include "RooTemplateProxy.h"
 #include "RooRealVar.h"
 #include "RooRealProxy.h"
 
@@ -24,22 +24,21 @@
 class RooPullVar : public RooAbsReal {
 public:
 
-  RooPullVar() ;
+  RooPullVar() = default;
   RooPullVar(const char *name, const char *title, RooRealVar& measurement, RooAbsReal& truth) ;
-  virtual ~RooPullVar() ;
 
-  RooPullVar(const RooPullVar& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooPullVar(*this, newname); }
+  RooPullVar(const RooPullVar& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooPullVar(*this, newname); }
 
 
 protected:
 
-  RooProxy<RooRealVar> _meas ;
+  RooTemplateProxy<RooRealVar> _meas ;
   RooRealProxy _true ;
 
-  Double_t evaluate() const;
+  double evaluate() const override;
 
-  ClassDef(RooPullVar,1) // Calculation of pull of measurement w.r.t a truth value
+  ClassDefOverride(RooPullVar,1) // Calculation of pull of measurement w.r.t a truth value
 };
 
 #endif

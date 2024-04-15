@@ -20,7 +20,7 @@
 
 #include "clang/Serialization/ModuleFileExtension.h"
 
-#include "llvm/Bitcode/BitstreamReader.h"
+#include "llvm/Bitstream/BitstreamReader.h"
 
 /// A module file extension used for testing purposes.
 class TClingRdictModuleFileExtension : public clang::ModuleFileExtension {
@@ -50,7 +50,7 @@ public:
 
    clang::ModuleFileExtensionMetadata getExtensionMetadata() const override;
 
-   llvm::hash_code hashExtension(llvm::hash_code Code) const override;
+   void hashExtension(ExtensionHashBuilder &HBuilder) const override;
 
    std::unique_ptr<clang::ModuleFileExtensionWriter> createExtensionWriter(clang::ASTWriter &Writer) override;
 

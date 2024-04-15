@@ -13,7 +13,7 @@
 \ingroup tree
 
 A TFriendElement TF describes a TTree object TF in a file.
-When a TFriendElement TF is added to the the list of friends of an
+When a TFriendElement TF is added to the list of friends of an
 existing TTree T, any variable from TF can be referenced in a query
 to T.
 
@@ -25,7 +25,6 @@ See TTree::AddFriend for more information.
 */
 
 #include "TFriendElement.h"
-#include "TBuffer.h"
 #include "TTree.h"
 #include "TFile.h"
 #include "TROOT.h"
@@ -38,10 +37,10 @@ ClassImp(TFriendElement);
 
 TFriendElement::TFriendElement() : TNamed()
 {
-   fFile       = 0;
-   fTree       = 0;
-   fOwnFile    = kFALSE;
-   fParentTree = 0;
+   fFile       = nullptr;
+   fTree       = nullptr;
+   fOwnFile    = false;
+   fParentTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,9 +52,9 @@ TFriendElement::TFriendElement() : TNamed()
 TFriendElement::TFriendElement(TTree *tree, const char *treename, const char *filename)
     :TNamed(treename,filename)
 {
-   fFile       = 0;
-   fTree       = 0;
-   fOwnFile    = kTRUE;
+   fFile       = nullptr;
+   fTree       = nullptr;
+   fOwnFile    = true;
    fParentTree = tree;
    fTreeName   = treename;
    if (treename && strchr(treename,'=')) {
@@ -82,8 +81,8 @@ TFriendElement::TFriendElement(TTree *tree, const char *treename, TFile *file)
     :TNamed(treename,file?file->GetName():"")
 {
    fFile       = file;
-   fTree       = 0;
-   fOwnFile    = kFALSE;
+   fTree       = nullptr;
+   fOwnFile    = false;
    fParentTree = tree;
    fTreeName   = treename;
    if (fParentTree && fParentTree->GetDirectory()
@@ -120,8 +119,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
 {
    fTree       = friendtree;
    fTreeName   = "";
-   fFile       = 0;
-   fOwnFile    = kFALSE;
+   fFile       = nullptr;
+   fOwnFile    = false;
    fParentTree = tree;
    if (fTree) {
       fTreeName   = fTree->GetName();
@@ -141,6 +140,8 @@ TFriendElement::TFriendElement(TTree *tree, TTree* friendtree, const char *alias
       delete [] temp;
    }
 
+   if (fTree)
+      fTree->RegisterExternalFriend(this);
    // No need to Connect.
 }
 
@@ -173,9 +174,9 @@ TTree *TFriendElement::DisConnect()
    if (fTree)
       fTree->RemoveExternalFriend(this);
    if (fOwnFile) delete fFile;
-   fFile = 0;
-   fTree = 0;
-   return 0;
+   fFile = nullptr;
+   fTree = nullptr;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,18 +189,18 @@ TFile *TFriendElement::GetFile()
    if (strlen(GetTitle())) {
       TDirectory::TContext ctxt;
       fFile = TFile::Open(GetTitle());
-      fOwnFile = kTRUE;
+      fOwnFile = true;
    } else {
       TDirectory *dir = fParentTree->GetDirectory();
       if (dir) {
          fFile = dir->GetFile();
-         fOwnFile = kFALSE;
+         fOwnFile = false;
       }
    }
    if (fFile && fFile->IsZombie()) {
       MakeZombie();
       delete fFile;
-      fFile = 0;
+      fFile = nullptr;
    }
    return fFile;
 }
@@ -221,11 +222,10 @@ TTree *TFriendElement::GetTree()
 
    if (GetFile()) {
       fFile->GetObject(GetTreeName(),fTree);
-      if (fTree) return fTree;
+   } else {
+      // This could be a memory tree or chain
+      fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
    }
-
-   // This could be a memory tree or chain
-   fTree = dynamic_cast<TTree*>( gROOT->FindObject(GetTreeName()) );
 
    if (fTree)
       fTree->RegisterExternalFriend(this);
@@ -239,4 +239,15 @@ TTree *TFriendElement::GetTree()
 void TFriendElement::ls(Option_t *) const
 {
    printf(" Friend Tree: %s in file: %s\n",GetName(),GetTitle());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Forget deleted elements.
+
+void TFriendElement::RecursiveRemove(TObject *delobj)
+{
+   if (delobj == fTree)
+      fTree = nullptr;
+   if (delobj == fFile)
+      fFile = nullptr;
 }

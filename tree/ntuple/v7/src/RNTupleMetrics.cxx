@@ -17,22 +17,50 @@
 
 #include <ostream>
 
+#include <iostream>
+
 ROOT::Experimental::Detail::RNTuplePerfCounter::~RNTuplePerfCounter()
 {
 }
 
 std::string ROOT::Experimental::Detail::RNTuplePerfCounter::ToString() const
 {
-   return fName + kFieldSeperator + fUnit + kFieldSeperator + fDescription + kFieldSeperator + ValueToString();
+   return fName + kFieldSeperator + fUnit + kFieldSeperator + fDescription + kFieldSeperator + GetValueAsString();
 }
 
 bool ROOT::Experimental::Detail::RNTupleMetrics::Contains(const std::string &name) const
 {
+  return GetLocalCounter(name) != nullptr;
+}
+
+const ROOT::Experimental::Detail::RNTuplePerfCounter*
+ROOT::Experimental::Detail::RNTupleMetrics::GetLocalCounter(std::string_view name) const
+{
    for (const auto &c : fCounters) {
       if (c->GetName() == name)
-         return true;
+         return c.get();
    }
-   return false;
+   return nullptr;
+}
+
+const ROOT::Experimental::Detail::RNTuplePerfCounter*
+ROOT::Experimental::Detail::RNTupleMetrics::GetCounter(std::string_view name) const
+{
+   std::string prefix = fName + ".";
+   if (name.compare(0, prefix.length(), std::string_view(prefix)) != 0)
+      return nullptr;
+
+   auto innerName = name.substr(prefix.length());
+   if (auto counter = GetLocalCounter(innerName))
+      return counter;
+
+   for (auto m : fObservedMetrics) {
+      auto counter = m->GetCounter(innerName);
+      if (counter != nullptr)
+         return counter;
+   }
+
+   return nullptr;
 }
 
 void ROOT::Experimental::Detail::RNTupleMetrics::Print(std::ostream &output, const std::string &prefix) const

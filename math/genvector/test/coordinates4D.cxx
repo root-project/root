@@ -153,7 +153,7 @@ int test4D ( const LorentzVector<C> & v, double ticks ) {
   //double m = std::sqrt ( v.t()*v.t() - v.x()*v.x() - v.y()*v.y() - v.z()*v.z());
   //double r = std::sqrt (v.x()*v.x() + v.y()*v.y() + v.z()*v.z());
   double rho = std::sqrt (v.x()*v.x() + v.y()*v.y());
-  double theta = std::atan2( rho, v.z() );  // better tahn using acos
+  double theta = std::atan2( rho, v.z() );  // better than using acos
   //double theta = r>0 ? std::acos ( v.z()/r ) : 0;
   double phi = rho>0 ? std::atan2 (v.y(), v.x()) : 0;
 

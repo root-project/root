@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamDecisionTree                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of decision tree like PDEFoam                              *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::PDEFoamDecisionTree
@@ -134,14 +134,14 @@ void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
    hsig_unw.reserve(fDim);
    hbkg_unw.reserve(fDim);
    for (Int_t idim = 0; idim < fDim; idim++) {
-      hsig.push_back(new TH1D(Form("hsig_%i", idim),
-                              Form("signal[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
-      hbkg.push_back(new TH1D(Form("hbkg_%i", idim),
-                              Form("background[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
-      hsig_unw.push_back(new TH1D(Form("hsig_unw_%i", idim),
-                                  Form("signal_unw[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
-      hbkg_unw.push_back(new TH1D(Form("hbkg_unw_%i", idim),
-                                  Form("background_unw[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
+      hsig.push_back(new TH1D(TString::Format("hsig_%i", idim),
+                              TString::Format("signal[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
+      hbkg.push_back(new TH1D(TString::Format("hbkg_%i", idim),
+                              TString::Format("background[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
+      hsig_unw.push_back(new TH1D(TString::Format("hsig_unw_%i", idim),
+                                  TString::Format("signal_unw[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
+      hbkg_unw.push_back(new TH1D(TString::Format("hbkg_unw_%i", idim),
+                                  TString::Format("background_unw[%i]", idim), fNBin, fXmin[idim], fXmax[idim]));
    }
 
    // get cell position and size

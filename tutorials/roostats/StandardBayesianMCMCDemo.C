@@ -73,10 +73,6 @@ void StandardBayesianMCMCDemo(const char *infile = "", const char *workspaceName
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -182,10 +178,8 @@ void StandardBayesianMCMCDemo(const char *infile = "", const char *workspaceName
    }
 
    // draw a scatter plot of chain results for poi vs each nuisance parameters
-   TIterator *it = mc->GetNuisanceParameters()->createIterator();
-   RooRealVar *nuis = NULL;
    int iPad = 1; // iPad, that's funny
-   while ((nuis = (RooRealVar *)it->Next())) {
+   for (auto *nuis : static_range_cast<RooRealVar *>(*mc->GetNuisanceParameters())) {
       c2->cd(iPad++);
       plot.DrawChainScatter(*firstPOI, *nuis);
    }

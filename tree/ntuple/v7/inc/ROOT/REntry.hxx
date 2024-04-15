@@ -16,13 +16,16 @@
 #ifndef ROOT7_REntry
 #define ROOT7_REntry
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TError.h>
 
+#include <algorithm>
+#include <iterator>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -40,57 +43,156 @@ that are associated to values are managed.
 */
 // clang-format on
 class REntry {
-   std::vector<Detail::RFieldValue> fValues;
-   /// The objects involed in serialization and deserialization might be used long after the entry is gone:
-   /// hence the shared pointer
-   std::vector<std::shared_ptr<void>> fValuePtrs;
-   /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
-   std::vector<std::size_t> fManagedValues;
+   friend class RNTupleCollectionWriter;
+   friend class RNTupleModel;
+   friend class RNTupleReader;
+   friend class RNTupleFillContext;
 
 public:
-   using Iterator_t = decltype(fValues)::iterator;
+   /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
+   /// methods, e.g. BindValue. The field token can also be created by the model.
+   class RFieldToken {
+      friend class REntry;
+      friend class RNTupleModel;
+
+      std::size_t fIndex;     ///< the index in fValues that belongs to the top-level field
+      std::uint64_t fModelId; ///< Safety check to prevent tokens from other models being used
+      RFieldToken(std::size_t index, std::uint64_t modelId) : fIndex(index), fModelId(modelId) {}
+   };
+
+private:
+   /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
+   std::uint64_t fModelId = 0;
+   /// Corresponds to the top-level fields of the linked model
+   std::vector<RFieldBase::RValue> fValues;
+
+   // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
-   REntry(const REntry& other) = delete;
-   REntry& operator=(const REntry& other) = delete;
-   ~REntry();
+   explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   /// Adds a value whose storage is managed by the entry
-   void AddValue(const Detail::RFieldValue& value);
-
-   /// Adds a value whose storage is _not_ managed by the entry
-   void CaptureValue(const Detail::RFieldValue& value);
+   void AddValue(RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
-   template<typename T, typename... ArgsT>
-   std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
+   template <typename T, typename... ArgsT>
+   std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
+   {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fValues.emplace_back(Detail::RFieldValue(field->CaptureValue(ptr.get())));
-      fValuePtrs.emplace_back(ptr);
+      fValues.emplace_back(field.BindValue(ptr));
       return ptr;
    }
 
-   Detail::RFieldValue GetValue(std::string_view fieldName) {
-      for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName)
-            return v;
+   void Read(NTupleSize_t index)
+   {
+      for (auto &v : fValues) {
+         v.Read(index);
       }
-      return Detail::RFieldValue();
    }
 
-   template<typename T>
-   T* Get(std::string_view fieldName) {
-      for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName) {
-            R__ASSERT(v.GetField()->GetType() == RField<T>::TypeName());
-            return static_cast<T*>(v.GetRawPtr());
+   std::size_t Append()
+   {
+      std::size_t bytesWritten = 0;
+      for (auto &v : fValues) {
+         bytesWritten += v.Append();
+      }
+      return bytesWritten;
+   }
+
+   void EnsureMatchingModel(RFieldToken token) const
+   {
+      if (fModelId != token.fModelId) {
+         throw RException(R__FAIL("invalid token for this entry, "
+                                  "make sure to use a token from the same model as this entry."));
+      }
+   }
+
+   template <typename T>
+   void EnsureMatchingType(RFieldToken token [[maybe_unused]]) const
+   {
+      if constexpr (!std::is_void_v<T>) {
+         const auto &v = fValues[token.fIndex];
+         if (v.GetField().GetTypeName() != RField<T>::TypeName()) {
+            throw RException(R__FAIL("type mismatch for field " + v.GetField().GetFieldName() + ": " +
+                                     v.GetField().GetTypeName() + " vs. " + RField<T>::TypeName()));
          }
       }
-      return nullptr;
    }
 
-   Iterator_t begin() { return fValues.begin(); }
-   Iterator_t end() { return fValues.end(); }
+public:
+   using ConstIterator_t = decltype(fValues)::const_iterator;
+
+   REntry(const REntry &other) = delete;
+   REntry &operator=(const REntry &other) = delete;
+   REntry(REntry &&other) = default;
+   REntry &operator=(REntry &&other) = default;
+   ~REntry() = default;
+
+   /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
+   RFieldToken GetToken(std::string_view fieldName) const
+   {
+      auto it = std::find_if(fValues.begin(), fValues.end(),
+         [&fieldName] (const RFieldBase::RValue &value) { return value.GetField().GetFieldName() == fieldName; });
+
+      if ( it == fValues.end() ) {
+         throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
+      }
+      return RFieldToken(std::distance(fValues.begin(), it), fModelId);
+   }
+
+   void EmplaceNewValue(RFieldToken token)
+   {
+      EnsureMatchingModel(token);
+      fValues[token.fIndex].EmplaceNew();
+   }
+
+   void EmplaceNewValue(std::string_view fieldName) { EmplaceNewValue(GetToken(fieldName)); }
+
+   template <typename T>
+   void BindValue(RFieldToken token, std::shared_ptr<T> objPtr)
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].Bind(objPtr);
+   }
+
+   template <typename T>
+   void BindValue(std::string_view fieldName, std::shared_ptr<T> objPtr)
+   {
+      BindValue<T>(GetToken(fieldName), objPtr);
+   }
+
+   template <typename T>
+   void BindRawPtr(RFieldToken token, T *rawPtr)
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      fValues[token.fIndex].BindRawPtr(rawPtr);
+   }
+
+   template <typename T>
+   void BindRawPtr(std::string_view fieldName, T *rawPtr)
+   {
+      BindRawPtr<void>(GetToken(fieldName), rawPtr);
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(RFieldToken token) const
+   {
+      EnsureMatchingModel(token);
+      EnsureMatchingType<T>(token);
+      return std::static_pointer_cast<T>(fValues[token.fIndex].GetPtr<void>());
+   }
+
+   template <typename T>
+   std::shared_ptr<T> GetPtr(std::string_view fieldName) const
+   {
+      return GetPtr<T>(GetToken(fieldName));
+   }
+
+   std::uint64_t GetModelId() const { return fModelId; }
+
+   ConstIterator_t begin() const { return fValues.cbegin(); }
+   ConstIterator_t end() const { return fValues.cend(); }
 };
 
 } // namespace Experimental

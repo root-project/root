@@ -22,9 +22,8 @@
 #include "TF1.h"
 
 // for graphical comparison of performance
-#include "TGraph.h"
 #include "TAxis.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 #include "TApplication.h"
 #include "TPaveLabel.h"
 #include "TLegend.h"
@@ -33,7 +32,7 @@
 bool showGraphics = false;
 bool verbose = false;
 
-using namespace std;
+using std::cout, std::cerr, std::endl;
 
 int NMAX = 6; //maximum dimension
 
@@ -179,7 +178,7 @@ void performance()
       num_performance->SetBarWidth(0.45);
       num_performance->SetBarOffset(0.05);
       num_performance->SetFillColor(49);
-      num_performance->SetStats(0);
+      num_performance->SetStats(false);
       //num_performance->GetXaxis()->SetLimits(1.5, Nmax+0.5);
       num_performance->GetXaxis()->SetTitle("number of dimensions");
       num_performance->GetYaxis()->SetTitle("time [s]");
@@ -226,7 +225,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
@@ -236,7 +235,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

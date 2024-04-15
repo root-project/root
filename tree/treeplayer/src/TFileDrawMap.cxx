@@ -50,7 +50,7 @@ objects to be shown. For example, to view only the keys with
 names starting with "abc", set the argument keys to "abc*".
 The default is to view all the objects.
 The argument options can also be used (only one option currently)
-When the option "same" is given, the new picture is suprimposed.
+When the option "same" is given, the new picture is superimposed.
 The option "same" is useful, eg:
 to draw all keys with names = "abc" in a first pass
 then all keys with names = "uv*" in a second pass, etc.
@@ -66,12 +66,12 @@ then all keys with names = "uv*" in a second pass, etc.
 #include "TMath.h"
 #include "TVirtualPad.h"
 #include "TVirtualX.h"
-#include "TStyle.h"
 #include "TH1.h"
 #include "TBox.h"
 #include "TKey.h"
 #include "TRegexp.h"
 #include "TSystem.h"
+#include "strlcpy.h"
 
 ClassImp(TFileDrawMap);
 
@@ -80,8 +80,8 @@ ClassImp(TFileDrawMap);
 
 TFileDrawMap::TFileDrawMap() :TNamed()
 {
-   fFile   = 0;
-   fFrame  = 0;
+   fFile   = nullptr;
+   fFrame  = nullptr;
    fXsize  = 1000;
    fYsize  = 1000;
 }
@@ -107,7 +107,7 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
       fXsize = 1000;
    }
    fFrame = new TH1D("hmapframe","",1000,0,fXsize);
-   fFrame->SetDirectory(0);
+   fFrame->SetDirectory(nullptr);
    fFrame->SetBit(TH1::kNoStats);
    fFrame->SetBit(kCanDelete);
    fFrame->SetMinimum(0);
@@ -121,7 +121,7 @@ TFileDrawMap::TFileDrawMap(const TFile *file, const char *keys, Option_t *option
    fFrame->SetMaximum(fYsize);
    fFrame->GetYaxis()->SetLimits(0,fYsize);
 
-   //Bool_t show = kFALSE;
+   //bool show = false;
    if (gPad) {
       gPad->Clear();
       //show = gPad->GetCanvas()->GetShowEventStatus();
@@ -284,7 +284,7 @@ void TFileDrawMap::DrawObject()
    if (padsave == gPad) {
       //must create a new canvas
       gROOT->MakeDefCanvas();
-   } else {
+   } else if (padsave) {
       padsave->cd();
    }
 
@@ -348,7 +348,7 @@ void TFileDrawMap::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TObject *TFileDrawMap::GetObject()
 {
-   if (strstr(GetName(),"entry=")) return 0;
+   if (strstr(GetName(),"entry=")) return nullptr;
    char *info = new char[fName.Length()+1];
    strlcpy(info,fName.Data(),fName.Length()+1);
    char *colon = strstr(info,"::");
@@ -371,7 +371,7 @@ TObject *TFileDrawMap::GetObject()
 char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 {
    // Thread safety: this solution is not elegant, but given the action performed
-   // by the method, this construct can be considered nonproblematic.
+   // by the method, this construct can be considered non-problematic.
    static TString info;
    GetObjectInfoDir(fFile, px, py, info);
    return (char*)info.Data();
@@ -382,7 +382,7 @@ char *TFileDrawMap::GetObjectInfo(Int_t px, Int_t py) const
 /// Displays the keys info in the directory
 /// corresponding to cursor position px,py
 
-Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
+bool TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const
 {
    Double_t x = gPad->AbsPixeltoX(px);
    Double_t y = gPad->AbsPixeltoY(py);
@@ -402,10 +402,10 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
       if (cl && cl == TDirectoryFile::Class()) {
          curdir->cd(key->GetName());
          TDirectory *subdir = gDirectory;
-         Bool_t gotInfo = GetObjectInfoDir(subdir, px, py, info);
+         bool gotInfo = GetObjectInfoDir(subdir, px, py, info);
          if (gotInfo) {
             dirsav->cd();
-            return kTRUE;
+            return true;
          }
          curdir->cd();
          continue;
@@ -432,7 +432,7 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
                   } else {
                      info.Form("%s/%s, branch=%s, basket=%d, entry=%d",curdir->GetPath(),key->GetName(),branch->GetName(),i,entry);
                   }
-                  return kTRUE;
+                  return true;
                }
             }
          }
@@ -446,32 +446,32 @@ Bool_t TFileDrawMap::GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TStri
             info.Form("%s/%s ::%s, nbytes=%d",curdir->GetPath(),key->GetName(),key->GetClassName(),nbytes);
          }
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
    }
    // Are we in the Keys list
    if (pbyte >= dir->GetSeekKeys() && pbyte < dir->GetSeekKeys()+dir->GetNbytesKeys()) {
       info.Form("%sKeys List, nbytes=%d",dir->GetPath(),dir->GetNbytesKeys());
       dirsav->cd();
-      return kTRUE;
+      return true;
    }
    if (dir == (TDirectory*)fFile) {
       // Are we in the TStreamerInfo
       if (pbyte >= fFile->GetSeekInfo() && pbyte < fFile->GetSeekInfo()+fFile->GetNbytesInfo()) {
          info.Form("%sStreamerInfo List, nbytes=%d",dir->GetPath(),fFile->GetNbytesInfo());
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
       // Are we in the Free Segments
       if (pbyte >= fFile->GetSeekFree() && pbyte < fFile->GetSeekFree()+fFile->GetNbytesFree()) {
          info.Form("%sFree List, nbytes=%d",dir->GetPath(),fFile->GetNbytesFree());
          dirsav->cd();
-         return kTRUE;
+         return true;
       }
    }
    info.Form("(byte=%lld)",pbyte);
    dirsav->cd();
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,7 +497,7 @@ void TFileDrawMap::Paint(Option_t *)
          fFrame->SetMinimum(0);
          fFrame->GetYaxis()->SetLimits(0,fYsize+1);
       }
-      fFrame->Paint("a");
+      fFrame->Paint();
    }
 
    //draw keys
@@ -546,7 +546,7 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
    TKey *key;
    Int_t color = 0;
    TBox box;
-   TRegexp re(keys,kTRUE);
+   TRegexp re(keys,true);
    while ((key = (TKey*)next())) {
       Int_t nbytes = key->GetNbytes();
       Long64_t bseek = key->GetSeekKey();
@@ -577,7 +577,10 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
          while ((leaf = (TLeaf*)nextb())) {
             TBranch *branch = leaf->GetBranch();
             color = branch->GetFillColor();
-            if (color == 0) color = 1;
+            if (color == 0) {
+               gPad->IncrementPaletteColor(1, "pfc");
+               color = gPad->NextPaletteColor();
+            }
             box.SetFillColor(color);
             Int_t nbaskets = branch->GetMaxBaskets();
             for (Int_t i=0;i<nbaskets;i++) {

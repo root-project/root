@@ -8,20 +8,22 @@
 ///
 /// \authors Anda Chelba, Gerardo Ganis
 
-#include "ROOT/RMakeUnique.hxx"
 #include "TString.h"
 #include "TROOT.h"
 #include "TChain.h"
+#include "TBranch.h"
 #include "TFileCollection.h"
 #include "TH1F.h"
 #include "TTreeReader.h"
 #include "ROOT/TTreeProcessorMP.hxx"
 
-const auto file0 = "http://root.cern.ch/files/h1/dstarmb.root";
+#include <memory>
+
+const auto file0 = "http://root.cern/files/h1/dstarmb.root";
 const std::vector<std::string> files = {file0,
-                                        "http://root.cern.ch/files/h1/dstarp1a.root",
-                                        "http://root.cern.ch/files/h1/dstarp1b.root",
-                                        "http://root.cern.ch/files/h1/dstarp2.root"};
+                                        "http://root.cern/files/h1/dstarp1a.root",
+                                        "http://root.cern/files/h1/dstarp1b.root",
+                                        "http://root.cern/files/h1/dstarp2.root"};
 
 int mp103_processSelector()
 {

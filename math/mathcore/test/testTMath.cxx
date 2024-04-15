@@ -2,10 +2,11 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <typeinfo>
 
 #include <TMath.h>
 
-using namespace std;
+using std::cout, std::endl, std::vector, std::sort;
 using namespace TMath;
 
 bool showVector = true;
@@ -140,6 +141,20 @@ void testPlane()
         << endl;
 }
 
+void testBreitWignerRelativistic()
+{
+  Double_t median = 5000;
+  Double_t gamma = 100;
+  Int_t nPoints = 10;
+  Double_t xMinimum = 0; Double_t xMaximum = 10000;
+  Double_t xStepSize = (xMaximum-xMinimum)/nPoints;
+
+  for (Int_t i=0;i<=nPoints;i++) {
+    Double_t currentX = xMinimum+i*xStepSize;
+    cout << "BreitWignerRelativistic(" << currentX << "," << median << "," << gamma << ") = " << BreitWignerRelativistic(currentX,median,gamma) << endl;
+  }
+}
+
 void testTMath()
 {
    cout << "Starting tests on TMath..." << endl;
@@ -178,6 +193,10 @@ void testTMath()
 
    testPlane<Double_t>();
    testPlane<Float_t>();
+
+   cout << "\nBreitWignerRelativistic tests: " << endl;
+
+   testBreitWignerRelativistic();
 }
 
 int main()

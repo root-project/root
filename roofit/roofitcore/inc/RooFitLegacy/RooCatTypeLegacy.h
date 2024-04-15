@@ -1,0 +1,110 @@
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id: RooCatType.h,v 1.20 2007/05/11 09:11:30 verkerke Exp $
+ * Authors:                                                                  *
+ *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
+ *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
+ *                                                                           *
+ * Copyright (c) 2000-2005, Regents of the University of California          *
+ *                          and Stanford University. All rights reserved.    *
+ *                                                                           *
+ * Redistribution and use in source and binary forms,                        *
+ * with or without modification, are permitted according to the terms        *
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+ *****************************************************************************/
+#ifndef ROO_CAT_TYPE
+#define ROO_CAT_TYPE
+
+#include "TObject.h"
+#include "RooPrintable.h"
+#include "strlcpy.h"
+
+class RooCatType : public TObject, public RooPrintable {
+public:
+  inline RooCatType()
+  {
+     _label[0] = 0;
+  }
+
+  /// Constructor with state name and index value.
+  inline RooCatType(const char *name, Int_t value) : _value(value)
+  {
+     SetName(name);
+  }
+  /// Copy constructor.
+  inline RooCatType(const RooCatType& other) :
+    TObject(other), RooPrintable(other), _value(other._value) {
+    strlcpy(_label,other._label,256) ;
+  }
+
+  TObject* Clone(const char*) const override { return new RooCatType(*this); }
+
+  const Text_t* GetName() const override {
+    // Return state name
+    return _label[0] ? _label : nullptr ;
+  }
+  void SetName(const Text_t* name) ;
+
+  inline RooCatType& operator=(const RooCatType& other) {
+    // Assignment operator from other RooCatType
+    if (&other==this) return *this ;
+    SetName(other.GetName()) ;
+    _value = other._value ;
+    return *this ;
+  }
+
+  inline void assignFast(const RooCatType& other) {
+    // Fast assignment operator from other RooCatType
+    _label[0] = 0 ;
+    _value = other._value ;
+  }
+
+  inline bool operator==(const RooCatType& other) const {
+    // Equality operator with other RooCatType
+    return (_value==other._value) ;
+  }
+
+  inline bool operator==(Int_t index) const {
+    // Return true if index value matches integer
+    return (_value==index) ;
+  }
+
+  bool operator==(const char* label) const {
+    // Return true if state name matchins string
+    return label && !strcmp(_label,label) ;
+  }
+
+  inline Int_t getVal() const {
+    // Return index value
+    return _value ;
+  }
+  void setVal(Int_t newValue) {
+    // Set index value
+  _value = newValue ;
+  }
+
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printValue(std::ostream& os) const override ;
+
+  inline void Print(Option_t *options= nullptr) const override {
+    // Printing interface
+    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
+  }
+
+protected:
+
+  friend class RooAbsCategoryLValue ;
+  friend class RooAbsCategory ;
+  Int_t _value = 0;  ///< Index value
+  char _label[256] ; ///< State name
+
+  ClassDefOverride(RooCatType,1) // Category state, (name,index) pair
+} R__SUGGEST_ALTERNATIVE("Instead of RooCatType, directly use the category number returned by RooAbsCategory::getIndex().\n"
+    "Convert it into a name using RooAbsCategory::lookupName(index).");
+
+
+#endif
+

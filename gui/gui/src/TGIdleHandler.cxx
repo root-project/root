@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIdleHandler                                                        //
-//                                                                      //
-// Handle idle events, i.e. process GUI actions when there is nothing   //
-// else anymore to do.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGIdleHandler
+    \ingroup guiwidgets
+
+Handle idle events, i.e. process GUI actions when there is nothing
+else anymore to do.
+
+*/
+
 
 #include "TGIdleHandler.h"
 #include "TGWindow.h"

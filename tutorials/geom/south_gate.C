@@ -10,6 +10,7 @@
 /// This macro was created for the evaluation of Computational Physics course in 2006.
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
+/// \image html geom_south_gate.png width=800px
 /// \macro_code
 ///
 /// \author Lan Hee Yang(yangd5d5@hotmail.com), Dept. of Physics, Univ. of Seoul
@@ -35,7 +36,7 @@ void south_gate()
 
   TGeoVolume *top = geom->MakeBox("top",Air,1000,1000,1000);
   geom->SetTopVolume(top);
-  geom->SetTopVisible(0);
+  geom->SetTopVisible(false);
   // If you want to see the boundary, please input the number, 1 instead of 0.
   // Like this, geom->SetTopVisible(1);
 
@@ -1882,7 +1883,7 @@ while(k<6){
 
 
 
-  top->SetVisibility(0);
+  top->SetVisibility(false);
   geom->CloseGeometry();
 
   top->Draw("ogl");

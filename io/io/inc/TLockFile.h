@@ -29,9 +29,9 @@ protected:
 
 public:
    TLockFile(const char *path, Int_t timeLimit = 0);
-   virtual ~TLockFile();
+   ~TLockFile() override;
 
-   ClassDef(TLockFile, 0) //Lock an object using a file
+   ClassDefOverride(TLockFile, 0) //Lock an object using a file
 };
 
 #endif

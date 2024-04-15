@@ -27,7 +27,7 @@
 ///
 /// whereas d does not.
 ///
-/// The methods that are added by the ClassDef()/Imp() marcro can be listed with
+/// The methods that are added by the ClassDef()/Imp() macro can be listed with
 ///
 /// ~~~
 /// .class
@@ -63,7 +63,7 @@ public:
 
   Det a; // say there are two detectors (a and b) in the experiment
   Det b;
-  ClassDef(Event,1)
+  ClassDefOverride(Event,1)
 };
 
 ClassImp(Event)

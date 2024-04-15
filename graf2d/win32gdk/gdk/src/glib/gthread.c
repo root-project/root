@@ -429,7 +429,7 @@ g_static_private_set (GStaticPrivate *private_key,
 void     
 g_static_private_free (GStaticPrivate *private_key)
 {
-  guint index = private_key->index;
+  gulong index = private_key->index;
   GSList *list;
 
   if (!index)

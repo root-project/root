@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : RootFinder                                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::RootFinder
@@ -37,7 +37,6 @@ Root finding using Brents algorithm (translated from CERNLIB function RZERO)
 #include "TMVA/Types.h"
 
 #include "TMath.h"
-#include "TObject.h"
 
 ClassImp(TMVA::RootFinder);
 

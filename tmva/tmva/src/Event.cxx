@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Event                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -31,7 +31,6 @@
 #include "TMVA/Event.h"
 #include "TMVA/Tools.h"
 #include <iostream>
-#include "assert.h"
 #include <iomanip>
 #include <cassert>
 #include "TCut.h"
@@ -261,8 +260,16 @@ Float_t TMVA::Event::GetValue( UInt_t ivar ) const
 
 Float_t TMVA::Event::GetSpectator( UInt_t ivar) const
 {
-   if (fDynamic) return *(fValuesDynamic->at(GetNVariables()+ivar));
-   else          return fSpectators.at(ivar);
+   if (fDynamic) { 
+      if (fSpectatorTypes[ivar] == 'F')
+         return *(fValuesDynamic->at(GetNVariables()+ivar));
+      else if (fSpectatorTypes[ivar] == 'I')
+         return *(reinterpret_cast<int *>(fValuesDynamic->at(GetNVariables() + ivar)));
+      else {
+         throw std::runtime_error("Spectator variable has an invalid type ");
+      }
+   } else
+      return fSpectators.at(ivar);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

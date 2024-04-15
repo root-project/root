@@ -27,8 +27,6 @@
 
 #include "TTree.h"
 
-#include "TError.h"
-
 class TFolder;
 class TStreamerInfo;
 class TVirtualCollectionProxy;
@@ -44,7 +42,7 @@ class TBranchElement : public TBranch {
    friend class TTreeCloner;
    friend class TLeafElement;
 
-// Types
+/// Types
 protected:
    enum EStatusBits {
       kBranchFolder  = BIT(14),
@@ -56,17 +54,6 @@ protected:
       kDecomposedObj = BIT(21)  ///<  More explicit alias for kMakeClass.
    };
 
-   // Note on fType values:
-   // -1 unsplit object with custom streamer at time of writing
-   //  0 unsplit object with default streamer at time of writing
-   //    OR simple data member of split object (fID==-1 for the former)
-   //  1 base class of a split object.
-   //  2 class typed data member of a split object
-   //  3 branch count of a split TClonesArray
-   // 31 data member of the content of a split TClonesArray
-   //  4 branch count of a split STL Collection.
-   // 41 data member of the content of a split STL collection
-
 
 // Data Members
 protected:
@@ -77,7 +64,18 @@ protected:
    UInt_t                   fCheckSum;      ///<  CheckSum of class
    Version_t                fClassVersion;  ///<  Version number of class
    Int_t                    fID;            ///<  element serial number in fInfo
-   Int_t                    fType;          ///<  branch type
+   Int_t                    fType;          ///<  Branch type
+                                            ///<
+                                            ///<  Note on fType values:
+                                            ///<  * -1 unsplit object with custom streamer at time of writing
+                                            ///<  * 0 unsplit object with default streamer at time of writing
+                                            ///<      OR simple data member of split object (fID==-1 for the former)
+                                            ///<  * 1 base class of a split object.
+                                            ///<  * 2 class typed data member of a split object
+                                            ///<  * 3 branch count of a split TClonesArray
+                                            ///<  * 31 data member of the content of a split TClonesArray
+                                            ///<  * 4 branch count of a split STL Collection.
+                                            ///<  * 41 data member of the content of a split STL collection
    Int_t                    fStreamerType;  ///<  branch streamer type
    Int_t                    fMaximum;       ///<  Maximum entries for a TClonesArray or variable array
    Int_t                    fSTLtype;       ///<! STL container type
@@ -87,9 +85,9 @@ protected:
    TStreamerInfo           *fInfo;          ///<! Pointer to StreamerInfo
    char                    *fObject;        ///<! Pointer to object at *fAddress
    TVirtualArray           *fOnfileObject;  ///<! Place holder for the onfile representation of data members.
-   Bool_t                   fInit : 1;      ///<! Initialization flag for branch assignment
-   Bool_t                   fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
-   Bool_t                   fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
+   bool                     fInit : 1;      ///<! Initialization flag for branch assignment
+   bool                     fInInitInfo : 1;///<! True during the 2nd part of InitInfo (cut recursion).
+   bool                     fInitOffsets: 1;///<! Initialization flag to not endlessly recalculate offsets
    TClassRef                fTargetClass;   ///<! Reference to the target in-memory class
    TClassRef                fCurrentClass;  ///<! Reference to current (transient) class definition
    TClassRef                fParentClass;   ///<! Reference to class definition in fParentName
@@ -106,8 +104,8 @@ protected:
 
 // Not implemented
 private:
-   TBranchElement(const TBranchElement&);            // not implemented
-   TBranchElement& operator=(const TBranchElement&); // not implemented
+   TBranchElement(const TBranchElement&) = delete;
+   TBranchElement& operator=(const TBranchElement&) = delete;
 
    static void SwitchContainer(TObjArray *);
 
@@ -116,7 +114,7 @@ protected:
    void                     BuildTitle(const char* name);
    virtual void             InitializeOffsets();
    virtual void             InitInfo();
-   Bool_t                   IsMissingCollection() const;
+   bool                     IsMissingCollection() const;
    TStreamerInfo           *FindOnfileInfo(TClass *valueClass, const TObjArray &branches) const;
    TClass                  *GetParentClass(); // Class referenced by fParentName
    TStreamerInfo           *GetInfoImp() const;
@@ -147,6 +145,7 @@ protected:
    void SetReadLeavesPtr();
    void SetReadActionSequence();
    void SetupAddressesImpl();
+   void SetAddressImpl(void *addr, bool implied) override;
 
    void FillLeavesImpl(TBuffer& b);
    void FillLeavesMakeClass(TBuffer& b);
@@ -174,27 +173,28 @@ public:
    TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
-   virtual                  ~TBranchElement();
+                    ~TBranchElement() override;
 
-   virtual void             Browse(TBrowser* b);
-   virtual TBranch         *FindBranch(const char *name);
-   virtual TLeaf           *FindLeaf(const char *name);
-   virtual char            *GetAddress() const;
+           void             Browse(TBrowser* b) override;
+           TBranch         *FindBranch(const char *name) override;
+           TLeaf           *FindLeaf(const char *name) override;
+           char            *GetAddress() const override;
            TBranchElement  *GetBranchCount() const { return fBranchCount; }
            TBranchElement  *GetBranchCount2() const { return fBranchCount2; }
            Int_t           *GetBranchOffset() const { return fBranchOffset; }
            UInt_t           GetCheckSum() { return fCheckSum; }
-   virtual const char      *GetClassName() const { return fClassName.Data(); }
+           const char      *GetClassName() const override { return fClassName.Data(); }
    virtual TClass          *GetClass() const { return fBranchClass; }
    virtual const char      *GetClonesName() const { return fClonesName.Data(); }
    TVirtualCollectionProxy *GetCollectionProxy();
    TClass                  *GetCurrentClass(); // Class referenced by transient description
-   virtual Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0);
-   virtual Int_t            GetExpectedType(TClass *&clptr,EDataType &type);
-           const char      *GetIconName() const;
+           Int_t            GetEntry(Long64_t entry = 0, Int_t getall = 0) override;
+           Int_t            GetExpectedType(TClass *&clptr,EDataType &type) override;
+           TString          GetFullName() const override;
+           const char      *GetIconName() const override;
            Int_t            GetID() const { return fID; }
            TStreamerInfo   *GetInfo() const;
-           Bool_t           GetMakeClass() const;
+           bool             GetMakeClass() const override;
            char            *GetObject() const;
            TVirtualArray   *GetOnfileObject() const { return fOnfileObject; }
    virtual const char      *GetParentName() const { return fParentName.Data(); }
@@ -204,35 +204,35 @@ public:
            Int_t            GetStreamerType() const { return fStreamerType; }
    virtual TClass          *GetTargetClass() { return fTargetClass; }
    virtual const char      *GetTypeName() const;
-           Double_t         GetValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const { return GetTypedValue<Double_t>(i, len, subarr); }
-   template<typename T > T  GetTypedValue(Int_t i, Int_t len, Bool_t subarr = kFALSE) const;
+           Double_t         GetValue(Int_t i, Int_t len, bool subarr = false) const { return GetTypedValue<Double_t>(i, len, subarr); }
+   template<typename T > T  GetTypedValue(Int_t i, Int_t len, bool subarr = false) const;
    virtual void            *GetValuePointer() const;
            Int_t            GetClassVersion() { return fClassVersion; }
-           Bool_t           IsBranchFolder() const { return TestBit(kBranchFolder); }
-           Bool_t           IsFolder() const;
-   virtual Bool_t           IsObjectOwner() const { return TestBit(kDeleteObject); }
-   virtual Bool_t           Notify() { if (fAddress) { ResetAddress(); } return 1; }
-   virtual void             Print(Option_t* option = "") const;
+           bool             IsBranchFolder() const { return TestBit(kBranchFolder); }
+           bool             IsFolder() const override;
+   virtual bool             IsObjectOwner() const { return TestBit(kDeleteObject); }
+           bool             Notify() override { if (fAddress) { ResetAddress(); } return true; }
+           void             Print(Option_t* option = "") const override;
            void             PrintValue(Int_t i) const;
-   virtual void             Reset(Option_t* option = "");
-   virtual void             ResetAfterMerge(TFileMergeInfo *);
-   virtual void             ResetAddress();
+           void             Reset(Option_t* option = "") override;
+           void             ResetAfterMerge(TFileMergeInfo *) override;
+           void             ResetAddress() override;
    virtual void             ResetDeleteObject();
    virtual void             ResetInitInfo(bool recurse);
-   virtual void             SetAddress(void* addobj);
-   virtual Bool_t           SetMakeClass(Bool_t decomposeObj = kTRUE);
-   virtual void             SetObject(void *objadd);
-   virtual void             SetBasketSize(Int_t buffsize);
+           void             SetAddress(void* addobj) override;
+           bool             SetMakeClass(bool decomposeObj = true) override;
+           void             SetObject(void *objadd) override;
+           void             SetBasketSize(Int_t buffsize) override;
    virtual void             SetBranchFolder() { SetBit(kBranchFolder); }
    virtual void             SetClassName(const char* name) { fClassName = name; }
-   virtual void             SetOffset(Int_t offset);
+           void             SetOffset(Int_t offset) override;
    virtual void             SetMissing();
    inline  void             SetParentClass(TClass* clparent);
    virtual void             SetParentName(const char* name) { fParentName = name; }
    virtual void             SetTargetClass(const char *name);
-   virtual void             SetupAddresses();
+           void             SetupAddresses() override;
    virtual void             SetType(Int_t btype) { fType = btype; }
-   virtual void             UpdateFile();
+           void             UpdateFile() override;
            void             Unroll(const char *name, TClass *cl, TStreamerInfo *sinfo, char* objptr, Int_t bufsize, Int_t splitlevel);
 
    enum EBranchElementType {
@@ -250,9 +250,9 @@ public:
    };
 
 private:
-   virtual Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *);
+   Int_t            FillImpl(ROOT::Internal::TBranchIMTHelper *) override;
 
-   ClassDef(TBranchElement,10)  // Branch in case of an object
+   ClassDefOverride(TBranchElement,10)  // Branch in case of an object
 };
 
 inline void TBranchElement::SetParentClass(TClass* clparent)

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Configurable                                                          *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
 
@@ -38,16 +38,12 @@
 #include <cstdlib>
 #include <vector>
 
-#include "TROOT.h"
 #include "TSystem.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TQObject.h"
 #include "TSpline.h"
 #include "TMatrix.h"
-#include "TMath.h"
-#include "TFile.h"
-#include "TKey.h"
 
 #include "TMVA/Configurable.h"
 #include "TMVA/Config.h"

@@ -30,7 +30,7 @@ ClassImp(TEveTextGL);
 
 TEveTextGL::TEveTextGL() :
    TGLObject(),
-   fM(0),
+   fM(nullptr),
    fFont()
 {
    fDLCache = kFALSE; // Disable display list.

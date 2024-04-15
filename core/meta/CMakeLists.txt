@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/meta package
 ############################################################################
 
-set(Meta_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   TBaseClass.h
   TClassGenerator.h
   TClass.h
@@ -48,10 +48,11 @@ set(Meta_dict_headers
   TVirtualIsAProxy.h
   TVirtualRefProxy.h
   TVirtualStreamerInfo.h
-  PARENT_SCOPE
+  TVirtualArray.h
+  TVirtualObject.h
 )
 
-ROOT_OBJECT_LIBRARY(Meta
+target_sources(Core PRIVATE
   src/TBaseClass.cxx
   src/TClass.cxx
   src/TClassGenerator.cxx
@@ -87,7 +88,10 @@ ROOT_OBJECT_LIBRARY(Meta
   src/TVirtualStreamerInfo.cxx
 )
 
-target_include_directories(Meta PRIVATE res ../foundation/res)
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
 
 ROOT_INSTALL_HEADERS()
 ROOT_ADD_TEST_SUBDIRECTORY(test)

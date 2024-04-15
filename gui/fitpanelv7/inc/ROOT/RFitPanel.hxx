@@ -1,10 +1,6 @@
-// \file ROOT/RFitPanel.hxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \author Iliana Betsou <Iliana.Betsou@cern.ch>
-/// \date 2019-04-11
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Authors: Sergey Linev <S.Linev@gsi.de> Iliana Betsou <Iliana.Betsou@cern.ch>
+// Date: 2019-04-11
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -49,7 +45,7 @@ class RFitPanel {
    std::shared_ptr<RCanvas> fCanvas; ///<! v7 canvas used to display results
    std::shared_ptr<RH1D> fFitHist;   ///<! v7 histogram for fitting
 
-   std::shared_ptr<RWebWindow> fWindow;  ///<! configured display
+   std::shared_ptr<ROOT::RWebWindow> fWindow;  ///<! configured display
    unsigned fConnId{0};                  ///<! client connection id
 
    std::vector<std::unique_ptr<TF1>> fSystemFuncs; ///<! local copy of all internal system funcs
@@ -92,6 +88,8 @@ class RFitPanel {
 
    TPad *GetDrawPad(TObject *obj, bool force = false);
 
+   void DoPadUpdate(TPad *pad);
+
    void SendModel();
 
    bool DoFit();
@@ -102,7 +100,7 @@ public:
    ~RFitPanel();
 
    // method required when any panel want to be inserted into the RCanvas
-   std::shared_ptr<RWebWindow> GetWindow();
+   std::shared_ptr<ROOT::RWebWindow> GetWindow();
 
    void AssignHistogram(TH1 *hist);
 
@@ -119,6 +117,8 @@ public:
 
    /// hide FitPanel
    void Hide();
+
+   void ClearOnClose(const std::shared_ptr<void> &handle);
 };
 
 } // namespace Experimental

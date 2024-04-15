@@ -12,7 +12,6 @@
 #ifndef ROOT_TClassDocOutput
 #define ROOT_TClassDocOutput
 
-#include "Rtypes.h"
 #include "TDocOutput.h"
 
 class TDocParser;
@@ -55,7 +54,7 @@ protected:
 
 public:
    TClassDocOutput(THtml& html, TClass* cl, TList* typedefs);
-   virtual ~TClassDocOutput();
+   ~TClassDocOutput() override;
 
    void           Class2Html(Bool_t force=kFALSE);
    Bool_t         ClassDotCharts(std::ostream & out);
@@ -65,7 +64,7 @@ public:
 
    friend class TDocParser;
 
-   ClassDef(TClassDocOutput, 0); // generates documentation web pages for a class
+   ClassDefOverride(TClassDocOutput, 0); // generates documentation web pages for a class
 };
 
 #endif // ROOT_TClassDocOutput

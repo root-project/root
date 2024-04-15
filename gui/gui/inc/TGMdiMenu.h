@@ -33,13 +33,6 @@
 #ifndef ROOT_TGMdiMenu
 #define ROOT_TGMdiMenu
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMenu.                                                           //
-//                                                                      //
-// This file contains the TGMdiMenuBar class.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGMenu.h"
 #include "TGFrame.h"
@@ -55,10 +48,10 @@ class TGMdiMenuBar : public TGCompositeFrame {
 friend class TGMdiMainFrame;
 
 protected:
-   TGCompositeFrame   *fLeft, *fRight;          // left and right parts of MDI menu bar
-   TGMenuBar          *fBar;                    // standard menu bar
-   TGLayoutHints      *fLHint, *fLeftHint;      // left layout hints
-   TGLayoutHints      *fRightHint, *fBarHint;   // right layout hints
+   TGCompositeFrame   *fLeft, *fRight;          ///< left and right parts of MDI menu bar
+   TGMenuBar          *fBar;                    ///< standard menu bar
+   TGLayoutHints      *fLHint, *fLeftHint;      ///< left layout hints
+   TGLayoutHints      *fRightHint, *fBarHint;   ///< right layout hints
 
    void AddFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
@@ -67,13 +60,13 @@ protected:
 
 public:
    TGMdiMenuBar(const TGWindow *p, Int_t w = 1, Int_t h = 20);
-   virtual ~TGMdiMenuBar();
+   ~TGMdiMenuBar() override;
 
    void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l);
    TGMenuBar *GetMenuBar() const { return fBar;}
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGMdiMenuBar, 0) // MDI menu bar
+   ClassDefOverride(TGMdiMenuBar, 0) // MDI menu bar
 };
 
 #endif

@@ -8,8 +8,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include "TGeoGlobalMagField.h"
+
+#include "TROOT.h"
+#include "TList.h"
 
 /** \class TGeoGlobalMagField
 \ingroup Geometry_classes
@@ -83,7 +85,8 @@ TGeoGlobalMagField::~TGeoGlobalMagField()
 
 void TGeoGlobalMagField::SetField(TVirtualMagField *field)
 {
-   if (field==fField) return;
+   if (field == fField)
+      return;
    // Check if we are allowed to change the old field.
    if (fField) {
       if (fLock) {
@@ -97,7 +100,8 @@ void TGeoGlobalMagField::SetField(TVirtualMagField *field)
       delete oldfield;
    }
    fField = field;
-   if (fField) Info("SetField", "Global magnetic field set to <%s>", fField->GetName());
+   if (fField)
+      Info("SetField", "Global magnetic field set to <%s>", fField->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +117,8 @@ TGeoGlobalMagField *TGeoGlobalMagField::GetInstance()
 
 TGeoGlobalMagField *TGeoGlobalMagField::Instance()
 {
-   if (fgInstance) return fgInstance;
+   if (fgInstance)
+      return fgInstance;
    return new TGeoGlobalMagField();
 }
 

@@ -19,41 +19,33 @@
 \class RooAbsCategoryLValue
 \ingroup Roofitcore
 
-RooAbsCategoryLValue is the common abstract base class for objects that represent a
-discrete value that may appear on the left hand side of an equation ('lvalue')
+Abstract base class for objects that represent a
+discrete value that can be set from the outside, i.e. that may appear on the left
+hand side of an assignment ("*lvalue*").
 
-Each implementation must provide setIndex()/setLabel() members to allow direct modification 
+Each implementation must provide the functions setIndex()/setLabel() to allow direct modification
 of the value. RooAbsCategoryLValue may be derived, but its functional relation
-to other RooAbsArgs must be invertible
-**/
+to other RooAbsArgs must be invertible.
+*/
 
-#include "RooFit.h"
+#include <RooAbsCategoryLValue.h>
 
-#include "Riostream.h"
-#include <stdlib.h>
-#include "TTree.h"
-#include "TString.h"
-#include "TH1.h"
-#include "RooAbsCategoryLValue.h"
-#include "RooArgSet.h"
-#include "RooStreamParser.h"
-#include "RooRandom.h"
-#include "RooMsgService.h"
+#include <RooRandom.h>
+#include <RooMsgService.h>
 
-using namespace std;
 
-ClassImp(RooAbsCategoryLValue); 
+ClassImp(RooAbsCategoryLValue);
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) : 
+RooAbsCategoryLValue::RooAbsCategoryLValue(const char *name, const char *title) :
   RooAbsCategory(name,title)
 {
-  setValueDirty() ;  
-  setShapeDirty() ;  
+  setValueDirty() ;
+  setShapeDirty() ;
 }
 
 
@@ -69,20 +61,11 @@ RooAbsCategoryLValue::RooAbsCategoryLValue(const RooAbsCategoryLValue& other, co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsCategoryLValue::~RooAbsCategoryLValue()
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from integer index number
 
-RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index) 
+RooAbsArg& RooAbsCategoryLValue::operator=(int index)
 {
-  setIndex(index,kTRUE) ;
+  setIndex(index,true) ;
   return *this ;
 }
 
@@ -91,7 +74,7 @@ RooAbsArg& RooAbsCategoryLValue::operator=(Int_t index)
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from string pointer
 
-RooAbsArg& RooAbsCategoryLValue::operator=(const char *label) 
+RooAbsArg& RooAbsCategoryLValue::operator=(const char *label)
 {
   setLabel(label) ;
   return *this ;
@@ -100,129 +83,110 @@ RooAbsArg& RooAbsCategoryLValue::operator=(const char *label)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment from another RooAbsCategory
-
-RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other) 
+/// Assignment from another RooAbsCategory. This will use the *state name*
+/// of the other object to set the corresponding state. This is less efficient
+/// then directly assigning the state index.
+RooAbsArg& RooAbsCategoryLValue::operator=(const RooAbsCategory& other)
 {
   if (&other==this) return *this ;
 
-  const RooCatType* type = lookupType(other.getLabel(),kTRUE) ;
-  if (!type) return *this ;
+  const auto index = lookupIndex(other.getCurrentLabel());
+  if (index == std::numeric_limits<value_type>::min()) {
+    coutE(ObjectHandling) << "Trying to assign the label '" << other.getCurrentLabel() << "' to category'"
+        << GetName() << "', but such a label is not defined." << std::endl;
+    return *this;
+  }
 
-  _value = *type ;
-  setValueDirty() ;
-  return *this ;
+  _currentIndex = index;
+  setValueDirty();
+
+  return *this;
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Set our state to our n'th defined type and return kTRUE.
-/// Return kFALSE if n is out of range.
-
-Bool_t RooAbsCategoryLValue::setOrdinal(UInt_t n, const char* rangeName) 
+/// Set our state to our `n`th defined type.
+/// \return true in case of an error.
+bool RooAbsCategoryLValue::setOrdinal(UInt_t n)
 {
-  const RooCatType *newValue= getOrdinal(n,rangeName);
-  if(newValue) {
-    return setIndex(newValue->getVal());
-  }
-  else {
-    return kFALSE;
-  }
+  return setIndex(getOrdinal(n).second, true);
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy the cached value from given source and raise dirty flag.
-/// It is the callers responsability to ensure that the sources
+/// It is the callers responsibility to ensure that the sources
 /// cache is clean(valid) before this function is called, e.g. by
 /// calling syncCache() on the source.
 
-void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, Bool_t valueOnly, Bool_t setValDirty) 
+void RooAbsCategoryLValue::copyCache(const RooAbsArg* source, bool valueOnly, bool setValDirty)
 {
   RooAbsCategory::copyCache(source,valueOnly,setValDirty) ;
-  if (isValid(_value)) {
-    setIndex(_value.getVal()) ; // force back-propagation
+
+  if (isValid()) {
+    setIndex(_currentIndex); // force back-propagation
   }
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Read object contents from given stream (dummy implementation)
-
-Bool_t RooAbsCategoryLValue::readFromStream(istream&, Bool_t, Bool_t) 
+/// Randomize current value.
+/// If the result is not in the range, the randomisation is repeated.
+void RooAbsCategoryLValue::randomize(const char* rangeName)
 {
-  return kTRUE ;
+  const auto& theStateNames = stateNames();
+
+  if (_insertionOrder.size() == theStateNames.size()) {
+    // If users didn't manipulate the state map directly, the order of insertion has to be respected to
+    // ensure backward compatibility.
+    // This heavily uses strings, though.
+    do {
+      const UInt_t ordinal = RooRandom::integer(theStateNames.size());
+      const auto item = theStateNames.find(_insertionOrder[ordinal]);
+      setIndex(item->second);
+    } while (!inRange(rangeName));
+  } else {
+    // When not having to respect the insertion order, can just advance the iterator
+    do {
+      const UInt_t ordinal = RooRandom::integer(theStateNames.size());
+      const auto it = std::next(theStateNames.begin(), ordinal);
+      setIndex(it->second);
+    } while (!inRange(rangeName));
+  }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object contents to given stream (dummy implementation)
-
-void RooAbsCategoryLValue::writeToStream(ostream&, Bool_t) const
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Randomize current value
-
-void RooAbsCategoryLValue::randomize(const char* rangeName) 
-{
-  UInt_t ordinal= RooRandom::integer(numTypes(rangeName));
-  setOrdinal(ordinal,rangeName);
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set category to i-th fit bin, which is the i-th registered state.
 
-void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName) 
+void RooAbsCategoryLValue::setBin(Int_t ibin, const char* rangeName)
 {
   // Check validity of ibin
   if (ibin<0 || ibin>=numBins(rangeName)) {
     coutE(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: bin index " << ibin
-			  << " is out of range (0," << numBins(rangeName)-1 << ")" << endl ;
+           << " is out of range (0," << numBins(rangeName)-1 << ")" << std::endl;
     return ;
   }
 
+  if (rangeName && getBinningPtr(rangeName)) {
+    coutF(InputArguments) << "RooAbsCategoryLValue::setBin(" << GetName() << ") ERROR: ranges not implemented"
+        " for setting bins in categories." << std::endl;
+    throw std::logic_error("Ranges not implemented for setting bins in categories.");
+  }
+
   // Retrieve state corresponding to bin
-  const RooCatType* type = getOrdinal(ibin,rangeName) ;
+  value_type val = getOrdinal(ibin).second;
+  assert(val != std::numeric_limits<value_type>::min());
 
   // Set value to requested state
-  setIndex(type->getVal()) ;
+  setIndex(val);
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Get index of plot bin for current value this category.
-
-Int_t RooAbsCategoryLValue::getBin(const char* /*rangeName*/) const 
-{
-  //Synchronize _value
-  getLabel() ; 
-  
-  // Lookup ordinal index number
-  std::string theName = _value.GetName();
-  auto item = std::find_if(_types.begin(), _types.end(), [&theName](const RooCatType* cat){
-    return cat->GetName() == theName;
-  });
-
-  return item - _types.begin();
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returm the number of fit bins ( = number of types )
-
-Int_t RooAbsCategoryLValue::numBins(const char* rangeName) const 
+/// Return the number of fit bins ( = number of types )
+Int_t RooAbsCategoryLValue::numBins(const char* rangeName) const
 {
   return numTypes(rangeName) ;
 }

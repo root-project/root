@@ -9,6 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
     Roo2DKeysPdf.h
@@ -23,6 +28,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooBreitWigner.h
     RooBukinPdf.h
     RooCBShape.h
+    RooCrystalBall.h
     RooCFunction1Binding.h
     RooCFunction2Binding.h
     RooCFunction3Binding.h
@@ -33,6 +39,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooDecay.h
     RooDstD0BG.h
     RooExponential.h
+    RooExpPoly.h
+    RooPower.h
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
@@ -43,14 +51,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooIntegralMorph.h
     RooJeffreysPrior.h
     RooKeysPdf.h
+    RooLagrangianMorphFunc.h
     RooLandau.h
     RooLognormal.h
     RooMathCoreReg.h
-    RooMathMoreReg.h
     RooMomentMorphFunc.h
     RooMomentMorphFuncND.h
     RooMomentMorph.h
-    RooMomentMorphND.h
     RooMultiBinomial.h
     RooNDKeysPdf.h
     RooNonCPEigenDecay.h
@@ -59,6 +66,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooParamHistFunc.h
     RooPoisson.h
     RooPolynomial.h
+    RooSpline.h
     RooStepFunction.h
     RooTFnBinding.h
     RooTFnPdfBinding.h
@@ -83,6 +91,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooBreitWigner.cxx
     src/RooBukinPdf.cxx
     src/RooCBShape.cxx
+    src/RooCrystalBall.cxx
     src/RooCFunction1Binding.cxx
     src/RooCFunction2Binding.cxx
     src/RooCFunction3Binding.cxx
@@ -93,6 +102,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooDecay.cxx
     src/RooDstD0BG.cxx
     src/RooExponential.cxx
+    src/RooExpPoly.cxx
+    src/RooPower.cxx
     src/RooFunctor1DBinding.cxx
     src/RooFunctorBinding.cxx
     src/RooGamma.cxx
@@ -103,14 +114,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooIntegralMorph.cxx
     src/RooJeffreysPrior.cxx
     src/RooKeysPdf.cxx
+    src/RooLagrangianMorphFunc.cxx
     src/RooLandau.cxx
     src/RooLognormal.cxx
     src/RooMathCoreReg.cxx
-    src/RooMathMoreReg.cxx
     src/RooMomentMorph.cxx
     src/RooMomentMorphFunc.cxx
     src/RooMomentMorphFuncND.cxx
-    src/RooMomentMorphND.cxx
     src/RooMultiBinomial.cxx
     src/RooNDKeysPdf.cxx
     src/RooNonCPEigenDecay.cxx
@@ -119,6 +129,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooParamHistFunc.cxx
     src/RooPoisson.cxx
     src/RooPolynomial.cxx
+    src/RooSpline.cxx
     src/RooStepFunction.cxx
     src/RooTFnBinding.cxx
     src/RooTFnPdfBinding.cxx
@@ -134,6 +145,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef1.h
+  LIBRARIES
+    RooBatchCompute
   DEPENDENCIES
     Core
     RooFitCore
@@ -141,10 +154,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RIO
     Matrix
     MathCore
+  ${EXTRA_DICT_OPTS}
 )
 
-if(vdt AND NOT builtin_vdt)
-  target_include_directories(RooFit PRIVATE ${VDT_INCLUDE_DIR})
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  target_compile_options(RooFit PUBLIC -fno-math-errno)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

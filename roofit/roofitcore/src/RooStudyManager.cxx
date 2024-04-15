@@ -19,14 +19,12 @@
 \class RooStudyManager
 \ingroup Roofitcore
 
-RooStudyManager is a utility class to manage studies that consist of
+Utility class to manage studies that consist of
 repeated applications of generate-and-fit operations on a workspace
 
 **/
 
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooStudyManager.h"
@@ -35,7 +33,6 @@ repeated applications of generate-and-fit operations on a workspace
 #include "RooDataSet.h"
 #include "RooMsgService.h"
 #include "RooStudyPackage.h"
-#include "TTree.h"
 #include "TFile.h"
 #include "TObjString.h"
 #include "TRegexp.h"
@@ -44,25 +41,20 @@ repeated applications of generate-and-fit operations on a workspace
 #include "TROOT.h"
 #include "TSystem.h"
 
-using namespace std ;
+using std::string, std::endl, std::ios, std::list, std::ofstream;
 
 ClassImp(RooStudyManager);
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyManager::RooStudyManager(RooWorkspace& w)
-{
-  _pkg = new RooStudyPackage(w) ;
-}
-
-
+RooStudyManager::RooStudyManager(RooWorkspace &w) : _pkg(new RooStudyPackage(w)) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
+RooStudyManager::RooStudyManager(RooWorkspace &w, RooAbsStudy &study) : _pkg(new RooStudyPackage(w))
 {
-  _pkg = new RooStudyPackage(w) ;
+
   _pkg->addStudy(study) ;
 }
 
@@ -72,7 +64,7 @@ RooStudyManager::RooStudyManager(RooWorkspace& w, RooAbsStudy& study)
 RooStudyManager::RooStudyManager(const char* studyPackFileName)
 {
   string pwd = gDirectory->GetName() ;
-  TFile *f = new TFile(studyPackFileName) ;
+  std::unique_ptr<TFile> f{TFile::Open(studyPackFileName, "READ")};
   _pkg = dynamic_cast<RooStudyPackage*>(f->Get("studypack")) ;
   gDirectory->cd(Form("%s:",pwd.c_str())) ;
 }
@@ -101,39 +93,39 @@ void RooStudyManager::run(Int_t nExperiments)
 ////////////////////////////////////////////////////////////////////////////////
 /// Open PROOF-Lite session
 
-void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, Bool_t showGui)
+void RooStudyManager::runProof(Int_t nExperiments, const char* proofHost, bool showGui)
 {
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") opening PROOF session" << endl ;
-  void* p = (void*) gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)) ;
+  void* p = reinterpret_cast<void*>(gROOT->ProcessLineFast(Form("TProof::Open(\"%s\")",proofHost)));
 
-  // Check that PROOF initialization actually succeeeded
-  if (p==0) {
+  // Check that PROOF initialization actually succeeded
+  if (p==nullptr) {
     coutE(Generation) << "RooStudyManager::runProof(" << GetName() << ") ERROR initializing proof, aborting" << endl ;
     return ;
   }
 
   // Suppress GUI if so requested
   if (!showGui) {
-    gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->SetProgressDialog(0) ;",(ULong_t)p)) ;
+    gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->SetProgressDialog(0) ;",reinterpret_cast<size_t>(p))) ;
   }
 
   // Propagate workspace to proof nodes
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") sending work package to PROOF servers" << endl ;
-  gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->AddInput((TObject*)0x%lx) ;",(ULong_t)p,(ULong_t)_pkg) ) ;
+  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->AddInput((TObject*)0x%zx) ;",reinterpret_cast<size_t>(p),reinterpret_cast<size_t>(_pkg)) ) ;
 
   // Run selector in parallel
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") starting PROOF processing of " << nExperiments << " experiments" << endl ;
 
-  gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->Process(\"RooProofDriverSelector\",%d) ;",(ULong_t)p,nExperiments)) ;
+  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->Process(\"RooProofDriverSelector\",%d) ;",reinterpret_cast<size_t>(p),nExperiments)) ;
 
   // Aggregate results data
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") aggregating results data" << endl ;
-  TList* olist = (TList*) gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetOutputList()",(ULong_t)p)) ;
+  TList* olist = reinterpret_cast<TList*>(gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->GetOutputList()",reinterpret_cast<size_t>(p))));
   aggregateData(olist) ;
 
   // cleaning up
   coutP(Generation) << "RooStudyManager::runProof(" << GetName() << ") cleaning up input list" << endl ;
-  gROOT->ProcessLineFast(Form("((TProof*)0x%lx)->GetInputList()->Remove((TObject*)0x%lx) ;",(ULong_t)p,(ULong_t)_pkg) ) ;
+  gROOT->ProcessLineFast(Form("((TProof*)0x%zx)->GetInputList()->Remove((TObject*)0x%zx) ;",reinterpret_cast<size_t>(p),reinterpret_cast<size_t>(_pkg)) ) ;
 
 }
 
@@ -158,7 +150,7 @@ void RooStudyManager::closeProof(Option_t *option)
       gROOT->ProcessLineFast("delete gProof ;") ;
     }
   } else {
-    ooccoutI((TObject*)NULL,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
+    ooccoutI(nullptr,Generation) << "RooStudyManager: No global Proof objects. No connections closed." << endl ;
   }
 }
 
@@ -166,7 +158,7 @@ void RooStudyManager::closeProof(Option_t *option)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, Bool_t unifiedInput=kFALSE)
+void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob, bool unifiedInput=false)
 {
   TFile f(Form("study_data_%s.root",studyName),"RECREATE") ;
   _pkg->Write("studypack") ;
@@ -184,31 +176,31 @@ void RooStudyManager::prepareBatchInput(const char* studyName, Int_t nExpPerJob,
     // Write uuencoded ROOT file (base64) in driver script
     gSystem->Exec(Form("cat study_data_%s.root | uuencode -m study_data_%s.root >> study_driver_%s.sh",studyName,studyName,studyName)) ;
 
-    // Write remainder of deriver script
+    // Write remainder of driver script
     ofstream bdr2 (Form("study_driver_%s.sh",studyName),ios::app) ;
     bdr2 << "EOR" << endl
-	 << "fi" << endl
-	 << "root -l -b <<EOR" << endl
-	 << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	 << ".q" << endl
-	 << "EOR" << endl ;
+    << "fi" << endl
+    << "root -l -b <<EOR" << endl
+    << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+    << ".q" << endl
+    << "EOR" << endl ;
     // Remove binary input file
     gSystem->Unlink(Form("study_data_%s.root",studyName)) ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data files is embedded in driver script" << endl ;
+         << "     input data files is embedded in driver script" << endl ;
 
   } else {
 
     ofstream bdr(Form("study_driver_%s.sh",studyName)) ;
     bdr << "#!/bin/sh" << endl
-	<< "root -l -b <<EOR" << endl
-	<< Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
-	<< ".q" << endl
-	<< "EOR" << endl ;
+   << "root -l -b <<EOR" << endl
+   << Form("RooStudyPackage::processFile(\"%s\",%d) ;",studyName,nExpPerJob) << endl
+   << ".q" << endl
+   << "EOR" << endl ;
 
     coutI(DataHandling) << "RooStudyManager::prepareBatchInput batch driver file is '" << Form("study_driver_%s.sh",studyName) << "," << endl
-			<< "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
+         << "     input data file is " << Form("study_data_%s.root",studyName) << endl ;
 
   }
 }
@@ -229,17 +221,10 @@ void RooStudyManager::processBatchOutput(const char* filePat)
     coutP(DataHandling) << "RooStudyManager::processBatchOutput() now reading file " << *iter << endl ;
     TFile f(iter->c_str()) ;
 
-    TList* list = f.GetListOfKeys() ;
-    TIterator* kiter = list->MakeIterator();
-
-    TObject* obj ;
-    TKey* key ;
-    while((key=(TKey*)kiter->Next())) {
-      obj = f.Get(key->GetName()) ;
-      TObject* clone = obj->Clone(obj->GetName()) ;
-      olist.Add(clone) ;
+    for(auto * key : static_range_cast<TKey*>(*f.GetListOfKeys())) {
+      TObject * obj = f.Get(key->GetName()) ;
+      olist.Add(obj->Clone(obj->GetName())) ;
     }
-    delete kiter ;
   }
   aggregateData(&olist) ;
   olist.Delete() ;
@@ -309,7 +294,7 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
    if (dir) {
       //create a TList to store the file names (not yet sorted)
       TList l;
-      TRegexp re(basename,kTRUE);
+      TRegexp re(basename,true);
       const char *file;
       while ((file = gSystem->GetDirEntry(dir))) {
          if (!strcmp(file,".") || !strcmp(file,"..")) continue;
@@ -322,12 +307,13 @@ void RooStudyManager::expandWildCardSpec(const char* name, list<string>& result)
       l.Sort();
       TIter next(&l);
       TObjString *obj;
-      while ((obj = (TObjString*)next())) {
+      while ((obj = static_cast<TObjString*>(next()))) {
          file = obj->GetName();
-         if (behind_dot_root.Length() != 0)
+         if (behind_dot_root.Length() != 0) {
             result.push_back(Form("%s/%s/%s",directory.Data(),file,behind_dot_root.Data())) ;
-         else
-            result.push_back(Form("%s/%s",directory.Data(),file)) ;
+         } else {
+            result.push_back(Form("%s/%s", directory.Data(), file));
+         }
       }
       l.Delete();
    }

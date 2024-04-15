@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 // ROOT
-#include "TObject.h"
+#include "RtypesCore.h"
 #include "TMutex.h"
 #include "TCondition.h"
 #include "TThread.h"
@@ -29,6 +29,7 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
+#include <utility>
 #ifdef _MSC_VER
 #define sleep(s) _sleep(s)
 #else

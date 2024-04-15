@@ -126,7 +126,8 @@ bool test6() {
    int iret = g.Fit("x++1","Q");
    ok &= (iret == 0);
    iret = g.Fit("1++x","Q");
-   return iret == 0;
+   ok &= (iret == 0);
+   return ok;
 }
 
 bool test7() {
@@ -1017,6 +1018,50 @@ bool test51() {
    return ok;
 }
 
+bool test52() {
+   // test for bug 10815
+   // mixing user previous defined functions (available in gROOT)
+   // and pre-defined functions
+   bool ok  = true;
+   TF1 f1("f1gaus","[0]*gaus(1)",-10,10);
+   TF1 f2("f2","[0]*f1gaus",-10,10);
+   f1.SetParameters(2,3,1,2);
+   f2.SetParameters(3,2,3,1,2);
+   ok &=  TMath::AreEqualAbs( f1.Eval(1), 2.*3.*TMath::Gaus(1,1,2), 1.E-10);
+   if (!ok) Error("test52","Error testing f1");
+   bool ret =  TMath::AreEqualAbs( f2.Eval(1), 3.*2.*3.*TMath::Gaus(1,1,2), 1.E-10);
+   if (!ret) Error("test52","Error testing f2");
+   ok &= ret; 
+   TF1 f3("f3","f1gaus*gaus(4)",-10,10);
+   f3.SetParameters(2,3,1,2,3,2,3);
+   ret =  TMath::AreEqualAbs( f3.Eval(1), 2.*3.*TMath::Gaus(1,1,2) * 3. * TMath::Gaus(1,2,3), 1.E-10);    
+   if (!ret) Error("test52","Error testing f3");
+   ok &= ret; 
+   // check also after
+   TF1 f4("gaus2a","[0]*gaus(1)",-10,10);
+   TF1 f5("f2","[0]*gaus2a",-10,10);
+   f4.SetParameters(2,3,1,2);
+   f5.SetParameters(3,2,3,1,2);
+   ret =  TMath::AreEqualAbs( f5.Eval(1), 3.*f4.Eval(1),1.E-10);
+   if (!ret) Error("test52","Error testing f4 & f5");
+   return ok;
+
+}
+
+
+bool test53()
+{
+   // Test if a formula with linear terms in each parameter is correctly expanded,
+   // even if some earlier terms are substrings of later terms.
+   bool ok = true;
+
+   TF1 f1("f1", "1.0 ++ x ++ x*x ++ x*x*x", -1.0, 1.0);
+   ok &= f1.GetNpar() == 4;
+
+   return ok;
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////////////
 
 void PrintError(int itest)  {
@@ -1087,6 +1132,8 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test49() ) { PrintError(itest); }
    IncrTest(itest); if (!test50() ) { PrintError(itest); }
    IncrTest(itest); if (!test51() ) { PrintError(itest); }
+   IncrTest(itest); if (!test52() ) { PrintError(itest); }
+   IncrTest(itest); if (!test53() ) { PrintError(itest); }
 
    std::cout << ".\n";
 

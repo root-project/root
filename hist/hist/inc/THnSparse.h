@@ -26,7 +26,7 @@
 
 // needed only for template instantiations of THnSparseT:
 #include "TArrayF.h"
-#include "TArrayL.h"
+#include "TArrayL64.h"
 #include "TArrayI.h"
 #include "TArrayS.h"
 #include "TArrayC.h"
@@ -35,15 +35,15 @@ class THnSparseCompactBinCoord;
 
 class THnSparse: public THnBase {
  private:
-   Int_t      fChunkSize;    // number of entries for each chunk
-   Long64_t   fFilledBins;   // number of filled bins
-   TObjArray  fBinContent;   // array of THnSparseArrayChunk
-   TExMap     fBins;         //! filled bins
-   TExMap     fBinsContinued;//! filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
-   THnSparseCompactBinCoord *fCompactCoord; //! compact coordinate
+   Int_t      fChunkSize;                   ///<  Number of entries for each chunk
+   Long64_t   fFilledBins;                  ///<  Number of filled bins
+   TObjArray  fBinContent;                  ///<  Array of THnSparseArrayChunk
+   TExMap     fBins;                        ///<! Filled bins
+   TExMap     fBinsContinued;               ///<! Filled bins for non-unique hashes, containing pairs of (bin index 0, bin index 1)
+   THnSparseCompactBinCoord *fCompactCoord; ///<! Compact coordinate
 
-   THnSparse(const THnSparse&); // Not implemented
-   THnSparse& operator=(const THnSparse&); // Not implemented
+   THnSparse(const THnSparse&) = delete;
+   THnSparse& operator=(const THnSparse&) = delete;
 
  protected:
 
@@ -56,22 +56,22 @@ class THnSparse: public THnBase {
       return (THnSparseArrayChunk*) fBinContent[idx]; }
 
    THnSparseArrayChunk* AddChunk();
-   void Reserve(Long64_t nbins);
+   void Reserve(Long64_t nbins) override;
    void FillExMap();
    virtual TArray* GenerateArray() const = 0;
    Long64_t GetBinIndexForCurrentBin(Bool_t allocate);
 
    /// Increment the bin content of "bin" by "w",
    /// return the bin index.
-   void FillBin(Long64_t bin, Double_t w) {
+   void FillBin(Long64_t bin, Double_t w) override {
       THnSparseArrayChunk* chunk = GetChunk(bin / fChunkSize);
       chunk->AddBinContent(bin % fChunkSize, w);
       FillBinBase(w);
    }
-   void InitStorage(Int_t* nbins, Int_t chunkSize);
+   void InitStorage(Int_t* nbins, Int_t chunkSize) override;
 
  public:
-   virtual ~THnSparse();
+   ~THnSparse() override;
 
    static THnSparse* CreateSparse(const char* name, const char* title,
                                   const TH1* h1, Int_t chunkSize = 1024 * 16) {
@@ -87,33 +87,33 @@ class THnSparse: public THnBase {
    Int_t GetChunkSize() const { return fChunkSize; }
    Int_t GetNChunks() const { return fBinContent.GetEntriesFast(); }
 
-   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const;
+   ROOT::Internal::THnBaseBinIter* CreateIter(Bool_t respectAxisRange) const override;
 
-   Long64_t GetNbins() const { return fFilledBins; }
-   void SetFilledBins(Long64_t nbins) { fFilledBins = nbins; }
+   Long64_t GetNbins() const override { return fFilledBins; }
+   void SetFilledBins(Long64_t nbins) override { fFilledBins = nbins; }
 
-   Long64_t GetBin(const Int_t* idx) const { return const_cast<THnSparse*>(this)->GetBin(idx, kFALSE); }
-   Long64_t GetBin(const Double_t* x) const { return const_cast<THnSparse*>(this)->GetBin(x, kFALSE); }
-   Long64_t GetBin(const char* name[]) const { return const_cast<THnSparse*>(this)->GetBin(name, kFALSE); }
-   Long64_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE);
-   Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE);
-   Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE);
+   Long64_t GetBin(const Int_t* idx) const override { return const_cast<THnSparse*>(this)->GetBin(idx, kFALSE); }
+   Long64_t GetBin(const Double_t* x) const override { return const_cast<THnSparse*>(this)->GetBin(x, kFALSE); }
+   Long64_t GetBin(const char* name[]) const override { return const_cast<THnSparse*>(this)->GetBin(name, kFALSE); }
+   Long64_t GetBin(const Int_t* idx, Bool_t allocate = kTRUE) override;
+   Long64_t GetBin(const Double_t* x, Bool_t allocate = kTRUE) override;
+   Long64_t GetBin(const char* name[], Bool_t allocate = kTRUE) override;
 
    /// Forwards to THnBase::SetBinContent().
    /// Non-virtual, CINT-compatible replacement of a using declaration.
    void SetBinContent(const Int_t* idx, Double_t v) {
       THnBase::SetBinContent(idx, v);
    }
-   void SetBinContent(Long64_t bin, Double_t v);
-   void SetBinError2(Long64_t bin, Double_t e2);
+   void SetBinContent(Long64_t bin, Double_t v) override;
+   void SetBinError2(Long64_t bin, Double_t e2) override;
 
-   /// Forwards to THnBase::SetBinContent().
+   /// Forwards to THnBase::AddBinContent().
    /// Non-virtual, CINT-compatible replacement of a using declaration.
    void AddBinContent(const Int_t* idx, Double_t v = 1.) {
       THnBase::AddBinContent(idx, v);
    }
-   void AddBinContent(Long64_t bin, Double_t v = 1.);
-   void AddBinError2(Long64_t bin, Double_t e2);
+   void AddBinContent(Long64_t bin, Double_t v = 1.) override;
+   void AddBinError2(Long64_t bin, Double_t e2) override;
 
    /// Forwards to THnBase::GetBinContent() overload.
    /// Non-virtual, CINT-compatible replacement of a using declaration.
@@ -121,8 +121,8 @@ class THnSparse: public THnBase {
 
       return THnBase::GetBinContent(idx);
    }
-   Double_t GetBinContent(Long64_t bin, Int_t* idx = 0) const;
-   Double_t GetBinError2(Long64_t linidx) const;
+   Double_t GetBinContent(Long64_t bin, Int_t* idx = nullptr) const override;
+   Double_t GetBinError2(Long64_t linidx) const override;
 
    Double_t GetSparseFractionBins() const;
    Double_t GetSparseFractionMem() const;
@@ -162,10 +162,10 @@ class THnSparse: public THnBase {
       return (THnSparse*) RebinBase(group);
    }
 
-   void Reset(Option_t* option = "");
-   void Sumw2();
+   void Reset(Option_t* option = "") override;
+   void Sumw2() override;
 
-   ClassDef(THnSparse, 3); // Interfaces of sparse n-dimensional histogram
+   ClassDefOverride(THnSparse, 3); // Interfaces of sparse n-dimensional histogram
 };
 
 
@@ -182,14 +182,14 @@ class THnSparse: public THnBase {
 
  Typedefs exist for template parameters with ROOT's generic types:
 
- Templated name      |    Typedef   |    Bin content type
- --------------------|--------------|--------------------
- THnSparseT<TArrayC> |  THnSparseC  |  Char_t
- THnSparseT<TArrayS> |  THnSparseS  |  Short_t
- THnSparseT<TArrayI> |  THnSparseI  |  Int_t
- THnSparseT<TArrayL> |  THnSparseL  |  Long_t
- THnSparseT<TArrayF> |  THnSparseF  |  Float_t
- THnSparseT<TArrayD> |  THnSparseD  |  Double_t
+ Templated name        |    Typedef    |    Bin content type
+ ----------------------|---------------|--------------------
+ THnSparseT<TArrayC>   |  THnSparseC   |  Char_t
+ THnSparseT<TArrayS>   |  THnSparseS   |  Short_t
+ THnSparseT<TArrayI>   |  THnSparseI   |  Int_t
+ THnSparseT<TArrayL64> |  THnSparseL   |  Long64_t
+ THnSparseT<TArrayF>   |  THnSparseF   |  Float_t
+ THnSparseT<TArrayD>   |  THnSparseD   |  Double_t
 
  We recommend to use THnSparseC wherever possible, and to map its value space
  of 256 possible values to e.g. float values outside the class. This saves an
@@ -207,18 +207,18 @@ class THnSparseT: public THnSparse {
  public:
    THnSparseT() {}
    THnSparseT(const char* name, const char* title, Int_t dim,
-              const Int_t* nbins, const Double_t* xmin = 0,
-              const Double_t* xmax = 0, Int_t chunksize = 1024 * 16):
+              const Int_t* nbins, const Double_t* xmin = nullptr,
+              const Double_t* xmax = nullptr, Int_t chunksize = 1024 * 16):
       THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
 
-   TArray* GenerateArray() const { return new CONT(GetChunkSize()); }
+   TArray* GenerateArray() const override { return new CONT(GetChunkSize()); }
  private:
-   ClassDef(THnSparseT, 1); // Sparse n-dimensional histogram with templated content
+   ClassDefOverride(THnSparseT, 1); // Sparse n-dimensional histogram with templated content
 };
 
 typedef THnSparseT<TArrayD> THnSparseD;
 typedef THnSparseT<TArrayF> THnSparseF;
-typedef THnSparseT<TArrayL> THnSparseL;
+typedef THnSparseT<TArrayL64> THnSparseL;
 typedef THnSparseT<TArrayI> THnSparseI;
 typedef THnSparseT<TArrayS> THnSparseS;
 typedef THnSparseT<TArrayC> THnSparseC;

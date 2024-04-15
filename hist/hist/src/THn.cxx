@@ -34,13 +34,13 @@ namespace {
    public:
       THnBinIter(Int_t dim, const TObjArray* axes, const TNDArray* arr,
                  Bool_t respectAxisRange);
-      ~THnBinIter() { delete [] fCounter; }
+      ~THnBinIter() override { delete [] fCounter; }
 
-      Long64_t Next(Int_t* coord = 0);
-      Int_t GetCoord(Int_t dim) const { return fCounter[dim].i; }
+      Long64_t Next(Int_t* coord = nullptr) override;
+      Int_t GetCoord(Int_t dim) const override { return fCounter[dim].i; }
    private:
-      THnBinIter(const THnBinIter&); // intentionally unimplemented
-      THnBinIter& operator=(const THnBinIter&); // intentionally unimplemented
+      THnBinIter(const THnBinIter&) = delete; // intentionally unimplemented
+      THnBinIter& operator=(const THnBinIter&) = delete; // intentionally unimplemented
 
    public:
       Int_t fNdimensions;
@@ -120,7 +120,7 @@ namespace {
 
 
 /** \class THn
-    \ingroup Hist
+    \ingroup Histograms
 Multidimensional histogram.
 
 Use a THn if you really, really have to store more than three dimensions,
@@ -138,7 +138,7 @@ classes:
 
     THnD (typedef for THnT<Double_t>): bin content held by a Double_t,
     THnF (typedef for THnT<Float_t>): bin content held by a Float_t,
-    THnL (typedef for THnT<Long_t>): bin content held by a Long_t,
+    THnL (typedef for THnT<Long64_t>): bin content held by a Long64_t,
     THnI (typedef for THnT<Int_t>): bin content held by an Int_t,
     THnS (typedef for THnT<Short_t>): bin content held by a Short_t,
     THnC (typedef for THnT<Char_t>): bin content held by a Char_t,
@@ -187,12 +187,17 @@ THn::THn(const char* name, const char* title,
    fCoordBuf() {
 }
 
+THn::THn(const char *name, const char *title, Int_t dim, const Int_t *nbins,
+         const std::vector<std::vector<double>> &xbins)
+   : THnBase(name, title, dim, nbins, xbins), fSumw2(dim, nbins, kTRUE /*overflow*/), fCoordBuf()
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destruct a THn
 
 THn::~THn()
 {
-   delete [] fCoordBuf;
 }
 
 
@@ -226,7 +231,7 @@ void THn::Sumw2() {
 
 void THn::AllocCoordBuf() const
 {
-   fCoordBuf = new Int_t[fNdimensions]();
+   fCoordBuf.assign(fNdimensions, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +239,7 @@ void THn::AllocCoordBuf() const
 
 void THn::InitStorage(Int_t* nbins, Int_t /*chunkSize*/)
 {
-   fCoordBuf = new Int_t[fNdimensions]();
+   fCoordBuf.assign(fNdimensions, 0);
    GetArray().Init(fNdimensions, nbins, true /*addOverflow*/);
    fSumw2.Init(fNdimensions, nbins, true /*addOverflow*/);
 }

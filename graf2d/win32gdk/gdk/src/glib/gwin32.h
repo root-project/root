@@ -86,7 +86,7 @@ struct DIR
 {
   gchar        *dir_name;
   gboolean 	just_opened;
-  guint    	find_file_handle;
+  gulong    	find_file_handle;
   gpointer 	find_file_data;
   struct dirent readdir_result;
 };

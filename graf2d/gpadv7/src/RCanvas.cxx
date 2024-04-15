@@ -15,20 +15,22 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
+#include "TList.h"
 #include "TROOT.h"
+#include "TString.h"
 
 namespace {
 
-static std::mutex &GetHeldCanvasesMutex()
+std::mutex &GetHeldCanvasesMutex()
 {
    static std::mutex sMutex;
    return sMutex;
 }
 
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
+std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
 {
    static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
    return sCanvases;
@@ -48,6 +50,21 @@ const std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> ROOT::Experiment
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////
+/// Release list of held canvases pointers
+/// If no other shared pointers exists on the canvas, object will be destroyed
+
+void ROOT::Experimental::RCanvas::ReleaseHeldCanvases()
+{
+   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> vect;
+
+   {
+      std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
+
+      std::swap(vect, GetHeldCanvases());
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////
 /// Returns true is canvas was modified since last painting
 
 bool ROOT::Experimental::RCanvas::IsModified() const
@@ -60,6 +77,8 @@ bool ROOT::Experimental::RCanvas::IsModified() const
 
 void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
 {
+   fUpdated = true;
+
    if (fPainter)
       fPainter->CanvasUpdated(fModified, async, callback);
 }
@@ -75,6 +94,7 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
       std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
       GetHeldCanvases().emplace_back(pCanvas);
    }
+
    return pCanvas;
 }
 
@@ -94,6 +114,12 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
 void ROOT::Experimental::RCanvas::Show(const std::string &where)
 {
+   fShown = true;
+
+   // Do not display canvas in batch mode
+   if (gROOT->IsWebDisplayBatch())
+      return;
+
    if (fPainter) {
       bool isany = (fPainter->NumDisplays() > 0);
 
@@ -126,6 +152,18 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
    return "";
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Returns window URL which can be used for connection
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
+
+std::string ROOT::Experimental::RCanvas::GetWindowUrl(bool remote)
+{
+   if (fPainter)
+      return fPainter->GetWindowUrl(remote);
+
+   return "";
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 /// Hide all canvas displays
@@ -133,12 +171,12 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
 void ROOT::Experimental::RCanvas::Hide()
 {
    if (fPainter)
-      delete fPainter.release();
+      fPainter = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Create image file for the canvas
-/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
+/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg), PNG (extension .png) or JSON (extension .json)
 
 bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
 {
@@ -148,33 +186,37 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    if (!fPainter)
       return false;
 
-   if (fModified == 0)
-      fModified = 1;
+   int width = GetWidth();
+   int height = GetHeight();
 
-   // ensure that snapshot is created
-   fPainter->CanvasUpdated(fModified, false, nullptr);
+   return fPainter->ProduceBatchOutput(filename, width > 1 ? width : 800, height > 1 ? height : 600);
+}
 
-   auto width = fSize[0].fVal;
-   auto height = fSize[1].fVal;
+//////////////////////////////////////////////////////////////////////////
+/// Return unique identifier for the canvas
+/// Used in iPython display
 
-   return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
-/*
+std::string ROOT::Experimental::RCanvas::GetUID() const
+{
+   const void *ptr = this;
+   auto hash = TString::Hash(&ptr, sizeof(void*));
+   TString fmt = TString::Format("rcanv_%x", hash);
+   return fmt.Data();
+}
 
-   if (fModified == 0)
-      fModified = 1;
+//////////////////////////////////////////////////////////////////////////
+/// Create JSON data for the canvas
+/// Can be used of offline display with JSROOT
 
-   // TODO: for the future one have to ensure only batch connection is updated
-   Update(); // ensure that snapshot is created
+std::string ROOT::Experimental::RCanvas::CreateJSON()
+{
+   if (!fPainter)
+      fPainter = Internal::RVirtualCanvasPainter::Create(*this);
 
-   if (filename.find(".json") != std::string::npos) {
-      fPainter->DoWhenReady("JSON", filename, async, callback);
-   } else if (filename.find(".svg") != std::string::npos)
-      fPainter->DoWhenReady("SVG", filename, async, callback);
-   else if (filename.find(".png") != std::string::npos)
-      fPainter->DoWhenReady("PNG", filename, async, callback);
-   else if ((filename.find(".jpg") != std::string::npos) || (filename.find(".jpeg") != std::string::npos))
-      fPainter->DoWhenReady("JPEG", filename, async, callback);
-*/
+   if (!fPainter)
+      return "";
+
+   return fPainter->ProduceJSON();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -189,6 +231,15 @@ void ROOT::Experimental::RCanvas::Remove()
       if (held[indx].get() == this)
          held.erase(held.begin() + indx);
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+
+void ROOT::Experimental::RCanvas::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fPainter)
+      fPainter->SetClearOnClose(handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -259,7 +310,7 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
       for (auto n2 = n+1; n2 < vect.size(); ++n2) {
          if (vect[n2]->GetIOPtr() == vect[n]->GetIOPtr()) {
             if (vect[n2]->HasShared())
-               R__ERROR_HERE("Gpadv7") << "FATAL Shared pointer for same IO ptr already exists";
+               R__LOG_ERROR(GPadLog()) << "FATAL Shared pointer for same IO ptr already exists";
             else
                vect[n2]->SetShared(shrd_ptr);
          }
@@ -267,3 +318,45 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
 
    }
 }
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+/// Apply attributes changes to the drawable
+/// Return mask with actions which were really applied
+
+std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeAttrRequest::Process()
+{
+   // suppress all changes coming from non-main connection
+   if (!GetContext().IsMainConn())
+      return nullptr;
+
+   auto canv = const_cast<ROOT::Experimental::RCanvas *>(GetContext().GetCanvas());
+   if (!canv) return nullptr;
+
+   if ((ids.size() != names.size()) || (ids.size() != values.size())) {
+      R__LOG_ERROR(GPadLog()) << "Mismatch of arrays size in RChangeAttrRequest";
+      return nullptr;
+   }
+
+   Version_t vers = 0;
+
+   for(int indx = 0; indx < (int) ids.size(); indx++) {
+      if (ids[indx] == "canvas") {
+         if (canv->GetAttrMap().Change(names[indx], values[indx].get())) {
+            if (!vers) vers = canv->IncModified();
+            canv->SetDrawableVersion(vers);
+         }
+      } else {
+         auto drawable = canv->FindPrimitiveByDisplayId(ids[indx]);
+         if (drawable && drawable->GetAttrMap().Change(names[indx], values[indx].get())) {
+            if (!vers) vers = canv->IncModified();
+            drawable->SetDrawableVersion(vers);
+         }
+      }
+   }
+
+   fNeedUpdate = (vers > 0) && update;
+
+   return nullptr; // no need for any reply
+}
+

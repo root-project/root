@@ -60,7 +60,6 @@
 #include <stdlib.h>
 #include <errno.h>
 
-#include "MemCheck.h"
 #include "TObjectTable.h"
 #include "TError.h"
 #include "TStorage.h" // for ROOT::Internal::gFreeIfTMapFile
@@ -90,21 +89,17 @@ static TReAllocInit gReallocInit;
 
 #ifdef MEM_DEBUG
 #   define MEM_MAGIC ((unsigned char)0xAB)
+#   define RealStart(p) ((char*)(p) - sizeof(std::max_align_t))
 #ifdef R__B64
-#   define storage_size(p) ((size_t)(((size_t*)p)[-1]))
-#   define RealStart(p) ((char*)(p) - sizeof(size_t))
+#   define storage_size(p) (*(size_t*)RealStart(p))
 #   define StoreSize(p, sz) (*((size_t*)(p)) = (sz))
-#   define ExtStart(p) ((char*)(p) + sizeof(size_t))
-#   define RealSize(sz) ((sz) + sizeof(size_t) + sizeof(char))
-#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(size_t)) = MEM_MAGIC
 #else
-#   define storage_size(p) ((size_t)(((int*)p)[-2]))
-#   define RealStart(p) ((char*)(p) - 2*sizeof(int))
 #   define StoreSize(p, sz) (*((int*)(p)) = (sz))
-#   define ExtStart(p) ((char*)(p) + 2*sizeof(int))
-#   define RealSize(sz) ((sz) + 2*sizeof(int) + sizeof(char))
-#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+2*sizeof(int)) = MEM_MAGIC
+#   define storage_size(p) ((size_t)*(int*)RealStart(p))
 #endif
+#   define ExtStart(p) ((char*)(p) + sizeof(std::max_align_t))
+#   define RealSize(sz) ((sz) + sizeof(std::max_align_t) + sizeof(char))
+#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(std::max_align_t)) = MEM_MAGIC
 #   define MemClear(p, start, len) \
       if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)
@@ -182,10 +177,6 @@ static int gNewInit = 0;
 
 void *operator new(size_t size)
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size);
-
    static const char *where = "operator new";
 
    if (!gNewInit) {
@@ -200,7 +191,7 @@ void *operator new(size_t size)
       vp = ::calloc(RealSize(size), sizeof(char));
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);  // NOLINT
    return ExtStart(vp);
 }
 
@@ -239,10 +230,6 @@ void *operator new(size_t size, void *vp)
    }
 
    if (vp == 0) {
-      // use memory checker
-      if (TROOT::MemCheck())
-         return TMemHashTable::AddPointer(size);
-
       void *vp;
       if (ROOT::Internal::gMmallocDesc)
          vp = ::mcalloc(ROOT::Internal::gMmallocDesc, RealSize(size), sizeof(char));
@@ -262,12 +249,6 @@ void *operator new(size_t size, void *vp)
 
 void operator delete(void *ptr) noexcept
 {
-   // use memory checker
-   if (TROOT::MemCheck()) {
-      TMemHashTable::FreePointer(ptr);
-      return;
-   }
-
    static const char *where = "operator delete";
 
    if (!gNewInit)
@@ -283,7 +264,7 @@ void operator delete(void *ptr) noexcept
           || !ROOT::Internal::gFreeIfTMapFile(RealStart(ptr))) {
          do {
             TSystem::ResetErrno();
-            ::free(RealStart(ptr));
+            ::free(RealStart(ptr));  // NOLINT
          } while (TSystem::GetErrno() == EINTR);
       }
       if (TSystem::GetErrno() != 0)
@@ -395,36 +376,11 @@ void operator delete[](void * /* ptr */, std::size_t, std::align_val_t /* al */)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.
 
-void *CustomReAlloc1(void *ovp, size_t size)
+void *CustomReAlloc1(void *, size_t )
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
-   static const char *where = "CustomReAlloc1";
-
-   if (ovp == 0)
-      return ::operator new(size);
-
-   if (!gNewInit)
-      Fatal(where, "space was not allocated via custom new");
-
-   size_t oldsize = storage_size(ovp);
-   if (oldsize == size)
-      return ovp;
-   RemoveStatMagic(ovp, where);
-   void *vp;
-   if (ROOT::Internal::gMmallocDesc)
-      vp = ::mrealloc(ROOT::Internal::gMmallocDesc, RealStart(ovp), RealSize(size));
-   else
-      vp = ::realloc((char*)RealStart(ovp), RealSize(size));
-   if (vp == 0)
-      Fatal(where, gSpaceErr, RealSize(size));
-   if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
-
-   StoreSizeMagic(vp, size, where);
-   return ExtStart(vp);
+   Fatal("NewDelete::CustomRealloc1",
+         "This should not be used. The TStorage interface using this has been removed.");
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,10 +389,6 @@ void *CustomReAlloc1(void *ovp, size_t size)
 
 void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
 {
-   // use memory checker
-   if (TROOT::MemCheck())
-      return TMemHashTable::AddPointer(size, ovp);
-
    static const char *where = "CustomReAlloc2";
 
    if (ovp == 0)
@@ -461,8 +413,8 @@ void *CustomReAlloc2(void *ovp, size_t size, size_t oldsize)
    if (vp == 0)
       Fatal(where, gSpaceErr, RealSize(size));
    if (size > oldsize)
-      MemClearRe(ExtStart(vp), oldsize, size-oldsize);
+      MemClearRe(ExtStart(vp), oldsize, size-oldsize);   // NOLINT
 
-   StoreSizeMagic(vp, size, where);
+   StoreSizeMagic(vp, size, where);    // NOLINT
    return ExtStart(vp);
 }

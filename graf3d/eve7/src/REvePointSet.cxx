@@ -16,16 +16,12 @@
 #include <ROOT/REveTrans.hxx>
 #include <ROOT/REveRenderData.hxx>
 
-#include "TColor.h"
 #include "TArrayI.h"
 #include "TClass.h"
 
-
-#include "json.hpp"
-
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REvePointSet
 \ingroup REve
@@ -49,8 +45,10 @@ REveProjectionManager class.
 
 REvePointSet::REvePointSet(const std::string& name, const std::string& title, Int_t n_points) :
    REveElement(name, title),
+   REveProjectable(),
    TAttMarker(),
-   TAttBBox()
+   TAttBBox(),
+   REveSecondarySelectable()
 {
    fMarkerStyle = 20;
 
@@ -69,8 +67,11 @@ REvePointSet::REvePointSet(const REvePointSet& e) :
    REveElement(e),
    REveProjectable(e),
    TAttMarker(e),
-   TAttBBox(e)
+   TAttBBox(e),
+   REveSecondarySelectable()
 {
+   fAlwaysSecSelect = e.GetAlwaysSecSelect();
+   ClonePoints(e);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,10 +213,20 @@ TClass* REvePointSet::ProjectedClass(const REveProjection*) const
 
 Int_t REvePointSet::WriteCoreJson(nlohmann::json& j, Int_t rnr_offset)
 {
+   if (gEve->IsRCore())
+      REveRenderData::CalcTextureSize(fSize, 1, fTexX, fTexY);
+
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
 
+   if (gEve->IsRCore()) {
+      j["fSize"] = fSize;
+      j["fTexX"] = fTexX;
+      j["fTexY"] = fTexY;
+   }
    j["fMarkerSize"]  = GetMarkerSize();
    j["fMarkerColor"] = GetMarkerColor();
+   j["fMarkerStyle"] = GetMarkerStyle();
+   j["fSecondarySelect"] = fAlwaysSecSelect;
 
    return ret;
 }
@@ -227,8 +238,17 @@ void REvePointSet::BuildRenderData()
 {
    if (fSize > 0)
    {
-      fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fSize);
-      fRenderData->PushV(&fPoints[0].fX, 3*fSize);
+      if (gEve->IsRCore()) {
+         fRenderData = std::make_unique<REveRenderData>("makeHit", 4*fTexX*fTexY);
+         for (int i = 0; i < fSize; ++i) {
+            fRenderData->PushV(&fPoints[i].fX, 3);
+            fRenderData->PushV(0);
+         }
+         fRenderData->ResizeV(4*fTexX*fTexY);
+      } else {
+         fRenderData = std::make_unique<REveRenderData>("makeHit", 3*fSize);
+         fRenderData->PushV(&fPoints[0].fX, 3*fSize);
+      }
    }
 }
 
@@ -449,7 +469,7 @@ Bool_t REvePointSetArray::Fill(Double_t x, Double_t y, Double_t z, Double_t quan
       fLastBin = fNBins - 1;
    }
 
-   if (fBins[fLastBin] != 0)
+   if (fBins[fLastBin] != nullptr)
    {
       fBins[fLastBin]->SetNextPoint(x, y, z);
       return kTRUE;
@@ -548,11 +568,17 @@ void REvePointSetProjected::UpdateProjection()
    REvePointSet   &ps   = * dynamic_cast<REvePointSet*>(fProjectable);
    REveTrans      *tr   =   ps.PtrMainTrans(kFALSE);
 
+   fAlwaysSecSelect = ps.GetAlwaysSecSelect();
+
    // XXXX rewrite
 
    Int_t n = ps.GetSize();
    Reset(n);
    fSize = n;
+
+   if (n == 0)
+     return;
+
    const Float_t *o = & ps.RefPoint(0).fX;
          Float_t *p = & fPoints[0].fX;
    for (Int_t i = 0; i < n; ++i, o+=3, p+=3)

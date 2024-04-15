@@ -11,7 +11,6 @@
 
 #include "TEveArrowEditor.h"
 #include "TEveArrow.h"
-#include "TVirtualPad.h"
 #include "TGLabel.h"
 #include "TEveGValuators.h"
 
@@ -27,14 +26,14 @@ ClassImp(TEveArrowEditor);
 TEveArrowEditor::TEveArrowEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+   fM(nullptr),
 
-   fTubeR(0),
-   fConeR(0),
-   fConeL(0),
+   fTubeR(nullptr),
+   fConeR(nullptr),
+   fConeL(nullptr),
 
-   fOrigin(0),
-   fVector(0)
+   fOrigin(nullptr),
+   fVector(nullptr)
 {
    // Constructor.
 

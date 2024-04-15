@@ -14,7 +14,7 @@
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h"
 
 #include <memory>
@@ -40,8 +40,8 @@ class RJittedFilter final : public RFilterBase {
    std::unique_ptr<RFilterBase> fConcreteFilter = nullptr;
 
 public:
-   RJittedFilter(RLoopManager *lm, std::string_view name);
-   ~RJittedFilter() { fLoopManager->Deregister(this); }
+   RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations);
+   ~RJittedFilter();
 
    void SetFilter(std::unique_ptr<RFilterBase> f);
 
@@ -55,11 +55,12 @@ public:
    void ResetChildrenCount() final;
    void TriggerChildrenCount() final;
    void ResetReportCount() final;
-   void ClearValueReaders(unsigned int slot) final;
    void InitNode() final;
    void AddFilterName(std::vector<std::string> &filters) final;
-   void ClearTask(unsigned int slot) final;
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph();
+   void FinalizeSlot(unsigned int slot) final;
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final;
+   std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final;
 };
 
 } // ns RDF

@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TAxis.h"
 #include "TVirtualPad.h"
 #include "TStyle.h"
@@ -21,16 +20,21 @@
 #include "TObjString.h"
 #include "TDatime.h"
 #include "TTimeStamp.h"
-#include "TROOT.h"
+#include "TBuffer.h"
 #include "TMath.h"
-#include <time.h>
+#include "THLimitsFinder.h"
+#include "strlcpy.h"
+#include "snprintf.h"
+
+#include <iostream>
+#include <ctime>
 #include <cassert>
 
 ClassImp(TAxis);
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class TAxis
-    \ingroup Hist
+    \ingroup Histograms
     \brief Class to manage histogram axis
 
 This class manages histogram axis. It is referenced by TH1 and TGraph.
@@ -50,11 +54,11 @@ TAxis::TAxis(): TNamed(), TAttAxis()
    fXmax    = 1;
    fFirst   = 0;
    fLast    = 0;
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    fBits2   = 0;
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,9 +66,9 @@ TAxis::TAxis(): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xlow,xup);
 }
 
@@ -73,9 +77,9 @@ TAxis::TAxis(Int_t nbins,Double_t xlow,Double_t xup): TNamed(), TAttAxis()
 
 TAxis::TAxis(Int_t nbins,const Double_t *xbins): TNamed(), TAttAxis()
 {
-   fParent  = 0;
-   fLabels  = 0;
-   fModLabs = 0;
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
    Set(nbins,xbins);
 }
 
@@ -87,29 +91,34 @@ TAxis::~TAxis()
    if (fLabels) {
       fLabels->Delete();
       delete fLabels;
-      fLabels = 0;
+      fLabels = nullptr;
    }
    if (fModLabs) {
       fModLabs->Delete();
       delete fModLabs;
-      fModLabs = 0;
+      fModLabs = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis), fLabels(0), fModLabs(0)
+TAxis::TAxis(const TAxis &axis) : TNamed(axis), TAttAxis(axis)
 {
-   axis.Copy(*this);
+   fParent  = nullptr;
+   fLabels  = nullptr;
+   fModLabs = nullptr;
+
+   axis.TAxis::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator.
 
-TAxis& TAxis::operator=(const TAxis &orig)
+TAxis& TAxis::operator=(const TAxis &axis)
 {
-   orig.Copy( *this );
+   if (this != &axis)
+      axis.TAxis::Copy(*this);
    return *this;
 }
 
@@ -206,9 +215,9 @@ const char *TAxis::ChooseTimeFormat(Double_t axislength)
 
 void TAxis::Copy(TObject &obj) const
 {
-   TNamed::Copy(obj);
-   TAttAxis::Copy(((TAxis&)obj));
-   TAxis &axis( ((TAxis&)obj) );
+   TAxis &axis = static_cast<TAxis &>(obj);
+   TNamed::Copy(axis);
+   TAttAxis::Copy(axis);
    axis.fNbins  = fNbins;
    axis.fXmin   = fXmin;
    axis.fXmax   = fXmax;
@@ -222,16 +231,13 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fLabels) {
       axis.fLabels->Delete();
       delete axis.fLabels;
-      axis.fLabels = 0;
+      axis.fLabels = nullptr;
    }
    if (fLabels) {
       //Properly handle case where not all bins have labels
+      axis.fLabels = new THashList(axis.fNbins, 3);
       TIter next(fLabels);
-      TObjString *label;
-      if(! axis.fLabels) {
-         axis.fLabels = new THashList(axis.fNbins, 3);
-      }
-      while( (label=(TObjString*)next()) ) {
+      while(auto label = (TObjString *)next()) {
          TObjString *copyLabel = new TObjString(*label);
          axis.fLabels->Add(copyLabel);
          copyLabel->SetUniqueID(label->GetUniqueID());
@@ -240,15 +246,12 @@ void TAxis::Copy(TObject &obj) const
    if (axis.fModLabs) {
       axis.fModLabs->Delete();
       delete axis.fModLabs;
-      axis.fModLabs = 0;
+      axis.fModLabs = nullptr;
    }
    if (fModLabs) {
+      axis.fModLabs = new TList();
       TIter next(fModLabs);
-      TAxisModLab *modlabel;
-      if(! axis.fModLabs) {
-         axis.fModLabs = new TList();
-      }
-      while( (modlabel=(TAxisModLab*)next()) ) {
+      while(auto modlabel = (TAxisModLab *)next()) {
          TAxisModLab *copyModLabel = new TAxisModLab(*modlabel);
          axis.fModLabs->Add(copyModLabel);
          copyModLabel->SetUniqueID(modlabel->GetUniqueID());
@@ -296,13 +299,13 @@ Int_t TAxis::FindBin(Double_t x)
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
@@ -549,8 +552,8 @@ Double_t TAxis::GetBinWidth(Int_t bin) const
 
 void TAxis::GetCenter(Double_t *center) const
 {
-   Int_t bin;
-   for (bin=1; bin<=fNbins; bin++) *(center + bin-1) = GetBinCenter(bin);
+   for (Int_t bin = 1; bin <= fNbins; bin++)
+      *(center + bin - 1) = GetBinCenter(bin);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -558,8 +561,36 @@ void TAxis::GetCenter(Double_t *center) const
 
 void TAxis::GetLowEdge(Double_t *edge) const
 {
-   Int_t bin;
-   for (bin=1; bin<=fNbins; bin++) *(edge + bin-1) = GetBinLowEdge(bin);
+   for (Int_t bin = 1; bin <= fNbins; bin++)
+      *(edge + bin - 1) = GetBinLowEdge(bin);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of axis labels.
+///
+/// It is sometimes useful to know the number of labels on an axis. For instance
+/// when changing the labels with TAxis::ChangeLabel. The number of labels is equal
+/// to `the_number_of_divisions + 1`. By default the number of divisions is
+/// optimised to show a coherent labeling of the main tick marks. After optimisation the
+/// real number of divisions will be smaller or equal to number of divisions requested.
+/// In order to turn off the labeling optimization, it is enough to give a negative
+/// number of divisions to TAttAxis::SetNdivisions. The absolute value of this number will be use as
+/// the exact number of divisions. This method takes the two cases (optimised or not) into
+/// account.
+
+Int_t TAxis::GetNlabels() const
+{
+   if (fNdivisions > 0) {
+      Int_t divxo  = 0;
+      Double_t x1o = 0.;
+      Double_t x2o = 0.;
+      Double_t bwx = 0.;
+      THLimitsFinder::Optimize(fXmin, fXmax,fNdivisions%100,x1o,x2o,divxo,bwx,"");
+      return divxo+1;
+   } else {
+      Int_t divx  = -fNdivisions;
+      return divx%100+1;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,17 +609,38 @@ const char *TAxis::GetTimeFormatOnly() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the time offset in GMT.
+
+UInt_t TAxis::GetTimeOffset() {
+
+  Int_t idF = fTimeFormat.Index("%F")+2;
+  if (idF<2) {
+    Warning("GetGMTimeOffset","Time format is not set!");
+    return 0;
+  }
+  TString stime=fTimeFormat(idF,19);
+  if (stime.Length() != 19) {
+    Warning("GetGMTimeOffset","Bad time format!");
+    return 0;
+  }
+
+  TDatime datime(stime.Data());
+  return datime.Convert(kTRUE);  // Convert to unix gmt time
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the ticks option (see SetTicks)
 
 const char *TAxis::GetTicks() const
 {
    if (TestBit(kTickPlus) && TestBit(kTickMinus)) return "+-";
    if (TestBit(kTickMinus)) return "-";
-   return "+";
+   if (TestBit(kTickPlus)) return "+";
+   return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// this helper function checks if there is a bin without a label
+/// This helper function checks if there is a bin without a label
 /// if all bins have labels, the axis can / will become alphanumeric
 
 Bool_t TAxis::HasBinWithoutLabel() const
@@ -718,7 +770,21 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
    if (TestBit(kNoExponent)) {
       out<<"   "<<name<<subname<<"->SetNoExponent();"<<std::endl;
    }
-
+   if (fModLabs) {
+      TIter next(fModLabs);
+      while (auto ml = (TAxisModLab*)next()) {
+         if (ml->GetLabNum() == 0)
+            out<<"   "<<name<<subname<<"->ChangeLabelByValue("<<ml->GetLabValue()<<",";
+         else
+            out<<"   "<<name<<subname<<"->ChangeLabel("<<ml->GetLabNum()<<",";
+         out<<ml->GetAngle()<<","
+            <<ml->GetSize()<<","
+            <<ml->GetAlign()<<","
+            <<ml->GetColor()<<","
+            <<ml->GetFont()<<","
+            <<quote<<ml->GetText()<<quote<<");"<<std::endl;
+      }
+   }
    TAttAxis::SaveAttributes(out,name,subname);
 }
 
@@ -789,7 +855,7 @@ void TAxis::SetAlphanumeric(Bool_t alphanumeric)
       double s[TH1::kNstat];
       h->GetStats(s);
       if (s[0] != 0. && gDebug > 0)
-         Info("SetAlphanumeric","Histogram %s is set alphanumeric but has non-zero content",GetName());
+         Info("SetAlphanumeric","Cannot switch axis %s of histogram %s to alphanumeric: it has non-zero content",GetName(),h->GetName());
    }
 }
 
@@ -806,7 +872,7 @@ void TAxis::SetDefaults()
    strlcpy(name,GetName(),2);
    name[1] = 0;
    TAttAxis::ResetAttAxis(name);
-   fTimeDisplay = 0;
+   fTimeDisplay = false;
    SetTimeFormat();
 }
 
@@ -851,6 +917,27 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Search for axis modifier by index or value
+
+TAxisModLab *TAxis::FindModLab(Int_t num, Double_t v, Double_t eps) const
+{
+   if (!fModLabs)
+      return nullptr;
+
+   TIter next(fModLabs);
+   while (auto ml = (TAxisModLab*)next()) {
+      if (ml->GetLabNum() != num)
+         continue;
+
+      if ((num != 0) || (TMath::Abs(v - ml->GetLabValue()) <= eps))
+         return ml;
+   }
+
+   return nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Define new text attributes for the label number "labNum". It allows to do a
 /// fine tuning of the labels. All the attributes can be changed, even the
 /// label text itself.
@@ -863,53 +950,104 @@ void TAxis::SetBinLabel(Int_t bin, const char *label)
 /// \param[in] labFont   New label font
 /// \param[in] labText   New label text
 ///
-/// If an attribute should not be changed just give the value "-1".
+///  #### Notes:
 ///
-/// If labnum=0 the list of modified labels is reset.
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+///  - To retrieve the number of axis labels use TAxis::GetNlabels.
 
 void TAxis::ChangeLabel(Int_t labNum, Double_t labAngle, Double_t labSize,
-                               Int_t labAlign, Int_t labColor, Int_t labFont,
-                               TString labText)
+                        Int_t labAlign, Int_t labColor, Int_t labFont,
+                        const TString &labText)
 {
-   if (!fModLabs) fModLabs = new TList();
-
    // Reset the list of modified labels.
    if (labNum == 0) {
-      delete fModLabs;
-      fModLabs  = 0;
+      SafeDelete(fModLabs);
       return;
    }
 
-   TAxisModLab *ml = new TAxisModLab();
-   ml->SetLabNum(labNum);
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(labNum);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabNum(labNum);
+      fModLabs->Add(ml);
+   }
+
    ml->SetAngle(labAngle);
    ml->SetSize(labSize);
    ml->SetAlign(labAlign);
    ml->SetColor(labColor);
    ml->SetFont(labFont);
    ml->SetText(labText);
+}
 
-   fModLabs->Add((TObject*)ml);
+////////////////////////////////////////////////////////////////////////////////
+/// Define new text attributes for the label value "labValue". It allows to do a
+/// fine tuning of the labels. All the attributes can be changed, even the
+/// label text itself.
+///
+/// \param[in] labValue  Axis value to be changed
+/// \param[in] labAngle  New angle value
+/// \param[in] labSize   New size (0 erase the label)
+/// \param[in] labAlign  New alignment value
+/// \param[in] labColor  New label color
+/// \param[in] labFont   New label font
+/// \param[in] labText   New label text
+///
+///  #### Notes:
+///
+///  - If an attribute should not be changed just give the value "-1".
+///  - If labnum=0 the list of modified labels is reset.
+///  - To erase a label set labSize to 0.
+///  - If labText is not specified or is an empty string, the text label is not changed.
+///  - To retrieve the number of axis labels use TAxis::GetNlabels.
+
+void TAxis::ChangeLabelByValue(Double_t labValue, Double_t labAngle, Double_t labSize,
+                             Int_t labAlign, Int_t labColor, Int_t labFont,
+                             const TString &labText)
+{
+   if (!fModLabs) fModLabs = new TList();
+
+   TAxisModLab *ml = FindModLab(0, labValue, 0.);
+   if (!ml) {
+      ml = new TAxisModLab();
+      ml->SetLabValue(labValue);
+      fModLabs->Add(ml);
+   }
+
+   ml->SetAngle(labAngle);
+   ml->SetSize(labSize);
+   ml->SetAlign(labAlign);
+   ml->SetColor(labColor);
+   ml->SetFont(labFont);
+   ml->SetText(labText);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from bin first to last.
+///  Set the viewing range for the axis using bin numbers.
+///
+///  \param first First bin of the range.
+///  \param last  Last bin of the range.
 ///  To set a range using the axis coordinates, use TAxis::SetRangeUser.
 ///
-///  If first == last == 0 or if last < first or if the range specified does
-///  not intersect at all with the maximum available range [0, fNbins + 1],
-///  then the range is reset by removing the bit TAxis::kAxisRange. In this
-///  case the functions TAxis::GetFirst() and TAxis::GetLast() will return 1
+///  If `first == last == 0` or if `first > last` or if the range specified does
+///  not intersect at all with the maximum available range `[0, fNbins + 1]`,
+///  then the viewing range is reset by removing the bit TAxis::kAxisRange. In this
+///  case, the functions TAxis::GetFirst() and TAxis::GetLast() will return 1
 ///  and fNbins.
 ///
-///  If the range specified partially intersects [0, fNbins + 1], then the
-///  intersection range is set. For instance, if first == -2 and last == fNbins,
-///  then the set range is [0, fNbins] (fFirst = 0 and fLast = fNbins).
+///  If the range specified partially intersects with `[0, fNbins + 1]`, then the
+///  intersection range is accepted. For instance, if `first == -2` and `last == fNbins`,
+///  the accepted range will be `[0, fNbins]` (`fFirst = 0` and `fLast = fNbins`).
 ///
-///  NOTE: for historical reasons, SetRange(0,0) resets the range even though Bin 0 is
+///  \note For historical reasons, SetRange(0,0) resets the range even though bin 0 is
 ///       technically reserved for the underflow; in order to set the range of the axis
-///       so that it only includes the underflow, use SetRange(a,0), where a < 0
+///       so that it only includes the underflow, use `SetRange(-1,0)`.
 
 void TAxis::SetRange(Int_t first, Int_t last)
 {
@@ -922,18 +1060,21 @@ void TAxis::SetRange(Int_t first, Int_t last)
    ) {
       fFirst = 1;
       fLast = fNbins;
-      SetBit(kAxisRange, 0);
+      SetBit(kAxisRange, false);
    } else {
+      if (first<0) Warning("TAxis::SetRange","first < 0, 0 is used");
       fFirst = std::max(first, 0);
+      if (last>nCells) Warning("TAxis::SetRange","last > fNbins+1, fNbins+1 is used");
       fLast = std::min(last, nCells);
-      SetBit(kAxisRange, 1);
+      SetBit(kAxisRange, true);
    }
 
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Set the viewing range for the axis from ufirst to ulast (in user coordinates).
+///  Set the viewing range for the axis from ufirst to ulast (in user coordinates,
+///  that is, the "natural" axis coordinates).
 ///  To set a range using the axis bin numbers, use TAxis::SetRange.
 
 void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
@@ -948,6 +1089,8 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
          return;
       }
    }
+   if (ufirst<fXmin) Warning("TAxis::SetRangeUser","ufirst < fXmin, fXmin is used");
+   if (ulast>fXmax) Warning("TAxis::SetRangeUser","ulast > fXmax, fXmax is used");
    Int_t ifirst = FindFixBin(ufirst);
    Int_t ilast = FindFixBin(ulast);
    // fixes for numerical error and for https://savannah.cern.ch/bugs/index.php?99777
@@ -961,6 +1104,7 @@ void TAxis::SetRangeUser(Double_t ufirst, Double_t ulast)
 ///  option = "+"  ticks drawn on the "positive side" (default)
 ///  option = "-"  ticks drawn on the "negative side"
 ///  option = "+-" ticks drawn on both sides
+///  option = ""   ticks will be drawn as whatever is defined as default. No bit is set internally.
 
 void TAxis::SetTicks(Option_t *option)
 {
@@ -1086,7 +1230,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Float_t xmin,xmax;
          R__b >> xmin; fXmin = xmin;
          R__b >> xmax; fXmax = xmax;
-         Float_t *xbins = 0;
+         Float_t *xbins = nullptr;
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];
@@ -1103,7 +1247,7 @@ void TAxis::Streamer(TBuffer &R__b)
          if (fFirst < 0 || fFirst > fNbins) fFirst = 0;
          if (fLast  < 0 || fLast  > fNbins) fLast  = 0;
          if (fLast  < fFirst) { fFirst = 0; fLast = 0;}
-         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,0);
+         if (fFirst ==0 && fLast == 0) SetBit(kAxisRange,false);
       }
       if (R__v > 3) {
          R__b >> fTimeDisplay;
@@ -1124,7 +1268,10 @@ void TAxis::Streamer(TBuffer &R__b)
 
 void TAxis::UnZoom()
 {
-   if (!gPad) return;
+   if (!gPad) {
+      Warning("TAxis::UnZoom","Cannot UnZoom if gPad does not exist. Did you mean to draw the TAxis first?");
+      return;
+   }
    gPad->SetView();
 
    //unzoom object owning this axis

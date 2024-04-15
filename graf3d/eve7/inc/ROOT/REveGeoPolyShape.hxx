@@ -34,14 +34,14 @@ private:
 protected:
    std::vector<Double_t> fVertices;
    std::vector<Double_t> fNormals;
-   std::vector<Int_t>    fPolyDesc;
+   std::vector<UInt_t>   fPolyDesc;
    Int_t                 fNbPols{0};
 
-   virtual void FillBuffer3D(TBuffer3D &buffer, Int_t reqSections, Bool_t localFrame) const;
+   void FillBuffer3D(TBuffer3D &buffer, Int_t reqSections, Bool_t localFrame) const override;
 
    void SetFromBuff3D(const TBuffer3D &buffer);
 
-   Int_t CheckPoints(const Int_t *source, Int_t *dest) const;
+   Int_t CheckPoints(const UInt_t *source, UInt_t *dest) const;
 
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
 
@@ -67,7 +67,7 @@ protected:
 public:
    REveGeoPolyShape() = default;
 
-   virtual ~REveGeoPolyShape() = default;
+   ~REveGeoPolyShape() override = default;
 
    Int_t GetNumFaces() const { return fNbPols; }
 
@@ -79,15 +79,15 @@ public:
    void EnforceTriangles();
    void CalculateNormals();
 
-   virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
-   virtual TBuffer3D *MakeBuffer3D() const;
+   const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
+   TBuffer3D *MakeBuffer3D() const override;
 
    static void   SetAutoEnforceTriangles(Bool_t f);
    static Bool_t GetAutoEnforceTriangles();
    static void   SetAutoCalculateNormals(Bool_t f);
    static Bool_t GetAutoCalculateNormals();
 
-   ClassDef(REveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
+   ClassDefOverride(REveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
 };
 
 }}

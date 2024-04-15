@@ -4,6 +4,19 @@
 
 #include "gtest/gtest.h"
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE_P
+#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef REGISTER_TYPED_TEST_SUITE_P
+#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
+#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
+#endif
+
 #include "StatFunction.h"
 #include "VectorTest.h"
 
@@ -22,7 +35,7 @@ protected:
    typedef SVector<double, T::GetDim()> SV_t;
    std::vector<SV_t> fV1;
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenData();
       fV1.reserve(fNGen);
@@ -38,7 +51,7 @@ public:
    Vector34Test() : fVectorTest(fNGen) {}
 };
 
-TYPED_TEST_CASE_P(Vector34Test);
+TYPED_TEST_SUITE_P(Vector34Test);
 
 // test of Svector of dim 3 or 4
 TYPED_TEST_P(Vector34Test, TestVector34)
@@ -78,8 +91,8 @@ TYPED_TEST_P(Vector34Test, TestVector34)
    EXPECT_TRUE(IsNear(this->VecTypeName() + "_D32 after read", s1, sref1, 1.E9));
 }
 
-REGISTER_TYPED_TEST_CASE_P(Vector34Test, TestVector34);
+REGISTER_TYPED_TEST_SUITE_P(Vector34Test, TestVector34);
 
 typedef testing::Types<Vector32TestDimWrapper<3>, Vector32TestDimWrapper<4>> SMatrixVectorTypes_t;
 
-INSTANTIATE_TYPED_TEST_CASE_P(SMatrix, Vector34Test, SMatrixVectorTypes_t);
+INSTANTIATE_TYPED_TEST_SUITE_P(SMatrix, Vector34Test, SMatrixVectorTypes_t);

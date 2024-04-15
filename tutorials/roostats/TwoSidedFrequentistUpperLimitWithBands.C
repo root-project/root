@@ -77,7 +77,7 @@
 /// and the threshold in this case is 0.011215.  One would expect for 95% that the threshold
 /// would be ~1.35 once the cross-section is far enough away from 0 that it is essentially
 /// unaffected by the boundary.  As one reaches the last points in the scan, the
-/// theshold starts to get artificially high.  This is because the range of the parameter in
+/// threshold starts to get artificially high.  This is because the range of the parameter in
 /// the fit is the same as the range in the scan.  In the future, these should be independently
 /// controlled, but they are not now.  As a result the ~50% of pseudo-experiments that have an
 /// upward fluctuation end up with muhat = muMax.  Because of this, the upper range of the
@@ -97,7 +97,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
+/// \authors Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
 
 #include "TFile.h"
 #include "TROOT.h"
@@ -121,7 +121,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 bool useProof = false; // flag to control whether to use Proof
 int nworkers = 0;      // number of workers (default use all available cores)
@@ -149,10 +149,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -166,36 +162,19 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       filename = infile;
 
    // Try to open the file
-   TFile *file = TFile::Open(filename);
-
-   // if input file was specified byt not found, quit
-   if (!file) {
-      cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
-      return;
-   }
+   TFile *inputFile = TFile::Open(filename);
 
    // -------------------------------------------------------
    // Now get the data and workspace
 
    // get the workspace out of the file
-   RooWorkspace *w = (RooWorkspace *)file->Get(workspaceName);
-   if (!w) {
-      cout << "workspace not found" << endl;
-      return;
-   }
+   RooWorkspace *w = (RooWorkspace *)inputFile->Get(workspaceName);
 
    // get the modelConfig out of the file
    ModelConfig *mc = (ModelConfig *)w->obj(modelConfigName);
 
    // get the modelConfig out of the file
    RooAbsData *data = w->data(dataName);
-
-   // make sure ingredients are found
-   if (!data || !mc) {
-      w->Print();
-      cout << "data or ModelConfig was not found" << endl;
-      return;
-   }
 
    cout << "Found data and ModelConfig:" << endl;
    mc->Print();
@@ -308,8 +287,8 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    // Now we generate the expected bands and power-constraint
 
    // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
-   RooAbsReal *nll = mc->GetPdf()->createNLL(*data);
-   RooAbsReal *profile = nll->createProfile(*mc->GetParametersOfInterest());
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data)};
+   std::unique_ptr<RooAbsReal> profile{nll->createProfile(*mc->GetParametersOfInterest())};
    firstPOI->setVal(0.);
    profile->getVal(); // this will do fit and set nuisance parameters to profiled values
    RooArgSet *poiAndNuisance = new RooArgSet();
@@ -339,16 +318,16 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       w->loadSnapshot("paramsToGenerateData");
       //    poiAndNuisance->Print("v");
 
-      RooDataSet *toyData = 0;
+      std::unique_ptr<RooDataSet> toyData;
       // now generate a toy dataset for the main measurement
       if (!mc->GetPdf()->canBeExtended()) {
          if (data->numEntries() == 1)
-            toyData = mc->GetPdf()->generate(*mc->GetObservables(), 1);
+            toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), 1)};
          else
             cout << "Not sure what to do about this model" << endl;
       } else {
          //      cout << "generating extended dataset"<<endl;
-         toyData = mc->GetPdf()->generate(*mc->GetObservables(), Extended());
+         toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), Extended())};
       }
 
       // generate global observables
@@ -360,19 +339,15 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       RooSimultaneous *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       if (!simPdf) {
-         RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
+         std::unique_ptr<RooDataSet> one{mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1)};
          const RooArgSet *values = one->get();
-         RooArgSet *allVars = mc->GetPdf()->getVariables();
-         *allVars = *values;
-         delete allVars;
-         delete one;
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
       } else {
-         RooDataSet *one = simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1);
+         std::unique_ptr<RooDataSet> one{simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1)};
          const RooArgSet *values = one->get();
-         RooArgSet *allVars = mc->GetPdf()->getVariables();
-         *allVars = *values;
-         delete allVars;
-         delete one;
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
       }
 
       // get test stat at observed UL in observed data
@@ -408,8 +383,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       // for few events, data is often the same, and UL is often the same
       //    cout << "thisUL = " << thisUL<<endl;
-
-      delete toyData;
    }
    histOfUL->Draw();
    c1->SaveAs("two-sided_upper_limit_output.pdf");
@@ -453,7 +426,4 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    cout << "\nobserved 95% upper-limit " << interval->UpperLimit(*firstPOI) << endl;
    cout << "CLb strict [P(toy>obs|0)] for observed 95% upper-limit " << CLb << endl;
    cout << "CLb inclusive [P(toy>=obs|0)] for observed 95% upper-limit " << CLbinclusive << endl;
-
-   delete profile;
-   delete nll;
 }

@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
 #-----------------------------------------------------------------------------
-#  Copyright (c) 2015, ROOT Team.
 #  Authors: Omar Zapata <Omar.Zapata@cern.ch> http://oproject.org
 #           Danilo Piparo <Danilo.Piparo@cern.ch> CERN
 #           Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
-#  website: http://oproject.org/ROOT+Jupyter+Kernel (information only for ROOT kernel)
-#  Distributed under the terms of the Modified LGPLv3 License.
-#
-#  The full license is in the file COPYING.rst, distributed with this software.
 #-----------------------------------------------------------------------------
+
+################################################################################
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
+# All rights reserved.                                                         #
+#                                                                              #
+# For the licensing terms see $ROOTSYS/LICENSE.                                #
+# For the list of contributors see $ROOTSYS/README/CREDITS.                    #
+################################################################################
 
 from __future__ import print_function
 
@@ -17,7 +20,6 @@ import sys
 
 try:
     from metakernel import MetaKernel
-    from metakernel.display import HTML
 except ImportError:
     raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
 
@@ -85,7 +87,7 @@ class ROOTKernel(MetaKernel):
         status = 'ok'
         try:
             RunAsyncAndPrint(self.Executor,
-                             code.encode('utf8'),
+                             code,
                              self.ioHandler,
                              self.print_output,
                              silent,

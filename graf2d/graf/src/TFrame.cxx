@@ -9,8 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
-#include "TROOT.h"
 #include "TVirtualPad.h"
 #include "TFrame.h"
 #include "TStyle.h"
@@ -45,7 +43,7 @@ TFrame::TFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
 
 TFrame::TFrame(const TFrame &frame) : TWbox(frame)
 {
-   ((TFrame&)frame).Copy(*this);
+   frame.TFrame::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +127,7 @@ void TFrame::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TFrame::Paint(Option_t *option)
 {
+   if (!gPad) return;
    const TPickerStackGuard stackGuard(this);
 
    if (!gPad->PadInHighlightMode() || (gPad->PadInHighlightMode() && this == gPad->GetSelected())) {

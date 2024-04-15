@@ -4,14 +4,15 @@
 /// Likelihood and minimization: demonstration of options of the RooFitResult class
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooChebychev.h"
 #include "RooFitResult.h"
@@ -41,12 +42,12 @@ void rf607_fitresult()
    RooGaussian sig1("sig1", "Signal component 1", x, mean, sigma1);
    RooGaussian sig2("sig2", "Signal component 2", x, mean, sigma2);
 
-   // Build Chebychev polynomial p.d.f.
+   // Build Chebychev polynomial pdf
    RooRealVar a0("a0", "a0", 0.5, 0., 1.);
    RooRealVar a1("a1", "a1", -0.2);
    RooChebychev bkg("bkg", "Background", x, RooArgSet(a0, a1));
 
-   // Sum the signal components into a composite signal p.d.f.
+   // Sum the signal components into a composite signal pdf
    RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
    RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
 
@@ -55,13 +56,13 @@ void rf607_fitresult()
    RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // F i t   p d f   t o   d a t a ,   s a v e   f i t r e s u l t
    // -------------------------------------------------------------
 
    // Perform fit and save result
-   RooFitResult *r = model.fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save(), PrintLevel(-1))};
 
    // P r i n t   f i t   r e s u l t s
    // ---------------------------------

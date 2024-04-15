@@ -14,6 +14,12 @@
 ///
 /// \author Rene Brun
 
+#include <TCanvas.h>
+#include <TFile.h>
+#include <TH2F.h>
+#include <TROOT.h>
+#include <TStyle.h>
+
 void fitslicesy() {
 // Change some default parameters in the current style
    gStyle->SetLabelSize(0.06,"x");
@@ -48,7 +54,7 @@ void fitslicesy() {
    hpxpy->SetMarkerColor(kYellow);
 
 // Fit slices projected along Y fron bins in X [7,32] with more than 20 bins  in Y filled
-   hpxpy->FitSlicesY(0,7,32,20);
+   hpxpy->FitSlicesY(nullptr,7,32,20);
 
 // Show fitted "mean" for each slice
    leftPad->cd(2);

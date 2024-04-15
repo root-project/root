@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TColorWheel.h"
 #include "TCanvas.h"
@@ -19,6 +18,7 @@
 #include "TLine.h"
 #include "TColor.h"
 #include "TMath.h"
+#include "snprintf.h"
 
 ClassImp(TColorWheel);
 
@@ -64,11 +64,6 @@ End_Macro
 
 TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
 {
-   fCanvas = 0;
-   fArc    = 0;
-   fLine   = 0;
-   fText   = 0;
-   fGraph  = 0;
    fRmin   = 2.1;
    fRmax   = 9.5;
    fR0     = 4;

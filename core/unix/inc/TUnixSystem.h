@@ -24,6 +24,7 @@
 #include "TSystem.h"
 #include "TSysEvtHandler.h"
 #include "TTimer.h"
+#include <string>
 
 typedef void (*SigHandler_t)(ESignals);
 
@@ -77,6 +78,7 @@ public:
    void              SetProgname(const char *name) override;
    void              SetDisplay() override;
    const char       *GetError() override;
+   Int_t             GetCryptoRandom(void *buf, Int_t len) override;
    const char       *HostName() override;
 
    //---- EventLoop --------------------------------------------
@@ -114,10 +116,11 @@ public:
    Int_t             Exec(const char *shellcmd) override;
    FILE             *OpenPipe(const char *shellcmd, const char *mode) override;
    int               ClosePipe(FILE *pipe) override;
-   void              Exit(int code, Bool_t mode = kTRUE) override;
-   void              Abort(int code = 0) override;
    int               GetPid() override;
    void              StackTrace() override;
+
+   [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
+   [[ noreturn ]] void Abort (int code = 0) override;
 
    //---- Directories ------------------------------------------
    int               MakeDirectory(const char *name) override;
@@ -130,7 +133,7 @@ public:
    const char       *HomeDirectory(const char *userName = nullptr) override;
    std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr) override;
 
    //---- Paths & Files ----------------------------------------
    const char       *PrependPathName(const char *dir, TString& name) override;

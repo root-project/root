@@ -1,6 +1,6 @@
+#include <ROOT/TestSupport.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RSqliteDS.hxx>
 #include <ROOT/TSeq.hxx>
 
@@ -10,13 +10,12 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <memory>
 
 using namespace ROOT::RDF;
 
 constexpr auto fileName0 = "RSqliteDS_test.sqlite";
-constexpr auto url0 = "http://root.cern.ch/files/RSqliteDS_test.sqlite";
-constexpr auto url1 = "http://root.cern.ch/files/RSqliteDS_test.sqlite.404";
+constexpr auto url0 = "http://root.cern/files/RSqliteDS_test.sqlite";
+constexpr auto url1 = "http://root.cern/files/RSqliteDS_test.sqlite.404";
 constexpr auto query0 = "SELECT * FROM test";
 constexpr auto query1 = "SELECT fint + 1, freal/1.0 as fmyreal, NULL, 'X', fblob FROM test";
 constexpr auto query2 = "SELECT fint, freal, fint FROM test";
@@ -25,18 +24,18 @@ constexpr auto epsilon = 0.001;
 
 TEST(RSqliteDS, Basics)
 {
-   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
    EXPECT_EQ(2, *rdf.Max("fint"));
 
-   EXPECT_THROW(MakeSqliteDataFrame(fileName0, ""), std::runtime_error);
-   EXPECT_THROW(MakeSqliteDataFrame("", query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(fileName0, ""), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite("", query0), std::runtime_error);
 }
 
 TEST(RSqliteDS, Snapshot)
 {
    // Use query 3 to avoid storing a void * in the root file
-   auto rdf = MakeSqliteDataFrame(fileName0, query3);
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query3);
 
    constexpr auto fname = "datasource_sqlite_snapshot.root";
    auto rdf_root = rdf.Snapshot("tree", fname);
@@ -113,7 +112,7 @@ TEST(RSqliteDS, DuplicateColumns)
    EXPECT_EQ("Long64_t", rds.GetTypeName("fint"));
    EXPECT_EQ("double", rds.GetTypeName("freal"));
    auto vals = rds.GetColumnReaders<Long64_t>("fint");
-   rds.Initialise();
+   rds.Initialize();
    auto ranges = rds.GetEntryRanges();
    ASSERT_EQ(1U, ranges.size());
    EXPECT_TRUE(rds.SetEntry(0, ranges[0].first));
@@ -125,9 +124,11 @@ TEST(RSqliteDS, ColumnReaders)
 {
    RSqliteDS rds(fileName0, query0);
    const auto nSlots = 2U;
-   rds.SetNSlots(nSlots);
+   ROOT_EXPECT_WARNING(rds.SetNSlots(nSlots), "SetNSlots",
+                       "Currently the SQlite data source faces performance degradation in multi-threaded mode. "
+                       "Consider turning off IMT.");
    auto vals = rds.GetColumnReaders<Long64_t>("fint");
-   rds.Initialise();
+   rds.Initialize();
    auto ranges = rds.GetEntryRanges();
    EXPECT_EQ(1U, ranges.size());
    for (auto i : ROOT::TSeq<unsigned>(0, nSlots)) {
@@ -142,7 +143,7 @@ TEST(RSqliteDS, ColumnReaders)
 TEST(RSqliteDS, GetEntryRanges)
 {
    RSqliteDS rds(fileName0, query0);
-   rds.Initialise();
+   rds.Initialize();
    auto ranges = rds.GetEntryRanges();
    ASSERT_EQ(1U, ranges.size());
    EXPECT_EQ(0U, ranges[0].first);
@@ -155,7 +156,7 @@ TEST(RSqliteDS, GetEntryRanges)
    EXPECT_EQ(0U, ranges.size());
 
    // New event loop
-   rds.Initialise();
+   rds.Initialize();
    ranges = rds.GetEntryRanges();
    EXPECT_EQ(1U, ranges.size());
    EXPECT_EQ(0U, ranges[0].first);
@@ -172,7 +173,7 @@ TEST(RSqliteDS, SetEntry)
    auto vblob = rds.GetColumnReaders<std::vector<unsigned char>>("fblob");
    auto vnull = rds.GetColumnReaders<void *>("fnull");
 
-   rds.Initialise();
+   rds.Initialize();
 
    rds.GetEntryRanges();
    EXPECT_TRUE(rds.SetEntry(0, 0));
@@ -201,7 +202,8 @@ TEST(RSqliteDS, IMT)
    const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
-   auto rdf = MakeSqliteDataFrame(fileName0, query0);
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kWarning, "SetNSlots", "Currently the SQlite data source faces performance degradation in multi-threaded mode. Consider turning off IMT."};
+   auto rdf = ROOT::RDF::FromSqlite(fileName0, query0);
    EXPECT_EQ(3, *rdf.Sum("fint"));
    EXPECT_NEAR(3.0, *rdf.Sum("freal"), epsilon);
    auto sum_text = *rdf.Reduce([](std::string a, std::string b) { return a + b; }, "ftext");
@@ -227,12 +229,13 @@ TEST(RSqliteDS, IMT)
 TEST(RSqliteDS, Davix)
 {
 #ifdef R__HAS_DAVIX
-   auto rdf = MakeSqliteDataFrame(url0, query0);
+   auto rdf = ROOT::RDF::FromSqlite(url0, query0);
    EXPECT_EQ(1, *rdf.Min("fint"));
    EXPECT_EQ(2, *rdf.Max("fint"));
 
-   EXPECT_THROW(MakeSqliteDataFrame(url1, query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(url1, query0), std::runtime_error);
 #else
-   EXPECT_THROW(MakeSqliteDataFrame(url0, query0), std::runtime_error);
+   EXPECT_THROW(ROOT::RDF::FromSqlite(url0, query0), std::runtime_error);
+   (void)url1; // silence -Wunused-const-variable
 #endif
 }

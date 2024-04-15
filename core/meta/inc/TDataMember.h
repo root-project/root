@@ -39,7 +39,7 @@ private:
    TClass             *fClass;        //!pointer to the class
    TDataType          *fDataType;     //!pointer to data basic type descriptor
 
-   Long_t              fOffset;       //offset
+   Longptr_t           fOffset;       //offset
    Int_t               fSTLCont;      //STL type
    Long_t              fProperty;     //Property
    Int_t               fArrayDim;     //Number of array dimensions
@@ -59,29 +59,31 @@ private:
 
    void Init(bool afterReading);
 
+   void ExtractOptionsFromComment();
+
 protected:
    TDataMember(const TDataMember&);
    TDataMember& operator=(const TDataMember&);
 
 public:
 
-   TDataMember(DataMemberInfo_t *info = 0, TClass *cl = 0);
+   TDataMember(DataMemberInfo_t *info = nullptr, TClass *cl = nullptr);
    virtual       ~TDataMember();
    Int_t          GetArrayDim() const;
    DeclId_t       GetDeclId() const;
    Int_t          GetMaxIndex(Int_t dim) const;
    TClass        *GetClass() const { return fClass; }
    TDataType     *GetDataType() const { return fDataType; } //only for basic type
-   Long_t         GetOffset() const;
-   Long_t         GetOffsetCint() const;
+   Longptr_t      GetOffset() const;
+   Longptr_t      GetOffsetCint() const;
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    const char    *GetTrueTypeName() const;
    const char    *GetArrayIndex() const;
    Int_t          GetUnitSize() const;
-   TList         *GetOptions() const;
+   TList         *GetOptions();
    TMethodCall   *SetterMethod(TClass *cl);
-   TMethodCall   *GetterMethod(TClass *cl = 0);
+   TMethodCall   *GetterMethod(TClass *cl = nullptr);
 
    Bool_t         IsBasic() const;
    Bool_t         IsEnum() const;
@@ -89,11 +91,11 @@ public:
    Bool_t         IsPersistent() const { return TestBit(kObjIsPersistent); }
    Int_t          IsSTLContainer();
    Bool_t         IsValid();
-   Long_t         Property() const;
+   Long_t         Property() const override;
    void           SetClass(TClass* cl) { fClass = cl; }
    virtual bool   Update(DataMemberInfo_t *info);
 
-   ClassDef(TDataMember,2)  //Dictionary for a class data member
+   ClassDefOverride(TDataMember,2)  //Dictionary for a class data member
 };
 
 
@@ -110,12 +112,12 @@ public:
    TString          fOptName;        //Text assigned to option which appears in option menu
    TString          fOptLabel;       //Text (or enum) value assigned to option.
    TOptionListItem():
-      fDataMember(0), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
+      fDataMember(nullptr), fValue(0), fValueMaskBit(0), fToggleMaskBit(0)
    {}
    TOptionListItem(TDataMember *m,Long_t val, Long_t valmask, Long_t tglmask,
                    const char *name, const char *label);
 
-   ClassDef(TOptionListItem,2); //Element in the list of options.
+   ClassDefOverride(TOptionListItem,2); //Element in the list of options.
 };
 
 #endif

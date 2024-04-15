@@ -20,8 +20,13 @@
 #include "TStreamerElement.h"
 #include "TStreamerInfo.h"
 #include "TTree.h"
+#include "TError.h"
 #include "TVirtualCollectionProxy.h"
 #include "TVirtualStreamerInfo.h"
+
+/** \class ROOT::Internal::TTreeGeneratorBase
+Base class for code generators like TTreeProxyGenerator and TTreeReaderGenerator
+*/
 
 namespace ROOT {
 namespace Internal {
@@ -37,7 +42,7 @@ namespace Internal {
 
    void TTreeGeneratorBase::AddHeader(TClass *cl)
    {
-      if (cl==0) return;
+      if (cl==nullptr) return;
 
       // Check if already included
       TObject *obj = fListOfHeaders.FindObject(cl->GetName());
@@ -78,11 +83,24 @@ namespace Internal {
             case  ROOT::kSTLunorderedmap:      what = "unordered_map"; break;
             case -ROOT::kSTLunorderedmultimap: // same as positive
             case  ROOT::kSTLunorderedmultimap: what = "unordered_multimap"; break;
+            case -ROOT::kROOTRVec:             // same as positive
+            case  ROOT::kROOTRVec:             what = "ROOT/RVec.hxx"; break;
          }
          if (what[0]) {
             directive = "#include <";
             directive.Append(what);
             directive.Append(">\n");
+         }
+      } else if (TClassEdit::IsStdPair(cl->GetName())) {
+         TClassEdit::TSplitType split(cl->GetName());
+         // 4 elements expected: "pair", "first type name", "second type name", "trailing stars"
+         // However legacy code had a test for 3, we will leave it here until
+         // a test is developed (or found :) ) that exercise these lines of code.
+         if (split.fElements.size() == 3 || split.fElements.size() == 4) {
+            for (int arg = 1; arg < 3; ++arg) {
+               TClass* clArg = TClass::GetClass(split.fElements[arg].c_str());
+               if (clArg) AddHeader(clArg);
+            }
          }
       } else if (cl->GetDeclFileName() && strlen(cl->GetDeclFileName()) ) { // Custom file
          const char *filename = cl->GetDeclFileName();
@@ -115,15 +133,6 @@ namespace Internal {
             }
          }
          directive = Form("#include \"%s\"\n",filename);
-      } else if (!strncmp(cl->GetName(), "pair<", 5)
-                 || !strncmp(cl->GetName(), "std::pair<", 10)) {
-         TClassEdit::TSplitType split(cl->GetName());
-         if (split.fElements.size() == 3) {
-            for (int arg = 1; arg < 3; ++arg) {
-               TClass* clArg = TClass::GetClass(split.fElements[arg].c_str());
-               if (clArg) AddHeader(clArg);
-            }
-         }
       }
       // Add directive (if it is not added already)
       if (directive.Length()) {
@@ -149,7 +158,7 @@ namespace Internal {
    ////////////////////////////////////////////////////////////////////////////////
    /// Get name of class inside a container.
 
-   TString TTreeGeneratorBase::GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer)
+   TString TTreeGeneratorBase::GetContainedClassName(TBranchElement *branch, TStreamerElement *element, bool ispointer)
    {
       TString cname = branch->GetClonesName();
       if (cname.Length()==0) {
@@ -166,7 +175,7 @@ namespace Internal {
          // TClass *clm = TClass::GetClass(GetClassName());
          Int_t lOffset = 0; // offset in the local streamerInfo.
          if (clparent) {
-            const char *ename = 0;
+            const char *ename = nullptr;
             if (element) {
                ename = element->GetName();
                lOffset = clparent->GetStreamerInfo()->GetOffset(ename);
@@ -201,7 +210,7 @@ namespace Internal {
          TVirtualStreamerInfo *info = base->GetBaseStreamerInfo();
          if (info) return info;
       }
-      return 0;
+      return nullptr;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -211,8 +220,8 @@ namespace Internal {
 
    TVirtualStreamerInfo *TTreeGeneratorBase::GetStreamerInfo(TBranch *branch, TIter current, TClass *cl)
    {
-      TVirtualStreamerInfo *objInfo = 0;
-      TBranchElement *b = 0;
+      TVirtualStreamerInfo *objInfo = nullptr;
+      TBranchElement *b = nullptr;
       TString cname = cl->GetName();
 
       while( ( b = (TBranchElement*)current() ) ) {
@@ -221,7 +230,7 @@ namespace Internal {
             break;
          }
       }
-      if (objInfo == 0 && branch->GetTree()->GetDirectory()->GetFile()) {
+      if (objInfo == nullptr && branch->GetTree()->GetDirectory()->GetFile()) {
          const TList *infolist = branch->GetTree()->GetDirectory()->GetFile()->GetStreamerInfoCache();
          if (infolist) {
             TVirtualStreamerInfo *i = (TVirtualStreamerInfo *)infolist->FindObject(cname);
@@ -231,7 +240,7 @@ namespace Internal {
             }
          }
       }
-      if (objInfo == 0) {
+      if (objInfo == nullptr) {
          // We still haven't found it ... this is likely to be an STL collection .. anyway, use the current StreamerInfo.
          objInfo = cl->GetStreamerInfo();
       }

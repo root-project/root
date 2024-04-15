@@ -11,39 +11,49 @@
 #define ROOT_Minuit2_AnalyticalGradientCalculator
 
 #include "Minuit2/GradientCalculator.h"
+#include "Minuit2/MnMatrixfwd.h"
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 class FCNGradientBase;
 class MnUserTransformation;
 
+
 class AnalyticalGradientCalculator : public GradientCalculator {
 
 public:
+   AnalyticalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
+      : fGradFunc(fcn), fTransformation(state)
+   {
+   }
 
-  AnalyticalGradientCalculator(const FCNGradientBase& fcn, const MnUserTransformation& state) : fGradCalc(fcn), fTransformation(state) {}
+   ~AnalyticalGradientCalculator() override {}
 
-  ~AnalyticalGradientCalculator() {}
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
-  virtual FunctionGradient operator()(const MinimumParameters&) const;
+   /// compute Hessian matrix
+   bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const override;
 
-  virtual FunctionGradient operator()(const MinimumParameters&,
-                                      const FunctionGradient&) const;
+   /// compute second derivatives (diagonal of Hessian)
+   bool G2(const MinimumParameters &, MnAlgebraicVector &) const override;
 
-  virtual bool CheckGradient() const;
+   virtual bool CheckGradient() const;
 
-private:
+   virtual bool CanComputeG2() const;
 
-  const FCNGradientBase& fGradCalc;
-  const MnUserTransformation& fTransformation;
+   virtual bool CanComputeHessian() const;
+
+protected:
+   const FCNGradientBase &fGradFunc;
+   const MnUserTransformation &fTransformation;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_AnalyticalGradientCalculator
+#endif // ROOT_Minuit2_AnalyticalGradientCalculator

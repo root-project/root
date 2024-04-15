@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Reader                                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Reader class to be used in the user application to interpret the trained  *
@@ -28,7 +28,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::Reader
@@ -104,12 +104,9 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "TTree.h"
 #include "TLeaf.h"
 #include "TString.h"
-#include "TClass.h"
 #include "TH1D.h"
-#include "TKey.h"
 #include "TVector.h"
 #include "TXMLEngine.h"
 #include "TMath.h"
@@ -119,8 +116,6 @@
 #include <string>
 #include <vector>
 #include <fstream>
-
-#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
@@ -599,7 +594,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the regression MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateRegression( MethodBase* method, Double_t /*aux*/ )
 {
@@ -665,7 +660,7 @@ const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( const TString& m
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluates the multiclass MVA
 /// check for NaN in event data:  (note: in the factory, this check was done already at the creation of the datasets, hence
-/// it is not again checked in each of these subsequent calls..
+/// it is not again checked in each of these subsequent calls.
 
 const std::vector< Float_t >& TMVA::Reader::EvaluateMulticlass( MethodBase* method, Double_t /*aux*/ )
 {
@@ -703,15 +698,6 @@ TMVA::IMethod* TMVA::Reader::FindMVA( const TString& methodTag )
    if (it != fMethodMap.end()) return it->second;
    Log() << kERROR << "Method " << methodTag << " not found!" << Endl;
    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// special function for Cuts to avoid dynamic_casts in ROOT macros,
-/// which are not properly handled by CINT
-
-TMVA::MethodCuts* TMVA::Reader::FindCutsMVA( const TString& methodTag )
-{
-   return dynamic_cast<MethodCuts*>(FindMVA(methodTag));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -15,12 +15,9 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// The following line should disappear in a future version of RNTuple, when
-// the common template specializations of RField are part of the LinkDef.h
-R__LOAD_LIBRARY(ROOTNTuple)
-
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <TCanvas.h>
 #include <TH1I.h>
@@ -93,7 +90,7 @@ void Analyze() {
 
    // Quick overview of the ntuple and list of fields.
    ntuple->PrintInfo();
-   
+
    std::cout << "The first entry in JSON format:" << std::endl;
    ntuple->Show(0);
    // In a future version of RNTuple, there will be support for ntuple->Scan()

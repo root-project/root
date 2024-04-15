@@ -16,11 +16,10 @@
 #include <cassert>
 #include <csignal>
 
-//TODO: cstdxx instead of stdxx.h ?
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+#include <cstddef>
+#include <cstdlib>
+#include <cstring>
+#include <cstdio>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -30,9 +29,8 @@
 #include <X11/extensions/shape.h>
 
 #include "Rtypes.h"
-#include "RConfigure.h"
-
-#include "rootcoreteam.h"
+#include "snprintf.h"
+#include "strlcpy.h"
 
 #if defined(R__AIX) || defined(R__SOLARIS)
 #   include <sys/select.h>
@@ -767,8 +765,6 @@ int DrawCredits(bool draw, bool extended)
    y = DrawCreditItem("Conception: ", gConception, y, draw);
    y += 2 * lineSpacing;
 
-   y = DrawCreditItem("Core Engineering: ", ROOT::ROOTX::gROOTCoreTeam, y, draw);
-
    if (extended && gContributors) {
       y += 2 * lineSpacing;
       y = DrawCreditItem("Contributors: ", (const char **)gContributors, y, draw);
@@ -780,8 +776,9 @@ int DrawCredits(bool draw, bool extended)
 
       struct passwd *pwd = getpwuid(getuid());
       if (pwd) {
-         char *name = new char [strlen(pwd->pw_gecos)+1];
-         strcpy(name, pwd->pw_gecos);
+         size_t sz = strlen(pwd->pw_gecos)+1;
+         char *name = new char [sz];
+         strlcpy(name, pwd->pw_gecos, sz);
          char *s = strchr(name, ',');
          if (s) *s = 0;
          char line[1024];

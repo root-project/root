@@ -103,7 +103,7 @@ SHORT_NAMES            = NO
 # will interpret the first line (until the first dot) of a JavaDoc-style
 # comment as the brief description. If set to NO, the JavaDoc
 # comments will behave just like the Qt-style comments (thus requiring an
-# explict @brief command for a brief description.
+# explicit @brief command for a brief description.
 
 JAVADOC_AUTOBRIEF      = YES
 
@@ -718,7 +718,7 @@ COMPACT_RTF            = NO
 RTF_HYPERLINKS         = NO
 
 # Load stylesheet definitions from file. Syntax is similar to doxygen's
-# config file, i.e. a series of assigments. You only have to provide
+# config file, i.e. a series of assignments. You only have to provide
 # replacements, missing definitions are set to their default value.
 
 RTF_STYLESHEET_FILE    =
@@ -945,7 +945,7 @@ PERL_PATH              = /usr/bin/perl
 # If the CLASS_DIAGRAMS tag is set to YES (the default) Doxygen will
 # generate a inheritance diagram (in HTML, RTF and LaTeX) for classes with base or
 # super classes. Setting the tag to NO turns the diagrams off. Note that this
-# option is superceded by the HAVE_DOT option below. This is only a fallback. It is
+# option is superseded by the HAVE_DOT option below. This is only a fallback. It is
 # recommended to install and use dot, since it yields more powerful graphs.
 
 CLASS_DIAGRAMS         = YES
@@ -978,7 +978,7 @@ CLASS_GRAPH            = YES
 COLLABORATION_GRAPH    = YES
 
 # If the UML_LOOK tag is set to YES doxygen will generate inheritance and
-# collaboration diagrams in a style similiar to the OMG's Unified Modeling
+# collaboration diagrams in a style similar to the OMG's Unified Modeling
 # Language.
 
 UML_LOOK               = NO

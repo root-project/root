@@ -1,38 +1,10 @@
+#include "ROOT/TestSupport.hxx"
+
 #include "TFileMerger.h"
 
 #include "TMemFile.h"
 #include "TTree.h"
-
-#include "gtest/gtest.h"
-
-namespace {
-using testing::internal::GetCapturedStderr;
-using testing::internal::CaptureStderr;
-using testing::internal::RE;
-class ExpectedErrorRAII {
-   std::string ExpectedRegex;
-   void pop()
-   {
-      std::string Seen = GetCapturedStderr();
-      bool match = RE::FullMatch(Seen, RE(ExpectedRegex));
-      EXPECT_TRUE(match);
-      if (!match) {
-         std::string msg = "Match failed!\nSeen: '" + Seen + "'\nRegex: '" + ExpectedRegex + "'\n";
-         GTEST_NONFATAL_FAILURE_(msg.c_str());
-      }
-   }
-
-public:
-   ExpectedErrorRAII(std::string E) : ExpectedRegex(E) { CaptureStderr(); }
-   ~ExpectedErrorRAII() { pop(); }
-};
-}
-
-#define EXPECT_ROOT_ERROR(expression, expected_error) \
-   {                                                  \
-      ExpectedErrorRAII EE(expected_error);           \
-      expression;                                     \
-   }
+#include "TH1.h"
 
 static void CreateATuple(TMemFile &file, const char *name, double value)
 {
@@ -80,7 +52,8 @@ TEST(TFileMerger, CreateWithTFilePointer)
    merger.AddFile(&a, false);
    merger.AddFile(&b, false);
    // FIXME: Calling merger.Merge() will call Close() and *delete* output.
-   merger.PartialMerge();
+   success = merger.PartialMerge();
+   ASSERT_TRUE(success);
 
    auto &result = *static_cast<TMemFile *>(merger.GetOutputFile());
    CheckTree(result, "a_tree", 1);
@@ -94,5 +67,37 @@ TEST(TFileMerger, CreateWithUnwritableTFilePointer)
    // FIXME: The ctor of TMemFile sets the 'zombie' flag to all TMemFiles whose options are different than CREATE and
    // RECREATE. We should probably fix the API but until then work around it.
    output->SetWritable(false);
-   EXPECT_ROOT_ERROR(merger.OutputFile(std::move(output)), "Error in .* output file output.root is not writable\n");
+   ROOT_EXPECT_ERROR(merger.OutputFile(std::move(output)), "TFileMerger::OutputFile",
+                     "output file output.root is not writable");
+}
+
+TEST(TFileMerger, MergeSingleOnlyListed)
+{
+   TMemFile a("hist4.root", "CREATE");
+
+   auto hist1 = new TH1F("hist1", "hist1", 1 , 0 , 2);
+   auto hist2 = new TH1F("hist2", "hist2", 1 , 0 , 2);
+   auto hist3 = new TH1F("hist3", "hist3", 1 , 0 , 2);
+   auto hist4 = new TH1F("hist4", "hist4", 1 , 0 , 2);
+   hist1->Fill(1);
+   hist2->Fill(1);   hist2->Fill(2);
+   hist3->Fill(1);   hist3->Fill(1);   hist3->Fill(1);
+   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);   hist4->Fill(1);
+   a.Write();
+   
+   TFileMerger merger;
+   auto output = std::unique_ptr<TFile>(new TFile("SingleOnlyListed.root", "RECREATE"));
+   bool success = merger.OutputFile(std::move(output));
+   ASSERT_TRUE(success);
+   
+   merger.AddObjectNames("hist1");
+   merger.AddObjectNames("hist2");
+   merger.AddFile(&a, false);
+   const Int_t mode = (TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kOnlyListed);
+   success = merger.PartialMerge(mode); // This will delete fOutputFile as we are not using kIncremental, so merger.GetOutputFile() will return a nullptr
+   ASSERT_TRUE(success);
+
+   output = std::unique_ptr<TFile>(TFile::Open("SingleOnlyListed.root"));
+   ASSERT_TRUE(output.get() && output->GetListOfKeys());
+   EXPECT_EQ(output->GetListOfKeys()->GetSize(), 2);
 }

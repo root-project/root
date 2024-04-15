@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TVirtualPad.h"
 #include "TNodeDiv.h"
 
 ClassImp(TNodeDiv);
@@ -58,7 +57,7 @@ TNodeDiv::TNodeDiv(const char *name, const char *title, const char *shapename, I
 /// This new node is added into the list of sons of the current node
 
 TNodeDiv::TNodeDiv(const char *name, const char *title, TShape *shape, Int_t ndiv, Int_t axis, Option_t *option)
-         :TNode(name, title, shape, 0, 0, 0, 0, option)
+         :TNode(name, title, shape, 0, 0, 0, nullptr, option)
 {
    fNdiv = ndiv;
    fAxis = axis;

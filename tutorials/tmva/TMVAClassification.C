@@ -13,7 +13,7 @@
 ///
 /// (note that the backslashes are mandatory)
 /// If no method given, a default set of classifiers is used.
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVAC.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 /// Launch the GUI via the command:
@@ -172,18 +172,13 @@ int TMVAClassification( TString myMethodList = "" )
 
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   TFile *input(0);
-   TString fname = "./tmva_class_example.root";
-   if (!gSystem->AccessPathName( fname )) {
-      input = TFile::Open( fname ); // check if file in local directory exists
-   }
-   else {
-      TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
-   }
-   if (!input) {
-      std::cout << "ERROR: could not open data file" << std::endl;
-      exit(1);
+   // Set the cache directory for the TFile to the current directory. The input
+   // data file will be downloaded here if not present yet, then it will be read
+   // from the cache path directly.
+   TFile::SetCacheFileDir(".");
+   std::unique_ptr<TFile> input{TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD")};
+   if (!input || input->IsZombie()) {
+      throw std::runtime_error("ERROR: could not open data file");
    }
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 
@@ -193,8 +188,11 @@ int TMVAClassification( TString myMethodList = "" )
    TTree *background     = (TTree*)input->Get("TreeB");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "TMVA.root" );
-   TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
+   TString outfileName("TMVAC.root");
+   std::unique_ptr<TFile> outputFile{TFile::Open(outfileName, "RECREATE")};
+   if (!outputFile || outputFile->IsZombie()) {
+      throw std::runtime_error("ERROR: could not open output file");
+   }
 
    // Create the factory object. Later you can choose the methods
    // whose performance you'd like to investigate. The factory is
@@ -206,10 +204,11 @@ int TMVAClassification( TString myMethodList = "" )
    // The second argument is the output file for the training results
    // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
-   TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile,
-                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
-
-   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
+   auto factory = std::make_unique<TMVA::Factory>(
+      "TMVAClassification", outputFile.get(),
+      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
+   auto dataloader_raii = std::make_unique<TMVA::DataLoader>("dataset");
+   auto *dataloader = dataloader_raii.get();
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //
@@ -306,7 +305,7 @@ int TMVAClassification( TString myMethodList = "" )
    // ### Book MVA methods
    //
    // Please lookup the various method configuration options in the corresponding cxx files, eg:
-   // src/MethoCuts.cxx, etc, or here: http://tmva.sourceforge.net/optionRef.html
+   // src/MethoCuts.cxx, etc, or here: http://tmva.sourceforge.net/old_site/optionRef.html
    // it is possible to preset ranges in the option string in which the cut optimisation should be done:
    // "...:CutRangeMin[2]=-1:CutRangeMax[2]=1"...", where [2] is the third input variable
 
@@ -449,21 +448,12 @@ int TMVAClassification( TString myMethodList = "" )
       // General layout.
       TString layoutString ("Layout=TANH|128,TANH|128,TANH|128,LINEAR");
 
-      // Training strategies.
-      TString training0("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                        "ConvergenceSteps=30,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=None,"
-                        "DropConfig=0.0+0.5+0.5+0.5, Multithreading=True");
-      TString training1("LearningRate=1e-2,Momentum=0.9,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
-                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-      TString training2("LearningRate=1e-3,Momentum=0.0,Repetitions=1,"
-                        "ConvergenceSteps=20,BatchSize=256,TestRepetitions=10,"
-                        "WeightDecay=1e-4,Regularization=L2,"
-                        "DropConfig=0.0+0.0+0.0+0.0, Multithreading=True");
-      TString trainingStrategyString ("TrainingStrategy=");
-      trainingStrategyString += training0 + "|" + training1 + "|" + training2;
+      // Define Training strategy. One could define multiple strategy string separated by the "|" delimiter
+
+      TString trainingStrategyString = ("TrainingStrategy=LearningRate=1e-2,Momentum=0.9,"
+                                        "ConvergenceSteps=20,BatchSize=100,TestRepetitions=1,"
+                                        "WeightDecay=1e-4,Regularization=None,"
+                                        "DropConfig=0.0+0.5+0.5+0.5");
 
       // General Options.
       TString dnnOptions ("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
@@ -546,13 +536,11 @@ int TMVAClassification( TString myMethodList = "" )
    // --------------------------------------------------------------
 
    // Save the output
-   outputFile->Close();
+   outputFile->Write();
 
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVAClassification is done!" << std::endl;
 
-   delete factory;
-   delete dataloader;
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
 

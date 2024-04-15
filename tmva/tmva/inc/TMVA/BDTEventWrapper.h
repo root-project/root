@@ -3,7 +3,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : BDTEventWrapper                                                       *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
@@ -16,7 +16,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_BDTEventWrapper
@@ -40,14 +40,14 @@ namespace TMVA {
 
       // Set the accumulated weight, for sorted signal/background events
       /**
-       * @param fType - true for signal, false for background
+       * @param type - true for signal, false for background
        * @param weight - the total weight
        */
       void SetCumulativeWeight( Bool_t type, Double_t weight );
 
       // Get the accumulated weight
       /**
-       * @param fType - true for signal, false for background
+       * @param type - true for signal, false for background
        * @return the cumulative weight for sorted signal/background events
        */
       Double_t GetCumulativeWeight( Bool_t type ) const;
@@ -74,8 +74,8 @@ namespace TMVA {
 
       const Event* fEvent;     // pointer to the event
 
-      Double_t     fBkgWeight; // cumulative background weight for splitting
-      Double_t     fSigWeight; // same for the signal weights
+      Double_t     fBkgWeight; ///< cumulative background weight for splitting
+      Double_t     fSigWeight; ///< same for the signal weights
    };
 }
 

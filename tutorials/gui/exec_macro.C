@@ -47,7 +47,7 @@ Int_t exec_macro(const char *macro, Bool_t comp = kFALSE, Bool_t save = kTRUE)
 
    UInt_t nMainFrames = 0;
    TClass* clGMainFrame = TClass::GetClass("TGMainFrame");
-   TGWindow* win = 0;
+   TGWindow* win = nullptr;
    TIter iWin(gClient->GetListOfWindows());
    while ((win = (TGWindow*)iWin())) {
       const TObject* winGetParent = win->GetParent();

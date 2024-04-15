@@ -3,14 +3,18 @@
 /// \notebook -js
 /// Addition and convolution: one-dimensional numeric convolution
 ///
+/// ```
 /// pdf = landau(t) (x) gauss(t)
+/// ```
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -54,10 +58,10 @@ void rf208_convolution()
    // ----------------------------------------------------------------------
 
    // Sample 1000 events in x from gxlx
-   RooDataSet *data = lxg.generate(t, 10000);
+   std::unique_ptr<RooDataSet> data{lxg.generate(t, 10000)};
 
    // Fit gxlx to data
-   lxg.fitTo(*data);
+   lxg.fitTo(*data, PrintLevel(-1));
 
    // Plot data, landau pdf, landau (X) gauss pdf
    RooPlot *frame = t.frame(Title("landau (x) gauss convolution"));

@@ -4,14 +4,15 @@
 /// Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -32,14 +33,14 @@ void rf603_multicpu()
    RooRealVar z("z", "z", -5, 5);
 
    // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-   RooGaussian gx("gx", "gx", x, RooConst(0), RooConst(1));
-   RooGaussian gy("gy", "gy", y, RooConst(0), RooConst(1));
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(1));
+   RooGaussian gx("gx", "gx", x, 0.0, 1.0);
+   RooGaussian gy("gy", "gy", y, 0.0, 1.0);
+   RooGaussian gz("gz", "gz", z, 0.0, 1.0);
    RooProdPdf sig("sig", "sig", RooArgSet(gx, gy, gz));
 
    // Create background pdf poly(x)*poly(y)*poly(z)
-   RooPolynomial px("px", "px", x, RooArgSet(RooConst(-0.1), RooConst(0.004)));
-   RooPolynomial py("py", "py", y, RooArgSet(RooConst(0.1), RooConst(-0.004)));
+   RooPolynomial px("px", "px", x, RooArgSet(-0.1, 0.004));
+   RooPolynomial py("py", "py", y, RooArgSet(0.1, -0.004));
    RooPolynomial pz("pz", "pz", z);
    RooProdPdf bkg("bkg", "bkg", RooArgSet(px, py, pz));
 
@@ -48,7 +49,7 @@ void rf603_multicpu()
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
    // Generate large dataset
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 200000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 200000)};
 
    // P a r a l l e l   f i t t i n g
    // -------------------------------
@@ -58,7 +59,7 @@ void rf603_multicpu()
    // it back to MINUIT.
 
    // Use four processes and time results both in wall time and CPU time
-   model.fitTo(*data, NumCPU(4), Timer(kTRUE));
+   model.fitTo(*data, NumCPU(4), Timer(true), PrintLevel(-1));
 
    // P a r a l l e l   M C   p r o j e c t i o n s
    // ----------------------------------------------
@@ -70,7 +71,7 @@ void rf603_multicpu()
 
    // Calculate likelihood ratio for each event, define subset of events with high signal likelihood
    data->addColumn(llratio_func);
-   RooDataSet *dataSel = (RooDataSet *)data->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> dataSel{data->reduce(Cut("llratio>0.7"))};
 
    // Make plot frame and plot data
    RooPlot *frame = x.frame(Title("Projection on X with LLratio(y,z)>0.7"), Bins(40));

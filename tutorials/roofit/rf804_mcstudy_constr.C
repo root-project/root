@@ -4,14 +4,15 @@
 /// Validation and MC studies: using RooMCStudy on models with constrains
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -43,9 +44,9 @@ void rf804_mcstudy_constr()
    RooAddPdf sum("sum", "sum", RooArgSet(g, p), f);
 
    // Construct constraint on parameter f
-   RooGaussian fconstraint("fconstraint", "fconstraint", f, RooConst(0.7), RooConst(0.1));
+   RooGaussian fconstraint("fconstraint", "fconstraint", f, 0.7, 0.1);
 
-   // Multiply constraint with p.d.f
+   // Multiply constraint with pdf
    RooProdPdf sumc("sumc", "sum with constraint", RooArgSet(sum, fconstraint));
 
    // S e t u p   t o y   s t u d y   w i t h   m o d e l
@@ -60,7 +61,7 @@ void rf804_mcstudy_constr()
    mcs.generateAndFit(500, 2000);
 
    // Make plot of distribution of generated value of f parameter
-   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", -40);
+   TH1 *h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", AutoBinning(40));
 
    // Make plot of distribution of fitted value of f parameter
    RooPlot *frame1 = mcs.plotParam(f, Bins(40));

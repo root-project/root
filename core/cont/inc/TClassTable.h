@@ -23,7 +23,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TObject.h"
-#include "TString.h"
+#include <string>
+#include <atomic>
 
 class TProtoClass;
 
@@ -40,20 +41,20 @@ friend  class TROOT;
 
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
+   class NormalizeThenLock;
 
-   static ROOT::TClassAlt **fgAlternate;
-   static ROOT::TClassRec **fgTable;
-   static ROOT::TClassRec **fgSortedTable;
-   static IdMap_t     *fgIdMap;
-   static UInt_t       fgSize;
-   static UInt_t       fgTally;
-   static Bool_t       fgSorted;
-   static UInt_t       fgCursor;
+   static ROOT::TClassAlt   **fgAlternate;
+   static ROOT::TClassRec   **fgTable;
+   static ROOT::TClassRec   **fgSortedTable;
+   static IdMap_t            *fgIdMap;
+   static UInt_t              fgSize;
+   static std::atomic<UInt_t> fgTally;
+   static Bool_t              fgSorted;
+   static UInt_t              fgCursor;
 
    TClassTable();
 
-   static ROOT::TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
-   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert);
    static void         SortTable();
 
    static Bool_t CheckClassTableInit();
@@ -67,29 +68,30 @@ public:
 
    ~TClassTable();
 
-   static void          Add(const char *cname, Version_t id,
-                            const std::type_info &info, DictFuncPtr_t dict,
-                            Int_t pragmabits);
-   static void          Add(TProtoClass *protoClass);
-   static void          AddAlternate(const char *normname, const char *alternate);
-   static char         *At(UInt_t index);
-   int                  Classes();
-   static Bool_t        Check(const char *cname, std::string &normname);
-   static Version_t     GetID(const char *cname);
-   static Int_t         GetPragmaBits(const char *name);
-   static DictFuncPtr_t GetDict(const char *cname);
-   static DictFuncPtr_t GetDict(const std::type_info& info);
-   static DictFuncPtr_t GetDictNorm(const char *cname);
-   static TProtoClass  *GetProto(const char *cname);
-   static TProtoClass  *GetProtoNorm(const char *cname);
-   static void          Init();
-   static char         *Next();
-   void                 Print(Option_t *option="") const;
-   static void          PrintTable();
-   static void          Remove(const char *cname);
-   static void          Terminate();
+   static void             Add(const char *cname, Version_t id,
+                               const std::type_info &info, DictFuncPtr_t dict,
+                               Int_t pragmabits);
+   static void             Add(TProtoClass *protoClass);
+   static ROOT::TClassAlt *AddAlternate(const char *normname, const char *alternate);
+   static char            *At(UInt_t index);
+   int                     Classes();
+   static Bool_t           Check(const char *cname, std::string &normname);
+   static Version_t        GetID(const char *cname);
+   static Int_t            GetPragmaBits(const char *name);
+   static DictFuncPtr_t    GetDict(const char *cname);
+   static DictFuncPtr_t    GetDict(const std::type_info& info);
+   static DictFuncPtr_t    GetDictNorm(const char *cname);
+   static TProtoClass     *GetProto(const char *cname);
+   static TProtoClass     *GetProtoNorm(const char *cname);
+   static void             Init();
+   static char            *Next();
+   void                    Print(Option_t *option="") const override;
+   static void             PrintTable();
+   static void             Remove(const char *cname);
+   static void             RemoveAlternate(ROOT::TClassAlt *alt);
+   static void             Terminate();
 
-   ClassDef(TClassTable,0)  //Table of known classes
+   ClassDefOverride(TClassTable,0)  //Table of known classes
 };
 
 R__EXTERN TClassTable *gClassTable;
@@ -97,7 +99,7 @@ R__EXTERN TClassTable *gClassTable;
 namespace ROOT {
    extern void AddClass(const char *cname, Version_t id, DictFuncPtr_t dict,
                         Int_t pragmabits);
-   extern void RemoveClass(const char *cname);
+   extern void RemoveClass(const char *cname, TClass *cl);
 }
 
 #endif

@@ -19,58 +19,54 @@
 \class RooConstVar
 \ingroup Roofitcore
 
-RooConstVar represent a constant real-valued object
+Represents a constant real-valued object.
 **/
 
-
-#include "RooFit.h"
-
-#include "Riostream.h"
 #include "RooConstVar.h"
-
-using namespace std;
+#include "RooNumber.h"
 
 ClassImp(RooConstVar);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with value
-///_fast = kTRUE ;
-
-RooConstVar::RooConstVar(const char *name, const char *title, Double_t value) : 
-  RooAbsReal(name,title), _value(value)
-{  
-  setAttribute("Constant",kTRUE) ;
+RooConstVar::RooConstVar(const char *name, const char *title, double value) :
+  RooAbsReal(name,title)
+{
+  _fast = true;
+  _value = value;
+  setAttribute("Constant",true) ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
-///_fast = kTRUE ;
-
-RooConstVar::RooConstVar(const RooConstVar& other, const char* name) : 
-  RooAbsReal(other, name), _value(other._value)
+RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
+  RooAbsReal(other, name)
 {
+  _fast = true;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooConstVar::~RooConstVar() 
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooConstVar::writeToStream(ostream& os, Bool_t /*compact*/) const
+void RooConstVar::writeToStream(std::ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooConstVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Just return a stringy-field version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   // Just use toString to make sure we do not output 'inf'.
+   // This is really ugly for large numbers...
+   ss << std::fixed << RooNumber::toString(_value);
+   ctx.addResult(this, ss.str());
+}

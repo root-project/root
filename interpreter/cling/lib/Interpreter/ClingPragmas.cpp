@@ -9,6 +9,7 @@
 
 #include "ClingPragmas.h"
 
+#include "cling/Interpreter/DynamicLibraryManager.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/Output.h"
@@ -17,8 +18,10 @@
 #include "clang/AST/ASTContext.h"
 #include "clang/Basic/TokenKinds.h"
 #include "clang/Frontend/CompilerInstance.h"
-#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/LexDiagnostic.h"
 #include "clang/Lex/LiteralSupport.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/Token.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Parse/ParseDiagnostic.h"
@@ -70,7 +73,7 @@ namespace {
           SmallVector<Token, 1> StrToks(1, Tok);
           StringLiteralParser LitParse(StrToks, PP);
           if (!LitParse.hadError)
-            Literal = LitParse.GetString();
+            Literal = LitParse.GetString().str();
         } else {
           llvm::SmallString<64> Buffer;
           Literal = PP.getSpelling(Tok, Buffer).str();
@@ -126,19 +129,23 @@ namespace {
         return;
 
       // Need to parse them all until the end to handle the possible
-      // #include stements that will be generated
-      std::vector<std::string> Files;
-      Files.push_back(std::move(Literal));
+      // #include statements that will be generated
+      struct LibraryFileInfo {
+        std::string FileName;
+        SourceLocation StartLoc;
+      };
+      std::vector<LibraryFileInfo> FileInfos;
+      FileInfos.push_back({std::move(Literal), Tok.getLocation()});
       while (GetNextLiteral(PP, Tok, Literal, kLoadFile))
-        Files.push_back(std::move(Literal));
-      
+        FileInfos.push_back({std::move(Literal), Tok.getLocation()});
+
       clang::Parser& P = m_Interp.getParser();
       Parser::ParserCurTokRestoreRAII savedCurToken(P);
       // After we have saved the token reset the current one to something
       // which is safe (semi colon usually means empty decl)
       Token& CurTok = const_cast<Token&>(P.getCurToken());
       CurTok.setKind(tok::semi);
-      
+
       Preprocessor::CleanupAndRestoreCacheRAII cleanupRAII(PP);
       // We can't PushDeclContext, because we go up and the routine that
       // pops the DeclContext assumes that we drill down always.
@@ -150,9 +157,26 @@ namespace {
                                             TU, m_Interp.getSema().TUScope);
       Interpreter::PushTransactionRAII pushedT(&m_Interp);
 
-      for (std::string& File : Files) {
-        if (m_Interp.loadFile(File, true) != Interpreter::kSuccess)
+      for (const LibraryFileInfo& FI : FileInfos) {
+        // FIXME: Consider the case where the library static init section has
+        // a call to interpreter parsing header file. It will suffer the same
+        // issue as if we included the file within the pragma.
+        if (m_Interp.loadLibrary(FI.FileName, true) != Interpreter::kSuccess) {
+          clang::ConstSearchDirIterator *CurDir = nullptr;
+          if (PP.getHeaderSearchInfo().LookupFile(FI.FileName, FI.StartLoc,
+              /*isAngled*/ false, /*fromDir*/ nullptr, /*CurDir*/ CurDir, /*Includers*/ {},
+              /*SearchPath*/ nullptr, /*RelativePath*/ nullptr, /*RequestingModule*/ nullptr,
+              /*suggestedModule*/ nullptr, /*IsMapped*/ nullptr,
+              /*IsFrameworkFound*/ nullptr, /*SkipCache*/ true, /*BuildSystemModule*/ false,
+              /*OpenFile*/ false, /*CacheFailures*/ false)) {
+            PP.Diag(FI.StartLoc, diag::err_expected)
+              << FI.FileName + " to be a library, but it is not. If this is a source file, use `#include \"" + FI.FileName + "\"`";
+          } else {
+            PP.Diag(FI.StartLoc, diag::err_pp_file_not_found)
+              << FI.FileName;
+          }
           return;
+        }
       }
     }
 
@@ -190,8 +214,8 @@ namespace {
       PragmaHandler("cling"), m_Interp(interp) {}
 
     void HandlePragma(Preprocessor& PP,
-                      PragmaIntroducerKind Introducer,
-                      Token& FirstToken) override {
+                      PragmaIntroducer /*Introducer*/,
+                      Token& /*FirstToken*/) override {
 
       Token Tok;
       PP.Lex(Tok);
@@ -230,7 +254,7 @@ namespace {
         default:
           do {
             if (Command == kAddLibrary)
-              m_Interp.getOptions().LibSearchPath.push_back(std::move(Literal));
+              m_Interp.getDynamicLibraryManager()->addSearchPath(std::move(Literal));
             else if (Command == kAddInclude)
               m_Interp.AddIncludePath(Literal);
           } while (GetNextLiteral(PP, Tok, Literal, Command));

@@ -201,10 +201,10 @@ public:
    }
 
 
-   unsigned int NPar() const { return NPAR; }
-   const double * Parameters() const { return fParams; }
-   ROOT::Math::IGenFunction * Clone() const { return new StatFunction(fPdf,fCdf,fQuant); }
-   void SetParameters(const double * p) { std::copy(p,p+NPAR,fParams); }
+   unsigned int NPar() const override { return NPAR; }
+   const double * Parameters() const override { return fParams; }
+   ROOT::Math::IGenFunction * Clone() const override { return new StatFunction(fPdf,fCdf,fQuant); }
+   void SetParameters(const double * p) override { std::copy(p,p+NPAR,fParams); }
    void SetParameters(double p0) { *fParams = p0; }
    void SetParameters(double p0, double p1) { *fParams = p0; *(fParams+1) = p1; }
    void SetParameters(double p0, double p1, double p2) { *fParams = p0; *(fParams+1) = p1; *(fParams+2) = p2; }
@@ -230,7 +230,7 @@ public:
 private:
 
 
-   double DoEvalPar(double x, const double * ) const {
+   double DoEvalPar(double x, const double * ) const override {
       // implement explicitly using cached parameter values
       return Evaluator<Func,NPAR>::F(fPdf,x, fParams);
    }
@@ -1120,7 +1120,7 @@ int testVector(int ngen, bool testio=false) {
    scale = Dim*20;
    if (Dim==3 && VecType<V2>::name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
    if (Dim==4 && ( VecType<V2>::name() == "PtEtaPhiMVector" || VecType<V2>::name() == "PxPyPzMVector")) {
-#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__))
+#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__) || defined(__s390x__))
       scale *= 1.E7;
 #else
       scale *= 10;

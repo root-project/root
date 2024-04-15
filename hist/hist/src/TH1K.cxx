@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include "Riostream.h"
 #include "TH1K.h"
@@ -178,7 +178,7 @@ void TH1K::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
                  <<","<<fKOrd;
    out <<");"<<std::endl;
 
-   if (fDirectory == 0) {
+   if (fDirectory == nullptr) {
       out<<"   "<<GetName()<<"->SetDirectory(0);"<<std::endl;
    }
    if (TestBit(kNoStats)) {

@@ -17,10 +17,10 @@ a TStreamerInfo (i.e. using TBranchElement).
 */
 
 #include "TLeafElement.h"
-//#include "TMethodCall.h"
 
 #include "TVirtualStreamerInfo.h"
 #include "Bytes.h"
+#include "TBuffer.h"
 
 ClassImp(TLeafElement);
 
@@ -29,7 +29,7 @@ ClassImp(TLeafElement);
 
 TLeafElement::TLeafElement(): TLeaf()
 {
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID   = -1;
    fType = -1;
 }
@@ -41,7 +41,7 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    : TLeaf(parent, name,name)
 {
    fLenType    = 0;
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID         = id;
    fType       = type;
    if (type < TVirtualStreamerInfo::kObject) {
@@ -110,19 +110,19 @@ TLeafElement::~TLeafElement()
 TLeaf::DeserializeType
 TLeafElement::GetDeserializeType() const
 {
-   if (R__likely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) != DeserializeType::kInvalid))
       return fDeserializeTypeCache;
 
    TClass *clptr = nullptr;
    EDataType type = EDataType::kOther_t;
    if (fBranch->GetExpectedType(clptr, type)) {  // Returns non-zero in case of failure
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;  // I don't know what it is, but we aren't going to use bulk IO.
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;  // I don't know what it is, but we aren't going to use bulk IO.
    }
    fDataTypeCache.store(type, std::memory_order_release);
    if (clptr) {  // Something that requires a dictionary to read; skip.
-      fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-      return DeserializeType::kDestructive;
+      fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+      return DeserializeType::kExternal;
    }
 
    if ((fType == EDataType::kChar_t) || fType == EDataType::kUChar_t || type == EDataType::kBool_t) {
@@ -135,14 +135,16 @@ TLeafElement::GetDeserializeType() const
       return DeserializeType::kInPlace;
    }
 
-   fDeserializeTypeCache.store(DeserializeType::kDestructive, std::memory_order_relaxed);
-   return DeserializeType::kDestructive;
+   fDeserializeTypeCache.store(DeserializeType::kExternal, std::memory_order_relaxed);
+   return DeserializeType::kExternal;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
-Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
+bool TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
+   if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
+      GetDeserializeType(); // Set fDataTypeCache if need be.
    EDataType type = fDataTypeCache.load(std::memory_order_consume);
    return input_buf.ByteSwapBuffer(fLen*N, type);
 }
@@ -154,29 +156,43 @@ Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 
 TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
-   return 0;
+   return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the full name (including the parent's branch names) of the leaf.
+
+TString TLeafElement::GetFullName() const
+{
+   TBranchElement *br = static_cast<TBranchElement*>(GetBranch());
+   if (br->GetType() == 3 || br->GetType() == 4) {
+      TString bname(br->GetFullName());
+      if (bname.Length() && bname[bname.Length()-1]=='.')
+         bname.Remove(bname.Length()-1);
+      return bname + "_";
+   } else
+      return GetBranch()->GetFullName();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafElement::IncludeRange(TLeaf *input)
+bool TLeafElement::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             ((TBranchElement*)fBranch)->fMaximum = input->GetMaximum();
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
 
-Bool_t TLeafElement::IsOnTerminalBranch() const
+bool TLeafElement::IsOnTerminalBranch() const
 {
-   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
-   return kTRUE;
+   if (fBranch->GetListOfBranches()->GetEntriesFast()) return false;
+   return true;
 }

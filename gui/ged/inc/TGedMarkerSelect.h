@@ -12,23 +12,6 @@
 #ifndef ROOT_TGedMarkerSelect
 #define ROOT_TGedMarkerSelect
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGedMarkerPopup and TGedMarkerSelect.                                //
-//                                                                      //
-// The TGedMarkerPopup is a popup containing all diferent styles of     //
-// markers.                                                             //
-//                                                                      //
-// The TGedMarkerSelect widget is a button with marker drawn inside     //
-// and a little down arrow. When clicked the TGMarkerPopup.             //
-//                                                                      //
-// Selecting a marker in this widget will generate the event:           //
-// kC_MARKERSEL, kMAR_SELCHANGED, widget id, pixel.                     //
-//                                                                      //
-// and the signal:                                                      //
-// MarkerSelected(Style_t marker)                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedPatternSelect.h"
 
@@ -43,34 +26,34 @@ protected:
 
 public:
    TGedMarkerPopup(const TGWindow *p, const TGWindow *m, Style_t markerStyle);
-   virtual ~TGedMarkerPopup();
+   ~TGedMarkerPopup() override;
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TGedMarkerPopup,0)  //marker select popup
+   ClassDefOverride(TGedMarkerPopup,0)  //marker select popup
 };
 
 
 class TGedMarkerSelect : public TGedSelect {
 
 protected:
-   Style_t          fMarkerStyle;   //marker style
-   const TGPicture *fPicture;       //image used for popup window
+   Style_t          fMarkerStyle;   ///< marker style
+   const TGPicture *fPicture;       ///< image used for popup window
 
-   virtual void     DoRedraw();
+   void     DoRedraw() override;
 
 public:
    TGedMarkerSelect(const TGWindow *p, Style_t markerStyle, Int_t id);
-   virtual ~TGedMarkerSelect() { if(fPicture) gClient->FreePicture(fPicture);}
+   ~TGedMarkerSelect() override { if(fPicture) gClient->FreePicture(fPicture);}
 
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    Style_t        GetMarkerStyle() const { return fMarkerStyle; }
    void           SetMarkerStyle(Style_t pattern);
    virtual void   MarkerSelected(Style_t marker = 0) { Emit("MarkerSelected(Style_t)", marker ? marker : GetMarkerStyle()); }  // *SIGNAL*
-   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
-   virtual TGDimension GetDefaultSize() const { return TGDimension(38, 21); }
+   void   SavePrimitive(std::ostream &out, Option_t * = "") override;
+   TGDimension GetDefaultSize() const override { return TGDimension(38, 21); }
 
-   ClassDef(TGedMarkerSelect,0)  // Marker selection button
+   ClassDefOverride(TGedMarkerSelect,0)  // Marker selection button
 };
 
 #endif

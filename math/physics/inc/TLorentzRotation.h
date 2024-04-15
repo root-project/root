@@ -30,7 +30,7 @@ private:
    const TLorentzRotation * fRR;
    int fII;
 };
-   // Helper class for implemention of C-style subscripting r[i][j]
+   // Helper class for implementation of C-style subscripting r[i][j]
 
    TLorentzRotation();
    // Default constructor. Gives a unit matrix.
@@ -134,7 +134,7 @@ protected:
                     Double_t, Double_t, Double_t, Double_t);
    // Protected constructor.
 
-   ClassDef(TLorentzRotation,1) // Lorentz transformations including boosts and rotations
+   ClassDefOverride(TLorentzRotation,1) // Lorentz transformations including boosts and rotations
 
 };
 

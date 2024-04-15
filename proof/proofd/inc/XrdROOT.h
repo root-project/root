@@ -39,6 +39,7 @@ private:
    XrdOucString fDir;
    XrdOucString fBinDir;
    XrdOucString fDataDir;
+   XrdOucString fEtcDir;
    XrdOucString fIncDir;
    XrdOucString fLibDir;
    XrdOucString fTag;
@@ -59,12 +60,14 @@ private:
 
 public:
    XrdROOT(const char *dir, const char *tag, const char *bindir = 0,
-           const char *incdir = 0, const char *libdir = 0, const char *datadir = 0);
+           const char *incdir = 0, const char *libdir = 0, const char *datadir = 0,
+           const char *etcdir = 0);
    ~XrdROOT() { }
 
    const char *Dir() const { return fDir.c_str(); }
    const char *BinDir() const { return fBinDir.c_str(); }
    const char *DataDir() const { return fDataDir.c_str(); }
+   const char *EtcDir() const { return fEtcDir.c_str(); }
    const char *IncDir() const { return fIncDir.c_str(); }
    const char *LibDir() const { return fLibDir.c_str(); }
    const char *Export() const { return fExport.c_str(); }

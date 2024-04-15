@@ -1,5 +1,5 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
@@ -12,18 +12,14 @@
 // Author    : Lorenzo.MONETA@cern.ch
 // Created by: moneta  at Thu Apr  8 10:26:22 2004
 
-
 #ifndef ROOT_Minuit2_SqrtUpParameterTransformation
 #define ROOT_Minuit2_SqrtUpParameterTransformation
 
-
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 class MnMachinePrecision;
-
 
 /**
  * Transformation from external to internal Parameter based on  sqrt(1 + x**2)
@@ -34,27 +30,25 @@ class MnMachinePrecision;
 class SqrtUpParameterTransformation /* : public ParameterTransformation */ {
 
 public:
+   // create with user defined precision
+   SqrtUpParameterTransformation() {}
 
-  // create with user defined precision
-  SqrtUpParameterTransformation() {}
+   ~SqrtUpParameterTransformation() {}
 
-  ~SqrtUpParameterTransformation() {}
+   // transformation from internal to external
+   long double Int2ext(long double Value, long double Upper) const;
 
-  // transformation from internal to external
-  double Int2ext(double Value, double Upper) const;
+   // transformation from external to internal
+   long double Ext2int(long double Value, long double Upper, const MnMachinePrecision &) const;
 
-  // transformation from external to internal
-  double Ext2int(double Value, double Upper, const MnMachinePrecision&) const;
-
-  // derivative of transformation from internal to external
-  double DInt2Ext(double Value, double Upper) const;
+   // derivative of transformation from internal to external
+   long double DInt2Ext(long double Value, long double Upper) const;
 
 private:
-
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
 #endif

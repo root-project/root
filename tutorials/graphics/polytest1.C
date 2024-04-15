@@ -33,7 +33,7 @@ class PolyTest1 : public TNamed, public TAttLine, public TAttFill {
 public:
    PolyTest1(unsigned nVertices);
 
-   void Paint(const Option_t *notUsed);
+   void Paint(const Option_t *notUsed) override;
    void Reset(unsigned nVertices);
 
 private:
@@ -56,9 +56,9 @@ PolyTest1::PolyTest1(unsigned nVertices)
 void PolyTest1::Reset(unsigned nVertices)
 {
    //Some canvas must already exist by this point.
-   assert(gPad != 0 && "Reset, gPad is null");
+   assert(gPad != nullptr && "Reset, gPad is null");
    //We need a gRandom to exist.
-   assert(gRandom != 0 && "Reset, gRandom is null");
+   assert(gRandom != nullptr && "Reset, gRandom is null");
 
    if (nVertices < kNPointsDefault) {
       Warning("Reset", "resetting nVertices parameter to %u", unsigned(kNPointsDefault));
@@ -91,7 +91,7 @@ void PolyTest1::Reset(unsigned nVertices)
 //_____________________________________________________________
 void PolyTest1::Paint(const Option_t * /*notUsed*/)
 {
-   assert(gPad != 0 && "Paint, gPad is null");
+   assert(gPad != nullptr && "Paint, gPad is null");
 
    TAttFill::Modify();
    gPad->PaintFillArea((Int_t)fXs.size(), &fXs[0], &fYs[0]);

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Node                                                                  *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      kd-tree (binary tree) template                                            *
@@ -20,7 +20,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_NodekNN
@@ -31,9 +31,10 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include <utility>
 
 // ROOT
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 /*! \class TMVA::kNN::Node
 \ingroup TMVA
@@ -223,8 +224,8 @@ namespace TMVA
 template<class T>
 TMVA::kNN::Node<T>::Node(const Node<T> *parent, const T &event, const Int_t mod)
 :fNodeP(parent),
-   fNodeL(0),
-   fNodeR(0),
+   fNodeL(nullptr),
+   fNodeR(nullptr),
    fEvent(event),
    fVarDis(event.GetVar(mod)),
    fVarMin(fVarDis),
@@ -256,7 +257,7 @@ const TMVA::kNN::Node<T>* TMVA::kNN::Node<T>::Add(const T &event, const UInt_t d
    fVarMin = std::min(fVarMin, value);
    fVarMax = std::max(fVarMax, value);
 
-   Node<T> *node = 0;
+   Node<T> *node = nullptr;
    if (value < fVarDis) {
       if (fNodeL)
          {

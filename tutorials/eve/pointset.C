@@ -15,7 +15,7 @@
 #include <TMath.h>
 
 
-TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
+TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=nullptr)
 {
    TEveManager::Create();
 
@@ -48,11 +48,11 @@ TEvePointSet* pointset(Int_t npoints = 512, TEveElement* parent=0)
 }
 
 TEvePointSet* pointset_hierarchy(Int_t level=3, Int_t nps=1, Int_t fac=2,
-                                 Int_t npoints=512, TEveElement* parent=0)
+                                 Int_t npoints=512, TEveElement* parent=nullptr)
 {
    // This only works in compiled mode!
 
-   TEvePointSet* ps = 0;
+   TEvePointSet* ps = nullptr;
    --level;
    for (Int_t i=0; i<nps; ++i) {
       printf("level=%d nps=%d i=%d\n", level, nps, i);
@@ -79,7 +79,7 @@ TEvePointSetArray* pointsetarray()
    gEve->AddElement(l);
    l->InitBins("Charge", 9, 10, 100);
 
-   TColor::SetPalette(1, 0); // Spectrum palette
+   TColor::SetPalette(1, nullptr); // Spectrum palette
    const Int_t nCol = TColor::GetNumberOfColors();
    for (Int_t i = 1; i <= 9; ++i)
       l->GetBin(i)->SetMainColor(TColor::GetColorPalette(i * nCol / 10));

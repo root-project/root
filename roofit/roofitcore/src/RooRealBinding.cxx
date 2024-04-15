@@ -23,25 +23,19 @@ Lightweight interface adaptor that binds a RooAbsReal object to a subset
 of its servers and present it as a simple array oriented interface.
 **/
 
-
-#include "RooFit.h"
-#include "Riostream.h"
-
 #include "RooRealBinding.h"
+
 #include "RooAbsReal.h"
 #include "RooArgSet.h"
 #include "RooAbsRealLValue.h"
 #include "RooNameReg.h"
 #include "RooMsgService.h"
 
-#include <assert.h>
+#include <cassert>
 
-
-
-using namespace std;
+using std::endl;
 
 ClassImp(RooRealBinding);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,29 +48,26 @@ ClassImp(RooRealBinding);
 /// defined range of the variables are clipped to fit in the defined
 /// range.
 
-RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, Bool_t clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(0), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
+RooRealBinding::RooRealBinding(const RooAbsReal &func, const RooArgSet &vars, const RooArgSet *nset, bool clipInvalid,
+                               const TNamed *rangeName)
+   : RooAbsFunc(vars.size()), _func(&func), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName), _funcSave(0)
 {
-  // allocate memory
-  _vars= new RooAbsRealLValue*[getDimension()];
-  if(0 == _vars) {
-    _valid= kFALSE;
-    return;
-  }
   // check that all of the arguments are real valued and store them
-  RooAbsArg *var = 0;
-  TIterator* iter = vars.createIterator() ;
-  Int_t index(0) ;
-  while((var=(RooAbsArg*)iter->Next())) {
-    _vars[index]= dynamic_cast<RooAbsRealLValue*>(var);
-    if(0 == _vars[index]) {
-      oocoutE((TObject*)0,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName() << endl ;
-      _valid= kFALSE;
+  for (unsigned int index=0; index < vars.size(); ++index) {
+    RooAbsArg* var = vars[index];
+    _vars.push_back(dynamic_cast<RooAbsRealLValue*>(var));
+    if(_vars.back() == nullptr) {
+      oocoutE(nullptr,InputArguments) << "RooRealBinding: cannot bind to " << var->GetName()
+          << ". Variables need to be assignable, e.g. instances of RooRealVar." << endl ;
+      _valid= false;
     }
-    index++ ;
+    if (!_func->dependsOn(*_vars[index])) {
+      oocoutW(nullptr, InputArguments) << "RooRealBinding: The function " << func.GetName() << " does not depend on the parameter " << _vars[index]->GetName()
+          << ". Note that passing copies of the parameters is not supported." << std::endl;
+    }
   }
-  delete iter ;
-  _xvecValid = kTRUE ;
+
+  _xvecValid = true ;
 }
 
 
@@ -91,27 +82,14 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 /// range.
 
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
-  RooAbsFunc(other), _func(other._func), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
-  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
+  RooAbsFunc(other), _func(other._func), _vars(other._vars), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
+  _clipInvalid(other._clipInvalid), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
-  // allocate memory
-  _vars= new RooAbsRealLValue*[getDimension()];
 
-  for(unsigned int index=0 ; index<getDimension() ; index++) {
-    _vars[index]= other._vars[index] ;
-  }
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRealBinding::~RooRealBinding() 
-{
-  if(0 != _vars) delete[] _vars;
-  if (_xsave) delete[] _xsave ;
-}
-
+RooRealBinding::~RooRealBinding() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,32 +97,30 @@ RooRealBinding::~RooRealBinding()
 
 void RooRealBinding::saveXVec() const
 {
-  if (!_xsave) {
-    _xsave = new Double_t[getDimension()] ;    
-    RooArgSet* comps = _func->getComponents() ;
-    RooFIter iter = comps->fwdIterator() ;
-    RooAbsArg* arg ;
-    while ((arg=iter.next())) {
-      if (dynamic_cast<RooAbsReal*>(arg)) {
-	_compList.push_back((RooAbsReal*)(arg)) ;
-	_compSave.push_back(0) ;
+  if (_xsave.empty()) {
+    _xsave.resize(getDimension());
+    std::unique_ptr<RooArgSet> comps{_func->getComponents()};
+    for (auto* arg : dynamic_range_cast<RooAbsArg*>(*comps)) {
+      if (arg) {
+        _compList.push_back(static_cast<RooAbsReal*>(arg)) ;
+        _compSave.push_back(0.0) ;
       }
     }
-    delete comps ;
   }
   _funcSave = _func->_value ;
 
   // Save components
-  list<RooAbsReal*>::iterator ci = _compList.begin() ;
-  list<Double_t>::iterator si = _compSave.begin() ;
-  while(ci!=_compList.end()) {
+  auto ci = _compList.begin() ;
+  auto si = _compSave.begin() ;
+  while(ci != _compList.end()) {
     *si = (*ci)->_value ;
-    ++si ; ++ci ;
+    ++si;
+    ++ci;
   }
-  
+
   for (UInt_t i=0 ; i<getDimension() ; i++) {
     _xsave[i] = _vars[i]->getVal() ;
-  } 
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -153,17 +129,18 @@ void RooRealBinding::saveXVec() const
 
 void RooRealBinding::restoreXVec() const
 {
-  if (!_xsave) {
+  if (_xsave.empty()) {
     return ;
   }
   _func->_value = _funcSave ;
 
   // Restore components
-  list<RooAbsReal*>::iterator ci = _compList.begin() ;
-  list<Double_t>::iterator si = _compSave.begin() ;
-  while (ci!=_compList.end()) {
+  auto ci = _compList.begin() ;
+  auto si = _compSave.begin() ;
+  while (ci != _compList.end()) {
     (*ci)->_value = *si ;
-    ++ci ; ++si ;
+    ++ci;
+    ++si;
   }
 
   for (UInt_t i=0 ; i<getDimension() ; i++) {
@@ -175,40 +152,40 @@ void RooRealBinding::restoreXVec() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Load the vector of variable values into the RooRealVars associated
-/// as variables with the bound RooAbsReal function
-
-void RooRealBinding::loadValues(const Double_t xvector[]) const 
+/// as variables with the bound RooAbsReal function.
+/// \warning This will load as many values as the dimensionality of the function
+/// requires. The size of `xvector` is not checked.
+void RooRealBinding::loadValues(const double xvector[]) const
 {
-  _xvecValid = kTRUE ;
-  const char* range = RooNameReg::instance().constStr(_rangeName) ;
+  _xvecValid = true ;
+  const char* range = RooNameReg::str(_rangeName) ;
   for(UInt_t index= 0; index < _dimension; index++) {
     if (_clipInvalid && !_vars[index]->isValidReal(xvector[index])) {
-      _xvecValid = kFALSE ;
+      _xvecValid = false ;
     } else {
       _vars[index]->setVal(xvector[index],range);
     }
   }
 
-}  
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the bound RooAbsReal at the variable values provided in xvector
 
-Double_t RooRealBinding::operator()(const Double_t xvector[]) const 
+double RooRealBinding::operator()(const double xvector[]) const
 {
   assert(isValid());
   _ncall++ ;
   loadValues(xvector);
-  //cout << getName() << "(x=" << xvector[0] << ")=" << _func->getVal(_nset) << " (nset = " << (_nset? *_nset:RooArgSet()) << ")" << endl ;
   return _xvecValid ? _func->getVal(_nset) : 0. ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return lower limit on i-th variable 
+/// Return lower limit on i-th variable
 
-Double_t RooRealBinding::getMinLimit(UInt_t index) const 
+double RooRealBinding::getMinLimit(UInt_t index) const
 {
   assert(isValid());
 
@@ -217,9 +194,9 @@ Double_t RooRealBinding::getMinLimit(UInt_t index) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return upper limit on i-th variable 
+/// Return upper limit on i-th variable
 
-Double_t RooRealBinding::getMaxLimit(UInt_t index) const 
+double RooRealBinding::getMaxLimit(UInt_t index) const
 {
   assert(isValid());
   return _vars[index]->getMax(RooNameReg::str(_rangeName));
@@ -229,23 +206,23 @@ Double_t RooRealBinding::getMaxLimit(UInt_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return name of function
 
-const char* RooRealBinding::getName() const 
-{ 
-  return _func->GetName() ; 
-} 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::list<Double_t>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+const char* RooRealBinding::getName() const
 {
-  return _func->plotSamplingHint(obs,xlo,xhi) ; 
+  return _func->GetName() ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::list<Double_t>* RooRealBinding::binBoundaries(Int_t index) const
+std::list<double>* RooRealBinding::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+{
+  return _func->plotSamplingHint(obs,xlo,xhi) ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::list<double>* RooRealBinding::binBoundaries(Int_t index) const
 {
   return _func->binBoundaries(*_vars[index],getMinLimit(index),getMaxLimit(index));
 }

@@ -29,11 +29,10 @@
 #include <cassert>
 
 #include <iostream>
-#include <iomanip>
 #include <cmath>
 #include <algorithm>
 #include <functional>
-#include <ctype.h>   // need to use c version of tolower defined here
+#include <cctype>   // need to use c version of tolower defined here
 #include <limits>
 
 namespace ROOT {
@@ -43,7 +42,7 @@ namespace ROOT {
 
 BasicMinimizer::BasicMinimizer( ) :
    fDim(0),
-   fObjFunc(0),
+   fObjFunc(nullptr),
    fMinVal(0)
 {
    fValues.reserve(10);
@@ -133,7 +132,7 @@ bool BasicMinimizer::SetVariableValue(unsigned int ivar, double val) {
 
 bool BasicMinimizer::SetVariableValues( const double * x) {
    // set all variable values in minimizer
-   if (x == 0) return false;
+   if (x == nullptr) return false;
    std::copy(x,x+fValues.size(), fValues.begin() );
    return true;
 }
@@ -239,15 +238,8 @@ int BasicMinimizer::VariableIndex(const std::string & name) const {
 
 
 void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
-   // set the function to minimizer
+   // set the function to minimizer after cloning it
    fObjFunc = func.Clone();
-   fDim = fObjFunc->NDim();
-}
-
-void BasicMinimizer::SetFunction(const ROOT::Math::IMultiGradFunction & func) {
-   // set the function to minimize
-   fObjFunc = dynamic_cast<const ROOT::Math::IMultiGradFunction *>( func.Clone());
-   assert(fObjFunc != 0);
    fDim = fObjFunc->NDim();
 }
 
@@ -262,7 +254,7 @@ bool BasicMinimizer::CheckDimension() const {
 }
 
 bool BasicMinimizer::CheckObjFunction() const {
-   if (fObjFunc == 0) {
+   if (fObjFunc == nullptr) {
       MATH_ERROR_MSG("BasicMinimizer::CheckFunction","Function has not been set");
       return false;
    }
@@ -272,7 +264,7 @@ bool BasicMinimizer::CheckObjFunction() const {
 
 MinimTransformFunction * BasicMinimizer::CreateTransformation(std::vector<double> & startValues, const ROOT::Math::IMultiGradFunction * func) {
 
-   bool doTransform = (fBounds.size() > 0);
+   bool doTransform = (!fBounds.empty());
    unsigned int ivar = 0;
    while (!doTransform && ivar < fVarTypes.size() ) {
       doTransform = (fVarTypes[ivar++] != kDefault );
@@ -280,37 +272,22 @@ MinimTransformFunction * BasicMinimizer::CreateTransformation(std::vector<double
 
    startValues = std::vector<double>(fValues.begin(), fValues.end() );
 
-   MinimTransformFunction * trFunc  = 0;
-
    // in case of transformation wrap objective function in a new transformation function
-   // and transform from external variables  to internals one
+   // and transform from external variables  to internals ones type
    // Transformations are supported only for gradient function
    const IMultiGradFunction * gradObjFunc = (func) ? func : dynamic_cast<const IMultiGradFunction *>(fObjFunc);
-   doTransform &= (gradObjFunc != 0);
+   doTransform &= (gradObjFunc != nullptr);
 
-   if (doTransform)   {
-      // minim transform function manages the passed function pointer (gradObjFunc)
-      trFunc =  new MinimTransformFunction ( gradObjFunc, fVarTypes, fValues, fBounds );
-      // transform from external to internal
-      trFunc->InvTransformation(&fValues.front(), &startValues[0]);
-      // size can be different since internal parameter can have smaller size
-      // if there are fixed parameters
-      startValues.resize( trFunc->NDim() );
-      // no need to save fObjFunc since trFunc will manage it
-      fObjFunc = trFunc;
-   }
-   else {
-      if (func) fObjFunc = func;  // to manege the passed function object
-   }
+   if (!doTransform) return nullptr;
 
-//    std::cout << " f has transform " << doTransform << "  " << fBounds.size() << "   " << startValues.size() <<  " ndim " << fObjFunc->NDim() << std::endl;   std::cout << "InitialValues external : ";
-//    for (int i = 0; i < fValues.size(); ++i) std::cout << fValues[i] << "  ";
-//    std::cout << "\n";
-//    std::cout << "InitialValues internal : ";
-//    for (int i = 0; i < startValues.size(); ++i) std::cout << startValues[i] << "  ";
-//    std::cout << "\n";
-
-
+   // minim transform function manages the passed function pointer (gradObjFunc)
+   auto trFunc =  new MinimTransformFunction ( gradObjFunc, fVarTypes, fValues, fBounds );
+   // transform from external to internal
+   trFunc->InvTransformation(&fValues.front(), &startValues[0]);
+   // size can be different since internal parameter can have smaller size
+   // if there are fixed parameters
+   startValues.resize( trFunc->NDim() );
+   // we transfer ownership of trFunc to the caller
    return trFunc;
 }
 
@@ -320,9 +297,8 @@ bool BasicMinimizer::Minimize() {
    return false;
 }
 
-void BasicMinimizer::SetFinalValues(const double * x) {
-   // check to see if a transformation need to be applied
-   const MinimTransformFunction * trFunc = TransformFunction();
+void BasicMinimizer::SetFinalValues(const double * x, const MinimTransformFunction * trFunc) {
+   // check to see if a transformation needs to be applied
    if (trFunc) {
       assert(fValues.size() >= trFunc->NTot() );
       trFunc->Transformation(x, &fValues[0]);
@@ -350,9 +326,6 @@ const ROOT::Math::IMultiGradFunction * BasicMinimizer::GradObjFunction() const {
       return  dynamic_cast<const ROOT::Math::IMultiGradFunction *>(fObjFunc);
 }
 
-const MinimTransformFunction * BasicMinimizer::TransformFunction() const {
-   return dynamic_cast<const MinimTransformFunction *>(fObjFunc);
-}
 
 unsigned int BasicMinimizer::NFree() const {
    // number of free variables

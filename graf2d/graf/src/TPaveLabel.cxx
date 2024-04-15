@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
 #include "TStyle.h"
 #include "TPaveLabel.h"
@@ -39,6 +39,7 @@ TPaveLabel::TPaveLabel(): TPave(), TAttText()
 /// a PaveLabel is a Pave with a label centered in the Pave
 /// The Pave is by default defined bith bordersize=5 and option ="br".
 /// The text size is automatically computed as a function of the pave size.
+/// To remove the shadow or border of a TPaveLabel, use the function TPave::SetBorderSize
 
 TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const char *label, Option_t *option)
            :TPave(x1,y1,x2,y2,3,option), TAttText(22,0,1,gStyle->GetTextFont(),0.99)
@@ -47,18 +48,28 @@ TPaveLabel::TPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Pavelabel default destructor.
+/// TPaveLabel default destructor.
 
 TPaveLabel::~TPaveLabel()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Pavelabel copy constructor.
+/// TPaveLabel copy constructor.
 
 TPaveLabel::TPaveLabel(const TPaveLabel &pavelabel) : TPave(pavelabel), TAttText(pavelabel)
 {
-   ((TPaveLabel&)pavelabel).Copy(*this);
+   pavelabel.TPaveLabel::Copy(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// TPaveLabel assign operator
+
+TPaveLabel& TPaveLabel::operator=(const TPaveLabel &pavelabel)
+{
+   if (this != &pavelabel)
+      pavelabel.TPaveLabel::Copy(*this);
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +79,7 @@ void TPaveLabel::Copy(TObject &obj) const
 {
    TPave::Copy(obj);
    TAttText::Copy(((TPaveLabel&)obj));
-   ((TPaveLabel&)obj).fLabel      = fLabel;
+   ((TPaveLabel &)obj).fLabel = fLabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,8 +88,8 @@ void TPaveLabel::Copy(TObject &obj) const
 void TPaveLabel::Draw(Option_t *option)
 {
    Option_t *opt;
-   if (option && strlen(option)) opt = option;
-   else                          opt = GetOption();
+   if (option && *option) opt = option;
+   else                   opt = GetOption();
 
    AppendPad(opt);
 }
@@ -86,11 +97,12 @@ void TPaveLabel::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pavelabel with new coordinates.
 
-void TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
+TPaveLabel *TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const char *label, Option_t *option)
 {
    TPaveLabel *newpavelabel = new TPaveLabel(x1,y1,x2,y2,label,option);
    newpavelabel->SetBit(kCanDelete);
    newpavelabel->AppendPad();
+   return newpavelabel;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +113,7 @@ void TPaveLabel::Paint(Option_t *option)
    // Convert from NDC to pad coordinates
    TPave::ConvertNDCtoPad();
 
-   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), strlen(option)?option:GetOption());
+   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), option && strlen(option) ? option : GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +122,8 @@ void TPaveLabel::Paint(Option_t *option)
 void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
-   Int_t nch = strlen(label);
+   if (!gPad) return;
+   Int_t nch = label ? strlen(label) : 0;
 
    // Draw the pave
    TPave::PaintPave(x1,y1,x2,y2,GetBorderSize(),option);
@@ -132,6 +145,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    // Draw label
    Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   if (wh==0||hh==0) return;
    Double_t labelsize, textsize = GetTextSize();
    Int_t automat = 0;
    if (GetTextFont()%10 > 2) {  // fixed size font specified in pixels
@@ -199,8 +213,10 @@ void TPaveLabel::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out<<"pl = new TPaveLabel("<<fX1NDC<<","<<fY1NDC<<","<<fX2NDC<<","<<fY2NDC
          <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
    } else {
-      out<<"pl = new TPaveLabel("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
-         <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
+      if (gPad) {
+         out<<"pl = new TPaveLabel("<<gPad->PadtoX(fX1)<<","<<gPad->PadtoY(fY1)<<","<<gPad->PadtoX(fX2)<<","<<gPad->PadtoY(fY2)
+            <<","<<quote<<s.Data()<<quote<<","<<quote<<fOption<<quote<<");"<<std::endl;
+      }
    }
    if (fBorderSize != 3) {
       out<<"   pl->SetBorderSize("<<fBorderSize<<");"<<std::endl;

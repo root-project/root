@@ -18,7 +18,7 @@ private:
    Double_t     fMass[18];       // masses of particles
    Double_t     fBeta[3];        // betas of decaying particle
    Double_t     fTeCmTm;         // total energy in the C.M. minus the total mass
-   Double_t     fWtMax;          // maximum weigth
+   Double_t     fWtMax;          // maximum weight
    TLorentzVector  fDecPro[18];  //kinematics of the generated particles
 
    Double_t PDK(Double_t a, Double_t b, Double_t c);
@@ -26,7 +26,7 @@ private:
 public:
    TGenPhaseSpace(): fNt(0), fMass(), fBeta(), fTeCmTm(0.), fWtMax(0.) {}
    TGenPhaseSpace(const TGenPhaseSpace &gen);
-   virtual ~TGenPhaseSpace() {}
+   ~TGenPhaseSpace() override {}
    TGenPhaseSpace& operator=(const TGenPhaseSpace &gen);
 
    Bool_t          SetDecay(TLorentzVector &P, Int_t nt, const Double_t *mass, Option_t *opt="");
@@ -36,7 +36,7 @@ public:
    Int_t    GetNt()      const { return fNt;}
    Double_t GetWtMax()   const { return fWtMax;}
 
-   ClassDef(TGenPhaseSpace,1) //Simple Phase Space Generator
+   ClassDefOverride(TGenPhaseSpace,1) //Simple Phase Space Generator
 };
 
 #endif

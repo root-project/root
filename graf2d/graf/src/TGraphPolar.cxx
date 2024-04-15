@@ -55,10 +55,8 @@ Begin_Macro(source)
 End_Macro
 */
 
-#include "TROOT.h"
 #include "TGraphPolar.h"
 #include "TGraphPolargram.h"
-#include "TVirtualPad.h"
 
 ClassImp(TGraphPolar);
 
@@ -66,7 +64,7 @@ ClassImp(TGraphPolar);
 /// TGraphPolar default constructor.
 
 TGraphPolar::TGraphPolar() : TGraphErrors(),
-             fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
+             fOptionAxis(kFALSE),fPolargram(nullptr),fXpol(nullptr),fYpol(nullptr)
 {
 }
 
@@ -82,7 +80,7 @@ TGraphPolar::TGraphPolar() : TGraphErrors(),
 TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
                                   const Double_t *etheta, const Double_t* er)
   : TGraphErrors(n,theta,r,etheta,er),
-             fOptionAxis(kFALSE),fPolargram(0),fXpol(0),fYpol(0)
+             fOptionAxis(kFALSE),fPolargram(nullptr),fXpol(nullptr),fYpol(nullptr)
 {
    SetEditable(kFALSE);
 }
@@ -92,8 +90,8 @@ TGraphPolar::TGraphPolar(Int_t n, const Double_t* theta, const Double_t* r,
 
 TGraphPolar::~TGraphPolar()
 {
-   delete []fXpol;
-   delete []fYpol;
+   delete [] fXpol;
+   delete [] fYpol;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

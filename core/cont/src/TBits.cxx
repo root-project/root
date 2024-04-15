@@ -10,7 +10,7 @@ Container of bits.
 This class provides a simple container of bits.
 Each bit can be set and tested via the functions SetBitNumber and
 TestBitNumber.
-                                             .
+
 The default value of all bits is kFALSE.
 The size of the container is automatically extended when a bit
 number is either set or tested.  To reduce the memory size of the
@@ -20,10 +20,10 @@ occupied by the upper bits that are 0.
 
 #include "TBits.h"
 
-#include "Riostream.h"
 #include "TObject.h"
 
-#include <string.h>
+#include <iostream>
+#include <cstring>
 
 ClassImp(TBits);
 
@@ -64,7 +64,7 @@ TBits& TBits::operator=(const TBits& rhs)
          fAllBits = new UChar_t[fNbytes];
          memcpy(fAllBits,rhs.fAllBits,fNbytes);
       } else {
-         fAllBits = 0;
+         fAllBits = nullptr;
       }
    }
    return *this;
@@ -84,7 +84,7 @@ TBits::~TBits()
 void TBits::Clear(Option_t * /*option*/)
 {
    delete [] fAllBits;
-   fAllBits = 0;
+   fAllBits = nullptr;
    fNbits   = 0;
    fNbytes  = 0;
 }
@@ -147,7 +147,7 @@ UInt_t TBits::CountBits(UInt_t startBit) const
    UInt_t ibit = startBit%8;
    if (ibit) {
       for (i=ibit;i<8;i++) {
-         if (fAllBits[startByte] & (1<<ibit)) count++;
+         if (fAllBits[startByte] & (1<<i)) count++;
       }
       startByte++;
    }

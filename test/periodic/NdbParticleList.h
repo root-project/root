@@ -15,7 +15,7 @@ protected:
 
 public:
    NdbParticleList() : mult(), part() { }
-   ~NdbParticleList() {}
+   ~NdbParticleList() override {}
 
    // --- Access Functions ---
    Int_t   TotalCharge();      // Total charge
@@ -25,7 +25,7 @@ public:
 
    void   Add(NdbParticle *p, Int_t n=1);
 
-   ClassDef(NdbParticleList,1)
+   ClassDefOverride(NdbParticleList,1)
 
 }; // NdbParticleList
 

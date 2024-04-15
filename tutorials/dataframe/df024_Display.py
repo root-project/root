@@ -1,13 +1,15 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook
+## Use the Display action to inspect entry values.
+##
 ## This tutorial shows how to use the Display action
 ##
 ## \macro_code
 ## \macro_output
 ##
 ## \date August 2018
-## \author Enrico Guiraud, Danilo Piparo, Enric Tejedor Saavedra CERN, Massimo Tumolo Politecnico di Torino
+## \authors Enrico Guiraud, Danilo Piparo, Enric Tejedor Saavedra (CERN), Massimo Tumolo (Politecnico di Torino)
 
 import ROOT
 

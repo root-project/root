@@ -34,12 +34,12 @@
 // Routines for processing URLs.
 
 #include <ctype.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstring>
+#include <cstdlib>
 
 #include "TGHtml.h"
 #include "TGHtmlUri.h"
-
+#include "strlcpy.h"
 
 static char *StrNDup(const char *z, int n);
 static void ReplaceStr(char **pzDest, const char *zSrc);
@@ -55,7 +55,7 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
 {
    int n;
 
-   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = nullptr;
 
    if (zUri && *zUri) {
       while (isspace(*zUri)) ++zUri;
@@ -91,7 +91,7 @@ TGHtmlUri::TGHtmlUri(const char *zUri)
 
 TGHtmlUri::TGHtmlUri(const TGHtmlUri *uri)
 {
-   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = (char *) 0;
+   fZScheme = fZAuthority = fZPath = fZQuery = fZFragment = nullptr;
 
    if (uri) {
       if (uri->fZScheme)    fZScheme    = StrDup(uri->fZScheme);
@@ -203,51 +203,28 @@ int TGHtmlUri::ComponentLength(const char *z, const char *zInit, const char *zTe
 
 char *TGHtmlUri::BuildUri()
 {
-   int n = 1;
-   char *z;
+   TString uri;
 
-   if (fZScheme)    n += strlen(fZScheme) + 1;
-   if (fZAuthority) n += strlen(fZAuthority) + 3;
-   if (fZPath)      n += strlen(fZPath) + 1;
-   if (fZQuery)     n += strlen(fZQuery) + 1;
-   if (fZFragment)  n += strlen(fZFragment) + 1;
-   z = new char[n];
-   if (z == 0) return 0;
-   n = 0;
-   if (fZScheme) {
-      // coverity[secure_coding]
-      sprintf(z, "%s:", fZScheme);
-      n = strlen(z);
-   }
-   if (fZAuthority) {
-      // coverity[secure_coding]
-      sprintf(&z[n], "//%s", fZAuthority);
-      n += strlen(&z[n]);
-   }
+   if (fZScheme)
+      uri.Append(TString::Format("%s:", fZScheme));
+
+   if (fZAuthority)
+      uri.Append(TString::Format("//%s", fZAuthority));
+
    if (fZAuthority && fZAuthority[strlen(fZAuthority)-1] != '/' &&
-      !(fZPath && fZPath[0] == '/')) {
-      // coverity[secure_coding]
-      strcat(z, "/");
-      ++n;
-   }
-   if (fZPath) {
-      // coverity[secure_coding]
-      sprintf(&z[n], "%s", fZPath);
-      n += strlen(&z[n]);
-   }
-   if (fZQuery) {
-      // coverity[secure_coding]
-      sprintf(&z[n], "?%s", fZQuery);
-      n += strlen(&z[n]);
-   }
-   if (fZFragment) {
-      // coverity[secure_coding]
-      sprintf(&z[n], "#%s", fZFragment);
-   } else {
-      z[n] = 0;
-   }
+         !(fZPath && fZPath[0] == '/'))
+      uri.Append("/");
 
-   return z;
+   if (fZPath)
+      uri.Append(fZPath);
+
+   if (fZQuery)
+      uri.Append(TString::Format("?%s", fZQuery));
+
+   if (fZFragment)
+      uri.Append(TString::Format("#%s", fZFragment));
+
+   return StrDup(uri.Data());
 }
 
 
@@ -340,21 +317,18 @@ char *TGHtml::ResolveUri(const char *zUri)
       ReplaceStr(&base->fZQuery, term->fZQuery);
       ReplaceStr(&base->fZFragment, term->fZFragment);
    } else if (term->fZPath && base->fZPath) {
-      char *zBuf;
-      int i, j;
-      zBuf = new char[strlen(base->fZPath) + strlen(term->fZPath) + 2];
+      int i, j, zBufSz = strlen(base->fZPath) + strlen(term->fZPath) + 2;
+      char *zBuf = new char[zBufSz];
       if (zBuf) {
-         // coverity[secure_coding]
-         sprintf(zBuf, "%s", base->fZPath);
+         strlcpy(zBuf, base->fZPath, zBufSz);
          for (i = strlen(zBuf) - 1; i >= 0 && zBuf[i] != '/'; --i) {
             zBuf[i] = 0;
          }
-         // coverity[secure_coding]
-         strcat(zBuf, term->fZPath);
+         strlcat(zBuf, term->fZPath, zBufSz);
          for (i = 0; zBuf[i]; i++) {
             if (zBuf[i] == '/' && zBuf[i+1] == '.' && zBuf[i+2] == '/') {
                // coverity[secure_coding]
-               strcpy(&zBuf[i+1], &zBuf[i+3]);
+               strcpy(&zBuf[i+1], &zBuf[i+3]); // NOLINT
                --i;
                continue;
             }
@@ -367,7 +341,7 @@ char *TGHtml::ResolveUri(const char *zUri)
                for (j = i - 1; j >= 0 && zBuf[j] != '/'; --j) {}
                if (zBuf[i+3]) {
                   // coverity[secure_coding]
-                  strcpy(&zBuf[j+1], &zBuf[i+4]);
+                  strcpy(&zBuf[j+1], &zBuf[i+4]); // NOLINT
                } else {
                   zBuf[j+1] = 0;
                }

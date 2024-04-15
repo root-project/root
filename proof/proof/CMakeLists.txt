@@ -9,16 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(alien)
-  add_definitions(-DALIENDSMGR)
-  set(PROOF_EXTRA_HEADERS TDataSetManagerAliEn.h)
-  set(PROOF_EXTRA_SOURCES src/TDataSetManagerAliEn.cxx)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Proof
   HEADERS
     TCondor.h
-    TDataSetManagerAliEn.h
     TDataSetManagerFile.h
     TDataSetManager.h
     TDSet.h
@@ -48,6 +41,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proof
     TSlave.h
     TSlaveLite.h
     TVirtualProofPlayer.h
+    TVirtualPacketizer.h
     ${PROOF_EXTRA_HEADERS}
   SOURCES
     src/TCondor.cxx
@@ -79,6 +73,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Proof
     src/TSlave.cxx
     src/TSlaveLite.cxx
     src/TVirtualProofPlayer.cxx
+    src/TVirtualPacketizer.cxx
     ${PROOF_EXTRA_SOURCES}
   DEPENDENCIES
     MathCore

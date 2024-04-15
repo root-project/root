@@ -1,0 +1,22 @@
+<lcgdict>
+
+  <class name="std::string" />
+
+  <class pattern="*_overload" />
+
+  <namespace name="ns_a_overload" />
+  <namespace name="ns_b_overload" />
+
+  <class pattern="ns_a_overload::*_overload" />
+  <class pattern="ns_b_overload::*_overload" />
+
+  <class pattern="*_ol" />
+  <function name="get_bb_ol" />
+  <function name="get_dd_ol" />
+  <class name="more_overloads" />
+  <class name="more_overloads2" />
+  <class name="more_overloads3" />
+
+  <function name="calc_mean" />
+
+</lcgdict>

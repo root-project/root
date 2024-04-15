@@ -179,7 +179,7 @@ file `simple.pdf`.
     following code the spaces between "text" and \#lambda were ignored.
 
 ``` {.cpp}
-       TLatex t; t.DrawLatex( 0.1,0.1,"text   #Lambda" )
+       TLatex t; t.DrawLatex( 0.1,0.1,"text   \#Lambda" )
 ```
 
 -   Implement `#backslash`.

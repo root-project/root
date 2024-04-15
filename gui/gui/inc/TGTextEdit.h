@@ -2,7 +2,7 @@
 // Author: Fons Rademakers   1/7/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,16 +13,6 @@
 #define ROOT_TGTextEdit
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGTextView.h"
 
 class TGPopupMenu;
@@ -32,8 +22,8 @@ class TGTextEditHist;
 class TGTextEdit : public TGTextView {
 
 private:
-   TGTextEdit(const TGTextEdit&); // Not implemented
-   TGTextEdit& operator=(const TGTextEdit&); // Not implemented
+   TGTextEdit(const TGTextEdit&) = delete;
+   TGTextEdit& operator=(const TGTextEdit&) = delete;
 
 public:
    enum EInsertMode { kInsert, kReplace };
@@ -44,18 +34,18 @@ public:
    };
 
 protected:
-   GContext_t       fCursor0GC;     // graphics context for erasing cursor
-   GContext_t       fCursor1GC;     // graphics context for drawing cursor
-   Int_t            fCursorState;   // cursor state (1=drawn, 2=erased)
-   TViewTimer      *fCurBlink;      // cursor blink timer
-   TGPopupMenu     *fMenu;          // popup menu with editor actions
-   TGSearchType    *fSearch;        // structure used by search dialog
-   TGLongPosition   fCurrent;       // current cursor position
-   EInsertMode      fInsertMode;    // *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
-   Bool_t           fEnableMenu;    // enable context menu with editor actions
-   TGTextEditHist  *fHistory;       // undo manager
-   Bool_t           fEnableCursorWithoutFocus; // enable cursor visibility when focus went out from
-                                               // text editor window (default is kTRUE)
+   GContext_t       fCursor0GC;     ///< graphics context for erasing cursor
+   GContext_t       fCursor1GC;     ///< graphics context for drawing cursor
+   Int_t            fCursorState;   ///< cursor state (1=drawn, 2=erased)
+   TViewTimer      *fCurBlink;      ///< cursor blink timer
+   TGPopupMenu     *fMenu;          ///< popup menu with editor actions
+   TGSearchType    *fSearch;        ///< structure used by search dialog
+   TGLongPosition   fCurrent;       ///< current cursor position
+   EInsertMode      fInsertMode;    ///< *OPTION={GetMethod="GetInsertMode";SetMethod="SetInsertMode";Items=(kInsert="&Insert",kReplace="&Replace")}*
+   Bool_t           fEnableMenu;    ///< enable context menu with editor actions
+   TGTextEditHist  *fHistory;       ///< undo manager
+   Bool_t           fEnableCursorWithoutFocus; ///< enable cursor visibility when focus went out from
+                                               ///< text editor window (default is kTRUE)
 
    static TGGC     *fgCursor0GC;
    static TGGC     *fgCursor1GC;
@@ -67,24 +57,24 @@ protected:
    virtual void CursorOff();
    virtual void DrawCursor(Int_t mode);
    virtual void AdjustPos();
-   virtual void Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   void Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
 
    static const TGGC &GetCursor0GC();
    static const TGGC &GetCursor1GC();
 
 public:
-   TGTextEdit(const TGWindow *parent = 0, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
+   TGTextEdit(const TGWindow *parent = nullptr, UInt_t w = 1, UInt_t h = 1, Int_t id = -1,
               UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGTextEdit();
+   ~TGTextEdit() override;
 
    virtual Bool_t SaveFile(const char *fname, Bool_t saveas = kFALSE);
-   virtual void   Clear(Option_t * = "");
-   virtual Bool_t Copy();
+           void   Clear(Option_t * = "") override;
+           Bool_t Copy() override;
    virtual Bool_t Cut();
    virtual Bool_t Paste();
    virtual void   InsChar(char character);
@@ -98,9 +88,9 @@ public:
    virtual void   ScreenDown();
    virtual void   Home();
    virtual void   End();
-   virtual void   Print(Option_t * = "") const;
-   virtual void   Delete(Option_t * = "");
-   virtual Bool_t Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE);
+           void   Print(Option_t * = "") const override;
+           void   Delete(Option_t * = "") override;
+           Bool_t Search(const char *string, Bool_t direction = kTRUE, Bool_t caseSensitive = kFALSE) override;
    virtual void   Search(Bool_t close);
    virtual Bool_t Replace(TGLongPosition pos, const char *oldText, const char *newText,
                           Bool_t direction, Bool_t caseSensitive);
@@ -114,23 +104,23 @@ public:
    virtual void   EnableCursorWithoutFocus(Bool_t on = kTRUE) { fEnableCursorWithoutFocus = on; }
    virtual Bool_t IsCursorEnabledithoutFocus() const { return fEnableCursorWithoutFocus; }
 
-   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height);
-   virtual void   ScrollCanvas(Int_t newTop, Int_t direction);
+           void   DrawRegion(Int_t x, Int_t y, UInt_t width, UInt_t height) override;
+           void   ScrollCanvas(Int_t newTop, Int_t direction) override;
    virtual void   SetFocus() { RequestFocus(); }
 
    virtual void   SetCurrent(TGLongPosition new_coord);
    TGLongPosition GetCurrentPos() const { return fCurrent; }
-   virtual Long_t ReturnLongestLineWidth();
+           Long_t ReturnLongestLineWidth() override;
 
-   virtual Bool_t HandleTimer(TTimer *t);
-   virtual Bool_t HandleSelection (Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleKey(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
-   virtual Bool_t HandleCrossing(Event_t *event);
-   virtual Bool_t HandleFocusChange(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+           Bool_t HandleTimer(TTimer *t) override;
+           Bool_t HandleSelection (Event_t *event) override;
+           Bool_t HandleButton(Event_t *event) override;
+           Bool_t HandleKey(Event_t *event) override;
+           Bool_t HandleMotion(Event_t *event) override;
+           Bool_t HandleCrossing(Event_t *event) override;
+           Bool_t HandleFocusChange(Event_t *event) override;
+           Bool_t HandleDoubleClick(Event_t *event) override;
+           Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    virtual void   FindAgain() { Emit("FindAgain()"); }  //*SIGNAL*
    virtual void   Closed() { Emit("Closed()"); }        //*SIGNAL*
@@ -138,9 +128,9 @@ public:
    virtual void   Saved() { Emit("Saved()"); }          //*SIGNAL*
    virtual void   SavedAs() { Emit("SavedAs()"); }      //*SIGNAL*
 
-   virtual void   SavePrimitive(std::ostream &out, Option_t * = "");
+   void           SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGTextEdit,0)  // Text edit widget
+   ClassDefOverride(TGTextEdit,0)  // Text edit widget
 };
 
 #endif

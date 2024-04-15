@@ -38,32 +38,32 @@ private:
 
    Int_t         LockSession(const char *sessiontag, TProofLockPath **lck);
 
-   Int_t         Setup();
+   Int_t         Setup() override;
 
 public:
    TXProofServ(Int_t *argc, char **argv, FILE *flog = 0);
-   virtual ~TXProofServ();
+   ~TXProofServ() override;
 
-   Int_t         CreateServer();
+   Int_t         CreateServer() override;
 
    // Disable / Enable read timeout
-   void          DisableTimeout();
-   void          EnableTimeout();
+   void          DisableTimeout() override;
+   void          EnableTimeout() override;
 
    EQueryAction  GetWorkers(TList *workers, Int_t &prioritychange,
-                            Bool_t resume = kFALSE);
+                            Bool_t resume = kFALSE) override;
 
-   Bool_t        HandleError(const void *in = 0); // Error Handler
-   Bool_t        HandleInput(const void *in = 0); // Input handler
+   Bool_t        HandleError(const void *in = 0) override; // Error Handler
+   Bool_t        HandleInput(const void *in = 0) override; // Input handler
 
-   void          HandleUrgentData();
-   void          HandleSigPipe();
-   void          HandleTermination();
+   void          HandleUrgentData() override;
+   void          HandleSigPipe() override;
+   void          HandleTermination() override;
 
-   void          ReleaseWorker(const char *ord);
-   void          Terminate(Int_t status);
+   void          ReleaseWorker(const char *ord) override;
+   void          Terminate(Int_t status) override;
 
-   ClassDef(TXProofServ,0)  //XRD PROOF Server Application Interface
+   ClassDefOverride(TXProofServ,0)  //XRD PROOF Server Application Interface
 };
 
 #endif

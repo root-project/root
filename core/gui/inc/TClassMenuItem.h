@@ -55,11 +55,11 @@ protected:
 public:
    TClassMenuItem();
    TClassMenuItem(Int_t type, TClass *parent, const char *title="",
-                  const char *functionname="", TObject *obj=0,
+                  const char *functionname="", TObject *obj=nullptr,
                   const char *args="", Int_t selfobjposition=-1,
                   Bool_t self=kFALSE);
    virtual        ~TClassMenuItem();
-   virtual const char *GetTitle() const { return fTitle; }
+   const char    *GetTitle() const override { return fTitle.Data(); }
    virtual const char *GetFunctionName() const { return fFunctionName; }
    virtual const char *GetArgs() const { return fArgs; }
    virtual TObject *GetCalledObject() const { return fCalledObject; }
@@ -78,7 +78,7 @@ public:
                        { fCalledObject = obj; fFunctionName = method;
                          fArgs = args; fSelfObjectPos = selfobjposition;}
 
-   ClassDef(TClassMenuItem,0)  //One element of the class context menu
+   ClassDefOverride(TClassMenuItem,0)  //One element of the class context menu
 };
 
 #endif

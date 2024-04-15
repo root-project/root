@@ -14,16 +14,17 @@
 
 #include "TBranchProxyDirector.h"
 #include "TTree.h"
-#include "TBranch.h"
+#include "TBranchElement.h"
 #include "TLeaf.h"
 #include "TClonesArray.h"
 #include "TString.h"
-#include "Riostream.h"
 #include "TError.h"
 #include "TVirtualCollectionProxy.h"
 #include "TNotifyLink.h"
 
 #include <algorithm>
+#include <string>
+#include <iostream>
 
 class TBranch;
 class TStreamerElement;
@@ -42,12 +43,12 @@ class TStreamerElement;
 
 namespace ROOT {
 namespace Internal {
-   //_______________________________________________
-   // String builder to be used in the constructors.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// String builder to be used in the constructors.
    class TBranchProxyHelper {
    public:
       TString fName;
-      TBranchProxyHelper(const char *left,const char *right = 0) :
+      TBranchProxyHelper(const char *left, const char *right = nullptr) :
          fName() {
          if (left) {
             fName = left;
@@ -57,23 +58,28 @@ namespace Internal {
             fName += right;
          }
       }
-      operator const char*() { return fName.Data(); };
+      operator const char*() { return fName.Data(); }
    };
 
    class TTreeReaderValueBase;
 } // namespace Internal
 
+// prevent access violation when executing the df017_vecOpsHEP.C tutorial with ROOT built in release mode
+// TODO: to be reviewed when updating Visual Studio or LLVM
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma optimize("", off)
+#endif
 
 namespace Detail {
    class TBranchProxy {
    protected:
       Internal::TBranchProxyDirector *fDirector; // contain pointer to TTree and entry to be read
 
-      Bool_t        fInitialized : 1;
-      const Bool_t  fIsMember : 1;    // true if we proxy an unsplit data member
-      Bool_t        fIsClone : 1;     // true if we proxy the inside of a TClonesArray
-      Bool_t        fIsaPointer : 1;  // true if we proxy a data member of pointer type
-      Bool_t        fHasLeafCount : 1;// true if we proxy a variable size leaf of a leaflist
+      bool          fInitialized : 1;
+      const bool    fIsMember : 1;    // true if we proxy an unsplit data member
+      bool          fIsClone : 1;     // true if we proxy the inside of a TClonesArray
+      bool          fIsaPointer : 1;  // true if we proxy a data member of pointer type
+      bool          fHasLeafCount : 1;// true if we proxy a variable size leaf of a leaflist
 
       const TString fBranchName;  // name of the branch to read
       TBranchProxy *fParent;      // Proxy to a parent object
@@ -90,8 +96,8 @@ namespace Detail {
 
       TBranch *fBranch;       // branch to read
       union {
-         TBranch *fBranchCount;  // eventual auxiliary branch (for example holding the size)
-         TLeaf   *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
+         TBranchElement *fBranchCount;  // eventual auxiliary branch (for example holding the size)
+         TLeaf          *fLeafCount;    // eventual auxiliary leaf (for example holding the size)
       };
 
       TNotifyLink<TBranchProxy> fNotify; // Callback object used by the TChain to update this proxy
@@ -105,9 +111,9 @@ namespace Detail {
       virtual void Print();
 
       TBranchProxy();
-      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, const char* top, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char *top, const char *name, const char *membername);
-      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = 0, const char* name = 0);
+      TBranchProxy(Internal::TBranchProxyDirector* boss, TBranchProxy *parent, const char* membername, const char* top = nullptr, const char* name = nullptr);
       TBranchProxy(Internal::TBranchProxyDirector* boss, TBranch* branch, const char* membername);
       TBranchProxy(Internal::TBranchProxyDirector* boss, const char* branchname, TBranch* branch, const char* membername);
       virtual ~TBranchProxy();
@@ -117,38 +123,41 @@ namespace Detail {
 
       void Reset();
 
-      Bool_t Notify() {
+      bool Notify() {
          fRead = -1;
          return Setup();
       }
 
-      Bool_t Setup();
+      bool Setup();
 
-      Bool_t IsInitialized() {
+      bool IsInitialized() {
          return fInitialized;
          // return fLastTree && fCurrentTreeNumber == fDirector->GetTree()->GetTreeNumber() && fLastTree == fDirector->GetTree();
       }
 
-      Bool_t IsaPointer() const {
+      bool IsaPointer() const {
          return fIsaPointer;
       }
 
-      Bool_t Read() {
-         if (R__unlikely(fDirector==0)) return false;
+      bool Read() {
+         if (R__unlikely(fDirector == nullptr)) return false;
 
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
                   ::Error("TBranchProxy::Read","%s",Form("Unable to initialize %s\n",fBranchName.Data()));
-                  return kFALSE;
+                  return false;
                }
             }
-            Bool_t result = kTRUE;
+            bool result = true;
             if (fParent) {
                result = fParent->Read();
             } else {
-               if (fBranchCount) {
+               if (fHasLeafCount) {
+                  if (fBranch != fLeafCount->GetBranch())
+                     result &= (-1 != fLeafCount->GetBranch()->GetEntry(treeEntry));
+               } else if (fBranchCount) {
                   result &= (-1 != fBranchCount->GetEntry(treeEntry));
                }
                result &= (-1 != fBranch->GetEntry(treeEntry));
@@ -185,52 +194,46 @@ private:
          kReadNoParentBranchCountNoCollection
       };
 
-      EReadType GetReadType() {
+      EReadType GetReadType()
+      {
          if (fParent) {
             if (!fCollection) {
                return EReadType::kReadParentNoCollection;
-            } else {
-               if (IsaPointer()) {
-                  return EReadType::kReadParentCollectionPointer;
-               } else {
-                  return EReadType::kReadParentCollectionNoPointer;
-               }
             }
-         } else {
-            if (fBranchCount) {
-               if (fCollection) {
-                  if (IsaPointer()) {
-                     return EReadType::kReadNoParentBranchCountCollectionPointer;
-                  } else {
-                     return EReadType::kReadNoParentBranchCountCollectionNoPointer;
-                  }
-               } else {
-                  return EReadType::kReadNoParentBranchCountNoCollection;
-               }
-
-            } else {
-               if (fCollection) {
-                  if (IsaPointer()) {
-                     return EReadType::kReadNoParentNoBranchCountCollectionPointer;
-                  } else {
-                     return EReadType::kReadNoParentNoBranchCountCollectionNoPointer;
-                  }
-               } else {
-                  return EReadType::kReadNoParentNoBranchCountNoCollection;
-               }
+            if (IsaPointer()) {
+               return EReadType::kReadParentCollectionPointer;
             }
+            return EReadType::kReadParentCollectionNoPointer;
          }
-         return EReadType::kDefault;
+         if (fHasLeafCount) {
+            return EReadType::kDefault;
+         }
+         if (fBranchCount) {
+            if (fCollection) {
+               if (IsaPointer()) {
+                  return EReadType::kReadNoParentBranchCountCollectionPointer;
+               }
+               return EReadType::kReadNoParentBranchCountCollectionNoPointer;
+            }
+            return EReadType::kReadNoParentBranchCountNoCollection;
+         }
+         if (fCollection) {
+            if (IsaPointer()) {
+               return EReadType::kReadNoParentNoBranchCountCollectionPointer;
+            }
+            return EReadType::kReadNoParentNoBranchCountCollectionNoPointer;
+         }
+         return EReadType::kReadNoParentNoBranchCountNoCollection;
       }
 
-      Bool_t ReadNoDirector() {
+      bool ReadNoDirector() {
          return false;
       }
 
-      Bool_t ReadParentNoCollection() {
+      bool ReadParentNoCollection() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            const Bool_t result = fParent->Read();
+            const bool result = fParent->Read();
             fRead = treeEntry;
             return result;
          } else {
@@ -238,49 +241,10 @@ private:
          }
       }
 
-      Bool_t ReadParentCollectionNoPointer() {
+      bool ReadParentCollectionNoPointer() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            const Bool_t result = fParent->Read();
-            fRead = treeEntry;
-            fCollection->PopProxy(); // works even if no proxy env object was set.
-            fCollection->PushProxy( fWhere );
-            return result;
-         } else {
-            return IsInitialized();
-         }
-      }
-
-      Bool_t ReadParentCollectionPointer() {
-         auto treeEntry = fDirector->GetReadEntry();
-         if (treeEntry != fRead) {
-            const Bool_t result = fParent->Read();
-            fRead = treeEntry;
-            fCollection->PopProxy(); // works even if no proxy env object was set.
-            fCollection->PushProxy( *(void**)fWhere );
-            return result;
-         } else {
-            return IsInitialized();
-         }
-      }
-
-      Bool_t ReadNoParentNoBranchCountCollectionPointer() {
-         auto treeEntry = fDirector->GetReadEntry();
-         if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
-            fRead = treeEntry;
-            fCollection->PopProxy(); // works even if no proxy env object was set.
-            fCollection->PushProxy( *(void**)fWhere );
-            return result;
-         } else {
-            return IsInitialized();
-         }
-      }
-
-      Bool_t ReadNoParentNoBranchCountCollectionNoPointer() {
-         auto treeEntry = fDirector->GetReadEntry();
-         if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
+            const bool result = fParent->Read();
             fRead = treeEntry;
             fCollection->PopProxy(); // works even if no proxy env object was set.
             fCollection->PushProxy( fWhere );
@@ -290,10 +254,49 @@ private:
          }
       }
 
-      Bool_t ReadNoParentNoBranchCountNoCollection() {
+      bool ReadParentCollectionPointer() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranch->GetEntry(treeEntry));
+            const bool result = fParent->Read();
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( *(void**)fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      bool ReadNoParentNoBranchCountCollectionPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            bool result = (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( *(void**)fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      bool ReadNoParentNoBranchCountCollectionNoPointer() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            bool result = (-1 != fBranch->GetEntry(treeEntry));
+            fRead = treeEntry;
+            fCollection->PopProxy(); // works even if no proxy env object was set.
+            fCollection->PushProxy( fWhere );
+            return result;
+         } else {
+            return IsInitialized();
+         }
+      }
+
+      bool ReadNoParentNoBranchCountNoCollection() {
+         auto treeEntry = fDirector->GetReadEntry();
+         if (treeEntry != fRead) {
+            bool result = (-1 != fBranch->GetEntry(treeEntry));
             fRead = treeEntry;
             return result;
          } else {
@@ -301,10 +304,10 @@ private:
          }
       }
 
-      Bool_t ReadNoParentBranchCountCollectionPointer() {
+      bool ReadNoParentBranchCountCollectionPointer() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            bool result = (-1 != fBranchCount->GetEntry(treeEntry));
             result &= (-1 != fBranch->GetEntry(treeEntry));
             fRead = treeEntry;
             fCollection->PopProxy(); // works even if no proxy env object was set.
@@ -315,10 +318,10 @@ private:
          }
       }
 
-      Bool_t ReadNoParentBranchCountCollectionNoPointer() {
+      bool ReadNoParentBranchCountCollectionNoPointer() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            bool result = (-1 != fBranchCount->GetEntry(treeEntry));
             result &= (-1 != fBranch->GetEntry(treeEntry));
             fRead = treeEntry;
             fCollection->PopProxy(); // works even if no proxy env object was set.
@@ -329,10 +332,10 @@ private:
          }
       }
 
-      Bool_t ReadNoParentBranchCountNoCollection() {
+      bool ReadNoParentBranchCountNoCollection() {
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
-            Bool_t result = (-1 != fBranchCount->GetEntry(treeEntry));
+            bool result = (-1 != fBranchCount->GetEntry(treeEntry));
             result &= (-1 != fBranch->GetEntry(treeEntry));
             fRead = treeEntry;
             return result;
@@ -343,8 +346,8 @@ private:
 
 public:
 
-      Bool_t ReadEntries() {
-         if (R__unlikely(fDirector==0)) return false;
+      bool ReadEntries() {
+         if (R__unlikely(fDirector == nullptr)) return false;
 
          auto treeEntry = fDirector->GetReadEntry();
          if (treeEntry != fRead) {
@@ -369,8 +372,10 @@ public:
 
       virtual Int_t GetEntries() {
          if (!ReadEntries()) return 0;
-         if (!fHasLeafCount) {
+         if (fHasLeafCount) {
             return *(Int_t*)fLeafCount->GetValuePointer();
+         } else if (fBranchCount) {
+            return fBranchCount->GetNdata();
          } else {
             return 1;
          }
@@ -381,12 +386,12 @@ public:
       }
 
       TClass *GetClass() {
-         if (fDirector==0) return 0;
+         if (!fDirector) return nullptr;
 
          if (fDirector->GetReadEntry() != fRead) {
             if (!IsInitialized()) {
                if (!Setup()) {
-                  return 0;
+                  return nullptr;
                }
             }
          }
@@ -413,7 +418,7 @@ public:
          }
          if (IsaPointer()) {
             if (fWhere) return *(void**)fWhere;
-            else return 0;
+            else return nullptr;
          } else {
             return fWhere;
          }
@@ -431,7 +436,7 @@ public:
             TClonesArray *tca;
             tca = (TClonesArray*)GetStart();
 
-            if (!tca || tca->GetLast()<(Int_t)i) return 0;
+            if (!tca || tca->GetLast()<(Int_t)i) return nullptr;
 
             location = (char*)tca->At(i);
 
@@ -449,13 +454,13 @@ public:
             TClonesArray *tca;
             tca = (TClonesArray*)tcaloc;
 
-            if (tca->GetLast()<(Int_t)i) return 0;
+            if (tca->GetLast()<(Int_t)i) return nullptr;
 
             location = (char*)tca->At(i);
          }
 
          if (location) location += fOffset;
-         else return 0;
+         else return nullptr;
 
          if (IsaPointer()) {
             return *(void**)(location);
@@ -470,11 +475,11 @@ public:
          // that Setup() has been called.  Assumes the object containing this data
          // member is held in STL Collection.
 
-         char *location=0;
+         char *location = nullptr;
 
          if (fCollection) {
 
-            if (fCollection->Size()<i) return 0;
+            if (fCollection->Size()<i) return nullptr;
 
             location = (char*)fCollection->At(i);
 
@@ -493,13 +498,13 @@ public:
             //TClonesArray *tca;
             //tca = (TClonesArray*)tcaloc;
 
-            //if (tca->GetLast()<i) return 0;
+            //if (tca->GetLast()<i) return nullptr;
 
             //location = (char*)tca->At(i);
          }
 
          if (location) location += fOffset;
-         else return 0;
+         else return nullptr;
 
          if (IsaPointer()) {
             return *(void**)(location);
@@ -513,10 +518,14 @@ public:
    };
 } // namespace Detail
 
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma optimize("", on)
+#endif
+
 namespace Internal {
 
-   //____________________________________________________________________________________________
-   // Concrete Implementation of the branch proxy around the data members which are array of char
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Concrete Implementation of the branch proxy around the data members which are array of char
    class TArrayCharProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -574,8 +583,8 @@ namespace Internal {
 
    };
 
-   //_______________________________________________________
-   // Base class for the proxy around object in TClonesArray.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Base class for the proxy around object in TClonesArray.
    class TClaProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -595,7 +604,7 @@ namespace Internal {
       ~TClaProxy() override = default;
 
       const TClonesArray* GetPtr() {
-         if (!Read()) return 0;
+         if (!Read()) return nullptr;
          return (TClonesArray*)GetStart();
       }
 
@@ -608,7 +617,7 @@ namespace Internal {
 
       void *GetAddressOfElement(UInt_t i) final {
          if (!Read()) return nullptr;
-         if (fWhere==0) return nullptr;
+         if (!fWhere) return nullptr;
          return GetClaStart(i);
       }
 
@@ -616,8 +625,8 @@ namespace Internal {
 
    };
 
-   //_______________________________________________
-   // Base class for the proxy around STL containers.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Base class for the proxy around STL containers.
    class TStlProxy : public Detail::TBranchProxy {
    public:
       void Print() override {
@@ -636,8 +645,8 @@ namespace Internal {
       TStlProxy() = default; // work around bug in GCC < 7
       ~TStlProxy() override = default;
 
-      const TVirtualCollectionProxy* GetPtr() {
-         if (!Read()) return 0;
+      TVirtualCollectionProxy* GetPtr() {
+         if (!Read()) return nullptr;
          return GetCollection();
       }
 
@@ -648,7 +657,7 @@ namespace Internal {
 
       void *GetAddressOfElement(UInt_t i) final {
          if (!Read()) return nullptr;
-         if (fWhere==0) return nullptr;
+         if (!fWhere) return nullptr;
          return GetStlStart(i);
       }
 
@@ -656,8 +665,8 @@ namespace Internal {
 
    };
 
-   //______________________________________
-   // Template of the proxy around objects.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the proxy around objects.
    template <class T>
    class TImpProxy : public Detail::TBranchProxy {
    public:
@@ -682,31 +691,31 @@ namespace Internal {
 
    };
 
-   //____________________________________________
-   // Helper template to be able to determine and
-   // use array dimentsions.
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper template to be able to determine and
+   /// use array dimensions.
    template <class T, int d = 0> struct TArrayType {
       typedef T type_t;
       typedef T array_t[d];
       static constexpr int gSize = d;
    };
-   //____________________________________________
-   // Helper class for proxy around multi dimension array
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper class for proxy around multi dimension array
    template <class T> struct TArrayType<T,0> {
       typedef T type_t;
       typedef T array_t;
       static constexpr int gSize = 0;
    };
-   //____________________________________________
-   // Helper class for proxy around multi dimension array
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Helper class for proxy around multi dimension array
    template <class T, int d> struct TMultiArrayType {
       typedef typename T::type_t type_t;
       typedef typename T::array_t array_t[d];
       static constexpr int gSize = d;
    };
 
-   //____________________________________________
-   // Template for concrete implementation of proxy around array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template for concrete implementation of proxy around array of T
    template <class T>
    class TArrayProxy : public Detail::TBranchProxy {
    public:
@@ -746,8 +755,8 @@ namespace Internal {
       const array_t &operator [](UInt_t i) { return At(i); }
    };
 
-   //_____________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around TClonesArray of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around TClonesArray of T
    template <class T>
    class TClaImpProxy : public TClaProxy {
    public:
@@ -776,8 +785,8 @@ namespace Internal {
 
    };
 
-   //_________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an stl container of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an stl container of T
    template <class T>
    class TStlImpProxy : public TStlProxy {
    public:
@@ -806,8 +815,8 @@ namespace Internal {
 
    };
 
-   //_________________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an TClonesArray of array of T
    template <class T>
    class TClaArrayProxy : public TClaProxy {
    public:
@@ -835,8 +844,8 @@ namespace Internal {
    };
 
 
-   //__________________________________________________________________________________________________
-   // Template of the Concrete Implementation of the branch proxy around an stl container of array of T
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Template of the Concrete Implementation of the branch proxy around an stl container of array of T
    template <class T>
    class TStlArrayProxy : public TStlProxy {
    public:
@@ -877,7 +886,7 @@ namespace Internal {
    typedef TImpProxy<Long64_t>   TLong64Proxy;   // Concrete Implementation of the branch proxy around the data members which are long long
    typedef TImpProxy<Short_t>    TShortProxy;    // Concrete Implementation of the branch proxy around the data members which are short
    typedef TImpProxy<Char_t>     TCharProxy;     // Concrete Implementation of the branch proxy around the data members which are char
-   typedef TImpProxy<Bool_t>     TBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are bool
+   typedef TImpProxy<bool>     TBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are bool
 
    typedef TArrayProxy<TArrayType<Double_t> >   TArrayDoubleProxy;   // Concrete Implementation of the branch proxy around the data members which are array of double
    typedef TArrayProxy<TArrayType<Double32_t> > TArrayDouble32Proxy; // Concrete Implementation of the branch proxy around the data members which are array of double32
@@ -893,7 +902,7 @@ namespace Internal {
    typedef TArrayProxy<TArrayType<Long64_t> >   TArrayLong64Proxy;   // Concrete Implementation of the branch proxy around the data members which are array of long long
    typedef TArrayProxy<TArrayType<UShort_t> >   TArrayShortProxy;    // Concrete Implementation of the branch proxy around the data members which are array of short
    //specialized ! typedef TArrayProxy<TArrayType<Char_t> >  TArrayCharProxy; // Concrete Implementation of the branch proxy around the data members which are array of char
-   typedef TArrayProxy<TArrayType<Bool_t> >     TArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are array of bool
+   typedef TArrayProxy<TArrayType<bool> >     TArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members which are array of bool
 
    typedef TClaImpProxy<Double_t>   TClaDoubleProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are double
    typedef TClaImpProxy<Double32_t> TClaDouble32Proxy; // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are double32
@@ -909,7 +918,7 @@ namespace Internal {
    typedef TClaImpProxy<Long64_t>   TClaLong64Proxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are long long
    typedef TClaImpProxy<Short_t>    TClaShortProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are short
    typedef TClaImpProxy<Char_t>     TClaCharProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are char
-   typedef TClaImpProxy<Bool_t>     TClaBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are bool
+   typedef TClaImpProxy<bool>     TClaBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are bool
 
    typedef TClaArrayProxy<TArrayType<Double_t> >    TClaArrayDoubleProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of double
    typedef TClaArrayProxy<TArrayType<Double32_t> >  TClaArrayDouble32Proxy; // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of double32
@@ -919,13 +928,13 @@ namespace Internal {
    typedef TClaArrayProxy<TArrayType<ULong_t> >     TClaArrayULongProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long
    typedef TClaArrayProxy<TArrayType<ULong64_t> >   TClaArrayULong64Proxy;  // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned long long
    typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayUShortProxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned short
-   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of nsigned char
+   typedef TClaArrayProxy<TArrayType<UChar_t> >     TClaArrayUCharProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of unsigned char
    typedef TClaArrayProxy<TArrayType<Int_t> >       TClaArrayIntProxy;      // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of int
    typedef TClaArrayProxy<TArrayType<Long_t> >      TClaArrayLongProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long
    typedef TClaArrayProxy<TArrayType<Long64_t> >    TClaArrayLong64Proxy;   // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of long long
    typedef TClaArrayProxy<TArrayType<UShort_t> >    TClaArrayShortProxy;    // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of short
    typedef TClaArrayProxy<TArrayType<Char_t> >      TClaArrayCharProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of char
-   typedef TClaArrayProxy<TArrayType<Bool_t> >      TClaArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of bool
+   typedef TClaArrayProxy<TArrayType<bool> >      TClaArrayBoolProxy;     // Concrete Implementation of the branch proxy around the data members of object in TClonesArray which are array of bool
    //specialized ! typedef TClaArrayProxy<TArrayType<Char_t> >  TClaArrayCharProxy;
 
    typedef TStlImpProxy<Double_t>   TStlDoubleProxy;   // Concrete Implementation of the branch proxy around an stl container of double
@@ -942,23 +951,23 @@ namespace Internal {
    typedef TStlImpProxy<Long64_t>   TStlLong64Proxy;   // Concrete Implementation of the branch proxy around an stl container of long long
    typedef TStlImpProxy<Short_t>    TStlShortProxy;    // Concrete Implementation of the branch proxy around an stl container of short
    typedef TStlImpProxy<Char_t>     TStlCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
-   typedef TStlImpProxy<Bool_t>     TStlBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
+   typedef TStlImpProxy<bool>     TStlBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
    typedef TStlArrayProxy<TArrayType<Double_t> >    TStlArrayDoubleProxy;   // Concrete Implementation of the branch proxy around an stl container of double
    typedef TStlArrayProxy<TArrayType<Double32_t> >  TStlArrayDouble32Proxy; // Concrete Implementation of the branch proxy around an stl container of double32
    typedef TStlArrayProxy<TArrayType<Float_t> >     TStlArrayFloatProxy;    // Concrete Implementation of the branch proxy around an stl container of float
    typedef TStlArrayProxy<TArrayType<Float16_t> >   TStlArrayFloat16Proxy;  // Concrete Implementation of the branch proxy around an stl container of float16_t
    typedef TStlArrayProxy<TArrayType<UInt_t> >      TStlArrayUIntProxy;     // Concrete Implementation of the branch proxy around an stl container of unsigned int
-   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;    // Concrete Implementation of the branch proxy around an stl container of usigned long
+   typedef TStlArrayProxy<TArrayType<ULong_t> >     TStlArrayULongProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned long
    typedef TStlArrayProxy<TArrayType<ULong64_t> >   TStlArrayULong64Proxy;  // Concrete Implementation of the branch proxy around an stl contained of unsigned long long
-   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unisgned short
-   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsingned char
+   typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayUShortProxy;   // Concrete Implementation of the branch proxy around an stl container of unsigned short
+   typedef TStlArrayProxy<TArrayType<UChar_t> >     TStlArrayUCharProxy;    // Concrete Implementation of the branch proxy around an stl container of unsigned char
    typedef TStlArrayProxy<TArrayType<Int_t> >       TStlArrayIntProxy;      // Concrete Implementation of the branch proxy around an stl container of int
    typedef TStlArrayProxy<TArrayType<Long_t> >      TStlArrayLongProxy;     // Concrete Implementation of the branch proxy around an stl container of long
    typedef TStlArrayProxy<TArrayType<Long64_t> >    TStlArrayLong64Proxy;   // Concrete Implementation of the branch proxy around an stl container of long long
    typedef TStlArrayProxy<TArrayType<UShort_t> >    TStlArrayShortProxy;    // Concrete Implementation of the branch proxy around an stl container of UShort_t
    typedef TStlArrayProxy<TArrayType<Char_t> >      TStlArrayCharProxy;     // Concrete Implementation of the branch proxy around an stl container of char
-   typedef TStlArrayProxy<TArrayType<Bool_t> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
+   typedef TStlArrayProxy<TArrayType<bool> >      TStlArrayBoolProxy;     // Concrete Implementation of the branch proxy around an stl container of bool
 
 } // namespace Internal
 

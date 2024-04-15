@@ -9,10 +9,11 @@
 #include <ROOT/Browsable/RGroup.hxx>
 
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/RItem.hxx>
 
 #include <ROOT/RLogger.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 class RGroupIter : public RLevelIter {
    int fIndx{-1};
@@ -24,27 +25,25 @@ public:
    virtual ~RGroupIter() = default;
 
    /** Shift to next element */
-   bool Next() override { fIndx++; return HasItem(); }
-
-   /** Is there current element  */
-   bool HasItem() const override { return (fIndx >= 0) &&  (fIndx < (int) fComp.GetChilds().size()); }
+   bool Next() override { return ++fIndx < (int) fComp.GetChilds().size(); }
 
    /** Returns current element name  */
-   std::string GetName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
+   std::string GetItemName() const override { return fComp.GetChilds()[fIndx]->GetName(); }
 
-   /** If element may have childs: 0 - no, >0 - yes, -1 - maybe */
-   int CanHaveChilds() const override { return fComp.GetChilds().size(); }
+   /** Returns true if item can have childs */
+   bool CanItemHaveChilds() const override { return true; }
 
    /** Returns full information for current element */
    std::shared_ptr<RElement> GetElement() override { return fComp.GetChilds()[fIndx]; }
 
-   /** Reset iterator to the first element, returns false if not supported */
-   bool Reset() override { fIndx = -1; return true; }
-
    /** Find item with specified name, use item MatchName() functionality */
-   bool Find(const std::string &name) override
+   bool Find(const std::string &name, int indx = -1) override
    {
-      if (!Reset()) return false;
+      if ((indx >= 0) && (indx <= (int) fComp.GetChilds().size()))
+         if (fComp.GetChilds()[indx]->MatchName(name)) {
+            fIndx = indx;
+            return true;
+         }
 
       while (Next()) {
          if (fComp.GetChilds()[fIndx]->MatchName(name))
@@ -52,6 +51,23 @@ public:
       }
 
       return false;
+   }
+
+   /////////////////////////////////////////////////////////////////////
+   /// Create generic description item for RBrowser
+
+   std::unique_ptr<RItem> CreateItem() override
+   {
+      auto elem = fComp.GetChilds()[fIndx];
+
+      std::string item_name = elem->GetName();
+
+      auto item = std::make_unique<RItem>(GetItemName(), -1, "sap-icon://folder-blank");
+
+      if (elem->IsExpandByDefault())
+         item->SetExpanded(true);
+
+      return item;
    }
 
 };

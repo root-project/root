@@ -9,10 +9,7 @@ from IPython.core.display import display, HTML
 from string import Template
 import ROOT
 import sys
-if sys.version_info >= (3, 0):
-    from JsMVA import DataLoader, Factory
-else:
-    import DataLoader, Factory
+from JsMVA import DataLoader, Factory
 from JsMVA import OutputTransformer
 
 
@@ -145,14 +142,14 @@ class functions:
     # from DataLoader and Factory modules
     @staticmethod
     def register(noOutput=False):
-        from JupyROOT.utils import transformers
+        from JupyROOT.helpers.utils import transformers
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
         functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
         functions.__changeMethod(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Change"))
         functions.__changeMethod(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Change"))
         for key in functions.ThreadedFunctions:
             for func in functions.ThreadedFunctions[key]:
-                setattr(getattr(getattr(ROOT.TMVA, key), func), "_threaded", True)
+                setattr(getattr(getattr(ROOT.TMVA, key), func), "__release_gil__", True)
         functions.__register(ROOT.TMVA.Factory, Factory, "BookDNN")
         if not noOutput:
             outputTransformer = OutputTransformer.transformTMVAOutputToHTML()
@@ -188,8 +185,8 @@ class functions:
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
     ## Base repository
-    __jsMVARepo = "https://root.cern.ch/js/jsmva/latest"
- 
+    __jsMVARepo = "https://root.cern/js/jsmva/latest"
+
     ## String containing the link to JavaScript files
     __jsMVASourceDir = __jsMVARepo + "/js"
 

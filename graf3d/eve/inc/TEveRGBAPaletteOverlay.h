@@ -37,9 +37,9 @@ protected:
 public:
    TEveRGBAPaletteOverlay(TEveRGBAPalette* p, Float_t posx, Float_t posy,
                           Float_t width, Float_t height);
-   virtual ~TEveRGBAPaletteOverlay() {}
+   ~TEveRGBAPaletteOverlay() override {}
 
-   virtual void Render(TGLRnrCtx& rnrCtx);
+   void Render(TGLRnrCtx& rnrCtx) override;
 
    TAxis&           RefAxis() { return fAxis; }
    TGLAxisPainter&  RefAxisPainter() { return fAxisPainter; }
@@ -48,7 +48,7 @@ public:
    void SetPosition(Float_t x, Float_t y) { fPosX = x; fPosY = y; }
    void SetSize(Float_t w, Float_t h) { fWidth = w; fHeight = h; }
 
-   ClassDef(TEveRGBAPaletteOverlay, 0); // Draws TEveRGBAPalette as GL overlay.
+   ClassDefOverride(TEveRGBAPaletteOverlay, 0); // Draws TEveRGBAPalette as GL overlay.
 };
 
 #endif

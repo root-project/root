@@ -1,46 +1,74 @@
-/*
-
-  This program will add histograms (see note) and Trees from a list of root files and write them
-  to a target root file. The target file is newly created and must not be
+/**
+  \file hadd.cxx
+  \brief This program will add histograms (see note) and Trees from a list of root files and write them to a target root file.
+  The target file is newly created and must not be
   identical to one of the source files.
 
   Syntax:
-
+  ```{.cpp}
        hadd targetfile source1 source2 ...
-    or
+  ```
+  or
+  ```{.cpp}
        hadd -f targetfile source1 source2 ...
-         (targetfile is overwritten if it exists)
+  ```
+  (targetfile is overwritten if it exists)
 
-  When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 1 (kDefaultZLIB), but
-  if "-f0" is specified, the target file will not be compressed.
-  if "-f6" is specified, the compression level 6 will be used.
+  \param -a   Append to the output
+  \param -f   Force overwriting of output file.
+  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 1 (kDefaultZLIB).
+                 You can also specify the full compresion algorithm, e.g. -f206
+  \param -fk  Sets the target file to contain the baskets with the same compression
+              as the input files (unless -O is specified). Compresses the meta data
+              using the compression level specified in the first input or the
+              compression setting after fk (for example 206 when using -fk206)
+  \param -ff  The compression level used is the one specified in the first input
+  \param -k   Skip corrupt or non-existent files, do not exit
+  \param -O   Re-optimize basket size when merging TTree
+  \param -T   Do not merge Trees
+  \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
+  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
+  \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
+  \param -d   Carry out the partial multiprocess execution in the specified directory
+  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
+  \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
+  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
+  \return hadd returns a status code: 0 if OK, -1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
-    f1 with h1 h2 h3 T1
-    f2 with h1 h4 T1 T2
-    f3 with h5
-   the result of
-     hadd -f x.root f1.root f2.root f3.root
-   will be a file x.root with h1 h2 h3 h4 h5 T1 T2
-   where h1 will be the sum of the 2 histograms in f1 and f2
-         T1 will be the merge of the Trees in f1 and f2
+   - f1 with h1 h2 h3 T1
+   - f2 with h1 h4 T1 T2
+   - f3 with h5
+  the result of
+  ```
+    hadd -f x.root f1.root f2.root f3.root
+  ```
+  will be a file x.root with h1 h2 h3 h4 h5 T1 T2
+  where
+   - h1 will be the sum of the 2 histograms in f1 and f2
+   - T1 will be the merge of the Trees in f1 and f2
 
   The files may contain sub-directories.
 
-  if the source files contains histograms and Trees, one can skip
+  If the source files contains histograms and Trees, one can skip
   the Trees with
+  ```
        hadd -T targetfile source1 source2 ...
+  ```
 
   Wildcarding and indirect files are also supported
-    hadd result.root  myfil*.root
-   will merge all files in myfil*.root
-    hadd result.root file1.root @list.txt file2. root myfil*.root
-    will merge file1. root, file2. root, all files in myfil*.root
-    and all files in the indirect text file list.txt ("@" as the first
-    character of the file indicates an indirect file. An indirect file
-    is a text file containing a list of other files, including other
-    indirect files, one line per file).
+  ```
+      hadd result.root  myfil*.root
+  ```
+  will merge all files in myfil*.root
+  ```
+      hadd result.root file1.root @list.txt file2. root myfil*.root
+  ```
+  will merge file1.root, file2.root, all files in myfil*.root
+  and all files in the indirect text file list.txt ("@" as the first
+  character of the file indicates an indirect file. An indirect file
+  is a text file containing a list of other files, including other
+  indirect files, one line per file).
 
   If the sources and and target compression levels are identical (default),
   the program uses the TChain::Merge function with option "fast", ie
@@ -51,37 +79,35 @@
   If the option -cachesize is used, hadd will resize (or disable if 0) the
   prefetching cache use to speed up I/O operations.
 
-  For options that takes a size as argument, a decimal number of bytes is expected.
-  If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied
+  For options that take a size as argument, a decimal number of bytes is expected.
+  If the number ends with a `k`, `m`, `g`, etc., the number is multiplied
   by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-  If this prefix is followed by i, the number is multiplied by the traditional
+  If this prefix is followed by `i`, the number is multiplied by the traditional
   1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
   The prefix can be optionally followed by B whose casing is ignored,
   eg. 1k, 1K, 1Kb and 1KB are the same.
 
-  NOTE1: By default histograms are added. However hadd does not support the case where
+  \note By default histograms are added. However hadd does not support the case where
          histograms have their bit TH1::kIsAverage set.
 
-  NOTE2: hadd returns a status code: 0 if OK, -1 otherwise
-
-  Authors: Rene Brun, Dirk Geppert, Sven A. Schmidt, sven.schmidt@cern.ch
-         : rewritten from scratch by Rene Brun (30 November 2005)
-            to support files with nested directories.
-           Toby Burnett implemented the possibility to use indirect files.
- */
+  \authors Rene Brun, Dirk Geppert, Sven A. Schmidt, Toby Burnett
+*/
 #include "Compression.h"
 #include <ROOT/RConfig.hxx>
 #include "ROOT/TIOFeatures.hxx"
-#include <string>
 #include "TFile.h"
 #include "THashList.h"
 #include "TKey.h"
-#include "Riostream.h"
 #include "TClass.h"
 #include "TSystem.h"
 #include "TUUID.h"
 #include "ROOT/StringConv.hxx"
-#include <stdlib.h>
+#include "snprintf.h"
+
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cstdlib>
 #include <climits>
 #include <sstream>
 #include "haddCommandLineOptionsHelp.h"
@@ -97,7 +123,7 @@ int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
          fprintf(stderr, kCommandLineOptionsHelp);
-         return 1;
+         return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
    }
 
    ROOT::TIOFeatures features;
@@ -350,32 +376,61 @@ int main( int argc, char **argv )
    if (maxopenedfiles > 0) {
       fileMerger.SetMaxOpenedFiles(maxopenedfiles);
    }
+   // The following section will collect all input filenames into a vector,
+   // including those listed within an indirect file.
+   // If any file can not be accessed, it will error out, unless skip_errors is true
+   std::vector<std::string> allSubfiles;
+   for (int a = ffirst; a < argc; ++a) {
+      if (a == outputPlace)
+         continue;
+      if (argv[a] && argv[a][0] == '@') {
+         std::ifstream indirect_file(argv[a] + 1);
+         if (!indirect_file.is_open()) {
+            std::cerr << "hadd could not open indirect file " << (argv[a] + 1) << std::endl;
+            if (!skip_errors)
+               return 1;
+         } else {
+            std::string line;
+            while (indirect_file) {
+               if( std::getline(indirect_file, line) && line.length() ) {
+                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE ||
+                      (!TString(line).EndsWith(".root"))) {
+                     std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
+                               << (argv[a] + 1) << std::endl;
+                     if (!skip_errors)
+                        return 1;
+                  } else
+                     allSubfiles.emplace_back(line);
+               }
+            }
+         }
+      } else {
+         const std::string line = argv[a];
+         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || (!TString(line).EndsWith(".root"))) {
+            std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
+            if (!skip_errors)
+               return 1;
+         } else
+            allSubfiles.emplace_back(line);
+      }
+   }
+   if (allSubfiles.empty()) {
+      std::cerr << "hadd could not find any valid input file " << std::endl;
+      return 1;
+   }
+   // The next snippet determines the output compression if unset
    if (newcomp == -1) {
       if (useFirstInputCompression || keepCompressionAsIs) {
          // grab from the first file.
-         TFile *firstInput = nullptr;
-         if (argv[ffirst] && argv[ffirst][0]=='@') {
-            std::ifstream indirect_file(argv[ffirst]+1);
-            if( ! indirect_file.is_open() ) {
-               std::cerr<< "hadd could not open indirect file " << (argv[ffirst]+1) << std::endl;
-               return 1;
-            }
-            std::string line;
-            while( indirect_file ){
-               if( std::getline(indirect_file, line) && line.length() ) {
-                  firstInput = TFile::Open(line.c_str());
-                  break;
-               }
-            }
-         } else {
-            firstInput = TFile::Open(argv[ffirst]);
-         }
+         TFile *firstInput = TFile::Open(allSubfiles.front().c_str());
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100;
+            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
          delete firstInput;
-      } else newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100; // default compression level.
+      } else {
+         newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
+      }
    }
    if (verbosity > 1) {
       if (keepCompressionAsIs && !reoptimize)
@@ -394,12 +449,11 @@ int main( int argc, char **argv )
       exit(1);
    }
 
-   auto filesToProcess = argc - ffirst;
-   auto step = (filesToProcess + nProcesses - 1) / nProcesses;
+   auto step = (allSubfiles.size() + nProcesses - 1) / nProcesses;
    if (multiproc && step < 3) {
       // At least 3 files per process
       step = 3;
-      nProcesses = (filesToProcess + step - 1) / step;
+      nProcesses = (allSubfiles.size() + step - 1) / step;
       std::cout << "Each process should handle at least 3 files for efficiency.";
       std::cout << " Setting the number of processes to: " << nProcesses << std::endl;
    }
@@ -408,15 +462,20 @@ int main( int argc, char **argv )
 
    std::vector<std::string> partialFiles;
 
+#ifndef R__WIN32
+   // this is commented out only to try to prevent false positive detection
+   // from several anti-virus engines on Windows, and multiproc is not
+   // supported on Windows anyway
    if (multiproc) {
       auto uuid = TUUID();
       auto partialTail = uuid.AsString();
-      for (auto i = 0; (i * step) < filesToProcess; i++) {
+      for (auto i = 0; (i * step) < allSubfiles.size(); i++) {
          std::stringstream buffer;
          buffer << workingDir << "/partial" << i << "_" << partialTail << ".root";
          partialFiles.emplace_back(buffer.str());
       }
    }
+#endif
 
    auto mergeFiles = [&](TFileMerger &merger) {
       if (reoptimize) {
@@ -440,25 +499,12 @@ int main( int argc, char **argv )
    };
 
    auto sequentialMerge = [&](TFileMerger &merger, int start, int nFiles) {
-
-      for (auto i = start; i < (start + nFiles) && i < argc; i++) {
-         if (argv[i] && argv[i][0] == '@') {
-            std::ifstream indirect_file(argv[i] + 1);
-            if (!indirect_file.is_open()) {
-               std::cerr << "hadd could not open indirect file " << (argv[i] + 1) << std::endl;
-               return kFALSE;
-            }
-            while (indirect_file) {
-               std::string line;
-               if (std::getline(indirect_file, line) && line.length() && !merger.AddFile(line.c_str())) {
-                  return kFALSE;
-               }
-            }
-         } else if (!merger.AddFile(argv[i])) {
+      for (auto i = start; i < (start + nFiles) && i < static_cast<int>(allSubfiles.size()); i++) {
+         if (!merger.AddFile(allSubfiles[i].c_str())) {
             if (skip_errors) {
-               std::cerr << "hadd skipping file with error: " << argv[i] << std::endl;
+               std::cerr << "hadd skipping file with error: " << allSubfiles[i] << std::endl;
             } else {
-               std::cerr << "hadd exiting due to error in " << argv[i] << std::endl;
+               std::cerr << "hadd exiting due to error in " << allSubfiles[i] << std::endl;
                return kFALSE;
             }
          }
@@ -473,7 +519,7 @@ int main( int argc, char **argv )
       if (maxopenedfiles > 0) {
          mergerP.SetMaxOpenedFiles(maxopenedfiles / nProcesses);
       }
-      if (!mergerP.OutputFile(partialFiles[(start - ffirst) / step].c_str(), newcomp)) {
+      if (!mergerP.OutputFile(partialFiles[start / step].c_str(), newcomp)) {
          std::cerr << "hadd error opening target partial file" << std::endl;
          exit(1);
       }
@@ -492,7 +538,7 @@ int main( int argc, char **argv )
 #ifndef R__WIN32
    if (multiproc) {
       ROOT::TProcessExecutor p(nProcesses);
-      auto res = p.Map(parallelMerge, ROOT::TSeqI(ffirst, argc, step));
+      auto res = p.Map(parallelMerge, ROOT::TSeqI(0, allSubfiles.size(), step));
       status = std::accumulate(res.begin(), res.end(), 0U) == partialFiles.size();
       if (status) {
          status = reductionFunc();
@@ -505,22 +551,22 @@ int main( int argc, char **argv )
          }
       }
    } else {
-      status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+      status = sequentialMerge(fileMerger, 0, allSubfiles.size());
    }
 #else
-   status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+   status = sequentialMerge(fileMerger, 0, allSubfiles.size());
 #endif
 
    if (status) {
       if (verbosity == 1) {
-         std::cout << "hadd merged " << fileMerger.GetMergeList()->GetEntries() << " input files in " << targetname
-                   << ".\n";
+         std::cout << "hadd merged " << allSubfiles.size() << " (" << fileMerger.GetMergeList()->GetEntries()
+                   << ") input (partial) files into " << targetname << ".\n";
       }
       return 0;
    } else {
       if (verbosity == 1) {
-         std::cout << "hadd failure during the merge of " << fileMerger.GetMergeList()->GetEntries()
-                   << " input files in " << targetname << ".\n";
+         std::cout << "hadd failure during the merge of " << allSubfiles.size() << " ("
+                   << fileMerger.GetMergeList()->GetEntries() << ") input (partial) files into " << targetname << ".\n";
       }
       return 1;
    }

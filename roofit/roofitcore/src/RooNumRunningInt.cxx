@@ -14,7 +14,7 @@
 \class RooNumRunningInt
 \ingroup Roofitcore
 
-Class RooNumRunningInt is an implementation of RooAbsCachedReal that represents a running integral
+Implementation of RooAbsCachedReal that represents a running integral
 \f[ RI(f(x)) = \int_{xlow}^{x} f(x') dx'                 \f]
 that is calculated internally with a numeric technique: The input function
 is first sampled into a histogram, which is then numerically integrated.
@@ -35,10 +35,9 @@ when any of the parameters of the input p.d.f. has changed.
 #include "RooHistPdf.h"
 #include "RooRealVar.h"
 
-using namespace std;
+using std::cout, std::endl, std::string;
 
 ClassImp(RooNumRunningInt);
-  ;
 
 
 
@@ -99,32 +98,23 @@ const char* RooNumRunningInt::inputBaseName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct RunningIntegral CacheElement
 
-RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt& self, const RooArgSet* nset) :
-  FuncCacheElem(self,nset), _self(&const_cast<RooNumRunningInt&>(self))
+RooNumRunningInt::RICacheElem::RICacheElem(const RooNumRunningInt &self, const RooArgSet *nset)
+   : FuncCacheElem(self, nset),
+     _self(&const_cast<RooNumRunningInt &>(self)),
+     _xx(static_cast<RooRealVar *>(hist()->get()->find(self.x.arg().GetName())))
 {
   // Instantiate temp arrays
-  _ax = new Double_t[hist()->numEntries()] ;
-  _ay = new Double_t[hist()->numEntries()] ;
+  _ax.resize(hist()->numEntries());
+  _ay.resize(hist()->numEntries());
 
   // Copy X values from histo
-  _xx = (RooRealVar*) hist()->get()->find(self.x.arg().GetName()) ;
+
   for (int i=0 ; i<hist()->numEntries() ; i++) {
     hist()->get(i) ;
     _ax[i] = _xx->getVal() ;
     _ay[i] = -1 ;
   }
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNumRunningInt::RICacheElem::~RICacheElem()
-{
-  // Delete temp arrays
-  delete[] _ax ;
-  delete[] _ay ;
 }
 
 
@@ -147,12 +137,12 @@ RooArgList RooNumRunningInt::RICacheElem::containedArgs(Action action)
 /// the result in the cache histogram provided
 /// by RooAbsCachedPdf
 
-void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
+void RooNumRunningInt::RICacheElem::calculate(bool cdfmode)
 {
   // Update contents of histogram
   Int_t nbins = hist()->numEntries() ;
 
-  Double_t xsave = _self->x ;
+  double xsave = _self->x ;
 
   Int_t lastHi=0 ;
   Int_t nInitRange=32 ;
@@ -169,18 +159,18 @@ void RooNumRunningInt::RICacheElem::calculate(Bool_t cdfmode)
   }
 
   // Normalize and transfer to cache histogram
-  Double_t binv = (_self->x.max()-_self->x.min())/nbins ;
+  double binv = (_self->x.max()-_self->x.min())/nbins ;
   for (int i=0 ; i<nbins ; i++) {
     hist()->get(i) ;
     if (cdfmode) {
-      hist()->set(_ay[i]/_ay[nbins-1]) ;
+      hist()->set(i, _ay[i]/_ay[nbins-1], 0.);
     } else {
-      hist()->set(_ay[i]*binv) ;
+      hist()->set(i, _ay[i]*binv, 0.);
     }
   }
 
   if (cdfmode) {
-    func()->setCdfBoundaries(kTRUE) ;
+    func()->setCdfBoundaries(true) ;
   }
   _self->x = xsave ;
 }
@@ -221,10 +211,10 @@ void RooNumRunningInt::RICacheElem::addRange(Int_t ixlo, Int_t ixhi, Int_t nbins
   addPoint(ixmid) ;
 
   // Calculate difference of mid-point w.r.t interpolated value
-  Double_t yInt = _ay[ixlo] + (_ay[ixhi]-_ay[ixlo])*(ixmid-ixlo)/(ixhi-ixlo) ;
+  double yInt = _ay[ixlo] + (_ay[ixhi]-_ay[ixlo])*(ixmid-ixlo)/(ixhi-ixlo) ;
 
   // If relative deviation is greater than tolerance divide and iterate
-  if (fabs(yInt-_ay[ixmid])*(_ax[nbins-1]-_ax[0])>1e-6) {
+  if (std::abs(yInt-_ay[ixmid])*(_ax[nbins-1]-_ax[0])>1e-6) {
     addRange(ixlo,ixmid,nbins) ;
     addRange(ixmid,ixhi,nbins) ;
   } else {
@@ -258,7 +248,7 @@ void RooNumRunningInt::RICacheElem::addPoint(Int_t ix)
 void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
   RICacheElem& riCache = static_cast<RICacheElem&>(cache) ;
-  riCache.calculate(kFALSE) ;
+  riCache.calculate(false) ;
 }
 
 
@@ -267,11 +257,11 @@ void RooNumRunningInt::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) c
 /// Return observable in nset to be cached by RooAbsCachedPdf
 /// this is always the x observable that is integrated
 
-RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 {
   RooArgSet* ret = new RooArgSet ;
   ret->add(x.arg()) ;
-  return ret ;
+  return RooFit::OwningPtr<RooArgSet>{ret};
 }
 
 
@@ -281,11 +271,11 @@ RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 /// These are always the input functions parameter, but never the
 /// integrated variable x.
 
-RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
 {
-  RooArgSet* ret = func.arg().getParameters(RooArgSet()) ;
-  ret->remove(x.arg(),kTRUE,kTRUE) ;
-  return ret ;
+  auto ret = func->getParameters(RooArgSet()) ;
+  ret->remove(x.arg(),true,true) ;
+  return ret;
 }
 
 
@@ -301,7 +291,7 @@ RooAbsCachedReal::FuncCacheElem* RooNumRunningInt::createCache(const RooArgSet* 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy function that is never called
 
-Double_t RooNumRunningInt::evaluate() const
+double RooNumRunningInt::evaluate() const
 {
   cout << "RooNumRunningInt::evaluate(" << GetName() << ")" << endl ;
   return 0 ;

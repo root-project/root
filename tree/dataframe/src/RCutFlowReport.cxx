@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "ROOT/RDF/RCutFlowReport.hxx"
+#include "TString.h" // Printf
 
 #include <algorithm>
 #include <stdexcept>

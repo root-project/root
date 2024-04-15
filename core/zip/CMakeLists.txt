@@ -6,7 +6,7 @@
 
 find_package(ZLIB REQUIRED)
 
-ROOT_OBJECT_LIBRARY(Zip
+target_sources(Core PRIVATE
   src/Bits.c
   src/ZDeflate.c
   src/ZTrees.c
@@ -15,6 +15,12 @@ ROOT_OBJECT_LIBRARY(Zip
   src/RZip.cxx
 )
 
-target_include_directories(Zip PRIVATE ${ZLIB_INCLUDE_DIR})
+target_link_libraries(Core PRIVATE ZLIB::ZLIB)
+
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
 
 ROOT_INSTALL_HEADERS()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

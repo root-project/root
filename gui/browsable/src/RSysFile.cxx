@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/// \file ROOT/RFileBrowsable.cxx
+/// \file
 /// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15
@@ -26,6 +26,7 @@
 #include "TROOT.h"
 #include "TList.h"
 #include "TBase64.h"
+#include "snprintf.h"
 
 #include <sstream>
 #include <fstream>
@@ -38,10 +39,9 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 
@@ -104,7 +104,7 @@ class RSysDirLevelIter : public RLevelIter {
          // produced file name may include \\? symbols, which are indicating long file name
          if ((dwRet > 0) && (dwRet < BUFSIZE))
            if ((path[0] == '\\') && (path[1] == '\\') && (path[2] == '?') && (path[3] == '\\')) {
-              R__DEBUG_HERE("Browserv7") << "Try to open directory " << (path+4) << " instead of " << fPath;
+              R__LOG_DEBUG(0, BrowsableLog()) << "Try to open directory " << (path+4) << " instead of " << fPath;
               fDir = gSystem->OpenDirectory(path + 4);
               if (fDir) fPath = path + 4;
            }
@@ -116,7 +116,7 @@ class RSysDirLevelIter : public RLevelIter {
 #endif
 
       if (!fDir) {
-         R__ERROR_HERE("Browserv7") << "Fail to open directory " << fPath;
+         R__LOG_ERROR(BrowsableLog()) << "Fail to open directory " << fPath;
          return false;
       }
 
@@ -167,9 +167,9 @@ class RSysDirLevelIter : public RLevelIter {
       if (pathinfores) {
 
          if (fCurrentStat.fIsLink) {
-            R__ERROR_HERE("Browserv7") << "Broken symlink of " << path;
+            R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << path;
          } else {
-            R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
+            R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" <<  path << "\" err:" << gSystem->GetError();
          }
          return false;
       }
@@ -213,15 +213,6 @@ class RSysDirLevelIter : public RLevelIter {
       return true;
    }
 
-   /** Try to find file directly by name */
-   bool FindDirEntry(const std::string &name)
-   {
-      if (!fDir && !OpenDir())
-         return false;
-
-      return TestDirEntry(name);
-   }
-
    std::string GetFileExtension(const std::string &fname) const
    {
       auto pos = fname.rfind(".");
@@ -236,31 +227,35 @@ public:
 
    virtual ~RSysDirLevelIter() { CloseDir(); }
 
-   bool Reset() override { return OpenDir(); }
-
    bool Next() override { return NextDirEntry(); }
 
-   bool Find(const std::string &name) override { return FindDirEntry(name); }
+   bool Find(const std::string &name, int = -1) override
+   {
+      // ignore index, it is not possible to have duplicated file names
 
-   bool HasItem() const override { return !fItemName.empty(); }
+      if (!fDir && !OpenDir())
+         return false;
 
-   std::string GetName() const override { return fItemName; }
+      return TestDirEntry(name);
+   }
 
-   /** Returns true if item can have childs and one should try to create iterator (optional) */
-   int CanHaveChilds() const override
+   std::string GetItemName() const override { return fItemName; }
+
+   /** Returns true if directory or is file format supported */
+   bool CanItemHaveChilds() const override
    {
       if (R_ISDIR(fCurrentStat.fMode))
-         return 1;
+         return true;
 
       if (RProvider::IsFileFormatSupported(GetFileExtension(fCurrentName)))
-         return 1;
+         return true;
 
-      return 0;
+      return false;
    }
 
    std::unique_ptr<RItem> CreateItem() override
    {
-      auto item = std::make_unique<RSysFileItem>(GetName(), CanHaveChilds());
+      auto item = std::make_unique<RSysFileItem>(GetItemName(), CanItemHaveChilds() ? -1 : 0);
 
       // this is construction of current item
       char tmp[256];
@@ -276,22 +271,10 @@ public:
       if (item->isdir)
          item->SetIcon("sap-icon://folder-blank"s);
       else
-         item->SetIcon(RSysFile::GetFileIcon(GetName()));
+         item->SetIcon(RSysFile::GetFileIcon(GetItemName()));
 
-      // file size
-      Long64_t _fsize = item->size, bsize = item->size;
-      if (_fsize > 1024) {
-         _fsize /= 1024;
-         if (_fsize > 1024) {
-            // 3.7MB is more informative than just 3MB
-            snprintf(tmp, sizeof(tmp), "%lld.%lldM", _fsize/1024, (_fsize%1024)/103);
-         } else {
-            snprintf(tmp, sizeof(tmp), "%lld.%lldK", bsize/1024, (bsize%1024)/103);
-         }
-      } else {
-         snprintf(tmp, sizeof(tmp), "%lld", bsize);
-      }
-      item->fsize = tmp;
+      // set file size as string
+      item->SetSize(item->size);
 
       // modification time
       time_t loctime = (time_t) item->modtime;
@@ -300,9 +283,9 @@ public:
          snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
                   newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
                   newtime->tm_min);
-         item->mtime = tmp;
+         item->SetMTime(tmp);
       } else {
-         item->mtime = "1901-01-01 00:00";
+         item->SetMTime("1901-01-01 00:00");
       }
 
       // file type
@@ -330,16 +313,16 @@ public:
                ((item->type & kS_IROTH) ? 'r' : '-'),
                ((item->type & kS_IWOTH) ? 'w' : '-'),
                ((item->type & kS_ISVTX) ? 't' : ((item->type & kS_IXOTH) ? 'x' : '-')));
-      item->ftype = tmp;
+      item->SetType(tmp);
 
       struct UserGroup_t *user_group = gSystem->GetUserInfo(item->uid);
       if (user_group) {
-         item->fuid = user_group->fUser;
-         item->fgid = user_group->fGroup;
+         item->SetUid(user_group->fUser.Data());
+         item->SetGid(user_group->fGroup.Data());
          delete user_group;
       } else {
-         item->fuid = std::to_string(item->uid);
-         item->fgid = std::to_string(item->gid);
+         item->SetUid(std::to_string(item->uid));
+         item->SetGid(std::to_string(item->gid));
       }
 
       return item;
@@ -364,7 +347,6 @@ public:
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 
@@ -385,7 +367,9 @@ std::string RSysFile::GetFileIcon(const std::string &fname)
        (EndsWith(".cxx")) ||
        (EndsWith(".c++")) ||
        (EndsWith(".cxx")) ||
+       (EndsWith(".cc")) ||
        (EndsWith(".h")) ||
+       (EndsWith(".hh")) ||
        (EndsWith(".hpp")) ||
        (EndsWith(".hxx")) ||
        (EndsWith(".h++")) ||
@@ -417,8 +401,6 @@ std::string RSysFile::GetFileIcon(const std::string &fname)
 }
 
 
-
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Create file element
 
@@ -426,9 +408,9 @@ RSysFile::RSysFile(const std::string &filename) : fFileName(filename)
 {
    if (gSystem->GetPathInfo(fFileName.c_str(), fStat)) {
       if (fStat.fIsLink) {
-         R__ERROR_HERE("Browserv7") << "Broken symlink of " << fFileName;
+         R__LOG_DEBUG(0, BrowsableLog()) << "Broken symlink of " << fFileName;
       } else {
-         R__ERROR_HERE("Browserv7") << "Can't read file attributes of \"" << fFileName
+         R__LOG_DEBUG(0, BrowsableLog()) << "Can't read file attributes of \"" << fFileName
                                     << "\" err:" << gSystem->GetError();
       }
    }
@@ -478,6 +460,21 @@ bool RSysFile::MatchName(const std::string &name) const
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Get default action for the file
+/// Either start text editor or image viewer or just do file browsing
+
+RElement::EActionKind RSysFile::GetDefaultAction() const
+{
+   if (R_ISDIR(fStat.fMode)) return kActBrowse;
+
+   auto icon = GetFileIcon(GetName());
+   if (icon == "sap-icon://document-text"s) return kActEdit;
+   if (icon == "sap-icon://picture"s) return kActImage;
+   if (icon == "sap-icon://org-chart"s) return kActBrowse;
+   return kActNone;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Returns full file name - including fully qualified path
 
 std::string RSysFile::GetFullName() const
@@ -514,7 +511,11 @@ std::string RSysFile::GetContent(const std::string &kind)
 
       auto pos = GetName().rfind(".");
 
-      return "data:image/"s  + GetName().substr(pos+1) + ";base64,"s + encode.Data();
+      std::string image_kind = GetName().substr(pos+1);
+      std::transform(image_kind.begin(), image_kind.end(), image_kind.begin(), ::tolower);
+      if (image_kind == "svg") image_kind = "svg+xml";
+
+      return "data:image/"s  + image_kind + ";base64,"s + encode.Data();
    }
 
    if (GetContentKind(kind) == kFileName) {
@@ -529,7 +530,7 @@ std::string RSysFile::GetContent(const std::string &kind)
 /// Provide top entries for file system
 /// On windows it is list of existing drivers, on Linux it is "Files system" and "Home"
 
-std::string RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
+RElementPath_t RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std::string &workdir)
 {
    std::string seldir = workdir;
 
@@ -558,8 +559,31 @@ std::string RSysFile::ProvideTopEntries(std::shared_ptr<RGroup> &comp, const std
       std::string homedir = gSystem->UnixPathName(gSystem->HomeDirectory());
 
       if (!homedir.empty())
-         comp->Add(std::make_shared<Browsable::RWrapper>("Home",std::make_unique<RSysFile>(homedir)));
+         comp->Add(std::make_shared<Browsable::RWrapper>("Home", std::make_unique<RSysFile>(homedir)));
    }
 
-   return seldir;
+   return RElement::ParsePath(seldir);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Return working path in browser hierarchy
+
+RElementPath_t RSysFile::GetWorkingPath(const std::string &workdir)
+{
+   std::string seldir = workdir;
+
+   if (seldir.empty())
+      seldir = gSystem->WorkingDirectory();
+
+   seldir = gSystem->UnixPathName(seldir.c_str());
+
+   auto volumes = gSystem->GetVolumes("all");
+   if (volumes) {
+      delete volumes;
+   } else {
+      seldir = "/Files system"s + seldir;
+   }
+
+   return RElement::ParsePath(seldir);
+}
+

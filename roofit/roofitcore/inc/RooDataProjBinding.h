@@ -24,22 +24,22 @@ class Roo1DTable ;
 
 class RooDataProjBinding : public RooRealBinding {
 public:
-  RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=0) ;
-  virtual ~RooDataProjBinding() ;
+  RooDataProjBinding(const RooAbsReal &real, const RooAbsData& data, const RooArgSet &vars, const RooArgSet* normSet=nullptr) ;
+  ~RooDataProjBinding() override ;
 
-  virtual Double_t operator()(const Double_t xvector[]) const;
+  double operator()(const double xvector[]) const override;
 
 protected:
 
-  mutable Bool_t _first   ;  // Bit indicating if operator() has been called yet
-  const RooAbsReal* _real ;  // Real function to be projected
-  const RooAbsData* _data ;  // Dataset used for projection
-  const RooArgSet*  _nset ;  // Normalization set for real function
+  mutable bool _first   ;  ///< Bit indicating if operator() has been called yet
+  const RooAbsReal* _real ;  ///< Real function to be projected
+  const RooAbsData* _data ;  ///< Dataset used for projection
+  const RooArgSet*  _nset ;  ///< Normalization set for real function
 
-  RooSuperCategory* _superCat ;  // Supercategory constructed from _data's category variables
-  Roo1DTable* _catTable ;        // Supercategory table generated from _data
+  std::unique_ptr<RooSuperCategory> _superCat; ///< Supercategory constructed from _data's category variables
+  std::unique_ptr<Roo1DTable> _catTable;       ///< Supercategory table generated from _data
 
-  ClassDef(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
+  ClassDefOverride(RooDataProjBinding,0) // RealFunc/Dataset binding for data projection of a real function
 };
 
 #endif

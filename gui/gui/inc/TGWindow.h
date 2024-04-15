@@ -13,14 +13,6 @@
 #define ROOT_TGWindow
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGWindow                                                             //
-//                                                                      //
-// ROOT GUI Window base class.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGObject.h"
 #include "TGClient.h"
 
@@ -33,53 +25,60 @@ class TGWindow : public TGObject {
 friend class TGClient;
 
 protected:
-   const TGWindow   *fParent;         // Parent window
-   Bool_t            fNeedRedraw;     // kTRUE if window needs to be redrawn
-   TString           fName;           // name of the window used in SavePrimitive()
-   static Int_t      fgCounter;       // counter of created windows in SavePrimitive
-   UInt_t            fEditDisabled;   // flags used for "guibuilding"
+   const TGWindow   *fParent;         ///< Parent window
+   Bool_t            fNeedRedraw;     ///< kTRUE if window needs to be redrawn
+   TString           fName;           ///< name of the window used in SavePrimitive()
+   static Int_t      fgCounter;       ///< counter of created windows in SavePrimitive
+   UInt_t            fEditDisabled;   ///< flags used for "guibuilding"
 
    TGWindow(Window_t id) :
-      fParent(0), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = 0; fId = id; }
+      fParent(nullptr), fNeedRedraw(kFALSE), fName(), fEditDisabled(0) { fClient = nullptr; fId = id; }
    TGWindow(const TGWindow& tgw) :
       TGObject(tgw), fParent(tgw.fParent), fNeedRedraw(tgw.fNeedRedraw),
-      fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) { }
+      fName(tgw.fName), fEditDisabled(tgw.fEditDisabled) {}
 
    TGWindow& operator=(const TGWindow& tgw)
-      { if (this!=&tgw) { TGObject::operator=(tgw); fParent=tgw.fParent;
-      fNeedRedraw=tgw.fNeedRedraw; fName=tgw.fName;
-      fEditDisabled=tgw.fEditDisabled; } return *this; }
+   {
+      if (this != &tgw) {
+         TGObject::operator=(tgw);
+         fParent = tgw.fParent;
+         fNeedRedraw = tgw.fNeedRedraw;
+         fName = tgw.fName;
+         fEditDisabled = tgw.fEditDisabled;
+      }
+      return *this;
+   }
 
    virtual void DoRedraw() { }
 
 public:
    enum  EEditMode {
-      kEditEnable        = 0,          // allow edit of this window
-      kEditDisable       = BIT(0),     // disable edit of this window
-      kEditDisableEvents = BIT(1),     // window events cannot be editted
-      kEditDisableGrab   = BIT(2),     // window grab cannot be editted
-      kEditDisableLayout = BIT(3),     // window layout cannot be editted
-      kEditDisableResize = BIT(4),     // window size cannot be editted
-      kEditDisableHeight = BIT(5),     // window height cannot be editted
-      kEditDisableWidth  = BIT(6),     // window width cannot be editted
-      kEditDisableBtnEnable = BIT(7),  // window can handle mouse button events
-      kEditDisableKeyEnable = BIT(8)   // window can handle keyboard events
+      kEditEnable        = 0,          ///< allow edit of this window
+      kEditDisable       = BIT(0),     ///< disable edit of this window
+      kEditDisableEvents = BIT(1),     ///< window events cannot be edited
+      kEditDisableGrab   = BIT(2),     ///< window grab cannot be edited
+      kEditDisableLayout = BIT(3),     ///< window layout cannot be edited
+      kEditDisableResize = BIT(4),     ///< window size cannot be edited
+      kEditDisableHeight = BIT(5),     ///< window height cannot be edited
+      kEditDisableWidth  = BIT(6),     ///< window width cannot be edited
+      kEditDisableBtnEnable = BIT(7),  ///< window can handle mouse button events
+      kEditDisableKeyEnable = BIT(8)   ///< window can handle keyboard events
    };
 
    enum EStatusBits {
       kIsHtmlView = BIT(14)
    };
 
-   TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
+   TGWindow(const TGWindow *p = nullptr, Int_t x = 0, Int_t y = 0,
             UInt_t w = 0, UInt_t h = 0, UInt_t border = 0,
             Int_t depth = 0,
             UInt_t clss = 0,
-            void *visual = 0,
-            SetWindowAttributes_t *attr = 0,
+            void *visual = nullptr,
+            SetWindowAttributes_t *attr = nullptr,
             UInt_t wtype = 0);
-   TGWindow(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGWindow(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
 
-   virtual ~TGWindow();
+   ~TGWindow() override;
 
    const TGWindow *GetParent() const { return fParent; }
    virtual const TGWindow *GetMainFrame() const;
@@ -102,7 +101,7 @@ public:
    virtual Bool_t HandleExpose(Event_t *event)
                   { if (event->fCount == 0) fClient->NeedRedraw(this); return kTRUE; }
    virtual Bool_t HandleEvent(Event_t *) { return kFALSE; }
-   virtual Bool_t HandleTimer(TTimer *) { return kFALSE; }
+   Bool_t         HandleTimer(TTimer *) override { return kFALSE; }
    virtual Bool_t HandleIdleEvent(TGIdleHandler *) { return kFALSE; }
 
    virtual void   Move(Int_t x, Int_t y);
@@ -113,41 +112,41 @@ public:
    virtual UInt_t GetEditDisabled() const { return fEditDisabled; }
    virtual void   SetEditDisabled(UInt_t on = kEditDisable) { fEditDisabled = on; }
    virtual void   SetEditable(Bool_t on = kTRUE)
-                  { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : 0); }
+                  { if (!(fEditDisabled & kEditDisable)) fClient->SetRoot(on ? this : nullptr); }
    virtual Int_t  MustCleanup() const { return 0; }
-   virtual void   Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const override;
 
-   virtual void        SetWindowName(const char *name = 0);
-   virtual const char *GetName() const;
-   virtual void        SetName(const char *name) { fName = name; }
+   virtual void   SetWindowName(const char *name = nullptr);
+   const char    *GetName() const override;
+   virtual void   SetName(const char *name) { fName = name; }
 
    virtual void   SetMapSubwindows(Bool_t /*on*/) {  }
    virtual Bool_t IsMapSubwindows() const { return kTRUE; }
 
-   static Int_t        GetCounter();
+   static Int_t   GetCounter();
 
-   ClassDef(TGWindow, 0);  // GUI Window base class
+   ClassDefOverride(TGWindow, 0);  // GUI Window base class
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGUnknownWindowHandler                                               //
-//                                                                      //
-// Handle events for windows that are not part of the native ROOT GUI.  //
-// Typically windows created by Xt or Motif.                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGUnknownWindowHandler
+    \ingroup guiwidgets
+
+Handle events for windows that are not part of the native ROOT GUI.
+Typically windows created by Xt or Motif.
+
+*/
+
 
 class TGUnknownWindowHandler : public TObject {
 
 public:
-   TGUnknownWindowHandler() { }
-   virtual ~TGUnknownWindowHandler() { }
+   TGUnknownWindowHandler() {}
+   ~TGUnknownWindowHandler() override {}
 
    virtual Bool_t HandleEvent(Event_t *) = 0;
 
-   ClassDef(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
+   ClassDefOverride(TGUnknownWindowHandler,0)  // Abstract event handler for unknown windows
 };
 
 #endif

@@ -25,8 +25,6 @@ pointer first using RooCFunction1Binding<T1,T2>::register().
 #include "Riostream.h"
 #include "RooCFunction1Binding.h"
 
-using namespace std ;
-
 #ifndef ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
 #define ROOFIT_R__NO_CLASS_TEMPLATE_SPECIALIZATION
 templateClassImp(RooCFunction1Binding);
@@ -57,19 +55,19 @@ RooCFunction1Map<double,int>& RooCFunction1Ref<double,int>::fmap()
 namespace RooFit {
 
   RooAbsReal* bindFunction(const char* name,CFUNCD1D func,RooAbsReal& x) {
-    return new RooCFunction1Binding<Double_t,Double_t>(name,name,func,x) ;
+    return new RooCFunction1Binding<double,double>(name,name,func,x) ;
   }
 
   RooAbsReal* bindFunction(const char* name,CFUNCD1I func,RooAbsReal& x) {
-    return new RooCFunction1Binding<Double_t,Int_t>(name,name,func,x) ;
+    return new RooCFunction1Binding<double,Int_t>(name,name,func,x) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD1D func,RooAbsReal& x) {
-    return new RooCFunction1PdfBinding<Double_t,Double_t>(name,name,func,x) ;
+    return new RooCFunction1PdfBinding<double,double>(name,name,func,x) ;
   }
 
   RooAbsPdf* bindPdf(const char* name,CFUNCD1I func,RooAbsReal& x) {
-    return new RooCFunction1PdfBinding<Double_t,Int_t>(name,name,func,x) ;
+    return new RooCFunction1PdfBinding<double,Int_t>(name,name,func,x) ;
   }
 
 }

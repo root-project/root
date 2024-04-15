@@ -21,7 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "RConfigure.h"
+// #include "RConfigure.h" // included via Rtypes.h
 #include "Rtypes.h"
 
 typedef void (*FreeHookFun_t)(void*, void *addr, size_t);
@@ -36,7 +36,6 @@ private:
    static size_t         fgMaxBlockSize;       // largest block allocated
    static FreeHookFun_t  fgFreeHook;           // function called on free
    static void          *fgFreeHookData;       // data used by this function
-   static ReAllocFun_t   fgReAllocHook;        // custom ReAlloc
    static ReAllocCFun_t  fgReAllocCHook;       // custom ReAlloc with length check
    static Bool_t         fgHasCustomNewDelete; // true if using ROOT's new/delete
 
@@ -52,14 +51,11 @@ public:
 public:
    virtual ~TStorage() { }
 
-   static ULong_t        GetHeapBegin();
-   static ULong_t        GetHeapEnd();
    static FreeHookFun_t  GetFreeHook();
    static void          *GetFreeHookData();
    static size_t         GetMaxBlockSize();
    static void          *Alloc(size_t size);
    static void           Dealloc(void *ptr);
-   static void          *ReAlloc(void *vp, size_t size);
    static void          *ReAlloc(void *vp, size_t size, size_t oldsize);
    static char          *ReAllocChar(char *vp, size_t size, size_t oldsize);
    static Int_t         *ReAllocInt(Int_t *vp, size_t size, size_t oldsize);
@@ -82,10 +78,6 @@ public:
    static void EnableStatistics(int size= -1, int ix= -1);
 
    static Bool_t HasCustomNewDelete();
-
-   // only valid after call to a TStorage allocating method
-   static void   AddToHeap(ULong_t begin, ULong_t end);
-   static Bool_t IsOnHeap(void *p);
 
    static Bool_t FilledByObjectAlloc(volatile const UInt_t* const member);
    static void UpdateIsOnHeap(volatile const UInt_t &uniqueID, volatile UInt_t &bits);
@@ -110,13 +102,13 @@ inline Bool_t TStorage::FilledByObjectAlloc(volatile const UInt_t *const member)
    //      the object.
    // The consequence would be that those objects would be deleted twice, once
    // by the TDirectory and once automatically when going out of scope
-   // (and thus quite visible).  A false negative (which is not posible with
+   // (and thus quite visible).  A false negative (which is not possible with
    // this implementation) would have been a silent memory leak.
 
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
 R__INTENTIONALLY_UNINIT_BEGIN
-   return *member == kObjectAllocMemValue;
+   return *member == kObjectAllocMemValue; // NOLINT
 R__INTENTIONALLY_UNINIT_END
 }
 
@@ -130,9 +122,9 @@ R__INTENTIONALLY_UNINIT_END
 // overhead (compared to inlining)
 R__NEVER_INLINE void TStorage::UpdateIsOnHeap(volatile const UInt_t &uniqueID, volatile UInt_t &bits) {
    if (TStorage::FilledByObjectAlloc(&uniqueID))
-      bits |= kIsOnHeap;
+      bits = bits | kIsOnHeap;
    else
-      bits &= ~kIsOnHeap;
+      bits = bits & ~kIsOnHeap;
 }
 
 

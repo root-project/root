@@ -14,22 +14,21 @@ from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 
-from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.regularizers import l2
-from keras.optimizers import SGD
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Regression_Keras.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
 # Load data
 if not isfile('tmva_reg_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_reg_example.root'])
+    call(['curl', '-L', '-O', 'http://root.cern/files/tmva_reg_example.root'])
 
 data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')
@@ -42,26 +41,27 @@ for branch in tree.GetListOfBranches():
 dataloader.AddTarget('fvalue')
 
 dataloader.AddRegressionTree(tree, 1.0)
+#use only 1000 events since evaluation is very slow (especially on MacOS). Increase it to get meaningful results
 dataloader.PrepareTrainingAndTestTree(TCut(''),
-        'nTrain_Regression=4000:SplitMode=Random:NormMode=NumEvents:!V')
+        'nTrain_Regression=1000:SplitMode=Random:NormMode=NumEvents:!V')
 
 # Generate model
 
 # Define model
 model = Sequential()
-model.add(Dense(64, activation='tanh', W_regularizer=l2(1e-5), input_dim=2))
+model.add(Dense(64, activation='tanh', input_dim=2))
 model.add(Dense(1, activation='linear'))
 
 # Set loss and optimizer
-model.compile(loss='mean_squared_error', optimizer=SGD(lr=0.01))
+model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01), weighted_metrics=[])
 
 # Store model to file
-model.save('model.h5')
+model.save('modelRegression.h5')
 model.summary()
 
 # Book methods
 factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-        'H:!V:VarTransform=D,G:FilenameModel=model.h5:NumEpochs=20:BatchSize=32')
+        'H:!V:VarTransform=D,G:FilenameModel=modelRegression.h5:FilenameTrainedModel=trainedModelRegression.h5:NumEpochs=20:BatchSize=32')
 factory.BookMethod(dataloader, TMVA.Types.kBDT, 'BDTG',
         '!H:!V:VarTransform=D,G:NTrees=1000:BoostType=Grad:Shrinkage=0.1:UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=4')
 

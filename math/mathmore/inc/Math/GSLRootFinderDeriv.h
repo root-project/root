@@ -75,7 +75,7 @@ class GSLRootFinderDeriv: public IRootFinderMethod {
 
 public:
    GSLRootFinderDeriv();
-   virtual ~GSLRootFinderDeriv();
+   ~GSLRootFinderDeriv() override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -87,13 +87,13 @@ public:
 
 
 #if defined(__MAKECINT__) || defined(G__DICTIONARY)
-   bool SetFunction( const IGenFunction & , double , double ) {
+   bool SetFunction( const IGenFunction & , double , double ) override {
       std::cerr <<"GSLRootFinderDeriv - Error : Algorithm requirs derivatives" << std::endl;
       return false;
    }
 #endif
 
-   bool SetFunction( const IGradFunction & f, double xstart) {
+   bool SetFunction( const IGradFunction & f, double xstart) override {
       const void * p = &f;
       return SetFunction(  &GSLFunctionAdapter<IGradFunction>::F, &GSLFunctionAdapter<IGradFunction>::Df, &GSLFunctionAdapter<IGradFunction>::Fdf, const_cast<void *>(p), xstart );
    }
@@ -106,22 +106,22 @@ public:
    using IRootFinderMethod::SetFunction;
 
    /// iterate (return GSL_SUCCESS in case of successful iteration)
-   int Iterate();
+   int Iterate() override;
 
-   double Root() const;
+   double Root() const override;
 
    /// Find the root (return false if failed)
-   bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+   bool Solve( int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) override;
 
    /// Return number of iterations
-   int Iterations() const {
+   int Iterations() const override {
       return fIter;
    }
 
    /// Return the status of last root finding
-   int Status() const { return fStatus; }
+   int Status() const override { return fStatus; }
 
-   const char * Name() const;
+   const char * Name() const override;
 
 protected:
 

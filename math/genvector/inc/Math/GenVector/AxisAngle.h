@@ -37,6 +37,7 @@ namespace Math {
 
       @ingroup GenVector
 
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 class AxisAngle {
 
@@ -90,7 +91,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**
@@ -113,14 +114,11 @@ public:
       The axis vector is automatically normalized to be a unit vector
    */
    template<class IT>
-#ifndef NDEBUG
    void SetComponents(IT begin, IT end) {
-#else
-   void SetComponents(IT begin, IT ) {
-#endif
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.SetCoordinates(*a,*b,*c);
       fAngle = *(++begin);
+      (void)end;
       assert (++begin==end);
       // re-normalize the vector
       double tot = fAxis.R();
@@ -132,14 +130,11 @@ public:
       and another to the end of the desired data (4 past start).
    */
    template<class IT>
-#ifndef NDEBUG
    void GetComponents(IT begin, IT end) const {
-#else
-   void GetComponents(IT begin, IT ) const {
-#endif
       IT a = begin; IT b = ++begin; IT c = ++begin;
       fAxis.GetCoordinates(*a,*b,*c);
       *(++begin) = fAngle;
+      (void)end;
       assert (++begin==end);
    }
 
@@ -168,7 +163,7 @@ public:
 
    /**
       Set components into a non-zero vector (x,y,z) and an angle.
-      The vector is intended to be a cartesian dispalcement vector
+      The vector is intended to be a cartesian displacement vector
       but any vector class assignable from one will work.
    */
    template<class AnyVector>
@@ -178,7 +173,7 @@ public:
    }
 
    /**
-      accesss to rotation axis
+      access to rotation axis
    */
    AxisVector Axis() const { return fAxis; }
 

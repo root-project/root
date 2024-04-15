@@ -11,19 +11,20 @@
 
 #include "TText.h"
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
-#  include <ft2build.h>
-#  include FT_FREETYPE_H
-#  include FT_GLYPH_H
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_GLYPH_H
 #include "TTF.h"
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TPoint.h"
-#include "TClass.h"
-#include <wchar.h>
+
+#include <cwchar>
 #include <cstdlib>
+#include <iostream>
 
 ClassImp(TText);
 
@@ -109,15 +110,15 @@ void TText::Copy(TObject &obj) const
    ((TText&)obj).fY = fY;
    TNamed::Copy(obj);
    TAttText::Copy(((TText&)obj));
-   if (((TText&)obj).fWcsTitle != NULL) {
-      if (fWcsTitle != NULL) {
-         *reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(&fWcsTitle);
+   if (((TText&)obj).fWcsTitle) {
+      if (fWcsTitle) {
+         *reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle) = *reinterpret_cast<const std::wstring*>(fWcsTitle);
       } else {
-        delete reinterpret_cast<std::wstring*>(&((TText&)obj).fWcsTitle);
-        ((TText&)obj).fWcsTitle = NULL;
+        delete reinterpret_cast<std::wstring*>(((TText&)obj).fWcsTitle);
+        ((TText&)obj).fWcsTitle = nullptr;
       }
    } else {
-      if (fWcsTitle != NULL) {
+      if (fWcsTitle) {
          ((TText&)(obj)).fWcsTitle = new std::wstring(*reinterpret_cast<const std::wstring*>(fWcsTitle));
       }
    }
@@ -128,10 +129,10 @@ void TText::Copy(TObject &obj) const
 
 const void *TText::GetWcsTitle(void) const
 {
-   if (fWcsTitle != NULL) {
+   if (fWcsTitle) {
       return reinterpret_cast<std::wstring *>(fWcsTitle)->c_str();
    } else {
-      return NULL;
+      return nullptr;
    }
 }
 
@@ -142,6 +143,7 @@ const void *TText::GetWcsTitle(void) const
 
 Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t ptx, pty;
 
    TAttText::Modify();  // change text attributes only if necessary
@@ -313,7 +315,7 @@ void TText::ExecuteEvent(Int_t event, Int_t px, Int_t py)
             theta = TMath::ACos((px-px1)/norm);
             dtheta= TMath::ASin((py1-py)/norm);
             if (dtheta<0) theta = -theta;
-            theta = theta/TMath::ACos(-1)*180;
+            theta = theta/TMath::Pi()*180;
             if (theta<0) theta += 360;
             if (right) {theta = theta+180; if (theta>=360) theta -= 360;}
          }
@@ -477,6 +479,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
+   if (!gPad) return;
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
@@ -521,6 +524,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -556,6 +560,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -585,6 +590,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -613,6 +619,7 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 
 void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -648,6 +655,7 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -678,6 +686,7 @@ void TText::ls(Option_t *) const
 
 void TText::Paint(Option_t *)
 {
+   if (!gPad) return;
    TAttText::Modify();  //Change text attributes only if necessary
    if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
    else                   gPad->PaintText(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTitle());
@@ -743,7 +752,7 @@ void TText::PaintControlBox(Int_t x, Int_t y, Double_t theta)
 void TText::PaintText(Double_t x, Double_t y, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,7 +761,7 @@ void TText::PaintText(Double_t x, Double_t y, const char *text)
 void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintText(x,y,text);
+   if (gPad) gPad->PaintText(x,y,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,7 +770,7 @@ void TText::PaintText(Double_t x, Double_t y, const wchar_t *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -770,7 +779,7 @@ void TText::PaintTextNDC(Double_t u, Double_t v, const char *text)
 void TText::PaintTextNDC(Double_t u, Double_t v, const wchar_t *text)
 {
    TAttText::Modify();  //Change text attributes only if necessary
-   gPad->PaintTextNDC(u,v,text);
+   if (gPad) gPad->PaintTextNDC(u,v,text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -791,17 +800,19 @@ void TText::Print(Option_t *) const
 void TText::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
-   if (gROOT->ClassSaved(TText::Class())) {
-       out<<"   ";
-   } else {
-       out<<"   TText *";
-   }
-   TString s = GetTitle();
-   s.ReplaceAll("\"","\\\"");
-   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC)) out<<"   text->SetNDC();"<<std::endl;
+   if (gROOT->ClassSaved(TText::Class()))
+      out<<"   ";
+   else
+      out<<"   TText *";
 
-   SaveTextAttributes(out,"text",11,0,1,62,0.05);
+   TString s = GetTitle();
+   s.ReplaceSpecialCppChars();
+
+   out<<"text = new TText("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC))
+      out<<"   text->SetNDC();"<<std::endl;
+
+   SaveTextAttributes(out, "text", 11, 0, 1, 62, 0.05);
 
    out<<"   text->Draw();"<<std::endl;
 }
@@ -880,7 +891,8 @@ Rectangle_t TText::GetBBox()
       case 3 : Dy = 0      ; break;
    }
 
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    BBox.fX = gPad->XtoPixel(fX)-Dx;
    BBox.fY = gPad->YtoPixel(fY)-Dy;
    BBox.fWidth  = w;
@@ -893,7 +905,8 @@ Rectangle_t TText::GetBBox()
 
 TPoint TText::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));
    return(p);
@@ -904,6 +917,7 @@ TPoint TText::GetBBoxCenter()
 
 void TText::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    this->SetX(gPad->PixeltoX(p.GetX()));
    this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
 }
@@ -913,6 +927,7 @@ void TText::SetBBoxCenter(const TPoint &p)
 
 void TText::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    this->SetX(gPad->PixeltoX(x));
 }
 
@@ -921,6 +936,7 @@ void TText::SetBBoxCenterX(const Int_t x)
 
 void TText::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
 }
 

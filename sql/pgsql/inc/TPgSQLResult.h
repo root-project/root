@@ -14,12 +14,8 @@
 
 #include "TSQLResult.h"
 
-#if !defined(__CINT__)
-#include <libpq-fe.h>
-#else
-struct PGresult;
-#endif
-
+struct pg_result;
+typedef struct pg_result PGresult;
 
 class TPgSQLResult : public TSQLResult {
 
@@ -30,7 +26,7 @@ private:
    Bool_t  IsValid(Int_t field);
 
 public:
-   TPgSQLResult(void *result);
+   TPgSQLResult(PGresult *result);
    ~TPgSQLResult();
 
    void        Close(Option_t *opt="") final;

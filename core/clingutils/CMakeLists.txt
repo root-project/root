@@ -11,9 +11,13 @@
 # These files depend on cling/clang/llvm; they need to be linked into libCling.
 # They are used by rootcling_stage1, rootcling and libCling.
 
-set(ClingUtils_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   root_std_complex.h
-  PARENT_SCOPE
+)
+
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
 )
 
 ROOT_OBJECT_LIBRARY(ClingUtils
@@ -23,18 +27,23 @@ ROOT_OBJECT_LIBRARY(ClingUtils
 
 add_dependencies(ClingUtils CLING)
 
-target_include_directories(ClingUtils PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
-target_include_directories(ClingUtils PRIVATE ${CLING_INCLUDE_DIRS})
+target_include_directories(ClingUtils PRIVATE 
+   ${CLING_INCLUDE_DIRS}
+   ${CMAKE_SOURCE_DIR}/core/foundation/res
+   ${CMAKE_SOURCE_DIR}/core/foundation/inc
+   ${CMAKE_SOURCE_DIR}/core/base/inc
+   ${CMAKE_SOURCE_DIR}/core/clib/inc
+   ${CMAKE_SOURCE_DIR}/core/meta/inc
+   ${CMAKE_BINARY_DIR}/ginclude)
+
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
 target_include_directories(ClingUtils SYSTEM PRIVATE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
-
-# This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-  ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-maybe-uninitialized)
-endif()
+set_target_properties(ClingUtils PROPERTIES
+  COMPILE_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
 ROOT_INSTALL_HEADERS()
 
@@ -53,7 +62,6 @@ set(stldicts
 if(NOT WIN32)
   list(APPEND stldicts valarray)
 endif()
-include_directories(${CMAKE_BINARY_DIR}/etc/cling/cint)
 foreach(dict ${stldicts})
   string(REPLACE "2" "" header ${dict})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
@@ -63,13 +71,15 @@ foreach(dict ${stldicts})
                                 STAGE1
                                 NODEPHEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
+                                DICTIONARY_OPTIONS --noIncludePaths
                                 DEPENDENCIES Core)
+  target_include_directories(${dict}Dict PRIVATE ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint)
 endforeach()
 
 set(CLANG_RESOURCE_DIR_STEM)
 if (builtin_clang)
-  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm/src/${CMAKE_CFG_INTDIR}/lib/clang)
-  set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION})
+  set(CLANG_RESOURCE_DIR_STEM ${CMAKE_BINARY_DIR}/interpreter/llvm-project/llvm/${CMAKE_CFG_INTDIR}/lib/clang)
+  set(CLANG_RESOURCE_DIR_VERSION ${LLVM_VERSION_MAJOR})
 else ()
   set(CLANG_RESOURCE_DIR_STEM ${LLVM_LIBRARY_DIR}/clang)
   # A user can define a clang version to use, otherwise find it (but will error if more than one version is present)
@@ -100,14 +110,48 @@ install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_V
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
 
-foreach(file libc.modulemap boost.modulemap tinyxml2.modulemap cuda.modulemap std.modulemap module.modulemap.build
+set(custom_modulemaps)
+if (runtime_cxxmodules)
+  set(custom_modulemaps boost.modulemap tinyxml2.modulemap cuda.modulemap module.modulemap.build)
+  # FIXME: We should install vc.modulemap only when Vc is found (Vc_FOUND) but
+  # some systems install it under /usr/include/Vc/Vc which allows rootcling to
+  # discover it and assert that the modulemap is not found.
+  set(custom_modulemaps ${custom_modulemaps} vc.modulemap)
+
+  # We need to override the default modulemap because instead of producing a
+  # single std.pcm, produces hundreds of pcms. This changed with sdk 15.3.
+  if (CMAKE_SYSTEM_NAME MATCHES Darwin AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 15.0.0.15000309)
+    set(custom_modulemaps ${custom_modulemaps} std_darwin.modulemap)
+  endif()
+
+  if (NOT libcxx)
+    if (MSVC)
+      set(custom_modulemaps ${custom_modulemaps} vcruntime.modulemap)
+      set(custom_modulemaps ${custom_modulemaps} services_msvc.modulemap)
+      set(custom_modulemaps ${custom_modulemaps} std_msvc.modulemap)
+    else()
+      set(custom_modulemaps ${custom_modulemaps} std.modulemap)
+    endif()
+  endif()
+  # Handle libc. Apple's libc is modularized.
+  if (MSVC)
+    set(custom_modulemaps ${custom_modulemaps} libc_msvc.modulemap)
+  elseif (NOT APPLE)
+    set(custom_modulemaps ${custom_modulemaps} libc.modulemap)
+  endif()
+endif(runtime_cxxmodules)
+
+foreach(file ${custom_modulemaps}
         Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
         Interpreter/DynamicLookupLifetimeHandler.h
         Interpreter/Exception.h
         Interpreter/RuntimePrintValue.h
         Interpreter/RuntimeUniverse.h
-        Interpreter/Value.h)
+        Interpreter/RuntimeOptions.h
+        Interpreter/Value.h
+        Interpreter/Visibility.h
+        )
   get_filename_component(path ${file} PATH)
   set(dest_file ${file})
   if (${file} STREQUAL "module.modulemap.build")
@@ -127,18 +171,6 @@ foreach(file  multimap  multiset)
   install(FILES ${CMAKE_SOURCE_DIR}/interpreter/cling/include/cling/cint/${file} DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/cint)
 endforeach()
 
-# These headers do not have complete include guards on all platforms we
-# support. This means that the PCH cannot provide their representation at
-# runtime and clang will hit disk, triggering a possible incompatibility
-# of that file in build-time versus run-time (different length etc).
-# Capture their build-time version here, and inject it into runtime.
-foreach(file wchar.h bits/stat.h bits/time.h)
-  if(EXISTS ${DEFAULT_SYSROOT}/usr/include/${file})
-    list(APPEND copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${DEFAULT_SYSROOT}/usr/include/${file}
-      ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/${file})
-  endif()
-endforeach()
-
 set(stamp_file ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LLVMRES.stamp)
 if(MSVC)
   add_custom_command(OUTPUT ${stamp_file}
@@ -156,15 +188,6 @@ else()
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CLANG_RESOURCE_DIR}
         ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/assert.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/assert.h
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/stdlib.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/stdlib.h
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${CMAKE_SOURCE_DIR}/interpreter/llvm/ROOT/unistd.h
-        ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${CLANG_RESOURCE_DIR_VERSION}/include/unistd.h
         ${copy_commands}
         COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
         DEPENDS ${files_to_copy}

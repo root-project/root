@@ -9,27 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TF1Editor                                                           //
-//                                                                      //
-//  GUI for TF1 attributes and parameters.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TF1Editor
+    \ingroup ged
+
+GUI for TF1 attributes and parameters.
+
+*/
 
 #include "TF1Editor.h"
 #include "TGedEditor.h"
 #include "TH1.h"
 #include "TF1.h"
 #include "TGTextEntry.h"
-#include "TGToolTip.h"
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 #include "TString.h"
 #include "TGNumberEntry.h"
 #include "TG3DLine.h"
 #include "TFunctionParametersDialog.h"
-#include "TCanvas.h"
+#include "TVirtualPad.h"
 
 
 ClassImp(TF1Editor);
@@ -210,10 +209,7 @@ void TF1Editor::DoSliderXMoved()
 {
    if (fAvoidSignal) return;
 
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fGedEditor->GetPad();
-   fGedEditor->GetPad()->cd();
+   TVirtualPad::TContext ctxt(fGedEditor->GetPad(), kTRUE);
 
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
@@ -243,7 +239,6 @@ void TF1Editor::DoSliderXMoved()
       fClient->NeedRedraw(fSldMinX,kTRUE);
       fClient->NeedRedraw(fSldMaxX,kTRUE);
    }
-   if(save) gPad = save;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -253,10 +248,7 @@ void TF1Editor::DoSliderXPressed()
 {
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fGedEditor->GetPad();
-   fGedEditor->GetPad()->cd();
+   TVirtualPad::TContext ctxt(fGedEditor->GetPad(), kTRUE);
 
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
@@ -274,9 +266,6 @@ void TF1Editor::DoSliderXPressed()
    fClient->NeedRedraw(fSldMinX,kTRUE);
    fClient->NeedRedraw(fSldMaxX,kTRUE);
    Update();
-
-   if(save) gPad = save;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,10 +275,7 @@ void TF1Editor::DoSliderXReleased()
 {
    if (fAvoidSignal || (fDrawMode->GetState() == kButtonDown)) return;
 
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fGedEditor->GetPad();
-   fGedEditor->GetPad()->cd();
+   TVirtualPad::TContext ctxt(fGedEditor->GetPad(), kTRUE);
 
    fF1->SetNpx((Int_t)fNXpoints->GetNumber());
    TAxis *x = fF1->GetHistogram()->GetXaxis();
@@ -307,8 +293,6 @@ void TF1Editor::DoSliderXReleased()
    fClient->NeedRedraw(fSldMinX,kTRUE);
    fClient->NeedRedraw(fSldMaxX,kTRUE);
    Update();
-
-   if(save) gPad = save;
 }
 
 

@@ -24,8 +24,8 @@ public:
               };
 
 private:
-   TGLLockable(const TGLLockable&);            // Not implemented
-   TGLLockable& operator=(const TGLLockable&); // Not implemented
+   TGLLockable(const TGLLockable&) = delete;
+   TGLLockable& operator=(const TGLLockable&) = delete;
 
 protected:
    // Locking - can take/release via const handle
@@ -35,8 +35,8 @@ protected:
    class TUnlocker
    {
    private:
-      TUnlocker(const TUnlocker&);            // Not implemented
-      TUnlocker& operator=(const TUnlocker&); // Not implemented
+      TUnlocker(const TUnlocker&) = delete;
+      TUnlocker& operator=(const TUnlocker&) = delete;
 
       const TGLLockable *fLockable;
 

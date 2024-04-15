@@ -44,8 +44,6 @@
 #pragma link C++ class TCollectionStreamer-;
 #pragma link C++ class TCollectionClassStreamer-;
 #pragma link C++ class TCollectionMemberStreamer-;
-#pragma link C++ options=version(0) class TVirtualObject-;
-#pragma link C++ options=version(0) class TVirtualArray-;
 #pragma link C++ class TFPBlock+;
 #pragma link C++ class TFilePrefetch+;
 #pragma link C++ namespace TStreamerInfoActions;
@@ -53,7 +51,7 @@
 #pragma link C++ class TStreamerInfoActions::TActionSequence+;
 #pragma link C++ class TStreamerInfoActions::TConfiguration-;
 #pragma link C++ class ROOT::Internal::RRawFile+;
-#pragma link C++ class ROOT::Experimental::TBufferMerger;
-#pragma link C++ class ROOT::Experimental::TBufferMergerFile;
+#pragma link C++ class ROOT::TBufferMerger;
+#pragma link C++ class ROOT::TBufferMergerFile;
 
 #endif

@@ -26,21 +26,45 @@ class REveScene;
 
 class REveViewer : public REveElement
 {
+public:
+   enum ECameraType { kCameraPerspXOZ, kCameraOrthoXOY };
+   enum EAxesType {kAxesNone, kAxesOrigin, kAxesEdge };
+
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
+   ECameraType fCameraType{kCameraPerspXOZ};
+   EAxesType fAxesType{kAxesNone};
+   bool      fBlackBackground{false};
+
+   bool fMandatory{true};
+   std::string fPostStreamFlag;
+
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
-   virtual ~REveViewer();
+   ~REveViewer() override;
 
    void Redraw(Bool_t resetCameras=kFALSE);
 
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
 
+   void SetCameraType(ECameraType t) { fCameraType = t; }
+   ECameraType GetCameraType() const { return fCameraType; }
+
+   void SetAxesType(int);
+   void SetBlackBackground(bool);
+
+   void DisconnectClient();
+   void ConnectClient();
+
+   void SetMandatory(bool x);
+   bool GetMandatory() { return fMandatory; }
+
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
 
 
@@ -65,7 +89,7 @@ protected:
 
 public:
    REveViewerList(const std::string &n="REveViewerList", const std::string &t="");
-   virtual ~REveViewerList();
+   ~REveViewerList() override;
 
    void AddElement(REveElement* el) override;
    void RemoveElementLocal(REveElement* el) override;
@@ -101,6 +125,7 @@ public:
 
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
+ //  Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
 
 } // namespace Experimental

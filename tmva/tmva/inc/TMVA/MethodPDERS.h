@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodPDERS                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Multidimensional Likelihood using the "Probability density estimator      *
@@ -32,7 +32,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_MethodPDERS
@@ -50,6 +50,8 @@
 #include "TMVA/MethodBase.h"
 #include "TMVA/BinarySearchTree.h"
 #include "TVector.h"
+#include "ThreadLocalStorage.h"
+#include <vector>
 
 namespace TMVA {
 
@@ -86,7 +88,7 @@ namespace TMVA {
       void ReadWeightsFromXML( void* wghtnode );
 
       // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       // calculate the MVA value
       const std::vector<Float_t>& GetRegressionValues();
@@ -125,7 +127,7 @@ namespace TMVA {
       Double_t LanczosFilter( Int_t level, Double_t x );
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
    private:
 
@@ -160,7 +162,7 @@ namespace TMVA {
          kSphere,
          kTeepee,
          kGauss,
-         kSinc3,     // the sinc enumerators must be consecutive and in order!
+         kSinc3,     ///< the sinc enumerators must be consecutive and in order!
          kSinc5,
          kSinc7,
          kSinc9,
@@ -172,34 +174,34 @@ namespace TMVA {
          kTrim
       } fKernelEstimator;
 
-      BinarySearchTree*  fBinaryTree;   // binary tree
+      BinarySearchTree*  fBinaryTree;   ///< binary tree
 
-      std::vector<Float_t>*   fDelta;         // size of volume
-      std::vector<Float_t>*   fShift;         // volume center
-      std::vector<Float_t>    fAverageRMS;    // average RMS of signal and background
+      std::vector<Float_t>*   fDelta;         ///< size of volume
+      std::vector<Float_t>*   fShift;         ///< volume center
+      std::vector<Float_t>    fAverageRMS;    ///< average RMS of signal and background
 
-      Float_t            fScaleS;        // weight for signal events
-      Float_t            fScaleB;        // weight for background events
-      Float_t            fDeltaFrac;     // fraction of RMS
-      Double_t           fGaussSigma;    // size of Gauss in adaptive volume
-      Double_t           fGaussSigmaNorm;// size of Gauss in adaptive volume (normalised to dimensions)
+      Float_t            fScaleS;        ///< weight for signal events
+      Float_t            fScaleB;        ///< weight for background events
+      Float_t            fDeltaFrac;     ///< fraction of RMS
+      Double_t           fGaussSigma;    ///< size of Gauss in adaptive volume
+      Double_t           fGaussSigmaNorm;///< size of Gauss in adaptive volume (normalised to dimensions)
 
       Double_t           fNRegOut;       // number of output dimensions for regression
 
       // input for adaptive volume adjustment
-      Float_t            fNEventsMin;    // minimum number of events in adaptive volume
-      Float_t            fNEventsMax;    // maximum number of events in adaptive volume
-      Float_t            fMaxVIterations;// maximum number of iterations to adapt volume size
-      Float_t            fInitialScale;  // initial scale for adaptive volume
+      Float_t            fNEventsMin;    ///< minimum number of events in adaptive volume
+      Float_t            fNEventsMax;    ///< maximum number of events in adaptive volume
+      Float_t            fMaxVIterations;///< maximum number of iterations to adapt volume size
+      Float_t            fInitialScale;  ///< initial scale for adaptive volume
 
-      Bool_t             fInitializedVolumeEle; // is volume element initialized ?
+      Bool_t             fInitializedVolumeEle; ///< is volume element initialized ?
 
-      Int_t              fkNNMin;        // min number of events in kNN tree
-      Int_t              fkNNMax;        // max number of events in kNN tree
+      Int_t              fkNNMin;        ///< min number of events in kNN tree
+      Int_t              fkNNMax;        ///< max number of events in kNN tree
 
-      Double_t           fMax_distance;  // maximum distance
-      Bool_t             fPrinted;       // print
-      Bool_t             fNormTree;      // binary-search tree is normalised
+      Double_t           fMax_distance;  ///< maximum distance
+      Bool_t             fPrinted;       ///< print
+      Bool_t             fNormTree;      ///< binary-search tree is normalised
 
       void    SetVolumeElement ( void );
 

@@ -1,6 +1,8 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -js
+## Show how NanoAOD files can be processed with RDataFrame.
+##
 ## This tutorial illustrates how NanoAOD files can be processed with ROOT
 ## dataframes. The NanoAOD-like input files are filled with 66 mio. events
 ## from CMS OpenData containing muon candidates part of 2012 dataset
@@ -10,9 +12,7 @@
 ## spectrum showing resonances up to the Z mass.
 ## Note that the bump at 30 GeV is not a resonance but a trigger effect.
 ##
-## Some more details about the dataset:
-##   - It contains about 66 millions events (muon and electron collections, plus some other information, e.g. about primary vertices)
-##   - It spans two compressed ROOT files located on EOS for about a total size of 7.5 GB.
+## More details about the dataset can be found on [the CERN Open Data portal](http://opendata.web.cern.ch/record/12341).
 ##
 ## \macro_image
 ## \macro_code
@@ -27,10 +27,7 @@ import ROOT
 ROOT.ROOT.EnableImplicitMT()
 
 # Create dataframe from NanoAOD files
-files = ROOT.std.vector("string")(2)
-files[0] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root"
-files[1] = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"
-df = ROOT.RDataFrame("Events", files)
+df = ROOT.RDataFrame("Events", "root://eospublic.cern.ch//eos/opendata/cms/derived-data/AOD2NanoAODOutreachTool/Run2012BC_DoubleMuParked_Muons.root")
 
 # For simplicity, select only events with exactly two muons and require opposite charge
 df_2mu = df.Filter("nMuon == 2", "Events with exactly two muons")
@@ -39,8 +36,8 @@ df_os = df_2mu.Filter("Muon_charge[0] != Muon_charge[1]", "Muons with opposite c
 # Compute invariant mass of the dimuon system
 df_mass = df_os.Define("Dimuon_mass", "InvariantMass(Muon_pt, Muon_eta, Muon_phi, Muon_mass)")
 
-# Make histogram of dimuon mass spectrum
-h = df_mass.Histo1D(("Dimuon_mass", "Dimuon_mass", 30000, 0.25, 300), "Dimuon_mass")
+# Make histogram of dimuon mass spectrum. Note how we can set titles and axis labels in one go.
+h = df_mass.Histo1D(("Dimuon_mass", "Dimuon mass;m_{#mu#mu} (GeV);N_{Events}", 30000, 0.25, 300), "Dimuon_mass")
 
 # Request cut-flow report
 report = df_mass.Report()
@@ -51,8 +48,8 @@ c = ROOT.TCanvas("c", "", 800, 700)
 c.SetLogx(); c.SetLogy()
 
 h.SetTitle("")
-h.GetXaxis().SetTitle("m_{#mu#mu} (GeV)"); h.GetXaxis().SetTitleSize(0.04)
-h.GetYaxis().SetTitle("N_{Events}"); h.GetYaxis().SetTitleSize(0.04)
+h.GetXaxis().SetTitleSize(0.04)
+h.GetYaxis().SetTitleSize(0.04)
 h.Draw()
 
 label = ROOT.TLatex(); label.SetNDC(True)

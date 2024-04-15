@@ -29,7 +29,7 @@ void mt103_fillNtupleFromMultipleThreads()
 
    // Create the TBufferMerger: this class orchestrates the parallel writing
    auto fileName = "mt103_fillNtupleFromMultipleThreads.root";
-   ROOT::Experimental::TBufferMerger merger(fileName);
+   ROOT::TBufferMerger merger(fileName);
 
    // Define what each worker will do
    // We obtain from a merger a TBufferMergerFile, which is nothing more than
@@ -38,12 +38,6 @@ void mt103_fillNtupleFromMultipleThreads()
    auto work_function = [&](int seed) {
       auto f = merger.GetFile();
       TNtuple ntrand("ntrand", "Random Numbers", "r");
-
-      // The resetting of the kCleanup bit below is necessary to avoid leaving
-      // the management of this object to ROOT, which leads to a race condition
-      // that may cause a crash once all threads are finished and the final
-      // merge is happening
-      ntrand.ResetBit(kMustCleanup);
 
       TRandom rnd(seed);
       for (auto i : ROOT::TSeqI(nEntries))

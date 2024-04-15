@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -15,4 +15,11 @@ endif()
 # Build RMVA. Allows users to call R mva's from c++ ROOT/TMVA.
 if(r OR tmva-rmva)
    add_subdirectory(rmva)
+endif()
+
+add_subdirectory(sofie)
+#parser depends on protobuf 
+#found if flag tmva-sofie is on
+if (tmva-sofie)
+   add_subdirectory(sofie_parsers)
 endif()

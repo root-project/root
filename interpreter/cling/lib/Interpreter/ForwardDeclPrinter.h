@@ -79,6 +79,7 @@ namespace clang {
   class TranslationUnitDecl;
   class TypeAliasDecl;
   class TypedefDecl;
+  class TypedefNameDecl;
   class VarDecl;
   class UsingDirectiveDecl;
 }
@@ -106,8 +107,10 @@ namespace cling {
 
     llvm::DenseMap<const clang::Decl*, bool> m_Visited; // fwd decl success
     std::stack<llvm::raw_ostream*> m_StreamStack;
-    std::set<const char*> m_BuiltinNames;
+    std::set<llvm::StringRef> m_BuiltinNames;
     IgnoreFilesFunc_t m_IgnoreFile; // Call back to ignore some top level files.
+
+    void printTypedefOrAliasDecl(clang::TypedefNameDecl* D);
 
   public:
     ForwardDeclPrinter(llvm::raw_ostream& OutS,
@@ -163,7 +166,7 @@ namespace cling {
 
     void PrintTemplateParameters(llvm::raw_ostream& Stream,
                                  clang::TemplateParameterList *Params,
-                                 const clang::TemplateArgumentList *Args = 0);
+                                 const clang::TemplateArgumentList *Args = nullptr);
     void prettyPrintAttributes(clang::Decl *D);
 
     bool isOperator(clang::FunctionDecl* D);
@@ -181,7 +184,7 @@ namespace cling {
       return false;
     }
 
-    std::string getNameIfPossible(clang::Decl* D) { return "<not named>"; }
+    std::string getNameIfPossible(clang::Decl*) { return "<not named>"; }
     std::string getNameIfPossible(clang::NamedDecl* D) {
       return D->getNameAsString();
     }
@@ -241,7 +244,7 @@ namespace cling {
     bool shouldSkipImpl(clang::ClassTemplateSpecializationDecl* D);
     bool shouldSkipImpl(clang::UsingDirectiveDecl* D);
     bool shouldSkipImpl(clang::TypeAliasTemplateDecl* D);
-    bool shouldSkipImpl(clang::EnumConstantDecl* D) { return false; };
+    bool shouldSkipImpl(clang::EnumConstantDecl*) { return false; };
     bool haveSkippedBefore(const clang::Decl* D) const {
       auto Found = m_Visited.find(getCanonicalOrNamespace(D));
       return (Found != m_Visited.end() && !Found->second);
@@ -267,7 +270,7 @@ namespace cling {
       largestream m_Stream;
       bool m_HavePopped;
     public:
-      StreamRAII(ForwardDeclPrinter& pr, clang::PrintingPolicy* pol = 0):
+      StreamRAII(ForwardDeclPrinter& pr, clang::PrintingPolicy* pol = nullptr):
         m_pr(pr), m_oldPol(pr.m_Policy), m_HavePopped(false) {
         m_pr.m_StreamStack.push(&static_cast<llvm::raw_ostream&>(m_Stream));
         if (pol)

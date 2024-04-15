@@ -19,7 +19,7 @@
 \class RooNameReg
 \ingroup Roofitcore
 
-RooNameReg is a registry for `const char*` names. For each unique
+Registry for `const char*` names. For each unique
 name (which is not necessarily a unique pointer in the C++ standard),
 a unique pointer to a TNamed object is returned that can be used for
 fast searches and comparisons.
@@ -27,23 +27,14 @@ fast searches and comparisons.
 
 #include "RooNameReg.h"
 
-#include "RooFit.h"
-#include "ROOT/RMakeUnique.hxx"
 #include <iostream>
-using namespace std ;
+#include <memory>
+using std::make_unique;
 
 
 RooNameReg::RooNameReg() :
     TNamed("RooNameReg","RooFit Name Registry")
 {}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooNameReg::~RooNameReg()
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to singleton instance
@@ -58,10 +49,10 @@ RooNameReg& RooNameReg::instance()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a unique TNamed pointer for given C++ string
 
-const TNamed* RooNameReg::constPtr(const char* inStr) 
+const TNamed* RooNameReg::constPtr(const char* inStr)
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
+  if (inStr==nullptr) return nullptr ;
 
   // See if name is already registered ;
   auto elm = _map.find(inStr) ;
@@ -71,39 +62,18 @@ const TNamed* RooNameReg::constPtr(const char* inStr)
   auto t = make_unique<TNamed>(inStr,inStr);
   auto ret = t.get();
   _map.emplace(std::string(inStr), std::move(t));
-  
+
   return ret;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return C++ string corresponding to given TNamed pointer
-
-const char* RooNameReg::constStr(const TNamed* namePtr) 
-{
-  if (namePtr) return namePtr->GetName() ;
-  return 0 ;  
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a unique TNamed pointer for given C++ string
 
-const TNamed* RooNameReg::ptr(const char* stringPtr) 
-{ 
-  if (stringPtr==0) return 0 ;
-  return instance().constPtr(stringPtr) ; 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return C++ string corresponding to given TNamed pointer
-
-const char* RooNameReg::str(const TNamed* ptr) 
-{ 
-  if (ptr==0) return 0 ;
-  return instance().constStr(ptr) ; 
+const TNamed* RooNameReg::ptr(const char* stringPtr)
+{
+  if (stringPtr==nullptr) return nullptr ;
+  return instance().constPtr(stringPtr) ;
 }
 
 
@@ -113,8 +83,27 @@ const char* RooNameReg::str(const TNamed* ptr)
 const TNamed* RooNameReg::known(const char* inStr)
 {
   // Handle null pointer case explicitly
-  if (inStr==0) return 0 ;
+  if (inStr==nullptr) return nullptr ;
   RooNameReg& reg = instance();
   const auto elm = reg._map.find(inStr);
   return elm != reg._map.end() ? elm->second.get() : nullptr;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// The renaming counter has to be incremented every time a RooAbsArg is
+/// renamed. This is a protected function, and only the friend class RooAbsArg
+/// should call it when it gets renamed.
+
+void RooNameReg::incrementRenameCounter() {
+  ++instance()._renameCounter;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+// Return a reference to a counter that keeps track how often a RooAbsArg was
+/// renamed in this RooFit process.
+
+const std::size_t& RooNameReg::renameCounter() {
+  return instance()._renameCounter;
 }

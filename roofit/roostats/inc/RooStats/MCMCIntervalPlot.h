@@ -32,58 +32,57 @@ namespace RooStats {
       MCMCIntervalPlot(MCMCInterval& interval);
 
       /// Destructor of SamplingDistribution
-      virtual ~MCMCIntervalPlot();
+      ~MCMCIntervalPlot() override;
 
       void SetMCMCInterval(MCMCInterval& interval);
       void SetLineColor(Color_t color) {fLineColor = color;}
       void SetLineWidth(Int_t width) {fLineWidth = width;}
       void SetShadeColor(Color_t color) {fShadeColor = color;}
-      void SetShowBurnIn(Bool_t showBurnIn) { fShowBurnIn = showBurnIn; }
+      void SetShowBurnIn(bool showBurnIn) { fShowBurnIn = showBurnIn; }
 
-      void Draw(const Option_t* options = NULL);
+      void Draw(const Option_t* options = nullptr) override;
 
       void DrawChainScatter(RooRealVar& xVar, RooRealVar& yVar);
       void DrawParameterVsTime(RooRealVar& param);
       void DrawNLLVsTime();
-      void DrawNLLHist(const Option_t* options = NULL);
-      void DrawWeightHist(const Option_t* options = NULL);
+      void DrawNLLHist(const Option_t* options = nullptr);
+      void DrawWeightHist(const Option_t* options = nullptr);
 
    private:
-
-      MCMCInterval *fInterval;
-      RooArgSet *fParameters;
-      TH1* fPosteriorHist;
-      RooNDKeysPdf* fPosteriorKeysPdf;
-      RooProduct* fPosteriorKeysProduct;
-      TH1* fNLLHist;
-      TH1* fWeightHist;
-      TH1* fPosteriorHistHistCopy;
-      TH1* fPosteriorHistTFCopy;
-      Int_t fDimension;
-      Color_t fLineColor;
-      Color_t fShadeColor;
-      Int_t fLineWidth;
-      Bool_t fShowBurnIn;
-      TGraph* fWalk;
-      TGraph* fBurnIn;
-      TGraph* fFirst;
-      TGraph* fParamGraph;
-      TGraph* fNLLGraph;
+      MCMCInterval *fInterval = nullptr;
+      RooArgSet *fParameters = nullptr;
+      TH1 *fPosteriorHist = nullptr;
+      RooNDKeysPdf *fPosteriorKeysPdf = nullptr;
+      RooProduct *fPosteriorKeysProduct = nullptr;
+      TH1 *fNLLHist = nullptr;
+      TH1 *fWeightHist = nullptr;
+      TH1 *fPosteriorHistHistCopy = nullptr;
+      TH1 *fPosteriorHistTFCopy = nullptr;
+      Int_t fDimension = 0;
+      Color_t fLineColor = kBlack;
+      Color_t fShadeColor = kGray;
+      Int_t fLineWidth = 1;
+      bool fShowBurnIn = true;
+      TGraph *fWalk = nullptr;
+      TGraph *fBurnIn = nullptr;
+      TGraph *fFirst = nullptr;
+      TGraph *fParamGraph = nullptr;
+      TGraph *fNLLGraph = nullptr;
 
    protected:
-      void DrawPosterior(const Option_t* options = NULL);
-      void* DrawPosteriorHist(const Option_t* options = NULL,
-            const char* title = NULL, Bool_t scale = kTRUE);
-      void* DrawPosteriorKeysPdf(const Option_t* options = NULL);
-      void* DrawPosteriorKeysProduct(const Option_t* options = NULL);
+      void DrawPosterior(const Option_t* options = nullptr);
+      void* DrawPosteriorHist(const Option_t* options = nullptr,
+            const char* title = nullptr, bool scale = true);
+      void* DrawPosteriorKeysPdf(const Option_t* options = nullptr);
+      void* DrawPosteriorKeysProduct(const Option_t* options = nullptr);
 
-      void DrawInterval(const Option_t* options = NULL);
-      void DrawShortestInterval(const Option_t* options = NULL);
-      void DrawHistInterval(const Option_t* options = NULL);
-      void DrawKeysPdfInterval(const Option_t* options = NULL);
-      void DrawTailFractionInterval(const Option_t* options = NULL);
+      void DrawInterval(const Option_t* options = nullptr);
+      void DrawShortestInterval(const Option_t* options = nullptr);
+      void DrawHistInterval(const Option_t* options = nullptr);
+      void DrawKeysPdfInterval(const Option_t* options = nullptr);
+      void DrawTailFractionInterval(const Option_t* options = nullptr);
 
-      ClassDef(MCMCIntervalPlot,1)  /// Class containing the results of the MCMCCalculator
+      ClassDefOverride(MCMCIntervalPlot,1)  // Class containing the results of the MCMCCalculator
    };
 }
 

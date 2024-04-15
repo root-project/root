@@ -222,15 +222,15 @@ const char *Matchs(const char*       str,
                    const Pattern_t*  pat,
                    const char**      startpat)
 {
-   if (!pat) return 0;
-   const char* endp = 0;
+   if (!pat) return nullptr;
+   const char* endp = nullptr;
    if (*pat == (Pattern_t)kBOL) {
       // the rest has to match directly
       endp = patcmp(str, slen, pat+1, str);
    } else {
       // scoot along the string until it matches, or no more string
       const char* start = str;
-      while ((endp = patcmp(str, slen, pat, start)) == 0 && slen != 0)
+      while ((endp = patcmp(str, slen, pat, start)) == nullptr && slen != 0)
          ++str, --slen;
    }
    *startpat = str;
@@ -290,7 +290,7 @@ static const char *patcmp(const char*      str,
                           const char*      start)
 {
    if (!pat)                     // make sure pattern is valid
-      return 0;
+      return nullptr;
 
    while (*pat != (Pattern_t)kEND) {
       if (*pat == (Pattern_t)kOPT) {
@@ -308,14 +308,14 @@ static const char *patcmp(const char*      str,
          // something in pat but we're at end of string.
 
          if (!omatch(&str, &slen, pat, start))
-            return 0;
+            return nullptr;
          ADVANCE(pat);
 
       } else {                    // Process a Kleene or positive closure
 
          if (*pat++ == (Pattern_t)kPCLOSE)    // one match required
             if (!omatch(&str, &slen, pat, start))
-               return 0;
+               return nullptr;
 
          // Match as many as possible, zero is okay
 
@@ -336,7 +336,7 @@ static const char *patcmp(const char*      str,
          // deep as there are closures in the pattern.
 
          const char* end;
-         while ((end = patcmp(str, slen, pat, start)) == 0) {
+         while ((end = patcmp(str, slen, pat, start)) == nullptr) {
             ++slen, --str;
             if (str < bocl) break;
          }
@@ -380,7 +380,7 @@ static int omatch(const char**      strp,
 
    // Notice: cases above don't advance.
    // Match any except newline
-   case kANY: if (**strp == '\n') return 0;
+   case kANY: if (*strp && (**strp == '\n')) return 0;
       break;
 
    // Set match
@@ -388,7 +388,7 @@ static int omatch(const char**      strp,
       break;
 
    // Literal match
-   default:    if (*slenp == 0 || (unsigned char) **strp != *pat)  return 0;
+   default:    if (*slenp == 0 || *strp == nullptr || (unsigned char) **strp != *pat) return 0;
       break;
    }
 

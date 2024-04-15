@@ -299,7 +299,7 @@
            d.y = d.depth * canvas.height / maxDepth;
         });
 
-        if (!("x0") in father || !("y0" in father)){
+        if (!("x0" in father) || !("y0" in father)){
             father.x0 = nodes[0].x+style.node.width*0.5;
             father.y0 = nodes[0].y-style.node.height;
         }

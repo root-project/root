@@ -105,19 +105,19 @@ private:
 public:
    TPacketizerAdaptive(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                        TList *input, TProofProgressStatus *st);
-   virtual ~TPacketizerAdaptive();
+   ~TPacketizerAdaptive() override;
 
    Int_t         AddProcessed(TSlave *sl, TProofProgressStatus *st,
-                               Double_t latency, TList **listOfMissingFiles = 0);
-   Int_t         GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls);
-   Float_t       GetCurrentRate(Bool_t &all);
+                               Double_t latency, TList **listOfMissingFiles = 0) override;
+   Int_t         GetEstEntriesProcessed(Float_t, Long64_t &ent, Long64_t &bytes, Long64_t &calls) override;
+   Float_t       GetCurrentRate(Bool_t &all) override;
    Int_t         CalculatePacketSize(TObject *slstat, Long64_t cachesz, Int_t learnent);
-   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
-   void          MarkBad(TSlave *s, TProofProgressStatus *status, TList **missingFiles);
+   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r) override;
+   void          MarkBad(TSlave *s, TProofProgressStatus *status, TList **missingFiles) override;
 
-   Int_t         GetActiveWorkers();
+   Int_t         GetActiveWorkers() override;
 
-   ClassDef(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
+   ClassDefOverride(TPacketizerAdaptive,0)  //Generate work packets for parallel processing
 };
 
 #endif

@@ -37,18 +37,18 @@ protected:
    TGCheckButton*  fVizVolumeDaughters;
 
 public:
-   TEveGeoNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveGeoNodeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveGeoNodeEditor() {}
+   ~TEveGeoNodeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoVizNode();
    void DoVizNodeDaughters();
    void DoVizVolume();
    void DoVizVolumeDaughters();
 
-   ClassDef(TEveGeoNodeEditor, 0); // Editor for TEveGeoNode class.
+   ClassDefOverride(TEveGeoNodeEditor, 0); // Editor for TEveGeoNode class.
 };
 
 /******************************************************************************/
@@ -66,17 +66,17 @@ protected:
    TEveGValuator*  fMaxVisNodes;
 
 public:
-   TEveGeoTopNodeEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveGeoTopNodeEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                         UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveGeoTopNodeEditor() {}
+   ~TEveGeoTopNodeEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoVisOption();
    void DoVisLevel();
    void DoMaxVisNodes();
 
-   ClassDef(TEveGeoTopNodeEditor, 0); // Editor for TEveGeoTopNode class.
+   ClassDefOverride(TEveGeoTopNodeEditor, 0); // Editor for TEveGeoTopNode class.
 };
 
 #endif

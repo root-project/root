@@ -11,7 +11,7 @@
 ///  - the new size (0 erase the label),
 ///  - the new text alignment,
 ///  - the new label color,
-///  = the new label text.
+///  - the new label text.
 ///
 /// \macro_image
 /// \macro_code
@@ -19,7 +19,7 @@
 /// \author  Olivier Couet
 
 void gaxis3() {
-   TCanvas* c1 = new TCanvas("c1","Examples of Gaxis",10,10,800,400);
+   TCanvas* c1 = new TCanvas("c1","Examples of TGaxis",10,10,800,400);
    c1->Range(-6,-0.1,6,0.1);
 
    TGaxis *axis = new TGaxis(-5.5,0.,5.5,0.,0.0,100,510,"");
@@ -30,7 +30,7 @@ void gaxis3() {
    axis->SetTitleFont(42);
 
    // Change the  1st label color to red.
-   axis->ChangeLabel(1,-1,-1,-1,2);
+   axis->ChangeLabel(1,-1,-1,-1,kRed);
 
    // Erase the 3rd label
    axis->ChangeLabel(3,-1,0.);
@@ -39,10 +39,14 @@ void gaxis3() {
    axis->ChangeLabel(5,30.,-1,0);
 
    // Change the text of the 6th label.
-   axis->ChangeLabel(6,-1,-1,-1,3,-1,"6th label");
+   axis->ChangeLabel(6,-1,-1,-1,kGreen,-1,"6th label");
 
    // Change the text of the 2nd label to the end.
-   axis->ChangeLabel(-2,-1,-1,-1,3,-1,"2nd to last label");
+   axis->ChangeLabel(-2,-1,-1,-1,kGreen,-1,"2nd to last label");
+
+   // Change the text of value 30 by "value of 30"
+   axis->ChangeLabelByValue(30.,-1,-1,-1,kBlue,-1,"value of 30");
+
 
    axis->Draw();
 }

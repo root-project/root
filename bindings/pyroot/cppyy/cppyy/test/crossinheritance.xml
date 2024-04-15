@@ -1,0 +1,10 @@
+<lcgdict>
+
+   <namespace name="CrossInheritance" />
+   <class pattern="CrossInheritance::*" />
+   <function pattern="CrossInheritance::*" />
+
+   <namespace name="AccessProtected" />
+   <class pattern="AccessProtected::*" />
+
+</lcgdict>

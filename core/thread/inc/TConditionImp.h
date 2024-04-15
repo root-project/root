@@ -12,7 +12,6 @@
 #ifndef ROOT_TConditionImp
 #define ROOT_TConditionImp
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TConditionImp                                                        //
@@ -22,9 +21,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Rtypes.h"
 #include "TObject.h"
-
 
 class TConditionImp : public TObject {
 
@@ -37,7 +34,7 @@ public:
    virtual Int_t  Signal() = 0;
    virtual Int_t  Broadcast() = 0;
 
-   ClassDef(TConditionImp,0)  // Condition variable implementation ABC
+   ClassDefOverride(TConditionImp,0)  // Condition variable implementation ABC
 };
 
 #endif

@@ -20,6 +20,7 @@
 #include "RConfigure.h"
 #include "TError.h"
 #include <ROOT/RConfig.hxx>
+#include "strlcpy.h"
 
 #include <ctype.h>
 #include <fcntl.h>
@@ -418,7 +419,7 @@ static volatile void *rpdmemset(volatile void *dst, int c, int len)
 {
    volatile char *buf;
 
-   for (buf = (volatile char *)dst; len; (buf[--len] = c)) { }
+   for (buf = (volatile char *)dst; len;) { buf[--len] = c; }
    return dst;
 }
 
@@ -574,7 +575,7 @@ int RpdDeleteKeyFile(int ofs)
 /// Update tab file.
 /// If ilck <= 0 open and lock the file; if ilck > 0, use file
 /// descriptor ilck, which should correspond to an open and locked file.
-/// If opt = -1 : delete file (backup saved in <file>.bak);
+/// If opt = -1 : delete file (backup saved in `<file>.bak`);
 /// If opt =  0 : eliminate all inactive entries
 ///               (if line="size" act only if size > gMAXTABSIZE)
 /// if opt =  1 : append 'line'.

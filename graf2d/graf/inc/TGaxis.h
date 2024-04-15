@@ -12,14 +12,14 @@
 #ifndef ROOT_TGaxis
 #define ROOT_TGaxis
 
-
-#include "TNamed.h"
 #include "TLine.h"
 #include "TAttText.h"
+#include "TString.h"
 
 class TF1;
 class TAxis;
 class TLatex;
+class TAxisModLab;
 
 class TGaxis : public TLine, public TAttText {
 
@@ -46,14 +46,13 @@ protected:
    TAxis     *fAxis;                ///<! Pointer to original TAxis axis (if any)
    TList     *fModLabs;             ///<  List of modified labels.
 
-   static Int_t fgMaxDigits;        ///<! Number of digits above which the 10>N notation is used
-   static Float_t fXAxisExpXOffset; ///<! Exponent X offset for the X axis
-   static Float_t fXAxisExpYOffset; ///<! Exponent Y offset for the X axis
-   static Float_t fYAxisExpXOffset; ///<! Exponent X offset for the Y axis
-   static Float_t fYAxisExpYOffset; ///<! Exponent Y offset for the Y axis
-
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
+
+   Bool_t IsOwnedModLabs() const;
+   void CleanupModLabs();
+
+   TAxisModLab *FindModLab(Int_t indx, Int_t numlabels = 0, Double_t v = 0., Double_t eps = -1.) const;
 
 public:
 
@@ -64,14 +63,14 @@ public:
    TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
           const char *funcname, Int_t ndiv=510, Option_t *chopt="",
           Double_t gridlength = 0);
-   virtual ~TGaxis();
+   ~TGaxis() override;
 
    virtual void        AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
    virtual void        CenterLabels(Bool_t center=kTRUE);
    virtual void        CenterTitle(Bool_t center=kTRUE);
-   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c);
-   virtual void        DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
+   void                ChangeLabelAttributes(Int_t i, Int_t nlabels, TLatex* t, char* c, Double_t value = 0., Double_t eps = -1.);
+   virtual TGaxis     *DrawAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                 Double_t wmin,Double_t wmax,Int_t ndiv=510, Option_t *chopt="",
                                 Double_t gridlength = 0);
    Float_t             GetGridLength() const   {return fGridLength;}
@@ -82,9 +81,9 @@ public:
    Float_t             GetLabelSize() const    {return fLabelSize;}
    Float_t             GetTitleOffset() const  {return fTitleOffset;}
    Float_t             GetTitleSize() const    {return fTitleSize;}
-   virtual const char *GetName() const  {return fName.Data();}
-   virtual const char *GetOption() const {return fChopt.Data();}
-   virtual const char *GetTitle() const {return fTitle.Data();}
+   const char         *GetName() const  override {return fName.Data();}
+   const char         *GetOption() const override {return fChopt.Data();}
+   const char         *GetTitle() const override {return fTitle.Data();}
    static Int_t        GetMaxDigits();
    Int_t               GetNdiv() const         {return fNdiv;}
    Double_t            GetWmin() const         {return fWmin;}
@@ -92,14 +91,14 @@ public:
    Float_t             GetTickSize() const     {return fTickSize;}
    virtual void        ImportAxisAttributes(TAxis *axis);
    void                LabelsLimits(const char *label, Int_t &first, Int_t &last);
-   virtual void        Paint(Option_t *chopt="");
+   void                Paint(Option_t *chopt="") override;
    virtual void        PaintAxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
                                  Double_t &wmin,Double_t &wmax,Int_t &ndiv, Option_t *chopt="",
                                  Double_t gridlength = 0, Bool_t drawGridOnly = kFALSE);
    virtual void        Rotate(Double_t X,  Double_t Y,  Double_t CFI, Double_t SFI
                              ,Double_t XT, Double_t YT, Double_t &U,   Double_t &V);
    void                ResetLabelAttributes(TLatex* t);
-   virtual void        SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                SetFunction(const char *funcname="");
    void                SetOption(Option_t *option="");
    void                SetLabelColor(Int_t labelcolor) {fLabelColor = labelcolor;} // *MENU*
@@ -107,9 +106,13 @@ public:
    void                SetLabelOffset(Float_t labeloffset) {fLabelOffset = labeloffset;} // *MENU*
    void                SetLabelSize(Float_t labelsize) {fLabelSize = labelsize;} // *MENU*
    void                ChangeLabel(Int_t labNum=0, Double_t labAngle = -1.,
-                                          Double_t labSize = -1., Int_t labAlign = -1,
-                                          Int_t labColor = -1 , Int_t labFont = -1,
-                                          TString labText = ""); // *MENU*
+                                   Double_t labSize = -1., Int_t labAlign = -1,
+                                   Int_t labColor = -1 , Int_t labFont = -1,
+                                   const TString &labText = ""); // *MENU*
+   void                ChangeLabelByValue(Double_t labValue, Double_t labAngle = -1.,
+                                        Double_t labSize = -1., Int_t labAlign = -1,
+                                        Int_t labColor = -1 , Int_t labFont = -1,
+                                        const TString &labText = ""); // *MENU*
    static void         SetMaxDigits(Int_t maxd=5);
    virtual void        SetName(const char *name); // *MENU*
    virtual void        SetNdivisions(Int_t ndiv) {fNdiv = ndiv;} // *MENU*
@@ -130,7 +133,7 @@ public:
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
    static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
 
-   ClassDef(TGaxis,6)  //Graphics axis
+   ClassDefOverride(TGaxis,6)  //Graphics axis
 };
 
 #endif

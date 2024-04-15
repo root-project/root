@@ -45,13 +45,18 @@ namespace ROOT {
       class UnBinData;
       class SparseData;
 
-      enum EFitObjectType {
+      enum class EFitObjectType {
          kHistogram,
          kGraph
       };
 
+      enum class EChisquareType {
+         kNeyman = 0,
+         kPLikeRatio,
+         kPearson
+      };
 
-      //#ifndef __CINT__  // does not link on Windows (why ??)
+
 
       /**
          Decode list of options into fitOption
@@ -97,43 +102,43 @@ namespace ROOT {
           fill the data vector from a TH1. Pass also the TF1 function which is
           needed in case of integral option and to reject points rejected by the function
       */
-      void FillData ( BinData  & dv, const TH1 * hist, TF1 * func = 0);
+      void FillData ( BinData  & dv, const TH1 * hist, TF1 * func = nullptr);
 
       /**
           fill the data vector from a TH1 with sparse data. Pass also the TF1 function which is
           needed in case of integral option and to reject points rejected by the function
       */
-      void FillData ( SparseData  & dv, const TH1 * hist, TF1 * func = 0);
+      void FillData ( SparseData  & dv, const TH1 * hist, TF1 * func = nullptr);
 
       /**
           fill the data vector from a THnBase. Pass also the TF1 function which is
           needed in case of integral option and to reject points rejected by the function
       */
-      void FillData ( SparseData  & dv, const THnBase * hist, TF1 * func = 0);
+      void FillData ( SparseData  & dv, const THnBase * hist, TF1 * func = nullptr);
 
       /**
           fill the data vector from a THnBase. Pass also the TF1 function which is
           needed in case of integral option and to reject points rejected by the function
       */
-      void FillData ( BinData  & dv, const THnBase * hist, TF1 * func = 0);
+      void FillData ( BinData  & dv, const THnBase * hist, TF1 * func = nullptr);
 
       /**
           fill the data vector from a TGraph2D. Pass also the TF1 function which is
           needed in case of integral option and to reject points rejected by the function
       */
-      void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func = 0);
+      void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func = nullptr);
 
 
       /**
           fill the data vector from a TGraph. Pass also the TF1 function which is
           needed in case to exclude points rejected by the function
       */
-      void FillData ( BinData  & dv, const TGraph * gr, TF1 * func = 0 );
+      void FillData ( BinData  & dv, const TGraph * gr, TF1 * func = nullptr);
       /**
           fill the data vector from a TMultiGraph. Pass also the TF1 function which is
           needed in case to exclude points rejected by the function
       */
-      void FillData ( BinData  & dv, const TMultiGraph * gr,  TF1 * func = 0);
+      void FillData ( BinData  & dv, const TMultiGraph * gr,  TF1 * func = nullptr);
 
 
       /**
@@ -141,7 +146,7 @@ namespace ROOT {
           Set the constant and slope assuming a simple exponential going through xmin and xmax
           of the data set
        */
-      void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1 );
+      void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1);
 
 
       /**
@@ -149,14 +154,14 @@ namespace ROOT {
           Set the sigma limits for zero top 10* initial rms values
           Set the initial parameter values in the TF1
        */
-      void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1 );
+      void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1);
 
       /**
           compute initial parameter for 2D gaussian function given the fit data
           Set the sigma limits for zero top 10* initial rms values
           Set the initial parameter values in the TF1
        */
-      void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1 );
+      void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1);
 
       /**
          compute confidence intervals at level cl for a fitted histogram h1 in a TGraphErrors gr
@@ -166,7 +171,7 @@ namespace ROOT {
       /**
          compute the chi2 value for an histogram given a function  (see TH1::Chisquare for the documentation)
       */
-      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, bool usePL = false);
+      double Chisquare(const TH1 & h1, TF1 & f1, bool useRange, EChisquareType type);
 
       /**
          compute the chi2 value for a graph given a function (see TGraph::Chisquare)
@@ -180,6 +185,3 @@ namespace ROOT {
 
 
 #endif /* ROOT_Fit_TH1Interface */
-
-
-//#endif  /* not CINT OR MAKE_CINT */

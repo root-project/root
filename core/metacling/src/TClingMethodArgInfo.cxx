@@ -40,7 +40,7 @@ the Clang C++ compiler, not CINT.
 
 #include <string>
 
-TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo* mi) : TClingDeclInfo(mi->GetMethodDecl()), fInterp(interp), fIdx(-1) {}
+TClingMethodArgInfo::TClingMethodArgInfo(cling::Interpreter *interp, const TClingMethodInfo* mi) : TClingDeclInfo(mi->GetTargetFunctionDecl()), fInterp(interp), fIdx(-1) {}
 
 bool TClingMethodArgInfo::IsValid() const
 {
@@ -73,43 +73,14 @@ long TClingMethodArgInfo::Property() const
       property |= kIsDefault;
    }
    clang::QualType qt = pvd->getOriginalType().getCanonicalType();
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   while (1) {
-      if (qt->isArrayType()) {
-         qt = llvm::cast<clang::ArrayType>(qt)->getElementType();
-         continue;
-      }
-      else if (qt->isReferenceType()) {
-         property |= kIsReference;
-         qt = llvm::cast<clang::ReferenceType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isPointerType()) {
-         property |= kIsPointer;
-         if (qt.isConstQualified()) {
-            property |= kIsConstPointer;
-         }
-         qt = llvm::cast<clang::PointerType>(qt)->getPointeeType();
-         continue;
-      }
-      else if (qt->isMemberPointerType()) {
-         qt = llvm::cast<clang::MemberPointerType>(qt)->getPointeeType();
-         continue;
-      }
-      break;
-   }
-   if (qt.isConstQualified()) {
-      property |= kIsConstant;
-   }
-   return property;
+
+   return TClingDeclInfo::Property(property, qt);
 }
 
 const char *TClingMethodArgInfo::DefaultValue() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    const clang::ParmVarDecl *pvd = GetDecl();
    // Instantiate default arg if needed
@@ -121,7 +92,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
                                                 const_cast<clang::FunctionDecl*>(fd),
                                                 const_cast<clang::ParmVarDecl*>(pvd));
    }
-   const clang::Expr *expr = 0;
+   const clang::Expr *expr = nullptr;
    if (pvd->hasUninstantiatedDefaultArg()) {
       // We tried to instantiate it above; if we fail, use the uninstantiated one.
       expr = pvd->getUninstantiatedDefaultArg();
@@ -135,7 +106,7 @@ const char *TClingMethodArgInfo::DefaultValue() const
    llvm::raw_string_ostream out(buf);
    if (!expr) {
       // CINT returned NULL for non-defaulted args.
-      return 0;
+      return nullptr;
    }
    bool implicitInit = false;
    if (const clang::CXXConstructExpr *construct =
@@ -151,13 +122,13 @@ const char *TClingMethodArgInfo::DefaultValue() const
       else if (pvd->getInitStyle() == clang::VarDecl::CInit) {
          //out << " = ";
       }
-      expr->printPretty(out, 0, policy, /*Indentation=*/0);
+      expr->printPretty(out, nullptr, policy, /*Indentation=*/0);
       if (pvd->getInitStyle() == clang::VarDecl::CallInit) {
          //out << ")";
       }
       out.flush();
    }
-   return buf.c_str();
+   return buf.c_str(); // NOLINT
 }
 
 const TClingTypeInfo *TClingMethodArgInfo::Type() const
@@ -175,7 +146,7 @@ const TClingTypeInfo *TClingMethodArgInfo::Type() const
 const char *TClingMethodArgInfo::TypeName() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    return Type()->Name();
 }

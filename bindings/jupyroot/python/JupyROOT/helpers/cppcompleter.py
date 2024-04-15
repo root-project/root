@@ -5,7 +5,16 @@
 #  Author: Enric Tejedor <enric.tejedor.saavedra@cern.ch> CERN
 #-----------------------------------------------------------------------------
 
+################################################################################
+# Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.                      #
+# All rights reserved.                                                         #
+#                                                                              #
+# For the licensing terms see $ROOTSYS/LICENSE.                                #
+# For the list of contributors see $ROOTSYS/README/CREDITS.                    #
+################################################################################
+
 from JupyROOT.helpers import utils
+import platform
 import ROOT
 
 # Jit a wrapper for the ttabcom
@@ -44,23 +53,11 @@ class CppCompleter(object):
 
     >>> comp = CppCompleter()
     >>> comp.activate()
-    >>> for suggestion in comp._completeImpl("TH1"):
+    >>> for suggestion in comp._completeImpl("TTreeF"):
     ...     print(suggestion)
-    TH1
-    TH1C
-    TH1D
-    TH1Editor
-    TH1F
-    TH1I
-    TH1K
-    TH1S
-    >>> for suggestion in comp._completeImpl("TProfile"):
-    ...     print(suggestion)
-    TProfile
-    TProfile2D
-    TProfile2Poly
-    TProfile2PolyBin
-    TProfile3D
+    TTreeFormula
+    TTreeFormulaManager
+    TTreeFriendLeafIter
     >>> garbage = ROOT.gInterpreter.ProcessLine("TH1F* h")
     >>> for suggestion in comp._completeImpl("h->GetA"):
     ...     print(suggestion)
@@ -79,6 +76,8 @@ class CppCompleter(object):
     ...     print(suggestion)
     TROOT::IsA
     TROOT::IsBatch
+    TROOT::IsBuilt
+    TROOT::IsDestructed
     TROOT::IsEqual
     TROOT::IsEscaped
     TROOT::IsExecutingMacro
@@ -108,8 +107,11 @@ class CppCompleter(object):
     def activate(self):
         self.active = True
         if self.firstActivation:
-            utils.declareCppCode('#include "dlfcn.h"')
-            dlOpenRint = 'dlopen("libRint.so",RTLD_NOW);'
+            if platform.system() == 'Windows':
+                dlOpenRint = 'gInterpreter->LoadFile("libRint.dll");'
+            else:
+                utils.declareCppCode('#include "dlfcn.h"')
+                dlOpenRint = 'dlopen("libRint.so",RTLD_NOW);'
             utils.processCppCode(dlOpenRint)
             utils.declareCppCode(_TTabComHookCode)
             self.hook = ROOT._TTabComHook

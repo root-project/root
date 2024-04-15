@@ -24,6 +24,7 @@
 #include "TContainerConverters.h"
 #include "TVirtualArray.h"
 #include "TVirtualObject.h"
+#include "ThreadLocalStorage.h"
 
 // GetCurrentElement.
 // Currently only used by TRef::Streamer.
@@ -608,6 +609,7 @@ Int_t TStreamerInfo::ReadBufferConv(TBuffer &b, const T &arr,  const TCompInfo *
          DOLOOP {
             UInt_t u;
             b >> u;
+            u |= kNotDeleted;  // by definition de-serialized object are not yet deleted.
             if ((u & kIsReferenced) != 0) {
                UShort_t pidf;
                b >> pidf;
@@ -1018,7 +1020,10 @@ Int_t TStreamerInfo::ReadBuffer(TBuffer &b, const T &arr,
          // special case for TObject::fBits in case of a referenced object
          case TStreamerInfo::kBits: {
             DOLOOP {
-               UInt_t *x=(UInt_t*)(arr[k]+ioffset); b >> *x;
+               UInt_t *x=(UInt_t*)(arr[k]+ioffset);
+               const UInt_t isonheap = *x & TObject::kIsOnHeap; // Record how this instance was actually allocated.
+               b >> *x;
+               *x |= isonheap | TObject::kNotDeleted;  // by definition de-serialized object are not yet deleted.
                if ((*x & kIsReferenced) != 0) {
                   UShort_t pidf;
                   b >> pidf;

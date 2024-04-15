@@ -17,34 +17,32 @@
 
 #include "RooAbsReal.h"
 #include "RooListProxy.h"
-#include "TString.h" 
 
-class RooArgList ;
+class RooArgList;
 
 
 class RooMultiBinomial : public RooAbsReal {
  public:
   // Constructors, assignment etc
-  inline RooMultiBinomial() { 
+  inline RooMultiBinomial() {
   }
 
-  RooMultiBinomial(const char *name, const char *title, const RooArgList& effFuncList, const RooArgList& catList, Bool_t ignoreNonVisible);
-  RooMultiBinomial(const RooMultiBinomial& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooMultiBinomial(*this,newname); }
-  virtual ~RooMultiBinomial();
+  RooMultiBinomial(const char *name, const char *title, const RooArgList& effFuncList, const RooArgList& catList, bool ignoreNonVisible);
+  RooMultiBinomial(const RooMultiBinomial& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooMultiBinomial(*this,newname); }
 
  protected:
 
   // Function evaluation
-  virtual Double_t evaluate() const ;
+  double evaluate() const override ;
 
  private:
 
   RooListProxy _catList ; // Accept/reject categories
   RooListProxy _effFuncList ; // Efficiency functions per category
-  Bool_t _ignoreNonVisible ; // Ignore combination of only rejects (since invisible)
+  bool _ignoreNonVisible ; // Ignore combination of only rejects (since invisible)
 
-  ClassDef(RooMultiBinomial,1) // Simultaneous pdf of N Binomial distributions with associated efficiency functions
+  ClassDefOverride(RooMultiBinomial,1) // Simultaneous pdf of N Binomial distributions with associated efficiency functions
   };
 
 #endif

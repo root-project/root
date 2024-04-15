@@ -1,5 +1,5 @@
 /// \file RAxis.cxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -15,10 +15,18 @@
 
 #include "ROOT/RAxis.hxx"
 
+#include "ROOT/RHistUtils.hxx"
+#include <ROOT/RLogger.hxx>
+
 #include <cmath>
 #include <limits>
 
-constexpr const int ROOT::Experimental::RAxisBase::kNOverflowBins[4];
+// From RHistUtils.hxx:
+ROOT::Experimental::RLogChannel &ROOT::Experimental::HistLog() {
+   static RLogChannel sLog("ROOT.Hist");
+   return sLog;
+}
+
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 
@@ -44,23 +52,23 @@ int ROOT::Experimental::RAxisEquidistant::GetBinIndexForLowEdge(double x) const 
 {
    // fracBinIdx is the fractional bin index of x in this axis. It's (close to)
    // an integer if it's an axis border.
-   double fracBinIdx = *begin() + (x - GetMinimum()) * fInvBinWidth;
+   double fracBinIdx = GetFirstBin() + FindBinRaw(x);
 
    // fracBinIdx might be 12.99999999. It's a bin border if the deviation from
-   // an actual bin border is "fairly small".
+   // an regular bin border is "fairly small".
    int binIdx = std::round(fracBinIdx);
    double binOffset = fracBinIdx - binIdx;
    if (std::fabs(binOffset) > 10 * std::numeric_limits<double>::epsilon())
-      return -1;
+      return RAxisBase::kInvalidBin;
 
    // If the bin index is below the first bin (i.e. x is the lower edge of the
    // underflow bin) then it's out of range.
-   if (IsUnderflowBin(binIdx))
-      return -1;
+   if (binIdx < GetFirstBin())
+      return RAxisBase::kInvalidBin;
    // If x is the lower edge of the overflow bin then that's still okay - but if
    // even the bin before binIdx is an overflow it's out of range.
-   if (IsOverflowBin(binIdx - 1))
-      return -1;
+   if (binIdx > GetLastBin() + 1)
+      return RAxisBase::kInvalidBin;
 
    return binIdx;
 }
@@ -83,23 +91,24 @@ bool ROOT::Experimental::RAxisEquidistant::HasSameBinBordersAs(const RAxisBase& 
 int ROOT::Experimental::RAxisIrregular::GetBinIndexForLowEdge(double x) const noexcept
 {
    // Check in which bin `x` resides
-   const int binIdx = FindBin(x);
+   double fracBinIdx = FindBinRaw(x);
+   const int binIdx = fracBinIdx;
 
    // Are we close to the lower and upper bin boundaries, if any?
    constexpr double tol = 10 * std::numeric_limits<double>::epsilon();
-   if (!IsUnderflowBin(binIdx)) {
+   if (binIdx >= GetFirstBin()) {
       const double lowBound = GetBinFrom(binIdx);
       if (std::fabs(x - lowBound) < tol * std::fabs(lowBound))
          return binIdx;
    }
-   if (!IsOverflowBin(binIdx)) {
+   if (binIdx <= GetLastBin()) {
       const double upBound = GetBinTo(binIdx);
       if (std::fabs(x - upBound) < tol * std::fabs(upBound))
          return binIdx + 1;
    }
 
    // If not, report failure
-   return -1;
+   return RAxisBase::kInvalidBin;
 }
 
 bool ROOT::Experimental::RAxisIrregular::HasSameBinBordersAs(const RAxisBase& other) const {
@@ -147,4 +156,4 @@ ROOT::Experimental::EAxisCompatibility ROOT::Experimental::CanMap(const RAxisEqu
    return EAxisCompatibility::kSampling;
 }
 
-// RODO: the other CanMap() overloads
+// TODO: the other CanMap() overloads

@@ -1,0 +1,515 @@
+
+name: 'ROOT CI'
+
+on:
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  push:
+    branches:
+      - 'master'
+      - 'v*-*-*-patches'
+
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        default: master
+      base_ref:
+        type: string
+        default: master
+      ref_name:
+        type: string
+        default: master
+
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
+
+env:
+  PYTHONUNBUFFERED: true
+  OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  build-macos:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Specify platform + arch + (optional) build option overrides
+        #
+        # Common configs: {Release,Debug,RelWithDebInfo)
+        # Build options: https://root.cern/install/build_from_source/#all-build-options
+        include:
+          - platform: mac12
+            arch: X64
+          - platform: mac13   
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+          - platform: mac14
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - platform: mac-beta
+            arch: ARM64
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+
+    runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
+      - self-hosted
+      - macOS
+      - ${{ matrix.arch }}
+      - ${{ matrix.platform }}
+
+    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ join( matrix.overrides, ', ' ) }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply option overrides from matrix for this job for non-release builds
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
+        shell: bash
+        run: |
+          set -x
+
+          echo '' >> "$CONFIGFILE"
+
+          for ENTRY in $OVERRIDES; do
+              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+
+              # Add entry to file if not exists, otherwise replace
+
+              if grep -q "$KEY=" "$CONFIGFILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+              else
+                  echo "$ENTRY" >> "$CONFIGFILE"
+              fi
+          done
+
+          cat "$CONFIGFILE" || true
+
+      - uses: root-project/gcc-problem-matcher-improved@main
+        with:
+          build-directory: /Users/sftnight/ROOT-CI/src/
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype       RelWithDebInfo
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --platform        ${{ matrix.platform }}"
+
+      - name: Workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ inputs.buildtype }}
+                    --platform       ${{ matrix.platform }}
+                    --incremental    ${{ inputs.incremental }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --binaries       ${{ inputs.binaries }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Release
+                    --platform       ${{ matrix.platform }}
+                    --incremental    false
+                    --binaries       true
+                    --base_ref       ${{ inputs.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Update build cache after push to release branch
+        if:   github.event_name == 'push'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      RelWithDebInfo
+                    --platform       ${{ matrix.platform }}
+                    --incremental    false
+                    --base_ref       ${{ github.ref_name }}
+                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results ${{ matrix.platform }} ${{ matrix.arch }}
+          path: /Users/sftnight/ROOT-CI/build/TestResults.xml
+
+      - name: Upload binaries
+        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Binaries ${{ matrix.platform }} ${{ matrix.arch }}
+          path: /Users/sftnight/ROOT-CI/packages/root_v*
+          if-no-files-found: error
+
+
+  build-windows:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # We have to get a bit creative here: GitHub actions only allows to
+        # exclude partial matches, so we artificially add the event_name as
+        # a "constant variable" that we can use to remove the Debug entries
+        # for pull requests and on branch pushes. This is further complicated
+        # by the fact that event_name is a string, but we need an array. So
+        # we construct a JSON string that we can then convert into an array.
+        event_name: ${{ fromJSON(format('["{0}"]', github.event_name)) }}
+        config: ["Debug", "Release"]
+        target_arch: [x64, x86]
+        exclude:
+          - event_name: pull_request
+            config: Debug
+          - event_name: push
+            config: Debug
+
+    name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
+
+    runs-on: # Using '[self-hosted, windows, ${{ matrix.arch }}]' does not work for some reason :)
+      - self-hosted
+      - windows
+      - x64 # machine host, not build target
+      - target${{ matrix.target_arch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype       ${{ matrix.config }}
+                    --platform        windows10
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+                    --architecture    ${{ matrix.target_arch }}"
+
+      - name: Workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  ${{ inputs.incremental }}
+                    --base_ref     ${{ inputs.base_ref }}
+                    --head_ref     ${{ inputs.head_ref }}
+                    --binaries     ${{ inputs.binaries }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}"
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  false
+                    --binaries     true
+                    --base_ref     ${{ inputs.ref_name }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}"
+
+      - name: Update build cache after push to release branch
+        if:   github.event_name == 'push'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  false
+                    --base_ref     ${{ github.ref_name }}
+                    --binaries     ${{ startsWith(github.ref, 'refs/tags/') }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}"
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results Windows ${{ matrix.target_arch }} ${{ matrix.config }}
+          path: C:/ROOT-CI/build/TestResults.xml
+
+      - name: Upload binaries
+        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Binaries ${{ matrix.target_arch }} ${{ matrix.config }}
+          path: C:/ROOT-CI/packages/root_v*
+          if-no-files-found: error
+
+
+  build-linux:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Specify image + (optional) build option overrides
+        #
+        # Available images: https://github.com/root-project/root-ci-images
+        # Common configs: {Release,Debug,RelWithDebInfo)
+        # Build options: https://root.cern/install/build_from_source/#all-build-options
+        include:
+          - image: fedora39
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          - image: fedora38
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
+          - image: alma8
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+          - image: alma9
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu20
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+          - image: ubuntu22
+            overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: ubuntu2310
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
+    name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
+
+    container:
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    steps:
+      - name: Set up Python Virtual Env
+        # if the `if` expr is false, `if` still has exit code 0.
+        # if the `if` block is entered, the block's exit code becomes the exit
+        # code of the `if`.
+        run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Print debug info
+        run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+               ls -la
+              '
+
+      - name: Apply option overrides from matrix for this job for non-release builds
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
+        shell: bash
+        run: |
+          set -x
+
+          echo '' >> "$CONFIGFILE"
+
+          for ENTRY in $OVERRIDES; do
+              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+
+              # Add entry to file if not exists, otherwise replace
+
+              if grep -q "$KEY=" "$CONFIGFILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+              else
+                  echo "$ENTRY" >> "$CONFIGFILE"
+              fi
+          done
+
+          cat "$CONFIGFILE" || true
+
+      - uses: root-project/gcc-problem-matcher-improved@main
+        with:
+          build-directory: /github/home/ROOT-CI/src/
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype       RelWithDebInfo
+                    --platform        ${{ matrix.image }}
+                    --image           registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+                    --dockeropts      '--security-opt label=disable --rm'
+                    --incremental     $INCREMENTAL
+                    --base_ref        ${{ github.base_ref }}
+                    --sha             ${{ github.sha }}
+                    --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                    --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --head_sha        ${{ github.event.pull_request.head.sha }}
+                    --repository      ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ inputs.buildtype }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    ${{ inputs.incremental }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --binaries       ${{ inputs.binaries }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Release
+                    --platform       ${{ matrix.image }}
+                    --incremental    false
+                    --binaries       true
+                    --base_ref       ${{ inputs.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Update build cache after push to release branch
+        if:   github.event_name == 'push'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      RelWithDebInfo
+                    --platform       ${{ matrix.image }}
+                    --incremental    false
+                    --base_ref       ${{ github.ref_name }}
+                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results ${{ matrix.image }}
+          path: /github/home/ROOT-CI/build/TestResults.xml
+
+      - name: Upload binaries
+        if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: Binaries ${{ matrix.image }}
+          path: /github/home/ROOT-CI/packages/root_v*
+          if-no-files-found: error
+
+  event_file:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    name: "Upload Event Payload"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Event File
+        path: ${{ github.event_path }}

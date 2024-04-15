@@ -54,22 +54,22 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #include "RConfigure.h"
 
-#if (defined(__GLIBCPP__) || defined(__GLIBCXX__)) && !defined(__CINT__)
+#if (defined(__GLIBCPP__) || defined(__GLIBCXX__))
 #include "TAtomicCountGcc.h"
-#elif defined(_WIN32) && !defined(__CINT__)
+#elif defined(_WIN32)
 #include "TWin32AtomicCount.h"
-#elif defined(R__HAS_PTHREAD) && !defined(__CINT__)
+#elif defined(R__HAS_PTHREAD)
 #include "TAtomicCountPthread.h"
 #else
 class TAtomicCount {
 private:
    Long_t  fCnt;   // counter
 
-   TAtomicCount(const TAtomicCount &);             // not implemented
-   TAtomicCount &operator=(const TAtomicCount &);  // not implemented
+   TAtomicCount(const TAtomicCount &) = delete;
+   TAtomicCount &operator=(const TAtomicCount &) = delete;
 
 public:
    explicit TAtomicCount(Long_t v) : fCnt(v) { }

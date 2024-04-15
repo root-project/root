@@ -5,7 +5,7 @@
 // To try this macro, in a ROOT prompt, do:
 // .L fitEllipseTGraphRMM.cxx // or ".L fitEllipseTGraphRMM.cxx++"
 // fitEllipseTGraphRMM(TestGraphRMM());
-// for (Int_t i=0; i<10; i++) { fitEllipseTGraphRMM(); gSystem->Sleep(333); }
+// for (int i=0; i<10; i++) { fitEllipseTGraphRMM(); gSystem->Sleep(333); }
 //
 // Last update: Thu Jul 31 18:00:00 UTC 2014
 //
@@ -37,12 +37,12 @@
 // b = ellipse's "semiminor" axis along "y" (> 0)
 // theta = ellipse's axes rotation angle (-45 ... 135 degrees)
 //
-Double_t ellipse_fcn(Double_t x, Double_t y,
-                     Double_t x0, Double_t y0,
-                     Double_t a, Double_t b,
-                     Double_t theta) // (in degrees)
+double ellipse_fcn(double x, double y,
+                     double x0, double y0,
+                     double a, double b,
+                     double theta) // (in degrees)
 {
-  Double_t v = 9999.9;
+  double v = 9999.9;
   if ((a == 0.0) || (b == 0.0)) return v; // just a precaution
   // shift the center
   x -= x0;
@@ -70,7 +70,7 @@ Double_t ellipse_fcn(Double_t x, Double_t y,
 // params[3] = ellipse's "semiminor" axis along "y" ("b" > 0)
 // params[4] = ellipse's axes rotation angle ("theta" = -45 ... 135 degrees)
 //
-Double_t ellipse_fcn(const Double_t *x, const Double_t *params)
+double ellipse_fcn(const double *x, const double *params)
 {
   return ellipse_fcn(x[0], x[1], // "x", "y"
                      params[0], params[1], // "x0", "y0"
@@ -81,7 +81,7 @@ Double_t ellipse_fcn(const Double_t *x, const Double_t *params)
 //
 // the TGraph to be fitted (used by the ellipse_TGraph_chi2 function below)
 //
-TGraph *ellipse_TGraph = ((TGraph *)0);
+TGraph *ellipse_TGraph = nullptr;
 //
 // x[0] = ellipse's "x" center ("x0")
 // x[1] = ellipse's "y" center ("y0")
@@ -89,12 +89,12 @@ TGraph *ellipse_TGraph = ((TGraph *)0);
 // x[3] = ellipse's "semiminor" axis along "y" ("b" > 0)
 // x[4] = ellipse's axes rotation angle ("theta" = -45 ... 135 degrees)
 //
-Double_t ellipse_TGraph_chi2(const Double_t *x)
+double ellipse_TGraph_chi2(const double *x)
 {
-  Double_t v = 0.0;
+  double v = 0.0;
   if (!ellipse_TGraph) return v; // just a precaution
-  for (Int_t i = 0; i < ellipse_TGraph->GetN(); i++) {
-    Double_t r = ellipse_fcn((ellipse_TGraph->GetX())[i], // "x"
+  for (int i = 0; i < ellipse_TGraph->GetN(); i++) {
+    double r = ellipse_fcn((ellipse_TGraph->GetX())[i], // "x"
                              (ellipse_TGraph->GetY())[i], // "y"
                              x[0], x[1], // "x0", "y0"
                              x[2], x[3], // "a", "b"
@@ -106,13 +106,12 @@ Double_t ellipse_TGraph_chi2(const Double_t *x)
 }
 
 //
-// http://root.cern.ch/drupal/content/numerical-minimization#multidim_minim
-// http://root.cern.ch/root/html534/tutorials/fit/NumericalMinimization.C.html
+// http://root.cern/root/html534/tutorials/fit/NumericalMinimization.C.html
 //
 ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 {
-  if (!g) return 0; // just a precaution
-  if (g->GetN() < 6) return 0; // just a precaution
+  if (!g) return nullptr; // just a precaution
+  if (g->GetN() < 6) return nullptr; // just a precaution
 
   // set the TGraph to be fitted (used by the ellipse_TGraph_chi2 function)
   ellipse_TGraph = g;
@@ -149,8 +148,8 @@ ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 
   // estimate all initial values (note: good initial values
   // are CRUCIAL for the minimizing procedure to succeed)
-  Double_t xmin, xmax, ymin, ymax;
-  Double_t x0, y0, a, b, theta;
+  double xmin, xmax, ymin, ymax;
+  double x0, y0, a, b, theta;
   ellipse_TGraph->ComputeRange(xmin, ymin, xmax, ymax);
   x0 = (xmax + xmin) / 2.0;
   y0 = (ymax + ymin) / 2.0;
@@ -159,10 +158,10 @@ ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
   theta = ((std::abs(b) > 9999.9 * std::abs(a)) ? 9999.9 : (b / a));
   a = a * a + b * b;
   b = a;
-  for (Int_t i = 1; i < ellipse_TGraph->GetN(); i++) {
-    Double_t dx = (ellipse_TGraph->GetX())[i] - x0;
-    Double_t dy = (ellipse_TGraph->GetY())[i] - y0;
-    Double_t d = dx * dx + dy * dy;
+  for (int i = 1; i < ellipse_TGraph->GetN(); i++) {
+    double dx = (ellipse_TGraph->GetX())[i] - x0;
+    double dy = (ellipse_TGraph->GetY())[i] - y0;
+    double d = dx * dx + dy * dy;
     // try to keep "a" > "b"
     if (a < d) {
       a = d;
@@ -203,7 +202,7 @@ ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
   m->Minimize();
 
 #if 0 /* 0 or 1 */
-  const Double_t *xm = m->X();
+  const double *xm = m->X();
   std::cout << "Minimum ( "
             << xm[0] << " , " << xm[1] << " , " // "x0", "y0"
             << xm[2] << " , " << xm[3] << " , " // "a", "b"
@@ -218,15 +217,14 @@ ROOT::Math::Minimizer *ellipse_TGraph_minimize(TGraph *g)
 //
 // creates a test TGraph with an ellipse
 //
-TGraph *TestGraphRMM(Bool_t randomize = kFALSE) {
-  Int_t i;
-
+TGraph *TestGraphRMM(bool randomize = false)
+{
   // define the test ellipse
-  Double_t x0 = 4; // ellipse's "x" center
-  Double_t y0 = 3; // ellipse's "y" center
-  Double_t a = 2; // ellipse's "semimajor" axis along "x" (> 0)
-  Double_t b = 1; // ellipse's "semiminor" axis along "y" (> 0)
-  Double_t theta = 100; // ellipse's axes rotation angle (-45 ... 135 degrees)
+  double x0 = 4; // ellipse's "x" center
+  double y0 = 3; // ellipse's "y" center
+  double a = 2; // ellipse's "semimajor" axis along "x" (> 0)
+  double b = 1; // ellipse's "semiminor" axis along "y" (> 0)
+  double theta = 100; // ellipse's axes rotation angle (-45 ... 135 degrees)
 
   // gRandom->SetSeed(0);
   if (randomize) {
@@ -237,14 +235,14 @@ TGraph *TestGraphRMM(Bool_t randomize = kFALSE) {
     theta = 180.0 - 360.0 * gRandom->Rndm();
   }
 
-  const Int_t n = 100; // number of points
-  Double_t x[n], y[n];
-  Double_t dt = TMath::TwoPi() / Double_t(n);
-  Double_t tmp;
+  const int n = 100; // number of points
+  double x[n], y[n];
+  double dt = TMath::TwoPi() / double(n);
+  double tmp;
   theta *= TMath::PiOver2() / 90.0; // degrees -> radians
-  for (i = 0; i < n; i++) {
-    x[i] = a * (std::cos(dt * Double_t(i)) + 0.1 * gRandom->Rndm() - 0.05);
-    y[i] = b * (std::sin(dt * Double_t(i)) + 0.1 * gRandom->Rndm() - 0.05);
+  for (int i = 0; i < n; i++) {
+    x[i] = a * (std::cos(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
+    y[i] = b * (std::sin(dt * double(i)) + 0.1 * gRandom->Rndm() - 0.05);
     // rotate the axes
     tmp = x[i];
     x[i] = x[i] * std::cos(theta) - y[i] * std::sin(theta);
@@ -255,7 +253,7 @@ TGraph *TestGraphRMM(Bool_t randomize = kFALSE) {
   }
 
   // create the test TGraph
-  TGraph *g = ((TGraph *)(gROOT->FindObject("g")));
+  TGraph *g = static_cast<TGraph *>(gROOT->FindObject("g"));
   if (g) delete g;
   g = new TGraph(n, x, y);
   g->SetNameTitle("g", "test ellipse");
@@ -266,44 +264,30 @@ TGraph *TestGraphRMM(Bool_t randomize = kFALSE) {
 //
 // "ROOT Script" entry point (the same name as the "filename's base")
 //
-void fitEllipseTGraphRMM(TGraph *g = ((TGraph *)0))
+void fitEllipseTGraphRMM(TGraph *g = nullptr)
 {
-  if (!g) g = TestGraphRMM(kTRUE); // create a "random" ellipse
-
-#if 0 /* 0 or 1 */
-  // create the "ellipse" TF2 (just for fun)
-  TF2 *ellipse = ((TF2 *)(gROOT->GetListOfFunctions()->FindObject("ellipse")));
-  if (ellipse) delete ellipse;
-  ellipse = new TF2("ellipse", ellipse_fcn, -1, 1, -1, 1, 5);
-  ellipse->SetMaximum(2.0); // just for nice graphics
-  ellipse->SetParNames("x0", "y0", "a", "b", "theta");
-  ellipse->SetParameters(0.4, 0.3, 0.2, 0.1, 10);
-#endif /* 0 or 1 */
+  if (!g) g = TestGraphRMM(true); // create a "random" ellipse
 
   // fit the TGraph
   ROOT::Math::Minimizer *m = ellipse_TGraph_minimize(g);
 
-#if 1 /* 0 or 1 */
   // draw everything
-  TCanvas *c = ((TCanvas *)(gROOT->GetListOfCanvases()->FindObject("c")));
-  if (c) { c->Clear(); } else { c = new TCanvas("c", "c"); }
-  c->SetGrid(1, 1);
+  auto c1 = new TCanvas("c1","c1", 1000, 800);
+  c1->SetGrid(1, 1);
   g->Draw("A*");
   if ( m && (!(m->Status())) ) {
-    const Double_t *xm = m->X();
-    TEllipse *e = new TEllipse(xm[0], xm[1], // "x0", "y0"
-                               xm[2], xm[3], // "a", "b"
-                               0, 360,
-                               xm[4]); // "theta" (in degrees)
-    e->SetFillStyle(0); // hollow
-    e->Draw();
+     const double *xm = m->X();
+     TEllipse *e = new TEllipse(xm[0], xm[1], // "x0", "y0"
+                                xm[2], xm[3], // "a", "b"
+                                0, 360,
+                                xm[4]); // "theta" (in degrees)
+     e->SetFillStyle(0); // hollow
+     e->Draw();
   }
-  c->Modified(); c->Update(); // make sure it's really drawn
-#endif /* 0 or 1 */
+  c1->Modified();
+  c1->Update(); // make sure it's really drawn
 
   delete m; // "cleanup"
-
-  return;
 }
 
 // end of file fitEllipseTGraphRMM.cxx by Silesius Anonymus

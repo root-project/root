@@ -2,7 +2,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::DecisionTree                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of a Decision Tree                                         *
@@ -56,9 +56,8 @@ subtree, defined to be the subtree with the best quality index for the validatio
 
 #include "RtypesCore.h"
 
-#include <fstream>
 #include <limits>
-#include <math.h>
+#include <cmath>
 
 using namespace TMVA;
 

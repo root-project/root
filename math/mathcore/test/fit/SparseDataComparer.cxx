@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <functional>
 
-using namespace std;
+using std::cout, std::cerr, std::endl, std::ostream, std::ostream_iterator, std::vector;
 
 
 double minRange[3] = { -5., -5., -5.};
@@ -221,7 +221,7 @@ int main(int argc, char** argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if (showGraphics)
       theApp = new TApplication("App",&argc,argv);
@@ -234,7 +234,7 @@ int main(int argc, char** argv)
    if (showGraphics) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

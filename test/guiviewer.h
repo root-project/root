@@ -22,10 +22,10 @@ private:
 
 public:
    Viewer(const TGWindow *win);
-   virtual ~Viewer();
+   ~Viewer() override;
    void DoButton();
    void DoSlider();
    void SetRange(Float_t xmin, Float_t ymin, Float_t xmax, Float_t ymax,
                  Bool_t move_slider = kTRUE);
-   ClassDef(Viewer,0) //GUI example
+   ClassDefOverride(Viewer,0) //GUI example
 };

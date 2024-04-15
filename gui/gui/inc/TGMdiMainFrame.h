@@ -33,27 +33,20 @@
 #ifndef ROOT_TGMdiMainFrame
 #define ROOT_TGMdiMainFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiMainFrame.                                                      //
-//                                                                      //
-// This file contains the TGMdiMainFrame class.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGCanvas.h"
 #include "TGMenu.h"
 #include "TGFont.h"
 
 
-// MDI resizing modes
+/// MDI resizing modes
 enum EMdiResizingModes {
    kMdiOpaque            = 1,
    kMdiNonOpaque         = 2,
    kMdiDefaultResizeMode = kMdiOpaque
 };
 
-// MDI hints, also used to identify titlebar buttons
+/// MDI hints, also used to identify titlebar buttons
 enum EMdiHints {
    kMdiClose         = 4,
    kMdiRestore       = 8,
@@ -67,14 +60,14 @@ enum EMdiHints {
                        kMdiMaximize | kMdiSize | kMdiClose
 };
 
-// window arrangement modes
+/// window arrangement modes
 enum EMdiArrangementModes {
    kMdiTileHorizontal = 1,
    kMdiTileVertical   = 2,
    kMdiCascade        = 3
 };
 
-// geometry value masks for ConfigureWindow() call
+/// geometry value masks for ConfigureWindow() call
 enum EMdiGeometryMask {
    kMdiClientGeometry = BIT(0),
    kMdiDecorGeometry  = BIT(1),
@@ -95,10 +88,10 @@ class TGMdiFrameList {
 friend class TGMdiMainFrame;
 
 protected:
-   UInt_t            fFrameId;                  // TGMdiFrameList Id
-   TGMdiDecorFrame  *fDecor;                    // MDI decor frame
-   TGMdiFrameList   *fPrev, *fNext;             // pointers on previous and next TGMdiFrameList
-   TGMdiFrameList   *fCyclePrev, *fCycleNext;   // pointers on previous and next TGMdiFrameList
+   UInt_t            fFrameId;                  ///< TGMdiFrameList Id
+   TGMdiDecorFrame  *fDecor;                    ///< MDI decor frame
+   TGMdiFrameList   *fPrev, *fNext;             ///< pointers on previous and next TGMdiFrameList
+   TGMdiFrameList   *fCyclePrev, *fCycleNext;   ///< pointers on previous and next TGMdiFrameList
 
 public:
    virtual ~TGMdiFrameList() { }
@@ -124,10 +117,10 @@ public:
 class TGMdiGeometry {
 
 public:
-   Int_t            fValueMask;                    // MDI hints mask
-   TGRectangle      fClient, fDecoration, fIcon;   // client, decoration and icon rectangles
+   Int_t            fValueMask;                    ///< MDI hints mask
+   TGRectangle      fClient, fDecoration, fIcon;   ///< client, decoration and icon rectangles
 
-   virtual ~TGMdiGeometry() { }
+   virtual ~TGMdiGeometry() {}
 
    ClassDef(TGMdiGeometry, 0) // MDI Geometry
 };
@@ -145,20 +138,20 @@ protected:
       kMinimizedWidth = 5
    };
 
-   Int_t            fCurrentX, fCurrentY, fResizeMode;   // current MDI child XY position and resize mode
-   Int_t            fArrangementMode;                    // MDI children arrangement mode
-   TGFont          *fFontCurrent, *fFontNotCurrent;      // fonts for active and inactive MDI children
-   Pixel_t          fBackCurrent, fForeCurrent;          // back and fore colors for active MDI children
-   Pixel_t          fBackNotCurrent, fForeNotCurrent;    // back and fore colors for inactive MDI children
+   Int_t            fCurrentX, fCurrentY, fResizeMode;   ///< current MDI child XY position and resize mode
+   Int_t            fArrangementMode;                    ///< MDI children arrangement mode
+   TGFont          *fFontCurrent, *fFontNotCurrent;      ///< fonts for active and inactive MDI children
+   Pixel_t          fBackCurrent, fForeCurrent;          ///< back and fore colors for active MDI children
+   Pixel_t          fBackNotCurrent, fForeNotCurrent;    ///< back and fore colors for inactive MDI children
 
-   TGGC            *fBoxGC;                              // GC used to draw resizing box (rectangle)
+   TGGC            *fBoxGC;                              ///< GC used to draw resizing box (rectangle)
 
-   Long_t           fNumberOfFrames;                     // number of MDI child windows
-   TGMdiMenuBar    *fMenuBar;                            // menu bar
-   TGFrame         *fContainer;                          // MDI container
-   TGPopupMenu     *fWinListMenu;                        // popup menu with list of MDI child windows
-   TGMdiFrameList  *fChildren;                           // list of MDI child windows
-   TGMdiFrameList  *fCurrent;                            // current list of MDI child windows
+   Long_t           fNumberOfFrames;                     ///< number of MDI child windows
+   TGMdiMenuBar    *fMenuBar;                            ///< menu bar
+   TGFrame         *fContainer;                          ///< MDI container
+   TGPopupMenu     *fWinListMenu;                        ///< popup menu with list of MDI child windows
+   TGMdiFrameList  *fChildren;                           ///< list of MDI child windows
+   TGMdiFrameList  *fCurrent;                            ///< current list of MDI child windows
 
    void             AddMdiFrame(TGMdiFrame *f);
    Bool_t           RemoveMdiFrame(TGMdiFrame *f);
@@ -173,12 +166,12 @@ public:
    TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menu, Int_t w, Int_t h,
                   UInt_t options = 0,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiMainFrame();
+   ~TGMdiMainFrame() override;
 
-   virtual Bool_t   HandleKey(Event_t *event);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   Bool_t           HandleKey(Event_t *event) override;
+   Bool_t           ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   virtual void     Layout();
+   void             Layout() override;
 
    virtual void     FreeMove(TGMdiFrame *frame);
    virtual void     FreeSize(TGMdiFrame *frame);
@@ -231,9 +224,9 @@ public:
    virtual void     FrameRestored(Int_t id) { Emit("FrameRestored(Int_t)", id); } //*SIGNAL*
    virtual void     FramesArranged(Int_t mode) { Emit("FramesArranged(Int_t)", mode); } //*SIGNAL*
 
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGMdiMainFrame, 0) // MDI main frame
+   ClassDefOverride(TGMdiMainFrame, 0) // MDI main frame
 };
 
 
@@ -249,10 +242,10 @@ public:
                   UInt_t options = 0,
                   ULong_t back = GetDefaultFrameBackground());
 
-   virtual Bool_t HandleConfigureNotify(Event_t *event);
-   virtual TGDimension GetDefaultSize() const;
+   Bool_t HandleConfigureNotify(Event_t *event) override;
+   TGDimension GetDefaultSize() const override;
 
-   ClassDef(TGMdiContainer, 0) // MDI container
+   ClassDefOverride(TGMdiContainer, 0) // MDI container
 };
 
 #endif

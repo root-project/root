@@ -11,14 +11,15 @@
 
 #include "TGLOutput.h"
 
-#include "Riostream.h"
+#include <iostream>
+#include <fstream>
 #include "TVirtualPad.h"
 #include "TVirtualPS.h"
 #include "TGLViewer.h"
-#include "TSystem.h" // For gSystem
+#include "TSystem.h"
 #include "gl2ps.h"
 #include "TError.h"
-#include <assert.h>
+#include <cassert>
 
 /** \class TGLOutput
 \ingroup opengl
@@ -108,11 +109,11 @@ Bool_t TGLOutput::CapturePostscript(TGLViewer & viewer, EFormat format, const ch
       viewer.fIsPrinting = kTRUE;
       while (state == GL2PS_OVERFLOW) {
          buffsize += 1024*1024;
-         gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+         gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
          gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
          | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
-         GL_RGBA, 0, NULL,0, 0, 0,
-         buffsize, output, NULL);
+         GL_RGBA, 0, nullptr,0, 0, 0,
+         buffsize, output, nullptr);
          viewer.DoDraw();
          state = gl2psEndPage();
          std::cout << ".";
@@ -215,11 +216,11 @@ void TGLOutput::Capture(TGLViewer & viewer)
 
    while (state == GL2PS_OVERFLOW) {
       buffsize += 1024*1024;
-      gl2psBeginPage ("ROOT Scene Graph", "ROOT", NULL,
+      gl2psBeginPage ("ROOT Scene Graph", "ROOT", nullptr,
       gl2psFormat, gl2psSort, GL2PS_USE_CURRENT_VIEWPORT
       | GL2PS_SILENT | GL2PS_BEST_ROOT | GL2PS_OCCLUSION_CULL | 0,
-      GL_RGBA, 0, NULL,0, 0, 0,
-      buffsize, output, NULL);
+      GL_RGBA, 0, nullptr,0, 0, 0,
+      buffsize, output, nullptr);
       viewer.DoDraw();
       state = gl2psEndPage();
       std::cout << ".";

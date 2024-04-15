@@ -12,19 +12,6 @@
 #ifndef ROOT_THelix
 #define ROOT_THelix
 
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THelix                                                               //
-//                                                                      //
-// A Helix with axis // z-axis:                                         //
-//                                                                      //
-//  X(t) = X0 - vt / w sin(-wt+phi0)                                    //
-//  Y(t) = Y0 + vt / w cos(-wt+phi0)                                    //
-//  Z(t) = Z0 + vz t                                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TPolyLine3D.h"
 #include "TRotMatrix.h"
 
@@ -59,27 +46,27 @@ public:
    THelix(Double_t x,  Double_t y,  Double_t z,
           Double_t vx, Double_t vy, Double_t vz,
           Double_t w);
-   THelix(Double_t * xyz, Double_t * v, Double_t w,
-          Double_t * range=0, EHelixRangeType rtype=kHelixZ,
-          Double_t * axis=0);
+   THelix(Double_t const* xyz, Double_t const* v, Double_t w,
+          Double_t const* range=nullptr, EHelixRangeType rtype=kHelixZ,
+          Double_t const* axis=nullptr);
    THelix(const THelix &helix);
-   virtual ~THelix();
+   ~THelix() override;
 
-   virtual void    Copy(TObject &helix) const;
-   virtual void    Draw(Option_t *option="");
-   Option_t       *GetOption() const {return fOption.Data();}
-   virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void    SetOption(Option_t *option="") {fOption = option;}
-   virtual void    SetAxis(Double_t * axis);       //Define new axis
+   void    Copy(TObject &helix) const override;
+   void    Draw(Option_t *option="") override;
+   Option_t       *GetOption() const override {return fOption.Data();}
+   void    Print(Option_t *option="") const override;
+   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void    SetOption(Option_t *option="") override {fOption = option;}
+   virtual void    SetAxis(Double_t const* axis);       //Define new axis
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);
    virtual void    SetRange(Double_t * range, EHelixRangeType rtype=kHelixZ);
    virtual void    SetRange(Double_t r1, Double_t r2, EHelixRangeType rtype=kHelixZ);
-   void            SetHelix(Double_t *xyz,  Double_t *v, Double_t w,
-                            Double_t *range=0, EHelixRangeType type=kUnchanged,
-                            Double_t *axis=0);
+   void            SetHelix(Double_t const* xyz,  Double_t const* v, Double_t w,
+                            Double_t const* range=nullptr, EHelixRangeType type=kUnchanged,
+                            Double_t const* axis=nullptr);
 
-   ClassDef(THelix,2)  //A Helix drawn as a PolyLine3D
+   ClassDefOverride(THelix,2)  //A Helix drawn as a PolyLine3D
 };
 
 #endif

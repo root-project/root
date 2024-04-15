@@ -32,7 +32,7 @@
 #include "TROOT.h"
 
 TSpectrum2 *s;
-TH2F *h2 = 0;
+TH2F *h2 = nullptr;
 Int_t npeaks = 30;
 Double_t fpeaks2(Double_t *x, Double_t *par) {
    Double_t result = 0.1;
@@ -58,7 +58,7 @@ void findPeak2() {
    Double_t dy = (ymax-ymin)/nbinsy;
    delete h2;
    h2 = new TH2F("h2","test",nbinsx,xmin,xmax,nbinsy,ymin,ymax);
-   h2->SetStats(0);
+   h2->SetStats(false);
    //generate n peaks at random
    Double_t par[3000];
    Int_t p;

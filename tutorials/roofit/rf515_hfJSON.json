@@ -1,0 +1,140 @@
+{
+    "misc": {
+        "ROOT_internal": {
+            "combined_datasets": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "main": {
+                    "combined_data_name": "observed",
+                    "mcName": "ModelConfig",
+                    "pdfName": "main"
+                }
+            }
+        }
+    },
+    "analyses": [
+        {
+            "name": "main",
+            "likelihood": "main_likelihood",
+            "parameters_of_interest": ["mu"]
+        }
+    ],
+    "likelihoods": [
+        {
+            "name": "main_likelihood",
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel1"]
+        }
+    ],
+    "distributions": [
+        {
+            "name": "model_channel1",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            ],
+            "samples": [
+                {
+                    "data": {
+                        "contents": [20, 10]
+                    },
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst1",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mu",
+                            "type": "normfactor"
+                        }
+                    ],
+                    "name": "signal"
+                },
+                {
+                    "data": {
+                        "contents": [100, 0],
+                        "errors": [5, 0]
+                    },
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst2",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror"
+                        }
+                    ],
+                    "name": "background1"
+                },
+                {
+                    "data": {
+                        "contents": [0, 100],
+                        "errors": [0, 10]
+                    },
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst3",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror"
+                        }
+                    ],
+                    "name": "background2"
+                }
+            ],
+            "type": "histfactory_dist"
+        }
+    ],
+    "data": [
+        {
+            "name": "observed_channel1",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "nbins": 2,
+                    "min": 1,
+                    "max": 2
+                }
+            ],
+            "contents": [122, 112],
+            "type": "binned"
+        }
+    ],
+    "metadata": {
+        "hs3_version" : "0.1.90"
+    }
+}

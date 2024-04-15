@@ -9,7 +9,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "Buttons.h"
@@ -79,7 +78,7 @@ TGL5DPainter::SurfIter_t TGL5DPainter::AddSurface(Double_t v4, Color_t ci,
 
    Info("TGL5DPainter::AddSurface", "Mesh has %d vertices", Int_t(mesh.fVerts.size() / 3));
 
-   if (!mesh.fVerts.size())//I do not need an empty mesh.
+   if (mesh.fVerts.empty())//I do not need an empty mesh.
       return fIsos.end();
    //Add surface with empty mesh and swap meshes.
    fIsos.push_front(fDummy);
@@ -179,7 +178,7 @@ Bool_t TGL5DPainter::InitGeometry()
       AddSurface(isoLevel, color, 0.125, 0.05, range);
    }
 
-   if (fIsos.size())
+   if (!fIsos.empty())
       fBoxCut.TurnOnOff();
 
    return fInit = kTRUE;
@@ -260,7 +259,7 @@ void TGL5DPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%zx)->Paint()", (size_t)this));
       else
          Paint();
    }
@@ -385,7 +384,7 @@ void TGL5DPainter::DrawPlot() const
 
    fBackBox.DrawBox(fSelectedPart, fSelectionPass, fZLevels, fHighColor);
    //
-   if (!fIsos.size())
+   if (fIsos.empty())
       DrawCloud();
    else {
       //Two passes. First, non-transparent surfaces.

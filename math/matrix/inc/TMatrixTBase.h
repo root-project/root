@@ -70,7 +70,6 @@
 #include "TMathBase.h"
 #include "TMatrixFBasefwd.h"
 #include "TMatrixDBasefwd.h"
-#include "TString.h"
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
 
@@ -93,7 +92,7 @@ protected:
    Int_t    fRowLwb;              // lower bound of the row index
    Int_t    fColLwb;              // lower bound of the col index
    Int_t    fNelems;              // number of elements in matrix
-   Int_t    fNrowIndex;           // length of row index array (= fNrows+1) wich is only used for sparse matrices
+   Int_t    fNrowIndex;           // length of row index array (= fNrows+1), which is only used for sparse matrices
 
    Element  fTol;                 // sqrt(epsilon); epsilon is smallest number number so that  1+epsilon > 1
                                   //  fTol is used in matrix decomposition (like in inversion)
@@ -117,7 +116,7 @@ public:
      fNrows(0), fNcols(0), fRowLwb(0), fColLwb(0), fNelems(0), fNrowIndex(0),
      fTol(0), fIsOwner(kTRUE) { }
 
-   virtual ~TMatrixTBase() {}
+   ~TMatrixTBase() override {}
 
            inline       Int_t     GetRowLwb     () const { return fRowLwb; }
            inline       Int_t     GetRowUpb     () const { return fNrows+fRowLwb-1; }
@@ -140,7 +139,7 @@ public:
    virtual              TMatrixTBase<Element> &SetMatrixArray  (const Element *data,Option_t *option="");
            inline       Element                SetTol          (Element tol);
 
-   virtual void   Clear      (Option_t *option="") = 0;
+   void   Clear      (Option_t *option="") override = 0;
 
    inline  void   Invalidate ()       { SetBit(kStatus); }
    inline  void   MakeValid  ()       { ResetBit(kStatus); }
@@ -181,8 +180,8 @@ public:
    virtual Element Min        () const;
    virtual Element Max        () const;
 
-   void Draw (Option_t *option="");       // *MENU*
-   void Print(Option_t *name  ="") const; // *MENU*
+   void Draw (Option_t *option="") override;       // *MENU*
+   void Print(Option_t *name  ="") const override; // *MENU*
 
    virtual Element   operator()(Int_t rown,Int_t coln) const = 0;
    virtual Element  &operator()(Int_t rown,Int_t coln)       = 0;
@@ -202,7 +201,7 @@ public:
    // make it public since it can be called by TMatrixTRow
    static Element & NaNValue();
 
-   ClassDef(TMatrixTBase,5) // Matrix base class (template)
+   ClassDefOverride(TMatrixTBase,5) // Matrix base class (template)
 };
 
 #ifndef __CLING__
@@ -224,6 +223,8 @@ template<class Element> Element TMatrixTBase<Element>::SetTol(Element newTol)
       fTol = newTol;
    return oldTol;
 }
+
+inline namespace TMatrixTAutoloadOps {
 
 template<class Element> Bool_t  operator==   (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
 template<class Element> Element E2Norm       (const TMatrixTBase<Element>  &m1,const TMatrixTBase<Element>  &m2);
@@ -247,4 +248,5 @@ template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> 
 template<class Element> Bool_t VerifyMatrixIdentity(const TMatrixTBase<Element> &m1,const TMatrixTBase<Element> &m2)
                                                                            { return VerifyMatrixIdentity(m1,m2,1,Element(0.)); }
 
+} // inline namespace TMatrixTAutoloadOps
 #endif

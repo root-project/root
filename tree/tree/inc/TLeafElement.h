@@ -39,38 +39,39 @@ protected:
    mutable std::atomic<EDataType> fDataTypeCache{EDataType::kOther_t}; ///<! Cache of the EDataType of deserialization.
 
 private:
-   virtual Int_t       GetOffsetHeaderSize() const {return 1;}
+   Int_t            GetOffsetHeaderSize() const override {return 1;}
 
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
-   virtual ~TLeafElement();
+   ~TLeafElement() override;
 
-   virtual Bool_t   CanGenerateOffsetArray() { return fLeafCount && fLenType; }
+   bool             CanGenerateOffsetArray() override { return fLeafCount && fLenType; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
-   virtual DeserializeType GetDeserializeType() const;
+   DeserializeType  GetDeserializeType() const override;
 
-   virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
+   Int_t            GetID() const { return fID; }
+   TString          GetFullName() const override;
+   Int_t            GetLen() const override { return ((TBranchElement*)fBranch)->GetNdata()*fLen; }
    TMethodCall     *GetMethodCall(const char *name);
-   virtual Int_t    GetMaximum() const {return ((TBranchElement*)fBranch)->GetMaximum();}
-   virtual Int_t    GetNdata() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
-   virtual const char *GetTypeName() const {return ((TBranchElement*)fBranch)->GetTypeName();}
+   Int_t            GetMaximum() const override { return ((TBranchElement*)fBranch)->GetMaximum(); }
+   Int_t            GetNdata() const override { return ((TBranchElement*)fBranch)->GetNdata()*fLen; }
+   const char      *GetTypeName() const override { return ((TBranchElement*)fBranch)->GetTypeName(); }
 
-   virtual Double_t     GetValue(Int_t i=0) const { return ((TBranchElement*)fBranch)->GetValue(i, fLen, kFALSE);}
-   virtual Long64_t     GetValueLong64(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
-   virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
-   template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
+   Double_t         GetValue(Int_t i=0) const override { return ((TBranchElement*)fBranch)->GetValue(i, fLen, false);}
+   Long64_t         GetValueLong64(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, false); }
+   LongDouble_t     GetValueLongDouble(Int_t i = 0) const override { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, false); }
+   template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, true);}
 
-   virtual bool     ReadBasketFast(TBuffer&, Long64_t);
-   virtual bool     ReadBasketSerialized(TBuffer&, Long64_t) { return GetDeserializeType() != DeserializeType::kDestructive; }
+   bool             ReadBasketFast(TBuffer&, Long64_t) override;
 
-   virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
-   virtual Bool_t   IncludeRange(TLeaf *);
-   virtual Bool_t   IsOnTerminalBranch() const;
-   virtual void     PrintValue(Int_t i=0) const {((TBranchElement*)fBranch)->PrintValue(i);}
-   virtual void     SetLeafCount(TLeaf *leaf) {fLeafCount = leaf;}
+   void            *GetValuePointer() const override { return ((TBranchElement*)fBranch)->GetValuePointer(); }
+   bool             IncludeRange(TLeaf *) override;
+   bool             IsOnTerminalBranch() const override;
+   void             PrintValue(Int_t i=0) const override {((TBranchElement*)fBranch)->PrintValue(i);}
+   void             SetLeafCount(TLeaf *leaf) override { fLeafCount = leaf; }
 
-   ClassDef(TLeafElement,1);  //A TLeaf for a general object derived from TObject.
+   ClassDefOverride(TLeafElement,1);  //A TLeaf for a general object derived from TObject.
 };
 
 #endif

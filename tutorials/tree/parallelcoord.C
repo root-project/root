@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_tree
 /// \notebook -nodraw
-/// Script illustrating the use of the TParalleCoord class
+/// Script illustrating the use of the TParallelCoord class
 ///
 /// \macro_image
 /// \macro_code
@@ -35,7 +35,7 @@ void generate_random(Int_t i) {
 
 void parallelcoord() {
 
-   TNtuple *nt = NULL;
+   TNtuple *nt = nullptr;
 
    Double_t s1x, s1y, s1z;
    Double_t s2x, s2y, s2z;

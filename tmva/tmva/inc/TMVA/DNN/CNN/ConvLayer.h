@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TConvLayer                                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Convolutional Deep Neural Network Layer                                   *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_CNN_CONVLAYER
@@ -35,6 +35,7 @@
 
 #include <vector>
 #include <iostream>
+#include <string>
 
 namespace TMVA {
 namespace DNN {
@@ -160,7 +161,7 @@ public:
    void Forward(Tensor_t &input, bool applyDropout = false);
 
    /*! Compute weight, bias and activation gradients. Uses the precomputed
-    *  first partial derviatives of the activation function computed during
+    *  first partial derivatives of the activation function computed during
     *  forward propagation and modifies them. Must only be called directly
     *  at the corresponding call to Forward(...). */
    void Backward(Tensor_t &gradients_backward, const Tensor_t &activations_backward);
@@ -245,7 +246,7 @@ TConvLayer<Architecture_t>::TConvLayer(size_t batchSize, size_t inputDepth, size
     **/
    fInputActivation = Tensor_t( batchSize, depth, fNLocalViews);     // create tensor (shape is B x C x LV)
    fForwardTensor = Tensor_t ( batchSize, fNLocalViews, fNLocalViewPixels );
-   
+
 
    InitializeDescriptors();
    InitializeWorkspace();
@@ -267,7 +268,7 @@ TConvLayer<Architecture_t>::TConvLayer(TConvLayer<Architecture_t> *layer)
 {
    InitializeDescriptors();
    InitializeWorkspace();
-   
+
 }
 
 //______________________________________________________________________________
@@ -367,19 +368,19 @@ auto TConvLayer<Architecture_t>::Print() const -> void
 template <typename Architecture_t>
 void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "ConvLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "ConvLayer");
 
-   gTools().xmlengine().NewAttr(layerxml, 0, "Depth", gTools().StringFromInt(this->GetDepth()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "PaddingHeight", gTools().StringFromInt(this->GetPaddingHeight()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "PaddingWidth", gTools().StringFromInt(this->GetPaddingWidth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "Depth", gTools().StringFromInt(this->GetDepth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "PaddingHeight", gTools().StringFromInt(this->GetPaddingHeight()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "PaddingWidth", gTools().StringFromInt(this->GetPaddingWidth()));
 
 
    int activationFunction = static_cast<int>(this -> GetActivationFunction());
-   gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "ActivationFunction",
                                 TString::Itoa(activationFunction, 10));
 
    // write weights and bias matrix
@@ -442,7 +443,7 @@ void TConvLayer<Architecture_t>::InitializeWorkspace() {
 
 template <typename Architecture_t>
 void TConvLayer<Architecture_t>::FreeWorkspace() {
-   Architecture_t::FreeConvWorkspace(fWorkspace, this);
+   Architecture_t::FreeConvWorkspace(fWorkspace);
 }
 
 //______________________________________________________________________________

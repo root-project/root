@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TGeneralLayer                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      General Deep Neural Network Layer                                         *
@@ -21,14 +21,16 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_DNN_GENERALLAYER
 #define TMVA_DNN_GENERALLAYER
 
-#include <iostream>
+#include <sstream>
 #include <limits>
+#include <vector>
+#include <string>
 
 // for xml
 #include "TMVA/Tools.h"
@@ -51,6 +53,7 @@ class VGeneralLayer {
    using Tensor_t = typename Architecture_t::Tensor_t;
    using Matrix_t = typename Architecture_t::Matrix_t;
    using Scalar_t = typename Architecture_t::Scalar_t;
+
 
 protected:
    size_t fBatchSize; ///< Batch size used for training and evaluation
@@ -153,7 +156,7 @@ public:
    /*! Read the information and the weights about the layer from XML node. */
    virtual void ReadWeightsFromXML(void *parent) = 0;
 
-   /*! Set Dropout probability. Reimplemented for layesrs supporting droput */
+   /*! Set Dropout probability. Reimplemented for layers supporting droput */
    virtual void SetDropoutProbability(Scalar_t ) {}
 
    /*! Getters */
@@ -475,7 +478,7 @@ template <typename Arch>
 void VGeneralLayer<Architecture_t>::CopyParameters(const VGeneralLayer<Arch> &layer)
 {
    //assert(!std::is_same<Arch, Architecture_t>::value);
-   // copy weights from a different arhcitecture- default generic implementation
+   // copy weights from a different architecture- default generic implementation
    Architecture_t::CopyDiffArch(this->GetWeights(), layer.GetWeights());
    Architecture_t::CopyDiffArch(this->GetBiases(), layer.GetBiases());
 
@@ -504,8 +507,9 @@ auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * n
       auto & mat = tensor[i];
       for (Int_t row = 0; row < mat.GetNrows(); row++) {
          for (Int_t col = 0; col < mat.GetNcols(); col++) {
-            TString tmp = TString::Format( "%5.15e ", (mat)(row,col) );
-            s << tmp.Data();
+            // TString tmp = TString::Format( "%5.15e ", (mat)(row,col) );
+            // s << tmp.Data();
+            s << std::scientific << mat(row, col) << " ";
          }
       }
    }
@@ -517,10 +521,10 @@ template <typename Architecture_t>
 auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * name, const Matrix_t & matrix) -> void
 {
    auto xmlengine = gTools().xmlengine();
-   void* matnode = xmlengine.NewChild(node, 0, name);
+   void* matnode = xmlengine.NewChild(node, nullptr, name);
 
-   xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
-   xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
+   xmlengine.NewAttr(matnode,nullptr,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
+   xmlengine.NewAttr(matnode,nullptr,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
    std::stringstream s;
    s.precision( std::numeric_limits<Scalar_t>::digits10 );
    size_t nrows = matrix.GetNrows();

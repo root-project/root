@@ -45,22 +45,14 @@ RooPoison(N,mu) and treating the function as a PDF in mu.
 
 #include "RooGamma.h"
 
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
 #include "RooRandom.h"
-#include "RooMath.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
+#include "RooBatchCompute.h"
 
 #include "TMath.h"
-#include <Math/SpecFuncMathCore.h>
-#include <Math/PdfFuncMathCore.h>
 #include <Math/ProbFuncMathCore.h>
 
-#include <iostream>
 #include <cmath>
-using namespace std;
 
 ClassImp(RooGamma);
 
@@ -81,95 +73,31 @@ RooGamma::RooGamma(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooGamma::RooGamma(const RooGamma& other, const char* name) :
-  RooAbsPdf(other,name), x("x",this,other.x), gamma("mean",this,other.gamma),
+  RooAbsPdf(other,name), x("x",this,other.x), gamma("gamma",this,other.gamma),
   beta("beta",this,other.beta), mu("mu",this,other.mu)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGamma::evaluate() const
+double RooGamma::evaluate() const
 {
   return TMath::GammaDist(x, gamma, mu, beta) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace {
-//Author: Emmanouil Michalainas, CERN 22 August 2019
-
-template<class Tx, class Tgamma, class Tbeta, class Tmu>
-void compute(	size_t batchSize,
-              double * __restrict output,
-              Tx X, Tgamma G, Tbeta B, Tmu M)
+void RooGamma::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-  constexpr double NaN = std::numeric_limits<double>::quiet_NaN();
-  for (size_t i=0; i<batchSize; i++) {
-    if (X[i]<M[i] || G[i] <= 0.0 || B[i] <= 0.0) {
-      output[i] = NaN;
-    }
-    if (X[i] == M[i]) {
-      output[i] = ((G[i]==1.0) ? 1. : 0.)/B[i];
-    }
-    else {
-      output[i] = 0.0;
-    }
-  }
-
-  if (G.isBatch()) {
-    for (size_t i=0; i<batchSize; i++) {
-      if (output[i] == 0.0) {
-        output[i] = -std::lgamma(G[i]);
-      }
-    }
-  }
-  else {
-    double gamma = -std::lgamma(G[2019]);
-    for (size_t i=0; i<batchSize; i++) {
-      if (output[i] == 0.0) {
-        output[i] = gamma;
-      }
-    }
-  }
-
-  for (size_t i=0; i<batchSize; i++) {
-    if (X[i] != M[i]) {
-      const double invBeta = 1/B[i];
-      double arg = (X[i]-M[i])*invBeta;
-      output[i] -= arg;
-      arg = _rf_fast_log(arg);
-      output[i] += arg*(G[i]-1);
-      output[i] = _rf_fast_exp(output[i]);
-      output[i] *= invBeta;
-    }
-  }
+   ctx.addResult(this, ctx.buildCall("TMath::GammaDist", x, gamma, mu, beta));
 }
-};
 
-RooSpan<double> RooGamma::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-
-  EvaluateInfo info = getInfo( {&x, &gamma, &beta, &mu}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(),
-    BracketAdapter<double> (gamma),
-    BracketAdapter<double> (beta),
-    BracketAdapter<double> (mu));
-  }
-  else {
-    compute(info.size, output.data(),
-    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (gamma,gamma.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (beta,beta.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (mu,mu.getValBatch(begin,info.size)));
-  }
-  return output;
+////////////////////////////////////////////////////////////////////////////////
+/// Compute multiple values of Gamma PDF.
+void RooGamma::doEval(RooFit::EvalContext &ctx) const
+{
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Gamma, ctx.output(),
+                            {ctx.at(x), ctx.at(gamma), ctx.at(beta), ctx.at(mu)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -182,21 +110,64 @@ Int_t RooGamma::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, c
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooGamma::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooGamma::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
-  R__ASSERT(code==1) ;
-
- //integral of the Gamma distribution via ROOT::Math
-  Double_t integral = ROOT::Math::gamma_cdf(x.max(rangeName), gamma, beta, mu) - ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
-  return integral ;
+   // integral of the Gamma distribution via ROOT::Math
+   return ROOT::Math::gamma_cdf(x.max(rangeName), gamma, beta, mu) -
+          ROOT::Math::gamma_cdf(x.min(rangeName), gamma, beta, mu);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+std::string RooGamma::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName,
+                                                  RooFit::Detail::CodeSquashContext &ctx) const
 {
-  if (matchArgs(directVars,generateVars,x)) return 1 ;
-  return 0 ;
+   const std::string a = ctx.buildCall("ROOT::Math::gamma_cdf", x.max(rangeName), gamma, beta, mu);
+   const std::string b = ctx.buildCall("ROOT::Math::gamma_cdf", x.min(rangeName), gamma, beta, mu);
+   return a + " - " + b;
+}
+
+namespace {
+
+inline double randomGamma(double gamma, double beta, double mu, double xmin, double xmax)
+{
+   while (true) {
+
+      double d = gamma - 1. / 3.;
+      double c = 1. / TMath::Sqrt(9. * d);
+      double xgen = 0;
+      double v = 0;
+
+      while (v <= 0.) {
+         xgen = RooRandom::randomGenerator()->Gaus();
+         v = 1. + c * xgen;
+      }
+      v = v * v * v;
+      double u = RooRandom::randomGenerator()->Uniform();
+      if (u < 1. - .0331 * (xgen * xgen) * (xgen * xgen)) {
+         double x = ((d * v) * beta + mu);
+         if ((x < xmax) && (x > xmin)) {
+            return x;
+         }
+      }
+      if (TMath::Log(u) < 0.5 * xgen * xgen + d * (1. - v + TMath::Log(v))) {
+         double x = ((d * v) * beta + mu);
+         if ((x < xmax) && (x > xmin)) {
+            return x;
+         }
+      }
+   }
+}
+
+} // namespace
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t RooGamma::getGenerator(const RooArgSet &directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
+{
+   if (matchArgs(directVars, generateVars, x))
+      return 1;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,41 +179,22 @@ Int_t RooGamma::getGenerator(const RooArgSet& directVars, RooArgSet &generateVar
 /// The speed of this algorithm depends on the speed of generating normal variates.
 /// The algorithm is limited to \f$ \gamma \geq 0 \f$ !
 
-void RooGamma::generateEvent(Int_t code)
+void RooGamma::generateEvent(Int_t /*code*/)
 {
-  R__ASSERT(code==1) ;
+   if (gamma >= 1) {
+      x = randomGamma(gamma, beta, mu, x.min(), x.max());
+      return;
+   }
 
+   double xVal = 0.0;
+   bool accepted = false;
 
-  while(1) {
+   while (!accepted) {
+      double u = RooRandom::randomGenerator()->Uniform();
+      double tmp = randomGamma(1 + gamma, beta, mu, 0, std::numeric_limits<double>::infinity());
+      xVal = tmp * std::pow(u, 1.0 / gamma);
+      accepted = xVal < x.max() && xVal > x.min();
+   }
 
-  double d = 0;
-  double c = 0;
-  double xgen = 0;
-  double v = 0;
-  double u = 0;
-  d = gamma -1./3.; c = 1./TMath::Sqrt(9.*d);
-
-  while(v <= 0.){
-    xgen = RooRandom::randomGenerator()->Gaus(); v = 1. + c*xgen;
-  }
-  v = v*v*v; u = RooRandom::randomGenerator()->Uniform();
-  if( u < 1.-.0331*(xgen*xgen)*(xgen*xgen) ) {
-    if ( (((d*v)* beta + mu ) < x.max()) && (((d*v)* beta + mu) > x.min()) ) {
-      x = ((d*v)* beta + mu) ;
-      break;
-    }
-  }
-  if( TMath::Log(u) < 0.5*xgen*xgen + d*(1.-v + TMath::Log(v)) ) {
-    if ( (((d*v)* beta + mu ) < x.max()) && (((d*v)* beta + mu) > x.min()) ) {
-      x = ((d*v)* beta + mu) ;
-      break;
-    }
-  }
-
-  }
-
-
-  return;
+   x = xVal;
 }
-
-

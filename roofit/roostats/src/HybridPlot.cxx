@@ -12,7 +12,7 @@ An example plot is available here:
 http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 */
 
-#include "assert.h"
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <map>
@@ -30,7 +30,6 @@ http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 #include <algorithm>
 
 /// To build the THtml documentation
-using namespace std;
 
 ClassImp(RooStats::HybridPlot);
 
@@ -47,13 +46,13 @@ HybridPlot::HybridPlot(const char* name,
                        int n_bins,
                        bool verbosity):
   TNamed(name,title),
-  fSb_histo(NULL),
-  fSb_histo_shaded(NULL),
-  fB_histo(NULL),
-  fB_histo_shaded(NULL),
-  fData_testStat_line(0),
-  fLegend(0),
-  fPad(0),
+  fSb_histo(nullptr),
+  fSb_histo_shaded(nullptr),
+  fB_histo(nullptr),
+  fB_histo_shaded(nullptr),
+  fData_testStat_line(nullptr),
+  fLegend(nullptr),
+  fPad(nullptr),
   fVerbose(verbosity)
 {
    int nToysSB = sb_vals.size();
@@ -96,11 +95,11 @@ HybridPlot::HybridPlot(const char* name,
    for (int i=0;i<nToysB;++i) fB_histo->Fill(b_vals[i]);
 
    double histos_max_y = fSb_histo->GetMaximum();
-   double line_hight = histos_max_y/nToysSB;
+   double lineHeight = histos_max_y/nToysSB;
    if (histos_max_y<fB_histo->GetMaximum()) histos_max_y = fB_histo->GetMaximum()/nToysB;
 
    // Build the line of the measured -2lnQ
-   fData_testStat_line = new TLine(testStat_data,0,testStat_data,line_hight);
+   fData_testStat_line = new TLine(testStat_data,0,testStat_data,lineHeight);
    fData_testStat_line->SetLineWidth(3);
    fData_testStat_line->SetLineColor(kBlack);
 
@@ -152,11 +151,11 @@ void HybridPlot::Draw(const char* )
    }
 
    // Shaded
-   fB_histo_shaded = (TH1F*)fB_histo->Clone("b_shaded");
+   fB_histo_shaded = static_cast<TH1F*>(fB_histo->Clone("b_shaded"));
    fB_histo_shaded->SetFillStyle(3005);
    fB_histo_shaded->SetFillColor(kRed);
 
-   fSb_histo_shaded = (TH1F*)fSb_histo->Clone("sb_shaded");
+   fSb_histo_shaded = static_cast<TH1F*>(fSb_histo->Clone("sb_shaded"));
    fSb_histo_shaded->SetFillStyle(3004);
    fSb_histo_shaded->SetFillColor(kBlue);
 
@@ -206,7 +205,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
    fB_histo->Write();
 
    // The shaded histos
-   if (fB_histo_shaded!=NULL && fSb_histo_shaded!=NULL){
+   if (fB_histo_shaded!=nullptr && fSb_histo_shaded!=nullptr){
       fB_histo_shaded->Write();
       fSb_histo_shaded->Write();
    }
@@ -242,7 +241,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    TString optfit = "Q0";
    if (display_result) optfit = "Q";
 
-   TH1F* histo = (TH1F*)histo_orig->Clone();
+   TH1F* histo = static_cast<TH1F*>(histo_orig->Clone());
 
    // get the histo x extremes
    double x_min = histo->GetXaxis()->GetXmin();
@@ -250,19 +249,19 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
 
    // First fit!
 
-   TF1* gaus = new TF1("mygaus", "gaus", x_min, x_max);
+   TF1* gauss = new TF1("mygauss", "gauss", x_min, x_max);
 
-   gaus->SetParameter("Constant",histo->GetEntries());
-   gaus->SetParameter("Mean",histo->GetMean());
-   gaus->SetParameter("Sigma",histo->GetRMS());
+   gauss->SetParameter("Constant",histo->GetEntries());
+   gauss->SetParameter("Mean",histo->GetMean());
+   gauss->SetParameter("Sigma",histo->GetRMS());
 
-   histo->Fit(gaus,optfit);
+   histo->Fit(gauss,optfit);
 
    // Second fit!
-   double sigma = gaus->GetParameter("Sigma");
-   double mean = gaus->GetParameter("Mean");
+   double sigma = gauss->GetParameter("Sigma");
+   double mean = gauss->GetParameter("Mean");
 
-   delete gaus;
+   delete gauss;
 
    std::cout << "Center is 1st pass = " << mean << std::endl;
 
@@ -271,24 +270,24 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    x_min = mean - n_rms*sigma - sigma*skewness/2;
    x_max = mean + n_rms*sigma - sigma*skewness/2;;
 
-   TF1* gaus2 = new TF1("mygaus2", "gaus", x_min, x_max);
-   gaus2->SetParameter("Mean",mean);
+   TF1* gauss2 = new TF1("mygauss2", "gauss", x_min, x_max);
+   gauss2->SetParameter("Mean",mean);
 
    // second fit : likelihood fit
    optfit += "L";
-   histo->Fit(gaus2,optfit,"", x_min, x_max);
+   histo->Fit(gauss2,optfit,"", x_min, x_max);
 
 
-   double center = gaus2->GetParameter("Mean");
+   double center = gauss2->GetParameter("Mean");
 
    if (display_result) {
       histo->Draw();
-      gaus2->Draw("same");
+      gauss2->Draw("same");
    }
    else {
       delete histo;
    }
-   delete gaus2;
+   delete gauss2;
 
    return center;
 
@@ -303,7 +302,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    if (percentage>1){
       std::cerr << "Percentage greater or equal to 1!\n";
-      return NULL;
+      return nullptr;
    }
 
    // Get the integral of the histo
@@ -324,14 +323,16 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    // Now select the couple of extremes which have the lower bin content diff
    std::map<int,int>::iterator it;
-   int a,b;
-   double left_bin_center(0.),right_bin_center(0.);
+   int a;
+   int b;
+   double left_bin_center(0.);
+   double right_bin_center(0.);
    double diff=10e40;
    double current_diff;
    for (it = extremes_map.begin();it != extremes_map.end();++it){
       a=it->first;
       b=it->second;
-      current_diff=std::fabs(histo->GetBinContent(a)-histo->GetBinContent(b));
+      current_diff=std::abs(histo->GetBinContent(a)-histo->GetBinContent(b));
       if (current_diff<diff){
          //std::cout << "a=" << a << " b=" << b << std::endl;
          diff=current_diff;
@@ -352,11 +353,12 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 double HybridPlot::GetMedian(TH1* histo){
 
    //int xbin_median;
-   Double_t* integral = histo->GetIntegral();
+   double* integral = histo->GetIntegral();
    int median_i = 0;
-   for (int j=0;j<histo->GetNbinsX(); j++)
+   for (int j = 0; j < histo->GetNbinsX(); j++) {
       if (integral[j]<0.5)
          median_i = j;
+   }
 
    double median_x =
       histo->GetBinCenter(median_i)+

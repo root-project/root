@@ -9,7 +9,7 @@
 #ifndef ROOT7_RPalette
 #define ROOT7_RPalette
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/RColor.hxx>
 
 #include <utility>

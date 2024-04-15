@@ -65,7 +65,7 @@ public:
    enum EFileType { kSource, kInclude, kTree, kDoc };
 
    TDocOutput(THtml& html);
-   virtual ~TDocOutput();
+   ~TDocOutput() override;
 
    virtual void   AdjustSourcePath(TString& line, const char* relpath = "../");
    void           Convert(std::istream& in, const char* infilename,
@@ -107,7 +107,7 @@ public:
                                   const char *author="", const char *copyright="");
    void           WriteLineNumbers(std::ostream& out, Long_t nLines, const TString& infileBase) const;
 
-   ClassDef(TDocOutput, 0); // generates documentation web pages
+   ClassDefOverride(TDocOutput, 0); // generates documentation web pages
 };
 
 #endif // ROOT_TDocOutput

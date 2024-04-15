@@ -92,7 +92,7 @@ Short_t TGLSphere::QuantizeShapeLOD(Short_t shapeLOD, Short_t combiLOD) const
 void TGLSphere::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    if (gDebug > 4) {
-      Info("TGLSphere::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLSphere::DirectDraw", "this %zd (class %s) LOD %d", (size_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    // 4 stack/slice min for gluSphere to work

@@ -29,7 +29,7 @@ void rose_image()
       return;
    }
 
-   img->SetConstRatio(0);
+   img->SetConstRatio(false);
    img->SetImageQuality(TAttImage::kImgBest);
 
    TString bc = "BlackChancery.ttf";
@@ -41,7 +41,7 @@ void rose_image()
                  bc, TImage::kShadeBelow);
 
    // draw text over image with foreground specified by pixmap
-   img->DrawText(250, 350, "goodbye cruel world ...", 24, 0,
+   img->DrawText(250, 350, "goodbye cruel world ...", 24, nullptr,
                  ar, TImage::kPlain, dir + "/image/fore.xpm");
 
    TImage *img2 = TImage::Open(dir + "/image/mditestbg.xpm");
@@ -70,10 +70,10 @@ void rose_image()
    img4->FillRectangle("#FF00FF", 20, 220, 40, 40);
 
    // Render multipoint alpha-blended gradient (R->G->B)
-   img4->Gradient(0, "#FF0000 #00FF00 #220000FF", 0, 50, 50, 100, 100);
+   img4->Gradient(0, "#FF0000 #00FF00 #220000FF", nullptr, 50, 50, 100, 100);
 
    // draw semi-transparent 3D button
-   img4->Bevel(300, 20, 160, 40, "#ffffffff", "#fe000000", 3, 0);
+   img4->Bevel(300, 20, 160, 40, "#ffffffff", "#fe000000", 3, false);
    img4->DrawLine(10, 100, 100, 10, "#0000ff", 4);
    img4->Draw();
 

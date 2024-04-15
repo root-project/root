@@ -16,10 +16,9 @@
 #include "TClass.h"
 #include "TError.h"
 #include "TMethod.h"
-#include "TROOT.h"
 
 #include <list>
-
+#include <utility>
 #include <iostream>
 #include <mutex>
 
@@ -77,7 +76,7 @@ public:
       fCont.push_back(Value_t{hashValue, obj});
    }
 
-   void RecursiveRemove(TObject *obj)
+   void RecursiveRemove(TObject *obj) override
    {
       // Since we use std::list, a remove (from another thread)
       // would invalidate out iterator and taking the write lock
@@ -243,7 +242,7 @@ public:
       return checker.VerifyRecursiveRemove(classRef);
    }
 
-   ClassDefInline(TCheckHashRecursiveRemoveConsistency, 0);
+   ClassDefInlineOverride(TCheckHashRecursiveRemoveConsistency, 0);
 };
 
 } // namespace Internal

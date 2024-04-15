@@ -70,7 +70,7 @@ Implemented using GSL, for detailed description see:
 <A HREF="http://www.gnu.org/software/gsl/manual/html_node/One-dimensional-Minimization.html">GSL online doc</A>
 
 The algorithms uspported are only bracketing algorithm which do not use derivatives information.
-The algorithms which can be chosen at construction time are  GOLDENSECTION, whic is the simplest method
+The algorithms which can be chosen at construction time are GOLDENSECTION, which is the simplest method
 but the slowest and BRENT (the default one) which combines the golden section with a parabolic interpolation.
 
 
@@ -91,7 +91,7 @@ This class does not support copying
       /**
          Destructor: free allocated resources
       */
-      virtual ~GSLMinimizer1D();
+      ~GSLMinimizer1D() override;
 
    private:
       // usually copying is non trivial, so we make this unaccessible
@@ -121,7 +121,7 @@ This class does not support copying
 
       /**
           Perform a minimizer iteration and
-          if an unexepcted problem occurr then an error code will be returned
+          if an unexpected problem occurs then an error code will be returned
       */
       int Iterate();
 
@@ -129,61 +129,61 @@ This class does not support copying
       /**
           Return current estimate of the position of the minimum
       */
-      double XMinimum() const;
+      double XMinimum() const override;
 
       /**
          Return current lower bound of the minimization interval
       */
-      double XLower() const;
+      double XLower() const override;
 
       /**
          Return current upper bound of the minimization interval
       */
-      double XUpper() const;
+      double XUpper() const override;
 
       /**
           Return function value at current estimate of the minimum
       */
-      double FValMinimum() const;
+      double FValMinimum() const override;
 
       /**
          Return function value at current lower bound of the minimization interval
       */
-      double FValLower() const;
+      double FValLower() const override;
 
       /**
          Return function value at current upper bound of the minimization interval
       */
-      double FValUpper() const;
+      double FValUpper() const override;
 
 
       /**
          Find minimum position iterating until convergence specified by the absolute and relative tolerance or
          the maximum number of iteration is reached
-         Return true is result is successfull
+         Return true is result is successful
          \@param maxIter maximum number of iteration
          \@param absTol desired absolute error in the minimum position
          \@param absTol desired relative error in the minimum position
       */
-      bool Minimize( int maxIter, double absTol, double relTol);
+      bool Minimize( int maxIter, double absTol, double relTol) override;
 
 
       /**
          Return number of iteration used to find minimum
       */
-      int Iterations() const {
+      int Iterations() const override {
          return fIter;
       }
 
       /**
          Return status of last minimization
        */
-      int Status() const { return fStatus; }
+      int Status() const override { return fStatus; }
 
       /**
          Return name of minimization algorithm
       */
-      const char * Name() const;
+      const char * Name() const override;
 
       /**
          Test convergence of the interval.

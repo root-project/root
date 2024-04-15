@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableGaussTransform                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::VariableGaussTransform
@@ -41,8 +41,6 @@ Gaussian Transformation of input variables.
 #include "TMVA/Types.h"
 #include "TMVA/Version.h"
 
-#include "TCanvas.h"
-#include "TGraph.h"
 #include "TH1F.h"
 #include "TMath.h"
 #include "TVectorF.h"
@@ -50,7 +48,6 @@ Gaussian Transformation of input variables.
 
 #include <exception>
 #include <iostream>
-#include <iomanip>
 #include <list>
 #include <limits>
 #include <stdexcept>
@@ -367,14 +364,14 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
             binnings[k] = vsForBinning[icls][ivar][k];
          }
          fCumulativeDist[ivar].resize(numDist);
-         if (0 != fCumulativeDist[ivar][icls] ) {
+         if (fCumulativeDist[ivar][icls] ) {
             delete fCumulativeDist[ivar][icls];
          }
-         fCumulativeDist[ivar][icls] = new TH1F(Form("Cumulative_Var%d_cls%d",ivar,icls),
-                                                Form("Cumulative_Var%d_cls%d",ivar,icls),
+         fCumulativeDist[ivar][icls] = new TH1F(TString::Format("Cumulative_Var%d_cls%d",ivar,icls),
+                                                TString::Format("Cumulative_Var%d_cls%d",ivar,icls),
                                                 nbins[icls][ivar] -1, // class icls
                                                 binnings);
-         fCumulativeDist[ivar][icls]->SetDirectory(0);
+         fCumulativeDist[ivar][icls]->SetDirectory(nullptr);
          delete [] binnings;
       }
    }
@@ -431,7 +428,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
             (fCumulativeDist[ivar][icls])->SetBinContent(ibin,sum/total);
          }
          // create PDf
-         fCumulativePDF[ivar].push_back(new PDF( Form("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline1, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
+         fCumulativePDF[ivar].push_back(new PDF( TString::Format("GaussTransform var%d cls%d",ivar,icls),  fCumulativeDist[ivar][icls], PDF::kSpline1, fPdfMinSmooth, fPdfMaxSmooth,kFALSE,kFALSE));
       }
    }
 }
@@ -485,7 +482,7 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
          Log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
 
       for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++){
-         void* pdfxml = gTools().AddChild( varxml, Form("CumulativePDF_cls%d",icls));
+         void* pdfxml = gTools().AddChild( varxml, TString::Format("CumulativePDF_cls%d",icls));
          (fCumulativePDF[ivar][icls])->AddXMLTo(pdfxml);
       }
    }
@@ -593,7 +590,7 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
          if ( histToRead !=0 ) delete histToRead;
          // recreate the cumulative histogram to be filled with the values read
          histToRead = new TH1F( hname, hname, nbins, Binnings );
-         histToRead->SetDirectory(0);
+         histToRead->SetDirectory(nullptr);
          fCumulativeDist[ivar][type]=histToRead;
 
          istr >> devnullS; // read the line "BinContent" ..

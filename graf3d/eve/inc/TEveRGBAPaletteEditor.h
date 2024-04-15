@@ -47,7 +47,7 @@ protected:
 
 public:
    TEveRGBAPaletteSubEditor(const TGWindow* p);
-   virtual ~TEveRGBAPaletteSubEditor() {}
+   ~TEveRGBAPaletteSubEditor() override {}
 
    void SetModel(TEveRGBAPalette* p);
 
@@ -64,7 +64,7 @@ public:
    void DoUnderflowAction(Int_t mode);
    void DoOverflowAction(Int_t mode);
 
-   ClassDef(TEveRGBAPaletteSubEditor, 0); // Sub-editor for TEveRGBAPalette class.
+   ClassDefOverride(TEveRGBAPaletteSubEditor, 0); // Sub-editor for TEveRGBAPalette class.
 };
 
 
@@ -82,12 +82,12 @@ protected:
    TEveRGBAPaletteSubEditor  *fSE;
 
 public:
-   TEveRGBAPaletteEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveRGBAPaletteEditor() {}
+   TEveRGBAPaletteEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   ~TEveRGBAPaletteEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TEveRGBAPaletteEditor, 0); // Editor for TEveRGBAPalette class.
+   ClassDefOverride(TEveRGBAPaletteEditor, 0); // Editor for TEveRGBAPalette class.
 };
 
 #endif

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamVect                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Auxiliary class PDEFoamVect of n-dimensional vector, with dynamic         *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_PDEFoamVect
@@ -36,15 +36,15 @@ namespace TMVA {
    class PDEFoamVect : public TObject {
 
    private:
-      Int_t       fDim;                     // Dimension
-      Double_t   *fCoords;                  // [fDim] Coordinates
+      Int_t       fDim;                     ///< Dimension
+      Double_t   *fCoords;                  ///< [fDim] Coordinates
 
    public:
       // constructor
-      PDEFoamVect();                                 // Constructor
-      PDEFoamVect(Int_t);                            // USER Constructor
-      PDEFoamVect(const PDEFoamVect &);              // Copy constructor
-      virtual ~PDEFoamVect();                        // Destructor
+      PDEFoamVect();                                 ///< Constructor
+      PDEFoamVect(Int_t);                            ///< USER Constructor
+      PDEFoamVect(const PDEFoamVect &);              ///< Copy constructor
+      virtual ~PDEFoamVect();                        ///< Destructor
 
       //////////////////////////////////////////////////////////////////////////////
       //                     Overloading operators                                //

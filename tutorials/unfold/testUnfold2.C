@@ -79,10 +79,8 @@
 #include <TGraph.h>
 #include "TUnfold.h"
 
-using namespace std;
 
-
-TRandom *rnd=0;
+TRandom *rnd=nullptr;
 
 // generate an event
 // output:
@@ -285,7 +283,7 @@ int testUnfold2()
   // extract unfolding results into histograms
 
   // set up a bin map, excluding underflow and overflow bins
-  // the binMap relates the the output of the unfolding to the final
+  // the binMap relates the output of the unfolding to the final
   // histogram bins
   Int_t *binMap=new Int_t[nGen+2];
   for(Int_t i=1;i<=nGen;i++) binMap[i]=i;
@@ -302,7 +300,7 @@ int testUnfold2()
   unfold.GetRhoI(histRhoi,binMap);
 
   delete[] binMap;
-  binMap=0;
+  binMap=nullptr;
 
   //=====================================================================
   // plot some histograms

@@ -14,10 +14,6 @@
 ///  messages, which not yet been seen in the browser and display them as text
 ///  At maximum, 1000 elements are preserved in the browser.
 ///
-///  Macro should always be started in compiled mode, otherwise Select() method is not
-///  accessible via TClass instance. One also requires comments after ClassDef to
-///  correctly configure behavior of the JavaScript ROOT code
-///
 ///  After macro started, one could open in browser address
 /// ~~~
 ///    http://localhost:8080?item=log
@@ -34,8 +30,8 @@
 /// \author Sergey Linev
 
 
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include "TNamed.h"
 #include "TList.h"
@@ -81,7 +77,7 @@ class TMsgList : public TNamed {
          fCounter = ((Long64_t) TDatime().Get()) * 1000;
       }
 
-      virtual ~TMsgList() { fMsgs.Clear(); }
+      ~TMsgList() override { fMsgs.Clear(); }
 
       void AddMsg(const char* msg)
       {
@@ -94,7 +90,7 @@ class TMsgList : public TNamed {
             fMsgs.RemoveLast();
             delete last;
          }
-         if (msg==0) return;
+         if (msg==nullptr) return;
 
          fMsgs.AddFirst(new TObjString(msg));
          fCounter++;
@@ -107,7 +103,7 @@ class TMsgList : public TNamed {
          // One could limit number of returned messages
 
          TIter iter(&fMsgs);
-         TObject* obj = 0;
+         TObject* obj = nullptr;
          Long64_t curr = fCounter;
          fSelect.Clear();
 
@@ -117,12 +113,12 @@ class TMsgList : public TNamed {
          fStrCounter.SetString(TString::LLtoa(fCounter, 10));
          fSelect.Add(&fStrCounter);
 
-         while (((obj = iter()) != 0) && (--curr >= id) && (--max>=0)) fSelect.Add(obj);
+         while (((obj = iter()) != nullptr) && (--curr >= id) && (--max>=0)) fSelect.Add(obj);
 
          return &fSelect;
       }
 
-   ClassDef(TMsgList, 1); // Custom messages list
+   ClassDefOverride(TMsgList, 1); // Custom messages list
 };
 
 void httptextlog()
@@ -130,7 +126,7 @@ void httptextlog()
    // create logging instance
    TMsgList* log = new TMsgList("log", 200);
 
-   if ((TMsgList::Class()->GetMethodAllAny("Select") == 0) || (strcmp(log->ClassName(), "TMsgList")!=0)) {
+   if ((TMsgList::Class()->GetMethodAllAny("Select") == nullptr) || (strcmp(log->ClassName(), "TMsgList")!=0)) {
       printf("Most probably, macro runs in interpreter mode\n");
       printf("To access new methods from TMsgList class,\n");
       printf("one should run macro with ACLiC like:\n");
@@ -147,16 +143,16 @@ void httptextlog()
    // create histograms, just for fun
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
-   hpx->SetDirectory(0);
+   hpx->SetDirectory(nullptr);
    TH2F *hpxpy = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
-   hpxpy->SetDirectory(0);
+   hpxpy->SetDirectory(nullptr);
 
    // start http server
    THttpServer* serv = new THttpServer("http:8080");
 
    // One could specify location of newer version of JSROOT
-   // serv->SetJSROOT("https://root.cern.ch/js/latest/");
-   // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
+   // serv->SetJSROOT("https://root.cern/js/latest/");
+   // serv->SetJSROOT("https://jsroot.gsi.de/dev/");
 
    // let always load httptextlog.js script in the browser
    serv->GetSniffer()->SetAutoLoad("currentdir/httptextlog.js");

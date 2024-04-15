@@ -82,7 +82,7 @@ public :
    virtual void    SlaveTerminate();
    virtual void    Terminate();
 
-   ClassDef(EventTree_ProcOpt,0);
+   ClassDefOverride(EventTree_ProcOpt,0);
 };
 
 #endif

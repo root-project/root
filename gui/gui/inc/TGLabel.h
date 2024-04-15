@@ -13,14 +13,6 @@
 #define ROOT_TGLabel
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLabel                                                              //
-//                                                                      //
-// This class handles GUI labels.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGDimension.h"
 #include "TGString.h"
@@ -32,33 +24,33 @@ class TGFont;
 class TGLabel : public TGFrame {
 
 protected:
-   TGString      *fText;         // label text
-   UInt_t         fTWidth;       // text width
-   UInt_t         fTHeight;      // text height
-   Int_t          fMLeft;        // margin left
-   Int_t          fMRight;       // margin right
-   Int_t          fMTop;         // margin top
-   Int_t          fMBottom;      // margin bottom
-   Int_t          fTMode;        // text alignment
-   Int_t          f3DStyle;      // 3D style (0 - normal, kRaisedFrame - raised, kSunkenFrame - sunken)
-   Int_t          fWrapLength;   // wrap length
-   Int_t          fTFlags;       // text flags (see TGFont.h  ETextLayoutFlags)
-   Bool_t         fTextChanged;  // has text changed
-   GContext_t     fNormGC;       // graphics context used for drawing label
-   TGFont        *fFont;         // font to draw label
-   TGTextLayout  *fTLayout;      // text layout
-   Bool_t         fHasOwnFont;   // kTRUE - font defined locally,  kFALSE - globally
-   Bool_t         fDisabled;     // if kTRUE label looks disabled (shaded text)
+   TGString      *fText;         ///< label text
+   UInt_t         fTWidth;       ///< text width
+   UInt_t         fTHeight;      ///< text height
+   Int_t          fMLeft;        ///< margin left
+   Int_t          fMRight;       ///< margin right
+   Int_t          fMTop;         ///< margin top
+   Int_t          fMBottom;      ///< margin bottom
+   Int_t          fTMode;        ///< text alignment
+   Int_t          f3DStyle;      ///< 3D style (0 - normal, kRaisedFrame - raised, kSunkenFrame - sunken)
+   Int_t          fWrapLength;   ///< wrap length
+   Int_t          fTFlags;       ///< text flags (see TGFont.h  ETextLayoutFlags)
+   Bool_t         fTextChanged;  ///< has text changed
+   GContext_t     fNormGC;       ///< graphics context used for drawing label
+   TGFont        *fFont;         ///< font to draw label
+   TGTextLayout  *fTLayout;      ///< text layout
+   Bool_t         fHasOwnFont;   ///< kTRUE - font defined locally,  kFALSE - globally
+   Bool_t         fDisabled;     ///< if kTRUE label looks disabled (shaded text)
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
    virtual void DrawText(GContext_t gc, Int_t x, Int_t y);
 
    static const TGFont  *fgDefaultFont;
    static const TGGC    *fgDefaultGC;
 
 private:
-   TGLabel(const TGLabel&);             // not implemented
-   TGLabel& operator=(const TGLabel&);  // not implemented
+   TGLabel(const TGLabel&) = delete;
+   TGLabel& operator=(const TGLabel&) = delete;
 
 public:
    static FontStruct_t  GetDefaultFontStruct();
@@ -69,18 +61,18 @@ public:
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
-   TGLabel(const TGWindow *p = 0, const char *text = 0,
+   TGLabel(const TGWindow *p = nullptr, const char *text = nullptr,
            GContext_t norm = GetDefaultGC()(),
            FontStruct_t font = GetDefaultFontStruct(),
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGLabel();
+   ~TGLabel() override;
 
-   virtual TGDimension GetDefaultSize() const;
+   TGDimension GetDefaultSize() const override;
 
    const TGString *GetText() const { return fText; }
-   virtual const char *GetTitle() const { return fText->Data(); }
+   const char *GetTitle() const override { return fText->Data(); }
    virtual void SetText(TGString *newText);
    void SetText(const char *newText) { SetText(new TGString(newText)); }
    virtual void ChangeText(const char *newText) { SetText(newText); } //*MENU*icon=bld_rename.png*
@@ -93,7 +85,7 @@ public:
    virtual void SetTextFont(const char *fontName, Bool_t global = kFALSE);
    virtual void SetTextColor(Pixel_t color, Bool_t global = kFALSE);
    virtual void SetTextColor(TColor *color, Bool_t global = kFALSE);
-   virtual void SetForegroundColor(Pixel_t fore) { SetTextColor(fore); }
+   void SetForegroundColor(Pixel_t fore) override { SetTextColor(fore); }
    virtual void Disable(Bool_t on = kTRUE)
                { fDisabled = on; fClient->NeedRedraw(this); } //*TOGGLE* *GETTER=IsDisabled
    virtual void Enable() { fDisabled = kFALSE; fClient->NeedRedraw(this); }
@@ -117,10 +109,10 @@ public:
    FontStruct_t GetFontStruct() const { return fFont->GetFontStruct(); }
    TGFont      *GetFont() const  { return fFont; }
 
-   virtual void Layout();
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void Layout() override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLabel,0)  // A label GUI element
+   ClassDefOverride(TGLabel,0)  // A label GUI element
 };
 
 #endif

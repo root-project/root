@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodDT (DT = Decision Trees)                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Analysis of Boosted Decision Trees                                        *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodDT
@@ -110,10 +110,9 @@ the selection.
 #include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 
-#include "Riostream.h"
 #include "TRandom3.h"
-#include "TMath.h"
 
+#include <iostream>
 #include <algorithm>
 
 using std::vector;
@@ -375,7 +374,7 @@ TMVA::MethodDT::~MethodDT( void )
 
 void TMVA::MethodDT::Train( void )
 {
-   TMVA::DecisionTreeNode::fgIsTraining=true;
+   TMVA::DecisionTreeNode::SetIsTraining(true);
    fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0,
                              fRandomisedTrees, fUseNvars, fUsePoissonNvars,fMaxDepth,0 );
    fTree->SetNVars(GetNvar());
@@ -395,7 +394,7 @@ void TMVA::MethodDT::Train( void )
    fTree->BuildTree(tmp);
    if (fPruneMethod != DecisionTree::kNoPruning) fTree->PruneTree();
 
-   TMVA::DecisionTreeNode::fgIsTraining=false;
+   TMVA::DecisionTreeNode::SetIsTraining(false);
    ExitFromTraining();
 }
 

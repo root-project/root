@@ -12,7 +12,7 @@
 #ifndef ROOT_TThreadSlots
 #define ROOT_TThreadSlots
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 namespace ROOT {
 
@@ -28,7 +28,9 @@ namespace ROOT {
       // Slot reserved by ROOT's packages.
       kPadThreadSlot       = 20,
       kClassThreadSlot     = 21,
-      kDirectoryThreadSlot = 22,
+      /* This no longer used.
+         kDirectoryThreadSlot = 22,
+      */
       kFileThreadSlot      = 23,
       kPerfStatsThreadSlot = 24,
 
@@ -36,8 +38,6 @@ namespace ROOT {
    };
 }
 
-#ifndef __CINT__
 R__EXTERN void **(*gThreadTsd)(void*,Int_t);
-#endif
 
 #endif // ROOT_TThreadSlots

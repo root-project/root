@@ -6,7 +6,8 @@
 # LICENSE.TXT for details.
 #------------------------------------------------------------------------------
 
-set(CLING_DEPEND_LIBS
+set(LIBS
+  clingUtils
   clangCodeGen
   clangDriver
   clangFrontend
@@ -20,11 +21,6 @@ set(CLING_DEPEND_LIBS
   clangAST
   clangBasic
   clangLex
-  CACHE STRING "Dependency Clang libraries for Cling"
-)
-
-set(LIBS
-  clingUtils
 )
 
 set(LLVM_LINK_COMPONENTS
@@ -34,6 +30,7 @@ set(LLVM_LINK_COMPONENTS
   coverage
   executionengine
   ipo
+  jitlink
   lto
   mc
   object
@@ -50,9 +47,9 @@ set(LLVM_LINK_COMPONENTS
 
 # clingInterpreter depends on Options.inc to be tablegen-ed
 # (target ClangDriverOptions) from in-tree builds.
-set(CLING_DEPENDS)
+set(CLING_DEPENDS ClingDriverOptions)
 if(TARGET ClangDriverOptions)
-  set(CLING_DEPENDS ClangDriverOptions)
+  set(CLING_DEPENDS "${CLING_DEPENDS};ClangDriverOptions")
 endif()
 # clangSema will make sure all of the dependencies of clingInterpreter are met.
 if(TARGET clangSema)
@@ -76,6 +73,7 @@ add_cling_library(clingInterpreter OBJECT
   DeclUnloader.cpp
   DeviceKernelInliner.cpp
   DynamicLibraryManager.cpp
+  DynamicLibraryManagerSymbol.cpp
   DynamicLookup.cpp
   DynamicExprInfo.cpp
   Exception.cpp
@@ -90,6 +88,7 @@ add_cling_library(clingInterpreter OBJECT
   InvocationOptions.cpp
   LookupHelper.cpp
   NullDerefProtectionTransformer.cpp
+  PerfJITEventListener.cpp
   RequiredSymbols.cpp
   Transaction.cpp
   TransactionUnloader.cpp
@@ -102,8 +101,8 @@ add_cling_library(clingInterpreter OBJECT
   ${CLING_DEPENDS}
 
   LINK_LIBS
-  ${CLING_DEPEND_LIBS}
   ${LIBS}
+  ${CMAKE_DL_LIBS}
   )
 
 
@@ -128,7 +127,6 @@ if (UNIX)
     # Remove absolute path from CMAKE_CXX_COMPILER
     get_filename_component(_name ${CMAKE_CXX_COMPILER} NAME)
     get_filename_component(_path ${CMAKE_CXX_COMPILER} PATH)
-
     # This should probably be more general...but how?
     if(_name STREQUAL "ccache" OR _name STREQUAL "distcc")
       separate_arguments(_arg_list UNIX_COMMAND "${CMAKE_CXX_COMPILER_ARG1}")
@@ -238,6 +236,8 @@ if (UNIX)
           set(CLING_CXX_RLTV "${CLING_CXX_RLTV} --gcc-toolchain=${gcctoolchain}")
         endif()
       endif()
+    elseif (APPLE)
+      set(CLING_CXX_PATH_ARGS "-isysroot;${CMAKE_OSX_SYSROOT}")
     endif()
   endif()
 
@@ -248,7 +248,9 @@ if (UNIX)
       set(CLING_CXX_PATH "${CLING_CXX_PATH} ${CLING_CXX_PATH_ARGS}")
     else()
       # convert CMAKE_CXX_FLAGS to a list for execute_process
-      string(REPLACE " " ";" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fdiagnostics-color=always" "" cling_tmp_arg_list ${CMAKE_CXX_FLAGS})
+      string(REPLACE "-fcolor-diagnosics" "" cling_tmp_arg_list ${cling_tmp_arg_list})
+      string(REPLACE " " ";" cling_tmp_arg_list ${cling_tmp_arg_list})
       execute_process(COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1} ${cling_tmp_arg_list} -xc++ -E -v /dev/null
                       OUTPUT_QUIET ERROR_VARIABLE CLING_CXX_HEADERS)
     endif()
@@ -294,9 +296,22 @@ if (UNIX)
     #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
   ")
   if (CMAKE_OSX_SYSROOT)
+    # CMAKE_OSX_SYSROOT hardcodes the concrete version of the sdk
+    # (eg .../MacOSX11.1.sdk) which changes after every update of XCode. We use
+    # the assumption that in the parent folder there is a symlink MacOSX.sdk
+    # which points to the current active sdk. This change allows releases
+    # to work when the users update their sdks.
+    # FIXME: That is a horrible hack and we should teach CIFactory to pick up
+    # the SDK directory at runtime, just as we do for the include paths to C++.
+    set (OSX_SYSROOT_DEFAULT_SDK ${CMAKE_OSX_SYSROOT})
+    if (${OSX_SYSROOT_DEFAULT_SDK} MATCHES "MacOSX[.0-9]+\.sdk")
+      get_filename_component(OSX_SYSROOT_DEFAULT_SDK ${OSX_SYSROOT_DEFAULT_SDK} DIRECTORY)
+      set (OSX_SYSROOT_DEFAULT_SDK ${OSX_SYSROOT_DEFAULT_SDK}/MacOSX.sdk/)
+    endif()
+
     file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
       "
-      #define CLING_OSX_SYSROOT \"${CMAKE_OSX_SYSROOT}\"
+      #define CLING_OSX_SYSROOT \"${OSX_SYSROOT_DEFAULT_SDK}\"
     ")
   endif()
   if (CLING_CXX_PATH)
@@ -314,7 +329,7 @@ if (UNIX)
     ")
   endif()
 else()
-    file(APPEND ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
+    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h.in
       "
       #define CLING_INCLUDE_PATHS \"${CLING_INCLUDE_PATHS}\"
       #define CLING_UCRT_VERSION  \"$ENV{UCRTVersion}\"
@@ -333,3 +348,35 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h
 
 add_file_dependencies(${CMAKE_CURRENT_SOURCE_DIR}/CIFactory.cpp
                       ${CMAKE_CURRENT_BINARY_DIR}/cling-compiledata.h)
+
+# If LLVM is external, but Clang is builtin, we must use some files
+# from patched (builtin) version of LLVM
+if ((NOT builtin_llvm) AND builtin_clang)
+  set(FixInclude "${CMAKE_SOURCE_DIR}/interpreter/llvm-project/llvm/include")
+
+  get_property(P SOURCE IncrementalJIT.cpp PROPERTY INCLUDE_DIRECTORIES)
+  list(INSERT P 0 ${FixInclude})
+  set_property(SOURCE IncrementalJIT.cpp PROPERTY INCLUDE_DIRECTORIES "${P}")
+
+  get_property(P SOURCE IncrementalExecutor.cpp PROPERTY INCLUDE_DIRECTORIES)
+  list(INSERT P 0 ${FixInclude})
+  set_property(SOURCE IncrementalExecutor.cpp PROPERTY INCLUDE_DIRECTORIES "${P}")
+
+  get_property(P SOURCE Interpreter.cpp PROPERTY INCLUDE_DIRECTORIES)
+  list(INSERT P 0 ${FixInclude})
+  set_property(SOURCE Interpreter.cpp PROPERTY INCLUDE_DIRECTORIES "${P}")
+
+  get_property(P SOURCE Transaction.cpp PROPERTY INCLUDE_DIRECTORIES)
+  list(INSERT P 0 ${FixInclude})
+  set_property(SOURCE Transaction.cpp PROPERTY INCLUDE_DIRECTORIES "${P}")
+
+  get_property(P SOURCE TransactionUnloader.cpp PROPERTY INCLUDE_DIRECTORIES)
+  list(INSERT P 0 ${FixInclude})
+  set_property(SOURCE TransactionUnloader.cpp PROPERTY INCLUDE_DIRECTORIES "${P}")
+endif()
+
+# If both LLVM and Clang are external, we need to define LLVM_PATH in order for
+# cling to use the correct (external) LLVM/Clang directories.
+if ((NOT builtin_llvm) AND (NOT builtin_clang))
+  target_compile_definitions(clingInterpreter PUBLIC "LLVM_PATH=\"${LLVM_BINARY_DIR}\"")
+endif()

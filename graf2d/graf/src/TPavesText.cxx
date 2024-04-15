@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
 #include "TPavesText.h"
 #include "TVirtualPad.h"
@@ -45,6 +45,7 @@ TPavesText::TPavesText(): TPaveText()
 ///  - option = "L" Left frame
 ///  - option = "NDC" x1,y1,x2,y2 are given in NDC
 ///  - option = "ARC" corners are rounded
+/// To add a shadow to the TPavesText, use the function TPave::SetBorderSize
 
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
@@ -86,6 +87,7 @@ void TPavesText::Draw(Option_t *option)
 
 void TPavesText::Paint(Option_t *option)
 {
+   if (!gPad) return;
    // Draw the fNpaves-1 stacked paves
    // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();

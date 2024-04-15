@@ -39,10 +39,10 @@ def getParams():
    makePCHInput.py WWW XXX YYY ZZZ -- CXXFLAGS
    """
    argv = sys.argv
-   rootSrcDir, modules, expPyROOT = argv[1:4]
+   rootSrcDir, modules, legacyPyROOT = argv[1:4]
    clingetpchList = argv[4:]
 
-   return rootSrcDir, modules, expPyROOT == 'ON', clingetpchList
+   return rootSrcDir, modules, legacyPyROOT == 'ON', clingetpchList
 
 #-------------------------------------------------------------------------------
 def getGuardedStlInclude(headerName):
@@ -212,7 +212,7 @@ def isAnyPatternInString(patterns,theString):
    return False
 
 #-------------------------------------------------------------------------------
-def isDirForPCH(dirName, expPyROOT):
+def isDirForPCH(dirName, legacyPyROOT):
    """
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
@@ -234,10 +234,10 @@ def isDirForPCH(dirName, expPyROOT):
                            "roofit/",
                            "tmva",
                            "main"]
-   if expPyROOT:
-      PCHPatternsWhitelist.append("bindings/tpython")
+   if legacyPyROOT:
+      PCHPatternsWhitelist.append("bindings/pyroot_legacy")
    else:
-      PCHPatternsWhitelist.append("bindings/pyroot")
+      PCHPatternsWhitelist.append("bindings/tpython")
 
    PCHPatternsBlacklist = ["gui/guihtml",
                            "gui/guibuilder",
@@ -252,9 +252,6 @@ def isDirForPCH(dirName, expPyROOT):
                            "math/vdt",
                            "tmva/rmva"]
 
-   if (sys.platform != 'win32' and sys.maxsize <= 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
-      PCHPatternsBlacklist.append("tree/dataframe")
-
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
 
@@ -264,7 +261,7 @@ def isDirForPCH(dirName, expPyROOT):
 def getLinesFromDict(marker, dictFileName):
    """
    Search for the line marker
-   in the dictionary and save all lines until the line '0'
+   in the dictionary and save all lines until the line 'nullptr'
    Return them as List
    """
    selectedLines = []
@@ -277,7 +274,7 @@ def getLinesFromDict(marker, dictFileName):
          recording = True
          continue
 
-      if recording and "0" == line[0]: break
+      if recording and "nullptr" == line[0:7]: break
 
       if recording:
          selectedLines.append(line[:-1])
@@ -441,7 +438,7 @@ def makePCHInput():
       * etc/dictpch/allHeaders.h
       * etc/dictpch/allCppflags.txt
    """
-   rootSrcDir, modules, expPyROOT, clingetpchList = getParams()
+   rootSrcDir, modules, legacyPyROOT, clingetpchList = getParams()
 
    outdir = os.path.join("etc","dictpch")
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
@@ -460,6 +457,11 @@ def makePCHInput():
    allHeadersContent = getSTLIncludes()
    allHeadersContent += getExtraIncludes(clingetpchList)
 
+   # Make sure we don't get warnings from the old RooFit test statistics
+   # headers that are deprecated. This line can be removed once the deprecaded
+   # headers are gone (ROOT 6.32.00):
+   allHeadersContent += "#define ROOFIT_BUILDS_ITSELF\n"
+
    allLinkdefsContent = ""
 
    # Loop over the dictionaries, ROOT modules
@@ -468,7 +470,7 @@ def makePCHInput():
    allIncPathsList = []
    for dictName in dictNames:
       dirName = getDirName(dictName)
-      if not isDirForPCH(dirName, expPyROOT): continue
+      if not isDirForPCH(dirName, legacyPyROOT): continue
 
       selModules.add(dirName)
 

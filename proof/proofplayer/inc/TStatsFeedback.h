@@ -35,13 +35,13 @@ protected:
    TProof        *fProof;  //handle to PROOF session
 public:
    TStatsFeedback(TProof *proof = 0);
-   ~TStatsFeedback();
+   ~TStatsFeedback() override;
 
    void        Feedback(TList *objs);
-   const char *GetName() const { return fName.Data(); }
-   ULong_t     Hash() const { return fName.Hash(); }
+   const char *GetName() const override { return fName.Data(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
 
-   ClassDef(TStatsFeedback,0)  // Present PROOF query feedback
+   ClassDefOverride(TStatsFeedback,0)  // Present PROOF query feedback
 };
 
 #endif

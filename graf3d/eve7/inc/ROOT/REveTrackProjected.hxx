@@ -35,13 +35,13 @@ private:
    REveVector *fOrigPnts{nullptr}; // original track points
 
 protected:
-   std::vector<Int_t> fBreakPoints; // indices of track break-points
+   std::vector<UInt_t> fBreakPoints; // indices of track break-points
 
    void SetDepthLocal(Float_t d) override;
 
 public:
    REveTrackProjected() = default;
-   virtual ~REveTrackProjected();
+   ~REveTrackProjected() override;
 
    void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
 
@@ -72,7 +72,7 @@ protected:
 
 public:
    REveTrackListProjected();
-   virtual ~REveTrackListProjected() {}
+   ~REveTrackListProjected() override {}
 
    void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
    void UpdateProjection() override {}

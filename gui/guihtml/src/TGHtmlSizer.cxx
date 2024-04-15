@@ -25,13 +25,14 @@
 
 // Routines used to compute the style and size of individual elements.
 
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
 
 #include "TGHtml.h"
 #include "TImage.h"
 #include "TVirtualX.h"
+#include "snprintf.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the current rendering style. In other words, get the style
@@ -59,7 +60,7 @@ SHtmlStyle_t TGHtml::GetCurrentStyle()
 ////////////////////////////////////////////////////////////////////////////////
 /// Push a new rendering style onto the stack.
 ///
-///  tag   - Tag for this style. Normally the end-tag such as </h3> or </em>.
+///  tag   - Tag for this style. Normally the end-tag such as \</h3\> or \</em\>.
 ///  style - The style to push
 
 void TGHtml::PushStyleStack(int tag, SHtmlStyle_t style)
@@ -151,7 +152,7 @@ void TGHtml::MakeInvisible(TGHtmlElement *p_first, TGHtmlElement *p_last)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// For the markup <a href=XXX>, find out if the URL has been visited
+/// For the markup \<a href=XXX\>, find out if the URL has been visited
 /// before or not.  Return COLOR_Visited or COLOR_Unvisited, as
 /// appropriate.
 
@@ -194,7 +195,7 @@ static int *GetCoords(const char *str, int *nptr)
 /// This routine adds information to the input texts that doesn't change
 /// when the display is resized or when new fonts are selected, etc.
 /// Mostly this means adding style attributes.  But other constant
-/// information (such as numbering on <li> and images used for <IMG>)
+/// information (such as numbering on `<li>` and images used for `<IMG>`)
 /// is also obtained.  The key is that this routine is only called
 /// once, where the sizer and layout routines can be called many times.
 ///
@@ -204,8 +205,8 @@ static int *GetCoords(const char *str, int *nptr)
 ///
 /// In addition to adding style, this routine will invoke methods
 /// needed to acquire information about a markup. The IsVisitied()
-/// method is called for each <a> and the GetImage() is called
-/// for each <IMG> or for each <LI> that has a SRC= field.
+/// method is called for each `<a>` and the GetImage() is called
+/// for each `<IMG>` or for each `<LI>` that has a `SRC=` field.
 ///
 /// When a markup is inserted or deleted from the token list, the
 /// style routine must be completely rerun from the beginning.  So
@@ -1102,6 +1103,8 @@ void TGHtml::Sizer()
          font->GetFontMetrics(&fontMetrics);
          spaceWidth = 0;
       }
+      if (!font)
+         continue;
       switch (p->fType) {
          case Html_Text: {
             TGHtmlTextElement *text = (TGHtmlTextElement *) p;

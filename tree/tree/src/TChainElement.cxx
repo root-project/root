@@ -16,21 +16,20 @@ A TChainElement describes a component of a TChain.
 */
 
 #include "TChainElement.h"
-#include "TBuffer.h"
 #include "TTree.h"
-#include "Riostream.h"
 #include "TROOT.h"
+#include <iostream>
 
 ClassImp(TChainElement);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for a chain element.
 
-TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
-   fBaddressIsPtr(kFALSE), fBranchPtr(0), fLoadResult(0)
+TChainElement::TChainElement() : TNamed(),fBaddress(nullptr),fBaddressType(0),
+   fBaddressIsPtr(false), fDecomposedObj(false), fCheckedType(false), fBranchPtr(nullptr), fLoadResult(0)
 {
    fNPackets   = 0;
-   fPackets    = 0;
+   fPackets    = nullptr;
    fEntries    = 0;
    fPacketSize = 100;
    fStatus     = -1;
@@ -41,11 +40,11 @@ TChainElement::TChainElement() : TNamed(),fBaddress(0),fBaddressType(0),
 /// Create a chain element.
 
 TChainElement::TChainElement(const char *name, const char *title)
-   :TNamed(name,title),fBaddress(0),fBaddressType(0),
-    fBaddressIsPtr(kFALSE), fBranchPtr(0), fLoadResult(0)
+   :TNamed(name,title),fBaddress(nullptr),fBaddressType(0),
+    fBaddressIsPtr(false), fDecomposedObj(false), fCheckedType(false), fBranchPtr(nullptr), fLoadResult(0)
 {
    fNPackets   = 0;
-   fPackets    = 0;
+   fPackets    = nullptr;
    fEntries    = 0;
    fPacketSize = 100;
    fStatus     = -1;
@@ -98,7 +97,7 @@ void TChainElement::SetPacketSize(Int_t size)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set/Reset the looked-up bit
 
-void TChainElement::SetLookedUp(Bool_t y)
+void TChainElement::SetLookedUp(bool y)
 {
    if (y)
       SetBit(kHasBeenLookedUp);

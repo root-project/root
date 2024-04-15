@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodDNN                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      A neural network implementation                                           *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodDNN
@@ -33,9 +33,8 @@ Deep Neural Network Implementation.
 #include "TMVA/MethodDNN.h"
 
 #include "TString.h"
-#include "TTree.h"
-#include "TFile.h"
 #include "TFormula.h"
+#include "TObjString.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Configurable.h"
@@ -53,6 +52,13 @@ Deep Neural Network Implementation.
 
 #include "TMVA/NeuralNet.h"
 #include "TMVA/Monitoring.h"
+
+#ifdef R__HAS_TMVACPU
+#include "TMVA/DNN/Architectures/Cpu.h"
+#endif
+#ifdef R__HAS_TMVAGPU
+#include "TMVA/DNN/Architectures/Cuda.h"
+#endif
 
 #include <algorithm>
 #include <iostream>
@@ -119,7 +125,13 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initializations
 
-void TMVA::MethodDNN::Init() {}
+void TMVA::MethodDNN::Init() {
+      Log() << kWARNING
+            << "MethodDNN is deprecated and it will be removed in future ROOT version. "
+               "Please use MethodDL ( TMVA::kDL)"
+            << Endl;
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Options to be set in the option string:
@@ -774,6 +786,7 @@ void TMVA::MethodDNN::Train()
          case EActivationFunction::kRelu:     g = EnumFunction::RELU;     break;
          case EActivationFunction::kSigmoid:  g = EnumFunction::SIGMOID;  break;
          case EActivationFunction::kTanh:     g = EnumFunction::TANH;     break;
+         case EActivationFunction::kFastTanh: g = EnumFunction::TANH;     break;
          case EActivationFunction::kSymmRelu: g = EnumFunction::SYMMRELU; break;
          case EActivationFunction::kSoftSign: g = EnumFunction::SOFTSIGN; break;
          case EActivationFunction::kGauss:    g = EnumFunction::GAUSS;    break;
@@ -1361,22 +1374,22 @@ const std::vector<Float_t> & TMVA::MethodDNN::GetMulticlassValues()
 
 void TMVA::MethodDNN::AddWeightsXMLTo( void* parent ) const
 {
-   void* nn = gTools().xmlengine().NewChild(parent, 0, "Weights");
+   void* nn = gTools().xmlengine().NewChild(parent, nullptr, "Weights");
    Int_t inputWidth = fNet.GetInputWidth();
    Int_t depth      = fNet.GetDepth();
    char  lossFunction = static_cast<char>(fNet.GetLossFunction());
-   gTools().xmlengine().NewAttr(nn, 0, "InputWidth",
+   gTools().xmlengine().NewAttr(nn, nullptr, "InputWidth",
                                 gTools().StringFromInt(inputWidth));
-   gTools().xmlengine().NewAttr(nn, 0, "Depth", gTools().StringFromInt(depth));
-   gTools().xmlengine().NewAttr(nn, 0, "LossFunction", TString(lossFunction));
-   gTools().xmlengine().NewAttr(nn, 0, "OutputFunction",
+   gTools().xmlengine().NewAttr(nn, nullptr, "Depth", gTools().StringFromInt(depth));
+   gTools().xmlengine().NewAttr(nn, nullptr, "LossFunction", TString(lossFunction));
+   gTools().xmlengine().NewAttr(nn, nullptr, "OutputFunction",
                                 TString(static_cast<char>(fOutputFunction)));
 
    for (Int_t i = 0; i < depth; i++) {
       const auto& layer = fNet.GetLayer(i);
-      auto layerxml = gTools().xmlengine().NewChild(nn, 0, "Layer");
+      auto layerxml = gTools().xmlengine().NewChild(nn, nullptr, "Layer");
       int activationFunction = static_cast<int>(layer.GetActivationFunction());
-      gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "ActivationFunction",
                                    TString::Itoa(activationFunction, 10));
       WriteMatrixXML(layerxml, "Weights", layer.GetWeights());
       WriteMatrixXML(layerxml, "Biases",  layer.GetBiases());

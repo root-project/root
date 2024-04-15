@@ -12,42 +12,32 @@
 #ifndef ROOT_TGButtonGroup
 #define ROOT_TGButtonGroup
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGButtonGroup, TGVButtonGroup and TGHButtonGroup                     //
-//                                                                      //
-// This header defines button group frames.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
-#include "TMap.h"
-
 
 class TGButton;
-
-
+class TMap;
 
 class TGButtonGroup : public TGGroupFrame {
 
 friend class TGButton;
 
 private:
-   TGButtonGroup(const TGButtonGroup&); // Not implemented
-   TGButtonGroup& operator=(const TGButtonGroup&); // Not implemented
+   TGButtonGroup(const TGButtonGroup&) = delete;
+   TGButtonGroup& operator=(const TGButtonGroup&) = delete;
 
 protected:
-   Bool_t  fState;           // kTRUE if group is enabled
-   Bool_t  fExclGroup;       // kTRUE if group is exclusive
-   Bool_t  fRadioExcl;       // kTRUE if radio buttons are exclusive
-   Bool_t  fDrawBorder;      // kTRUE if border and title are drawn
-   TMap   *fMapOfButtons;    // map of button/id pairs in this group
+   Bool_t  fState;           ///< kTRUE if group is enabled
+   Bool_t  fExclGroup;       ///< kTRUE if group is exclusive
+   Bool_t  fRadioExcl;       ///< kTRUE if radio buttons are exclusive
+   Bool_t  fDrawBorder;      ///< kTRUE if border and title are drawn
+   TMap   *fMapOfButtons;    ///< map of button/id pairs in this group
 
    void Init();
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
-   TGButtonGroup(const TGWindow *parent = 0,
+   TGButtonGroup(const TGWindow *parent = nullptr,
                  const TString &title = "",
                  UInt_t options = kChildFrame | kVerticalFrame,
                  GContext_t norm = GetDefaultGC()(),
@@ -61,7 +51,7 @@ public:
                  FontStruct_t font = GetDefaultFontStruct(),
                  Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGButtonGroup();
+   ~TGButtonGroup() override;
 
    virtual void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }   //*SIGNAL*
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
@@ -76,7 +66,7 @@ public:
    Bool_t IsExclusive() const { return fExclGroup; }
    Bool_t IsRadioButtonExclusive() const  { return fRadioExcl; }
    Bool_t IsBorderDrawn() const { return fDrawBorder; }
-   Int_t  GetCount() const { return fMapOfButtons->GetSize(); }
+   Int_t  GetCount() const;
    Int_t  GetId(TGButton *button) const;
 
    virtual void SetExclusive(Bool_t flag = kTRUE);
@@ -84,8 +74,8 @@ public:
    virtual void SetState(Bool_t state = kTRUE);
    virtual void SetBorderDrawn(Bool_t enable = kTRUE);
    virtual void SetButton(Int_t id, Bool_t down = kTRUE);
-   virtual void SetTitle(TGString *title);
-   virtual void SetTitle(const char *title);
+   void         SetTitle(TGString *title) override;
+   void         SetTitle(const char *title) override;
 
    virtual Int_t     Insert(TGButton *button, int id = -1);
    virtual void      Remove(TGButton *button);
@@ -93,11 +83,11 @@ public:
    virtual TGButton *GetButton(Int_t id) const { return Find(id); }
    virtual void      Show();
    virtual void      Hide();
-   virtual void      DrawBorder();
-   virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = 0);
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void              DrawBorder() override;
+   virtual void      SetLayoutHints(TGLayoutHints *l, TGButton *button = nullptr);
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGButtonGroup,0)  // Organizes TGButtons in a group
+   ClassDefOverride(TGButtonGroup,0)  // Organizes TGButtons in a group
 };
 
 
@@ -110,12 +100,12 @@ public:
                   FontStruct_t font = GetDefaultFontStruct(),
                   Pixel_t back = GetDefaultFrameBackground()) :
       TGButtonGroup(parent, title, kChildFrame | kVerticalFrame,
-                    norm, font, back) { }
+                    norm, font, back) {}
 
-   virtual ~TGVButtonGroup() { }
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   ~TGVButtonGroup() override {}
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGVButtonGroup,0)  // A button group with one vertical column
+   ClassDefOverride(TGVButtonGroup,0)  // A button group with one vertical column
 };
 
 
@@ -130,10 +120,10 @@ public:
       TGButtonGroup(parent, title, kChildFrame | kHorizontalFrame,
                     norm, font, back) { }
 
-   virtual ~TGHButtonGroup() { }
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   ~TGHButtonGroup() override {}
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGHButtonGroup,0)  // A button group with one horizontal row
+   ClassDefOverride(TGHButtonGroup,0)  // A button group with one horizontal row
 };
 
 #endif

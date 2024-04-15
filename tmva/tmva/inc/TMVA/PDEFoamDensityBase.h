@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamDensityBase                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Class PDEFoamDensityBase is an Abstract class representing                *
@@ -26,13 +26,14 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_PDEFoamDensityBase
 #define ROOT_TMVA_PDEFoamDensityBase
 
 #include "TObject.h"
+#include <vector>
 
 #include "TMVA/BinarySearchTree.h"
 #include "TMVA/Event.h"
@@ -45,13 +46,13 @@ namespace TMVA
    class PDEFoamDensityBase : public ::TObject
       {
       private:
-         std::vector<Double_t> fBox; // range-searching box
-         Double_t fBoxVolume;        // volume of range searching box
-         Bool_t fBoxHasChanged;      // range searching box has changed
+         std::vector<Double_t> fBox; ///< range-searching box
+         Double_t fBoxVolume;        ///< volume of range searching box
+         Bool_t fBoxHasChanged;      ///< range searching box has changed
 
       protected:
-         BinarySearchTree *fBst;     // Binary tree to find events within a volume
-         mutable MsgLogger *fLogger; //! message logger
+         BinarySearchTree *fBst;     ///< Binary tree to find events within a volume
+         mutable MsgLogger *fLogger; ///<! message logger
 
          MsgLogger& Log() const { return *fLogger; }
 

@@ -7,6 +7,19 @@
 #include "TestHelper.h"
 #include "gtest/gtest.h"
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE_P
+#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef REGISTER_TYPED_TEST_SUITE_P
+#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
+#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
+#endif
+
 #include "VectorTest.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -35,7 +48,7 @@ protected:
 
    VectorTest<R_t::kSize> fVectorTest;
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenDataN();
       v1.reserve(fNGen);
@@ -62,7 +75,7 @@ public:
    SMatrixTest() : fVectorTest(fNGen) {}
 };
 
-TYPED_TEST_CASE_P(SMatrixTest);
+TYPED_TEST_SUITE_P(SMatrixTest);
 
 // test of generic SMatrix
 TYPED_TEST_P(SMatrixTest, TestSMatrix)
@@ -116,11 +129,11 @@ TYPED_TEST_P(SMatrixTest, TestSMatrix)
    }
 }
 
-REGISTER_TYPED_TEST_CASE_P(SMatrixTest, TestSMatrix);
+REGISTER_TYPED_TEST_SUITE_P(SMatrixTest, TestSMatrix);
 
 typedef testing::Types<GenericSMatrixTypeWrapper<3, 4, RepStd<3, 4>>, GenericSMatrixTypeWrapper<4, 3, RepStd<4, 3>>,
                        GenericSMatrixTypeWrapper<3, 3, RepStd<3, 3>>,
                        GenericSMatrixTypeWrapper<5, 5, RepSym<5>>> // sym matrix
    SMatrixTestingTypes_t;
 
-INSTANTIATE_TYPED_TEST_CASE_P(SMatrix, SMatrixTest, SMatrixTestingTypes_t);
+INSTANTIATE_TYPED_TEST_SUITE_P(SMatrix, SMatrixTest, SMatrixTestingTypes_t);

@@ -85,7 +85,7 @@ void goftest() {
    Double_t pvalueAD_2 = (*goftest_1)(); // p-value and Anderson - Darling Test are the default choices
    assert(pvalueAD_1 == pvalueAD_2);
 
-   // Rebuild the test using the default 1-sample construtor 
+   // Rebuild the test using the default 1-sample constructor 
    delete goftest_1;
    goftest_1 = new ROOT::Math::GoFTest(nEvents1, sample1 ); // User must then input a distribution type option
    goftest_1->SetDistribution(ROOT::Math::GoFTest::kLogNormal);
@@ -184,7 +184,7 @@ void goftest() {
    assert(pvalueKS_1 == pvalueKS_2);
 
 #ifdef TEST_ERROR_MESSAGE
-   /* Valid but incorrect calls for the 1-sample methods of the 2-samples constucted goftest_2 */
+   /* Valid but incorrect calls for the 1-sample methods of the 2-samples constructed goftest_2 */
    A2 = (*goftest_2)(ROOT::Math::GoFTest::kAD, "t");     // Issues error message
    pvalueKS = (*goftest_2)(ROOT::Math::GoFTest::kKS);    // Issues error message
    assert(A2 == pvalueKS);

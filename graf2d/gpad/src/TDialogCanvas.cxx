@@ -2,7 +2,7 @@
 // Author: Rene Brun   03/07/96
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TDialogCanvas.h"
 #include "TGroupButton.h"
-#include "TText.h"
 #include "TStyle.h"
 
 ClassImp(TDialogCanvas);
@@ -34,8 +33,6 @@ See examples in TAttLineCanvas, TAttFillCanvas, TAttTextCanvas, TAttMarkerCanvas
 
 TDialogCanvas::TDialogCanvas() : TCanvas()
 {
-   fRefObject = 0;
-   fRefPad    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -45,8 +42,6 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t ww, Int_
              : TCanvas(name,title,-ww,wh)
 {
    SetFillColor(36);
-   fRefObject = 0;
-   fRefPad    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,8 +51,6 @@ TDialogCanvas::TDialogCanvas(const char *name, const char *title, Int_t wtopx, I
              : TCanvas(name,title,-wtopx,wtopy,ww,wh)
 {
    SetFillColor(36);
-   fRefObject = 0;
-   fRefPad    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +127,6 @@ void TDialogCanvas::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 void TDialogCanvas::RecursiveRemove(TObject *obj)
 {
    TPad::RecursiveRemove(obj);
-   if (fRefObject == obj) fRefObject = 0;
-   if (fRefPad    == obj) fRefPad    = 0;
+   if (fRefObject == obj) fRefObject = nullptr;
+   if (fRefPad    == obj) fRefPad    = nullptr;
 }

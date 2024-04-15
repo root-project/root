@@ -16,8 +16,7 @@
 #include "Fit/FitData.h"
 #include "Math/Error.h"
 #include <cmath>
-
-
+#include <vector>
 
 namespace ROOT {
 
@@ -34,7 +33,7 @@ namespace ROOT {
    - only coordinates and values  (for binned likelihood fits)  : kNoError
    - coordinate, values and error on  values (for normal least square fits)  : kValueError
    - coordinate, values, error on values and coordinates (for effective least square fits) : kCoordError
-   - corrdinate, values, error on coordinates and asymmettric error on valyes : kAsymError
+   - coordinate, values, error on coordinates and asymmetric error on values : kAsymError
 
    In addition there is the option to construct Bindata copying the data in (using the DataVector class)
    or using pointer to external data (DataWrapper) class.
@@ -73,12 +72,12 @@ public :
 
    /**
       constructor from options and range
-      efault is 1D and value errors
+      default is 1D and value errors
    */
    BinData (const DataOptions & opt, const DataRange & range,
             unsigned int maxpoints = 0, unsigned int dim = 1, ErrorType err = kValueError );
 
-   /** constructurs using external data */
+   /** constructors using external data */
 
    /**
       constructor from external data for 1D with errors on  coordinate and value
@@ -103,27 +102,31 @@ public :
    /**
       destructor
    */
-   virtual ~BinData();
+   ~BinData() override;
 
    /**
       copy constructors
    */
    BinData(const BinData & rhs);
 
+   /// assignment operator
    BinData & operator= ( const BinData & rhs );
 
 
    /**
-      preallocate a data set with given size ,  dimension and error type (to get the full point size)
-      If the data set already exists and it is having the compatible point size space for the new points
-      is created in the data sets, while if not compatible the old data are erased and new space of
-      new size is allocated.
-      (i.e if exists initialize is equivalent to a resize( NPoints() + maxpoints)
+      Preallocate a data set with given size, dimension and error type.
+      If the data set already exists, `newPoints` are appended to the existing data set.
+      (i.e., if the data exists Initialize() is equivalent to a `resize( NPoints() + maxpoints)`).
+      Initialize() and Append() are equivalent.
    */
+   void Initialize( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError ){
+      Append(newPoints,dim,err);
+   }
 
+   /// Equivalent to Initialize()
    void Append( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError );
 
-   void Initialize( unsigned int newPoints, unsigned int dim = 1, ErrorType err = kValueError );
+
 
    /**
       flag to control if data provides error on the coordinates
@@ -232,9 +235,15 @@ public :
    }
 
    /**
-      return error on the value for the given fit point
-      Safe (but slower) method returning correctly the error on the value
-      in case of asymm errors return the average 0.5(eu + el)
+      Return a pointer to the error (or the inverse error) on the value for a given point
+      depending on the type of data.
+      - If the data contains only value error (e.g. from histograms) returns a pointer to
+        the inverse of the errors.
+      - If the data contains errors in coordinates and value (e.g from TGraphErrors) returns a
+        pointer to the corresponding value error (NOT the inverse).
+      - If the data contains asymmetric errors return a pointer to the average error (NOT the inverse):
+        0.5(eu + el).
+      - If the data does not contain errors return a nullptr.
    */
 
    const double * ErrorPtr(unsigned int ipoint) const{
@@ -244,10 +253,12 @@ public :
 
       if ( fErrorType == kNoError )
          return nullptr;
-      // assert( fErrorType == kCoordError );
       return &fDataErrorPtr[ ipoint ];
    }
 
+   /// Return the error on the given point.
+   /// Safer method returning in any case the error and not the inverse as in the
+   /// function above.
    double Error( unsigned int ipoint ) const
    {
       assert( ipoint < fMaxPoints );
@@ -334,7 +345,7 @@ public :
 
          // in case of wrapped data the pointer stores the error and
          // not the inverse
-         if (fWrapped) 
+         if (fWrapped)
             return 1.0 / eval;
          else
             return (eval != 0.0) ? eval : 0.0;
@@ -508,25 +519,31 @@ public :
    const double* BinUpEdge( unsigned int ipoint ) const
    {
       if ( fBinEdge.empty() || ipoint > fBinEdge.front().size() )
-         return 0;
+         return nullptr;
 
-      assert( fpTmpBinEdgeVector );
-      assert( !fBinEdge.empty() );
-      assert( ipoint < fMaxPoints );
-
-      for ( unsigned int i=0; i < fDim; i++ )
-      {
-         fpTmpBinEdgeVector[i] = fBinEdge[i][ ipoint ];
-      }
+      GetBinUpEdgeCoordinates(ipoint, fpTmpBinEdgeVector);
 
       return fpTmpBinEdgeVector;
+   }
+
+   /**
+    * Thread save version of function retrieving the bin up-edge in case of multidimensions
+   */
+   void GetBinUpEdgeCoordinates(unsigned int ipoint, double * x) const
+   {
+      if (fBinEdge.empty() || ipoint > fBinEdge.front().size()) return;
+      assert(!fBinEdge.empty());
+      assert(ipoint < fMaxPoints);
+      for (unsigned int i = 0; i < fDim; i++) {
+         x[i] = fBinEdge[i][ipoint];
+      }
    }
 
    /**
       query if the data store the bin edges instead of the center
    */
    bool HasBinEdges() const {
-      return fBinEdge.size() == fDim && fBinEdge[0].size() > 0;
+      return fBinEdge.size() == fDim && !fBinEdge[0].empty();
    }
 
    /**
@@ -560,8 +577,8 @@ public :
    double SumOfError2() const { return fSumError2;}
 
    /**
-      return true if the data set is weighted 
-      We cannot compute ourselfs because sometimes errors are filled with 1
+      return true if the data set is weighted
+      We cannot compute ourselves because sometimes errors are filled with 1
       instead of zero (as in ROOT::Fit::FillData )
     */
    bool IsWeighted() const {
@@ -578,15 +595,15 @@ protected:
    void UnWrap( );
 
    // compute sum of content and error squares
-   void ComputeSums(); 
+   void ComputeSums();
 
 private:
 
    ErrorType fErrorType;
-   bool fIsWeighted = false; // flag to indicate weighted data
-   double fRefVolume;  // reference bin volume - used to normalize the bins in case of variable bins data
-   double fSumContent = 0;  // total sum of the bin data content
-   double fSumError2 = 0;  // total sum square of the errors
+   bool fIsWeighted = false; ///< flag to indicate weighted data
+   double fRefVolume;        ///< reference bin volume - used to normalize the bins in case of variable bins data
+   double fSumContent = 0;   ///< total sum of the bin data content
+   double fSumError2 = 0;    ///< total sum square of the errors
 
    /**
     * Stores the data values the same way as the coordinates.
@@ -609,12 +626,12 @@ private:
    // This vector contains the data error.
    // Either only fDataError or fDataErrorHigh and fDataErrorLow are used.
 
-   double* fpTmpCoordErrorVector; // not threadsafe stuff!
+   double* fpTmpCoordErrorVector; ///< not threadsafe stuff!
 
    std::vector< std::vector< double > > fBinEdge;
    // vector containing the bin upper edge (coordinate will contain low edge)
 
-   double* fpTmpBinEdgeVector; // not threadsafe stuff!
+   double* fpTmpBinEdgeVector; ///< not threadsafe stuff!
 };
 
 

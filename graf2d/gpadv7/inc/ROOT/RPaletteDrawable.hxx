@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -10,7 +10,7 @@
 #define ROOT7_RPaletteDrawable
 
 #include <ROOT/RDrawable.hxx>
-#include <ROOT/RAttrAxis.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadPos.hxx>
 #include <ROOT/RPalette.hxx>
 
@@ -31,14 +31,7 @@ namespace Experimental {
 
 class RPaletteDrawable final : public RDrawable {
 
-   class ROwnAttrs : public RAttrBase {
-      friend class RPaletteDrawable;
-      R__ATTR_CLASS(ROwnAttrs, "", AddBool("visible", true).AddString("margin","0.02").AddString("size","0.05"));
-   };
-
-   RPalette   fPalette;                     ///  color palette to draw
-   RAttrAxis  fAttrAxis{this, "axis_"};     ///<! axis attributes
-   ROwnAttrs  fAttr{this,""};               ///<! own attributes
+   RPalette                fPalette;                              ///<  color palette to draw
 
 protected:
 
@@ -48,54 +41,13 @@ protected:
 
 public:
 
+   RAttrValue<bool>        visible{this, "visible", true};       ///<! visibility flag
+   RAttrValue<RPadLength>  margin{this, "margin", 0.02_normal};  ///<! horizontal margin to frame
+   RAttrValue<RPadLength>  width{this, "width", 0.05_normal};    ///<! width of palette
+
    RPaletteDrawable(const RPalette &palette) : RPaletteDrawable() { fPalette = palette; }
-   RPaletteDrawable(const RPalette &palette, bool visible) : RPaletteDrawable() { fPalette = palette; SetVisible(visible); }
+   RPaletteDrawable(const RPalette &palette, bool _visible) : RPaletteDrawable() { fPalette = palette; visible = _visible; }
    const RPalette &GetPalette() const { return fPalette; }
-
-   RPaletteDrawable &SetVisible(bool on = true) { fAttr.SetValue("visible", on); return *this; }
-   bool GetVisible() const { return fAttr.GetValue<bool>("visible"); }
-
-   RPaletteDrawable &SetMargin(const RPadLength &pos)
-   {
-      if (pos.Empty())
-         fAttr.ClearValue("margin");
-      else
-         fAttr.SetValue("margin", pos.AsString());
-
-      return *this;
-   }
-
-   RPadLength GetMargin() const
-   {
-      RPadLength res;
-      auto value = fAttr.GetValue<std::string>("margin");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
-   }
-
-   RPaletteDrawable &SetSize(const RPadLength &sz)
-   {
-      if (sz.Empty())
-         fAttr.ClearValue("size");
-      else
-         fAttr.SetValue("size", sz.AsString());
-
-      return *this;
-   }
-
-   RPadLength GetSize() const
-   {
-      RPadLength res;
-      auto value = fAttr.GetValue<std::string>("size");
-      if (!value.empty())
-         res.ParseString(value);
-      return res;
-   }
-
-   const RAttrAxis &GetAttrAxis() const { return fAttrAxis; }
-   RPaletteDrawable &SetAttrAxis(const RAttrAxis &attr) { fAttrAxis = attr; return *this; }
-   RAttrAxis &AttrAxis() { return fAttrAxis; }
 };
 
 //inline auto GetDrawable(const RPalette &palette)

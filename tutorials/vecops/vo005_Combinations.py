@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_vecops
 ## \notebook -nodraw
-## In this tutorial we learn how combinations of RVecs can be build.
+## In this tutorial we learn how combinations of RVecs can be built.
 ##
 ## \macro_code
 ## \macro_output
@@ -10,13 +10,13 @@
 ## \author Stefan Wunsch
 
 import ROOT
-from ROOT.VecOps import RVec, Take, Combinations
+from ROOT.VecOps import Take, Combinations
 
 # RVec can be sorted in Python with the inbuilt sorting function because
 # PyROOT implements a Python iterator
-v1 = RVec("double")(3)
+v1 = ROOT.RVecD(3)
 v1[0], v1[1], v1[2] = 1, 2, 3
-v2 = RVec("double")(2)
+v2 = ROOT.RVecD(2)
 v2[0], v2[1] = -4, -5
 
 # To get the indices, which result in all combinations, you can call the
@@ -40,7 +40,7 @@ print
 # single RVec, you can perform this as follows.
 
 # Get the indices of unique triples for the given vector.
-v4 = RVec("double")(4)
+v4 = ROOT.RVecD(4)
 v4[0], v4[1], v4[2], v4[3] = 1, 2, 3, 4
 idx2 = Combinations(v4, 3)
 

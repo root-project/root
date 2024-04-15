@@ -318,7 +318,7 @@ int XrdProofdSandbox::GetSessionDirs(int opt, std::list<XrdOucString *> *sdirs,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Record entry for new proofserv session tagged 'tag' in the active
-/// sessions file (<SandBox>/.sessions). The file is created if needed.
+/// sessions file (`<SandBox>/.sessions`). The file is created if needed.
 /// Return 0 on success, -1 on error.
 
 int XrdProofdSandbox::AddSession(const char *tag)
@@ -501,7 +501,7 @@ int XrdProofdSandbox::GuessTag(XrdOucString &tag, int ridx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Move record for tag from the active sessions file to the old
-/// sessions file (<SandBox>/.sessions). The active file is removed if
+/// sessions file (`<SandBox>/.sessions`). The active file is removed if
 /// empty after the operation. The old sessions file is created if needed.
 /// Return 0 on success, -1 on error.
 

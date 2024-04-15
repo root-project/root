@@ -14,3 +14,9 @@
  *************************************************************************/
 
 #include <ROOT/RPage.hxx>
+
+const void *ROOT::Experimental::Internal::RPage::GetPageZeroBuffer()
+{
+   static const auto pageZero = std::make_unique<unsigned char[]>(kPageZeroSize);
+   return pageZero.get();
+}

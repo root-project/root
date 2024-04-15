@@ -8,18 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TGTable.h"
-#include "TClass.h"
-#include "TGWindow.h"
-#include "TGResourcePool.h"
-#include "Riostream.h"
-#include "TSystem.h"
-#include "TImage.h"
-#include "TGToolTip.h"
-#include "TGPicture.h"
-#include "TRandom3.h"
-#include "TTreeTableInterface.h"
 #include "TGTreeTable.h"
+#include "TTreeTableInterface.h"
 
 ClassImp(TGTreeTable);
 
@@ -41,7 +31,7 @@ GetInterface() method.
 TGTreeTable::TGTreeTable(TGWindow *p, Int_t id, TTree *tree,
                          const char *expression, const char *selection,
                          const char *option, UInt_t nrows, UInt_t ncolumns)
-   : TGTable(p, id, 0, nrows, ncolumns)
+   : TGTable(p, id, nullptr, nrows, ncolumns)
 {
    TTreeTableInterface *iface = new TTreeTableInterface(tree, expression,
                                                         selection, option);

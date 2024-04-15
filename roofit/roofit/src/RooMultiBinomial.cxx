@@ -27,8 +27,6 @@ The combination only 'reject' can be chosen to be visible or not visible
 (and hence this efficiency is then equal to zero).
 **/
 
-#include "RooFit.h"
-
 #include "RooMultiBinomial.h"
 #include "RooStreamParser.h"
 #include "RooArgList.h"
@@ -37,7 +35,7 @@ The combination only 'reject' can be chosen to be visible or not visible
 #include <string>
 #include <vector>
 
-using namespace std ;
+using std::endl, std::vector, std::string;
 
 ClassImp(RooMultiBinomial);
 
@@ -49,7 +47,7 @@ ClassImp(RooMultiBinomial);
 RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
                const RooArgList& effFuncList,
                const RooArgList& catList,
-               Bool_t ignoreNonVisible) :
+               bool ignoreNonVisible) :
   RooAbsReal(name,title),
   _catList("catList","list of cats", this),
   _effFuncList("effFuncList","list of eff funcs",this),
@@ -58,7 +56,7 @@ RooMultiBinomial::RooMultiBinomial(const char *name, const char *title,
   _catList.add(catList);
   _effFuncList.add(effFuncList);
 
-  if (_catList.getSize() != effFuncList.getSize()) {
+  if (_catList.size() != effFuncList.size()) {
     coutE(InputArguments) << "RooMultiBinomial::ctor(" << GetName() << ") ERROR: Wrong input, should have equal number of categories and efficiencies." << endl;
     throw string("RooMultiBinomial::ctor() ERROR: Wrong input, should have equal number of categories and efficiencies") ;
   }
@@ -77,25 +75,18 @@ RooMultiBinomial::RooMultiBinomial(const RooMultiBinomial& other, const char* na
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMultiBinomial::~RooMultiBinomial()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Calculate the raw value of the function which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 
-Double_t RooMultiBinomial::evaluate() const
+double RooMultiBinomial::evaluate() const
 {
-  Int_t effFuncListSize = _effFuncList.getSize();
+  Int_t effFuncListSize = _effFuncList.size();
 
   // Get efficiency function for category i
 
-  vector<Double_t> effFuncVal(effFuncListSize);
+  vector<double> effFuncVal(effFuncListSize);
   for (int i=0; i<effFuncListSize; ++i) {
-    effFuncVal[i] = ((RooAbsReal&)_effFuncList[i]).getVal() ;
+    effFuncVal[i] = (static_cast<RooAbsReal&>(_effFuncList[i])).getVal() ;
   }
 
   // Truncate efficiency functions in range 0.0-1.0
@@ -112,26 +103,26 @@ Double_t RooMultiBinomial::evaluate() const
     }
   }
 
-  vector<Double_t> effValue(effFuncListSize);
-  Bool_t notVisible = true;
+  vector<double> effValue(effFuncListSize);
+  bool notVisible = true;
 
   // Calculate efficiency per accept/reject decision
 
   for (int i=0; i<effFuncListSize; ++i) {
-    if ( ((RooAbsCategory&)_catList[i]).getIndex() == 1) {
+    if ( (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() == 1) {
       // Accept case
       effValue[i] = effFuncVal[i] ;
       notVisible = false;
-    } else if ( ((RooAbsCategory&)_catList[i]).getIndex() == 0){
+    } else if ( (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() == 0){
       // Reject case
       effValue[i] = 1 - effFuncVal[i] ;
     } else {
-      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << ((RooAbsCategory&)_catList[i]).getIndex() << endl;
+      coutW(Eval) << "WARNING: WRONG CATEGORY NAMES GIVEN!, label = " << (static_cast<RooAbsCategory&>(_catList[i])).getCurrentIndex() << endl;
       effValue[i] = 0;
     }
   }
 
-  Double_t _effVal = 1.;
+  double _effVal = 1.;
 
   // Calculate efficiency for combination of accept/reject categories
   // put equal to zero if combination of only zeros AND chosen to be invisible

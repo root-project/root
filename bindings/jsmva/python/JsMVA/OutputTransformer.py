@@ -4,7 +4,6 @@
 # This class will transform the TMVA original output to HTML formated output.
 
 from JsMVA import DataLoader
-from JsMVA.Utils import xrange
 import cgi
 import re
 
@@ -56,7 +55,7 @@ class transformTMVAOutputToHTML:
     def __transformDatasetSpecificContent(self, firstLine, startIndex, maxlen):
         tmp_str = ""
         count = 0
-        for l in xrange(1, maxlen):
+        for l in range(1, maxlen):
             nextline = self.lines[startIndex+l]
             if self.__isEmpty(nextline):
                 count += 1
@@ -89,7 +88,7 @@ class transformTMVAOutputToHTML:
         tmp_str = ""
         count = 0
         tmpmap = {}
-        for l in xrange(1, maxlen):
+        for l in range(1, maxlen):
             nextline = self.lines[startIndex+l]
             if self.__isEmpty(nextline):
                 count += 1
@@ -115,7 +114,7 @@ class transformTMVAOutputToHTML:
             rstr += "<td>"+tmpmap[key][0]["name"]+"</td><td>"+tmpmap[key][0]["value"]+"</td>"
             rstr += "<td class='tmva_output_hidden_td'></td>"
             rstr += "</tr>"
-            for i in xrange(1, len(tmpmap[key])):
+            for i in range(1, len(tmpmap[key])):
                 rstr += "<tr><td>"+tmpmap[key][i]["name"]+"</td><td>"+tmpmap[key][i]["value"]+"</td>"
                 rstr += "<td class='tmva_output_hidden_td'></td></tr>"
         rstr += tmp_str
@@ -132,7 +131,7 @@ class transformTMVAOutputToHTML:
         table = [[]]
         for j in range(1, 6):
             table[0].append(headerMatch.group(j))
-        for l in xrange(1, maxlen):
+        for l in range(1, maxlen):
             nextline = self.lines[startIndex + l]
             if self.__isEmpty(nextline):
                 count += 1
@@ -147,9 +146,9 @@ class transformTMVAOutputToHTML:
             else:
                 break
         rstr = "<table class='tmva_output_varmeanrms'>"
-        for i in xrange(len(table)):
+        for i in range(len(table)):
             rstr += "<tr>"
-            for j in xrange(len(table[i])):
+            for j in range(len(table[i])):
                 rstr += "<td>" + str(table[i][j])
             rstr += "<td class='tmva_output_hidden_td'></td>"
             rstr += "</tr>"
@@ -209,7 +208,7 @@ class transformTMVAOutputToHTML:
     def __transformOneGroup(self, firstLine):
         tmp_str = ""
         processed_lines = 0
-        lineIter = iter(xrange(len(self.lines) - self.lineIndex))
+        lineIter = iter(range(len(self.lines) - self.lineIndex))
         for j in lineIter:
             if j == 0:
                 nextline = firstLine
@@ -238,7 +237,7 @@ class transformTMVAOutputToHTML:
                         func = self.__transformVariableMeanSpecificContent
                         fLine = VariableMeanHeader
                     count, tmp = func(fLine, self.lineIndex + j, len(self.lines) - self.lineIndex - j)
-                    for x in xrange(count):
+                    for x in range(count):
                         lineIter.next()
                         self.iterLines.next()
                     tmp_str += self.__processGroupContentLine(tmp)
@@ -257,16 +256,16 @@ class transformTMVAOutputToHTML:
                         if ltmp.find(":") != -1:
                             matrixLines.append(ltmp.split(":"))
                     rmatch = "^\s*"
-                    for ii in xrange(len(matrixLines)):
+                    for ii in range(len(matrixLines)):
                         rmatch += r"(\+\d+\.?\d*|-\d+\.?\d*)\s*"
                     rmatch += "$"
                     matrix = []
                     varNames = []
-                    for ii in xrange(len(matrixLines)):
+                    for ii in range(len(matrixLines)):
                         varNames.append(matrixLines[ii][0])
                         ll = re.match(rmatch, matrixLines[ii][1])
                         mline = []
-                        for jj in xrange(len(matrixLines)):
+                        for jj in range(len(matrixLines)):
                             mline.append(float(ll.group(jj + 1)))
                         matrix.append(mline)
                     tmp_str += self.__correlationMatrix(CorrelationMatrixHeader.group(1),
@@ -315,7 +314,7 @@ class transformTMVAOutputToHTML:
             self.err = error
         self.out = ""
         self.lines = output.splitlines()
-        self.iterLines = iter(xrange(len(self.lines)))
+        self.iterLines = iter(range(len(self.lines)))
         for self.lineIndex in self.iterLines:
             line = self.lines[self.lineIndex]
             Header = re.match(r"^\s*-*\s*(<\w+>\s*)*\s*(\w+.*\s+)(\s+)(:)\s*(.*)", line, re.I)
@@ -361,7 +360,7 @@ class transformTMVAOutputToHTML:
                 if len(lines) > 1:
                     tbodyclass = " class='tmva_output_tbody_multiple_row'"
                 self.out += "<tbody"+tbodyclass+"><tr><td rowspan='"+str(len(lines))+"'><td>"+lines[0]+"</td></tr>"
-                for ii in xrange(1, len(lines)):
+                for ii in range(1, len(lines)):
                     self.out += "<tr><td>"+lines[ii]+"</td></tr>"
             else:
                 lre = re.match(r"\s*:\s*(.*)", line)

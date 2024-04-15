@@ -4,6 +4,19 @@
 
 #include "gtest/gtest.h"
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE_P
+#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef REGISTER_TYPED_TEST_SUITE_P
+#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
+#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
+#endif
+
 #include "StatFunction.h"
 #include "TestHelper.h"
 #include "VectorTest.h"
@@ -17,7 +30,7 @@ protected:
    VectorTest<T::kSize> fVectorTest;
    std::vector<T> fV1;
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenDataN();
       fV1.reserve(fNGen);
@@ -29,7 +42,7 @@ public:
    VectorTestFixture() : fVectorTest(fNGen) {}
 };
 
-TYPED_TEST_CASE_P(VectorTestFixture);
+TYPED_TEST_SUITE_P(VectorTestFixture);
 
 // Test of a Composite Object (containing Vector's and Matrices)
 TYPED_TEST_P(VectorTestFixture, TestCompositeObj)
@@ -74,8 +87,8 @@ TYPED_TEST_P(VectorTestFixture, TestCompositeObj)
    }
 }
 
-REGISTER_TYPED_TEST_CASE_P(VectorTestFixture, TestCompositeObj);
+REGISTER_TYPED_TEST_SUITE_P(VectorTestFixture, TestCompositeObj);
 
 typedef testing::Types<TrackD, TrackD32, TrackErrD, TrackErrD32, VecTrack<TrackD>, VecTrack<TrackErrD>> TrackTypes_t;
 
-INSTANTIATE_TYPED_TEST_CASE_P(StressMathCore, VectorTestFixture, TrackTypes_t);
+INSTANTIATE_TYPED_TEST_SUITE_P(StressMathCore, VectorTestFixture, TrackTypes_t);

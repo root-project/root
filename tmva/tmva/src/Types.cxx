@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Types                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
@@ -38,12 +38,12 @@ Singleton class for Global types used by TMVA
 #include "TString.h"
 
 #include <map>
-#include <iostream>
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
+#include <atomic>
 #include <mutex>
 #endif
 
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
 std::atomic<TMVA::Types*> TMVA::Types::fgTypesPtr{0};
 static std::mutex gTypesMutex;
 #else
@@ -65,11 +65,11 @@ TMVA::Types::~Types()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// the the single instance of "Types" if existing already, or create it  (Singleton)
+/// The single instance of "Types" if existing already, or create it  (Singleton)
 
 TMVA::Types& TMVA::Types::Instance()
 {
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
    if(!fgTypesPtr) {
       Types* tmp = new Types();
       Types* expected = 0;
@@ -89,7 +89,7 @@ TMVA::Types& TMVA::Types::Instance()
 
 void   TMVA::Types::DestroyInstance()
 {
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
    if (fgTypesPtr != 0) { delete fgTypesPtr.load(); fgTypesPtr = 0; }
 #else
    if (fgTypesPtr != 0) { delete fgTypesPtr; fgTypesPtr = 0; }
@@ -100,7 +100,7 @@ void   TMVA::Types::DestroyInstance()
 
 Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodname )
 {
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
    std::lock_guard<std::mutex> guard(gTypesMutex);
 #endif
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( methodname );
@@ -120,7 +120,7 @@ Bool_t TMVA::Types::AddTypeMapping( Types::EMVA method, const TString& methodnam
 
 TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
 {
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
    std::lock_guard<std::mutex> guard(gTypesMutex);
 #endif
    std::map<TString, EMVA>::const_iterator it = fStr2type.find( method );
@@ -135,7 +135,7 @@ TMVA::Types::EMVA TMVA::Types::GetMethodType( const TString& method ) const
 
 TString TMVA::Types::GetMethodName( TMVA::Types::EMVA method ) const
 {
-#if __cplusplus > 199711L && !defined _MSC_VER
+#if !defined _MSC_VER
    std::lock_guard<std::mutex> guard(gTypesMutex);
 #endif
    std::map<TString, EMVA>::const_iterator it = fStr2type.begin();

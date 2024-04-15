@@ -2,7 +2,7 @@
 // Author: Paul Gessinger   25/08/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2016, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -25,17 +25,17 @@
 
 #include "TString.h"
 
-#include "TGraph.h"
+#include "TFitResultPtr.h"
 
 class TH1;
 class TPad;
 class TVirtualPad;
+class TGraph;
 class TGraphAsymmErrors;
 class TGraphErrors;
 class TAxis;
 class TGaxis;
 class TLine;
-class TFitResultPtr;
 class TFitResult;
 class THStack;
 class TBrowser;
@@ -43,8 +43,8 @@ class TBrowser;
 class TRatioPlot : public TObject {
 
 private:
-   TRatioPlot& operator=(const TRatioPlot&) = delete; // Not implemented
-   TRatioPlot(const TRatioPlot &hrp) = delete;
+   TRatioPlot &operator=(const TRatioPlot &) = delete;
+   TRatioPlot(const TRatioPlot &) = delete;
 
    enum CalculationMode {
       kDivideHist = 1, ///< Use `TH1::Divide` to create the ratio.
@@ -71,30 +71,31 @@ private:
 
 protected:
 
-   TVirtualPad *fParentPad = 0; ///< Stores the pad the ratio plot was created in
-   TPad *fUpperPad = 0; ///< The pad which contains the upper plot part
-   TPad *fLowerPad = 0; ///< The pad which contains the calculated lower plot part
-   TPad *fTopPad = 0; ///< The Pad that drawn on top on the others to have consistent coordinates
+   TVirtualPad *fParentPad = nullptr; ///< Stores the pad the ratio plot was created in
+   TPad *fUpperPad = nullptr; ///< The pad which contains the upper plot part
+   TPad *fLowerPad = nullptr; ///< The pad which contains the calculated lower plot part
+   TPad *fTopPad = nullptr; ///< The Pad that drawn on top on the others to have consistent coordinates
 
-   TH1 *fH1 = 0; ///< Stores the primary histogram
-   TH1 *fH2 = 0; ///< Stores the secondary histogram, if there is one
-   TObject *fHistDrawProxy = 0; ///< The object which is actually drawn, this might be TH1 or THStack
+   TH1 *fH1 = nullptr; ///< Stores the primary histogram
+   TH1 *fH2 = nullptr; ///< Stores the secondary histogram, if there is one
+   TObject *fHistDrawProxy = nullptr; ///< The object which is actually drawn, this might be TH1 or THStack
+   Bool_t fHistDrawProxyStack = kFALSE; ///< If stack was assigned as proxy
 
    Int_t fMode = 0; ///< Stores which calculation is supposed to be performed as specified by user option
-   Int_t fErrorMode = TRatioPlot::ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
-   TString fOption = ""; ///< Stores the option which is given in the constructor as a string
-   TString fH1DrawOpt = ""; ///< Stores draw option for h1 given in constructor
-   TString fH2DrawOpt = ""; ///< Stores draw option for h2 given in constructor
-   TString fGraphDrawOpt = ""; ///< Stores draw option for the lower plot graph given in constructor
-   TString fFitDrawOpt = ""; ///< Stores draw option for the fit function in the fit residual case
+   Int_t fErrorMode = ErrorMode::kErrorSymmetric; ///< Stores the error mode, sym, asym or func
+   TString fOption; ///< Stores the option which is given in the constructor as a string
+   TString fH1DrawOpt; ///< Stores draw option for h1 given in constructor
+   TString fH2DrawOpt; ///< Stores draw option for h2 given in constructor
+   TString fGraphDrawOpt; ///< Stores draw option for the lower plot graph given in constructor
+   TString fFitDrawOpt; ///< Stores draw option for the fit function in the fit residual case
 
    Float_t fSplitFraction = 0.3; ///< Stores the fraction at which the upper and lower pads meet
 
-   TGraph *fRatioGraph = 0; ///< Stores the lower plot's graph
-   TGraphErrors *fConfidenceInterval1 = 0; ///< Stores the graph for the 1 sigma band
-   TGraphErrors *fConfidenceInterval2 = 0; ///< Stores the graph for the 2 sigma band
-   Color_t fCi1Color = kGreen; ///< Stores the color for the 1 sigma band
-   Color_t fCi2Color = kYellow; ///< Stores the color for the 2 sigma band
+   TGraph *fRatioGraph = nullptr; ///< Stores the lower plot's graph
+   TGraphErrors *fConfidenceInterval1 = nullptr; ///< Stores the graph for the 1 sigma band
+   TGraphErrors *fConfidenceInterval2 = nullptr; ///< Stores the graph for the 2 sigma band
+   Color_t fCi1Color = kYellow; ///< Stores the color for the 1 sigma band
+   Color_t fCi2Color = kGreen; ///< Stores the color for the 2 sigma band
 
    Bool_t fShowConfidenceIntervals = kTRUE; ///< Stores whether to show the confidence interval bands. From Draw option
 
@@ -104,25 +105,25 @@ protected:
    Double_t fC1 = 1.; ///< Stores the scale factor for h1 (or THStack sum)
    Double_t fC2 = 1.; ///< Stores the scale factor for h2
 
-   TFitResult *fFitResult = 0; ///< Stores the explicit fit result given in the fit residual case. Can be 0
+   TFitResult *fFitResult = nullptr; ///< Stores the explicit fit result given in the fit residual case. Can be 0
 
-   TAxis *fSharedXAxis = 0; ///< X axis that stores the range for both plots
-   TGaxis *fUpperGXaxis = 0; ///< Upper graphical x axis
-   TGaxis *fLowerGXaxis = 0; ///< Lower graphical x axis
-   TGaxis *fUpperGYaxis = 0; ///< Upper graphical y axis
-   TGaxis *fLowerGYaxis = 0; ///< Lower graphical y axis
-   TGaxis *fUpperGXaxisMirror = 0; ///< Upper mirror of the x axis
-   TGaxis *fLowerGXaxisMirror = 0; ///< Lower mirror of the x axis
-   TGaxis *fUpperGYaxisMirror = 0; ///< Upper mirror of the y axis
-   TGaxis *fLowerGYaxisMirror = 0; ///< Lower mirror of the y axis
+   TAxis *fSharedXAxis = nullptr; ///< X axis that stores the range for both plots
+   TGaxis *fUpperGXaxis = nullptr; ///< Upper graphical x axis
+   TGaxis *fLowerGXaxis = nullptr; ///< Lower graphical x axis
+   TGaxis *fUpperGYaxis = nullptr; ///< Upper graphical y axis
+   TGaxis *fLowerGYaxis = nullptr; ///< Lower graphical y axis
+   TGaxis *fUpperGXaxisMirror = nullptr; ///< Upper mirror of the x axis
+   TGaxis *fLowerGXaxisMirror = nullptr; ///< Lower mirror of the x axis
+   TGaxis *fUpperGYaxisMirror = nullptr; ///< Upper mirror of the y axis
+   TGaxis *fLowerGYaxisMirror = nullptr; ///< Lower mirror of the y axis
 
-   TAxis *fUpYaxis = 0; ///< Clone of the upper y axis
-   TAxis *fLowYaxis = 0; ///< Clone of the lower y axis
+   TAxis *fUpYaxis = nullptr; ///< Clone of the upper y axis
+   TAxis *fLowYaxis = nullptr; ///< Clone of the lower y axis
 
    std::vector<TLine*> fGridlines; ///< Keeps TLine objects for the gridlines
    std::vector<double> fGridlinePositions; ///< Stores the y positions for the gridlines
    Bool_t fShowGridlines = kTRUE; ///< Stores whether to show the gridlines at all
-   Int_t fHideLabelMode = TRatioPlot::HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
+   Int_t fHideLabelMode = HideLabelMode::kHideLow; ///< Stores which label to hide if the margin is to narrow, if at all
 
    // store margins to be able do determine
    // what has changed when user drags
@@ -136,32 +137,32 @@ protected:
 
    Float_t fInsetWidth = 0.0025;
 
-   Bool_t fIsUpdating = kFALSE; ///< Keeps track of whether its currently updating to reject other calls until done
-   Bool_t fIsPadUpdating = kFALSE; ///< Keeps track whether pads are updating during resizing
+   Bool_t fIsUpdating = kFALSE; ///<! Keeps track of whether its currently updating to reject other calls until done
 
    virtual void SyncAxesRanges();
    virtual void SetupPads();
+   virtual void ConnectPadsSignals();
    virtual void CreateVisualAxes();
+   virtual void UpdateVisualAxes();
    virtual Bool_t SyncPadMargins();
    void SetPadMargins();
-   void CreateGridline();
+   void CreateGridlines();
+   void UpdateGridlines();
    Int_t BuildLowerPlot();
 
    void ImportAxisAttributes(TGaxis* gaxis, TAxis* axis);
-
-   Bool_t IsDrawn();
 
    virtual void Init(TH1* h1, TH1* h2, Option_t *option = "");
 
 public:
 
    TRatioPlot();
-   virtual ~TRatioPlot();
+   ~TRatioPlot() override;
    TRatioPlot(TH1* h1, TH1* h2, Option_t *option = "pois");
 
    TRatioPlot(THStack* st, TH1* h2, Option_t *option = "pois");
 
-   TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = 0);
+   TRatioPlot(TH1* h1, Option_t *option = "", TFitResult *fitres = nullptr);
 
    void SetH1DrawOpt(Option_t *opt);
    void SetH2DrawOpt(Option_t *opt);
@@ -170,11 +171,9 @@ public:
 
    void SetInsetWidth(Double_t width);
 
-   virtual void Draw(Option_t *chopt="");
-   virtual void Browse(TBrowser *b);
+   void Draw(Option_t *chopt = "") override;
 
-
-   virtual void Paint(Option_t *opt = "");
+   void Paint(Option_t *opt = "") override;
 
    // Slots for signal receiving
    void UnZoomed();
@@ -186,29 +185,13 @@ public:
    TAxis *GetUpYaxis() const { return fUpYaxis; }
    TAxis *GetLowYaxis() const { return fLowYaxis; }
 
-   virtual TGraph *GetLowerRefGraph() const;
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Shortcut for:
-   ///
-   /// ~~~{.cpp}
-   /// rp->GetLowerRefGraph()->GetXaxis();
-   /// ~~~
-
-   TAxis *GetLowerRefXaxis() const { return GetLowerRefGraph()->GetXaxis(); }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Shortcut for:
-   ///
-   /// ~~~{.cpp}
-   /// rp->GetLowerRefGraph()->GetYaxis();
-   /// ~~~
-
-   TAxis *GetLowerRefYaxis() const { return GetLowerRefGraph()->GetYaxis(); }
-
    virtual TObject *GetUpperRefObject() const;
    TAxis *GetUpperRefXaxis() const;
    TAxis *GetUpperRefYaxis() const;
+
+   virtual TGraph *GetLowerRefGraph() const;
+   TAxis *GetLowerRefXaxis() const;
+   TAxis *GetLowerRefYaxis() const;
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Get the output of the calculation in the form of a graph. The type of
@@ -226,8 +209,8 @@ public:
 
    TGraphErrors *GetConfidenceInterval2() const { return fConfidenceInterval2; }
 
-   TPad * GetUpperPad() const { return fUpperPad; }
-   TPad * GetLowerPad() const { return fLowerPad; }
+   TPad *GetUpperPad() const { return fUpperPad; }
+   TPad *GetLowerPad() const { return fLowerPad; }
 
    // Setters
 
@@ -256,12 +239,12 @@ public:
    virtual void SetGridlines(Double_t *gridlines, Int_t numGridlines);
    virtual void SetGridlines(std::vector<double> gridlines);
 
-   void SetConfidenceIntervalColors(Color_t ci1 = kGreen, Color_t ci2 = kYellow);
+   void SetConfidenceIntervalColors(Color_t ci1 = kYellow, Color_t ci2 = kGreen);
 
    void SetC1(Double_t c1) { fC1 = c1; }
    void SetC2(Double_t c2) { fC2 = c2; }
 
-   ClassDef(TRatioPlot, 1)  //A ratio of histograms
+   ClassDefOverride(TRatioPlot, 2)  //A ratio of histograms
 };
 
 #endif

@@ -26,18 +26,19 @@
 #ifndef ROOT_Math_MCParameters
 #define ROOT_Math_MCParameters
 
-#include <stddef.h>   // for size_t
+#include <cstddef>   // for size_t
+#include <memory>  // for unique_ptr
+
+#include "Math/IOptions.h"
 
 namespace ROOT {
 namespace Math {
 
 
-class IOptions;
-
 /**
-   structures collecting parameters
+   Structures collecting parameters
    for VEGAS multidimensional integration
-   FOr implementation of default parameters see file
+   For implementation of default parameters see file
    mathmore/src/GSLMCIntegrationWorkspace.h
 
    @ingroup MCIntegration
@@ -60,15 +61,15 @@ struct VegasParameters{
 
    VegasParameters & operator=(const ROOT::Math::IOptions & opt);
 
-   /// convert to options (return object is managed by the user)
-   ROOT::Math::IOptions * operator() () const;
+   /// Convert to options
+   std::unique_ptr<ROOT::Math::IOptions>  MakeIOptions() const;
 };
 
 
 
 
 /**
-   structures collecting parameters
+   Structure collecting parameters
    for MISER multidimensional integration
 
    @ingroup MCIntegration
@@ -93,7 +94,7 @@ struct MiserParameters{
    MiserParameters & operator=(const ROOT::Math::IOptions & opt);
 
    /// convert to options (return object is managed by the user)
-   ROOT::Math::IOptions * operator() () const;
+   std::unique_ptr<ROOT::Math::IOptions> MakeIOptions() const;
 
 };
 

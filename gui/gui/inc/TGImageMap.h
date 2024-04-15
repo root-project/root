@@ -2,7 +2,7 @@
 // Author: Valeriy Onuchin & Fons Rademakers   18/10/2000
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,14 +12,6 @@
 #ifndef ROOT_TGImageMap
 #define ROOT_TGImageMap
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGImageMap (with TGRegion and TGRegionWithId help classes)           //
-//                                                                      //
-// A TGImageMap provides the functionality like a clickable image in    //
-// a web browser with sensitive regions (MAP HTML tag).                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGButton.h"
 #include "TPoint.h"
@@ -49,7 +41,7 @@ public:
    TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding = kFALSE);
    TGRegion(const TArrayS &x, const TArrayS &y, Bool_t winding = kFALSE);
    TGRegion(const TGRegion &reg);
-   virtual ~TGRegion();
+   ~TGRegion() override;
 
    Bool_t      Contains(const TPoint &p) const;
    Bool_t      Contains(Int_t x, Int_t y) const;
@@ -76,7 +68,7 @@ public:
    Bool_t operator!=(const TGRegion &r) const { return !(operator==(r)); }
    TGRegion &operator=(const TGRegion &r);
 
-   ClassDef(TGRegion,0) // Describes a region
+   ClassDefOverride(TGRegion,0) // Describes a region
 };
 
 
@@ -84,12 +76,12 @@ class TGRegionWithId : public TGRegion {
 
 private:
 
-   TGRegionWithId& operator=(const TGRegionWithId&); // Not implemented
+   TGRegionWithId& operator=(const TGRegionWithId&) = delete;
 
 protected:
-   Int_t         fId;      // region id
-   TGToolTip    *fTip;     // tooltip
-   TGPopupMenu  *fPopup;   // popup menu
+   Int_t         fId;      ///< region id
+   TGToolTip    *fTip;     ///< tooltip
+   TGPopupMenu  *fPopup;   ///< popup menu
 
 public:
    TGRegionWithId();
@@ -98,7 +90,7 @@ public:
    TGRegionWithId(Int_t id, Int_t n, TPoint *points, Bool_t winding = kFALSE);
    TGRegionWithId(const TGRegionWithId &reg);
    TGRegionWithId(const TGRegion &reg, Int_t id);
-   virtual ~TGRegionWithId();
+   ~TGRegionWithId() override;
 
    Int_t        GetId() const { return fId; }
    TGToolTip   *GetToolTipText() const { return fTip; }
@@ -108,7 +100,7 @@ public:
    void         SetPopup(TGPopupMenu *popup) { fPopup = popup; }
    void         DisplayPopup();
 
-   ClassDef(TGRegionWithId,0) // Region with id, tooltip text and popup menu
+   ClassDefOverride(TGRegionWithId,0) // Region with id, tooltip text and popup menu
 };
 
 
@@ -116,39 +108,39 @@ class TGImageMap : public TGPictureButton {
 
 private:
 
-   TGImageMap(const TGImageMap&); // Not implemented
-   TGImageMap& operator=(const TGImageMap&); // Not implemented
+   TGImageMap(const TGImageMap&) = delete;
+   TGImageMap& operator=(const TGImageMap&) = delete;
 
 public:
    enum ENavMode { kNavRegions, kNavGrid };
 
 protected:
-   TList      *fListOfRegions;   // list of regions
-   ENavMode    fNavMode;         // navigation mode
-   ECursor     fCursorMouseOver; // cursor shape in regions
-   ECursor     fCursorMouseOut;  // cursor shape out of regions
-   Int_t       fLastVisited;     // id of the last visited region
-   TGToolTip  *fMainTip;         // tooltip text for main region
-   TList      *fTrash;           // collect all objects that need to be cleaned up
+   TList      *fListOfRegions;   ///< list of regions
+   ENavMode    fNavMode;         ///< navigation mode
+   ECursor     fCursorMouseOver; ///< cursor shape in regions
+   ECursor     fCursorMouseOut;  ///< cursor shape out of regions
+   Int_t       fLastVisited;     ///< id of the last visited region
+   TGToolTip  *fMainTip;         ///< tooltip text for main region
+   TList      *fTrash;           ///< collect all objects that need to be cleaned up
 
 public:
-   TGImageMap(const TGWindow *p = 0, const TGPicture *pic = 0);
+   TGImageMap(const TGWindow *p = nullptr, const TGPicture *pic = nullptr);
    TGImageMap(const TGWindow *p, const TString &pic);
-   virtual ~TGImageMap();
+   ~TGImageMap() override;
 
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleDoubleClick(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleDoubleClick(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
    ENavMode       GetNavMode() { return fNavMode; }
    void           AddRegion(const TGRegion &region, Int_t id);
    TGPopupMenu   *CreatePopup(Int_t id);
    TGPopupMenu   *GetPopup(Int_t id);
 
-   void SetToolTipText(const char *text, Long_t delayms = 300);
+   void SetToolTipText(const char *text, Long_t delayms = 300) override;
    void SetToolTipText(Int_t id, const char *text, Long_t delayms = 300);
    void SetCursor(ECursor cursor = kHand) { fCursorMouseOver = cursor; }
-   void SetPicture(const TGPicture * /*new_pic*/) { } // disabled
+   void SetPicture(const TGPicture * /*new_pic*/) override { } // disabled
 
    virtual void RegionClicked(Int_t id); // *SIGNAL*
    virtual void DoubleClicked(Int_t id); // *SIGNAL*
@@ -156,7 +148,7 @@ public:
    virtual void OnMouseOver(Int_t id);   // *SIGNAL*
    virtual void OnMouseOut(Int_t id);    // *SIGNAL*
 
-   ClassDef(TGImageMap,0)  // Clickable image (like MAP in HTML)
+   ClassDefOverride(TGImageMap,0)  // Clickable image (like MAP in HTML)
 };
 
 R__EXTERN TGRegionWithId *gCurrentRegion;

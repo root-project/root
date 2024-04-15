@@ -115,7 +115,7 @@ public:
    TRolke(Double_t CL = 0.9, Option_t *option = "");
 
    /* Destructor */
-   virtual ~TRolke();
+   ~TRolke() override;
 
    /* Get and set the Confidence Level */
    Double_t GetCL() const         {
@@ -189,9 +189,9 @@ public:
    void SetSwitch(bool bnd) ;
 
    /* Dump internals. Option is not used */
-   void Print(Option_t*) const;
+   void Print(Option_t*) const override;
 
-   ClassDef(TRolke, 2)
+   ClassDefOverride(TRolke, 2)
 };
 
 //calculate confidence limits using the Rolke method

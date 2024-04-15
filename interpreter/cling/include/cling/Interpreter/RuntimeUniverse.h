@@ -23,6 +23,8 @@
 
 #ifdef __cplusplus
 
+#include <cling/Interpreter/RuntimeOptions.h>
+#include "cling/Interpreter/Visibility.h"
 #include <new>
 
 namespace cling {
@@ -38,6 +40,9 @@ namespace cling {
     /// the dynamic scopes and the runtime bindings
     extern Interpreter* gCling;
 
+    /// \brief Configuration bits for the parent interpreter.
+    extern RuntimeOptions* gClingOpts;
+
     namespace internal {
       /// \brief Some of clang's routines rely on valid source locations and
       /// source ranges. This member can be looked up and source locations and
@@ -45,7 +50,7 @@ namespace cling {
       ///
       /// Use instead of SourceLocation() and SourceRange(). This might help,
       /// when clang emits diagnostics on artificially inserted AST node.
-      int InterpreterGeneratedCodeDiagnosticsMaybeIncorrect;
+      static int InterpreterGeneratedCodeDiagnosticsMaybeIncorrect;
 
 
       ///\brief Set the type of a void expression evaluated at the prompt.
@@ -54,6 +59,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpSVR, void* vpQT, char vpOn);
 
       ///\brief Set the value of the GenericValue for the expression
@@ -65,6 +71,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            float value);
 
@@ -77,6 +84,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            double value);
 
@@ -90,6 +98,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            long double value);
 
@@ -104,6 +113,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpSVR - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            unsigned long long value);
 
@@ -116,6 +126,7 @@ namespace cling {
       ///\param [in] vpT - The opaque ptr for the cling::Transaction.
       ///\param [out] vpV - The Value that is created.
       ///
+      CLING_LIB_EXPORT
       void setValueNoAlloc(void* vpI, void* vpV, void* vpQT, char vpOn,
                            const void* value);
 
@@ -128,6 +139,7 @@ namespace cling {
       ///
       ///\returns the address where the value should be put.
       ///
+      CLING_LIB_EXPORT
       void* setValueWithAlloc(void* vpI, void* vpV, void* vpQT, char vpOn);
 
       ///\brief Placement new doesn't work for arrays. It needs to be called on
@@ -159,16 +171,10 @@ namespace cling {
       ///\param[in] placement - where to copy
       ///\param[in] size - size of the array.
       ///
-      template <class T, class = T (*)() /*disable for arrays*/>
+      template <class T>
       void copyArray(T* src, void* placement, std::size_t size) {
         for (std::size_t i = 0; i < size; ++i)
           new ((void*)(((T*)placement) + i)) T(src[i]);
-      }
-
-      // "size" is the number of elements even for subarrays; flatten the type:
-      template <class T, std::size_t N>
-      void copyArray(const T (*src)[N], void* placement, std::size_t size) {
-        copyArray(src[0], placement, size);
       }
     } // end namespace internal
   } // end namespace runtime
@@ -181,7 +187,7 @@ extern "C" {
   /// the definition of the exceptions from the RuntimeUniverse and allows us to
   /// run cling in -no-rtti mode.
   ///
-
+  CLING_LIB_EXPORT
   void* cling_runtime_internal_throwIfInvalidPointer(void* Sema,
                                                     void* Expr,
                                                     const void* Arg);

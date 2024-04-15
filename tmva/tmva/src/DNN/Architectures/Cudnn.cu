@@ -14,7 +14,9 @@
 // for Double_t and Real_t floating point types.                 //
 ///////////////////////////////////////////////////////////////////
 
-
+// in case we compile C++ code with std-17 and cuda with lower standard
+// use experimental string_view, otherwise keep as is
+#include "RConfigure.h"
 
 #include "TMVA/DNN/Architectures/TCudnn.h"
 #include "Cudnn/Propagate.cu"
@@ -27,7 +29,7 @@
 #include "Cudnn/OutputFunctions.cu"
 
 //#include "Cudnn/Dropout.cu"
-//#include "Cudnn/RecurrentPropagation.cu"*/
+#include "Cudnn/RecurrentPropagation.cu"
 
 namespace TMVA {
 namespace DNN  {
@@ -36,8 +38,8 @@ template class TCudnn<Float_t>;
 template class TCudnn<Double_t>;
 
 #ifndef R__HAS_TMVAGPU
-   // if R__HAS_TMVAGPU is not defined this file should not be compiled 
-   static_assert(false,"GPU/CUDA architecture is not enabled"); 
+   // if R__HAS_TMVAGPU is not defined this file should not be compiled
+   static_assert(false,"GPU/CUDA architecture is not enabled");
 #endif
 
    // CuDNN options

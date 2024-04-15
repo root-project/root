@@ -2,6 +2,7 @@
 /// \ingroup tutorial_geom
 /// Macro allowing to vizualize tessellations from Wavefront's .obj format.
 ///
+/// \image html geom_visualizeWavefrontObj.png width=500px
 /// \macro_code
 ///
 /// \author Andrei Gheata
@@ -29,7 +30,7 @@ void visualizeWavefrontObj(const char *dot_obj_file="", bool check = false)
 {
    // Input a file in .obj format (https://en.wikipedia.org/wiki/Wavefront_.obj_file)
    // The file should have a single object inside, only vertex and faces information is used
-   
+
    TString name = dot_obj_file;
    TString sfile = dot_obj_file;
    if (sfile.IsNull()) {

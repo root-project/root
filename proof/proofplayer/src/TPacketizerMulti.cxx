@@ -296,19 +296,19 @@ TVirtualPacketizer *TPacketizerMulti::CreatePacketizer(TDSet *dset, TList *wrks,
       return packetizer;
    }
    callEnv.ResetParam();
-   callEnv.SetParam((Long_t) dset);
-   callEnv.SetParam((Long_t) wrks);
+   callEnv.SetParam((Longptr_t) dset);
+   callEnv.SetParam((Longptr_t) wrks);
    callEnv.SetParam((Long64_t) first);
    callEnv.SetParam((Long64_t) num);
-   callEnv.SetParam((Long_t) input);
-   callEnv.SetParam((Long_t) st);
+   callEnv.SetParam((Longptr_t) input);
+   callEnv.SetParam((Longptr_t) st);
 
    // We are going to test validity during the packetizer initialization
    dset->SetBit(TDSet::kValidityChecked);
    dset->ResetBit(TDSet::kSomeInvalid);
 
    // Get an instance of the packetizer
-   Long_t ret = 0;
+   Longptr_t ret = 0;
    callEnv.Execute(ret);
    if ((packetizer = (TVirtualPacketizer *)ret) == 0) {
       Error("CreatePacketizer", "cannot construct '%s'", cl->GetName());

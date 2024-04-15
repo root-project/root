@@ -4,13 +4,17 @@
 #ifndef ROOT_TSchemaRuleSet
 #define ROOT_TSchemaRuleSet
 
-class TClass;
-
 #include "TObject.h"
-#include "TObjArray.h"
-#include "Rtypes.h"
 #include "TString.h"
 #include "TClassRef.h"
+#include <vector>
+
+#ifdef R__LESS_INCLUDES
+class TObjArray;
+#else
+#include "TObjArray.h"
+#endif
+
 
 namespace ROOT {
 
@@ -40,8 +44,8 @@ namespace Detail {
       TSchemaRuleSet();
       virtual ~TSchemaRuleSet();
 
-      Bool_t              AddRule( TSchemaRule* rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0 );
-      Bool_t              AddRules( TSchemaRuleSet* rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = 0);
+      Bool_t              AddRule(TSchemaRule *rule, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = nullptr);
+      Bool_t              AddRules(TSchemaRuleSet *rules, EConsistencyCheck checkConsistency = kCheckAll, TString *errmsg = nullptr);
       Bool_t              HasRuleWithSourceClass( const TString &source) const;
       const TMatches FindRules( const TString &source ) const;
       const TMatches FindRules( const TString &source, Int_t version ) const;
@@ -57,19 +61,20 @@ namespace Detail {
       void                RemoveRules( TObjArray* rules );
       void                SetClass( TClass* cls );
 
-      void                ls(Option_t *option="") const;
+      void                ls(Option_t *option="") const override;
       void                AsString(TString &out) const;
-
-      ClassDef( TSchemaRuleSet, 1 )
 
    private:
       TObjArray* fPersistentRules; //  Array of the rules that will be embeded in the file
-      TObjArray* fRemainingRules;  //! Array of non-persisten rules - just for cleanup purposes - owns the elements
+      TObjArray* fRemainingRules;  //! Array of non-persistent rules - just for cleanup purposes - owns the elements
       TObjArray* fAllRules;        //! Array of all rules
       TClassRef  fClass;           //! Target class pointer (for consistency checking)
       TString    fClassName;       //  Target class name
       Int_t      fVersion;         //  Target class version
       UInt_t     fCheckSum;        //  Target class checksum
+
+   ClassDefOverride( TSchemaRuleSet, 1 )
+
    };
 
 } // End of Namespace Detail

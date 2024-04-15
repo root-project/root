@@ -3,14 +3,15 @@ sap.ui.define([
    "sap/ui/model/json/JSONModel",
    "sap/m/Button",
    "sap/m/Input",
+   "sap/m/StepInput",
    "sap/m/CheckBox",
    "sap/m/Text",
    "sap/m/ColorPalettePopover",
    "sap/ui/layout/HorizontalLayout"
-], function (Controller, JSONModel, Button, mInput, mCheckBox, mText, ColorPalettePopover, HorizontalLayout) {
+], function (Controller, JSONModel, Button, mInput, mStepInput, mCheckBox, mText, ColorPalettePopover, HorizontalLayout) {
    "use strict";
 
-   var UI5PopupColors = {
+   let UI5PopupColors = {
          aliceblue: 'f0f8ff',
          antiquewhite: 'faebd7',
          aqua: '00ffff',
@@ -161,8 +162,9 @@ sap.ui.define([
          transparent: '00000000'
    };// colorButton colors
 
+
    // TODO: move to separate file
-   var EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
+   let EVEColorButton = Button.extend("rootui5.eve7.controller.EVEColorButton", {
       // when default value not specified - openui tries to load custom
       renderer: {}, // ButtonRenderer.render,
 
@@ -178,7 +180,38 @@ sap.ui.define([
 
    });
 
-   var GedController = Controller.extend("rootui5.eve7.controller.Ged", {
+    let EVEColorPopup = ColorPalettePopover.extend("rootui5.eve7.controller.EVEColorPopup", {
+        // when default value not specified - openui tries to load custom
+        defaultColors : ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
+                             'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
+                             'white', 'black','red' , 'rgb(102,154,51)', 'rgb(200, 0, 200)'],
+
+        parseRGB : function(val) {
+            let rgb, regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/,
+                found = val.match(regex);
+            if (found) {
+                console.log("match color ", found);
+                rgb = { r: found[1], g: found[2], b: found[3] };
+            } else {
+                let hex = UI5PopupColors[val];
+
+                // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+                let shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+
+                hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+                    return r + r + g + g + b + b;
+                });
+
+                rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+
+                rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
+            }
+            return rgb;
+        }
+
+    });
+
+   let GedController = Controller.extend("rootui5.eve7.controller.Ged", {
 
       onInit : function() {
          this.oModel = new JSONModel({ title: "GED title", "widgetlist" : [] });
@@ -201,8 +234,8 @@ sap.ui.define([
 
       closeGedEditor: function() {
          if (this.ged_visible) {
-            var prnt = this.getView().getParent();
-            if (prnt) prnt.removeContentArea(this.getView());
+            let prnt = this.getView().getParent();
+            if (prnt) prnt.removeItem(this.getView());
             this.ged_visible = false;
          }
 
@@ -215,294 +248,513 @@ sap.ui.define([
          if (this.ged_visible && (elementId == this.ged_id))
             return this.closeGedEditor();
 
-         var editorElement = this.mgr ? this.mgr.GetElement(elementId) : null;
+         let editorElement = this.mgr ? this.mgr.GetElement(elementId) : null;
          if (!editorElement)
             return this.closeGedEditor();
 
          if (!this.ged_visible)
-            sumSplitter.addContentArea(this.getView());
+            sumSplitter.addItem(this.getView());
 
          this.ged_id = elementId;
          this.ged_visible = true;
 
          this.editorElement = editorElement;
 
-         // removing ROOT::Experimental:: from class name
-         var title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
+         let title = this.editorElement.fName + " (" +  this.editorElement._typename.substring(20) + " )" ;
          this.oModel.setProperty("/title", title);
+         this.buildEditor();
+      },
 
-         var gedFrame =  this.getView().byId("GED");
-
+      buildEditor: function() {
+         let gedFrame =  this.getView().byId("GED");
          gedFrame.unbindElement();
          gedFrame.destroyContent();
+         this.secSelectList = 0;
 
-         this.makeDataForGED(this.editorElement);
-
-         // console.log("going to bind >>> ", this.getView().getModel("ged"));
-         gedFrame.bindAggregation("content", "ged>/widgetlist",  this.gedFactory.bind(this) );
+         let t = this.editorElement._typename;
+         if (t.indexOf("ROOT::Experimental::")==0) t = t.substring(20);
+         let fn = "build" + t + "Setter";
+         if (typeof this[fn] === "function")
+            this[fn](this.editorElement);
+         else
+            this.buildREveElementSetter(this.editorElement);
       },
 
-      makeDataForGED: function (element) {
-
-         var cgd = GedController.canEditClass(element._typename);
-         if (!cgd)
-            return this.oModel.setProperty("/widgetlist", []);
-
-         var arrw = [], modelw = [], off = 0, subEds = [];
-         this.maxLabelLength = 0;
-
-         // sub editors
-         if (cgd[0].sub) {
-            off = 1;
-            var sarr = cgd[0].sub;
-            for (var i = 0; i< sarr.length; ++i) {
-               var x = GedController.canEditClass(sarr[i]);
-               if (x)
-                  for (var j=0; j < x.length; j++)
-                     arrw.push(x[j]);
-            }
-         }
-
-         for (var i = off; i < cgd.length; ++i)
-         {
-            arrw.push(cgd[i]);
-         }
-
-         for (var i=0; i< arrw.length; ++i) {
-            var parName = arrw[i].name;
-
-            if (!arrw[i].member) {
-               arrw[i].member = "f" + parName;
-            }
-
-            if (!arrw[i].srv) {
-               arrw[i].srv = "Set" + parName;
-            }
-
-            var v  = element[arrw[i].member];
-            if (arrw[i]._type == "Color") {
-               v = JSROOT.Painter.root_colors[v];
-            }
-            var labeledInput = {
-               value: v,
-               name: arrw[i].name,
-               data: arrw[i]
-            };
-
-            modelw.push({ value: v, name: arrw[i].name, data: arrw[i]});
-
-            if (this.maxLabelLength < arrw[i].name.length) this.maxLabelLength = arrw[i].name.length;
-         }
-
-         this.oModel.setProperty("/widgetlist", modelw);
+      buildREveElementSetter : function(el)
+      {
+         this.makeBoolSetter(el.fRnrSelf, "RnrSelf");
+         this.makeBoolSetter(el.fRnrChildren, "RnrChildren");
+         this.makeColorSetter(el.fMainColor, "MainColor");
       },
 
-      /** Method used to create custom items for GED */
-      gedFactory: function(sId, oContext) {
-         var base = "/widgetlist/";
-         var path = oContext.getPath();
-         var idx = path.substring(base.length);
-         var customData =  oContext.oModel.oData["widgetlist"][idx].data;
-         var controller = this;
-         var widget = null;
+      buildREveSelectionSetter : function(el)
+      {
+         this.makeColorSetter(el.fVisibleEdgeColor, "VisibleEdgeColor");
+         this.makeColorSetter(el.fHiddenEdgeColor, "HiddenEdgeColor");
+      },
 
-         switch (customData._type) {
+      buildREveJetConeSetter : function(el)
+      {
+         this.makeBoolSetter(el.fRnrSelf, "RnrSelf");
+         this.makeBoolSetter(el.fRnrChildren, "RnrChildren");
+         this.makeColorSetter(el.fMainColor, "MainColor");
+         this.makeNumberSetter(el.fNDiv, "NDiv");
+      },
 
-         case "Number":
-            widget = new mInput(sId, {
-               value: { path: "ged>value" },
-               change: controller.sendMethodInvocationRequest.bind(controller, "Number")
+      buildREveTrackSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+         this.makeNumberSetter(el.fLineWidth, "LineWidth");
+      },
+
+      buildREveViewerSetter: function(el)
+      {
+         this.makeBoolSetter(Boolean(el.AxesType), "ShowAxes", "SetAxesType");
+         this.makeBoolSetter(el.BlackBg, "BlackBackground");
+      },
+
+      buildREveDataCollectionSetter : function(el)
+      {
+         this.makeBoolSetter(el.fRnrSelf, "RnrSelf");
+         this.makeColorSetter(el.fMainColor, "MainColor");
+         this.makeStringSetter(el.fFilterExpr, "FilterExpr");
+      },
+      buildREveDataItemListSetter : function(el)
+      {
+         let pthis = this;
+         let gedFrame =  this.getView().byId("GED");
+         let list = new sap.m.List({});
+         this.secSelectList = list;
+
+         list.addStyleClass("eveSummaryItem");
+	 list.setMode("MultiSelect");
+	 list.setIncludeItemInSelection(true);
+	 list.addStyleClass("eveNoSelectionCheckBox");
+         let citems = el.items;
+
+         // CAUTION! This state is only valid for the last click event.
+	 // If the next itemPress is triggered by a keyboard or touch event, it will still
+	 // read this outdated ctrlKeyPressed information!!
+	 // So ALL events causing itemPress must clear/set ctrlKeyPressed
+	 // or ctrlKeyPressed must be reset to false after a short timeout.
+	 //
+	 // Also, it is not tested whether for all types of events, the direct browser
+	 // event is coming BEFORE the itemPress event handler invocation!
+         let ctrlKeyPressed = false;
+         list.attachBrowserEvent("click", function(e) {
+	    ctrlKeyPressed = e.ctrlKey;
+	 });
+
+         let lastLabel = "item_"+ (citems.length -1)
+         let makeItem = function(i) {
+            let iid = "item_"+ i;
+            let fout = citems[i].fFiltered;
+	    let item  = new sap.m.CustomListItem( iid, {type:sap.m.ListType.Active});
+	    item.addStyleClass("sapUiTinyMargin");
+
+            // item info
+	    let label = new sap.m.Label({text: iid});
+            label.addStyleClass("sapUiTinyMarginBeginEnd");
+
+            // rnr self
+	    let rb = new mCheckBox({
+               selected: citems[i].fRnrSelf,
+               text: "RnrSelf",
+               select: function(oEvent)
+               {
+                  let value = oEvent.getSource().getSelected();
+                  let mir =  "SetItemVisible( " + i + ", " + value + " )";
+                  pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
+               }
             });
-            widget.setType(sap.m.InputType.Number);
-            break;
 
-         case "String":
-            widget = new mInput(sId, {
-               value: { path: "ged>value" },
-               change: controller.sendMethodInvocationRequest.bind(controller, "String")
+            rb.addStyleClass("sapUiTinyMarginEnd");
 
-            });
-            widget.setType(sap.m.InputType.String);
-            widget.setWidth("250px"); // AMT this should be handled differently
-            break;
-         case "Bool":
-            widget = new mCheckBox(sId, {
-               selected: { path: "ged>value" },
-               select: controller.sendMethodInvocationRequest.bind(controller, "Bool")
-            });
-            break;
-
-         case "Color":
-            var colVal = oContext.oModel.oData["widgetlist"][idx].value;
-            // var model = this.getView().getModel("colors");
-            //   model["mainColor"] = colVal;
-            //  console.log("col value ", colVal, JSROOT.Painter.root_colors[colVal]);
-            widget = new EVEColorButton(sId, {
-               icon: "sap-icon://palette",
-               background: colVal,
-
+            let col_widget = new EVEColorButton( {
+               icon : "sap-icon://palette",
+               background: EVE.JSR.getColor(citems[i].fColor),
                press: function () {
-                  var colButton = this;
-                  var oCPPop = new ColorPalettePopover( {
-                      defaultColor: "cyan",
-                       colors: ['gold','darkorange', 'indianred','rgb(102,51,0)', 'cyan',// 'magenta'
-                                'blue', 'lime', 'gray','slategray','rgb(204, 198, 170)',
-                                'white', 'black','red' , 'rgb(102,154,51)', 'rgb(200, 0, 200)'],
-                       colorSelect: function(event) {
-                          colButton.setBackground(event.getParameters().value);
-                          controller.handleColorSelect(event);
-                       }
-                   });
-
-                   oCPPop.openBy(colButton);
-                   oCPPop.data("myData", customData);
-                 }
+                  let oCPPop = new EVEColorPopup( {
+                     colorSelect: function(event) {
+                        let rgb = this.parseRGB(event.getParameters().value);
+                        let mir = "SetItemColorRGB(" + i + ", " + rgb.r + ", " + rgb.g +  ", " + rgb.b + ")";
+                        pthis.mgr.SendMIR(mir, el.fElementId, el._typename );
+                        // console.log("color mir -  .... ", mir);
+                     }
+                  });
+                  oCPPop.openBy(this);
+               }
             });
-            break;
+            col_widget.addStyleClass("sapUiTinyMarginBeginEnd");
+            if (fout){
+               label.addStyleClass("eveTableCellUnfiltered");
+               rb.setEnabled(false);
+               col_widget.setEnabled(false);
+            }
 
-         case "Action":
-            widget = new Button(sId, {
-               //text: "Action",
-               icon: "sap-icon://accept",
-               press: controller.sendMethodInvocationRequest.bind(controller, "Action")
+            let box = new sap.m.HBox({
+               items : [ label, rb, col_widget ]
             });
-            break;
+
+            item.addContent(box);
+            list.addItem(item);
+
+         };
+
+         for (let i = 0; i < citems.length; ++i ) {
+            if (!citems[i].fFiltered)
+               makeItem(i);
          }
+         for (let i = 0; i < citems.length; ++i ) {
+            if (citems[i].fFiltered)
+               makeItem(i);
+         }
+         list.attachItemPress(function(oEvent) {
+	    let p = oEvent.getParameters("item");
+	    let idx = p.listItem.sId.substring(5);
+            let secIdcs = [idx];
+            let is_multi = false;
 
-         if (widget) widget.data("myData", customData);
+            if(!ctrlKeyPressed)
+	    {
+	       let selected = list.getSelectedItems();
+	       console.log("selected items ", selected, "idx = ",  idx);
+	       for (let s = 0; s < selected.length; s++) {
+		  if (selected[s].sId !=  p.listItem.sId)
+		     list.setSelectedItem(selected[s], false);
+	       }
+	    }
+            let fcall = "ProcessSelectionStr(" + pthis.mgr.global_selection_id + `, ${is_multi}, true`;
+                              fcall += ", \"" + secIdcs.join(", ")  + " \"";
+                              fcall += ")";
+                              pthis.mgr.SendMIR(fcall, el.fElementId, el._typename);
 
-         var label = new mText(sId + "label", { text: { path: "ged>name" } });
-         label.setWidth(this.maxLabelLength +"ex");
+	 });
+         gedFrame.addContent(list);
+      },
+
+      buildREveCaloDataHistSetter : function(el)
+      {
+         let si = el.sliceInfos;
+
+         for (let i = 0; i < si.length; i++)
+         {
+            let pthis = this;
+            let col_widget = new EVEColorButton( {
+               background: EVE.JSR.getColor(si[i].color),
+               press: function () {
+                  let oCPPop = new EVEColorPopup( {
+                     colorSelect: function(event) {
+                        let rgb = this.parseRGB(event.getParameters().value);
+                        let mir = "SetSliceColor(" + i + ", TColor::GetColor(" + rgb.r + ", " + rgb.g +  ", " + rgb.b + "))";
+                        console.log("color mir -  .... ", mir);
+                        pthis.mgr.SendMIR(mir, pthis.editorElement.fElementId, pthis.editorElement._typename);
+                     }
+                  });
+                  oCPPop.openBy(this);
+               }
+            });
+
+            let name = si[i].name;
+            let label = new mText({ text:name });
+            label.addStyleClass("sapUiTinyMargin");
+
+            let cx = new mText({ text:"Color:"});
+            cx.addStyleClass("sapUiTinyMargin");
+
+            let fx = new mText({ text:"Threshold:"});
+            fx.addStyleClass("sapUiTinyMargin");
+
+            let in_widget = new mStepInput({
+               displayValuePrecision: 3,
+               min : 0,
+               value:  si[i].threshold,
+               step : 0.1,
+               change: function (event)
+               {
+                  let mir =  "SetSliceThreshold( " + i + ", " + event.getParameter("value") + " )";
+                  pthis.mgr.SendMIR(mir, pthis.editorElement.fElementId, pthis.editorElement._typename );
+               }
+            });
+            in_widget.setWidth("100px");
+            let frame = new HorizontalLayout({
+               content : [label, cx, col_widget, fx, in_widget ]
+            });
+            let gedFrame =  this.getView().byId("GED");
+            gedFrame.addContent(frame);
+         }
+      },
+
+      buildREveBoxSetSetter : function(el)
+      {
+         this.buildREveElementSetter(el);
+         this.makeBoolSetter(el.coneCap, "DrawConeCap");
+      },
+   
+      buildREveRGBAPaletteSetter: function (el) {
+         let  gedFrame =  this.getView().byId("GED");
+
+         // fix color
+         this.makeBoolSetter(el.fixRng, "FixColorRange");
+         this.makeBoolSetter(el.interpolate, "Interpolate");
+
+         // modes
+         var sheetNames = { myList: [{ Name: "Cut", Key: 0 }, { Name: "Mark", Key: 1 },{ Name: "Clip", Key : 2 }, { Name: "Wrap", Key : 3 } ] };
+         var sheets = new sap.ui.model.json.JSONModel(sheetNames);
+
+         // underflow
+         {
+            let oa_label = new mText({ text: "UnderFlowAction" });
+            gedFrame.addContent(oa_label);
+            let comboBox = new sap.m.ComboBox({
+               showSecondaryValues: true,
+               items: {
+                  path: "/myList",
+                  template: new sap.ui.core.ListItem({ key: "{Key}", text: "{Name}" })
+               },
+
+               selectionChange: function (oControlEvent) {
+                  var oSelectedItem = oControlEvent.getParameter("selectedItem");
+                  oSelectedItem = oSelectedItem.getKey();
+                  let mir = "SetUnderflowAction(" + oSelectedItem + ")";
+                  gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename);
+               }
+            });
+            comboBox.setModel(sheets);
+            let ci = comboBox.getItems();
+            comboBox.setSelectedItem(el.oAction, true);
+
+            let tagg = sheetNames.myList[el.oAction].Name;
+            comboBox.setPlaceholder(tagg);
+            gedFrame.addContent(comboBox);
+         }
+         this.makeColorSetter(el.uColor, "UnderColor", "SetUnderColorRGBA");
+
+         // overflow
+         {
+            let oa_label = new mText({ text: "OverFlowAction" });
+            gedFrame.addContent(oa_label);
+            let comboBox = new sap.m.ComboBox({
+               showSecondaryValues: true,
+               items: {
+                  path: "/myList",
+                  template: new sap.ui.core.ListItem({ key: "{Key}", text: "{Name}" })
+               },
+
+               selectionChange: function (oControlEvent) {
+                  var oSelectedItem = oControlEvent.getParameter("selectedItem");
+                  oSelectedItem = oSelectedItem.getKey();
+                  let mir = "SetOverflowAction(" + oSelectedItem + ")";
+                  gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename);
+               }
+            });
+            comboBox.setModel(sheets);
+            let ci = comboBox.getItems();
+            let tagg = sheetNames.myList[el.oAction].Name;
+                        comboBox.setPlaceholder(tagg);
+            comboBox.setSelectedItem(el.oAction, true);
+
+            gedFrame.addContent(comboBox);
+         }
+         this.makeColorSetter(el.oColor, "OverColor", "SetOverColorRGBA");
+
+         // range
+         let label = new mText({ text: "Range" });
+         label.addStyleClass("sapUiTinyMargin");
+         gedFrame.addContent(label);
+
+         let gcm = this;
+         let s = new sap.m.RangeSlider({
+            min:el.lowLimit,
+            max:el.highLimit,
+            enableTickmarks: true,
+            width: "80%",
+            scale: new sap.m.ResponsiveScale({tickmarksBetweenLabels: 5}),
+            range: [el.min, el.max],
+            liveChange: function (oControlEvent) { // change range
+               // AMT tmp workaround / event queue not enabled
+               if (gcm.mgr.busyProcessingChanges)
+                   return;
+               
+               let minv = this.getValue();
+               let maxv = this.getValue2();
+               let mir = "SetMinMax(" + minv + "," + maxv + ")";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            },
+            change: function (oControlEvent) { // change only min or max side
+               // AMT tmp workaround / event queue not enabled
+               if (gcm.mgr.busyProcessingChanges)
+               return;
+               let minv = this.getValue();
+               let maxv = this.getValue2();
+               let mir = "SetMinMax(" + minv + "," + maxv + ")";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            }
+         });
+
+         gedFrame.addContent(s);
+      },
+
+      makeBoolSetter : function(val, labelName, funcName, gedFrame)
+      {
+         if (!gedFrame)
+            gedFrame =  this.getView().byId("GED");
+
+
+         if (!funcName)
+            funcName = "Set" + labelName;
+
+         let gcm = this;
+         let widget = new mCheckBox({
+            selected: val,
+
+            select: function(oEvent)
+            {
+               console.log("Bool setter select event", oEvent.getSource());
+               let value = oEvent.getSource().getSelected();
+               let mir =  funcName + "( " + value + " )";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            }
+         });
+
+         let label = new mText({ text: labelName });
          label.addStyleClass("sapUiTinyMargin");
 
-         return new HorizontalLayout({
-            content : [label, widget]
+         let frame = new HorizontalLayout({
+            content : [widget, label]
          });
+
+         gedFrame.addContent(frame);
       },
 
-      sendMethodInvocationRequest: function(kind, event) {
-         if (!this.editorElement || !this.mgr)
-            return;
+      makeColorSetter : function(val, labelName, funcName, gedFrame)
+      {
+         if (!gedFrame)
+            gedFrame =  this.getView().byId("GED");
 
-         var value = "";
-         switch (kind) {
-            case "Bool": value = event.getSource().getSelected(); break;
-            case "Action": value = ""; break;
-            default: value =  event.getParameter("value");
-         }
+         if (!funcName)
+            funcName = "Set" + labelName + "RGB";
 
-         var myData = event.getSource().data("myData");
 
-         if (myData.quote !== undefined)
-              value = "\"" + value + " \"";
+         let pthis = this;
+         let widget = new EVEColorButton( {
+            icon: "sap-icon://palette",
+            background: EVE.JSR.getColor(val),
+            press: function () {
+               let oCPPop = new EVEColorPopup( {
+                  colors: this.defaultColors,
+                  colorSelect: function(event) {
+                     let rgb = this.parseRGB(event.getParameters().value);
+                     let mir =  funcName + "((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
+                     pthis.mgr.SendMIR(mir, pthis.editorElement.fElementId, pthis.editorElement._typename);
+                  }
+               });
+               oCPPop.openBy(this);
+            }
+         });
 
-         this.mgr.SendMIR(myData.srv + "( " + value + " )", this.editorElement.fElementId, this.editorElement._typename );
+         let label = new mText({ text: labelName });
+         label.addStyleClass("sapUiTinyMargin");
+
+         let frame = new HorizontalLayout({
+            content : [widget, label]
+         });
+         gedFrame.addContent(frame);
       },
 
-      handleColorSelect: function(event) {
-         var val = event.getParameters().value;
-         var myData = event.getSource().data("myData");
+      makeNumberSetter : function(val, labelName, funcName, gedFrame)
+      {
+         if (!gedFrame)
+            gedFrame =  this.getView().byId("GED");
 
-        var rgb, regex = /rgb\((\d+)\,\s?(\d+)\,\s?(\d+)\)/,
-            found = val.match(regex);
-        if (found) {
-           console.log("match color ", found);
-           /*
-           rgb.r = found[1];
-           rgb.g = found[2];
-           rgb.b = found[3];
-           */
-           rgb = { r: found[1], g: found[2], b: found[3] };
-        } else {
-           var hex = UI5PopupColors[val];
+         if (!funcName)
+            funcName = "Set" + labelName;
 
-           // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
-           var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+         let gcm = this;
+         let widget = new mInput({
+            value: val,
+            change: function (event)
+            {
+               let value = event.getParameter("value");
+               let mir =  funcName + "( " + value + " )";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            }
+         });
+         widget.setType(sap.m.InputType.Number);
+         let label = new mText({ text: labelName });
+         label.addStyleClass("sapUiTinyMargin");
 
-           hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-              return r + r + g + g + b + b;
-           });
+         let frame = new HorizontalLayout({
+            content : [widget, label]
+         });
+         gedFrame.addContent(frame);
+      },
 
-           rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      makeStringSetter : function(val, labelName, funcName, gedFrame)
+      {
+         if (!gedFrame)
+            gedFrame =  this.getView().byId("GED");
 
-           rgb = rgb ? { r: parseInt(rgb[1], 16), g: parseInt(rgb[2], 16), b: parseInt(rgb[3], 16) } : null;
-        }
+         if (!funcName)
+            funcName = "Set" + labelName;
 
-        var mir =  myData.srv + "((UChar_t)" + rgb.r + ", (UChar_t)" + rgb.g +  ", (UChar_t)" + rgb.b + ")";
-        if (this.mgr)
-           this.mgr.SendMIR(mir, this.editorElement.fElementId, this.editorElement._typename);
-     },
+         let gcm = this;
+         let widget = new mInput({
+            value: val,
+            change: function (event)
+            {
+               let value = event.getParameter("value");
+               let mir =  funcName + "( \"" + value + "\" )";
+               gcm.mgr.SendMIR(mir, gcm.editorElement.fElementId, gcm.editorElement._typename );
+            }
+         });
+         widget.setType(sap.m.InputType.String);
+         widget.setWidth("250px"); // AMT this should be handled differently
+
+         let label = new mText({ text: labelName });
+         label.addStyleClass("sapUiTinyMargin");
+
+         let frame = new HorizontalLayout({
+            content : [widget, label]
+         });
+         gedFrame.addContent(frame);
+      },
 
       updateGED: function(elementId) {
          if (this.ged_visible && this.editorElement && (this.editorElement.fElementId == elementId)) {
-            var gedFrame =  this.getView().byId("GED");
-            gedFrame.unbindElement();
-            gedFrame.destroyContent();
-            this.makeDataForGED(this.editorElement);
-            gedFrame.bindAggregation("content", "ged>/widgetlist", this.gedFactory.bind(this));
+            this.buildEditor();
          }
-      }
+      },
 
-   });
+      updateSecondarySelectionGED:function(elementId, sec_idcs) {
+         if (this.secSelectList)
+         {
+            if (this.editorElement.fElementId == elementId){
+               let selected = this.secSelectList.getSelectedItems();
+               for (let s = 0; s < selected.length; s++)
+                  this.secSelectList.setSelectedItem(selected[s], false);
 
-   function make_col_obj(stem) {
-      return { name: stem, member: "f" + stem, srv: "Set" + stem + "RGB", _type: "Color" };
+
+               for (let i =0; i < sec_idcs.length; ++i) {
+                  let sid = "item_"+sec_idcs[i];
+                  this.secSelectList.setSelectedItemById(sid, true);
+               }
+            }
+            else
+               this.secSelectList.removeSelections();
+         }
    }
 
-   function make_main_col_obj(label, use_main_setter) {
-      return { name: label, member: "fMainColor", srv: "Set" + (use_main_setter ? "MainColor" : label) + "RGB", _type: "Color" };
-   };
-
-   /** Used in creating items and configuring GED */
-   GedController.oGuiClassDef = {
-      "REveElement" : [
-         { name : "RnrSelf",     _type : "Bool" },
-         { name : "RnrChildren", _type : "Bool" },
-         make_main_col_obj("Color", true),
-         { name : "Destroy",  member : "fElementId", srv : "Destroy",  _type : "Action" },
-      ],
-      "REveElementList" : [ { sub: ["REveElement"] }, ],
-      "REveSelection"   : [ make_col_obj("VisibleEdgeColor"), make_col_obj("HiddenEdgeColor"), ],
-      "REveGeoShape"    : [ { sub: ["REveElement"] } ],
-      "REveCompound"    : [ { sub: ["REveElement"] } ],
-      "REvePointSet" : [
-         { sub: ["REveElement" ] },
-         { name : "MarkerSize", _type : "Number" }
-      ],
-      "REveJetCone" : [
-         { name : "RnrSelf", _type : "Bool" },
-         make_main_col_obj("ConeColor", true),
-         { name : "NDiv",    _type : "Number" }
-      ],
-      "REveDataCollection" : [
-         { sub: ["REveElement"] },
-         { name : "FilterExpr",  _type : "String",   quote : 1 }
-      ],
-      "REveDataItem" : [
-         make_main_col_obj("ItemColor"),
-         { name : "RnrSelf",   member : "fRnrSelf",  _type : "Bool" },
-         { name : "Filtered",   _type : "Bool" }
-      ],
-      "REveTrack" : [
-         { name : "RnrSelf",   _type : "Bool" },
-         make_main_col_obj("LineColor", true),
-         { name : "LineWidth", _type : "Number" },
-         { name : "Destroy",  member : "fElementId",  srv : "Destroy", _type : "Action" }
-      ],
-   };
-
+   });
    GedController.canEditClass = function(typename) {
-      // suppress ROOT::Exeperimental:: prefix
-      var t = typename || "";
-      if (t.indexOf("ROOT::Experimental::")==0) t = t.substring(20);
-      return this.oGuiClassDef[t];
+      return true;
    };
 
    /** Return method to toggle rendering self */
    GedController.GetRnrSelfMethod = function(typename) {
-      var desc = this.canEditClass(typename);
+      let desc = this.canEditClass(typename);
       if (desc)
-         for (var k=0;k<desc.length;++k)
+         for (let k=0;k<desc.length;++k)
             if ((desc[k].member == "fRnrSelf") && desc[k].name)
                return "Set" + desc[k].name;
 

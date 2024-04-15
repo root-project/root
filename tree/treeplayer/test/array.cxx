@@ -7,8 +7,6 @@
 
 #include "gtest/gtest.h"
 
-#include <fstream>
-
 TEST(TTreeReaderArray, Vector)
 {
    TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
@@ -33,7 +31,7 @@ TEST(TTreeReaderArray, Vector)
 
 TEST(TTreeReaderArray, MultiReaders)
 {
-   // See https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=22790
+   // See https://root.cern/phpBB3/viewtopic.php?f=3&t=22790
    TTree *tree = new TTree("TTreeReaderArrayTree", "In-memory test tree");
    double Double[6] = {42.f, 43.f, 44.f, 45.f, 46.f, 47.f};
    tree->Branch("D", &Double, "D[4]/D");
@@ -207,4 +205,138 @@ TEST(TTreeReaderArray, Float16_t)
                                               << " in the collections differs!";
       }
    }
+}
+
+TEST(TTreeReaderArray, ROOT10397)
+{
+   TTree t("t", "t");
+   float x[10];
+   int n;
+   struct {
+      int n = 10;
+      float z[10];
+   } z;
+   t.Branch("n", &n, "n/I");
+   t.Branch("x", &x, "y[n]/F");
+   t.Branch("z", &z, "n/I:z[n]/F");
+   for (int i = 7; i < 10; i++) {
+      n = i;
+      for (int j = 0; j < n; j++) {
+         x[j] = j;
+      }
+      z.n = 13 - i;
+      for (int j = 0; j < 10; ++j)
+         z.z[j] = z.n;
+      t.Fill();
+   };
+
+   TTreeReader r(&t);
+   TTreeReaderArray<float> xr(r, "x.y");
+   TTreeReaderArray<float> zr(r, "z.z");
+   r.Next();
+   EXPECT_EQ(xr.GetSize(), 7);
+   EXPECT_EQ(zr.GetSize(), 13 - 7);
+}
+
+TEST(TTreeReaderArray, LongIntArray)
+{
+   const auto fname = "TTreeReaderArrayLongIntArray.root";
+   {
+      TFile f(fname, "recreate");
+      long int G[3] = {std::numeric_limits<long int>::min(), 42, std::numeric_limits<long int>::max()};
+      int size = 2;
+      unsigned long int *g = new unsigned long int[size];
+      g[0] = 42;
+      g[1] = std::numeric_limits<unsigned long int>::max();
+      TTree t("t", "t");
+      t.Branch("G", G, "G[3]/G");
+      t.Branch("n", &size);
+      t.Branch("g", g, "g[n]/g");
+      t.Fill();
+      t.Write();
+   }
+
+   TFile f(fname);
+   TTreeReader r("t", &f);
+   TTreeReaderArray<long int> rG(r, "G");
+   TTreeReaderArray<unsigned long int> rg(r, "g");
+   EXPECT_TRUE(r.Next());
+   ASSERT_EQ(rG.GetSize(), 3);
+   EXPECT_EQ(rG[0], std::numeric_limits<long int>::min());
+   EXPECT_EQ(rG[1], 42);
+   ASSERT_EQ(rg.GetSize(), 2);
+   EXPECT_EQ(rg[0], 42);
+   EXPECT_EQ(rg[1], std::numeric_limits<unsigned long int>::max());
+   EXPECT_FALSE(r.Next());
+}
+
+template <typename Size_t>
+void TestReadingNonIntArraySizes()
+{
+   TTree t("t", "t");
+   Size_t sizes = 1;
+   float arr[10]{};
+
+   t.Branch("sizes", &sizes);
+   t.Branch("arrs", arr, "arrs[sizes]/F");
+
+   arr[0] = 42.f;
+   t.Fill();
+
+   sizes = 3;
+   arr[0] = 1.f;
+   arr[1] = 2.f;
+   arr[2] = 3.f;
+   t.Fill();
+
+   TTreeReader r(&t);
+   TTreeReaderArray<float> ras(r, "arrs");
+   r.Next();
+   EXPECT_EQ(ras.GetSize(), 1);
+   EXPECT_FLOAT_EQ(ras[0], 42.f);
+   r.Next();
+   EXPECT_EQ(ras.GetSize(), 3);
+   EXPECT_FLOAT_EQ(ras[0], 1.f);
+   EXPECT_FLOAT_EQ(ras[1], 2.f);
+   EXPECT_FLOAT_EQ(ras[2], 3.f);
+}
+
+TEST(TTreeReaderArray, ShortSize)
+{
+   TestReadingNonIntArraySizes<short>();
+}
+
+TEST(TTreeReaderArray, UShortSize)
+{
+   TestReadingNonIntArraySizes<unsigned short>();
+}
+
+TEST(TTreeReaderArray, LongSize)
+{
+   TestReadingNonIntArraySizes<long>();
+}
+
+TEST(TTreeReaderArray, ULongSize)
+{
+   TestReadingNonIntArraySizes<unsigned long>();
+}
+
+TEST(TTreeReaderArray, LongLongSize)
+{
+   TestReadingNonIntArraySizes<long long>();
+}
+
+TEST(TTreeReaderArray, ULongLongSize)
+{
+   TestReadingNonIntArraySizes<unsigned long long>();
+}
+
+TEST(TTreeReaderArray, Long64Size)
+{
+   TestReadingNonIntArraySizes<Long64_t>();
+}
+
+TEST(TTreeReaderArray, ULong64Size)
+{
+   TestReadingNonIntArraySizes<ULong64_t>();
 }

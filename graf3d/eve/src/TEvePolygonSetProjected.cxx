@@ -15,7 +15,6 @@
 
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
 
 namespace
@@ -49,9 +48,9 @@ ClassImp(TEvePolygonSetProjected);
 
 TEvePolygonSetProjected::TEvePolygonSetProjected(const char* n, const char* t) :
    TEveShape(n, t),
-   fBuff(0),
+   fBuff(nullptr),
    fNPnts(0),
-   fPnts(0)
+   fPnts(nullptr)
 {
 }
 
@@ -108,7 +107,7 @@ void TEvePolygonSetProjected::SetDepthLocal(Float_t d)
 
 void TEvePolygonSetProjected::UpdateProjection()
 {
-   if (fBuff == 0) return;
+   if (fBuff == nullptr) return;
 
    // drop polygons and projected/reduced points
    fPols.clear();

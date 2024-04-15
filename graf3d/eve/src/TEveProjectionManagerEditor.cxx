@@ -13,7 +13,6 @@
 #include "TEveProjectionManager.h"
 #include "TEveGValuators.h"
 
-#include "TGNumberEntry.h"
 #include "TGComboBox.h"
 #include "TGLabel.h"
 
@@ -31,18 +30,18 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
                                                          Int_t width, Int_t height,
                                                          UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+   fM(nullptr),
 
-   fType(0),
-   fDistortion(0),
-   fFixR(0), fFixZ(0),
-   fPastFixRFac(0), fPastFixZFac(0),
-   fCurrentDepth(0),
-   fMaxTrackStep(0),
+   fType(nullptr),
+   fDistortion(nullptr),
+   fFixR(nullptr), fFixZ(nullptr),
+   fPastFixRFac(nullptr), fPastFixZFac(nullptr),
+   fCurrentDepth(nullptr),
+   fMaxTrackStep(nullptr),
 
-   fCenterX(0),
-   fCenterY(0),
-   fCenterZ(0)
+   fCenterX(nullptr),
+   fCenterY(nullptr),
+   fCenterZ(nullptr)
 {
    MakeTitle("TEveProjection");
    {
@@ -50,8 +49,12 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
       TGLabel* lab = new TGLabel(f, "Type");
       f->AddFrame(lab, new TGLayoutHints(kLHintsLeft|kLHintsBottom, 1, 31, 1, 2));
       fType = new TGComboBox(f);
-      fType->AddEntry("RPhi", TEveProjection::kPT_RPhi);
       fType->AddEntry("RhoZ", TEveProjection::kPT_RhoZ);
+      fType->AddEntry("RPhi", TEveProjection::kPT_RPhi);
+      fType->AddEntry("XZ",   TEveProjection::kPT_XZ);
+      fType->AddEntry("YZ",   TEveProjection::kPT_YZ);
+      fType->AddEntry("ZX",   TEveProjection::kPT_ZX);
+      fType->AddEntry("ZY",   TEveProjection::kPT_ZY);
       fType->AddEntry("3D",   TEveProjection::kPT_3D);
       TGListBox* lb = fType->GetListBox();
       lb->Resize(lb->GetWidth(), 2*18);

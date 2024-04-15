@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamMultiTarget                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Concrete PDEFoamEvent sub-class.  This foam stores the number             *
@@ -26,13 +26,16 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_PDEFoamMultiTarget
 #define ROOT_TMVA_PDEFoamMultiTarget
 
 #include "TMVA/PDEFoamEvent.h"
+
+#include <vector>
+#include <map>
 
 namespace TMVA
 {

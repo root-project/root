@@ -41,11 +41,11 @@ namespace ROOT {
 
          LCGEngine() : fSeed(65539) { }
 
-         virtual ~LCGEngine() {}
+         ~LCGEngine() override {}
 
          void SetSeed(uint32_t seed) { fSeed = seed; }
 
-         virtual double Rndm() {
+         double Rndm() override {
             //double Rndm() {
             return Rndm_impl();
          }
@@ -56,9 +56,9 @@ namespace ROOT {
             return fSeed; 
          }
 
-         /// minimum integer taht can be generated
+         /// minimum integer that can be generated
          static unsigned int MinInt() { return 0; }
-         /// maximum integer taht can be generated
+         /// maximum integer that can be generated
          static unsigned int MaxInt() { return 0xffffffff; }  //  2^32 -1
          /// Size of the generator state
          static int Size() { return 1; }

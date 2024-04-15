@@ -32,11 +32,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
-#ifndef __CINT__
-#include <string.h>
-#endif
+#include <cstring>
 
 #if (defined(__linux) || defined(__APPLE__)) && \
     (defined(__i386__) || defined(__x86_64__)) && \
@@ -49,7 +47,7 @@
 #undef R__USEASMSWAP
 #endif
 
-#if defined(R__USEASMSWAP) && !defined(__CINT__)
+#if defined(R__USEASMSWAP)
 #include "Byteswap.h"
 #endif
 
@@ -469,7 +467,7 @@ inline UInt_t host2net(UInt_t x)
 
 inline ULong_t host2net(ULong_t x)
 {
-#ifdef R__B64
+#if defined(R__B64) && !defined(_WIN64)
 # if defined(R__USEASMSWAP)
    return Rbswap_64(x);
 # else

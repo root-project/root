@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2024, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -11,6 +11,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   HEADERS
+    TAnnotation.h
     TAttCanvas.h
     TButton.h
     TCanvas.h
@@ -31,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     TViewer3DPad.h
     TView.h
   SOURCES
+    src/TAnnotation.cxx
     src/TAttCanvas.cxx
     src/TButton.cxx
     src/TCanvas.cxx
@@ -56,3 +58,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     Graf
     Hist
 )
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

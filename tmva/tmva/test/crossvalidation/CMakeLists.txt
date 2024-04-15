@@ -10,12 +10,16 @@
 ############################################################################
 
 set(Libraries TMVA)
-include_directories(${ROOT_INCLUDE_DIRS})
 
 # Tests utilising google test
 ROOT_ADD_GTEST(testCrossValidationSplitting
                TestCrossValidationSplitting.cxx
                LIBRARIES ${Libraries})
+
+ROOT_ADD_GTEST(testCrossValidationIntVar
+               TestCrossValidationIntVar.cxx
+               LIBRARIES ${Libraries})
+
 if(NOT MSVC)
   #---Multiproc is not supported on Windows
   ROOT_ADD_GTEST(testCrossValidationMultiProc

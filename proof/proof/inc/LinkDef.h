@@ -42,6 +42,7 @@
 #pragma link C++ class TProofLogElem;
 #pragma link C++ class TSlave;
 #pragma link C++ class TSlaveLite;
+#pragma link C++ class TVirtualPacketizer+;
 #pragma link C++ class TVirtualProofPlayer+;
 #pragma link C++ class TProofQueryResult+;
 #pragma link C++ class TQueryResultManager+;
@@ -59,12 +60,6 @@
 
 #pragma link C++ class TDataSetManager;
 #pragma link C++ class TDataSetManagerFile;
-
-// Dictionary for TDataSetManagerAliEn only if requested
-#ifdef ALIENDSMGR
-#pragma link C++ class TDataSetManagerAliEn;
-#pragma link C++ class TAliEnFind;
-#endif
 
 #pragma link C++ class TSelVerifyDataSet+;
 

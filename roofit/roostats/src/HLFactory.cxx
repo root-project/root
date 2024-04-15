@@ -34,9 +34,7 @@ Moreover it provides tools for the combination of models and datasets.
 
 */
 
-using namespace std;
-
-ClassImp(RooStats::HLFactory); ;
+ClassImp(RooStats::HLFactory);
 
 
 using namespace RooStats;
@@ -47,83 +45,52 @@ using namespace RooFit;
 /// verbosity flag. The extension for the config files is assumed to
 /// be ".rs".
 
-HLFactory::HLFactory(const char *name,
-                     const char *fileName,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    TString wsName(name);
-    wsName+="_ws";
-    fWs = new RooWorkspace(wsName,true);
+HLFactory::HLFactory(const char *name, const char *fileName, bool isVerbose)
+   : TNamed(name, name), fVerbose(isVerbose), fOwnWs(true)
+{
+   TString wsName(name);
+   wsName += "_ws";
+   fWs = new RooWorkspace(wsName, true);
 
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 
-    // Start the parsing
-    fReadFile(fileName);
+   // Start the parsing
+   fReadFile(fileName);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor without a card but with an external workspace.
 
-HLFactory::HLFactory(const char* name,
-                     RooWorkspace* externalWs,
-                     bool isVerbose):
-    TNamed(name,name),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(isVerbose),
-    fInclusionLevel(0),
-    fOwnWs(false){
-    fWs=externalWs;
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
-
+HLFactory::HLFactory(const char *name, RooWorkspace *externalWs, bool isVerbose)
+   : TNamed(name, name), fVerbose(isVerbose), fWs(externalWs)
+{
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-HLFactory::HLFactory():
-    TNamed("hlfactory","hlfactory"),
-    fComboCat(0),
-    fComboBkgPdf(0),
-    fComboSigBkgPdf(0),
-    fComboDataset(0),
-    fCombinationDone(false),
-    fVerbose(false),
-    fInclusionLevel(0),
-    fOwnWs(true){
-    fWs = new RooWorkspace("hlfactory_ws",true);
-
-    fSigBkgPdfNames.SetOwner();
-    fBkgPdfNames.SetOwner();
-    fDatasetsNames.SetOwner();
-
-    }
+HLFactory::HLFactory() : TNamed("hlfactory", "hlfactory"), fWs(new RooWorkspace("hlfactory_ws", true)), fOwnWs(true)
+{
+   fSigBkgPdfNames.SetOwner();
+   fBkgPdfNames.SetOwner();
+   fDatasetsNames.SetOwner();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 HLFactory::~HLFactory(){
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         delete fComboSigBkgPdf;
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         delete fComboBkgPdf;
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         delete fComboDataset;
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         delete fComboCat;
 
     if (fOwnWs)
@@ -148,8 +115,8 @@ int HLFactory::AddChannel(const char* label,
         return -1;
         }
 
-    if (SigBkgPdfName!=0){
-        if (fWs->pdf(SigBkgPdfName)==NULL){
+    if (SigBkgPdfName!=nullptr){
+        if (fWs->pdf(SigBkgPdfName)==nullptr){
             std::cerr << "Pdf " << SigBkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -157,8 +124,8 @@ int HLFactory::AddChannel(const char* label,
         fSigBkgPdfNames.Add(name);
         }
 
-    if (BkgPdfName!=0){
-        if (fWs->pdf(BkgPdfName)==NULL){
+    if (BkgPdfName!=nullptr){
+        if (fWs->pdf(BkgPdfName)==nullptr){
             std::cerr << "Pdf " << BkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -166,8 +133,8 @@ int HLFactory::AddChannel(const char* label,
         fBkgPdfNames.Add(name);
         }
 
-    if (DatasetName!=0){
-        if (fWs->data(DatasetName)==NULL){
+    if (DatasetName!=nullptr){
+        if (fWs->data(DatasetName)==nullptr){
             std::cerr << "Dataset " << DatasetName << " not found in workspace!\n";
             return -1;
             }
@@ -175,7 +142,7 @@ int HLFactory::AddChannel(const char* label,
         fDatasetsNames.Add(name);
         }
 
-    if (label!=0){
+    if (label!=nullptr){
         TObjString* name = new TObjString(label);
         fLabelsNames.Add(name);
         }
@@ -189,17 +156,16 @@ int HLFactory::AddChannel(const char* label,
 
 RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     if (fSigBkgPdfNames.GetSize()==0)
-        return 0;
+        return nullptr;
 
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         return fComboSigBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fSigBkgPdfNames.GetSize()==1){
-        TString name(((TObjString*)fSigBkgPdfNames.At(0))->String());
-        fComboSigBkgPdf=fWs->pdf(name);
+        fComboSigBkgPdf=fWs->pdf(static_cast<TObjString*>(fSigBkgPdfNames.At(0))->String().Data());
         return fComboSigBkgPdf;
         }
 
@@ -208,24 +174,19 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIterator* it=fSigBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
-        pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
-    delete it;
+    for(auto * ostring : static_range_cast<TObjString*>(fSigBkgPdfNames)) {
+        pdfs.add( *(fWs->pdf(ostring->String().Data())) );
+    }
 
-    TString name(GetName());
+    std::string name(GetName());
     name+="_sigbkg";
 
-    TString title(GetName());
+    std::string title(GetName());
     title+="_sigbkg";
 
     fComboSigBkgPdf=
-      new RooSimultaneous(name,
-                          title,
+      new RooSimultaneous(name.c_str(),
+                          title.c_str(),
                           pdfs,
                           *fComboCat);
 
@@ -235,21 +196,21 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the background only channels.
-/// If no background channel is specified a NULL pointer is returned.
+/// If no background channel is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotBkgPdf(){
     if (fBkgPdfNames.GetSize()==0)
-        return 0;
+        return nullptr;
 
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         return fComboBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fBkgPdfNames.GetSize()==1){
-        fComboBkgPdf=fWs->pdf(((TObjString*)fBkgPdfNames.First())->String());
+        fComboBkgPdf=fWs->pdf(static_cast<TObjString*>(fBkgPdfNames.First())->String().Data());
         return fComboBkgPdf;
         }
 
@@ -258,13 +219,9 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIterator* it = fBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
-        pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
+    for(auto * ostring : static_range_cast<TObjString*>(fBkgPdfNames)) {
+        pdfs.add( *fWs->pdf(ostring->String().Data()) );
+    }
 
     TString name(GetName());
     name+="_bkg";
@@ -284,21 +241,21 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the datasets.
-/// If no dataset is specified a NULL pointer is returned.
+/// If no dataset is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooDataSet* HLFactory::GetTotDataSet(){
     if (fDatasetsNames.GetSize()==0)
-        return 0;
+        return nullptr;
 
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         return fComboDataset;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fDatasetsNames.GetSize()==1){
-        fComboDataset=(RooDataSet*)fWs->data(((TObjString*)fDatasetsNames.First())->String());
+        fComboDataset=static_cast<RooDataSet*>(fWs->data(static_cast<TObjString*>(fDatasetsNames.First())->String().Data()));
         return fComboDataset;
         }
 
@@ -306,23 +263,23 @@ RooDataSet* HLFactory::GetTotDataSet(){
         fCreateCategory();
 
 
-    TIterator* it = fDatasetsNames.MakeIterator();
+    auto it = fDatasetsNames.begin();
     TObjString* ostring;
-    TObject* obj = it->Next();
-    ostring = (TObjString*) obj;
-    fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
-    if (!fComboDataset) return NULL;
+    ostring = static_cast<TObjString*>(*it);
+    ++it;
+    fComboDataset = static_cast<RooDataSet*>(fWs->data(ostring->String().Data())) ;
+    if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
     fComboDataset = new RooDataSet(*fComboDataset,dataname+"_TotData");
     int catindex=0;
     fComboCat->setIndex(catindex);
     fComboDataset->addColumn(*fComboCat);
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for(; it != fDatasetsNames.end() ; ++it) {
+        ostring = static_cast<TObjString*>(*it);
         catindex++;
-        RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
-        if (!data) return NULL;
+        RooDataSet * data = static_cast<RooDataSet*>(fWs->data(ostring->String().Data()));
+        if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);
         fComboCat->Print();
@@ -331,7 +288,6 @@ RooDataSet* HLFactory::GetTotDataSet(){
         delete dummy;
     }
 
-    delete it;
     return fComboDataset;
 
 }
@@ -341,11 +297,11 @@ RooDataSet* HLFactory::GetTotDataSet(){
 /// The factory owns the object.
 
 RooCategory* HLFactory::GetTotCategory(){
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         return fComboCat;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (!fCombinationDone)
         fCreateCategory();
@@ -358,7 +314,7 @@ RooCategory* HLFactory::GetTotCategory(){
 /// Process an additional configuration file
 
 int HLFactory::ProcessCard(const char* filename){
-    return fReadFile(filename,0);
+    return fReadFile(filename,false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -390,10 +346,11 @@ int HLFactory::ProcessCard(const char* filename){
 
 int HLFactory::fReadFile(const char*fileName, bool is_included){
     // Check the deepness of the inclusion
-    if (is_included)
+    if (is_included) {
         fInclusionLevel+=1;
-    else
-        fInclusionLevel=0;
+    } else {
+        fInclusionLevel = 0;
+    }
 
     const int maxDeepness=50;
     if (fInclusionLevel>maxDeepness){
@@ -423,24 +380,23 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
     // the comments.
     TString ifileContentStripped("");
 
-    TObjArray* lines_array = ifileContent.Tokenize("\n");
-    TIterator* lineIt=lines_array->MakeIterator();
+    std::unique_ptr<TObjArray> lines_array{ifileContent.Tokenize("\n")};
 
     bool in_comment=false;
-    TString line;
-    TObject* line_o;
 
-    while((line_o=(*lineIt)())){ // Start iteration on lines array
-        line = (static_cast<TObjString*>(line_o))->GetString();
+    // Start iteration on lines array
+    for(TObject * line_o : *lines_array) {
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Are we in a multiline comment?
-        if (in_comment)
+        if (in_comment) {
             if (line.EndsWith("*/")){
                 in_comment=false;
                 if (fVerbose) Info("fReadFile","Out of multiline comment ...");
 
                 continue;
-                }
+            }
+        }
 
         // Was line a single line comment?
 
@@ -460,21 +416,17 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         ifileContentStripped+=line+"\n";
         }
 
-    delete lines_array;
-    delete lineIt;
-
     // Now proceed with the parsing of the stripped file
 
-    lines_array = ifileContentStripped.Tokenize(";");
-    lineIt=lines_array->MakeIterator();
+    lines_array.reset(ifileContentStripped.Tokenize(";"));
     in_comment=false;
 
     const int nNeutrals=2;
     TString neutrals[nNeutrals]={"\t"," "};
 
-    while((line_o=(*lineIt)())){
+    for(TObject * line_o : *lines_array) {
 
-        line = (static_cast<TObjString*>(line_o))->GetString();
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Strip spaces at the beginning and the end of the line
         line.Strip(TString::kBoth,' ');
@@ -519,9 +471,6 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         fParseLine(line);
         }
 
-    delete lineIt;
-    delete lines_array;
-
     return 0;
 }
 
@@ -542,11 +491,7 @@ void HLFactory::fCreateCategory(){
 
     fComboCat=new RooCategory(name,title);
 
-    TIterator* it=fLabelsNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for (auto * ostring : static_range_cast<TObjString*>(fLabelsNames)) {
         fComboCat->defineType(ostring->String());
         }
 
@@ -557,11 +502,11 @@ void HLFactory::fCreateCategory(){
 /// is not empty prompt an error.
 
 bool HLFactory::fNamesListsConsistent(){
-    if ((fSigBkgPdfNames.GetEntries()==fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries()==0) &&
-        (fSigBkgPdfNames.GetEntries()==fDatasetsNames.GetEntries() || fDatasetsNames.GetEntries()==0) &&
-        (fSigBkgPdfNames.GetEntries()==fLabelsNames.GetEntries() || fLabelsNames.GetEntries()==0))
+        if ((fSigBkgPdfNames.GetEntries() == fBkgPdfNames.GetEntries() || fBkgPdfNames.GetEntries() == 0) &&
+            (fSigBkgPdfNames.GetEntries() == fDatasetsNames.GetEntries() || fDatasetsNames.GetEntries() == 0) &&
+            (fSigBkgPdfNames.GetEntries() == fLabelsNames.GetEntries() || fLabelsNames.GetEntries() == 0)) {
         return true;
-    else{
+        } else {
         std::cerr << "The number of datasets and models added as channels "
                   << " is not the same!\n";
         return false;
@@ -587,7 +532,7 @@ int HLFactory::fParseLine(TString& line){
          nequals>0 &&    // It is a cat like "tag[B0=1,B0bar=-1]"
          ! line.Contains("(") &&
          ! line.Contains(")"))) {
-      fWs->factory(line);
+      fWs->factory(line.Data());
       return 0;
       }
 
@@ -623,8 +568,8 @@ int HLFactory::fParseLine(TString& line){
         TString ws_name("");
         TString rootfile_name (static_cast<TObjString*>(descr_array->At(0))->GetString());
 
-        TFile* ifile=TFile::Open(rootfile_name);
-        if (ifile==0)
+        std::unique_ptr<TFile> ifile{TFile::Open(rootfile_name)};
+        if (ifile==nullptr)
             return 1;
 
         if (n_descr_parts==3){// in presence of a Ws
@@ -632,13 +577,13 @@ int HLFactory::fParseLine(TString& line){
           fWs->import(o_descr);
           }
         else if(n_descr_parts==2){ // in presence of an object in rootfile
-          if (fVerbose)
-            Info("fParseLine","Importing %s from %s under the name of %s",
-                 obj_name.Data(), rootfile_name.Data(), o_name.Data());
+          if (fVerbose) {
+             Info("fParseLine", "Importing %s from %s under the name of %s", obj_name.Data(), rootfile_name.Data(),
+                  o_name.Data());
+          }
           TObject* the_obj=ifile->Get(obj_name);
           fWs->import(*the_obj,o_name);
           }
-        delete ifile;
         return 0;
         } // end of import block
 
@@ -649,13 +594,13 @@ int HLFactory::fParseLine(TString& line){
             std::cout << "DEBUG: new_line: " << new_line.Data() << std::endl;
             }
 
-        fWs->factory(new_line);
+        fWs->factory(new_line.Data());
 
         return 0;
         }
 
     else { // In case we do not know what to do we pipe it..
-        fWs->factory(line);
+        fWs->factory(line.Data());
         }
 
     return 0;

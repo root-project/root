@@ -1,9 +1,11 @@
 sap.ui.define([
-   'sap/ui/core/UIComponent', 'sap/ui/core/mvc/XMLView', 'sap/m/routing/Router' /* Router is only needed for packaging */
-], function(UIComponent, XMLView) {
+   'sap/ui/core/UIComponent',
+   'sap/ui/core/mvc/XMLView',
+   'sap/m/routing/Router' /* Router is only needed for packaging */
+], function(UIComponent) {
    "use strict";
 
-   var Component = UIComponent.extend("rootui5.eve7.Component", {
+   return UIComponent.extend("rootui5.eve7.Component", {
       metadata : {
          manifest: "json"
       },
@@ -12,7 +14,4 @@ sap.ui.define([
          this.getRouter().initialize();
       }
    });
-
-   return Component;
-
 });

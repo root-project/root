@@ -21,7 +21,7 @@ namespace utils {
 namespace platform {
 #if defined(LLVM_ON_UNIX)
   const char* const kEnvDelim = ":";
-#elif defined(LLVM_ON_WIN32)
+#elif defined(_WIN32)
   const char* const kEnvDelim = ";";
 #else
   #error "Unknown platform (environmental delimiter)"
@@ -174,7 +174,7 @@ bool LookForFile(const std::vector<const char*>& Args, std::string& Path,
         llvm::sys::fs::is_regular_file(FilePath)) {
       if (FileType)
         LogFileStatus("Using", FileType, FilePath.str());
-      Path = FilePath.str();
+      Path = FilePath.str().str();
       return true;
     }
     // Don't write same same log entry twice when FilePath == Path
@@ -201,7 +201,7 @@ bool LookForFile(const std::vector<const char*>& Args, std::string& Path,
       if (llvm::sys::fs::is_regular_file(FilePath)) {
         if (FileType)
           LogFileStatus("Using", FileType, FilePath.str());
-        Path = FilePath.str();
+        Path = FilePath.str().str();
         return true;
       }
       if (FileType)
@@ -216,7 +216,7 @@ bool SplitPaths(llvm::StringRef PathStr,
                 SplitMode Mode, llvm::StringRef Delim, bool Verbose) {
   assert(Delim.size() && "Splitting without a delimiter");
 
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
   // Support using a ':' delimiter on Windows.
   const bool WindowsColon = Delim.equals(":");
 #endif
@@ -228,7 +228,7 @@ bool SplitPaths(llvm::StringRef PathStr,
     if (!Split.first.empty()) {
       bool Exists = llvm::sys::fs::is_directory(Split.first);
 
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
     // Because drive letters will have a colon we have to make sure the split
     // occurs at a colon not followed by a path separator.
     if (!Exists && WindowsColon && Split.first.size()==1) {
@@ -277,7 +277,7 @@ bool SplitPaths(llvm::StringRef PathStr,
   }
 
   // Trim trailing sep in case of A:B:C:D:
-  if (!PathStr.empty() && PathStr.endswith(Delim))
+  if (!PathStr.empty() && PathStr.ends_with(Delim))
     PathStr = PathStr.substr(0, PathStr.size()-Delim.size());
 
   if (!PathStr.empty()) {

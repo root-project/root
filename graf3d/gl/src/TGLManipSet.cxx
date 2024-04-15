@@ -22,7 +22,6 @@
 #include "TGLIncludes.h"
 
 #include <KeySymbols.h>
-#include <TVirtualX.h>
 
 /** \class TGLManipSet
 \ingroup opengl
@@ -151,7 +150,7 @@ void TGLManipSet::MouseLeave()
 
 void TGLManipSet::Render(TGLRnrCtx& rnrCtx)
 {
-   if (fPShape == 0)
+   if (fPShape == nullptr)
       return;
 
    if (rnrCtx.Selection())

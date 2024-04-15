@@ -122,7 +122,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
       Float_t llx, lly, llz, urx, ury, urz;
       fFont.BBox(fText.Data(), llx, lly, llz, urx, ury, urz);
       glRasterPos2i(0, 0);
-      glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.5f, 0);
+      glBitmap(0, 0, 0, 0, -urx*0.5f, -ury*0.5f, nullptr);
       fFont.Render(fText.Data());
       fFont.PostRender();
       glPopMatrix();
@@ -141,7 +141,7 @@ void TGLOverlayButton::Render(TGLRnrCtx& rnrCtx)
 
 void TGLOverlayButton::Clicked(TGLViewerBase *viewer)
 {
-   Emit("Clicked(TGLViewerBase*)", (Long_t)viewer);
+   Emit("Clicked(TGLViewerBase*)", (Longptr_t)viewer);
 }
 
 /******************************************************************************/

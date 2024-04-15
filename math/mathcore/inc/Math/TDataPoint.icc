@@ -33,12 +33,12 @@ namespace Math
 //
 // This class can be used for describing data points in a high-dimensional space.
 // The (positive) dimension is specified by the first template parameter. The second
-// template paramter can be used to tweak the precision of the stored coordinates. By
+// template parameter can be used to tweak the precision of the stored coordinates. By
 // default all coordinates are stored with 4 byte float precision. In addition to the
 // coordinates a weight can be assigned to each data point allowing the representation
 // of fields in high dimensions.
 // Basic functionality for accessing/modifying the coordinates/weight are provided
-// as well as a comparison method and the basic euclidian metric.
+// as well as a comparison method and the basic euclidean metric.
 // End_Html
 
 //______________________________________________________________________________
@@ -66,7 +66,7 @@ TDataPoint<K,_val_type>::TDataPoint(const _coord_type* pData,_val_type fWeight):
 {
    //constructor initialising the data point from an array
    //
-   //Input: pData   - arrray with kDimension coordinates
+   //Input: pData   - array with kDimension coordinates
    //       fWeight - weight (default = 1)
 
    // at least one dimension
@@ -81,9 +81,9 @@ template<unsigned int K,typename _val_type>
 template<typename _val>
 _val_type TDataPoint<K,_val_type>::Distance(const TDataPoint<K,_val>& rPoint) const
 {
-   //euclidian distance
+   //euclidean distance
    //
-   //returns the euclidian distance to the given data point
+   //returns the euclidean distance to the given data point
    //
    //Input: rPoint - data point of same dimensionality
 

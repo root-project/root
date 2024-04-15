@@ -507,7 +507,7 @@ void TDecompSVD::SortSingular(TMatrixD &v,TMatrixD &u,TVectorD &sDiag)
 
    Int_t i,j;
    if (nCol_v > 1) {
-      while (1) {
+      while (true) {
          Bool_t found = kFALSE;
          i = 1;
          while (!found && i < nCol_v) {

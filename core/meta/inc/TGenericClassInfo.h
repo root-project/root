@@ -9,18 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#ifndef ROOT_Rtypes
+// Include Rtypes.h outside of the code guard to insure the intended
+// ordering of Rtypes.h and TGenericClassInfo.h
+#include "Rtypes.h"
+#endif
+
 #ifndef ROOT_TGenericClassInfo
 #define ROOT_TGenericClassInfo
 
-#include <vector>
 #include "TSchemaHelper.h"
-#include "Rtypes.h"
+#include <vector>
+#include <string>
 
 // Forward declarations
 class TVirtualIsAProxy;
-//class TClass;
-//class TClassStreamer;
-//class TVirtualCollectionProxy;
 
 
 namespace ROOT {
@@ -68,6 +71,7 @@ namespace ROOT {
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
+      std::vector<ROOT::TClassAlt*>               fAlternate;
 
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -113,6 +117,7 @@ namespace ROOT {
 
       TClass                           *IsA(const void *obj);
 
+      void                              AdoptAlternate(ROOT::TClassAlt *alt);
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
       void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
@@ -138,8 +143,8 @@ namespace ROOT {
       //   protected:
    private:
       void CreateRuleSet( std::vector<ROOT::Internal::TSchemaHelper>& vect, Bool_t ProcessReadRules );
-      TGenericClassInfo(const TGenericClassInfo&); // Not implemented
-      TGenericClassInfo& operator=(const TGenericClassInfo&); // Not implemented
+      TGenericClassInfo(const TGenericClassInfo &) = delete;
+      TGenericClassInfo& operator=(const TGenericClassInfo &) = delete;
 
    private:
       TGenericClassInfo();

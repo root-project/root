@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : IMethod                                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Interface for all concrete MVA method implementations                     *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_IMethod
@@ -38,7 +38,6 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TObject.h"
 #include "TString.h"
 #include <iosfwd>
 #include "Rtypes.h"
@@ -66,7 +65,7 @@ namespace TMVA {
       virtual const char *GetName() const = 0;
 
       // calculate the MVA value - some methods may return a per-event error estimate (unless: *err = -1)
-      virtual Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 ) = 0;
+      virtual Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr ) = 0;
 
       // training method
       virtual void Train( void ) = 0;

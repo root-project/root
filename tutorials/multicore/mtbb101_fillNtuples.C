@@ -32,7 +32,6 @@ void fillRandom(TNtuple &ntuple, TRandom3 &rndm, UInt_t n)
 
 Int_t mtbb101_fillNtuples()
 {
-   ROOT::EnableThreadSafety();
    // No nuisance for batch execution
    gROOT->SetBatch();
 

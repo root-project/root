@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamDiscriminant                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation.                                                           *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::PDEFoamDiscriminant
@@ -191,12 +191,12 @@ TH2D* TMVA::PDEFoamDiscriminant::Project2(Int_t idim1, Int_t idim2, ECellValue c
    }
 
    // create result histogram
-   TString hname(Form("h_%d_vs_%d", idim1, idim2));
+   TString hname = TString::Format("h_%d_vs_%d", idim1, idim2);
 
    // if histogram with this name already exists, delete it
    TH2D* h1 = (TH2D*)gDirectory->Get(hname.Data());
    if (h1) delete h1;
-   h1 = new TH2D(hname.Data(), Form("var%d vs var%d", idim1, idim2), nbin, fXmin[idim1], fXmax[idim1], nbin, fXmin[idim2], fXmax[idim2]);
+   h1 = new TH2D(hname.Data(), TString::Format("var%d vs var%d", idim1, idim2).Data(), nbin, fXmin[idim1], fXmax[idim1], nbin, fXmin[idim2], fXmax[idim2]);
 
    if (!h1) Log() << kFATAL << "ERROR: Can not create histo" << hname << Endl;
    if (cell_value == kValue)

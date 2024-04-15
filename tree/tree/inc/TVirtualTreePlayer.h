@@ -45,7 +45,7 @@ public:
    static constexpr Long64_t kMaxEntries = std::numeric_limits<Long64_t>::max();
 
    TVirtualTreePlayer() { }
-   virtual ~TVirtualTreePlayer();
+   ~TVirtualTreePlayer() override;
    virtual TVirtualIndex *BuildIndex(const TTree *T, const char *majorname, const char *minorname) = 0;
    virtual TTree         *CopyTree(const char *selection, Option_t *option=""
                                    ,Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
@@ -61,6 +61,8 @@ public:
    virtual Int_t          GetNfill() const = 0;
    virtual Long64_t       GetEntries(const char *) = 0;
    virtual Long64_t       GetSelectedRows() const = 0;
+   virtual TSelector     *GetSelector() const = 0;
+   virtual TSelector     *GetSelectorFromFile() const = 0;
    virtual TTreeFormula  *GetSelect() const = 0;
    virtual TTreeFormula  *GetVar(Int_t) const = 0;
    virtual TTreeFormula  *GetVar1() const = 0;
@@ -76,8 +78,8 @@ public:
    virtual Int_t          MakeClass(const char *classname, const char *option) = 0;
    virtual Int_t          MakeCode(const char *filename) = 0;
    virtual Int_t          MakeProxy(const char *classname,
-                                    const char *macrofilename = 0, const char *cutfilename = 0,
-                                    const char *option = 0, Int_t maxUnrolling = 3) = 0;
+                                    const char *macrofilename = nullptr, const char *cutfilename = nullptr,
+                                    const char *option = nullptr, Int_t maxUnrolling = 3) = 0;
    virtual Int_t          MakeReader(const char *classname, Option_t *option) = 0;
    virtual TPrincipal    *Principal(const char *varexp="", const char *selection="", Option_t *option="np"
                                     ,Long64_t nentries=kMaxEntries, Long64_t firstentry=0) = 0;
@@ -98,7 +100,7 @@ public:
    static  TVirtualTreePlayer *TreePlayer(TTree *obj);
    static void        SetPlayer(const char *player);
 
-   ClassDef(TVirtualTreePlayer,0);  //Abstract interface for Tree players
+   ClassDefOverride(TVirtualTreePlayer,0);  //Abstract interface for Tree players
 };
 
 #endif

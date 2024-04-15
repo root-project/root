@@ -19,7 +19,8 @@ A TLeaf for a 24 bit truncated floating point data type.
 #include "TBranch.h"
 #include "TBuffer.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
+#include "TStreamerElement.h"
+#include <iostream>
 
 ClassImp(TLeafF16);
 
@@ -58,7 +59,7 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
 
 TLeafF16::~TLeafF16()
 {
-   if (ResetAddress(nullptr, kTRUE))
+   if (ResetAddress(nullptr, true))
       delete[] fValue;
 
    if (fElement)

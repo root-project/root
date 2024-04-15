@@ -22,7 +22,7 @@ void parallelMergeTest(UInt_t nhist, UInt_t ndims = 1, UInt_t nbins = 100)
    TFile *file = TFile::Open("mergedClient.root?pmerge=localhost:1095","RECREATE");
 
    Float_t px, py;
-   TTree *tree = 0;
+   TTree *tree = nullptr;
    switch (ndims) {
       case 1: {
          for(UInt_t h = 0 ; h < nhist; ++h) {

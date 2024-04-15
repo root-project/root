@@ -27,15 +27,18 @@
 #include "TRegexp.h"
 #include "TPRegexp.h"
 #include "TException.h"
-#include "Demangle.h"
 #include "TEnv.h"
 #include "Getline.h"
 #include "TInterpreter.h"
 #include "TApplication.h"
 #include "TObjString.h"
-#include "Riostream.h"
 #include "TVirtualMutex.h"
+#include "ThreadLocalStorage.h"
 #include "TObjArray.h"
+#include "snprintf.h"
+#include "strlcpy.h"
+#include <iostream>
+#include <fstream>
 #include <map>
 #include <algorithm>
 #include <atomic>
@@ -76,6 +79,14 @@
 #elif defined(R__FBSD) || defined(R__OBSD)
 #   include <sys/param.h>
 #   include <sys/mount.h>
+# ifdef R__FBSD
+#   include <sys/user.h>
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   include <sys/queue.h>
+#   include <libprocstat.h>
+#   include <libutil.h>
+# endif
 #else
 #   include <sys/statfs.h>
 #endif
@@ -144,22 +155,19 @@
 #   define UTMP_NO_ADDR
 #endif
 
-#if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || defined(R__FBSD) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || \
-      defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-      (defined(R__AIX) && defined(_AIX43)) || \
-      (defined(R__SOLARIS) && defined(_SOCKLEN_T))
-#   define USE_SOCKLEN_T
-#endif
-
 #if defined(R__LYNXOS)
 extern "C" {
    extern int putenv(const char *);
    extern int inet_aton(const char *, struct in_addr *);
 };
+#endif
+
+#if defined(R__ARC4_STDLIB)
+// do nothing, stdlib.h already included
+#elif defined(R__ARC4_BSDLIB)
+#include <bsd/stdlib.h>
+#elif defined(R__GETRANDOM_CLIB)
+#include <sys/random.h>
 #endif
 
 #ifdef HAVE_UTMPX_H
@@ -187,7 +195,7 @@ extern "C" {
 #   endif
 #   define HAVE_DLADDR
 #endif
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) || defined(R__FBSD)
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #      define HAVE_DLADDR
 #endif
@@ -210,7 +218,6 @@ extern "C" {
 
 // FPE handling includes
 #if (defined(R__LINUX) && !defined(R__WINGCC))
-#include <fpu_control.h>
 #include <fenv.h>
 #include <sys/prctl.h>    // for prctl() function used in StackTrace()
 #endif
@@ -336,7 +343,7 @@ struct TUtmpContent {
          fclose(utmp);
 
       free(fUtmpContents);
-      fUtmpContents = 0;
+      fUtmpContents = nullptr;
       return 0;
    }
 
@@ -412,7 +419,7 @@ static const char *GetExePath()
 #if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);
 #elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__FBSD)
-      char buf[kMAXPATHLEN];  // exe path name
+      char buf[kMAXPATHLEN]="";  // exe path name
 
       // get the name from the link in /proc
 #if defined(R__LINUX)
@@ -420,7 +427,16 @@ static const char *GetExePath()
 #elif defined(R__SOLARIS)
       int ret = readlink("/proc/self/path/a.out", buf, kMAXPATHLEN);
 #elif defined(R__FBSD)
-      int ret = readlink("/proc/curproc/file", buf, kMAXPATHLEN);
+      procstat* ps = procstat_open_sysctl();
+      kinfo_proc* kp = kinfo_getproc(getpid());
+
+      int ret{0};
+      if (kp!=NULL) {
+	procstat_getpathname(ps, kp, buf, sizeof(buf));
+      }
+      free(kp);
+      procstat_close(ps);
+      exepath = buf;
 #endif
       if (ret > 0 && ret < kMAXPATHLEN) {
          buf[ret] = 0;
@@ -519,8 +535,15 @@ static void DylibAdded(const struct mach_header *mh, intptr_t /* vmaddr_slide */
    // explicitly linked against the executable. Additional dylibs
    // come when they are explicitly linked against loaded so's, currently
    // we are not interested in these
-   if (lib.EndsWith("/libSystem.B.dylib"))
+   if (lib.EndsWith("/libSystem.B.dylib")) {
       gotFirstSo = kTRUE;
+      if (linkedDylibs.IsNull()) {
+         // TSystem::GetLibraries() assumes that an empty GetLinkedLibraries()
+         // means failure to extract the linked libraries. Signal "we did
+         // manage, but it's empty" by returning a single space.
+         linkedDylibs = ' ';
+      }
+   }
 
    // add all libs loaded before libSystem.B.dylib
    if (!gotFirstSo && (lib.EndsWith(".dylib") || lib.EndsWith(".so"))) {
@@ -650,17 +673,13 @@ void TUnixSystem::SetDisplay()
          STRUCT_UTMP *utmp_entry = utmp.SearchUtmpEntry(tty);
          if (utmp_entry) {
             if (utmp_entry->ut_host[0]) {
-               if (strchr(utmp_entry->ut_host, ':')) {
-                  Setenv("DISPLAY", utmp_entry->ut_host);
-                  Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          utmp_entry->ut_host);
-               } else {
-                  char disp[260];
-                  snprintf(disp, sizeof(disp), "%s:0.0", utmp_entry->ut_host);
-                  Setenv("DISPLAY", disp);
-                  Warning("SetDisplay", "DISPLAY not set, setting it to %s",
-                          disp);
-               }
+               TString disp;
+               for (unsigned n = 0; (n < sizeof(utmp_entry->ut_host)) && utmp_entry->ut_host[n]; n++)
+                  disp.Append(utmp_entry->ut_host[n]);
+               if (disp.First(':') == kNPOS)
+                  disp.Append(":0.0");
+               Setenv("DISPLAY", disp.Data());
+               Warning("SetDisplay", "DISPLAY not set, setting it to %s", disp.Data());
             }
 #ifndef UTMP_NO_ADDR
             else if (utmp_entry->ut_addr) {
@@ -675,7 +694,7 @@ void TUnixSystem::SetDisplay()
                char hbuf[NI_MAXHOST + 4];
                if (getnameinfo(sa, sizeof(struct sockaddr), hbuf, sizeof(hbuf), nullptr, 0, NI_NAMEREQD) == 0) {
                   assert( strlen(hbuf) < NI_MAXHOST );
-                  strcat(hbuf, ":0.0");
+                  strlcat(hbuf, ":0.0", sizeof(hbuf));
                   Setenv("DISPLAY", hbuf);
                   Warning("SetDisplay", "DISPLAY not set, setting it to %s",
                           hbuf);
@@ -710,6 +729,24 @@ const char *TUnixSystem::GetError()
    if (err < 0 || err >= sys_nerr)
       return Form("errno out of range %d", err);
    return sys_errlist[err];
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
+{
+#if defined(R__ARC4_STDLIB) || defined(R__ARC4_BSDLIB)
+   arc4random_buf(buf, len);
+   return len;
+#elif defined(R__GETRANDOM_CLIB)
+   return getrandom(buf, len, GRND_NONBLOCK);
+#else
+#error "Reliable cryptographic random function not defined"
+   return -1;
 #endif
 }
 
@@ -1116,14 +1153,14 @@ void TUnixSystem::DispatchOneEvent(Bool_t pendingOnly)
          for (fd = 0; fd < mxfd; fd++) {
             t.Set(fd);
             if (fReadmask->IsSet(fd)) {
-               rc = UnixSelect(fd+1, &t, 0, 0);
+               rc = UnixSelect(fd+1, &t, nullptr, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: read error on %d", fd);
                   fReadmask->Clr(fd);
                }
             }
             if (fWritemask->IsSet(fd)) {
-               rc = UnixSelect(fd+1, 0, &t, 0);
+               rc = UnixSelect(fd+1, nullptr, &t, 0);
                if (rc < 0 && rc != -2) {
                   SysError("DispatchOneEvent", "select: write error on %d", fd);
                   fWritemask->Clr(fd);
@@ -1145,7 +1182,7 @@ void TUnixSystem::Sleep(UInt_t milliSec)
    tv.tv_sec  = milliSec / 1000;
    tv.tv_usec = (milliSec % 1000) * 1000;
 
-   select(0, 0, 0, 0, &tv);
+   select(0, nullptr, nullptr, nullptr, &tv);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1163,7 +1200,7 @@ Int_t TUnixSystem::Select(TList *act, Long_t to)
    TFdSet rd, wr;
    Int_t mxfd = -1;
    TIter next(act);
-   TFileHandler *h = 0;
+   TFileHandler *h = nullptr;
    while ((h = (TFileHandler *) next())) {
       Int_t fd = h->GetFd();
       if (fd > -1) {
@@ -1360,7 +1397,7 @@ void *TUnixSystem::OpenDirectory(const char *name)
 
 void TUnixSystem::FreeDirectory(void *dirp)
 {
-   TSystem *helper = FindHelper(0, dirp);
+   TSystem *helper = FindHelper(nullptr, dirp);
    if (helper) {
       helper->FreeDirectory(dirp);
       return;
@@ -1375,7 +1412,7 @@ void TUnixSystem::FreeDirectory(void *dirp)
 
 const char *TUnixSystem::GetDirEntry(void *dirp)
 {
-   TSystem *helper = FindHelper(0, dirp);
+   TSystem *helper = FindHelper(nullptr, dirp);
    if (helper)
       return helper->GetDirEntry(dirp);
 
@@ -1429,7 +1466,7 @@ std::string TUnixSystem::GetWorkingDirectory() const
 
 void TUnixSystem::FillWithCwd(char *cwd) const
 {
-   if (::getcwd(cwd, kMAXPATHLEN) == 0) {
+   if (::getcwd(cwd, kMAXPATHLEN) == nullptr) {
       Error("WorkingDirectory", "getcwd() failed");
    }
 }
@@ -1470,20 +1507,25 @@ const char *TUnixSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TUnixSystem::TempFileName(TString &base, const char *dir)
+FILE *TUnixSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
    char *b = ConcatFileName(dir ? dir : TempDirectory(), base);
    base = b;
    base += "XXXXXX";
+   const bool hasSuffix = suffix && *suffix;
+   if (hasSuffix)
+      base.Append(suffix);
    delete [] b;
 
    char *arg = StrDup(base);
-   int fd = mkstemp(arg);
+   int fd = hasSuffix ? mkstemps(arg, strlen(suffix)) : mkstemp(arg);
    base = arg;
    delete [] arg;
 
@@ -1769,15 +1811,15 @@ needshell:
             *q++ = *p++;
          *q = '\0';
          hd = UnixHomedirectory(name);
-         if (hd == 0)
+         if (!hd)
             cmd += stuffedPat;
          else {
             cmd += hd;
             cmd += p;
          }
       } else {
-         hd = UnixHomedirectory(0);
-         if (hd == 0) {
+         hd = UnixHomedirectory(nullptr);
+         if (!hd) {
             GetLastErrorString() = GetError();
             return kTRUE;
          }
@@ -2270,7 +2312,7 @@ void TUnixSystem::StackTrace()
    if (fd && message) { }  // remove unused warning (remove later)
 
    if (gApplication && !strcmp(gApplication->GetName(), "TRint"))
-      Getlinem(kCleanUp, 0);
+      Getlinem(kCleanUp, nullptr);
 
 #if defined(USE_GDB_STACK_TRACE)
    char *gdb = Which(Getenv("PATH"), "gdb", kExecutePermission);
@@ -2687,13 +2729,13 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       xh->fFile = file;
 
       // Redirect stdout & stderr
-      if (freopen(file, m, stdout) == 0) {
+      if (freopen(file, m, stdout) == nullptr) {
          SysError("RedirectOutput", "could not freopen stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
-      if (freopen(file, m, stderr) == 0) {
+      if (freopen(file, m, stderr) == nullptr) {
          SysError("RedirectOutput", "could not freopen stderr (errno: %d)", TSystem::GetErrno());
-         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0)
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == nullptr)
             SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
          return -1;
       }
@@ -2701,7 +2743,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       // Restore stdout & stderr
       fflush(stdout);
       if (!(xh->fStdOutTty.IsNull())) {
-         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == 0) {
+         if (freopen(xh->fStdOutTty.Data(), "a", stdout) == nullptr) {
             SysError("RedirectOutput", "could not restore stdout (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
@@ -2727,7 +2769,7 @@ Int_t TUnixSystem::RedirectOutput(const char *file, const char *mode,
       }
       fflush(stderr);
       if (!(xh->fStdErrTty.IsNull())) {
-         if (freopen(xh->fStdErrTty.Data(), "a", stderr) == 0) {
+         if (freopen(xh->fStdErrTty.Data(), "a", stderr) == nullptr) {
             SysError("RedirectOutput", "could not restore stderr (errno: %d)", TSystem::GetErrno());
             rc = -1;
          }
@@ -2934,7 +2976,7 @@ Bool_t TUnixSystem::DispatchTimers(Bool_t mode)
 
    fInsideNotify = kTRUE;
 
-   TOrdCollectionIter it((TOrdCollection*)fTimers);
+   TListIter it(fTimers);
    TTimer *t;
    Bool_t  timedout = kFALSE;
 
@@ -3063,13 +3105,7 @@ TInetAddress TUnixSystem::GetHostByName(const char *hostname)
 TInetAddress TUnixSystem::GetSockName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getsockname(sock, &addr, &len) == -1) {
@@ -3099,13 +3135,7 @@ TInetAddress TUnixSystem::GetSockName(int sock)
 TInetAddress TUnixSystem::GetPeerName(int sock)
 {
    struct sockaddr addr;
-#if defined(USE_SIZE_T)
-   size_t len = sizeof(addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t len = sizeof(addr);
-#else
-   int len = sizeof(addr);
-#endif
 
    TInetAddress ia;
    if (getpeername(sock, &addr, &len) == -1) {
@@ -3136,7 +3166,7 @@ int TUnixSystem::GetServiceByName(const char *servicename)
 {
    struct servent *sp;
 
-   if ((sp = getservbyname(servicename, kProtocolName)) == 0) {
+   if ((sp = getservbyname(servicename, kProtocolName)) == nullptr) {
       Error("GetServiceByName", "no service \"%s\" with protocol \"%s\"\n",
               servicename, kProtocolName);
       return -1;
@@ -3151,7 +3181,7 @@ char *TUnixSystem::GetServiceByPort(int port)
 {
    struct servent *sp;
 
-   if ((sp = getservbyport(htons(port), kProtocolName)) == 0) {
+   if ((sp = getservbyport(htons(port), kProtocolName)) == nullptr) {
       //::Error("GetServiceByPort", "no service \"%d\" with protocol \"%s\"",
       //        port, kProtocolName);
       return Form("%d", port);
@@ -3241,7 +3271,7 @@ int TUnixSystem::AcceptConnection(int sock)
 {
    int soc = -1;
 
-   while ((soc = ::accept(sock, 0, 0)) == -1 && GetErrno() == EINTR)
+   while ((soc = ::accept(sock, nullptr, nullptr)) == -1 && GetErrno() == EINTR)
       ResetErrno();
 
    if (soc == -1) {
@@ -3472,13 +3502,7 @@ int TUnixSystem::GetSockOpt(int sock, int opt, int *val)
 {
    if (sock < 0) return -1;
 
-#if defined(USE_SOCKLEN_T) || defined(_AIX43)
    socklen_t optlen = sizeof(*val);
-#elif defined(USE_SIZE_T)
-   size_t optlen = sizeof(*val);
-#else
-   int optlen = sizeof(*val);
-#endif
 
    switch (opt) {
    case kSendBuffer:
@@ -3580,22 +3604,22 @@ static struct Signalmap_t {
    struct sigaction *fOldHandler;
    const char       *fSigName;
 } gSignalMap[kMAXSIGNALS] = {       // the order of the signals should be identical
-   { SIGBUS,   0, 0, "bus error" }, // to the one in TSysEvtHandler.h
-   { SIGSEGV,  0, 0, "segmentation violation" },
-   { SIGSYS,   0, 0, "bad argument to system call" },
-   { SIGPIPE,  0, 0, "write on a pipe with no one to read it" },
-   { SIGILL,   0, 0, "illegal instruction" },
-   { SIGABRT,  0, 0, "abort" },
-   { SIGQUIT,  0, 0, "quit" },
-   { SIGINT,   0, 0, "interrupt" },
-   { SIGWINCH, 0, 0, "window size change" },
-   { SIGALRM,  0, 0, "alarm clock" },
-   { SIGCHLD,  0, 0, "death of a child" },
-   { SIGURG,   0, 0, "urgent data arrived on an I/O channel" },
-   { SIGFPE,   0, 0, "floating point exception" },
-   { SIGTERM,  0, 0, "termination signal" },
-   { SIGUSR1,  0, 0, "user-defined signal 1" },
-   { SIGUSR2,  0, 0, "user-defined signal 2" }
+   { SIGBUS,   nullptr, nullptr, "bus error" }, // to the one in TSysEvtHandler.h
+   { SIGSEGV,  nullptr, nullptr, "segmentation violation" },
+   { SIGSYS,   nullptr, nullptr, "bad argument to system call" },
+   { SIGPIPE,  nullptr, nullptr, "write on a pipe with no one to read it" },
+   { SIGILL,   nullptr, nullptr, "illegal instruction" },
+   { SIGABRT,  nullptr, nullptr, "abort" },
+   { SIGQUIT,  nullptr, nullptr, "quit" },
+   { SIGINT,   nullptr, nullptr, "interrupt" },
+   { SIGWINCH, nullptr, nullptr, "window size change" },
+   { SIGALRM,  nullptr, nullptr, "alarm clock" },
+   { SIGCHLD,  nullptr, nullptr, "death of a child" },
+   { SIGURG,   nullptr, nullptr, "urgent data arrived on an I/O channel" },
+   { SIGFPE,   nullptr, nullptr, "floating point exception" },
+   { SIGTERM,  nullptr, nullptr, "termination signal" },
+   { SIGUSR1,  nullptr, nullptr, "user-defined signal 1" },
+   { SIGUSR2,  nullptr, nullptr, "user-defined signal 2" }
 };
 
 
@@ -3730,7 +3754,7 @@ void TUnixSystem::UnixIgnoreSignal(ESignals sig, Bool_t ignore)
          if (sigaction(gSignalMap[sig].fCode, &sigact, &oldsigact[sig]) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       } else {
-         if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], 0) < 0)
+         if (sigaction(gSignalMap[sig].fCode, &oldsigact[sig], nullptr) < 0)
             ::SysError("TUnixSystem::UnixIgnoreSignal", "sigaction");
       }
    }
@@ -3772,7 +3796,7 @@ void TUnixSystem::UnixSigAlarmInterruptsSyscalls(Bool_t set)
          sigact.sa_flags |= SA_RESTART;
 #endif
       }
-      if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, 0) < 0)
+      if (sigaction(gSignalMap[kSigAlarm].fCode, &sigact, nullptr) < 0)
          ::SysError("TUnixSystem::UnixSigAlarmInterruptsSyscalls", "sigaction");
    }
 }
@@ -3792,11 +3816,11 @@ void TUnixSystem::UnixResetSignal(ESignals sig)
 {
    if (gSignalMap[sig].fOldHandler) {
       // restore old signal handler
-      if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, 0) < 0)
+      if (sigaction(gSignalMap[sig].fCode, gSignalMap[sig].fOldHandler, nullptr) < 0)
          ::SysError("TUnixSystem::UnixSignal", "sigaction");
       delete gSignalMap[sig].fOldHandler;
-      gSignalMap[sig].fOldHandler = 0;
-      gSignalMap[sig].fHandler    = 0;
+      gSignalMap[sig].fOldHandler = nullptr;
+      gSignalMap[sig].fHandler    = nullptr;
    }
 }
 
@@ -3835,7 +3859,7 @@ Long64_t TUnixSystem::UnixNow()
    }
 
    struct timeval t;
-   gettimeofday(&t, 0);
+   gettimeofday(&t, nullptr);
    return Long64_t(t.tv_sec-(Long_t)jan95)*1000 + t.tv_usec/1000;
 }
 
@@ -3853,7 +3877,7 @@ int TUnixSystem::UnixSetitimer(Long_t ms)
       itv.it_value.tv_sec  = time_t(ms / 1000);
       itv.it_value.tv_usec = time_t((ms % 1000) * 1000);
    }
-   int st = setitimer(ITIMER_REAL, &itv, 0);
+   int st = setitimer(ITIMER_REAL, &itv, nullptr);
    if (st == -1)
       ::SysError("TUnixSystem::UnixSetitimer", "setitimer");
    return st;
@@ -3873,16 +3897,16 @@ int TUnixSystem::UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
 {
    int retcode;
 
-   fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : 0;
-   fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : 0;
+   fd_set *rd = (readready)  ? (fd_set*)readready->GetBits()  : nullptr;
+   fd_set *wr = (writeready) ? (fd_set*)writeready->GetBits() : nullptr;
 
    if (timeout >= 0) {
       struct timeval tv;
       tv.tv_sec  = Int_t(timeout / 1000);
       tv.tv_usec = (timeout % 1000) * 1000;
-      retcode = select(nfds, rd, wr, 0, &tv);
+      retcode = select(nfds, rd, wr, nullptr, &tv);
    } else {
-      retcode = select(nfds, rd, wr, 0, 0);
+      retcode = select(nfds, rd, wr, nullptr, nullptr);
    }
    if (retcode == -1) {
       if (GetErrno() == EINTR) {
@@ -3925,12 +3949,12 @@ const char *TUnixSystem::UnixHomedirectory(const char *name, char *path, char *m
       if (mydir[0])
          return mydir;
       pw = getpwuid(getuid());
-      if (pw && pw->pw_dir) {
-         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
+      if (gSystem->Getenv("HOME")) {
+         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
-      } else if (gSystem->Getenv("HOME")) {
-         strncpy(mydir, gSystem->Getenv("HOME"), kMAXPATHLEN-1);
+      } else if (pw && pw->pw_dir) {
+         strncpy(mydir, pw->pw_dir, kMAXPATHLEN-1);
          mydir[kMAXPATHLEN-1] = '\0';
          return mydir;
       }
@@ -4232,7 +4256,7 @@ int TUnixSystem::UnixUnixConnect(const char *sockpath)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Open socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4444,7 +4468,7 @@ int TUnixSystem::UnixUnixService(const char *sockpath, int backlog)
               sockpath, (UInt_t)sizeof(unserver.sun_path)-1);
       return -1;
    }
-   strcpy(unserver.sun_path, sockpath);
+   strlcpy(unserver.sun_path, sockpath, sizeof(unserver.sun_path));
 
    // Create socket
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) < 0) {
@@ -4564,10 +4588,39 @@ int TUnixSystem::UnixSend(int sock, const void *buffer, int length, int flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get shared library search path. Static utility function.
 
-static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
+static const char *DynamicPath(const char *newpath = nullptr, Bool_t reset = kFALSE)
 {
-   static TString dynpath;
-   static Bool_t initialized = kFALSE;
+   static TString dynpath_full;
+   static std::atomic<bool> initialized(kFALSE);
+   static std::atomic<bool> seenCling(kFALSE);
+
+   // If we have not seen Cling but the result has been initialized and gCling
+   // is still nullptr, the result won't change.
+   if (newpath == nullptr && !reset && (seenCling || (initialized && gCling == nullptr)))
+      return dynpath_full;
+
+   R__LOCKGUARD2(gSystemMutex);
+
+   if (newpath) {
+      dynpath_full = newpath;
+      // Don't erase the user given path at the next call.
+      initialized = kTRUE;
+      // We do not (otherwise) record whether the path was set automatically or
+      // whether it was set explicitly by the user. If the user set the path
+      // explicitly, we should never automatically over-ride the value; if
+      // seenCling stayed false, it would tell this routine that at the next
+      // call it should update the value (to insert the Cling provided parts)
+      // back to the default.
+      seenCling = kTRUE;
+      return dynpath_full;
+   }
+
+   // Another thread might have updated this. Even-though this is executed at the
+   // start of the process, we might get there if the user is explicitly
+   // 'resetting' the value.
+   if (!reset && (seenCling || (initialized && gCling == nullptr)))
+      return dynpath_full;
+
    if (!initialized) {
       // force one time initialization of gROOT before we start
       // (otherwise it might be done as a side effect of gEnv->GetValue and
@@ -4575,19 +4628,21 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       gROOT;
    }
 
-   if (newpath) {
-      dynpath = newpath;
-   } else if (reset || !initialized) {
-      initialized = kTRUE;
+   static TString dynpath_envpart;
+   static TString dynpath_syspart;
+
+   if (reset || !initialized) {
+
+      dynpath_envpart = gSystem->Getenv("ROOT_LIBRARY_PATH");
       TString rdynpath = gEnv->GetValue("Root.DynamicPath", (char*)0);
       rdynpath.ReplaceAll(": ", ":");  // in case DynamicPath was extended
       if (rdynpath.IsNull()) {
          rdynpath = ".:"; rdynpath += TROOT::GetLibDir();
       }
       TString ldpath;
-#if defined (R__AIX)
+   #if defined (R__AIX)
       ldpath = gSystem->Getenv("LIBPATH");
-#elif defined(R__MACOSX)
+   #elif defined(R__MACOSX)
       ldpath = gSystem->Getenv("DYLD_LIBRARY_PATH");
       if (!ldpath.IsNull())
          ldpath += ":";
@@ -4595,27 +4650,28 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       if (!ldpath.IsNull())
          ldpath += ":";
       ldpath += gSystem->Getenv("DYLD_FALLBACK_LIBRARY_PATH");
-#else
+   #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
-#endif
-      if (ldpath.IsNull())
-         dynpath = rdynpath;
-      else {
-         dynpath = ldpath; dynpath += ":"; dynpath += rdynpath;
+   #endif
+      if (!ldpath.IsNull()) {
+         if (!dynpath_envpart.IsNull())
+            dynpath_envpart += ":";
+         dynpath_envpart += ldpath;
       }
-      if (!dynpath.Contains(TROOT::GetLibDir())) {
-         dynpath += ":"; dynpath += TROOT::GetLibDir();
+      if (!rdynpath.IsNull()) {
+         if (!dynpath_envpart.IsNull())
+            dynpath_envpart += ":";
+         dynpath_envpart += rdynpath;
       }
-      if (gCling) {
-         dynpath += ":"; dynpath += gCling->GetSTLIncludePath();
-      } else
-         initialized = kFALSE;
+      if (!dynpath_envpart.Contains(TROOT::GetLibDir())) {
+         dynpath_envpart += ":"; dynpath_envpart += TROOT::GetLibDir();
+      }
 
-#if defined(R__WINGCC) || defined(R__MACOSX)
-      if (!dynpath.EndsWith(":")) dynpath += ":";
-      dynpath += "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
-      dynpath += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
-#else
+   #if defined(R__WINGCC) || defined(R__MACOSX)
+      // if (!dynpath.EndsWith(":")) dynpath += ":";
+      dynpath_syspart = "/usr/local/lib:/usr/X11R6/lib:/usr/lib:/lib:";
+      dynpath_syspart += "/lib/x86_64-linux-gnu:/usr/local/lib64:/usr/lib64:/lib64:";
+   #else
       // trick to get the system search path
       std::string cmd("LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls 2>&1");
       FILE *pf = popen(cmd.c_str (), "r");
@@ -4632,14 +4688,29 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
          from += 12;
          std::string sys_path = result.substr(from, to-from);
          sys_path.erase(std::remove_if(sys_path.begin(), sys_path.end(), isspace), sys_path.end());
-         if (!dynpath.EndsWith(":")) dynpath += ":";
-         dynpath += sys_path.c_str();
+         dynpath_syspart = sys_path.c_str();
       }
-      dynpath.ReplaceAll("::", ":");
-#endif
-      if (gDebug > 0) std::cout << "dynpath = " << dynpath.Data() << std::endl;
+      dynpath_envpart.ReplaceAll("::", ":");
+      dynpath_syspart.ReplaceAll("::", ":");
+   #endif
    }
-   return dynpath;
+
+   if (!initialized || (!seenCling && gCling)) {
+      dynpath_full = dynpath_envpart;
+      if (!dynpath_full.EndsWith(":")) dynpath_full += ":";
+      if (gCling) {
+         dynpath_full += gCling->GetSTLIncludePath();
+         if (!dynpath_full.EndsWith(":")) dynpath_full += ":";
+
+         seenCling = kTRUE;
+      }
+      dynpath_full += dynpath_syspart;
+      initialized = kTRUE;
+
+      if (gDebug > 0) std::cout << "dynpath = " << dynpath_full.Data() << std::endl;
+   }
+
+   return dynpath_full;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4648,7 +4719,7 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
 void TUnixSystem::AddDynamicPath(const char *path)
 {
    if (path) {
-      TString oldpath = DynamicPath(0, kFALSE);
+      TString oldpath = DynamicPath(nullptr, kFALSE);
       oldpath.Append(":");
       oldpath.Append(path);
       DynamicPath(oldpath);
@@ -4660,7 +4731,7 @@ void TUnixSystem::AddDynamicPath(const char *path)
 
 const char *TUnixSystem::GetDynamicPath()
 {
-   return DynamicPath(0, kFALSE);
+   return DynamicPath(nullptr, kFALSE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4671,7 +4742,7 @@ const char *TUnixSystem::GetDynamicPath()
 void TUnixSystem::SetDynamicPath(const char *path)
 {
    if (!path)
-      DynamicPath(0, kTRUE);
+      DynamicPath(nullptr, kTRUE);
    else
       DynamicPath(path);
 }
@@ -4709,7 +4780,7 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
       return nullptr;
    }
    static const char* exts[] = {
-      ".so", ".dll", ".dylib", ".sl", ".dl", ".a", 0 };
+      ".so", ".dll", ".dylib", ".sl", ".dl", ".a", nullptr };
    const char** ext = exts;
    while (*ext) {
       TString fname(sLib);
@@ -4730,6 +4801,38 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
 }
 
 //---- System, CPU and Memory info ---------------------------------------------
+
+#if defined(R__FBSD)
+///////////////////////////////////////////////////////////////////////////////
+//// Get system info for FreeBSD
+
+static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
+{
+   // it probably would be better to get this information from syscalls
+   // this is possibly less error prone
+   FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu "
+                               "hw.physmem dev.cpu.0.freq", "r");
+   TString s;
+   s.Gets(p);
+   sysinfo->fOS = s;
+   s.Gets(p);
+   sysinfo->fModel = s;
+   s.Gets(p);
+   sysinfo->fCpus = s.Atoi();
+   s.Gets(p);
+   Long64_t t = s.Atoll();
+   sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
+   s.Gets(p);
+   t = s.Atoll();
+   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   gSystem->ClosePipe(p);
+}
+
+static void GetFreeBSDCpuInfo(CpuInfo_t*, Int_t)
+{
+  //not yet implemented
+}
+#endif
 
 #if defined(R__MACOSX)
 #include <sys/resource.h>
@@ -4895,7 +4998,7 @@ static void GetDarwinMemInfo(MemInfo_t *meminfo)
 /// http://www.opensource.apple.com/source/top/top-15/libtop.c
 /// The virtual memory usage is slightly over estimated as we don't
 /// subtract shared regions, but the value makes more sense
-/// then pure vsize, which is useless on 64-bit machines.
+/// than using `virtual_size`, which is useless on 64-bit machines.
 
 static void GetDarwinProcInfo(ProcInfo_t *procinfo)
 {
@@ -4936,9 +5039,8 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
       mach_port_t object_name;
       vm_address_t address;
       vm_region_top_info_data_t info;
-      vm_size_t vsize, vprvt, rsize, size;
+      vm_size_t vprvt, rsize, size;
       rsize = ti.resident_size;
-      vsize = ti.virtual_size;
       vprvt = 0;
       for (address = 0; ; address += size) {
          // get memory region
@@ -4964,11 +5066,6 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
                                 (vm_region_info_t)&b_info, &count,
                                 &object_name) != KERN_SUCCESS) {
                   break;
-               }
-
-               if (b_info.reserved) {
-                  vsize -= (SHARED_TEXT_REGION_SIZE + SHARED_DATA_REGION_SIZE);
-                  //break;  // only for vsize
                }
             }
             // Short circuit the loop if this isn't a shared
@@ -4997,7 +5094,6 @@ static void GetDarwinProcInfo(ProcInfo_t *procinfo)
       }
 
       procinfo->fMemResident = (Long_t)(rsize / 1024);
-      //procinfo->fMemVirtual  = (Long_t)(vsize / 1024);
       procinfo->fMemVirtual  = (Long_t)(vprvt / 1024);
    }
 }
@@ -5189,6 +5285,8 @@ int TUnixSystem::GetSysInfo(SysInfo_t *info) const
       GetDarwinSysInfo(&sysinfo);
 #elif defined(R__LINUX)
       GetLinuxSysInfo(&sysinfo);
+#elif defined(R__FBSD)
+      GetFreeBSDSysInfo(&sysinfo);
 #endif
    }
 
@@ -5210,6 +5308,8 @@ int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
    GetDarwinCpuInfo(info, sampleTime);
 #elif defined(R__LINUX)
    GetLinuxCpuInfo(info, sampleTime);
+#elif defined(R__FBSD)
+   GetFreeBSDCpuInfo(info, sampleTime);
 #endif
 
    return 0;

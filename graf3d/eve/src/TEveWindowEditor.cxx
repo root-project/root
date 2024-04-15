@@ -12,15 +12,7 @@
 #include "TEveWindowEditor.h"
 #include "TEveWindow.h"
 
-#include "TVirtualPad.h"
-#include "TColor.h"
-
-// Cleanup these includes:
-#include "TGLabel.h"
 #include "TGButton.h"
-#include "TGNumberEntry.h"
-#include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
 
 /** \class TEveWindowEditor
 \ingroup TEve
@@ -35,8 +27,8 @@ ClassImp(TEveWindowEditor);
 TEveWindowEditor::TEveWindowEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fShowTitleBar(0)
+   fM(nullptr),
+   fShowTitleBar(nullptr)
 {
    MakeTitle("TEveWindow");
 

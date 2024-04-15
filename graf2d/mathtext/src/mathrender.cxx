@@ -24,7 +24,7 @@
 #pragma warning( disable : 4066)
 #endif
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <sstream>
 #include "../inc/mathrender.h"

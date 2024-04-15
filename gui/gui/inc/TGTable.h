@@ -34,68 +34,75 @@ class TTableRange;
 class TGTable : public TGCompositeFrame, public TGWidget {
 
 protected:
-   TObjArray     *fRows;          // Array of rows
-   TObjArray     *fRowHeaders;    // Array of row headers
-   TObjArray     *fColumnHeaders; // Array of column headers
-   TGTableHeader *fTableHeader;   // Top left element of the table
-   Bool_t         fReadOnly;      // Table readonly state
-   Pixel_t        fSelectColor;      // Select Color
-   Int_t          fTMode;         // Text justify mode
-   Bool_t         fAllData;       // Is the data bigger than the table
-   TTableRange   *fCurrentRange;  // Range of data currently loaded
-   TTableRange   *fDataRange;     // Full range of the data set
-   TTableRange   *fGotoRange;     // Range used by Goto frame
-   TGTableFrame  *fTableFrame;    // Container for the frames
-   TGCanvas      *fCanvas;        // Canvas that will contains the cells
-   UInt_t         fCellWidth;     // Default cell width
-   UInt_t         fCellHeight;    // Default cell width
+   TObjArray     *fRows;          ///< Array of rows
+   TObjArray     *fRowHeaders;    ///< Array of row headers
+   TObjArray     *fColumnHeaders; ///< Array of column headers
+   TGTableHeader *fTableHeader;   ///< Top left element of the table
+   Bool_t         fReadOnly;      ///< Table readonly state
+   Pixel_t        fSelectColor;   ///< Select Color
+   Int_t          fTMode;         ///< Text justify mode
+   Bool_t         fAllData;       ///< Is the data bigger than the table
+   TTableRange   *fCurrentRange;  ///< Range of data currently loaded
+   TTableRange   *fDataRange;     ///< Full range of the data set
+   TTableRange   *fGotoRange;     ///< Range used by Goto frame
+   TGTableFrame  *fTableFrame;    ///< Container for the frames
+   TGCanvas      *fCanvas;        ///< Canvas that will contains the cells
+   UInt_t         fCellWidth;     ///< Default cell width
+   UInt_t         fCellHeight;    ///< Default cell width
 
-   // Frames used for layout
-   TGTableHeaderFrame *fCHdrFrame;     // Frame that contains the row headers
-   TGTableHeaderFrame *fRHdrFrame;     // Frame that contains the row headers
-   TGHorizontalFrame  *fRangeFrame;    // Frame that contains the top part
-   TGHorizontalFrame  *fTopFrame;      // Frame that contains the top part
-   TGHorizontalFrame  *fTopExtraFrame; // Dev idea
-   TGHorizontalFrame  *fBottomFrame;   // Frame that contains the bottom part
-   TGHorizontalFrame  *fButtonFrame;   // Contains the buttons
+   ///@{
+   ///@name Frames used for layout
+   TGTableHeaderFrame *fCHdrFrame;     ///< Frame that contains the row headers
+   TGTableHeaderFrame *fRHdrFrame;     ///< Frame that contains the row headers
+   TGHorizontalFrame  *fRangeFrame;    ///< Frame that contains the top part
+   TGHorizontalFrame  *fTopFrame;      ///< Frame that contains the top part
+   TGHorizontalFrame  *fTopExtraFrame; ///< Dev idea
+   TGHorizontalFrame  *fBottomFrame;   ///< Frame that contains the bottom part
+   TGHorizontalFrame  *fButtonFrame;   ///< Contains the buttons
+   ///@}
 
-   // Buttons for interaction
-   TGTextButton *fNextButton;     // Button to view next chunk
-   TGTextButton *fPrevButton;     // Button to view previous chunk
-   TGTextButton *fUpdateButton;   // Button to update current view
-   TGTextButton *fGotoButton;     // Button to goto a new range
+   ///@{
+   ///@name Buttons for interaction
+   TGTextButton *fNextButton;     ///< Button to view next chunk
+   TGTextButton *fPrevButton;     ///< Button to view previous chunk
+   TGTextButton *fUpdateButton;   ///< Button to update current view
+   TGTextButton *fGotoButton;     ///< Button to goto a new range
+   ///@}
 
-   // Labels and textentries for range information and input
-   TGLabel     *fFirstCellLabel;  // Label for the range frame
-   TGLabel     *fRangeLabel;      // Label for the range frame
-   TGTextEntry *fFirstCellEntry;  // TextEntry for the range frame
-   TGTextEntry *fRangeEntry;      // TextEntry for the range frame
+   ///@{
+   ///@name Labels and text entries for range information and input
+   TGLabel     *fFirstCellLabel;  ///< Label for the range frame
+   TGLabel     *fRangeLabel;      ///< Label for the range frame
+   TGTextEntry *fFirstCellEntry;  ///< TextEntry for the range frame
+   TGTextEntry *fRangeEntry;      ///< TextEntry for the range frame
 
-   Pixel_t fOddRowBackground;     // Background color for odd numbered rows
-   Pixel_t fEvenRowBackground;    // Background color for even numbered rows
-   Pixel_t fHeaderBackground;     // Background color for headers
+   Pixel_t fOddRowBackground;     ///< Background color for odd numbered rows
+   Pixel_t fEvenRowBackground;    ///< Background color for even numbered rows
+   Pixel_t fHeaderBackground;     ///< Background color for headers
+   ///@}
 
    // Those are neither used nor even initialized:
    // static const TGGC *fgDefaultSelectGC; // Default select GC
    // static const TGGC *fgDefaultBckgndGC; // Default cell background GC
    // static const Int_t fgDefaultTMode;    // Default text justify mode
 
-   // Data members to keep track of LayoutHints that can't be
-   // automatically cleaned
+   ///@{
+   ///@name Data members to keep track of LayoutHints that can't be automatically cleaned
    TList *fCellHintsList;
    TList *fRHdrHintsList;
    TList *fCHdrHintsList;
-   TList *fMainHintsList;   // List for all hints used in the main table frame
+   TList *fMainHintsList;   ///< List for all hints used in the main table frame
+   ///@}
 
-   // Add rows and/or colums to the edge of the table.
+   // Add rows and/or columns to the edge of the table.
 
    virtual void Init();
 
-   // Remove rows and/or colums from the edge of the table.
+   // Remove rows and/or columns from the edge of the table.
 protected:
    TVirtualTableInterface *fInterface; // Interface to the data source
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
    virtual void Expand(UInt_t nrows, UInt_t ncolumns);
    virtual void ExpandColumns(UInt_t ncolumns);
@@ -116,10 +123,10 @@ protected:
    virtual void UpdateRangeFrame();
 
 public:
-   TGTable(const TGWindow *p = 0, Int_t id = 0,
-           TVirtualTableInterface *interface = 0, UInt_t nrows = 50,
+   TGTable(const TGWindow *p = nullptr, Int_t id = 0,
+           TVirtualTableInterface *interface = nullptr, UInt_t nrows = 50,
            UInt_t ncolumns = 20);
-   virtual ~TGTable();
+   ~TGTable() override;
 
    virtual TObjArray *GetRow(UInt_t row);
    virtual TObjArray *GetColumn(UInt_t columns);
@@ -222,21 +229,22 @@ public:
    virtual void Goto();
    virtual void Update();
 
-   ClassDef(TGTable, 0) // A table used to visualize data from diffent sources.
+   ClassDefOverride(TGTable, 0) // A table used to visualize data from different sources.
 };
 
 class TTableRange {
 public:
-   UInt_t fXtl; // Top left X coordinate
-   UInt_t fYtl; // Top left Y coordinate
-   UInt_t fXbr; // Bottom right X coordinate
-   UInt_t fYbr; // Bottom right Y coordinate
+   UInt_t fXtl; ///< Top left X coordinate
+   UInt_t fYtl; ///< Top left Y coordinate
+   UInt_t fXbr; ///< Bottom right X coordinate
+   UInt_t fYbr; ///< Bottom right Y coordinate
 
    TTableRange();
    virtual ~TTableRange() {}
    virtual void Print();
 
    Bool_t operator==(TTableRange &other);
+
    ClassDef(TTableRange, 0) // Range used in TGTable.
 };
 

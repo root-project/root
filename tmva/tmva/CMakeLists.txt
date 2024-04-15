@@ -8,43 +8,19 @@
 # CMakeLists.txt file for building ROOT tmva package
 # @author Pere Mato, CERN
 ############################################################################
-if (tmva-cpu)
-  set(TMVA_CPU_HEADERS
-      TMVA/DNN/Architectures/Cpu/Blas.h
-  )
-#else()
-#  set(installoptions ${installoptions} FILTER "Cpu")
-endif()
 
-if(tmva-gpu)
-  set(dictoptions -I${CUDA_TOOLKIT_INCLUDE})
-  set(TMVA_GPU_HEADERS
-       TMVA/DNN/Architectures/Cuda.h
-		#  TMVA/DNN/Architectures/Cuda/CudaBuffers.h
-		#  TMVA/DNN/Architectures/Cuda/CudaMatrix.h
-		#  TMVA/DNN/Architectures/Cuda/CudaTensor.h
-  )
-else()
+if(NOT tmva-gpu)
   set(installoptions ${installoptions} FILTER "Cuda")
 endif()
 
-# Enable parts dependent RDataFrame
-if(dataframe)
-    set(TMVA_EXTRA_HEADERS
-        TMVA/RTensor.hxx
-        TMVA/RTensorUtils.hxx
-        TMVA/RStandardScaler.hxx
-        TMVA/RReader.hxx
-        TMVA/RInferenceUtils.hxx
-        TMVA/RBDT.hxx
-    )
-    set(TMVA_EXTRA_SOURCES
-        RBDT.cxx
-    )
-    set(TMVA_EXTRA_DEPENDENCIES
-        ROOTDataFrame
-        ROOTVecOps
-    )
+
+if (imt)
+  list(APPEND TMVA_EXTRA_DEPENDENCIES Imt)
+endif(imt)
+
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
@@ -213,38 +189,32 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     TMVA/VarTransformHandler.h
     TMVA/Version.h
     TMVA/Volume.h
-    TMVA/TreeInference/PythonHelpers.hxx
-    TMVA/TreeInference/BranchlessTree.hxx
-    TMVA/TreeInference/Forest.hxx
-    TMVA/TreeInference/Objectives.hxx
-	#  TMVA/DNN/Adadelta.h
-	#  TMVA/DNN/Adagrad.h
-	#  TMVA/DNN/Adam.h
-	#  TMVA/DNN/BatchNormLayer.h
-	#  TMVA/DNN/DataLoader.h
-	#  TMVA/DNN/DeepNet.h
-	#  TMVA/DNN/DenseLayer.h
-	#  TMVA/DNN/DLMinimizers.h
-	#  TMVA/DNN/Functions.h
-	#  TMVA/DNN/GeneralLayer.h
-	#  TMVA/DNN/ReshapeLayer.h
-	#  TMVA/DNN/RMSProp.h
-	#  TMVA/DNN/SGD.h
-	#  TMVA/DNN/TensorDataLoader.h
-	#  TMVA/DNN/CNN/ContextHandles.h
-	#  TMVA/DNN/CNN/ConvLayer.h
-	#  TMVA/DNN/CNN/MaxPoolLayer.h
-	#  TMVA/DNN/RNN/RNNLayer.h
-	#   TMVA/DNN/Architectures/Reference.h
-	#  TMVA/DNN/Architectures/Reference/DataLoader.h
-	#  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
-	#   TMVA/DNN/Architectures/Cpu.h
-	#  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
-	#  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
-	#  TMVA/DNN/Architectures/Cpu/CpuTensor.h
-	#  ${TMVA_CPU_HEADERS}
-	#  ${TMVA_GPU_HEADERS}
-	   ${TMVA_EXTRA_HEADERS}
+    #  TMVA/DNN/Adadelta.h
+    #  TMVA/DNN/Adagrad.h
+    #  TMVA/DNN/Adam.h
+    #  TMVA/DNN/BatchNormLayer.h
+    #  TMVA/DNN/DataLoader.h
+    #  TMVA/DNN/DeepNet.h
+    #  TMVA/DNN/DenseLayer.h
+    #  TMVA/DNN/DLMinimizers.h
+    #  TMVA/DNN/Functions.h
+    #  TMVA/DNN/GeneralLayer.h
+    #  TMVA/DNN/ReshapeLayer.h
+    #  TMVA/DNN/RMSProp.h
+    #  TMVA/DNN/SGD.h
+    #  TMVA/DNN/TensorDataLoader.h
+    #  TMVA/DNN/CNN/ContextHandles.h
+    #  TMVA/DNN/CNN/ConvLayer.h
+    #  TMVA/DNN/CNN/MaxPoolLayer.h
+    #  TMVA/DNN/RNN/RNNLayer.h
+    #   TMVA/DNN/Architectures/Reference.h
+    #  TMVA/DNN/Architectures/Reference/DataLoader.h
+    #  TMVA/DNN/Architectures/Reference/TensorDataLoader.h
+    #   TMVA/DNN/Architectures/Cpu.h
+    #  TMVA/DNN/Architectures/Cpu/CpuBuffer.h
+    #  TMVA/DNN/Architectures/Cpu/CpuMatrix.h
+    #  TMVA/DNN/Architectures/Cpu/CpuTensor.h
+    ${TMVA_EXTRA_HEADERS}
   SOURCES
     src/BDTEventWrapper.cxx
     src/BinarySearchTree.cxx
@@ -405,12 +375,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     src/VarTransformHandler.cxx
     src/Volume.cxx
     src/DNN/Architectures/Reference.cxx
-	 src/DNN/Architectures/Reference/DataLoader.cxx
-	 src/DNN/Architectures/Reference/TensorDataLoader.cxx
-	 src/DNN/Architectures/Cpu.cxx
+    src/DNN/Architectures/Reference/DataLoader.cxx
+    src/DNN/Architectures/Reference/TensorDataLoader.cxx
+    src/DNN/Architectures/Cpu.cxx
     src/DNN/Architectures/Cpu/CpuBuffer.cxx
-	 src/DNN/Architectures/Cpu/CpuMatrix.cxx
-	 ${TMVA_EXTRA_SOURCES}
+    src/DNN/Architectures/Cpu/CpuMatrix.cxx
+    ${TMVA_EXTRA_SOURCES}
   DEPENDENCIES
     TreePlayer
     Tree
@@ -420,22 +390,25 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TMVA
     MLP
     MathCore
     Core
-    Imt
     RIO
     XMLIO
     ${TMVA_EXTRA_DEPENDENCIES}
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
-    ${dictoptions}
   INSTALL_OPTIONS
     ${installoptions}
+  ${EXTRA_DICT_OPTS}
 )
 
+if(MSVC)
+  target_compile_definitions(TMVA PRIVATE _USE_MATH_DEFINES)
+endif()
+
+if(vdt OR builtin_vdt)
+  target_link_libraries(TMVA PRIVATE VDT::VDT)
+endif()
 if(builtin_vdt)
-  # cannot export include for vdt, as it points to build dir
-  target_include_directories(TMVA PRIVATE ${VDT_INCLUDE_DIRS})
-elseif(vdt)
-  target_include_directories(TMVA PUBLIC ${VDT_INCLUDE_DIRS})
+  add_dependencies(TMVA VDT)
 endif()
 
 if(tmva-cpu)
@@ -447,35 +420,67 @@ if(tmva-cpu)
     target_link_libraries(TMVA PRIVATE ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
   elseif(GSL_FOUND)
     target_compile_definitions(TMVA PRIVATE -DDNN_USE_CBLAS)
-    target_include_directories(TMVA PRIVATE ${GSL_INCLUDE_DIR})
+    target_include_directories(TMVA SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
     target_link_libraries(TMVA PRIVATE ${GSL_CBLAS_LIBRARY})
+    if(builtin_gsl)
+      add_dependencies(TMVA GSL)
+    endif()
   else()
     message(FATAL_ERROR "tmva-cpu enabled but neither BLAS nor GSL BLAS were found")
   endif()
 endif()
 
 if(tmva-gpu)
-  if (tmva-cudnn)
+  target_sources(TMVA PRIVATE
+                 src/DNN/Architectures/Cuda.cu
+                 src/DNN/Architectures/Cuda/CudaBuffers.cxx
+                 src/DNN/Architectures/Cuda/CudaMatrix.cu
+                 src/DNN/Architectures/Cuda/CudaTensor.cu )
+  target_link_libraries(TMVA PRIVATE CUDA::cuda_driver CUDA::cublas)
+  if(tmva-cudnn)
     message(STATUS "Using Cuda+cuDNN for TMVA Deep Learning on GPU")
     target_sources(TMVA PRIVATE
-                   src/DNN/Architectures/Cuda.cu
-                   src/DNN/Architectures/Cuda/CudaBuffers.cxx
-                   src/DNN/Architectures/Cuda/CudaMatrix.cu
-                   src/DNN/Architectures/Cuda/CudaTensor.cu
                    src/DNN/Architectures/Cudnn/TensorDataLoader.cxx
-		   src/DNN/Architectures/Cudnn.cu)
-    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS} ${CUDNN_INCLUDE_DIRS} )
-    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES} ${CUDNN_LIBRARIES})
+                   src/DNN/Architectures/Cudnn.cu)
+    target_include_directories(TMVA PRIVATE ${CUDNN_INCLUDE_DIRS} )
+    target_link_libraries(TMVA PRIVATE ${CUDNN_LIBRARIES})
   else()
     message(STATUS "cuDNN not found or disabled - use only Cuda+Cublas for TMVA Deep Learning on GPU")
-    target_include_directories(TMVA PRIVATE ${CUDA_INCLUDE_DIRS})
-    target_link_libraries(TMVA PRIVATE ${CUDA_CUBLAS_LIBRARIES})
-    target_sources(TMVA PRIVATE
-                   src/DNN/Architectures/Cuda.cu
-    		   src/DNN/Architectures/Cuda/CudaBuffers.cxx
-                   src/DNN/Architectures/Cuda/CudaMatrix.cu
-                   src/DNN/Architectures/Cuda/CudaTensor.cu )
-   endif()
+  endif()
+endif(tmva-gpu)
+
+if(dataframe)
+ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils
+  NO_INSTALL_HEADERS
+  HEADERS
+  TMVA/RTensorUtils.hxx
+  TMVA/RStandardScaler.hxx
+  TMVA/RReader.hxx
+  TMVA/RInferenceUtils.hxx
+  TMVA/RBDT.hxx
+  TMVA/RSofieReader.hxx
+  TMVA/RBatchGenerator.hxx
+  TMVA/RBatchLoader.hxx
+  TMVA/RChunkLoader.hxx
+  TMVA/TreeInference/PythonHelpers.hxx
+  TMVA/TreeInference/BranchlessTree.hxx
+  TMVA/TreeInference/Forest.hxx
+  TMVA/TreeInference/Objectives.hxx
+
+  SOURCES
+
+  src/RBDT.cxx
+
+  DEPENDENCIES
+    TMVA ROOTDataFrame ROOTVecOps
+    ${TMVA_EXTRA_DEPENDENCIES}
+
+  LINKDEF  LinkDefUtils.h
+  DICTIONARY_OPTIONS
+    -writeEmptyRootPCM
+
+  ${EXTRA_DICT_OPTS}
+)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
@@ -486,3 +491,5 @@ ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 ROOT_ADD_TEST_SUBDIRECTORY(test/envelope)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/CNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/RNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/LSTM)
+ROOT_ADD_TEST_SUBDIRECTORY(test/DNN/GRU)

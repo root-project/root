@@ -17,22 +17,23 @@
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 
-class RooRealVar;
-
 class RooGamma : public RooAbsPdf {
 public:
   RooGamma() {} ;
   RooGamma(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _gamma, RooAbsReal& _beta, RooAbsReal& _mu);
-  RooGamma(const RooGamma& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooGamma(*this,newname); }
-  inline virtual ~RooGamma() { }
+  RooGamma(const RooGamma& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooGamma(*this,newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void generateEvent(Int_t code);
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
+  void generateEvent(Int_t code) override;
+
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 
@@ -41,13 +42,13 @@ protected:
   RooRealProxy beta ;
   RooRealProxy mu ;
 
-  Double_t evaluate() const ;
-  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
-
+  double evaluate() const override ;
+  void doEval(RooFit::EvalContext &) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
-  ClassDef(RooGamma,1) // Gaussian PDF
+  ClassDefOverride(RooGamma,1) // Gaussian PDF
 };
 
 #endif

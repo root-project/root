@@ -20,7 +20,7 @@
 /* zsolve_cubic.c - finds the complex roots of x^3 + a x^2 + b x + c = 0 */
 
 //#include <config.h>
-#include <math.h>
+#include <cmath>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_poly.h>

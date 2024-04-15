@@ -53,12 +53,13 @@ the table of contents.
 #pragma optimize("",off)
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -69,8 +70,8 @@ the table of contents.
 #include "TText.h"
 #include "zlib.h"
 #include "TObjString.h"
-#include "TClass.h"
 #include "TObjArray.h"
+#include "snprintf.h"
 
 // To scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
@@ -93,8 +94,9 @@ const Int_t kObjFirstPage        = 51; // First page object
 // Number of fonts
 const Int_t kNumberOfFonts = 15;
 
-Int_t TPDF::fgLineJoin = 0;
-Int_t TPDF::fgLineCap  = 0;
+Int_t  TPDF::fgLineJoin = 0;
+Int_t  TPDF::fgLineCap  = 0;
+Bool_t TPDF::fgObjectIsOpen = kFALSE;
 
 ClassImp(TPDF);
 
@@ -103,7 +105,7 @@ ClassImp(TPDF);
 
 TPDF::TPDF() : TVirtualPS()
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
    gVirtualPS       = this;
@@ -118,9 +120,6 @@ TPDF::TPDF() : TVirtualPS()
    fPageOrientation = 0;
    fStartStream     = 0;
    fLineScale       = 0.;
-   fObjPosSize      = 0;
-   fObjPos          = 0;
-   fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
    SetTitle("PDF");
@@ -137,7 +136,7 @@ TPDF::TPDF() : TVirtualPS()
 
 TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fCompress        = kFALSE;
    fPageNotEmpty    = kFALSE;
    fRed             = 0.;
@@ -151,8 +150,6 @@ TPDF::TPDF(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
    fPageOrientation = 0;
    fStartStream     = 0;
    fLineScale       = 0.;
-   fObjPosSize      = 0;
-   fNbObj           = 0;
    fNbPage          = 0;
    fRange           = kFALSE;
    SetTitle("PDF");
@@ -209,11 +206,11 @@ void TPDF::Close(Option_t *)
    WriteCompressedBuffer();
    PrintStr("endstream@");
    Int_t streamLength = fNByte-fStartStream-10;
-   PrintStr("endobj@");
+   EndObject();
    NewObject(4*(fNbPage-1)+kObjFirstPage+2);
-   WriteInteger(streamLength, 0);
+   WriteInteger(streamLength, false);
    PrintStr("@");
-   PrintStr("endobj@");
+   EndObject();
    NewObject(4*(fNbPage-1)+kObjFirstPage+3);
    PrintStr("<<@");
    if (!strstr(GetTitle(),"PDF")) {
@@ -239,6 +236,7 @@ void TPDF::Close(Option_t *)
       PrintStr("@");
    }
    PrintStr(">>@");
+   EndObject();
 
    NewObject(kObjOutlines);
    PrintStr("<<@");
@@ -255,7 +253,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(kObjContents);
    PrintStr("<<@");
@@ -279,6 +277,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr(">>@");
+   EndObject();
 
    // List of all the pages
    NewObject(kObjPages);
@@ -295,7 +294,7 @@ void TPDF::Close(Option_t *)
    PrintStr(" ]");
    PrintStr("@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(kObjTransList);
    PrintStr("<<@");
@@ -305,8 +304,8 @@ void TPDF::Close(Option_t *)
       fAlphas[i],fAlphas[i],fAlphas[i],fAlphas[i]));
    }
    PrintStr(">>@");
-   PrintStr("endobj@");
-   if (fAlphas.size()) fAlphas.clear();
+   EndObject();
+   if (!fAlphas.empty()) fAlphas.clear();
 
    // Cross-Reference Table
    Int_t refInd = fNByte;
@@ -336,14 +335,14 @@ void TPDF::Close(Option_t *)
    PrintStr(" 0 R@");
    PrintStr(">>@");
    PrintStr("startxref@");
-   WriteInteger(refInd, 0);
+   WriteInteger(refInd, false);
    PrintStr("@");
    PrintStr("%%EOF@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1371,6 +1370,18 @@ void TPDF::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Close the current opened object
+
+void TPDF::EndObject()
+{
+   if (!fgObjectIsOpen)
+      Warning("TPDF::EndObject", "No Object currently opened.");
+   fgObjectIsOpen = kFALSE;
+
+   PrintStr("endobj@");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Font encoding
 
 void TPDF::FontEncode()
@@ -1388,7 +1399,7 @@ void TPDF::FontEncode()
       PrintStr("/Type /Font@");
       PrintStr("/Subtype /Type1@");
       PrintStr("/Name /F");
-      WriteInteger(i+1,0);
+      WriteInteger(i+1,false);
       PrintStr("@");
       PrintStr("/BaseFont ");
       PrintStr(sdtfonts[i]);
@@ -1398,7 +1409,7 @@ void TPDF::FontEncode()
          PrintStr("@");
       }
       PrintStr(">>@");
-      PrintStr("endobj@");
+      EndObject();
    }
 }
 
@@ -1427,6 +1438,9 @@ void TPDF::MoveTo(Double_t x, Double_t y)
 
 void TPDF::NewObject(Int_t n)
 {
+   if (fgObjectIsOpen)
+      Warning("TPDF::NewObject", "An Object is already open.");
+   fgObjectIsOpen = kTRUE;
    if (!fObjPos || n >= fObjPosSize) {
       Int_t newN = TMath::Max(2*fObjPosSize,n+1);
       Int_t *saveo = new Int_t [newN];
@@ -1440,7 +1454,7 @@ void TPDF::NewObject(Int_t n)
    }
    fObjPos[n-1] = fNByte;
    fNbObj       = TMath::Max(fNbObj,n);
-   WriteInteger(n, 0);
+   WriteInteger(n, false);
    PrintStr(" 0 obj");
    PrintStr("@");
 }
@@ -1468,11 +1482,11 @@ void TPDF::NewPage()
       WriteCompressedBuffer();
       PrintStr("endstream@");
       Int_t streamLength = fNByte-fStartStream-10;
-      PrintStr("endobj@");
+      EndObject();
       NewObject(4*(fNbPage-2)+kObjFirstPage+2);
-      WriteInteger(streamLength, 0);
+      WriteInteger(streamLength, false);
       PrintStr("@");
-      PrintStr("endobj@");
+      EndObject();
       NewObject(4*(fNbPage-2)+kObjFirstPage+3);
       PrintStr("<<@");
       if (!strstr(GetTitle(),"PDF")) {
@@ -1502,6 +1516,7 @@ void TPDF::NewPage()
          PrintStr("@");
       }
       PrintStr(">>@");
+      EndObject();
    }
 
    // Start a new page
@@ -1581,7 +1596,7 @@ void TPDF::NewPage()
    WriteInteger(4*(fNbPage-1)+kObjFirstPage+1);
    PrintStr(" 0 R@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(4*(fNbPage-1)+kObjFirstPage+1);
    PrintStr("<<@");
@@ -1627,7 +1642,7 @@ void TPDF::NewPage()
 
 void TPDF::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1690,9 +1705,9 @@ void TPDF::Open(const char *fname, Int_t wtype)
 #else
       fStream->open(fname, std::ofstream::out);
 #endif
-   if (fStream == 0 || !fStream->good()) {
+   if (!fStream || !fStream->good()) {
       printf("ERROR in TPDF::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (!fStream) return;
    }
 
    gVirtualPS = this;
@@ -1721,7 +1736,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    // Set a default range
    Range(fXsize, fYsize);
 
-   fObjPos = 0;
+   fObjPos = nullptr;
    fObjPosSize = 0;
    fNbObj = 0;
    fNbPage = 0;
@@ -1741,7 +1756,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr(" 0 R@");
    PrintStr("/PageMode /UseOutlines@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(kObjInfo);
    PrintStr("<<@");
@@ -1751,11 +1766,20 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr("/CreationDate (");
    TDatime t;
-   char str[17];
-   snprintf(str,17,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d",
-                t.GetYear()  , t.GetMonth(),
-                t.GetDay()   , t.GetHour(),
-                t.GetMinute(), t.GetSecond());
+   Int_t toff = t.Convert(kFALSE) - t.Convert(kTRUE); // time zone and dst offset
+   toff = toff/60;
+   char str[24];
+   snprintf(str,24,"D:%4.4d%2.2d%2.2d%2.2d%2.2d%2.2d%c%2.2d'%2.2d'",
+            t.GetYear()  , t.GetMonth(),
+            t.GetDay()   , t.GetHour(),
+            t.GetMinute(), t.GetSecond(),
+            toff < 0 ? '-' : '+',
+            // TMath::Abs(toff/60), TMath::Abs(toff%60)); // format-truncation warning
+            TMath::Abs(toff/60) & 0x3F, TMath::Abs(toff%60) & 0x3F); // now 2 digits
+   PrintStr(str);
+   PrintStr(")");
+   PrintStr("@");
+   PrintStr("/ModDate (");
    PrintStr(str);
    PrintStr(")");
    PrintStr("@");
@@ -1765,7 +1789,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("@");
    PrintStr("/Keywords (ROOT)@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(kObjPageResources);
    PrintStr("<<@");
@@ -1775,7 +1799,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("<<@");
    for (i=0; i<kNumberOfFonts; i++) {
       PrintStr(" /F");
-      WriteInteger(i+1,0);
+      WriteInteger(i+1,false);
       WriteInteger(kObjFont+i);
       PrintStr(" 0 R");
    }
@@ -1785,7 +1809,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr("/ExtGState");
    WriteInteger(kObjTransList);
    PrintStr(" 0 R @");
-   if (fAlphas.size()) fAlphas.clear();
+   if (!fAlphas.empty()) fAlphas.clear();
 
    PrintStr("/ColorSpace << /Cs8");
    WriteInteger(kObjColorSpace);
@@ -1796,7 +1820,7 @@ void TPDF::Open(const char *fname, Int_t wtype)
    PrintStr(" 0 R");
    PrintStr("@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    FontEncode();
    PatternEncode();
@@ -1851,51 +1875,8 @@ void TPDF::PrintFast(Int_t len, const char *str)
 
 void TPDF::Range(Float_t xsize, Float_t ysize)
 {
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
-
    fXsize = xsize;
    fYsize = ysize;
-
-   xps = xsize;
-   yps = ysize;
-
-   if (xsize <= xps && ysize < yps) {
-      if ( xps > yps) xymax = xps;
-      else            xymax = yps;
-      xncm  = xsize/xymax;
-      yncm  = ysize/xymax;
-      dxwn  = ((xps/xymax)-xncm)/2;
-      dywn  = ((yps/xymax)-yncm)/2;
-   } else {
-      if (xps/yps < 1) xwkwn = xps/yps;
-      else             xwkwn = 1;
-      if (yps/xps < 1) ywkwn = yps/xps;
-      else             ywkwn = 1;
-
-      if (xsize < ysize)  {
-         xncm = ywkwn*xsize/ysize;
-         yncm = ywkwn;
-         dxwn = (xwkwn-xncm)/2;
-         dywn = 0;
-         if (dxwn < 0) {
-            xncm = xwkwn;
-            dxwn = 0;
-            yncm = xwkwn*ysize/xsize;
-            dywn = (ywkwn-yncm)/2;
-         }
-      } else {
-         xncm = xwkwn;
-         yncm = xwkwn*ysize/xsize;
-         dxwn = 0;
-         dywn = (ywkwn-yncm)/2;
-         if (dywn < 0) {
-            yncm = ywkwn;
-            dywn = 0;
-            xncm = ywkwn*xsize/ysize;
-            dxwn = (xwkwn-xncm)/2;
-         }
-      }
-   }
    fRange = kTRUE;
 }
 
@@ -1998,7 +1979,6 @@ void TPDF::SetColor(Float_t r, Float_t g, Float_t b)
 void TPDF::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
-   if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2033,6 +2013,21 @@ void TPDF::SetFillPatterns(Int_t ipat, Int_t color)
       WriteReal(colRed);
       WriteReal(colGreen);
       WriteReal(colBlue);
+   }
+
+   if (fPageOrientation == 2) {
+      switch (ipat) {
+         case 4:  ipat = 5;  break;
+         case 5:  ipat = 4;  break;
+         case 6:  ipat = 7;  break;
+         case 7:  ipat = 6;  break;
+         case 17: ipat = 18; break;
+         case 18: ipat = 17; break;
+         case 20: ipat = 16; break;
+         case 16: ipat = 20; break;
+         case 21: ipat = 22; break;
+         case 22: ipat = 21; break;
+      }
    }
    snprintf(cpat,10," /P%2.2d scn", ipat);
    PrintStr(cpat);
@@ -2288,7 +2283,7 @@ void TPDF::Text(Double_t xx, Double_t yy, const char *chars)
    Bool_t kerning;
    if (wa0-wa1 != 0) kerning = kTRUE;
    else              kerning = kFALSE;
-   Int_t *charDeltas = 0;
+   Int_t *charDeltas = nullptr;
    if (kerning) {
         charDeltas = new Int_t[len];
         for (Int_t i = 0;i < len;i++) {
@@ -2420,9 +2415,9 @@ void TPDF::WriteCompressedBuffer()
    stream.avail_in  = (uInt)fLenBuffer;
    stream.next_out  = (Bytef*)out;
    stream.avail_out = (uInt)2*fLenBuffer;
-   stream.zalloc    = (alloc_func)0;
-   stream.zfree     = (free_func)0;
-   stream.opaque    = (voidpf)0;
+   stream.zalloc    = (alloc_func)nullptr;
+   stream.zfree     = (free_func)nullptr;
+   stream.opaque    = (voidpf)nullptr;
 
    err = deflateInit(&stream, Z_DEFAULT_COMPRESSION);
    if (err != Z_OK) {
@@ -2440,6 +2435,9 @@ void TPDF::WriteCompressedBuffer()
    }
 
    err = deflateEnd(&stream);
+   if (err != Z_OK) {
+      Error("WriteCompressedBuffer", "error in deflateEnd (zlib)");
+   }
 
    fStream->write(out, stream.total_out);
 
@@ -2483,10 +2481,10 @@ void TPDF::PatternEncode()
    } else {
       PrintStr("[/Pattern /DeviceRGB]@");
    }
-   PrintStr("endobj@");
+   EndObject();
    NewObject(kObjPatternResourses);
    PrintStr("<</ProcSet[/PDF]>>@");
-   PrintStr("endobj@");
+   EndObject();
 
    NewObject(kObjPatternList);
    PrintStr("<<@");
@@ -2566,7 +2564,7 @@ void TPDF::PatternEncode()
    WriteInteger(patternNb++);
    PrintStr(" 0 R@");
    PrintStr(">>@");
-   PrintStr("endobj@");
+   EndObject();
 
    patternNb = kObjPattern;
 
@@ -2580,7 +2578,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301P\241\034(\254\340\253\020m\250\020k\240\220\302e\244`\242\220\313ei\t\244r\200\272\215A\034\v \225\003\2241\202\310\030\201e\f!2\206@N0W \027@\200\001\0|c\024\357\n", 93);
    fNByte += 93;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P02
    NewObject(patternNb++);
@@ -2592,7 +2590,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\277\025\321+\b\016\342\340P\334tP\252\240\213\3277\332!\204\274\227\v\316\2150\032\335J\356\025\023O\241Np\247\363\021f\317\344\214\234\215\v\002+\036h\033U\326/~\243Ve\231PL\370\215\027\343\032#\006\274\002\f\0\242`\025:\n", 94);
    fNByte += 94;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P03
    NewObject(patternNb++);
@@ -2604,7 +2602,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211$\2121\n\2000\024C\367\234\"G\370\261(\366\n\202\20388\210\233\016J\025t\361\372\376\332!\204\274\227\033\342N\030\215\262\222g\303\304\313Q\347\360\240\370:f\317Y\f\\\214+**\360Dls'\177\306\274\032\257\344\256.\252\376\215\212\221\217\021\003>\001\006\0\317\243\025\254\n", 95);
    fNByte += 95;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P04
    NewObject(patternNb++);
@@ -2616,7 +2614,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\025\314\025\310\005\020`\0\344\270\r\274\n", 65);
    fNByte += 65;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P05
    NewObject(patternNb++);
@@ -2628,7 +2626,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302\005Q\223\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\344\320\r\274\n", 68);
    fNByte += 68;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P06
    NewObject(patternNb++);
@@ -2640,7 +2638,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302e\nR\232\v\242@js\270\202\271\002\271\0\002\f\0\345X\r\305\n", 68);
    fNByte += 68;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P07
    NewObject(patternNb++);
@@ -2652,7 +2650,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\270\202\271\002\271\0\002\f\0\345=\r\305\n", 70);
    fNByte += 70;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P08
    NewObject(patternNb++);
@@ -2664,7 +2662,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211D\217\261\016\3020\fDw\177\305\315L6Q\225|\003\022C\305\300Puk+\201\032$\272\360\373\330\265\323\016\271\330\367\234\344\"x\201\030\214\252\232\030+%\353VZ.jd\367\205\003x\241({]\311\324]\323|\342\006\033J\201:\306\325\230Jg\226J\261\275D\257#\337=\220\260\354k\233\351\211\217Z75\337\020\374\324\306\035\303\310\230\342x=\303\371\275\307o\332s\331\223\224\240G\330\a\365\364\027`\0\nX1}\n",141);
    fNByte += 141;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P09
    NewObject(patternNb++);
@@ -2676,7 +2674,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\005RFFz&\020\002,d\240\220\314en\256g\0065\b,\001b\230\202$\240\232\214@\362\246`\2169H\336\024\2426\231\v&\200,\n\326\030\314\025\310\005\020`\0\f@\036\227\n", 110);
    fNByte += 110;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P10
    NewObject(patternNb++);
@@ -2688,7 +2686,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002\02465P\310\345\002)\0042r\200\332\r\241\\C \017dN.\027L\312\0\302\205\2535\205j6\205X\224\303\025\314\025\310\005\020`\0\2127\031\t\n", 95);
    fNByte += 95;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P11
    NewObject(patternNb++);
@@ -2700,7 +2698,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211\\\2171\016\3020\fEw\237\342\037\301ip\223^\001\211\001u`@l0\200(\022,\\\037;v\204\332\241\211\336\373\337V\363\246\204;\210\301H\354\337\347F'\274T\355U>\220\360U\215\003\316\027\306\2655\027=\a\306\223\304I\002m\332\330\356&\030\325\333fZ\275F\337\205\235\265O\270\032\004\331\214\336\305\270\004\227`\357i\256\223\342;]\344\255(!\372\356\205j\030\377K\335\220\344\377\210\274\306\022\330\337T{\214,\212;\301\3508\006\346\206\021O=\216|\212|\246#\375\004\030\0\216FF\207\n", 166);
    fNByte += 166;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P12
    NewObject(patternNb++);
@@ -2712,7 +2710,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211<P;n\3030\f\335y\n\236 \220DK\242\256P\240C\321\241C\221\311\311\220\242\016\220.\275~D\221/\203I\342}\370(?(\363\215)q\342\234\374\373\273\322\027\337'\3646\301\037\316\374?a~\347\357s\342\313\2045\361A9\237\322fc\231\200\236F\263\301\334;\211\017\207\rN\311\252S\\\227{\247\006w\207\244\303\255p+(\205\333\360e/v\356a\315\317\360\272\320b|w\276\203o\340k\b\004\027\v$b\226\235,\242\254t(\024\nu\305Vm\313\021\375\327\272\257\227fuf\226ju\356\222x\030\024\313\261S\215\377\341\274,\203\254\253Z\\\262A\262\205eD\350\210\320\201\225\212\320\036\241\355\025\372JE,\2266\344\366\310U\344\016HFx>\351\203\236\002\f\0d}e\216\n", 228);
    fNByte += 228;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P13
    NewObject(patternNb++);
@@ -2724,7 +2722,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\002V\231\313\005S\233\303\005\241!\" ~0W \027@\200\001\0\331\227\020\253\n", 71);
    fNByte += 71;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P14
    NewObject(patternNb++);
@@ -2736,7 +2734,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\2114\214=\n\2000\f\205\367\234\342\035!-\241\364\f\202\20388\210\233\016J+\350\342\365M\3723\224\327\367}I\036r8A\f\206\343\372\336\203\026\334\212\006\205\027\004\237b\214X7\306\256\33032\331\240~\022y[\315\026\206\222\372\330}\264\036\253\217\335\353\240\030\b%\223\245o=X\227\346\245\355K\341\345@\3613M\364\v0\0\207o\"\261\n", 116);
    fNByte += 116;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P15
    NewObject(patternNb++);
@@ -2748,7 +2746,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211<\2211\016\3020\fEw\237\302'@\211c\267w@b@\f\f\210\2510\200(\022,\\\037\347\307\256Z\325\221\375\337\377\225\363\241\312\017\246\302\205'\274\337;\235\371\355\215\275\267\236\\\371\307\265\360\201/\327\3027o\233\361J\262\233\247~\362g\336\211zur!A]{\035}\031S\343\006p\241\226dKI\v\326\202\265\3153\331)X)\335fE\205M\235\373\327\r*\374\026\252\022\216u\223\200\361I\211\177\031\022\001#``\342GI\211\004c\221gi\246\231\247\221\247\231\247\233$XM3\315<\215<\315<K\211e\036#\215a4\366\344\035lm\214Z\314b\211Xj\337K\\\201$\332\325\v\365\2659\204\362\242\274'\v\221\r\321\211\216\364\027`\0\212'_\215\n", 220);
    fNByte += 220;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P16
    NewObject(patternNb++);
@@ -2760,7 +2758,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020\035k\240\220\302ej\240\0D\271 \332\314X\317B\301\330\002H\230\233*\030\231\202\310d.CC=#\020\v*\rV\235\214\254\v\210r@\264\261\031P\241\031H5D\253\021H\267\005\3104 \v\344\016\260\002\020\003lB0W \027@\200\001\0hU \305\n", 125);
    fNByte += 125;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P17
    NewObject(patternNb++);
@@ -2772,7 +2770,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\002V\234\313\005S\236\303\025\314\025\310\005\020`\0\r\351\016B\n", 68);
    fNByte += 68;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P18
    NewObject(patternNb++);
@@ -2784,7 +2782,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211*\3442T\310T\3402P0P04\200\340\242T\256p\205<\240\220\027P0K\301D\241\034(\254\340\253\020md\242\020k\240\220\302\005Q\226\313\005\"\r\024r\270\202\271\002\271\0\002\f\0\016\001\016B\n", 71);
    fNByte += 71;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P19
    NewObject(patternNb++);
@@ -2796,7 +2794,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211L\216;\016\302@\fD{\237bN\020\331+6a\257\200D\201((P\252@\001R\220\240\341\372\370\263\216(\326\266f\336\330\373&\301\003\304`\b\307\373\334\351\202\227J\a\025\237\020|U\306\021\327\231q\243\306\250\214\325\372T\006\336\367\032\262\326\205\3124\264b\243$\"n.\244=\314\250!\2139\033\327\022i=\323\317\2518\332T}\347.\202\346W\373\372j\315\221\344\266\213=\237\241\344\034\361\264!\236w\344\177\271o8\323\211~\002\f\0\366\3026\233\n", 151);
    fNByte += 151;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P20
    NewObject(patternNb++);
@@ -2808,7 +2806,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211<L;\016\2030\f\335}\212w\002\344$M\2323 1 \006\006\304\224vhU\220`\341\372<\aT\311\366\263\336o\023\207\017D\241pz\355\376\226\021+\251\226\344\027\017\034\244\321a\232\025/\211\n\316r\343ORh\262}\317\210\344\032o\310)\302\2233\245\252[m\274\332\313\277!$\332\371\371\210`N\242\267$\217\263\246\252W\257\245\006\351\345\024`\0o\347 \305\n", 124);
    fNByte += 124;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P21
    NewObject(patternNb++);
@@ -2820,7 +2818,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211D\2151\n\2000\fE\367\234\342\037!)\224\336Ap\020\a\aq\323A\251\202.^\337$-\025\022^\372\033^n\022\354 \006CX\274\237\215&\\\032u\032\036\020\274\032\243\307\2740V]\027\234\024\242\"\033\2642En\324\312\224bc\262\\\230\377\301\332WM\224\212(U\221\375\265\301\025\016?\350\317P\215\221\033\213o\244\201>\001\006\0\031I'f\n", 119);
    fNByte += 119;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P22
    NewObject(patternNb++);
@@ -2832,7 +2830,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211<\215=\n\204P\f\204\373\234b\216\220<\b\357\016\302\026ba!vZ(\273\v\332x}\223\274\237\"|\223a\230\271Hp\200\030\fa\211\273w\232\3617k0\363\204\3401\033\037,+c#\3170~\2244\304\327EV\243r\247\272oOcr\337\323]H\t\226\252\334\252r\255\362\257\213(\t\304\250\326\315T\267\032\275q\242\221^\001\006\0\272\367(&\n", 120);
    fNByte += 120;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P23
    NewObject(patternNb++);
@@ -2844,7 +2842,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211<\220\273\n\0021\020E\373\371\212[[M\326\331\354\344\027\004\v\261\260\020;\025\224D\320\306\337w\036\254p\363\230\223\341$\344M\005\017\020\203Q8\307\347F'\274\f\355\f>Q\3605\214=\316\005\v.\214kt\217\230;)\324\366\245Fa\213e\320v\212r\022X\006\211Fi\3242\250J\224\302\020\367h\212\254I\\\325R\225o\03143\346U\235@a\t[\202Za\tA\202E`\351~O\002\235`\351~S\202\306h.m\253\264)\232K\217t\310\017q\354\a\353\247\364\377C\356\033\372\t0\0\bm:\375\n", 171);
    fNByte += 171;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P24
    NewObject(patternNb++);
@@ -2856,7 +2854,7 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\211DQ9N\004A\f\314\373\025\216\211\326\343v\037_@\"@\004\004\210\f\220@\003\022$|\177\335\345j\220v\345\251\303\343*\215\312\273\024\275\\d\375?\361dM\3162\306\337\214\337Y\336n\240m\217\036\301y\343\\<,i\250\0038F\035)\347l\322\026o\377\023\353|[\254\177\343\005;\315\317ky\224\257\240n\203\374\020\225\337\240\345N\236T\272<_\344\245\304^\3238\030\tc\236E\233xO\034\363\204>\251\317\324\233\023{\352\235\376\336S\357Fl\251\017\372\207\247>xoh&_\366Ud\331\253\314D\023\332\241\211\016\205\246\235\326\236*\275\307\204z8!s\031\335\306\\\306C\306\\\225\376\312\\\225\307\252\246\356\364\273Q\347\271:\371\341l\177\311e\210\3571\211\251#\374\302H\037:\342c\241\323\2617\320 \034\250\0\302\323a{\005%\302a\373(Zx\313\026\213@\215p\324}\026=\274e\217E8s\326}\026M\036\312}\271\n0\0\215\263\207\016\n", 282);
    fNByte += 282;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 
    // P25
    NewObject(patternNb++);
@@ -2868,5 +2866,5 @@ void TPDF::PatternEncode()
    fStream->write("\r\nH\2112T\310T\3402P0P\310\34526P\0\242\034.s\004m\016\242\r\r\f\024@\030\302\002\321iZP\305`M\346\310\212\201R\0\001\006\0\206\322\017\200\n", 56);
    fNByte += 56;
    PrintStr("endstream@");
-   PrintStr("endobj@");
+   EndObject();
 }

@@ -34,9 +34,10 @@ namespace ROOT {
      */
     inline
     long double etaMax_impl() {
-      return std::log ( std::numeric_limits<long double>::max()/256.0l ) -
-             std::log ( std::numeric_limits<long double>::denorm_min()*256.0l )
-             + 16.0 * std::log(2.0);
+      using std::log;
+      return log ( std::numeric_limits<long double>::max()/256.0l ) -
+             log ( std::numeric_limits<long double>::denorm_min()*256.0l )
+             + 16.0 * log(2.0);
     // Actual usage of etaMax() simply returns the number 22756, which is
     // the answer this would supply, rounded to a higher integer.
     }

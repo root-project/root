@@ -1,9 +1,0 @@
-This directory contains the Graphics Editor (GED) of ROOT and the basic classes of so-called object editors.
-BEGIN_HTML
- See the chapter about the Graphics Editor in ROOT on page 418 at:
-<ul>
-<li><a href="ftp://root.cern.ch/root/doc/25WritingGUI.pdf">The Chapter about Writing a Graphical User Interface in the Users Guide
-    </a></li>
-<li>The different object editors are documented in the corresponding classes.</li>
-</ul>
-END_HTML

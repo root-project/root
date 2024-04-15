@@ -17,7 +17,6 @@
 #include "TString.h"
 #include "TColor.h"
 #include "TROOT.h"
-#include "TClass.h"
 #include "TStyle.h"
 #include "TAxis.h"
 #include "TMath.h"
@@ -434,7 +433,6 @@ void TGLLegoPainter::Pan(Int_t px, Int_t py)
 
 void TGLLegoPainter::AddOption(const TString &option)
 {
-   using namespace std;
    const Ssiz_t legoPos = option.Index("lego");//"lego" _already_ _exists_ in a string.
    if (legoPos + 4 < option.Length() && isdigit(option[legoPos + 4])) {
       switch (option[legoPos + 4] - '0') {
@@ -1079,7 +1077,7 @@ void TGLLegoPainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
          fBoxCut.TurnOnOff();
       //gGLManager->PaintSingleObject(this);
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%zx)->Paint()", (size_t)this));
       else
          Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {

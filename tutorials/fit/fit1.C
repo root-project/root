@@ -33,13 +33,16 @@ void fit1() {
    gBenchmark->Start("fit1");
    //
    // We connect the ROOT file generated in a previous tutorial
-   // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>) 
+   // (see <a href="fillrandom.C.nbconvert.ipynb">Filling histograms with random numbers from a function</a>)
    //
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/fit/");
-   TFile *file = TFile::Open("fillrandom.root");
-   if (!file) {
-      gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C",dir.Data()));
+   TFile *file = nullptr;
+   if (!gSystem->AccessPathName("fillrandom.root")) {
+      // file exists
+      file = TFile::Open("fillrandom.root");
+   } else {
+      gROOT->ProcessLine(Form(".x %s../hist/fillrandom.C(0)",dir.Data()));
       file = TFile::Open("fillrandom.root");
       if (!file) return;
    }
@@ -54,7 +57,7 @@ void fit1() {
    // for using gROOT->FindObject("xxx"), e.g.:
    // TF1 *sqroot = (TF1*) gROOT.FindObject("sqroot")
    //
-   TF1 * sqroot = 0;
+   TF1 * sqroot = nullptr;
    file->GetObject("sqroot",sqroot);
    if (!sqroot){
       Error("fit1.C","Cannot find object sqroot of type TF1\n");
@@ -65,7 +68,7 @@ void fit1() {
    //
    // Now get and fit histogram h1f with the function sqroot
    //
-   TH1F* h1f = 0;
+   TH1F* h1f = nullptr;
    file->GetObject("h1f",h1f);
    if (!h1f){
       Error("fit1.C","Cannot find object h1f of type TH1F\n");

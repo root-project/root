@@ -55,7 +55,7 @@ public:
    REveVector fPDecay; // Decay momentum
 
    REveMCTrack() = default;
-   virtual ~REveMCTrack() {}
+   ~REveMCTrack() override {}
 
    REveMCTrack &operator=(const TParticle &p)
    {
@@ -65,7 +65,7 @@ public:
 
    void ResetPdgCode() { fPdgCode = 0; }
 
-   ClassDef(REveMCTrack, 1); // Monte Carlo track (also used in VSD).
+   ClassDefOverride(REveMCTrack, 1); // Monte Carlo track (also used in VSD).
 };
 
 ////////////////////////////////////////////////////////////////////////////////

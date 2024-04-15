@@ -19,17 +19,13 @@
 \class RooAbsGenContext
 \ingroup Roofitcore
 
-RooAbsGenContext is the abstract base class for generator contexts of 
+Abstract base class for generator contexts of
 RooAbsPdf objects. A generator context is an object that controls
 the generation of events from a given p.d.f in one or more sessions.
 This class defines the common interface for all such contexts and organizes
-storage of common components, such as the observables definition, the 
+storage of common components, such as the observables definition, the
 prototype data etc..
 **/
-
-#include "RooFit.h"
-
-#include "TClass.h"
 
 #include "RooAbsGenContext.h"
 #include "RooRandom.h"
@@ -41,60 +37,53 @@ prototype data etc..
 #include "Riostream.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(RooAbsGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
 RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars,
-				   const RooDataSet *prototype, const RooArgSet* auxProto, Bool_t verbose) :
-  TNamed(model), 
-  _prototype(prototype), 
-  _theEvent(0), 
-  _isValid(kTRUE),
-  _verbose(verbose),
-  _protoOrder(0),
-  _genData(0)
+               const RooDataSet *prototype, const RooArgSet* auxProto, bool verbose) :
+  TNamed(model),
+  _prototype(prototype),
+  _isValid(true),
+  _verbose(verbose)
 {
-  // Check PDF dependents 
+  // Check PDF dependents
   if (model.recursiveCheckObservables(&vars)) {
     coutE(Generation) << "RooAbsGenContext::ctor: Error in PDF dependents" << endl ;
-    _isValid = kFALSE ;
+    _isValid = false ;
     return ;
   }
 
   // Make a snapshot of the generated variables that we can overwrite.
-  _theEvent= (RooArgSet*)vars.snapshot(kFALSE);
+  vars.snapshot(_theEvent, false);
 
   // Analyze the prototype dataset, if one is specified
   _nextProtoIndex= 0;
-  if(0 != _prototype) {
-    TIterator *protoIterator= _prototype->get()->createIterator();
-    const RooAbsArg *proto = 0;
-    while((proto= (const RooAbsArg*)protoIterator->Next())) {
+  if(nullptr != _prototype) {
+    for (RooAbsArg const* proto : *_prototype->get()) {
       // is this variable being generated or taken from the prototype?
-      if(!_theEvent->contains(*proto)) {
-	_protoVars.add(*proto);
-	_theEvent->addClone(*proto);
+      if(!_theEvent.contains(*proto)) {
+   _protoVars.add(*proto);
+   _theEvent.addClone(*proto);
       }
     }
-    delete protoIterator;
   }
 
   // Add auxiliary protovars to _protoVars, if provided
   if (auxProto) {
     _protoVars.add(*auxProto) ;
-    _theEvent->addClone(*auxProto) ; 
+    _theEvent.addClone(*auxProto);
   }
 
   // Remember the default number of events to generate when no prototype dataset is provided.
   _extendMode = model.extendMode() ;
   if (model.canBeExtended()) {
-    _expectedEvents= (Int_t)(model.expectedEvents(_theEvent) + 0.5);
+    _expectedEvents= (Int_t)(model.expectedEvents(&_theEvent) + 0.5);
   } else {
     _expectedEvents= 0 ;
   }
@@ -108,20 +97,9 @@ RooAbsGenContext::RooAbsGenContext(const RooAbsPdf& model, const RooArgSet &vars
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsGenContext::~RooAbsGenContext()
-{
-  if(0 != _theEvent) delete _theEvent;
-  if (_protoOrder) delete[] _protoOrder ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Interface to attach given parameters to object in this context
 
-void RooAbsGenContext::attach(const RooArgSet& /*params*/) 
+void RooAbsGenContext::attach(const RooArgSet& /*params*/)
 {
 }
 
@@ -133,7 +111,7 @@ void RooAbsGenContext::attach(const RooArgSet& /*params*/)
 RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title, const RooArgSet& obs)
 {
   RooDataSet* ret = new RooDataSet(name, title, obs);
-  ret->setDirtyProp(kFALSE) ;
+  ret->setDirtyProp(false) ;
   return ret ;
 }
 
@@ -142,18 +120,18 @@ RooDataSet* RooAbsGenContext::createDataSet(const char* name, const char* title,
 /// Generate the specified number of events with nEvents>0 and
 /// and return a dataset containing the generated events. With nEvents<=0,
 /// generate the number of events in the prototype dataset, if available,
-/// or else the expected number of events, if non-zero. 
-/// If extendedMode = true generate according to a Poisson(nEvents) 
+/// or else the expected number of events, if non-zero.
+/// If extendedMode = true generate according to a Poisson(nEvents)
 /// The returned dataset belongs to the caller. Return zero in case of an error.
 /// Generation of individual events is delegated to a virtual generateEvent()
 /// method. A virtual initGenerator() method is also called just before the
 /// first call to generateEvent().
 
-RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t extendedMode) 
+RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool extendedMode)
 {
   if(!isValid()) {
     coutE(Generation) << ClassName() << "::" << GetName() << ": context is not valid" << endl;
-    return 0;
+    return nullptr;
   }
 
   // Calculate the expected number of events if necessary
@@ -163,26 +141,26 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
     }
     else {
       if (_extendMode == RooAbsPdf::CanNotBeExtended) {
-	coutE(Generation) << ClassName() << "::" << GetName()
-	     << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
-	return 0;	
+   coutE(Generation) << ClassName() << "::" << GetName()
+        << ":generate: PDF not extendable: cannot calculate expected number of events" << endl;
+   return nullptr;
       }
       nEvents= _expectedEvents;
     }
     if(nEvents <= 0) {
       coutE(Generation) << ClassName() << "::" << GetName()
-			<< ":generate: cannot calculate expected number of events" << endl;
-      return 0;
+         << ":generate: cannot calculate expected number of events" << endl;
+      return nullptr;
     }
     coutI(Generation) << ClassName() << "::" << GetName() << ":generate: will generate "
-		      << nEvents << " events" << endl;
+            << nEvents << " events" << endl;
 
   }
 
   if (extendedMode) {
      double nExpEvents = nEvents;
      nEvents = RooRandom::randomGenerator()->Poisson(nEvents) ;
-     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on " 
+     cxcoutI(Generation) << " Extended mode active, number of events generated (" << nEvents << ") is Poisson fluctuation on "
                          << GetName() << "::expectedEvents() = " << nExpEvents << endl ;
   }
 
@@ -190,76 +168,72 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
   // (this is necessary since we never make a private clone, for efficiency)
   if(_prototype) {
     const RooArgSet *vars= _prototype->get();
-    TIterator *iterator= _protoVars.createIterator();
-    const RooAbsArg *arg = 0;
-    Bool_t ok(kTRUE);
-    while((arg= (const RooAbsArg*)iterator->Next())) {
+    bool ok(true);
+    for (RooAbsArg * arg : _protoVars) {
       if(vars->contains(*arg)) continue;
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":generate: prototype dataset is missing \""
-			    << arg->GetName() << "\"" << endl;
+             << arg->GetName() << "\"" << endl;
 
       // WVE disable this for the moment
-      // ok= kFALSE;
+      // ok= false;
     }
-    delete iterator;
     // coverity[DEADCODE]
-    if(!ok) return 0;
+    if(!ok) return nullptr;
   }
 
   if (_verbose) Print("v") ;
 
   // create a new dataset
-  TString name(GetName()),title(GetTitle());
+  TString name(GetName());
+  TString title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
 
   // WVE need specialization here for simultaneous pdfs
-  _genData = createDataSet(name.Data(),title.Data(),*_theEvent) ; 
+  _genData = createDataSet(name.Data(), title.Data(), _theEvent);
 
   // Perform any subclass implementation-specific initialization
   // Can be skipped if this is a rerun with an identical configuration
   if (!skipInit) {
-    initGenerator(*_theEvent);
+    initGenerator(_theEvent);
   }
-  
+
   // Loop over the events to generate
-  Int_t evt(0) ;
   while(_genData->numEntries()<nEvents) {
-    
+
     // first, load values from the prototype dataset, if one was provided
-    if(0 != _prototype) {
+    if(nullptr != _prototype) {
       if(_nextProtoIndex >= _prototype->numEntries()) _nextProtoIndex= 0;
 
-      Int_t actualProtoIdx = _protoOrder ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
+      Int_t actualProtoIdx = !_protoOrder.empty() ? _protoOrder[_nextProtoIndex] : _nextProtoIndex ;
 
       const RooArgSet *subEvent= _prototype->get(actualProtoIdx);
       _nextProtoIndex++;
-      if(0 != subEvent) {
-	*_theEvent= *subEvent;
+      if(nullptr != subEvent) {
+        _theEvent.assign(*subEvent);
       }
       else {
-	coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
-			  << actualProtoIdx << " from prototype dataset" << endl;
-	return 0;
+   coutE(Generation) << ClassName() << "::" << GetName() << ":generate: cannot load event "
+           << actualProtoIdx << " from prototype dataset" << endl;
+   return nullptr;
       }
     }
 
     // delegate the generation of the rest of this event to our subclass implementation
-    generateEvent(*_theEvent, (Int_t)(nEvents - _genData->numEntries()));
+    generateEvent(_theEvent, (Int_t)(nEvents - _genData->numEntries()));
 
 
     // WVE add check that event is in normRange
-    if (_normRange.Length()>0 && !_theEvent->isInRange(_normRange.Data())) {
+    if (_normRange.Length()>0 && !_theEvent.isInRange(_normRange.Data())) {
       continue ;
-    }      
+    }
 
-    _genData->addFast(*_theEvent);
-    evt++ ;
+    _genData->addFast(_theEvent);
   }
 
   RooDataSet* output = _genData ;
-  _genData = 0 ;
-  output->setDirtyProp(kTRUE) ;
+  _genData = nullptr ;
+  output->setDirtyProp(true) ;
 
   return output;
 }
@@ -270,7 +244,7 @@ RooDataSet *RooAbsGenContext::generate(Double_t nEvents, Bool_t skipInit, Bool_t
 /// Interface function to initialize context for generation for given
 /// set of observables
 
-void RooAbsGenContext::initGenerator(const RooArgSet&) 
+void RooAbsGenContext::initGenerator(const RooArgSet&)
 {
 }
 
@@ -279,7 +253,7 @@ void RooAbsGenContext::initGenerator(const RooArgSet&)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of context
 
-void RooAbsGenContext::printName(ostream& os) const 
+void RooAbsGenContext::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -289,7 +263,7 @@ void RooAbsGenContext::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of context
 
-void RooAbsGenContext::printTitle(ostream& os) const 
+void RooAbsGenContext::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -299,9 +273,9 @@ void RooAbsGenContext::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of context
 
-void RooAbsGenContext::printClassName(ostream& os) const 
+void RooAbsGenContext::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
@@ -309,22 +283,19 @@ void RooAbsGenContext::printClassName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print arguments of context, i.e. the observables being generated in this context
 
-void RooAbsGenContext::printArgs(ostream& os) const 
+void RooAbsGenContext::printArgs(ostream& os) const
 {
-  os << "[ " ;    
-  TIterator* iter = _theEvent->createIterator() ;
-  RooAbsArg* arg ;
-  Bool_t first(kTRUE) ;
-  while((arg=(RooAbsArg*)iter->Next())) {
+  os << "[ " ;
+  bool first(true) ;
+  for (RooAbsArg * arg : _theEvent) {
     if (first) {
-      first=kFALSE ;
+      first=false ;
     } else {
       os << "," ;
     }
     os << arg->GetName() ;
-  }    
+  }
   os << "]" ;
-  delete iter ;
 }
 
 
@@ -332,7 +303,7 @@ void RooAbsGenContext::printArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Interface for multi-line printing
 
-void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, Bool_t /*verbose*/, TString /*indent*/) const
+void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, bool /*verbose*/, TString /*indent*/) const
 {
 }
 
@@ -347,16 +318,10 @@ void RooAbsGenContext::printMultiline(ostream &/*os*/, Int_t /*contents*/, Bool_
 
 void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 {
-  // Delete any previous lookup table
-  if (_protoOrder) {
-    delete[] _protoOrder ;
-    _protoOrder = 0 ;
-  }
-  
   // Copy new lookup table if provided and needed
   if (lut && _prototype) {
     Int_t n = _prototype->numEntries() ;
-    _protoOrder = new Int_t[n] ;
+    _protoOrder.resize(n);
     Int_t i ;
     for (i=0 ; i<n ; i++) {
       _protoOrder[i] = lut[i] ;
@@ -370,17 +335,17 @@ void RooAbsGenContext::setProtoDataOrder(Int_t* lut)
 ////////////////////////////////////////////////////////////////////////////////
 /// Rescale existing output buffer with given ratio
 
-void RooAbsGenContext::resampleData(Double_t& ratio) 
+void RooAbsGenContext::resampleData(double& ratio)
 {
 
   Int_t nOrig = _genData->numEntries() ;
   Int_t nTarg = Int_t(nOrig*ratio+0.5) ;
-  RooDataSet* trimmedData = (RooDataSet*) _genData->reduce(RooFit::EventRange(0,nTarg)) ;
+  std::unique_ptr<RooAbsData> trimmedData{_genData->reduce(RooFit::EventRange(0,nTarg))};
 
   cxcoutD(Generation) << "RooGenContext::resampleData*( existing production trimmed from " << nOrig << " to " << trimmedData->numEntries() << " events" << endl ;
 
   delete _genData ;
-  _genData = trimmedData ;
+  _genData = static_cast<RooDataSet*>(trimmedData.release());
 
   if (_prototype) {
     // Push back proto index by trimmed amount to force recycling of the
@@ -389,7 +354,7 @@ void RooAbsGenContext::resampleData(Double_t& ratio)
     while (_nextProtoIndex<0) {
       _nextProtoIndex += _prototype->numEntries() ;
     }
-  }  
+  }
 
 }
 
@@ -399,7 +364,7 @@ void RooAbsGenContext::resampleData(Double_t& ratio)
 ////////////////////////////////////////////////////////////////////////////////
 /// Define default contents when printing
 
-Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const 
+Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const
 {
   return kName|kClassName|kValue ;
 }
@@ -407,12 +372,12 @@ Int_t RooAbsGenContext::defaultPrintContents(Option_t* /*opt*/) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define default print style 
+/// Define default print style
 
-RooPrintable::StyleOption RooAbsGenContext::defaultPrintStyle(Option_t* opt) const 
+RooPrintable::StyleOption RooAbsGenContext::defaultPrintStyle(Option_t* opt) const
 {
   if (opt && TString(opt).Contains("v")) {
     return kVerbose ;
-  } 
+  }
   return kStandard ;
 }

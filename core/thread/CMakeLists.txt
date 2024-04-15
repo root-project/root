@@ -33,7 +33,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TAtomicCount.h
     TCondition.h
     TConditionImp.h
-    ThreadLocalStorage.h
     TMutex.h
     TMutexImp.h
     TRWLock.h
@@ -43,7 +42,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     TThreadImp.h
     TThreadPool.h
     ROOT/RConcurrentHashColl.hxx
-    ROOT/TReentrantRWLock.hxx
     ROOT/TRWSpinLock.hxx
     ROOT/TSpinMutex.hxx
     ROOT/TThreadedObject.hxx
@@ -63,17 +61,33 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
     src/TThreadImp.cxx
   STAGE1
   DICTIONARY_OPTIONS
-    -writeEmptyRootPCM 
+    -writeEmptyRootPCM
   DEPENDENCIES
     Core
+  BUILTINS
+    TBB
   INSTALL_OPTIONS ${installoptions}
+)
+
+target_include_directories(Core PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
 )
 
 target_link_libraries(Thread PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 
+target_include_directories(Thread PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+)
+
 # keep include directory for ROOT/RSha256.hxx private
 set_source_files_properties(src/RConcurrentHashColl.cxx
-  PROPERTIES COMPILE_FLAGS -I${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+  PROPERTIES COMPILE_FLAGS -I${CMAKE_SOURCE_DIR}/core/foundation/res)
+
+if((tbb OR builtin_tbb) AND NOT MSVC)
+  target_include_directories(Thread PRIVATE ${TBB_INCLUDE_DIRS})
+  target_link_libraries(Thread PRIVATE ${TBB_LIBRARIES})
+  set_target_properties(Thread PROPERTIES COMPILE_FLAGS "${TBB_CXXFLAGS}")
+endif()
 
 if(WIN32)
   target_sources(Thread PRIVATE
@@ -82,6 +96,7 @@ if(WIN32)
     src/TWin32Thread.cxx
     src/TWin32ThreadFactory.cxx
   )
+  target_include_directories(Thread PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
 else()
   target_sources(Thread PRIVATE
     src/TPosixCondition.cxx

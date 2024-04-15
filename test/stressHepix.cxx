@@ -60,7 +60,7 @@
 // If you run this benchmark on a new platform, please report the results
 // at rootdev@cern.ch. Send the output shown above and also the
 // log file stressHepix.log that contains more details about the individual
-// tests. Your results will be shown at http://root.cern.ch/root/Benchmark.html
+// tests. Your results will be shown at http://root.cern/root/Benchmark.html
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
    printf("Takes 348 CP seconds on a  800 rootmarks reference machine (P IV 2.8 GHz, SLC4 gcc3.4)\n");
    printf("Takes 162 CP seconds on a 1710 rootmarks machine (MacPro 2.0GHz gcc4.0.1)\n");
    if (gSystem->AccessPathName("atlas.root")) {
-      printf("\nPreparing geometry files from http://root.cern.ch\n\n");
+      printf("\nPreparing geometry files from http://root.cern\n\n");
       runTest("stressGeometry", 0);
    }
    TStopwatch timer;
@@ -143,10 +143,6 @@ int main(int argc, char **argv)
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";

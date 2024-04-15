@@ -5,8 +5,7 @@
 ///
 /// \date 2019-04-11
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \author Iliana Betsou <Iliana.Betsou@cern.ch>
+/// \authors Sergey Linev <S.Linev@gsi.de>, Iliana Betsou <Iliana.Betsou@cern.ch>
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -17,11 +16,8 @@
  *************************************************************************/
 
 #include <ROOT/RFitPanel.hxx>
-#include "ROOT/RDirectory.hxx"
 #include "TH1.h"
 #include "TFile.h"
-
-using namespace ROOT::Experimental;
 
 void fitpanel6()
 {
@@ -33,8 +29,7 @@ void fitpanel6()
    }
 
    // create panel
-   auto panel = std::make_shared<RFitPanel>("FitPanel");
-   RDirectory::Heap().Add("fitpanel", panel);
+   auto panel = std::make_shared<ROOT::Experimental::RFitPanel>("FitPanel");
 
    TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
    test->FillRandom("gaus", 10000);
@@ -42,5 +37,7 @@ void fitpanel6()
    panel->AssignHistogram(test);
 
    panel->Show();
+
+   panel->ClearOnClose(panel);
 }
 

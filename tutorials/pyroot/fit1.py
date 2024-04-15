@@ -9,6 +9,7 @@
 ##
 ## \author Wim Lavrijsen
 
+import ROOT
 from os import path
 from ROOT import TCanvas, TFile, TPaveText
 from ROOT import gROOT, gBenchmark
@@ -24,7 +25,12 @@ gBenchmark.Start( 'fit1' )
 #
 # We connect the ROOT file generated in a previous tutorial
 #
-fill = TFile( 'py-fillrandom.root' )
+File = "py-fillrandom.root"
+if (ROOT.gSystem.AccessPathName(File)) :
+    ROOT.Info("fit1.py", File+" does not exist")
+    exit()
+
+fill = TFile(File)
 
 #
 # The function "ls()" lists the directory contents of this file

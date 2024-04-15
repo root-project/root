@@ -19,6 +19,8 @@
 #include "clang/Sema/Lookup.h"
 #include "clang/Sema/Sema.h"
 
+#include <algorithm>
+
 using namespace clang;
 
 namespace cling {
@@ -33,7 +35,9 @@ namespace cling {
            && (SM.getFileID(SM.getIncludeLoc(FID)) == SM.getMainFileID());
   }
 
-  /// \brief Returns whether the given {Function,Tag,Var}Decl/TemplateDecl is a definition.
+  /// \brief Returns whether a declaration is a definition.  A `TemplateDecl` is
+  /// a definition if the templated decl is itself a definition; a concept is
+  /// always considered a definition.
   static bool isDefinition(const Decl *D) {
     if (auto FD = dyn_cast<FunctionDecl>(D))
       return FD->isThisDeclarationADefinition();
@@ -42,24 +46,37 @@ namespace cling {
     if (auto VD = dyn_cast<VarDecl>(D))
       return VD->isThisDeclarationADefinition();
     if (auto TD = dyn_cast<TemplateDecl>(D))
-      return isDefinition(TD->getTemplatedDecl());
+      return isa<ConceptDecl>(TD) || isDefinition(TD->getTemplatedDecl());
     return true;
   }
 
+  /// \brief Returns whether the given declaration is a template instantiation
+  /// or specialization.
+  static bool isInstantiationOrSpecialization(const Decl *D) {
+    if (auto FD = dyn_cast<FunctionDecl>(D))
+      return FD->isTemplateInstantiation() || FD->isFunctionTemplateSpecialization();
+    if (auto CTSD = dyn_cast<ClassTemplateSpecializationDecl>(D))
+      return CTSD->getSpecializationKind() != TSK_Undeclared;
+    if (auto VTSD = dyn_cast<VarTemplateSpecializationDecl>(D))
+      return VTSD->getSpecializationKind() != TSK_Undeclared;
+    return false;
+  }
+
   DefinitionShadower::DefinitionShadower(Sema& S, Interpreter& I)
-          : ASTTransformer(&S), m_Interp(I), m_Context(S.getASTContext()),
-            m_TU(S.getASTContext().getTranslationUnitDecl())
+          : ASTTransformer(&S), m_Context(S.getASTContext()), m_Interp(I),
+            m_TU(S.getASTContext().getTranslationUnitDecl()),
+            m_ShadowsDeclInStdDiagID(S.getDiagnostics().getCustomDiagID(
+                DiagnosticsEngine::Warning,
+                "'%0' shadows a declaration with the same name in the 'std' "
+                "namespace; use '::%0' to reference this declaration"))
   {}
 
   bool DefinitionShadower::isClingShadowNamespace(const DeclContext *DC) {
     auto NS = dyn_cast<NamespaceDecl>(DC);
-    return NS && NS->getName().startswith("__cling_N5");
+    return NS && NS->getName().starts_with("__cling_N5");
   }
 
   void DefinitionShadower::hideDecl(clang::NamedDecl *D) const {
-    assert(isClingShadowNamespace(D->getDeclContext())
-             && "D not in a __cling_N5xxx namespace?");
-
     // FIXME: this hides a decl from SemaLookup (there is no unloading). For
     // (large) L-values, this might be a memory leak. Should this be fixed?
     if (Scope* S = m_Sema->getScopeForContext(m_TU)) {
@@ -67,24 +84,32 @@ namespace cling {
       if (utils::Analyze::isOnScopeChains(D, *m_Sema))
         m_Sema->IdResolver.RemoveDecl(D);
     }
-    clang::StoredDeclsList &SDL = (*m_TU->getLookupPtr())[D->getDeclName()];
-    if (SDL.getAsVector() || SDL.getAsDecl() == D)
-      SDL.remove(D);
+    if (StoredDeclsMap* Map = m_TU->getLookupPtr()) {
+      StoredDeclsMap::iterator Pos = Map->find(D->getDeclName());
+      if (Pos != Map->end() && !Pos->second.isNull()) {
+       StoredDeclsList &List = Pos->second;
+       List.remove(D);
+       if (List.isNull())
+         Map->erase(Pos);
+     }
+    }
 
     if (InterpreterCallbacks *IC = m_Interp.getCallbacks())
       IC->DefinitionShadowed(D);
   }
 
   void DefinitionShadower::invalidatePreviousDefinitions(NamedDecl *D) const {
+    // NotForRedeclaration: lookup anything visible; follows using directives
     LookupResult Previous(*m_Sema, D->getDeclName(), D->getLocation(),
-                   Sema::LookupOrdinaryName, Sema::ForRedeclaration);
+                   Sema::LookupOrdinaryName, Sema::NotForRedeclaration);
+    Previous.suppressDiagnostics();
     m_Sema->LookupQualifiedName(Previous, m_TU);
+    bool shadowsDeclInStd = false;
 
     for (auto Prev : Previous) {
       if (Prev == D)
         continue;
-      if (isDefinition(Prev)
-          && (!isDefinition(D) || !isClingShadowNamespace(Prev->getDeclContext())))
+      if (isDefinition(Prev) && !isDefinition(D))
         continue;
       // If the found declaration is a function overload, do not invalidate it.
       // For templated functions, Sema::IsOverload() does the right thing as per
@@ -99,6 +124,7 @@ namespace cling {
                                 /*IsForUsingDecl=*/false))
         continue;
 
+      shadowsDeclInStd |= Prev->isInStdNamespace();
       hideDecl(Prev);
 
       // For unscoped enumerations, also invalidate all enumerators.
@@ -115,6 +141,18 @@ namespace cling {
     // : reference to 'xxx' is ambiguous" in `class C {}; class C; C foo;`.
     if (!Previous.empty() && !isDefinition(D))
       D->setInvalidDecl();
+
+    // Diagnose shadowing of decls in the `std` namespace (see ROOT-5971).
+    // For unnamed macros, the input is ingested in a single `Interpreter::process()`
+    // call. Do not emit the warning in that case, as all references are local
+    // to the wrapper function and this diagnostic might be misleading.
+    if (shadowsDeclInStd
+        && ((m_Interp.getInputFlags() & (Interpreter::kInputFromFile
+                                         | Interpreter::kIFFLineByLine))
+             != Interpreter::kInputFromFile)) {
+      m_Sema->Diag(D->getBeginLoc(), m_ShadowsDeclInStdDiagID)
+        << D->getQualifiedNameAsString();
+    }
   }
 
   void DefinitionShadower::invalidatePreviousDefinitions(FunctionDecl *D) const {
@@ -147,15 +185,19 @@ namespace cling {
 
   ASTTransformer::Result DefinitionShadower::Transform(Decl* D) {
     Transaction *T = getTransaction();
-    const CompilationOptions &CO = T->getCompilationOpts();
-    // Global declarations whose origin is the Cling prompt are subject to be
-    // nested in a `__cling_N5' namespace.
-    if (!CO.EnableShadowing
-        || D->getLexicalDeclContext() != m_TU || D->isInvalidDecl()
-        || isa<UsingDirectiveDecl>(D) || isa<UsingDecl>(D)
-        // FIXME: NamespaceDecl requires additional processing (TBD)
-        || isa<NamespaceDecl>(D)
-        || (isa<FunctionDecl>(D) && cast<FunctionDecl>(D)->isTemplateInstantiation())
+    if (!T->getCompilationOpts().EnableShadowing)
+      return Result(D, true);
+
+    // For variable templates, Transform() is invoked with a VarDecl; get the
+    // corresponding VarTemplateDecl.
+    if (auto VD = dyn_cast<VarDecl>(D))
+      if (auto VTD = VD->getDescribedVarTemplate())
+        D = VTD;
+
+    // Disable definition shadowing for some specific cases.
+    if (D->getLexicalDeclContext() != m_TU || D->isInvalidDecl()
+        || isa<UsingDirectiveDecl>(D) || isa<UsingDecl>(D) || isa<NamespaceDecl>(D)
+        || isInstantiationOrSpecialization(D)
         || !typedInClingPrompt(FullSourceLoc{D->getLocation(),
                                              m_Context.getSourceManager()}))
       return Result(D, true);
@@ -168,7 +210,7 @@ namespace cling {
                                  SourceLocation(), SourceLocation(),
                                  &m_Context.Idents.get("__cling_N5"
                                        + std::to_string(m_UniqueNameCounter++)),
-                                 nullptr);
+                                 /*PrevDecl=*/nullptr, /*Nested=*/false);
       //NS->setImplicit();
       m_TU->addDecl(NS);
       T->setDefinitionShadowNS(NS);

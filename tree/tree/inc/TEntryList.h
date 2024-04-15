@@ -43,12 +43,12 @@ class TEntryList: public TNamed
 
    Long64_t         fLastIndexQueried;  ///<! used to optimize GetEntry() function from a loop
    Long64_t         fLastIndexReturned; ///<! used to optimize GetEntry() function from a loop
-   Bool_t           fShift;             ///<! true when some sub-lists don't correspond to trees
+   bool             fShift;             ///<! true when some sub-lists don't correspond to trees
                                         ///<  (when the entry list is used as input in TChain)
    TDirectory      *fDirectory;         ///<! Pointer to directory holding this tree
-   Bool_t           fReapply;           ///<  If true, TTree::Draw will 'reapply' the original cut
+   bool             fReapply;           ///<  If true, TTree::Draw will 'reapply' the original cut
 
-   void             GetFileName(const char *filename, TString &fn, Bool_t * = 0);
+   void             GetFileName(const char *filename, TString &fn, bool * = nullptr);
 
  public:
    enum {kBlockSize = 64000}; //number of entries in each block (not the physical size).
@@ -59,16 +59,19 @@ class TEntryList: public TNamed
    TEntryList(const char *name, const char *title, const char *treename, const char *filename);
    TEntryList(const TTree *tree);
    TEntryList(const TEntryList& elist);
-   virtual ~TEntryList();
+   ~TEntryList() override;
 
    virtual void        Add(const TEntryList *elist);
-   virtual Int_t       Contains(Long64_t entry, TTree *tree = 0);
+   void                AddSubList(TEntryList *elist);
+   virtual Int_t       Contains(Long64_t entry, TTree *tree = nullptr);
    virtual void        DirectoryAutoAdd(TDirectory *);
-   virtual Bool_t      Enter(Long64_t entry, TTree *tree = 0);
+   virtual bool        Enter(Long64_t entry, TTree *tree = nullptr);
+   virtual bool        Enter(Long64_t localentry, const char *treename, const char *filename);
+   void                EnterRange(Long64_t start, Long64_t end, TTree *tree = nullptr, UInt_t step = 1U);
    virtual TEntryList *GetCurrentList() const { return fCurrent; };
    virtual TEntryList *GetEntryList(const char *treename, const char *filename, Option_t *opt="");
-   virtual Long64_t    GetEntry(Int_t index);
-   virtual Long64_t    GetEntryAndTree(Int_t index, Int_t &treenum);
+   virtual Long64_t    GetEntry(Long64_t index);
+   virtual Long64_t    GetEntryAndTree(Long64_t index, Int_t &treenum);
    virtual Long64_t    GetEntriesToProcess() const {return fEntriesToProcess;}
    virtual TList      *GetLists() const { return fLists; }
    virtual TDirectory *GetDirectory() const { return fDirectory; }
@@ -76,37 +79,37 @@ class TEntryList: public TNamed
    virtual const char *GetTreeName() const { return fTreeName.Data(); }
    virtual const char *GetFileName() const { return fFileName.Data(); }
    virtual Int_t       GetTreeNumber() const { return fTreeNumber; }
-   virtual Bool_t      GetReapplyCut() const { return fReapply; };
+   virtual bool        GetReapplyCut() const { return fReapply; };
 
-   Bool_t IsValid() const
+   bool IsValid() const
    {
-      if ((fLists || fBlocks)) return kTRUE;
-      return kFALSE;
+      if ((fLists || fBlocks)) return true;
+      return false;
    }
 
    virtual Int_t       Merge(TCollection *list);
 
    virtual Long64_t    Next();
    virtual void        OptimizeStorage();
-   virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = 0);
-   virtual Bool_t      Remove(Long64_t entry, TTree *tree = 0);
+   virtual Int_t       RelocatePaths(const char *newloc, const char *oldloc = nullptr);
+   virtual bool        Remove(Long64_t entry, TTree *tree = nullptr);
    virtual void        Reset();
-   virtual Int_t       ScanPaths(TList *roots, Bool_t notify = kTRUE);
+   virtual Int_t       ScanPaths(TList *roots, bool notify = true);
 
-   virtual void        Print(const Option_t* option = "") const;
+   void                Print(const Option_t* option = "") const override;
    virtual void        SetDirectory(TDirectory *dir);
    virtual void        SetEntriesToProcess(Long64_t nen) { fEntriesToProcess = nen; }
-   virtual void        SetShift(Bool_t shift) { fShift = shift; };
+   virtual void        SetShift(bool shift) { fShift = shift; };
    virtual void        SetTree(const TTree *tree);
    virtual void        SetTree(const char *treename, const char *filename);
    virtual void        SetTreeName(const char *treename){ fTreeName = treename; };
    virtual void        SetFileName(const char *filename){ fFileName = filename; };
    virtual void        SetTreeNumber(Int_t index) { fTreeNumber=index;  }
-   virtual void        SetReapplyCut(Bool_t apply = kFALSE) {fReapply = apply;}; // *TOGGLE* *GETTER=GetReapplyCut
+   virtual void        SetReapplyCut(bool apply = false) {fReapply = apply;}; // *TOGGLE* *GETTER=GetReapplyCut
    virtual void        Subtract(const TEntryList *elist);
 
    static  Int_t       Relocate(const char *fn,
-                                const char *newroot, const char *oldroot = 0, const char *enlnm = 0);
+                                const char *newroot, const char *oldroot = nullptr, const char *enlnm = nullptr);
    static  Int_t       Scan(const char *fn, TList *roots);
 
 // Preventing warnings with -Weffc++ in GCC since the overloading of the || operator was a design choice.
@@ -119,6 +122,6 @@ class TEntryList: public TNamed
 #pragma GCC diagnostic pop
 #endif
 
-   ClassDef(TEntryList, 2);  //A list of entries in a TTree
+   ClassDefOverride(TEntryList, 2);  //A list of entries in a TTree
 };
 #endif

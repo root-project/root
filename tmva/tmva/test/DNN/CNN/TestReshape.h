@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  :                                                                       *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Testing Flatten function for every architecture using templates           *
@@ -21,14 +21,13 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 
 #ifndef ROOT_TESTFLATTEN_H
 #define ROOT_TESTFLATTEN_H
 
-#include <iostream>
 #include "TestConvNet.h"
 
 using namespace TMVA::DNN;

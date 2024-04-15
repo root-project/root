@@ -33,29 +33,27 @@ class TFunction;
 class TContextMenuImp {
 
 protected:
-   TContextMenu *fContextMenu; //TContextMenu associated with this implementation
+   TContextMenu *fContextMenu{nullptr}; //TContextMenu associated with this implementation
 
-   TContextMenuImp(const TContextMenuImp& cmi)
-     : fContextMenu(cmi.fContextMenu) { }
-   TContextMenuImp& operator=(const TContextMenuImp& cmi)
-     {if(this!=&cmi) fContextMenu=cmi.fContextMenu;
-     return *this;}
+   TContextMenuImp(const TContextMenuImp &cmi) : fContextMenu(cmi.fContextMenu) {}
+   TContextMenuImp &operator=(const TContextMenuImp &cmi)
+   {
+      if (this != &cmi)
+         fContextMenu = cmi.fContextMenu;
+      return *this;
+   }
 
 public:
-   TContextMenuImp(TContextMenu *c=nullptr) : fContextMenu(c) { }
-   virtual ~TContextMenuImp();
+   TContextMenuImp(TContextMenu *c = nullptr) : fContextMenu(c) {}
+   virtual ~TContextMenuImp() {}
 
    virtual TContextMenu *GetContextMenu() const { return fContextMenu; }
 
-   virtual void Dialog(TObject *object, TFunction *function);
-   virtual void Dialog(TObject *object, TMethod *method);
-   virtual void DisplayPopup(Int_t x, Int_t y);
+   virtual void Dialog(TObject *object, TFunction *function) { (void) object; (void) function; }
+   virtual void Dialog(TObject *object, TMethod *method) { (void) object; (void) method; }
+   virtual void DisplayPopup(Int_t x, Int_t y) { (void) x; (void) y; }
 
    ClassDef(TContextMenuImp,0) //Context sensitive popup menu implementation
 };
-
-inline void TContextMenuImp::Dialog(TObject *, TFunction *) { }
-inline void TContextMenuImp::Dialog(TObject *, TMethod *) { }
-inline void TContextMenuImp::DisplayPopup(Int_t, Int_t) { }
 
 #endif

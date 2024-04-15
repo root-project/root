@@ -2,7 +2,7 @@
 /// \ingroup tutorial_roostats
 /// \notebook
 /// Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
-/// RooStats hypotheiss tests calculators and test statistics.
+/// RooStats hypothesis tests calculators and test statistics.
 ///
 /// Usage:
 ///
@@ -65,7 +65,7 @@ using namespace RooStats;
 
 struct HypoTestOptions {
 
-   bool noSystematics = false; // force all systematics to be off (i.e. set all nuisance parameters as constat
+   bool noSystematics = false; // force all systematics to be off (i.e. set all nuisance parameters as constant)
    double nToysRatio = 4;      // ratio Ntoys Null/ntoys ALT
    double poiValue = -1;       // change poi snapshot value for S+B model (needed for expected p0 values)
    int printLevel = 0;
@@ -143,10 +143,6 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -162,7 +158,7 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
    // Try to open the file
    TFile *file = TFile::Open(filename);
 
-   // if input file was specified byt not found, quit
+   // if input file was specified but not found, quit
    if (!file) {
       cout << "StandardRooStatsDemoMacro: Input file " << filename << " is not found" << endl;
       return;
@@ -243,7 +239,7 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
 
    // part 1, hypothesis testing
    SimpleLikelihoodRatioTestStat *slrts = new SimpleLikelihoodRatioTestStat(*bModel->GetPdf(), *sbModel->GetPdf());
-   // null parameters must includes snapshot of poi plus the nuisance values
+   // null parameters must include snapshot of poi plus the nuisance values
    RooArgSet nullParams(*bModel->GetSnapshot());
    if (bModel->GetNuisanceParameters())
       nullParams.add(*bModel->GetNuisanceParameters());
@@ -334,12 +330,11 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
 
       const RooArgSet *nuisParams =
          (bModel->GetNuisanceParameters()) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
-      RooArgSet *np = nuisPdf->getObservables(*nuisParams);
+      std::unique_ptr<RooArgSet> np{nuisPdf->getObservables(*nuisParams)};
       if (np->getSize() == 0) {
          Warning("StandardHypoTestDemo",
                  "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range");
       }
-      delete np;
 
       ((HybridCalculator *)hypoCalc)->ForcePriorNuisanceAlt(*nuisPdf);
       ((HybridCalculator *)hypoCalc)->ForcePriorNuisanceNull(*nuisPdf);

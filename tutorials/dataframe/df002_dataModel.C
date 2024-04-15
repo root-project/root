@@ -1,14 +1,17 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
+/// Show how to work with non-flat data models, e.g. vectors of tracks.
+///
 /// This tutorial shows the possibility to use data models which are more
-/// complex than flat ntuples with RDataFrame
+/// complex than flat ntuples with RDataFrame.
 ///
 /// \macro_code
 /// \macro_image
 ///
 /// \date December 2016
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
+
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectorVec = std::vector<FourVector>;
 using FourVectorRVec = ROOT::VecOps::RVec<FourVector>;
@@ -56,9 +59,9 @@ int df002_dataModel()
    // allows us to interact with the data contained in the tree.
    ROOT::RDataFrame d(treeName, fileName, {"tracks"});
 
-   // ## Operating on branches which are collection of objects
+   // ## Operating on branches which are collections of objects
    // Here we deal with the simplest of the cuts: we decide to accept the event
-   // only if the number of tracks is greater than 5.
+   // only if the number of tracks is greater than 8.
    auto n_cut = [](const FourVectorRVec &tracks) { return tracks.size() > 8; };
    auto nentries = d.Filter(n_cut, {"tracks"}).Count();
 

@@ -1,5 +1,5 @@
-/// \file ROOT/RHist.h
-/// \ingroup Hist ROOT7
+/// \file ROOT/RHist.hxx
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -21,6 +21,7 @@
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistImpl.hxx"
 #include "ROOT/RHistData.hxx"
+#include "ROOT/RLogger.hxx"
 #include <initializer_list>
 #include <stdexcept>
 
@@ -90,7 +91,7 @@ public:
    ///     RHist<2,int> h2i({{ {10, 0., 1.}, {{-1., 0., 1., 10., 100.}} }});
    explicit RHist(std::array<RAxisConfig, DIMENSIONS> axes);
 
-   /// Constructor overload taking the histogram title
+   /// Constructor overload taking the histogram title.
    RHist(std::string_view histTitle, std::array<RAxisConfig, DIMENSIONS> axes);
 
    /// Constructor overload that's only available for a 1-dimensional histogram.
@@ -146,8 +147,23 @@ public:
       fImpl->FillN(xN, weightN);
    }
 
+   /// For each coordinate in `xN`, add `weightN[i]` to the bin at coordinate
+   /// `xN[i]`. The sizes of `xN` and `weightN` must be the same. This is more
+   /// efficient than many separate calls to `Fill()`.
+   /// Overload for passing initializer lists.
+   void FillN(std::initializer_list<const CoordArray_t> xN, std::initializer_list<const Weight_t> weightN) noexcept
+   {
+      fImpl->FillN(std::span<const CoordArray_t>(xN.begin(), xN.end()), std::span<const Weight_t>(weightN.begin(), weightN.end()));
+   }
+
    /// Convenience overload: `FillN()` with weight 1.
    void FillN(const std::span<const CoordArray_t> xN) noexcept { fImpl->FillN(xN); }
+
+   /// Convenience overload: `FillN()` with weight 1.
+   /// Overload for passing initializer lists.
+   void FillN(std::initializer_list<const CoordArray_t> xN) noexcept {
+      fImpl->FillN(std::span<const CoordArray_t>(xN.begin(), xN.end()));
+   }
 
    /// Get the number of entries this histogram was filled with.
    int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }
@@ -158,9 +174,9 @@ public:
    /// Get the uncertainty on the content of the bin at `x`.
    double GetBinUncertainty(const CoordArray_t &x) const { return fImpl->GetBinUncertainty(x); }
 
-   const_iterator begin() const { return const_iterator(*fImpl); }
+   const_iterator begin() const { return const_iterator(*fImpl, 1); }
 
-   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBins()); }
+   const_iterator end() const { return const_iterator(*fImpl, fImpl->GetNBinsNoOver() + 1); }
 
    /// Swap *this and other.
    ///
@@ -172,8 +188,11 @@ public:
    }
 
 private:
-   std::unique_ptr<ImplBase_t> fImpl; ///<  The actual histogram implementation
-   FillFunc_t fFillFunc = nullptr;    ///<! Pinter to RHistImpl::Fill() member function
+   /// The actual histogram implementation.
+   std::unique_ptr<ImplBase_t> fImpl;
+
+   /// Pointer to RHistImpl::Fill() member function.
+   FillFunc_t fFillFunc = nullptr;    //!
 
    friend RHist HistFromImpl<>(std::unique_ptr<ImplBase_t>);
 };
@@ -191,7 +210,7 @@ template <int DIMENSIONS, class PRECISION, template <int D_, class P_> class... 
 void swap(RHist<DIMENSIONS, PRECISION, STAT...> &a, RHist<DIMENSIONS, PRECISION, STAT...> &b) noexcept
 {
    a.swap(b);
-};
+}
 
 namespace Internal {
 /**
@@ -216,9 +235,9 @@ struct RHistImplGen {
    ///
    /// Delegate to the appropriate MakeNextAxis instantiation, depending on the
    /// axis type selected in the RAxisConfig.
+   /// \param title - title of the derived object.
    /// \param axes - `RAxisConfig` objects describing the axis of the resulting
    ///   RHistImpl.
-   /// \param statConfig - the statConfig parameter to be passed to the RHistImpl
    /// \param processedAxisArgs - the RAxisBase-derived axis objects describing the
    ///   axes of the resulting RHistImpl. There are `IDIM` of those; in the end
    /// (`IDIM` == `GetNDim()`), all `axes` have been converted to
@@ -232,7 +251,7 @@ struct RHistImplGen {
       case RAxisConfig::kEquidistant: return MakeNextAxis<RAxisConfig::kEquidistant>(title, axes, processedAxisArgs...);
       case RAxisConfig::kGrow: return MakeNextAxis<RAxisConfig::kGrow>(title, axes, processedAxisArgs...);
       case RAxisConfig::kIrregular: return MakeNextAxis<RAxisConfig::kIrregular>(title, axes, processedAxisArgs...);
-      default: R__ERROR_HERE("HIST") << "Unhandled axis kind";
+      default: R__LOG_ERROR(HistLog()) << "Unhandled axis kind";
       }
       return nullptr;
    }
@@ -276,7 +295,7 @@ HistFromImpl(std::unique_ptr<typename RHist<DIMENSIONS, PRECISION, STAT...>::Imp
    ret.fFillFunc = pHistImpl->GetFillFunc();
    std::swap(ret.fImpl, pHistImpl);
    return ret;
-};
+}
 
 /// \name RHist Typedefs
 ///\{ Convenience typedefs (ROOT6-compatible type names)
@@ -286,18 +305,21 @@ using RH1D = RHist<1, double, RHistStatContent, RHistStatUncertainty>;
 using RH1F = RHist<1, float, RHistStatContent, RHistStatUncertainty>;
 using RH1C = RHist<1, char, RHistStatContent>;
 using RH1I = RHist<1, int, RHistStatContent>;
+using RH1L = RHist<1, int64_t, RHistStatContent>;
 using RH1LL = RHist<1, int64_t, RHistStatContent>;
 
 using RH2D = RHist<2, double, RHistStatContent, RHistStatUncertainty>;
 using RH2F = RHist<2, float, RHistStatContent, RHistStatUncertainty>;
 using RH2C = RHist<2, char, RHistStatContent>;
 using RH2I = RHist<2, int, RHistStatContent>;
+using RH2L = RHist<2, int64_t, RHistStatContent>;
 using RH2LL = RHist<2, int64_t, RHistStatContent>;
 
 using RH3D = RHist<3, double, RHistStatContent, RHistStatUncertainty>;
 using RH3F = RHist<3, float, RHistStatContent, RHistStatUncertainty>;
 using RH3C = RHist<3, char, RHistStatContent>;
 using RH3I = RHist<3, int, RHistStatContent>;
+using RH3L = RHist<3, int64_t, RHistStatContent>;
 using RH3LL = RHist<3, int64_t, RHistStatContent>;
 ///\}
 

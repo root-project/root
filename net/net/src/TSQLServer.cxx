@@ -50,11 +50,11 @@ const char* TSQLServer::fgFloatFmt = "%e";
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The db should be of the form:  <dbms>://<host>[:<port>][/<database>],
-/// e.g.:  mysql://pcroot.cern.ch:3456/test, oracle://srv1.cern.ch/main,
-/// pgsql://... or sqlite://<database>...
+/// The db should be of the form:  `<dbms>://<host>[:<port>][/<database>]`,
+/// e.g.:  `mysql://pcroot.cern.ch:3456/test`, `oracle://srv1.cern.ch/main`,
+/// `pgsql://...` or `sqlite://<database>...`
 /// The uid is the username and pw the password that should be used for
-/// the connection. Depending on the <dbms> the shared library (plugin)
+/// the connection. Depending on the `<dbms>` the shared library (plugin)
 /// for the selected system will be loaded. When the connection could not
 /// be opened 0 is returned.
 
@@ -141,6 +141,16 @@ void TSQLServer::SetError(Int_t code, const char* msg, const char* method)
 Bool_t TSQLServer::StartTransaction()
 {
    return Exec("START TRANSACTION");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// returns kTRUE when transaction is running
+/// Must be implemented in derived classes
+
+Bool_t TSQLServer::HasTransactionInFlight()
+{
+   Warning("HasTransactionInFlight", "Not implemented");
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

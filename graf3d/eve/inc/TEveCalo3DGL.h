@@ -14,14 +14,15 @@
 
 #include "TGLObject.h"
 #include "TEveCaloData.h"
+#include <vector>
 
 class TEveCalo3D;
 
 class TEveCalo3DGL : public TGLObject
 {
 private:
-   TEveCalo3DGL(const TEveCalo3DGL&);            // Not implemented
-   TEveCalo3DGL& operator=(const TEveCalo3DGL&); // Not implemented
+   TEveCalo3DGL(const TEveCalo3DGL&) = delete;
+   TEveCalo3DGL& operator=(const TEveCalo3DGL&) = delete;
 
    void    CrossProduct(const Float_t a[3], const Float_t b[3], const Float_t c[3], Float_t out[3]) const;
 
@@ -41,20 +42,20 @@ protected:
 
 public:
    TEveCalo3DGL();
-   virtual ~TEveCalo3DGL() {}
+   ~TEveCalo3DGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
-   virtual void   DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void   DrawHighlight(TGLRnrCtx & rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const override;
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }
-   virtual void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   Bool_t AlwaysSecondarySelect()   const override { return kTRUE; }
+   void   ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec) override;
 
-   ClassDef(TEveCalo3DGL, 0); // GL renderer class for TEveCalo.
+   ClassDefOverride(TEveCalo3DGL, 0); // GL renderer class for TEveCalo.
 };
 
 #endif

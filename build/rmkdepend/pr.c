@@ -46,12 +46,8 @@ extern void freefile(struct filepointer *fp);
 extern void ROOT_adddep(char* buf, size_t len);
 extern void ROOT_newFile();
 
-void
-add_include(filep, file, file_red, include, dot, failOK)
-struct filepointer *filep;
-struct inclist *file, *file_red;
-char *include;
-boolean dot, failOK;
+void add_include(struct filepointer *filep, struct inclist *file, struct inclist *file_red, char *include, boolean dot,
+                 boolean failOK)
 {
    register struct inclist *newfile;
    register struct filepointer *content;
@@ -87,10 +83,7 @@ boolean dot, failOK;
    }
 }
 
-void
-pr(ip, file, base, dep)
-register struct inclist  *ip;
-char *file, *base, *dep;
+void pr(register struct inclist *ip, char *file, char *base, char *dep)
 {
    static char *lastfile;
    static int current_len;
@@ -162,11 +155,7 @@ char *file, *base, *dep;
       printf("\n#\t%s", ip->i_list[ i ]->i_incstring);
 }
 
-void
-recursive_pr_include(head, file, base, dep)
-register struct inclist *head;
-register char *file, *base;
-register char  *dep;
+void recursive_pr_include(register struct inclist *head, register char *file, register char *base, register char *dep)
 {
    register int i;
 

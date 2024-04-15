@@ -9,6 +9,7 @@
 #  LIBDIR           - object code libraries (lib or lib64 or lib/<multiarch-tuple> on Debian)
 #  INCLUDEDIR       - C/C++ header files (include)
 #  SYSCONFDIR       - read-only single-machine data (etc)
+#  PYTHONDIR        - python libraries and modules (same as LIBDIR)
 #  DATAROOTDIR      - read-only architecture-independent data (share)
 #  DATADIR          - read-only architecture-independent data (DATAROOTDIR/root)
 #  MANDIR           - man documentation (DATAROOTDIR/man)
@@ -20,7 +21,6 @@
 #  DOCDIR           - documentation root (DATAROOTDIR/doc/PROJECT_NAME)
 #  TUTDIR           - tutorials (DOCDIR/tutorials)
 #  CMAKEDIR         - cmake modules (DATAROOTDIR/cmake)
-#  ELISPDIR         - lisp files (DATAROOTDIR/emacs/site-lisp)
 #
 # Each CMAKE_INSTALL_<dir> value may be passed to the DESTINATION options of
 # install() commands for the corresponding file type.  If the includer does
@@ -53,6 +53,14 @@ if(NOT DEFINED CMAKE_INSTALL_LIBDIR)
     set(CMAKE_INSTALL_LIBDIR "lib/root" CACHE PATH "object code libraries (lib/root)")
   else()
     set(CMAKE_INSTALL_LIBDIR "lib" CACHE PATH "object code libraries (lib)")
+  endif()
+endif()
+
+if(NOT DEFINED CMAKE_INSTALL_PYTHONDIR)
+  if(MSVC)
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_BINDIR}" CACHE PATH "python libraries and modules (same as BINDIR)")
+  else()
+    set(CMAKE_INSTALL_PYTHONDIR "${CMAKE_INSTALL_LIBDIR}" CACHE PATH "python libraries and modules (same as LIBDIR)")
   endif()
 endif()
 
@@ -175,15 +183,6 @@ if(NOT CMAKE_INSTALL_CMAKEDIR)
   endif()
 endif()
 
-if(NOT CMAKE_INSTALL_ELISPDIR)
-  set(CMAKE_INSTALL_ELISPDIR "" CACHE PATH "Lisp files (DATAROOTDIR/emacs/site-lisp)")
-  if(gnuinstall)
-    set(CMAKE_INSTALL_ELISPDIR "${CMAKE_INSTALL_DATAROOTDIR}/emacs/site-lisp")
-  else()
-    set(CMAKE_INSTALL_ELISPDIR "emacs/site-lisp")
-  endif()
-endif()
-
 if(NOT CMAKE_INSTALL_DOCDIR)
   set(CMAKE_INSTALL_DOCDIR "" CACHE PATH "documentation root (DATAROOTDIR/doc/root)")
   if(gnuinstall)
@@ -220,7 +219,6 @@ mark_as_advanced(
   CMAKE_INSTALL_SRCDIR
   CMAKE_INSTALL_DOCDIR
   CMAKE_INSTALL_TUTDIR
-  CMAKE_INSTALL_ELISPDIR
   CMAKE_INSTALL_CMAKEDIR
   )
 
@@ -228,6 +226,7 @@ mark_as_advanced(
 #
 foreach(dir BINDIR
             LIBDIR
+            PYTHONDIR
             INCLUDEDIR
             SYSCONFDIR
             MANDIR
@@ -240,7 +239,6 @@ foreach(dir BINDIR
             SRCDIR
             DOCDIR
             TUTDIR
-            ELISPDIR
             CMAKEDIR )
   if(NOT IS_ABSOLUTE ${CMAKE_INSTALL_${dir}})
     set(CMAKE_INSTALL_FULL_${dir} "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_${dir}}")

@@ -63,16 +63,15 @@
 /// \author Stefan Schmitt DESY, 14.10.2008
 
 #include <iostream>
-#include <map>
 #include <cmath>
 #include <TMath.h>
 #include <TRandom3.h>
 #include <TFile.h>
 #include <TTree.h>
 
-using namespace std;
+using std::cout;
 
-TRandom *g_rnd=0;
+TRandom *g_rnd=nullptr;
 
 class ToyEvent {
 public:
@@ -252,13 +251,13 @@ void ToyEvent::GenerateDataEvent(TRandom *rnd) {
 }
 
 void ToyEvent::GenerateSignalEvent(TRandom *rnd) {
-   fIsSignal=1;
+   fIsSignal=true;
    GenerateSignalKinematics(rnd,kFALSE);
    GenerateReco(rnd);
 }
 
 void ToyEvent::GenerateBgrEvent(TRandom *rnd) {
-   fIsSignal=0;
+   fIsSignal=false;
    GenerateBgrKinematics(rnd,kFALSE);
    GenerateReco(rnd);
 }

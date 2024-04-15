@@ -15,6 +15,9 @@
 #include "TGLUtil.h"
 #include "TGLFontManager.h"
 
+#include <vector>
+#include <utility>
+
 class TAttAxis;
 class TAxis;
 class TH1;
@@ -35,8 +38,8 @@ public:
    typedef std::vector<TM_t>                TMVec_t; // vector od tick lines
 
 private:
-   TGLAxisPainter(const TGLAxisPainter&);            // Not implemented
-   TGLAxisPainter& operator=(const TGLAxisPainter&); // Not implemented
+   TGLAxisPainter(const TGLAxisPainter&) = delete;
+   TGLAxisPainter& operator=(const TGLAxisPainter&) = delete;
 
    // Print format derived from attributers.
    Int_t fExp;
@@ -143,14 +146,14 @@ protected:
 
 public:
    TGLAxisPainterBox();
-   virtual ~TGLAxisPainterBox();
+   ~TGLAxisPainterBox() override;
 
    void SetAxis3DTitlePos(TGLRnrCtx &rnrCtx);
    void DrawAxis3D(TGLRnrCtx &rnrCtx);
 
    void PlotStandard(TGLRnrCtx &rnrCtx, TH1* histo, const TGLBoundingBox& bbox);
 
-   ClassDef(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
+   ClassDefOverride(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
 };
 
 #endif

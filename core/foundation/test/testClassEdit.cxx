@@ -263,6 +263,12 @@ TEST(TClassEdit, ResolveTypedef)
 {
    gInterpreter->Declare("struct testPoint{}; typedef struct testPoint testPoint;");
    std::string non_existent = TClassEdit::ResolveTypedef("testPointAA");
-   ASSERT_STREQ("testPointAA", non_existent.c_str());
-   ASSERT_STRNE("::testPoint", TClassEdit::ResolveTypedef("::testPointXX").c_str());
+   EXPECT_STREQ("testPointAA", non_existent.c_str());
+   EXPECT_STRNE("::testPoint", TClassEdit::ResolveTypedef("::testPointXX").c_str());
+}
+
+// ROOT-11000
+TEST(TClassEdit, DefComp)
+{
+   EXPECT_FALSE(TClassEdit::IsDefComp("std::less<>", "std::string"));
 }

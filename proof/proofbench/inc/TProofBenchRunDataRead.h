@@ -102,17 +102,17 @@ public:
                           Long64_t nevents=-1, Int_t ntries=2, Int_t start=1, Int_t stop=-1,
                           Int_t step=1, Int_t debug=0);
 
-   virtual ~TProofBenchRunDataRead();
+   ~TProofBenchRunDataRead() override;
 
-   void Run(Long64_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) { }
+   void Run(Long64_t, Int_t, Int_t, Int_t, Int_t, Int_t, Int_t) override { }
    void Run(const char *dset, Int_t start, Int_t stop, Int_t step, Int_t ntries,
-            Int_t debug, Int_t);
+            Int_t debug, Int_t) override;
 
    TFileCollection *GetDataSet(const char *dset, Int_t nact, Bool_t nx);
 
    void DrawPerfProfiles();
 
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
    void SetReadType(TPBReadType *readtype) { fReadType = readtype; }
    void SetNEvents(Long64_t nevents) { fNEvents = nevents; }
@@ -134,11 +134,11 @@ public:
    Int_t GetDebug() const { return fDebug; }
    TDirectory* GetDirProofBench() const { return fDirProofBench; }
    TCanvas* GetCPerfProfiles() const { return fCPerfProfiles; }
-   const char* GetName() const { return fName; }
+   const char* GetName() const override { return fName; }
 
    TString GetNameStem() const;
 
-   ClassDef(TProofBenchRunDataRead,0)         //IO-intensive PROOF benchmark
+   ClassDefOverride(TProofBenchRunDataRead,0)         //IO-intensive PROOF benchmark
 };
 
 #endif

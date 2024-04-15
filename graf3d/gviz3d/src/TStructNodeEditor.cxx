@@ -15,7 +15,6 @@
 #include "TStructNodeProperty.h"
 
 #include <TGColorSelect.h>
-#include <TColor.h>
 #include <TGNumberEntry.h>
 #include <TGLabel.h>
 #include <TGTextEntry.h>
@@ -204,7 +203,7 @@ TStructNodeProperty* TStructNodeEditor::FindNodeProperty(TStructNode* node)
       }
    }
 
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

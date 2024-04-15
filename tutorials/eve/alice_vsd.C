@@ -41,7 +41,7 @@
 // Include components -- compile time link :)
 
 #include "MultiView.C"
-MultiView* gMultiView = 0;
+MultiView* gMultiView = nullptr;
 
 
 class TVSDReader
@@ -72,13 +72,13 @@ public:
 
 public:
    TVSDReader(const char* file_name) :
-      fFile(0), fDirectory(0), fEvDirKeys(0),
-      fVSD(0),
+      fFile(nullptr), fDirectory(nullptr), fEvDirKeys(nullptr),
+      fVSD(nullptr),
 
       fMaxEv(-1), fCurEv(-1),
 
-      fTrackList(0),
-      fITSClusters(0), fTPCClusters(0), fTRDClusters(0), fTOFClusters(0)
+      fTrackList(nullptr),
+      fITSClusters(nullptr), fTPCClusters(nullptr), fTRDClusters(nullptr), fTOFClusters(nullptr)
    {
       fFile = TFile::Open(file_name);
       if (!fFile)
@@ -142,7 +142,7 @@ public:
 
       fVSD->DeleteTrees();
       delete fDirectory;
-      fDirectory = 0;
+      fDirectory = nullptr;
    }
 
    //---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ public:
 
    void LoadClusters(TEvePointSet*& ps, const TString& det_name, Int_t det_id)
    {
-      if (ps == 0) {
+      if (ps == nullptr) {
          ps = new TEvePointSet(det_name);
          ps->SetMainColor((Color_t)(det_id + 2));
          ps->SetMarkerSize(0.5);
@@ -256,7 +256,7 @@ public:
    {
       // Read reconstructed tracks from current event.
 
-      if (fTrackList == 0) {
+      if (fTrackList == nullptr) {
          fTrackList = new TEveTrackList("ESD Tracks");
          fTrackList->SetMainColor(6);
          fTrackList->SetMarkerColor(kYellow);
@@ -293,7 +293,7 @@ public:
    ClassDef(TVSDReader, 0);
 };
 
-TVSDReader* gVSDReader = 0;
+TVSDReader* gVSDReader = nullptr;
 
 
 // Forward declaration.
@@ -320,7 +320,7 @@ void alice_vsd(const char* vsd_file_name=
 
    TEveManager::Create();
 
-   TEveGeoShape *gentle_geom = 0;
+   TEveGeoShape *gentle_geom = nullptr;
 
    { // Simple geometry
       auto geom =
@@ -329,7 +329,7 @@ void alice_vsd(const char* vsd_file_name=
       if (!geom)
          return;
       auto gse = (TEveGeoShapeExtract*) geom->Get("Gentle");
-      gentle_geom = TEveGeoShape::ImportShapeExtract(gse, 0);
+      gentle_geom = TEveGeoShape::ImportShapeExtract(gse, nullptr);
       geom->Close();
       delete geom;
       gEve->AddGlobalElement(gentle_geom);
@@ -381,7 +381,7 @@ void make_gui()
    auto hf = new TGHorizontalFrame(frmMain);
    {
       TString icondir(TString::Format("%s/icons/", gSystem->Getenv("ROOTSYS")));
-      TGPictureButton* b = 0;
+      TGPictureButton* b = nullptr;
 
       b = new TGPictureButton(hf, gClient->GetPicture(icondir+"GoBack.gif"));
       hf->AddFrame(b);

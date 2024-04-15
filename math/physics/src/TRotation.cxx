@@ -2,6 +2,7 @@
 // Author: Peter Malzacher   19/06/99
 
 /** \class TRotation
+    \legacy{TRotation, Consider using instead ROOT::Math::Rotation3D.}
     \ingroup Physics
 
 The TRotation class describes a rotation of objects of the TVector3 class.
@@ -268,7 +269,7 @@ TRotation::TRotation(const TQuaternion & Q) {
    double two_yr = 2 * Q.fVectorPart.Y() * Q.fRealPart;
    double two_zr = 2 * Q.fVectorPart.Z() * Q.fRealPart;
 
-   // protect agains zero quaternion
+   // protect against zero quaternion
    double mag2 = Q.QMag2();
    if (mag2 > 0) {
 
@@ -289,7 +290,7 @@ TRotation::TRotation(const TQuaternion & Q) {
       fyz = two_yz - two_xr;
       fzy = two_yz + two_xr;
 
-      // protect agains non-unit quaternion
+      // protect against non-unit quaternion
       if (TMath::Abs(mag2-1) > 1e-10) {
          fxx /= mag2;
          fyy /= mag2;

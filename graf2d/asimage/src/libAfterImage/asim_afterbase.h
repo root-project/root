@@ -31,6 +31,7 @@
 /* from libAfterBase/astypes.h : */
 
 #include <stdio.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -303,7 +304,7 @@ typedef union ASHashableValue
 }
 ASHashableValue;
 #else
-typedef unsigned long ASHashableValue;
+typedef uintptr_t ASHashableValue;
 #endif
 
 typedef union ASHashData
@@ -323,7 +324,7 @@ typedef union ASHashData
 	CARD8  c8 ;
 }ASHashData;
 
-#define AS_HASHABLE(v)  ((ASHashableValue)((unsigned long)(v)))
+#define AS_HASHABLE(v)  ((ASHashableValue)((uintptr_t)(v)))
 
 typedef struct ASHashItem
 {

@@ -11,30 +11,46 @@
 #include <ROOT/Browsable/RElement.hxx>
 #include <ROOT/Browsable/RItem.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 /////////////////////////////////////////////////////////////////////
 /// Find item with specified name
 /// Default implementation, should work for all
+/// If index specified, not only name but also index should match
 
-bool RLevelIter::Find(const std::string &name)
+bool RLevelIter::Find(const std::string &name, int indx)
 {
-   if (!Reset()) return false;
+   int i = -1;
 
    while (Next()) {
-      if (GetName() == name)
+      if (indx >= 0) {
+         i++;
+         if (i > indx) return false;
+         if (i < indx) continue;
+      }
+
+      std::string iname = GetItemName();
+      if (iname.empty())
+         iname = "<empty>";
+
+      if (iname == name)
          return true;
    }
 
    return false;
 }
 
-
 /////////////////////////////////////////////////////////////////////
 /// Create generic description item for RBrowser
 
 std::unique_ptr<RItem> RLevelIter::CreateItem()
 {
-   return HasItem() ? std::make_unique<RItem>(GetName(), CanHaveChilds(), CanHaveChilds() > 0 ? "sap-icon://folder-blank" : "sap-icon://document") : nullptr;
+   std::string name = GetItemName();
+   if (name.empty())
+      name = "<empty>";
+
+   bool have_childs = CanItemHaveChilds();
+
+   return std::make_unique<RItem>(name, have_childs ? -1 : 0, have_childs ? "sap-icon://folder-blank" : "sap-icon://document");
 }
 

@@ -1,5 +1,3 @@
-#include "ROOT/RMakeUnique.hxx"
-#include "TFile.h"
 #include "TInterpreter.h"
 #include "TTree.h"
 #include "TTreeReader.h"
@@ -12,7 +10,7 @@
 
 #include "RErrorIgnoreRAII.hxx"
 
-#include <fstream>
+#include <memory>
 
 TEST(TTreeReaderLeafs, LeafListCaseA) {
    // From "Case A" of the TTree class doc:
@@ -27,6 +25,8 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    double Double = 9.;
    long long SLL = 10;
    unsigned long long ULL = 11;
+   long SL = 12;
+   unsigned long UL = 13;
    bool Bool = true;
 
    auto tree = std::make_unique<TTree>("T", "In-memory test tree");
@@ -41,6 +41,8 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    tree->Branch("D", &Double, "D/D");
    tree->Branch("L", &SLL, "L/L");
    tree->Branch("l", &ULL, "l/l");
+   tree->Branch("G", &SL, "G/G");
+   tree->Branch("g", &UL, "g/g");
    tree->Branch("O", &Bool, "O/O");
 
    tree->Fill();
@@ -59,6 +61,8 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    TTreeReaderValue<double> trDouble(TR, "D");
    TTreeReaderValue<signed long long> trSLL(TR, "L");
    TTreeReaderValue<unsigned long long> trULL(TR, "l");
+   TTreeReaderValue<signed long> trSL(TR, "G");
+   TTreeReaderValue<unsigned long> trUL(TR, "g");
    TTreeReaderValue<bool> trBool(TR, "O");
 
    TR.SetEntry(1);
@@ -74,6 +78,8 @@ TEST(TTreeReaderLeafs, LeafListCaseA) {
    EXPECT_DOUBLE_EQ(Double, *trDouble);
    EXPECT_EQ(SLL, *trSLL);
    EXPECT_EQ(ULL, *trULL);
+   EXPECT_EQ(SL, *trSL);
+   EXPECT_EQ(UL, *trUL);
    EXPECT_EQ(Bool, *trBool);
 }
 
@@ -213,10 +219,11 @@ struct Event {
    int truth_type = 1;
 };
 
-TEST(TTreeReaderLeafs, MultipleReaders) {
-   TTree t("t","t");
+TEST(TTreeReaderLeafs, MultipleReaders)
+{
+   TTree t("t", "t");
    Event event;
-   t.Branch ("event", &event, "bla/F:truth_type/I");
+   t.Branch("event", &event, "bla/F:truth_type/I");
    t.Fill();
 
    TTreeReader r(&t);
@@ -228,4 +235,21 @@ TEST(TTreeReaderLeafs, MultipleReaders) {
    EXPECT_EQ(*v1, 1) << "Wrong value read for rv1!";
    EXPECT_EQ(*v2, 1) << "Wrong value read for rv2!";
    EXPECT_EQ(*v3, 1) << "Wrong value read for rv3!";
+}
+
+// Test for https://github.com/root-project/root/issues/6881
+TEST(TTreeReaderLeafs, BranchAndLeafWithDifferentNames)
+{
+   TTree t("t", "t");
+   int x = 42;
+   t.Branch("x", &x, "y/I");
+   t.Fill();
+
+   TTreeReader r(&t);
+   TTreeReaderValue<int> rv(r, "x");
+   TTreeReaderValue<int> rvwithdot(r, "x.y");
+   ASSERT_TRUE(r.Next());
+   EXPECT_EQ(*rv, 42);
+   EXPECT_EQ(*rvwithdot, 42);
+   EXPECT_FALSE(r.Next());
 }

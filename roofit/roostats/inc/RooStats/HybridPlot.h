@@ -47,10 +47,10 @@ namespace RooStats {
                  bool verbosity=true);
 
       /// Destructor
-      ~HybridPlot();
+      ~HybridPlot() override;
 
       /// Draw on current pad
-      void Draw (const char* options="");
+      void Draw (const char* options="") override;
 
       /// All the objects are written to rootfile
       void DumpToFile (const char* RootFileName, const char* options);
@@ -109,16 +109,16 @@ namespace RooStats {
 
    private:
 
-      TH1F* fSb_histo; // The sb Histo
-      TH1F* fSb_histo_shaded; // The sb Histo shaded
-      TH1F* fB_histo; // The b Histo
-      TH1F* fB_histo_shaded; // The b Histo shaded
-      TLine* fData_testStat_line; // The line for the data value of the test statistic
-      TLegend* fLegend; // The legend of the plot
-      TVirtualPad * fPad;   // The pad where it has been drawn
-      bool fVerbose; // verbosity flag
+      TH1F* fSb_histo;            ///< The sb Histo
+      TH1F* fSb_histo_shaded;     ///< The sb Histo shaded
+      TH1F* fB_histo;             ///< The b Histo
+      TH1F* fB_histo_shaded;      ///< The b Histo shaded
+      TLine* fData_testStat_line; ///< The line for the data value of the test statistic
+      TLegend* fLegend;           ///< The legend of the plot
+      TVirtualPad * fPad;         ///< The pad where it has been drawn
+      bool fVerbose;              ///< verbosity flag
 
-      ClassDef(HybridPlot,1)   // Provides the plots for an HybridResult
+      ClassDefOverride(HybridPlot,1)   // Provides the plots for an HybridResult
    };
 }
 

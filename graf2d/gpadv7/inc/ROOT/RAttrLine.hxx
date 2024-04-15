@@ -9,45 +9,80 @@
 #ifndef ROOT7_RAttrLine
 #define ROOT7_RAttrLine
 
-#include <ROOT/RAttrBase.hxx>
-#include <ROOT/RAttrColor.hxx>
+#include <ROOT/RAttrAggregation.hxx>
+#include <ROOT/RAttrValue.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
 /** \class RAttrLine
 \ingroup GpadROOT7
-\author Axel Naumann <axel@cern.ch>
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 \date 2018-10-12
 \brief Drawing line attributes for different objects.
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrLine : public RAttrBase {
+class RAttrLine : public RAttrAggregation {
 
-   RAttrColor fColor{this, "color_"}; ///<! line color, will access container from line attributes
+   R__ATTR_CLASS(RAttrLine, "line");
 
-   R__ATTR_CLASS(RAttrLine, "line_", AddDouble("width", 1.).AddInt("style", 1).AddDefaults(fColor));
+public:
 
-   // keep it here, it is minimal set of methods which should be reimplemented
-   // using RAttrBase::RAttrBase;
-   // RAttrLine(const RAttrLine &src) : RAttrLine() { src.CopyTo(*this); }
-   // RAttrLine &operator=(const RAttrLine &src) { Clear(); src.CopyTo(*this); return *this; }
+   enum EStyle {
+      kNone = 0,
+      kSolid = 1,
+      kDashed = 2,
+      kDotted = 3,
+      kDashDotted = 4,
+      kStyle1 = 1,
+      kStyle2 = 2,
+      kStyle3 = 3,
+      kStyle4 = 4,
+      kStyle5 = 5,
+      kStyle6 = 6,
+      kStyle7 = 7,
+      kStyle8 = 8,
+      kStyle9 = 9,
+      kStyle10 = 10
+   };
 
-   ///The width of the line.
-   RAttrLine &SetWidth(double width) { SetValue("width", width); return *this; }
-   double GetWidth() const { return GetValue<double>("width"); }
+   RAttrValue<RColor>  color{this, "color", RColor::kBlack}; ///<! line color
+   RAttrValue<double>  width{this, "width", 1.};             ///<! line width
+   RAttrValue<EStyle>  style{this, "style", kSolid};         ///<! line style
+   RAttrValue<std::string> pattern{this, "pattern"};         ///<! line pattern like "3,2,3,1,5"
 
-   ///The style of the line.
-   RAttrLine &SetStyle(int style) { SetValue("style", style); return *this; }
-   int GetStyle() const { return GetValue<int>("style"); }
-
-   ///The color of the line.
-   RAttrLine &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
+   RAttrLine(const RColor &_color, double _width, EStyle _style) : RAttrLine()
+   {
+      color = _color;
+      width = _width;
+      style = _style;
+   }
 
 };
+
+
+/** \class RAttrLineEnding
+\ingroup GpadROOT7
+\author  Sergey Linev <s.linev@gsi.de>
+\date 2021-06-28
+\brief Attributes for line ending
+\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+*/
+
+class RAttrLineEnding : public RAttrAggregation {
+
+   R__ATTR_CLASS(RAttrLineEnding, "ending");
+
+public:
+
+   RAttrValue<std::string> style{this, "style", ""};       ///<! axis ending style - none, arrow, circle
+   RAttrValue<RPadLength> size{this, "size", 0.02_normal}; ///<! ending size
+
+   void SetArrow() { style = "arrow"; }
+   void SetCircle() { style = "cicrle"; }
+};
+
 
 } // namespace Experimental
 } // namespace ROOT

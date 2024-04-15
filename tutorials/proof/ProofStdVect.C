@@ -27,12 +27,12 @@ ProofStdVect::ProofStdVect()
    // Constructor
 
    fCreate = kFALSE;
-   fTree = 0;
-   fFile = 0;
-   fProofFile = 0;
-   fRandom = 0;
-   fHgood = 0;
-   fHbad = 0;
+   fTree = nullptr;
+   fFile = nullptr;
+   fProofFile = nullptr;
+   fRandom = nullptr;
+   fHgood = nullptr;
+   fHbad = nullptr;
 }
 
 //_____________________________________________________________________________
@@ -156,7 +156,7 @@ Bool_t ProofStdVect::Process(Long64_t entry)
             Double_t sy = (Double_t) (0.1*y);
             Double_t ym = fRandom->Gaus((Double_t)y, sy);
             Double_t c2 = TMath::Abs((ym - y) / sy);
-            bool xb = (1. - TMath::Erfc(c2/TMath::Sqrt(2.)) > .95) ? 0 : 1;
+            bool xb = (1. - TMath::Erfc(c2/TMath::Sqrt(2.)) > .95) ? false : true;
             vb.push_back(xb);
             vfx.push_back(x);
             vfy.push_back(float(ym));
@@ -231,7 +231,7 @@ void ProofStdVect::SlaveTerminate()
       } else {
          cleanup = kTRUE;
       }
-      fTree->SetDirectory(0);
+      fTree->SetDirectory(nullptr);
       fFile->Close();
       // Cleanup, if needed
       if (cleanup) {
@@ -281,9 +281,9 @@ void ProofStdVect::Init(TTree *tree)
    if (fCreate) return;
 
    // Set object pointer
-   fVbr = 0;
-   fVfxr = 0;
-   fVfyr = 0;
+   fVbr = nullptr;
+   fVfxr = nullptr;
+   fVfyr = nullptr;
    // Set branch addresses and branch pointers
    if (!tree) return;
    fChain = tree;

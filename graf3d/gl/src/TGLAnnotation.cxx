@@ -20,7 +20,6 @@
 #include "TGLSelectRecord.h"
 #include "TGLViewerBase.h"
 #include "TObjString.h"
-#include "TGFrame.h"
 #include "TGTextEdit.h"
 #include "TGButton.h"
 #include "TGLViewer.h"
@@ -49,9 +48,9 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
    fDrag(kNone),
    fDrawW(0), fDrawH(0), fTextSizeDrag(0),
    fActive(kFALSE),
-   fMainFrame(0), fTextEdit(0),
+   fMainFrame(nullptr), fTextEdit(nullptr),
 
-   fParent(0),
+   fParent(nullptr),
 
    fText(text),
    fTextSize(0.03),
@@ -79,9 +78,9 @@ TGLAnnotation::TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t po
    fDrag(kNone),
    fDrawW(0), fDrawH(0), fTextSizeDrag(0),
    fActive(kFALSE),
-   fMainFrame(0), fTextEdit(0),
+   fMainFrame(nullptr), fTextEdit(nullptr),
 
-   fParent(0),
+   fParent(nullptr),
 
    fText(text),
    fTextSize(0.03),
@@ -278,7 +277,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
 
       Float_t llx, lly, llz, urx, ury, urz;
       widthTxt = heightTxt = 0;
-      while ((osl = (TObjString*) line_iter()) != 0)
+      while ((osl = (TObjString*) line_iter()) != nullptr)
       {
          fFont.BBox(osl->GetString().Data(), llx, lly, llz, urx, ury, urz);
          widthTxt   = TMath::Max(widthTxt, urx);
@@ -331,7 +330,7 @@ void TGLAnnotation::Render(TGLRnrCtx& rnrCtx)
    glPushMatrix();
    Float_t tx = 0;
    line_iter.Reset();
-   while ((osl = (TObjString*) line_iter()) != 0)
+   while ((osl = (TObjString*) line_iter()) != nullptr)
    {
       if (fTextAlign == TGLFont::kLeft) {
          tx = 0;
@@ -486,7 +485,7 @@ Char_t TGLAnnotation::GetLineTransparency() const
 
 void TGLAnnotation::MakeEditor()
 {
-   if (fMainFrame == 0)
+   if (fMainFrame == nullptr)
    {
       fMainFrame = new TGMainFrame(gClient->GetRoot(), 1000, 1000);
       fMainFrame->SetWindowName("Annotation Editor");

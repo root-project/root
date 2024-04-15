@@ -19,92 +19,39 @@
 \class RooDirItem
 \ingroup Roofitcore
 
-RooDirItem is a utility base class for RooFit objects that are to be attached
+Utility base class for \ref Roofitmain objects that are to be attached
 to ROOT directories. Concrete classes inherit the appendToDir and removeToDir
-methods that can be used to safely attach and detach one self from a TDirectory
+methods that can be used to safely attach and detach one self from a TDirectory.
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include "TROOT.h"
-#include "TList.h"
+#include <iostream>
 #include "TDirectoryFile.h"
-#include "TString.h"
 #include "RooDirItem.h"
-
-using namespace std;
 
 ClassImp(RooDirItem);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooDirItem::RooDirItem() : _dir(0) 
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooDirItem::RooDirItem(const RooDirItem& /*other*/) : _dir(0) 
-{
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooDirItem::~RooDirItem() 
-{  
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Remove object from directory it was added to
 
-void RooDirItem::removeFromDir(TObject* obj) 
+void RooDirItem::removeFromDir(TObject* obj)
 {
   if (_dir) {
-    if (!_dir->TestBit(TDirectoryFile::kCloseDirectory))
-      _dir->GetList()->Remove(obj) ;
+    _dir->GetList()->Remove(obj) ;
   }
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append object to directory. If forceMemoryResident is
-/// true, force addition to ROOT memory directory if that
-/// is not the current directory
-
-void RooDirItem::appendToDir(TObject* obj, Bool_t forceMemoryResident) 
+/// true, nothing happens.
+void RooDirItem::appendToDir(TObject* obj, bool forceMemoryResident)
 {
   if (forceMemoryResident) {
-    // Append self forcibly to memory directory
-
-    TString pwd(gDirectory->GetPath()) ;
-    TString memDir(gROOT->GetName()) ;
-    memDir.Append(":/") ;
-    Bool_t notInMemNow= (pwd!=memDir) ;
-
-    //cout << "RooDirItem::appendToDir pwd=" << pwd << " memDir=" << memDir << endl ;
-
-    if (notInMemNow) { 
-      gDirectory->cd(memDir) ;
-    }
-
-    _dir = gDirectory ;
-    gDirectory->Append(obj) ;
-    
-    if (notInMemNow) {
-      gDirectory->cd(pwd) ;    
-    }
-
+    // If we are not going into a file, appending to a directory
+    // doesn't make sense. It only creates global state and congestion.
+    return;
   } else {
     // Append self to present gDirectory
     _dir = gDirectory ;

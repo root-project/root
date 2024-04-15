@@ -18,25 +18,34 @@
     \ingroup Roofit
 
 Single or double sided decay function that can be analytically convolved
-with any RooResolutionModel implementation
+with any RooResolutionModel implementation. It declares the basis functions
+for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
+\f[
+  \mathrm{basis} = \begin{cases}
+    \exp\left(-\frac{t}{\tau}\right) & \mathrm{SingleSided} \\
+    \exp\left( \frac{t}{\tau}\right) & \mathrm{Flipped} \\
+    \exp\left(-\frac{|t|}{\tau}\right) & \mathrm{DoubleSided}
+    \end{cases}
+\f]
 **/
 
-#include "RooFit.h"
-
-#include "Riostream.h"
 #include "RooDecay.h"
+
 #include "RooRealVar.h"
 #include "RooRandom.h"
 
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-
+/// Create a new RooDecay.
+/// \param[in] name Name of this object.
+/// \param[in] title Title (for *e.g.* plotting)
+/// \param[in] t Convolution variable (*e.g.* time).
+/// \param[in] tau Decay constant.
+/// \param[in] model Resolution model for the convolution.
+/// \param[in] type One of the decays types `SingleSided, Flipped, DoubleSided`
 RooDecay::RooDecay(const char *name, const char *title,
          RooRealVar& t, RooAbsReal& tau,
          const RooResolutionModel& model, DecayType type) :
@@ -71,22 +80,15 @@ RooDecay::RooDecay(const RooDecay& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
 
-RooDecay::~RooDecay()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
+double RooDecay::coefficient(Int_t /*basisIndex*/) const
 {
   return 1 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;
   return 0 ;
@@ -99,9 +101,9 @@ void RooDecay::generateEvent(Int_t code)
   R__ASSERT(code==1) ;
 
   // Generate delta-t dependent
-  while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+  while(true) {
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:

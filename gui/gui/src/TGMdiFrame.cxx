@@ -30,19 +30,20 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiFrame.                                                          //
-//                                                                      //
-// This file contains the TGMdiFrame class.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
-#include "TGFrame.h"
+/** \class TGMdiFrame.
+\ingroup guiwidgets
+
+This file contains the TGMdiFrame class.
+
+*/
+
+
 #include "TGMdiFrame.h"
 #include "TGMdiMainFrame.h"
 #include "TGMdiDecorFrame.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 ClassImp(TGMdiFrame);
 

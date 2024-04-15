@@ -230,7 +230,7 @@ protected:
 
 public:
    TProofServ(Int_t *argc, char **argv, FILE *flog = 0);
-   virtual ~TProofServ();
+   ~TProofServ() override;
 
    virtual Int_t  CreateServer();
 
@@ -263,7 +263,7 @@ public:
    Int_t          GetActSessions() const { return fActSessions; }
    Float_t        GetEffSessions() const { return fEffSessions; }
 
-   void           GetOptions(Int_t *argc, char **argv);
+   void           GetOptions(Int_t *argc, char **argv) override;
    TList         *GetEnabledPackages() const { return fPackMgr->GetListOfEnabled(); }
 
    static Long_t  GetVirtMemMax();
@@ -282,7 +282,7 @@ public:
 
    virtual EQueryAction GetWorkers(TList *workers, Int_t &prioritychange,
                                    Bool_t resume = kFALSE);
-   virtual void   HandleException(Int_t sig);
+   void   HandleException(Int_t sig) override;
    virtual Int_t  HandleSocketInput(TMessage *mess, Bool_t all);
    virtual void   HandleSocketInput();
    virtual void   HandleUrgentData();
@@ -294,9 +294,9 @@ public:
    Bool_t         IsParallel() const;
    Bool_t         IsTopMaster() const { return fOrdinal == "0"; }
 
-   void           Run(Bool_t retrn = kFALSE);
+   void           Run(Bool_t retrn = kFALSE) override;
 
-   void           Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const override;
 
    void           RestartComputeTime();
 
@@ -316,7 +316,7 @@ public:
    virtual void   DisableTimeout() { }
    virtual void   EnableTimeout() { }
 
-   virtual void   Terminate(Int_t status);
+   void   Terminate(Int_t status) override;
 
    // Log control
    void           LogToMaster(Bool_t on = kTRUE) { fSendLogToMaster = on; }
@@ -341,7 +341,7 @@ public:
    static Bool_t      IsActive();
    static TProofServ *This();
 
-   ClassDef(TProofServ,0)  //PROOF Server Application Interface
+   ClassDefOverride(TProofServ,0)  //PROOF Server Application Interface
 };
 
 R__EXTERN TProofServ *gProofServ;
@@ -352,7 +352,7 @@ private:
 
 public:
    TProofLockPath(const char *path) : TNamed(path,path), fLockId(-1) { }
-   ~TProofLockPath() { if (IsLocked()) Unlock(); }
+   ~TProofLockPath() override { if (IsLocked()) Unlock(); }
 
    Int_t         Lock();
    Int_t         Unlock();
@@ -385,12 +385,12 @@ public:
    enum EStatusBits { kFileIsPipe = BIT(23) };
    TProofServLogHandler(const char *cmd, TSocket *s, const char *pfx = "");
    TProofServLogHandler(FILE *f, TSocket *s, const char *pfx = "");
-   virtual ~TProofServLogHandler();
+   ~TProofServLogHandler() override;
 
    Bool_t IsValid() { return ((fFile && fSocket) ? kTRUE : kFALSE); }
 
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 
    static void SetDefaultPrefix(const char *pfx);
    static Int_t GetCmdRtn();
@@ -421,7 +421,7 @@ private:
 public:
    TShutdownTimer(TProofServ *p, Int_t delay);
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 //--- Synchronous timer used to reap children processes change of state
@@ -432,10 +432,10 @@ private:
 
 public:
    TReaperTimer(Long_t frequency = 1000) : TTimer(frequency, kTRUE), fChildren(0) { }
-   virtual ~TReaperTimer();
+   ~TReaperTimer() override;
 
    void AddPid(Int_t pid);
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 //--- Special timer to terminate idle sessions
@@ -447,7 +447,7 @@ private:
 public:
    TIdleTOTimer(TProofServ *p, Int_t delay) : TTimer(delay, kTRUE), fProofServ(p) { }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 //______________________________________________________________________________
 class TIdleTOTimerGuard {

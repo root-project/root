@@ -32,6 +32,7 @@
 #   include <sys/types.h>
 #endif
 
+#include "strlcpy.h"
 #include "TFTP.h"
 #include "TPSocket.h"
 #include "TUrl.h"

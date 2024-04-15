@@ -11,33 +11,47 @@
 #ifndef ROOT_RDFUTILS
 #define ROOT_RDFUTILS
 
-#include "ROOT/RDataSource.hxx" // ColumnName2ColumnTypeName
-#include "ROOT/TypeTraits.hxx"
+#include "ROOT/RSpan.hxx"
+#include <string_view>
 #include "ROOT/RVec.hxx"
-#include "ROOT/RSnapshotOptions.hxx"
-#include "ROOT/RSpan.hxx" // for IsDataContainer
-#include "TH1.h"
+#include "ROOT/TypeTraits.hxx"
+#include "Rtypes.h"
 
 #include <array>
 #include <deque>
 #include <functional>
 #include <memory>
+#include <new> // std::hardware_destructive_interference_size
 #include <string>
-#include <type_traits> // std::decay
+#include <type_traits> // std::decay, std::false_type
+#include <vector>
 
 class TTree;
 class TTreeReader;
 
-/// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
+namespace RDF {
+using ColumnNames_t = std::vector<std::string>;
+}
+
+namespace Experimental {
+class RLogChannel;
+}
+
+namespace RDF {
+class RDataSource;
+}
 
 namespace Detail {
 namespace RDF {
-using ColumnNames_t = std::vector<std::string>;
+
+using ROOT::RDF::ColumnNames_t;
+
+ROOT::Experimental::RLogChannel &RDFLogChannel();
 
 // fwd decl for ColumnName2ColumnTypeName
-class RCustomColumnBase;
+class RDefineBase;
 
 // type used for tag dispatching
 struct RInferredType {
@@ -48,16 +62,20 @@ struct RInferredType {
 
 namespace Internal {
 namespace RDF {
+
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Detail::RDF;
 using namespace ROOT::RDF;
 
 /// Check for container traits.
 ///
-/// Note that we don't recognize std::string as a container.
+/// Note that for all uses in RDF we don't want to classify std::string as a container.
+/// Template specializations of IsDataContainer make it return `true` for std::span<T>, std::vector<bool> and
+/// RVec<bool>, which we do want to count as containers even though they do not satisfy all the traits tested by the
+/// generic IsDataContainer<T>.
 template <typename T>
 struct IsDataContainer {
-   using Test_t = typename std::decay<T>::type;
+   using Test_t = std::decay_t<T>;
 
    template <typename A>
    static constexpr bool Test(A *pt, A const *cpt = nullptr, decltype(pt->begin()) * = nullptr,
@@ -68,11 +86,10 @@ struct IsDataContainer {
       using It_t = typename A::iterator;
       using CIt_t = typename A::const_iterator;
       using V_t = typename A::value_type;
-      return std::is_same<Test_t, std::vector<bool>>::value ||
-             (std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
-              std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
-              std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value &&
-              !std::is_same<T, std::string>::value);
+      return std::is_same<decltype(pt->begin()), It_t>::value && std::is_same<decltype(pt->end()), It_t>::value &&
+             std::is_same<decltype(cpt->begin()), CIt_t>::value && std::is_same<decltype(cpt->end()), CIt_t>::value &&
+             std::is_same<decltype(**pi), V_t &>::value && std::is_same<decltype(**pci), V_t const &>::value &&
+             !std::is_same<T, std::string>::value;
    }
 
    template <typename A>
@@ -82,6 +99,16 @@ struct IsDataContainer {
    }
 
    static constexpr bool value = Test<Test_t>(nullptr);
+};
+
+template<>
+struct IsDataContainer<std::vector<bool>> {
+   static constexpr bool value = true;
+};
+
+template<>
+struct IsDataContainer<ROOT::VecOps::RVec<bool>> {
+   static constexpr bool value = true;
 };
 
 template<typename T>
@@ -100,8 +127,8 @@ const std::type_info &TypeName2TypeID(const std::string &name);
 
 std::string TypeID2TypeName(const std::type_info &id);
 
-std::string ColumnName2ColumnTypeName(const std::string &colName, unsigned int namespaceID, TTree *, RDataSource *,
-                                      bool isCustomColumn, bool vector2rvec = true, unsigned int customColID = 0);
+std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *, RDataSource *, RDefineBase *,
+                                      bool vector2rvec = true);
 
 char TypeName2ROOTTypeName(const std::string &b);
 
@@ -135,16 +162,10 @@ struct RemoveFirstTwoParametersIf<true, TypeList> {
 template <bool MustRemove, typename TypeList>
 using RemoveFirstTwoParametersIf_t = typename RemoveFirstTwoParametersIf<MustRemove, TypeList>::type;
 
-/// Detect whether a type is an instantiation of RVec<T>
-template <typename>
-struct IsRVec_t : public std::false_type {};
-
-template <typename T>
-struct IsRVec_t<ROOT::VecOps::RVec<T>> : public std::true_type {};
-
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
 // fundamental types
-template <typename T, bool IsDataContainer = IsDataContainer<typename std::decay<T>::type>::value || std::is_same<std::string, T>::value>
+template <typename T,
+          bool IsDataContainer = IsDataContainer<std::decay_t<T>>::value || std::is_same<std::string, T>::value>
 struct ValueType {
    using value_type = typename T::value_type;
 };
@@ -176,10 +197,86 @@ void InterpreterDeclare(const std::string &code);
 /// The pointer returned by the call to TInterpreter::Calc is returned in case of success.
 Long64_t InterpreterCalc(const std::string &code, const std::string &context = "");
 
+/// Whether custom column with name colName is an "internal" column such as rdfentry_ or rdfslot_
+bool IsInternalColumn(std::string_view colName);
+
+/// Get optimal column width for printing a table given the names and the desired minimal space between columns
+unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigned int minColumnSpace = 8u);
+
+// We could just check `#ifdef __cpp_lib_hardware_interference_size`, but at least on Mac 11
+// libc++ defines that macro but is missing the actual feature, so we use an ad-hoc ROOT macro instead.
+// See the relevant entry in cmake/modules/RootConfiguration.cmake for more info.
+#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE
+   // C++17 feature (so we can use inline variables)
+   inline constexpr std::size_t kCacheLineSize = std::hardware_destructive_interference_size;
+#else
+   // safe bet: assume the typical 64 bytes
+   static constexpr std::size_t kCacheLineSize = 64;
+#endif
+
+/// Stepping through CacheLineStep<T> values in a vector<T> brings you to a new cache line.
+/// Useful to avoid false sharing.
+template <typename T>
+constexpr std::size_t CacheLineStep() {
+   return (kCacheLineSize + sizeof(T) - 1) / sizeof(T);
+}
+
+void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
+                            const std::string &colName);
+
+// TODO in C++17 this could be a lambda within FillHelper::Exec
+template <typename T>
+constexpr std::size_t FindIdxTrue(const T &arr)
+{
+   for (size_t i = 0; i < arr.size(); ++i) {
+      if (arr[i])
+         return i;
+   }
+   return arr.size();
+}
+
+// return type has to be decltype(auto) to preserve perfect forwarding
+template <std::size_t N, typename... Ts>
+decltype(auto) GetNthElement(Ts &&...args)
+{
+   auto tuple = std::forward_as_tuple(args...);
+   return std::get<N>(tuple);
+}
+
+#if __cplusplus >= 201703L
+template <class... Ts>
+using Disjunction = std::disjunction<Ts...>;
+#else
+template <class...>
+struct Disjunction : std::false_type {
+};
+template <class B1>
+struct Disjunction<B1> : B1 {
+};
+template <class B1, class... Bn>
+struct Disjunction<B1, Bn...> : std::conditional_t<bool(B1::value), B1, Disjunction<Bn...>> {
+};
+#endif
+
+bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec);
+
+/// Return a vector with all elements of v1 and v2 and duplicates removed.
+/// Precondition: each of v1 and v2 must not have duplicate elements.
+template <typename T>
+std::vector<T> Union(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   std::vector<T> res = v1;
+
+   // Add the variations coming from the input columns
+   for (const auto &e : v2)
+      if (std::find(v1.begin(), v1.end(), e) == v1.end())
+         res.emplace_back(e);
+
+   return res;
+}
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
-
-/// \endcond
 
 #endif // RDFUTILS

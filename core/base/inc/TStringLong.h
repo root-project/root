@@ -44,11 +44,11 @@ public:
    virtual ~TStringLong();
 
    // ROOT I/O interface
-   virtual void     FillBuffer(char *&buffer) const;
-   virtual void     ReadBuffer(char *&buffer);
-   virtual Int_t    Sizeof() const;
+   void     FillBuffer(char *&buffer) const override;
+   void     ReadBuffer(char *&buffer) override;
+   Int_t    Sizeof() const override;
 
-   ClassDef(TStringLong,1)  //Long string class (more than 255 chars)
+   ClassDefOverride(TStringLong,1)  //Long string class (more than 255 chars)
 } R__ALWAYS_SUGGEST_ALTERNATIVE("TString");
 
 #endif

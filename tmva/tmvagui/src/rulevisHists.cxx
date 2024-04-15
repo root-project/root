@@ -150,16 +150,16 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
       if (hname.Contains("__S")){ // found a new signal plot
          // create new canvas
          if ((c[countCanvas]==NULL) || (countPad>noPad)) {
-            char cn[20];
-            sprintf( cn, "rulehist%d_", countCanvas+1 );
-            TString cname(cn);
+            TString cname("rulehist");
+            cname += countCanvas + 1;
+            cname += "_";
             cname += rfdir->GetName();
             c[countCanvas] = new TCanvas( cname, maintitle,
                                           countCanvas*50+200, countCanvas*20, width, height ); 
             // style
             c[countCanvas]->Divide(xPad,yPad);
             countPad = 1;
-         }       
+         }
 
          // save canvas to file
          TPad *cPad = (TPad *)(c[countCanvas]->GetPad(countPad));
@@ -250,7 +250,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
          // save canvas to file
          if (countPad > noPad) {
             c[countCanvas]->Update();
-            TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
+            TString fname = TString::Format( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
             TMVAGlob::imgconv( c[countCanvas], fname );
             //        TMVAGlob::plot_logo(); // don't understand why this doesn't work ... :-(
             countCanvas++;
@@ -260,7 +260,7 @@ void TMVA::rulevisHists( TDirectory *rfdir, TDirectory *vardir, TDirectory *corr
 
    if (countPad <= noPad) {
       c[countCanvas]->Update();
-      TString fname = Form( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
+      TString fname = TString::Format( "plots/%s_c%i", outputName.Data(), countCanvas+1 );
       TMVAGlob::imgconv( c[countCanvas], fname );
    }
    delete[] c;

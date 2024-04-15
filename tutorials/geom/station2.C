@@ -10,6 +10,7 @@
 /// This macro was created for the evaluation of Computational Physics course in 2006.
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
+/// \image html geom_station2.png width=800px
 /// \macro_code
 ///
 /// \author Dong Ryeol Lee (leedr2580@hanmail.net), Dept. of Physics, Univ. of Seoul
@@ -32,7 +33,7 @@ void station2()
 
    TGeoVolume *top=geom->MakeBox("top",Air,1000,1000,1000);
    geom->SetTopVolume(top);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -936,7 +937,7 @@ void station2()
    top->AddNodeOverlap(Cone12,1,new TGeoCombiTrans(0,0,-107, new TGeoRotation("c11",0,0,0)));
 
 
-   top->SetVisibility(0);
+   top->SetVisibility(false);
    geom->CloseGeometry();
 
    top->Draw("ogl");

@@ -40,10 +40,12 @@ namespace Impl {
     with the ROOT::Math::Rotation3D  classes and ROOT::Math::Transform3D to obtained combined
     transformations and to operate on points and vectors.
     Note that a the translation applied to a Vector object (DisplacementVector3D and LorentzVector classes)
-    performes a noop, i.e. it returns the same vector. A translation can be applied only to the Point objects
+    performs a noop, i.e. it returns the same vector. A translation can be applied only to the Point objects
     (PositionVector3D classes).
 
     @ingroup GenVector
+
+    @sa Overview of the @ref GenVector "physics vector library"
 
 */
 
@@ -79,7 +81,7 @@ public:
       Construct from any Displacement vector in ant tag and coordinate system
    */
    template<class CoordSystem, class Tag>
-   explicit Translation3D( const DisplacementVector3D<CoordSystem,Tag> & v) :
+   explicit constexpr Translation3D( const DisplacementVector3D<CoordSystem,Tag> & v) :
       fVect(Vector(v.X(),v.Y(),v.Z()))
    { }
 
@@ -97,7 +99,7 @@ public:
    { }
 
 
-   // use compiler generated copy ctor, copy assignmet and dtor
+   // use compiler generated copy ctor, copy assignment and dtor
 
 
    // ======== Components ==============
@@ -292,7 +294,7 @@ template <class T>
 std::ostream &operator<<(std::ostream &os, const Translation3D<T> &t)
 {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form needs formatiing improvements
+   //        and even the human readable form needs formatting improvements
 
    T m[3];
    t.GetComponents(m, m + 3);

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableNormalizeTransform                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::VariableNormalizeTransform
@@ -44,7 +44,6 @@ Linear interpolation class
 
 #include "TMatrixD.h"
 #include "TMatrixDBase.h"
-#include "TVectorD.h"
 #include "TVectorF.h"
 
 #include <iostream>
@@ -289,8 +288,8 @@ std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings
       TString str("");
       VariableInfo& varInfo = (type=='v'?fDsi.GetVariableInfo(idx):(type=='t'?fDsi.GetTargetInfo(idx):fDsi.GetSpectatorInfo(idx)));
 
-      if (offset < 0) str = Form( "2*%g*([%s] + %g) - 1", scale, varInfo.GetLabel().Data(), -offset );
-      else            str = Form( "2*%g*([%s] - %g) - 1", scale, varInfo.GetLabel().Data(),  offset );
+      if (offset < 0) str = TString::Format( "2*%g*([%s] + %g) - 1", scale, varInfo.GetLabel().Data(), -offset );
+      else            str = TString::Format( "2*%g*([%s] - %g) - 1", scale, varInfo.GetLabel().Data(),  offset );
       (*strVec)[iinp] = str;
 
       ++iinp;
@@ -542,7 +541,6 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
          Log() << kINFO << "Transformation for all classes based on these ranges:" << Endl;
       else
          Log() << kINFO << "Transformation for class " << icls << " based on these ranges:" << Endl;
-      UInt_t iinp = 0;
       for( ItVarTypeIdxConst itGet = fGet.begin(), itGetEnd = fGet.end(); itGet != itGetEnd; ++itGet ){
          Char_t type = (*itGet).first;
          UInt_t idx  = (*itGet).second;
@@ -550,7 +548,6 @@ void TMVA::VariableNormalizeTransform::PrintTransformation( std::ostream& /* o *
          TString typeString = (type=='v'?"Variable: ": (type=='t'?"Target : ":"Spectator : ") );
          Log() << typeString.Data() << std::setw(20) << fMin[icls][idx] << std::setw(20) << fMax[icls][idx] << Endl;
 
-         ++iinp;
       }
    }
 }

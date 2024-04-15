@@ -23,6 +23,7 @@
 #include "TMath.h"
 
 #include <vector>
+#include <string>
 
 namespace ROOT {
 
@@ -110,7 +111,7 @@ public:
       // set the parameters values from the function
       unsigned int npar = func.NPar();
       const double *begin = func.Parameters();
-      if (begin == 0) {
+      if (!begin) {
          fSettings = std::vector<ParameterSettings>(npar);
          return;
       }
@@ -136,12 +137,12 @@ public:
    /**
       set the parameter settings from number of parameters and a vector of values and optionally step values. If there are not existing or number of parameters does not match existing one, create a new parameter setting list.
    */
-   void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = 0);
+   void SetParamsSettings(unsigned int npar, const double * params, const double * vstep = nullptr);
 
    /*
      Set the parameter settings from a vector of parameter settings
    */
-   void SetParamsSettings (const std::vector<ROOT::Fit::ParameterSettings>& pars ) {
+   void SetParamsSettings (const std::vector<ROOT::Fit::ParameterSettings>& pars) {
       fSettings = pars;
    }
 
@@ -166,18 +167,16 @@ public:
    ROOT::Math::MinimizerOptions & MinimizerOptions()  { return fMinimizerOpts; }
 
 
-#ifndef __CINT__   // this method fails on Windows
    /**
       set all the minimizer options using class MinimizerOptions
     */
    void SetMinimizerOptions(const ROOT::Math::MinimizerOptions & minopt);
-#endif
 
 
    /**
       set minimizer type
    */
-   void SetMinimizer(const char * type, const char * algo = 0) {
+   void SetMinimizer(const char *type, const char *algo = nullptr) {
       if (type) fMinimizerOpts.SetMinimizerType(type);
       if (algo) fMinimizerOpts.SetMinimizerAlgorithm(algo);
    }
@@ -205,7 +204,7 @@ public:
    ///do analysis for parabolic errors
    bool ParabErrors() const { return fParabErrors; }
 
-   ///do minos errros analysis on the  parameters
+   ///do minos errors analysis on the  parameters
    bool MinosErrors() const { return fMinosErrors; }
 
    ///Update configuration after a fit using the FitResult
@@ -215,7 +214,7 @@ public:
    bool UseWeightCorrection() const { return fWeightCorr; }
 
 
-   /// return vector of parameter indeces for which the Minos Error will be computed
+   /// return vector of parameter indices for which the Minos Error will be computed
    const std::vector<unsigned int> & MinosParams() const { return fMinosParams; }
 
    /**
@@ -223,16 +222,16 @@ public:
    */
    void SetNormErrors(bool on = true) { fNormErrors= on; }
 
-   ///set parabolic erros
+   ///set parabolic errors
    void SetParabErrors(bool on = true) { fParabErrors = on; }
 
-   ///set Minos erros computation to be performed after fitting
+   ///set Minos errors computation to be performed after fitting
    void SetMinosErrors(bool on = true) { fMinosErrors = on; }
 
-   ///apply the weight correction for error matric computation
+   ///apply the weight correction for error matrix computation
    void SetWeightCorrection(bool on = true) { fWeightCorr = on; }
 
-   /// set parameter indeces for running Minos
+   /// set parameter indices for running Minos
    /// this can be used for running Minos on a subset of parameters - otherwise is run on all of them
    /// if MinosErrors() is set
    void SetMinosErrors(const std::vector<unsigned int> & paramInd ) {
@@ -247,7 +246,7 @@ public:
    /**
       static function to control default minimizer type and algorithm
    */
-   static void SetDefaultMinimizer(const char * type, const char * algo = 0);
+   static void SetDefaultMinimizer(const char *type, const char *algo = nullptr);
 
 
 
@@ -257,16 +256,16 @@ protected:
 
 private:
 
-   bool fNormErrors;       // flag for error normalization
-   bool fParabErrors;      // get correct parabolic errors estimate (call Hesse after minimizing)
-   bool fMinosErrors;      // do full error analysis using Minos
-   bool fUpdateAfterFit;   // update the configuration after a fit using the result
-   bool fWeightCorr;       // apply correction to errors for weights fits
+   bool fNormErrors;       ///< flag for error normalization
+   bool fParabErrors;      ///< get correct parabolic errors estimate (call Hesse after minimizing)
+   bool fMinosErrors;      ///< do full error analysis using Minos
+   bool fUpdateAfterFit;   ///< update the configuration after a fit using the result
+   bool fWeightCorr;       ///< apply correction to errors for weights fits
 
-   std::vector<ROOT::Fit::ParameterSettings> fSettings;  // vector with the parameter settings
-   std::vector<unsigned int> fMinosParams;               // vector with the parameter indeces for running Minos
+   std::vector<ROOT::Fit::ParameterSettings> fSettings;  ///< vector with the parameter settings
+   std::vector<unsigned int> fMinosParams;               ///< vector with the parameter indices for running Minos
 
-   ROOT::Math::MinimizerOptions fMinimizerOpts;   //minimizer control parameters including name and algo type
+   ROOT::Math::MinimizerOptions fMinimizerOpts;   ///< minimizer control parameters including name and algo type
 
 };
 

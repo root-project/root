@@ -80,16 +80,29 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
-   if (transport == "http" || transport == "https") {
-      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile")) {
+   if (transport == "http" || transport == "https" ||
+       transport == "root" || transport == "roots" ) {
+      std::string plgclass = transport.compare( 0, 4, "http" ) == 0 ?
+                             "RRawFileDavix" : "RRawFileNetXNG";
+      if (TPluginHandler *h = gROOT->GetPluginManager()->
+          FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
          if (h->LoadPlugin() == 0) {
             return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
-         throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
+         throw std::runtime_error("Cannot load plugin handler for " + plgclass);
       }
-      throw std::runtime_error("Cannot find plugin handler for RRawFileDavix");
+      throw std::runtime_error("Cannot find plugin handler for " + plgclass);
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
+}
+
+void ROOT::Internal::RRawFile::EnsureOpen()
+{
+   if (fIsOpen)
+      return;
+
+   OpenImpl();
+   fIsOpen = true;
 }
 
 void *ROOT::Internal::RRawFile::MapImpl(size_t /* nbytes */, std::uint64_t /* offset */,
@@ -120,13 +133,16 @@ std::string ROOT::Internal::RRawFile::GetLocation(std::string_view url)
 
 std::uint64_t ROOT::Internal::RRawFile::GetSize()
 {
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
+   if (fFileSize != kUnknownFileSize)
+      return fFileSize;
 
-   if (fFileSize == kUnknownFileSize)
-      fFileSize = GetSizeImpl();
+   EnsureOpen();
+   fFileSize = GetSizeImpl();
    return fFileSize;
+}
+
+std::string ROOT::Internal::RRawFile::GetUrl() const {
+   return fUrl;
 }
 
 std::string ROOT::Internal::RRawFile::GetTransport(std::string_view url)
@@ -141,9 +157,7 @@ std::string ROOT::Internal::RRawFile::GetTransport(std::string_view url)
 
 void *ROOT::Internal::RRawFile::Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
 {
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
+   EnsureOpen();
    return MapImpl(nbytes, offset, mapdOffset);
 }
 
@@ -156,10 +170,8 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
 
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!fIsOpen)
-      OpenImpl();
+   EnsureOpen();
    R__ASSERT(fOptions.fBlockSize >= 0);
-   fIsOpen = true;
 
    // "Large" reads are served directly, bypassing the cache
    if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
@@ -202,9 +214,7 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
 
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
+   EnsureOpen();
    ReadVImpl(ioVec, nReq);
 }
 

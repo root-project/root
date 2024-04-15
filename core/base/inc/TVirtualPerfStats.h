@@ -27,8 +27,14 @@
 
 class TFile;
 class TBranch;
+class TChain;
 
 class TVirtualPerfStats : public TObject {
+
+private:
+   friend class TChain;
+
+   virtual void SetFile(TFile *) = 0;
 
 public:
    virtual ~TVirtualPerfStats() {}
@@ -84,17 +90,9 @@ public:
 
    static const char *EventType(EEventType type);
 
-   ClassDef(TVirtualPerfStats,0)  // ABC for collecting PROOF statistics
+   ClassDefOverride(TVirtualPerfStats,0)  // ABC for collecting PROOF statistics
 };
 
-
-#ifndef __CINT__
 #define gPerfStats (TVirtualPerfStats::CurrentPerfStats())
-
-#elif defined(__MAKECINT__)
-// To properly handle the use of gPerfStats in header files (in static declarations)
-R__EXTERN TVirtualPerfStats *gPerfStats;
-#endif
-
 
 #endif

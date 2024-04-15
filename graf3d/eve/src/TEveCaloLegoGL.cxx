@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "TAxis.h"
-#include "TH2.h"
 #include "THLimitsFinder.h"
 
 #include "TGLViewer.h"
@@ -48,10 +47,10 @@ TEveCaloLegoGL::TEveCaloLegoGL() :
    fGridColor(-1),
    fFontColor(-1),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
-   fZAxis(0),
-   fM(0),
+   fEtaAxis(nullptr),
+   fPhiAxis(nullptr),
+   fZAxis(nullptr),
+   fM(nullptr),
    fDLCacheOK(kFALSE),
    fMaxVal(0),
    fValToPixel(0),

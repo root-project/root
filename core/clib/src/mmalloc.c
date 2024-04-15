@@ -39,10 +39,7 @@ static PTR align PARAMS ((struct mdesc *, size_t));
 
 /* Aligned allocation.  */
 
-static PTR
-align (mdp, size)
-  struct mdesc *mdp;
-  size_t size;
+static PTR align(struct mdesc *mdp, size_t size)
 {
   PTR result;
   unsigned long int adj;
@@ -60,9 +57,7 @@ align (mdp, size)
 
 /* Set everything up and remember that we have.  */
 
-static int
-initialize (mdp)
-  struct mdesc *mdp;
+static int initialize(struct mdesc *mdp)
 {
   mdp -> heapsize = HEAP / BLOCKSIZE;
   mdp -> heapinfo = (mmalloc_info *)
@@ -83,10 +78,7 @@ initialize (mdp)
 /* Get neatly aligned memory, initializing or
    growing the heap info table as necessary. */
 
-static PTR
-morecore (mdp, size)
-  struct mdesc *mdp;
-  size_t size;
+static PTR morecore(struct mdesc *mdp, size_t size)
 {
    PTR result;
    mmalloc_info *newinfo, *oldinfo;
@@ -130,10 +122,7 @@ morecore (mdp, size)
 
 /* Allocate memory from the heap.  */
 
-PTR
-mmalloc (md, size)
-  PTR md;
-  size_t size;
+PTR mmalloc(PTR md, size_t size)
 {
    struct mdesc *mdp;
    PTR result;

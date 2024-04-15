@@ -24,17 +24,17 @@ private:
 public:
    TStructNodeProperty(const char * name, Int_t color);
    TStructNodeProperty(const char * name, Pixel_t pixel);
-   ~TStructNodeProperty();
+   ~TStructNodeProperty() override;
 
    TColor   GetColor() const;
    Pixel_t  GetPixel() const;
    void     SetColor(const TColor & color);
    void     SetColor(Pixel_t pixel);
    void     SetColor(Int_t color);
-   Int_t    Compare(const TObject* obj) const;
-   Bool_t   IsSortable() const;
+   Int_t    Compare(const TObject* obj) const override;
+   Bool_t   IsSortable() const override;
 
-   ClassDef(TStructNodeProperty, 1); // Class with nodes color property
+   ClassDefOverride(TStructNodeProperty, 1); // Class with nodes color property
 };
 
 #endif

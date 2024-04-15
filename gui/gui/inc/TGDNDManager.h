@@ -2,15 +2,15 @@
 // Author: Bertrand Bellenot   19/04/07
 
 /*************************************************************************
- * Copyright (C) 1995-2007, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TDNDManager
-#define ROOT_TDNDManager
+#ifndef ROOT_TGDNDManager
+#define ROOT_TGDNDManager
 
 #include "TGFrame.h"
 
@@ -18,7 +18,6 @@ class TGMainFrame;
 class TGDragWindow;
 class TTimer;
 
-//----------------------------------------------------------------------
 
 class TGDragWindow : public TGFrame {
 
@@ -26,91 +25,90 @@ protected:
    static Cursor_t fgDefaultCursor; // Default Cursor
 
 protected:
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
-   Window_t fInput;                 // Input Window
-   Pixmap_t fPic, fMask;            // Pixmaps used as Window shape
-   UInt_t   fPw, fPh;               // Hot point coordinates (x and y)
+   Window_t fInput;                 ///< Input Window
+   Pixmap_t fPic, fMask;            ///< Pixmaps used as Window shape
+   UInt_t   fPw, fPh;               ///< Hot point coordinates (x and y)
 
 public:
    TGDragWindow(const TGWindow *p, Pixmap_t pic, Pixmap_t mask,
                 UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
-   virtual ~TGDragWindow();
+   ~TGDragWindow() override;
 
-   virtual TGDimension GetDefaultSize() const { return TGDimension(fPw, fPh); }
+   TGDimension GetDefaultSize() const override { return TGDimension(fPw, fPh); }
 
-   virtual void MapWindow();
-   virtual void UnmapWindow();
-   virtual void RaiseWindow();
-   virtual void LowerWindow();
-   virtual void MapRaised();
+   void MapWindow() override;
+   void UnmapWindow() override;
+   void RaiseWindow() override;
+   void LowerWindow() override;
+   void MapRaised() override;
 
-   virtual void Layout();
+   void Layout() override;
 
    Window_t GetInputId() const { return fInput; }
    Bool_t HasWindow(Window_t w) const { return (w == fId || w == fInput); }
 
-   ClassDef(TGDragWindow, 0) // Window used for dragging
+   ClassDefOverride(TGDragWindow, 0) // Window used for dragging
 };
 
-//----------------------------------------------------------------------
 
-//_____________________________________________________________________________
-//
-// TDNDData
-//
-// Drag and drop data container.
-//_____________________________________________________________________________
+/** \class TDNDData
+    \ingroup guiwidgets
+
+Drag and drop data container.
+
+*/
+
 
 class TDNDData : public TObject {
 private:
-   TDNDData(const TDNDData&);            // Not implemented
-   TDNDData& operator=(const TDNDData&); // Not implemented
+   TDNDData(const TDNDData&) = delete;
+   TDNDData& operator=(const TDNDData&) = delete;
 
 public:
-   TDNDData(Atom_t dt = kNone, void *d = 0, Int_t len = 0, Atom_t act = kNone) :
+   TDNDData(Atom_t dt = kNone, void *d = nullptr, Int_t len = 0, Atom_t act = kNone) :
       fDataType(dt), fAction(act), fData(d), fDataLength(len) {}
-   ~TDNDData() {}
+   ~TDNDData() override {}
 
-   Atom_t    fDataType;       // Data type description
-   Atom_t    fAction;         // Action description
-   void     *fData;           // Actual data
-   Int_t     fDataLength;     // Length of data
+   Atom_t    fDataType;       ///< Data type description
+   Atom_t    fAction;         ///< Action description
+   void     *fData;           ///< Actual data
+   Int_t     fDataLength;     ///< Length of data
 
-   ClassDef(TDNDData, 0) // Drag and drop specific data
+   ClassDefOverride(TDNDData, 0) // Drag and drop specific data
 };
 
-//----------------------------------------------------------------------
 
 class TGDNDManager : public TObject {
 
 private:
-   TGDNDManager(const TGDNDManager&);            // Not implemented
-   TGDNDManager& operator=(const TGDNDManager&); // Not implemented
+   TGDNDManager(const TGDNDManager&) = delete;
+   TGDNDManager& operator=(const TGDNDManager&) = delete;
 
 protected:
-   TGFrame       *fMain;                         // pointer on TGMainFrame
-   Atom_t         fVersion;                      // not really an Atom, but a long
-   Atom_t        *fTypelist, *fDraggerTypes;     // lists of DND types
-   Atom_t         fDropType;                     // drop type
-   Atom_t         fAcceptedAction, fLocalAction; // accepted and local actions
+   TGFrame       *fMain;                         ///< pointer on TGMainFrame
+   Atom_t         fVersion;                      ///< not really an Atom, but a long
+   Atom_t        *fTypelist, *fDraggerTypes;     ///< lists of DND types
+   Atom_t         fDropType;                     ///< drop type
+   Atom_t         fAcceptedAction, fLocalAction; ///< accepted and local actions
 
-   Bool_t         fDragging;                     // kTRUE while dragging
-   Bool_t         fDropAccepted;                 // kTRUE if drop accepted
-   Bool_t         fStatusPending;                // kTRUE if status is pending
-   Bool_t         fUseVersion;                   // kTRUE if DND version is used
-   Bool_t         fProxyOurs;                    // kTRUE if root proxy is ours
-   Window_t       fSource, fTarget;              // source and target windows
-   Bool_t         fTargetIsDNDAware;             // kTRUE if target is DND aware
-   UInt_t         fGrabEventMask;                // pointer grab event mask
-   TGFrame       *fLocalSource, *fLocalTarget;   // local source and target
+   Bool_t         fDragging;                     ///< kTRUE while dragging
+   Bool_t         fDropAccepted;                 ///< kTRUE if drop accepted
+   Bool_t         fStatusPending;                ///< kTRUE if status is pending
+   Bool_t         fUseVersion;                   ///< kTRUE if DND version is used
+   Bool_t         fProxyOurs;                    ///< kTRUE if root proxy is ours
+   Window_t       fSource, fTarget;              ///< source and target windows
+   Bool_t         fTargetIsDNDAware;             ///< kTRUE if target is DND aware
+   UInt_t         fGrabEventMask;                ///< pointer grab event mask
+   TGFrame       *fLocalSource, *fLocalTarget;   ///< local source and target
 
-   TTimer        *fDropTimeout;                  // drop timeout
-   TGDragWindow  *fDragWin;                      // drag window
+   TTimer        *fDropTimeout;                  ///< drop timeout
+   TGDragWindow  *fDragWin;                      ///< drag window
 
-   Pixmap_t       fPic, fMask;                   // pixmap used for the drag window
-   Int_t          fHotx, fHoty;                  // hot point coordinates
-   Cursor_t       fDNDNoDropCursor;              // no drop cursor type
+   Pixmap_t       fPic, fMask;                   ///< pixmap used for the drag window
+   Int_t          fHotx, fHoty;                  ///< hot point coordinates
+   Cursor_t       fDNDNoDropCursor;              ///< no drop cursor type
 
 protected:
    static Atom_t  fgDNDAware, fgDNDSelection, fgDNDProxy;
@@ -129,7 +127,7 @@ protected:
    void           InitAtoms();
    Window_t       GetRootProxy();
    Window_t       FindWindow(Window_t root, Int_t x, Int_t y, Int_t maxd);
-   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = 0);
+   Bool_t         IsDNDAware(Window_t win, Atom_t *typelist = nullptr);
    Bool_t         IsTopLevel(Window_t win);
 
    void           SendDNDEnter(Window_t target);
@@ -150,13 +148,13 @@ protected:
 
 public:
    TGDNDManager(TGFrame *toplevel, Atom_t *typelist);
-   virtual ~TGDNDManager();
+   ~TGDNDManager() override;
 
    Bool_t         HandleClientMessage(Event_t *event);
    Bool_t         HandleSelectionRequest(Event_t *event);
    Bool_t         HandleSelection(Event_t *event);
 
-   Bool_t         HandleTimer(TTimer *t);
+   Bool_t         HandleTimer(TTimer *t) override;
 
   //--- called by widgets
 
@@ -197,10 +195,10 @@ public:
    static Atom_t  GetDNDActionDescrip();
    static Atom_t  GetXCDNDData();
 
-   ClassDef(TGDNDManager, 0) // The main Drag and Drop Manager
+   ClassDefOverride(TGDNDManager, 0) // The main Drag and Drop Manager
 };
 
 R__EXTERN TGDNDManager *gDNDManager; // global drag and drop manager
 
-#endif  // ROOT_TDNDManager
+#endif  // ROOT_TGDNDManager
 

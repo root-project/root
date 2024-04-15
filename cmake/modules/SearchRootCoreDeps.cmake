@@ -4,104 +4,75 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-#---Check for Python installation-------------------------------------------------------
+#[[
+The purpose of this machinery is to search Python and set both the ROOT and PyROOT related
+Python variables.
+
+Variables set when Interpreter is found:
+  - PYTHON_EXECUTABLE
+  - PYTHON_VERSION_STRING
+  - PYTHON_VERSION_MAJOR
+  - PYTHON_VERSION_MINOR
+
+Variables set when Development is found:
+  - PYTHON_INCLUDE_DIRS
+  - PYTHON_LIBRARIES
+  - PYTHON_LINK_OPTIONS: necessary on MacOS to link to the XCode Python
+
+^^^^^^^^
+
+Explanation of the machinery:
+
+The first distinction is based on the CMake version used to build. If it is >= 3.14, than PyROOT can be built
+for multiple Python versions. In case CMake >= 3.14, then we check if PYTHON_EXECUTABLE was specified by the user;
+if so, PyROOT is built with only that version.
+
+If PYTHON_EXECUTABLE is specified:
+    - we check which version it is (from here call X) and call the relative
+    find_package(PythonX COMPONENTS Interpreter Development Numpy)
+    - if Interpreter is found, we set the ROOT related Python variables
+    - if Development is found, we set the PyROOT variables (+ Numpy ones)
+
+If PYTHON_EXECUTABLE is NOT specified:
+    - we look for Python3, since we want the highest version to be the preferred one
+    - if Python3 Interpreter is found, we set the ROOT related Python variables
+    - if Python3 Development is found, we set the PyROOT_Main variables (+ Numpy ones)
+]]
 
 message(STATUS "Looking for Python")
 
-if(pyroot_experimental)
-  unset(PYTHON_INCLUDE_DIR CACHE)
-  unset(PYTHON_LIBRARY CACHE)
-endif()
+# On macOS, prefer user-provided Pythons.
+set(Python3_FIND_FRAMEWORK LAST)
 
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.14)
-  # - Check if the PYTHON_EXECUTABLE deprecated variable was passed by the
-  # user; if so, check weather it points to Python 2 or 3 and set the
-  # appropriate Python{X}_EXECUTABLE variable
-  # - Look for Python3 and set the deprecated variables to the ones set
-  # automatically by find_package(Python3 ...)
-  # - Look for Python2 and set the deprecated variables to the ones set
-  # automatically by find_package(Python2 ...) ONLY IF PYTHON3 WASN'T FOUND
-  if(PYTHON_EXECUTABLE)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;print(sys.version_info[0])"
-                    OUTPUT_VARIABLE PYTHON_PREFER_VERSION
-                    ERROR_VARIABLE PYTHON_PREFER_VERSION_ERR)
-    if(PYTHON_PREFER_VERSION_ERR)
-      message(WARNING "Unable to determine version of ${PYTHON_EXECUTABLE}: ${PYTHON_PREFER_VERSION_ERR}")
-    endif()
-    string(STRIP "${PYTHON_PREFER_VERSION}" PYTHON_PREFER_VERSION)
-    set(Python${PYTHON_PREFER_VERSION}_EXECUTABLE "${PYTHON_EXECUTABLE}")
-  endif()
-
-  find_package(Python3 COMPONENTS Interpreter Development NumPy)
+# - Look for Python3 and set the deprecated variables to the ones set
+# automatically by find_package(Python3 ...)
+find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy)
+if(Python3_Interpreter_FOUND)
+  set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  set(PYTHON_VERSION_STRING "${Python3_VERSION}" CACHE INTERNAL "" FORCE)
+  set(PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
+  set(PYTHON_VERSION_MINOR "${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE )
   if(Python3_Development_FOUND)
-    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}" CACHE INTERNAL "" FORCE)
     set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
     set(PYTHON_LIBRARIES "${Python3_LIBRARIES}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_VERSION_MINOR "${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_VERSION_STRING "${Python3_VERSION_MAJOR}_${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-    set(NUMPY_FOUND ${Python3_NumPy_FOUND} CACHE INTERNAL "" FORCE)
+    set(PYTHON_LIBRARY_DIR "${Python3_LIBRARY_DIRS}" CACHE INTERNAL "" FORCE)
+    set(PYTHON_LINK_OPTIONS "${Python3_LINK_OPTIONS}" CACHE INTERNAL "" FORCE)
+  endif()
+  if(Python3_NumPy_FOUND)
+    set(NUMPY_FOUND ${Python3_NumPy_FOUND})
     set(NUMPY_INCLUDE_DIRS "${Python3_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
   endif()
-
-  find_package(Python2 COMPONENTS Interpreter Development NumPy)
-  if(Python2_Development_FOUND)
-    if(NOT Python3_Development_FOUND)
-      # Only Python2 was found, set as main
-      set(PYTHON_EXECUTABLE "${Python2_EXECUTABLE}" CACHE INTERNAL "" FORCE)
-      set(PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-      set(PYTHON_LIBRARIES "${Python2_LIBRARIES}" CACHE INTERNAL "" FORCE)
-      set(PYTHON_VERSION_MAJOR "${Python2_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
-      set(PYTHON_VERSION_MINOR "${Python2_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-      set(PYTHON_VERSION_STRING "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-      set(NUMPY_FOUND ${Python2_NumPy_FOUND} CACHE INTERNAL "" FORCE)
-      set(NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-    else()
-      # Both Python3 and 2 found, set 2 as 'other'
-      set(OTHER_PYTHON_EXECUTABLE "${Python2_EXECUTABLE}" CACHE INTERNAL "" FORCE)
-      set(OTHER_PYTHON_INCLUDE_DIRS "${Python2_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-      set(OTHER_PYTHON_LIBRARIES "${Python2_LIBRARIES}" CACHE INTERNAL "" FORCE)
-      set(OTHER_PYTHON_VERSION_MAJOR "${Python2_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
-      set(OTHER_PYTHON_VERSION_MINOR "${Python2_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-      set(OTHER_PYTHON_VERSION_STRING "${Python2_VERSION_MAJOR}_${Python2_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-      set(OTHER_NUMPY_FOUND ${Python2_NumPy_FOUND} CACHE INTERNAL "" FORCE)
-      set(OTHER_NUMPY_INCLUDE_DIRS "${Python2_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-    endif()
-  endif()
-
-  if(NOT Python3_Development_FOUND AND NOT Python2_Development_FOUND)
-    message(FATAL_ERROR "No Python 2 or 3 were found")
-  endif()
-
-  # Print message saying with which versions of Python are used to build
-  if(pyroot_experimental)
-    if(NOT Python3_Development_FOUND OR NOT Python2_Development_FOUND)
-      message(STATUS "Main Python used to build: ${PYTHON_VERSION_MAJOR}; PyROOT built for version ${PYTHON_VERSION_MAJOR} ")
-    elseif(Python3_Development_FOUND AND Python2_Development_FOUND)
-      message(STATUS "Main Python used to build: ${PYTHON_VERSION_MAJOR}; PyROOT built for versions ${PYTHON_VERSION_MAJOR} and ${OTHER_PYTHON_VERSION_MAJOR}")
-    endif()
-  endif()
-
-else()
-
-  find_package(PythonInterp ${python_version} REQUIRED)
-
-  find_package(PythonLibs ${python_version} REQUIRED)
-
-  if(NOT "${PYTHONLIBS_VERSION_STRING}" MATCHES "${PYTHON_VERSION_STRING}")
-    message(FATAL_ERROR "Version mismatch between Python interpreter (${PYTHON_VERSION_STRING})"
-    " and libraries (${PYTHONLIBS_VERSION_STRING}).\nROOT cannot work with this configuration. "
-    "Please specify only PYTHON_EXECUTABLE to CMake with an absolute path to ensure matching versions are found.")
-  endif()
-
-  find_package(NumPy)
-
-  set(PYTHON_VERSION_STRING "${PYTHON_VERSION_MAJOR}_${PYTHON_VERSION_MINOR}" CACHE INTERNAL "" FORCE)
-
 endif()
 
-# Create lists of Python 2 and 3 useful variables
-set(python_executables ${PYTHON_EXECUTABLE} ${OTHER_PYTHON_EXECUTABLE})
-set(python_include_dirs ${PYTHON_INCLUDE_DIRS} ${OTHER_PYTHON_INCLUDE_DIRS})
-set(python_version_strings ${PYTHON_VERSION_STRING} ${OTHER_PYTHON_VERSION_STRING})
-set(python_libraries ${PYTHON_LIBRARIES} ${OTHER_PYTHON_LIBRARIES})
+if(NOT Python3_Development_FOUND)
+  message(WARNING "No Python 3 development packages were found; PyROOT will not be built.")
+endif()
+
+# if development parts not found, one still need python executable to run some scripts
+if(NOT PYTHON_EXECUTABLE)
+  find_package(Python3)
+  if(Python3_FOUND)
+      message(STATUS "Found python3 executable ${Python3_EXECUTABLE}, required only for ROOT compilation.")
+      set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  endif()
+endif()

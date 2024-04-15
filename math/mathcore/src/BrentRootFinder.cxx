@@ -1,12 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Authors: David Gonzalez Maline    01/2008
 
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2006 , LCG ROOT MathLib Team                         *
- *                                                                    *
- *                                                                    *
- **********************************************************************/
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2006  CERN                                           *
+  * All rights reserved.                                               *
+  *                                                                    *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+  *                                                                    *
+  **********************************************************************/
 
 #include "Math/BrentRootFinder.h"
 #include "Math/BrentMethods.h"
@@ -22,7 +25,7 @@ namespace Math {
 static int gDefaultNpx = 100; // default nunmber of points used in the grid to bracked the root
 static int gDefaultNSearch = 10;  // number of time the iteration (bracketing -Brent ) is repeted
 
-   BrentRootFinder::BrentRootFinder() : fFunction(0),
+   BrentRootFinder::BrentRootFinder() : fFunction(nullptr),
                                         fLogScan(false), fNIter(0),
                                         fNpx(0), fStatus(-1),
                                         fXMin(0), fXMax(0), fRoot(0)

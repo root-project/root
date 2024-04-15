@@ -5,7 +5,7 @@
 /// (Palette Fill Color), `PLC` (Palette Line Color) and `AMC` (Palette Marker Color).
 /// When one of these options is given to `TMultiGraph::Draw` the `TGraph`s  in the
 /// `TMultiGraph`get their color from the current color palette defined by
-/// `gStyle->SetPalette(…)`. The color is determined according to the number of
+/// `gStyle->SetPalette(...)`. The color is determined according to the number of
 /// `TGraph`s.
 ///
 /// In this example four graphs are displayed with palette coloring for lines and

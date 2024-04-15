@@ -20,7 +20,7 @@ TEST(RColor, Empty) {
    RColor col;
    EXPECT_EQ(col.AsHex(), "");
    EXPECT_FLOAT_EQ(col.GetAlphaFloat(), 1.);
-   EXPECT_EQ(col.GetName(), "");
+   EXPECT_EQ(col.AsString(), "");
 }
 
 // Test usage of empty color
@@ -49,7 +49,7 @@ TEST(RColor, Alpha) {
 
    static constexpr double delta = 0.01; // approx precision of alpha storage
 
-   RColor col;
+   RColor col{RColor::kBlack};
    col.SetAlphaFloat(0.);
    EXPECT_DOUBLE_EQ(col.GetAlphaFloat(), 0.);
 
@@ -64,6 +64,27 @@ TEST(RColor, Alpha) {
 
    col.SetAlphaFloat(0.8);
    EXPECT_NEAR(0.8,col.GetAlphaFloat(), delta);
+}
+
+TEST(RColor, Ordinal) {
+
+   static constexpr double delta = 0.00001; // approx precision of ordinal storage
+
+   RColor col;
+   col.SetOrdinal(0.);
+   EXPECT_DOUBLE_EQ(col.GetOrdinal(), 0.);
+
+   col.SetOrdinal(1.);
+   EXPECT_DOUBLE_EQ(col.GetOrdinal(), 1.);
+
+   col.SetOrdinal(0.15);
+   EXPECT_NEAR(0.15, col.GetOrdinal(), delta);
+
+   col.SetOrdinal(0.5);
+   EXPECT_NEAR(0.5, col.GetOrdinal(), delta);
+
+   col.SetOrdinal(0.77);
+   EXPECT_NEAR(0.77, col.GetOrdinal(), delta);
 }
 
 

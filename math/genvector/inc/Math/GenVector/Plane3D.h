@@ -45,6 +45,8 @@ namespace Impl {
    i.e. fA**2 + fB**2 + fC**2 = 1
 
    @ingroup GenVector
+
+   @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <typename T = double>
@@ -216,6 +218,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
+      using std::sqrt;
       const SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       if (s == SCALAR(0)) {
@@ -236,6 +239,7 @@ protected:
    void Normalize()
    {
       // normalize the plane
+      using std::sqrt;
       SCALAR s = sqrt(fA * fA + fB * fB + fC * fC);
       // what to do if s = 0 ?
       const auto m = (s == SCALAR(0));
@@ -264,7 +268,7 @@ private:
    // internal method to construct class from 3 points
    void BuildFrom3Points(const Point &p1, const Point &p2, const Point &p3)
    {
-      // plane from thre points
+      // plane from three points
       // normal is (x3-x1) cross (x2 -x1)
       const Vector n = (p2 - p1).Cross(p3 - p1);
       fA             = n.X();
@@ -308,7 +312,3 @@ private:
 
 
 #endif
-
-
-
-

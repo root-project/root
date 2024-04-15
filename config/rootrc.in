@@ -44,32 +44,8 @@ Root.CompressionAlgorithm: 0
 # Show where item is found in the specified path.
 Root.ShowPath:           false
 
-# Activate malloc/new, free/delete calls via the TMemStat class
-# the parameter buffersize is the number of calls to malloc or free that can be stored in one memory buffer.
-# when the buffer is full, the calls to malloc/free pointing to the same location
-# are eliminated and not written to the final Tree. The default value 100000
-# is such that between 50 and 90% of the calls are eliminated depending on the application.
-# the parameter TMemStat.maxcalls is the maximum number of new/delete calls to be monitored
-# 5 million calls is a reasonable number.
-# if your code has been compiled with -fno-omit-frame-pointer you can specify
-# gnubuiltin for Root.TMemStat.system. In this case the backtrace is much faster.
-Root.TMemStat:            0
-Root.TMemStat.buffersize: 100000
-Root.TMemStat.maxcalls:   5000000
-#Root.TMemStat.system:    gnubuiltin
-Root.TMemStat.system:
-
-# Activate memory statistics (size and cnt is used to trap allocation of
-# blocks of a certain size after cnt times).
-Root.MemStat:            0
-Root.MemStat.size:      -1
-Root.MemStat.cnt:       -1
+# Activate TObject statistics.
 Root.ObjectStat:         0
-
-# Activate memory leak checker (use in conjunction with $ROOTSYS/bin/memprobe).
-# Currently only works on Linux with gcc.
-Root.MemCheck:           0
-Root.MemCheckFile:       memcheck.out
 
 # Global debug mode. When >0 turns on progressively more details debugging.
 Root.Debug:              0
@@ -113,11 +89,8 @@ WinNT.*.Editor:          notepad
 # if the next line is activated, the default viewer will be OpenGL.
 #Viewer3D.DefaultDrawOption:   ogl
 
-# Default Fitter (current choices are Minuit and Fumili).
-Root.Fitter:             Minuit
-
-# Enable (default) or disable the RooFit banner printing.
-# RooFit.Banner:  yes
+# Default Fitter (current choices are Minuit, Minuit2, and Fumili).
+#Root.Fitter:             Minuit2
 
 # Specify list of file endings which TTabCom (TAB completion) should ignore.
 #TabCom.FileIgnore:       .cpp:.h:.cmz
@@ -130,6 +103,9 @@ Root.Fitter:             Minuit
 # HighLightColor 2 = red. ShowEventStatus allows the event status bar to
 # be turned on by default. AutoExec allows TExec objects to be executed
 # on mouse and key events.
+#
+# As options for Canvas.Name, ROOT provides TWebCanvas and the legacy TRootCanvas.
+Canvas.Name:                @root_canvas_class@
 Canvas.MoveOpaque:          true
 Canvas.ResizeOpaque:        true
 Canvas.ShowGuideLines:      true
@@ -238,8 +214,10 @@ Gui.TooltipForegroundColor:  black
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
+# Type of tree viewer: TTreeViewer or RTreeViewer
+TreeViewer.Name:             TTreeViewer
 # Type of Browser: TRootBrowser or TRootBrowserLite
-Browser.Name:                TRootBrowser
+Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
 # F: File browser E: Text Editor H: HTML browser
 # C: Canvas I: I/O redirection P: Proof G: GL viewer
@@ -269,8 +247,10 @@ WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
 # Exact IP iddress to bind bind http server (default - empty)
 WebGui.HttpBind:
-# Use only loopback address to bind http server (default - no)
-WebGui.HttpLoopback:        no
+# Use only loopback address to bind http server (default - yes)
+WebGui.HttpLoopback:        yes
+# Require unique single-time token (key) for connecting with widget (default - yes)
+WebGui.OnetimeKey:          yes
 # Use https protocol for the http server (default - no)
 WebGui.UseHttps:            no
 WebGui.ServerCert:          rootserver.pem
@@ -278,6 +258,7 @@ WebGui.ServerCert:          rootserver.pem
 WebGui.WaitForTmout:        100.0
 # name of executable for firefox and chrome
 WebGui.Chrome:             @chromeexe@
+WebGui.ChromeVersion:      @chromemajor@
 WebGui.Firefox:            @firefoxexe@
 # location of OpenUi5 applications for ROOT like canvas, eve, fitpanel, ...
 #WebGui.RootUi5Path:        @openui5dir@
@@ -389,6 +370,8 @@ ACLiC.Linkdef:          _linkdef
 #      needed libraries.
 # On Windows, the default is 3
 #ACLiC.LinkLibs:      1
+# Add extra options to rootcling invocation by ACLiC
+#ACLiC.ExtraRootclingFlags:      [-optA ... -optZ]
 
 # PROOF related variables
 #
@@ -493,6 +476,12 @@ RSA.KeyType:  1
 # Enable cross-protocol redirects
 TFile.CrossProtocolRedirects:  yes
 
+# Force the producing of files forward compatible with (unpatched) version
+# of ROOT older than v6.30 by recording the internal bits kIsOnHeap and
+# kNotDeleted; Older releases were not explicitly setting those bits to the
+# correct value but instead used verbatim the value stored in the file.
+# TFile.v630forwardCompatibility: no
+
 # List of S3 servers known to support multi-range HTTP GET requests.
 # This is the value sent back by the S3 server in the 'Server:' header
 # of the HTTP response.
@@ -506,7 +495,7 @@ TS3WebFile.Root.MultiRangeServer:  Huawei OBS
 # In case the file namespace descriptor ends with - the namespace
 # is not a part of the filename.
 # Extend in private .rootrc with a +Url.Special line.
-Url.Special:         file: hpss: gfal: dcache:
+Url.Special:         file: hpss: dcache:
 +Url.Special:        /alien/-
 
 # PROOF XRD client variables

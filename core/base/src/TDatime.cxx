@@ -26,7 +26,7 @@ required, use TTimeStamp.
 
 #include <ROOT/RConfig.hxx>
 
-#include <time.h>
+#include <ctime>
 
 #ifdef WIN32
 #include "Windows4Root.h"
@@ -35,6 +35,7 @@ required, use TTimeStamp.
 
 #include "TBuffer.h"
 #include "Strlen.h"
+#include "snprintf.h"
 #include "TDatime.h"
 #include "TError.h"
 #include "Bytes.h"
@@ -120,7 +121,7 @@ const char *TDatime::AsString() const
 const char *TDatime::AsString(char *out) const
 {
    time_t t = Convert();
-#ifdef _REENTRANT
+#ifndef WIN32
 #if defined(R__SOLARIS) && (_POSIX_C_SOURCE - 0 < 199506L)
    char *retStr = ctime_r(&t, out, 26);
 #else
@@ -131,7 +132,7 @@ const char *TDatime::AsString(char *out) const
 #endif
    if (retStr) {
       *(retStr + 24) = 0;
-#ifndef _REENTRANT
+#ifdef WIN32
       strcpy(out, retStr);
 #endif
       return retStr;
@@ -202,7 +203,7 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
       return 0;
    }
    if (toGMT) {
-#ifdef _REENTRANT
+#ifndef WIN32
       struct tm tg;
       struct tm *tgp = gmtime_r(&t, &tg);
 #else
@@ -288,13 +289,9 @@ void TDatime::ReadBuffer(char *&buffer)
 void TDatime::Set()
 {
 #ifndef WIN32
-   time_t tloc   = time(0);
-#ifdef _REENTRANT
+   time_t tloc   = time(nullptr);
    struct tm tpa;
    struct tm *tp = localtime_r(&tloc, &tpa);
-#else
-   struct tm *tp = localtime(&tloc);
-#endif
    UInt_t year   = tp->tm_year;
    UInt_t month  = tp->tm_mon + 1;
    UInt_t day    = tp->tm_mday;
@@ -334,7 +331,7 @@ void TDatime::Set(UInt_t tloc, Bool_t dosDate)
       sec   = (tloc & 0x1f) * 2;
    } else {
       time_t t = (time_t) tloc;
-#ifdef _REENTRANT
+#ifndef WIN32
       struct tm tpa;
       struct tm *tp = localtime_r(&t, &tpa);
 #else
@@ -468,7 +465,7 @@ Int_t TDatime::GetGlobalDayFromDate(Int_t date)
 
 Int_t TDatime::GetDateFromGlobalDay(Int_t day)
 {
-   Long_t ld = day;
+   Long64_t ld = day;
    Int_t y = int((10000*ld + 14780)/3652425);
    Int_t ddd = day - (y*365 + y/4 - y/100 + y/400);
    if (ddd < 0) {

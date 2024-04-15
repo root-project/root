@@ -111,7 +111,7 @@ int main(int argc, char **argv)
       }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 

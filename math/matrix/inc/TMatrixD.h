@@ -13,7 +13,7 @@
 //                                                                      //
 // TMatrixD                                                             //
 //                                                                      //
-//  Instantation of TMatrixT<Double_t>                                  //
+//  Instantiation of TMatrixT<Double_t>                                  //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

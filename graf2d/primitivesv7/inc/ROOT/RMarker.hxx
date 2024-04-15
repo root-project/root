@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,12 +9,11 @@
 #ifndef ROOT7_RMarker
 #define ROOT7_RMarker
 
-#include <ROOT/RDrawable.hxx>
+#include <ROOT/ROnFrameDrawable.hxx>
 #include <ROOT/RAttrMarker.hxx>
 #include <ROOT/RPadPos.hxx>
 
 #include <initializer_list>
-#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -27,24 +26,19 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RMarker : public RDrawable {
+class RMarker : public ROnFrameDrawable {
 
-   RPadPos fP;                                ///< position
-   RAttrMarker fMarkerAttr{this, "marker_"};  ///<! marker attributes
+   RPadPos fP;                                         ///< position
 
 public:
+   RAttrMarker marker{this, "marker"};            ///<! marker attributes
 
-   RMarker() : RDrawable("marker") {}
+   RMarker() : ROnFrameDrawable("marker") {}
 
-   RMarker(const RPadPos& p) : RMarker() { fP = p; }
+   RMarker(const RPadPos &p) : RMarker() { fP = p; }
 
-   RMarker &SetP(const RPadPos& p) { fP = p; return *this; }
-   const RPadPos& GetP() const { return fP; }
-
-   const RAttrMarker &GetAttrMarker() const { return fMarkerAttr; }
-   RMarker &SetAttrMarker(const RAttrMarker &attr) { fMarkerAttr = attr; return *this; }
-   RAttrMarker &AttrMarker() { return fMarkerAttr; }
-
+   RMarker &SetP(const RPadPos &p) { fP = p; return *this; }
+   const RPadPos &GetP() const { return fP; }
 };
 
 } // namespace Experimental

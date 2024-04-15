@@ -9,16 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TProofProgressMemoryPlot                                             //
-//                                                                      //
-// This class implements a dialog, used to display the memory footprint //
-// on the proof workers and master. For the workers, memory is plotted  //
-// as a function of number of events processed. For the master, it is   //
-// plotted as a function of number of objects merged                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TProofProgressMemoryPlot
+    \ingroup sessionviewer
+
+This class implements a dialog, used to display the memory footprint
+on the proof workers and master. For the workers, memory is plotted
+as a function of number of events processed. For the master, it is
+plotted as a function of number of objects merged
+
+*/
+
 
 #include "TProofProgressMemoryPlot.h"
 #include "TProofProgressDialog.h"
@@ -39,6 +40,7 @@
 #include "TGraph.h"
 #include "TLegend.h"
 #include "TAxis.h"
+#include "snprintf.h"
 
 #define kMemValuePos 8
 #define kMemValuePosMaster 8
@@ -499,7 +501,7 @@ TGraph *TProofProgressMemoryPlot::DoAveragePlot(Int_t &max_el, Int_t &min_el)
 /// The line is assumed to be in the form
 /// "... Memory 130868 virtual 31540 ... event 5550"
 /// The fields are only filled if >= 0 .
-/// Return 0 on success, -1 if any of the values coudl not be filled (the output
+/// Return 0 on success, -1 if any of the values could not be filled (the output
 /// fields are not touched in such a case).
 
 Int_t TProofProgressMemoryPlot::ParseLine(TString l,

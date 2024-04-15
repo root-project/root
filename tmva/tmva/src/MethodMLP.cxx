@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodMLP                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      ANN Multilayer Perceptron class for the discrimination of signal          *
@@ -32,7 +32,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodMLP
@@ -65,13 +65,11 @@ Multilayer Perceptron class built off of MethodANNBase
 
 #include "TH1.h"
 #include "TString.h"
-#include "TTree.h"
-#include "Riostream.h"
 #include "TFitter.h"
 #include "TMatrixD.h"
 #include "TMath.h"
-#include "TFile.h"
 
+#include <iostream>
 #include <cmath>
 #include <vector>
 
@@ -177,21 +175,21 @@ void TMVA::MethodMLP::Init()
 ///
 /// know options:
 ///
-///  - TrainingMethod  <string>     Training method
+///  - TrainingMethod  `<string>`     Training method
 ///        available values are:
-///       - BP   Back-Propagation <default>
+///       - BP   Back-Propagation `<default>`
 ///       - GA   Genetic Algorithm (takes a LONG time)
 ///
-///  - LearningRate    <float>      NN learning rate parameter
-///  - DecayRate       <float>      Decay rate for learning parameter
-///  - TestRate        <int>        Test for overtraining performed at each #th epochs
+///  - LearningRate    `<float>`      NN learning rate parameter
+///  - DecayRate       `<float>`      Decay rate for learning parameter
+///  - TestRate        `<int>`        Test for overtraining performed at each #%th epochs
 ///
-///  - BPMode          <string>     Back-propagation learning mode
+///  - BPMode          `<string>`     Back-propagation learning mode
 ///      available values are:
-///       - sequential <default>
+///       - sequential `<default>`
 ///       - batch
 ///
-///  - BatchSize       <int>        Batch size: number of events/batch, only set if in Batch Mode,
+///  - BatchSize       `<int>`        Batch size: number of events/batch, only set if in Batch Mode,
 ///       - -1 for BatchSize=number_of_events
 
 void TMVA::MethodMLP::DeclareOptions()
@@ -303,7 +301,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
    // if epochs are counted create monitoring histograms (only available for classification)
    TString type  = (treeType == Types::kTraining ? "train" : "test");
-   TString name  = Form("convergencetest___mlp_%s_epoch_%04i", type.Data(), iEpoch);
+   TString name  = TString::Format("convergencetest___mlp_%s_epoch_%04i", type.Data(), iEpoch);
    TString nameB = name + "_B";
    TString nameS = name + "_S";
    Int_t   nbin  = 100;
@@ -427,7 +425,7 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
    // provide epoch-wise monitoring
    if (fEpochMon && iEpoch >= 0 && !DoRegression() && treeType == Types::kTraining) {
-      CreateWeightMonitoringHists( Form("epochmonitoring___epoch_%04i_weights_hist", iEpoch), &fEpochMonHistW );
+      CreateWeightMonitoringHists( TString::Format("epochmonitoring___epoch_%04i_weights_hist", iEpoch), &fEpochMonHistW );
    }
 
    return estimator;
@@ -640,7 +638,7 @@ void TMVA::MethodMLP::BFGSMinimize( Int_t nEpochs )
       }
 
       // draw progress
-      TString convText = Form( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainE, testE,i  ); //zjh
+      TString convText = TString::Format( "<D^2> (train/test/epoch): %.4g/%.4g/%d", trainE, testE,i  ); //zjh
       if (fSteps > 0) {
          Float_t progress = 0;
          if (Float_t(i)/nEpochs < fSamplingEpoch)
@@ -1122,7 +1120,7 @@ void TMVA::MethodMLP::BackPropagationMinimize(Int_t nEpochs)
       }
 
       // draw progress bar (add convergence value)
-      TString convText = Form( "<D^2> (train/test): %.4g/%.4g", trainE, testE );
+      TString convText = TString::Format( "<D^2> (train/test): %.4g/%.4g", trainE, testE );
       if (fSteps > 0) {
          Float_t progress = 0;
          if (Float_t(i)/nEpochs < fSamplingEpoch)
@@ -1620,7 +1618,7 @@ void TMVA::MethodMLP::MinuitMinimize()
 
    // init parameters
    for (Int_t ipar=0; ipar < fNumberOfWeights; ipar++) {
-      TString parName = Form("w%i", ipar);
+      TString parName = TString::Format("w%i", ipar);
       tfitter->SetParameter( ipar,
                              parName, w[ipar], 0.1, 0, 0 );
    }

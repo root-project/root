@@ -24,17 +24,17 @@ public:
       Long64_t    fLast;    // Upper bound of this range
       ProcFileElement(Long64_t fst = 0, Long64_t lst = -1) :
                                       fFirst(fst), fLast(lst) { }
-      virtual ~ProcFileElement() { }
+      ~ProcFileElement() override { }
 
-      Int_t       Compare(const TObject *obj) const;
+      Int_t       Compare(const TObject *obj) const override;
 
-      Bool_t      IsSortable() const { return kTRUE; }
+      Bool_t      IsSortable() const override { return kTRUE; }
       Int_t       MergeElement(ProcFileElement *);
 
       Int_t       Overlapping(ProcFileElement *);
-      void        Print(Option_t *option="") const;
+      void        Print(Option_t *option="") const override;
 
-      ClassDef(ProcFileElement, 1); // ProcFileElement class
+      ClassDefOverride(ProcFileElement, 1); // ProcFileElement class
    };
 
 private:
@@ -45,12 +45,12 @@ private:
    Long64_t    fLast;    // Overall Upper bound
 
 public:
-   ProcFileElements(const char *fn = "") : fName(fn), fElements(0),
+   ProcFileElements(const char *fn = "") : fName(fn), fElements(nullptr),
                                            fFirst(0), fLast(-1) { }
-   virtual ~ProcFileElements() { if (fElements) { fElements->SetOwner();
+   ~ProcFileElements() override { if (fElements) { fElements->SetOwner();
                                                   delete fElements; } }
-   const char *   GetName() const { return fName; }
-   ULong_t        Hash() const { return fName.Hash(); }
+   const char *   GetName() const override { return fName; }
+   ULong_t        Hash() const override { return fName.Hash(); }
 
    Int_t          Add(Long64_t fst = 0, Long64_t lst = -1);
    Int_t          Merge(TCollection *list);
@@ -61,9 +61,9 @@ public:
    Long64_t       GetFirst() const { return fFirst; }
    Long64_t       GetLast() const { return fLast; }
 
-   void           Print(Option_t *option="") const;
+   void           Print(Option_t *option="") const override;
 
-   ClassDef(ProcFileElements, 1);  // Processed File Elements class
+   ClassDefOverride(ProcFileElements, 1);  // Processed File Elements class
 };
 
 #endif

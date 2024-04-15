@@ -11,6 +11,7 @@
 
 #include "TROOT.h"
 #include "TF3.h"
+#include "TBuffer.h"
 #include "TMath.h"
 #include "TH3.h"
 #include "TVirtualPad.h"
@@ -20,12 +21,13 @@
 #include "TColor.h"
 #include "TVirtualFitter.h"
 #include "TVirtualHistPainter.h"
+#include "Math/IntegratorOptions.h"
 #include <cassert>
 
 ClassImp(TF3);
 
 /** \class TF3
-    \ingroup Hist
+    \ingroup Functions
 A 3-Dim function with parameters
 */
 
@@ -63,7 +65,13 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 ////////////////////////////////////////////////////////////////////////////////
 /// F3 constructor using a pointer to real function
 ///
+/// \param[in] name object name
+/// \param[in] fcn pointer to real function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] ymin,ymax y axis limits
+/// \param[in] zmin,zmax z axis limits
 /// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
 ///
 /// For example, for a 3-dim function with 3 parameters, the user function
 /// looks like:
@@ -71,7 +79,7 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
 ///     Double_t fun1(Double_t *x, Double_t *par)
 ///     return par[0]*x[2] + par[1]*exp(par[2]*x[0]*x[1]);
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar,Int_t ndim)
       :TF2(name,fcn,xmin,xmax,ymin,ymax,npar,ndim)
@@ -84,7 +92,13 @@ TF3::TF3(const char *name,Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin
 ////////////////////////////////////////////////////////////////////////////////
 /// F3 constructor using a pointer to real function---
 ///
+/// \param[in] name object name
+/// \param[in] fcn pointer to real function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] ymin,ymax y axis limits
+/// \param[in] zmin,zmax z axis limits
 /// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
 ///
 /// For example, for a 3-dim function with 3 parameters, the user function
 /// looks like:
@@ -107,9 +121,15 @@ TF3::TF3(const char *name,Double_t (*fcn)(const Double_t *, const Double_t *), D
 ///
 /// a functor class implementing operator() (double *, double *)
 ///
+/// \param[in] name object name
+/// \param[in] f parameter functor
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] ymin,ymax y axis limits
+/// \param[in] zmin,zmax z axis limits
 /// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Int_t npar, Int_t ndim)
    : TF2(name, f, xmin, xmax, ymin, ymax,  npar, ndim),
@@ -124,9 +144,8 @@ TF3::TF3(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin, Double_t x
 
 TF3& TF3::operator=(const TF3 &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TF3::Copy(*this);
    return *this;
 }
 
@@ -142,7 +161,7 @@ TF3::~TF3()
 
 TF3::TF3(const TF3 &f3) : TF2()
 {
-   ((TF3&)f3).Copy(*this);
+   f3.TF3::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -216,7 +235,7 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
    Double_t rsign = (findmax) ? -1. : 1.;
    TF3 & function = const_cast<TF3&>(*this); // needed since EvalPar is not const
    Double_t xxmin = 0, yymin = 0, zzmin = 0, ttmin = 0;
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){
+   if (x == nullptr || ( (x!= nullptr) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) || !TMath::Finite(x[2]) ) ) ){
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       Double_t dz = (fZmax - fZmin)/fNpz;
@@ -244,7 +263,7 @@ Double_t TF3::FindMinMax(Double_t *x, Bool_t findmax) const
       xxmin = x[0];
       yymin = x[1];
       zzmin = x[2];
-      zzmin = function(xx);
+      zzmin = function(x);
    }
    xx[0] = xxmin;
    xx[1] = yymin;
@@ -320,9 +339,9 @@ Double_t TF3::GetMaximumXYZ(Double_t &x, Double_t &y, Double_t &z)
 ///  points (SetNpx, SetNpy, SetNpz) such that the peak is correctly tabulated
 ///  at several points.
 
-void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
+void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom, TRandom * rng)
 {
-   //  Check if integral array must be build
+   //  Check if integral array must be built
    Int_t i,j,k,cell;
    Double_t dx   = (fXmax-fXmin)/fNpx;
    Double_t dy   = (fYmax-fYmin)/fNpy;
@@ -365,14 +384,15 @@ void TF3::GetRandom3(Double_t &xrandom, Double_t &yrandom, Double_t &zrandom)
 
 // return random numbers
    Double_t r;
-   r    = gRandom->Rndm();
+   if (!rng) rng = gRandom;
+   r    = rng->Rndm();
    cell = TMath::BinarySearch(ncells,fIntegral.data(),r);
    k    = cell/(fNpx*fNpy);
    j    = (cell -k*fNpx*fNpy)/fNpx;
    i    = cell -fNpx*(j +fNpy*k);
-   xrandom = fXmin +dx*i +dx*gRandom->Rndm();
-   yrandom = fYmin +dy*j +dy*gRandom->Rndm();
-   zrandom = fZmin +dz*k +dz*gRandom->Rndm();
+   xrandom = fXmin +dx*i +dx*rng->Rndm();
+   yrandom = fYmin +dy*j +dy*rng->Rndm();
+   zrandom = fZmin +dz*k +dz*rng->Rndm();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -394,35 +414,34 @@ void TF3::GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xma
 
 Double_t TF3::GetSave(const Double_t *xx)
 {
-   //if (fNsave <= 0) return 0;
-   if (fSave.empty()) return 0;
-   Int_t np = fSave.size() - 9;
-   Double_t xmin = Double_t(fSave[np+0]);
-   Double_t xmax = Double_t(fSave[np+1]);
-   Double_t ymin = Double_t(fSave[np+2]);
-   Double_t ymax = Double_t(fSave[np+3]);
-   Double_t zmin = Double_t(fSave[np+4]);
-   Double_t zmax = Double_t(fSave[np+5]);
-   Int_t npx     = Int_t(fSave[np+6]);
-   Int_t npy     = Int_t(fSave[np+7]);
-   Int_t npz     = Int_t(fSave[np+8]);
-   Double_t x    = Double_t(xx[0]);
+   if (fSave.size() < 9) return 0;
+   Int_t nsave = fSave.size() - 9;
+   Double_t xmin = fSave[nsave+0];
+   Double_t xmax = fSave[nsave+1];
+   Double_t ymin = fSave[nsave+2];
+   Double_t ymax = fSave[nsave+3];
+   Double_t zmin = fSave[nsave+4];
+   Double_t zmax = fSave[nsave+5];
+   Int_t npx     = Int_t(fSave[nsave+6]);
+   Int_t npy     = Int_t(fSave[nsave+7]);
+   Int_t npz     = Int_t(fSave[nsave+8]);
+   Double_t x    = xx[0];
    Double_t dx   = (xmax-xmin)/npx;
    if (x < xmin || x > xmax) return 0;
    if (dx <= 0) return 0;
-   Double_t y    = Double_t(xx[1]);
+   Double_t y    = xx[1];
    Double_t dy   = (ymax-ymin)/npy;
    if (y < ymin || y > ymax) return 0;
    if (dy <= 0) return 0;
-   Double_t z    = Double_t(xx[2]);
+   Double_t z    = xx[2];
    Double_t dz   = (zmax-zmin)/npz;
    if (z < zmin || z > zmax) return 0;
    if (dz <= 0) return 0;
 
    //we make a trilinear interpolation using the 8 points surrounding x,y,z
-   Int_t ibin    = Int_t((x-xmin)/dx);
-   Int_t jbin    = Int_t((y-ymin)/dy);
-   Int_t kbin    = Int_t((z-zmin)/dz);
+   Int_t ibin    = TMath::Min(npx-1, Int_t((x-xmin)/dx));
+   Int_t jbin    = TMath::Min(npy-1, Int_t((y-ymin)/dy));
+   Int_t kbin    = TMath::Min(npz-1, Int_t((z-zmin)/dz));
    Double_t xlow = xmin + ibin*dx;
    Double_t ylow = ymin + jbin*dy;
    Double_t zlow = zmin + kbin*dz;
@@ -457,11 +476,14 @@ Double_t TF3::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Doubl
    b[2] = bz;
    Double_t relerr  = 0;
    Int_t n = 3;
-   Int_t maxpts = TMath::Min(100000, 20*fNpx*fNpy*fNpz);
-   Int_t nfnevl,ifail;
+   Int_t maxpts = TMath::Max(UInt_t(fNpx * fNpy * fNpz), ROOT::Math::IntegratorMultiDimOptions::DefaultNCalls());
+   Int_t nfnevl, ifail;
    Double_t result = IntegralMultiple(n,a,b,maxpts,epsrel,epsrel, relerr,nfnevl,ifail);
    if (ifail > 0) {
-      Warning("Integral","failed code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",ifail,maxpts,epsrel,nfnevl,relerr);
+      Warning("Integral","failed for %s code=%d, maxpts=%d, epsrel=%g, nfnevl=%d, relerr=%g ",GetName(),ifail,maxpts,epsrel,nfnevl,relerr);
+   }
+   if (gDebug) {
+      Info("Integral","Integral of %s using %d and tol=%f is %f , relerr=%f nfcn=%d",GetName(),maxpts,epsrel,result,relerr,nfnevl);
    }
    return result;
 }
@@ -485,7 +507,7 @@ TH1* TF3::CreateHistogram()
    TH1* h = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                          ,fNpy,fYmin,fYmax
                          ,fNpz,fZmin,fZmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    return h;
 }
 
@@ -503,7 +525,7 @@ void TF3::Paint(Option_t *option)
       fHistogram = new TH3F("R__TF3",(char*)GetTitle(),fNpx,fXmin,fXmax
                                                       ,fNpy,fYmin,fYmax
                                                       ,fNpz,fZmin,fZmax);
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
 
    fHistogram->GetPainter(option)->ProcessMessage("SetF3",this);
@@ -529,41 +551,43 @@ void TF3::SetClippingBoxOff()
 void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
 {
    if (!fSave.empty()) fSave.clear();
-   Int_t nsave = (fNpx+1)*(fNpy+1)*(fNpz+1);
-   Int_t fNsave = nsave+9;
-   assert(fNsave > 9);
-   //fSave  = new Double_t[fNsave];
-   fSave.resize(fNsave);
-   Int_t i,j,k,l=0;
+   Int_t npx = fNpx, npy = fNpy, npz = fNpz;
+   if ((npx < 2) || (npy < 2) || (npz < 2))
+      return;
+
    Double_t dx = (xmax-xmin)/fNpx;
    Double_t dy = (ymax-ymin)/fNpy;
    Double_t dz = (zmax-zmin)/fNpz;
    if (dx <= 0) {
       dx = (fXmax-fXmin)/fNpx;
-      xmin = fXmin +0.5*dx;
-      xmax = fXmax -0.5*dx;
+      npx--;
+      xmin = fXmin + 0.5*dx;
+      xmax = fXmax - 0.5*dx;
    }
    if (dy <= 0) {
       dy = (fYmax-fYmin)/fNpy;
-      ymin = fYmin +0.5*dy;
-      ymax = fYmax -0.5*dy;
+      npy--;
+      ymin = fYmin + 0.5*dy;
+      ymax = fYmax - 0.5*dy;
    }
    if (dz <= 0) {
       dz = (fZmax-fZmin)/fNpz;
-      zmin = fZmin +0.5*dz;
-      zmax = fZmax -0.5*dz;
+      npz--;
+      zmin = fZmin + 0.5*dz;
+      zmax = fZmax - 0.5*dz;
    }
+   Int_t nsave = (npx + 1)*(npy + 1)*(npz + 1);
+   fSave.resize(nsave + 9);
    Double_t xv[3];
    Double_t *pp = GetParameters();
    InitArgs(xv,pp);
-   for (k=0;k<=fNpz;k++) {
+   for (Int_t k = 0, l = 0; k <= npz; k++) {
       xv[2]    = zmin + dz*k;
-      for (j=0;j<=fNpy;j++) {
+      for (Int_t j = 0; j <= npy; j++) {
          xv[1]    = ymin + dy*j;
-         for (i=0;i<=fNpx;i++) {
+         for (Int_t i = 0; i <= npx; i++) {
             xv[0]    = xmin + dx*i;
-            fSave[l] = EvalPar(xv,pp);
-            l++;
+            fSave[l++] = EvalPar(xv, pp);
          }
       }
    }
@@ -573,9 +597,9 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
    fSave[nsave+3] = ymax;
    fSave[nsave+4] = zmin;
    fSave[nsave+5] = zmax;
-   fSave[nsave+6] = fNpx;
-   fSave[nsave+7] = fNpy;
-   fSave[nsave+8] = fNpz;
+   fSave[nsave+6] = npx;
+   fSave[nsave+7] = npy;
+   fSave[nsave+8] = npz;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -584,6 +608,7 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
+   TString f3Name(GetName());
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF3::Class())) {
       out<<"   ";
@@ -591,39 +616,47 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   TF3 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
    if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
-      } else
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
+      if (TColor::SaveColor(out, GetFillColor()))
+         out<<"   "<<f3Name.Data()<<"->SetFillColor(ci);" << std::endl;
+      else
+         out<<"   "<<f3Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
-      } else
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+      if (TColor::SaveColor(out, GetLineColor()))
+         out<<"   "<<f3Name.Data()<<"->SetLineColor(ci);" << std::endl;
+      else
+         out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
-   if (GetNpz() != 100) {
-      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
-   }
-   if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
-   }
+
+   if (GetNpx() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpy() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+   if (GetNpz() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
+
+   if (GetChisquare() != 0)
+      out<<"   "<<f3Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("
+
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f3Name.Data(), "->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
+   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
+
+   out<<"   "<<f3Name.Data()<<"->Draw("
       <<quote<<option<<quote<<");"<<std::endl;
 }
 
@@ -711,8 +744,17 @@ Double_t TF3::Moment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double
       return 0;
    }
 
-   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x,%f)*pow(y,%f)*pow(z,%f)",GetName(),nx,ny,nz));
-   return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+   // define  integrand function as a lambda : g(x,y,z)=  x^(nx) * y^(ny) * z^(nz) * f(x,y,z)
+   auto integrand = [&](double *x, double *) {
+      return std::pow(x[0], nx) * std::pow(x[1], ny) * std::pow(x[2], nz) * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y,z)
+   TF3 fnc("TF3_ExpValHelper", integrand, ax, bx, ay, by, az, bz, 0);
+   // set same points as current function to get correct max points when computing the integral
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
+   fnc.fNpz = fNpz;
+   return fnc.Integral(ax, bx, ay, by, az, bz, epsilon) / norm;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -731,18 +773,41 @@ Double_t TF3::CentralMoment3(Double_t nx, Double_t ax, Double_t bx, Double_t ny,
    Double_t ybar = 0;
    Double_t zbar = 0;
    if (nx!=0) {
-      TF3 fncx("TF3_ExpValHelperx",Form("%s*x",GetName()));
-      xbar = fncx.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
+      // compute first momentum in x
+      auto integrandX = [&](double *x, double *) { return x[0] * this->EvalPar(x, nullptr); };
+      TF3 fncx("TF3_ExpValHelperx", integrandX, ax, bx, ay, by, az, bz, 0);
+      fncx.fNpx = fNpx;
+      fncx.fNpy = fNpy;
+      fncx.fNpz = fNpz;
+      xbar = fncx.Integral(ax, bx, ay, by, az, bz, epsilon) / norm;
    }
    if (ny!=0) {
-      TF3 fncy("TF3_ExpValHelpery",Form("%s*y",GetName()));
+      auto integrandY = [&](double *x, double *) { return x[1] * this->EvalPar(x, nullptr); };
+      TF3 fncy("TF3_ExpValHelpery", integrandY, ax, bx, ay, by, az, bz, 0);
+      fncy.fNpx = fNpx;
+      fncy.fNpy = fNpy;
+      fncy.fNpz = fNpz;
       ybar = fncy.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
    }
    if (nz!=0) {
-      TF3 fncz("TF3_ExpValHelperz",Form("%s*z",GetName()));
+      auto integrandZ = [&](double *x, double *) { return x[2] * this->EvalPar(x, nullptr); };
+      TF3 fncz("TF3_ExpValHelperz", integrandZ, ax, bx, ay, by, az, bz, 0);
+      fncz.fNpx = fNpx;
+      fncz.fNpy = fNpy;
+      fncz.fNpz = fNpz;
       zbar = fncz.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
    }
-   TF3 fnc("TF3_ExpValHelper",Form("%s*pow(x-%f,%f)*pow(y-%f,%f)*pow(z-%f,%f)",GetName(),xbar,nx,ybar,ny,zbar,nz));
+   // define  integrand function as a lambda : g(x,y)=  (x-xbar)^(nx) * (y-ybar)^(ny) * f(x,y)
+   auto integrand = [&](double *x, double *) {
+      double xxx = (nx != 0) ? std::pow(x[0] - xbar, nx) : 1.;
+      double yyy = (ny != 0) ? std::pow(x[1] - ybar, ny) : 1.;
+      double zzz = (nz != 0) ? std::pow(x[2] - zbar, nz) : 1.;
+      return xxx * yyy * zzz * this->EvalPar(x, nullptr);
+   };
+   // compute integral of g(x,y, z)
+   TF3 fnc("TF3_ExpValHelper",integrand,ax,bx,ay,by,az,bz,0) ;
+   fnc.fNpx = fNpx;
+   fnc.fNpy = fNpy;
+   fnc.fNpz = fNpz;
    return fnc.Integral(ax,bx,ay,by,az,bz,epsilon)/norm;
 }
-

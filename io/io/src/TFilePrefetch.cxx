@@ -12,10 +12,13 @@
 #include "TFilePrefetch.h"
 #include "TTimeStamp.h"
 #include "TSystem.h"
+#include "TMD5.h"
 #include "TVirtualPerfStats.h"
 #include "TVirtualMonitoring.h"
+#include "TSemaphore.h"
+#include "TFPBlock.h"
+#include "strlcpy.h"
 
-#include <iostream>
 #include <string>
 #include <sstream>
 #include <cstdio>
@@ -26,8 +29,6 @@
 static const int kMAX_READ_SIZE    = 2;   //maximum size of the read list of blocks
 
 inline int xtod(char c) { return (c>='0' && c<='9') ? c-'0' : ((c>='A' && c<='F') ? c-'A'+10 : ((c>='a' && c<='f') ? c-'a'+10 : 0)); }
-
-using namespace std;
 
 ClassImp(TFilePrefetch);
 

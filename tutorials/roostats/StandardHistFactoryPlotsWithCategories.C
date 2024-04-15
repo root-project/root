@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-///  StandardHistFactoryPlotsWithCategories
+/// StandardHistFactoryPlotsWithCategories
 ///
 ///  This is a standard demo that can be used with any ROOT file
 ///  prepared in the standard way.  You specify:
@@ -54,7 +54,7 @@
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl;
 
 void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char *workspaceName = "combined",
                                             const char *modelConfigName = "ModelConfig",
@@ -74,10 +74,6 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
                                                            // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -153,21 +149,19 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
    if (doFit) {
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
-      tt = (RooCatType *)iter->Next();
-      RooAbsPdf *pdftmp = ((RooSimultaneous *)mc->GetPdf())->getPdf(tt->GetName());
-      RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
+      auto const& catName = channelCat->begin()->first;
+      RooAbsPdf *pdftmp = ((RooSimultaneous *)mc->GetPdf())->getPdf(catName.c_str());
+      std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*mc->GetObservables())};
       obs = ((RooRealVar *)obstmp->first());
       RooPlot *frame = obs->frame();
-      cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()) << endl;
-      cout << tt->GetName() << " " << channelCat->getLabel() << endl;
+      cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()) << endl;
+      cout << catName << " " << channelCat->getLabel() << endl;
       data->plotOn(frame, MarkerSize(1),
-                   Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                   Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                    DataError(RooAbsData::None));
 
       Double_t normCount =
-         data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()));
+         data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()));
 
       pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent));
       frame->Draw();
@@ -178,9 +172,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
    int nPlots = 0;
    if (!simPdf) {
 
-      TIterator *it = mc->GetNuisanceParameters()->createIterator();
-      RooRealVar *var = NULL;
-      while ((var = (RooRealVar *)it->Next()) != NULL) {
+      for (auto *var : static_range_cast<RooRealVar *>(*mc->GetNuisanceParameters())) {
          RooPlot *frame = obs->frame();
          frame->SetYTitle(var->GetName());
          data->plotOn(frame, MarkerSize(1));
@@ -196,37 +188,40 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
    } else {
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
-      //    TIterator* iter = simPdf->indexCat().typeIterator() ;
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
-      while (nPlots < nPlotsMax && (tt = (RooCatType *)iter->Next())) {
+      for (auto const& tt : *channelCat) {
 
-         cout << "on type " << tt->GetName() << " " << endl;
+         if (nPlots == nPlotsMax) {
+            break;
+         }
+
+         auto const& catName = tt.first;
+
+         cout << "on type " << catName << " " << endl;
          // Get pdf associated with state from simpdf
-         RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+         RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
 
          // Generate observables defined by the pdf associated with this state
-         RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
+         std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*mc->GetObservables())};
          //      obstmp->Print();
 
          obs = ((RooRealVar *)obstmp->first());
 
-         TIterator *it = mc->GetNuisanceParameters()->createIterator();
+         TIter it = mc->GetNuisanceParameters()->createIterator();
          RooRealVar *var = NULL;
-         while (nPlots < nPlotsMax && (var = (RooRealVar *)it->Next())) {
+         while (nPlots < nPlotsMax && (var = (RooRealVar *)it.Next())) {
             TCanvas *c2 = new TCanvas("c2");
             RooPlot *frame = obs->frame();
             frame->SetName(Form("frame%d", nPlots));
             frame->SetYTitle(var->GetName());
 
-            cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()) << endl;
-            cout << tt->GetName() << " " << channelCat->getLabel() << endl;
+            cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()) << endl;
+            cout << catName << " " << channelCat->getLabel() << endl;
             data->plotOn(frame, MarkerSize(1),
-                         Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                         Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                          DataError(RooAbsData::None));
 
             Double_t normCount =
-               data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()));
+               data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()));
 
             if (strcmp(var->GetName(), "Lumi") == 0) {
                cout << "working on lumi" << endl;
@@ -238,8 +233,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             // w->allVars().Print("v");
             // mc->GetNuisanceParameters()->Print("v");
             // pdftmp->plotOn(frame,LineWidth(2.));
-            // mc->GetPdf()->plotOn(frame,LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent));
 
@@ -251,8 +246,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
                var->setVal(nSigmaToVary);
             }
             // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2));
-            // mc->GetPdf()->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kRed), LineStyle(kDashed),
                            Normalization(normCount, RooAbsReal::NumEvent));
@@ -265,8 +260,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
                var->setVal(-nSigmaToVary);
             }
             // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2));
-            // mc->GetPdf()->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kGreen), LineStyle(kDashed),
                            Normalization(normCount, RooAbsReal::NumEvent));
@@ -286,7 +281,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             ++nPlots;
 
             frame->Draw();
-            c2->SaveAs(Form("%s_%s_%s.pdf", tt->GetName(), obs->GetName(), var->GetName()));
+            c2->SaveAs(Form("%s_%s_%s.pdf", catName.c_str(), obs->GetName(), var->GetName()));
             delete c2;
          }
       }

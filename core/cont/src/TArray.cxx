@@ -29,7 +29,7 @@ ClassImp(TArray);
 
 Bool_t TArray::OutOfBoundsError(const char *where, Int_t i) const
 {
-   ::Error(where, "index %d out of bounds (size: %d, this: 0x%lx)", i, fN, (Long_t)this);
+   ::Error(where, "index %d out of bounds (size: %d, this: 0x%zx)", i, fN, (size_t)this);
    return kFALSE;
 }
 
@@ -54,7 +54,7 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
    TArray *a;
    if (!clRef) {
 
-      a = 0;
+      a = nullptr;
 
    } else {
 
@@ -63,7 +63,7 @@ TArray *TArray::ReadArray(TBuffer &b, const TClass *clReq)
          ::Error("TArray::ReadArray", "could not create object of class %s",
                  clRef->GetName());
          // Exception
-         return 0;
+         return nullptr;
       }
 
       a->Streamer(b);

@@ -52,7 +52,7 @@ TCudaHostBuffer<AFloat>::TCudaHostBuffer(size_t size) : fOffset(0), fSize(size),
 template <typename AFloat>
 TCudaHostBuffer<AFloat>::operator AFloat *() const
 {
-   return *fHostPointer + fOffset;
+   return (fHostPointer) ? *fHostPointer + fOffset : nullptr;
 }
 
 //______________________________________________________________________________
@@ -126,7 +126,7 @@ TCudaDeviceBuffer<AFloat> TCudaDeviceBuffer<AFloat>::GetSubBuffer(size_t offset,
 template <typename AFloat>
 TCudaDeviceBuffer<AFloat>::operator AFloat *() const
 {
-   return *fDevicePointer + fOffset;
+   return (fDevicePointer) ? *fDevicePointer + fOffset : nullptr;
 }
 
 //______________________________________________________________________________
@@ -746,6 +746,7 @@ TTensorBatch<TCuda<double> > TTensorDataLoader<TMVAInput_t, TCuda<double> >::Get
    return TTensorBatch<TCuda<double>>(inputTensor, outputMatrix, weightMatrix);
 }
 #endif
+
 
 // see file Cudnn/TensorDataLoader.cxx for Cudnn definitions
 

@@ -44,39 +44,16 @@
 #include <iosfwd>
 
 
-
-
-//doxygen tag
-
 /**
-   @defgroup SMatrixGroup SMatrix
-   @ingroup  Math
+\defgroup SMatrixSVector Matrix and Vector classes
+\ingroup SMatrixGroup
 
-   \ref SMatrixPage  for high performance vector and matrix computations.
-   Classes representing Matrices and Vectors of arbitrary type and dimension and related functions.
-   For a detailed description and usage examples see:
-   <ul>
-    <li>\ref SMatrixPage home page
-    <li>\ref SVectorDoc
-    <li>\ref SMatrixDoc
-    <li>\ref MatVecFunctions
-   </ul>
+Classes representing Matrices and Vectors of arbitrary type and dimension.
+For a detailed description and usage examples see:
 
-
-*/
-
-/**
-   @defgroup SMatrixSVector Matrix and Vector classes
-
-   @ingroup SMatrixGroup
-
-   Classes representing Matrices and Vectors of arbitrary type and dimension.
-   For a detailed description and usage examples see:
-   <ul>
-    <li>\ref SVectorDoc
-    <li>\ref SMatrixDoc
-    <li>\ref MatVecFunctions
-   </ul>
+  - \ref SVectorDoc
+  - \ref SMatrixDoc
+  - \ref MatVecFunctions
 
 */
 
@@ -464,12 +441,10 @@ public:
     */
    SMatrix<T,D1,D2,R>& operator*=(const T& rhs);
 
-#ifndef __CINT__
-
 
    /**
       multiplication with another compatible matrix (it is a real matrix multiplication)
-      Note that this operation does not avid to create a temporary to store intermidiate result
+      Note that this operation does not avid to create a temporary to store intermediate result
    */
    template <class R2>
    SMatrix<T,D1,D2,R>& operator*=(const SMatrix<T,D1,D2,R2>& rhs);
@@ -480,7 +455,6 @@ public:
    template <class A, class R2>
    SMatrix<T,D1,D2,R>& operator*=(const Expr<A,T,D1,D2,R2>& rhs);
 
-#endif
 
    /**
       division with a scalar
@@ -493,7 +467,7 @@ public:
 
    /**
       Invert a square Matrix ( this method changes the current matrix).
-      Return true if inversion is successfull.
+      Return true if inversion is successful.
       The method used for general square matrices is the LU factorization taken from Dinv routine
       from the CERNLIB (written in C++ from CLHEP authors)
       In case of symmetric matrices Bunch-Kaufman diagonal pivoting method is used
@@ -504,14 +478,14 @@ public:
    /**
       Invert a square Matrix and  returns a new matrix. In case the inversion fails
       the current matrix is returned.
-      \param ifail . ifail will be set to 0 when inversion is successfull.
+      \param ifail . ifail will be set to 0 when inversion is successful.
       See ROOT::Math::SMatrix::Invert for the inversion algorithm
    */
    SMatrix<T,D1,D2,R> Inverse(int & ifail ) const;
 
    /**
-      Fast Invertion of a square Matrix ( this method changes the current matrix).
-      Return true if inversion is successfull.
+      Fast inversion of a square Matrix ( this method changes the current matrix).
+      Return true if inversion is successful.
       The method used is based on direct inversion using the Cramer rule for
       matrices upto 5x5. Afterwards the same default algorithm of Invert() is used.
       Note that this method is faster but can suffer from much larger numerical accuracy
@@ -522,15 +496,15 @@ public:
    /**
       Invert a square Matrix and  returns a new matrix. In case the inversion fails
       the current matrix is returned.
-      \param ifail . ifail will be set to 0 when inversion is successfull.
+      \param ifail . ifail will be set to 0 when inversion is successful.
       See ROOT::Math::SMatrix::InvertFast for the inversion algorithm
    */
    SMatrix<T,D1,D2,R> InverseFast(int & ifail ) const;
 
    /**
-      Invertion of a symmetric positive defined Matrix using Choleski decomposition.
+      Inversion of a symmetric positive defined Matrix using Choleski decomposition.
       ( this method changes the current matrix).
-      Return true if inversion is successfull.
+      Return true if inversion is successful.
       The method used is based on Choleski decomposition
       A compile error is given if the matrix is not of type symmetric and a run-time failure if the
       matrix is not positive defined.
@@ -544,14 +518,14 @@ public:
       A compile error is given if the matrix is not of type symmetric and a run-time failure if the
       matrix is not positive defined.
       In case the inversion fails the current matrix is returned.
-      \param ifail . ifail will be set to 0 when inversion is successfull.
+      \param ifail . ifail will be set to 0 when inversion is successful.
       See ROOT::Math::SMatrix::InvertChol for the inversion algorithm
    */
    SMatrix<T,D1,D2,R> InverseChol(int & ifail ) const;
 
    /**
       determinant of square Matrix via Dfact.
-      Return true when the calculation is successfull.
+      Return true when the calculation is successful.
       \param det will contain the calculated determinant value
       \b Note: this will destroy the contents of the Matrix!
    */
@@ -559,7 +533,7 @@ public:
 
    /**
       determinant of square Matrix via Dfact.
-      Return true when the calculation is successfull.
+      Return true when the calculation is successful.
       \param det will contain the calculated determinant value
       \b Note: this will preserve the content of the Matrix!
    */
@@ -610,8 +584,8 @@ public:
    SVector<T,D1> Col(unsigned int thecol) const;
 
    /**
-      return a slice of therow as a vector starting at the colum value col0 until col0+N,
-      where N is the size of the vector (SubVector::kSize )
+      return a slice of therow as a vector starting at the column value col0 until col0+N,
+      where N is the size of the vector (SVector::kSize )
       Condition  col0+N <= D2
    */
    template <class SubVector>
@@ -619,7 +593,7 @@ public:
 
    /**
       return a slice of the column as a vector starting at the row value row0 until row0+Dsub.
-      where N is the size of the vector (SubVector::kSize )
+      where N is the size of the vector (SVector::kSize )
       Condition  row0+N <= D1
    */
    template <class SubVector>
@@ -641,7 +615,7 @@ public:
 
    /**
       Set the diagonal elements from a Vector
-      Require that vector implements ::kSize since a check (statically) is done on
+      Require that vector implements SVector::kSize since a check (statically) is done on
       diagonal size == vector size
    */
    template <class Vector>
@@ -728,15 +702,8 @@ inline std::ostream& operator<<(std::ostream& os, const ROOT::Math::SMatrix<T,D1
 
 
 
-
-
-
-#ifndef __CINT__
-
 #include "Math/SMatrix.icc"
 
 #include "Math/MatrixFunctions.h"
-
-#endif //__CINT__
 
 #endif  /* ROOT_Math_SMatrix  */

@@ -43,6 +43,8 @@ struct ClusterInfo {
 };
 
 struct ColumnInfo {
+   ROOT::Experimental::DescriptorId_t fPhysicalColumnId = 0;
+   ROOT::Experimental::DescriptorId_t fLogicalColumnId = 0;
    ROOT::Experimental::DescriptorId_t fFieldId = 0;
    std::uint64_t fLocalOrder = 0;
    std::uint64_t fNElements = 0;
@@ -51,6 +53,7 @@ struct ColumnInfo {
    std::uint32_t fElementSize = 0;
    ROOT::Experimental::EColumnType fType;
    std::string fFieldName;
+   std::string fFieldDescription;
 
    bool operator <(const ColumnInfo &other) const {
       if (fFieldName == other.fFieldName)
@@ -59,7 +62,7 @@ struct ColumnInfo {
    }
 };
 
-static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
+std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
@@ -68,28 +71,11 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-static std::string GetColumnTypeName(ROOT::Experimental::EColumnType type)
+std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
+   const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
-   switch (type) {
-   case ROOT::Experimental::EColumnType::kBit:
-      return "Bit";
-   case ROOT::Experimental::EColumnType::kByte:
-      return "Byte";
-   case ROOT::Experimental::EColumnType::kInt32:
-      return "Int32";
-   case ROOT::Experimental::EColumnType::kInt64:
-      return "Int64";
-   case ROOT::Experimental::EColumnType::kReal32:
-      return "Real32";
-   case ROOT::Experimental::EColumnType::kReal64:
-      return "Real64";
-   case ROOT::Experimental::EColumnType::kIndex:
-      return "Index";
-   case ROOT::Experimental::EColumnType::kSwitch:
-      return "Switch";
-   default:
-      return "UNKNOWN";
-   }
+   const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
+   return fieldDesc.GetFieldDescription();
 }
 
 } // anonymous namespace
@@ -112,22 +98,30 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
-      auto element = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType());
-      auto elementSize = element.GetSize();
+      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
+      // but don't add the the page sizes to the overall volume.
+      if (column.second.IsAliasColumn())
+         continue;
+
+      // We generate the default memory representation for the given column type in order
+      // to report the size _in memory_ of column elements
+      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
 
       ColumnInfo info;
+      info.fPhysicalColumnId = column.second.GetPhysicalId();
+      info.fLogicalColumnId = column.second.GetLogicalId();
       info.fFieldId = column.second.GetFieldId();
       info.fLocalOrder = column.second.GetIndex();
       info.fElementSize = elementSize;
       info.fType = column.second.GetModel().GetType();
 
       for (const auto &cluster : fClusterDescriptors) {
-         auto columnRange = cluster.second.GetColumnRange(column.first);
+         auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
          info.fNElements += columnRange.fNElements;
          if (compression == -1) {
             compression = columnRange.fCompressionSettings;
          }
-         const auto &pageRange = cluster.second.GetPageRange(column.first);
+         const auto &pageRange = cluster.second.GetPageRange(column.second.GetPhysicalId());
          auto idx = cluster2Idx[cluster.first];
          for (const auto &page : pageRange.fPageInfos) {
             bytesOnStorage += page.fLocator.fBytesOnStorage;
@@ -142,15 +136,16 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       }
       columns.emplace_back(info);
    }
-   auto headerSize = SerializeHeader(nullptr);
-   auto footerSize = SerializeFooter(nullptr);
+   auto headerSize = GetOnDiskHeaderSize();
+   auto footerSize = GetOnDiskFooterSize();
    output << "============================================================" << std::endl;
    output << "NTUPLE:      " << GetName() << std::endl;
    output << "Compression: " << compression << std::endl;
    output << "------------------------------------------------------------" << std::endl;
    output << "  # Entries:        " << GetNEntries() << std::endl;
    output << "  # Fields:         " << GetNFields() << std::endl;
-   output << "  # Columns:        " << GetNColumns() << std::endl;
+   output << "  # Columns:        " << GetNPhysicalColumns() << std::endl;
+   output << "  # Alias Columns:  " << GetNLogicalColumns() - GetNPhysicalColumns() << std::endl;
    output << "  # Pages:          " << nPages << std::endl;
    output << "  # Clusters:       " << GetNClusters() << std::endl;
    output << "  Size on storage:  " << bytesOnStorage << " B" << std::endl;
@@ -168,7 +163,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (unsigned int i = 0; i < clusters.size(); ++i) {
       output << "  # " << std::setw(5) << i
              << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
-             << clusters[i].fFirstEntry + clusters[i].fNEntries << ")  --  " << clusters[i].fNEntries << std::endl;
+             << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << std::endl;
       output << "         "
              << "   # Pages:         " << clusters[i].fNPages << std::endl;
       output << "         "
@@ -181,14 +176,22 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    output << "------------------------------------------------------------" << std::endl;
    output << "COLUMN DETAILS" << std::endl;
    output << "------------------------------------------------------------" << std::endl;
-   for (auto &col : columns)
+   for (auto &col : columns) {
       col.fFieldName = GetFieldName(col.fFieldId, *this).substr(1);
+      col.fFieldDescription = GetFieldDescription(col.fFieldId, *this);
+   }
    std::sort(columns.begin(), columns.end());
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
-      output << "  " << col.fFieldName << " [#" << col.fLocalOrder << "]" << "  --  "
-             << GetColumnTypeName(col.fType) << std::endl;
+      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]" +
+                                "  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
+      std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
+      if (col.fLogicalColumnId != col.fPhysicalColumnId)
+         id += " --alias--> " + std::to_string(col.fPhysicalColumnId);
+      output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
+      if (!col.fFieldDescription.empty())
+         output << "    Description:         " << col.fFieldDescription << std::endl;
       output << "    # Elements:          " << col.fNElements << std::endl;
       output << "    # Pages:             " << col.fNPages << std::endl;
       output << "    Avg elements / page: " << avgElementsPerPage << std::endl;

@@ -8,10 +8,10 @@
  *                                                                    *
  **********************************************************************/
 
-// Header file for class UnuranDistr
+// Header file for class UnuranDistrAdapter
 
-#ifndef ROOT_Math_UnuranDistr
-#define ROOT_Math_UnuranDistr
+#ifndef ROOT_Math_UnuranDistrAdapter
+#define ROOT_Math_UnuranDistrAdapter
 
 #include "unuran.h"
 #include <iostream>
@@ -69,7 +69,7 @@ struct MultiDist {
       return 0;
    }
 
-   // provides the gradient components separatly (partial derivatives)
+   // provides the gradient components separately (partial derivatives)
    static double Pdpdf(const double * x, int coord, UNUR_DISTR * dist) {
       const Distribution * func = reinterpret_cast<const Distribution *> (  unur_distr_get_extobj(dist) );
       return func->Derivative(x,coord);

@@ -1,16 +1,21 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## This tutorial shows how to write out datasets in ROOT formatusing the RDataFrame
+## Write ROOT data with RDataFrame.
+##
+## This tutorial shows how to write out datasets in ROOT format using RDataFrame.
+##
+## \macro_image
 ## \macro_code
 ##
 ## \date April 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 
 # A simple helper function to fill a test tree: this makes the example stand-alone.
 def fill_tree(treeName, fileName):
+    df = ROOT.RDataFrame(10000)
     df.Define("b1", "(int) rdfentry_")\
       .Define("b2", "(float) rdfentry_ * rdfentry_").Snapshot(treeName, fileName)
 
@@ -21,7 +26,7 @@ outFileNameAllColumns = "df007_snapshot_output_allColumns_py.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 
-# We read the tree from the file and create a RDataFrame.
+# We read the tree from the file and create a RDataFrame
 d = ROOT.RDataFrame(treeName, fileName)
 
 # ## Select entries
@@ -49,14 +54,11 @@ d2 = d_cut.Define("b1_square", "b1 * b1") \
 # The user can explicitly specify the types of the columns as template
 # arguments of the Snapshot method, otherwise they will be automatically
 # inferred.
-branchList = ROOT.vector('string')()
-for branchName in ["b1", "b1_square", "b2_vector"]:
-    branchList.push_back(branchName)
-d2.Snapshot(treeName, outFileName, branchList)
-
+d2.Snapshot(treeName, outFileName, \
+    ["b1", "b1_square", "b2_vector"])
 # Open the new file and list the columns of the tree
 f1 = ROOT.TFile(outFileName)
-t = f1.myTree
+t = f1[treeName]
 print("These are the columns b1, b1_square and b2_vector:")
 for branch in t.GetListOfBranches():
     print("Branch: %s" %branch.GetName())
@@ -70,7 +72,7 @@ d2.Snapshot(treeName, outFileNameAllColumns)
 
 # Open the new file and list the columns of the tree
 f2 = ROOT.TFile(outFileNameAllColumns)
-t = f2.myTree
+t = f2[treeName]
 print("These are all the columns available to this dataframe:")
 for branch in t.GetListOfBranches():
     print("Branch: %s" %branch.GetName())
@@ -80,10 +82,11 @@ f2.Close()
 # We can also get a fresh RDataFrame out of the snapshot and restart the
 # analysis chain from it.
 
-branchList.clear()
-branchList.push_back("b1_square")
-snapshot_df = d2.Snapshot(treeName, outFileName, branchList);
+snapshot_df = d2.Snapshot(treeName, outFileName, ["b1_square"]);
 h = snapshot_df.Histo1D("b1_square")
+
 c = ROOT.TCanvas()
 h.Draw()
+c.SaveAs("df007_snapshot.png")
 
+print("Saved figure to df007_snapshot.png")

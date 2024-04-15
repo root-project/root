@@ -1,22 +1,20 @@
 // @(#)root/hist:$Id$
 // Author: Christian Stratowa 30/09/2001
 
+/*************************************************************************
+ * Copyright (C) 2006, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 /******************************************************************************
-* Copyright(c) 2001-    , Dr. Christian Stratowa, Vienna, Austria.            *
-* Author: Christian Stratowa with help from Rene Brun.                                                 *
+* Copyright(c) 2001-2006, Dr. Christian Stratowa, Vienna, Austria.            *
+* Author: Christian Stratowa with help from Rene Brun.                        *
 *                                                                             *
 * Algorithms for smooth regression adapted from:                              *
 * R: A Computer Language for Statistical Data Analysis                        *
-* Copyright (C) 1996 Robert Gentleman and Ross Ihaka                          *
-* Copyright (C) 1999-2001 Robert Gentleman, Ross Ihaka and the                *
-* R Development Core Team                                                     *
-* R is free software, for licensing see the GNU General Public License        *
-* http://www.ci.tuwien.ac.at/R-project/welcome.html                           *
-*                                                                             *
-* Based on: "The ROOT System", All rights reserved.                           *
-* Authors: Rene Brun and Fons Rademakers.                                     *
-* For the licensing terms of "The ROOT System" see $ROOTSYS/AA_LICENSE.       *
-* For the list of contributors to "The ROOT System" see $ROOTSYS/AA_CREDITS.  *
 ******************************************************************************/
 
 #ifndef ROOT_TGraphSmooth
@@ -40,24 +38,24 @@ private:
    TGraphSmooth& operator=(const TGraphSmooth&); // Not implented
 
 protected:
-   Int_t       fNin;        //Number of input points
-   Int_t       fNout;       //Number of output points
-   TGraph     *fGin;        //Input graph
-   TGraph     *fGout;       //Output graph
-   Double_t    fMinX;       //Minimum value of array X
-   Double_t    fMaxX;       //Maximum value of array X
+   Int_t       fNin;        ///< Number of input points
+   Int_t       fNout;       ///< Number of output points
+   TGraph     *fGin;        ///< Input graph
+   TGraph     *fGout;       ///< Output graph
+   Double_t    fMinX;       ///< Minimum value of array X
+   Double_t    fMaxX;       ///< Maximum value of array X
 
 public :
    TGraphSmooth();
    TGraphSmooth(const char *name);
 //      TGraphSmooth(const TGraphSmooth &smoothReg);   //??
-   virtual ~TGraphSmooth();
+   ~TGraphSmooth() override;
 
-   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=0,
+   TGraph         *Approx(TGraph *grin, Option_t *option="linear", Int_t nout=50, Double_t *xout=nullptr,
                           Double_t yleft=0, Double_t yright=0, Int_t rule=0, Double_t f=0, Option_t *ties="mean");
-   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=0);
+   TGraph         *SmoothKern(TGraph *grin, Option_t *option="normal", Double_t bandwidth=0.5, Int_t nout=100, Double_t *xout=nullptr);
    TGraph         *SmoothLowess(TGraph *grin, Option_t *option="",Double_t span=0.67, Int_t iter = 3, Double_t delta = 0);
-   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=0);
+   TGraph         *SmoothSuper(TGraph *grin, Option_t *option="", Double_t bass = 0, Double_t span=0, Bool_t isPeriodic = kFALSE, Double_t *w=nullptr);
 
    void            Approxin(TGraph *grin, Int_t iKind, Double_t &Ylow, Double_t &Yhigh, Int_t rule, Int_t iTies);
    void            Smoothin(TGraph *grin);
@@ -75,7 +73,7 @@ public :
    static void     BDRsmooth(Int_t n, Double_t *x, Double_t *y, Double_t *w,
                              Double_t span, Int_t iper, Double_t vsmlsq, Double_t *smo, Double_t *acvr);
 
-   ClassDef(TGraphSmooth,1) //Graph Smoother
+   ClassDefOverride(TGraphSmooth,1) //Graph Smoother
 };
 
 #endif

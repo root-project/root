@@ -1,6 +1,8 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
+/// Basic RDataFrame usage.
+///
 /// This tutorial illustrates the basic features of the RDataFrame class,
 /// a utility which allows to interact with data stored in TTrees following
 /// a functional-chain like approach.
@@ -9,7 +11,7 @@
 /// \macro_output
 ///
 /// \date December 2016
-/// \author Enrico Guiraud
+/// \author Enrico Guiraud (CERN)
 
 // ## Preparation
 
@@ -46,17 +48,19 @@ int df001_introduction()
 
    // ## Operations on the dataframe
    // We now review some *actions* which can be performed on the data frame.
-   // All actions but ForEach return a TActionResultPtr<T>. The series of
-   // operations on the data frame is not executed until one of those pointers
-   // is accessed. If the Foreach action is invoked, the execution is immediate.
-   // But first of all, let us we define now our cut-flow with two lambda
+   // Actions can be divided into instant actions (e. g. Foreach()) and lazy
+   // actions (e. g. Count()), depending on whether they trigger the event
+   // loop immediately or only when one of the results is accessed for the
+   // first time. Actions that return "something" either return their result
+   // wrapped in a RResultPtr or in a RDataFrame.
+   // But first of all, let us define our cut-flow with two lambda
    // functions. We can use free functions too.
    auto cutb1 = [](double b1) { return b1 < 5.; };
    auto cutb1b2 = [](int b2, double b1) { return b2 % 2 && b1 < 4.; };
 
    // ### `Count` action
    // The `Count` allows to retrieve the number of the entries that passed the
-   // filters. Here we show how the automatic selection of the column kicks
+   // filters. Here, we show how the automatic selection of the column kicks
    // in in case the user specifies none.
    auto entries1 = d.Filter(cutb1) // <- no column name specified here!
                       .Filter(cutb1b2, {"b2", "b1"})
@@ -66,7 +70,7 @@ int df001_introduction()
 
    // Filters can be expressed as strings. The content must be C++ code. The
    // name of the variables must be the name of the branches. The code is
-   // just in time compiled.
+   // just-in-time compiled.
    auto entries2 = d.Filter("b1 < 5.").Count();
    std::cout << *entries2 << " entries passed the string filter" << std::endl;
 
@@ -84,7 +88,7 @@ int df001_introduction()
    // ### `Take` action
    // The `Take` action allows to retrieve all values of the variable stored in a
    // particular column that passed filters we specified. The values are stored
-   // in a list by default, but other collections can be chosen.
+   // in a vector by default, but other collections can be chosen.
    auto b1_cut = d.Filter(cutb1);
    auto b1Vec = b1_cut.Take<double>();
    auto b1List = b1_cut.Take<double, std::list<double>>();
@@ -119,7 +123,7 @@ int df001_introduction()
    // which is well organised, for example allowing to conditionally add filters
    // or again to clearly separate filters and actions without the need of
    // writing the entire pipeline on one line. This can be easily achieved.
-   // We'll show this re-working the `Count` example:
+   // We'll show this by re-working the `Count` example:
    auto cutb1_result = d.Filter(cutb1);
    auto cutb1b2_result = d.Filter(cutb1b2, {"b2", "b1"});
    auto cutb1_cutb1b2_result = cutb1_result.Filter(cutb1b2, {"b2", "b1"});
@@ -135,8 +139,8 @@ int df001_introduction()
    // ## Calculating quantities starting from existing columns
    // Often, operations need to be carried out on quantities calculated starting
    // from the ones present in the columns. We'll create in this example a third
-   // column the values of which are the sum of the *b1* and *b2* ones, entry by
-   // entry. The way in which the new quantity is defined is via a runable.
+   // column, the values of which are the sum of the *b1* and *b2* ones, entry by
+   // entry. The way in which the new quantity is defined is via a callable.
    // It is important to note two aspects at this point:
    // - The value is created on the fly only if the entry passed the existing
    // filters.
@@ -152,7 +156,7 @@ int df001_introduction()
 
    // Additional columns can be expressed as strings. The content must be C++
    // code. The name of the variables must be the name of the branches. The code
-   // is just in time compiled.
+   // is just-in-time compiled.
    auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 

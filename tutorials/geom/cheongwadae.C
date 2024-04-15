@@ -10,6 +10,7 @@
 /// This macro was created for the evaluation of Computational Physics course in 2006.
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
+/// \image html geom_cheongwadae.png width=800px
 /// \macro_code
 ///
 /// \author Hee Jun Shin (s-heejun@hanmail.net), Dept. of Physics, Univ. of Seoul
@@ -31,7 +32,7 @@ void cheongwadae()
    //creat volume
    TGeoVolume *top = geom->MakeBox("top",Air,300,300,300);
    geom->SetTopVolume(top);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -344,7 +345,7 @@ TGeoVolume *mBlock;
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,-24,100));
 
    geom->CloseGeometry();
-   top->SetVisibility(0);
+   top->SetVisibility(false);
 
    top->Draw("ogl");
 }

@@ -16,17 +16,18 @@
 #ifndef ROO_ERROR_HANDLER
 #define ROO_ERROR_HANDLER
 
-#include <signal.h>
-#include "Rtypes.h"
+#include <csignal>
+#include <cstdlib>
+#include "RtypesCore.h"
 
 class RooErrorHandler
 {
 public:
-  // Soft assert function that interrupts macro execution but doesn't kill ROOT
-  static void softAssert(Bool_t condition) { if (!condition) abort() ; }
+  /// Soft assert function that interrupts macro execution but doesn't kill ROOT
+  static void softAssert(bool condition) { if (!condition) abort() ; }
 
-  // Soft abort function that interrupts macro execution but doesn't kill ROOT
+  /// Soft abort function that interrupts macro execution but doesn't kill ROOT
   static void softAbort() { raise(11) ; }
 } ;
- 
+
 #endif

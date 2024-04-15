@@ -10,11 +10,9 @@
  *************************************************************************/
 
 #include <algorithm>
-#include "Riostream.h"
 #include <cstdlib>
 #include <cctype>
 
-#include "TVirtualPad.h"
 #include "KeySymbols.h"
 #include "TVirtualX.h"
 #include "Buttons.h"
@@ -157,7 +155,6 @@ void TGLSurfacePainter::Pan(Int_t px, Int_t py)
 
 void TGLSurfacePainter::AddOption(const TString &option)
 {
-   using namespace std;
    const Ssiz_t surfPos = option.Index("surf");//"surf" _already_ _exists_ in a string.
    if (surfPos + 4 < option.Length() && isdigit(option[surfPos + 4])) {
       switch (option[surfPos + 4] - '0') {
@@ -217,7 +214,7 @@ void TGLSurfacePainter::ProcessEvent(Int_t event, Int_t /*px*/, Int_t py)
       if (fBoxCut.IsActive())
          fBoxCut.TurnOnOff();
       if (!gVirtualX->IsCmdThread())
-         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%lx)->Paint()", (ULong_t)this));
+         gROOT->ProcessLineFast(Form("((TGLPlotPainter *)0x%zx)->Paint()", (size_t)this));
       else
          Paint();
    } else if (event == kKeyPress && (py == kKey_c || py == kKey_C)) {
@@ -865,7 +862,6 @@ void TGLSurfacePainter::DrawProjections()const
 
 void TGLSurfacePainter::DrawSectionXOZ()const
 {
-   using namespace std;
    //XOZ parallel section.
    Int_t binY = -1;
    for (Int_t j = 0, e = fCoord->GetNYBins() - 1; j < e; ++j) {
@@ -898,7 +894,7 @@ void TGLSurfacePainter::DrawSectionXOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[i + 1][binY], fMesh[i][binY + 1]), kFALSE).second);
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[i][binY], fMesh[i][binY + 1]), kFALSE).second);
          }
-         if (fProj.fVertices.size()) {
+         if (!fProj.fVertices.empty()) {
             fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
             fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
@@ -916,7 +912,6 @@ void TGLSurfacePainter::DrawSectionXOZ()const
 
 void TGLSurfacePainter::DrawSectionYOZ()const
 {
-   using namespace std;
    //YOZ parallel section.
    Int_t binX = -1;
    for (Int_t i = 0, e = fCoord->GetNXBins() - 1; i < e; ++i) {
@@ -948,7 +943,7 @@ void TGLSurfacePainter::DrawSectionYOZ()const
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[binX][j + 1], fMesh[binX + 1][j]), kFALSE).second);
             fProj.fVertices.push_back(Intersection(profilePlane, TGLLine3(fMesh[binX][j], fMesh[binX + 1][j]), kFALSE).second);
          }
-         if (fProj.fVertices.size()) {
+         if (!fProj.fVertices.empty()) {
             fProj.fRGBA[0] = (UChar_t) (50 + fgRandom->Integer(206));
             fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
             fProj.fRGBA[2] = (UChar_t) fgRandom->Integer(150);
@@ -967,7 +962,6 @@ void TGLSurfacePainter::DrawSectionYOZ()const
 
 void TGLSurfacePainter::DrawSectionXOY()const
 {
-   using namespace std;
    //XOY parallel section.
    const Int_t nX = fCoord->GetNXBins();
    const Int_t nY = fCoord->GetNYBins();
@@ -1045,7 +1039,7 @@ void TGLSurfacePainter::DrawSectionXOY()const
       }
    }
 
-   if (fSectionPass && fProj.fVertices.size()) {
+   if (fSectionPass && !fProj.fVertices.empty()) {
       fProj.fRGBA[0] = (UChar_t) fgRandom->Integer(150);
       fProj.fRGBA[1] = (UChar_t) fgRandom->Integer(150);
       fProj.fRGBA[2] = (UChar_t) (50 + fgRandom->Integer(206));
@@ -1227,7 +1221,7 @@ Bool_t TGLSurfacePainter::HasSections()const
 
 Bool_t TGLSurfacePainter::HasProjections()const
 {
-   return fXOZProj.size() || fYOZProj.size() || fXOYProj.size();
+   return !fXOZProj.empty() || !fYOZProj.empty() || !fXOYProj.empty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

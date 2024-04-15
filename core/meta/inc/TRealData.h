@@ -49,17 +49,17 @@ public:
    virtual     ~TRealData();
 
    void                AdoptStreamer(TMemberStreamer *p);
-   virtual const char *GetName() const {return fName.Data();}
-   TDataMember        *GetDataMember() const {return fDataMember;}
+   const char         *GetName() const override { return fName.Data(); }
+   TDataMember        *GetDataMember() const { return fDataMember; }
    TMemberStreamer    *GetStreamer() const;
-   Long_t              GetThisOffset() const {return fThisOffset;}
-   Bool_t              IsObject() const {return fIsObject;}
-   void                SetIsObject(Bool_t isObject) {fIsObject=isObject;}
+   Long_t              GetThisOffset() const { return fThisOffset; }
+   Bool_t              IsObject() const { return fIsObject; }
+   void                SetIsObject(Bool_t isObject) { fIsObject = isObject; }
    void                WriteRealData(void *pointer, char *&buffer);
 
    static void         GetName(TString &output, TDataMember *dm);
 
-   ClassDef(TRealData,0)  //Description of persistent data members
+   ClassDefOverride(TRealData,0)  //Description of persistent data members
 };
 
 #endif

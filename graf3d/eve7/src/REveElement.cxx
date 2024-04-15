@@ -27,11 +27,10 @@
 #include "TROOT.h"
 #include "TColor.h"
 
-#include "json.hpp"
 #include <cassert>
-
-
 #include <algorithm>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -135,6 +134,18 @@ void REveElement::assign_element_id_recurisvely()
    REX::gEve->AssignElementId(this);
    for (auto &c : fChildren)
       c->assign_element_id_recurisvely();
+}
+
+std::string REveElement::GetHighlightTooltip(const std::set<int>& iSet) const
+{
+   std::string res = fTitle;
+   if (res.empty())
+      res = fName;
+
+   if (!iSet.empty())
+      res = TString::Format("%s idx=%d", res.c_str(), *iSet.begin());
+
+   return res;
 }
 
 void REveElement::assign_scene_recursively(REveScene* s)
@@ -428,7 +439,6 @@ void REveElement::VizDB_Apply(const std::string& tag)
    if (ApplyVizTag(tag))
    {
       PropagateVizParamsToProjecteds();
-      REX::gEve->Redraw3D();
    }
 }
 
@@ -442,7 +452,6 @@ void REveElement::VizDB_Reapply()
    {
       CopyVizParamsFromDB();
       PropagateVizParamsToProjecteds();
-      REX::gEve->Redraw3D();
    }
 }
 
@@ -464,7 +473,6 @@ void REveElement::VizDB_UpdateModel(Bool_t update)
          // XXX have a matching fVizModel. Or something.
          Error("VizDB_UpdateModel", "update from vizdb -> elements not implemented.");
          // fVizModel->PropagateVizParamsToElements(fVizModel);
-         // REX::gEve->Redraw3D();
       }
    }
    else
@@ -489,9 +497,7 @@ void REveElement::VizDB_Insert(const std::string& tag, Bool_t replace, Bool_t up
       return;
    }
    el->CopyVizParams(this);
-   Bool_t succ = REX::gEve->InsertVizDBEntry(tag, el, replace, update);
-   if (succ && update)
-      REX::gEve->Redraw3D();
+   REX::gEve->InsertVizDBEntry(tag, el, replace, update);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -555,7 +561,7 @@ TClass *REveElement::IsA() const
 void REveElement::ExportToCINT(const char *var_name)
 {
    const char* cname = IsA()->GetName();
-   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%lx;", cname, var_name, cname, (ULong_t)this));
+   gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1199,7 +1205,6 @@ void REveElement::Annihilate()
    AnnihilateRecursively();
 
    // XXXX ????? Annihilate flag ???? Is it different than regular remove ????
-   // REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1230,7 +1235,6 @@ void REveElement::Destroy()
 
    PreDeleteElement();
    delete this;
-   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1273,8 +1277,6 @@ void REveElement::DestroyElements()
          RemoveElement(c);
       }
    }
-
-   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1372,7 +1374,7 @@ REveElement *REveElement::GetSelectionMaster()
 /// Note that this also takes care of projections of REveCompound
 /// class, which is also a projectable.
 
-void REveElement::FillImpliedSelectedSet(Set_t &impSelSet)
+void REveElement::FillImpliedSelectedSet(Set_t &impSelSet, const std::set<int>&)
 {
    REveProjectable* p = dynamic_cast<REveProjectable*>(this);
    if (p)

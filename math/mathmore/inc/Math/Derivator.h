@@ -82,7 +82,7 @@ public:
        @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
     */
-   explicit Derivator(const GSLFuncPointer &f, void * p = 0);
+   explicit Derivator(const GSLFuncPointer &f, void * p = nullptr);
 
    /// destructor
    virtual ~Derivator();
@@ -100,7 +100,7 @@ public:
    /**
        Template methods for generic functions
        Set the function f for evaluating the derivative.
-       The function type must implement the assigment operator,
+       The function type must implement the assignment operator,
        <em>  double  operator() (  double  x ) </em>
    */
    template <class UserFunc>
@@ -123,7 +123,7 @@ public:
        @param p :  pointer to the object carrying the function state
                     (for example the function object itself)
    */
-   void SetFunction( const GSLFuncPointer &f, void * p = 0);
+   void SetFunction( const GSLFuncPointer &f, void * p = nullptr);
 
 
 

@@ -37,7 +37,8 @@ namespace textinput {
       return C(In.GetRaw());
     }
     // else
-    return ToCommandExtended(In.GetExtendedInput(), HadEscPending);
+    return ToCommandExtended(In.GetExtendedInput(), In.GetModifier(),
+                             HadEscPending);
   }
 
   Editor::Command
@@ -69,7 +70,7 @@ namespace textinput {
       case 'p' - 0x60: return C(Editor::kCmdHistOlder);
       case 'q' - 0x60: return C(In, Editor::kCKError);
       case 'r' - 0x60: return C(Editor::kCmdReverseSearch);
-      case 's' - 0x60: return C(In, Editor::kCKError);
+      case 's' - 0x60: return C(Editor::kCmdForwardSearch);
       case 't' - 0x60: return C(Editor::kCmdSwapThisAndLeftThenMoveRight);
       case 'u' - 0x60: return C(Editor::kCmdCutToFront);
       case 'v' - 0x60: return C(In, Editor::kCKError);
@@ -81,7 +82,7 @@ namespace textinput {
       case 'z' - 0x60:
         return C(In, Editor::kCKControl);
       case 0x1f: return C(Editor::kCmdUndo);
-      case 0x7f: // MacOS
+      case 0x7f: // Backspace key (with Alt, or no modifier) on Unix, Del on MacOS
         if (HadEscPending) {
           return C(Editor::kCmdCutPrevWord);
         } else {
@@ -113,6 +114,7 @@ namespace textinput {
 
   Editor::Command
   KeyBinding::ToCommandExtended(InputData::EExtendedInput EI,
+                                unsigned char modifier,
                                 bool HadEscPending) {
     // Convert extended input into the corresponding Command.
     typedef Editor::Command C;
@@ -122,8 +124,12 @@ namespace textinput {
       case InputData::kEIEnd: return C(Editor::kMoveEnd);
       case InputData::kEIUp: return C(Editor::kCmdHistOlder);
       case InputData::kEIDown: return C(Editor::kCmdHistNewer);
-      case InputData::kEILeft: return C(Editor::kMoveLeft);
-      case InputData::kEIRight: return C(Editor::kMoveRight);
+      case InputData::kEILeft:
+        return (modifier & InputData::kModCtrl)
+               ? C(Editor::kMovePrevWord) : C(Editor::kMoveLeft);
+      case InputData::kEIRight:
+        return (modifier & InputData::kModCtrl)
+               ? C(Editor::kMoveNextWord) : C(Editor::kMoveRight);
       case InputData::kEIPgUp: return C(Editor::kCmdIgnore);
       case InputData::kEIPgDown: return C(Editor::kCmdIgnore);
       case InputData::kEIBackSpace:
@@ -136,7 +142,8 @@ namespace textinput {
         if (HadEscPending) {
           return C(Editor::kCmdCutPrevWord);
         } else {
-          return C(Editor::kCmdDel);
+          return (modifier & InputData::kModCtrl)
+                 ? C(Editor::kCmdCutNextWord) : C(Editor::kCmdDel);
         }
       case InputData::kEIIns: return C(Editor::kCmdToggleOverwriteMode);
       case InputData::kEITab: return C(Editor::kCmdComplete);

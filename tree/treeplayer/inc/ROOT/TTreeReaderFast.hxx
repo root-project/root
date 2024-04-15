@@ -42,9 +42,8 @@ public:
    // TTreeReaderFast.
    //
    // NOTE that an increment may invalidate previous copies of the iterator.
-   class Iterator_t:
-      public std::iterator<std::input_iterator_tag, const Long64_t, Long64_t> {
-   private:
+   class Iterator_t {
+
       Int_t   *fIdx{nullptr}; ///< Current offset inside this cluster.
       Int_t    fCount{0};     ///< Number of entries inside this cluster.
       Long64_t fEntry{-1};    ///< Entry number of the tree referenced by this iterator; -1 is invalid.
@@ -54,6 +53,13 @@ public:
       bool IsValid() const { return fEntry >= 0; }
 
    public:
+      using iterator_category = std::input_iterator_tag;
+      using value_type = const Long64_t;
+      using difference_type = Long_t;
+      using pointer = const Long64_t *;
+      using const_pointer = const Long64_t *;
+      using reference = const Long64_t &;
+
       /// Default-initialize the iterator as "past the end".
       Iterator_t() {}
 
@@ -122,9 +128,9 @@ public:
    {}
 
    TTreeReaderFast(TTree* tree);
-   TTreeReaderFast(const char* keyname, TDirectory* dir = NULL );
+   TTreeReaderFast(const char* keyname, TDirectory* dir = nullptr );
 
-   ~TTreeReaderFast();
+   ~TTreeReaderFast() override;
 
    TTreeReader::EEntryStatus SetEntriesRange(Long64_t first, Long64_t last);
 
@@ -165,7 +171,7 @@ private:
 
    friend class ROOT::Experimental::Internal::TTreeReaderValueFastBase;
 
-   ClassDef(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
+   ClassDefOverride(TTreeReaderFast, 0); // A simple interface to read trees via bulk I/O
 };
 
 }  // Experimental

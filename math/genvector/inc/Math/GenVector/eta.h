@@ -36,7 +36,7 @@ namespace ROOT {
         but one has to be careful when rho is much smaller than z (large eta values)
         Formula is  eta = log( zs + sqrt(zs^2 + 1) )  where zs = z/rho
 
-        For large value of z_scaled (tan(theta) ) one can appoximate the sqrt via a Taylor expansion
+        For large value of z_scaled (tan(theta) ) one can approximate the sqrt via a Taylor expansion
         We do the approximation of the sqrt if the numerical error is of the same order of second term of
         the sqrt.expansion:
         eps > 1/zs^4   =>   zs > 1/(eps^0.25)
@@ -52,10 +52,14 @@ namespace ROOT {
               static const Scalar big_z_scaled = pow(std::numeric_limits<Scalar>::epsilon(), static_cast<Scalar>(-.25));
 
               Scalar z_scaled = z/rho;
+              using std::fabs;
               if (std::fabs(z_scaled) < big_z_scaled) {
-                 return log(z_scaled + sqrt(z_scaled * z_scaled + 1.0));
+                 using std::sqrt;
+                 using std::log;
+                 return log(z_scaled + std::sqrt(z_scaled * z_scaled + 1.0));
               } else {
                  // apply correction using first order Taylor expansion of sqrt
+                 using std::log;
                  return z > 0 ? log(2.0 * z_scaled + 0.5 / z_scaled) : -log(-2.0 * z_scaled);
               }
            }
@@ -87,6 +91,7 @@ namespace ROOT {
               return -r - etaMax<Scalar>();
            }
            else {
+              using std::log;
               return -log(tanThetaOver2);
            }
 

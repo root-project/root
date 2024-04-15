@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,53 +9,47 @@
 #ifndef ROOT7_RAttrText
 #define ROOT7_RAttrText
 
-#include <ROOT/RAttrBase.hxx>
-#include <ROOT/RAttrColor.hxx>
-
-#include <string>
+#include <ROOT/RAttrAggregation.hxx>
+#include <ROOT/RAttrValue.hxx>
+#include <ROOT/RAttrFont.hxx>
 
 namespace ROOT {
 namespace Experimental {
 
 /** \class RAttrText
 \ingroup GpadROOT7
-\brief A text.attributes.
-\author Axel Naumann <axel@cern.ch>
+\brief A text attributes.
+\authors Axel Naumann <axel@cern.ch> Sergey Linev <s.linev@gsi.de>
 \date 2018-10-12
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
+class RAttrText : public RAttrAggregation {
 
-class RAttrText : public RAttrBase {
+   R__ATTR_CLASS(RAttrText, "text");
 
-   RAttrColor fColor{this, "color_"}; ///<! text color, will access container from text attributes
+public:
 
-   R__ATTR_CLASS(RAttrText, "text_", AddDouble("size", 12.).AddDouble("angle", 0.).AddInt("align", 22).AddInt("font", 41).AddDefaults(fColor));
+   enum EAlign {
+      kLeftBottom = 11,
+      kLeftCenter = 12,
+      kLeftTop = 13,
+      kCenterBottom = 21,
+      kCenter = 22,
+      kCenterTop = 23,
+      kRightBottom = 31,
+      kRightCenter = 32,
+      kRightTop = 33
+   };
 
-   ///The text size
-   RAttrText &SetSize(double width) { SetValue("size", width); return *this; }
-   double GetSize() const { return GetValue<double>("size"); }
+   RAttrValue<RColor> color{this, "color", RColor::kBlack};  ///<! text color
+   RAttrValue<double> size{this, "size", 12.};               ///<! text size
+   RAttrValue<double> angle{this, "angle", 0.};              ///<! text angle
+   RAttrValue<EAlign> align{this, "align", kCenter};         ///<! text align
+   RAttrFont font{this, "font"};                             ///<! text font
 
-   ///The text angle
-   RAttrText &SetAngle(double angle) { SetValue("angle", angle); return *this; }
-   double GetAngle() const { return GetValue<double>("angle"); }
-
-   ///The text alignment
-   RAttrText &SetAlign(int align) { SetValue("align", align); return *this; }
-   int GetAlign() const { return GetValue<int>("align"); }
-
-   ///The text font
-   RAttrText &SetFont(int font) { SetValue("font", font); return *this; }
-   int GetFont() const { return GetValue<int>("font"); }
-
-   ///The color of the text.
-   RAttrText &SetColor(const RColor &color) { fColor = color; return *this; }
-   RColor GetColor() const { return fColor.GetColor(); }
-   RAttrColor &AttrColor() { return fColor; }
-
+   RAttrText(RDrawable *drawable, const char *prefix, double _size) : RAttrAggregation(drawable, prefix), size(this, "size", _size) {}
 };
-
-
 
 } // namespace Experimental
 } // namespace ROOT

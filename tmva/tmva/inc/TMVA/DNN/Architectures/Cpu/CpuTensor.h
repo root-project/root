@@ -24,7 +24,6 @@
 #include "TMVA/Config.h"
 #include "CpuBuffer.h"
 #include "CpuMatrix.h"
-#include <TMVA/Config.h>
 #include <TMVA/RTensor.hxx>
 
 namespace TMVA {
@@ -185,7 +184,7 @@ public:
 
    }
 
-   // for backward compatibility (assume column-major 
+   // for backward compatibility (assume column-major
    // for backward compatibility : for CM tensor (n1,n2,n3,n4) -> ( n1*n2*n3, n4)
    //                              for RM tensor (n1,n2,n3,n4) -> ( n2*n3*n4, n1 ) ???
    size_t GetNrows() const { return (GetLayout() == MemoryLayout::ColumnMajor ) ? this->GetStrides().back() : this->GetShape().front();}
@@ -197,7 +196,7 @@ public:
    //this will be an unsafe view. Method exists for backwards compatibility only
    TCpuMatrix<AFloat> GetMatrix() const
    {
-      size_t ndims = 0;
+      [[maybe_unused]] size_t ndims = 0;
       auto& shape = this->GetShape();
       //check if squeezable but do not actually squeeze
       for (auto& shape_i : shape){
@@ -217,7 +216,7 @@ public:
       return x;
    }
 
-      // return a view of slices in the first dimension (if row wise) or last dimension if colun wise
+      // return a view of slices in the first dimension (if row wise) or last dimension if column wise
       // so single event slices
       TCpuTensor<AFloat> At(size_t i)
       {
@@ -233,6 +232,12 @@ public:
       }
 
       TCpuTensor<AFloat> At(size_t i) const { return (const_cast<TCpuTensor<AFloat> &>(*this)).At(i); }
+
+      // for compatibility with old tensor (std::vector<matrix>)
+      TCpuMatrix<AFloat> operator[](size_t i) const {
+         assert(this->GetMemoryLayout() == MemoryLayout::ColumnMajor );
+         return At(i).GetMatrix();
+      }
 
       // set all the tensor contents to zero
       void Zero()
@@ -251,7 +256,7 @@ public:
                                                                     : (*(this->GetContainer()))[j * shape[0] + i];
       }
 
-      // access single element - assume tensor dim is 3. First index i is always the major  indipendent of row-major or
+      // access single element - assume tensor dim is 3. First index i is always the major  independent of row-major or
       // column major row- major  I - J - K    . Column- major  is  J - K - I
       AFloat &operator()(size_t i, size_t j, size_t k)
       {

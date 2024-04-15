@@ -44,16 +44,20 @@ public:
       printf("v(%f, %f, %f) B(%f, %f, %f) \n", x, y, z, b.fX, b.fY, b.fZ);
    }
 
+   // Track propagator uses only GetFieldD() and GetMaxFieldMagD().
+   //
+   // Here, in this base-class, we have to keep float versions GetField() and GetMaxFieldMag() as
+   // primary sources of field data (for backward compatibility in ALICE and CMS).
+   //
+   // One only needs to redefine the double versions in subclasses.
+
+   virtual Double_t    GetMaxFieldMagD() const { return GetMaxFieldMag(); }
+   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const { return GetField(x, y, z); }
+
    TEveVectorD GetFieldD(const TEveVectorD &v) const { return GetFieldD(v.fX, v.fY, v.fZ); }
 
-   // Track propgator uses only GetFieldD() and GetMaxFieldMagD(). Have to keep/reuse
-   // GetField() and GetMaxFieldMag() because of backward compatibility.
-
-   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t z) const { return GetField(x, y, z); }
-   virtual Double_t GetMaxFieldMagD() const { return GetMaxFieldMag(); } // not abstract because of backward compatibility
-
+   virtual Float_t    GetMaxFieldMag() const { return 4; }
    virtual TEveVector GetField(Float_t, Float_t, Float_t) const { return TEveVector(); }
-   virtual Float_t GetMaxFieldMag() const { return 4; } // not abstract because of backward compatibility
 
    ClassDef(TEveMagField, 0); // Abstract interface to magnetic field
 };
@@ -72,13 +76,12 @@ public:
    TEveMagFieldConst(Double_t x, Double_t y, Double_t z) :
       TEveMagField(), fB(x, y, z)
    { fFieldConstant = kTRUE; }
-   virtual ~TEveMagFieldConst() {}
+   ~TEveMagFieldConst() override {}
 
-   using   TEveMagField::GetField;
-   virtual TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const { return fB; }
-   virtual Double_t GetMaxFieldMagD() const { return fB.Mag(); };
+   Double_t    GetMaxFieldMagD() const override { return fB.Mag(); };
+   TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
 
-   ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
+   ClassDefOverride(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
 
@@ -100,16 +103,14 @@ public:
    {
       fFieldConstant = kFALSE;
    }
-   virtual ~TEveMagFieldDuo() {}
+   ~TEveMagFieldDuo() override {}
 
-   using   TEveMagField::GetField;
-   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const
+   Double_t GetMaxFieldMagD() const override { return std::max(fBIn.Mag(), fBOut.Mag()); }
+
+   TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const override
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
 
-   virtual Double_t GetMaxFieldMagD() const
-   { Double_t b1 = fBIn.Mag(), b2 = fBOut.Mag(); return b1 > b2 ? b1 : b2; }
-
-   ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
+   ClassDefOverride(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
 
@@ -236,21 +237,21 @@ protected:
                                TEveVectorD&itsect);
    Bool_t  LineIntersectPlane(const TEveVectorD& p, const TEveVectorD& point, const TEveVectorD& normal,
                               TEveVectorD& itsect);
-   Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p=0);
+   Bool_t  PointOverVertex(const TEveVector4D& v0, const TEveVector4D& v, Double_t* p = nullptr);
 
    void    ClosestPointFromVertexToLineSegment(const TEveVectorD& v, const TEveVectorD& s, const TEveVectorD& r, Double_t rMagInv, TEveVectorD& c);
    Bool_t  ClosestPointBetweenLines(const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, const TEveVectorD&, TEveVectorD& out);
 
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
-                       TEveMagField* field=0, Bool_t own_field=kTRUE);
-   virtual ~TEveTrackPropagator();
+                       TEveMagField* field=nullptr, Bool_t own_field=kTRUE);
+   ~TEveTrackPropagator() override;
 
-   virtual void OnZeroRefCount();
+   void OnZeroRefCount() override;
 
-   virtual void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ");
+   void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ") override;
 
-   virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
+   void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE) override;
 
    // propagation
    void   InitTrack(const TEveVectorD& v, Int_t charge);
@@ -344,7 +345,7 @@ public:
    static Double_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
    static Double_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
 
-   ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
+   ClassDefOverride(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________

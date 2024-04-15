@@ -1,12 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-/// Basic functionality: importing data from ROOT TTrees and THx histograms
+/// Basic functionality: importing data from ROOT TTrees and THx histograms.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
@@ -47,11 +49,11 @@ void rf102_dataimport()
    RooPlot *frame = x.frame(Title("Imported TH1 with Poisson error bars"));
    dh.plotOn(frame);
 
-   // Fit a Gaussian p.d.f to the data
+   // Fit a Gaussian pdf to the data
    RooRealVar mean("mean", "mean", 0, -10, 10);
    RooRealVar sigma("sigma", "sigma", 3, 0.1, 10);
    RooGaussian gauss("gauss", "gauss", x, mean, sigma);
-   gauss.fitTo(dh);
+   gauss.fitTo(dh, PrintLevel(-1));
    gauss.plotOn(frame);
 
    // P l o t   a n d   f i t   a   R o o D a t a H i s t   w i t h   i n t e r n a l   e r r o r s
@@ -163,10 +165,9 @@ void rf102_dataimport()
    frame5->Draw();
 }
 
+// Create ROOT TH1 filled with a Gaussian distribution
 TH1 *makeTH1()
 {
-   // Create ROOT TH1 filled with a Gaussian distribution
-
    TH1D *hh = new TH1D("hh", "hh", 25, -10, 10);
    for (int i = 0; i < 100; i++) {
       hh->Fill(gRandom->Gaus(0, 3));
@@ -174,13 +175,12 @@ TH1 *makeTH1()
    return hh;
 }
 
+// Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 TTree *makeTTree()
 {
-   // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
-
    TTree *tree = new TTree("tree", "tree");
-   Double_t *px = new Double_t;
-   Double_t *py = new Double_t;
+   double *px = new double;
+   double *py = new double;
    tree->Branch("x", px, "x/D");
    tree->Branch("y", py, "y/D");
    for (int i = 0; i < 100; i++) {

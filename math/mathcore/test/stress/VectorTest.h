@@ -11,6 +11,9 @@
 #include "VecType.h"
 #include "VecOp.h"
 
+#include <vector>
+#include <string>
+
 //*******************************************************************************************************************
 // GenVector tests
 //*******************************************************************************************************************
@@ -145,7 +148,7 @@ public:
       return tot;
    }
 
-   // mantain loop in gen otherwise is proportional to N**@
+   // maintain loop in gen otherwise is proportional to N**@
    template <class V>
    double TestDelta(const std::vector<V> &dataV)
    {
@@ -196,12 +199,12 @@ public:
       V *v1 = new V();
 
       // need to add namespace to full type name
-      if (typeName == "") {
+      if (typeName.empty()) {
          typeName = "ROOT::Math::" + VecType<V>::name();
       }
 
       TBranch *br = tree.Branch("Vector_branch", typeName.c_str(), &v1);
-      if (br == 0) {
+      if (br == nullptr) {
          std::cout << "Error creating branch for" << typeName << "\n\t typeid is " << typeid(*v1).name() << std::endl;
          return -1;
       }
@@ -234,7 +237,7 @@ public:
 
       // create tree
       TTree *tree = dynamic_cast<TTree *>(f1.Get("VectorTree"));
-      if (tree == 0) {
+      if (tree == nullptr) {
          std::cout << " Error reading file " << fname << std::endl;
          return -1;
       }

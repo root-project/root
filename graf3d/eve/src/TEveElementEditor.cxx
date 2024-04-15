@@ -13,14 +13,11 @@
 #include "TEveElement.h"
 #include "TEveTransEditor.h"
 
-#include "TVirtualPad.h"
 #include "TColor.h"
 
 #include "TGLabel.h"
-#include "TGButton.h"
 #include "TGNumberEntry.h"
 #include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
 
 /** \class TEveElementEditor
 \ingroup TEve
@@ -37,15 +34,15 @@ TEveElementEditor::TEveElementEditor(const TGWindow *p,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fRE           (0),
-   fHFrame       (0),
-   fPreLabel     (0),
-   fRnrSelf      (0),
-   fRnrChildren  (0),
-   fRnrState     (0),
-   fMainColor    (0),
-   fTransparency (0),
-   fTrans        (0)
+   fRE           (nullptr),
+   fHFrame       (nullptr),
+   fPreLabel     (nullptr),
+   fRnrSelf      (nullptr),
+   fRnrChildren  (nullptr),
+   fRnrState     (nullptr),
+   fMainColor    (nullptr),
+   fTransparency (nullptr),
+   fTrans        (nullptr)
 {
    MakeTitle("TEveElement");
    fPriority = 0;

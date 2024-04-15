@@ -9,18 +9,13 @@
 # @author Kim Albertsson
 ############################################################################
 
-set(Libraries TMVA)
-include_directories(${ROOT_INCLUDE_DIRS})
-
-
-
 # Tests using google test
 ROOT_ADD_GTEST(TestRandomGenerator
                TestRandomGenerator.cxx
-               LIBRARIES ${Libraries})
+               LIBRARIES TMVA)
 ROOT_ADD_GTEST(TestOptimizeConfigParameters
                TestOptimizeConfigParameters.cxx
-               LIBRARIES ${Libraries})
+               LIBRARIES TMVA)
 
 if(dataframe)
     # RTensor
@@ -33,15 +28,29 @@ if(dataframe)
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
     ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVAUtils)
 endif()
 
-if(dataframe AND pyroot_experimental)
-  find_python_module(xgboost QUIET)
-  if (PY_XGBOOST_FOUND)
-    ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
-  endif()
+# Disabled because RBDT doesn't support the imbalanced tree structure of
+# XGBoost models. See https://github.com/root-project/root/issues/15197
+# TODO: Re-enable once fixed
+# if(dataframe)
+#   find_python_module(xgboost QUIET)
+#   if (PY_XGBOOST_FOUND)
+#     ROOT_ADD_PYUNITTEST(rbdt_xgboost rbdt_xgboost.py)
+#   endif()
+# endif()
+
+#--stressTMVA--------------------------------------------------------------------------------------
+
+ROOT_EXECUTABLE(stressTMVA stressTMVA.cxx LIBRARIES TMVA)
+
+if(tmva-gpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCUDA)
 endif()
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
+if(tmva-cpu)
+  target_compile_definitions(stressTMVA PRIVATE DNNCPU)
+endif()
+
+ROOT_ADD_TEST(test-stresstmva COMMAND stressTMVA -b LABELS longtest TIMEOUT 1800)

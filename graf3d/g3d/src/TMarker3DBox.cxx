@@ -9,21 +9,20 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
+#include <iostream>
 #include "TROOT.h"
+#include "TBuffer.h"
 #include "TView.h"
 #include "TMarker3DBox.h"
 #include "TVirtualPad.h"
 #include "TH1.h"
-#include "TH3.h"
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 #include "TVirtualViewer3D.h"
 #include "TGeometry.h"
-#include "TClass.h"
 #include "TMath.h"
 
-#include <assert.h>
+#include <cassert>
 
 ClassImp(TMarker3DBox);
 
@@ -48,7 +47,7 @@ It has the following parameters:
 
 TMarker3DBox::TMarker3DBox()
 {
-   fRefObject = 0;
+   fRefObject = nullptr;
    fDx        = 1;
    fDy        = 1;
    fDz        = 1;
@@ -76,7 +75,7 @@ TMarker3DBox::TMarker3DBox( Float_t x, Float_t y, Float_t z,
    fZ         = z;
    fTheta     = theta;
    fPhi       = phi;
-   fRefObject = 0;
+   fRefObject = nullptr;
    SetBit(kTemporary,kFALSE);
 }
 
@@ -199,7 +198,7 @@ void TMarker3DBox::Paint(Option_t * /* option */ )
    // If we are just a temporary object then no 'real object' to
    // pass to viewer
    if (TestBit(kTemporary)) {
-      buffer.fID = 0;
+      buffer.fID = nullptr;
    } else {
       buffer.fID           = this;
    }
@@ -304,7 +303,7 @@ void TMarker3DBox::PaintH3(TH1 *h, Option_t *option)
    TView *view = gPad->GetView();
    if (!view) {
       gPad->Range(-1,-1,1,1);
-      view = TView::CreateView(1,0,0);
+      view = TView::CreateView(1,nullptr,nullptr);
       if (!view) return;
    }
    view->SetRange(xaxis->GetBinLowEdge(xaxis->GetFirst()),

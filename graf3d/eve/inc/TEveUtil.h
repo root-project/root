@@ -19,7 +19,7 @@
 #include "GuiTypes.h"
 
 #include <map>
-#include <set>
+#include <string>
 #include <exception>
 
 class TVirtualPad;
@@ -106,11 +106,11 @@ public:
    TEveException(const char* s)    : TString(s) {}
    TEveException(const std::string& s);
 
-   virtual ~TEveException() noexcept {}
+   ~TEveException() noexcept override {}
 
-   virtual const char* what() const noexcept { return Data(); }
+   const char* what() const noexcept override { return Data(); }
 
-   ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
+   ClassDefOverride(TEveException, 1); // Exception-type thrown by Eve classes.
 };
 
 TEveException operator+(const TEveException &s1, const std::string  &s2);
@@ -132,7 +132,7 @@ private:
    TEvePadHolder& operator=(const TEvePadHolder&); // Not implemented
 
 public:
-   TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=0, Int_t subpad=0);
+   TEvePadHolder(Bool_t modify_update_p, TVirtualPad* new_pad=nullptr, Int_t subpad=0);
    virtual ~TEvePadHolder();
 
    ClassDef(TEvePadHolder, 0); // Exception-safe wrapper for temporary setting of gPad variable.
@@ -148,7 +148,7 @@ private:
    TEveGeoManagerHolder& operator=(const TEveGeoManagerHolder&); // Not implemented
 
 public:
-   TEveGeoManagerHolder(TGeoManager* new_gmgr=0, Int_t n_seg=0);
+   TEveGeoManagerHolder(TGeoManager* new_gmgr=nullptr, Int_t n_seg=0);
    virtual ~TEveGeoManagerHolder();
 
    ClassDef(TEveGeoManagerHolder, 0); // Exception-safe wrapper for temporary setting of gGeoManager variable.
@@ -193,7 +193,7 @@ protected:
 
 public:
    TEveRefBackPtr();
-   virtual ~TEveRefBackPtr();
+   ~TEveRefBackPtr() override;
 
    TEveRefBackPtr(const TEveRefBackPtr&);
    TEveRefBackPtr& operator=(const TEveRefBackPtr&);
@@ -205,7 +205,7 @@ public:
 
    virtual void StampBackPtrElements(UChar_t stamps);
 
-   ClassDef(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
+   ClassDefOverride(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
 };
 
 #endif

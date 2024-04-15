@@ -23,6 +23,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 namespace clang {
    class CompilerInstance;

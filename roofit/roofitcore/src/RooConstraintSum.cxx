@@ -19,7 +19,7 @@
 \class RooConstraintSum
 \ingroup Roofitcore
 
-RooConstraintSum calculates the sum of the -(log) likelihoods of
+Calculates the sum of the -(log) likelihoods of
 a set of RooAbsPfs that represent constraint functions. This class
 is used to calculate the composite -log(L) of constraints to be
 added to the regular -log(L) in RooAbsPdf::fitTo() with Constrain(..)
@@ -27,95 +27,96 @@ arguments.
 **/
 
 
-#include "RooFit.h"
-
-#include "Riostream.h"
-#include <math.h>
-
 #include "RooConstraintSum.h"
+#include "RooAbsData.h"
 #include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
-#include "RooNLLVar.h"
-#include "RooChi2Var.h"
 #include "RooMsgService.h"
-
-using namespace std;
+#include "RooHelpers.h"
+#include "RooAbsCategoryLValue.h"
 
 ClassImp(RooConstraintSum);
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
+/// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf.
 
-RooConstraintSum::RooConstraintSum()
-{
-
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor with set of constraint p.d.f.s. All elements in constraintSet must inherit from RooAbsPdf
-
-RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet) :
+RooConstraintSum::RooConstraintSum(const char* name, const char* title, const RooArgSet& constraintSet, const RooArgSet& normSet, bool takeGlobalObservablesFromData) :
   RooAbsReal(name, title),
   _set1("set1","First set of components",this),
-  _paramSet("paramSet","Set of parameters",this)
+  _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
 {
-  for (const auto comp : constraintSet) {
-    if (!dynamic_cast<RooAbsPdf*>(comp)) {
-      coutE(InputArguments) << "RooConstraintSum::ctor(" << GetName() << ") ERROR: component " << comp->GetName() 
-			    << " is not of type RooAbsPdf" << endl ;
-      RooErrorHandler::softAbort() ;
-    }
-    _set1.add(*comp) ;
-  }
-
+  _set1.addTyped<RooAbsPdf>(constraintSet);
   _paramSet.add(normSet) ;
 }
 
 
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
+/// Copy constructor.
 
 RooConstraintSum::RooConstraintSum(const RooConstraintSum& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _set1("set1",this,other._set1),
-  _paramSet("paramSet",this,other._paramSet)
+  _paramSet(other._paramSet),
+  _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
 {
-
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
+/// Return sum of -log of constraint p.d.f.s.
 
-RooConstraintSum::~RooConstraintSum() 
+double RooConstraintSum::evaluate() const
 {
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return sum of -log of constraint p.d.f.s
-
-Double_t RooConstraintSum::evaluate() const 
-{
-  Double_t sum(0);
+  double sum(0);
 
   for (const auto comp : _set1) {
     sum -= static_cast<RooAbsPdf*>(comp)->getLogVal(&_paramSet);
   }
-  
+
   return sum;
 }
 
+void RooConstraintSum::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::constraintSumEvaluate", _set1, _set1.size()));
+}
+
+void RooConstraintSum::doEval(RooFit::EvalContext &ctx) const
+{
+   double sum(0);
+
+   for (const auto comp : _set1) {
+      sum -= std::log(ctx.at(comp)[0]);
+   }
+
+   ctx.output()[0] = sum;
+}
+
+std::unique_ptr<RooAbsArg> RooConstraintSum::compileForNormSet(RooArgSet const & /*normSet*/, RooFit::Detail::CompileContext & ctx) const
+{
+   std::unique_ptr<RooAbsReal> newArg{static_cast<RooAbsReal*>(this->Clone())};
+
+   for (const auto server : newArg->servers()) {
+      RooArgSet nset;
+      server->getObservables(&_paramSet, nset);
+      ctx.compileServer(*server, *newArg, nset);
+   }
+
+   return newArg;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace the variables in this RooConstraintSum with the global observables
+/// in the dataset if they match by name. This function will do nothing if this
+/// RooConstraintSum is configured to not use the global observables stored in
+/// datasets.
+bool RooConstraintSum::setData(RooAbsData const& data, bool /*cloneData=true*/) {
+  if(_takeGlobalObservablesFromData && data.getGlobalObservables()) {
+    this->recursiveRedirectServers(*data.getGlobalObservables()) ;
+  }
+  return true;
+}

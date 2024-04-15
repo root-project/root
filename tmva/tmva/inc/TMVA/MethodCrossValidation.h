@@ -26,6 +26,8 @@
 
 #include <iostream>
 #include <memory>
+#include <vector>
+#include <map>
 
 namespace TMVA {
 
@@ -42,7 +44,7 @@ public:
    MethodCrossValidation(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
                          const TString &theOption = "");
 
-   // constructor for calculating BDT-MVA using previously generatad decision trees
+   // constructor for calculating BDT-MVA using previously generated decision trees
    MethodCrossValidation(DataSetInfo &theData, const TString &theWeightFile);
 
    virtual ~MethodCrossValidation(void);
@@ -70,7 +72,7 @@ public:
    void WriteMonitoringHistosToFile(void) const;
 
    // calculate the MVA value
-   Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   Double_t GetMvaValue(Double_t *err = nullptr, Double_t *errUpper = nullptr);
    const std::vector<Float_t> &GetMulticlassValues();
    const std::vector<Float_t> &GetRegressionValues();
 

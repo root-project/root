@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
@@ -28,44 +30,34 @@ Object          | function
 ----------------|------------
    RooPlot      | regPlot()
    RooFitResult | regResult()
-   Double_t     | regValue()
+   double       | regValue()
    RooTable     | regTable()
    TH1/2/3      | regTH()
    RooWorkspace | regWS()
 **/
 
-#include "RooFit.h"
 #include "RooUnitTest.h"
-#include "TROOT.h"
-#include "TClass.h"
-#include "TSystem.h"
+
+#include "RooCurve.h"
 #include "RooHist.h"
 #include "RooMsgService.h"
 #include "RooDouble.h"
 #include "RooTrace.h"
 #include "RooRandom.h"
-#include <math.h>
 
-ClassImp(RooUnitTest);
-;
+#include <TClass.h>
+#include <TDirectory.h>
+#include <TFile.h>
 
-using namespace std;
+#include <cmath>
 
-TDirectory* RooUnitTest::gMemDir = 0 ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooUnitTest::RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose) : TNamed(name,name),
-  			                         _refFile(refFile), _debug(kFALSE), _write(writeRef), _verb(verbose)
-{
-}
-
+TDirectory* RooUnitTest::gMemDir = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooUnitTest::~RooUnitTest()
+RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose) : TNamed(name,name),
+                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose)
 {
 }
 
@@ -75,9 +67,15 @@ RooUnitTest::~RooUnitTest()
 void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
+    std::string refNameStr(refName) ;
     frame->SetName(refName) ;
-    _regPlots.push_back(make_pair(frame,refNameStr)) ;
+    // Since ROOT 6.28, the RooPlot doesn't clone the plot variable by default
+    // anymore. This is a problem for registering the RooPlots, because they
+    // need to survive without dangling pointers even after the RooUnitTest is
+    // done. For that reason, we ask the RooPlot to create an internal plot
+    // variable clone for itself.
+    frame->createInternalPlotVarClone();
+    _regPlots.emplace_back(frame,refNameStr);
   } else {
     delete frame ;
   }
@@ -86,24 +84,20 @@ void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooUnitTest::regResult(RooFitResult* r, const char* refName)
+void RooUnitTest::regResult(std::unique_ptr<RooFitResult> r, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
-    _regResults.push_back(make_pair(r,refNameStr)) ;
-  } else {
-    delete r ;
+    _regResults.emplace_back(r.release(),refName);
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooUnitTest::regValue(Double_t d, const char* refName)
+void RooUnitTest::regValue(double d, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
-    _regValues.push_back(make_pair(d,refNameStr)) ;
+    _regValues.emplace_back(d,refName);
   }
 }
 
@@ -113,8 +107,7 @@ void RooUnitTest::regValue(Double_t d, const char* refName)
 void RooUnitTest::regTable(RooTable* t, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
-    _regTables.push_back(make_pair(t,refNameStr)) ;
+    _regTables.emplace_back(t,refName) ;
   } else {
     delete t ;
   }
@@ -126,8 +119,7 @@ void RooUnitTest::regTable(RooTable* t, const char* refName)
 void RooUnitTest::regWS(RooWorkspace* ws, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
-    _regWS.push_back(make_pair(ws,refNameStr)) ;
+    _regWS.emplace_back(ws,refName) ;
   } else {
     delete ws ;
   }
@@ -139,8 +131,7 @@ void RooUnitTest::regWS(RooWorkspace* ws, const char* refName)
 void RooUnitTest::regTH(TH1* th, const char* refName)
 {
   if (_refFile) {
-    string refNameStr(refName) ;
-    _regTH.push_back(make_pair(th,refNameStr)) ;
+    _regTH.emplace_back(th,refName) ;
   } else {
     delete th ;
   }
@@ -153,9 +144,9 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
 {
   RooWorkspace* ws = dynamic_cast<RooWorkspace*>(_refFile->Get(refName)) ;
   if (!ws) {
-    cout << "RooUnitTest ERROR: cannot retrieve RooWorkspace " << refName
-	 << " from reference file, skipping " << endl ;
-    return 0 ;
+    if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooWorkspace " << refName
+                             << " from reference file, skipping " << std::endl ;
+    return nullptr ;
   }
 
   return ws ;
@@ -164,20 +155,20 @@ RooWorkspace* RooUnitTest::getWS(const char* refName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href)
+bool RooUnitTest::areTHidentical(TH1* htest, TH1* href)
 {
   if (htest->GetDimension() != href->GetDimension()) {
-    return kFALSE ;
+    return false ;
   }
 
   // Use Kolmogorov distance as metric rather than probability
   // because we expect histograms to be identical rather
   // than drawn from the same parent distribution
-  Double_t kmax = htest->KolmogorovTest(href,"M") ;
+  double kmax = htest->KolmogorovTest(href,"M") ;
 
   if (kmax>htol()) {
 
-    cout << "KS distances = " << kmax << endl ;
+    if(_verb >= 0) std::cout << "KS distances = " << kmax << std::endl;
 
     Int_t ntest = htest->GetNbinsX() +2 ;
     Int_t nref  = href->GetNbinsX() +2 ;
@@ -191,30 +182,30 @@ Bool_t RooUnitTest::areTHidentical(TH1* htest, TH1* href)
     }
 
     if (ntest != nref) {
-      return kFALSE ;
+      return false ;
     }
 
     for (Int_t i=0 ; i<ntest ; i++) {
-      if (fabs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
-	cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << endl;
+      if (std::abs(htest->GetBinContent(i)-href->GetBinContent(i))>htol()) {
+        if(_verb >= 0) std::cout << "htest[" << i << "] = " << htest->GetBinContent(i) << " href[" << i << "] = " << href->GetBinContent(i) << std::endl;
       }
     }
 
-    return kFALSE ;
+    return false ;
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::runCompTests()
+bool RooUnitTest::runCompTests()
 {
-  Bool_t ret = kTRUE ;
+  bool ret = true ;
 
-  list<pair<RooPlot*, string> >::iterator iter = _regPlots.begin() ;
+  auto iter = _regPlots.begin() ;
   while (iter!=_regPlots.end()) {
 
     if (!_write) {
@@ -224,92 +215,94 @@ Bool_t RooUnitTest::runCompTests()
       // Retrieve benchmark
       RooPlot* bmark = dynamic_cast<RooPlot*>(_refFile->Get(iter->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooPlot " << iter->second << " from reference file, skipping " << endl ;
-	ret = kFALSE ;
-	++iter ;
-	continue ;
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooPlot " << iter->second
+                                 << " from reference file, skipping " << std::endl;
+        ret = false ;
+        ++iter ;
+        continue ;
       }
 
-      if (_verb) {
-	cout << "comparing RooPlot " << iter->first << " to benchmark " << iter->second << " = " << bmark << endl ;
-	cout << "reference: " ; iter->first->Print() ;
-	cout << "benchmark: " ; bmark->Print() ;
+      if (_verb > 0) {
+   std::cout << "comparing RooPlot " << iter->first << " to benchmark " << iter->second << " = " << bmark << std::endl ;
+   std::cout << "reference: " ; iter->first->Print() ;
+   std::cout << "benchmark: " ; bmark->Print() ;
       }
 
-      RooPlot* compPlot = _debug ? iter->first->emptyClone(Form("%s_comparison",iter->first->GetName())) : 0 ;
-      Bool_t anyFail=kFALSE ;
+      RooPlot* compPlot = _debug ? iter->first->emptyClone(Form("%s_comparison",iter->first->GetName())) : nullptr ;
+      bool anyFail=false ;
 
       Stat_t nItems = iter->first->numItems() ;
       for (Stat_t i=0 ; i<nItems ; i++) {
-	// coverity[NULL_RETURNS]
-	TObject* obj = iter->first->getObject((Int_t)i) ;
+   // coverity[NULL_RETURNS]
+   TObject* obj = iter->first->getObject((Int_t)i) ;
 
-	// Retrieve corresponding object from reference frame
-	TObject* objRef = bmark->findObject(obj->GetName()) ;
+   // Retrieve corresponding object from reference frame
+   TObject* objRef = bmark->findObject(obj->GetName()) ;
 
-	if (!objRef) {
-	  cout << "RooUnitTest ERROR: cannot retrieve object " << obj->GetName() << " from reference  RooPlot " << iter->second << ", skipping" << endl ;
-	  ret = kFALSE ;
-	  break ;
-	}
+   if (!objRef) {
+     if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve reference object " << obj->GetName()
+                               << " from benchmark RooPlot " << iter->second << ", skipping" << std::endl;
+     ret = false ;
+     break ;
+   }
 
-	// Histogram comparisons
-	if (obj->IsA()==RooHist::Class()) {
-	  RooHist* testHist = static_cast<RooHist*>(obj) ;
-	  RooHist* refHist = static_cast<RooHist*>(objRef) ;
-	  if (!testHist->isIdentical(*refHist,htol())) {
-	    cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName()
-		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
+   // Histogram comparisons
+   if (obj->IsA()==RooHist::Class()) {
+     RooHist* testHist = static_cast<RooHist*>(obj) ;
+     RooHist* refHist = static_cast<RooHist*>(objRef) ;
+     if (!testHist->isIdentical(*refHist,htol(),_verb >= 0)) {
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->ClassName() << "::" << obj->GetName()
+                                 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
-	    if (compPlot) {
-	      compPlot->addPlotable((RooHist*)testHist->Clone(),"P") ;
-	      compPlot->getAttLine()->SetLineColor(kRed) ;
-	      compPlot->getAttMarker()->SetMarkerColor(kRed) ;
-	      compPlot->getAttLine()->SetLineWidth(1) ;
+       if (compPlot) {
+         compPlot->addPlotable(static_cast<RooHist*>(testHist->Clone()),"P") ;
+         compPlot->getAttLine()->SetLineColor(kRed) ;
+         compPlot->getAttMarker()->SetMarkerColor(kRed) ;
+         compPlot->getAttLine()->SetLineWidth(1) ;
 
-	      compPlot->addPlotable((RooHist*)refHist->Clone(),"P") ;
-	      compPlot->getAttLine()->SetLineColor(kBlue) ;
-	      compPlot->getAttMarker()->SetMarkerColor(kBlue) ;
-	      compPlot->getAttLine()->SetLineWidth(1) ;
-	    }
+         compPlot->addPlotable(static_cast<RooHist*>(refHist->Clone()),"P") ;
+         compPlot->getAttLine()->SetLineColor(kBlue) ;
+         compPlot->getAttMarker()->SetMarkerColor(kBlue) ;
+         compPlot->getAttLine()->SetLineWidth(1) ;
+       }
 
-	    anyFail=kTRUE ;
-	    ret = kFALSE ;
-	  }
-	} else if (obj->IsA()==RooCurve::Class()) {
-	  RooCurve* testCurve = static_cast<RooCurve*>(obj) ;
-	  RooCurve* refCurve = static_cast<RooCurve*>(objRef) ;
-	  if (!testCurve->isIdentical(*refCurve,ctol())) {
-	    cout << "RooUnitTest ERROR: comparison of object " << obj->IsA()->GetName() << "::" << obj->GetName()
-		 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << endl ;
+       anyFail=true ;
+       ret = false ;
+     }
+   } else if (obj->IsA()==RooCurve::Class()) {
+     RooCurve* testCurve = static_cast<RooCurve*>(obj) ;
+     RooCurve* refCurve = static_cast<RooCurve*>(objRef) ;
+     if (!testCurve->isIdentical(*refCurve,ctol(),_verb >= 0)) {
+       if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << obj->ClassName() << "::" << obj->GetName()
+                                 <<   " fails comparison with counterpart in reference RooPlot " << bmark->GetName() << std::endl;
 
-	    if (compPlot) {
-	      compPlot->addPlotable((RooCurve*)testCurve->Clone()) ;
-	      compPlot->getAttLine()->SetLineColor(kRed) ;
-	      compPlot->getAttLine()->SetLineWidth(1) ;
-	      compPlot->getAttLine()->SetLineStyle(kSolid) ;
+       if (compPlot) {
+         compPlot->addPlotable(static_cast<RooCurve*>(testCurve->Clone())) ;
+         compPlot->getAttLine()->SetLineColor(kRed) ;
+         compPlot->getAttLine()->SetLineWidth(1) ;
+         compPlot->getAttLine()->SetLineStyle(kSolid) ;
 
-	      compPlot->addPlotable((RooCurve*)refCurve->Clone()) ;
-	      compPlot->getAttLine()->SetLineColor(kBlue) ;
-	      compPlot->getAttLine()->SetLineWidth(1) ;
-	      compPlot->getAttLine()->SetLineStyle(kDashed) ;
-	    }
+         compPlot->addPlotable(static_cast<RooCurve*>(refCurve->Clone())) ;
+         compPlot->getAttLine()->SetLineColor(kBlue) ;
+         compPlot->getAttLine()->SetLineWidth(1) ;
+         compPlot->getAttLine()->SetLineStyle(kDashed) ;
+       }
 
-	    anyFail=kTRUE ;
-	    ret = kFALSE ;
-	  }
+       anyFail=true ;
+       ret = false ;
+     }
 
-	}
+   }
 
       }
 
       if (anyFail && compPlot) {
-	cout << "RooUnitTest INFO: writing comparison plot " << compPlot->GetName() << " of failed test to RooUnitTest_DEBUG.root" << endl ;
-	TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
-	compPlot->Write() ;
-	fdbg.Close() ;
+   std::cout << "RooUnitTest INFO: writing comparison plot " << compPlot->GetName() << " of failed test to RooUnitTest_DEBUG.root" << std::endl ;
+   TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
+   compPlot->Write() ;
+   fdbg.Close() ;
       } else {
-	delete compPlot ;
+   delete compPlot ;
       }
 
       // Delete RooPlot when comparison is finished to avoid noise in leak checking
@@ -319,7 +312,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference RooPlot " << iter->first << " as benchmark " << iter->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference RooPlot " << iter->first << " as benchmark " << iter->second << std::endl ;
       _refFile->cd() ;
       iter->first->Write(iter->second.c_str()) ;
       gMemDir->cd() ;
@@ -329,7 +322,7 @@ Bool_t RooUnitTest::runCompTests()
   }
 
 
-  list<pair<RooFitResult*, string> >::iterator iter2 = _regResults.begin() ;
+  auto iter2 = _regResults.begin() ;
   while (iter2!=_regResults.end()) {
 
     if (!_write) {
@@ -339,21 +332,24 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooFitResult* bmark = dynamic_cast<RooFitResult*>(_refFile->Get(iter2->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooFitResult " << iter2->second << " from reference file, skipping " << endl ;
-	++iter2 ;
-	ret = kFALSE ;
-	continue ;
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooFitResult "
+                                 << iter2->second << " from reference file, skipping " << std::endl ;
+        ++iter2 ;
+        ret = false ;
+        continue ;
       }
 
-      if (_verb) {
-	cout << "comparing RooFitResult " << iter2->first << " to benchmark " << iter2->second << " = " << bmark << endl ;
+      if (_verb > 0) {
+   std::cout << "comparing RooFitResult " << iter2->first << " to benchmark " << iter2->second << " = " << bmark << std::endl ;
       }
 
-      if (!iter2->first->isIdentical(*bmark,fptol(),fctol())) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter2->first->IsA()->GetName() << "::" << iter2->first->GetName()
-	     << " from result " << iter2->second
-	     <<   " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << endl ;
-	ret = kFALSE ;
+      if (!iter2->first->isIdentical(*bmark,fptol(),fctol(),_verb >= 0)) {
+   if (_verb >= 0) {
+     std::cout << "RooUnitTest ERROR: comparison of object " << iter2->first->ClassName()
+               << "::" << iter2->first->GetName() << " from result " << iter2->second
+               << " fails comparison with counterpart in reference RooFitResult " << bmark->GetName() << std::endl;
+   }
+        ret = false ;
       }
 
       // Delete RooFitResult when comparison is finished to avoid noise in leak checking
@@ -364,7 +360,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference RooFitResult " << iter2->first << " as benchmark " << iter2->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference RooFitResult " << iter2->first << " as benchmark " << iter2->second << std::endl ;
       _refFile->cd() ;
       iter2->first->Write(iter2->second.c_str()) ;
       gMemDir->cd() ;
@@ -373,7 +369,7 @@ Bool_t RooUnitTest::runCompTests()
     ++iter2 ;
   }
 
-  list<pair<Double_t, string> >::iterator iter3 = _regValues.begin() ;
+  auto iter3 = _regValues.begin() ;
   while (iter3!=_regValues.end()) {
 
     if (!_write) {
@@ -383,19 +379,19 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooDouble* ref = dynamic_cast<RooDouble*>(_refFile->Get(iter3->second.c_str())) ;
       if (!ref) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooDouble " << iter3->second << " from reference file, skipping " << endl ;
-	++iter3 ;
-	ret = kFALSE ;
-	continue ;
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooDouble " << iter3->second << " from reference file, skipping " << std::endl;
+        ++iter3 ;
+        ret = false ;
+        continue ;
       }
 
-      if (_verb) {
-	cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (Double_t)(*ref) << endl ;
+      if (_verb > 0) {
+   std::cout << "comparing value " << iter3->first << " to benchmark " << iter3->second << " = " << (double)(*ref) << std::endl ;
       }
 
-      if (fabs(iter3->first - (Double_t)(*ref))>vtol() ) {
-	cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << endl ;
-	ret = kFALSE ;
+      if (std::abs(iter3->first - (double)(*ref))>vtol() ) {
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of value " << iter3->first <<   " fails comparison with reference " << ref->GetName() << std::endl ;
+        ret = false ;
       }
 
 
@@ -403,7 +399,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference Double_t " << iter3->first << " as benchmark " << iter3->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference double " << iter3->first << " as benchmark " << iter3->second << std::endl ;
       _refFile->cd() ;
       RooDouble* rd = new RooDouble(iter3->first) ;
       rd->Write(iter3->second.c_str()) ;
@@ -414,7 +410,7 @@ Bool_t RooUnitTest::runCompTests()
   }
 
 
-  list<pair<RooTable*, string> >::iterator iter4 = _regTables.begin() ;
+  auto iter4 = _regTables.begin() ;
   while (iter4!=_regTables.end()) {
 
     if (!_write) {
@@ -424,20 +420,24 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       RooTable* bmark = dynamic_cast<RooTable*>(_refFile->Get(iter4->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve RooTable " << iter4->second << " from reference file, skipping " << endl ;
-	++iter4 ;
-	ret = kFALSE ;
-	continue ;
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve RooTable " << iter4->second << " from reference file, skipping " << std::endl ;
+        ++iter4 ;
+        ret = false ;
+        continue ;
       }
 
-      if (_verb) {
-	cout << "comparing RooTable " << iter4->first << " to benchmark " << iter4->second << " = " << bmark << endl ;
+      if (_verb > 0) {
+   std::cout << "comparing RooTable " << iter4->first << " to benchmark " << iter4->second << " = " << bmark << std::endl ;
       }
 
-      if (!iter4->first->isIdentical(*bmark)) {
-	cout << "RooUnitTest ERROR: comparison of object " << iter4->first->IsA()->GetName() << "::" << iter4->first->GetName()
-	     <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << endl ;
-	ret = kFALSE ;
+      if (!iter4->first->isIdentical(*bmark, _verb >= 0)) {
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << iter4->first->ClassName() << "::" << iter4->first->GetName()
+            <<   " fails comparison with counterpart in reference RooTable " << bmark->GetName() << std::endl ;
+        if (_verb > 0) {
+          iter4->first->Print("V");
+          bmark->Print("V");
+        }
+        ret = false;
       }
 
       // Delete RooTable when comparison is finished to avoid noise in leak checking
@@ -448,7 +448,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference RooTable " << iter4->first << " as benchmark " << iter4->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference RooTable " << iter4->first << " as benchmark " << iter4->second << std::endl ;
       _refFile->cd() ;
       iter4->first->Write(iter4->second.c_str()) ;
       gMemDir->cd() ;
@@ -458,14 +458,14 @@ Bool_t RooUnitTest::runCompTests()
   }
 
 
-  list<pair<RooWorkspace*, string> >::iterator iter5 = _regWS.begin() ;
+  auto iter5 = _regWS.begin() ;
   while (iter5!=_regWS.end()) {
 
     if (_write) {
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference RooWorkspace " << iter5->first << " as benchmark " << iter5->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference RooWorkspace " << iter5->first << " as benchmark " << iter5->second << std::endl ;
       _refFile->cd() ;
       iter5->first->Write(iter5->second.c_str()) ;
       gMemDir->cd() ;
@@ -475,7 +475,7 @@ Bool_t RooUnitTest::runCompTests()
   }
 
   /////////////////
-  list<pair<TH1*, string> >::iterator iter6 = _regTH.begin() ;
+  auto iter6 = _regTH.begin() ;
   while (iter6!=_regTH.end()) {
 
     if (!_write) {
@@ -485,34 +485,34 @@ Bool_t RooUnitTest::runCompTests()
      // Retrieve benchmark
       TH1* bmark = dynamic_cast<TH1*>(_refFile->Get(iter6->second.c_str())) ;
       if (!bmark) {
-	cout << "RooUnitTest ERROR: cannot retrieve TH1 " << iter6->second << " from reference file, skipping " << endl ;
-	++iter6 ;
-	ret = kFALSE ;
-	continue ;
+        if(_verb >= 0) std::cout << "RooUnitTest ERROR: cannot retrieve TH1 " << iter6->second << " from reference file, skipping " << std::endl ;
+        ++iter6 ;
+        ret = false ;
+        continue ;
       }
 
-      if (_verb) {
-	cout << "comparing TH1 " << iter6->first << " to benchmark " << iter6->second << " = " << bmark << endl ;
+      if (_verb > 0) {
+   std::cout << "comparing TH1 " << iter6->first << " to benchmark " << iter6->second << " = " << bmark << std::endl ;
       }
 
       if (!areTHidentical(iter6->first,bmark)) {
-	// coverity[NULL_RETURNS]
-	cout << "RooUnitTest ERROR: comparison of object " << iter6->first->IsA()->GetName() << "::" << iter6->first->GetName()
-	     <<   " fails comparison with counterpart in reference TH1 " << bmark->GetName() << endl ;
+   // coverity[NULL_RETURNS]
+   if(_verb >= 0) std::cout << "RooUnitTest ERROR: comparison of object " << iter6->first->ClassName() << "::" << iter6->first->GetName()
+        <<   " fails comparison with counterpart in reference TH1 " << bmark->GetName() << std::endl ;
 
 
       if (_debug) {
-	cout << "RooUnitTest INFO: writing THx " << iter6->first->GetName() << " and " << bmark->GetName()
-	     << " of failed test to RooUnitTest_DEBUG.root" << endl ;
-	TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
-	iter6->first->SetName(Form("%s_test",iter6->first->GetName())) ;
-	iter6->first->Write() ;
-	bmark->SetName(Form("%s_ref",bmark->GetName())) ;
-	bmark->Write() ;
-	fdbg.Close() ;
+   std::cout << "RooUnitTest INFO: writing THx " << iter6->first->GetName() << " and " << bmark->GetName()
+        << " of failed test to RooUnitTest_DEBUG.root" << std::endl ;
+   TFile fdbg("RooUnitTest_DEBUG.root","UPDATE") ;
+   iter6->first->SetName(Form("%s_test",iter6->first->GetName())) ;
+   iter6->first->Write() ;
+   bmark->SetName(Form("%s_ref",bmark->GetName())) ;
+   bmark->Write() ;
+   fdbg.Close() ;
       }
 
-	ret = kFALSE ;
+   ret = false ;
       }
 
       // Delete TH1 when comparison is finished to avoid noise in leak checking
@@ -523,7 +523,7 @@ Bool_t RooUnitTest::runCompTests()
 
       // Writing mode
 
-      cout <<"RooUnitTest: Writing reference TH1 " << iter6->first << " as benchmark " << iter6->second << endl ;
+      std::cout <<"RooUnitTest: Writing reference TH1 " << iter6->first << " as benchmark " << iter6->second << std::endl ;
       _refFile->cd() ;
       iter6->first->Write(iter6->second.c_str()) ;
       gMemDir->cd() ;
@@ -543,10 +543,10 @@ Bool_t RooUnitTest::runCompTests()
 
 void RooUnitTest::setSilentMode()
 {
-  RooMsgService::instance().setSilentMode(kTRUE) ;
+  RooMsgService::instance().setSilentMode(true) ;
   for (Int_t i=0 ; i<RooMsgService::instance().numStreams() ; i++) {
     if (RooMsgService::instance().getStream(i).minLevel<RooFit::ERROR) {
-      RooMsgService::instance().setStreamStatus(i,kFALSE) ;
+      RooMsgService::instance().setStreamStatus(i,false) ;
     }
   }
 }
@@ -556,9 +556,9 @@ void RooUnitTest::setSilentMode()
 
 void RooUnitTest::clearSilentMode()
 {
-  RooMsgService::instance().setSilentMode(kFALSE) ;
+  RooMsgService::instance().setSilentMode(false) ;
   for (Int_t i=0 ; i<RooMsgService::instance().numStreams() ; i++) {
-    RooMsgService::instance().setStreamStatus(i,kTRUE) ;
+    RooMsgService::instance().setStreamStatus(i,true) ;
   }
 }
 
@@ -566,14 +566,14 @@ void RooUnitTest::clearSilentMode()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooUnitTest::runTest()
+bool RooUnitTest::runTest()
 {
   gMemDir->cd() ;
 
   if (_verb<2) {
     setSilentMode() ;
   } else {
-    cout << "*** Begin of output of Unit Test at normal verbosity *************" << endl ;
+    std::cout << "*** Begin of output of Unit Test at normal verbosity *************" << std::endl ;
   }
 
   RooMsgService::instance().clearErrorCount() ;
@@ -583,18 +583,18 @@ Bool_t RooUnitTest::runTest()
   RooRandom::randomGenerator()->SetSeed(12345) ;
 
   RooTrace::callgrind_zero() ;
-  if (!testCode()) return kFALSE ;
+  if (!testCode()) return false ;
   RooTrace::callgrind_dump() ;
 
   if (_verb<2) {
     clearSilentMode() ;
   } else {
-    cout << "*** End of output of Unit Test at normal verbosity ***************" << endl ;
+    std::cout << "*** End of output of Unit Test at normal verbosity ***************" << std::endl ;
   }
 
   if (RooMsgService::instance().errorCount()>0) {
-    cout << "RooUnitTest: ERROR messages were logged, failing test" << endl ;
-    return kFALSE ;
+    if(_verb >= 0) std::cout << "RooUnitTest: ERROR messages were logged, failing test" << std::endl ;
+    return false ;
   }
 
   return runCompTests() ;
@@ -607,3 +607,5 @@ Bool_t RooUnitTest::runTest()
 void RooUnitTest::setMemDir(TDirectory* memDir) {
    gMemDir = memDir ;
 }
+
+/// \endcond

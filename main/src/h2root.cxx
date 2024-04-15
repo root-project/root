@@ -16,23 +16,26 @@
 //  if tolower is missing (or = 1) ntuple column names are converted to lower case
 //                but the first character is converted to upper case.
 //  if tolower = 2 same as tolower=1 except that the first character is also
-//                convertex to lower case
+//                converted to lower case
 /////////////////////////////////////////////////////////////////////////
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TFile.h"
 #include "TDirectoryFile.h"
 #include "TTree.h"
+#include "TBranch.h"
 #include "TLeafI.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TProfile.h"
 #include "TGraph.h"
 #include "TMath.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 //  Define the names of the Fortran common blocks for the different OSs
 // Note that with gcc3.4 or above the size of PAWC_SIZE must be the same
@@ -624,7 +627,7 @@ void convert_rwn(Int_t id)
    for(i=0; i<nvar;i++) {
       name[kNchar-1] = 0;
       first = last = 0;
-      // suppress traling blanks
+      // suppress trailing blanks
       for (j=kNchar-2;j>0;j--) {
          if(golower) name[j] = tolower(name[j]);
          if (name[j] == ' ' && last == 0) name[j] = 0;

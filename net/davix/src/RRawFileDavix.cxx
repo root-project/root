@@ -10,11 +10,12 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileDavix.hxx"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <TError.h>
 
+#include <memory>
 #include <stdexcept>
+#include <vector>
 
 #include <davix.hpp>
 #include <sys/stat.h>
@@ -91,8 +92,8 @@ size_t ROOT::Internal::RRawFileDavix::ReadAtImpl(void *buffer, size_t nbytes, st
 void ROOT::Internal::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
 {
    Davix::DavixError *davixErr = NULL;
-   Davix::DavIOVecInput in[nReq];
-   Davix::DavIOVecOuput out[nReq];
+   std::vector<Davix::DavIOVecInput> in(nReq);
+   std::vector<Davix::DavIOVecOuput> out(nReq);
 
    for (unsigned int i = 0; i < nReq; ++i) {
       in[i].diov_buffer = ioVec[i].fBuffer;
@@ -101,7 +102,7 @@ void ROOT::Internal::RRawFileDavix::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
       R__ASSERT(ioVec[i].fSize > 0);
    }
 
-   auto ret = fFileDes->pos.preadVec(fFileDes->fd, in, out, nReq, &davixErr);
+   auto ret = fFileDes->pos.preadVec(fFileDes->fd, in.data(), out.data(), nReq, &davixErr);
    if (ret < 0) {
       throw std::runtime_error("Cannot do vector read from '" + fUrl + "', error: " + davixErr->getErrMsg());
    }

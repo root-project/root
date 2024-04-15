@@ -36,7 +36,7 @@ Atom_t    gROOT_MESSAGE;
 
 
 TVirtualX     *gGXBatch;  //Global pointer to batch graphics interface
-TVirtualX*   (*gPtr2VirtualX)() = 0; // returns pointer to global object
+TVirtualX*   (*gPtr2VirtualX)() = nullptr; // returns pointer to global object
 
 
 ClassImp(TVirtualX);
@@ -56,7 +56,7 @@ TVirtualX::TVirtualX(const char *name, const char *title) : TNamed(name, title),
 
 TVirtualX *&TVirtualX::Instance()
 {
-   static TVirtualX *instance = 0;
+   static TVirtualX *instance = nullptr;
    if (gPtr2VirtualX) instance = gPtr2VirtualX();
    return instance;
 }
@@ -68,9 +68,9 @@ void TVirtualX::GetWindowAttributes(Window_t /*id*/, WindowAttributes_t &attr)
 {
    attr.fX = attr.fY = 0;
    attr.fWidth = attr.fHeight = 0;
-   attr.fVisual   = 0;
+   attr.fVisual   = nullptr;
    attr.fMapState = kIsUnmapped;
-   attr.fScreen   = 0;
+   attr.fScreen   = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -536,7 +536,7 @@ Window_t TVirtualX::GetWindowID(Int_t /*wid*/)
 /// Creates a new window and return window number.
 /// Returns -1 if window initialization fails.
 
-Int_t TVirtualX::InitWindow(ULong_t /*window*/)
+Int_t TVirtualX::InitWindow(ULongptr_t /*window*/)
 {
    return 0;
 }
@@ -547,7 +547,7 @@ Int_t TVirtualX::InitWindow(ULong_t /*window*/)
 /// \param [in] qwid   window identifier
 /// \param [in] w, h   the width and height, which define the window size
 
-Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
+Int_t TVirtualX::AddWindow(ULongptr_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    return 0;
 }
@@ -558,7 +558,7 @@ Int_t TVirtualX::AddWindow(ULong_t /*qwid*/, UInt_t /*w*/, UInt_t /*h*/)
 /// \param [in] pixid  pixmap identifier
 /// \param [in] w, h   the width and height, which define the pixmap size
 
-Int_t TVirtualX::AddPixmap(ULong_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
+Int_t TVirtualX::AddPixmap(ULongptr_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
 {
    return 0;
 }
@@ -567,7 +567,7 @@ Int_t TVirtualX::AddPixmap(ULong_t /*pixid*/, UInt_t /*w*/, UInt_t /*h*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Removes the created by Qt window "qwid".
 
-void TVirtualX::RemoveWindow(ULong_t /*qwid*/)
+void TVirtualX::RemoveWindow(ULongptr_t /*qwid*/)
 {
 }
 
@@ -807,7 +807,7 @@ void TVirtualX::SetLineColor(Color_t /*cindex*/)
 ///          - n >  0 use dashed lines described by dash(n)
 ///                 e.g. n = 4,dash = (6,3,1,3) gives a dashed-dotted line
 ///                 with dash length 6 and a gap of 7 between dashes
-/// \param [in] dash(n)   dash segment lengths
+/// \param [in] dash      dash segment lengths
 
 void TVirtualX::SetLineType(Int_t /*n*/, Int_t * /*dash*/)
 {
@@ -1123,7 +1123,7 @@ void TVirtualX::IconifyWindow(Window_t /*id*/)
 /// all paint operations within "expose" / "paint" like low level event
 /// or equivalent
 
-Bool_t TVirtualX::NeedRedraw(ULong_t /*tgwindow*/, Bool_t /*force*/)
+Bool_t TVirtualX::NeedRedraw(ULongptr_t /*tgwindow*/, Bool_t /*force*/)
 {
    return kFALSE;
 }
@@ -2257,9 +2257,10 @@ void TVirtualX::GetRegionBox(Region_t /*reg*/, Rectangle_t * /*rect*/)
 /// \param [in] max        specifies the maximum number of names to be returned
 /// \param [in] count      returns the actual number of font names
 
-char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t &/*count*/)
+char **TVirtualX::ListFonts(const char * /*fontname*/, Int_t /*max*/, Int_t & count)
 {
-   return 0;
+   count=0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2358,7 +2359,7 @@ Window_t TVirtualX::GetCurrentWindow() const
 unsigned char *TVirtualX::GetColorBits(Drawable_t /*wid*/, Int_t /*x*/, Int_t /*y*/,
                                        UInt_t /*w*/, UInt_t /*h*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

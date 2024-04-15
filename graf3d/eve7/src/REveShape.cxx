@@ -10,13 +10,10 @@
  *************************************************************************/
 
 #include <ROOT/REveShape.hxx>
-#include "Riostream.h"
 
-#include "json.hpp"
-
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveShape
 \ingroup REve

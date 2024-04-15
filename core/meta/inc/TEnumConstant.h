@@ -32,7 +32,7 @@ private:
    Long64_t           fValue; //the value for the constant
 
 public:
-   TEnumConstant(): fEnum(0), fValue(-1) {}
+   TEnumConstant(): fEnum(nullptr), fValue(-1) {}
    TEnumConstant(DataMemberInfo_t *info, const char* name, Long64_t value, TEnum* type);
    virtual ~TEnumConstant();
 

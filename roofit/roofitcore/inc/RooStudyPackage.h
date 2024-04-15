@@ -16,30 +16,25 @@
 #ifndef ROO_STUDY_PACKAGE
 #define ROO_STUDY_PACKAGE
 
-#include "TNamed.h"
+#include <TNamed.h>
 
-class RooAbsPdf;
-class RooDataSet ;
-class RooAbsData ;
-class RooFitResult ;
-class RooPlot ;
-class RooRealVar ;
-class RooWorkspace ;
-class RooAbsStudy ;
 #include <list>
+
+class RooAbsStudy ;
+class RooWorkspace ;
 
 class RooStudyPackage : public TNamed {
 public:
 
-  RooStudyPackage() ;
+  RooStudyPackage() = default;
   RooStudyPackage(RooWorkspace& w) ;
   RooStudyPackage(const RooStudyPackage&) ;
   void addStudy(RooAbsStudy& study) ;
-  TObject* Clone(const char* /*newname*/="") const { return new RooStudyPackage(*this) ; }
-  
+  TObject* Clone(const char* /*newname*/="") const override { return new RooStudyPackage(*this) ; }
+
   RooWorkspace& wspace() { return *_ws ; }
   std::list<RooAbsStudy*>& studies() { return _studies ; }
-    
+
   void driver(Int_t nExperiments) ;
 
   Int_t initRandom() ;
@@ -47,18 +42,18 @@ public:
   void runOne() ;
   void run(Int_t nExperiments) ;
   void finalize() ;
-  
+
   void exportData(TList* olist, Int_t seqno) ;
 
   static void processFile(const char* infile, Int_t nexp) ;
 
 protected:
 
-  RooWorkspace* _ws ;
-  std::list<RooAbsStudy*> _studies ; 
+  RooWorkspace* _ws = nullptr;
+  std::list<RooAbsStudy*> _studies ;
 
-	
-  ClassDef(RooStudyPackage,1) // A general purpose workspace oriented parallelizing study manager
+
+  ClassDefOverride(RooStudyPackage,1) // A general purpose workspace oriented parallelizing study manager
 } ;
 
 

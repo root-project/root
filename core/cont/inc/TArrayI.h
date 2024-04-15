@@ -42,17 +42,17 @@ public:
    void         Copy(TArrayI &array) const {array.Set(fN,fArray);}
    const Int_t *GetArray() const { return fArray; }
    Int_t       *GetArray() { return fArray; }
-   Double_t     GetAt(Int_t i) const { return At(i); }
+   Double_t     GetAt(Int_t i) const override { return At(i); }
    Stat_t       GetSum() const {Stat_t sum=0; for (Int_t i=0;i<fN;i++) sum+=fArray[i]; return sum;}
    void         Reset()           {memset(fArray, 0, fN*sizeof(Int_t));}
    void         Reset(Int_t val)  {for (Int_t i=0;i<fN;i++) fArray[i] = val;}
-   void         Set(Int_t n);
+   void         Set(Int_t n) override;
    void         Set(Int_t n, const Int_t *array);
-   void         SetAt(Double_t v, Int_t i) { AddAt((Int_t)v, i); }
+   void         SetAt(Double_t v, Int_t i) override { AddAt((Int_t)v, i); }
    Int_t       &operator[](Int_t i);
    Int_t        operator[](Int_t i) const;
 
-   ClassDef(TArrayI,1)  //Array of ints
+   ClassDefOverride(TArrayI,1)  //Array of ints
 };
 
 

@@ -10,6 +10,7 @@
 /// This macro was created for the evaluation of Computational Physics course in 2006.
 /// We thank to Prof. Inkyu Park for his special lecture on ROOT and to all of ROOT team
 ///
+/// \image html geom_building.png width=800px
 /// \macro_code
 ///
 /// \author Hyung Ju Lee (laccalus@nate.com), Dept. of Physics, Univ. of Seoul
@@ -31,7 +32,7 @@ void building()
 // Volume
    TGeoVolume *Phy_Building = geom->MakeBox("top",Air,150,150,150);
    geom->SetTopVolume(Phy_Building);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -1258,7 +1259,7 @@ void building()
 
 
 ////////////////////////// Draw
-   Phy_Building->SetVisibility(0);
+   Phy_Building->SetVisibility(false);
    Phy_Building->Draw("ogl");
 
 

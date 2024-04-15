@@ -9,7 +9,7 @@
 /// the current pad.
 ///
 /// In this example five histograms are displayed with palette coloring for lines and
-/// and marker. The histograms are drawn with makers and error bars and one can see
+/// and marker. The histograms are drawn with markers and error bars and one can see
 /// the color of each histogram is picked inside the default palette `kBird`.
 ///
 /// \macro_image
@@ -24,11 +24,11 @@ void histpalettecolor()
    gStyle->SetOptTitle(kFALSE);
    gStyle->SetOptStat(0);
 
-   auto h1 = new TH1F ("h1","Histogram drawn with full circles",100,-4,4);
-   auto h2 = new TH1F ("h2","Histogram drawn with full squares",100,-4,4);
-   auto h3 = new TH1F ("h3","Histogram drawn with full triangles up",100,-4,4);
-   auto h4 = new TH1F ("h4","Histogram drawn with full triangles down",100,-4,4);
-   auto h5 = new TH1F ("h5","Histogram drawn with empty circles",100,-4,4);
+   auto h1 = new TH1F("h1","Histogram drawn with full circles",100,-4,4);
+   auto h2 = new TH1F("h2","Histogram drawn with full squares",100,-4,4);
+   auto h3 = new TH1F("h3","Histogram drawn with full triangles up",100,-4,4);
+   auto h4 = new TH1F("h4","Histogram drawn with full triangles down",100,-4,4);
+   auto h5 = new TH1F("h5","Histogram drawn with empty circles",100,-4,4);
 
    TRandom3 rng;
    Double_t px,py;

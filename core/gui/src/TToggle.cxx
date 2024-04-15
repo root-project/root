@@ -28,9 +28,10 @@ with name GetXXX, IsXXX or HasXXX for given object.
 */
 
 #include "TMethod.h"
+#include "TMethodCall.h"
 #include "TToggle.h"
 #include "TDataMember.h"
-
+#include "snprintf.h"
 
 ClassImp(TToggle);
 
@@ -45,10 +46,10 @@ TToggle::TToggle()
    fOnValue     =  1;
    fOffValue    =  0;
    fInitialized =  0;
-   fObject      =  0;
-   fGetter      =  0;
-   fSetter      =  0;
-   fTglVariable =  0;
+   fObject      =  nullptr;
+   fGetter      =  nullptr;
+   fSetter      =  nullptr;
+   fTglVariable =  nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +122,7 @@ void TToggle::Toggle()
          fValue=( (fValue==fOnValue) ? fOffValue:fOnValue);
          fState=(!(fValue!=fOnValue));
          char stringon[20];
-         snprintf(stringon,sizeof(stringon),"%li",fValue);
+         snprintf(stringon,sizeof(stringon),"%zi",(size_t)fValue);
          fSetter->Execute(fObject, stringon);
       }
    }

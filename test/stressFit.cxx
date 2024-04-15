@@ -53,7 +53,7 @@
 //                                                                           //
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*_*//
 
-#include <stdlib.h>
+#include <cstdlib>
 #include "TSystem.h"
 #include "TROOT.h"
 #include "TBenchmark.h"
@@ -62,6 +62,7 @@
 #include "Riostream.h"
 #include "TVectorD.h"
 #include "TMatrixD.h"
+#include "snprintf.h"
 
 #include "Math/Factory.h"
 #include "Math/Functor.h"
@@ -645,10 +646,6 @@ Int_t stressFit(const char *type, const char *algo, Int_t N)
      TString sp = gSystem->GetFromPipe("uname -a");
      sp.Resize(60);
      printf("*  SYS: %s\n",sp.Data());
-     if (strstr(gSystem->GetBuildNode(),"Linux")) {
-        sp = gSystem->GetFromPipe("lsb_release -d -s");
-        printf("*  SYS: %s\n",sp.Data());
-     }
      if (strstr(gSystem->GetBuildNode(),"Darwin")) {
         sp  = gSystem->GetFromPipe("sw_vers -productVersion");
         sp += " Mac OS X ";

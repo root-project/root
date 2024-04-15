@@ -92,23 +92,13 @@
 
 
 
-#pragma link C++ class ROOT::Math::KelvinFunctions+;
-
 #pragma link C++ class ROOT::Math::GSLMinimizer+;
 #pragma link C++ class ROOT::Math::GSLSimAnMinimizer+;
 #pragma link C++ class ROOT::Math::GSLSimAnFunc+;
 #pragma link C++ class ROOT::Math::GSLSimAnParams+;
 #pragma link C++ class ROOT::Math::GSLSimAnnealing+;
 
-//#pragma link C++ class std::vector<ROOT::Math::IGradientFunctionMultiDim *>+;
 #pragma link C++ class ROOT::Math::GSLNLSMinimizer-;
-#pragma link C++ class ROOT::Math::LSResidualFunc-;
-
-// #ifndef _WIN32  // exclude for same problem of virtual inheritance
-// #pragma link C++ class ROOT::Math::LSResidualFunc+;
-// #else
-// #pragma link C++ class ROOT::Math::LSResidualFunc-;
-// #endif
 
 #pragma link C++ class ROOT::Math::GSLMCIntegrator+;
 #pragma link C++ class ROOT::Math::VegasParameters+;

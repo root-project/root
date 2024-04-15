@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : RuleFitAPI                                                            *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Interface to Friedman's RuleFit method                                    *
@@ -39,6 +39,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include <fstream>
+#include <vector>
 
 #include "TMVA/MsgLogger.h"
 
@@ -176,20 +177,20 @@ namespace TMVA {
    private:
       // prevent empty constructor from being used
       RuleFitAPI();
-      const MethodRuleFit *fMethodRuleFit; // parent method - set in constructor
-      RuleFit             *fRuleFit;       // non const ptr to RuleFit class in MethodRuleFit
+      const MethodRuleFit *fMethodRuleFit; ///< parent method - set in constructor
+      RuleFit             *fRuleFit;       ///< non const ptr to RuleFit class in MethodRuleFit
       //
-      std::vector<Float_t> fRFYhat;      // score results from test sample
-      std::vector<Float_t> fRFVarImp;    // variable importances
-      std::vector<Int_t>   fRFVarImpInd; // variable index
-      TString              fRFWorkDir;   // working directory
-      IntParms             fRFIntParms;  // integer parameters
-      RealParms            fRFRealParms; // real parameters
-      std::vector<int>     fRFLx;        // variable selector
-      ERFProgram           fRFProgram;   // what to run
-      TString              fModelType;   // model type string
+      std::vector<Float_t> fRFYhat;      ///< score results from test sample
+      std::vector<Float_t> fRFVarImp;    ///< variable importances
+      std::vector<Int_t>   fRFVarImpInd; ///< variable index
+      TString              fRFWorkDir;   ///< working directory
+      IntParms             fRFIntParms;  ///< integer parameters
+      RealParms            fRFRealParms; ///< real parameters
+      std::vector<int>     fRFLx;        ///< variable selector
+      ERFProgram           fRFProgram;   ///< what to run
+      TString              fModelType;   ///< model type string
 
-      mutable MsgLogger    fLogger;      // message logger
+      mutable MsgLogger    fLogger;      ///< message logger
 
       ClassDef(RuleFitAPI,0);        // Friedman's RuleFit method
 

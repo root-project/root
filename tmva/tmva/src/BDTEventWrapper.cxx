@@ -2,7 +2,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : BDTEventWrapper                                                       *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
@@ -17,7 +17,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #include "TMVA/BDTEventWrapper.h"
@@ -48,7 +48,7 @@ BDTEventWrapper::~BDTEventWrapper() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the accumulated weight, for sorted signal/background events
 ///
-/// @param fType - true for signal, false for background
+/// @param type - true for signal, false for background
 /// @param weight - the total weight
 
 void BDTEventWrapper::SetCumulativeWeight(Bool_t type, Double_t weight) {

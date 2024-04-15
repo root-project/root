@@ -25,13 +25,13 @@ void fitLinearRobust()
 {
    //First generate a dataset, where 20% of points are spoiled by large
    //errors
-   Int_t npoints = 250;
-   Int_t fraction = Int_t(0.8*npoints);
-   Double_t *x = new Double_t[npoints];
-   Double_t *y = new Double_t[npoints];
-   Double_t *e = new Double_t[npoints];
+   int npoints = 250;
+   int fraction = int(0.8*npoints);
+   double *x = new double[npoints];
+   double *y = new double[npoints];
+   double *e = new double[npoints];
    TRandom r;
-   Int_t i;
+   int i;
    for (i=0; i<fraction; i++){
       //the good part of the sample
       x[i]=r.Uniform(-2, 2);
@@ -45,7 +45,7 @@ void fitLinearRobust()
       y[i] = 1 + 2*x[i] + 3*x[i]*x[i] + 4*x[i]*x[i]*x[i] + r.Landau(10, 5);
    }
 
-   TGraphErrors *grr = new TGraphErrors(npoints, x, y, 0, e);
+   TGraphErrors *grr = new TGraphErrors(npoints, x, y, nullptr, e);
    grr->SetMinimum(-30);
    grr->SetMaximum(80);
    TF1 *ffit1 = new TF1("ffit1", "pol3", -5, 5);

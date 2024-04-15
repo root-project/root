@@ -36,7 +36,7 @@ TFile *hsimple(Int_t getFile=0)
    TString filename = "hsimple.root";
    TString dir = gROOT->GetTutorialDir();
    dir.ReplaceAll("/./","/");
-   TFile *hfile = 0;
+   TFile *hfile = nullptr;
    if (getFile) {
       // if the argument getFile =1 return the file "hsimple.root"
       // if the file does not exist, it is created
@@ -55,7 +55,7 @@ TFile *hsimple(Int_t getFile=0)
    //generate hsimple.root in current directory if we have write access
    if (gSystem->AccessPathName(".",kWritePermission)) {
       printf("you must run the script in a directory with write access\n");
-      return 0;
+      return nullptr;
    }
    hfile = (TFile*)gROOT->FindObject(filename); if (hfile) hfile->Close();
    hfile = new TFile(filename,"RECREATE","Demo ROOT file with histograms");

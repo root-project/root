@@ -23,11 +23,11 @@
 
 
 //____________________________________________________________________
-void makeData(Double_t* x, Double_t& d, Double_t& e)
+void makeData(double* x, double& d, double& e)
 {
   // Make data points
-  Double_t upp[5] = { 10, 10, 10, 10,  1 };
-  Double_t low[5] = {  0,  0,  0,  0, .1 };
+  double upp[5] = { 10, 10, 10, 10,  1 };
+  double low[5] = {  0,  0,  0,  0, .1 };
   for (int i = 0; i < 4; i++)
     x[i] = (upp[i] - low[i]) * gRandom->Rndm() + low[i];
 
@@ -117,21 +117,21 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
    2,  2,  2,  1
    };
 
-   Int_t nc = fit->GetNCoefficients();
-   Int_t nv = fit->GetNVariables();
-   const Int_t *powers = fit->GetPowers();
-   const Int_t *pindex = fit->GetPowerIndex();
+   int nc = fit->GetNCoefficients();
+   int nv = fit->GetNVariables();
+   const int *powers = fit->GetPowers();
+   const int *pindex = fit->GetPowerIndex();
    if (nc != 21) return 1;
    const TVectorD *coeffs = fit->GetCoefficients();
    int k = 0;
-   for (Int_t i=0;i<nc;i++) {
+   for (int i=0;i<nc;i++) {
       if (doFit) {
          if (!TMath::AreEqualRel((*coeffs)[i],GoodCoeffs[i],1e-3)) return 2;
       }
       else {
          if (TMath::Abs((*coeffs)[i] - GoodCoeffsNoFit[i]) > 5e-5) return 2;
       }
-      for (Int_t j=0;j<nv;j++) {
+      for (int j=0;j<nv;j++) {
          if (powers[pindex[i]*nv+j] != GoodPower[k]) return 3;
          k++;
       }
@@ -140,28 +140,28 @@ int CompareResults(TMultiDimFit *fit, bool doFit)
    // now test the result of the generated function
    gROOT->ProcessLine(".L MDF.C");
 
-   Double_t refMDF = (doFit) ? 43.95 : 43.98;
+   double refMDF = (doFit) ? 43.95 : 43.98;
    // this does not work in CLing since the function is not defined
-   //Double_t x[]    = {5,5,5,5};
-   //Double_t rMDF   = MDF(x);
+   //double x[]    = {5,5,5,5};
+   //double rMDF   = MDF(x);
    //LM:  need to return the address of the result since it is casted to a long (this should not be in a tutorial !)
-   Long_t iret = gROOT->ProcessLine(" Double_t xvalues[] = {5,5,5,5}; double result=MDF(xvalues); &result;");
-   Double_t rMDF = * ( (Double_t*)iret);
+   std::intptr_t iret = gROOT->ProcessLine(" double xvalues[] = {5,5,5,5}; double result=MDF(xvalues); &result;");
+   double rMDF = * ( (double*)iret);
    //printf("%f\n",rMDF);
    if (TMath::Abs(rMDF -refMDF) > 1e-2) return 4;
    return 0;
 }
 
 //____________________________________________________________________
-Int_t multidimfit(bool doFit = true)
+int multidimfit(bool doFit = true)
 {
 
-   cout << "*************************************************" << endl;
-   cout << "*             Multidimensional Fit              *" << endl;
-   cout << "*                                               *" << endl;
-   cout << "* By Christian Holm <cholm@nbi.dk> 14/10/00     *" << endl;
-   cout << "*************************************************" << endl;
-   cout << endl;
+   std::cout << "*************************************************" << std::endl;
+   std::cout << "*             Multidimensional Fit              *" << std::endl;
+   std::cout << "*                                               *" << std::endl;
+   std::cout << "* By Christian Holm <cholm@nbi.dk> 14/10/00     *" << std::endl;
+   std::cout << "*************************************************" << std::endl;
+   std::cout << std::endl;
 
    // Initialize global TRannom object.
    gRandom = new TRandom();
@@ -170,14 +170,14 @@ Int_t multidimfit(bool doFit = true)
    TFile* output = new TFile("mdf.root", "RECREATE");
 
    // Global data parameters
-   Int_t nVars       = 4;
-   Int_t nData       = 500;
-   Double_t x[4];
+   int nVars       = 4;
+   int nData       = 500;
+   double x[4];
 
    // make fit object and set parameters on it.
    TMultiDimFit* fit = new TMultiDimFit(nVars, TMultiDimFit::kMonomials,"v");
 
-   Int_t mPowers[]   = { 6 , 6, 6, 6 };
+   int mPowers[]   = { 6 , 6, 6, 6 };
    fit->SetMaxPowers(mPowers);
    fit->SetMaxFunctions(1000);
    fit->SetMaxStudy(1000);
@@ -188,8 +188,8 @@ Int_t multidimfit(bool doFit = true)
    fit->SetMinRelativeError(.01);
 
    // variables to hold the temporary input data
-   Double_t d;
-   Double_t e;
+   double d;
+   double e;
 
    // Print out the start parameters
    fit->Print("p");
@@ -197,7 +197,7 @@ Int_t multidimfit(bool doFit = true)
    printf("======================================\n");
 
    // Create training sample
-   Int_t i;
+   int i;
    for (i = 0; i < nData ; i++) {
 
       // Make some data
@@ -221,15 +221,15 @@ Int_t multidimfit(bool doFit = true)
 
    // Get the min and max of variables from the training sample, used
    // for cuts in test sample.
-   Double_t *xMax = new Double_t[nVars];
-   Double_t *xMin = new Double_t[nVars];
+   double *xMax = new double[nVars];
+   double *xMin = new double[nVars];
    for (i = 0; i < nVars; i++) {
       xMax[i] = (*fit->GetMaxVariables())(i);
       xMin[i] = (*fit->GetMinVariables())(i);
    }
 
    nData = fit->GetNCoefficients() * 100;
-   Int_t j;
+   int j;
 
    // Create test sample
    for (i = 0; i < nData ; i++) {
@@ -265,7 +265,7 @@ Int_t multidimfit(bool doFit = true)
    delete output;
 
    // Compare results with reference run
-   Int_t compare = CompareResults(fit, doFit);
+   int compare = CompareResults(fit, doFit);
    if (!compare) {
       printf("\nmultidimfit ..............................................  OK\n");
    } else {

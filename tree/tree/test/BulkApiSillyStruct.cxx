@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 
 #include "Bytes.h"
 #include "Rtypes.h"
@@ -6,8 +6,6 @@
 #include "TBranch.h"
 #include "TBufferFile.h"
 #include "TFile.h"
-#include "TObject.h"
-#include "TStopwatch.h"
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderValue.h"
@@ -25,7 +23,7 @@ public:
    const std::string fFileName = "BulkApiSillyStruct.root";
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       TFile *hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree silly-struct benchmark");
       hfile->SetCompressionLevel(0); // No compression at all.
@@ -39,7 +37,7 @@ protected:
 
       SillyStruct ss;
       TBranch *branch = tree->Branch("myEvent", &ss, 32000, 99);
-      branch->SetAutoDelete(kFALSE);
+      branch->SetAutoDelete(false);
 
       Int_t nb = 0;
       for (Long64_t ev = 0; ev < fEventCount; ev++) {
@@ -79,6 +77,7 @@ TEST_F(BulkApiSillyStructTest, stdReadStruct)
       evF++;
       evD++;
    }
+   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
@@ -101,6 +100,7 @@ TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
       evF++;
       evD++;
    }
+   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, fastRead)

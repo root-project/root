@@ -18,11 +18,20 @@ Provides the interface for externel Monitoring
 
 #include "TVirtualMonitoring.h"
 
+#include "TList.h"
 
 ClassImp(TVirtualMonitoringWriter);
 ClassImp(TVirtualMonitoringReader);
 
 
-TVirtualMonitoringWriter *gMonitoringWriter = 0;
-TVirtualMonitoringReader *gMonitoringReader = 0;
+TVirtualMonitoringWriter *gMonitoringWriter = nullptr;
+TVirtualMonitoringReader *gMonitoringReader = nullptr;
 
+////////////////////////////////////////////////////////////
+/// destructor
+
+TVirtualMonitoringWriter::~TVirtualMonitoringWriter() 
+{
+   if (fTmpOpenPhases) 
+      delete fTmpOpenPhases; 
+}

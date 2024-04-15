@@ -11,10 +11,10 @@
 #ifndef ROOT_TMVA_Envelope
 #define ROOT_TMVA_Envelope
 
-#include <sstream>
-#include<iostream>
 #include <memory>
+#include <vector>
 
+#include <TString.h>
 #include <TROOT.h>
 #include <TStopwatch.h>
 
@@ -22,12 +22,9 @@
 #include <TProcPool.h>
 #endif
 
-#include <TStopwatch.h>
-
 #include <TMVA/OptionMap.h>
 #include <TMVA/Config.h>
 #include <TMVA/Tools.h>
-#include <TMVA/DataLoader.h>
 #include <TMVA/DataLoader.h>
 
 /*! \class TMVA::Envelope
@@ -46,18 +43,18 @@ namespace TMVA {
       class Envelope:public Configurable
       {
       protected:
-         std::vector<OptionMap> fMethods;         //! Booked method information
-         std::shared_ptr<DataLoader> fDataLoader; //! data
-         std::shared_ptr<TFile> fFile;            //! file to save the results
-         Bool_t fModelPersistence;                //! flag to save the trained model
-         Bool_t fVerbose;                         //! flag for extra information
-         TString fTransformations;                //! List of transformations to test
-         Bool_t fSilentFile;                      //! if true dont produce file output
+         std::vector<OptionMap> fMethods;         ///<! Booked method information
+         std::shared_ptr<DataLoader> fDataLoader; ///<! data
+         std::shared_ptr<TFile> fFile;            ///<! file to save the results
+         Bool_t fModelPersistence;                ///<! flag to save the trained model
+         Bool_t fVerbose;                         ///<! flag for extra information
+         TString fTransformations;                ///<! List of transformations to test
+         Bool_t fSilentFile;                      ///<! if true dont produce file output
 #ifndef _MSC_VER
-         TProcPool fWorkers;                      //! procpool object
+         TProcPool fWorkers;                      ///<! procpool object
 #endif
-         UInt_t fJobs;                            //! number of jobs to run some high level algorithm in parallel
-         TStopwatch fTimer;                       //! timer to measute the time.
+         UInt_t fJobs;                            ///<! number of jobs to run some high level algorithm in parallel
+         TStopwatch fTimer;                       ///<! timer to measure the time.
 
          Envelope(const TString &name, DataLoader *dataloader = nullptr, TFile *file = nullptr,
                   const TString options = "");

@@ -1,7 +1,21 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2020
+
+/*************************************************************************
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #include <ROOT/REveTypes.hxx>
+#include <ROOT/RLogger.hxx>
+#include <iostream>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
+
 
 /** \class REveException
 \ingroup REve
@@ -29,3 +43,10 @@ REveException REX::operator+(const REveException &s1,  const char *s2)
 
 REveException REX::operator+(const REveException &s1, ElementId_t x)
 { REveException r(s1); r.append(std::to_string(x)); return r; }
+
+REX::RLogChannel &REX::REveLog()
+{
+   static RLogChannel sLog("ROOT.Eve");
+   return sLog;
+}
+

@@ -12,21 +12,15 @@
 #ifndef TBASKETSQL_CXX
 #define TBASKETSQL_CXX
 
-#include "TBasket.h"
-#include "TBuffer.h"
-#include "TTree.h"
+#include "TBasketSQL.h"
 #include "TBranch.h"
 #include "TFile.h"
-#include "TMath.h"
-#include "TBasketSQL.h"
-#include <Riostream.h>
-#include <vector>
 #include "TTreeSQL.h"
 #include "TBufferSQL.h"
 
-ClassImp(TBasketSQL);
+#include <vector>
 
-namespace std {} using namespace std;
+ClassImp(TBasketSQL);
 
 /** \class TBasketSQL
 \ingroup tree
@@ -37,7 +31,7 @@ Implement TBasket for a SQL backend.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(0), fRowPtr(0), fInsertQuery(0)
+TBasketSQL::TBasketSQL() : TBasket(), fResultPtr(nullptr), fRowPtr(nullptr), fInsertQuery(nullptr)
 {
 }
 
@@ -55,22 +49,22 @@ TBasketSQL::TBasketSQL(const char *name, const char *title, TBranch *branch,
    fBufferSize  = branch->GetBasketSize();
    fNevBufSize  = branch->GetEntryOffsetLen();
    fNevBuf      = 0;
-   fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
-   fDisplacement= 0;  //Must be set to 0 before calling Sizeof
-   fBuffer      = 0;  //Must be set to 0 before calling Sizeof
+   fEntryOffset = nullptr;  //Must be set to 0 before calling Sizeof
+   fDisplacement= nullptr;  //Must be set to 0 before calling Sizeof
+   fBuffer      = nullptr;  //Must be set to 0 before calling Sizeof
    fInsertQuery = insert_query;
 
-   if (vc==0) {
-      fBufferRef = 0;
+   if (vc==nullptr) {
+      fBufferRef = nullptr;
    } else {
       fBufferRef = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
-   fHeaderOnly  = kTRUE;
+   fHeaderOnly  = true;
    fLast        = 0; // Must initialize before calling Streamer()
    //Streamer(*fBufferRef);
-   fBuffer      = 0;
+   fBuffer      = nullptr;
    fBranch      = branch;
-   fHeaderOnly  = kFALSE;
+   fHeaderOnly  = false;
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
 }
@@ -96,22 +90,22 @@ void TBasketSQL::CreateBuffer(const char *name, TString title,
    fBufferSize  = branch->GetBasketSize();
    fNevBufSize  = branch->GetEntryOffsetLen();
    fNevBuf      = 0;
-   fEntryOffset = 0;  //Must be set to 0 before calling Sizeof
-   fDisplacement= 0;  //Must be set to 0 before calling Sizeof
-   fBuffer      = 0;  //Must be set to 0 before calling Sizeof
+   fEntryOffset = nullptr;  //Must be set to 0 before calling Sizeof
+   fDisplacement= nullptr;  //Must be set to 0 before calling Sizeof
+   fBuffer      = nullptr;  //Must be set to 0 before calling Sizeof
 
-   if(vc==0) {
-      fBufferRef = 0;
+   if(vc==nullptr) {
+      fBufferRef = nullptr;
       Error("CreateBuffer","Need a vector of columns\n");
    } else {
       fBufferRef   = new TBufferSQL(TBuffer::kWrite, fBufferSize, vc, fInsertQuery, fRowPtr);
    }
-   fHeaderOnly  = kTRUE;
+   fHeaderOnly  = true;
    fLast        = 0;
    //Streamer(*fBufferRef);
-   fBuffer      = 0;
+   fBuffer      = nullptr;
    fBranch      = branch;
-   fHeaderOnly  = kFALSE;
+   fHeaderOnly  = false;
    branch->GetTree()->IncrementTotalBuffers(fBufferSize);
 }
 
@@ -143,13 +137,6 @@ Int_t TBasketSQL::ReadBasketBuffers(Long64_t , Int_t, TFile *)
    return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// See TBasket::Reset
-
-void TBasketSQL::Reset()
-{
-   TBasket::Reset();
-}
 ////////////////////////////////////////////////////////////////////////////////
 /// See TBasket::Update.
 

@@ -25,17 +25,17 @@ private:
 
 public:
    XSTblElement( const TGWindow *p, Int_t z, UInt_t color);
-   ~XSTblElement();
-   virtual void      Layout();
-   virtual TGDimension   GetDefaultSize() const
+   ~XSTblElement() override;
+   void      Layout() override;
+   TGDimension   GetDefaultSize() const override
       { return TGDimension(20,20); }
 
-   virtual void   SetState(EButtonState state, Bool_t emit = kFALSE);
+   void   SetState(EButtonState state, Bool_t emit = kFALSE) override;
 
    Int_t      GetZ()   const { return Z; }
-   virtual void   ChangeBackground( ULong_t color );
+   void   ChangeBackground( ULong_t color ) override;
 
-   //ClassDef(XSTblElement,1)
+   //ClassDefOverride(XSTblElement,1)
 }; // XSTblElement
 
 //////////////////////////////////////////////////////////////
@@ -53,14 +53,14 @@ private:
 public:
    XSPeriodicTable(const TGWindow *msgWnd, const TGWindow* p,
          UInt_t w, UInt_t h);
-   virtual      ~XSPeriodicTable();
+        ~XSPeriodicTable() override;
 
    virtual   void      SelectZ( ULong_t Z );
-   virtual void      Layout();
-   virtual   TGDimension   GetDefaultSize() const
+   void      Layout() override;
+     TGDimension   GetDefaultSize() const override
             { return TGDimension(width,height); }
 
-   //ClassDef(XSPeriodicTable,1)
+   //ClassDefOverride(XSPeriodicTable,1)
 }; // XSPeriodicTable
 
 #endif

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableGaussTransform                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Decorrelation of input variables                                          *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_VariableGaussTransform
@@ -100,10 +100,10 @@ namespace TMVA {
       Int_t            fPdfMaxSmooth;
       //      mutable Event*   fTransformedEvent;
 
-      std::vector< std::vector< TH1F* > >      fCumulativeDist;   //! The Cumulative distributions
-      //std::vector< std::vector< TGraph* > >    fCumulativeGraph;  //! The Cumulative distributions
-      //std::vector< std::vector< TSpline3* > >  fCumulativeSpline; //! The Cumulative distributions
-      std::vector< std::vector< PDF*> >         fCumulativePDF;    //  The cumulative PDF
+      std::vector< std::vector< TH1F* > >      fCumulativeDist;     ///<! The Cumulative distributions
+      //std::vector< std::vector< TGraph* > >    fCumulativeGraph;  ///<! The Cumulative distributions
+      //std::vector< std::vector< TSpline3* > >  fCumulativeSpline; ///<! The Cumulative distributions
+      std::vector< std::vector< PDF*> >         fCumulativePDF;     ///<  The cumulative PDF
 
       void GetCumulativeDist( const std::vector<Event*>& );
       void CleanUpCumulativeArrays(TString opt = "ALL");

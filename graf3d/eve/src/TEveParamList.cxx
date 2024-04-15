@@ -11,15 +11,11 @@
 
 #include "TEveParamList.h"
 
-// Cleanup these includes:
 #include "TGLabel.h"
 #include "TGButton.h"
 #include "TGNumberEntry.h"
-#include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
 
 #include "TEveGValuators.h"
-#include "TGNumberEntry.h"
 #include "TGedEditor.h"
 
 /** \class TEveParamList
@@ -109,8 +105,8 @@ ClassImp(TEveParamListEditor);
 TEveParamListEditor::TEveParamListEditor(const TGWindow *p, Int_t width, Int_t height,
                                          UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM          (0),
-   fParamFrame (0)
+   fM          (nullptr),
+   fParamFrame (nullptr)
 {
    MakeTitle("TEveParamList");
 }

@@ -22,7 +22,6 @@
 #include "TClass.h"
 #include "TClassEdit.h"
 #include "TVirtualX.h"
-#include "TStyle.h"
 #include "TObjectTable.h"
 #include "TClassTable.h"
 #include "TStopwatch.h"
@@ -36,16 +35,20 @@
 #include "TException.h"
 #include "TInterpreter.h"
 #include "TObjString.h"
+#include "TObjArray.h"
 #include "TStorage.h" // ROOT::Internal::gMmallocDesc
+#include "ThreadLocalStorage.h"
 #include "TTabCom.h"
-#include "TError.h"
-#include <stdlib.h>
+#include <cstdlib>
 #include <algorithm>
-
+#include <iostream>
 #include "Getline.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
 #ifdef R__UNIX
 #include <signal.h>
+#include <unistd.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +73,7 @@ static Int_t BeepHook()
 
 static void ResetTermAtExit()
 {
-   Getlinem(kCleanUp, 0);
+   Getlinem(kCleanUp, nullptr);
 }
 
 
@@ -80,7 +83,7 @@ static void ResetTermAtExit()
 class TInterruptHandler : public TSignalHandler {
 public:
    TInterruptHandler() : TSignalHandler(kSigInterrupt, kFALSE) { }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +97,7 @@ Bool_t TInterruptHandler::Notify()
    }
 
    // make sure we use the sbrk heap (in case of mapped files)
-   ROOT::Internal::gMmallocDesc = 0;
+   ROOT::Internal::gMmallocDesc = nullptr;
 
    if (TROOT::Initialized() && gROOT->IsLineProcessing()) {
       Break("TInterruptHandler::Notify", "keyboard interrupt");
@@ -118,8 +121,8 @@ Bool_t TInterruptHandler::Notify()
 class TTermInputHandler : public TFileHandler {
 public:
    TTermInputHandler(Int_t fd) : TFileHandler(fd, 1) { }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,17 +136,54 @@ Bool_t TTermInputHandler::Notify()
 
 ClassImp(TRint);
 
+
+namespace {
+static int SetExtraClingArgsBeforeTAppCtor(Int_t *argc, char **argv)
+{
+   bool forcePtrCheck = false;
+   if (argc != nullptr) {
+      for (int iarg = 1; iarg < *argc; ++iarg) {
+         if (!strcmp(argv[iarg], "--ptrcheck")) {
+            // Hide this, by moving all other args one down...
+            for (int jarg = iarg + 1; jarg < *argc; ++jarg)
+               argv[jarg - 1] = argv[jarg];
+            // ... and updating argc accordingly.
+            --*argc;
+            forcePtrCheck = true;
+            break;
+         }
+      }
+   }
+#ifdef R__UNIX
+   if (forcePtrCheck || isatty(0) || isatty(1))
+#endif
+         TROOT::AddExtraInterpreterArgs({"--ptrcheck"});
+      return 0;
+}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an application environment. The TRint environment provides an
 /// interface to the WM manager functionality and eventloop via inheritance
 /// of TApplication and in addition provides interactive access to
 /// the Cling C++ interpreter via the command line.
 
-TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
-             Int_t numOptions, Bool_t noLogo):
-   TApplication(appClassName, argc, argv, options, numOptions),
-   fCaughtSignal(-1)
+TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options, Int_t numOptions, Bool_t noLogo,
+             Bool_t exitOnUnknownArgs)
+   : TApplication(appClassName, argc, argv, options, numOptions + SetExtraClingArgsBeforeTAppCtor(argc, argv)),
+     fCaughtSignal(-1)
 {
+
+   if (exitOnUnknownArgs && argc != nullptr && *argc > 1) {
+      // Early exit if there are remaining unrecognized options
+      // This branch supposes that TRint is created as a result of using the `root` command
+      for (auto n = 1; n < *argc; n++) {
+         std::cerr << "root: unrecognized option '" << argv[n] << "'\n";
+      }
+      std::cerr << "Try 'root --help' for more information.\n";
+      TApplication::Terminate(0);
+   }
+
    fNcmd          = 0;
    fDefaultPrompt = "root [%d] ";
    fInterrupt     = kFALSE;
@@ -189,7 +229,7 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 
    // Load user functions
    const char *logon;
-   logon = gEnv->GetValue("Rint.Load", (char*)0);
+   logon = gEnv->GetValue("Rint.Load", (char*)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -276,9 +316,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
 TRint::~TRint()
 {
    delete gTabCom;
-   gTabCom = 0;
-   Gl_in_key = 0;
-   Gl_beep_hook = 0;
+   gTabCom = nullptr;
+   Gl_in_key = nullptr;
+   Gl_beep_hook = nullptr;
    fInputHandler->Remove();
    delete fInputHandler;
    // We can't know where the signal handler was changed since we started ...
@@ -322,7 +362,7 @@ void TRint::ExecLogon()
    }
 
    // execute also the logon macro specified by "Rint.Logon"
-   const char *logon = gEnv->GetValue("Rint.Logon", (char*)0);
+   const char *logon = gEnv->GetValue("Rint.Logon", (char*)nullptr);
    if (logon) {
       char *mac = gSystem->Which(TROOT::GetMacroPath(), logon, kReadPermission);
       if (mac)
@@ -344,11 +384,11 @@ void TRint::ExecLogon()
 void TRint::Run(Bool_t retrn)
 {
    if (!QuitOpt()) {
-      // Promt prompt only if we are expecting / allowing input.
+      // Prompt prompt only if we are expecting / allowing input.
       Getlinem(kInit, GetPrompt());
    }
 
-   Long_t retval = 0;
+   Longptr_t retval = 0;
    Int_t  error = 0;
    volatile Bool_t needGetlinemInit = kFALSE;
 
@@ -411,9 +451,8 @@ void TRint::Run(Bool_t retrn)
                   snprintf(cmd, kMAXPATHLEN+50, ".x %s", (const char*)file->String());
                }
             }
-            Getlinem(kCleanUp, 0);
+            Getlinem(kCleanUp, nullptr);
             Gl_histadd(cmd);
-            fNcmd++;
 
             // The ProcessLine might throw an 'exception'.  In this case,
             // GetLinem(kInit,"Root >") is called and we are jump back
@@ -421,6 +460,7 @@ void TRint::Run(Bool_t retrn)
             needGetlinemInit = kFALSE;
             retval = ProcessLineNr("ROOT_cli_", cmd, &error);
             gCling->EndOfLineAction();
+            fNcmd++;
 
             // The ProcessLine has successfully completed and we need
             // to call Getlinem(kInit, GetPrompt());
@@ -463,7 +503,7 @@ void TRint::Run(Bool_t retrn)
    // Reset to happiness.
    fCaughtSignal = -1;
 
-   Getlinem(kCleanUp, 0);
+   Getlinem(kCleanUp, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -478,7 +518,7 @@ void TRint::PrintLogo(Bool_t lite)
       // Here, %%s results in %s after TString::Format():
       lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttps://root.cern",
                                          gROOT->GetVersion()));
-      lines.emplace_back(TString::Format("(c) 1995-2019, The ROOT Team; conception: R. Brun, F. Rademakers%%s"));
+      lines.emplace_back(TString::Format("(c) 1995-2024, The ROOT Team; conception: R. Brun, F. Rademakers%%s"));
       lines.emplace_back(TString::Format("Built for %s on %s%%s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
       if (!strcmp(gROOT->GetGitBranch(), gROOT->GetGitCommit())) {
          static const char *months[] = {"January","February","March","April","May",
@@ -499,7 +539,9 @@ void TRint::PrintLogo(Bool_t lite)
                                             gROOT->GetGitBranch(),
                                             gROOT->GetGitCommit()));
       }
-      lines.emplace_back(TString("Try '.help', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
+      lines.emplace_back(TString::Format("With %s %%s",
+                                         gSystem->GetBuildCompilerVersionStr()));
+      lines.emplace_back(TString("Try '.help'/'.?', '.demo', '.license', '.credits', '.quit'/'.q'%s"));
 
       // Find the longest line and its length:
       auto itLongest = std::max_element(lines.begin(), lines.end(),
@@ -571,7 +613,7 @@ Bool_t TRint::HandleTermInput()
    static TStopwatch timer;
    const char *line;
 
-   if ((line = Getlinem(kOneChar, 0))) {
+   if ((line = Getlinem(kOneChar, nullptr))) {
       if (line[0] == 0 && Gl_eof())
          Terminate(0);
 
@@ -587,8 +629,6 @@ Bool_t TRint::HandleTermInput()
       ReturnPressed((char*)sline.Data());
 
       fInterrupt = kFALSE;
-
-      if (!gCling->GetMore() && !sline.IsNull()) fNcmd++;
 
       // prevent recursive calling of this input handler
       fInputHandler->DeActivate();
@@ -634,6 +674,14 @@ Bool_t TRint::HandleTermInput()
          Error("HandleTermInput()", "Exception caught!");
       }
 
+      // `ProcessLineNr()` only prepends a `#line` directive if the previous
+      // input line was not terminated by a '\' (backslash-newline).
+      // Thus, to match source locations included in cling diagnostics, we only
+      // increment `fNcmd` if the next call to `ProcessLineNr()` will issue
+      // a new `#line`.
+      if (!fBackslashContinue && !sline.IsNull())
+         fNcmd++;
+
       if (gROOT->Timer()) timer.Print("u");
 
       // enable again intput handler
@@ -658,7 +706,7 @@ void TRint::HandleException(Int_t sig)
    fCaughtSignal = sig;
    if (TROOT::Initialized()) {
       if (gException) {
-         Getlinem(kCleanUp, 0);
+         Getlinem(kCleanUp, nullptr);
          Getlinem(kInit, "Root > ");
       }
    }
@@ -668,20 +716,22 @@ void TRint::HandleException(Int_t sig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Terminate the application. Reset the terminal to sane mode and call
 /// the logoff macro defined via Rint.Logoff environment variable.
+/// @note The function does not return, unless the class has
+/// been told to return from Run(), by a call to SetReturnFromRun().
 
 void TRint::Terminate(Int_t status)
 {
-   Getlinem(kCleanUp, 0);
+   Getlinem(kCleanUp, nullptr);
 
    if (ReturnFromRun()) {
       gSystem->ExitLoop();
    } else {
       delete gTabCom;
-      gTabCom = 0;
+      gTabCom = nullptr;
 
       //Execute logoff macro
       const char *logoff;
-      logoff = gEnv->GetValue("Rint.Logoff", (char*)0);
+      logoff = gEnv->GetValue("Rint.Logoff", (char*)nullptr);
       if (logoff && !NoLogOpt()) {
          char *mac = gSystem->Which(TROOT::GetMacroPath(), logoff, kReadPermission);
          if (mac)
@@ -715,9 +765,9 @@ void TRint::SetEchoMode(Bool_t mode)
 /// The last argument 'script' allows to specify an alternative script to
 /// be executed remotely to startup the session.
 
-Long_t TRint::ProcessRemote(const char *line, Int_t *)
+Longptr_t TRint::ProcessRemote(const char *line, Int_t *)
 {
-   Long_t ret = TApplication::ProcessRemote(line);
+   Longptr_t ret = TApplication::ProcessRemote(line);
 
    if (ret == 1) {
       if (fAppRemote) {
@@ -733,19 +783,23 @@ Long_t TRint::ProcessRemote(const char *line, Int_t *)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calls ProcessLine() possibly prepending a #line directive for
-/// better diagnostics. Must be called after fNcmd has been increased for
-/// the next line.
+/// Calls TRint::ProcessLine() possibly prepending a `#line` directive for
+/// better diagnostics.
+/// The user is responsible for incrementing `fNcmd`, where appropriate, after
+/// a call to this function.
 
-Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
+Longptr_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *error /*= 0*/)
 {
    Int_t err;
    if (!error)
       error = &err;
    if (line && line[0] != '.') {
-      TString lineWithNr = TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd - 1);
-      int res = ProcessLine(lineWithNr + line, kFALSE, error);
-      if (*error == TInterpreter::kProcessing) {
+      TString input;
+      if (!fBackslashContinue)
+         input += TString::Format("#line 1 \"%s%d\"\n", filestem, fNcmd);
+      input += line;
+      int res = ProcessLine(input, kFALSE, error);
+      if (gCling->GetMore()) {
          if (!fNonContinuePrompt.Length())
             fNonContinuePrompt = fDefaultPrompt;
          SetPrompt("root (cont'ed, cancel with .@) [%d]");
@@ -753,6 +807,10 @@ Long_t  TRint::ProcessLineNr(const char* filestem, const char *line, Int_t *erro
          SetPrompt(fNonContinuePrompt);
          fNonContinuePrompt.Clear();
       }
+      std::string_view sv(line);
+      auto lastNonSpace = sv.find_last_not_of(" \t");
+      fBackslashContinue = (lastNonSpace != std::string_view::npos
+                            && sv[lastNonSpace] == '\\');
       return res;
    }
    if (line && line[0] == '.' && line[1] == '@') {

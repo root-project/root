@@ -13,12 +13,13 @@
 #pragma optimize("",off)
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <fstream>
 
-#include "Riostream.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -27,7 +28,7 @@
 #include "TMath.h"
 #include "TObjString.h"
 #include "TObjArray.h"
-#include "TClass.h"
+#include "snprintf.h"
 
 Int_t TSVG::fgLineJoin = 0;
 Int_t TSVG::fgLineCap  = 0;
@@ -79,7 +80,7 @@ using the file extension `.svgz`.
 
 TSVG::TSVG() : TVirtualPS()
 {
-   fStream      = 0;
+   fStream      = nullptr;
    fType        = 0;
    gVirtualPS   = this;
    fBoundingBox = kFALSE;
@@ -101,7 +102,7 @@ TSVG::TSVG() : TVirtualPS()
 
 TSVG::TSVG(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype)
 {
-   fStream = 0;
+   fStream = nullptr;
    SetTitle("SVG");
    Open(fname, wtype);
 }
@@ -137,9 +138,9 @@ void TSVG::Open(const char *fname, Int_t wtype)
 
    // Open OS file
    fStream   = new std::ofstream(fname,std::ios::out);
-   if (fStream == 0 || !fStream->good()) {
+   if (!fStream || !fStream->good()) {
       printf("ERROR in TSVG::Open: Cannot open file:%s\n",fname);
-      if (fStream == 0) return;
+      if (!fStream) return;
    }
 
    gVirtualPS = this;
@@ -175,9 +176,9 @@ void TSVG::Close(Option_t *)
    PrintStr("</svg>@");
 
    // Close file stream
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,7 +202,7 @@ void TSVG::On()
 
 void TSVG::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -359,9 +360,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
       SetColorAlpha(light);
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 
    //- Draw bottom&right part of the box
@@ -427,9 +428,9 @@ void TSVG::DrawFrame(Double_t xl, Double_t yl, Double_t xt, Double_t  yt,
       SetColorAlpha(dark);
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
@@ -624,9 +625,9 @@ void TSVG::DrawPolyMarker(Int_t n, Float_t *xw, Float_t *yw)
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       if (fgLineJoin)
-         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
       if (fgLineCap)
-         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1033,9 +1034,9 @@ void TSVG::DrawPolyMarker(Int_t n, Double_t *xw, Double_t *yw)
       WriteReal(TMath::Max(1, Int_t(TAttMarker::GetMarkerLineWidth(fMarkerStyle))), kFALSE);
       PrintStr("\" fill=\"none\"");
       if (fgLineJoin)
-         PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+         PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
       if (fgLineCap)
-         PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+         PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
       PrintStr(">");
    }
    Double_t ix,iy;
@@ -1493,16 +1494,16 @@ void TSVG::DrawPS(Int_t nn, Double_t *xw, Double_t *yw)
       }
    }
    if (fgLineJoin)
-      PrintStr(Form(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
+      PrintStr(TString::Format(" stroke-linejoin=\"%s\"", fgLineJoin == 1 ? "round" : "bevel"));
    if (fgLineCap)
-      PrintStr(Form(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
+      PrintStr(TString::Format(" stroke-linecap=\"%s\"", fgLineCap == 1 ? "round" : "square"));
    PrintFast(2,"/>");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the SVG file. The main task of the function is to output the
-/// SVG header file which consist in <title>, <desc> and <defs>. The
-/// HeaderPS provided by the user program is written in the <defs> part.
+/// SVG header file which consist in `<title>`, `<desc>` and `<defs>`. The
+/// HeaderPS provided by the user program is written in the `<defs>` part.
 
 void TSVG::Initialize()
 {
@@ -1557,7 +1558,7 @@ void TSVG::MovePS(Double_t ix, Double_t iy)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the SVG page. This function initialize the pad conversion
-/// coefficients and output the <svg> directive which is close later in the
+/// coefficients and output the `<svg>` directive which is close later in the
 /// the function Close.
 
 void TSVG::NewPage()
@@ -1594,51 +1595,8 @@ void TSVG::NewPage()
 
 void TSVG::Range(Float_t xsize, Float_t ysize)
 {
-   Float_t xps, yps, xncm, yncm, dxwn, dywn, xwkwn, ywkwn, xymax;
-
    fXsize = xsize;
    fYsize = ysize;
-
-   xps = xsize;
-   yps = ysize;
-
-   if( xsize <= xps && ysize < yps) {
-      if ( xps > yps ) xymax = xps;
-      else             xymax = yps;
-      xncm  = xsize/xymax;
-      yncm  = ysize/xymax;
-      dxwn  = ((xps/xymax)-xncm)/2;
-      dywn  = ((yps/xymax)-yncm)/2;
-   } else {
-      if (xps/yps < 1) xwkwn = xps/yps;
-      else             xwkwn = 1;
-      if (yps/xps < 1) ywkwn = yps/xps;
-      else             ywkwn = 1;
-
-      if (xsize < ysize)  {
-         xncm = ywkwn*xsize/ysize;
-         yncm = ywkwn;
-         dxwn = (xwkwn-xncm)/2;
-         dywn = 0;
-         if( dxwn < 0) {
-            xncm = xwkwn;
-            dxwn = 0;
-            yncm = xwkwn*ysize/xsize;
-            dywn = (ywkwn-yncm)/2;
-         }
-      } else {
-         xncm = xwkwn;
-         yncm = xwkwn*ysize/xsize;
-         dxwn = 0;
-         dywn = (ywkwn-yncm)/2;
-         if( dywn < 0) {
-            yncm = ywkwn;
-            dywn = 0;
-            xncm = ywkwn*xsize/ysize;
-            dxwn = (xwkwn-xncm)/2;
-         }
-      }
-   }
    fRange = kTRUE;
 }
 
@@ -1648,7 +1606,6 @@ void TSVG::Range(Float_t xsize, Float_t ysize)
 void TSVG::SetFillColor( Color_t cindex )
 {
    fFillColor = cindex;
-   if (gStyle->GetFillColor() <= 0) cindex = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1746,7 +1703,7 @@ void TSVG::SetColorAlpha(Int_t color)
    if (col) {
       SetColor(col->GetRed(), col->GetGreen(), col->GetBlue());
       Float_t a = col->GetAlpha();
-      if (a<1.) PrintStr(Form(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
+      if (a<1.) PrintStr(TString::Format(" fill-opacity=\"%3.2f\" stroke-opacity=\"%3.2f\"",a,a));
    } else {
       SetColor(1., 1., 1.);
    }
@@ -2021,6 +1978,7 @@ void TSVG::Text(Double_t xx, Double_t yy, const char *chars)
       }
    }
 
+   PrintStr("@");
    PrintFast(7,"</text>");
 
    if (fTextAngle != 0.) {

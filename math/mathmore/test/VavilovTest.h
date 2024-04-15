@@ -92,6 +92,8 @@ public:
 
        @param v The Vavilov test object
        @param os Output stream
+       @param maxabsdiff max abs difference
+       @param maxcdfdiff max cdf difference
    */
    static int CdfTest (Vavilov& v, std::ostream& os,
                        double maxabsdiff, double maxcdfdiff);

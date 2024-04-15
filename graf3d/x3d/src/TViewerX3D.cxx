@@ -22,6 +22,7 @@
 #include "TView.h"
 #include "TMath.h"
 #include "TROOT.h"
+#include "snprintf.h"
 
 #include "TRootHelpDialog.h"
 #include "TGClient.h"
@@ -36,7 +37,7 @@
 
 #include "HelpText.h"
 
-#include <assert.h>
+#include <cassert>
 
 const char gHelpX3DViewer[] = "\
      PRESS \n\
@@ -108,19 +109,19 @@ private:
 public:
    TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev)
+   Bool_t  HandleButton(Event_t *ev) override
                   {  x3d_dispatch_event(gVirtualX->GetNativeEvent());
                      return fViewer->HandleContainerButton(ev); }
-   Bool_t  HandleConfigureNotify(Event_t *ev)
+   Bool_t  HandleConfigureNotify(Event_t *ev) override
                   {  TGFrame::HandleConfigureNotify(ev);
                      return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleKey(Event_t *)
+   Bool_t  HandleKey(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleMotion(Event_t *)
+   Bool_t  HandleMotion(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleExpose(Event_t *)
+   Bool_t  HandleExpose(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleColormapChange(Event_t *)
+   Bool_t  HandleColormapChange(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
 };
 
@@ -143,9 +144,9 @@ ClassImp(TViewerX3D);
 
 TViewerX3D::TViewerX3D(TVirtualPad *pad)
    : TVirtualViewer3D(),
-     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
-     fMenuBarHelpLayout(0), fCanvasLayout(0),
+     fCanvas(nullptr), fContainer(nullptr), fMenuBar(nullptr), fFileMenu(nullptr),
+     fHelpMenu(nullptr), fMenuBarLayout(nullptr), fMenuBarItemLayout(nullptr),
+     fMenuBarHelpLayout(nullptr), fCanvasLayout(nullptr),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
@@ -165,9 +166,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad)
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
-     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
-     fMenuBarHelpLayout(0), fCanvasLayout(0),
+     fCanvas(nullptr), fContainer(nullptr), fMenuBar(nullptr), fFileMenu(nullptr),
+     fHelpMenu(nullptr), fMenuBarLayout(nullptr), fMenuBarItemLayout(nullptr),
+     fMenuBarHelpLayout(nullptr), fCanvasLayout(nullptr),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
@@ -187,9 +188,9 @@ TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
 TViewerX3D::TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
                        Int_t x, Int_t y, UInt_t width, UInt_t height)
    : TVirtualViewer3D(),
-     fCanvas(0), fContainer(0), fMenuBar(0), fFileMenu(0),
-     fHelpMenu(0), fMenuBarLayout(0), fMenuBarItemLayout(0),
-     fMenuBarHelpLayout(0), fCanvasLayout(0),
+     fCanvas(nullptr), fContainer(nullptr), fMenuBar(nullptr), fFileMenu(nullptr),
+     fHelpMenu(nullptr), fMenuBarLayout(nullptr), fMenuBarItemLayout(nullptr),
+     fMenuBarHelpLayout(nullptr), fCanvasLayout(nullptr),
      fPad(pad), fBuildingScene(kFALSE), fPass(kSize)
 {
    fMainFrame = new TX3DFrame(*this, gClient->GetRoot(), 800, 600);
@@ -286,8 +287,8 @@ void TViewerX3D::CreateViewer(const char *name)
                           kSunkenFrame | kDoubleBorder);
    InitX3DWindow();
    if (!fX3DWin) {
-      fContainer    = 0;
-      fCanvasLayout = 0;
+      fContainer    = nullptr;
+      fCanvasLayout = nullptr;
       return;
    }
    fContainer = new TX3DContainer(this, fX3DWin, fCanvas->GetViewPort());
@@ -493,7 +494,7 @@ void TViewerX3D::PaintPolyMarker(const TBuffer3D & buffer) const
          x3dBuff->numPolys  = 0;
          x3dBuff->points    = new Float_t[3*x3dBuff->numPoints];
          x3dBuff->segs      = new Int_t[3*x3dBuff->numSegs];
-         x3dBuff->polys     = 0;
+         x3dBuff->polys     = nullptr;
 
          Double_t delta = 0.002;
 

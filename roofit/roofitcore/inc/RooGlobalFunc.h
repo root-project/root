@@ -17,12 +17,13 @@
 #define ROO_GLOBAL_FUNC
 
 #include "RooCmdArg.h"
+#include "RooLinkedList.h"
+#include "RooArgSet.h"
+
+#include "ROOT/RConfig.hxx"
+
 #include <map>
 #include <string>
-//#include "RooDataHist.h"
-//#include "RooAbsPdf.h"
-//#include "RooRealConstant.h"
-//#include "RooMsgService.h"
 
 class RooDataHist ;
 class RooDataSet ;
@@ -33,7 +34,6 @@ class RooRealConstant ;
 class RooMsgService ;
 class RooFormulaVar ;
 class RooAbsData ;
-class RooArgSet ;
 class RooCategory ;
 class RooAbsReal ;
 class RooAbsBinning ;
@@ -43,12 +43,7 @@ class RooConstVar ;
 class RooRealVar ;
 class RooAbsCategory ;
 class RooNumIntConfig ;
-class RooArgList ;
-class RooAbsCollection ;
 class TH1 ;
-class TF1 ;
-class TF2 ;
-class TF3 ;
 class TTree ;
 
 /*! \namespace RooFit
@@ -56,32 +51,55 @@ The namespace RooFit contains mostly switches that change the behaviour of funct
 (or other types of arguments).
 
 These switches are documented with the relevant functions, e.g. RooAbsPdf::fitTo().
-For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern.ch/root-user-guides-and-manuals),
-[courses](https://root.cern.ch/courses) or [RooFit in 20 minutes](https://root.cern.ch/roofit-20-minutes).
+For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern/root-user-guides-and-manuals),
+[courses](https://root.cern/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 */
 namespace RooFit {
 
 /// Verbosity level for RooMsgService::StreamConfig in RooMsgService
 enum MsgLevel { DEBUG=0, INFO=1, PROGRESS=2, WARNING=3, ERROR=4, FATAL=5 } ;
 /// Topics for a RooMsgService::StreamConfig in RooMsgService
-enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32, 
-	 Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048, 
-	 Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16 };
+enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration=16, LinkStateMgmt=32,
+    Eval=64, Caching=128, Optimization=256, ObjectHandling=512, InputArguments=1024, Tracing=2048,
+    Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16, IO=1<<17 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
-// RooAbsReal::plotOn arguments
+/// For setting the offset mode with the Offset() command argument to
+/// RooAbsPdf::fitTo()
+enum class OffsetMode { None, Initial, Bin };
+
+namespace Experimental {
+
+/// Configuration options for parallel minimization with multiprocessing library
+RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
+RooCmdArg ParallelDescentOptions(bool enable=false, int splitStrategy=0, int numSplits=4) ;
+
+} // Experimental
+
+/**
+ * \defgroup CmdArgs RooFit command arguments
+ * These arguments can be passed to functions of RooFit objects.
+ * \ingroup Roofitmain
+ * @{
+ */
+
+/**
+ * \defgroup Plotting Arguments for plotOn functions
+ * @{
+ */
 RooCmdArg DrawOption(const char* opt) ;
-RooCmdArg Normalization(Double_t scaleFactor) ;
+RooCmdArg Normalization(double scaleFactor) ;
 RooCmdArg Slice(const RooArgSet& sliceSet) ;
 RooCmdArg Slice(RooCategory& cat, const char* label) ;
+RooCmdArg Slice(std::map<RooCategory*, std::string> const&) ;
 RooCmdArg Project(const RooArgSet& projSet) ;
-RooCmdArg ProjWData(const RooAbsData& projData, Bool_t binData=kFALSE) ;
-RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, Bool_t binData=kFALSE) ;
+RooCmdArg ProjWData(const RooAbsData& projData, bool binData=false) ;
+RooCmdArg ProjWData(const RooArgSet& projSet, const RooAbsData& projData, bool binData=false) ;
 RooCmdArg Asymmetry(const RooCategory& cat) ;
-RooCmdArg Precision(Double_t prec) ;
+RooCmdArg Precision(double prec) ;
 RooCmdArg ShiftToZero() ;
-RooCmdArg Range(const char* rangeName, Bool_t adjustNorm=kTRUE) ;
-RooCmdArg Range(Double_t lo, Double_t hi, Bool_t adjustNorm=kTRUE) ;
+RooCmdArg Range(const char* rangeName, bool adjustNorm=true) ;
+RooCmdArg Range(double lo, double hi, bool adjustNorm=true) ;
 RooCmdArg NormRange(const char* rangeNameList) ;
 RooCmdArg VLines() ;
 RooCmdArg LineColor(Color_t color) ;
@@ -93,16 +111,21 @@ RooCmdArg ProjectionRange(const char* rangeName) ;
 RooCmdArg Name(const char* name) ;
 RooCmdArg Invisible(bool inv=true) ;
 RooCmdArg AddTo(const char* name, double wgtSel=1.0, double wgtOther=1.0) ;
-RooCmdArg EvalErrorValue(Double_t value) ;
+RooCmdArg EvalErrorValue(double value) ;
 RooCmdArg MoveToBack()  ;
-RooCmdArg VisualizeError(const RooDataSet& paramData, Double_t Z=1) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
-RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, Double_t Z=1, Bool_t linearMethod=kTRUE) ;
+RooCmdArg VisualizeError(const RooDataSet& paramData, double Z=1) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, double Z=1, bool linearMethod=true) ;
+RooCmdArg VisualizeError(const RooFitResult& fitres, const RooArgSet& param, double Z=1, bool linearMethod=true) ;
 RooCmdArg ShowProgress() ;
 
 // RooAbsPdf::plotOn arguments
-RooCmdArg Normalization(Double_t scaleFactor, Int_t scaleType) ;
-RooCmdArg Components(const RooArgSet& compSet) ;
+RooCmdArg Normalization(double scaleFactor, Int_t scaleType) ;
+template<class... Args_t>
+RooCmdArg Components(Args_t &&... argsOrArgSet) {
+  RooCmdArg out{"SelectCompSet",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
+}
 RooCmdArg Components(const char* compSpec) ;
 
 // RooAbsData::plotOn arguments
@@ -110,64 +133,75 @@ RooCmdArg Cut(const char* cutSpec) ;
 RooCmdArg Cut(const RooFormulaVar& cutVar) ;
 RooCmdArg Binning(const RooAbsBinning& binning) ;
 RooCmdArg Binning(const char* binningName) ;
-RooCmdArg Binning(Int_t nBins, Double_t xlo=0., Double_t xhi=0.) ;
+RooCmdArg Binning(int nBins, double xlo=0.0, double xhi=0.0) ;
 RooCmdArg MarkerStyle(Style_t style) ;
 RooCmdArg MarkerSize(Size_t size) ;
 RooCmdArg MarkerColor(Color_t color) ;
 RooCmdArg CutRange(const char* rangeName) ;
-RooCmdArg XErrorSize(Double_t width) ;
+RooCmdArg XErrorSize(double width) ;
 RooCmdArg RefreshNorm() ;
 RooCmdArg Efficiency(const RooCategory& cat) ;
-RooCmdArg Rescale(Double_t factor) ;
+RooCmdArg Rescale(double factor) ;
 
+/** @} */
+
+/**
+ * \defgroup ConstructorArgs Arguments for various constructors
+ * @{
+ */
 // RooDataHist::ctor arguments
-RooCmdArg Weight(Double_t wgt) ;
+RooCmdArg Weight(double wgt) ;
 RooCmdArg Index(RooCategory& icat) ;
 RooCmdArg Import(const char* state, TH1& histo) ;
 RooCmdArg Import(const std::map<std::string,TH1*>&) ;
 RooCmdArg Import(const char* state, RooDataHist& dhist) ;
 RooCmdArg Import(const std::map<std::string,RooDataHist*>&) ;
-RooCmdArg Import(TH1& histo, Bool_t importDensity=kFALSE) ;
+RooCmdArg Import(TH1& histo, bool importDensity=false) ;
 
 // RooDataSet::ctor arguments
-RooCmdArg WeightVar(const char* name, Bool_t reinterpretAsWeight=kFALSE) ;
-RooCmdArg WeightVar(const RooRealVar& arg, Bool_t reinterpretAsWeight=kFALSE) ;
-RooCmdArg Import(const char* state, RooDataSet& data) ;
+RooCmdArg WeightVar(const char* name="weight", bool reinterpretAsWeight=false) ;
+RooCmdArg WeightVar(const RooRealVar& arg, bool reinterpretAsWeight=false) ;
+RooCmdArg Import(const char* state, RooAbsData& data) ;
 RooCmdArg Import(const std::map<std::string,RooDataSet*>& ) ;
+template<class DataPtr_t>
+RooCmdArg Import(std::map<std::string,DataPtr_t> const& map) {
+    RooCmdArg container("ImportDataSliceMany",0,0,0,0,nullptr,nullptr,nullptr,nullptr) ;
+    for (auto const& item : map) {
+      container.addArg(Import(item.first.c_str(), *item.second)) ;
+    }
+    container.setProcessRecArgs(true,false) ;
+    return container ;
+}
+
 RooCmdArg Link(const char* state, RooAbsData& data) ;
 RooCmdArg Link(const std::map<std::string,RooAbsData*>&) ;
-RooCmdArg Import(RooDataSet& data) ;
+RooCmdArg Import(RooAbsData& data) ;
 RooCmdArg Import(TTree& tree) ;
 RooCmdArg ImportFromFile(const char* fname, const char* tname) ;
-RooCmdArg StoreError(const RooArgSet& aset) ; 
-RooCmdArg StoreAsymError(const RooArgSet& aset) ; 
+RooCmdArg StoreError(const RooArgSet& aset) ;
+RooCmdArg StoreAsymError(const RooArgSet& aset) ;
 RooCmdArg OwnLinked() ;
 
-// RooChi2Var::ctor / RooNLLVar arguments
-RooCmdArg Extended(Bool_t flag=kTRUE) ;
-RooCmdArg DataError(Int_t) ;
-RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
-RooCmdArg BatchMode(bool flag=true);
+/** @} */
 
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
-RooCmdArg Format(const char* format, Int_t sigDigit) ;
-RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                 const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                 const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-                 const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
+RooCmdArg Format(const char* what, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                 const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                 const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+                 const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 RooCmdArg Sibling(const RooAbsCollection& sibling) ;
 
 // RooAbsRealLValue::frame arguments
 RooCmdArg Title(const char* name) ;
 RooCmdArg Bins(Int_t nbin) ;
-RooCmdArg AutoSymRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
-RooCmdArg AutoRange(const RooAbsData& data, Double_t marginFactor=0.1) ;
+RooCmdArg AutoSymRange(const RooAbsData& data, double marginFactor=0.1) ;
+RooCmdArg AutoRange(const RooAbsData& data, double marginFactor=0.1) ;
 
 // RooAbsData::createHistogram arguments
-RooCmdArg AutoSymBinning(Int_t nbins=100, Double_t marginFactor=0.1) ; 
-RooCmdArg AutoBinning(Int_t nbins=100, Double_t marginFactor=0.1) ;
+RooCmdArg AutoSymBinning(Int_t nbins=100, double marginFactor=0.1) ;
+RooCmdArg AutoBinning(Int_t nbins=100, double marginFactor=0.1) ;
 
 // RooAbsReal::fillHistogram arguments
 RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
@@ -176,97 +210,188 @@ RooCmdArg IntegratedObservables(const RooArgSet& intObs) ;
 RooCmdArg SelectVars(const RooArgSet& vars) ;
 RooCmdArg EventRange(Int_t nStart, Int_t nStop) ;
 
+
+/**
+ * \defgroup Fitting Arguments for fitting
+ * @{
+ */
+// RooChi2Var::ctor / RooNLLVar arguments
+RooCmdArg Extended(bool flag=true) ;
+RooCmdArg DataError(Int_t) ;
+RooCmdArg NumCPU(Int_t nCPU, Int_t interleave=0) ;
+RooCmdArg Parallelize(int nWorkers) ;
+RooCmdArg ModularL(bool flag=false) ;
+RooCmdArg TimingAnalysis(bool timingAnalysis) ;
+
+//RooCmdArg BatchMode(std::string const& batchMode="cpu");
+//// The const char * overload is necessary, otherwise the compiler will cast a
+//// C-Style string to a bool and choose the BatchMode(bool) overload if one
+//// calls for example BatchMode("off").
+//inline RooCmdArg BatchMode(const char * batchMode) { return BatchMode(std::string(batchMode)); }
+//inline RooCmdArg BatchMode(bool batchModeOn) { return BatchMode(batchModeOn ? "cpu" : "off"); }
+
+RooCmdArg IntegrateBins(double precision);
+
 // RooAbsPdf::fitTo arguments
-RooCmdArg PrefitDataFraction(Double_t data_ratio = 0.0) ;
-RooCmdArg FitOptions(const char* opts) ;
+RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
 RooCmdArg Optimize(Int_t flag=2) ;
-RooCmdArg ProjectedObservables(const RooArgSet& set) ; // obsolete, for backward compatibility
-RooCmdArg ConditionalObservables(const RooArgSet& set) ;
-RooCmdArg Verbose(Bool_t flag=kTRUE) ;
-RooCmdArg Save(Bool_t flag=kTRUE) ;
-RooCmdArg Timer(Bool_t flag=kTRUE) ;
+
+class EvalBackend : public RooCmdArg {
+public:
+   enum class Value { Legacy, Cpu, Cuda, Codegen, CodegenNoGrad };
+
+   EvalBackend(Value value);
+
+   EvalBackend(std::string const &name);
+
+   static EvalBackend Legacy();
+   static EvalBackend Cpu();
+   static EvalBackend Cuda();
+   static EvalBackend Codegen();
+   static EvalBackend CodegenNoGrad();
+
+   Value value() const { return static_cast<Value>(getInt(0)); }
+
+   bool operator==(EvalBackend const &other) const { return value() == other.value(); }
+
+   bool operator!=(EvalBackend const &other) const { return value() != other.value(); }
+
+   std::string name() const;
+
+   static Value &defaultValue();
+private:
+   static Value toValue(std::string const& name);
+   static std::string toName(Value value);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a RooCmdArg to declare conditional observables.
+/// \param[in] argsOrArgSet Can either be one or more RooRealVar with the
+//                          observables or a single RooArgSet containing them.
+template<class... Args_t>
+RooCmdArg ConditionalObservables(Args_t &&... argsOrArgSet) {
+  RooCmdArg out{"ProjectedObservables",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
+}
+
+// obsolete, for backward compatibility
+template<class... Args_t>
+RooCmdArg ProjectedObservables(Args_t &&... argsOrArgSet) {
+  return ConditionalObservables(std::forward<Args_t>(argsOrArgSet)...);
+}
+
+RooCmdArg Verbose(bool flag=true) ;
+RooCmdArg Save(bool flag=true) ;
+RooCmdArg Timer(bool flag=true) ;
 RooCmdArg PrintLevel(Int_t code) ;
-RooCmdArg Warnings(Bool_t flag=kTRUE) ; 
+RooCmdArg Warnings(bool flag=true) ;
 RooCmdArg Strategy(Int_t code) ;
-RooCmdArg InitialHesse(Bool_t flag=kTRUE) ;
-RooCmdArg Hesse(Bool_t flag=kTRUE) ;
-RooCmdArg Minos(Bool_t flag=kTRUE) ;
+RooCmdArg InitialHesse(bool flag=true) ;
+RooCmdArg Hesse(bool flag=true) ;
+RooCmdArg Minos(bool flag=true) ;
 RooCmdArg Minos(const RooArgSet& minosArgs) ;
-RooCmdArg SplitRange(Bool_t flag=kTRUE) ;
+RooCmdArg SplitRange(bool flag=true) ;
 RooCmdArg SumCoefRange(const char* rangeName) ;
 RooCmdArg Constrain(const RooArgSet& params) ;
-RooCmdArg GlobalObservables(const RooArgSet& globs) ;
+RooCmdArg MaxCalls(int n) ;
+
+template<class... Args_t>
+RooCmdArg GlobalObservables(Args_t &&... argsOrArgSet) {
+  RooCmdArg out{"GlobalObservables",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
+}
+RooCmdArg GlobalObservablesSource(const char* sourceName);
 RooCmdArg GlobalObservablesTag(const char* tagName) ;
-//RooCmdArg Constrained() ;
 RooCmdArg ExternalConstraints(const RooArgSet& constraintPdfs) ;
 RooCmdArg PrintEvalErrors(Int_t numErrors) ;
-RooCmdArg EvalErrorWall(Bool_t flag) ;
-RooCmdArg SumW2Error(Bool_t flag) ;
-RooCmdArg AsymptoticError(Bool_t flag) ;
-RooCmdArg CloneData(Bool_t flag) ;
-RooCmdArg Integrate(Bool_t flag) ;
-RooCmdArg Minimizer(const char* type, const char* alg=0) ;
-RooCmdArg Offset(Bool_t flag=kTRUE) ;
+RooCmdArg EvalErrorWall(bool flag) ;
+RooCmdArg SumW2Error(bool flag) ;
+RooCmdArg AsymptoticError(bool flag) ;
+RooCmdArg CloneData(bool flag) ;
+RooCmdArg Integrate(bool flag) ;
+RooCmdArg Minimizer(const char* type, const char* alg=nullptr) ;
+RooCmdArg Offset(std::string const& mode);
+// The const char * overload is necessary, otherwise the compiler will cast a
+// C-Style string to a bool and choose the Offset(bool) overload if one
+// calls for example Offset("off").
+inline RooCmdArg Offset(const char * mode) { return Offset(std::string(mode)); }
+// For backwards compatibility
+inline RooCmdArg Offset(bool flag=true) { return flag ? Offset("initial") : Offset("off"); }
+RooCmdArg RecoverFromUndefinedRegions(double strength);
+/** @} */
 
 // RooAbsPdf::paramOn arguments
 RooCmdArg Label(const char* str) ;
-RooCmdArg Layout(Double_t xmin, Double_t xmax=0.99, Double_t ymin=0.95) ;
+RooCmdArg Layout(double xmin, double xmax=0.99, double ymin=0.95) ;
 RooCmdArg Parameters(const RooArgSet& params) ;
-RooCmdArg ShowConstants(Bool_t flag=kTRUE) ;
+RooCmdArg ShowConstants(bool flag=true) ;
 
 // RooTreeData::statOn arguments
 RooCmdArg What(const char* str) ;
 
 // RooProdPdf::ctor arguments
-RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, Bool_t depsAreCond=kFALSE) ;
+RooCmdArg Conditional(const RooArgSet& pdfSet, const RooArgSet& depSet, bool depsAreCond=false) ;
 
+/**
+ * \defgroup Generating Arguments for generating data
+ * @{
+ */
 // RooAbsPdf::generate arguments
-RooCmdArg ProtoData(const RooDataSet& protoData, Bool_t randomizeOrder=kFALSE, Bool_t resample=kFALSE) ;
+RooCmdArg ProtoData(const RooDataSet& protoData, bool randomizeOrder=false, bool resample=false) ;
 RooCmdArg NumEvents(Int_t numEvents) ;
-RooCmdArg NumEvents(Double_t numEvents) ;
-RooCmdArg AutoBinned(Bool_t flag=kTRUE) ;
+RooCmdArg NumEvents(double numEvents) ;
+RooCmdArg AutoBinned(bool flag=true) ;
 RooCmdArg GenBinned(const char* tag) ;
 RooCmdArg AllBinned() ;
-RooCmdArg ExpectedData(Bool_t flag=kTRUE) ; 
-RooCmdArg Asimov(Bool_t flag=kTRUE) ; 
+RooCmdArg ExpectedData(bool flag=true) ;
+RooCmdArg Asimov(bool flag=true) ;
+
+/** @} */
 
 // RooAbsRealLValue::createHistogram arguments
-RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
-RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;
+RooCmdArg YVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
+RooCmdArg ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;
 RooCmdArg AxisLabel(const char* name) ;
-RooCmdArg Scaling(Bool_t flag) ; 
+RooCmdArg Scaling(bool flag) ;
 
 
 // RooAbsReal::createHistogram arguments
-RooCmdArg IntrinsicBinning(Bool_t flag=kTRUE) ;
+RooCmdArg IntrinsicBinning(bool flag=true) ;
 
 // RooAbsReal::createIntegral arguments
-RooCmdArg NormSet(const RooArgSet& nset) ;
+template<class... Args_t>
+RooCmdArg NormSet(Args_t &&... argsOrArgSet) {
+  RooCmdArg out{"NormSet",0};
+  out.setSet(0, RooArgSet{std::forward<Args_t>(argsOrArgSet)...});
+  return out;
+}
 RooCmdArg NumIntConfig(const RooNumIntConfig& cfg) ;
 
 // RooMCStudy::ctor arguments
-RooCmdArg Silence(Bool_t flag=kTRUE) ;
+RooCmdArg Silence(bool flag=true) ;
 RooCmdArg FitModel(RooAbsPdf& pdf) ;
-RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                     const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                     const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
-RooCmdArg Binned(Bool_t flag=kTRUE) ;
+RooCmdArg FitOptions(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                     const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                     const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
+RooCmdArg Binned(bool flag=true) ;
 
 // RooMCStudy::plot* arguments
-RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2=RooCmdArg::none(),
-                const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-                const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;
+RooCmdArg Frame(const RooCmdArg& arg1                ,const RooCmdArg& arg2={},
+                const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;
 RooCmdArg FrameBins(Int_t nbins) ;
-RooCmdArg FrameRange(Double_t xlo, Double_t xhi) ;
-RooCmdArg FitGauss(Bool_t flag=kTRUE) ;
+RooCmdArg FrameRange(double xlo, double xhi) ;
+RooCmdArg FitGauss(bool flag=true) ;
 
 // RooRealVar::format arguments
 RooCmdArg AutoPrecision(Int_t ndigit=2) ;
 RooCmdArg FixedPrecision(Int_t ndigit=2) ;
-RooCmdArg TLatexStyle(Bool_t flag=kTRUE) ;
-RooCmdArg LatexStyle(Bool_t flag=kTRUE) ;
-RooCmdArg LatexTableStyle(Bool_t flag=kTRUE) ;
-RooCmdArg VerbatimName(Bool_t flag=kTRUE) ;
+RooCmdArg TLatexStyle(bool flag=true) ;
+RooCmdArg LatexStyle(bool flag=true) ;
+RooCmdArg LatexTableStyle(bool flag=true) ;
+RooCmdArg VerbatimName(bool flag=true) ;
 
 // RooMsgService::addReportingStream arguments
 RooCmdArg Topic(Int_t topic) ;
@@ -275,19 +400,19 @@ RooCmdArg ClassName(const char* name) ;
 RooCmdArg BaseClassName(const char* name) ;
 RooCmdArg TagName(const char* name) ;
 RooCmdArg OutputStream(std::ostream& os) ;
-RooCmdArg Prefix(Bool_t flag) ;
+RooCmdArg Prefix(bool flag) ;
 RooCmdArg Color(Color_t color) ;
 
 // RooWorkspace::import() arguments
-RooCmdArg RenameConflictNodes(const char* suffix, Bool_t renameOrigNodes=kFALSE) ;
-RooCmdArg RenameAllNodes(const char* suffix) ; 
-RooCmdArg RenameAllVariables(const char* suffix) ; 
-RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ; 
+RooCmdArg RenameConflictNodes(const char* suffix, bool renameOrigNodes=false) ;
+RooCmdArg RenameAllNodes(const char* suffix) ;
+RooCmdArg RenameAllVariables(const char* suffix) ;
+RooCmdArg RenameAllVariablesExcept(const char* suffix,const char* exceptionList) ;
 RooCmdArg RenameVariable(const char* inputName, const char* outputName) ;
 RooCmdArg Rename(const char* suffix) ;
-RooCmdArg RecycleConflictNodes(Bool_t flag=kTRUE) ;
-RooCmdArg Embedded(Bool_t flag=kTRUE) ;
-RooCmdArg NoRecursion(Bool_t flag=kTRUE) ;
+RooCmdArg RecycleConflictNodes(bool flag=true) ;
+RooCmdArg Embedded(bool flag=true) ;
+RooCmdArg NoRecursion(bool flag=true) ;
 
 // RooSimCloneTool::build() arguments
 RooCmdArg SplitParam(const char* varname, const char* catname) ;
@@ -297,7 +422,7 @@ RooCmdArg SplitParamConstrained(const RooRealVar& var, const RooAbsCategory& cat
 RooCmdArg Restrict(const char* catName, const char* stateNameList) ;
 
 // RooAbsPdf::createCdf() arguments
-RooCmdArg SupNormSet(const RooArgSet& nset) ; 
+RooCmdArg SupNormSet(const RooArgSet& nset) ;
 RooCmdArg ScanParameters(Int_t nbins,Int_t intOrder) ;
 RooCmdArg ScanNumCdf() ;
 RooCmdArg ScanAllCdf() ;
@@ -305,49 +430,52 @@ RooCmdArg ScanNoCdf() ;
 
 // Generic container arguments (to be able to supply more command line arguments)
 RooCmdArg MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,
-		   const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
-		   const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-		   const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;
- 
-RooConstVar& RooConst(Double_t val) ; 
+         const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+         const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 
+RooConstVar& RooConst(double val) ;
 
+// End group CmdArgs:
+/**
+ * @}
+ */
+
+namespace Detail {
+
+// Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
+template <typename... Args>
+inline std::unique_ptr<RooLinkedList> createCmdList(RooCmdArg const* arg1, Args &&...args)
+{
+   auto cmdList = std::make_unique<RooLinkedList>();
+   for (auto &arg : {arg1, static_cast<RooCmdArg const *>(args)...}) {
+      cmdList->Add(const_cast<RooCmdArg *>(arg));
+   }
+   return cmdList;
 }
+
+inline std::unique_ptr<RooLinkedList> createCmdList()
+{
+   return std::make_unique<RooLinkedList>();
+}
+
+inline std::unique_ptr<RooLinkedList> createCmdList(RooLinkedList const *cmdList)
+{
+   auto cmdListCopy = std::make_unique<RooLinkedList>();
+   for (auto *arg : *cmdList) {
+      cmdListCopy->Add(arg);
+   }
+   return cmdListCopy;
+}
+
+} // namespace Detail
+
+} // namespace RooFit
 
 namespace RooFitShortHand {
 
-RooArgSet S(const RooAbsArg& v1) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-            const RooAbsArg& v6) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-            const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-            const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgSet S(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-            const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
+RooConstVar& C(double value);
 
-RooArgList L(const RooAbsArg& v1) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-             const RooAbsArg& v6) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-             const RooAbsArg& v6, const RooAbsArg& v7) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8) ;
-RooArgList L(const RooAbsArg& v1, const RooAbsArg& v2, const RooAbsArg& v3, const RooAbsArg& v4, const RooAbsArg& v5, 
-             const RooAbsArg& v6, const RooAbsArg& v7, const RooAbsArg& v8, const RooAbsArg& v9) ;
-
-RooConstVar& C(Double_t value) ;
-
-} // End namespace ShortHand
-
-class RooGlobalFunc {};
+} // namespace RooFitShortHand
 
 #endif

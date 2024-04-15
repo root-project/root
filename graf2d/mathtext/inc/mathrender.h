@@ -30,9 +30,9 @@ typedef unsigned __int16 uint16_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int64 uint64_t;
 #else
-#include <stdint.h>
+#include <cstdint>
 #endif
-#include <math.h>
+#include <cmath>
 #include <string>
 #include <iostream>
 #include <algorithm>
@@ -59,6 +59,12 @@ namespace mathtext {
       {
          _x[0] = x0;
          _x[1] = y0;
+      }
+      inline point_t& operator=(const point_t &point)
+      {
+         _x[0] = point._x[0];
+         _x[1] = point._x[1];
+         return *this;
       }
       inline const float *x(void) const
       {

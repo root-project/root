@@ -53,7 +53,7 @@ public:
       pId = anId;
    }
 
-   ~NdbParticle() {}
+   ~NdbParticle() override {}
 
    // --- Access Functions ---
    inline TString Name()      const { return pName; }
@@ -63,7 +63,7 @@ public:
    inline Float_t HalfLife()   const { return pHalfLife; }
    inline Int_t   Charge()      const { return pCharge; }
 
-   ClassDef(NdbParticle,1)
+   ClassDefOverride(NdbParticle,1)
 
 }; // NdbParticle
 

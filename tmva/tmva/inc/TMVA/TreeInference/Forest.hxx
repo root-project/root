@@ -1,7 +1,7 @@
 /**********************************************************************************
  * Project: ROOT - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
@@ -14,7 +14,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_TREEINFERENCE_FOREST
@@ -43,7 +43,7 @@ namespace Internal {
 template <typename T>
 T *GetObjectSafe(TFile *f, const std::string &n, const std::string &m)
 {
-   auto v = reinterpret_cast<T *>(f->Get(m.c_str()));
+   auto *v = f->Get<T>(m.c_str());
    if (v == nullptr)
       throw std::runtime_error("Failed to read " + m + " from file " + n + ".");
    return v;
@@ -195,7 +195,7 @@ struct BranchlessJittedForest : public ForestBase<T, std::function<void (const T
 /// \param[in] filename Filename of the ROOT file
 /// \param[in] output Load trees corresponding to the given output node of the forest
 /// \param[in] sortTrees Flag to indicate sorting the input trees by the cut value of the first node of each tree
-/// \param[out] Return jitted code as string
+/// \return Return jitted code as string
 template <typename T>
 inline std::string
 BranchlessJittedForest<T>::Load(const std::string &key, const std::string &filename, const int output, const bool sortTrees)

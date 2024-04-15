@@ -3,11 +3,11 @@
  * $Log$
  */
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <Riostream.h>
+#include <iostream>
 #include <TSystem.h>
 #include <TGTab.h>
 #include <TGFrame.h>
@@ -16,6 +16,8 @@
 #include <TGButton.h>
 #include <TGMsgBox.h>
 #include <TVirtualX.h>
+#include <strlcpy.h>
+#include <snprintf.h>
 
 #include "XSVarious.h"
 #include "XSElementDlg.h"
@@ -961,7 +963,7 @@ XSReactionDlg::ExecCommand()
 
 /* ----- ProcessButton ----- */
 Bool_t
-XSReactionDlg::ProcessButton(Long_t param1, Long_t param2)
+XSReactionDlg::ProcessButton(Longptr_t param1, Longptr_t param2)
 {
    UInt_t   newZ;
    switch (param1) {
@@ -1010,7 +1012,7 @@ XSReactionDlg::ProcessButton(Long_t param1, Long_t param2)
 
 /* ----- ProcessCombo ------ */
 Bool_t
-XSReactionDlg::ProcessCombo( Long_t param1, Long_t param2 )
+XSReactionDlg::ProcessCombo( Longptr_t param1, Longptr_t param2 )
 {
    printf("ComboMessage %ld %ld\n",param1,param2);
 
@@ -1043,7 +1045,7 @@ XSReactionDlg::ProcessCombo( Long_t param1, Long_t param2 )
 
 /* ----- ProcessMessage ----- */
 Bool_t
-XSReactionDlg::ProcessMessage(Long_t msg, Long_t param1, Long_t param2)
+XSReactionDlg::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2)
 {
    printf("Message = %d (%d)\n", GET_MSG(msg), GET_SUBMSG(msg));
 

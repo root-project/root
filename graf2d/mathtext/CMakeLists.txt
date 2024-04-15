@@ -19,4 +19,8 @@ ROOT_LINKER_LIBRARY(mathtext
   NOINSTALL
 )
 
+check_cxx_compiler_flag(-Wbidi-chars=none GCC_HAS_BIDI_CHARS_FLAG)
+if(GCC_HAS_BIDI_CHARS_FLAG)
+    set_source_files_properties(src/fontembed.cxx COMPILE_FLAGS "-Wbidi-chars=none")
+endif()
 set_property(TARGET mathtext PROPERTY POSITION_INDEPENDENT_CODE ON)

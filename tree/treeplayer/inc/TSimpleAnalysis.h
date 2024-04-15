@@ -36,19 +36,19 @@ private:
    std::string              fConfigFile; ///< Name of the configuration file
    std::vector<std::string> fInputFiles; ///< .root input files
    std::string              fOutputFile; ///< Output file in which are stored the histograms
-   std::string              fTreeName; ///< Name of the input tree
-   std::ifstream            fIn; ///< Stream for the input file
+   std::string              fTreeName;   ///< Name of the input tree
+   std::ifstream            fIn;         ///< Stream for the input file
 
-   //The map contains in the first part the names of the histograms written in the output file, in the
-   //second part the pair of what is shown in the histograms and the cut applied on the variables
+   /// The map contains in the first part the names of the histograms written in the output file, in the
+   /// second part the pair of what is shown in the histograms and the cut applied on the variables
    std::map<std::string, std::pair<std::string, std::string>> fHists;
 
-   //The elements of the enumeration refer to the different types of elements
-   //that are in the input file
+   /// The elements of the enumeration refer to the different types of elements
+   /// that are in the input file
    enum EReadingWhat {
-      kReadingOutput, ///< Reading the name of the output file
-      kReadingTreeName, ///< Reading the name of the tree
-      kReadingInput, ///< Reading the name of the .root input files
+      kReadingOutput,     ///< Reading the name of the output file
+      kReadingTreeName,   ///< Reading the name of the tree
+      kReadingInput,      ///< Reading the name of the .root input files
       kReadingExpressions ///< Reading the expressions
    };
 

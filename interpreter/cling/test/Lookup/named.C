@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %built_cling -fno-rtti 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -fno-rtti 2>&1 | FileCheck %s
 // Test Lookup::Named and Namespace, used in quick simple lookups.
 
 #include "cling/Interpreter/Interpreter.h"
@@ -39,6 +39,14 @@ class Inside_AnotherNext {};
 
 .rawInput 0
 
+// ROOT-6095: names introduced in a scopeless enum should be available in the
+// parent context.
+typedef enum { k0, k1 } E;
+E foo = k1
+//CHECK: (E) (k1) : (unsigned int) 1
+struct X { enum { k0, k1 = 2 }; } bar
+X::k1
+//CHECK: (X::(unnamed enum {{.*}})) (X::k1) : (unsigned int) 2
 
 clang::Sema& S = gCling->getSema();
 const LookupHelper& lookup = gCling->getLookupHelper();
@@ -61,6 +69,10 @@ decl
 //CHECK: (const clang::NamedDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
 decl->getQualifiedNameAsString().c_str()
 //CHECK-NEXT: ({{[^)]+}}) "AnotherNext::Inside_AnotherNext"
+
+decl = utils::Lookup::Named(&S, "k1", nullptr);
+decl
+//CHECK: (const clang::NamedDecl *) 0x{{[1-9a-f][0-9a-f]*$}}
 
 // Now test the ambiguities.
 

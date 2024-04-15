@@ -12,7 +12,6 @@
 #ifndef ROOT_TStreamerElement
 #define ROOT_TStreamerElement
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TStreamerElement                                                     //
@@ -33,8 +32,8 @@ class TVirtualStreamerInfo;
 class TStreamerElement : public TNamed {
 
 private:
-   TStreamerElement(const TStreamerElement &);          // Not implemented
-   TStreamerElement&operator=(const TStreamerElement&); // Not implemented
+   TStreamerElement(const TStreamerElement &) = delete;
+   TStreamerElement&operator=(const TStreamerElement&) = delete;
 
 protected:
    Int_t            fType;            //element type
@@ -111,7 +110,7 @@ public:
    virtual const char *GetFullName() const;
    virtual const char *GetInclude() const {return "";}
    Int_t            GetMaxIndex(Int_t i) const {return fMaxIndex[i];}
-   virtual ULong_t  GetMethod() const {return ULong_t(fStreamer);}
+   virtual ULongptr_t GetMethod() const {return ULongptr_t(fStreamer);}
    TMemberStreamer *GetStreamer() const;
    virtual Int_t    GetSize() const;
    Int_t            GetNewType() const {return fNewType;}
@@ -125,13 +124,13 @@ public:
    Double_t         GetFactor() const {return fFactor;}
    Double_t         GetXmin()   const {return fXmin;}
    Double_t         GetXmax()   const {return fXmax;}
-   virtual void     Init(TVirtualStreamerInfo *obj=0);
+   virtual void     Init(TVirtualStreamerInfo *obj = nullptr);
    virtual Bool_t   IsaPointer() const {return kFALSE;}
    virtual Bool_t   HasCounter() const {return kFALSE;}
    virtual Bool_t   IsOldFormat(const char *newTypeName);
    virtual Bool_t   IsBase() const;
    virtual Bool_t   IsTransient() const;
-   virtual void     ls(Option_t *option="") const;
+   void             ls(Option_t *option="") const override;
    virtual void     SetArrayDim(Int_t dim);
    virtual void     SetMaxIndex(Int_t dim, Int_t max);
    virtual void     SetOffset(Int_t offset) {fOffset=offset;}
@@ -144,15 +143,15 @@ public:
    virtual void     SetTypeName(const char *name) {fTypeName = name; fClassObject = (TClass*)-1; }
    virtual void     Update(const TClass *oldClass, TClass *newClass);
 
-   ClassDef(TStreamerElement,4)  //Base class for one element (data member) to be Streamed
+   ClassDefOverride(TStreamerElement,4)  //Base class for one element (data member) to be Streamed
 };
 
 //________________________________________________________________________
 class TStreamerBase : public TStreamerElement {
 
 private:
-   TStreamerBase(const TStreamerBase &);          // Not implemented
-   TStreamerBase&operator=(const TStreamerBase&); // Not implemented
+   TStreamerBase(const TStreamerBase &) = delete;
+   TStreamerBase&operator=(const TStreamerBase&) = delete;
 
 protected:
    Int_t             fBaseVersion;    //version number of the base class (used during memberwise streaming)
@@ -164,42 +163,43 @@ protected:
    TVirtualStreamerInfo *fStreamerInfo; //!Pointer to the current StreamerInfo for the baset class.
    TString               fErrorMsg;     //!Error message in case of checksum/version mismatch.
 
-   void InitStreaming();
+   void InitStreaming(Bool_t isTransient);
 
 public:
 
    TStreamerBase();
-   TStreamerBase(const char *name, const char *title, Int_t offset);
+   TStreamerBase(const char *name, const char *title, Int_t offset, Bool_t isTransient = kFALSE);
    virtual         ~TStreamerBase();
    Int_t            GetBaseVersion() {return fBaseVersion;}
    UInt_t           GetBaseCheckSum() {return fBaseCheckSum;}
-   virtual TClass  *GetClassPointer() const;
+   TClass          *GetClassPointer() const override;
    const char      *GetErrorMessage() const { return fErrorMsg; }
-   const char      *GetInclude() const;
+   const char      *GetInclude() const override;
    TClass          *GetNewBaseClass() { return fNewBaseClass; }
-   ULong_t          GetMethod() const {return 0;}
-   Int_t            GetSize() const;
-   TVirtualStreamerInfo *GetBaseStreamerInfo () const { return fStreamerInfo; }
-   virtual void     Init(TVirtualStreamerInfo *obj=0);
-   Bool_t           IsBase() const;
-   virtual void     ls(Option_t *option="") const;
+   ULongptr_t       GetMethod() const override {return 0;}
+   Int_t            GetSize() const override;
+   TVirtualStreamerInfo *GetBaseStreamerInfo() const { return fStreamerInfo; }
+   void             Init(TVirtualStreamerInfo *obj = nullptr) override;
+   void             Init(Bool_t isTransient = kFALSE);
+   Bool_t           IsBase() const override;
+   void             ls(Option_t *option="") const override;
    Int_t            ReadBuffer (TBuffer &b, char *pointer);
-   void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; InitStreaming(); }
+   void             SetNewBaseClass( TClass* cl ) { fNewBaseClass = cl; InitStreaming(kFALSE); }
    void             SetBaseVersion(Int_t v) {fBaseVersion = v;}
    void             SetBaseCheckSum(UInt_t cs) {fBaseCheckSum = cs;}
    void             SetErrorMessage(const char *msg) { fErrorMsg = msg; }
-   virtual void     Update(const TClass *oldClass, TClass *newClass);
+   void             Update(const TClass *oldClass, TClass *newClass) override;
    Int_t            WriteBuffer(TBuffer &b, char *pointer);
 
-   ClassDef(TStreamerBase,3)  //Streamer element of type base class
+   ClassDefOverride(TStreamerBase,3)  //Streamer element of type base class
 };
 
 //________________________________________________________________________
 class TStreamerBasicPointer : public TStreamerElement {
 
 private:
-   TStreamerBasicPointer(const TStreamerBasicPointer &);          // Not implemented
-   TStreamerBasicPointer&operator=(const TStreamerBasicPointer&); // Not implemented
+   TStreamerBasicPointer(const TStreamerBasicPointer &) = delete;
+   TStreamerBasicPointer&operator=(const TStreamerBasicPointer&) = delete;
 
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
@@ -213,30 +213,30 @@ public:
    TStreamerBasicPointer(const char *name, const char *title, Int_t offset, Int_t dtype,
                          const char *countName, const char *countClass, Int_t version, const char *typeName);
    virtual       ~TStreamerBasicPointer();
-   TClass        *GetClassPointer() const { return 0; }
+   TClass        *GetClassPointer() const override { return nullptr; }
    const char    *GetCountClass()   const {return fCountClass.Data();}
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
-   ULong_t        GetMethod() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
-   virtual Bool_t HasCounter() const                {return fCounter!=0;   }
-   virtual Bool_t IsaPointer() const                {return kTRUE;         }
-   void           SetArrayDim(Int_t dim);
-   void           SetCountClass(const char *clname) {fCountClass = clname; }
-   void           SetCountName(const char *name)    {fCountName = name;    }
-   void           SetCountVersion(Int_t count)      {fCountVersion = count;}
-   virtual void   Update(const TClass * /* oldClass */, TClass * /*newClass*/ ) {}
+   ULongptr_t     GetMethod() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
+   Bool_t         HasCounter() const override { return fCounter != nullptr; }
+   Bool_t         IsaPointer() const override { return kTRUE; }
+   void           SetArrayDim(Int_t dim) override;
+   void           SetCountClass(const char *clname) { fCountClass = clname; }
+   void           SetCountName(const char *name)    { fCountName = name; }
+   void           SetCountVersion(Int_t count)      { fCountVersion = count; }
+   void           Update(const TClass * /* oldClass */, TClass * /*newClass*/ ) override {}
 
-   ClassDef(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
+   ClassDefOverride(TStreamerBasicPointer,2)  //Streamer element for a pointer to a basic type
 };
 
 //________________________________________________________________________
 class TStreamerLoop : public TStreamerElement {
 
 private:
-   TStreamerLoop(const TStreamerLoop&);          // Not implemented
-   TStreamerLoop&operator=(const TStreamerLoop&); // Not implemented
+   TStreamerLoop(const TStreamerLoop&) = delete;
+   TStreamerLoop&operator=(const TStreamerLoop&) = delete;
 
 protected:
    Int_t               fCountVersion;   //version number of the class with the counter
@@ -252,25 +252,25 @@ public:
    const char    *GetCountClass()   const {return fCountClass.Data();}
    const char    *GetCountName()    const {return fCountName.Data();}
    Int_t          GetCountVersion() const {return fCountVersion;}
-   const char    *GetInclude() const;
-   ULong_t        GetMethod() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
-   virtual Bool_t IsaPointer() const                {return kTRUE;         }
-   virtual Bool_t HasCounter() const                {return fCounter!=0;   }
-   void           SetCountClass(const char *clname) {fCountClass = clname; }
-   void           SetCountName(const char *name)    {fCountName = name;    }
-   void           SetCountVersion(Int_t count)      {fCountVersion = count;}
+   const char    *GetInclude() const override;
+   ULongptr_t     GetMethod() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
+   Bool_t         IsaPointer() const override {return kTRUE; }
+   Bool_t         HasCounter() const  override { return fCounter != nullptr; }
+   void           SetCountClass(const char *clname) { fCountClass = clname; }
+   void           SetCountName(const char *name) { fCountName = name; }
+   void           SetCountVersion(Int_t count) { fCountVersion = count; }
 
-   ClassDef(TStreamerLoop,2)  //Streamer element for a pointer to an array of objects
+   ClassDefOverride(TStreamerLoop,2)  //Streamer element for a pointer to an array of objects
 };
 
 //________________________________________________________________________
 class TStreamerBasicType : public TStreamerElement {
 
 private:
-   TStreamerBasicType(const TStreamerBasicType&);          // Not implemented
-   TStreamerBasicType&operator=(const TStreamerBasicType&); // Not implemented
+   TStreamerBasicType(const TStreamerBasicType&) = delete;
+   TStreamerBasicType&operator=(const TStreamerBasicType&) = delete;
 
 protected:
    Int_t             fCounter;     //!value of data member when referenced by an array
@@ -280,119 +280,119 @@ public:
    TStreamerBasicType();
    TStreamerBasicType(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName);
    virtual       ~TStreamerBasicType();
-   TClass        *GetClassPointer() const { return 0; }
-   Int_t          GetCounter() const {return fCounter;}
-   ULong_t        GetMethod() const;
-   Int_t          GetSize() const;
-   virtual void   Update(const TClass * /* oldClass */, TClass * /* newClass */) {}
+   TClass        *GetClassPointer() const override { return nullptr; }
+   Int_t          GetCounter() const { return fCounter; }
+   ULongptr_t     GetMethod() const override;
+   Int_t          GetSize() const override;
+   void           Update(const TClass * /* oldClass */, TClass * /* newClass */) override {}
 
-   ClassDef(TStreamerBasicType,2)  //Streamer element for a basic type
+   ClassDefOverride(TStreamerBasicType,2)  //Streamer element for a basic type
 };
 
 //________________________________________________________________________
 class TStreamerObject : public TStreamerElement {
 
 private:
-   TStreamerObject(const TStreamerObject&);          // Not implemented
-   TStreamerObject&operator=(const TStreamerObject&); // Not implemented
+   TStreamerObject(const TStreamerObject&) = delete;
+   TStreamerObject&operator=(const TStreamerObject&) = delete;
 
 public:
 
    TStreamerObject();
    TStreamerObject(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObject();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
-   ClassDef(TStreamerObject,2)  //Streamer element of type object
+   ClassDefOverride(TStreamerObject,2)  //Streamer element of type object
 };
 
 //________________________________________________________________________
 class TStreamerObjectAny : public TStreamerElement {
 
 private:
-   TStreamerObjectAny(const TStreamerObjectAny&);          // Not implemented
-   TStreamerObjectAny&operator=(const TStreamerObjectAny&); // Not implemented
+   TStreamerObjectAny(const TStreamerObjectAny&) = delete;
+   TStreamerObjectAny&operator=(const TStreamerObjectAny&) = delete;
 
 public:
 
    TStreamerObjectAny();
    TStreamerObjectAny(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAny();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
 
-   ClassDef(TStreamerObjectAny,2)  //Streamer element of type object other than TObject
+   ClassDefOverride(TStreamerObjectAny,2)  //Streamer element of type object other than TObject
 };
 
 //________________________________________________________________________
 class TStreamerObjectPointer : public TStreamerElement {
 
 private:
-   TStreamerObjectPointer(const TStreamerObjectPointer&);          // Not implemented
-   TStreamerObjectPointer&operator=(const TStreamerObjectPointer&); // Not implemented
+   TStreamerObjectPointer(const TStreamerObjectPointer&) = delete;
+   TStreamerObjectPointer&operator=(const TStreamerObjectPointer&) = delete;
 
 public:
 
    TStreamerObjectPointer();
    TStreamerObjectPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectPointer();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
-   virtual Bool_t IsaPointer() const {return kTRUE;}
-   virtual void   SetArrayDim(Int_t dim);
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
+   Bool_t         IsaPointer() const override {return kTRUE;}
+   void           SetArrayDim(Int_t dim) override;
 
-   ClassDef(TStreamerObjectPointer,2)  //Streamer element of type pointer to a TObject
+   ClassDefOverride(TStreamerObjectPointer,2)  //Streamer element of type pointer to a TObject
 };
 
 //________________________________________________________________________
 class TStreamerObjectAnyPointer : public TStreamerElement {
 
 private:
-   TStreamerObjectAnyPointer(const TStreamerObjectAnyPointer&);          // Not implemented
-   TStreamerObjectAnyPointer&operator=(const TStreamerObjectAnyPointer&); // Not implemented
+   TStreamerObjectAnyPointer(const TStreamerObjectAnyPointer&) = delete;
+   TStreamerObjectAnyPointer&operator=(const TStreamerObjectAnyPointer&) = delete;
 
 public:
 
    TStreamerObjectAnyPointer();
    TStreamerObjectAnyPointer(const char *name, const char *title, Int_t offset, const char *typeName);
    virtual       ~TStreamerObjectAnyPointer();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   Init(TVirtualStreamerInfo *obj=0);
-   virtual Bool_t IsaPointer() const {return kTRUE;}
-   virtual void   SetArrayDim(Int_t dim);
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
+   void           Init(TVirtualStreamerInfo *obj = nullptr) override;
+   Bool_t         IsaPointer() const override { return kTRUE; }
+   void           SetArrayDim(Int_t dim) override;
 
-   ClassDef(TStreamerObjectAnyPointer,1)  //Streamer element of type pointer to a non TObject
+   ClassDefOverride(TStreamerObjectAnyPointer,1)  //Streamer element of type pointer to a non TObject
 };
 
 //________________________________________________________________________
 class TStreamerString : public TStreamerElement {
 
 private:
-   TStreamerString(const TStreamerString&);          // Not implemented
-   TStreamerString&operator=(const TStreamerString&); // Not implemented
+   TStreamerString(const TStreamerString&) = delete;
+   TStreamerString&operator=(const TStreamerString&) = delete;
 
 public:
 
    TStreamerString();
    TStreamerString(const char *name, const char *title, Int_t offset);
    virtual       ~TStreamerString();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
 
-   ClassDef(TStreamerString,2)  //Streamer element of type TString
+   ClassDefOverride(TStreamerString,2)  //Streamer element of type TString
 };
 
 //________________________________________________________________________
 class TStreamerSTL : public TStreamerElement {
 
 private:
-   TStreamerSTL(const TStreamerSTL&);          // Not implemented
-   TStreamerSTL&operator=(const TStreamerSTL&); // Not implemented
+   TStreamerSTL(const TStreamerSTL&) = delete;
+   TStreamerSTL&operator=(const TStreamerSTL&) = delete;
 
 protected:
    Int_t       fSTLtype;       //type of STL vector
@@ -406,27 +406,27 @@ public:
    TStreamerSTL(const char *name, const char *title, Int_t offset,
                 const char *typeName, const TVirtualCollectionProxy &proxy , Bool_t dmPointer);
    virtual       ~TStreamerSTL();
-   Bool_t         CannotSplit() const;
-   Bool_t         IsaPointer() const;
-   Bool_t         IsBase() const;
+   Bool_t         CannotSplit() const override;
+   Bool_t         IsaPointer() const override;
+   Bool_t         IsBase() const override;
    Int_t          GetSTLtype() const {return fSTLtype;}
    Int_t          GetCtype()   const {return fCtype;}
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
-   virtual void   ls(Option_t *option="") const;
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
+   void           ls(Option_t *option="") const override;
    void           SetSTLtype(Int_t t) {fSTLtype = t;}
    void           SetCtype(Int_t t) {fCtype = t;}
-   virtual void   SetStreamer(TMemberStreamer *streamer);
+   void           SetStreamer(TMemberStreamer *streamer) override;
 
-   ClassDef(TStreamerSTL,3)  //Streamer element of type STL container
+   ClassDefOverride(TStreamerSTL,3)  //Streamer element of type STL container
 };
 
 //________________________________________________________________________
 class TStreamerSTLstring : public TStreamerSTL {
 
 private:
-   TStreamerSTLstring(const TStreamerSTLstring&);          // Not implemented
-   TStreamerSTLstring&operator=(const TStreamerSTLstring&); // Not implemented
+   TStreamerSTLstring(const TStreamerSTLstring&) = delete;
+   TStreamerSTLstring&operator=(const TStreamerSTLstring&) = delete;
 
 public:
 
@@ -434,10 +434,10 @@ public:
    TStreamerSTLstring(const char *name, const char *title, Int_t offset,
                       const char *typeName, Bool_t dmPointer);
    virtual       ~TStreamerSTLstring();
-   const char    *GetInclude() const;
-   Int_t          GetSize() const;
+   const char    *GetInclude() const override;
+   Int_t          GetSize() const override;
 
-   ClassDef(TStreamerSTLstring,2)  //Streamer element of type  C++ string
+   ClassDefOverride(TStreamerSTLstring,2)  //Streamer element of type  C++ string
 };
 
 class TVirtualObject;
@@ -448,8 +448,8 @@ class TBuffer;
 //________________________________________________________________________
 class TStreamerArtificial : public TStreamerElement {
 private:
-   TStreamerArtificial(const TStreamerArtificial&);          // Not implemented
-   TStreamerArtificial&operator=(const TStreamerArtificial&); // Not implemented
+   TStreamerArtificial(const TStreamerArtificial&) = delete;
+   TStreamerArtificial&operator=(const TStreamerArtificial&) = delete;
 
 protected:
    ROOT::TSchemaRule::ReadFuncPtr_t     fReadFunc;    //!
@@ -459,7 +459,7 @@ public:
 
    // TStreamerArtificial() : fReadFunc(0),fReadRawFunc(0) {}
 
-   TStreamerArtificial(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName) : TStreamerElement(name,title,offset,dtype,typeName), fReadFunc(0), fReadRawFunc(0) {}
+   TStreamerArtificial(const char *name, const char *title, Int_t offset, Int_t dtype, const char *typeName) : TStreamerElement(name,title,offset,dtype,typeName), fReadFunc(nullptr), fReadRawFunc(nullptr) {}
 
    void SetReadFunc( ROOT::TSchemaRule::ReadFuncPtr_t val ) { fReadFunc = val; };
    void SetReadRawFunc( ROOT::TSchemaRule::ReadRawFuncPtr_t val ) { fReadRawFunc = val; };
@@ -467,7 +467,7 @@ public:
    ROOT::TSchemaRule::ReadFuncPtr_t     GetReadFunc();
    ROOT::TSchemaRule::ReadRawFuncPtr_t  GetReadRawFunc();
 
-   ClassDef(TStreamerArtificial, 0); // StreamerElement injected by a TSchemaRule. Transient only to preverse forward compatibility.
+   ClassDefOverride(TStreamerArtificial, 0); // StreamerElement injected by a TSchemaRule. Transient only to preserve forward compatibility.
 };
 
 #endif

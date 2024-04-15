@@ -29,27 +29,40 @@ Suitably stolen and modified from RooBCPEffDecay
 #include "RooBCPGenDecay.h"
 #include "RooRealIntegral.h"
 
-using namespace std;
-
 ClassImp(RooBCPGenDecay);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
+/// \brief Constructor for RooBCPGenDecay.
+///
+/// Creates an instance of RooBCPGenDecay with the specified parameters.
+///
+/// \param[in] name       The name of the PDF.
+/// \param[in] title      The title of the PDF.
+/// \param[in] t          The time variable.
+/// \param[in] tag        The CP state category.
+/// \param[in] tau        The decay time parameter.
+/// \param[in] dm         The mixing frequency parameter.
+/// \param[in] avgMistag  The average mistag rate parameter.
+/// \param[in] avgC       Coefficient of cos term.
+/// \param[in] avgS       Coefficient of sin term.
+/// \param[in] delMistag  Delta mistag rate parameter.
+/// \param[in] mu         Tag efficiency difference parameter.
+/// \param[in] model      The resolution model.
+/// \param[in] type       The decay type.
 
 RooBCPGenDecay::RooBCPGenDecay(const char *name, const char *title,
                 RooRealVar& t, RooAbsCategory& tag,
                 RooAbsReal& tau, RooAbsReal& dm,
                 RooAbsReal& avgMistag,
-                RooAbsReal& a, RooAbsReal& b,
+                RooAbsReal& avgC, RooAbsReal& avgS,
                 RooAbsReal& delMistag,
                                RooAbsReal& mu,
                 const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t),
-  _avgC("C","Coefficient of cos term",this,a),
-  _avgS("S","Coefficient of sin term",this,b),
+  _avgC("C","Coefficient of cos term",this,avgC),
+  _avgS("S","Coefficient of sin term",this,avgS),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
   _delMistag("delMistag","Delta mistag rate",this,delMistag),
-  _mu("mu","Tagg efficiency difference",this,mu),
+  _mu("mu","Tag efficiency difference",this,mu),
   _t("t","time",this,t),
   _tau("tau","decay time",this,tau),
   _dm("dm","mixing frequency",this,dm),
@@ -99,17 +112,10 @@ RooBCPGenDecay::RooBCPGenDecay(const RooBCPGenDecay& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBCPGenDecay::~RooBCPGenDecay()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// B0    : _tag = +1
 /// B0bar : _tag = -1
 
-Double_t RooBCPGenDecay::coefficient(Int_t basisIndex) const
+double RooBCPGenDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw + mu*_tag*w)
@@ -143,7 +149,7 @@ Int_t RooBCPGenDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+double RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -172,7 +178,7 @@ Double_t RooBCPGenDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBCPGenDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
@@ -187,9 +193,9 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 {
   if (code==2) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
+    double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
     _tag = 1 ;
-    Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+    double b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
   }
 }
@@ -200,14 +206,14 @@ void RooBCPGenDecay::initGenerator(Int_t code)
 void RooBCPGenDecay::generateEvent(Int_t code)
 {
   if (code==2) {
-    Double_t rand = RooRandom::uniform() ;
+    double rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;
   }
 
   // Generate delta-t dependent
-  while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+  while(true) {
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:
@@ -222,14 +228,14 @@ void RooBCPGenDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t maxDil = 1.0 ;
+    double maxDil = 1.0 ;
 // 2 in next line is conservative and inefficient - allows for delMistag=1!
-    Double_t maxAcceptProb = 2 + fabs(maxDil*_avgS) + fabs(maxDil*_avgC);
-    Double_t acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
+    double maxAcceptProb = 2 + std::abs(maxDil*_avgS) + std::abs(maxDil*_avgC);
+    double acceptProb    = (1-_tag*_delMistag + _mu*_tag*(1. - 2.*_avgMistag))
                            + (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgS*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag) + _mu*(1. - _tag*_delMistag))*_avgC*cos(_dm*tval);
 
-    Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    bool accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && accept) {
       _t = tval ;

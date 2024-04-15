@@ -133,7 +133,7 @@ SpyServ::SpyServ()
          TSocket *s;
          if ((s = fMon->Select(20)) != (TSocket*)-1)
             HandleSocket(s);
-         if (!fCanvas->TestBit(TObject::kNotDeleted))
+         if (ROOT::Detail::HasBeenDeleted(fCanvas))
             break;
          if (gROOT->IsInterrupted())
             break;

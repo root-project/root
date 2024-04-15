@@ -13,15 +13,9 @@
 
 #include "TEveManager.h"
 
-#include "TColor.h"
-
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
-#include "TVirtualPad.h"
 #include "TVirtualViewer3D.h"
-
-#include "TROOT.h"
-#include "TRandom.h"
 
 /** \class TEveQuadSet
 \ingroup TEve
@@ -122,7 +116,7 @@ void TEveQuadSet::AddQuad(Float_t verts[12])
       throw(eH + "expect free quad-type.");
 
    QFreeQuad_t* fq = (QFreeQuad_t*) NewDigit();
-   if (verts != 0)
+   if (verts != nullptr)
      memcpy(fq->fVertices, verts, sizeof(fq->fVertices));
 }
 
@@ -254,7 +248,7 @@ void TEveQuadSet::ComputeBBox()
 {
    static const TEveException eH("TEveQuadSet::ComputeBBox ");
 
-   if (fFrame != 0)
+   if (fFrame != nullptr)
    {
       BBoxInit();
       Int_t    n    = fFrame->GetFrameSize() / 3;

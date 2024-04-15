@@ -1,5 +1,5 @@
-/// \file ROOT/RHistData.h
-/// \ingroup Hist ROOT7
+/// \file ROOT/RHistUtils.hxx
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2016-06-01
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
@@ -20,6 +20,11 @@
 
 namespace ROOT {
 namespace Experimental {
+
+class RLogChannel;
+/// Log channel for Hist diagnostics.
+RLogChannel &HistLog(); // implemented in RAxis.cxx
+
 namespace Hist {
 
 template <int DIMENSIONS>

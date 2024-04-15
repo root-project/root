@@ -12,6 +12,7 @@
 #ifndef ROOT_TMPWorkerTree
 #define ROOT_TMPWorkerTree
 
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 #include "TMPWorker.h"
 #include "TFile.h"
 #include "TEntryList.h"
@@ -26,19 +27,18 @@
 #include <memory> //unique_ptr
 #include <string>
 #include <sstream>
-#include <type_traits> //std::result_of
+#include <type_traits> //std::enable_if_t
 #include <unistd.h> //pid_t
+#include <vector>
 
 class TMPWorkerTree : public TMPWorker {
-   /// \cond
-//   ClassDef(TMPWorkerTree, 0);
-   /// \endcond
+
 public:
    TMPWorkerTree();
    TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
                  UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
    TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
-   virtual ~TMPWorkerTree();
+   ~TMPWorkerTree() override;
 
    // It doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
    TMPWorkerTree(const TMPWorkerTree &) = delete;
@@ -48,8 +48,8 @@ protected:
 
    void         CloseFile();
    ULong64_t    EvalMaxEntries(ULong64_t maxEntries);
-   void         HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a MP client
-   void Init(int fd, UInt_t workerN);
+   void         HandleInput(MPCodeBufPair& msg) override; ///< Execute instructions received from a MP client
+   void Init(int fd, UInt_t workerN) override;
    Int_t LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
                   std::string &errmsg);
    TFile       *OpenFile(const std::string& fileName);
@@ -70,8 +70,8 @@ private:
 
    // TTree cache handling
    TTreeCache *fTreeCache;              ///< instance of the tree cache for the tree
-   Bool_t      fTreeCacheIsLearning;    ///< Whether cache is in learning phase
-   Bool_t      fUseTreeCache;           ///< Control usage of the tree cache
+   bool        fTreeCacheIsLearning;    ///< Whether cache is in learning phase
+   bool        fUseTreeCache;           ///< Control usage of the tree cache
    Long64_t    fCacheSize;              ///< Cache size
 };
 
@@ -90,15 +90,17 @@ public:
         fCanReduce(false)
    {
    }
-   virtual ~TMPWorkerTreeFunc() {}
+   ~TMPWorkerTreeFunc() override {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair &msg);
-   void SendResult();
+   void Process(UInt_t code, MPCodeBufPair &msg) override;
+   void SendResult() override;
 
    F  fProcFunc; ///< copy the function to be executed
-   typename std::result_of<F(std::reference_wrapper<TTreeReader>)>::type fReducedResult; ///< the results of the executions of fProcFunc merged together
-   bool fCanReduce; ///< true if fReducedResult can be reduced with a new result, false until we have produced one result
+   /// the results of the executions of fProcFunc merged together
+   ROOT::TypeTraits::InvokeResult_t<F, std::reference_wrapper<TTreeReader>> fReducedResult;
+   /// true if fReducedResult can be reduced with a new result, false until we have produced one result
+   bool fCanReduce;
 };
 
 class TMPWorkerTreeSel : public TMPWorkerTree {
@@ -114,26 +116,26 @@ public:
       : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fSelector(selector), fCallBegin(true)
    {
    }
-   virtual ~TMPWorkerTreeSel() {}
+   ~TMPWorkerTreeSel() override {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair &msg);
-   void SendResult();
+   void Process(UInt_t code, MPCodeBufPair &msg) override;
+   void SendResult() override;
 
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
    bool fCallBegin = true;
 };
 
 //////////////////////////////////////////////////////////////////////////
-/// Auxilliary templated functions
+/// Auxiliary templated functions
 /// If the user lambda returns a TH1F*, TTree*, TEventList*, we incur in the
 /// problem of that object being automatically owned by the current open file.
 /// For these three types, we call SetDirectory(nullptr) to detach the returned
 /// object from the file we are reading the TTree from.
 /// Note: the only sane case in which this should happen is when a TH1F* is
 /// returned.
-template <class T, typename std::enable_if<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
-                                           !std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T, std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TObject *, T>::value &&
+                                    !std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    auto th1p = dynamic_cast<TH1*>(res);
@@ -160,13 +162,13 @@ void DetachRes(T res)
 }
 
 // Specialization for TCollections
-template <class T, typename std::enable_if<std::is_pointer<T>::value &&
-                                           std::is_constructible<TCollection *, T>::value>::type * = nullptr>
+template <class T,
+          std::enable_if_t<std::is_pointer<T>::value && std::is_constructible<TCollection *, T>::value> * = nullptr>
 void DetachRes(T res)
 {
    if (res) {
       TIter nxo(res);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = nxo())) {
          DetachRes(obj);
       }
@@ -189,7 +191,7 @@ void TMPWorkerTreeFunc<F>::Process(UInt_t code, MPCodeBufPair &msg)
 
    Long64_t start = 0;
    Long64_t finish = 0;
-   TEntryList *enl = 0;
+   TEntryList *enl = nullptr;
    std::string reply, errmsg, sn = "[S" + std::to_string(GetNWorker()) + "]: ";
    if (LoadTree(code, msg, start, finish, &enl, errmsg) != 0) {
       reply = sn + errmsg;

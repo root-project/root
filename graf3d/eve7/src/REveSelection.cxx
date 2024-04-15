@@ -13,11 +13,15 @@
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveCompound.hxx>
 #include <ROOT/REveManager.hxx>
+#include <ROOT/REveSecondarySelectable.hxx>
 
 #include "TClass.h"
 #include "TColor.h"
 
-#include "json.hpp"
+#include <iostream>
+#include <regex>
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
@@ -35,9 +39,7 @@ REveSelection::REveSelection(const std::string& n, const std::string& t,
                              Color_t col_visible, Color_t col_hidden) :
    REveElement       (n, t),
    fVisibleEdgeColor (col_visible),
-   fHiddenEdgeColor  (col_hidden),
-   fActive           (kTRUE),
-   fIsMaster         (kTRUE)
+   fHiddenEdgeColor  (col_hidden)
 {
    // Managing complete selection state on element level.
    //
@@ -83,18 +85,6 @@ void REveSelection::SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set to 'highlight' mode.
-
-void REveSelection::SetHighlightMode()
-{
-   // Most importantly, this sets the pointers-to-function-members in
-   // REveElement that are used to mark elements as (un)selected and
-   // implied-(un)selected.
-
-   fIsMaster     = kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Select element indicated by the entry and fill its
 /// implied-selected set.
 
@@ -102,7 +92,7 @@ void REveSelection::DoElementSelect(SelMap_i &entry)
 {
    Set_t &imp_set = entry->second.f_implied;
 
-   entry->first->FillImpliedSelectedSet(imp_set);
+   entry->first->FillImpliedSelectedSet(imp_set, entry->second.f_sec_idcs);
 
    auto i = imp_set.begin();
    while (i != imp_set.end())
@@ -170,9 +160,21 @@ bool REveSelection::AcceptNiece(REveElement* el)
 
 void REveSelection::AddNieceInternal(REveElement* el)
 {
-   auto res = fMap.emplace(el, Record(el));
+   fMap.emplace(el, Record(el));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void REveSelection::AddNieceForSelection(REveElement* el, bool secondary, const std::set<int>& sec_idcs)
+{
+   AddNiece(el);
+
+   auto i = fMap.find(el);
+   i->second.f_is_sec = secondary;
+   i->second.f_sec_idcs = sec_idcs;
+
    if (fActive) {
-      DoElementSelect(res.first);
+      DoElementSelect(i);
       SelectionAdded(el);
    }
    StampObjPropsPreChk();
@@ -252,7 +254,7 @@ void REveSelection::RecheckImpliedSet(SelMap_i &smi)
 {
    bool  changed = false;
    Set_t set;
-   smi->first->FillImpliedSelectedSet(set);
+   smi->first->FillImpliedSelectedSet(set, smi->second.f_sec_idcs);
    for (auto &i: set)
    {
       if (smi->second.f_implied.find(i) == smi->second.f_implied.end())
@@ -334,7 +336,7 @@ void REveSelection::ActivateSelection()
 {
    if (fActive) return;
 
-   fActive = kTRUE;
+   fActive = true;
    for (auto i = fMap.begin(); i != fMap.end(); ++i) {
       DoElementSelect(i);
       SelectionAdded(i->first);
@@ -352,7 +354,7 @@ void REveSelection::DeactivateSelection()
       DoElementUnselect(i);
    }
    SelectionCleared();
-   fActive = kFALSE;
+   fActive = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -472,21 +474,41 @@ void REveSelection::UserUnPickedElement(REveElement* el)
 
 //==============================================================================
 
-void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+////////////////////////////////////////////////////////////////////////////////
+/// Called from GUI when user picks or un-picks an element.
+
+void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int> &secondary_idcs)
 {
    static const REveException eh("REveSelection::NewElementPicked ");
 
    REveElement *pel = nullptr, *el = nullptr;
 
-   if (id > 0)
-   {
-     pel = REX::gEve->FindElementById(id);
+   if (id > 0) {
+      pel = REX::gEve->FindElementById(id);
 
-     if ( ! pel) throw eh + "picked element id=" + id + " not found.";
+      if (!pel)
+         throw eh + "picked element id=" + id + " not found.";
 
-     el = MapPickedToSelected(pel);
+      el = MapPickedToSelected(pel);
    }
 
+   if (fDeviator && fDeviator->DeviateSelection(this, el, multi, secondary, secondary_idcs))
+   {
+      return;
+   }
+   else
+   {
+      NewElementPickedInternal(el, multi, secondary, secondary_idcs);
+   }
+}
+
+//==============================================================================
+
+////////////////////////////////////////////////////////////////////////////////
+/// Called from NewElementPicked or Deviator::DeviateSelection
+
+void REveSelection::NewElementPickedInternal(REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+{
    if (gDebug > 0) {
       std::string debug_secondary;
       if (secondary) {
@@ -497,7 +519,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          }
          debug_secondary.append(" }");
       }
-      ::Info("REveSelection::NewElementPicked", "%p -> %p, multi: %d, secondary: %d  %s", pel, el, multi, secondary, debug_secondary.c_str());
+      ::Info("REveSelection::NewElementPickedInternal", " %p, multi: %d, secondary: %d  %s", el, multi, secondary, debug_secondary.c_str());
    }
 
    Record *rec = find_record(el);
@@ -510,12 +532,28 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
       {
          if (rec)
          {
-            if (secondary || rec->is_secondary()) // ??? should actually be && ???
+            assert(secondary == rec->is_secondary());
+            if (secondary || rec->is_secondary())
             {
-               // XXXX union or difference:
-               // - if all secondary_idcs are already in the record, toggle
-               //   - if final result is empty set, remove element from selection
-               // - otherwise union
+               std::set<int> dup;
+               for (auto &ns :  secondary_idcs)
+               {
+                  int nsi = ns;
+                  auto ir = rec->f_sec_idcs.insert(nsi);
+                  if (!ir.second)
+                     dup.insert(nsi);
+               }
+
+               // erase duplicates
+               for (auto &dit :  dup)
+                  rec->f_sec_idcs.erase(dit);
+
+               // re-adding is needed to refresh implied selected
+               std::set<int> newSet = rec->f_sec_idcs;
+               RemoveNiece(el);
+               if (!newSet.empty()) {
+                  AddNieceForSelection(el, secondary, newSet);
+               }
             }
             else
             {
@@ -524,7 +562,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          }
          else
          {
-            AddNiece(el);
+            AddNieceForSelection(el, secondary, secondary_idcs);
          }
       }
       else
@@ -541,12 +579,12 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          {
             if (secondary)
             {
-               // Could check rec->is_secondary() and compare indices.
-               // if sets are identical, issue SelectionRepeated()
-               // else modify record for the new one, issue Repeated
-
-               rec->f_is_sec   = true;
-               rec->f_sec_idcs = secondary_idcs;
+               bool modified = (rec->f_sec_idcs != secondary_idcs);
+               RemoveNieces();
+               // re-adding is needed to refresh implied selected
+               if (modified) {
+                  AddNieceForSelection(el, secondary, secondary_idcs);
+               }
             }
             else
             {
@@ -556,13 +594,7 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
          else
          {
             if (HasNieces()) RemoveNieces();
-            AddNiece(el);
-            if (secondary)
-            {
-               rec = find_record(el);
-               rec->f_is_sec   = true;
-               rec->f_sec_idcs = secondary_idcs;
-            }
+            AddNieceForSelection(el, secondary, secondary_idcs);
          }
       }
       else // Single selection with zero element --> clear selection.
@@ -576,6 +608,36 @@ void REveSelection::NewElementPicked(ElementId_t id, bool multi, bool secondary,
 
    if (changed)
      StampObjProps();
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Wrapper for NewElementPickedStr that takes secondary indices as C-style string.
+/// Needed to be able to use TMethodCall interface.
+
+void REveSelection::NewElementPickedStr(ElementId_t id, bool multi, bool secondary, const char* secondary_idcs)
+{
+   static const REveException eh("REveSelection::NewElementPickedStr ");
+
+   if (secondary_idcs == nullptr || secondary_idcs[0] == 0)
+   {
+      NewElementPicked(id, multi, secondary);
+      return;
+   }
+
+   static const std::regex comma_re("\\s*,\\s*", std::regex::optimize);
+   std::string   str(secondary_idcs);
+   std::set<int> sis;
+   std::sregex_token_iterator itr(str.begin(), str.end(), comma_re, -1);
+   std::sregex_token_iterator end;
+
+   try {
+      while (itr != end) sis.insert(std::stoi(*itr++));
+   }
+   catch (const std::invalid_argument&) {
+      throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
+   }
+
+   NewElementPicked(id, multi, secondary, sis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -623,6 +685,8 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
 
    j["fVisibleEdgeColor"] = fVisibleEdgeColor;
    j["fHiddenEdgeColor"]  = fHiddenEdgeColor;
+   j["fIsMater"] = fIsMaster;
+   j["fIsHighlight"] = fIsHighlight;
 
    nlohmann::json sel_list = nlohmann::json::array();
 
@@ -632,13 +696,29 @@ Int_t REveSelection::WriteCoreJson(nlohmann::json &j, Int_t /* rnr_offset */)
 
       rec["primary"] = i.first->GetElementId();
 
+      // XXX if not empty / f_is_sec is false ???
+      for (auto &sec_id : i.second.f_sec_idcs)
+         sec.push_back(sec_id);
+
       // XXX if not empty ???
-      for (auto &imp_el : i.second.f_implied) imp.push_back(imp_el->GetElementId());
+      for (auto &imp_el : i.second.f_implied) {
+         imp.push_back(imp_el->GetElementId());
+         if (imp_el->RequiresExtraSelectionData())
+            imp_el->FillExtraSelectionData(rec["extra"], sec);
+
+      }
       rec["implied"]  = imp;
 
-      // XXX if not empty / f_is_sec is false ???
-      for (auto &sec_id : i.second.f_sec_idcs) sec.push_back(sec_id);
+
+      if (i.first->RequiresExtraSelectionData()) {
+         i.first->FillExtraSelectionData(rec["extra"], sec);
+      }
+
       rec["sec_idcs"] = sec;
+
+      // stream tooltip in highlight type
+      if (fIsHighlight)
+         rec["tooltip"] = i.first->GetHighlightTooltip(i.second.f_sec_idcs);
 
       sel_list.push_back(rec);
    }

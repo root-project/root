@@ -19,41 +19,66 @@
 \class RooFoamGenerator
 \ingroup Roofitcore
 
-Class RooFoamGenerator is a generic toy monte carlo generator that implement
+Generic Monte Carlo toy generator that implement
 the TFOAM sampling technique on any positively valued function.
 The RooFoamGenerator generator is used by the various generator context
 classes to take care of generation of observables for which p.d.fs
-do not define internal methods
+do not define internal methods.
+
+The foam generator reacts to the following config options:
+- nCell[123N]D
+- nSample
+- chatLevel
+Access those using:
+    myPdf->specialGeneratorConfig()->getConfigSection("RooFoamGenerator").setRealValue("nSample",1e4);
+
+\see rf902_numgenconfig.C
 **/
 
-
-#include "RooFit.h"
-#include "Riostream.h"
-
 #include "RooFoamGenerator.h"
-#include "RooAbsReal.h"
-#include "RooCategory.h"
-#include "RooRealVar.h"
-#include "RooDataSet.h"
-#include "RooRandom.h"
-#include "RooErrorHandler.h"
 
-#include "TString.h"
-#include "TIterator.h"
-#include "RooMsgService.h"
-#include "TClass.h"
-#include "TFoam.h"
-#include "RooTFoamBinding.h"
+#include <RooAbsReal.h>
+#include <RooArgSet.h>
+#include <RooCategory.h>
+#include <RooDataSet.h>
+#include <RooErrorHandler.h>
+#include <RooMsgService.h>
+#include <RooNumGenConfig.h>
+#include <RooRandom.h>
+#include <RooRealBinding.h>
+#include <RooRealVar.h>
+
 #include "RooNumGenFactory.h"
-#include "RooNumGenConfig.h"
 
-#include <assert.h>
+namespace {
 
-using namespace std;
+// Lightweight interface adaptor that binds a RooAbsPdf to TFOAM.
+class RooTFoamBinding : public TFoamIntegrand {
+public:
+   RooTFoamBinding(const RooAbsReal &pdf, const RooArgSet &observables)
+      : _binding(std::make_unique<RooRealBinding>(pdf, observables, &_nset, false, nullptr))
+   {
+      _nset.add(observables);
+   }
 
-ClassImp(RooFoamGenerator);
-  ;
+   double Density(Int_t ndim, double *xvec) override
+   {
+      double x[10];
+      for (int i = 0; i < ndim; i++) {
+         x[i] = xvec[i] * (_binding->getMaxLimit(i) - _binding->getMinLimit(i)) + _binding->getMinLimit(i);
+      }
+      double ret = (*_binding)(x);
+      return ret < 0 ? 0 : ret;
+   }
 
+   RooRealBinding &binding() { return *_binding; }
+
+private:
+   RooArgSet _nset;
+   std::unique_ptr<RooRealBinding> _binding;
+};
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register RooIntegrator1D, is parameters and capabilities with RooNumIntFactory
@@ -77,17 +102,16 @@ void RooFoamGenerator::registerSampler(RooNumGenFactory& fact)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, Bool_t verbose, const RooAbsReal* maxFuncVal) :
+RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
   RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
 {
-  _rvIter = _realVars.createIterator() ;
-  _binding = new RooTFoamBinding(*_funcClone,_realVars) ;
- 
-  _tfoam = new TFoam("TFOAM") ;
-  _tfoam->SetkDim(_realVars.getSize()) ;
-  _tfoam->SetRho(_binding) ;
+  _binding = std::make_unique<RooTFoamBinding>(*_funcClone,_realVars) ;
+
+  _tfoam = std::make_unique<TFoam>("TFOAM") ;
+  _tfoam->SetkDim(_realVars.size()) ;
+  _tfoam->SetRho(_binding.get()) ;
   _tfoam->SetPseRan(RooRandom::randomGenerator()) ;
-  switch(_realVars.getSize()) {
+  switch(_realVars.size()) {
   case 1:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell1D")) ; break ;
   case 2:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell2D")) ; break ;
   case 3:_tfoam->SetnCells((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("nCell3D")) ; break ;
@@ -98,56 +122,40 @@ RooFoamGenerator::RooFoamGenerator(const RooAbsReal &func, const RooArgSet &genV
   _tfoam->SetChat((Int_t)config.getConfigSection("RooFoamGenerator").getRealValue("chatLevel")) ;
   _tfoam->Initialize() ;
 
-  _vec = new Double_t[_realVars.getSize()] ;
-  _xmin  = new Double_t[_realVars.getSize()] ;
-  _range = new Double_t[_realVars.getSize()] ;
-  
-  TIterator* iter = _realVars.createIterator() ;
-  RooRealVar* var ;
+  _vec.resize(_realVars.size());
+  _xmin.resize(_realVars.size());
+  _range.resize(_realVars.size());
+
   Int_t i(0) ;
-  while((var=(RooRealVar*)iter->Next())) {
+  for (auto *var : static_range_cast<RooRealVar const*>(_realVars)) {
     _xmin[i] = var->getMin() ;
     _range[i] = var->getMax() - var->getMin() ;
     i++ ;
   }
-  delete iter ;
-
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFoamGenerator::~RooFoamGenerator() 
-{
-  delete[] _vec ;
-  delete[] _xmin ;
-  delete[] _range ;
-  delete _tfoam ;
-  delete _binding ;
-  delete _rvIter ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// are we actually generating anything? (the cache always contains at least our function value)
 
-const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, Double_t& /*resampleRatio*/) 
+const RooArgSet *RooFoamGenerator::generateEvent(UInt_t /*remaining*/, double& /*resampleRatio*/)
 {
   const RooArgSet *event= _cache->get();
-  if(event->getSize() == 1) return event;
+  if(event->size() == 1) return event;
 
   _tfoam->MakeEvent() ;
-  _tfoam->GetMCvect(_vec) ;
-  
+  _tfoam->GetMCvect(_vec.data()) ;
+
   // Transfer contents to dataset
-  RooRealVar* var ;  
-  _rvIter->Reset() ;
   Int_t i(0) ;
-  while((var=(RooRealVar*)_rvIter->Next())) {
+  for (auto arg : _realVars) {
+    auto var = static_cast<RooRealVar*>(arg);
     var->setVal(_xmin[i] + _range[i]*_vec[i]) ;
     i++ ;
   }
   return &_realVars ;
+}
+
+std::string const& RooFoamGenerator::generatorName() const {
+   static const std::string name = "RooFoamGenerator";
+   return name;
 }

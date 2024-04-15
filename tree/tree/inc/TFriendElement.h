@@ -17,7 +17,7 @@
 // TFriendElement                                                       //
 //                                                                      //
 // A TFriendElement TF describes a TTree object TF in a file.           //
-// When a TFriendElement TF is added to the the list of friends of an   //
+// When a TFriendElement TF is added to the list of friends of an   //
 // existing TTree T, any variable from TF can be referenced in a query  //
 // to T.                                                                //
 //                                                                      //
@@ -37,7 +37,7 @@ protected:
    TTree        *fTree;        ///<! pointer to the TTree described by this element
    TFile        *fFile;        ///<! pointer to the file containing the friend TTree
    TString       fTreeName;    ///<  name of the friend TTree
-   Bool_t        fOwnFile;     ///<  true if file is managed by this class
+   bool          fOwnFile;     ///<  true if file is managed by this class
 
    TFriendElement(const TFriendElement&) = delete;
    TFriendElement& operator=(const TFriendElement&) = delete;
@@ -53,20 +53,24 @@ public:
    TFriendElement(TTree *tree, const char *treename, const char *filename);
    TFriendElement(TTree *tree, const char *treename, TFile *file);
    TFriendElement(TTree *tree, TTree* friendtree, const char *alias);
-   virtual ~TFriendElement();
+   ~TFriendElement() override;
    virtual TTree      *Connect();
    virtual TTree      *DisConnect();
    virtual TFile      *GetFile();
    virtual TTree      *GetParentTree() const {return fParentTree;}
    virtual TTree      *GetTree();
+   /// Get the actual TTree name of the friend.
+   /// If an alias is present, it can be retrieved with GetName().
    virtual const char *GetTreeName() const {return fTreeName.Data();}
-   virtual void        ls(Option_t *option="") const;
+   void        ls(Option_t *option="") const override;
            void        Reset() { fTree = nullptr; fFile = nullptr; }
-           Bool_t      IsUpdated() const { return TestBit(kUpdated); }
+           bool        IsUpdated() const { return TestBit(kUpdated); }
            void        ResetUpdated() { ResetBit(kUpdated); }
            void        MarkUpdated() { SetBit(kUpdated); }
+   void        RecursiveRemove(TObject *obj) override;
 
-   ClassDef(TFriendElement,2)  //A friend element of another TTree
+
+   ClassDefOverride(TFriendElement,2)  //A friend element of another TTree
 };
 
 #endif

@@ -21,16 +21,18 @@
 
 
 #include "RtypesCore.h"
-#include "DllImport.h"
+// #include "DllImport.h" // included via RtypesCore.h, not used here
 
-#include "snprintf.h"   // part of stdio.h on systems that have it
+#ifndef R__LESS_INCLUDES
+#include <cstdio>
+#include "strtok.h"     // provides R__STRTOK_R with <cstring> include
 #include "strlcpy.h"    // part of string.h on systems that have it
-
-#include <atomic>
-#include <stdio.h>
-#include <string.h>
-#include <typeinfo>
+#include "snprintf.h"   // part of stdio.h on systems that have it
 #include <type_traits>
+#endif
+
+#include <typeinfo>
+#include <atomic>
 
 #ifndef __CLING__
 // __attribute__ is not supported on Windows, but it is internally needed by Cling
@@ -86,10 +88,6 @@ typedef TClass* (*DictFuncPtr_t)();  //pointer to dictionary function
 #define TESTBIT(n,i) ((Bool_t)(((n) & BIT(i)) != 0))
 
 
-//---- debug global ------------------------------------------------------------
-
-R__EXTERN Int_t gDebug;
-
 
 //---- ClassDef macros ---------------------------------------------------------
 
@@ -107,6 +105,7 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
 namespace ROOT {
 
    class TGenericClassInfo;
+   class TClassAlt;
    typedef void *(*NewFunc_t)(void *);
    typedef void *(*NewArrFunc_t)(Long_t size, void *arena);
    typedef void  (*DelFunc_t)(void *);
@@ -124,9 +123,10 @@ namespace ROOT {
                               Int_t dl, Int_t il);
    extern void AddClass(const char *cname, Version_t id, const std::type_info &info,
                         DictFuncPtr_t dict, Int_t pragmabits);
-   extern void RemoveClass(const char *cname);
+   extern void RemoveClass(const char *cname, TClass *cl);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
-   extern void AddClassAlternate(const char *normName, const char *alternate);
+   extern ROOT::TClassAlt* AddClassAlternate(const char *normName, const char *alternate);
+   extern void RemoveClassAlternate(ROOT::TClassAlt*);
 
    extern TNamed *RegisterClassTemplate(const char *name,
                                         const char *file, Int_t line);
@@ -155,7 +155,7 @@ namespace ROOT {
       virtual void Register(const char *cname, Version_t id,
                             const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const = 0;
-      virtual void Unregister(const char *classname) const = 0;
+      virtual void Unregister(const char *classname, TClass *cl) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
@@ -164,20 +164,20 @@ namespace ROOT {
 
    class TDefaultInitBehavior: public TInitBehavior {
    public:
-      virtual void Register(const char *cname, Version_t id,
+      void Register(const char *cname, Version_t id,
                             const std::type_info &info,
-                            DictFuncPtr_t dict, Int_t pragmabits) const {
+                            DictFuncPtr_t dict, Int_t pragmabits) const override {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
 
-      virtual void Unregister(const char *classname) const {
-         ROOT::RemoveClass(classname);
+      void Unregister(const char *classname, TClass *cl) const override {
+         ROOT::RemoveClass(classname, cl);
       }
 
-      virtual TClass *CreateClass(const char *cname, Version_t id,
+      TClass *CreateClass(const char *cname, Version_t id,
                                   const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
-                                  Int_t dl, Int_t il) const {
+                                  Int_t dl, Int_t il) const override {
          return ROOT::CreateClass(cname, id, info, isa, dfil, ifil, dl, il);
       }
    };
@@ -195,6 +195,7 @@ namespace ROOT {
 typedef std::atomic<TClass*> atomic_TClass_ptr;
 
 #include "TIsAProxy.h"
+#include <string>
 
 namespace ROOT { namespace Internal {
 
@@ -220,11 +221,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static void DeleteArray(void *p) { delete[] ((T*)p); }
       static void Destruct(void *p) { ((T*)p)->~T();  }
       static ::ROOT::TGenericClassInfo *GenerateInitInstanceLocal() {
-         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(0);
+         static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy<T>(nullptr);
          static ::ROOT::TGenericClassInfo
             R__instance(T::Class_Name(), T::Class_Version(),
                         T::DeclFileName(), T::DeclFileLine(),
-                        typeid(T), ::ROOT::Internal::DefineBehavior((T*)0, (T*)0),
+                        typeid(T), ::ROOT::Internal::DefineBehavior((T*)nullptr, (T*)nullptr),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
          SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
@@ -264,13 +265,14 @@ class ClassDefGenerateInitInstanceLocalInjector:
 }} // namespace ROOT::Internal
 
 
-// Common part of ClassDef definition.
-// DeclFileLine() is not part of it since CINT uses that as trigger for
-// the class comment string.
+/// Common part being called both by \_ClassDefOutline\_ and \_ClassDefInline\_.
+/// \note DeclFileLine() is not part of it, since Cling uses that as trigger for
+/// associating as class title the comment string found right after the macro.
 #define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
-private:          \
-   static_assert(std::is_integral<decltype(id)>::value, "ClassDef(Inline) macro: the specified class version number is not an integer.");                                                        \
-   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
+private:                                                                                                        \
+   static_assert(std::is_integral<decltype(id)>::value,                                                         \
+   "ClassDef(Inline) macro: the specified class version number is not an integer.");                            \
+   /** \cond HIDDEN_SYMBOLS */ virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                \
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
       if (R__likely(recurseBlocker >= 2)) {                                                                     \
@@ -284,99 +286,110 @@ private:          \
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
       }                                                                                                         \
-      return false; /* unreacheable */                                                                          \
-   }                                                                                                            \
+      return false; /* unreachable */                                                                           \
+   } /** \endcond */                                                                                            \
                                                                                                                 \
 public:                                                                                                         \
-   static Version_t Class_Version() { return id; }                                                              \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); }                                         \
-   virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd                                        \
+   /** \return Version of this class */ static constexpr Version_t Class_Version() { return id; }               \
+   /** \return TClass describing current object */ virtual_keyword TClass *IsA() const overrd                   \
+   { return name::Class(); }                                                                                    \
+   /** \cond HIDDEN_SYMBOLS */ virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd            \
    {                                                                                                            \
       ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
-   }                                                                                                            \
+   } /** \endcond */                                                                                            \
    void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
-   static const char *DeclFileName() { return __FILE__; }
+   /** \return Name of the file containing the class declaration */ static const char *DeclFileName() { return __FILE__; }
 
-#define _ClassDefOutline_(name,id, virtual_keyword, overrd) \
-   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
-private: \
-   static atomic_TClass_ptr fgIsA; \
-public: \
-   static int ImplFileLine(); \
-   static const char *ImplFileName(); \
-   static const char *Class_Name(); \
-   static TClass *Dictionary(); \
-   static TClass *Class(); \
+#define _ClassDefOutline_(name,id, virtual_keyword, overrd)                                                     \
+   _ClassDefBase_(name,id, virtual_keyword, overrd)                                                             \
+private:                                                                                                        \
+   /** \cond HIDDEN_SYMBOLS \brief Pointer holding the address of the TClass describing this class */           \
+   static atomic_TClass_ptr fgIsA; /** \endcond */                                                              \
+public:                                                                                                         \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine(); /** \endcond */                           \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName(); /** \endcond */                   \
+   /** \return Name of this class */ static const char *Class_Name();                                           \
+   /** \cond HIDDEN_SYMBOLS */ static TClass *Dictionary(); /** \endcond */                                     \
+   /** \return TClass describing this class */ static TClass *Class();                                          \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
-#define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                      \
-   _ClassDefBase_(name, id, virtual_keyword, overrd) public : static int ImplFileLine() { return -1; }           \
-   static const char *ImplFileName() { return 0; }                                                               \
-   static const char *Class_Name()                                                                               \
-   {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                          \
-   }                                                                                                             \
-   static TClass *Dictionary()                                                                                   \
-   {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                    \
-   }                                                                                                             \
-   static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
-   virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
+#define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                     \
+   _ClassDefBase_(name, id, virtual_keyword, overrd) public :                                                   \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static int ImplFileLine() { return -1; } /** \endcond */             \
+   /** \cond HIDDEN_SYMBOLS \deprecated */ static const char *ImplFileName() { return nullptr; } /** \endcond */\
+   /** \return Name of this class */ static const char *Class_Name()                                            \
+   {                                                                                                            \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                         \
+   }                                                                                                            \
+   /** \cond HIDDEN_SYMBOLS */ static TClass *Dictionary()                                                      \
+   {                                                                                                            \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                   \
+   } /** \endcond */                                                                                            \
+   /** \return TClass describing this class */ static TClass *Class()                                           \
+   {                                                                                                            \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class();                        \
+   }                                                                                                            \
+   virtual_keyword void Streamer(TBuffer &R__b) overrd                                                          \
+   {                                                                                                            \
+      ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this);                                             \
+   }
 
-#define ClassDef(name,id) \
-   _ClassDefOutline_(name,id,virtual,)   \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDef(name,id)                            \
+   _ClassDefOutline_(name,id,virtual,)               \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefOverride(name,id) \
-   _ClassDefOutline_(name,id,,override)   \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefOverride(name,id)                    \
+   _ClassDefOutline_(name,id,,override)              \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefNV(name,id) \
-   _ClassDefOutline_(name,id,,) \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefNV(name,id)                          \
+   _ClassDefOutline_(name,id,,)                      \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefInline(name,id) \
-   _ClassDefInline_(name,id,virtual,)                   \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefInline(name,id)                      \
+   _ClassDefInline_(name,id,virtual,)                \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefInlineOverride(name,id)                       \
-   _ClassDefInline_(name,id,,override)                        \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefInlineOverride(name,id)              \
+   _ClassDefInline_(name,id,,override)               \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefInlineNV(name,id) \
-   _ClassDefInline_(name,id,,)                         \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefInlineNV(name,id)                    \
+   _ClassDefInline_(name,id,,)                       \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
 //#define _ClassDefInterp_(name,id) ClassDefInline(name,id)
 
 #define R__UseDummy(name) \
    class _NAME2_(name,_c) { public: _NAME2_(name,_c)() { if (name) { } } }
 
-
-#define ClassImpUnique(name,key) \
-   namespace ROOT { \
-      TGenericClassInfo *GenerateInitInstance(const name*); \
-      namespace { \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) = \
-            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
-         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-      } \
+#define ClassImpUnique(name,key)                                                                        \
+   namespace ROOT {                                                                                     \
+      /** \cond HIDDEN_SYMBOLS */ TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+      namespace {                                                                                       \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) =                     \
+            GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__);                          \
+         R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));                                            \
+      }                                                                                                 \
    }
+
+/// \deprecated
 #define ClassImp(name) ClassImpUnique(name,default)
 
-// Macro for Namespace
-
-#define NamespaceImpUnique(name,key) \
-   namespace name { \
-      namespace ROOT { \
-         ::ROOT::TGenericClassInfo *GenerateInitInstance(); \
-         namespace { \
-            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) = \
-               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__); \
-            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
-         } \
-      } \
+/// Macro for Namespace
+#define NamespaceImpUnique(name,key)                                        \
+   namespace name {                                                         \
+      namespace ROOTDict {                                                  \
+         /** \cond HIDDEN_SYMBOLS */                                        \
+         ::ROOT::TGenericClassInfo *GenerateInitInstance(); /** \endcond */ \
+         namespace {                                                        \
+            static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) =              \
+               GenerateInitInstance()->SetImplFile(__FILE__, __LINE__);     \
+            R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key)));             \
+         }                                                                  \
+      }                                                                     \
    }
+
 #define NamespaceImp(name) NamespaceImpUnique(name,default)
 
 //---- ClassDefT macros for templates with one template argument ---------------
@@ -386,24 +399,24 @@ public: \
 // ClassImpT  corresponds to ClassImp
 
 
-// This ClassDefT is stricly redundant and is kept only for
-// backward compatibility.
+/// This ClassDefT is strictly redundant and is kept only for
+/// backward compatibility. \deprecated
+#define ClassDefT(name,id)                          \
+   _ClassDefOutline_(name,id,virtual,)              \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
-#define ClassDefT(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
-   static int DeclFileLine() { return __LINE__; }
-
-#define ClassDefTNV(name,id) \
-   _ClassDefOutline_(name,id,virtual,) \
-   static int DeclFileLine() { return __LINE__; }
+#define ClassDefTNV(name,id)                        \
+   _ClassDefOutline_(name,id,virtual,)              \
+   /** \cond HIDDEN_SYMBOLS */ static int DeclFileLine() { return __LINE__; } /** \endcond */
 
 
 #define ClassDefT2(name,Tmpl)
 
 #define templateClassImpUnique(name, key)                                                                           \
    namespace ROOT {                                                                                                 \
-   static TNamed *                                                                                                  \
+   /** \cond HIDDEN_SYMBOLS */ static TNamed *                                                                      \
       _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+   /** \endcond */                                                                                                  \
    R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
    }
 #define templateClassImp(name) templateClassImpUnique(name,default)
@@ -430,20 +443,25 @@ public: \
 
 //---- Macro to set the class version of non instrumented classes --------------
 
-#define RootClassVersion(name,VersionNumber) \
-namespace ROOT { \
-   TGenericClassInfo *GenerateInitInstance(const name*); \
-   static Short_t _R__UNIQUE_(R__dummyVersionNumber) = \
-           GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber); \
-   R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber)); \
+#define RootClassVersion(name,VersionNumber)                             \
+namespace ROOT { /** \cond HIDDEN_SYMBOLS */                             \
+   TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   static Short_t _R__UNIQUE_(R__dummyVersionNumber) =                   \
+           GenerateInitInstance((name*)0x0)->SetVersion(VersionNumber);  \
+   /** \endcond */                                                       \
+   R__UseDummy(_R__UNIQUE_(R__dummyVersionNumber));                      \
 }
 
-#define RootStreamer(name,STREAMER)                                  \
-namespace ROOT {                                                     \
-   TGenericClassInfo *GenerateInitInstance(const name*);             \
-   static Short_t _R__UNIQUE_(R__dummyStreamer) =                    \
-           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);  \
-   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                       \
+#define RootStreamer(name,STREAMER)                                      \
+namespace ROOT {                                                         \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   TGenericClassInfo *GenerateInitInstance(const name*); /** \endcond */ \
+   /** \cond HIDDEN_SYMBOLS */                                           \
+   static Short_t _R__UNIQUE_(R__dummyStreamer) =                        \
+           GenerateInitInstance((name*)0x0)->SetStreamer(STREAMER);      \
+   /** \endcond */                                                       \
+   R__UseDummy(_R__UNIQUE_(R__dummyStreamer));                           \
 }
 
 //---- Macro to load a library into the interpreter --------------
@@ -481,15 +499,5 @@ namespace ROOT {                                                     \
 #else
 # define R__CLING_PTRCHECK(ONOFF)
 #endif
-
-// On Windows strtok_r does not exist: the function is called strtok_s.
-inline char *R__STRTOK_R(char *str, const char *delim, char **saveptr)
-{
-#if defined(R__WIN32)
-   return strtok_s(str, delim, saveptr);
-#else
-   return strtok_r(str, delim, saveptr);
-#endif
-}
 
 #endif

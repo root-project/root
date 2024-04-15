@@ -49,6 +49,7 @@ namespace ROOT {
 
      @ingroup GenVector
 
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class LorentzRotation {
@@ -115,7 +116,7 @@ public:
      Note:  (0,0) refers to the XX component; (3,3) refers to the TT component.
   */
   template<class ForeignMatrix>
-  explicit LorentzRotation(const ForeignMatrix & m) { SetComponents(m); }
+  explicit constexpr LorentzRotation(const ForeignMatrix & m) { SetComponents(m); }
 
   /**
      Construct from four orthosymplectic vectors (which must have methods
@@ -252,15 +253,12 @@ public:
      the desired data, and another to the end (16 past start).
    */
   template<class IT>
-#ifndef NDEBUG
   void SetComponents(IT begin, IT end) {
-#else
-  void SetComponents(IT begin, IT ) {
-#endif
      for (int i = 0; i <16; ++i) {
         fM[i] = *begin;
         ++begin;
      }
+     (void)end;
      assert (end==begin);
   }
 
@@ -269,15 +267,12 @@ public:
      and another to the end of the desired data (16 past start).
    */
   template<class IT>
-#ifndef NDEBUG
   void GetComponents(IT begin, IT end) const {
-#else
-  void GetComponents(IT begin, IT ) const {
-#endif
      for (int i = 0; i <16; ++i) {
         *begin = fM[i];
         ++begin;
      }
+     (void)end;
      assert (end==begin);
   }
 

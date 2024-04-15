@@ -27,6 +27,8 @@ namespace Experimental {
 class REveSelection : public REveElement,
                       public REveAunt
 {
+   friend class Deviator;
+
 public:
    enum EPickToSelect   // How to convert picking events to top selected element:
    { kPS_Ignore,        // ignore picking
@@ -64,6 +66,18 @@ public:
       bool is_secondary() const { return f_is_sec; }
    };
 
+   class Deviator {
+    public:
+      virtual ~Deviator(){};
+      Deviator() {}
+      virtual bool DeviateSelection(REveSelection* s, REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs) = 0;
+   protected:
+      void ExecuteNewElementPicked(REveSelection* s, REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs)
+      {
+         s->NewElementPickedInternal(el, multi, secondary, secondary_idcs);
+      }
+   };
+
    typedef std::map<REveElement*, Record>  SelMap_t;
    typedef SelMap_t::iterator              SelMap_i;
 
@@ -76,10 +90,13 @@ protected:
    Color_t          fHiddenEdgeColor;  ///<!
 
    std::vector<int> fPickToSelect;     ///<!
-   Bool_t           fActive{kFALSE};   ///<!
-   Bool_t           fIsMaster{kFALSE}; ///<!
+   bool             fActive{true};     ///<!
+   bool             fIsMaster{false};  ///<!
+   bool             fIsHighlight{false}; ///<!
 
    SelMap_t         fMap;              ///<!
+   
+   std::shared_ptr<Deviator>        fDeviator;///<!
 
    Record* find_record(REveElement *el)
    {
@@ -92,22 +109,29 @@ protected:
 
    void RecheckImpliedSet(SelMap_i &entry);
 
+   void AddNieceForSelection(REveElement*, bool secondary, const std::set<int>&);
+
+   void NewElementPickedInternal(REveElement* el, bool multi, bool secondary, const std::set<int>& secondary_idcs);
+
 public:
    REveSelection(const std::string &n = "REveSelection", const std::string &t = "",
                  Color_t col_visible = kViolet, Color_t col_hidden = kPink);
-   virtual ~REveSelection();
+   ~REveSelection() override;
 
    void   SetVisibleEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
    void   SetHiddenEdgeColorRGB(UChar_t r, UChar_t g, UChar_t b);
-
-   void   SetHighlightMode();
 
    const std::vector<int>& RefPickToSelect()  const { return fPickToSelect; }
    void   ClearPickToSelect()     { fPickToSelect.clear(); }
    void   AddPickToSelect(int ps) { fPickToSelect.push_back(ps); }
 
-   Bool_t GetIsMaster()   const { return fIsMaster; }
-   void   SetIsMaster(Bool_t m) { fIsMaster = m; }
+   bool GetIsMaster() const { return fIsMaster; }
+   void SetIsMaster(bool m) { fIsMaster = m; }
+   bool GetIsHighlight() const { return fIsHighlight; }
+   void SetIsHighlight(bool m) { fIsHighlight = m; }
+
+   std::shared_ptr<Deviator> GetDeviator() const { return fDeviator; }
+   void   SetDeviator(std::shared_ptr<Deviator> d) { fDeviator = d; }
 
    bool   IsEmpty()  const { return   fMap.empty(); }
    bool   NotEmpty() const { return ! fMap.empty(); }
@@ -145,6 +169,7 @@ public:
    virtual void UserUnPickedElement(REveElement *el);
 
    void NewElementPicked(ElementId_t id, bool multi, bool secondary, const std::set<int>& secondary_idcs={});
+   void NewElementPickedStr(ElementId_t id, bool multi, bool secondary, const char* secondary_idcs="");
    void ClearSelection();
 
    int  RemoveImpliedSelectedReferencesTo(REveElement *el);

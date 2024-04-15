@@ -1,7 +1,7 @@
 #ifndef BDTControlPlots__HH
 #define BDTControlPlots__HH
 
-#include <string>
+#include "TString.h"
 #include "tmvaglob.h"
 
 namespace TMVA{
@@ -11,8 +11,7 @@ namespace TMVA{
    void bdtcontrolplots(TString dataset,TDirectory *);
 
    void BDTControlPlots(TString dataset, TString fin = "TMVA.root", Bool_t useTMVAStyle = kTRUE );
-   void bdtcontrolplots(TString dataset, TDirectory *bdtdir ); 
-  
-  
+   void bdtcontrolplots(TString dataset, TDirectory *bdtdir );
+
 }
 #endif

@@ -4,9 +4,9 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-############################################################################
-# CMakeLists.txt file for building ROOT bindings/pyroot_experimental package
-############################################################################
+###########################################################
+# CMakeLists.txt file for building TPython
+###########################################################
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
   HEADERS
@@ -22,8 +22,17 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
     -writeEmptyRootPCM
   DEPENDENCIES
     Core
-    cppyy${PYTHON_VERSION_STRING}
+  LIBRARIES
+    cppyy
+    # We link libTPython against Python libraries to compensate for the fact that libcppyy
+    # is built with unresolved symbols. If we didn't do this, invoking TPython from C++
+    # would not work.
+    Python3::Python
 )
+
+if(APPLE)
+    target_link_options(ROOTTPython PRIVATE ${PYTHON_LINK_OPTIONS})
+endif()
 
 # Disables warnings originating from deprecated register keyword in Python
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" AND CMAKE_CXX_STANDARD GREATER_EQUAL 11)

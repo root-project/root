@@ -44,7 +44,7 @@ else()
     set(UNR_CFLAGS "-m32")
   elseif(ROOT_ARCHITECTURE MATCHES linuxx8664icc)
     set(UNR_CFLAGS "-m64")
-  elseif(ROOT_ARCHITECTURE MATCHES win32)
+  elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
     set(UNR_CFLAGS "-MD -G5 -GX")
   endif()
   if(CMAKE_OSX_SYSROOT)
@@ -61,13 +61,14 @@ endif()
 string(REPLACE -Wall "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 if(${CMAKE_CXX_COMPILER_ID} MATCHES Clang)
   ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-parentheses-equality)
+  ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-deprecated-non-prototype)
 endif()
 if(${CMAKE_CXX_COMPILER_ID} MATCHES GNU)
   ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-maybe-uninitialized)
+  ROOT_ADD_C_FLAG(CMAKE_C_FLAGS -Wno-alloc-size-larger-than)
+
 endif()
 
-include_directories(BEFORE SYSTEM ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)
-add_definitions(-DHAVE_CONFIG_H)
 set(unrsources ${UNR_UNTARDIR}/src/utils/*.c
                ${UNR_UNTARDIR}/src/methods/*.c
                ${UNR_UNTARDIR}/src/specfunct/*.c
@@ -81,11 +82,11 @@ set(unrconfig ${UNR_UNTARDIR}/config.h)
 
 else()
 
-include_directories(SYSTEM ${UNURAN_INCLUDE_DIRS})
 set(unrsources)
 set(unrconfig)
 
-endif()
+endif(builtin_unuran)
+
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Unuran
   HEADERS
@@ -112,3 +113,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Unuran
     Hist
     MathCore
 )
+
+if(builtin_unuran)
+  target_include_directories(Unuran SYSTEM BEFORE PRIVATE ${UNR_UNTARDIR} ${UNR_UNTARDIR}/src ${UNR_UNTARDIR}/src/utils)
+  target_compile_definitions(Unuran PRIVATE HAVE_CONFIG_H)
+else()
+  target_include_directories(Unuran SYSTEM PRIVATE ${UNURAN_INCLUDE_DIRS})
+endif()
+
+ROOT_ADD_TEST_SUBDIRECTORY(test)

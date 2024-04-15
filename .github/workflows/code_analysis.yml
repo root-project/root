@@ -1,0 +1,29 @@
+name: clang-tools code analysis
+
+on: pull_request
+  # push:
+  #   branches: [ $default-branch ]
+  # pull_request:
+  #   branches: [ $default-branch ]
+
+jobs:
+  clang-format:
+    # For any event that is not a PR, the CI will always run. In PRs, the CI
+    # can be skipped if the tag [skip-ci] is written in the title.
+    if: |
+        (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
+        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+
+    runs-on: ubuntu-latest
+    env:
+      TRAVIS_BRANCH: ${{ github.base_ref }} 
+      TRAVIS_PULL_REQUEST_BRANCH: ${{ github.head_ref }}
+      BASE_COMMIT: ${{ github.event.pull_request.base.sha }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch base sha
+      run: git fetch --depth=1 origin +${{github.event.pull_request.base.sha}}:origin/base_sha
+    - name: install clang-format
+      run: sudo apt-get install -y clang-format
+    - name: run clang-format script
+      run: .ci/format_script.sh

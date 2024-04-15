@@ -12,14 +12,16 @@
 #ifndef ROOT_TBranchIMTHelper
 #define ROOT_TBranchIMTHelper
 
-#include "Rtypes.h"
+#include "RtypesCore.h"
 
 #ifdef R__USE_IMT
 #include "ROOT/TTaskGroup.hxx"
 #endif
 
-/// A helper class for managing IMT work during TTree:Fill operations.
-///
+/** \class ROOT::Internal::TBranchIMTHelper
+ A helper class for managing IMT work during TTree:Fill operations.
+*/
+
 namespace ROOT {
 namespace Internal {
 
@@ -33,7 +35,7 @@ public:
    template<typename FN> void Run(const FN &lambda) {
 #ifdef R__USE_IMT
       if (!fGroup) { fGroup.reset(new TaskGroup_t()); }
-      fGroup->Run( [=]() {
+      fGroup->Run( [this, lambda]() {
          auto nbytes = lambda();
          if (nbytes >= 0) {
             fBytes += nbytes;
@@ -56,8 +58,8 @@ public:
    Long64_t GetNerrors() {  return fNerrors; }
 
 private:
-   std::atomic<Long64_t> fBytes{0};   // Total number of bytes written by this helper.
-   std::atomic<Int_t>    fNerrors{0}; // Total error count of all tasks done by this helper.
+   std::atomic<Long64_t> fBytes{0};   ///< Total number of bytes written by this helper.
+   std::atomic<Int_t>    fNerrors{0}; ///< Total error count of all tasks done by this helper.
 #ifdef R__USE_IMT
    std::unique_ptr<TaskGroup_t> fGroup;
 #endif

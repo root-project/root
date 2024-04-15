@@ -13,7 +13,7 @@
 #define ROOT_RRawFileDavix
 
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstddef>
 #include <cstdint>
@@ -24,13 +24,14 @@ namespace Internal {
 
 struct RDavixFileDes;
 
-/**
- * \class RRawFileDavix RRawFileDavix.hxx
- *
- * The RRawFileDavix class provides read-only access to remote non-ROOT files.  It uses the Davix library for
- * the transport layer.  It instructs the RRawFile base class to buffer in larger chunks than the default for
- * local files, assuming that remote file access has high(er) latency.
- */
+/** \class RRawFileDavix RRawFileDavix.hxx
+
+The RRawFileDavix class provides read-only access to remote non-ROOT files.  It uses the Davix library for
+the transport layer.  It instructs the RRawFile base class to buffer in larger chunks than the default for
+local files, assuming that remote file access has high(er) latency.
+
+*/
+
 class RRawFileDavix : public RRawFile {
 private:
    std::unique_ptr<Internal::RDavixFileDes> fFileDes;

@@ -1,8 +1,9 @@
 
 
-#include <stdio.h>
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdint>
+#include <cstdlib>
+#include <vector>
 
 #ifndef ROOT_Math_MixMaxEngineImpl
 #define ROOT_Math_MixMaxEngineImpl
@@ -20,6 +21,7 @@ namespace {
 
 #ifdef WIN32
 #define __thread __declspec(thread)
+extern "C" int fscanf(FILE *stream, const char *format, ...);
 #endif
 
 #include "mixmax.icc"
@@ -132,7 +134,7 @@ public:
 };
 
       
-   } // end namesapce Math
+   } // end namespace Math
 } // end namespace ROOT
 
 #endif

@@ -17,50 +17,67 @@
 #define ROO_GENERIC_PDF
 
 #include "RooAbsPdf.h"
-#include "RooFormula.h"
 #include "RooListProxy.h"
 
 class RooArgList ;
+class RooFormula ;
 
 class RooGenericPdf : public RooAbsPdf {
 public:
   // Constructors, assignment etc
-  inline RooGenericPdf(){}
+  RooGenericPdf();
+  ~RooGenericPdf() override;
   RooGenericPdf(const char *name, const char *title, const char* formula, const RooArgList& dependents);
   RooGenericPdf(const char *name, const char *title, const RooArgList& dependents);
-  RooGenericPdf(const RooGenericPdf& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooGenericPdf(*this,newname); }
+  RooGenericPdf(const RooGenericPdf& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooGenericPdf(*this,newname); }
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
+
+  /// Return pointer to parameter with given name.
+  inline RooAbsArg* getParameter(const char* name) const {
+    return _actualVars.find(name) ;
+  }
+  /// Return pointer to parameter at given index.
+  inline RooAbsArg* getParameter(Int_t index) const {
+    return _actualVars.at(index) ;
+  }
+  /// Return the number of parameters.
+  inline size_t nParameters() const {
+    return _actualVars.size();
+  }
 
   // Printing interface (human readable)
-  void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
-  void printMetaArgs(std::ostream& os) const ;
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   // Debugging
-  void dumpFormula() { formula().dump() ; }
+  void dumpFormula();
+
+  const char* expression() const { return _formExpr.Data(); }
+  const RooArgList& dependents() const { return _actualVars; }
 
 protected:
 
   RooFormula& formula() const ;
 
   // Function evaluation
-  RooListProxy _actualVars ; 
-  virtual Double_t evaluate() const ;
-
-  Bool_t setFormula(const char* formula) ;
+  RooListProxy _actualVars ;
+  double evaluate() const override ;
+  void doEval(RooFit::EvalContext &) const override;
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   // Post-processing of server redirection
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 
-  virtual Bool_t isValidReal(Double_t value, Bool_t printError) const ;
+  bool isValidReal(double /*value*/, bool /*printError*/) const override { return true; }
 
-  std::unique_ptr<RooFormula> _formula{nullptr}; //! Formula engine
-  TString _formExpr ;            // Formula expression string
+  mutable RooFormula * _formula = nullptr; ///<! Formula engine
+  TString _formExpr ;            ///< Formula expression string
 
-  ClassDef(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
+  ClassDefOverride(RooGenericPdf,1) // Generic PDF defined by string expression and list of variables
 };
 
 #endif

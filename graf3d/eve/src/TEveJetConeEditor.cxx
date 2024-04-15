@@ -12,16 +12,6 @@
 #include "TEveJetConeEditor.h"
 #include "TEveJetCone.h"
 
-#include "TVirtualPad.h"
-#include "TColor.h"
-
-// Cleanup these includes:
-#include "TGLabel.h"
-#include "TGButton.h"
-#include "TGNumberEntry.h"
-#include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
-
 /** \class TEveJetConeEditor
 \ingroup TEve
 GUI editor for TEveJetCone.
@@ -35,7 +25,7 @@ ClassImp(TEveJetConeEditor);
 TEveJetConeEditor::TEveJetConeEditor(const TGWindow *p, Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0)
+   fM(nullptr)
    // Initialize widget pointers to 0
 {
    MakeTitle("TEveJetCone");

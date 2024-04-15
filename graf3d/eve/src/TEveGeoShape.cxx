@@ -46,7 +46,7 @@ namespace
 
       TGeoManager  *old    = gGeoManager;
       TGeoIdentity *old_id = gGeoIdentity;
-      gGeoManager = 0;
+      gGeoManager = nullptr;
       TGeoManager* mgr = new TGeoManager();
       mgr->SetNameTitle("TEveGeoShape::fgGeoMangeur",
                         "Static geo manager used for wrapped TGeoShapes.");
@@ -107,8 +107,8 @@ TGeoHMatrix* TEveGeoShape::GetGeoHMatrixIdentity()
 TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
    TEveShape       (name, title),
    fNSegments      (0),
-   fShape          (0),
-   fCompositeShape (0)
+   fShape          (nullptr),
+   fCompositeShape (nullptr)
 {
    InitMainTrans();
 }
@@ -118,7 +118,7 @@ TEveGeoShape::TEveGeoShape(const char* name, const char* title) :
 
 TEveGeoShape::~TEveGeoShape()
 {
-   SetShape(0);
+   SetShape(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ TGeoShape* TEveGeoShape::MakePolyShape()
 
 void TEveGeoShape::SetNSegments(Int_t s)
 {
-   if (s != fNSegments && fCompositeShape != 0)
+   if (s != fNSegments && fCompositeShape != nullptr)
    {
       delete fShape;
       fShape = MakePolyShape();
@@ -207,7 +207,7 @@ void TEveGeoShape::Paint(Option_t* /*option*/)
 {
    static const TEveException eh("TEveGeoShape::Paint ");
 
-   if (fShape == 0)
+   if (fShape == nullptr)
       return;
 
    TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
@@ -290,7 +290,7 @@ void TEveGeoShape::Save(const char* file, const char* name)
 
 void TEveGeoShape::SaveExtract(const char* file, const char* name)
 {
-   TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
+   TEveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
 
    TFile f(file, "RECREATE");
    gse->Write(name);
@@ -302,7 +302,7 @@ void TEveGeoShape::SaveExtract(const char* file, const char* name)
 
 void TEveGeoShape::WriteExtract(const char* name)
 {
-   TEveGeoShapeExtract* gse = DumpShapeTree(this, 0);
+   TEveGeoShapeExtract* gse = DumpShapeTree(this, nullptr);
    gse->Write(name);
 }
 
@@ -400,7 +400,7 @@ TEveGeoShape* TEveGeoShape::SubImportShapeExtract(TEveGeoShapeExtract* gse,
    {
       TIter next(gse->GetElements());
       TEveGeoShapeExtract* chld;
-      while ((chld = (TEveGeoShapeExtract*) next()) != 0)
+      while ((chld = (TEveGeoShapeExtract*) next()) != nullptr)
          SubImportShapeExtract(chld, gsre);
    }
 
@@ -427,11 +427,11 @@ TClass* TEveGeoShape::ProjectedClass(const TEveProjection* p) const
 
 TBuffer3D* TEveGeoShape::MakeBuffer3D()
 {
-   if (fShape == 0) return 0;
+   if (fShape == nullptr) return nullptr;
 
    if (dynamic_cast<TGeoShapeAssembly*>(fShape)) {
       // TGeoShapeAssembly makes a bad TBuffer3D.
-      return 0;
+      return nullptr;
    }
 
    TEveGeoManagerHolder gmgr(fgGeoMangeur, fNSegments);
@@ -463,7 +463,7 @@ ClassImp(TEveGeoShapeProjected);
 
 TEveGeoShapeProjected::TEveGeoShapeProjected() :
    TEveShape("TEveGeoShapeProjected"),
-   fBuff(0)
+   fBuff(nullptr)
 {
 }
 

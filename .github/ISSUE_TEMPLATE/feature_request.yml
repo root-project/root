@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a new feature for ROOT.
+labels: ["new feature"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for taking the time to fill out this feature request! Note that since v6.28/06 you can also prefill this template using `root -q -e '.gh feature'`
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature description
+      description: What problem does the feature solve? How does the solution look like?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Can you think of any alternative solutions to the proposed feature?
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+    validations:
+      required: false

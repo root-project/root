@@ -16,23 +16,16 @@
 #include <ROOT/REveTrackProjected.hxx>
 
 #include "TParticle.h"
-#include "TPolyLine3D.h"
-#include "TMarker.h"
-#include "TPolyMarker3D.h"
-#include "TColor.h"
 #include "TParticlePDG.h"
 #include "TClass.h"
-#include "Riostream.h"
 
+#include <iostream>
 #include <vector>
 #include <algorithm>
 #include <functional>
 
-#include "json.hpp"
-
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveTrack
 \ingroup REve
@@ -117,7 +110,7 @@ REveTrack::REveTrack(REveMCTrack* t, REveTrackPropagator* prop):
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    // Constructor from REveUtil Monte Carlo track.
 
@@ -151,7 +144,7 @@ REveTrack::REveTrack(REveRecTrackD* t, REveTrackPropagator* prop) :
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -178,7 +171,7 @@ REveTrack::REveTrack(REveRecTrack* t, REveTrackPropagator* prop) :
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -572,7 +565,7 @@ REveTrackList::REveTrackList(REveTrackPropagator* prop) :
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fPropagator(0),
+   fPropagator(nullptr),
    fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
@@ -598,7 +591,7 @@ REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop)
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fPropagator(0),
+   fPropagator(nullptr),
    fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
@@ -619,7 +612,7 @@ REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop)
 
 REveTrackList::~REveTrackList()
 {
-   SetPropagator(0);
+   SetPropagator(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

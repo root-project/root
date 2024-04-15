@@ -4,7 +4,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodDL                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Deep Neural Network Method                                                *
@@ -22,12 +22,13 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #include "TFormula.h"
 #include "TString.h"
 #include "TMath.h"
+#include "TObjString.h"
 
 #include "TMVA/Tools.h"
 #include "TMVA/Configurable.h"
@@ -45,7 +46,12 @@
 #include "TMVA/DNN/Adadelta.h"
 #include "TMVA/Timer.h"
 
-#include "TStopwatch.h"
+#ifdef R__HAS_TMVAGPU
+#include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
+#endif
 
 #include <chrono>
 
@@ -189,36 +195,23 @@ void MethodDL::DeclareOptions()
                     "Specify as 100 to use exactly 100 events. (Default: 20%)");
 
    DeclareOptionRef(fArchitectureString = "CPU", "Architecture", "Which architecture to perform the training on.");
-   AddPreDefVal(TString("STANDARD"));
+   AddPreDefVal(TString("STANDARD"));   // deprecated and not supported anymore
    AddPreDefVal(TString("CPU"));
    AddPreDefVal(TString("GPU"));
-   AddPreDefVal(TString("OPENCL"));
-   AddPreDefVal(TString("CUDNN"));
+   AddPreDefVal(TString("OPENCL"));    // not yet implemented
+   AddPreDefVal(TString("CUDNN"));     // not needed (by default GPU is now CUDNN if available)
 
-   // define training stratgey separated by a separator "|"
-   DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-1,"
-                                              "Momentum=0.3,"
-                                              "Repetitions=3,"
-                                              "ConvergenceSteps=50,"
+   // define training strategy separated by a separator "|"
+   DeclareOptionRef(fTrainingStrategyString = "LearningRate=1e-3,"
+                                              "Momentum=0.0,"
+                                              "ConvergenceSteps=100,"
+                                              "MaxEpochs=2000,"
+                                              "Optimizer=ADAM,"
                                               "BatchSize=30,"
-                                              "TestRepetitions=7,"
+                                              "TestRepetitions=1,"
                                               "WeightDecay=0.0,"
                                               "Regularization=None,"
-                                              "DropConfig=0.0,"
-                                              "DropRepetitions=5"
-                                              "|"
-                                              "LearningRate=1e-4,"
-                                              "Momentum=0.3,"
-                                              "Repetitions=3,"
-                                              "ConvergenceSteps=50,"
-                                              "MaxEpochs=2000,"
-                                              "BatchSize=20,"
-                                              "TestRepetitions=7,"
-                                              "WeightDecay=0.001,"
-                                              "Regularization=L2,"
-                                              "DropConfig=0.0+0.5+0.5,"
-                                              "DropRepetitions=5,"
-                                              "Multithreading=True",
+                                              "DropConfig=0.0",
                     "TrainingStrategy", "Defines the training strategies.");
 }
 
@@ -231,11 +224,13 @@ void MethodDL::ProcessOptions()
    }
 
    if (fArchitectureString == "STANDARD") {
-      Log() << kINFO << "The STANDARD architecture has been deprecated. "
+      Log() << kWARNING << "The STANDARD architecture is not supported anymore. "
                          "Please use Architecture=CPU or Architecture=CPU."
                          "See the TMVA Users' Guide for instructions if you "
                          "encounter problems."
             << Endl;
+      Log() << kINFO << "We will use instead the CPU architecture" << Endl;
+      fArchitectureString = "CPU";
    }
    if (fArchitectureString == "OPENCL") {
       Log() << kERROR << "The OPENCL architecture has not been implemented yet. "
@@ -243,67 +238,37 @@ void MethodDL::ProcessOptions()
                          "time being. See the TMVA Users' Guide for instructions "
                          "if you encounter problems."
             << Endl;
+      // use instead GPU
+      Log() << kINFO << "We will try using the GPU-CUDA architecture if available" << Endl;
+      fArchitectureString = "GPU";
    }
 
    // the architecture can now be set at runtime as an option
 
 
-   if (fArchitectureString == "GPU") {
-#ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
+   if (fArchitectureString == "GPU" || fArchitectureString == "CUDNN") {
+#ifdef R__HAS_TMVAGPU
+      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
+#else  // case TMVA does not support GPU
       Log() << kERROR << "CUDA backend not enabled. Please make sure "
          "you have CUDA installed and it was successfully "
          "detected by CMAKE by using -Dtmva-gpu=On  "
             << Endl;
-#ifdef R__HAS_TMVACPU
       fArchitectureString = "CPU";
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#else
-      fArchitectureString = "Standard";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
-#endif
-#else
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
-#endif
-   }
-  else if (fArchitectureString == "CUDNN") {
-#ifndef R__HAS_TMVAGPU    // case TMVA does not support GPU
-      Log() << kERROR << "CUDA+CUDNN backend not enabled. Please make sure "
-            "you have CUDNN and CUDA installed and that the GPU capability/CUDA "
-            "was successfully detected by CMAKE by using -Dtmva-gpu=On"
-            << Endl;
-#ifdef R__HAS_TMVACPU
-      fArchitectureString = "CPU";
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#else
-      fArchitectureString = "Standard";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
-#endif
-#else
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
+      Log() << kINFO << "Will now use instead the CPU architecture !" << Endl;
 #endif
    }
 
-   else if (fArchitectureString == "CPU") {
-#ifndef R__HAS_TMVACPU  // TMVA has no CPU support
-      Log() << kERROR << "Multi-core CPU backend not enabled. Please make sure "
+   if (fArchitectureString == "CPU") {
+#ifdef R__HAS_TMVACPU  // TMVA has CPU BLAS and IMT support
+      Log() << kINFO << "Will now use the CPU architecture with BLAS and IMT support !" << Endl;
+#else  // TMVA has no CPU BLAS or IMT support
+      Log() << kINFO << "Multi-core CPU backend not enabled. For better performances, make sure "
                           "you have a BLAS implementation and it was successfully "
                          "detected by CMake as well that the imt CMake flag is set."
             << Endl;
-#ifdef R__HAS_TMVAGPU
-      fArchitectureString = "GPU";
-      Log() << kINFO << "Will now use the GPU architecture !" << Endl;
-#else
-      fArchitectureString = "STANDARD";
-      Log() << kINFO << "Will now use the Standard architecture !" << Endl;
+      Log() << kINFO << "Will use anyway the CPU architecture but with slower performance" << Endl;
 #endif
-#else
-      Log() << kINFO << "Will now use the CPU architecture !" << Endl;
-#endif
-   }
-
-   else {
-      Log() << kINFO << "Will use the deprecated STANDARD architecture !" << Endl;
-      fArchitectureString = "STANDARD";
    }
 
    // Input Layout
@@ -402,19 +367,30 @@ void MethodDL::ProcessOptions()
          settings.optimizer = DNN::EOptimizer::kAdam;
          settings.optimizerName = "ADAM";
       }
-
-
-      TString strMultithreading = fetchValueTmp(block, "Multithreading", TString("True"));
-
-      if (strMultithreading.BeginsWith("T")) {
-         settings.multithreading = true;
-      } else {
-         settings.multithreading = false;
+      // check for specific optimizer parameters
+      std::vector<TString> optimParamLabels = {"_beta1", "_beta2", "_eps", "_rho"};
+      //default values
+      std::map<TString, double> defaultValues = {
+         {"ADADELTA_eps", 1.E-8}, {"ADADELTA_rho", 0.95},
+         {"ADAGRAD_eps", 1.E-8},
+         {"ADAM_beta1", 0.9},     {"ADAM_beta2", 0.999}, {"ADAM_eps", 1.E-7},
+         {"RMSPROP_eps", 1.E-7}, {"RMSPROP_rho", 0.9},
+      };
+      for (auto &pN : optimParamLabels) {
+         TString optimParamName = settings.optimizerName + pN;
+         // check if optimizer has default values for this specific  parameters
+         if (defaultValues.count(optimParamName) > 0) {
+            double defValue = defaultValues[optimParamName];
+            double val = fetchValueTmp(block, optimParamName, defValue);
+            // create entry in settings for this optimizer parameter
+            settings.optimizerParams[optimParamName] = val;
+         }
       }
 
       fTrainingSettings.push_back(settings);
    }
 
+   // this set fInputShape[0] = batchSize
    this->SetBatchSize(fTrainingSettings.front().batchSize);
 
    // case inputlayout and batch layout was not given. Use default then
@@ -428,7 +404,14 @@ void MethodDL::ProcessOptions()
       fInputShape[2] = 1;
       fInputShape[3] = GetNVariables();
    }
+   // case when batch layout is not provided (all zero)
+   // batch layout can be determined by the input layout + batch size
+   // case DNN : { 1, B, W }
+   // case CNN :  { B, C, H*W}
+   // case RNN :  { B, T, H*W }
+
    if (fBatchWidth == 0 && fBatchHeight == 0 && fBatchDepth == 0) {
+      // case first layer is DENSE
       if (fInputShape[2] == 1 && fInputShape[1] == 1) {
          // case of (1, batchsize, input features)
          fBatchDepth  = 1;
@@ -436,6 +419,7 @@ void MethodDL::ProcessOptions()
          fBatchWidth  = fInputShape[3];
       }
       else { // more general cases (e.g. for CNN)
+         // case CONV or RNN
          fBatchDepth  = fTrainingSettings.front().batchSize;
          fBatchHeight = fInputShape[1];
          fBatchWidth  = fInputShape[3]*fInputShape[2];
@@ -470,13 +454,24 @@ void MethodDL::ParseInputLayout()
    int subDim = 1;
    std::vector<size_t> inputShape;
    inputShape.reserve(inputLayoutString.Length()/2 + 2);
-   inputShape.push_back(30);    // Will be set by Trainingsettings, use default now
+   inputShape.push_back(0);    // Will be set later by Trainingsettings, use 0 value now
    for (; inputDimString != nullptr; inputDimString = (TObjString *)nextInputDim()) {
       // size_t is unsigned
       subDim = (size_t) abs(inputDimString->GetString().Atoi());
       // Size among unused dimensions should be set to 1 for cudnn
       //if (subDim == 0) subDim = 1;
       inputShape.push_back(subDim);
+   }
+   // it is expected that empty Shape has at least 4 dimensions. We pad the missing one's with 1
+   // for example in case of dense layer input layouts
+   // when we will support 3D convolutions we would need to add extra 1's
+   if (inputShape.size() == 2) {
+      // case of dense layer where only width is specified
+      inputShape = {inputShape[0], 1, 1, inputShape[1]};
+   }
+   else if (inputShape.size() == 3) {
+      //e.g. case of RNN T,W -> T,1,W
+      inputShape = {inputShape[0], inputShape[1], 1, inputShape[2]};
    }
 
    this->SetInputShape(inputShape);
@@ -570,11 +565,11 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
       } else if (strLayerType == "BNORM") {
          ParseBatchNormLayer(deepNet, nets, layerString->GetString(), subDelimiter);
       } else if (strLayerType == "RNN") {
-         ParseRnnLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      // } else if (strLayerType == "LSTM") {
-      //    Log() << kError << "LSTM Layer is not yet fully implemented" << Endl;
-      //    //ParseLstmLayer(deepNet, nets, layerString->GetString(), subDelimiter);
-      //    break;
+         ParseRecurrentLayer(kLayerRNN, deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "LSTM") {
+         ParseRecurrentLayer(kLayerLSTM, deepNet, nets, layerString->GetString(), subDelimiter);
+      } else if (strLayerType == "GRU") {
+         ParseRecurrentLayer(kLayerGRU, deepNet, nets, layerString->GetString(), subDelimiter);
       } else {
          // no type of layer specified - assume is dense layer as in old DNN interface
          ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
@@ -601,13 +596,11 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TObjArray *subStrings = layerString.Tokenize(delim);
    TIter nextToken(subStrings);
    TObjString *token = (TObjString *)nextToken();
-   int idxToken = 0;
 
    // loop on the tokens
    // order of sepcifying width and activation function is not relevant
    // both  100|TANH and TANH|100 are valid cases
    for (; token != nullptr; token = (TObjString *)nextToken()) {
-      idxToken++;
       // try a match with the activation function
       TString strActFnc(token->GetString());
       // if first token defines the layer type- skip it
@@ -617,6 +610,8 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          activationFunction = DNN::EActivationFunction::kRelu;
       } else if (strActFnc == "TANH") {
          activationFunction = DNN::EActivationFunction::kTanh;
+      } else if (strActFnc == "FTANH") {
+         activationFunction = DNN::EActivationFunction::kFastTanh;
       } else if (strActFnc == "SYMMRELU") {
          activationFunction = DNN::EActivationFunction::kSymmRelu;
       } else if (strActFnc == "SOFTSIGN") {
@@ -639,10 +634,16 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
          TFormula fml("tmp", strNumNodes);
          width = fml.Eval(inputSize);
       }
-
    }
-   // avoid zero width. assume is 1
-   if (width == 0) width = 1;
+   // avoid zero width. assume is last layer and give width = output width
+   // Determine the number of outputs
+   size_t outputSize = 1;
+   if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
+      outputSize = GetNTargets();
+   } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
+      outputSize = DataInfo().GetNClasses();
+   }
+   if (width == 0) width = outputSize;
 
    // Add the dense layer, initialize the weights and biases and copy
    TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
@@ -927,7 +928,7 @@ void MethodDL::ParseBatchNormLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepN
 ////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate rnn layer
 template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
+void MethodDL::ParseRecurrentLayer(ERecurrentLayerType rnnType, DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets */, TString layerString,
                              TString delim)
 {
@@ -936,6 +937,8 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
    int inputSize = 0;
    int timeSteps = 0;
    bool rememberState = false;
+   bool returnSequence = false;
+   bool resetGateAfter = false;
 
    // Split layer details
    TObjArray *subStrings = layerString.Tokenize(delim);
@@ -949,59 +952,65 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> & deepNet,
          {
             TString strstateSize(token->GetString());
             stateSize = strstateSize.Atoi();
-         } break;
+            break;
+         }
          case 2:  // input size
          {
             TString strinputSize(token->GetString());
             inputSize = strinputSize.Atoi();
-         } break;
+            break;
+         }
          case 3:  // time steps
          {
             TString strtimeSteps(token->GetString());
             timeSteps = strtimeSteps.Atoi();
+            break;
          }
-         case 4: // remember state (1 or 0)
+         case 4: // returnSequence (option stateful in Keras)
          {
             TString strrememberState(token->GetString());
             rememberState = (bool) strrememberState.Atoi();
-         } break;
+            break;
+         }
+         case 5: // return full output sequence (1 or 0)
+         {
+            TString str(token->GetString());
+            returnSequence = (bool)str.Atoi();
+            break;
+         }
+         case 6: // resetGate after option (only for GRU)
+         {
+            TString str(token->GetString());
+            resetGateAfter = (bool)str.Atoi();
+         }
       }
       ++idxToken;
    }
 
    // Add the recurrent layer, initialize the weights and biases and copy
-   TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
-                                                                        timeSteps, rememberState);
-   basicRNNLayer->Initialize();
-
-   // Add same layer to fNet
-   if (fBuildNet) fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
-
-   //TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
-
-   //// add the copy to all slave nets
-   //for (size_t i = 0; i < nets.size(); i++) {
-   //   nets[i].AddBasicRNNLayer(copyRNNLayer);
-   //}
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Pases the layer string and creates the appropriate lstm layer
-template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet*/,
-                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
-                              TString delim)
-{
-   // Split layer details
-   TObjArray *subStrings = layerString.Tokenize(delim);
-   TIter nextToken(subStrings);
-   TObjString *token = (TObjString *)nextToken();
-   int idxToken = 0;
-
-   for (; token != nullptr; token = (TObjString *)nextToken()) {
-      switch (idxToken) {
-      }
-      ++idxToken;
+   if (rnnType == kLayerRNN) {
+      auto  * recurrentLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+      recurrentLayer->Initialize();
+      // Add same layer to fNet
+      if (fBuildNet) fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+   }
+   else if (rnnType == kLayerLSTM ) {
+      auto *recurrentLayer = deepNet.AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+      recurrentLayer->Initialize();
+      // Add same layer to fNet
+      if (fBuildNet)
+         fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+   }
+   else if (rnnType == kLayerGRU) {
+      if (Architecture_t::IsCudnn()) resetGateAfter = true; // needed for Cudnn
+      auto *recurrentLayer = deepNet.AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
+      recurrentLayer->Initialize();
+      // Add same layer to fNet
+      if (fBuildNet)
+         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
+   }
+   else {
+      Log() << kFATAL << "Invalid Recurrent layer type " << Endl;
    }
 }
 
@@ -1162,14 +1171,6 @@ void MethodDL::TrainDeepNet()
 
    bool debug = Log().GetMinType() == kDEBUG;
 
-
-   // Determine the number of outputs
-   // //    size_t outputSize = 1;
-   // //    if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
-   // //       outputSize = GetNTargets();
-   // //    } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
-   // //       outputSize = DataInfo().GetNClasses();
-   // //    }
 
    // set the random seed for weight initialization
    Architecture_t::SetRandomSeed(fRandomSeed);
@@ -1357,24 +1358,32 @@ void MethodDL::TrainDeepNet()
             new DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>(settings.learningRate, deepNet, settings.momentum));
          break;
 
-      case EOptimizer::kAdam:
+      case EOptimizer::kAdam: {
          optimizer = std::unique_ptr<DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(
+               deepNet, settings.learningRate, settings.optimizerParams["ADAM_beta1"],
+               settings.optimizerParams["ADAM_beta2"], settings.optimizerParams["ADAM_eps"]));
          break;
+      }
 
       case EOptimizer::kAdagrad:
          optimizer = std::unique_ptr<DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                  settings.optimizerParams["ADAGRAD_eps"]));
          break;
 
       case EOptimizer::kRMSProp:
          optimizer = std::unique_ptr<DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum));
+            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum,
+                                                                  settings.optimizerParams["RMSPROP_rho"],
+                                                                  settings.optimizerParams["RMSPROP_eps"]));
          break;
 
       case EOptimizer::kAdadelta:
          optimizer = std::unique_ptr<DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                   settings.optimizerParams["ADADELTA_rho"],
+                                                                   settings.optimizerParams["ADADELTA_eps"]));
          break;
       }
 
@@ -1390,20 +1399,36 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
+      // function building string with optimizer parameters values for logging
+      auto optimParametersString = [&]() {
+         TString optimParameters;
+         for ( auto & element :  settings.optimizerParams) {
+            TString key = element.first;
+            key.ReplaceAll(settings.optimizerName + "_", "");  // strip optimizerName_
+            double value = element.second;
+            if (!optimParameters.IsNull())
+               optimParameters += ",";
+            else
+               optimParameters += " (";
+            optimParameters += TString::Format("%s=%g", key.Data(), value);
+         }
+         if (!optimParameters.IsNull())
+            optimParameters += ")";
+         return optimParameters;
+      };
+
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ": "
             << " Optimizer " << settings.optimizerName
-            << " Learning rate = " << settings.learningRate
-            << " regularization " << (char) settings.regularization
-            << " minimum error = " << minValError
-            << Endl;
+            << optimParametersString()
+            << " Learning rate = " << settings.learningRate << " regularization " << (char)settings.regularization
+            << " minimum error = " << minValError << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
-               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err."
-               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
-               << std::setw(12) << "nEvents/s"
-               << std::setw(12) << "Conv. Steps" << Endl;
+               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." << std::setw(12)
+               << "t(s)/epoch" << std::setw(12) << "t(s)/Loss" << std::setw(12) << "nEvents/s" << std::setw(12)
+               << "Conv. Steps" << Endl;
          Log() << separator << Endl;
       }
 
@@ -1654,71 +1679,46 @@ void MethodDL::Train()
              << Endl;
       return;
 #endif
-   } else if (this->GetArchitectureString() == "OPENCL") {
-      Log() << kFATAL << "OPENCL backend not yet supported." << Endl;
-      return;
    } else if (this->GetArchitectureString() == "CPU") {
 #ifdef R__HAS_TMVACPU
       // note that number of threads used for BLAS might be different
       // e.g use openblas_set_num_threads(num_threads) for OPENBLAS backend
-      Log() << kINFO << "Start of deep neural network training on CPU using (for ROOT-IMT) nthreads = "
+      Log() << kINFO << "Start of deep neural network training on CPU using MT,  nthreads = "
             << gConfig().GetNCpu() << Endl << Endl;
-      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >();
 #else
-      Log() << kFATAL << "Multi-core CPU backend not enabled. Please make sure "
-                      "you have a BLAS implementation and it was successfully "
-                      "detected by CMake as well that the imt CMake flag is set."
+      Log() << kINFO << "Start of deep neural network training on single thread CPU (without ROOT-MT support) " << Endl
             << Endl;
+#endif
+      TrainDeepNet<DNN::TCpu<ScalarImpl_t> >();
       return;
-#endif
-   } else if (this->GetArchitectureString() == "STANDARD") {
-      Log() << kINFO << "Start of deep neural network training on the STANDARD architecture" << Endl << Endl;
-#if HAVE_REFERENCE
-      TrainDeepNet<DNN::TReference<ScalarImpl_t> >();
-#endif
    }
    else {
       Log() << kFATAL << this->GetArchitectureString() <<
-                      " is not  a supported archiectire for TMVA::MethodDL"
+                      " is not  a supported architecture for TMVA::MethodDL"
             << Endl;
    }
 
-// /// definitions for CUDA
-// #ifdef R__HAS_TMVAGPU // Included only if DNNCUDA flag is set.
-//    using Architecture_t = DNN::TCuda<Double_t>;
-// #else
-// #ifdef R__HAS_TMVACPU // Included only if DNNCPU flag is set.
-//    using Architecture_t = DNN::TCpu<Double_t>;
-// #else
-//    using Architecture_t = DNN::TReference<Double_t>;
-// #endif
-// #endif
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
+void TMVA::MethodDL::FillInputTensor()
 {
-
-   // note that fNet  should have been build with a batch size of  1
+   // fill the input tensor fXInput from the current Event data
+   // with the correct shape depending on the model used
+   // The input tensor is used for network prediction after training 
+   // using a single event. The network batch size must be equal to 1. 
+   // The architecture specified at compile time  in ArchitectureImpl_t
+   // is used. This should be the CPU architecture
 
    if (!fNet || fNet->GetDepth() == 0) {
-       Log() << kFATAL << "The network has not been trained and fNet is not built"
-             << Endl;
+      Log() << kFATAL << "The network has not been trained and fNet is not built" << Endl;
    }
-
-   // input  size must be equal to  1 which is the batch size of fNet
-   R__ASSERT(fNet->GetBatchSize() == 1);
-
-   // int batchWidth = fNet->GetBatchWidth();
-   // int batchDepth = fNet->GetBatchDepth();
-   // int batchHeight = fNet->GetBatchHeight();
-//   int noutput = fNet->GetOutputWidth();
-
+   if (fNet->GetBatchSize() != 1) {
+      Log() << kFATAL << "FillINputTensor::Network batch size must be equal to 1 when doing single event predicition" << Endl;
+   }
 
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
-
    size_t nVariables = GetEvent()->GetNVariables();
 
    // for Columnlayout tensor memory layout is   HWC while for rowwise is CHW
@@ -1726,26 +1726,24 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
       R__ASSERT(fXInput.GetShape().size() < 4);
       size_t nc, nhw = 0;
       if (fXInput.GetShape().size() == 2) {
-         nc =  fXInput.GetShape()[0];
-         if (nc != 1 ) {
-             ArchitectureImpl_t::PrintTensor(fXInput);
-             Log() << kFATAL << "First tensor dimension should be equal to batch size, i.e. = 1"
-                   << Endl;
+         nc = fXInput.GetShape()[0];
+         if (nc != 1) {
+            ArchitectureImpl_t::PrintTensor(fXInput);
+            Log() << kFATAL << "First tensor dimension should be equal to batch size, i.e. = 1" << Endl;
          }
          nhw = fXInput.GetShape()[1];
       } else {
          nc = fXInput.GetCSize();
          nhw = fXInput.GetWSize();
       }
-      if ( nVariables != nc * nhw)  {
-          Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw
-            << Endl;
+      if (nVariables != nc * nhw) {
+         Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+               << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw << Endl;
       }
       for (size_t j = 0; j < nc; j++) {
          for (size_t k = 0; k < nhw; k++) {
             // note that in TMVA events images are stored as C H W while in the buffer we stored as H W C
-            fXInputBuffer[ k * nc + j] = inputValues[j*nhw + k];  // for column layout !!!
+            fXInputBuffer[k * nc + j] = inputValues[j * nhw + k]; // for column layout !!!
          }
       }
    } else {
@@ -1755,18 +1753,26 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
       size_t nh = fXInput.GetHSize();
       size_t nw = fXInput.GetWSize();
       size_t n = nc * nh * nw;
-      if ( nVariables != n) {
+      if (nVariables != n) {
          Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nh << " x " << nw
-            << Endl;
+               << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nh << " x " << nw
+               << Endl;
       }
       for (size_t j = 0; j < n; j++) {
          // in this case TMVA event has same order as input tensor
-         fXInputBuffer[ j ] = inputValues[j];  // for column layout !!!
+         fXInputBuffer[j] = inputValues[j]; // for column layout !!!
       }
    }
    // copy buffer in input
-   fXInput.GetDeviceBuffer().CopyFrom( fXInputBuffer);
+   fXInput.GetDeviceBuffer().CopyFrom(fXInputBuffer);
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
+{
+
+   FillInputTensor();
 
    // perform the prediction
    fNet->Prediction(*fYHat, fXInput, fOutputFunction);
@@ -1949,80 +1955,72 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
    return mvaValues;
 }
 
+//////////////////////////////////////////////////////////////////////////
+///  Get the regression output values for a single event
+//////////////////////////////////////////////////////////////////////////
 const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
 {
-   size_t nVariables = GetEvent()->GetNVariables();
-   MatrixImpl_t X(1, nVariables);
-   TensorImpl_t X_vec ( 1,  1, nVariables);  // needs to be really 1
-   const Event *ev = GetEvent();
-   const std::vector<Float_t>& inputValues = ev->GetValues();
-   for (size_t i = 0; i < nVariables; i++) {
-       X_vec(0,i,0) = inputValues[i];   // in case of column format !!
-   }
-   //X_vec.emplace_back(X);
 
-   size_t nTargets = std::max(1u, ev->GetNTargets());
-   MatrixImpl_t YHat(1, nTargets);
+   FillInputTensor ();
+
+   // perform the network prediction
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
+
+   size_t nTargets = DataInfo().GetNTargets();
+   R__ASSERT(nTargets == fYHat->GetNcols());
+
    std::vector<Float_t> output(nTargets);
-   fNet->Prediction(YHat, X_vec, fOutputFunction);
-
    for (size_t i = 0; i < nTargets; i++)
-       output[i] = YHat(0, i);
+      output[i] = (*fYHat)(0, i);
 
-   if (fRegressionReturnVal == NULL) {
-       fRegressionReturnVal = new std::vector<Float_t>();
-   }
-   fRegressionReturnVal->clear();
+   // ned to transform back output values
+   if (fRegressionReturnVal == NULL)
+      fRegressionReturnVal = new std::vector<Float_t>(nTargets);
+   R__ASSERT(fRegressionReturnVal->size() == nTargets);
 
-   Event * evT = new Event(*ev);
+   // N.B. one should cache here temporary event class
+   Event *evT = new Event(*GetEvent());
    for (size_t i = 0; i < nTargets; ++i) {
       evT->SetTarget(i, output[i]);
    }
-
-   const Event* evT2 = GetTransformationHandler().InverseTransform(evT);
+   const Event *evT2 = GetTransformationHandler().InverseTransform(evT);
    for (size_t i = 0; i < nTargets; ++i) {
-      fRegressionReturnVal->push_back(evT2->GetTarget(i));
+      (*fRegressionReturnVal)[i] = evT2->GetTarget(i);
    }
    delete evT;
    return *fRegressionReturnVal;
 }
-
-const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
+//////////////////////////////////////////////////////////////////////////
+///  Get the multi-class output values for a single event
+//////////////////////////////////////////////////////////////////////////
+const std::vector<Float_t> &TMVA::MethodDL::GetMulticlassValues()
 {
-   size_t nVariables = GetEvent()->GetNVariables();
-   MatrixImpl_t X(1, nVariables);
-   TensorImpl_t X_vec ( 1, 1, nVariables);
-   MatrixImpl_t YHat(1, DataInfo().GetNClasses());
-   if (fMulticlassReturnVal == NULL) {
-      fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
-   }
 
-   const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
-   for (size_t i = 0; i < nVariables; i++) {
-      X_vec(0,i, 0) = inputValues[i];
+   FillInputTensor();
+
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
+
+   size_t nClasses = DataInfo().GetNClasses();
+   R__ASSERT(nClasses == fYHat->GetNcols());
+
+   if (fMulticlassReturnVal == NULL) {
+      fMulticlassReturnVal = new std::vector<Float_t>(nClasses);
    }
-   //X_vec.emplace_back(X);
-   fNet->Prediction(YHat, X_vec, fOutputFunction);
-   for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
-      (*fMulticlassReturnVal)[i] = YHat(0, i);
+   R__ASSERT(fMulticlassReturnVal->size() == nClasses);
+
+   for (size_t i = 0; i < nClasses; i++) {
+      (*fMulticlassReturnVal)[i] = (*fYHat)(0, i);
    }
    return *fMulticlassReturnVal;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class
+/// Here we will evaluate using a default batch size and the same architecture used for 
+/// Training
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
 {
-   // Long64_t nEvents = Data()->GetNEvents();
-   // std::vector<Double_t>  v(nEvents);
-   // for (Long64_t i = 0; i < nEvents; ++i) {
-   //    Data()->SetCurrentEvent(i);
-   //    v[i] = GetMvaValue();
-   // }
-   // return v;
-
 
    Long64_t nEvents = Data()->GetNEvents();
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
@@ -2045,20 +2043,9 @@ std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt
 #endif
 
 #endif
-   } else if (this->GetArchitectureString() == "CPU") {
-//#ifdef R__HAS_TMVACPU
-      Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
-      return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-//#endif
    }
-   Log() << kINFO << "ERROR:  STANDARD architecture  is not supported anymore for MethodDL ! "
-         << Endl << Endl;
-// #if HAVE_REFERENCE
-//    return PredictDeepNet<DNN::TReference<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
-// #else
-   return std::vector<Double_t>(nEvents,TMath::QuietNaN());
-//#endif
-
+   Log() << kINFO << "Evaluate deep neural network on CPU using batches with size = " << batchSize << Endl << Endl;
+   return PredictDeepNet<DNN::TCpu<ScalarImpl_t> >(firstEvt, lastEvt, batchSize, logProgress);
 }
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void * parent) const
@@ -2243,6 +2230,7 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
 
          fNet->AddMaxPoolLayer(filterHeight, filterWidth, strideRows, strideCols);
       }
+      // Reshape Layer
       else if (layerName == "ReshapeLayer") {
 
          // read reshape layer info
@@ -2256,27 +2244,62 @@ void MethodDL::ReadWeightsFromXML(void * rootXML)
          fNet->AddReshapeLayer(depth, height, width, flattening);
 
       }
+      // RNN Layer
       else if (layerName == "RNNLayer") {
 
          // read RNN layer info
          size_t  stateSize,inputSize, timeSteps = 0;
          int rememberState= 0;
+         int returnSequence = 0;
          gTools().ReadAttr(layerXML, "StateSize", stateSize);
          gTools().ReadAttr(layerXML, "InputSize", inputSize);
          gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
          gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         gTools().ReadAttr(layerXML, "ReturnSequence", returnSequence);
 
-         fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
+         fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
 
       }
-       // BatchNorm Layer
+      // LSTM Layer
+      else if (layerName == "LSTMLayer") {
+
+         // read RNN layer info
+         size_t  stateSize,inputSize, timeSteps = 0;
+         int rememberState, returnSequence = 0;
+         gTools().ReadAttr(layerXML, "StateSize", stateSize);
+         gTools().ReadAttr(layerXML, "InputSize", inputSize);
+         gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
+         gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         gTools().ReadAttr(layerXML, "ReturnSequence", returnSequence);
+
+         fNet->AddBasicLSTMLayer(stateSize, inputSize, timeSteps, rememberState, returnSequence);
+
+      }
+      // GRU Layer
+      else if (layerName == "GRULayer") {
+
+         // read RNN layer info
+         size_t  stateSize,inputSize, timeSteps = 0;
+         int rememberState, returnSequence, resetGateAfter = 0;
+         gTools().ReadAttr(layerXML, "StateSize", stateSize);
+         gTools().ReadAttr(layerXML, "InputSize", inputSize);
+         gTools().ReadAttr(layerXML, "TimeSteps", timeSteps);
+         gTools().ReadAttr(layerXML, "RememberState", rememberState );
+         gTools().ReadAttr(layerXML, "ReturnSequence", returnSequence);
+         gTools().ReadAttr(layerXML, "ResetGateAfter", resetGateAfter);
+
+         if (!resetGateAfter && ArchitectureImpl_t::IsCudnn())
+            Warning("ReadWeightsFromXML",
+                    "Cannot use a reset gate after to false with CudNN - use implementation with resetgate=true");
+
+         fNet->AddBasicGRULayer(stateSize, inputSize, timeSteps, rememberState, returnSequence, resetGateAfter);
+      }
+      // BatchNorm Layer
       else if (layerName == "BatchNormLayer") {
          // use some dammy value which will be overwrittem in BatchNormLayer::ReadWeightsFromXML
          fNet->AddBatchNormLayer(0., 0.0);
       }
-
-
-      // read eventually weights and biases
+      // read weights and biases
       fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
 
       // read next layer

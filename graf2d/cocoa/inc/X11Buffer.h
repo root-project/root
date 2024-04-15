@@ -48,7 +48,7 @@ class Command {
 protected:
    const Drawable_t fID;
    const GCValues_t fGC;
-
+   NSView * view = nil;
 public:
    Command(Drawable_t wid);
    Command(Drawable_t wid, const GCValues_t &gc);
@@ -60,6 +60,10 @@ public:
    virtual void Execute()const = 0;
    virtual void Execute(CGContextRef /*ctx*/)const;
 
+   void setView(NSView *v)
+   {
+      view = v;
+   }
 private:
    Command(const Command &rhs);
    Command &operator = (const Command &rhs);
@@ -229,6 +233,9 @@ public:
 
    void Execute()const;
    void Execute(CGContextRef ctx)const;
+
+   Point start() const {return fP1;}
+   Point end() const {return fP2;}
 };
 
 class CommandBuffer {
@@ -271,12 +278,11 @@ public:
    {
       return fCommands.size();
    }
+
+   void ClearXOROperations();
 private:
    void ClearCommands();
-   void ClearXOROperations();
-
    //Clip related stuff.
-
    struct WidgetRect {
       int fX1;
       int fY1;

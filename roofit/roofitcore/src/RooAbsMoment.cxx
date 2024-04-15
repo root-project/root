@@ -18,57 +18,28 @@
 \file RooAbsMoment.cxx
 \class RooAbsMoment
 \ingroup Roofitcore
-
-RooAbsMoment represents the first, second, or third order derivative
-of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-derivator class.
 **/
 
+#include <RooAbsMoment.h>
+#include <RooRealVar.h>
 
-#include "RooFit.h"
+#include <Riostream.h>
 
-#include "Riostream.h"
-#include <math.h>
-
-#include "RooAbsMoment.h"
-#include "RooAbsReal.h"
-#include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
-#include "RooArgSet.h"
-#include "RooMsgService.h"
-#include "RooRealVar.h"
-#include "RooFunctor.h"
-#include "RooFormulaVar.h"
-#include "RooGlobalFunc.h"
-#include "RooConstVar.h"
-#include "RooRealIntegral.h"
+#include <cmath>
 #include <string>
-using namespace std ;
-
 
 ClassImp(RooAbsMoment);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooAbsMoment::RooAbsMoment() : _order(1), _takeRoot(kFALSE)
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t takeRoot) :
+RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, bool takeRoot) :
   RooAbsReal(name, title),
   _order(orderIn),
   _takeRoot(takeRoot),
-  _nset("nset","nset",this,kFALSE,kFALSE),
-  _func("function","function",this,func,kFALSE,kFALSE),
-  _x("x","x",this,x,kFALSE,kFALSE),
-  _mean("!mean","!mean",this,kFALSE,kFALSE)
+  _nset("nset","nset",this,false,false),
+  _func("function","function",this,func,false,false),
+  _x("x","x",this,x,false,false),
+  _mean("!mean","!mean",this,false,false)
 {
 }
 
@@ -76,24 +47,12 @@ RooAbsMoment::RooAbsMoment(const char* name, const char* title, RooAbsReal& func
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsMoment::RooAbsMoment(const RooAbsMoment& other, const char* name) :
-  RooAbsReal(other, name), 
-  _order(other._order),  
+  RooAbsReal(other, name),
+  _order(other._order),
   _takeRoot(other._takeRoot),
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
   _x("x",this,other._x),
-  _mean("!mean","!mean",this,kFALSE,kFALSE)
+  _mean("!mean","!mean",this,false,false)
 {
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsMoment::~RooAbsMoment() 
-{
-}
-
-
-

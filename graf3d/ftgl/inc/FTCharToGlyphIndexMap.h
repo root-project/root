@@ -1,7 +1,8 @@
 #ifndef    __FTCharToGlyphIndexMap__
 #define    __FTCharToGlyphIndexMap__
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <map>
 
 #include "FTGL.h"
 
@@ -40,7 +41,7 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
 
         FTCharToGlyphIndexMap()
         {
-            this->Indices = 0;
+            this->Indices = nullptr;
         }
 
         virtual ~FTCharToGlyphIndexMap()
@@ -52,7 +53,7 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
 
                 // Free main structure
                 delete [] this->Indices;
-                this->Indices = 0;
+                this->Indices = nullptr;
             }
         }
 
@@ -65,7 +66,7 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
                     if( this->Indices[i])
                     {
                         delete [] this->Indices[i];
-                        this->Indices[i] = 0;
+                        this->Indices[i] = nullptr;
                     }
                 }
             }
@@ -102,7 +103,7 @@ class FTGL_EXPORT FTCharToGlyphIndexMap
                 this->Indices = new GlyphIndex* [FTCharToGlyphIndexMap::NumberOfBuckets];
                 for( int i = 0; i < FTCharToGlyphIndexMap::NumberOfBuckets; i++)
                 {
-                    this->Indices[i] = 0;
+                    this->Indices[i] = nullptr;
                 }
             }
 

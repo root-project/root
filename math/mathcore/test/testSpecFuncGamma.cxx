@@ -1,5 +1,5 @@
 #include <iostream>
-#include <fstream>
+//#include <fstream>
 #include <vector>
 
 #include <cmath>
@@ -22,7 +22,7 @@ const int ARRAYSIZE = (int) (( MAX - MIN ) / INCREMENT) + 1;
 
 bool showGraphics = false;
 //bool verbose = false;
-using namespace std;
+using std::vector, std::cout, std::cerr, std::endl;
 
 TGraph* drawPoints(Double_t x[], Double_t y[], int color, int style = 1)
 {
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return status;

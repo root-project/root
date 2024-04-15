@@ -23,10 +23,21 @@
 #include "Math/DistFunc.h"
 
 #include "TBenchmark.h"
-#include "TSystem.h"
-#include "TF1.h"
 
 #include "gtest/gtest.h"
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE_P
+#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef REGISTER_TYPED_TEST_SUITE_P
+#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
+#endif
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
+#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
+#endif
 
 using ::testing::TestWithParam;
 using ::testing::Values;
@@ -112,7 +123,7 @@ public:
    int GetRangeEnd() { return 4; }
 };
 
-TYPED_TEST_CASE_P(MathMoreStress);
+TYPED_TEST_SUITE_P(MathMoreStress);
 
 TYPED_TEST_P(MathMoreStress, kADAPTIVESINGULAR)
 {
@@ -147,9 +158,9 @@ TYPED_TEST_P(MathMoreStress, kGSLSTEFFENSON)
    this->RunRangedTest([](StatFunction dist) { dist.TestInverse2(RootFinder::kGSL_STEFFENSON); });
 }
 
-REGISTER_TYPED_TEST_CASE_P(MathMoreStress, kADAPTIVESINGULAR, kGAUSS, TestDerivative, kBRENT, kGSLBRENT,
+REGISTER_TYPED_TEST_SUITE_P(MathMoreStress, kADAPTIVESINGULAR, kGAUSS, TestDerivative, kBRENT, kGSLBRENT,
                            kGSLSTEFFENSON);
 
 typedef testing::Types<BetaTestFactory, GammaTestFactory> Factories_t;
 
-INSTANTIATE_TYPED_TEST_CASE_P(StressMathMore, MathMoreStress, Factories_t);
+INSTANTIATE_TYPED_TEST_SUITE_P(StressMathMore, MathMoreStress, Factories_t);

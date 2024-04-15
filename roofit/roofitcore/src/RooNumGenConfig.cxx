@@ -19,12 +19,11 @@
 \class RooNumGenConfig
 \ingroup Roofitcore
 
-RooNumGenConfig holds the configuration parameters of the various
+Holds the configuration parameters of the various
 numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooNumGenConfig.h"
@@ -33,11 +32,8 @@ use this class in the (normalization) integral configuration interface
 #include "RooNumGenFactory.h"
 #include "RooMsgService.h"
 
-#include "TClass.h"
 
-
-
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooNumGenConfig);
 
@@ -45,7 +41,7 @@ ClassImp(RooNumGenConfig);
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to instance of default numeric integrator configuration object
 
-RooNumGenConfig& RooNumGenConfig::defaultConfig() 
+RooNumGenConfig& RooNumGenConfig::defaultConfig()
 {
   static RooNumGenConfig defaultConfig;
   return defaultConfig;
@@ -54,9 +50,9 @@ RooNumGenConfig& RooNumGenConfig::defaultConfig()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor 
+/// Constructor
 
-RooNumGenConfig::RooNumGenConfig() : 
+RooNumGenConfig::RooNumGenConfig() :
   _method1D("method1D","1D sampling method"),
   _method1DCat("method1DCat","1D sampling method for pdfs with categories"),
   _method1DCond("method1DCond","1D sampling method for conditional pfs"),
@@ -119,55 +115,51 @@ RooNumGenConfig::RooNumGenConfig(const RooNumGenConfig& other) :
   _methodNDCondCat(other._methodNDCondCat)
 {
   // Clone all configuration dat
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
-    RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
+  for (auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
+    RooArgSet* setCopy = new RooArgSet;
+    set->snapshot(*setCopy) ;
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from other RooNumGenConfig
 
-RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other) 
+RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other)
 {
-  // Prevent self-assignment 
+  // Prevent self-assignment
   if (&other==this) {
     return *this ;
   }
 
   // Copy common properties
-  _method1D.setIndex(other._method1D.getIndex()) ;
-  _method1DCat.setIndex(other._method1DCat.getIndex()) ;
-  _method1DCond.setIndex(other._method1DCond.getIndex()) ;
-  _method1DCondCat.setIndex(other._method1DCondCat.getIndex()) ;
+  _method1D.setIndex(other._method1D.getCurrentIndex()) ;
+  _method1DCat.setIndex(other._method1DCat.getCurrentIndex()) ;
+  _method1DCond.setIndex(other._method1DCond.getCurrentIndex()) ;
+  _method1DCondCat.setIndex(other._method1DCondCat.getCurrentIndex()) ;
 
-  _method2D.setIndex(other._method2D.getIndex()) ;
-  _method2DCat.setIndex(other._method2DCat.getIndex()) ;
-  _method2DCond.setIndex(other._method2DCond.getIndex()) ;
-  _method2DCondCat.setIndex(other._method2DCondCat.getIndex()) ;
+  _method2D.setIndex(other._method2D.getCurrentIndex()) ;
+  _method2DCat.setIndex(other._method2DCat.getCurrentIndex()) ;
+  _method2DCond.setIndex(other._method2DCond.getCurrentIndex()) ;
+  _method2DCondCat.setIndex(other._method2DCondCat.getCurrentIndex()) ;
 
-  _methodND.setIndex(other._methodND.getIndex()) ;
-  _methodNDCat.setIndex(other._methodNDCat.getIndex()) ;
-  _methodNDCond.setIndex(other._methodNDCond.getIndex()) ;
-  _methodNDCondCat.setIndex(other._methodNDCondCat.getIndex()) ;
+  _methodND.setIndex(other._methodND.getCurrentIndex()) ;
+  _methodNDCat.setIndex(other._methodNDCat.getCurrentIndex()) ;
+  _methodNDCond.setIndex(other._methodNDCond.getCurrentIndex()) ;
+  _methodNDCondCat.setIndex(other._methodNDCondCat.getCurrentIndex()) ;
 
   // Delete old integrator-specific configuration data
   _configSets.Delete() ;
 
   // Copy new integrator-specific data
-  TIterator* iter = other._configSets.MakeIterator() ;
-  RooArgSet* set ;
-  while((set=(RooArgSet*)iter->Next())) {
-    RooArgSet* setCopy = (RooArgSet*) set->snapshot() ;
+  for(auto * set : static_range_cast<RooArgSet*>(other._configSets)) {
+    RooArgSet* setCopy = new RooArgSet;
+    set->snapshot(*setCopy);
     setCopy->setName(set->GetName()) ;
    _configSets.Add(setCopy);
   }
-  delete iter ;
 
   return *this ;
 }
@@ -177,7 +169,7 @@ RooNumGenConfig& RooNumGenConfig::operator=(const RooNumGenConfig& other)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) 
+RooCategory& RooNumGenConfig::method1D(bool cond, bool cat)
 {
   if (cond && cat) return _method1DCondCat ;
   if (cond) return _method1DCond ;
@@ -189,7 +181,7 @@ RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) 
+RooCategory& RooNumGenConfig::method2D(bool cond, bool cat)
 {
   if (cond && cat) return _method2DCondCat ;
   if (cond) return _method2DCond ;
@@ -201,7 +193,7 @@ RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) 
+RooCategory& RooNumGenConfig::methodND(bool cond, bool cat)
 {
   if (cond && cat) return _methodNDCondCat ;
   if (cond) return _methodNDCond ;
@@ -213,7 +205,7 @@ RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const 
+const RooCategory& RooNumGenConfig::method1D(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->method1D(cond,cat) ;
 }
@@ -222,7 +214,7 @@ const RooCategory& RooNumGenConfig::method1D(Bool_t cond, Bool_t cat) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const 
+const RooCategory& RooNumGenConfig::method2D(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->method2D(cond,cat) ;
 }
@@ -231,7 +223,7 @@ const RooCategory& RooNumGenConfig::method2D(Bool_t cond, Bool_t cat) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const 
+const RooCategory& RooNumGenConfig::methodND(bool cond, bool cat) const
 {
   return const_cast<RooNumGenConfig*>(this)->methodND(cond,cat) ;
 }
@@ -241,16 +233,16 @@ const RooCategory& RooNumGenConfig::methodND(Bool_t cond, Bool_t cat) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a configuration section for a particular integrator. Integrator name and capabilities are
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
-/// as the default configuration for the integrator. 
+/// as the default configuration for the integrator.
 
-Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
+bool RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const RooArgSet& inDefaultConfig)
 {
-  TString name = proto->IsA()->GetName() ;
+  std::string name = proto->generatorName();
 
   // Register integrator for appropriate dimensionalities
-  
+
   _method1D.defineType(name) ;
-  _method2D.defineType(name) ; 
+  _method2D.defineType(name) ;
   _methodND.defineType(name) ;
 
   if (proto->canSampleConditional()) {
@@ -269,13 +261,14 @@ Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const 
     _method2DCondCat.defineType(name) ;
     _methodNDCondCat.defineType(name) ;
   }
-  
+
   // Store default configuration parameters
-  RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
-  config->setName(name) ;
+  RooArgSet* config = new RooArgSet;
+  inDefaultConfig.snapshot(*config);
+  config->setName(name.c_str());
   _configSets.Add(config) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -283,7 +276,7 @@ Bool_t RooNumGenConfig::addConfigSection(const RooAbsNumGenerator* proto, const 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return section with configuration parameters for integrator with given (class) name
 
-RooArgSet& RooNumGenConfig::getConfigSection(const char* name)  
+RooArgSet& RooNumGenConfig::getConfigSection(const char* name)
 {
   return const_cast<RooArgSet&>((const_cast<const RooNumGenConfig*>(this)->getConfigSection(name))) ;
 }
@@ -295,9 +288,9 @@ RooArgSet& RooNumGenConfig::getConfigSection(const char* name)
 const RooArgSet& RooNumGenConfig::getConfigSection(const char* name) const
 {
   static RooArgSet dummy ;
-  RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
+  RooArgSet* config = static_cast<RooArgSet*>(_configSets.FindObject(name)) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumGenConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumGenConfig::getIntegrator: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;
   }
   return *config ;
@@ -307,7 +300,7 @@ const RooArgSet& RooNumGenConfig::getConfigSection(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 
 RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) const
-{ 
+{
   if (!opt) {
     return kStandard ;
   }
@@ -317,7 +310,7 @@ RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) cons
 
   if (o.Contains("v")) {
     return kVerbose ;
-  } 
+  }
   return kStandard ;
 }
 
@@ -326,51 +319,49 @@ RooPrintable::StyleOption RooNumGenConfig::defaultPrintStyle(Option_t* opt) cons
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << endl ;
-  os << indent << "1-D sampling method: " << _method1D.getLabel() << endl ;
-  if (_method1DCat.getIndex()!=_method1D.getIndex()) {
-    os << " (" << _method1DCat.getLabel() << " if with categories)" << endl ;
+  os << indent << "1-D sampling method: " << _method1D.getCurrentLabel() << endl ;
+  if (_method1DCat.getCurrentIndex()!=_method1D.getCurrentIndex()) {
+    os << " (" << _method1DCat.getCurrentLabel() << " if with categories)" << endl ;
   }
-  if (_method1DCond.getIndex()!=_method1D.getIndex()) {
-    os << " (" << _method1DCond.getLabel() << " if conditional)" << endl ;
+  if (_method1DCond.getCurrentIndex()!=_method1D.getCurrentIndex()) {
+    os << " (" << _method1DCond.getCurrentLabel() << " if conditional)" << endl ;
   }
-  if (_method1DCondCat.getIndex()!=_method1D.getIndex()) {
-    os << " (" << _method1DCondCat.getLabel() << " if conditional with categories)" << endl ;    
-  }
-  os << endl ;
-
-  os << indent << "2-D sampling method: " << _method2D.getLabel() << endl ;
-  if (_method2DCat.getIndex()!=_method2D.getIndex()) {
-    os << " (" << _method2DCat.getLabel() << " if with categories)" << endl ;
-  }
-  if (_method2DCond.getIndex()!=_method2D.getIndex()) {
-    os << " (" << _method2DCond.getLabel() << " if conditional)" << endl ;
-  }
-  if (_method2DCondCat.getIndex()!=_method2D.getIndex()) {
-    os << " (" << _method2DCondCat.getLabel() << " if conditional with categories)" << endl ;
+  if (_method1DCondCat.getCurrentIndex()!=_method1D.getCurrentIndex()) {
+    os << " (" << _method1DCondCat.getCurrentLabel() << " if conditional with categories)" << endl ;
   }
   os << endl ;
 
-  os << indent << "N-D sampling method: " << _methodND.getLabel() << endl ;
-  if (_methodNDCat.getIndex()!=_methodND.getIndex()) {
-    os << " (" << _methodNDCat.getLabel() << " if with categories)" << endl ;
+  os << indent << "2-D sampling method: " << _method2D.getCurrentLabel() << endl ;
+  if (_method2DCat.getCurrentIndex()!=_method2D.getCurrentIndex()) {
+    os << " (" << _method2DCat.getCurrentLabel() << " if with categories)" << endl ;
   }
-  if (_methodNDCond.getIndex()!=_methodND.getIndex()) {
-    os << " (" << _methodNDCond.getLabel() << " if conditional)" << endl ;
+  if (_method2DCond.getCurrentIndex()!=_method2D.getCurrentIndex()) {
+    os << " (" << _method2DCond.getCurrentLabel() << " if conditional)" << endl ;
   }
-  if (_methodNDCondCat.getIndex()!=_methodND.getIndex()) {
-    os << " (" << _methodNDCondCat.getLabel() << " if conditional with categories)" << endl ;
+  if (_method2DCondCat.getCurrentIndex()!=_method2D.getCurrentIndex()) {
+    os << " (" << _method2DCondCat.getCurrentLabel() << " if conditional with categories)" << endl ;
   }
   os << endl ;
-   
+
+  os << indent << "N-D sampling method: " << _methodND.getCurrentLabel() << endl ;
+  if (_methodNDCat.getCurrentIndex()!=_methodND.getCurrentIndex()) {
+    os << " (" << _methodNDCat.getCurrentLabel() << " if with categories)" << endl ;
+  }
+  if (_methodNDCond.getCurrentIndex()!=_methodND.getCurrentIndex()) {
+    os << " (" << _methodNDCond.getCurrentLabel() << " if conditional)" << endl ;
+  }
+  if (_methodNDCondCat.getCurrentIndex()!=_methodND.getCurrentIndex()) {
+    os << " (" << _methodNDCondCat.getCurrentLabel() << " if conditional with categories)" << endl ;
+  }
+  os << endl ;
+
   if (verbose) {
 
     os << endl << "Available sampling methods:" << endl << endl ;
-    TIterator* cIter = _configSets.MakeIterator() ;
-    RooArgSet* configSet ;
-    while ((configSet=(RooArgSet*)cIter->Next())) {
+    for(auto * configSet : static_range_cast<RooArgSet*>(_configSets)) {
 
       os << indent << "*** " << configSet->GetName() << " ***" << endl ;
       os << indent << "Capabilities: " ;
@@ -384,7 +375,5 @@ void RooNumGenConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
       os << endl ;
 
     }
-
-    delete cIter ;
   }
 }

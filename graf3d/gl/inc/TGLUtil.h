@@ -18,6 +18,7 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
+#include <utility>
 
 class TString;
 class TGLBoundingBox;
@@ -622,7 +623,7 @@ public:
    TGLMatrix & operator*=(const TGLMatrix & rhs) { MultRight(rhs); return *this; }
 
    // Manipulators
-   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = 0);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = nullptr);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
@@ -927,8 +928,11 @@ private:
    static Float_t fgPointLineScalingFactor;
    static Int_t   fgPickingRadius;
 
-   TGLUtil(const TGLUtil&);            // Not implemented.
-   TGLUtil& operator=(const TGLUtil&); // Not implemented.
+   static Float_t fgSimpleAxisWidthScale;
+   static Float_t fgSimpleAxisBBoxScale;
+
+   TGLUtil(const TGLUtil&) = delete;
+   TGLUtil& operator=(const TGLUtil&) = delete;
 
 public:
    virtual ~TGLUtil() {}
@@ -1036,13 +1040,17 @@ public:
    static void DrawReferenceMarker(const TGLCamera  & camera,
                                    const TGLVertex3 & pos,
                                          Float_t      radius = 3,
-                                   const UChar_t    * rgba   = 0);
+                                   const UChar_t    * rgba   = nullptr);
    static void DrawSimpleAxes(const TGLCamera      & camera,
                               const TGLBoundingBox & bbox,
-                                    Int_t            axesType);
+                                    Int_t            axesType,
+                                    Float_t          labelScale = 1);
    static void DrawNumber(const TString    & num,
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
+
+   static void SetSimpleAxisWidthScale(Float_t s);
+   static void SetSimpleAxisBBoxScale(Float_t s);
 
    // Frequently used colors.
    static const UChar_t fgRed[4];
@@ -1090,8 +1098,8 @@ public:
 
 class TGLFloatHolder
 {
-   TGLFloatHolder(const TGLFloatHolder&);            // Not implemented
-   TGLFloatHolder& operator=(const TGLFloatHolder&); // Not implemented
+   TGLFloatHolder(const TGLFloatHolder&) = delete;
+   TGLFloatHolder& operator=(const TGLFloatHolder&) = delete;
 
    Int_t    fWhat;
    Float_t  fState;
@@ -1224,13 +1232,11 @@ void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
 void DrawQuadStripWithRadialGradientFill(unsigned nPoints, const Double_t *inner, const Double_t *innerRGBA,
                                         const Double_t *outer, const Double_t *outerRGBA);
 
-#ifndef __CINT__
 void DrawTrapezoidTextured(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                            Double_t tMin, Double_t tMax);
 void DrawTrapezoidTextured(const Double_t ver[][3], Double_t texMin, Double_t texMax);
 void DrawTrapezoidTextured2(const Double_t ver[][2], Double_t zMin, Double_t zMax,
                             Double_t tMin, Double_t tMax);
-#endif
 
 void DrawCylinder(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin,
                   Double_t yMax, Double_t zMin, Double_t zMax);
@@ -1239,10 +1245,8 @@ void DrawSphere(TGLQuadric *quadric, Double_t xMin, Double_t xMax, Double_t yMin
 void DrawError(Double_t xMin, Double_t xMax, Double_t yMin,
                Double_t yMax, Double_t zMin, Double_t zMax);
 
-#ifndef __CINT__
 void DrawTrapezoid(const Double_t ver[][2], Double_t zMin, Double_t zMax, Bool_t color = kTRUE);
 void DrawTrapezoid(const Double_t ver[][3]);
-#endif
 
 void DrawAxes(Int_t frontPoint, const Int_t *viewport, const TGLVertex3 *box2D,
               const TGLPlotCoordinates *plotCoord, TAxis *xAxis, TAxis *yAxis,
@@ -1261,7 +1265,7 @@ class TGuardBase {
 private:
    mutable Bool_t fActive;
 
-   TGuardBase &operator = (const TGuardBase &rhs);
+   TGuardBase &operator = (const TGuardBase &rhs) = delete;
 protected:
    TGuardBase()
       : fActive(kTRUE)
@@ -1344,8 +1348,8 @@ private:
    Int_t                        fMaxPaletteSize;
    Rgl::Range_t                 fZRange;
 
-   TGLLevelPalette(const TGLLevelPalette&);    // Not implemented
-   TGLLevelPalette& operator=(const TGLLevelPalette&);  // Not implemented
+   TGLLevelPalette(const TGLLevelPalette&) = delete;
+   TGLLevelPalette& operator=(const TGLLevelPalette&) = delete;
 
 public:
    TGLLevelPalette();

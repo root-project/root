@@ -1,3 +1,7 @@
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-10-14
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
+
 /*************************************************************************
  * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -8,18 +12,75 @@
 
 #include <ROOT/RBrowserData.hxx>
 
+#include <ROOT/Browsable/RGroup.hxx>
+#include <ROOT/Browsable/RWrapper.hxx>
 #include <ROOT/Browsable/RProvider.hxx>
 #include <ROOT/Browsable/RLevelIter.hxx>
+#include <ROOT/Browsable/TObjectHolder.hxx>
+#include <ROOT/Browsable/RSysFile.hxx>
+
 #include <ROOT/RLogger.hxx>
 
-#include "TClass.h"
+#include "TFolder.h"
+#include "TROOT.h"
 #include "TBufferJSON.h"
+#include "TEnv.h"
 
 #include <algorithm>
 #include <regex>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 using namespace std::string_literals;
+
+ROOT::Experimental::RLogChannel &ROOT::BrowserLog()
+{
+   static ROOT::Experimental::RLogChannel sLog("ROOT.Browser");
+   return sLog;
+}
+
+namespace ROOT {
+
+class RBrowserDataCleanup : public TObject {
+
+   RBrowserData &fData;
+
+public:
+   RBrowserDataCleanup(RBrowserData &_data) : fData(_data) {}
+
+   void RecursiveRemove(TObject *obj) override
+   {
+      fData.RemoveFromCache(obj);
+   }
+};
+
+} // namespace ROOT
+
+
+/** \class ROOT::RBrowserData
+\ingroup rbrowser
+\brief Way to browse (hopefully) everything in %ROOT
+*/
+
+
+/////////////////////////////////////////////////////////////////////
+/// Default constructor
+
+RBrowserData::RBrowserData()
+{
+   fCleanupHandle = std::make_unique<RBrowserDataCleanup>(*this);
+   R__LOCKGUARD(gROOTMutex);
+   gROOT->GetListOfCleanups()->Add(fCleanupHandle.get());
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Destructor
+
+RBrowserData::~RBrowserData()
+{
+   // should be here because of fCleanupHandle destructor
+   R__LOCKGUARD(gROOTMutex);
+   gROOT->GetListOfCleanups()->Remove(fCleanupHandle.get());
+}
 
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
@@ -28,17 +89,7 @@ void RBrowserData::SetTopElement(std::shared_ptr<Browsable::RElement> elem)
 {
    fTopElement = elem;
 
-   SetWorkingDirectory("");
-}
-
-/////////////////////////////////////////////////////////////////////
-/// set working directory relative to top element
-
-void RBrowserData::SetWorkingDirectory(const std::string &strpath)
-{
-   auto path = DecomposePath(strpath);
-
-   SetWorkingPath(path);
+   SetWorkingPath({});
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -47,22 +98,53 @@ void RBrowserData::SetWorkingDirectory(const std::string &strpath)
 void RBrowserData::SetWorkingPath(const Browsable::RElementPath_t &path)
 {
    fWorkingPath = path;
-   fWorkElement = Browsable::RElement::GetSubElement(fTopElement, path);
 
-   ResetLastRequest();
+   ResetLastRequestData(true);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Create default elements shown in the RBrowser
+
+void RBrowserData::CreateDefaultElements()
+{
+   auto comp = std::make_shared<Browsable::RGroup>("top","Root browser");
+
+   auto seldir = Browsable::RSysFile::ProvideTopEntries(comp);
+
+   std::unique_ptr<Browsable::RHolder> rootfold = std::make_unique<Browsable::TObjectHolder>(gROOT->GetRootFolder(), kFALSE);
+   auto elem_root = Browsable::RProvider::Browse(rootfold);
+   if (elem_root)
+      comp->Add(std::make_shared<Browsable::RWrapper>("root", elem_root));
+
+   std::unique_ptr<Browsable::RHolder> rootfiles = std::make_unique<Browsable::TObjectHolder>(gROOT->GetListOfFiles(), kFALSE);
+   auto elem_files = Browsable::RProvider::Browse(rootfiles);
+   if (elem_files) {
+      auto files = std::make_shared<Browsable::RWrapper>("ROOT Files", elem_files);
+      files->SetExpandByDefault(true);
+      comp->Add(files);
+      // if there are any open files, make them visible by default
+      if (elem_files->GetNumChilds() > 0)
+         seldir = {};
+   }
+
+   SetTopElement(comp);
+
+   SetWorkingPath(seldir);
 }
 
 /////////////////////////////////////////////////////////////////////
 /// Reset all data correspondent to last request
 
-void RBrowserData::ResetLastRequest()
+void RBrowserData::ResetLastRequestData(bool with_element)
 {
    fLastAllChilds = false;
    fLastSortedItems.clear();
    fLastSortMethod.clear();
    fLastItems.clear();
-   fLastPath.clear();
-   fLastElement.reset();
+   if (with_element) {
+      fLastPath.clear();
+      fLastElement.reset();
+   }
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -70,29 +152,16 @@ void RBrowserData::ResetLastRequest()
 /// Returns array of names for each element in the path, first element either "/" or "."
 /// If returned array empty - it is error
 
-Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath)
+Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath, bool relative_to_work_element)
 {
    Browsable::RElementPath_t arr;
+   if (relative_to_work_element) arr = fWorkingPath;
 
    if (strpath.empty())
       return arr;
 
-   std::string slash = "/";
-
-   std::string::size_type previous = 0;
-   if (strpath[0] == slash[0]) previous++;
-
-   auto current = strpath.find(slash, previous);
-   while (current != std::string::npos) {
-      if (current > previous)
-         arr.emplace_back(strpath.substr(previous, current - previous));
-      previous = current + 1;
-      current = strpath.find(slash, previous);
-   }
-
-   if (previous < strpath.length())
-      arr.emplace_back(strpath.substr(previous));
-
+   auto arr2 = Browsable::RElement::ParsePath(strpath);
+   arr.insert(arr.end(), arr2.begin(), arr2.end());
    return arr;
 }
 
@@ -101,25 +170,30 @@ Browsable::RElementPath_t RBrowserData::DecomposePath(const std::string &strpath
 
 bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowserReply &reply)
 {
-   if (gDebug > 0)
-      printf("REQ: Do decompose path '%s'\n",request.path.c_str());
-
-   auto path = DecomposePath(request.path);
+   auto path = fWorkingPath;
+   path.insert(path.end(), request.path.begin(), request.path.end());
 
    if ((path != fLastPath) || !fLastElement) {
 
-      auto elem = Browsable::RElement::GetSubElement(fWorkElement, path);
+      auto elem = GetSubElement(path);
       if (!elem) return false;
 
-      ResetLastRequest();
+      ResetLastRequestData(true);
 
       fLastPath = path;
-      fLastElement = elem;
+      fLastElement = std::move(elem);
+
+      fLastElement->cd(); // set element active
+   } else if (request.reload) {
+      // only reload items from element, not need to reset element itself
+      ResetLastRequestData(false);
    }
 
    // when request childs, always try to make elements
    if (fLastItems.empty()) {
+
       auto iter = fLastElement->GetChildsIter();
+
       if (!iter) return false;
       int id = 0;
       fLastAllChilds = true;
@@ -135,7 +209,9 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
    }
 
    // create sorted array
-   if ((fLastSortedItems.size() != fLastItems.size()) || (fLastSortMethod != request.sort)) {
+   if ((fLastSortedItems.size() != fLastItems.size()) ||
+       (fLastSortMethod != request.sort) ||
+       (fLastSortReverse != request.reverse)) {
       fLastSortedItems.resize(fLastItems.size(), nullptr);
       int id = 0;
       if (request.sort.empty()) {
@@ -153,15 +229,24 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
          if (request.sort != "unsorted")
             std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
-                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a->Compare(b, request.sort); });
+                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a ? a->Compare(b, request.sort) : !b; });
       }
+
+      if (request.reverse)
+         std::reverse(fLastSortedItems.begin(), fLastSortedItems.end());
+
       fLastSortMethod = request.sort;
+      fLastSortReverse = request.reverse;
    }
 
    const std::regex expr(request.regex);
 
    int id = 0;
    for (auto &item : fLastSortedItems) {
+
+      // check if element is hidden
+      if (!request.hidden && item->IsHidden())
+         continue;
 
       if (!request.regex.empty() && !item->IsFolder() && !std::regex_match(item->GetName(), expr))
          continue;
@@ -183,6 +268,11 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
 std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
+   if (request.lastcycle < 0)
+      gEnv->SetValue("WebGui.LastCycle", "no");
+   else if (request.lastcycle > 0)
+      gEnv->SetValue("WebGui.LastCycle", "yes");
+
    RBrowserReply reply;
 
    reply.path = request.path;
@@ -199,9 +289,9 @@ std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 
 std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string &str)
 {
-   auto path = DecomposePath(str);
+   auto path = DecomposePath(str, true);
 
-   return Browsable::RElement::GetSubElement(fWorkElement, path);
+   return GetSubElement(path);
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -209,6 +299,124 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetElement(const std::string 
 
 std::shared_ptr<Browsable::RElement> RBrowserData::GetElementFromTop(const Browsable::RElementPath_t &path)
 {
-   return Browsable::RElement::GetSubElement(fTopElement, path);
+   return GetSubElement(path);
 }
 
+/////////////////////////////////////////////////////////////////////////
+/// Returns sub-element starting from top, using cached data
+
+std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable::RElementPath_t &path)
+{
+   if (path.empty())
+      return fTopElement;
+
+   // validate cache - removes no longer actual elements
+   RemoveFromCache(nullptr);
+
+   // first check direct match in cache
+   for (auto &entry : fCache)
+      if (entry.first == path)
+         return entry.second;
+
+   // find best possible entry in cache
+   int pos = 0;
+   auto elem = fTopElement;
+
+   for (auto &entry : fCache) {
+      if (entry.first.size() >= path.size())
+         continue;
+
+      auto comp = Browsable::RElement::ComparePaths(path, entry.first);
+
+      if ((comp > pos) && (comp == (int) entry.first.size())) {
+         pos = comp;
+         elem = entry.second;
+      }
+   }
+
+   while (pos < (int) path.size()) {
+      std::string subname = path[pos];
+      int indx = Browsable::RElement::ExtractItemIndex(subname);
+
+      auto iter = elem->GetChildsIter();
+      if (!iter)
+         return nullptr;
+
+      if (!iter->Find(subname, indx)) {
+         if (indx < 0)
+            return nullptr;
+         iter = elem->GetChildsIter();
+         if (!iter || !iter->Find(subname))
+            return nullptr;
+      }
+
+      elem = iter->GetElement();
+
+      if (!elem)
+         return nullptr;
+
+      auto subpath = path;
+      subpath.resize(pos+1);
+      fCache.emplace_back(subpath, elem);
+      pos++; // switch to next element
+   }
+
+   return elem;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Clear internal objects cache
+
+void RBrowserData::ClearCache()
+{
+   fCache.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove object from cache
+/// If nullptr specified - removes no-longer-valid elements
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(void *obj)
+{
+   unsigned pos = 0;
+
+   bool isany = false;
+
+   while (pos < fCache.size()) {
+      if (obj ? !fCache[pos].second->IsObject(obj) : fCache[pos].second->CheckValid()) {
+         pos++;
+         continue;
+      }
+
+      isany = true;
+      auto path = fCache[pos].first;
+      fCache.erase(fCache.begin() + pos);
+      if (RemoveFromCache(path))
+         pos = 0; // start scan from the beginning
+   }
+
+   return isany;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove path (and all sub-paths) from cache
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(const Browsable::RElementPath_t &path)
+{
+   if (path.size() == 0)
+      return false;
+
+   bool isany = false;
+   unsigned pos = 0;
+   while (pos < fCache.size()) {
+      if (Browsable::RElement::ComparePaths(path, fCache[pos].first) == (int) path.size()) {
+         fCache.erase(fCache.begin() + pos);
+         isany = true;
+      } else {
+         pos++;
+      }
+   }
+   return isany;
+}

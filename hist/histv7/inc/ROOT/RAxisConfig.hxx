@@ -1,5 +1,5 @@
-/// \file ROOT/RAxisConfig.h
-/// \ingroup Hist ROOT7
+/// \file ROOT/RAxisConfig.hxx
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2020-02-05
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -20,7 +20,7 @@
 #include <utility>
 #include <vector>
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 namespace ROOT {
 namespace Experimental {
@@ -30,7 +30,7 @@ namespace Experimental {
 Objects used to configure the different axis types. It can store the
 properties of all ROOT-provided axis types, together with the type of the axis.
 
-RODO: that's what a variant will be invented for!
+TODO: that's what a variant will be invented for!
 */
 class RAxisConfig {
 public:

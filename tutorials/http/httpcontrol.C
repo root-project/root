@@ -30,15 +30,15 @@ void httpcontrol()
    // create histograms
    TH1D *hpx = new TH1D("hpx","This is the px distribution",100,-4,4);
    hpx->SetFillColor(48);
-   hpx->SetDirectory(0);
+   hpx->SetDirectory(nullptr);
    TH2D *hpxpy = new TH2D("hpxpy","py vs px",40,-4,4,40,-4,4);
-   hpxpy->SetDirectory(0);
+   hpxpy->SetDirectory(nullptr);
 
    // start http server
    THttpServer* serv = new THttpServer("http:8080");
 
    // One could specify location of newer version of JSROOT
-   // serv->SetJSROOT("https://root.cern.ch/js/latest/");
+   // serv->SetJSROOT("https://root.cern/js/latest/");
    // serv->SetJSROOT("http://jsroot.gsi.de/latest/");
 
    // register histograms

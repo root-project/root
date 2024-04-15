@@ -3,14 +3,15 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: reading and writing ASCII configuration files
 ///
-/// \macro_output
 /// \macro_code
-/// \author 07/2008 - Wouter Verkerke
+/// \macro_output
+///
+/// \date July 2008
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "TCanvas.h"
@@ -40,14 +41,14 @@ void rf505_asciicfg()
    // F i t   m o d e l   t o   t o y   d a t a
    // -----------------------------------------
 
-   RooDataSet *d = model.generate(x, 1000);
-   model.fitTo(*d);
+   std::unique_ptr<RooDataSet> d{model.generate(x, 1000)};
+   model.fitTo(*d, PrintLevel(-1));
 
    // W r i t e   p a r a m e t e r s   t o   a s c i i   f i l e
    // -----------------------------------------------------------
 
    // Obtain set of parameters
-   RooArgSet *params = model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
 
    // Write parameters to file
    params->writeToFile("rf505_asciicfg_example.txt");
@@ -56,7 +57,7 @@ void rf505_asciicfg()
    dir1.Append("/roofit/rf505_asciicfg.txt") ;
    TString dir2 = "rf505_asciicfg_example.txt";
 
-   // R e a d    p a r a m e t e r s   f r o m    a s c i i   f i l e 
+   // R e a d    p a r a m e t e r s   f r o m    a s c i i   f i l e
    // ----------------------------------------------------------------
 
    // Read parameters from file
@@ -73,7 +74,7 @@ void rf505_asciicfg()
 
    // Print the list of parameters that were not read from Section3
    cout << "The following parameters of the were _not_ read from Section3: "
-        << (*params->selectByAttrib("READ", kFALSE)) << endl;
+        << (*params->selectByAttrib("READ", false)) << endl;
 
    // Read parameters from section 'Section4' of file, which contains
    // 'include file' statement of rf505_asciicfg_example.txt

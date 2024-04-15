@@ -48,8 +48,10 @@
 #pragma link C++ class TGraphAsymmErrors-;
 #pragma link C++ class TGraphMultiErrors+;
 #pragma link C++ class TGraphBentErrors+;
+#pragma link C++ class TScatter+;
 #pragma link C++ class TGraph2D-;
 #pragma link C++ class TGraph2DErrors-;
+#pragma link C++ class TGraph2DAsymmErrors-;
 #pragma link C++ class TGraphDelaunay+;
 #pragma link C++ class TGraphDelaunay2D+;
 #pragma link C++ class TGraphSmooth+;
@@ -61,22 +63,27 @@
 #pragma link C++ class TH1S+;
 #pragma link C++ class TH1I+;
 #pragma link C++ class TH1K+;
+#pragma link C++ class TH1L+;
 #pragma link C++ class TH2-;
 #pragma link C++ class TH2C-;
 #pragma link C++ class TH2D-;
 #pragma link C++ class TH2F-;
 #pragma link C++ class TH2Poly+;
 #pragma link C++ class TH2PolyBin+;
+#pragma link C++ class THistRange+;
+#pragma link C++ class TBinIterator+;
 #pragma link C++ class TProfile2Poly+;
 #pragma link C++ class TProfile2PolyBin+;
 #pragma link C++ class TH2S-;
 #pragma link C++ class TH2I+;
+#pragma link C++ class TH2L+;
 #pragma link C++ class TH3-;
 #pragma link C++ class TH3C-;
 #pragma link C++ class TH3D-;
 #pragma link C++ class TH3F-;
 #pragma link C++ class TH3S-;
 #pragma link C++ class TH3I+;
+#pragma link C++ class TH3L+;
 #pragma link C++ class THLimitsFinder+;
 #pragma link C++ class THnBase+;
 #pragma link C++ class THnIter+;
@@ -140,7 +147,7 @@
 #pragma link C++ class THnSparse+;
 #pragma link C++ class THnSparseT<TArrayD>+;
 #pragma link C++ class THnSparseT<TArrayF>+;
-#pragma link C++ class THnSparseT<TArrayL>+;
+#pragma link C++ class THnSparseT<TArrayL64>+;
 #pragma link C++ class THnSparseT<TArrayI>+;
 #pragma link C++ class THnSparseT<TArrayS>+;
 #pragma link C++ class THnSparseT<TArrayC>+;
@@ -165,6 +172,7 @@
 #pragma link C++ class TVirtualHistPainter+;
 #pragma link C++ class TVirtualGraphPainter+;
 #pragma link C++ class TVirtualFitter+;
+#pragma link C++ class TVirtualPaveStats+;
 #pragma link C++ class TBackCompFitter+;
 #pragma link C++ class TSVDUnfold+;
 #pragma link C++ class TEfficiency+;
@@ -226,6 +234,13 @@
 #pragma link C++ function operator*(TH1I&, TH1I&);
 #pragma link C++ function operator/(TH1I&, TH1I&);
 
+#pragma link C++ function operator*(Float_t,TH1L&);
+#pragma link C++ function operator*(TH1L&, Float_t);
+#pragma link C++ function operator+(TH1L&, TH1L&);
+#pragma link C++ function operator-(TH1L&, TH1L&);
+#pragma link C++ function operator*(TH1L&, TH1L&);
+#pragma link C++ function operator/(TH1L&, TH1L&);
+
 #pragma link C++ function operator*(Float_t,TH1F&);
 #pragma link C++ function operator*(TH1F&, Float_t);
 #pragma link C++ function operator+(TH1F&, TH1F&);
@@ -261,6 +276,13 @@
 #pragma link C++ function operator*(TH2I&, TH2I&);
 #pragma link C++ function operator/(TH2I&, TH2I&);
 
+#pragma link C++ function operator*(Float_t,TH2L&);
+#pragma link C++ function operator*(TH2L&, Float_t);
+#pragma link C++ function operator+(TH2L&, TH2L&);
+#pragma link C++ function operator-(TH2L&, TH2L&);
+#pragma link C++ function operator*(TH2L&, TH2L&);
+#pragma link C++ function operator/(TH2L&, TH2L&);
+
 #pragma link C++ function operator*(Float_t,TH2F&);
 #pragma link C++ function operator*(TH2F&, Float_t);
 #pragma link C++ function operator+(TH2F&, TH2F&);
@@ -295,6 +317,13 @@
 #pragma link C++ function operator-(TH3I&, TH3I&);
 #pragma link C++ function operator*(TH3I&, TH3I&);
 #pragma link C++ function operator/(TH3I&, TH3I&);
+
+#pragma link C++ function operator*(Float_t,TH3L&);
+#pragma link C++ function operator*(TH3L&, Float_t);
+#pragma link C++ function operator+(TH3L&, TH3L&);
+#pragma link C++ function operator-(TH3L&, TH3L&);
+#pragma link C++ function operator*(TH3L&, TH3L&);
+#pragma link C++ function operator/(TH3L&, TH3L&);
 
 #pragma link C++ function operator*(Float_t,TH3F&);
 #pragma link C++ function operator*(TH3F&, Float_t);
@@ -339,6 +368,20 @@
   source="" target="fBinSumw2" \
   code="{ fBinSumw2.Reset(); }"
 
+#pragma read sourceClass="TF1" targetClass="TF1" version="[10]" source="TF1AbsComposition* fComposition_ptr" target="fComposition" code="{ fComposition.reset(onfile.fComposition_ptr); onfile.fComposition_ptr = nullptr; }"
 
+#pragma read sourceClass="TNDArrayT<Float_t>" targetClass="TNDArrayT<Float_t>" source="Int_t fNumData; Float_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Double_t>" targetClass="TNDArrayT<Double_t>" source="Int_t fNumData; Double_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Long64_t>" targetClass="TNDArrayT<Long64_t>" source="Int_t fNumData; Long64_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Long_t>" targetClass="TNDArrayT<Long_t>" source="Int_t fNumData; Long_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Int_t>" targetClass="TNDArrayT<Int_t>" source="Int_t fNumData; Int_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Short_t>" targetClass="TNDArrayT<Short_t>" source="Int_t fNumData; Short_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<Char_t>" targetClass="TNDArrayT<Char_t>" source="Int_t fNumData; Char_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<ULong64_t>" targetClass="TNDArrayT<ULong64_t>" source="Int_t fNumData; ULong64_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<ULong_t>" targetClass="TNDArrayT<ULong_t>" source="Int_t fNumData; ULong_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<UInt_t>" targetClass="TNDArrayT<UInt_t>" source="Int_t fNumData; UInt_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+#pragma read sourceClass="TNDArrayT<UShort_t>" targetClass="TNDArrayT<UShort_t>" source="Int_t fNumData; UShort_t *fData;" target="fData" version="[1]" code="{ fData.clear(); if(onfile.fData){fData.reserve(onfile.fNumData); for(int i = 0; i < onfile.fNumData; ++i) fData.push_back(onfile.fData[i]);} }"
+
+#pragma read sourceClass="TNDArray" targetClass="TNDArray" source="Int_t fNdimPlusOne; Long64_t *fSizes;" target="fSizes" version="[1]" code="{ fSizes.clear(); if(onfile.fSizes) {fSizes.reserve(onfile.fNdimPlusOne); for(int i = 0; i < onfile.fNdimPlusOne; ++i) fSizes.push_back(onfile.fSizes[i]);} }"
 
 #endif

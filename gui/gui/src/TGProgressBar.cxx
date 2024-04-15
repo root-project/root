@@ -9,25 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGProgressBar, TGHProgressBar and TGVProgressBar                     //
-//                                                                      //
-// The classes in this file implement progress bars. Progress bars can  //
-// be used to show progress of tasks taking more then a few seconds.    //
-// TGProgressBar is an abstract base class, use either TGHProgressBar   //
-// or TGVProgressBar. TGHProgressBar can in addition show the position  //
-// as text in the bar.                                                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGProgressBar
+    \ingroup guiwidgets
+
+The classes in this file implement progress bars. Progress bars can
+be used to show progress of tasks taking more then a few seconds.
+TGProgressBar is an abstract base class, use either TGHProgressBar
+or TGVProgressBar. TGHProgressBar can in addition show the position
+as text in the bar.
+
+*/
+
 
 #include "TGProgressBar.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 #include "TColor.h"
-#include "TGMsgBox.h"
 #include "TVirtualX.h"
 
+#include <iostream>
 
 const TGFont *TGProgressBar::fgDefaultFont = nullptr;
 TGGC         *TGProgressBar::fgDefaultGC = nullptr;
@@ -154,7 +153,7 @@ void TGProgressBar::SetBarType(EBarType type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set progress bar color.
 
-void TGProgressBar::SetBarColor(ULong_t color)
+void TGProgressBar::SetBarColor(Pixel_t color)
 {
    fBarColorGC.SetForeground(color);
 
@@ -270,9 +269,7 @@ void TGHProgressBar::DoRedraw()
       TGFrame::DoRedraw();
    }
 
-   fPosPix = Int_t(((Float_t)fWidth - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
-             fBorderWidth);
+   fPosPix = (Int_t)((fWidth - 2.0*fBorderWidth ) *(fPos - fMin) / (fMax - fMin)) + fBorderWidth;
 
    Int_t pospix = fPosPix;
 
@@ -311,8 +308,8 @@ void TGHProgressBar::DoRedraw()
       gVirtualX->GetFontProperties(fFontStruct, max_ascent, max_descent);
       UInt_t theight = max_ascent + max_descent;
 
-      x = (fWidth - twidth) >> 1;
-      y = (fHeight - theight) >> 1;
+      x = (Int_t)((fWidth - twidth)*0.5);
+      y = (Int_t)((fHeight - theight)*0.5);
 
       if (fDrawBar && fPosPix < Int_t(x+twidth))
          gVirtualX->ClearArea(fId, pospix, fBorderWidth,
@@ -326,7 +323,7 @@ void TGHProgressBar::DoRedraw()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// cconstructor
+/// Constructor
 
 TGVProgressBar::TGVProgressBar(const TGWindow *p, UInt_t w, UInt_t h,
                               Pixel_t back, Pixel_t barcolor, GContext_t norm,
@@ -366,9 +363,7 @@ void TGVProgressBar::DoRedraw()
       TGFrame::DoRedraw();
    }
 
-   fPosPix = Int_t(((Float_t)fHeight - (fBorderWidth << 1)) *
-             (fPos - fMin) / (fMax - fMin) +
-             fBorderWidth);
+    fPosPix = (Int_t)((fHeight - 2.0f*fBorderWidth) *(fPos - fMin) / (fMax - fMin)) + fBorderWidth;
 
    if (fFillType == kSolidFill)
       gVirtualX->FillRectangle(fId, fBarColorGC(), fBorderWidth,

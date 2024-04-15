@@ -12,13 +12,6 @@
 #ifndef ROOT_TFunctionParametersDialog
 #define ROOT_TFunctionParametersDialog
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TFunctionParametersDialog                                           //
-//                                                                      //
-//  This class is used for function parameter settings.                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -36,44 +29,44 @@ class TVirtualPad;
 class TFunctionParametersDialog : public TGTransientFrame {
 
 protected:
-   TF1                 *fFunc;            // function passed to this dialog
-   TVirtualPad         *fFpad;            // pad where the function is drawn
-   Int_t                fNP;              // number of function parameters
-   Double_t            *fPmin;            // min limits of patameters range
-   Double_t            *fPmax;            // max limits of patameters range
-   Double_t            *fPval;            // original patameters' values
-   Double_t            *fPerr;            // original patameters' errors
-   Double_t             fRangexmin;       // min limits of patameters range
-   Double_t             fRangexmax;       // max limits of patameters range
-   Double_t             fRXmin;           // original min range
-   Double_t             fRXmax;           // original max range
-   TGCompositeFrame    *fContNam;         // container of parameter names
-   TGCompositeFrame    *fContVal;         // container of parameter values
-   TGCompositeFrame    *fContFix;         // container of fix settings
-   TGCompositeFrame    *fContSld;         // container of sliders
-   TGCompositeFrame    *fContMin;         // container of min range values
-   TGCompositeFrame    *fContMax;         // container of max range values
-   TGTextEntry         **fParNam;         // parameter names
-   TGCheckButton       **fParFix;         // fix setting check buttons
-   TGNumberEntry       **fParVal;         // parameter values
-   TGNumberEntryField  **fParMin;         // min range values
-   TGNumberEntryField  **fParMax;         // max range values
-   TGTripleHSlider     **fParSld;         // triple sliders
-   TGCheckButton       *fUpdate;          // Immediate update check button
-   TGTextButton        *fApply;           // Apply button
-   TGTextButton        *fReset;           // Reset button
-   TGTextButton        *fOK;              // Cancel button
-   TGTextButton        *fCancel;          // Cancel button
-   Bool_t              fHasChanges;       // kTRUE if function was redrawn;
-   Bool_t              fImmediateDraw;    // kTRUE if function is updated on run-time
+   TF1                 *fFunc;            ///< function passed to this dialog
+   TVirtualPad         *fFpad;            ///< pad where the function is drawn
+   Int_t                fNP;              ///< number of function parameters
+   Double_t            *fPmin;            ///< min limits of patameters range
+   Double_t            *fPmax;            ///< max limits of patameters range
+   Double_t            *fPval;            ///< original patameters' values
+   Double_t            *fPerr;            ///< original patameters' errors
+   Double_t             fRangexmin;       ///< min limits of patameters range
+   Double_t             fRangexmax;       ///< max limits of patameters range
+   Double_t             fRXmin;           ///< original min range
+   Double_t             fRXmax;           ///< original max range
+   TGCompositeFrame    *fContNam;         ///< container of parameter names
+   TGCompositeFrame    *fContVal;         ///< container of parameter values
+   TGCompositeFrame    *fContFix;         ///< container of fix settings
+   TGCompositeFrame    *fContSld;         ///< container of sliders
+   TGCompositeFrame    *fContMin;         ///< container of min range values
+   TGCompositeFrame    *fContMax;         ///< container of max range values
+   TGTextEntry         **fParNam;         ///< parameter names
+   TGCheckButton       **fParFix;         ///< fix setting check buttons
+   TGNumberEntry       **fParVal;         ///< parameter values
+   TGNumberEntryField  **fParMin;         ///< min range values
+   TGNumberEntryField  **fParMax;         ///< max range values
+   TGTripleHSlider     **fParSld;         ///< triple sliders
+   TGCheckButton       *fUpdate;          ///< Immediate update check button
+   TGTextButton        *fApply;           ///< Apply button
+   TGTextButton        *fReset;           ///< Reset button
+   TGTextButton        *fOK;              ///< Cancel button
+   TGTextButton        *fCancel;          ///< Cancel button
+   Bool_t              fHasChanges;       ///< kTRUE if function was redrawn;
+   Bool_t              fImmediateDraw;    ///< kTRUE if function is updated on run-time
 
 public:
    TFunctionParametersDialog(const TGWindow *p, const TGWindow *main,
                              TF1 *func, TVirtualPad *pad,
                              Double_t rmin, Double_t rmax);
-   virtual ~TFunctionParametersDialog();
+   ~TFunctionParametersDialog() override;
 
-   virtual void  CloseWindow();
+   void  CloseWindow() override;
    virtual void  DoApply();
    virtual void  DoCancel();
    virtual void  DoFix(Bool_t on);
@@ -86,7 +79,7 @@ public:
    virtual void  HandleButtons(Bool_t update);
    virtual void  RedrawFunction();
 
-   ClassDef(TFunctionParametersDialog, 0)  // Function parameters dialog
+   ClassDefOverride(TFunctionParametersDialog, 0)  // Function parameters dialog
 };
 
 #endif

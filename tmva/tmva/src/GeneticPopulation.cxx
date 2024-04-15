@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::GeneticPopulation                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -19,7 +19,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::GeneticPopulation
@@ -29,14 +29,11 @@ Population definition for genetic algorithm.
 
 */
 
-#include <iostream>
-#include <iomanip>
+#include <algorithm>
 
 #include "Rstrstream.h"
-#include "TSystem.h"
 #include "TRandom3.h"
 #include "TH1.h"
-#include <algorithm>
 
 #include "TMVA/GeneticPopulation.h"
 #include "TMVA/GeneticGenes.h"
@@ -44,7 +41,7 @@ Population definition for genetic algorithm.
 
 ClassImp(TMVA::GeneticPopulation);
 
-using namespace std;
+using std::vector, std::ostream;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

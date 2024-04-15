@@ -1,13 +1,16 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+## Special pdf's: unbinned maximum likelihood fit of an efficiency eff(x) function to a
+## dataset D(x,cut), cut is a category encoding a selection, which the efficiency as function
+## of x should be described by eff(x)
 ##
-## Special p.d.f.'s: unbinned maximum likelihood fit of an efficiency eff(x) function to a dataset D(x,cut), cut is a category encoding a selection, which the efficiency as function of x should be described by eff(x)
-##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
-## \author Clemens Lange, Wouter Verkerke (C++ version)
+## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
 import ROOT
 
@@ -23,64 +26,46 @@ x = ROOT.RooRealVar("x", "x", -10, 10)
 a = ROOT.RooRealVar("a", "a", 0.4, 0, 1)
 b = ROOT.RooRealVar("b", "b", 5)
 c = ROOT.RooRealVar("c", "c", -1, -10, 10)
-effFunc = ROOT.RooFormulaVar(
-    "effFunc", "(1-a)+a*cos((x-c)/b)", ROOT.RooArgList(a, b, c, x))
+effFunc = ROOT.RooFormulaVar("effFunc", "(1-a)+a*cos((x-c)/b)", [a, b, c, x])
 
 # Construct conditional efficiency pdf E(cut|x)
 # ------------------------------------------------------------------------------------------
 
 # Acceptance state cut (1 or 0)
-cut = ROOT.RooCategory("cut", "cutr")
-cut.defineType("accept", 1)
-cut.defineType("reject", 0)
+cut = ROOT.RooCategory("cut", "cutr", {"accept": 1, "reject": 0})
 
-# Construct efficiency p.d.f eff(cut|x)
+# Construct efficiency pdf eff(cut|x)
 effPdf = ROOT.RooEfficiency("effPdf", "effPdf", effFunc, cut, "accept")
 
 # Generate data (x, cut) from a toy model
 # -----------------------------------------------------------------------------
 
-# Construct global shape p.d.f shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
+# Construct global shape pdf shape(x) and product model(x,cut) = eff(cut|x)*shape(x)
 # (These are _only_ needed to generate some toy MC here to be used later)
-shapePdf = ROOT.RooPolynomial(
-    "shapePdf", "shapePdf", x, ROOT.RooArgList(ROOT.RooFit.RooConst(-0.095)))
-model = ROOT.RooProdPdf(
-    "model",
-    "model",
-    ROOT.RooArgSet(shapePdf),
-    ROOT.RooFit.Conditional(
-        ROOT.RooArgSet(effPdf),
-        ROOT.RooArgSet(cut)))
+shapePdf = ROOT.RooPolynomial("shapePdf", "shapePdf", x, [-0.095])
+model = ROOT.RooProdPdf("model", "model", {shapePdf}, Conditional=({effPdf}, {cut}))
 
 # Generate some toy data from model
-data = model.generate(ROOT.RooArgSet(x, cut), 10000)
+data = model.generate({x, cut}, 10000)
 
 # Fit conditional efficiency pdf to data
 # --------------------------------------------------------------------------
 
-# Fit conditional efficiency p.d.f to data
-effPdf.fitTo(data, ROOT.RooFit.ConditionalObservables(ROOT.RooArgSet(x)))
+# Fit conditional efficiency pdf to data
+effPdf.fitTo(data, ConditionalObservables={x}, PrintLevel=-1)
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------
 
 # Plot distribution of all events and accepted fraction of events on frame
-frame1 = x.frame(ROOT.RooFit.Bins(
-    20), ROOT.RooFit.Title("Data (all, accepted)"))
+frame1 = x.frame(Bins=20, Title="Data (all, accepted)")
 data.plotOn(frame1)
-data.plotOn(
-    frame1,
-    ROOT.RooFit.Cut("cut==cut::accept"),
-    ROOT.RooFit.MarkerColor(
-        ROOT.kRed),
-    ROOT.RooFit.LineColor(
-        ROOT.kRed))
+data.plotOn(frame1, Cut="cut==cut::accept", MarkerColor="r", LineColor="r")
 
 # Plot accept/reject efficiency on data overlay fitted efficiency curve
-frame2 = x.frame(ROOT.RooFit.Bins(
-    20), ROOT.RooFit.Title("Fitted efficiency"))
-data.plotOn(frame2, ROOT.RooFit.Efficiency(cut))  # needs ROOT version >= 5.21
-effFunc.plotOn(frame2, ROOT.RooFit.LineColor(ROOT.kRed))
+frame2 = x.frame(Bins=20, Title="Fitted efficiency")
+data.plotOn(frame2, Efficiency=cut)  # needs ROOT version >= 5.21
+effFunc.plotOn(frame2, LineColor="r")
 
 # Draw all frames on a canvas
 ca = ROOT.TCanvas("rf701_efficiency", "rf701_efficiency", 800, 400)

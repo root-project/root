@@ -29,9 +29,9 @@ ClassImp(TTreeRow);
 TTreeRow::TTreeRow()
 {
    fColumnCount = 0;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
+   fFields      = nullptr;
+   fOriginal    = nullptr;
+   fRow         = nullptr;
 
 }
 
@@ -41,9 +41,9 @@ TTreeRow::TTreeRow()
 TTreeRow::TTreeRow(Int_t nfields)
 {
    fColumnCount = nfields;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
+   fFields      = nullptr;
+   fOriginal    = nullptr;
+   fRow         = nullptr;
 
 }
 
@@ -53,9 +53,9 @@ TTreeRow::TTreeRow(Int_t nfields)
 TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
 {
    fColumnCount = nfields;
-   fFields      = 0;
-   fOriginal    = 0;
-   fRow         = 0;
+   fFields      = nullptr;
+   fOriginal    = nullptr;
+   fRow         = nullptr;
    SetRow(fields,row);
 }
 
@@ -65,10 +65,10 @@ TTreeRow::TTreeRow(Int_t nfields, const Int_t *fields, const char *row)
 
 TTreeRow::TTreeRow(TSQLRow *original)
 {
-   fFields      = 0;
-   fOriginal    = 0;
+   fFields      = nullptr;
+   fOriginal    = nullptr;
    fColumnCount = 0;
-   fRow         = 0;
+   fRow         = nullptr;
 
    if (!original) {
       Error("TTreeRow", "original may not be 0");
@@ -100,7 +100,7 @@ void TTreeRow::Close(Option_t *)
    if (fRow)    delete [] fRow;
    if (fFields) delete [] fFields;
    fColumnCount = 0;
-   fOriginal = 0;
+   fOriginal = nullptr;
    fRow = nullptr;
    fFields = nullptr;
 }
@@ -108,17 +108,17 @@ void TTreeRow::Close(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if row is open and field index within range.
 
-Bool_t TTreeRow::IsValid(Int_t field)
+bool TTreeRow::IsValid(Int_t field)
 {
    if (!fFields && !fOriginal) {
       Error("IsValid", "row closed");
-      return kFALSE;
+      return false;
    }
    if (field < 0 || field >= fColumnCount) {
       Error("IsValid", "field index out of bounds");
-      return kFALSE;
+      return false;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,7 +142,7 @@ ULong_t TTreeRow::GetFieldLength(Int_t field)
 const char *TTreeRow::GetField(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
 
    if (fOriginal)
       return fOriginal->GetField(field);
@@ -160,7 +160,7 @@ void TTreeRow::SetRow(const Int_t *fields, const char *row)
    if (fFields) delete [] fFields;
    Int_t nch    = fields[fColumnCount-1];
    fFields      = new Int_t[fColumnCount];
-   fOriginal    = 0;
+   fOriginal    = nullptr;
    if (fRow) delete [] fRow;
    fRow         = new char[nch];
    for (Int_t i=0;i<fColumnCount;i++) fFields[i] = fields[i];
@@ -185,13 +185,13 @@ void TTreeRow::Streamer(TBuffer &R__b)
       R__b.ReadFastArray(fRow,nch);
       R__b.CheckByteCount(R__s, R__c, TTreeRow::IsA());
    } else {
-      R__c = R__b.WriteVersion(TTreeRow::Class(),kTRUE);
+      R__c = R__b.WriteVersion(TTreeRow::Class(),true);
       TSQLRow::Streamer(R__b);
       R__b << fColumnCount;
       R__b.WriteFastArray(fFields,fColumnCount);
       Int_t nch = fFields ? fFields[fColumnCount-1] : 0;
       R__b << nch;
       R__b.WriteFastArray(fRow,nch);
-      R__b.SetByteCount(R__c,kTRUE);
+      R__b.SetByteCount(R__c,true);
    }
 }

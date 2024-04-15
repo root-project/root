@@ -11,7 +11,6 @@
 #include "TUnuranDiscrDist.h"
 
 #include "TH1.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TRandom3.h"
 #include "TApplication.h"
@@ -447,7 +446,6 @@ int unuranDiscrete() {
 }
 
 
-#ifndef __CINT__
 int main(int argc, char **argv)
 {
    int iret = 0;
@@ -461,4 +459,3 @@ int main(int argc, char **argv)
 
    return iret;
 }
-#endif

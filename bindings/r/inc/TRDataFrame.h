@@ -1,9 +1,9 @@
 // @(#)root/r:$Id$
-// Author: Omar Zapata   30/05/2015
+// Author: Omar Zapata  Omar.Zapata@cern.ch   30/05/2015
 
 
 /*************************************************************************
- * Copyright (C) 2013-2015, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -136,7 +136,7 @@ namespace ROOT {
          2 |1
       \endcode
 
-      </h2>Working with colunms between dataframes</h2><br>
+      <h2>Working with colunms between dataframes</h2><br>
       \code{.cpp}
       df2["v3"]<<df1["strings"];
 
@@ -168,8 +168,7 @@ namespace ROOT {
       3   v3 0.303    3      v3   -3
       \endcode
       <h2>Users Guide </h2>
-      <a href="http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide"> http://oproject.org/tiki-index.php?page=ROOT+R+Users+Guide</a><br>
-      <a href="https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface"> https://root.cern.ch/drupal/content/how-use-r-root-root-r-interface</a>
+      <a href="https://oproject.org/pages/ROOT%20R%20Users%20Guide"> https://oproject.org/pages/ROOT R Users Guide</a><br>
          @ingroup R
       */
 
@@ -389,7 +388,7 @@ namespace ROOT {
          }
 
          /**
-         Method to get the number of colunms
+         Method to get the number of columns
          \return number of cols
          */
          Int_t GetNcols() { return df.size(); }
@@ -400,7 +399,7 @@ namespace ROOT {
          Int_t GetNrows() { return df.nrows(); }
          /**
          Method to get labels of dataframe
-         \return colunms names
+         \return columns names
          */
          TVectorString GetColNames()
          {
@@ -423,7 +422,7 @@ namespace ROOT {
 
          /**
          Method to print the dataframe in stdout or a column given the label
-         \param label nomber of the column to print
+         \param label number of the column to print
          */
          void Print(const Char_t *label = "")
          {

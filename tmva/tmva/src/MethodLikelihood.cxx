@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate Data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::MethodLikelihood                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodLikelihood
@@ -122,15 +122,12 @@ non-linear methods must be applied.
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
-#include "TMatrixD.h"
 #include "TVector.h"
 #include "TMath.h"
 #include "TFile.h"
-#include "TKey.h"
 #include "TH1.h"
-#include "TClass.h"
-#include "Riostream.h"
 
+#include <iostream>
 #include <iomanip>
 #include <vector>
 #include <cstdlib>
@@ -241,7 +238,7 @@ void TMVA::MethodLikelihood::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// define the options (their key words) that can be set in the option string
 ///
-/// TransformOutput   <bool>   transform (often strongly peaked) likelihood output through sigmoid inversion
+/// TransformOutput   `<bool>`   transform (often strongly peaked) likelihood output through sigmoid inversion
 
 void TMVA::MethodLikelihood::DeclareOptions()
 {
@@ -257,13 +254,13 @@ void TMVA::MethodLikelihood::DeclareOptions()
    fDefaultPDFLik->ParseOptions();
    updatedOptions = fDefaultPDFLik->GetOptions();
    for (UInt_t ivar = 0; ivar< DataInfo().GetNVariables(); ivar++) {
-      (*fPDFSig)[ivar] = new PDF( Form("%s PDF Sig[%d]", GetName(), ivar), updatedOptions,
-                                  Form("Sig[%d]",ivar), fDefaultPDFLik );
+      (*fPDFSig)[ivar] = new PDF( TString::Format("%s PDF Sig[%d]", GetName(), ivar), updatedOptions,
+                                  TString::Format("Sig[%d]",ivar), fDefaultPDFLik );
       (*fPDFSig)[ivar]->DeclareOptions();
       (*fPDFSig)[ivar]->ParseOptions();
       updatedOptions = (*fPDFSig)[ivar]->GetOptions();
-      (*fPDFBgd)[ivar] = new PDF( Form("%s PDF Bkg[%d]", GetName(), ivar), updatedOptions,
-                                  Form("Bkg[%d]",ivar), fDefaultPDFLik );
+      (*fPDFBgd)[ivar] = new PDF( TString::Format("%s PDF Bkg[%d]", GetName(), ivar), updatedOptions,
+                                  TString::Format("Bkg[%d]",ivar), fDefaultPDFLik );
       (*fPDFBgd)[ivar]->DeclareOptions();
       (*fPDFBgd)[ivar]->ParseOptions();
       updatedOptions = (*fPDFBgd)[ivar]->GetOptions();
@@ -383,10 +380,12 @@ void TMVA::MethodLikelihood::Train( void )
          Int_t nbinsS = (*fPDFSig)[ivar]->GetHistNBins( minNEvt );
          Int_t nbinsB = (*fPDFBgd)[ivar]->GetHistNBins( minNEvt );
 
-         (*fHistSig)[ivar] = new TH1F( Form("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsS, xmin[ivar], xmax[ivar] );
-         (*fHistBgd)[ivar] = new TH1F( Form("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
-                                       Form("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()), nbinsB, xmin[ivar], xmax[ivar] );
+         (*fHistSig)[ivar] = new TH1F( TString::Format("%s_%s_%s_sig",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       TString::Format("%s_%s_%s signal training",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       nbinsS, xmin[ivar], xmax[ivar] );
+         (*fHistBgd)[ivar] = new TH1F( TString::Format("%s_%s_%s_bgd",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       TString::Format("%s_%s_%s background training",DataInfo().GetName(),GetMethodName().Data(),var.Data()),
+                                       nbinsB, xmin[ivar], xmax[ivar] );
       }
    }
 
@@ -568,7 +567,7 @@ void TMVA::MethodLikelihood::WriteOptionsToStream( std::ostream& o, const TStrin
    }
    for (UInt_t ivar = 0; ivar < fPDFSig->size(); ivar++) {
       if ((*fPDFSig)[ivar] != 0) {
-         o << prefix << std::endl << prefix << Form("#Signal[%d] Likelihood PDF Options:",ivar) << std::endl << prefix << std::endl;
+         o << prefix << std::endl << prefix << TString::Format("#Signal[%d] Likelihood PDF Options:",ivar) << std::endl << prefix << std::endl;
          (*fPDFSig)[ivar]->WriteOptionsToStream( o, prefix );
       }
       if ((*fPDFBgd)[ivar] != 0) {
@@ -617,8 +616,8 @@ const TMVA::Ranking* TMVA::MethodLikelihood::CreateRanking()
       // this variable should not be used
       fDropVariable = ivar;
 
-      TString nameS = Form( "rS_%i", ivar+1 );
-      TString nameB = Form( "rB_%i", ivar+1 );
+      TString nameS = TString::Format( "rS_%i", ivar+1 );
+      TString nameB = TString::Format( "rB_%i", ivar+1 );
       TH1* rS = new TH1F( nameS, nameS, 80, 0, 1 );
       TH1* rB = new TH1F( nameB, nameB, 80, 0, 1 );
 
@@ -725,8 +724,8 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
    Bool_t addDirStatus = TH1::AddDirectoryStatus();
    TH1::AddDirectory(0); // this avoids the binding of the hists in TMVA::PDF to the current ROOT file
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-      (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
-      (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( Form( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
+      (*fPDFSig)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_S", GetInputVar( ivar ).Data() ) );
+      (*fPDFBgd)[ivar] = (TMVA::PDF*)rf.Get( TString::Format( "PDF_%s_B", GetInputVar( ivar ).Data() ) );
    }
    TH1::AddDirectory(addDirStatus);
 }

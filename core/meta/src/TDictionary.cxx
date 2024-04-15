@@ -40,6 +40,7 @@ TMethodCall                            (method call environment)
 #include "TDictAttributeMap.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
+#include "TEnum.h"
 
 
 ClassImp(TDictionary);
@@ -47,7 +48,7 @@ ClassImp(TDictionary);
 TDictionary::TDictionary(const TDictionary& dict):
    TNamed(dict),
    fAttributeMap(dict.fAttributeMap ?
-                 ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : 0 ),
+                 ((TDictAttributeMap*)dict.fAttributeMap->Clone()) : nullptr ),
    fUpdatingTransactionCount(0)
 {
    // Copy constructor, cloning fAttributeMap.
@@ -65,7 +66,7 @@ TDictionary &TDictionary::operator=(const TDictionary& dict)
   TNamed::operator=(dict);
 
   delete fAttributeMap;
-  fAttributeMap = 0;
+  fAttributeMap = nullptr;
   if (dict.fAttributeMap)
     fAttributeMap = ((TDictAttributeMap*)dict.fAttributeMap->Clone());
 
@@ -81,14 +82,27 @@ void TDictionary::CreateAttributeMap()
       fAttributeMap = new TDictAttributeMap;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the type (class, fundamental type, typedef etc)
+/// named "name". Returned object is either a TClass or TDataType.
+/// Returns `nullptr` if the type is unknown.
+
 TDictionary* TDictionary::GetDictionary(const char* name)
 {
-   // Retrieve the type (class, fundamental type, typedef etc)
-   // named "name". Returned object is either a TClass or TDataType.
-   // Returns 0 if the type is unknown.
-
-   TDictionary* ret = (TDictionary*)gROOT->GetListOfTypes()->FindObject(name);
-   if (ret) return ret;
+   // Start with typedef, the query is way faster than TClass::GetClass().
+   if (auto* ret = (TDictionary*)gROOT->GetListOfTypes()->FindObject(name)) {
+      if (auto *dtRet = dynamic_cast<TDataType*>(ret)) {
+         if (dtRet->GetType() <= 0) {
+            // Not a numeric type. Is it a known enum?
+            if (auto e = TEnum::GetEnum(name))
+               return e;
+            // Not a numeric type. Is it a known class?
+            if (auto *clRet = TClass::GetClass(name, true))
+               return clRet;
+         }
+      }
+      return ret;
+   }
 
    return TClass::GetClass(name, true);
 }
@@ -100,9 +114,10 @@ TDictionary* TDictionary::GetDictionary(const std::type_info &typeinfo)
    // Returns 0 if the type is unknown.
 
    EDataType datatype = TDataType::GetType(typeinfo);
-   TDictionary* ret = TDataType::GetDataType(datatype);
-   if (ret) return ret;
-
+   if (TDictionary* ret = TDataType::GetDataType(datatype))
+      return ret;
+   if (auto e = TEnum::GetEnum(typeinfo))
+      return e;
    return TClass::GetClass(typeinfo, true);
 }
 

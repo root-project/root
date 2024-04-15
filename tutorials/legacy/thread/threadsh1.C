@@ -17,13 +17,14 @@
 TCanvas *c[4];
 TH1F    *hpx[4];
 TThread *t[5];
+TRandom * rng[4];
 Bool_t finished;
 
 void *handle(void *ptr)
 {
    long nr = (long) ptr;
-   Long64_t nfills = 25000000;
-   int upd = 50000;
+   Long64_t nfills = 250;
+   int upd = 50;
 
    char name[32];
    sprintf(name,"hpx%ld",nr);
@@ -32,9 +33,9 @@ void *handle(void *ptr)
    hpx[nr]->SetFillColor(48);
    TThread::UnLock();
    Float_t px, py, pz;
-   gRandom->SetSeed();
+   rng[nr]->SetSeed(0);
    for (Int_t i = 0; i < nfills; i++) {
-      gRandom->Rannor(px,py);
+      rng[nr]->Rannor(px,py);
       pz = px*px + py*py;
       hpx[nr]->Fill(px);
       if (i && (i%upd) == 0) {
@@ -45,7 +46,7 @@ void *handle(void *ptr)
             TThread::UnLock();
          }
          if (c[nr]) c[nr]->Modified();
-         gSystem->Sleep(10);
+         gSystem->Sleep(4);
       }
    }
    return 0;
@@ -66,7 +67,8 @@ void *joiner(void *)
 void closed(Int_t id)
 {
    // kill the thread matching the canvas being closed
-   t[id]->Kill();
+   if (t[id])
+      t[id]->Kill();
    // and set the canvas pointer to 0
    c[id] = 0;
 }
@@ -104,6 +106,11 @@ void threadsh1()
    c[2]->Connect("Closed()", 0, 0, "closed(Int_t=2)");
    c[3]->Connect("Closed()", 0, 0, "closed(Int_t=3)");
 
+   rng[0] = new TRandom3(1);
+   rng[1] = new TRandom3(2);
+   rng[2] = new TRandom3(3);
+   rng[3] = new TRandom3(4);
+
    printf("Starting Thread 0\n");
    t[0] = new TThread("t0", handle, (void*) 0);
    t[0]->Run();
@@ -129,16 +136,21 @@ void threadsh1()
             c[i]->Update();
          }
       }
-      gSystem->Sleep(100);
+      gSystem->Sleep(10);
       gSystem->ProcessEvents();
    }
 
    t[4]->Join();
    TThread::Ps();
 
-   delete t[0];
-   delete t[1];
-   delete t[2];
-   delete t[3];
-   delete t[4];
+   delete t[0]; t[0] = nullptr; // Prevents after deletion access.
+   delete t[1]; t[1] = nullptr;
+   delete t[2]; t[2] = nullptr;
+   delete t[3]; t[3] = nullptr;
+   delete t[4]; t[4] = nullptr;
+
+   delete rng[0];
+   delete rng[1];
+   delete rng[2];
+   delete rng[3];
 }

@@ -43,8 +43,8 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
    Int_t height = 900;
    char cn[100];
    const TString titName = boostdir->GetName();
-   sprintf( cn, "cv_%s", titName.Data() );
-   TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
+   snprintf( cn, 100, "cv_%s", titName.Data() );
+   TCanvas *c = new TCanvas( cn,  TString::Format( "%s Control Plots", titName.Data() ),
                              width, height ); 
    c->Divide(2,4);
 
@@ -121,18 +121,18 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
          legend->Draw("same");
       }
       else {
-         TText* t = new TText();
-         t->SetTextSize( 0.056 );
-         t->SetTextColor( 2 );
-         t->DrawTextNDC( .2, 0.6, "Use MethodBoost option: \"Boost_DetailedMonitoring\" " );        
-         t->DrawTextNDC( .2, 0.51, "to fill this histograms" );        
+         TText t;
+         t.SetTextSize( 0.056 );
+         t.SetTextColor( 2 );
+         t.DrawTextNDC( .2, 0.6, "Use MethodBoost option: \"Boost_DetailedMonitoring\" " );        
+         t.DrawTextNDC( .2, 0.51, "to fill this histograms" );        
       }
 
       c->Update();
    }
 
    // write to file
-   TString fname = dataset+Form( "/plots/%s_ControlPlots", titName.Data() );
+   TString fname = dataset+TString::Format( "/plots/%s_ControlPlots", titName.Data() );
    TMVAGlob::imgconv( c, fname );
 
 }

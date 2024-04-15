@@ -1,0 +1,38 @@
+name: Diff LLVM and Clang against fork of monorepo
+on:
+  pull_request:
+    paths:
+      - 'interpreter/llvm-project/**'
+
+jobs:
+  llvm-diff:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ROOT
+        uses: actions/checkout@v4
+        with:
+          path: root
+      - name: Determine tag in fork of monorepo
+        id: determine-tag
+        run: |
+          tag_file=root/interpreter/llvm-project/llvm-project.tag
+          echo "tag=$(cat $tag_file)" >> $GITHUB_OUTPUT
+          rm $tag_file
+      - name: Check out llvm-project
+        uses: actions/checkout@v4
+        with:
+          repository: root-project/llvm-project
+          ref: ${{ steps.determine-tag.outputs.tag }}
+          path: llvm-project
+      - name: Delete directories and files in llvm-project
+        working-directory: llvm-project
+        run: |
+          for d in bindings benchmark benchmarks gn test tests unittest unittests; do
+            find . -name $d -prune -exec rm -r "{}" \;
+          done
+          rm -r llvm/utils/vscode
+          for f in $(ls -A); do
+            [ -e ../root/interpreter/llvm-project/$f ] || rm -r $f
+          done
+      - name: Compare
+        run: diff -ur llvm-project/ root/interpreter/llvm-project/

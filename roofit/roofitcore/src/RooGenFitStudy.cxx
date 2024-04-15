@@ -19,13 +19,9 @@
 \class RooGenFitStudy
 \ingroup Roofitcore
 
-RooGenFitStudy is an abstract base class for RooStudyManager modules
-
+Abstract base class for RooStudyManager modules
 **/
 
-
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooGenFitStudy.h"
@@ -38,25 +34,14 @@ RooGenFitStudy is an abstract base class for RooStudyManager modules
 #include "RooFitResult.h"
 
 
-using namespace std ;
-
 ClassImp(RooGenFitStudy);
-  ;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) : 
-  RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy"), 
-  _genPdf(0), 
-  _fitPdf(0), 
-  _genSpec(0),
-  _nllVar(0),
-  _ngenVar(0),
-  _params(0),
-  _initParams(0)
-{  
+RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) :
+  RooAbsStudy(name?name:"RooGenFitStudy",title?title:"RooGenFitStudy")
+{
 }
 
 
@@ -64,89 +49,60 @@ RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) : 
+RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
   RooAbsStudy(other),
   _genPdfName(other._genPdfName),
   _genObsName(other._genObsName),
   _fitPdfName(other._fitPdfName),
-  _fitObsName(other._fitObsName),
-  _genPdf(0),
-  _fitPdf(0),
-  _genSpec(0),
-  _nllVar(0),
-  _ngenVar(0),
-  _params(0),
-  _initParams(0)
-{  
-  TIterator* giter = other._genOpts.MakeIterator() ;
-  TObject* o ;
-  while((o=giter->Next())) {
-    _genOpts.Add(o->Clone()) ;
-  }
-  delete giter ;
-
-  TIterator* fiter = other._fitOpts.MakeIterator() ;
-  while((o=fiter->Next())) {
-    _fitOpts.Add(o->Clone()) ;
-  }
-  delete fiter ;
-
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooGenFitStudy::~RooGenFitStudy()
+  _fitObsName(other._fitObsName)
 {
-  if (_params) delete _params ;
+  for(TObject * o : other._genOpts) _genOpts.Add(o->Clone());
+  for(TObject * o : other._fitOpts) _fitOpts.Add(o->Clone());
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function called after insertion into workspace
 
-Bool_t RooGenFitStudy::attach(RooWorkspace& w) 
-{ 
-  Bool_t ret = kFALSE ;
+bool RooGenFitStudy::attach(RooWorkspace& w)
+{
+  bool ret = false ;
 
-  RooAbsPdf* pdf = w.pdf(_genPdfName.c_str()) ;
+  RooAbsPdf* pdf = w.pdf(_genPdfName) ;
   if (pdf) {
     _genPdf = pdf ;
   } else {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: generator p.d.f named " << _genPdfName << " not found in workspace " << w.GetName() << endl ;
-    ret = kTRUE ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: generator p.d.f named " << _genPdfName << " not found in workspace " << w.GetName() << std::endl ;
+    ret = true ;
   }
 
-  _genObs.add(w.argSet(_genObsName.c_str())) ;
-  if (_genObs.getSize()==0) {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << endl ;
-    ret = kTRUE ;
+  _genObs.add(w.argSet(_genObsName)) ;
+  if (_genObs.empty()) {
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no generator observables defined" << std::endl ;
+    ret = true ;
   }
 
-  pdf = w.pdf(_fitPdfName.c_str()) ;
+  pdf = w.pdf(_fitPdfName) ;
   if (pdf) {
     _fitPdf = pdf ;
   } else {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: fitting p.d.f named " << _fitPdfName << " not found in workspace " << w.GetName() << endl ;
-    ret = kTRUE ;
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: fitting p.d.f named " << _fitPdfName << " not found in workspace " << w.GetName() << std::endl ;
+    ret = true ;
   }
 
-  _fitObs.add(w.argSet(_fitObsName.c_str())) ;
-  if (_fitObs.getSize()==0) {
-    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << endl ;
-    ret = kTRUE ;
+  _fitObs.add(w.argSet(_fitObsName)) ;
+  if (_fitObs.empty()) {
+    coutE(InputArguments) << "RooGenFitStudy(" << GetName() << ") ERROR: no fitting observables defined" << std::endl ;
+    ret = true ;
   }
 
-  return ret ; 
-} 
+  return ret ;
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3) 
+void RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3)
 {
   _genPdfName = pdfName ;
   _genObsName = obsName ;
@@ -159,7 +115,7 @@ void RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3) 
+void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1,const RooCmdArg& arg2,const RooCmdArg& arg3)
 {
   _fitPdfName = pdfName ;
   _fitObsName = obsName ;
@@ -171,68 +127,67 @@ void RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, cons
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// One-time initialization of study 
+/// One-time initialization of study
 
-Bool_t RooGenFitStudy::initialize() 
-{ 
+bool RooGenFitStudy::initialize()
+{
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
   _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
-  
-  _params = _fitPdf->getParameters(_genObs) ;
+
+  _params = std::unique_ptr<RooArgSet>{_fitPdf->getParameters(_genObs)};
   RooArgSet modelParams(*_params) ;
-  _initParams = (RooArgSet*) _params->snapshot() ;
+  _initParams = new RooArgSet;
+  _params->snapshot(*_initParams);
   _params->add(*_nllVar) ;
   _params->add(*_ngenVar) ;
 
-  _genSpec = _genPdf->prepareMultiGen(_genObs,(RooCmdArg&)*_genOpts.At(0),(RooCmdArg&)*_genOpts.At(1),(RooCmdArg&)*_genOpts.At(2)) ;
+  _genSpec = _genPdf->prepareMultiGen(_genObs,static_cast<RooCmdArg&>(*_genOpts.At(0)),static_cast<RooCmdArg&>(*_genOpts.At(1)),static_cast<RooCmdArg&>(*_genOpts.At(2))) ;
 
   registerSummaryOutput(*_params,modelParams) ;
-  return kFALSE ;
-} 
+  return false ;
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute one study iteration
 
-Bool_t RooGenFitStudy::execute() 
-{ 
-  *_params = *_initParams ;
-  RooDataSet* data = _genPdf->generate(*_genSpec) ;
-  RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(kTRUE),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
+bool RooGenFitStudy::execute()
+{
+  _params->assign(*_initParams) ;
+  std::unique_ptr<RooDataSet> data{_genPdf->generate(*_genSpec)};
+  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),static_cast<RooCmdArg&>(*_fitOpts.At(0)),static_cast<RooCmdArg&>(*_fitOpts.At(1)),static_cast<RooCmdArg&>(*_fitOpts.At(2)))};
 
   if (fr->status()==0) {
     _ngenVar->setVal(data->sumEntries()) ;
     _nllVar->setVal(fr->minNll()) ;
     storeSummaryOutput(*_params) ;
-    storeDetailedOutput(*fr) ;
+    storeDetailedOutput(std::move(fr)) ;
   }
 
-  delete data ;
-  return kFALSE ;
-} 
+  return false ;
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Finalization of study
 
-Bool_t RooGenFitStudy::finalize() 
-{ 
-  delete _params ;
+bool RooGenFitStudy::finalize()
+{
   delete _nllVar ;
   delete _ngenVar ;
   delete _initParams ;
   delete _genSpec ;
-  _params = 0 ;
-  _nllVar = 0 ;
-  _ngenVar = 0 ;
-  _initParams = 0 ;
-  _genSpec = 0 ;
-  
+  _params.reset();
+  _nllVar = nullptr ;
+  _ngenVar = nullptr ;
+  _initParams = nullptr ;
+  _genSpec = nullptr ;
 
-  return kFALSE ; 
-} 
+
+  return false ;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

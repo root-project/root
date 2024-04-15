@@ -19,7 +19,7 @@ A TLeaf for a 64 bit floating point data type.
 #include "TBranch.h"
 #include "TBuffer.h"
 #include "TClonesArray.h"
-#include "Riostream.h"
+#include <iostream>
 
 ClassImp(TLeafD);
 
@@ -31,8 +31,8 @@ TLeafD::TLeafD(): TLeaf()
    fLenType = 8;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@ TLeafD::TLeafD(TBranch *parent, const char *name, const char *type)
    fLenType = 8;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ TLeafD::TLeafD(TBranch *parent, const char *name, const char *type)
 
 TLeafD::~TLeafD()
 {
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,true)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +173,7 @@ void TLeafD::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
-             ncountmax > fNdata || *fPointer == 0) {
+             ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Double_t[fNdata];

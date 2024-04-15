@@ -69,7 +69,10 @@ namespace Math {
 
       /// retrieve option pointer corresponding to parameters
       /// create a new object to be managed by the user
-      virtual ROOT::Math::IOptions * Options() const = 0;
+      virtual std::unique_ptr<ROOT::Math::IOptions>  Options() const = 0;
+
+      /// set options
+      virtual void SetOptions(const ROOT::Math::IOptions &)  = 0;
 
    private:
 
@@ -84,18 +87,18 @@ namespace Math {
    public :
 
       GSLVegasIntegrationWorkspace(size_t dim = 0) :
-         fWs(0)
+         fWs(nullptr)
       {
          if (dim > 0) Init(dim);
       }
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_vegas_alloc( dim);
          if (fWs) SetVegasParameters();
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          // according to the code - reinit just reset default GSL values
          if (!fWs) return false;
          int iret = gsl_monte_vegas_init( fWs );
@@ -103,9 +106,9 @@ namespace Math {
          return (iret == 0);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_vegas_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_vegas_state * GetWS() { return fWs; }
@@ -115,7 +118,7 @@ namespace Math {
          if (fWs) SetVegasParameters();
       }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
       double Result() const {  return (fWs) ? fWs->result : -1;}
 
@@ -123,15 +126,18 @@ namespace Math {
 
       double Chisq() const {  return (fWs) ? fWs->chisq: -1;}
 
-      MCIntegration::Type Type() const { return MCIntegration::kVEGAS; }
+      MCIntegration::Type Type() const override { return MCIntegration::kVEGAS; }
 
       const VegasParameters & Parameters() const { return fParams; }
       VegasParameters & Parameters()  { return fParams; }
 
-      virtual ROOT::Math::IOptions * Options() const {
-         return fParams();
+      std::unique_ptr<IOptions> Options() const override {
+         return fParams.MakeIOptions();
       }
-
+      /// set options
+      virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
+         SetParameters(VegasParameters(opt));
+      }
 
    private:
 
@@ -159,21 +165,21 @@ namespace Math {
 
       GSLMiserIntegrationWorkspace(size_t dim = 0) :
          fHaveNewParams(false),
-         fWs(0)
+         fWs(nullptr)
       {
          if (dim > 0) Init(dim);
       }
 
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_miser_alloc( dim);
          // need this to set parameters according to dimension
          if (!fHaveNewParams) fParams = MiserParameters(dim);
          if (fWs) SetMiserParameters();
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          // according to the code - reinit just reset default GSL values
          if (!fWs) return false;
          int iret = gsl_monte_miser_init( fWs );
@@ -181,9 +187,9 @@ namespace Math {
          return (iret == 0);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_miser_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_miser_state * GetWS() { return fWs; }
@@ -194,16 +200,19 @@ namespace Math {
          if (fWs) SetMiserParameters();
       }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
-      MCIntegration::Type Type() const { return MCIntegration::kMISER; }
+      MCIntegration::Type Type() const override { return MCIntegration::kMISER; }
 
 
       const MiserParameters & Parameters() const { return fParams; }
       MiserParameters & Parameters()  { return fParams; }
 
-      virtual ROOT::Math::IOptions * Options() const {
-         return fParams();
+      std::unique_ptr<ROOT::Math::IOptions> Options() const override {
+         return fParams.MakeIOptions();
+      }
+      virtual void SetOptions(const ROOT::Math::IOptions & opt) override {
+         SetParameters(MiserParameters(opt));
       }
 
    private:
@@ -232,37 +241,39 @@ namespace Math {
    public :
 
       GSLPlainIntegrationWorkspace() :
-         fWs(0)
+         fWs(nullptr)
       {  }
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_plain_alloc( dim);
          // no parameter exists for plain
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          if (!fWs) return false;
          int iret = gsl_monte_plain_init( fWs );
          return (iret == GSL_SUCCESS);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_plain_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_plain_state * GetWS() { return fWs; }
 
       //void SetParameters(const struct PlainParameters &p);
 
-      MCIntegration::Type Type() const { return MCIntegration::kPLAIN; }
+      MCIntegration::Type Type() const override { return MCIntegration::kPLAIN; }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
-      virtual ROOT::Math::IOptions * Options() const {
-         return 0;
+      std::unique_ptr<ROOT::Math::IOptions>  Options() const override {
+         return std::unique_ptr<ROOT::Math::IOptions>();
       }
+
+      virtual void SetOptions(const ROOT::Math::IOptions &) override {}
 
 
    private:

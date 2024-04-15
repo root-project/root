@@ -14,16 +14,14 @@
 
 #include "TObject.h"
 
-#include "TString.h"
-
 class TList;
 struct _xmlNode;
 
 class TXMLNode : public TObject {
 
 private:
-   TXMLNode(const TXMLNode&);            // Not implemented
-   TXMLNode& operator=(const TXMLNode&); // Not implemented
+   TXMLNode(const TXMLNode&) = delete;
+   TXMLNode& operator=(const TXMLNode&) = delete;
 
    _xmlNode *fXMLNode;        ///< libxml node
 
@@ -42,9 +40,9 @@ public:
       kXMLCommentNode = 8
    };
 
-   TXMLNode(_xmlNode *node, TXMLNode* parent=0, TXMLNode* previous=0);
+   TXMLNode(_xmlNode *node, TXMLNode *parent = nullptr, TXMLNode *previous = nullptr);
 
-   virtual ~TXMLNode();
+   ~TXMLNode() override;
 
    EXMLElementType GetNodeType() const;
    const char *GetNodeName() const;
@@ -65,7 +63,7 @@ public:
    const char *GetNamespaceHref() const;
    const char *GetNamespacePrefix() const;
 
-   ClassDef(TXMLNode,0);  // XML node under DOM tree
+   ClassDefOverride(TXMLNode,0);  // XML node under DOM tree
 };
 
 #endif

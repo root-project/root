@@ -1,8 +1,7 @@
 #ifndef TMVA_RINFERENCEUTILS
 #define TMVA_RINFERENCEUTILS
 
-#include "ROOT/RIntegerSequence.hxx" // std::index_sequence
-#include <utility> // std::forward
+#include <utility> // std::forward, std::index_sequence
 
 namespace TMVA {
 namespace Experimental {
@@ -21,7 +20,9 @@ class ComputeHelper<std::index_sequence<N...>, T, F> {
 
 public:
    ComputeHelper(F &&f) : fFunc(std::forward<F>(f)) {}
-   auto operator()(AlwaysT<N>... args) -> decltype(fFunc.Compute({args...})) { return fFunc.Compute({args...}); }
+   auto operator()(AlwaysT<N>... args) -> decltype(fFunc.Compute({args...})) {
+      return fFunc.Compute({args...});
+   }
 };
 
 } // namespace Internal

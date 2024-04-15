@@ -1,5 +1,7 @@
+// Author: Omar Zapata  Omar.Zapata@cern.ch   2014
+
 /*************************************************************************
- * Copyright (C) 2013-2014, Omar Andres Zapata Mesa                      *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,7 +11,6 @@
 #include<TRFunctionExport.h>
 #include<TRObject.h>
 #include<TRDataFrame.h>
-#include<Rcpp/Vector.h>
 
 namespace ROOT {
    namespace R {

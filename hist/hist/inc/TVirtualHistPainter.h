@@ -30,20 +30,20 @@ class TList;
 class TVirtualHistPainter : public TObject {
 
 private:
-   static TClass   *fgPainter; //Pointer to class painter
+   static TClass   *fgPainter; ///< Pointer to class painter
 
 public:
    TVirtualHistPainter() { }
-   virtual ~TVirtualHistPainter() { }
-   virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py) = 0;
+   ~TVirtualHistPainter() override { }
+   Int_t      DistancetoPrimitive(Int_t px, Int_t py) override = 0;
    virtual void       DrawPanel() = 0;
-   virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py) = 0;
+   void       ExecuteEvent(Int_t event, Int_t px, Int_t py) override = 0;
    virtual TList     *GetContourList(Double_t contour) const = 0;
-   virtual char      *GetObjectInfo(Int_t px, Int_t py) const = 0;
+   char      *GetObjectInfo(Int_t px, Int_t py) const override = 0;
    virtual TList     *GetStack() const = 0;
    virtual Bool_t     IsInside(Int_t x, Int_t y) = 0;
    virtual Bool_t     IsInside(Double_t x, Double_t y) = 0;
-   virtual void       Paint(Option_t *option="") = 0;
+   void       Paint(Option_t *option="") override = 0;
    virtual void       PaintStat(Int_t dostat, TF1 *fit) = 0;
    virtual void       ProcessMessage(const char *mess, const TObject *obj) = 0;
    virtual void       SetHighlight() = 0;
@@ -51,11 +51,12 @@ public:
    virtual void       SetStack(TList *stack) = 0;
    virtual Int_t      MakeCuts(char *cutsopt) = 0;
    virtual void       SetShowProjection(const char *option, Int_t nbins) = 0;
+   virtual void       SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t nbinsX) = 0;
 
    static TVirtualHistPainter *HistPainter(TH1 *obj);
    static void                 SetPainter(const char *painter);
 
-   ClassDef(TVirtualHistPainter,0)  //Abstract interface for histogram painters
+   ClassDefOverride(TVirtualHistPainter,0)  //Abstract interface for histogram painters
 };
 
 #endif

@@ -52,7 +52,7 @@ private:
 public:
    TQueryResultManager(const char *qdir, const char *stag, const char *sdir,
                        TProofLockPath *lck, FILE *logfile = 0);
-   virtual ~TQueryResultManager();
+   ~TQueryResultManager() override;
 
    const char   *QueryDir() const { return fQueryDir.Data(); }
    Int_t         SeqNum() const { return fSeqNum; }
@@ -81,7 +81,7 @@ public:
    Int_t         CleanupSession(const char *sessiontag);
    void          ScanPreviousQueries(const char *dir);
 
-   ClassDef(TQueryResultManager,0)  //PROOF query result manager
+   ClassDefOverride(TQueryResultManager,0)  //PROOF query result manager
 };
 
 #endif

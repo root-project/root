@@ -45,7 +45,7 @@ the histogram represents counts
 	weights different than 1.
 
     -   "`P`" Use Pearson chi-square method, using expected errors instead of the observed one given by `TH1::GetBinError` (default case).
-         The expected error is instead estimated from the the square-root of the bin function value.
+         The expected error is instead estimated from the square-root of the bin function value.
 
 	-   "`Q`" Quiet mode (minimum printing)
 
@@ -137,7 +137,7 @@ The list of pre-defined functions that can be used with the `Fit` method is the 
 -   "`landau`" Landau function with mean and sigma. This function has
 been adapted from the `CERNLIB` routine `G110 denlan` (see `TMath::Landau`).
 
-- "`gausn` Normalized form of the gaussian function with 3 parameters
+- "`gausn`" Normalized form of the gaussian function with 3 parameters
 `f(x) = p0*exp(-0.5*((x-p1)/p2)^2)/(p2 *sqrt(2PI))`
 
 
@@ -1764,7 +1764,7 @@ later with the method `SetWeight()` of the class
 **`TMultiLayerPerceptron`**. Two datasets must be defined before
 learning the network: a training dataset that is used when minimizing
 the error, and a test dataset that will avoid bias. Those two datasets
-can be build aside and then given to the network, or can be build from
+can be built aside and then given to the network, or can be built from
 a standard expression. By default, half of the events are put in both
 datasets.
 

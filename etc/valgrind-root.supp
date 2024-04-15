@@ -1013,6 +1013,14 @@
    fun:_ZN11TBufferFile13ReadStdStringERSs
 }
 
+######## ROOT use-after-delete detection attempts
+
+{
+   Checking if delete taints memory
+   Memcheck:Addr4
+   fun:_ZN4ROOT8Internal*DeleteChangesMemory*
+}
+
 ######## ROOT TObject on heap
 
 {
@@ -1275,7 +1283,7 @@
    ROOT:X11 - XQueryExtension
    Memcheck:Param
    writev(vector[...])
-   fun:writev
+   ...
    obj:*/libxcb.*
    obj:*/libxcb.*
    fun:xcb_writev
@@ -1618,3 +1626,12 @@
    fun:_ZN5cling5utils14isAddressValidEPKv
    fun:cling_runtime_internal_throwIfInvalidPointer
 }
+
+{
+   cling pointer checker on uninitialized memory (ROOT-8144)
+   Memcheck:Param
+   msync(start)
+   ...
+   fun:_ZN5cling5utils8platform13IsMemoryValidEPKv
+}
+

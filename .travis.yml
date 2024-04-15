@@ -20,15 +20,14 @@ matrix:
   # Abort all builds on a single failing matrix entry.
   fast_finish: true
 
-  exclude:
-    # Note: Workaround travis-ci/travis-ci#4681
-    # Exclude default job which lacks our included environment variables.
-    - os: linux
-
   include:
     - env: TOOL=clang-format
       script: &format_script
-        - if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then .ci/format_script.sh; fi
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" != "false" ]; then
+            export BASE_COMMIT=$(git rev-parse $TRAVIS_BRANCH)
+            .ci/format_script.sh
+          fi
 
     - env: TOOL=clang-tidy-analyzer
       before_script: &copy_headers

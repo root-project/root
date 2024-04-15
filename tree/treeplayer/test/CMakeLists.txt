@@ -12,4 +12,9 @@ endif()
 
 if(imt)
    ROOT_ADD_GTEST(treeprocessormt treeprocmt/treeprocessormt.cxx LIBRARIES TreePlayer)
+   if(xrootd)
+      ROOT_ADD_GTEST(treeprocessormt_remotefiles treeprocmt/treeprocessormt_remotefiles.cxx LIBRARIES TreePlayer)
+   endif()
 endif()
+
+ROOT_ADD_GTEST(ttreeindex_clone ttreeindex_clone.cxx LIBRARIES TreePlayer)

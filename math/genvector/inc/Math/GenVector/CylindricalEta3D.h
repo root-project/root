@@ -28,8 +28,6 @@
 #include <limits>
 #include <cmath>
 
-#include "Math/Math.h"
-
 
 namespace ROOT {
 
@@ -42,6 +40,8 @@ namespace Math {
       Phi is restricted to be in the range [-PI,PI)
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
   */
 
 template <class T>
@@ -50,6 +50,7 @@ class CylindricalEta3D {
 public :
 
   typedef T Scalar;
+  static constexpr unsigned int Dimension = 3U;
 
   /**
      Default constructor with rho=eta=phi=0
@@ -70,6 +71,7 @@ public :
   explicit CylindricalEta3D( const CoordSystem & v ) :
      fRho(v.Rho() ),  fEta(v.Eta() ),  fPhi(v.Phi() )
   {
+     using std::log; 
      static Scalar bigEta = Scalar(-0.3) * log(std::numeric_limits<Scalar>::epsilon());
      if (std::fabs(fEta) > bigEta) {
         // This gives a small absolute adjustment in rho,
@@ -125,6 +127,7 @@ public :
 private:
    inline static Scalar pi() { return M_PI; }
    inline void Restrict() {
+      using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
       return;
    }
@@ -135,14 +138,16 @@ public:
    T Rho()   const { return fRho; }
    T Eta()   const { return fEta; }
    T Phi()   const { return fPhi; }
-   T X() const { return fRho * cos(fPhi); }
-   T Y() const { return fRho * sin(fPhi); }
+   T X() const { using std::cos; return fRho * cos(fPhi); }
+   T Y() const { using std::sin; return fRho * sin(fPhi); }
    T Z() const
    {
+      using std::sinh;
       return fRho > 0 ? fRho * sinh(fEta) : fEta == 0 ? 0 : fEta > 0 ? fEta - etaMax<T>() : fEta + etaMax<T>();
    }
    T R() const
    {
+      using std::cosh;
       return fRho > 0 ? fRho * cosh(fEta)
                       : fEta > etaMax<T>() ? fEta - etaMax<T>() : fEta < -etaMax<T>() ? -fEta - etaMax<T>() : 0;
    }
@@ -152,7 +157,7 @@ public:
       return r * r;
    }
    T Perp2() const { return fRho*fRho;            }
-   T Theta() const { return fRho > 0 ? 2 * atan(exp(-fEta)) : (fEta >= 0 ? 0 : pi()); }
+   T Theta() const { using std::atan; return fRho > 0 ? 2 * atan(exp(-fEta)) : (fEta >= 0 ? 0 : pi()); }
 
    // setters (only for data members)
 
@@ -227,7 +232,7 @@ public:
 
    /**
       Exact component-by-component equality
-      Note: Peculiar representaions of the zero vector such as (0,1,0) will
+      Note: Peculiar representations of the zero vector such as (0,1,0) will
       not test as equal to one another.
    */
    bool operator==(const CylindricalEta3D & rhs) const {

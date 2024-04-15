@@ -124,7 +124,7 @@ TGHtmlBrowserTest::TGHtmlBrowserTest(const char *filename, const TGWindow *p, UI
    fMenuFavorites->AddEntry("&Add to Favorites", M_FAVORITES_ADD, 0,
                             gClient->GetPicture("bld_plus.png"));
    fMenuFavorites->AddSeparator();
-   fMenuFavorites->AddEntry("http://root.cern.ch/drupal/", fNbFavorites++, 0,
+   fMenuFavorites->AddEntry("http://root.cern.ch/", fNbFavorites++, 0,
                             gClient->GetPicture("htmlfile.gif"));
    fMenuFavorites->Associate(this);
 
@@ -177,7 +177,7 @@ TGHtmlBrowserTest::TGHtmlBrowserTest(const char *filename, const TGWindow *p, UI
    fHome->SetStyle(gClient->GetStyle());
    fHome->SetToolTipText("Go to ROOT HomePage\n  (http://root.cern.ch)");
    fHorizontalFrame->AddFrame(fHome, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,2,2,2,2));
-   fHome->Connect("Clicked()", "TGHtmlBrowserTest", this, "Selected(=\"http://root.cern.ch/drupal/\")");
+   fHome->Connect("Clicked()", "TGHtmlBrowserTest", this, "Selected(=\"http://root.cern.ch/\")");
 
    // combo box
    fURLBuf   = new TGTextBuffer(256);
@@ -428,7 +428,7 @@ void TGHtmlBrowserTest::MouseDown(char *url)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process Events.
 
-Bool_t TGHtmlBrowserTest::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGHtmlBrowserTest::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:

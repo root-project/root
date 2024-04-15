@@ -16,6 +16,7 @@
 
 #include "TGLBoundingBox.h"
 #include "TGLUtil.h"
+#include <vector>
 
 class TGLViewerBase;
 class TGLSceneBase;
@@ -31,8 +32,8 @@ public:
    enum EClipTest { kClipNone, kClipOutside, kClipInside };
 
 private:
-   TGLSceneInfo(const TGLSceneInfo&);            // Not implemented
-   TGLSceneInfo& operator=(const TGLSceneInfo&); // Not implemented
+   TGLSceneInfo(const TGLSceneInfo&) = delete;
+   TGLSceneInfo& operator=(const TGLSceneInfo&) = delete;
 
 protected:
    TGLViewerBase  * fViewer;
@@ -75,7 +76,7 @@ protected:
    // For TGLScene these data include draw-lists after clipping.
 
 public:
-   TGLSceneInfo(TGLViewerBase* view=0, TGLSceneBase* scene=0);
+   TGLSceneInfo(TGLViewerBase* view=nullptr, TGLSceneBase* scene=nullptr);
    virtual ~TGLSceneInfo() {}
 
    TGLViewerBase * GetViewer() const { return  fViewer; }

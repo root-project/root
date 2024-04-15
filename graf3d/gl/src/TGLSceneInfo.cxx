@@ -42,14 +42,14 @@ TGLSceneInfo::TGLSceneInfo(TGLViewerBase* view, TGLSceneBase* scene) :
    fStyle   (TGLRnrCtx::kStyleUndef),
    fWFLineW (0),
    fOLLineW (0),
-   fClip    (0),
+   fClip    (nullptr),
 
    fLastLOD   (TGLRnrCtx::kLODUndef),
    fLastStyle (TGLRnrCtx::kStyleUndef),
    fLastWFLineW (0),
    fLastOLLineW (0),
-   fLastClip  (0),
-   fLastCamera(0),
+   fLastClip  (nullptr),
+   fLastCamera(nullptr),
 
    fSceneStamp (0),
    fClipStamp  (0),

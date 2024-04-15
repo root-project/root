@@ -8,8 +8,11 @@
 
 #include <ROOT/RStyle.hxx>
 
+#include "ROOT/RAttrBase.hxx" // for GPadLog()
 #include <ROOT/RDrawable.hxx>
 #include <ROOT/RLogger.hxx>
+
+#include <algorithm>
 
 using namespace std::string_literals;
 
@@ -18,9 +21,13 @@ using namespace std::string_literals;
 
 const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const RDrawable &drawable) const
 {
+   std::string name;
+   for(auto &c : field)
+      name += std::tolower(c);
+
    for (const auto &block : fBlocks) {
       if (drawable.MatchSelector(block.selector)) {
-         auto res = block.map.Find(field);
+         auto res = block.map.Find(name);
          if (res)
             return res;
       }
@@ -34,9 +41,13 @@ const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(co
 
 const ROOT::Experimental::RAttrMap::Value_t *ROOT::Experimental::RStyle::Eval(const std::string &field, const std::string &selector) const
 {
+   std::string name;
+   for(auto &c : field)
+      name += std::tolower(c);
+
    for (const auto &block : fBlocks) {
       if (block.selector == selector) {
-         auto res = block.map.Find(field);
+         auto res = block.map.Find(name);
          if (res)
             return res;
       }
@@ -153,7 +164,11 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
          while ((pos < len) && check_symbol(is_first)) { shift(); is_first = false; }
 
-         return css_code.substr(pos0, pos-pos0);
+         std::string s = css_code.substr(pos0, pos-pos0);
+         if (!selector)
+            std::transform(s.begin(), s.end(), s.begin(),
+                              [](unsigned char c){ return std::tolower(c); });
+         return s;
       }
 
       std::string scan_value()
@@ -185,7 +200,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
 
       auto sel = parser.scan_identifier(true);
       if (sel.empty()) {
-         R__ERROR_HERE("rstyle") << "Fail to find selector" << parser.error_position();
+         R__LOG_ERROR(GPadLog()) << "Fail to find selector" << parser.error_position();
          return false;
       }
 
@@ -193,7 +208,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
          return false;
 
       if (parser.current() != '{') {
-         R__ERROR_HERE("rstyle") << "Fail to find starting {" << parser.error_position();
+         R__LOG_ERROR(GPadLog()) << "Fail to find starting {" << parser.error_position();
          return false;
       }
 
@@ -207,7 +222,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
       while (parser.current() != '}') {
          auto name = parser.scan_identifier();
          if (name.empty()) {
-            R__ERROR_HERE("rstyle") << "not able to extract identifier" << parser.error_position();
+            R__LOG_ERROR(GPadLog()) << "not able to extract identifier" << parser.error_position();
             return false;
          }
 
@@ -215,7 +230,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
             return false;
 
          if (parser.current() != ':') {
-            R__ERROR_HERE("rstyle") << "not able to find separator :" << parser.error_position();
+            R__LOG_ERROR(GPadLog()) << "not able to find separator :" << parser.error_position();
             return false;
          }
 
@@ -230,7 +245,7 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
          } else {
             auto value = parser.scan_value();
             if (value.empty()) {
-               R__ERROR_HERE("rstyle") << "not able to find value" << parser.error_position();
+               R__LOG_ERROR(GPadLog()) << "not able to find value" << parser.error_position();
                return false;
             }
 
@@ -250,4 +265,15 @@ bool ROOT::Experimental::RStyle::ParseString(const std::string &css_code)
    fBlocks.splice(fBlocks.end(), newstyle.fBlocks);
 
    return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+/// Parse CSS code and returns std::shared_ptr<RStyle> when successful
+
+std::shared_ptr<ROOT::Experimental::RStyle> ROOT::Experimental::RStyle::Parse(const std::string &css_code)
+{
+   auto style = std::make_shared<RStyle>();
+   if (!style->ParseString(css_code)) return nullptr;
+   return style;
 }

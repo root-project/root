@@ -1,14 +1,16 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-/// Addition and convolution: working with a p.d.f. with a convolution operator in terms of a parameter
+/// Addition and convolution: working with a pdf with a convolution operator in terms of a parameter
 ///
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+/// \macro_output
+///
+/// \date April 2009
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataHist.h"
@@ -52,12 +54,12 @@ void rf211_paramconv()
    RooAbsPdf *projModel = model.createProjection(mean);
 
    // Generate 1000 toy events
-   RooDataHist *d = projModel->generateBinned(x, 1000);
+   std::unique_ptr<RooDataHist> d{projModel->generateBinned(x, 1000)};
 
-   // Fit p.d.f. to toy data
-   projModel->fitTo(*d, Verbose());
+   // Fit pdf to toy data
+   projModel->fitTo(*d, Verbose(), PrintLevel(-1));
 
-   // Plot data and fitted p.d.f.
+   // Plot data and fitted pdf
    RooPlot *frame = x.frame(Bins(25));
    d->plotOn(frame);
    projModel->plotOn(frame);

@@ -1,4 +1,4 @@
-/// \file RDrawableRHist.cxx
+/// \file RHistDraw7Provider.cxx
 /// \ingroup rbrowser
 /// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
 /// \author Sergey Linev <S.Linev@gsi.de>
@@ -19,7 +19,7 @@
 
 #include <ROOT/RCanvas.hxx>
 
-using namespace ROOT::Experimental::Browsable;
+using namespace ROOT::Browsable;
 
 class RV7HistDrawProvider : public RProvider {
    template<class HistClass>
@@ -29,14 +29,7 @@ class RV7HistDrawProvider : public RProvider {
          auto hist = obj->get_shared<HistClass>();
          if (!hist) return false;
 
-         if (subpad->NumPrimitives() > 0) {
-            subpad->Wipe();
-            subpad->GetCanvas()->Modified();
-            subpad->GetCanvas()->Update(true);
-         }
-
          subpad->Draw(hist);
-
          return true;
       });
    }

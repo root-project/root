@@ -28,8 +28,8 @@ public:
    enum EMode { kPlaneIntersect, kBar, kAxis, kGridFront, kGridBack };
 
 private:
-   TGLCameraOverlay(const TGLCameraOverlay&);            // Not implemented
-   TGLCameraOverlay& operator=(const TGLCameraOverlay&); // Not implemented
+   TGLCameraOverlay(const TGLCameraOverlay&) = delete;
+   TGLCameraOverlay& operator=(const TGLCameraOverlay&) = delete;
 
 protected:
    Bool_t         fShowOrthographic;
@@ -56,9 +56,9 @@ protected:
 
 public:
    TGLCameraOverlay(Bool_t showOrtho=kTRUE, Bool_t showPersp=kFALSE);
-   virtual ~TGLCameraOverlay();
+   ~TGLCameraOverlay() override;
 
-   virtual  void   Render(TGLRnrCtx& rnrCtx);
+    void   Render(TGLRnrCtx& rnrCtx) override;
 
    TGLPlane& RefExternalRefPlane() { return fExternalRefPlane; }
    void      UseExternalRefPlane(Bool_t x) { fUseExternalRefPlane=x; }
@@ -78,7 +78,7 @@ public:
 
    TAttAxis* GetAttAxis();
 
-   ClassDef(TGLCameraOverlay, 1); // Show coorinates of current camera frustum.
+   ClassDefOverride(TGLCameraOverlay, 1); // Show coorinates of current camera frustum.
 };
 
 #endif

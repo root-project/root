@@ -96,7 +96,7 @@ namespace cling {
     /// \name PPCallbacks overrides
     /// Macro support
     void MacroUndefined(const clang::Token& MacroNameTok,
-                        const clang::MacroDefinition& MD,
+                        const clang::MacroDefinition& /*MD*/,
                         const clang::MacroDirective* Undef) final {
       if (Undef)
         MacroDirective(MacroNameTok, Undef);
@@ -263,22 +263,14 @@ namespace cling {
     Transaction::DelayCallInfo DCI(DeclGroupRef(TD),
                                    Transaction::kCCIHandleTagDeclDefinition);
     m_CurTransaction->append(DCI);
+    if (TD->isInvalidDecl()) {
+       m_CurTransaction->setIssuedDiags(Transaction::kErrors);
+       return;
+    }
     if (m_Consumer
         && (!comesFromASTReader(DeclGroupRef(TD))
             || !shouldIgnore(TD)))
       m_Consumer->HandleTagDeclDefinition(TD);
-  }
-
-  void DeclCollector::HandleInvalidTagDeclDefinition(clang::TagDecl *TD){
-    assertHasTransaction(m_CurTransaction);
-    Transaction::DelayCallInfo DCI(DeclGroupRef(TD),
-                                   Transaction::kCCIHandleTagDeclDefinition);
-    m_CurTransaction->append(DCI);
-    m_CurTransaction->setIssuedDiags(Transaction::kErrors);
-    if (m_Consumer
-        && (!comesFromASTReader(DeclGroupRef(TD))
-            || !shouldIgnore(TD)))
-      m_Consumer->HandleInvalidTagDeclDefinition(TD);
   }
 
   void DeclCollector::HandleVTable(CXXRecordDecl* RD) {
@@ -312,7 +304,7 @@ namespace cling {
     m_Consumer->CompleteTentativeDefinition(VD);
   }
 
-  void DeclCollector::HandleTranslationUnit(ASTContext& Ctx) {
+  void DeclCollector::HandleTranslationUnit(ASTContext& /*Ctx*/) {
     //if (m_Consumer)
     //  m_Consumer->HandleTranslationUnit(Ctx);
   }

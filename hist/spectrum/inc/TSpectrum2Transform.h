@@ -11,7 +11,7 @@
 #ifndef ROOT_TSpectrum2Transform
 #define ROOT_TSpectrum2Transform
 
-#include "TNamed.h"
+#include "TObject.h"
 
 class TSpectrum2Transform : public TObject {
 protected:
@@ -46,7 +46,7 @@ public:
    };
    TSpectrum2Transform();
    TSpectrum2Transform(Int_t sizeX, Int_t sizeY);
-   virtual ~TSpectrum2Transform();
+   ~TSpectrum2Transform() override;
 
 protected:
    void                BitReverse(Double_t *working_space,Int_t num);
@@ -70,7 +70,7 @@ public:
    void                SetTransformType(Int_t transType, Int_t degree);
    void                Transform(const Double_t **fSource, Double_t **fDest);
 
-   ClassDef(TSpectrum2Transform,1)  //Spectrum2 Transformer, it calculates classic orthogonal 2D transforms
+   ClassDefOverride(TSpectrum2Transform,1)  //Spectrum2 Transformer, it calculates classic orthogonal 2D transforms
 };
 
 #endif

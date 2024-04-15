@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+
+if [[ $# -eq 0 ]] ; then
+
+  echo "rootssh - invokes ssh and automatically configures tunel for remote ROOT session"
+  echo ""
+  echo "To start, just call:"
+  echo ""
+  echo "     [localhost] rootssh  user@remotehost"
+  echo ""
+  echo "And then in the ssh shell do:"
+  echo ""
+  echo "    [user@remotehost] source path/to/bin/thisroot.sh"
+  echo "    [user@remotehost] root --web=server -e 'new TBrowser'"
+  echo ""
+  echo "Or just call in single line:"
+  echo ""
+  echo "    [localhost] rootssh  user@remotehost \"source path/to/bin/thisroot.sh; root --web=server -e 'new TBrowser'\""
+  echo ""
+  echo "ROOT automatically recognizes that it runs in special session (because of ROOT_LISTENER_SOCKET variable)"
+  echo "and provides to this socket information to configure port forwarding and to start web windows automatically"
+  echo ""
+  echo "One can provide all supported by ssh arguments also to rootssh like '-E config.file' or '-Y'"
+  echo "In addition, special rootssh arguments can be specified:"
+  echo ""
+  echo "    --port number - port number on local node used for ssh tunnel to remote"
+  echo "    --browser <name> - name of web browser executable like firefox or chromium"
+  echo ""
+  echo " Thus one can call:"
+  echo ""
+  echo "     [localhost] rootssh --port 9753 --browser chromium -E config.file user@remotehost \"root --web 'new TBrowser'\""
+  echo ""
+  echo "Author: Sergey Linev, 2.12.2022"
+
+elif [[ "$1" == "--as-listener--" ]] ; then
+
+   # run listener, receive messages from ROOT messages
+   # currently only win:$url messages are expected
+
+   listener_socket=$2
+   local_port=$3
+   used_browser=$4
+
+   flag=1
+
+   while [ $flag -ne 0 ] ; do
+
+      line="$(nc -l -U $listener_socket)"
+
+      if [[ "${line:0:5}" == "http:" ]] ; then
+         remoteport=${line:5}
+         # echo "Want to map remote port $localport:localhost:$remoteport"
+      elif [[ "${line:0:7}" == "socket:" ]] ; then
+         remotesocket=${line:7}
+         #  echo "Remote socket was created $remotesocket"
+      elif [[ "${line:0:4}" == "win:" ]] ; then
+         winurl=${line:4}
+         # echo "Start window http://localhost:$local_port/$winurl"
+         $used_browser "http://localhost:$local_port/$winurl"
+      elif [[ "$line" == "stop" ]] ; then
+         flag=0
+      else
+         echo "Command not recognized $line - stop"
+         flag=0
+      fi
+   done
+
+else
+
+   # main body
+
+   listener_local="$(mktemp /tmp/root.XXXXXXXXX)"
+   listener_remote="$(mktemp /tmp/root.XXXXXXXXX)"
+   root_socket="$(mktemp /tmp/root.XXXXXXXXX)"
+
+   rm -f $listener_local $listener_remote
+
+   # analyze arguments
+
+   localport=""
+   browser=""
+   ssh_destination=""
+   ssh_command=""
+   ssh_args=""
+
+   ssh_array2=("-B -b -c -D -E -e -F -I -i -J -L -l -m -O -o -p -Q -R -S -W -w")
+
+   while [ $# -gt 0 ] ; do
+      if [[ "$1" == "--port"  ]] ; then
+         localport=$2
+         shift 2
+      elif [[ "$1" == "--browser" ]] ; then
+         browser=$2
+         shift 2
+      elif [[ " ${ssh_array2[*]} " =~ " $1 " ]]; then
+         # arguments with extra option
+         ssh_args+=" $1 $2"
+         shift 2
+      elif [[ "${1:0:1}" == "-" && "x$ssh_destination" == "x" ]]; then
+         # any other arguments starting with "-"
+         ssh_args+=" $1"
+         shift
+      elif [[ "x$ssh_destination" == "x" ]] ; then
+         ssh_destination=$1
+         shift
+      else
+         ssh_command+=" $1"
+         shift
+      fi
+   done
+
+
+   # List of potential local client browsers
+   browsers=( xdg-open open chromium firefox )
+   if [ -z "${browser}" ]; then
+      for b in "${browsers[@]}"
+      do
+         # test if the browser is available.
+         which ${b} 2>&1 >/dev/null
+         if [ $? -eq 0 ]; then
+            # The search was successful.
+           browser=${b}
+            break
+         fi
+      done
+   fi
+
+   if [ -z "${browser}" ]; then
+       echo "No appropriate browser found; please use --browser option"
+       exit 1
+   fi
+
+   if [[ "x$localport" == "x" ]] ; then
+      probe="probing"
+      localport=7777
+      while [[ "x$probe" != "x" ]] ; do
+         localport=$((7000 + $RANDOM%1000))
+         probe=$(nc -zv localhost $localport 2>/dev/null)
+      done
+   fi
+
+   echo "Use local port $localport for root_socket $root_socket redirection from $ssh_destination"
+
+   # start listener process
+
+   $0 --as-listener-- $listener_local $localport $browser &
+
+   listener_processid=$!
+
+   # start ssh
+
+   if [[ "x$ssh_command" == "x" ]] ; then
+      ssh_command="\$SHELL"
+   fi
+
+   ssh -t -R $listener_remote:$listener_local -L $localport:$root_socket $ssh_destination $ssh_args \
+   "chmod 0700 $listener_remote; export ROOT_LISTENER_SOCKET=$listener_remote; export ROOT_WEBGUI_SOCKET=$root_socket; $ssh_command; rm -f $listener_remote $root_socket"
+
+   # try to stop listener with "stop" message
+
+   echo "stop" | nc -U $listener_local -q 1 >/dev/null 2>&1
+
+   # Kill listener process
+
+   kill -9 $listener_processid > /dev/null 2>&1
+
+   # Remove temporary files
+
+   rm -f $listener_local $listener_remote
+fi

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodCompositeBase                                                   *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Virtual base class for all MVA method                                     *
@@ -27,7 +27,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodCategory
@@ -45,15 +45,10 @@ is due to different locations/angles.
 #include "TMVA/MethodCategory.h"
 
 #include <algorithm>
-#include <iomanip>
 #include <vector>
-#include <iostream>
 
-#include "Riostream.h"
 #include "TRandom3.h"
-#include "TMath.h"
 #include "TH1F.h"
-#include "TGraph.h"
 #include "TSpline.h"
 #include "TDirectory.h"
 #include "TTreeFormula.h"
@@ -168,10 +163,10 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
 
 
    // set or create correct method base dir for added method
-   const TString dirName(Form("Method_%s",method->GetMethodTypeName().Data()));
+   const TString dirName = TString::Format("Method_%s",method->GetMethodTypeName().Data());
    TDirectory * dir = BaseDir()->GetDirectory(dirName);
    if (dir != 0) method->SetMethodBaseDir( dir );
-   else method->SetMethodBaseDir( BaseDir()->mkdir(dirName,Form("Directory for all %s methods", method->GetMethodTypeName().Data())) );
+   else method->SetMethodBaseDir( BaseDir()->mkdir(dirName,  TString::Format("Directory for all %s methods", method->GetMethodTypeName().Data())) );
 
    // method->SetBaseDir(eigenes base dir, gucken ob Fisher dir existiert, sonst erzeugen )
 
@@ -192,8 +187,8 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    UInt_t newSpectatorIndex = primaryDSI.GetSpectatorInfos().size();
    fCategorySpecIdx.push_back(newSpectatorIndex);
 
-   primaryDSI.AddSpectator( Form("%s_cat%i:=%s", GetName(),(int)fMethods.size(),theCut.GetTitle()),
-                            Form("%s:%s",GetName(),method->GetName()),
+   primaryDSI.AddSpectator( TString::Format("%s_cat%i:=%s", GetName(),(int)fMethods.size(),theCut.GetTitle()).Data(),
+                            TString::Format("%s:%s",GetName(),method->GetName()).Data(),
                             "pass", 0, 0, 'C' );
 
    return method;
@@ -298,6 +293,10 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    dsi->SetRootDir(oldDSI.GetRootDir());
    TString norm(oldDSI.GetNormalization().Data());
    dsi->SetNormalization(norm);
+   // need to add split options to normalize with cut efficiency
+   TString splitOpt = dsi->GetSplitOptions();
+   splitOpt += ":ScaleWithPreselEff";
+   dsi->SetSplitOptions(splitOpt);
 
    DataSetInfo& dsiReference= (*dsi);
 
@@ -317,6 +316,7 @@ void TMVA::MethodCategory::Init()
 void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 {
    delete fCatTree;
+   fCatTree = nullptr;
 
    std::vector<VariableInfo>::const_iterator viIt;
    const std::vector<VariableInfo>& vars  = dsi.GetVariableInfos();
@@ -342,7 +342,7 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
       // The add-then-remove can lead to  a problem if gDirectory points to the same directory (for example
       // gROOT) in the current thread and another one (and both try to add to the directory at the same time).
       TDirectory::TContext ctxt(nullptr);
-      fCatTree = new TTree(Form("Circ%s",GetMethodName().Data()),"Circular Tree for categorization");
+      fCatTree = new TTree(TString::Format("Circ%s",GetMethodName().Data()).Data(),"Circular Tree for categorization");
       fCatTree->SetCircular(1);
    }
 
@@ -357,7 +357,7 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
    }
 
    for(UInt_t cat=0; cat!=fCategoryCuts.size(); ++cat) {
-      fCatFormulas.push_back(new TTreeFormula(Form("Category_%i",cat), fCategoryCuts[cat].GetTitle(), fCatTree));
+      fCatFormulas.push_back(new TTreeFormula(TString::Format("Category_%i",cat).Data(), fCategoryCuts[cat].GetTitle(), fCatTree));
    }
 }
 
@@ -514,7 +514,7 @@ void TMVA::MethodCategory::ReadWeightsFromXML( void* wghtnode )
       // find the spectator index
       std::vector<VariableInfo>& spectators=primaryDSI.GetSpectatorInfos();
       std::vector<VariableInfo>::iterator itrVarInfo;
-      TString specName= Form("%s_cat%i", GetName(),(int)fCategorySpecIdx.size()+1);
+      TString specName= TString::Format("%s_cat%i", GetName(),(int)fCategorySpecIdx.size()+1);
 
       for (itrVarInfo = spectators.begin(); itrVarInfo != spectators.end(); ++itrVarInfo, ++counter) {
          if((specName==itrVarInfo->GetLabel()) || (specName==itrVarInfo->GetExpression())) {
@@ -629,10 +629,122 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err,errUpper);
    ev->SetVariableArrangement(0);
 
+   Log() << kDEBUG << "Event  is for method " << methodToUse << " spectator is " << ev->GetSpectator(0) << "  "
+             << fVarMaps[0][0] << " classID " << DataInfo().IsSignal(ev) << " value " <<  mvaValue
+             << " type " << Data()->GetCurrentType() << Endl;
+
    return mvaValue;
 }
 
+///////////////////////////////////////////////////////////////
+/// returns the mva values of the right sub-classifier
+///
+std::vector<Double_t>
+TMVA::MethodCategory::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+{
 
+   std::vector<Double_t> result;
+
+   Info("GetMVaValues", "Evaluate MethodCategory for %d events type %d on the dataset %s", int(lastEvt - firstEvt),
+        (int)Data()->GetCurrentType(), DataInfo().GetName());
+
+   if (fMethods.empty())
+      return result;
+
+   auto data = Data();
+
+   // it is faster to evaluate all categories
+   std::vector<std::vector<Double_t>> mvaValues(fMethods.size());
+   for (UInt_t i = 0; i < fMethods.size(); ++i) {
+      // need to set variable map
+      for (UInt_t iev = firstEvt; iev < lastEvt; ++iev) {
+          data->SetCurrentEvent(iev);
+          const Event *ev = GetEvent(data->GetEvent());
+          ev->SetVariableArrangement(&fVarMaps[i]);
+      }
+      // need to set correct data in the different method
+      mvaValues[i] = dynamic_cast<MethodBase *>(fMethods[i])->GetDataMvaValues(data,firstEvt, lastEvt, logProgress);
+   }
+
+   // now loop on all events
+   result.resize(lastEvt - firstEvt);
+
+   for (UInt_t iev = firstEvt; iev < lastEvt; ++iev)
+   {
+      data->SetCurrentEvent(iev);
+      UInt_t methodToUse = 0;
+      const Event *ev = GetEvent(data->GetEvent());
+
+      // determine which sub-classifier to use for this event
+      Int_t suitableCutsN = 0;
+
+      for (UInt_t i = 0; i < fMethods.size(); ++i) {
+         if (PassesCut(ev, i)) {
+            ++suitableCutsN;
+            methodToUse = i;
+         }
+      }
+
+      if (suitableCutsN == 0) {
+         Log() << kWARNING << "Event does not lie within the cut of any sub-classifier." << Endl;
+         result[iev] = 0;
+      }
+
+      if (suitableCutsN > 1) {
+         Log() << kFATAL << "The defined categories are not disjoint." << Endl;
+         return result;
+      }
+
+
+      result[iev - firstEvt] = mvaValues[methodToUse][iev - firstEvt];
+
+      // reset variable map which was set it before
+      ev->SetVariableArrangement(nullptr);
+   }
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// returns the mva values of the multi-class right sub-classifier
+///
+const std::vector<Float_t> &TMVA::MethodCategory::GetMulticlassValues()
+{
+   if (fMethods.empty())
+      return MethodBase::GetMulticlassValues();
+
+   UInt_t methodToUse = 0;
+   const Event *ev = GetEvent();
+
+   // determine which sub-classifier to use for this event
+   Int_t suitableCutsN = 0;
+
+   for (UInt_t i = 0; i < fMethods.size(); ++i) {
+      if (PassesCut(ev, i)) {
+         ++suitableCutsN;
+         methodToUse = i;
+      }
+   }
+
+   if (suitableCutsN == 0) {
+      Log() << kWARNING << "Event does not lie within the cut of any sub-classifier." << Endl;
+      return MethodBase::GetMulticlassValues();
+   }
+
+   if (suitableCutsN > 1) {
+      Log() << kFATAL << "The defined categories are not disjoint." << Endl;
+      return MethodBase::GetMulticlassValues();
+   }
+   MethodBase *meth = dynamic_cast<MethodBase *>(fMethods[methodToUse]);
+   if (!meth) {
+      Log() << kFATAL << "method not found in Category Regression method" << Endl;
+      return MethodBase::GetMulticlassValues();
+   }
+   // get mva value from the suitable sub-classifier
+   ev->SetVariableArrangement(&fVarMaps[methodToUse]);
+   auto &result = meth->GetMulticlassValues();
+   ev->SetVariableArrangement(nullptr);
+   return result;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the mva value of the right sub-classifier
@@ -669,6 +781,7 @@ const std::vector<Float_t> &TMVA::MethodCategory::GetRegressionValues()
       return MethodBase::GetRegressionValues();
    }
    // get mva value from the suitable sub-classifier
-   return meth->GetRegressionValues(ev);
+   ev->SetVariableArrangement(&fVarMaps[methodToUse]);
+   auto & result =  meth->GetRegressionValues(ev);
+   return result;
 }
-

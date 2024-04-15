@@ -64,7 +64,6 @@ and statistics gathering in the system.
 size_t        TStorage::fgMaxBlockSize;
 FreeHookFun_t TStorage::fgFreeHook;
 void         *TStorage::fgFreeHookData;
-ReAllocFun_t  TStorage::fgReAllocHook;
 ReAllocCFun_t TStorage::fgReAllocCHook;
 Bool_t        TStorage::fgHasCustomNewDelete;
 
@@ -80,13 +79,13 @@ const size_t kObjMaxSize = 10024;
 static Bool_t   gMemStatistics;
 static Int_t    gAllocated[kObjMaxSize], gFreed[kObjMaxSize];
 static Int_t    gAllocatedTotal, gFreedTotal;
-static void   **gTraceArray = 0;
+static void   **gTraceArray = nullptr;
 static Int_t    gTraceCapacity = 10, gTraceIndex = 0,
                 gMemSize = -1, gMemIndex = -1;
 
 // Used in NewDelete.cxx; set by TMapFile.
 ROOT::Internal::FreeIfTMapFile_t *ROOT::Internal::gFreeIfTMapFile = nullptr;
-void *ROOT::Internal::gMmallocDesc = 0; //is used and set in TMapFile
+void *ROOT::Internal::gMmallocDesc = nullptr; //is used and set in TMapFile
 
 
 
@@ -134,7 +133,7 @@ void TStorage::RemoveStat(void *vp)
    if ((Int_t)size == gMemSize) {
       for (int i = 0; i < gTraceIndex; i++)
          if (gTraceArray[i] == vp) {
-            gTraceArray[i] = 0;
+            gTraceArray[i] = nullptr;
             break;
          }
    }
@@ -158,7 +157,7 @@ void *TStorage::Alloc(size_t size)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, "%s", gSpaceErr);
 
    return vp;
@@ -177,45 +176,6 @@ void TStorage::Dealloc(void *ptr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reallocate (i.e. resize) block of memory. Don't use if size is larger
-/// than old size, use ReAlloc(void *, size_t, size_t) instead.
-
-void *TStorage::ReAlloc(void *ovp, size_t size)
-{
-   ::Obsolete("ReAlloc(void*,size_t)", "v5-34-00", "v6-02-00");
-   ::Info("ReAlloc(void*,size_t)", "please use ReAlloc(void*,size_t,size_t)");
-
-   {
-      // Needs to be protected by global mutex
-      R__LOCKGUARD(gGlobalMutex);
-
-      if (fgReAllocHook && fgHasCustomNewDelete && !TROOT::MemCheck())
-         return (*fgReAllocHook)(ovp, size);
-   }
-
-   static const char *where = "TStorage::ReAlloc";
-
-#ifndef WIN32
-   void *vp = ::operator new[](size);
-#else
-   void *vp = ::operator new(size);
-#endif
-   if (vp == 0)
-      Fatal(where, "%s", gSpaceErr);
-
-   if (ovp == 0)
-      return vp;
-
-   memmove(vp, ovp, size);
-#ifndef WIN32
-   ::operator delete[](ovp);
-#else
-   ::operator delete(ovp);
-#endif
-   return vp;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory. Checks if current size is
 /// equal to oldsize. If not memory was overwritten.
 
@@ -225,7 +185,7 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
    {
       R__LOCKGUARD(gGlobalMutex);
 
-      if (fgReAllocCHook && fgHasCustomNewDelete && !TROOT::MemCheck())
+      if (fgReAllocCHook && fgHasCustomNewDelete)
          return (*fgReAllocCHook)(ovp, size, oldsize);
    }
 
@@ -239,10 +199,12 @@ void *TStorage::ReAlloc(void *ovp, size_t size, size_t oldsize)
 #else
    void *vp = ::operator new(size);
 #endif
-   if (vp == 0)
+   if (vp == nullptr) {
       Fatal(where, "%s", gSpaceErr);
+      return nullptr; // Unreachable unless gErrorIgnoreLevel > kFatal.
+   }
 
-   if (ovp == 0)
+   if (ovp == nullptr)
       return vp;
 
    if (size > oldsize) {
@@ -267,9 +229,9 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
    static const char *where = "TStorage::ReAllocChar";
 
    char *vp;
-   if (ovp == 0) {
+   if (ovp == nullptr) {
       vp = new char[size];
-      if (vp == 0)
+      if (vp == nullptr)
          Fatal(where, "%s", gSpaceErr);
       return vp;
    }
@@ -277,7 +239,7 @@ char *TStorage::ReAllocChar(char *ovp, size_t size, size_t oldsize)
       return ovp;
 
    vp = new char[size];
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize);
@@ -297,9 +259,9 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
    static const char *where = "TStorage::ReAllocInt";
 
    Int_t *vp;
-   if (ovp == 0) {
+   if (ovp == nullptr) {
       vp = new Int_t[size];
-      if (vp == 0)
+      if (vp == nullptr)
          Fatal(where, "%s", gSpaceErr);
       return vp;
    }
@@ -307,7 +269,7 @@ Int_t *TStorage::ReAllocInt(Int_t *ovp, size_t size, size_t oldsize)
       return ovp;
 
    vp = new Int_t[size];
-   if (vp == 0)
+   if (vp == nullptr)
       Fatal(where, "%s", gSpaceErr);
    if (size > oldsize) {
       memcpy(vp, ovp, oldsize*sizeof(Int_t));
@@ -394,9 +356,8 @@ void TStorage::SetFreeHook(FreeHookFun_t fh, void *data)
 /// Set a custom ReAlloc handlers. This function is typically
 /// called via a static object in the ROOT libNew.so shared library.
 
-void TStorage::SetReAllocHooks(ReAllocFun_t rh1, ReAllocCFun_t rh2)
+void TStorage::SetReAllocHooks(ReAllocFun_t, ReAllocCFun_t rh2)
 {
-   fgReAllocHook  = rh1;
    fgReAllocCHook = rh2;
 }
 
@@ -459,24 +420,6 @@ void TStorage::EnableStatistics(int size, int ix)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-ULong_t TStorage::GetHeapBegin()
-{
-   ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
-   //return begin of heap
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-ULong_t TStorage::GetHeapEnd()
-{
-   ::Obsolete("GetHeapBegin()", "v5-34-00", "v6-02-00");
-   //return end of heap
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 ///return static free hook data
 
 void *TStorage::GetFreeHookData()
@@ -498,23 +441,5 @@ Bool_t TStorage::HasCustomNewDelete()
 void TStorage::SetCustomNewDelete()
 {
    fgHasCustomNewDelete = kTRUE;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-///add a range to the heap
-
-void TStorage::AddToHeap(ULong_t, ULong_t)
-{
-   ::Obsolete("AddToHeap(ULong_t,ULong_t)", "v5-34-00", "v6-02-00");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///is object at p in the heap?
-
-Bool_t TStorage::IsOnHeap(void *)
-{
-   ::Obsolete("IsOnHeap(void*)", "v5-34-00", "v6-02-00");
-   return false;
 }
 

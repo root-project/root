@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootControlBar                                                      //
-//                                                                      //
-// This class provides an interface to the GUI dependent functions of   //
-// the TControlBar class. A control bar is a horizontal or vertical bar //
-// with a number of buttons (text or picture buttons).                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class  TRootControlBar
+    \ingroup guiwidgets
+
+This class provides an interface to the GUI dependent functions of
+the TControlBar class. A control bar is a horizontal or vertical bar
+with a number of buttons (text or picture buttons).
+
+*/
+
 
 #include "TRootControlBar.h"
 #include "TControlBar.h"
@@ -136,7 +137,7 @@ void TRootControlBar::Hide()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle controlbar button messages.
 
-Bool_t TRootControlBar::ProcessMessage(Long_t, Long_t, Long_t parm2)
+Bool_t TRootControlBar::ProcessMessage(Longptr_t, Longptr_t, Longptr_t parm2)
 {
    TControlBarButton *button = (TControlBarButton *) parm2;
 

@@ -9,22 +9,24 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGShutter, TGShutterItem                                             //
-//                                                                      //
-// A shutter widget contains a set of shutter items that can be         //
-// open and closed like a shutter.                                      //
-// This widget is usefull to group a large number of options in         //
-// a number of categories.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGShutter
+    \ingroup guiwidgets
+
+A shutter widget contains a set of shutter items that can be
+open and closed like a shutter.
+This widget is usefull to group a large number of options in
+a number of categories.
+
+*/
+
 
 #include "TGShutter.h"
 #include "TGButton.h"
 #include "TList.h"
 #include "TTimer.h"
-#include "Riostream.h"
+
+#include <iostream>
 
 
 ClassImp(TGShutterItem);
@@ -153,7 +155,7 @@ TGShutterItem *TGShutter::AddPage(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle shutter messages.
 
-Bool_t TGShutter::ProcessMessage(Long_t /*msg*/, Long_t parm1, Long_t /*parm2*/)
+Bool_t TGShutter::ProcessMessage(Longptr_t /*msg*/, Longptr_t parm1, Longptr_t /*parm2*/)
 {
    if (!fList) return kFALSE;
 

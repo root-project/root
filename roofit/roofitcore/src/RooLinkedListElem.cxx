@@ -19,20 +19,10 @@
 \class RooLinkedListElem
 \ingroup Roofitcore
 
-RooLinkedListElem is an link element for the RooLinkedList class
+Link element for the RooLinkedList class
 **/
 
-#include "RooFit.h"
-
-#include "TBuffer.h"
 #include "TBuffer.h"
 #include "RooLinkedListElem.h"
 
-
-using namespace std;
-
-ClassImp(RooLinkedListElem); 
-;
-
-
-
+ClassImp(RooLinkedListElem);

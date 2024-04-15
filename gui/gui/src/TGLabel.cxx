@@ -20,22 +20,24 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLabel                                                              //
-//                                                                      //
-// This class handles GUI labels.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGLabel
+    \ingroup guiwidgets
+
+This class handles GUI labels.
+
+*/
+
 
 #include "TGLabel.h"
 #include "TGString.h"
 #include "TGWidget.h"
 #include "TGResourcePool.h"
-#include "Riostream.h"
 #include "TColor.h"
 #include "TClass.h"
 #include "TVirtualX.h"
+
+#include <iostream>
 
 
 const TGFont *TGLabel::fgDefaultFont = nullptr;
@@ -48,7 +50,7 @@ ClassImp(TGLabel);
 /// text and will delete it in its dtor.
 
 TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
-                 FontStruct_t font, UInt_t options, ULong_t back) :
+                 FontStruct_t font, UInt_t options, Pixel_t back) :
     TGFrame(p, 1, 1, options, back)
 {
    fText        = text;
@@ -89,7 +91,7 @@ TGLabel::TGLabel(const TGWindow *p, TGString *text, GContext_t norm,
 /// Create a label GUI object.
 
 TGLabel::TGLabel(const TGWindow *p, const char *text, GContext_t norm,
-                 FontStruct_t font, UInt_t options, ULong_t back) :
+                 FontStruct_t font, UInt_t options, Pixel_t back) :
     TGFrame(p, 1, 1, options, back)
 {
    fText        = new TGString(!text && !p ? GetName() : text);

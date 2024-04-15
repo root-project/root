@@ -7,6 +7,8 @@
 
 #include <TString.h>
 #include <TMultiGraph.h>
+#include <vector>
+#include <map>
 
 #include <TMVA/IMethod.h>
 #include <TMVA/MethodBase.h>
@@ -27,14 +29,14 @@
  * Every machine learning method booked have an object for the results
  * in the classification process, in this class is stored the mvas,
  * data loader name and ml method name and title.
- * You can to display the resutls calling the method Show, get the ROC-integral with the
+ * You can to display the results calling the method Show, get the ROC-integral with the
  * method GetROCIntegral or get the TMVA::ROCCurve object calling GetROC.
 \ingroup TMVA
 */
 
 /*! \class TMVA::Classification
  * Class to perform two class classification.
- * The first step before any analysis is to preperate the data,
+ * The first step before any analysis is to prepare the data,
  * to do that you need to create an object of TMVA::DataLoader,
  * in this object you need to configure the variables and the number of events
  * to train/test.
@@ -60,7 +62,7 @@ void classification(UInt_t jobs = 2)
       input = TFile::Open(fname); // check if file in local directory exists
    } else {
       TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
@@ -127,16 +129,15 @@ class ClassificationResult : public TObject {
    friend class Classification;
 
 private:
-   OptionMap fMethod;                                                             //
-   TString fDataLoaderName;                                                       //
-   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>> fMvaTrain; // Mvas for two-class classification
-   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>>
-      fMvaTest;                      // Mvas for two-class and multiclass classification
-   std::vector<TString> fClassNames; //
+   OptionMap fMethod;
+   TString fDataLoaderName;
+   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>> fMvaTrain; ///< Mvas for two-class classification
+   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>> fMvaTest;  ///< Mvas for two-class and multiclass classification
+   std::vector<TString> fClassNames;
 
    Bool_t IsMethod(TString methodname, TString methodtitle);
-   Bool_t fIsCuts;        // if it is a method cuts need special output
-   Double_t fROCIntegral; //
+   Bool_t fIsCuts;        ///< if it is a method cuts need special output
+   Double_t fROCIntegral;
 
 public:
    ClassificationResult();
@@ -159,11 +160,11 @@ public:
 };
 
 class Classification : public Envelope {
-   std::vector<ClassificationResult> fResults; //!
-   std::vector<IMethod *> fIMethods;           //! vector of objects with booked methods
-   Types::EAnalysisType fAnalysisType;         //!
-   Bool_t fCorrelations;                       //!
-   Bool_t fROC;                                //!
+   std::vector<ClassificationResult> fResults; ///<!
+   std::vector<IMethod *> fIMethods;           ///<! vector of objects with booked methods
+   Types::EAnalysisType fAnalysisType;         ///<!
+   Bool_t fCorrelations;                       ///<!
+   Bool_t fROC;                                ///<!
 public:
    explicit Classification(DataLoader *loader, TFile *file, TString options);
    explicit Classification(DataLoader *loader, TString options);

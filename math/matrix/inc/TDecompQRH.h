@@ -34,7 +34,7 @@ protected :
 
    static Bool_t QRH(TMatrixD &q,TVectorD &diagR,TVectorD &up,TVectorD &w,Double_t tol);
 
-   virtual const TMatrixDBase &GetDecompMatrix() const { return fR; }
+   const TMatrixDBase &GetDecompMatrix() const override { return fR; }
 
 public :
 
@@ -45,10 +45,10 @@ public :
    TDecompQRH(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TDecompQRH(const TMatrixD &m,Double_t tol = 0.0); // be careful for slicing in operator=
    TDecompQRH(const TDecompQRH &another);
-   virtual ~TDecompQRH() {}
+   ~TDecompQRH() override {}
 
-   virtual       Int_t     GetNrows () const { return fQ.GetNrows(); }
-   virtual       Int_t     GetNcols () const { return fQ.GetNcols(); }
+         Int_t     GetNrows () const override { return fQ.GetNrows(); }
+         Int_t     GetNcols () const override { return fQ.GetNcols(); }
    virtual const TMatrixD &GetQ     ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                return fQ; }
    virtual const TMatrixD &GetR     ()       { if ( !TestBit(kDecomposed) ) Decompose();
@@ -63,24 +63,24 @@ public :
 
    virtual       void      SetMatrix(const TMatrixD &a);
 
-   virtual Bool_t   Decompose  ();
-   virtual Bool_t   Solve      (      TVectorD &b);
-   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x); return x; }
-   virtual Bool_t   Solve      (      TMatrixDColumn &b);
-   virtual Bool_t   TransSolve (      TVectorD &b);
-   virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x); return x; }
-   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
-   virtual void     Det        (Double_t &d1,Double_t &d2);
+   Bool_t   Decompose  () override;
+   Bool_t   Solve      (      TVectorD &b) override;
+   TVectorD Solve      (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x); return x; }
+   Bool_t   Solve      (      TMatrixDColumn &b) override;
+   Bool_t   TransSolve (      TVectorD &b) override;
+   TVectorD TransSolve (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = TransSolve(x); return x; }
+   Bool_t   TransSolve (      TMatrixDColumn &b) override;
+   void     Det        (Double_t &d1,Double_t &d2) override;
 
            Bool_t   Invert     (TMatrixD &inv);
            TMatrixD Invert     (Bool_t &status);
            TMatrixD Invert     () { Bool_t status; return Invert(status); }
 
-   void Print(Option_t *opt ="") const; // *MENU*
+   void Print(Option_t *opt ="") const override; // *MENU*
 
    TDecompQRH &operator= (const TDecompQRH &source);
 
-   ClassDef(TDecompQRH,1) // Matrix Decompositition QRH
+   ClassDefOverride(TDecompQRH,1) // Matrix Decompositition QRH
 };
 
 #endif

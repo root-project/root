@@ -29,7 +29,7 @@ Example:
 
 Assume a TTree object T and:
 ~~~ {.cpp}
-    Root > T.Draw("abs(fMomemtum)%fEtot")
+    Root > T.Draw("abs(fMomemtum):fEtot")
 ~~~
 the TCutG members fVarX, fVary will be set to:
 ~~~ {.cpp}
@@ -70,7 +70,7 @@ corresponding to x,y if one wants to use the cut as input to TTree::Draw,eg
 ~~~
 Example of use of a TCutG in TTree::Draw:
 ~~~ {.cpp}
-    tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
+    tree.Draw("x:y","mycutg && z>0 && sqrt(x)>1")
 ~~~
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
 TGraph. Being a TGraph the drawing options and behavior relatives to graphs apply.
@@ -80,16 +80,16 @@ See in particular "Graphs in logarithmic scale".
 A Graphical cut may be saved to a file via TCutG::Write.
 */
 
-#include <string.h>
+#include <cstring>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TROOT.h"
 #include "TCutG.h"
+#include "TBuffer.h"
 #include "TVirtualPad.h"
 #include "TPaveText.h"
 #include "TH2.h"
-#include "TClass.h"
-#include "TMath.h"
+#include "strlcpy.h"
 
 ClassImp(TCutG);
 
@@ -98,8 +98,8 @@ ClassImp(TCutG);
 
 TCutG::TCutG() : TGraph()
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,8 +120,8 @@ TCutG::TCutG(const TCutG &cutg)
 TCutG::TCutG(const char *name, Int_t n)
       :TGraph(n)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -161,8 +161,8 @@ TCutG::TCutG(const char *name, Int_t n)
 TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
       :TGraph(n,x,y)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -202,8 +202,8 @@ TCutG::TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y)
 TCutG::TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y)
       :TGraph(n,x,y)
 {
-   fObjectX  = 0;
-   fObjectY  = 0;
+   fObjectX  = nullptr;
+   fObjectY  = nullptr;
    SetName(name);
    delete gROOT->GetListOfSpecials()->FindObject(name);
    gROOT->GetListOfSpecials()->Add(this);
@@ -403,7 +403,7 @@ void TCutG::SetVarX(const char *varx)
 {
    fVarX = varx;
    delete fObjectX;
-   fObjectX = 0;
+   fObjectX = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -413,7 +413,7 @@ void TCutG::SetVarY(const char *vary)
 {
    fVarY = vary;
    delete fObjectY;
-   fObjectY = 0;
+   fObjectY = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

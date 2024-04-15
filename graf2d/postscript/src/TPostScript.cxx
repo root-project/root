@@ -229,14 +229,17 @@ To change the color model use `gStyle->SetColorModelPS(c)`.
 #pragma optimize("",off)
 #endif
 
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <wchar.h>
+#include <cstdlib>
+#include <cstring>
+#include <cctype>
+#include <cwchar>
+#include <fstream>
 
-#include "Riostream.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 #include "Byteswap.h"
 #include "TROOT.h"
+#include "TDatime.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
 #include "TPoints.h"
@@ -265,7 +268,7 @@ ClassImp(TPostScript);
 
 TPostScript::TPostScript() : TVirtualPS()
 {
-   fStream          = 0;
+   fStream          = nullptr;
    fType            = 0;
    gVirtualPS       = this;
    fBlue            = 0.;
@@ -343,7 +346,7 @@ TPostScript::TPostScript() : TVirtualPS()
 TPostScript::TPostScript(const char *fname, Int_t wtype)
 :TVirtualPS(fname, wtype)
 {
-   fStream = 0;
+   fStream = nullptr;
    SetTitle("PS");
    Open(fname, wtype);
 }
@@ -399,7 +402,7 @@ void TPostScript::Open(const char *fname, Int_t wtype)
    // Open OS file
    fFileName = fname;
    fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-   if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+   if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
       printf("ERROR in TPostScript::Open: Cannot open file:%s\n",fFileName.Data());
       return;
    }
@@ -464,11 +467,11 @@ void TPostScript::Close(Option_t *)
       // Close the file fFileName
       if (fStream) {
          PrintStr("@");
-         fStream->close(); delete fStream; fStream = 0;
+         fStream->close(); delete fStream; fStream = nullptr;
       }
 
       // Rename the file fFileName
-      TString tmpname = Form("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
+      TString tmpname = TString::Format("%s_tmp_%d",fFileName.Data(),gSystem->GetPid());
       if (gSystem->Rename( fFileName.Data() , tmpname.Data())) {
          Error("Text", "Cannot open temporary file: %s\n", tmpname.Data());
          return;
@@ -476,14 +479,14 @@ void TPostScript::Close(Option_t *)
 
       // Reopen the file fFileName
       fStream = new std::ofstream(fFileName.Data(),std::ios::out);
-      if (fStream == 0 || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
+      if (!fStream || gSystem->AccessPathName(fFileName.Data(),kWritePermission)) {
          Error("Text", "Cannot open file: %s\n", fFileName.Data());
          return;
       }
 
       // Embed the fonts at the right place
       FILE *sg = fopen(tmpname.Data(),"r");
-      if (sg == 0) {
+      if (!sg) {
          Error("Text", "Cannot open file: %s\n", tmpname.Data());
          return;
       }
@@ -504,9 +507,9 @@ void TPostScript::Close(Option_t *)
 
    // Close file stream
 
-   if (fStream) { fStream->close(); delete fStream; fStream = 0;}
+   if (fStream) { fStream->close(); delete fStream; fStream = nullptr;}
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -527,7 +530,7 @@ void TPostScript::On()
 
 void TPostScript::Off()
 {
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2708,7 +2711,7 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    TText saveAttText;
    saveAttText.TAttText::operator=(*this);
    const Int_t len=strlen(chars);
-   Int_t *charWidthsCumul = 0;
+   Int_t *charWidthsCumul = nullptr;
    TText t;
    t.SetTextSize(fTextSize * scale);
    t.SetTextFont(fTextFont);
@@ -2759,14 +2762,14 @@ void TPostScript::Text(Double_t xx, Double_t yy, const char *chars)
    Double_t vy  = (y - gPad->GetY1())/(gPad->GetY2()-gPad->GetY1());
    Double_t cmy = fYsize*(gPad->GetAbsYlowNDC()+vy*gPad->GetAbsHNDC());
    WriteReal((288.*cmy)/2.54);
-   PrintStr(Form(" t %d r ", psangle));
-   if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
-   if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
+   PrintStr(TString::Format(" t %d r ", psangle));
+   if(txalh == 2) PrintStr(TString::Format(" %d 0 t ", -psCharsLength/2));
+   if(txalh == 3) PrintStr(TString::Format(" %d 0 t ", -psCharsLength));
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
    if (font != 15) {
-      PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
+      PrintStr(TString::Format(" findfont %g sf 0 0 m ",fontsize));
    } else {
-      PrintStr(Form(" findfont %g sf 0 0 m ita ",fontsize));
+      PrintStr(TString::Format(" findfont %g sf 0 0 m ita ",fontsize));
    }
 
    if (kerning) {
@@ -2934,15 +2937,15 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
    // Output text position and angle.
    WriteInteger(XtoPS(x));
    WriteInteger(YtoPS(y));
-   PrintStr(Form(" t %d r ", psangle));
-   if(txalh == 2) PrintStr(Form(" %d 0 t ", -psCharsLength/2));
-   if(txalh == 3) PrintStr(Form(" %d 0 t ", -psCharsLength));
+   PrintStr(TString::Format(" t %d r ", psangle));
+   if(txalh == 2) PrintStr(TString::Format(" %d 0 t ", -psCharsLength/2));
+   if(txalh == 3) PrintStr(TString::Format(" %d 0 t ", -psCharsLength));
    MustEmbed[font-1] = kTRUE; // This font will be embedded in the file at EOF time.
    PrintStr(gEnv->GetValue(psfont[font-1][0], psfont[font-1][1]));
-   PrintStr(Form(" findfont %g sf 0 0 m ",fontsize));
+   PrintStr(TString::Format(" findfont %g sf 0 0 m ",fontsize));
 
    // Output text.
-   if (len > 1) PrintStr(Form("%d ", len));
+   if (len > 1) PrintStr(TString::Format("%d ", len));
    for(Int_t i = 0; i < len; i++) {
       // Adobe Glyph Naming Convention
       // http://www.adobe.com/devnet/opentype/archives/glyph.html
@@ -2955,16 +2958,16 @@ void TPostScript::Text(Double_t xx, Double_t yy, const wchar_t *chars)
          // Named glyph from AGL 1.2
          const unsigned long index =
          lower - adobe_glyph_ucs;
-         PrintStr(Form("/%s ", adobe_glyph_name[index]));
+         PrintStr(TString::Format("/%s ", adobe_glyph_name[index]));
       }
       else if((unsigned int)chars[i] < 0xffff) {
          // Unicode BMP
-         PrintStr(Form("/uni%04X ",
+         PrintStr(TString::Format("/uni%04X ",
                        (unsigned int)chars[i]));
       }
       else {
          // Unicode supplemental planes
-         PrintStr(Form("/u%04X ",
+         PrintStr(TString::Format("/u%04X ",
                        (unsigned int)chars[i]));
       }
    }

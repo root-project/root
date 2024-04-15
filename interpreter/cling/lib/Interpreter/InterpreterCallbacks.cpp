@@ -21,6 +21,8 @@
 #include "clang/Serialization/ASTDeserializationListener.h"
 #include "clang/Serialization/ASTReader.h"
 
+#include <optional>
+
 using namespace clang;
 
 namespace cling {
@@ -35,18 +37,20 @@ namespace cling {
     InterpreterPPCallbacks(InterpreterCallbacks* C) : m_Callbacks(C) { }
     ~InterpreterPPCallbacks() { }
 
-    virtual void InclusionDirective(clang::SourceLocation HashLoc,
-                                    const clang::Token &IncludeTok,
-                                    llvm::StringRef FileName,
-                                    bool IsAngled,
-                                    clang::CharSourceRange FilenameRange,
-                                    const clang::FileEntry *File,
-                                    llvm::StringRef SearchPath,
-                                    llvm::StringRef RelativePath,
-                                    const clang::Module *Imported) {
+    void InclusionDirective(clang::SourceLocation HashLoc,
+                            const clang::Token &IncludeTok,
+                            llvm::StringRef FileName,
+                            bool IsAngled,
+                            clang::CharSourceRange FilenameRange,
+                            clang::OptionalFileEntryRef File,
+                            llvm::StringRef SearchPath,
+                            llvm::StringRef RelativePath,
+                            const clang::Module *Imported,
+                            SrcMgr::CharacteristicKind FileType) override {
       m_Callbacks->InclusionDirective(HashLoc, IncludeTok, FileName,
                                       IsAngled, FilenameRange, File,
-                                      SearchPath, RelativePath, Imported);
+                                      SearchPath, RelativePath, Imported,
+                                      FileType);
     }
 
     void EnteredSubmodule(clang::Module* M,
@@ -55,12 +59,12 @@ namespace cling {
       m_Callbacks->EnteredSubmodule(M, ImportLoc, ForPragma);
     }
 
-    virtual bool FileNotFound(llvm::StringRef FileName,
-                              llvm::SmallVectorImpl<char>& RecoveryPath) {
+    bool FileNotFound(llvm::StringRef FileName) override {
       if (m_Callbacks)
-        return m_Callbacks->FileNotFound(FileName, RecoveryPath);
+        return m_Callbacks->FileNotFound(FileName);
 
-      // Returning true would mean that the preprocessor should try to recover.
+      // Returning true would mean that the preprocessor should silently skip
+      // this file.
       return false;
     }
   };
@@ -75,12 +79,12 @@ namespace cling {
     InterpreterDeserializationListener(InterpreterCallbacks* C)
       : m_Callbacks(C) {}
 
-    virtual void DeclRead(serialization::DeclID, const Decl *D) {
+    void DeclRead(serialization::DeclID, const Decl *D) override {
       if (m_Callbacks)
         m_Callbacks->DeclDeserialized(D);
     }
 
-    virtual void TypeRead(serialization::TypeIdx, QualType T) {
+    void TypeRead(serialization::TypeIdx, QualType T) override {
       if (m_Callbacks)
         m_Callbacks->TypeDeserialized(T.getTypePtr());
     }
@@ -152,7 +156,7 @@ namespace cling {
       return m_Source->getModule(ID);
     }
 
-    virtual llvm::Optional<ASTSourceDescriptor>
+    virtual std::optional<ASTSourceDescriptor>
     getSourceDescriptor(unsigned ID) override {
       return m_Source->getSourceDescriptor(ID);
     }
@@ -230,7 +234,7 @@ namespace cling {
 
   public:
     InterpreterExternalSemaSource(InterpreterCallbacks* C)
-      : m_Callbacks(C), m_Sema(0) {}
+      : m_Callbacks(C), m_Sema(nullptr) {}
 
     ~InterpreterExternalSemaSource() {
       // FIXME: Another gross hack due to the missing multiplexing AST external
@@ -243,12 +247,12 @@ namespace cling {
       }
     }
 
-    virtual void InitializeSema(Sema& S) {
+    void InitializeSema(Sema& S) override {
       m_Sema = &S;
     }
 
-    virtual void ForgetSema() {
-      m_Sema = 0;
+    void ForgetSema() override {
+      m_Sema = nullptr;
     }
 
     InterpreterCallbacks* getCallbacks() const { return m_Callbacks; }
@@ -262,7 +266,7 @@ namespace cling {
     ///
     ///\returns true if a suitable declaration is found.
     ///
-    virtual bool LookupUnqualified(clang::LookupResult& R, clang::Scope* S) {
+    bool LookupUnqualified(clang::LookupResult& R, clang::Scope* S) override {
       if (m_Callbacks) {
         return m_Callbacks->LookupObject(R, S);
       }
@@ -270,8 +274,8 @@ namespace cling {
       return false;
     }
 
-    virtual bool FindExternalVisibleDeclsByName(const clang::DeclContext* DC,
-                                                clang::DeclarationName Name) {
+    bool FindExternalVisibleDeclsByName(const clang::DeclContext* DC,
+                                        clang::DeclarationName Name) override {
       if (m_Callbacks)
         return m_Callbacks->LookupObject(DC, Name);
 
@@ -280,7 +284,7 @@ namespace cling {
 
     // Silence warning virtual function was hidden.
     using ExternalASTSource::CompleteType;
-    virtual void CompleteType(TagDecl* Tag) {
+    void CompleteType(TagDecl* Tag) override {
       if (m_Callbacks)
         m_Callbacks->LookupObject(Tag);
     }
@@ -295,10 +299,10 @@ namespace cling {
                              bool enableExternalSemaSourceCallbacks/* = false*/,
                         bool enableDeserializationListenerCallbacks/* = false*/,
                                              bool enablePPCallbacks/* = false*/)
-    : m_Interpreter(interp), m_ExternalSemaSource(0), m_PPCallbacks(0),
+    : m_Interpreter(interp), m_ExternalSemaSource(nullptr), m_PPCallbacks(nullptr),
       m_IsRuntime(false) {
     Sema& SemaRef = interp->getSema();
-    ASTReader* Reader = m_Interpreter->getCI()->getModuleManager().get();
+    ASTReader* Reader = m_Interpreter->getCI()->getASTReader().get();
     ExternalSemaSource* externalSemaSrc = SemaRef.getExternalSource();
     if (enableExternalSemaSourceCallbacks)
       if (!externalSemaSrc || externalSemaSrc == Reader) {
@@ -327,7 +331,7 @@ namespace cling {
           // Wrap both the existing source and our source. We give our own
           // source preference to the existing one.
           IntrusiveRefCntPtr<ExternalASTSource> S;
-          S = new MultiplexExternalSemaSource(*m_ExternalSemaSource, *wrapper);
+          S = new MultiplexExternalSemaSource(m_ExternalSemaSource, wrapper);
 
           Ctx.setExternalSource(S);
         } else {
@@ -385,8 +389,7 @@ namespace cling {
     return m_DeserializationListener.get();
   }
 
-  bool InterpreterCallbacks::FileNotFound(llvm::StringRef FileName,
-                                    llvm::SmallVectorImpl<char>& RecoveryPath) {
+  bool InterpreterCallbacks::FileNotFound(llvm::StringRef) {
     // Default implementation is no op.
     return false;
   }
@@ -523,9 +526,7 @@ namespace test {
     // Annotate the decl to give a hint in cling. FIXME: Current implementation
     // is a gross hack, because TClingCallbacks shouldn't know about
     // EvaluateTSynthesizer at all!
-    SourceRange invalidRange;
-    TopmostFunc->addAttr(new (C) AnnotateAttr(invalidRange, C,
-                                              "__ResolveAtRuntime", 0));
+    TopmostFunc->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime"));
     R.addDecl(Res);
     DC->addDecl(Res);
     // Say that we can handle the situation. Clang should try to recover

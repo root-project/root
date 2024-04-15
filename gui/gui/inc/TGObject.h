@@ -13,44 +13,38 @@
 #define ROOT_TGObject
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGObject                                                             //
-//                                                                      //
-// This class is the baseclass for all ROOT GUI widgets.                //
-// The ROOT GUI components emulate the Win95 look and feel and the code //
-// is based on the XClass'95 code (see Copyleft in source).             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "GuiTypes.h"
 
 class TGClient;
 
-
 class TGObject : public TObject {
 
-
 protected:
-   Handle_t    fId;                  // X11/Win32 Window identifier
-   TGClient   *fClient;              // Connection to display server
+   Handle_t    fId;                  ///< X11/Win32 Window identifier
+   TGClient   *fClient;              ///< Connection to display server
 
-   TGObject& operator=(const TGObject& tgo)
-     {if(this!=&tgo) { TObject::operator=(tgo); fId=tgo.fId;
-     fClient=tgo.fClient; } return *this; }
+   TGObject &operator=(const TGObject& tgo)
+   {
+      if(this!=&tgo) {
+         TObject::operator=(tgo);
+         fId=tgo.fId;
+         fClient=tgo.fClient;
+      }
+      return *this;
+   }
 
 public:
-   TGObject(): fId(0), fClient(0) { }
+   TGObject(): fId(0), fClient(nullptr) { }
    TGObject(const TGObject& tgo): TObject(tgo), fId(tgo.fId), fClient(tgo.fClient) { }
-   virtual ~TGObject();
+   ~TGObject() override;
    Handle_t  GetId() const { return fId; }
    TGClient *GetClient() const { return fClient; }
-   ULong_t   Hash() const { return (ULong_t) fId >> 0; }
-   Bool_t    IsEqual(const TObject *obj) const;
-   virtual void SaveAs(const char* filename = "", Option_t* option = "") const;
+   ULong_t   Hash() const override { return (ULong_t) fId >> 0; }
+   Bool_t    IsEqual(const TObject *obj) const override;
+   void SaveAs(const char* filename = "", Option_t* option = "") const override;
 
-   ClassDef(TGObject,0)  //ROOT GUI base class
+   ClassDefOverride(TGObject,0)  //ROOT GUI base class
 };
 
 #endif

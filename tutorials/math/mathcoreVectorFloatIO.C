@@ -3,7 +3,7 @@
 /// \notebook -nodraw
 /// Macro illustrating  I/O with Lorentz Vectors of floats
 /// The dictionary for LorentzVector of float is not in the libMathCore, therefore
-/// is generated when parsed the file with CINT.
+/// is generated when parsed the file with CLING.
 ///
 ///  To run  this macro you must do
 ///
@@ -34,7 +34,7 @@
 // Now the dictionary contains the vector's with float types
 // No need to force dictionary generation
 // You need to run ACLIC with old ROOT version
-// and uncomment these lines below 
+// and uncomment these lines below
 // #ifdef __MAKECINT__
 // #pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
 // #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;

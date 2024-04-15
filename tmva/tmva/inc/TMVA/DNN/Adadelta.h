@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TAdadelta                                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Adadelta Optimizer Class                                                      *
@@ -21,7 +21,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef TMVA_DNN_ADADELTA
@@ -30,6 +30,7 @@
 #include "TMatrix.h"
 #include "TMVA/DNN/Optimizer.h"
 #include "TMVA/DNN/Functions.h"
+#include <vector>
 
 namespace TMVA {
 namespace DNN {

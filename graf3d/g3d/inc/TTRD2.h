@@ -31,18 +31,18 @@ protected:
    Float_t fDx2;        // half length in x at the high z surface
    Float_t fDy2;        // half length in y at the high z surface
 
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
 
 public:
    TTRD2();
    TTRD2(const char *name, const char *title, const char *material, Float_t dx1, Float_t dx2,
          Float_t dy1, Float_t dy2, Float_t dz);
-   virtual ~TTRD2();
+   ~TTRD2() override;
 
    Float_t         GetDx2() const {return fDx2;}
    Float_t         GetDy2() const {return fDy2;}
 
-   ClassDef(TTRD2,1)  //TRD2 shape
+   ClassDefOverride(TTRD2,1)  //TRD2 shape
 };
 
 #endif

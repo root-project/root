@@ -20,7 +20,6 @@
 
 #include "Math/GenVector/Cartesian3D.h"
 #include "Math/GenVector/DisplacementVector3D.h"
-#include "Math/GenVector/EulerAngles.h"
 #include "Math/GenVector/Rotation3D.h"
 #include "Math/GenVector/Quaternion.h"
 #include "Math/GenVector/RotationX.h"
@@ -127,7 +126,7 @@ operator * ( RotationZ const & r, EulerAngles const & e )  {
 
 std::ostream & operator<< (std::ostream & os, const EulerAngles & e) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form may need formatiing improvements
+   //        and even the human readable form may need formatting improvements
    os << "\n{phi: " << e.Phi() << "   theta: " << e.Theta()
    << "   psi: " << e.Psi() << "}\n";
    return os;

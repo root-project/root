@@ -4,14 +4,15 @@
 /// Likelihood and minimization: visualization of errors from a covariance matrix
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
-/// \author 04/2009 - Wouter Verkerke
+/// \macro_output
+///
+/// \date April 2009
+/// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
@@ -24,7 +25,7 @@ void rf610_visualerror()
    // S e t u p   e x a m p l e   f i t
    // ---------------------------------------
 
-   // Create sum of two Gaussians p.d.f. with factory
+   // Create sum of two Gaussians pdf with factory
    RooRealVar x("x", "x", -10, 10);
 
    RooRealVar m("m", "m", 0, -10, 10);
@@ -40,10 +41,10 @@ void rf610_visualerror()
 
    // Create binned dataset
    x.setBins(25);
-   RooAbsData *d = model.generateBinned(x, 1000);
+   std::unique_ptr<RooAbsData> d{model.generateBinned(x, 1000)};
 
    // Perform fit and save fit result
-   RooFitResult *r = model.fitTo(*d, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*d, Save(), PrintLevel(-1))};
 
    // V i s u a l i z e   f i t   e r r o r
    // -------------------------------------
@@ -74,19 +75,19 @@ void rf610_visualerror()
    // Calculate error using sampling method and visualize as dashed red line.
    //
    // In this method a number of curves is calculated with variations of the parameter values, as sampled
-   // from a multi-variate Gaussian p.d.f. that is constructed from the fit results covariance matrix.
+   // from a multi-variate Gaussian pdf that is constructed from the fit results covariance matrix.
    // The error(x) is determined by calculating a central interval that capture N% of the variations
    // for each value of x, where N% is controlled by Z (i.e. Z=1 gives N=68%). The number of sampling curves
    // is chosen to be such that at least 100 curves are expected to be outside the N% interval, and is minimally
    // 100 (e.g. Z=1->Ncurve=356, Z=2->Ncurve=2156)) Intervals from the sampling method can be asymmetric,
    // and may perform better in the presence of strong correlations, but may take (much) longer to calculate
-   model.plotOn(frame, VisualizeError(*r, 1, kFALSE), DrawOption("L"), LineWidth(2), LineColor(kRed));
+   model.plotOn(frame, VisualizeError(*r, 1, false), DrawOption("L"), LineWidth(2), LineColor(kRed));
 
    // Perform the same type of error visualization on the background component only.
    // The VisualizeError() option can generally applied to _any_ kind of plot (components, asymmetries, efficiencies
    // etc..)
    model.plotOn(frame, VisualizeError(*r, 1), FillColor(kOrange), Components("bkg"));
-   model.plotOn(frame, VisualizeError(*r, 1, kFALSE), DrawOption("L"), LineWidth(2), LineColor(kRed), Components("bkg"),
+   model.plotOn(frame, VisualizeError(*r, 1, false), DrawOption("L"), LineWidth(2), LineColor(kRed), Components("bkg"),
                 LineStyle(kDashed));
 
    // Overlay central value

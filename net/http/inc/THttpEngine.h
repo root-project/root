@@ -20,7 +20,7 @@ class THttpEngine : public TNamed {
 protected:
    friend class THttpServer;
 
-   THttpServer *fServer; ///<! object server
+   THttpServer *fServer{nullptr}; ///<! object server
 
    THttpEngine(const char *name, const char *title);
 
@@ -39,7 +39,7 @@ public:
    /** Returns pointer to THttpServer associated with engine */
    THttpServer *GetServer() const { return fServer; }
 
-   ClassDef(THttpEngine, 0) // abstract class which should provide http-based protocol for server
+   ClassDefOverride(THttpEngine, 0) // abstract class which should provide http-based protocol for server
 };
 
 #endif

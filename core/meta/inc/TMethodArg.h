@@ -22,8 +22,13 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TDictionary.h"
+#include <string>
 
+#ifdef R__LESS_INCLUDES
+class TDataMember;
+#else
 #include "TDataMember.h"
+#endif
 
 class TFunction;
 class TMethod;
@@ -33,29 +38,30 @@ class TMethodArg : public TDictionary {
 friend class TMethod;
 
 private:
-   TMethodArg(const TMethodArg&);    // Not implemented
-   TMethodArg& operator=(const TMethodArg&);    // Not implemented
+   TMethodArg(const TMethodArg&) = delete;
+   TMethodArg& operator=(const TMethodArg&) = delete;
 
    MethodArgInfo_t   *fInfo;         //pointer to CINT method argument info
    TFunction         *fMethod;       //pointer to the method or global function
    TDataMember       *fDataMember;   //TDataMember pointed by this arg,to get values and options from.
 
 public:
-   TMethodArg(MethodArgInfo_t *info = 0, TFunction *method = 0);
+   TMethodArg(MethodArgInfo_t *info = nullptr, TFunction *method = nullptr);
    virtual       ~TMethodArg();
    const char    *GetDefault() const;
    TFunction     *GetMethod() const { return fMethod; }
    const char    *GetTypeName() const;
    const char    *GetFullTypeName() const;
    std::string    GetTypeNormalizedName() const;
-   Long_t         Property() const;
+   Long_t         Property() const override;
+   TypeInfo_t    *GetTypeInfo() const;
 
    TDataMember   *GetDataMember() const;
    TList         *GetOptions() const;
 
    void           Update(MethodArgInfo_t *info);
 
-   ClassDef(TMethodArg,0)  //Dictionary for a method argument
+   ClassDefOverride(TMethodArg,0)  //Dictionary for a method argument
 };
 
 #endif

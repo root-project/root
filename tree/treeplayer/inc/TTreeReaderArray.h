@@ -33,13 +33,13 @@ Base class of TTreeReaderArray.
          TTreeReaderValueBase(reader, branchname, dict) {}
 
       std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
-      Bool_t IsEmpty() const { return !GetSize(); }
+      bool IsEmpty() const { return !GetSize(); }
 
-      virtual EReadStatus GetReadStatus() const { return fImpl ? fImpl->fReadStatus : kReadError; }
+      EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 
    protected:
       void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
-      virtual void CreateProxy();
+      void CreateProxy() override;
       bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
                             TDictionary* &branchActualType);
       void SetImpl(TBranch* branch, TLeaf* myLeaf);
@@ -50,7 +50,7 @@ Base class of TTreeReaderArray.
       std::unique_ptr<TVirtualCollectionReader> fImpl; // Common interface to collections
 
       // FIXME: re-introduce once we have ClassDefInline!
-      //ClassDef(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
+      //ClassDefOverride(TTreeReaderArrayBase, 0);//Accessor to member of an object stored in a collection
    };
 
 } // namespace Internal
@@ -85,8 +85,8 @@ public:
       using iterator_category = std::random_access_iterator_tag;
       using value_type = T;
       using difference_type = std::ptrdiff_t;
-      using pointer = typename std::conditional<std::is_const<ReaderArrayType>::value, const T *, T *>::type;
-      using reference = typename std::conditional<std::is_const<ReaderArrayType>::value, const T &, T &>::type;
+      using pointer = std::conditional_t<std::is_const<ReaderArrayType>::value, const T *, T *>;
+      using reference = std::conditional_t<std::is_const<ReaderArrayType>::value, const T &, T &>;
 
    private:
       TTreeReaderArray *fArray; ///< The array iterated over; nullptr if invalid/past-the-end.
@@ -216,7 +216,7 @@ public:
 
 protected:
 #define R__TTreeReaderArray_TypeString(T) #T
-   virtual const char *GetDerivedTypeName() const { return R__TTreeReaderArray_TypeString(T); }
+   const char *GetDerivedTypeName() const override { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
    // FIXME: re-introduce once we have ClassDefTInline!
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection

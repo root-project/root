@@ -5,7 +5,7 @@
 # of Illinois Open Source License or the GNU Lesser General Public License. See
 # LICENSE.TXT for details.
 #-------------------------------------------------------------------------------
-if (CLING_INCLUDE_TESTS OR CLING_BUILD_PLUGINS)
+if ((CLING_INCLUDE_TESTS OR CLING_BUILD_PLUGINS) AND NOT MSVC)
   add_subdirectory(example)
 endif()
 
@@ -27,5 +27,7 @@ if (CLING_BUILD_PLUGINS)
 #  foreach(subdir ${SUBDIRS})
 #    add_subdirectory(${subdir})
 #  endforeach()
-  add_subdirectory(clad)
+  if(NOT DEFINED NO_CONNECTION OR NOT NO_CONNECTION)
+    add_subdirectory(clad)
+  endif()
 endif(CLING_BUILD_PLUGINS)

@@ -36,7 +36,7 @@ public:
    // ****** constructors  and destructor
 
    TParticleClassPDG(const char* name = 0);
-   virtual ~TParticleClassPDG();
+   ~TParticleClassPDG() override;
    // ****** access methods
 
    Int_t   GetNParticles () {
@@ -55,12 +55,12 @@ public:
 
    // ****** overloaded methods of TObject
 
-   virtual void    Print(Option_t* opt="") const; // *MENU*
+   void    Print(Option_t* opt="") const override; // *MENU*
 
-   Bool_t IsFolder() const { return kTRUE; }
-   virtual void   Browse(TBrowser* b);
+   Bool_t IsFolder() const override { return kTRUE; }
+   void   Browse(TBrowser* b) override;
 
-   ClassDef(TParticleClassPDG,1)  // PDG static particle definition
+   ClassDefOverride(TParticleClassPDG,1)  // PDG static particle definition
 };
 
 #endif

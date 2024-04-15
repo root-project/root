@@ -78,7 +78,7 @@ namespace cling {
           llvm_unreachable("kSTDSTRM passed for unknown stream");
         }
         const int Perm = 0644;
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
         const int Mode = _O_CREAT | _O_WRONLY | (append ? _O_APPEND : _O_TRUNC);
         FD = ::_open(file.c_str(), Mode, Perm);
 #else
@@ -106,7 +106,7 @@ namespace cling {
     int m_Bak[kNumRedirects];
     int m_CurStdOut;
 
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
     // After a redirection from stdout into stderr then undirecting stdout, the
     // console will loose line-buffering. To get arround this we test if stdout
     // is a tty during construction, and if so mark the case when stdout has
@@ -181,7 +181,7 @@ namespace cling {
       while (!m_Stack.empty())
         m_Stack.pop_back();
 
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
       // State 2, was tty to begin with, then redirected to stderr and back.
       if (m_TTY == 2)
         ::freopen("CON", "w", stdout);
@@ -209,7 +209,7 @@ namespace cling {
           Redirect *R = (*it).get();
           const unsigned Match = R->Scope & lScope;
           if (Match) {
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
             // stdout back from stderr, fix up our console output on destruction
             if (m_TTY && R->FD == m_Bak[1] && scope & kSTDOUT)
               m_TTY = 2;
@@ -286,7 +286,7 @@ namespace cling {
   MetaProcessor::MetaProcessor(Interpreter& interp, raw_ostream& outs)
     : m_Interp(interp), m_Outs(&outs) {
     m_InputValidator.reset(new InputValidator());
-    m_MetaParser.reset(new MetaParser(new MetaSema(interp, *this)));
+    m_MetaSema.reset(new MetaSema(interp, *this));
   }
 
   MetaProcessor::~MetaProcessor() {
@@ -311,12 +311,12 @@ namespace cling {
     }
 
     //  Check for and handle meta commands.
-    m_MetaParser->enterNewInputLine(input_line);
+    MetaParser parser(*m_MetaSema, input_line);
     MetaSema::ActionResult actionResult = MetaSema::AR_Success;
     if (!m_InputValidator->inBlockComment() &&
-         m_MetaParser->isMetaCommand(actionResult, result)) {
+         parser.isMetaCommand(actionResult, result)) {
 
-      if (m_MetaParser->isQuitRequested())
+      if (parser.isQuitRequested())
         return -1;
 
       if (actionResult != MetaSema::AR_Success)
@@ -346,6 +346,11 @@ namespace cling {
 
   void MetaProcessor::cancelContinuation() const {
     m_InputValidator->reset();
+  }
+
+  bool MetaProcessor::awaitingMoreInput() const {
+    return m_InputValidator->getLastResult() ==
+           InputValidator::ValidationResult::kIncomplete;
   }
 
   int MetaProcessor::getExpectedIndent() const {
@@ -476,7 +481,7 @@ namespace cling {
       m_TopExecutingFile = m_CurrentlyExecutingFile;
 
     std::string path(filename.str());
-#ifdef LLVM_ON_WIN32
+#ifdef _WIN32
     std::size_t p = 0;
     while ((p = path.find('\\', p)) != std::string::npos) {
       path.insert(p, "\\");
@@ -488,6 +493,8 @@ namespace cling {
     if (content.back() != ';')
       content.append(";");
 
+    Interpreter::InputFlagsRAII RAII(m_Interp, Interpreter::kInputFromFile |
+                                               (lineByLine ? Interpreter::kIFFLineByLine : 0));
     Interpreter::CompilationResult ret = Interpreter::kSuccess;
     if (lineByLine) {
       int rslt = 0;
@@ -525,7 +532,7 @@ namespace cling {
 
   void MetaProcessor::registerUnloadPoint(const Transaction* T,
                                           llvm::StringRef filename) {
-    m_MetaParser->getActions().registerUnloadPoint(T, filename);
+    m_MetaSema->registerUnloadPoint(T, filename);
   }
 
 } // end namespace cling

@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -13,7 +13,9 @@
 #include <string>
 #include <type_traits>
 #include <unordered_map>
-#include <ROOT/RMakeUnique.hxx>
+
+#include <ROOT/RPadLength.hxx>
+#include <ROOT/RColor.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -142,7 +144,30 @@ public:
    RAttrMap &AddInt(const std::string &name, int value) { m[name] = std::make_unique<IntValue_t>(value); return *this; }
    RAttrMap &AddDouble(const std::string &name, double value) { m[name] = std::make_unique<DoubleValue_t>(value); return *this; }
    RAttrMap &AddString(const std::string &name, const std::string &value) { m[name] = std::make_unique<StringValue_t>(value); return *this; }
+   RAttrMap &AddPadLength(const std::string &name, const RPadLength &value)
+   {
+      if (value.Empty())
+         Clear(name);
+      else
+         m[name] = std::make_unique<StringValue_t>(value.AsString());
+      return *this;
+   }
+   RAttrMap &AddColor(const std::string &name, const RColor &value)
+   {
+      if (value.IsEmpty())
+         Clear(name);
+      else
+         m[name] = std::make_unique<StringValue_t>(value.AsString());
+      return *this;
+   }
    RAttrMap &AddDefaults(const RAttrBase &vis);
+
+   RAttrMap &AddValue(const std::string &name, bool value) { return AddBool(name, value); }
+   RAttrMap &AddValue(const std::string &name, int value) { return AddInt(name, value); }
+   RAttrMap &AddValue(const std::string &name, double value) { return AddDouble(name, value); }
+   RAttrMap &AddValue(const std::string &name, const std::string &value) { return AddString(name, value); }
+   RAttrMap &AddValue(const std::string &name, const RPadLength &value) { return AddPadLength(name, value); }
+   RAttrMap &AddValue(const std::string &name, const RColor &value) { return AddColor(name, value); }
 
    RAttrMap(const RAttrMap &src)
    {
@@ -164,12 +189,15 @@ public:
       return (entry != m.end()) ? entry->second.get() : nullptr;
    }
 
+   /** Clear specified attribute */
    void Clear(const std::string &name)
    {
       auto entry = m.find(name);
       if (entry != m.end())
          m.erase(entry);
    }
+
+   bool Change(const std::string &name, Value_t *value = nullptr);
 
    auto begin() const { return m.begin(); }
    auto end() const { return m.end(); }
@@ -179,20 +207,23 @@ template<> bool RAttrMap::Value_t::Get<bool>() const;
 template<> int RAttrMap::Value_t::Get<int>() const;
 template<> double RAttrMap::Value_t::Get<double>() const;
 template<> std::string RAttrMap::Value_t::Get<std::string>() const;
+template<> RPadLength RAttrMap::Value_t::Get<RPadLength>() const;
+template<> RColor RAttrMap::Value_t::Get<RColor>() const;
 
 template<> bool RAttrMap::Value_t::GetValue<bool,void>(const Value_t *rec);
 template<> int RAttrMap::Value_t::GetValue<int,void>(const Value_t *rec);
 template<> double RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec);
 template<> std::string RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec);
+template<> RPadLength RAttrMap::Value_t::GetValue<RPadLength,void>(const Value_t *rec);
+template<> RColor RAttrMap::Value_t::GetValue<RColor,void>(const Value_t *rec);
+
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,void>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,int>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec);
-
-
-//////////////////////////////////////////////////////////////////////////
-
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,RPadLength>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,RColor>(const Value_t *rec);
 
 } // namespace Experimental
 } // namespace ROOT

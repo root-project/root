@@ -16,10 +16,10 @@
 
 #include "TMath.h"
 #include "TError.h"
-#include <math.h>
-#include <string.h>
+#include <cmath>
+#include <cstring>
 #include <algorithm>
-#include "Riostream.h"
+#include <iostream>
 #include "TString.h"
 
 #include <Math/SpecFuncMathCore.h>
@@ -46,6 +46,7 @@ namespace TMath {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `sqrt(x*x + y*y)`
 
 Long_t TMath::Hypot(Long_t x, Long_t y)
 {
@@ -53,6 +54,7 @@ Long_t TMath::Hypot(Long_t x, Long_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns `sqrt(x*x + y*y)`
 
 Double_t TMath::Hypot(Double_t x, Double_t y)
 {
@@ -60,6 +62,7 @@ Double_t TMath::Hypot(Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the area hyperbolic sine of `x`.
 
 Double_t TMath::ASinH(Double_t x)
 {
@@ -73,6 +76,7 @@ Double_t TMath::ASinH(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the nonnegative area hyperbolic cosine of `x`.
 
 Double_t TMath::ACosH(Double_t x)
 {
@@ -86,6 +90,7 @@ Double_t TMath::ACosH(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the area hyperbolic tangent of `x`.
 
 Double_t TMath::ATanH(Double_t x)
 {
@@ -97,6 +102,7 @@ Double_t TMath::ATanH(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Returns the binary (base-2) logarithm of `x`.
 
 Double_t TMath::Log2(Double_t x)
 {
@@ -115,7 +121,7 @@ Double_t TMath::DiLog(Double_t x)
    const Double_t pi3 = pi2/3;
    const Double_t pi6 = pi2/6;
    const Double_t pi12 = pi2/12;
-   const Double_t c[20] = {0.42996693560813697, 0.40975987533077105,
+   const Double_t c[20] = {0.42996693560813697, 0.40975987533077106,
      -0.01858843665014592, 0.00145751084062268,-0.00014304184442340,
       0.00001588415541880,-0.00000190784959387, 0.00000024195180854,
      -0.00000003193341274, 0.00000000434545063,-0.00000000060578480,
@@ -187,9 +193,8 @@ Double_t TMath::Erf(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the complementary error function erfc(x).
+/// Computes the complementary error function erfc(x).
 /// Erfc(x) = (2/sqrt(pi)) Integral(exp(-t^2))dt between x and infinity
-///
 
 Double_t TMath::Erfc(Double_t x)
 {
@@ -197,7 +202,7 @@ Double_t TMath::Erfc(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns  the inverse error function
+/// Returns the inverse error function.
 /// x must be  <-1<x<1
 
 Double_t TMath::ErfInverse(Double_t x)
@@ -229,7 +234,7 @@ Double_t TMath::ErfInverse(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// returns  the inverse of the complementary error function
+/// Returns the inverse of the complementary error function.
 /// x must be  0<x<2
 /// implement using  the quantile of the normal distribution
 /// instead of ErfInverse for better numerical precision for large x
@@ -242,7 +247,7 @@ Double_t TMath::ErfcInverse(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute factorial(n).
+/// Computes factorial(n).
 
 Double_t TMath::Factorial(Int_t n)
 {
@@ -432,7 +437,7 @@ Double_t TMath::GamSer(Double_t a,Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate a Breit Wigner function with mean and gamma.
+/// Calculates a Breit Wigner function with mean and gamma.
 
 Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 {
@@ -441,7 +446,25 @@ Double_t TMath::BreitWigner(Double_t x, Double_t mean, Double_t gamma)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate a gaussian function with mean and sigma.
+/// Calculates a Relativistic Breit Wigner function with median and gamma.
+// \f$ BW(E) = \frac{2\sqrt{2}}{\pi}\frac{M^{2}\gamma\sqrt{M^{2} + \gamma^{2}}}{\left(\sqrt{M^{2}+M\sqrt{M^{2} + \gamma^{2}}}\right)\left(\left(E^{2} - M^{2}\right)^{2} + M^{2}\gamma^{2}\right)} \f$
+
+Double_t TMath::BreitWignerRelativistic(Double_t x, Double_t median, Double_t gamma)
+{
+  Double_t mm = median*median;
+  Double_t gg = gamma*gamma;
+  Double_t mg = median*gamma;
+  Double_t xxMinusmm = x*x - mm;
+
+  Double_t y = sqrt(mm * (mm + gg));
+  Double_t k = (0.90031631615710606*mg*y)/(sqrt(mm+y)); //2*sqrt(2)/pi = 0.90031631615710606
+
+  Double_t bw = k/(xxMinusmm*xxMinusmm + mg*mg);
+  return bw;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calculates a gaussian function with mean and sigma.
 /// If norm=kTRUE (default is kFALSE) the result is divided
 /// by sqrt(2*Pi)*sigma.
 
@@ -548,14 +571,10 @@ Double_t TMath::Normalize(Double_t v[3])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the Poisson distribution function for (x,par)
+/// Computes the Poisson distribution function for (x,par).
 /// The Poisson PDF is implemented by means of Euler's Gamma-function
-/// (for the factorial), so for any x integer argument it is correct.
-/// BUT for non-integer x values, it IS NOT equal to the Poisson distribution.
-/// see TMath::PoissonI to get a non-smooth function.
-/// Note that for large values of par, it is better to call
-///
-///     TMath::Gaus(x,par,sqrt(par),kTRUE)
+/// (for the factorial), so for any x integer argument it is the correct Poisson distribution.
+/// BUT for non-integer x values, it IS NOT equal to the Poisson distribution !
 ///
 /// Begin_Macro
 /// {
@@ -567,24 +586,21 @@ Double_t TMath::Normalize(Double_t v[3])
 
 Double_t TMath::Poisson(Double_t x, Double_t par)
 {
-   if (x<0)
+   if (par < 0)
+      return TMath::QuietNaN();
+   if (x < 0)
       return 0;
-   else if (x == 0.0)
-      return 1./Exp(par);
-   else {
-      Double_t lnpoisson = x*log(par)-par-LnGamma(x+1.);
-      return Exp(lnpoisson);
+   else if (x == 0.0 )
+      return Exp(-par);
+   else
+   {
+      return Exp( x * log(par) - LnGamma(x + 1.) - par);
    }
-   // An alternative strategy is to transition to a Gaussian approximation for
-   // large values of par ...
-   //   else {
-   //     return Gaus(x,par,Sqrt(par),kTRUE);
-   //   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the Poisson distribution function for (x,par)
-/// This is a non-smooth function.
+/// Computes the Discrete Poisson distribution function for (x,par).
+/// This is a discrete and a non-smooth function.
 /// This function is equivalent to ROOT::Math::poisson_pdf
 ///
 /// Begin_Macro
@@ -864,17 +880,17 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
 /// \f[
 /// lorentz(xx) = \frac{ \frac{1}{\pi} \frac{lg}{2} }{ (xx^{2} + \frac{lg^{2}}{4}) }
 /// \f]
-/// .
+/// \.
 ///
 /// The Voigt function is known to be the real part of Faddeeva function also
 /// called complex error function [2].
 ///
-/// The algoritm was developed by J. Humlicek [1].
+/// The algorithm was developed by J. Humlicek [1].
 /// This code is based on fortran code presented by R. J. Wells [2].
 /// Translated and adapted by Miha D. Puc
 ///
 /// To calculate the Faddeeva function with relative error less than 10^(-r).
-/// r can be set by the the user subject to the constraints 2 <= r <= 5.
+/// r can be set by the user subject to the constraints 2 <= r <= 5.
 ///
 ///  - [1] J. Humlicek, JQSRT, 21, 437 (1982).
 ///  - [2] [R.J. Wells "Rapid Approximation to the Voigt/Faddeeva Function and its Derivatives" JQSRT 62 (1999), pp 29-48.](http://www-atm.physics.ox.ac.uk/user/wells/voigt.html)
@@ -1082,7 +1098,7 @@ Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 ///
 /// If the boolean returned by the method is false:
 ///    ==> there are 3 real roots a,b,c
-
+///
 /// If the boolean returned by the method is true:
 ///    ==> there is one real root a and 2 complex conjugates roots (b+i*c,b-i*c)
 ///
@@ -1156,6 +1172,7 @@ Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double
 ///  \param[in] prob        probabilities where to compute quantiles
 ///  \param[in] nprob       size of prob array
 ///  \param[in] isSorted    is the input array x sorted ?
+///  \param[in] index       parameter index
 ///  \param[in] type        method to compute (from 1 to 9).
 ///
 /// #### NOTE:
@@ -1194,7 +1211,7 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
       printf("illegal value of type\n");
       return;
    }
-   Int_t *ind = 0;
+   Int_t *ind = nullptr;
    Bool_t isAllocated = kFALSE;
    if (!isSorted){
       if (index) ind = index;
@@ -1286,8 +1303,9 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
 /// Bubble sort variant to obtain the order of an array's elements into
 /// an index in order to do more useful things than the standard built
 /// in functions.
+/// \param[in] Narr   number of array elements
 /// \param[in] *arr1  is unchanged;
-/// \param[in] *arr2  is the array of indicies corresponding to the descending value
+/// \param[in] *arr2  is the array of indices corresponding to the descending value
 ///            of arr1 with arr2[0] corresponding to the largest arr1 value and
 ///            arr2[Narr] the smallest.
 ///
@@ -1376,7 +1394,7 @@ void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 ///
 /// The quality of hash method is good enough, that
 /// "random" numbers made as R = Hash(1), Hash(2), ...Hash(N)
-/// tested by <R>, <R*R>, <Ri*Ri+1> gives the same result
+/// tested by `<R>`, `<R*R>`, `<Ri*Ri+1>` gives the same result
 /// as for libc rand().
 ///
 ///  - For string:  i = TMath::Hash(string,nstring);
@@ -1401,7 +1419,7 @@ ULong_t TMath::Hash(const char *txt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the modified Bessel function I_0(x) for any real x.
+/// Computes the modified Bessel function I_0(x) for any real x.
 ///
 /// \author NvE 12-mar-2000 UU-SAP Utrecht
 
@@ -1432,7 +1450,7 @@ Double_t TMath::BesselI0(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the modified Bessel function K_0(x) for positive real x.
+/// Computes the modified Bessel function K_0(x) for positive real x.
 ///
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
@@ -1466,7 +1484,7 @@ Double_t TMath::BesselK0(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the modified Bessel function I_1(x) for any real x.
+/// Computes the modified Bessel function I_1(x) for any real x.
 ///
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
@@ -1501,7 +1519,7 @@ Double_t TMath::BesselI1(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the modified Bessel function K_1(x) for positive real x.
+/// Computes the modified Bessel function K_1(x) for positive real x.
 ///
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
@@ -1535,7 +1553,7 @@ Double_t TMath::BesselK1(Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the Integer Order Modified Bessel function K_n(x)
+/// Computes the Integer Order Modified Bessel function K_n(x)
 /// for n=0,1,2,... and positive real x.
 ///
 /// \author NvE 12-mar-2000 UU-SAP Utrecht
@@ -1564,7 +1582,7 @@ Double_t TMath::BesselK(Int_t n,Double_t x)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute the Integer Order Modified Bessel function I_n(x)
+/// Computes the Integer Order Modified Bessel function I_n(x)
 /// for n=0,1,2,... and any real x.
 ///
 /// \author NvE 12-mar-2000 UU-SAP Utrecht
@@ -1899,7 +1917,8 @@ Double_t TMath::StruveH1(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modified Struve Function of Order 0.
-/// By Kirill Filimonov.
+///
+/// \author Kirill Filimonov.
 
 Double_t TMath::StruveL0(Double_t x)
 {
@@ -1945,7 +1964,8 @@ Double_t TMath::StruveL0(Double_t x)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modified Struve Function of Order 1.
-/// By Kirill Filimonov.
+///
+/// \author Kirill Filimonov.
 
 Double_t TMath::StruveL1(Double_t x)
 {
@@ -2042,7 +2062,7 @@ Double_t TMath::BetaCf(Double_t x, Double_t a, Double_t b)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the probability density function of the Beta distribution
-/// (the distribution function is computed in BetaDistI).
+/// (the cumulative distribution function is computed in BetaDistI).
 /// The first argument is the point, where the function will be
 /// computed, second and third are the function parameters.
 /// Since the Beta distribution is bounded on both sides, it's often
@@ -2060,7 +2080,8 @@ Double_t TMath::BetaDist(Double_t x, Double_t p, Double_t q)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Computes the distribution function of the Beta distribution.
+/// Computes the cumulative distribution function of the Beta distribution,
+/// i.e. the lower tail integral of TMath::BetaDist
 /// The first argument is the point, where the function will be
 /// computed, second and third are the function parameters.
 /// Since the Beta distribution is bounded on both sides, it's often
@@ -2085,7 +2106,7 @@ Double_t TMath::BetaIncomplete(Double_t x, Double_t a, Double_t b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate the binomial coefficient n over k.
+/// Calculates the binomial coefficient n over k.
 
 Double_t TMath::Binomial(Int_t n,Int_t k)
 {
@@ -2104,13 +2125,18 @@ Double_t TMath::Binomial(Int_t n,Int_t k)
 /// Suppose an event occurs with probability _p_ per trial
 /// Then the probability P of its occurring _k_ or more times
 /// in _n_ trials is termed a cumulative binomial probability
-/// the formula is P = sum_from_j=k_to_n(TMath::Binomial(n, j)*
-/// *TMath::Power(p, j)*TMath::Power(1-p, n-j)
+/// the formula is:
+/// ~~~ {cpp}
+/// P = sum_from_j=k_to_n(TMath::Binomial (n, j)**TMath::Power (p, j)*TMath::Power (1-p, n-j)
+/// ~~~
 /// For _n_ larger than 12 BetaIncomplete is a much better way
 /// to evaluate the sum than would be the straightforward sum calculation
-/// for _n_ smaller than 12 either method is acceptable
-/// ("Numerical Recipes")
-///     --implementation by Anna Kreshuk
+/// for _n_ smaller than 12 either method is acceptable ("Numerical Recipes")
+///
+/// Note this function is not exactly implementing the cumulative or the complement of the cumulative of the
+/// Binomial distrinution. It is equivalent to ROOT::Math::binomial_cdf_c(k-1,p,n)
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 {
@@ -2135,7 +2161,6 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 /// does a single point.
 /// The formula was taken from "Engineering Statistics Handbook" on site
 /// http://www.itl.nist.gov/div898/handbook/eda/section3/eda3663.htm
-/// Implementation by Anna Kreshuk.
 ///
 /// Example:
 ///
@@ -2144,6 +2169,8 @@ Double_t TMath::BinomialI(Double_t p, Int_t n, Int_t k)
 ///    fc->SetParameters(0, 1);
 ///    fc->Draw();
 /// ~~~
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 {
@@ -2155,11 +2182,13 @@ Double_t TMath::CauchyDist(Double_t x, Double_t t, Double_t s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the quantiles of the chi-squared probability distribution function.
 /// Algorithm AS 91   Appl. Statist. (1975) Vol.24, P.35
-/// implemented by Anna Kreshuk.
+/// .
 /// Incorporates the suggested changes in AS R85 (vol.40(1), pp.233-5, 1991)
 ///
 /// \param[in] p     the probability value, at which the quantile is computed
 /// \param[in] ndf   number of degrees of freedom
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 {
@@ -2242,7 +2271,8 @@ Double_t TMath::ChisquareQuantile(Double_t p, Double_t ndf)
 /// distributions, with N and M degrees of freedom respectively,
 /// where each chi-square is first divided by it's number of degrees
 /// of freedom.
-/// Implementation by Anna Kreshuk.
+///
+/// \author Anna Kreshuk
 
 Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 {
@@ -2250,8 +2280,9 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculates the cumulative distribution function of F-distribution,
-/// this function occurs in the statistical test of whether two observed
+/// Calculates the cumulative distribution function of F-distribution
+/// (see ROOT::Math::fdistribution_cdf).
+/// This function occurs in the statistical test of whether two observed
 /// samples have the same variance. For this test a certain statistic F,
 /// the ratio of observed dispersion of the first sample to that of the
 /// second sample, is calculated. N and M stand for numbers of degrees
@@ -2261,7 +2292,7 @@ Double_t TMath::FDist(Double_t F, Double_t N, Double_t M)
 /// rejection, in turn implying high confidence in the hypothesis
 /// "1 has variance greater than 2".
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 {
@@ -2272,6 +2303,7 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 ////////////////////////////////////////////////////////////////////////////////
 /// Computes the density function of Gamma distribution at point x.
 ///
+/// \param[in] x       evaluation point
 /// \param[in] gamma   shape parameter
 /// \param[in] mu      location parameter
 /// \param[in] beta    scale parameter
@@ -2338,8 +2370,8 @@ Double_t TMath::LaplaceDist(Double_t x, Double_t alpha, Double_t beta)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Computes the distribution function of Laplace distribution
-/// at point x, with location parameter alpha and shape parameter beta.
+/// Computes the cumulative distribution function (lower tail integral)
+/// of Laplace distribution at point x, with location parameter alpha and shape parameter beta.
 /// By default, alpha=0, beta=1
 /// This distribution is known under different names, most common is
 /// double exponential distribution, but it also appears as
@@ -2360,6 +2392,7 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 /// Computes the density of LogNormal distribution at point x.
 /// Variable X has lognormal distribution if Y=Ln(X) has normal distribution
 ///
+/// \param[in] x      is the evaluation point
 /// \param[in] sigma  is the shape parameter
 /// \param[in] theta  is the location parameter
 /// \param[in] m      is the scale parameter
@@ -2585,7 +2618,7 @@ Bool_t TMath::Permute(Int_t n, Int_t *a)
 /// As the number of degrees of freedom grows, t-distribution approaches
 /// Normal(0,1) distribution.
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::Student(Double_t T, Double_t ndf)
 {
@@ -2606,8 +2639,9 @@ Double_t TMath::Student(Double_t T, Double_t ndf)
 /// not for the number of samples
 /// if x has Student's t-distribution, the function returns the probability of
 /// x being less than T.
+/// This is equivalent to ROOT::Math::tdistribution_cdf(T,ndf)
 ///
-/// Implementation by Anna Kreshuk.
+/// \author Anna Kreshuk
 
 Double_t TMath::StudentI(Double_t T, Double_t ndf)
 {
@@ -2690,7 +2724,7 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Vavilov density function
+/// Returns the value of the Vavilov probability density function
 ///
 /// \param[in] x      the point were the density function is evaluated
 /// \param[in] kappa  value of kappa (distribution parameter)
@@ -2706,6 +2740,9 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 /// density function computed numerically in an accurate way: our approximation
 /// shows a difference of less than 3% around the peak of the density function, slowly
 /// increasing going towards the extreme tails to the right and to the left"
+///
+/// For a more accurate implementation see the documentation in the Vavilov class and
+/// ROOT::Math::vavilov_accurate_pdf
 ///
 /// Begin_Macro
 /// {
@@ -2745,7 +2782,7 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 
    Int_t itype;
    Int_t npt;
-   TMath::VavilovSet(kappa, beta2, 0, 0, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, false, nullptr, ac, hc, itype, npt);
    Double_t v =  TMath::VavilovDenEval(x, ac, hc, itype);
    delete [] ac;
    delete [] hc;
@@ -2753,7 +2790,8 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Vavilov distribution function
+/// Returns the value of the Vavilov cumulative distribution function
+/// (lower tail integral of the probability distribution function)
 ///
 /// \param[in] x      the point were the density function is evaluated
 /// \param[in] kappa  value of kappa (distribution parameter)
@@ -2770,6 +2808,9 @@ Double_t TMath::Vavilov(Double_t x, Double_t kappa, Double_t beta2)
 /// density function computed numerically in an accurate way: our approximation
 /// shows a difference of less than 3% around the peak of the density function, slowly
 /// increasing going towards the extreme tails to the right and to the left"
+///
+/// For a more accurate implementation see the documentation of the Vavilov class and the cumulative
+/// ROOT::Math::vavilov_accurate_cdf
 
 Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 {
@@ -2780,7 +2821,7 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
    Int_t npt;
    Int_t k;
    Double_t xx, v;
-   TMath::VavilovSet(kappa, beta2, 1, wcm, ac, hc, itype, npt);
+   TMath::VavilovSet(kappa, beta2, true, wcm, ac, hc, itype, npt);
    if (x < ac[0]) v = 0;
    else if (x >=ac[8]) v = 1;
    else {
@@ -2795,7 +2836,8 @@ Double_t TMath::VavilovI(Double_t x, Double_t kappa, Double_t beta2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the value of the Landau distribution function at point x.
+/// Returns the cumulative (lower tail integral) of the Landau distribution function at point x.
+/// (see ROOT::Math::landau_cdf)
 /// The algorithm was taken from the Cernlib function dislan(G110)
 /// Reference: K.S.Kolbig and B.Schorr, "A program package for the Landau
 /// distribution", Computer Phys.Comm., 31(1984), 97-111

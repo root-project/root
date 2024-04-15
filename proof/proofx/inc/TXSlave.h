@@ -46,34 +46,34 @@ private:
    static Int_t GetProofdProtocol(TSocket *s);
 
 protected:
-   void     FlushSocket();
-   void     Interrupt(Int_t type);
-   Int_t    Ping();
-   TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0);
-   Int_t    SendGroupPriority(const char *grp, Int_t priority);
-   void     SetAlias(const char *alias);
-   void     StopProcess(Bool_t abort, Int_t timeout);
+   void     FlushSocket() override;
+   void     Interrupt(Int_t type) override;
+   Int_t    Ping() override;
+   TObjString *SendCoordinator(Int_t kind, const char *msg = 0, Int_t int2 = 0) override;
+   Int_t    SendGroupPriority(const char *grp, Int_t priority) override;
+   void     SetAlias(const char *alias) override;
+   void     StopProcess(Bool_t abort, Int_t timeout) override;
 
 public:
    TXSlave(const char *url, const char *ord, Int_t perf,
            const char *image, TProof *proof, Int_t stype,
            const char *workdir, const char *msd, Int_t nwk = 1);
-   virtual ~TXSlave();
+   ~TXSlave() override;
 
-   void   Close(Option_t *opt = "");
+   void   Close(Option_t *opt = "") override;
    void   DoError(int level, const char *location, const char *fmt,
-                  va_list va) const;
+                  va_list va) const override;
 
-   Bool_t HandleError(const void *in = 0); // Error Handler
-   Bool_t HandleInput(const void *in = 0); // Input handler
+   Bool_t HandleError(const void *in = 0) override; // Error Handler
+   Bool_t HandleInput(const void *in = 0) override; // Input handler
 
-   void   SetInterruptHandler(Bool_t on = kTRUE);
+   void   SetInterruptHandler(Bool_t on = kTRUE) override;
 
-   Int_t  SetupServ(Int_t stype, const char *conffile);
+   Int_t  SetupServ(Int_t stype, const char *conffile) override;
 
-   void   Touch();
+   void   Touch() override;
 
-   ClassDef(TXSlave,0)  //Xrd PROOF slave server
+   ClassDefOverride(TXSlave,0)  //Xrd PROOF slave server
 };
 
 #endif

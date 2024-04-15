@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MsgLogger                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MsgLogger
@@ -39,14 +39,13 @@ ostringstream derivative to redirect and format output
 #include "TMVA/Types.h"
 
 // ROOT include(s):
-#include "Riostream.h"
 #include "Rtypes.h"
 #include "TObject.h"
 
 // STL include(s):
-#include <assert.h>
+#include <cassert>
 #include <cstdlib>
-#include <iomanip>
+#include <iostream>
 #include <memory>
 
 
@@ -58,15 +57,9 @@ const UInt_t                           TMVA::MsgLogger::fgMaxSourceSize = 25;
 
 const std::string                      TMVA::MsgLogger::fgPrefix = "";
 const std::string                      TMVA::MsgLogger::fgSuffix = ": ";
-#if __cplusplus > 199711L
 std::atomic<Bool_t>                                       TMVA::MsgLogger::fgInhibitOutput{kFALSE};
 std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgTypeMap{0};
 std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgColorMap{0};
-#else
-Bool_t                                       TMVA::MsgLogger::fgInhibitOutput = kFALSE;
-const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
-const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgColorMap = 0;
-#endif
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnTypeMap;
 static std::unique_ptr<const std::map<TMVA::EMsgType, std::string> > gOwnColorMap;
 
@@ -164,6 +157,14 @@ std::string TMVA::MsgLogger::GetFormattedSource() const
    }
 
    return source_name;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// returns the maximum source size
+
+UInt_t TMVA::MsgLogger::GetMaxSourceSize()
+{
+   return static_cast<UInt_t>(fgMaxSourceSize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

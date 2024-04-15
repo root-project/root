@@ -28,20 +28,21 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TClingMethodInfo.h"
-#include "TClingClassInfo.h"
 #include "TClingUtils.h"
+#include "TClingMethodInfo.h"
 #include "TInterpreter.h"
 
 #include "cling/Interpreter/Value.h"
 
-#include <llvm/ADT/SmallVector.h>
+#include "clang/AST/ASTContext.h"
+#include "llvm/ADT/SmallVector.h"
 
 namespace clang {
 class BuiltinType;
+class CXXMethodDecl;
+class DeclContext;
 class Expr;
 class FunctionDecl;
-class CXXMethodDecl;
 }
 
 namespace cling {
@@ -49,6 +50,7 @@ class Interpreter;
 }
 
 class TClingClassInfo;
+class TClingMethodInfo;
 class TInterpreterValue;
 
 typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
@@ -61,8 +63,6 @@ private:
 
    /// Cling interpreter, we do *not* own.
    cling::Interpreter* fInterp;
-   /// ROOT normalized context for that interpreter
-   const ROOT::TMetaUtils::TNormalizedCtxt &fNormCtxt;
    /// Current method, we own.
    std::unique_ptr<TClingMethodInfo> fMethod;
    /// Decl for the method
@@ -70,12 +70,9 @@ private:
    /// Number of required arguments
    size_t fMinRequiredArguments = -1;
    /// Pointer to compiled wrapper, we do *not* own.
-   tcling_callfunc_Wrapper_t fWrapper;
+   std::atomic<tcling_callfunc_Wrapper_t> fWrapper;
    /// Stored function arguments, we own.
    mutable llvm::SmallVector<cling::Value, 8> fArgVals;
-   /// If true, do not limit number of function arguments to declared number.
-   bool fIgnoreExtraArgs : 1;
-   bool fReturnIsRecordType : 1;
 
 private:
    enum EReferenceType {
@@ -118,22 +115,10 @@ private:
    tcling_callfunc_dtor_Wrapper_t
    make_dtor_wrapper(const TClingClassInfo* info);
 
-   // Implemented in source file.
-   template <typename T>
-   void execWithLL(void* address, cling::Value* val);
-   template <typename T>
-   void execWithULL(void* address, cling::Value* val);
-   template <class T>
-   ExecWithRetFunc_t InitRetAndExecIntegral(clang::QualType QT, cling::Value &ret);
-
-   ExecWithRetFunc_t InitRetAndExecBuiltin(clang::QualType QT, const clang::BuiltinType *BT, cling::Value &ret);
-   ExecWithRetFunc_t InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret);
-   ExecWithRetFunc_t InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret);
-
    void exec(void* address, void* ret);
 
    void exec_with_valref_return(void* address,
-                                cling::Value* ret);
+                                cling::Value& ret);
    void EvaluateArgList(const std::string& ArgList);
 
    size_t CalculateMinRequiredArguments();
@@ -153,23 +138,21 @@ public:
 
    ~TClingCallFunc() = default;
 
-   explicit TClingCallFunc(cling::Interpreter *interp, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-      : fInterp(interp), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false), fReturnIsRecordType(false)
+   explicit TClingCallFunc(cling::Interpreter *interp)
+      : fInterp(interp), fWrapper(0)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(interp));
    }
 
-   explicit TClingCallFunc(const TClingMethodInfo &minfo, const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt)
-   : fInterp(minfo.GetInterpreter()), fNormCtxt(normCtxt), fWrapper(0), fIgnoreExtraArgs(false),
-     fReturnIsRecordType(false)
+   explicit TClingCallFunc(const TClingMethodInfo &minfo)
+   : fInterp(minfo.GetInterpreter()), fWrapper(0)
 
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(minfo));
    }
 
    TClingCallFunc(const TClingCallFunc &rhs)
-      : fInterp(rhs.fInterp), fNormCtxt(rhs.fNormCtxt), fWrapper(rhs.fWrapper), fArgVals(rhs.fArgVals),
-        fIgnoreExtraArgs(rhs.fIgnoreExtraArgs), fReturnIsRecordType(rhs.fReturnIsRecordType)
+      : fInterp(rhs.fInterp), fWrapper(rhs.fWrapper.load()), fArgVals(rhs.fArgVals)
    {
       fMethod = std::unique_ptr<TClingMethodInfo>(new TClingMethodInfo(*rhs.fMethod));
    }
@@ -188,11 +171,11 @@ public:
                               int nargs = 0,
                               void* ret = 0);
    void Exec(void* address, TInterpreterValue* interpVal = 0);
-   long ExecInt(void* address);
+   Longptr_t ExecInt(void* address);
    long long ExecInt64(void* address);
    double ExecDouble(void* address);
    TClingMethodInfo* FactoryMethod() const;
-   void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
+   void IgnoreExtraArgs(bool ignore) { /*FIXME Remove that interface */ }
    void Init();
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);
@@ -200,46 +183,79 @@ public:
    void* InterfaceMethod();
    bool IsValid() const;
    TInterpreter::CallFuncIFacePtr_t IFacePtr();
-   const clang::FunctionDecl *GetDecl() {
-      if (!fDecl)
-         fDecl = fMethod->GetMethodDecl();
-      return fDecl;
-   }
+   const clang::DeclContext *GetDeclContext() const;
 
    int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
+   const clang::FunctionDecl *GetDecl() {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
+      if (!fDecl)
+         fDecl = fMethod->GetTargetFunctionDecl();
+      return fDecl;
+   }
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)
          return fDecl;
-      return fMethod->GetMethodDecl();
+      return fMethod->GetTargetFunctionDecl();
+   }
+   const clang::Decl *GetFunctionOrShadowDecl() const {
+      return fMethod->GetDecl();
    }
    void ResetArg();
-   void SetArg(long arg);
-   void SetArg(unsigned long arg);
-   void SetArg(float arg);
-   void SetArg(double arg);
-   void SetArg(long long arg);
-   void SetArg(unsigned long long arg);
-   void SetArgArray(long* argArr, int narg);
+   template<typename T, std::enable_if_t<std::is_fundamental<T>::value, bool> = true>
+   void SetArg(T arg) {
+      cling::Value ArgValue = cling::Value::Create(*fInterp, arg);
+      // T can be different from the actual parameter of the underlying function.
+      // If we know already the function signature, make sure we create the
+      // cling::Value with the proper type and representation to avoid
+      // re-adjusting at the time we execute.
+      if (const clang::FunctionDecl* FD = GetDecl()) {
+         // FIXME: We need to think how to handle the implicit this pointer.
+         // See the comment in TClingCallFunc::exec.
+         if (!llvm::isa<clang::CXXMethodDecl>(FD)) {
+            clang::QualType QT = FD->getParamDecl(fArgVals.size())->getType();
+            QT = QT.getCanonicalType();
+            clang::ASTContext &C = FD->getASTContext();
+            if (QT->isBuiltinType() && !C.hasSameType(QT, ArgValue.getType())) {
+               switch(QT->getAs<clang::BuiltinType>()->getKind()) {
+               default:
+                  ROOT::TMetaUtils::Error("TClingCallFunc::SetArg", "Unknown builtin type!");
+#ifndef NDEBUG
+                  QT->dump();
+#endif // NDEBUG
+                  break;
+#define X(type, name)                                                      \
+                  case clang::BuiltinType::name:                           \
+                     ArgValue = cling::Value::Create(*fInterp, (type)arg); \
+                  break;
+                  CLING_VALUE_BUILTIN_TYPES
+#undef X
+               }
+            }
+         }
+      }
+      fArgVals.push_back(ArgValue);
+   }
+   void SetArgArray(Longptr_t* argArr, int narg);
    void SetArgs(const char* args);
    void SetFunc(const TClingClassInfo* info, const char* method,
-                const char* arglist, long* poffset);
+                const char* arglist, Longptr_t* poffset);
    void SetFunc(const TClingClassInfo* info, const char* method,
-                const char* arglist, bool objectIsConst, long* poffset);
+                const char* arglist, bool objectIsConst, Longptr_t* poffset);
    void SetFunc(const TClingMethodInfo* info);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const char* proto, long* poffset,
+                     const char* proto, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const char* proto, bool objectIsConst, long* poffset,
-                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
-   void SetFuncProto(const TClingClassInfo* info, const char* method,
-                     const llvm::SmallVectorImpl<clang::QualType>& proto,
-                     long* poffset,
+                     const char* proto, bool objectIsConst, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void SetFuncProto(const TClingClassInfo* info, const char* method,
                      const llvm::SmallVectorImpl<clang::QualType>& proto,
-                     bool objectIsConst, long* poffset,
+                     Longptr_t* poffset,
+                     ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
+   void SetFuncProto(const TClingClassInfo* info, const char* method,
+                     const llvm::SmallVectorImpl<clang::QualType>& proto,
+                     bool objectIsConst, Longptr_t* poffset,
                      ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 };
 

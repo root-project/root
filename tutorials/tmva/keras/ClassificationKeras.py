@@ -14,22 +14,21 @@ from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call
 from os.path import isfile
 
-from keras.models import Sequential
-from keras.layers import Dense, Activation
-from keras.regularizers import l2
-from keras.optimizers import SGD
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Activation
+from tensorflow.keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Classification_Keras.root', 'RECREATE')
 factory = TMVA.Factory('TMVAClassification', output,
                        '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Classification')
 
 # Load data
 if not isfile('tmva_class_example.root'):
-    call(['curl', '-O', 'http://root.cern.ch/files/tmva_class_example.root'])
+    call(['curl', '-L', '-O', 'http://root.cern/files/tmva_class_example.root'])
 
 data = TFile.Open('tmva_class_example.root')
 signal = data.Get('TreeS')
@@ -48,22 +47,22 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Define model
 model = Sequential()
-model.add(Dense(64, activation='relu', W_regularizer=l2(1e-5), input_dim=4))
+model.add(Dense(64, activation='relu', input_dim=4))
 model.add(Dense(2, activation='softmax'))
 
 # Set loss and optimizer
 model.compile(loss='categorical_crossentropy',
-              optimizer=SGD(lr=0.01), metrics=['accuracy', ])
+              optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy', ])
 
 # Store model to file
-model.save('model.h5')
+model.save('modelClassification.h5')
 model.summary()
 
 # Book methods
 factory.BookMethod(dataloader, TMVA.Types.kFisher, 'Fisher',
                    '!H:!V:Fisher:VarTransform=D,G')
 factory.BookMethod(dataloader, TMVA.Types.kPyKeras, 'PyKeras',
-                   'H:!V:VarTransform=D,G:FilenameModel=model.h5:NumEpochs=20:BatchSize=32')
+                   'H:!V:VarTransform=D,G:FilenameModel=modelClassification.h5:FilenameTrainedModel=trainedModelClassification.h5:NumEpochs=20:BatchSize=32')
 
 # Run training, test and evaluation
 factory.TrainAllMethods()

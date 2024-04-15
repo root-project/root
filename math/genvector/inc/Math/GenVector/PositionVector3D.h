@@ -47,6 +47,8 @@ namespace ROOT {
      like global or local coordinate systems.
 
      @ingroup GenVector
+
+     @sa Overview of the @ref GenVector "physics vector library"
     */
 
     template <class CoordSystem, class Tag = DefaultCoordinateSystemTag >
@@ -64,14 +66,14 @@ namespace ROOT {
          Default constructor. Construct an empty object with zero values
       */
 
-      PositionVector3D() : fCoordinates() { }
+      constexpr PositionVector3D() : fCoordinates() { }
 
       /**
          Construct from three values of type <em>Scalar</em>.
          In the case of a XYZPoint the values are x,y,z
          In the case of  a polar vector they are r,theta,phi
       */
-      PositionVector3D(const Scalar & a, const Scalar & b, const Scalar & c) :
+      constexpr PositionVector3D(const Scalar & a, const Scalar & b, const Scalar & c) :
         fCoordinates ( a , b,  c)  { }
 
      /**
@@ -79,14 +81,14 @@ namespace ROOT {
           coordinates, or using a different Scalar type
       */
       template <class T>
-      explicit PositionVector3D( const PositionVector3D<T,Tag> & v) :
+      explicit constexpr PositionVector3D( const PositionVector3D<T,Tag> & v) :
         fCoordinates ( v.Coordinates() ) { }
 
      /**
           Construct from an arbitrary displacement vector
       */
       template <class T>
-      explicit PositionVector3D( const DisplacementVector3D<T,Tag> & p) :
+      explicit constexpr PositionVector3D( const DisplacementVector3D<T,Tag> & p) :
         fCoordinates ( p.Coordinates() ) { }
 
       /**
@@ -94,7 +96,7 @@ namespace ROOT {
           Precondition: v must implement methods x(), y() and z()
       */
       template <class ForeignVector>
-      explicit PositionVector3D( const ForeignVector & v) :
+      explicit constexpr PositionVector3D( const ForeignVector & v) :
         fCoordinates ( Cartesian3D<Scalar>( v.x(), v.y(), v.z() ) ) { }
 
 #ifdef LATER
@@ -185,12 +187,9 @@ namespace ROOT {
          Set internal data based on 3 Scalars at *begin to *end
        */
       template <class IT>
-#ifndef NDEBUG
       PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT end )
-#else
-      PositionVector3D<CoordSystem, Tag>& SetCoordinates( IT begin, IT /* end */ )
-#endif
       { IT a = begin; IT b = ++begin; IT c = ++begin;
+        (void)end;
         assert (++begin==end);
         SetCoordinates (*a,*b,*c);
         return *this;
@@ -212,12 +211,9 @@ namespace ROOT {
          get internal data into 3 Scalars at *begin to *end (3 past begin)
        */
       template <class IT>
-#ifndef NDEBUG
       void GetCoordinates( IT begin, IT end ) const
-#else
-      void GetCoordinates( IT begin, IT /* end */ ) const
-#endif
       { IT a = begin; IT b = ++begin; IT c = ++begin;
+        (void)end;
         assert (++begin==end);
         GetCoordinates (*a,*b,*c);
       }
@@ -259,6 +255,14 @@ namespace ROOT {
       }
 
       // ------ Individual element access, in various coordinate systems ------
+
+      /**
+          Dimension
+      */
+      unsigned int Dimension() const
+      {
+         return fDimension;
+      };
 
       /**
           Cartesian X, converting if necessary from internal coordinate system.
@@ -462,16 +466,17 @@ namespace ROOT {
     private:
 
       CoordSystem fCoordinates;
+      static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
       // Prohibited methods
 
       // this should not compile (if from a vector or points with different tag
 
       template <class OtherCoords, class OtherTag>
-      explicit PositionVector3D( const PositionVector3D<OtherCoords, OtherTag> & );
+      explicit constexpr PositionVector3D( const PositionVector3D<OtherCoords, OtherTag> & );
 
       template <class OtherCoords, class OtherTag>
-      explicit PositionVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & );
+      explicit constexpr PositionVector3D( const DisplacementVector3D<OtherCoords, OtherTag> & );
 
       template <class OtherCoords, class OtherTag>
       PositionVector3D & operator=( const PositionVector3D<OtherCoords, OtherTag> & );

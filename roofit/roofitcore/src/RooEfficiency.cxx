@@ -19,7 +19,7 @@
 \class RooEfficiency
 \ingroup Roofitcore
 
-RooEfficiency is a PDF helper class to fit efficiencies parameterized
+A PDF helper class to fit efficiencies parameterized
 by a supplied function F.
 
 Given a dataset with a category C that determines if a given
@@ -34,12 +34,11 @@ F may have an arbitrary number of dependents and parameters
 #include "RooStreamParser.h"
 #include "RooArgList.h"
 
+#include <RooFit/Detail/EvaluateFuncs.h>
+
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooEfficiency);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,7 +51,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
   _cat("cat","Signal/Background category",this,(RooAbsCategory&)cat),
   _effFunc("effFunc","Efficiency modeling function",this,(RooAbsReal&)effFunc),
   _sigCatName(sigCatName)
-{  
+{
 }
 
 
@@ -60,7 +59,7 @@ RooEfficiency::RooEfficiency(const char *name, const char *title, const RooAbsRe
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) : 
+RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
   RooAbsPdf(other, name),
   _cat("cat",this,other._cat),
   _effFunc("effFunc",this,other._effFunc),
@@ -68,63 +67,34 @@ RooEfficiency::RooEfficiency(const RooEfficiency& other, const char* name) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooEfficiency::~RooEfficiency() 
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the raw value of this p.d.f which is the effFunc
 /// value if cat==1 and it is (1-effFunc) if cat==0
 
-Double_t RooEfficiency::evaluate() const
+double RooEfficiency::evaluate() const
 {
-  Double_t effFuncVal = _effFunc ;
-
-  // Truncate efficiency function in range 0.0-1.0
-  if (_effFunc>1) {
-    effFuncVal = 1.0 ;
-  } else if (_effFunc<0) {
-    effFuncVal = 0.0 ;
-  }
-
-  if (_cat.label() == _sigCatName) {
-    // Accept case
-    return effFuncVal ;
-  } else {
-    // Reject case
-    return 1 - effFuncVal ;
-  }
+   const int sigCatIndex = _cat->lookupIndex(_sigCatName.Data());
+   return RooFit::Detail::EvaluateFuncs::efficiencyEvaluate(_effFunc, _cat, sigCatIndex);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t RooEfficiency::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const 
+int RooEfficiency::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-  if (matchArgs(allVars,analVars,_cat)) return 1 ;
-  return 0 ;
+   return matchArgs(allVars, analVars, _cat) ? 1 : 0;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooEfficiency::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+double RooEfficiency::analyticalIntegral(int /*code*/, const char * /*rangeName*/) const
 {
-  R__ASSERT(code==1) ;
-  return 1.0 ;
+   return 1.0;
 }
 
+void RooEfficiency::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   int sigCatIndex = _cat->lookupIndex(_sigCatName.Data());
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::efficiencyEvaluate", _effFunc, _cat, sigCatIndex));
+}
 
-
-
-
-
+std::string RooEfficiency::buildCallToAnalyticIntegral(int /*code*/, const char * /*rangeName*/,
+                                                       RooFit::Detail::CodeSquashContext &) const
+{
+   return "1.0";
+}

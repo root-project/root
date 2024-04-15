@@ -1,12 +1,9 @@
-/// \file gui_handler_mac.mm
-/// \ingroup CanvasPainter ROOT7
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2017-06-29
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,11 +17,10 @@
 #include "include/cef_browser.h"
 
 
-void GuiHandler::PlatformInit()
+bool GuiHandler::PlatformInit()
 {
-   // do nothing
+   return false; // MAC not yet support ozone and headless mode
 }
-
 
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title)
 {
@@ -33,4 +29,9 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    std::string titleStr(title);
    NSString *str = [NSString stringWithUTF8String:titleStr.c_str()];
    [window setTitle:str];
+}
+
+bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser>, int, int)
+{
+   return false;
 }

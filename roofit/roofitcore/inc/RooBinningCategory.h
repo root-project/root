@@ -16,34 +16,33 @@
 #ifndef ROO_BINNING_CATEGORY
 #define ROO_BINNING_CATEGORY
 
-#include "TSortedList.h"
 #include "RooAbsCategory.h"
-#include "RooRealProxy.h"
-#include "RooCatType.h"
+#include "RooTemplateProxy.h"
+#include "TString.h"
 
 class RooBinningCategory : public RooAbsCategory {
 
 public:
-  // Constructors etc.
-  inline RooBinningCategory() { }
-  RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=0, const char* catTypeName=0);
-  RooBinningCategory(const RooBinningCategory& other, const char *name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooBinningCategory(*this, newname); }
-  virtual ~RooBinningCategory();
+  RooBinningCategory() = default;
+  RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=nullptr, const char* catTypeName=nullptr);
+  RooBinningCategory(const RooBinningCategory& other, const char *name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooBinningCategory(*this, newname); }
 
-  // Printing interface (human readable)
-  virtual void printMultiline(std::ostream& os, Int_t content, Bool_t verbose=kFALSE, TString indent="") const ;
+  /// Printing interface (human readable)
+  void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;
 
 protected:
-  
-  void initialize(const char* catTypeName=0) ;
 
-  RooRealProxy _inputVar ; // Input variable that is mapped
-  TString _bname ;         // Name of the binning specification to be used to perform the mapping
+  void initialize(const char* catTypeName=nullptr) ;
 
-  virtual RooCatType evaluate() const ; 
+  RooTemplateProxy<RooAbsRealLValue> _inputVar; ///< Input variable that is mapped
+  TString _bname ;         ///< Name of the binning specification to be used to perform the mapping
 
-  ClassDef(RooBinningCategory,1) // RealVar-to-Category function defined by bin boundaries on input var
+  value_type evaluate() const override;
+  /// The shape of this category does not need to be recomputed, as it creates states on the fly.
+  void recomputeShape() override { }
+
+  ClassDefOverride(RooBinningCategory,1) // RealVar-to-Category function defined by bin boundaries on input var
 };
 
 #endif

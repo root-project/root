@@ -21,6 +21,7 @@
 #include "ROOT/REveProjectionBases.hxx"
 #include "ROOT/REveChunkManager.hxx"
 #include "ROOT/REveTrans.hxx"
+#include "ROOT/REveSecondarySelectable.hxx"
 
 class TRandom;
 
@@ -36,7 +37,8 @@ class REveStraightLineSet : public REveElement,
                             public REveProjectable,
                             public TAttLine,
                             public TAttMarker,
-                            public TAttBBox
+                            public TAttBBox,
+                            public REveSecondarySelectable
 {
 private:
    REveStraightLineSet(const REveStraightLineSet&) = delete;
@@ -84,7 +86,7 @@ protected:
 
 public:
    REveStraightLineSet(const std::string &n="StraightLineSet", const std::string &t="");
-   virtual ~REveStraightLineSet() {}
+   ~REveStraightLineSet() override {}
 
    void SetLineColor(Color_t col) override { SetMainColor(col); }
 
@@ -137,7 +139,7 @@ protected:
 
 public:
    REveStraightLineSetProjected();
-   virtual ~REveStraightLineSetProjected() {}
+   ~REveStraightLineSetProjected() override {}
 
    void SetProjection(REveProjectionManager* mng, REveProjectable* model) override;
    void UpdateProjection() override;

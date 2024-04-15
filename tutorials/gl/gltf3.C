@@ -27,8 +27,8 @@ void gltf3()
    TPad *tf3Pad  = new TPad("box", "box", 0.04, 0.04, 0.96, 0.8);
    tf3Pad->Draw();
 
-   TFormula f1 = TFormula("f1", "x*x + y*y + z*z + 2*y - 1");
-   TFormula f2 = TFormula("f2", "x*x + y*y + z*z - 2*y - 1");
+   TFormula *f1 = new TFormula("f1", "x*x + y*y + z*z + 2*y - 1");
+   TFormula *f2 = new TFormula("f2", "x*x + y*y + z*z - 2*y - 1");
 
    // Klein bottle with cut top&bottom parts
    // The Klein bottle is a closed non-orientable surface that has no

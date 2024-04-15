@@ -1,62 +1,111 @@
 // Author: Enrico Guiraud, Danilo Piparo CERN  09/2018
 
 /*************************************************************************
- * Copyright (C) 1995-2018, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RBookedCustomColumns.hxx"
-#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
-#include "TError.h"
+// Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
+#include "ROOT/RDF/RMergeableValue.hxx"
+
+#include <cassert>
+#include <memory>
 
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
 
-RJittedAction::RJittedAction(RLoopManager &lm) : RActionBase(&lm, {}, ROOT::Internal::RDF::RBookedCustomColumns{}) { }
+// fwd decls
+class TTreeReader;
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RMergeableValueBase;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+class RColumnRegister;
+}
+} // namespace Internal
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+class GraphNode;
+}
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
+
+RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
+                             const ROOT::Internal::RDF::RColumnRegister &colRegister,
+                             const std::vector<std::string> &prevVariations)
+   : RActionBase(&lm, columns, colRegister, prevVariations)
+{
+}
+
+RJittedAction::~RJittedAction() {}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Run(slot, entry);
 }
 
 void RJittedAction::Initialize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Initialize();
 }
 
 void RJittedAction::InitSlot(TTreeReader *r, unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->InitSlot(r, slot);
 }
 
 void RJittedAction::TriggerChildrenCount()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->TriggerChildrenCount();
 }
 
 void RJittedAction::FinalizeSlot(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->FinalizeSlot(slot);
 }
 
 void RJittedAction::Finalize()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    fConcreteAction->Finalize();
 }
 
 void *RJittedAction::PartialUpdate(unsigned int slot)
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->PartialUpdate(slot);
 }
 
@@ -72,18 +121,41 @@ bool RJittedAction::HasRun() const
 
 void RJittedAction::SetHasRun()
 {
-   R__ASSERT(fConcreteAction != nullptr);
+   assert(fConcreteAction != nullptr);
    return fConcreteAction->SetHasRun();
 }
 
-void RJittedAction::ClearValueReaders(unsigned int slot)
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
-   R__ASSERT(fConcreteAction != nullptr);
-   return fConcreteAction->ClearValueReaders(slot);
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->GetGraph(visitedMap);
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
+/**
+   Retrieve a wrapper to the result of the action that knows how to merge
+   with others of the same type.
+*/
+std::unique_ptr<ROOT::Detail::RDF::RMergeableValueBase> RJittedAction::GetMergeableValue() const
 {
-   R__ASSERT(fConcreteAction != nullptr);
-   return fConcreteAction->GetGraph();
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->GetMergeableValue();
+}
+
+ROOT::RDF::SampleCallback_t RJittedAction::GetSampleCallback()
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->GetSampleCallback();
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::MakeVariedAction(std::vector<void *> &&results)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->MakeVariedAction(std::move(results));
+}
+
+std::unique_ptr<ROOT::Internal::RDF::RActionBase> RJittedAction::CloneAction(void *newResult)
+{
+   assert(fConcreteAction != nullptr);
+   return fConcreteAction->CloneAction(newResult);
 }

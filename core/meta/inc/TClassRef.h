@@ -22,7 +22,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "TClass.h"
-#include "TRef.h"
 
 #include <string>
 
@@ -30,11 +29,7 @@ class TClassRef {
 
 private:
    std::string   fClassName; //Name of referenced class
-#ifdef __CINT__
-   TClass      **fClassPtr;  //! Ptr to the permanent TClass ptr/reference
-#else
    TClass *const*fClassPtr;  //! Ptr to the permanent TClass ptr/reference
-#endif
 
    friend class TClass;
 
@@ -42,20 +37,20 @@ private:
    void Assign(TClass *);
    TClass   *InternalGetClass() const;
 public:
-   TClassRef() : fClassName(), fClassPtr(0) {}
+   TClassRef() : fClassName(), fClassPtr(nullptr) {}
    TClassRef(TClass *cl);
    TClassRef(const char *classname);
    TClassRef(const TClassRef&);
    inline TClassRef &operator=(const TClassRef &rhs) {
       // Inline implementation of operator= to speed the no-op case.
-      if (this != &rhs && (fClassPtr == 0 || fClassPtr != rhs.fClassPtr)) {
+      if (this != &rhs && (!fClassPtr || fClassPtr != rhs.fClassPtr)) {
          this->Assign(rhs);
       }
       return *this;
    }
    inline TClassRef &operator=(TClass *rhs) {
       // Inline implementation of operator= to speed the no-op case.
-      if ( this->fClassPtr==0 || *(this->fClassPtr) != rhs) {
+      if ( !this->fClassPtr|| *(this->fClassPtr) != rhs) {
          this->Assign(rhs);
       }
       return *this;
@@ -69,7 +64,7 @@ public:
    }
    const char *GetClassName() { return fClassName.c_str(); }
    TClass *GetClass()  const { return (fClassPtr && *fClassPtr) ? *fClassPtr : InternalGetClass(); }
-   void Reset() { fClassPtr = 0; }
+   void Reset() { fClassPtr = nullptr; }
 
    TClass* operator->() const { return (fClassPtr && *fClassPtr) ? *fClassPtr : InternalGetClass(); }
    operator TClass*() const { return (fClassPtr && *fClassPtr )? *fClassPtr : InternalGetClass(); }

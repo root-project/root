@@ -41,6 +41,7 @@ namespace ROOT {
 
      @ingroup GenVector
 
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class Boost {
@@ -161,12 +162,9 @@ public:
      an array of three Scalars to use as beta_x,beta _y, and beta_z
    */
   template<class IT>
-#ifndef NDEBUG
   void SetComponents(IT begin, IT end) {
-#else
-  void SetComponents(IT begin, IT ) {
-#endif
     IT a = begin; IT b = ++begin; IT c = ++begin;
+    (void)end;
     assert (++begin==end);
     SetComponents (*a, *b, *c);
   }
@@ -176,12 +174,9 @@ public:
      an array of three Scalars into which to place beta_x, beta_y, and beta_z
    */
   template<class IT>
-#ifndef NDEBUG
   void GetComponents(IT begin, IT end) const {
-#else
-  void GetComponents(IT begin, IT ) const {
-#endif
     IT a = begin; IT b = ++begin; IT c = ++begin;
+    (void)end;
     assert (++begin==end);
     GetComponents (*a, *b, *c);
   }

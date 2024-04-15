@@ -13,13 +13,6 @@
 #define ROOT_TGuiBldEditor
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBldEditor                                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TGFrame.h"
 
 #include "TGNumberEntry.h"
@@ -41,7 +34,7 @@ class TGuiBldEditor : public TGVerticalFrame {
 friend class TGuiBldDragManager;
 
 private:
-   TGFrame              *fSelected;       // editted frame
+   TGFrame              *fSelected;       // edited frame
    TGuiBldNameFrame     *fNameFrame;      // frame name
    TGuiBldHintsEditor   *fHintsFrame;     // frame hints
    TGuiBldBorderFrame   *fBorderFrame;    // frame border
@@ -58,8 +51,8 @@ private:
    TGNumberEntry        *fYpos;           // Y position
 
 public:
-   TGuiBldEditor(const TGWindow *p = 0);
-   virtual ~TGuiBldEditor();
+   TGuiBldEditor(const TGWindow *p = nullptr);
+   ~TGuiBldEditor() override;
 
    Int_t    GetXPos() const { return fXpos->GetIntNumber(); }
    Int_t    GetYPos() const { return fYpos->GetIntNumber(); }
@@ -76,13 +69,13 @@ public:
    void     Reset();
    TGuiBldHintsEditor *GetHintsEditor() const { return fHintsFrame; }
 
-   void     RemoveFrame(TGFrame *);
+   void     RemoveFrame(TGFrame *) override;
    void     TabSelected(Int_t id);
-   void     UpdateSelected(TGFrame* = 0); //*SIGNAL*
+   void     UpdateSelected(TGFrame* = nullptr); //*SIGNAL*
    void     ChangeSelected(TGFrame*);     //*SIGNAL*
    void     SwitchLayout();
 
-   ClassDef(TGuiBldEditor,0)  // frame property editor
+   ClassDefOverride(TGuiBldEditor,0)  // frame property editor
 };
 
 #endif

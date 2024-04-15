@@ -52,10 +52,10 @@ using std::cout;
 using std::endl;
 
 // number of distribution generated points
-#define NGEN 1000000
+#define NGEN 100000
 
 int izone = 0;
-TCanvas * c1 = 0;
+TCanvas * c1 = nullptr;
 
 // test using UNURAN string interface
 void testStringAPI() {
@@ -95,7 +95,7 @@ void testStringAPI() {
    w.Stop();
    cout << "Time using TRandom::Gaus  \t=\t " << w.CpuTime() << endl;
 
-   assert(c1 != 0);
+   assert(c1 != nullptr);
    c1->cd(++izone);
    h1->Draw();
    c1->cd(++izone);
@@ -206,8 +206,9 @@ void testDistrMultiDim() {
 
    cout << "\nTest Multidimensional distributions\n\n";
 
-   TH3D * h1 = new TH3D("h13D","gaussian 3D distribution from Unuran",50,-10,10,50,-10,10,50,-10,10);
-   TH3D * h2 = new TH3D("h23D","gaussian 3D distribution from GetRandom",50,-10,10,50,-10,10,50,-10,10);
+   TH3D * h1 = new TH3D("h13D","gaussian 3D distribution from Unuran (vnrou)",50,-10,10,50,-10,10,50,-10,10);
+   TH3D * h2 = new TH3D("h23D","gaussian 3D distribution from Unuran (hitro)",50,-10,10,50,-10,10,50,-10,10);
+   TH3D * h3 = new TH3D("h33D","gaussian 3D distribution from GetRandom",50,-10,10,50,-10,10,50,-10,10);
 
 
 
@@ -219,10 +220,9 @@ void testDistrMultiDim() {
 
    TUnuranMultiContDist dist(f);
    TUnuran unr(gRandom);
-   //std::string method = "method=vnrou";
 
    //std::string method = "method=hitro;use_boundingrectangle=false ";
-   std::string method = "hitro";
+   std::string method = "vnrou";
    if ( !  unr.Init(dist,method) ) {
       cout << "Error initializing unuran" << endl;
       return;
@@ -240,13 +240,32 @@ void testDistrMultiDim() {
    w.Stop();
    cout << "Time using Unuran method " << unr.MethodName() << "\t=\t\t " << w.CpuTime() << endl;
 
-   assert(c1 != 0);
+   assert(c1 != nullptr);
    c1->cd(++izone);
    h1->Draw();
 
 
+   // use a different UNURAN method
+
+   method = "hitro";
+   if ( !  unr.Init(dist,method) ) {
+      cout << "Error re-initializing unuran" << endl;
+      return;
+   }
+
+   w.Start();
+
+   for (int i = 0; i < NGEN; ++i) {
+      unr.SampleMulti(x);
+      h2->Fill(x[0],x[1],x[2]);
+   }
+
+   w.Stop();
+   cout << "Time using Unuran method " << unr.MethodName() << "\t=\t\t " << w.CpuTime() << endl;
+
+
    // need to set a reasonable number of points in TF1 to get acceptable quality from GetRandom to
-   int np = 200;
+   int np = 100;
    f->SetNpx(np);
    f->SetNpy(np);
    f->SetNpz(np);
@@ -254,7 +273,7 @@ void testDistrMultiDim() {
    w.Start();
    for (int i = 0; i < NGEN; ++i) {
       f->GetRandom3(x[0],x[1],x[2]);
-      h2->Fill(x[0],x[1],x[2]);
+      h3->Fill(x[0],x[1],x[2]);
    }
 
    w.Stop();
@@ -262,10 +281,12 @@ void testDistrMultiDim() {
 
 
    c1->cd(++izone);
-   h2->Draw();
+   h3->Draw();
 
-   std::cout << " chi2 test of UNURAN vs GetRandom generated histograms:  " << std::endl;
-   h1->Chi2Test(h2,"UUP");
+   std::cout << " chi2 test of UNURAN vnrou vs GetRandom generated histograms:  " << std::endl;
+   h1->Chi2Test(h3,"UUP");
+   std::cout << " chi2 test of UNURAN hitro vs GetRandom generated histograms:  " << std::endl;
+   h2->Chi2Test(h3,"UUP");
 
 }
 //_____________________________________________
@@ -350,7 +371,7 @@ void testEmpDistr() {
    TH1D * h1b = new TH1D("h1bUnr","Unuran bin Generated data",100,-10,10);
    TH1D * h2 = new TH1D("h2GR","Data from TH1::GetRandom",100,-10,10);
 
-   h0->FillN(Ndata,x,0,1); // fill histogram with starting data
+   h0->FillN(Ndata,x,nullptr,1); // fill histogram with starting data
 
    TUnuran unr;
    TUnuranEmpDist dist(x,x+Ndata,1);

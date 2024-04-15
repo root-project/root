@@ -42,8 +42,8 @@ class REveDigitSet : public REveElement,
 public:
    enum ERenderMode_e { kRM_AsIs, kRM_Line, kRM_Fill };
 
-   typedef void (*Callback_foo)(REveDigitSet*, Int_t, TObject*);
-   typedef TString (*TooltipCB_foo)(REveDigitSet*, Int_t);
+   typedef void (*Callback_foo)(const REveDigitSet*, Int_t, TObject*);
+   typedef std::string (*TooltipCB_foo)(const REveDigitSet*, Int_t);
 
    struct DigitBase_t
    {
@@ -52,17 +52,19 @@ public:
       Int_t  fValue;    // signal value of a digit (can be direct RGBA color)
       void  *fUserData{nullptr}; // user-data for given digit
 
-      DigitBase_t(Int_t v=0) : fValue(v), fUserData(0) {}
+      DigitBase_t(Int_t v=0) : fValue(v), fUserData(nullptr) {}
    };
 
 protected:
-   TRefArray        *fDigitIds;       //  Array holding references to external objects.
+   TRefArray        *fDigitIds{nullptr};  //  Array holding references to external objects.
 
    Int_t             fDefaultValue;   //  Default signal value.
-   Bool_t            fValueIsColor;   //  Interpret signal value as RGBA color.
+   Bool_t            fValueIsColor{false};   //  Interpret signal value as RGBA color.
    Bool_t            fSingleColor;    //  Use the same color for all digits.
    Bool_t            fAntiFlick;      // Make extra render pass to avoid flickering when quads are too small.
-   Bool_t            fOwnIds;         //  Flag specifying if id-objects are owned by the REveDigitSet.
+
+   Bool_t            fOwnIds{false};  //  Flag specifying if id-objects are owned by the TEveDigitSet.
+   Bool_t            fDetIdsAsSecondaryIndices;         //  Flag specifying if id-objects are owned by the REveDigitSet.
    REveChunkManager  fPlex;           //  Container of digit data.
    DigitBase_t*      fLastDigit;      //! The last / current digit added to collection.
    Int_t             fLastIdx;        //! The last / current idx added to collection.
@@ -85,22 +87,21 @@ protected:
 
 public:
    REveDigitSet(const char* n="REveDigitSet", const char* t="");
-   virtual ~REveDigitSet();
+   ~REveDigitSet() override;
 
    void   UseSingleColor();
 
    Bool_t GetAntiFlick() const   { return fAntiFlick; }
    void   SetAntiFlick(Bool_t f) { fAntiFlick = f; }
 
-   virtual void SetMainColor(Color_t color) override;
+   void SetMainColor(Color_t color) override;
 
    /*
    virtual void UnSelected();
    virtual void UnHighlighted();
-
+*/
    using REveElement::GetHighlightTooltip;
-   virtual TString GetHighlightTooltip();
-   */
+   std::string GetHighlightTooltip(const std::set<int>& secondary_idcs) const override;
 
    // Implemented in sub-classes:
    // virtual void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
@@ -118,19 +119,14 @@ public:
    void DigitColor(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
    void DigitColor(UChar_t* rgba);
 
-   Bool_t GetOwnIds() const     { return fOwnIds; }
-   void   SetOwnIds(Bool_t o)   { fOwnIds = o; }
-
    void   DigitId(TObject* id);
-   void   DigitUserData(void* ud);
-
    void   DigitId(Int_t n, TObject* id);
-   void   DigitUserData(Int_t n, void* ud);
+
+   Bool_t GetDetIdsAsSecondaryIndices() const     { return fDetIdsAsSecondaryIndices; }
+   void   SetDetIdsAsSecondaryIndices(Bool_t o)   { fDetIdsAsSecondaryIndices = o; }
 
    DigitBase_t* GetDigit(Int_t n) const { return (DigitBase_t*) fPlex.Atom(n); }
-   TObject*     GetId(Int_t n) const;
-   void*        GetUserData(Int_t n) const;
-   using REveElement::GetUserData;
+   TObject*  GetId(Int_t n) const;
 
    // --------------------------------
 
@@ -178,6 +174,16 @@ public:
 
    TooltipCB_foo GetTooltipCBFoo()          const { return fTooltipCBFoo; }
    void          SetTooltipCBFoo(TooltipCB_foo f) { fTooltipCBFoo = f; }
+
+   bool    IsDigitVisible(const DigitBase_t*) const;
+   int     GetAtomIdxFromShapeIdx(int) const;
+   int     GetShapeIdxFromAtomIdx(int) const;
+
+   void    NewShapePicked(int shapeId, Int_t selectionId, bool multi);
+
+
+   bool    RequiresExtraSelectionData() const override { return GetAlwaysSecSelect(); };
+   void    FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 };

@@ -13,7 +13,6 @@
 #include "TEveManager.h"
 #include "TEveTrans.h"
 
-#include "TColor.h"
 #include "TRefArray.h"
 
 
@@ -86,27 +85,27 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
    TEveElement     (fColor),
    TNamed          (n, t),
 
-   fDigitIds       (0),
+   fDigitIds       (nullptr),
    fDefaultValue   (kMinInt),
    fValueIsColor   (kFALSE),
    fSingleColor    (kFALSE),
    fAntiFlick      (kTRUE),
    fOwnIds         (kFALSE),
    fPlex           (),
-   fLastDigit      (0),
+   fLastDigit      (nullptr),
    fLastIdx        (-1),
 
    fColor          (kWhite),
-   fFrame          (0),
-   fPalette        (0),
+   fFrame          (nullptr),
+   fPalette        (nullptr),
    fRenderMode     (kRM_AsIs),
    fSelectViaFrame (kFALSE),
    fHighlightFrame (kFALSE),
    fDisableLighting(kTRUE),
    fHistoButtons   (kTRUE),
    fEmitSignals    (kFALSE),
-   fCallbackFoo    (0),
-   fTooltipCBFoo   (0)
+   fCallbackFoo    (nullptr),
+   fTooltipCBFoo   (nullptr)
 {
    // Constructor.
 
@@ -122,8 +121,8 @@ TEveDigitSet::TEveDigitSet(const char* n, const char* t) :
 
 TEveDigitSet::~TEveDigitSet()
 {
-   SetFrame(0);
-   SetPalette(0);
+   SetFrame(nullptr);
+   SetPalette(nullptr);
    if (fOwnIds)
       ReleaseIds();
    delete fDigitIds;
@@ -364,7 +363,7 @@ void TEveDigitSet::DigitUserData(Int_t n, void* ud)
 
 TObject* TEveDigitSet::GetId(Int_t n) const
 {
-   return fDigitIds ? fDigitIds->At(n) : 0;
+   return fDigitIds ? fDigitIds->At(n) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,8 +397,8 @@ void TEveDigitSet::DigitSelected(Int_t idx)
    if (fEmitSignals) {
       SecSelected(this, idx);
    } else {
-      printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%lx\n",
-             idx, qb->fValue, (ULong_t)obj);
+      printf("TEveDigitSet::DigitSelected idx=%d, value=%d, obj=0x%zx\n",
+             idx, qb->fValue, (size_t)obj);
       if (obj)
          obj->Print();
    }
@@ -411,9 +410,9 @@ void TEveDigitSet::DigitSelected(Int_t idx)
 
 void TEveDigitSet::SecSelected(TEveDigitSet* qs, Int_t idx)
 {
-   Long_t args[2];
-   args[0] = (Long_t) qs;
-   args[1] = (Long_t) idx;
+   Longptr_t args[2];
+   args[0] = (Longptr_t) qs;
+   args[1] = (Longptr_t) idx;
 
    Emit("SecSelected(TEveDigitSet*, Int_t)", args);
 }
@@ -454,7 +453,7 @@ void TEveDigitSet::SetPalette(TEveRGBAPalette* p)
 
 TEveRGBAPalette* TEveDigitSet::AssertPalette()
 {
-   if (fPalette == 0) {
+   if (fPalette == nullptr) {
       fPalette = new TEveRGBAPalette;
       if (!fValueIsColor) {
          Int_t min, max;

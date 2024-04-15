@@ -12,14 +12,7 @@
 #include "TEveStraightLineSetEditor.h"
 #include "TEveStraightLineSet.h"
 
-#include "TVirtualPad.h"
-#include "TColor.h"
-
-#include "TGLabel.h"
 #include "TGButton.h"
-#include "TGNumberEntry.h"
-#include "TGColorSelect.h"
-#include "TGDoubleSlider.h"
 
 /** \class TEveStraightLineSetEditor
 \ingroup TEve
@@ -34,7 +27,7 @@ ClassImp(TEveStraightLineSetEditor);
 TEveStraightLineSetEditor::TEveStraightLineSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0)
+   fM(nullptr)
                                                     // Initialize widget pointers to 0
 {
    MakeTitle("TEveStraightLineSet");

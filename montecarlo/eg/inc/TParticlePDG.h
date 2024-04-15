@@ -60,7 +60,7 @@ public:
                 const char* ParticleClass, Int_t PdgCode, Int_t Anti,
                 Int_t TrackingCode);
 
-   virtual ~TParticlePDG();
+   ~TParticlePDG() override;
    // ****** access methods
 
    Int_t           PdgCode      () const { return fPdgCode; }
@@ -105,9 +105,9 @@ public:
 
    virtual void  PrintDecayChannel(TDecayChannel* dc, Option_t* opt = "") const;
 
-   virtual void  Print(Option_t* opt = "") const; // *MENU*
+   void  Print(Option_t* opt = "") const override; // *MENU*
 
-   ClassDef(TParticlePDG,2)  // PDG static particle definition
+   ClassDefOverride(TParticlePDG,2)  // PDG static particle definition
 };
 
 #endif

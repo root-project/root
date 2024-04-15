@@ -19,7 +19,7 @@
 
 
 #ifdef R__HAS_TMVACPU
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#include "Blas.h"
 #else
 #include "TMVA/DNN/Architectures/Reference.h"
 #endif
@@ -30,8 +30,8 @@ namespace DNN {
 
 
 template <typename AFloat>
-void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &input,
-                                     const TCpuMatrix<AFloat> &Weights)
+void TCpu<AFloat>::MultiplyTranspose(TCpu<AFloat>::Matrix_t &output, const TCpu<AFloat>::Matrix_t &input,
+                                     const TCpu<AFloat>::Matrix_t &Weights)
 {
 
    int m = (int)input.GetNrows();
@@ -66,13 +66,13 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    ::TMVA::DNN::Blas::Gemm(&transa, &transb, &m, &n, &k, &alpha, A, &m, B, &n, &beta, C, &m);
 #else
    TMatrixT<AFloat> tmp(output.GetNrows(), output.GetNcols());
-   tmp.MultT( input,Weights);
+   tmp.MultT(input, Weights);
    output = tmp;
 #endif
 }
 
 template <typename AFloat>
-void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloat> &biases)
+void TCpu<AFloat>::AddRowWise(TCpu<AFloat>::Matrix_t &output, const TCpu<AFloat>::Matrix_t &biases)
 {
 #ifdef R__HAS_TMVACPU
    int m = (int)output.GetNrows();
@@ -90,7 +90,7 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 #else
-   TMatrixT<AFloat> tmp;
+   TMatrixT<AFloat> tmp = output;
    TReference<AFloat>::AddRowWise(tmp, biases);
    output = tmp;
 #endif

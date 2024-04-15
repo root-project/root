@@ -1,4 +1,4 @@
-   // @(#)root/pgsql:$Id$
+// @(#)root/pgsql:$Id$
 // Author: Dennis Box (dbox@fnal.gov)  3/12/2007
 
 /*************************************************************************
@@ -22,8 +22,18 @@
 #include "TDatime.h"
 #include "TTimeStamp.h"
 #include "TMath.h"
+#include "strlcpy.h"
+#include "snprintf.h"
 
-#include <stdlib.h>
+#include <cstdlib>
+
+#include <pg_config.h> // to get PG_VERSION_NUM
+
+#define pgsql_success(x) (((x) == PGRES_EMPTY_QUERY) \
+                        || ((x) == PGRES_COMMAND_OK) \
+                        || ((x) == PGRES_TUPLES_OK))
+
+#include <libpq-fe.h>
 
 ClassImp(TPgSQLStatement);
 
@@ -37,21 +47,21 @@ static const Int_t kBindStringSize = 30;    // big enough to handle text rep. of
 /// Normal constructor.
 /// Checks if statement contains parameters tags.
 
-TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t* stmt, Bool_t errout):
+TPgSQLStatement::TPgSQLStatement(PgSQL_Stmt_t *stmt, Bool_t errout):
    TSQLStatement(errout),
    fStmt(stmt),
    fNumBuffers(0),
-   fBind(0),
-   fFieldName(0),
+   fBind(nullptr),
+   fFieldName(nullptr),
    fWorkingMode(0),
    fIterationCount(0),
-   fParamLengths(0),
-   fParamFormats(0),
+   fParamLengths(nullptr),
+   fParamFormats(nullptr),
    fNumResultRows(0),
    fNumResultCols(0)
 {
    // Given fRes not used, we retrieve the statement using the connection.
-   if (fStmt->fRes != NULL) {
+   if (fStmt->fRes != nullptr) {
       PQclear(fStmt->fRes);
    }
 
@@ -101,7 +111,7 @@ void TPgSQLStatement::Close(Option_t *)
 #define CheckStmt(method, res)                          \
    {                                                    \
       ClearError();                                     \
-      if (fStmt==0) {                                   \
+      if (!fStmt) {                                     \
          SetError(-1,"Statement handle is 0",method);   \
          return res;                                    \
       }                                                 \
@@ -166,11 +176,12 @@ Bool_t TPgSQLStatement::Process()
    if (IsSetParsMode()) {
       fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                  (const char* const*)fBind,
-                                 0,0,0);
+                                 fParamLengths,
+                                 fParamFormats,
+                                 0);
 
    } else { //result set mode
-
-      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",0,(const char* const*) 0,0,0,0);
+      fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",0,(const char* const*) nullptr, nullptr, nullptr,0);
    }
    ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat))
@@ -240,7 +251,7 @@ Int_t TPgSQLStatement::GetNumFields()
 
 const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 {
-   if (!IsResultSetMode() || (nfield<0) || (nfield>=fNumBuffers)) return 0;
+   if (!IsResultSetMode() || (nfield < 0) || (nfield >= fNumBuffers)) return nullptr;
 
    return fFieldName[nfield];
 }
@@ -250,13 +261,13 @@ const char* TPgSQLStatement::GetFieldName(Int_t nfield)
 
 Bool_t TPgSQLStatement::NextResultRow()
 {
-   if ((fStmt==0) || !IsResultSetMode()) return kFALSE;
+   if (!fStmt || !IsResultSetMode()) return kFALSE;
 
-   Bool_t res=kTRUE;
+   Bool_t res = kTRUE;
 
    fIterationCount++;
    if (fIterationCount>=fNumResultRows)
-     res=kFALSE;
+     res = kFALSE;
    return res;
 }
 
@@ -269,7 +280,7 @@ Bool_t TPgSQLStatement::NextIteration()
 {
    ClearError();
 
-   if (!IsSetParsMode() || (fBind==0)) {
+   if (!IsSetParsMode() || !fBind) {
       SetError(-1,"Cannot call for that statement","NextIteration");
       return kFALSE;
    }
@@ -280,8 +291,8 @@ Bool_t TPgSQLStatement::NextIteration()
 
    fStmt->fRes= PQexecPrepared(fStmt->fConn,"preparedstmt",fNumBuffers,
                                (const char* const*)fBind,
-                               0,//fParamLengths,
-                               0,//fParamFormats,
+                               fParamLengths,
+                               fParamFormats,
                                0);
    ExecStatusType stat = PQresultStatus(fStmt->fRes);
    if (!pgsql_success(stat) ){
@@ -686,17 +697,34 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, TTimeStamp& tm)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set parameter type to be used as buffer.
+/// Also verifies parameter index and memory allocation
+
+Bool_t TPgSQLStatement::SetSQLParamType(Int_t npar, Bool_t isbinary, Int_t param_len, Int_t maxsize)
+{
+   if ((npar < 0) || (npar >= fNumBuffers)) return kFALSE;
+
+   if (maxsize < 0) {
+      if (fBind[npar]) delete [] fBind[npar];
+      fBind[npar] = nullptr;
+   } else if (maxsize > kBindStringSize) {
+      if (fBind[npar]) delete [] fBind[npar];
+      fBind[npar] = new char[maxsize];
+   } else if (!fBind[npar]) {
+      fBind[npar] = new char[kBindStringSize];
+   }
+   fParamFormats[npar] = isbinary ? 1 : 0;
+   fParamLengths[npar] = isbinary ? param_len : 0;
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set NULL as parameter value.
-/// If NULL should be set for statement parameter during first iteration,
-/// one should call before proper Set... method to identify type of argument for
-/// the future. For instance, if one suppose to have double as type of parameter,
-/// code should look like:
-///    stmt->SetDouble(2, 0.);
-///    stmt->SetNull(2);
 
 Bool_t TPgSQLStatement::SetNull(Int_t npar)
 {
-   fBind[npar] = 0;
+   if (!SetSQLParamType(npar, kFALSE, 0, -1)) return kFALSE;
 
    return kTRUE;
 }
@@ -706,6 +734,8 @@ Bool_t TPgSQLStatement::SetNull(Int_t npar)
 
 Bool_t TPgSQLStatement::SetInt(Int_t npar, Int_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%d",value);
 
    return kTRUE;
@@ -716,6 +746,8 @@ Bool_t TPgSQLStatement::SetInt(Int_t npar, Int_t value)
 
 Bool_t TPgSQLStatement::SetUInt(Int_t npar, UInt_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%u",value);
 
    return kTRUE;
@@ -726,6 +758,8 @@ Bool_t TPgSQLStatement::SetUInt(Int_t npar, UInt_t value)
 
 Bool_t TPgSQLStatement::SetLong(Int_t npar, Long_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%ld",value);
 
    return kTRUE;
@@ -736,6 +770,8 @@ Bool_t TPgSQLStatement::SetLong(Int_t npar, Long_t value)
 
 Bool_t TPgSQLStatement::SetLong64(Int_t npar, Long64_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%lld",(Long64_t)value);
 
    return kTRUE;
@@ -746,6 +782,8 @@ Bool_t TPgSQLStatement::SetLong64(Int_t npar, Long64_t value)
 
 Bool_t TPgSQLStatement::SetULong64(Int_t npar, ULong64_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%llu",(ULong64_t)value);
 
    return kTRUE;
@@ -756,6 +794,8 @@ Bool_t TPgSQLStatement::SetULong64(Int_t npar, ULong64_t value)
 
 Bool_t TPgSQLStatement::SetDouble(Int_t npar, Double_t value)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar],kBindStringSize,"%lf",value);
 
    return kTRUE;
@@ -766,32 +806,26 @@ Bool_t TPgSQLStatement::SetDouble(Int_t npar, Double_t value)
 
 Bool_t TPgSQLStatement::SetString(Int_t npar, const char* value, Int_t maxsize)
 {
-   if(sizeof(fBind[npar])<(unsigned)maxsize){
-      delete [] fBind[npar];
-      fBind[npar] = new char[maxsize];
-   }
-   strlcpy(fBind[npar],value,maxsize);
+   if (!SetSQLParamType(npar, kFALSE, 0, maxsize)) return kFALSE;
+
+   if (fBind[npar] && value)
+      strlcpy(fBind[npar], value, (maxsize > kBindStringSize) ? maxsize : kBindStringSize);
+
    return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter value as binary data.
 
-Bool_t TPgSQLStatement::SetBinary(Int_t npar, void* mem, Long_t size, Long_t maxsize)
+Bool_t TPgSQLStatement::SetBinary(Int_t npar, void *mem, Long_t size, Long_t maxsize)
 {
-   // Set parameter value as binary data.
+   if (size > maxsize) maxsize = size;
 
-   size_t sz = size, mxsz = maxsize;
-   unsigned char* escape_ptr = PQescapeBytea((const unsigned char*)mem, sz, &mxsz);
-   unsigned char* binary_ptr = PQunescapeBytea((const unsigned char*)escape_ptr, &mxsz);
-   PQfreemem(escape_ptr);
+   if (!SetSQLParamType(npar, kTRUE, size, maxsize)) return kFALSE;
 
-   delete [] fBind[npar];
-   fBind[npar] = new char[mxsz+1];
-   fBind[npar][mxsz] = '\0';
-   memcpy(fBind[npar], binary_ptr, mxsz);
+   if (fBind[npar] && mem)
+      memcpy(fBind[npar], mem, size);
 
-   PQfreemem(binary_ptr);
    return kTRUE;
 }
 
@@ -853,7 +887,9 @@ Bool_t TPgSQLStatement::SetLargeObject(Int_t npar, void* mem, Long_t size, Long_
 
 Bool_t TPgSQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 {
-   TDatime d =TDatime(year,month,day,0,0,0);
+   if (!SetSQLParamType(npar)) return kFALSE;
+
+   TDatime d(year,month,day,0,0,0);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
 
    return kTRUE;
@@ -864,7 +900,9 @@ Bool_t TPgSQLStatement::SetDate(Int_t npar, Int_t year, Int_t month, Int_t day)
 
 Bool_t TPgSQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 {
-   TDatime d=TDatime(2000,1,1,hour,min,sec);
+   if (!SetSQLParamType(npar)) return kFALSE;
+
+   TDatime d(2000,1,1,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s",(char*)d.AsSQLString());
    return kTRUE;
 }
@@ -874,7 +912,9 @@ Bool_t TPgSQLStatement::SetTime(Int_t npar, Int_t hour, Int_t min, Int_t sec)
 
 Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec)
 {
-   TDatime d=TDatime(year,month,day,hour,min,sec);
+   if (!SetSQLParamType(npar)) return kFALSE;
+
+   TDatime d(year,month,day,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s+00",(char*)d.AsSQLString());
    return kTRUE;
 }
@@ -887,6 +927,8 @@ Bool_t TPgSQLStatement::SetDatime(Int_t npar, Int_t year, Int_t month, Int_t day
 
 Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t day, Int_t hour, Int_t min, Int_t sec, Int_t frac)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    TDatime d(year,month,day,hour,min,sec);
    snprintf(fBind[npar],kBindStringSize,"%s.%06d+00",(char*)d.AsSQLString(),frac);
    return kTRUE;
@@ -897,6 +939,8 @@ Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, Int_t year, Int_t month, Int_t 
 
 Bool_t TPgSQLStatement::SetTimestamp(Int_t npar, const TTimeStamp& tm)
 {
+   if (!SetSQLParamType(npar)) return kFALSE;
+
    snprintf(fBind[npar], kBindStringSize, "%s.%06d+00", (char*)tm.AsString("s"), TMath::Nint(tm.GetNanoSec() / 1000.0));
    return kTRUE;
 }
@@ -1146,27 +1190,17 @@ Bool_t TPgSQLStatement::GetTimestamp(Int_t npar, TTimeStamp& tm)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set parameter type to be used as buffer.
-/// Used in both setting data to database and retriving data from data base.
-/// Initialize proper PGSQL_BIND structure and allocate required buffers.
 
-Bool_t TPgSQLStatement::SetSQLParamType(Int_t, int, bool, int)
+Bool_t TPgSQLStatement::SetSQLParamType(Int_t, Bool_t, Int_t, Int_t)
 {
    return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set NULL as parameter value.
-/// If NULL should be set for statement parameter during first iteration,
-/// one should call before proper Set... method to identify type of argument for
-/// the future. For instance, if one suppose to have double as type of parameter,
-/// code should look like:
-///    stmt->SetDouble(2, 0.);
-///    stmt->SetNull(2);
 
-Bool_t TPgSQLStatement::SetNull(Int_t npar)
+Bool_t TPgSQLStatement::SetNull(Int_t)
 {
-   if ((npar >= 0) && (npar < fNumBuffers))
-      fBind[npar] = 0;
    return kFALSE;
 }
 

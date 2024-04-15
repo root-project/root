@@ -6,7 +6,7 @@
 
 INCLUDE (CheckCXXSourceCompiles)
 
-#---Define a function to do not polute the top level namespace with unneeded variables-----------------------
+#---Define a function not to pollute the top level namespace with unneeded variables-----------------------
 function(RootConfigure)
 
 #---Define all sort of variables to bridge between the old Module.mk and the new CMake equivalents-----------
@@ -74,11 +74,6 @@ if(IS_ABSOLUTE ${CMAKE_INSTALL_DATADIR})
   set(datadir ${CMAKE_INSTALL_DATADIR})
 else()
   set(datadir ${prefix}/${CMAKE_INSTALL_DATADIR})
-endif()
-if(IS_ABSOLUTE ${CMAKE_INSTALL_ELISPDIR})
-  set(elispdir ${CMAKE_INSTALL_ELISPDIR})
-else()
-  set(elispdir ${prefix}/${CMAKE_INSTALL_ELISPDIR})
 endif()
 if(IS_ABSOLUTE ${CMAKE_INSTALL_FONTDIR})
   set(ttffontdir ${CMAKE_INSTALL_FONTDIR})
@@ -220,25 +215,12 @@ set(glewlibdir ${GLEW_LIBRARY_DIR})
 set(glewlibs ${GLEW_LIBRARIES})
 set(glewincdir ${GLEW_INCLUDE_DIR})
 
-set(buildgfal ${value${gfal}})
-set(gfallibdir ${GFAL_LIBRARY_DIR})
-set(gfallib ${GFAL_LIBRARY})
-set(gfalincdir ${GFAL_INCLUDE_DIR})
-
-set(buildmemstat ${value${memstat}})
-
-set(buildalien ${value${alien}})
-set(alienlibdir ${ALIEN_LIBRARY_DIR})
-set(alienlib ${ALIEN_LIBRARY})
-set(alienincdir ${ALIEN_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})
 set(arrowincdir ${ARROW_INCLUDE_DIR})
 
 set(buildasimage ${value${asimage}})
-set(builtinafterimage ${builtin_afterimage})
 set(asextralib ${ASEXTRA_LIBRARIES})
 set(asextralibdir)
 set(asjpegincdir ${JPEG_INCLUDE_DIR})
@@ -249,10 +231,6 @@ set(asimageincdir)
 set(asimagelib)
 set(asimagelibdir)
 
-set(buildpythia6 ${value${pythia6}})
-set(pythia6libdir ${PYTHIA6_LIBRARY_DIR})
-set(pythia6lib ${PYTHIA6_LIBRARY})
-set(pythia6cppflags)
 set(buildpythia8 ${value${pythia8}})
 set(pythia8libdir ${PYTHIA8_LIBRARY_DIR})
 set(pythia8lib ${PYTHIA8_LIBRARY})
@@ -276,8 +254,8 @@ set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
 set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARY})
-set(pythonincdir ${PYTHON_INCLUDE_DIR})
+set(pythonlib ${PYTHON_LIBRARIES})
+set(pythonincdir ${PYTHON_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
@@ -313,7 +291,6 @@ set(gslflags)
 set(shadowpw ${value${shadowpw}})
 set(buildmathmore ${value${mathmore}})
 set(buildroofit ${value${roofit}})
-set(buildminuit2 ${value${minuit2}})
 set(buildunuran ${value${unuran}})
 set(buildgdml ${value${gdml}})
 set(buildhttp ${value${http}})
@@ -339,13 +316,24 @@ set(dicttype ${ROOT_DICTTYPE})
 find_program(PERL_EXECUTABLE perl)
 set(perl ${PERL_EXECUTABLE})
 
-find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser Google\ Chrome
+find_program(CHROME_EXECUTABLE NAMES chrome.exe chromium chromium-browser chrome chrome-browser google-chrome-stable Google\ Chrome
              PATH_SUFFIXES "Google/Chrome/Application")
 if(CHROME_EXECUTABLE)
+  if(WIN32)
+    set(chromemajor 100)
+    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE}, not testing the version")
+  else()
+    execute_process(COMMAND "${CHROME_EXECUTABLE}" --version
+                    OUTPUT_VARIABLE CHROME_VERSION
+                    OUTPUT_STRIP_TRAILING_WHITESPACE)
+    string(REGEX MATCH "[0-9]+" CHROME_MAJOR_VERSION "${CHROME_VERSION}")
+    set(chromemajor ${CHROME_MAJOR_VERSION})
+    message(STATUS "Found CHROME executable ${CHROME_EXECUTABLE} major version ${CHROME_MAJOR_VERSION}")
+  endif()
   set(chromeexe ${CHROME_EXECUTABLE})
 endif()
 
-find_program(FIREFOX_EXECUTABLE NAMES firefox firefox.exe
+find_program(FIREFOX_EXECUTABLE NAMES firefox firefox-bin firefox.exe
              PATH_SUFFIXES "Mozilla Firefox")
 if(FIREFOX_EXECUTABLE)
   set(firefoxexe ${FIREFOX_EXECUTABLE})
@@ -402,11 +390,6 @@ if(vc)
 else()
   set(hasvc undef)
 endif()
-if(vmc)
-  set(hasvmc define)
-else()
-  set(hasvmc undef)
-endif()
 if(vdt)
   set(hasvdt define)
 else()
@@ -421,6 +404,21 @@ if(dataframe)
   set(hasdataframe define)
 else()
   set(hasdataframe undef)
+endif()
+if(dev)
+  set(use_less_includes define)
+else()
+  set(use_less_includes undef)
+endif()
+if((tbb OR builtin_tbb) AND NOT MSVC)
+  set(hastbb define)
+else()
+  set(hastbb undef)
+endif()
+if(root7)
+  set(hasroot7 define)
+else()
+  set(hasroot7 undef)
 endif()
 
 set(uselz4 undef)
@@ -481,93 +479,20 @@ if (tmva-cudnn)
 else()
    set(hastmvacudnn undef)
 endif()
-
-# clear cache to allow reconfiguring
-# with a different CMAKE_CXX_STANDARD
-unset(found_stdapply CACHE)
-unset(found_stdindexsequence CACHE)
-unset(found_stdinvoke CACHE)
-unset(found_stdstringview CACHE)
-unset(found_stdexpstringview CACHE)
-unset(found_stod_stringview CACHE)
-
-set(hasstdexpstringview undef)
-CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-  int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
-if(found_stdstringview)
-  set(hasstdstringview define)
+if (tmva-pymva)
+  set(haspymva define)
 else()
-  set(hasstdstringview undef)
-
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
-  if(found_stdexpstringview)
-    set(hasstdexpstringview define)
-  else()
-    set(hasstdexpstringview undef)
-  endif()
+  set(haspymva undef)
 endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-     int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-     int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
+if (tmva-rmva)
+  set(hasrmva define)
 else()
-  set(found_stod_stringview false)
+  set(hasrmva undef)
 endif()
-
-if(found_stod_stringview)
-  set(hasstodstringview define)
+if (uring)
+  set(hasuring define)
 else()
-  set(hasstodstringview undef)
-endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <string_view>
-     int main() { std::string s; std::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <experimental/string_view>
-     int main() { std::string s; std::experimental::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-else()
-  set(found_opplusequal_stringview false)
-endif()
-
-if(found_opplusequal_stringview)
-  set(hasopplusequalstringview define)
-else()
-  set(hasopplusequalstringview undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
-if(found_stdapply)
-  set(hasstdapply define)
-else()
-  set(hasstdapply undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <functional>
-int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
-if(found_stdinvoke)
-  set(hasstdinvoke define)
-else()
-  set(hasstdinvoke undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <utility>
-#include <type_traits>
-int main() {
-  static_assert(std::is_same<std::integer_sequence<std::size_t, 0, 1, 2>, std::make_index_sequence<3>>::value, \"\");
-  return 0;
-}" found_stdindexsequence)
-if(found_stdindexsequence)
-  set(hasstdindexsequence define)
-else()
-  set(hasstdindexsequence undef)
+  set(hasuring undef)
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("
@@ -588,6 +513,35 @@ else()
    set(has_found_attribute_noinline undef)
 endif()
 
+# We could just check `#ifdef __cpp_lib_hardware_interference_size`, but on at least Mac 11
+# libc++ defines that macro but is missing the actual feature
+# (see https://github.com/llvm/llvm-project/commit/174322c2737d699e199db4762aaf4217305ec465).
+# So we need to "manually" check instead.
+# `#ifdef R__HAS_HARDWARE_INTERFERENCE_SIZE` could be substituted by `#ifdef __cpp_lib_hardware_interference_size`
+# when Mac 11's life has ended (assuming the libc++ fix makes it in the next MacOS version).
+CHECK_CXX_SOURCE_COMPILES("
+#include <new>
+using Check_t = char[std::hardware_destructive_interference_size];
+" found_hardware_interference_size)
+if(found_hardware_interference_size)
+   set(hashardwareinterferencesize define)
+else()
+   set(hashardwareinterferencesize undef)
+endif()
+
+if(webgui)
+   set(root_canvas_class "TWebCanvas")
+else()
+   set(root_canvas_class "TRootCanvas")
+endif()
+
+if(root7 AND webgui)
+#   set(root_browser_class "ROOT::RWebBrowserImp")
+   set(root_browser_class "TRootBrowser")
+else()
+   set(root_browser_class "TRootBrowser")
+endif()
+
 #---root-config----------------------------------------------------------------------------------------------
 ROOT_GET_OPTIONS(features ENABLED)
 set(features "cxx${CMAKE_CXX_STANDARD} ${features}")
@@ -601,10 +555,16 @@ get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
 set(pythonvers ${PYTHON_VERSION_STRING})
+set(python${PYTHON_VERSION_MAJOR}vers ${PYTHON_VERSION_STRING})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
-configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in include/RConfigure.h NEWLINE_STYLE UNIX)
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
+            OUTPUT_VARIABLE __cplusplus_PPout)
+string(REGEX MATCH "__cplusplus=([0-9]+)" __cplusplus "${__cplusplus_PPout}")
+set(__cplusplus ${CMAKE_MATCH_1}L)
+
+configure_file(${PROJECT_SOURCE_DIR}/config/RConfigure.in ginclude/RConfigure.h NEWLINE_STYLE UNIX)
+install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigure.h DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 #---Configure and install various files----------------------------------------------------------------------
 execute_Process(COMMAND hostname OUTPUT_VARIABLE BuildNodeInfo OUTPUT_STRIP_TRAILING_WHITESPACE )
@@ -613,7 +573,8 @@ configure_file(${CMAKE_SOURCE_DIR}/config/rootrc.in ${CMAKE_BINARY_DIR}/etc/syst
 configure_file(${CMAKE_SOURCE_DIR}/config/rootauthrc.in ${CMAKE_BINARY_DIR}/etc/system.rootauthrc @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootdaemonrc.in ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc @ONLY NEWLINE_STYLE UNIX)
 
-configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in include/RConfigOptions.h NEWLINE_STYLE UNIX)
+# file used in TROOT.cxx, not need in include/ dir and not need to install
+configure_file(${CMAKE_SOURCE_DIR}/config/RConfigOptions.in ginclude/RConfigOptions.h NEWLINE_STYLE UNIX)
 
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile-comp.in config/Makefile.comp NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/Makefile.in config/Makefile.config NEWLINE_STYLE UNIX)
@@ -632,6 +593,11 @@ configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/ROOTConfig-version.cmake.in
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cxxflags "${CMAKE_CXX_FLAGS}")
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 
+if(MSVC)
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cxxflags "${__cxxflags}")
+  string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cflags "${__cflags}")
+endif()
+
 if (cxxmodules)
   # Re-add the -Wno-module-import-in-extern-c which we just filtered out.
   # We want it because it changes the module cache hash and causes modules to be
@@ -642,9 +608,10 @@ if (cxxmodules)
 endif()
 
 string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
-string(REGEX MATCHALL "-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
+string(REGEX MATCHALL "(-Wp,)?-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
 set(ROOT_DEFINITIONS \"${__defs}\")
+set(ROOT_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
@@ -668,6 +635,10 @@ set(ROOT_BINDIR ${CMAKE_BINARY_DIR}/bin)
 set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 set(ROOT_BINARY_DIR ${ROOT_BINDIR})
+")
+set(ROOT_CMAKE_DIR_SETUP "
+# ROOT configured for use from the build tree - absolute paths are used.
+set(ROOT_CMAKE_DIR ${CMAKE_SOURCE_DIR}/cmake)
 ")
 
 get_property(exported_targets GLOBAL PROPERTY ROOT_EXPORTED_TARGETS)
@@ -708,6 +679,10 @@ set(ROOT_BINARY_DIR_SETUP "
 # Deprecated value, please don't use it and use ROOT_BINDIR instead.
 get_filename_component(ROOT_BINARY_DIR \"\${ROOT_BINDIR}\" REALPATH)
 ")
+set(ROOT_CMAKE_DIR_SETUP "
+## ROOT configured for the install with relative paths, so use these
+get_filename_component(ROOT_CMAKE_DIR \"\${_thisdir}\" REALPATH)
+")
 
 # used by ROOTConfig.cmake from the build directory
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/RootMacros.cmake
@@ -737,28 +712,30 @@ endif()
 
 #---compiledata.h--------------------------------------------------------------------------------------------
 
-if(APPLE AND runtime_cxxmodules)
-  # Modules have superior dynamic linker and they can resolve undefined symbols upon library loading.
-  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -undefined dynamic_lookup")
-  set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} -undefined dynamic_lookup")
+# ROOTBUILD definition (it is defined in compiledata.h and used by ACLIC
+# to decide whether (by default) to optimize or not optimize the user scripts.)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+  set(ROOTBUILD "debug")
 endif()
 
 if(WIN32)
   # We cannot use the compiledata.sh script for windows
-  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/include/compiledata.h NEWLINE_STYLE UNIX)
+  configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
 else()
+  # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
+  set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
-    ${CMAKE_BINARY_DIR}/include/compiledata.h "${CMAKE_CXX_COMPILER}"
-        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
-        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_FLAGS}" "so"
-        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "")
+    ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
+        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
+        "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
+        "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()
 
-#---Get the value of CMAKE_CXX_FLAGS provided by the user in the command line
+#---Get the values of ROOT_ALL_OPTIONS and CMAKE_CXX_FLAGS provided by the user in the command line
+set(all_features ${ROOT_ALL_OPTIONS})
 set(usercflags ${CMAKE_CXX_FLAGS-CACHED})
 file(REMOVE ${CMAKE_BINARY_DIR}/installtree/root-config)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_BINARY_DIR}/installtree/root-config @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/memprobe.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.csh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.fish ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.fish @ONLY NEWLINE_STYLE UNIX)
@@ -766,13 +743,19 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.csh ${CMAKE_RUNTIME_OUTPUT_DIRE
 configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh COPYONLY)
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
-configure_file(${CMAKE_SOURCE_DIR}/config/root-help.el.in root-help.el @ONLY NEWLINE_STYLE UNIX)
-if (XROOTD_FOUND AND XROOTD_NOMAIN)
+configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
+if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
   configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
 endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
+  set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
   configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.bat ${thisrootbat} @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/thisroot.ps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1 @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/root.rc.in ${CMAKE_BINARY_DIR}/etc/root.rc @ONLY)
+  configure_file(${CMAKE_SOURCE_DIR}/config/root-manifest.xml.in ${CMAKE_BINARY_DIR}/etc/root-manifest.xml @ONLY)
+  install(FILES ${CMAKE_SOURCE_DIR}/build/win/w32pragma.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+  install(FILES ${CMAKE_SOURCE_DIR}/build/win/sehmap.h  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 endif()
 
 #--Local root-configure
@@ -784,6 +767,14 @@ set(etcdir $ROOTSYS/etc)
 set(tutdir $ROOTSYS/tutorials)
 set(mandir $ROOTSYS/man)
 configure_file(${CMAKE_SOURCE_DIR}/config/root-config.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config @ONLY NEWLINE_STYLE UNIX)
+if(MSVC)
+  configure_file(${CMAKE_SOURCE_DIR}/config/root-config.bat.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat @ONLY)
+  install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/root-config.bat
+  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
+              GROUP_EXECUTE GROUP_READ
+              WORLD_EXECUTE WORLD_READ
+  DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
 
 install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.csh
@@ -791,21 +782,22 @@ install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.sh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.csh
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/setxrd.sh
               ${thisrootbat}
+              ${thisrootps1}
               PERMISSIONS OWNER_WRITE OWNER_READ
                           GROUP_READ
                           WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/memprobe
-              ${CMAKE_BINARY_DIR}/installtree/root-config
+install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots
               ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv
+              ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh
               PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                           GROUP_EXECUTE GROUP_READ
                           WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-if (XROOTD_FOUND AND XROOTD_NOMAIN)
+if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
    install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
                  PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
                              GROUP_EXECUTE GROUP_READ
@@ -813,8 +805,8 @@ if (XROOTD_FOUND AND XROOTD_NOMAIN)
                  DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_BINARY_DIR}/include/RConfigOptions.h
-              ${CMAKE_BINARY_DIR}/include/compiledata.h
+install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
+              ${CMAKE_BINARY_DIR}/ginclude/compiledata.h
               DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
@@ -822,8 +814,6 @@ install(FILES ${CMAKE_BINARY_DIR}/etc/root.mimes
               ${CMAKE_BINARY_DIR}/etc/system.rootauthrc
               ${CMAKE_BINARY_DIR}/etc/system.rootdaemonrc
               DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-
-install(FILES ${CMAKE_BINARY_DIR}/root-help.el DESTINATION ${CMAKE_INSTALL_ELISPDIR})
 
 if(NOT gnuinstall)
   install(FILES ${CMAKE_BINARY_DIR}/config/Makefile.comp

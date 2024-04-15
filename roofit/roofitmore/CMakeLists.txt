@@ -13,12 +13,16 @@ if(mathmore)
   set(ROOT_MATHMORE_LIBRARY MathMore)
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
     RooFitMoreLib.h
-    RooAdaptiveGaussKronrodIntegrator1D.h
-    RooGaussKronrodIntegrator1D.h
     RooLegendre.h
+    RooMathMoreReg.h
     RooSpHarmonic.h
     RooNonCentralChiSquare.h
     RooHypatia2.h
@@ -27,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     src/RooAdaptiveGaussKronrodIntegrator1D.cxx
     src/RooGaussKronrodIntegrator1D.cxx
     src/RooLegendre.cxx
+    src/RooMathMoreReg.cxx
     src/RooSpHarmonic.cxx
     src/RooNonCentralChiSquare.cxx
     src/RooHypatia2.cxx
@@ -34,10 +39,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     "-writeEmptyRootPCM"
   LINKDEF
     LinkDef.h
+  LIBRARIES
+    RooBatchCompute
   DEPENDENCIES
     ${ROOT_MATHMORE_LIBRARY}
     Core
     RooFitCore
+    RooFit
     Hist
     Matrix
     Tree
@@ -45,10 +53,18 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     RIO
     MathCore
     Foam
+  BUILTINS
+    GSL
+  ${EXTRA_DICT_OPTS}
 )
 
-#if(vdt AND NOT builtin_vdt)
-#  target_include_directories(RooFitCore PRIVATE ${VDT_INCLUDE_DIR})
-#endif()
+target_include_directories(RooFitMore SYSTEM PRIVATE ${GSL_INCLUDE_DIR})
+target_link_libraries(RooFitMore PRIVATE ${GSL_LIBRARIES})
+
+# For recent clang, this can facilitate auto-vectorisation.
+# In RooFit, the errno side effect is not needed, anyway:
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+  target_compile_options(RooFitMore PUBLIC -fno-math-errno)
+endif()
 
 #ROOT_ADD_TEST_SUBDIRECTORY(test)

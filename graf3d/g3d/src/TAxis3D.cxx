@@ -9,22 +9,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ctype.h>
-#include <assert.h>
+#include <cctype>
+#include <cassert>
+#include <iostream>
 
-#include "Riostream.h"
 #include "TMath.h"
 #include "TList.h"
-#include "TClass.h"
 #include "TAxis3D.h"
-#include "TCanvas.h"
-#include "TVirtualPad.h"
+#include "TClass.h"
+#include "TPad.h"
 #include "TGaxis.h"
 #include "TView.h"
-#include "TVirtualPad.h"
 #include "TVirtualX.h"
 #include "TBrowser.h"
 #include "TStyle.h"
+#include "strlcpy.h"
 
 /** \class TAxis3D
 \ingroup g3d
@@ -109,7 +108,7 @@ ClassImp(TAxis3D);
 
 TAxis3D::TAxis3D() : TNamed(TAxis3D::fgRulerName,"ruler")
 {
-   fSelected = 0;
+   fSelected = nullptr;
    fZoomMode = kFALSE;
    fStickyZoom = kFALSE;
    InitSet();
@@ -120,7 +119,7 @@ TAxis3D::TAxis3D() : TNamed(TAxis3D::fgRulerName,"ruler")
 
 TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 {
-   fSelected = 0;
+   fSelected = nullptr;
    InitSet();
    fZoomMode = kFALSE;
    fStickyZoom = kFALSE;
@@ -131,7 +130,7 @@ TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 
 TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 {
-   ((TAxis3D&)axis).Copy(*this);
+   axis.TAxis3D::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +139,8 @@ TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 void TAxis3D::Copy(TObject &obj) const
 {
    TNamed::Copy(obj);
-   for (Int_t i=0;i<2;i++) fAxis[i].Copy(((TAxis3D&)obj).fAxis[i]);
+   for (Int_t i = 0; i < 3; i++)
+      fAxis[i].Copy(((TAxis3D &)obj).fAxis[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -456,7 +456,7 @@ void TAxis3D::PaintAxis(TGaxis *axis, Float_t ang)
 
 Double_t *TAxis3D::PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view)
 {
-   Double_t *thisPoint = 0;
+   Double_t *thisPoint = nullptr;
    if (!view && gPad) view = gPad->GetView();
    if (view) {
       Double_t x[3] = {px,py,0.5}; // ((TPad *)thisPad)->AbsPixeltoXY(px,py,x[0],x[1]);
@@ -720,13 +720,13 @@ void TAxis3D::SetTitleOffset(Float_t offset, Option_t *axis)
 
 TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
 {
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;
    if (thisPad) {
       // Find axis in the current thisPad
       obj = thisPad->FindObject(TAxis3D::fgRulerName);
-      if (!(obj && obj->InheritsFrom(Class()->GetName()))) obj = 0;
+      if (!(obj && obj->InheritsFrom(Class()->GetName()))) obj = nullptr;
    }
    return (TAxis3D *)obj;
 }
@@ -737,7 +737,7 @@ TAxis3D *TAxis3D::GetPadAxis(TVirtualPad *pad)
 
 TAxis3D *TAxis3D::ToggleRulers(TVirtualPad *pad)
 {
-   TAxis3D *ax = 0;
+   TAxis3D *ax = nullptr;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;
    if (thisPad && thisPad->GetView() ) {
@@ -765,7 +765,7 @@ TAxis3D *TAxis3D::ToggleRulers(TVirtualPad *pad)
 
 TAxis3D *TAxis3D::ToggleZoom(TVirtualPad *pad)
 {
-   TAxis3D *ax = 0;
+   TAxis3D *ax = nullptr;
    TVirtualPad *thisPad=pad;
    if (!thisPad) thisPad = gPad;
    if (thisPad && thisPad->GetView()) {

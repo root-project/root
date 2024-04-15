@@ -14,9 +14,6 @@
 
 #include "TObject.h"
 
-#include "TString.h"
-
-
 struct _xmlDoc;
 class TXMLNode;
 
@@ -24,15 +21,15 @@ class TXMLNode;
 class TXMLDocument : public TObject {
 
 private:
-   TXMLDocument(const TXMLDocument&);            // Not implemented
-   TXMLDocument& operator=(const TXMLDocument&); // Not implemented
+   TXMLDocument(const TXMLDocument&) = delete;
+   TXMLDocument& operator=(const TXMLDocument&) = delete;
 
    _xmlDoc  *fXMLDoc;           // libxml xml doc
    TXMLNode *fRootNode;         // the root node
 
 public:
    TXMLDocument(_xmlDoc *doc);
-   virtual ~TXMLDocument();
+   ~TXMLDocument() override;
 
    TXMLNode   *GetRootNode() const;
 
@@ -40,7 +37,7 @@ public:
    const char *Encoding() const;
    const char *URL() const;
 
-   ClassDef(TXMLDocument,0)  // XML document created by the DOM parser
+   ClassDefOverride(TXMLDocument,0)  // XML document created by the DOM parser
 };
 
 #endif

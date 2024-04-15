@@ -1,13 +1,10 @@
-<!--  this file used for ROOT7 Canvas display -->
 <!DOCTYPE html>
 <html lang="en">
    <head>
       <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <title>ROOT7 TCanvas</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <title>ROOT7 RCanvas</title>
    </head>
-   
+
    <style>
       html { height: 100%; }
       body { min-height: 100%; margin: 0; overflow: hidden }
@@ -23,61 +20,58 @@
 
    <body>
       <div id="CanvasDiv">
-         loading scripts...
       </div>
    </body>
-   
-   <script type='text/javascript'>
-   
-      function InitV7Canvas(handle, args) {
 
-         var painter = new JSROOT.v7.TCanvasPainter(null);
-         painter.use_openui = true;
-         painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
-         if (painter.batch_mode) JSROOT.BatchMode = true;
+   <script type='module'>
+
+      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+      import { decodeUrl, setBatchMode, browser } from './jsrootsys/modules/core.mjs';
+      import { RPadPainter, RCanvasPainter } from './jsrootsys/modules/gpad/RCanvasPainter.mjs';
+      import { assignPadPainterDraw } from './jsrootsys/modules/draw.mjs';
+
+      assignPadPainterDraw(RPadPainter);
+
+      let url = decodeUrl(),
+          is_batch = url.has("batch_mode"),
+          is_ui5 = !url.has("noopenui") && !is_batch;
+
+      if (is_batch)
+         setBatchMode(true);
+
+      connectWebWindow({
+         ui5: is_ui5
+      }).then(handle => {
+         let painter = new RCanvasPainter(null, null);
+         painter.online_canvas = true;
+         painter.use_openui = is_ui5;
+         painter.batch_mode = is_batch;
 
          if (window) {
-            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
-            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
+            window.onbeforeunload = () => painter.closeWebsocket(true);
+            if (browser.qt5) window.onqt5unload = window.onbeforeunload;
          }
 
-         if (painter.use_openui && !painter.batch_mode) {
-
+         if (is_ui5) {
             painter._window_handle = handle;
-            painter.use_openui = true;
-            
-            return JSROOT.AssertPrerequisites('openui5', function() {
-               
-               sap.ui.require(["sap/ui/core/ComponentContainer"], function(ComponentContainer) {
-                  new ComponentContainer({
-                     name: "rootui5.canv",
-                     manifest: true,
-                     async: true,
-                     settings: {
-                        componentData: {
-                           canvas_painter: painter
-                        }
-                     },
-                     height: "100%"
-                  }).placeAt("CanvasDiv")
-               });
-               
+
+            sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
+               new ComponentContainer({
+                  name: "rootui5.canv",
+                  manifest: true,
+                  async: true,
+                  settings: {
+                     componentData: {
+                        canvas_painter: painter
+                     }
+                  },
+                  height: "100%"
+               }).placeAt("CanvasDiv")
             });
-
+         } else {
+            painter.setDom("CanvasDiv"); // just assign id, nothing else is happens
+            painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
          }
-
-         painter.SetDivId("CanvasDiv", -1); // just assign id, nothing else is happens
-
-         painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
-
-         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
-      }
-      
-      JSROOT.ConnectWebWindow({
-         prereq: "2d;v6;v7;",
-         prereq_logdiv: "CanvasDiv",
-         // openui5src: "https://openui5.hana.ondemand.com/",
-         callback: InitV7Canvas
       });
 
    </script>

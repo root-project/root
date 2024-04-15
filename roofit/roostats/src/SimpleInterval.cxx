@@ -31,9 +31,7 @@ In addition, you can ask it for the upper- or lower-bound.
 #include <string>
 
 
-using namespace std;
-
-ClassImp(RooStats::SimpleInterval); ;
+ClassImp(RooStats::SimpleInterval);
 
 using namespace RooStats;
 
@@ -84,31 +82,24 @@ SimpleInterval::operator=(const SimpleInterval& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
-SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, Double_t lower, Double_t upper, Double_t cl) :
+SimpleInterval::SimpleInterval(const char* name, const RooRealVar & var, double lower, double upper, double cl) :
    ConfInterval(name), fParameters(var), fLowerLimit(lower), fUpperLimit(upper), fConfidenceLevel(cl)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-SimpleInterval::~SimpleInterval()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
-Bool_t SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
+bool SimpleInterval::IsInInterval(const RooArgSet &parameterPoint) const
 {
    if( !this->CheckParameters(parameterPoint) )
       return false;
 
-   if(parameterPoint.getSize() != 1 )
+   if(parameterPoint.size() != 1 )
       return false;
 
    RooAbsReal* point = dynamic_cast<RooAbsReal*> (parameterPoint.first());
-   if (point == 0)
+   if (point == nullptr)
       return false;
 
    if ( point->getVal() > fUpperLimit || point->getVal() < fLowerLimit)
@@ -128,9 +119,9 @@ RooArgSet* SimpleInterval::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
+bool SimpleInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-   if (parameterPoint.getSize() != fParameters.getSize() ) {
+   if (parameterPoint.size() != fParameters.size() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;
       return false;
    }

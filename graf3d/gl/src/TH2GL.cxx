@@ -11,9 +11,7 @@
 
 #include "TH2GL.h"
 #include "TH2.h"
-#include "TVirtualPad.h"
 #include "TAxis.h"
-#include "TMath.h"
 
 #include "TGLSurfacePainter.h"
 #include "TGLHistPainter.h"
@@ -39,7 +37,7 @@ ClassImp(TH2GL);
 /// Constructor.
 
 TH2GL::TH2GL() :
-   TGLPlot3D(), fM(0)
+   TGLPlot3D(), fM(nullptr)
 {
 }
 
@@ -62,9 +60,9 @@ Bool_t TH2GL::SetModel(TObject* obj, const Option_t* opt)
 
    // Plot type
    if (option.Index("surf") != kNPOS)
-      SetPainter( new TGLSurfacePainter(fM, 0, &fCoord) );
+      SetPainter( new TGLSurfacePainter(fM, nullptr, &fCoord) );
    else
-      SetPainter( new TGLLegoPainter(fM, 0, &fCoord) );
+      SetPainter( new TGLLegoPainter(fM, nullptr, &fCoord) );
 
    if (option.Index("sph") != kNPOS)
       fCoord.SetCoordType(kGLSpherical);

@@ -60,9 +60,9 @@ public:
 
   GSLMonteFunctionWrapper()
    {
-      fFunc.f = 0;
+      fFunc.f = nullptr;
       fFunc.dim = 0;
-      fFunc.params = 0;
+      fFunc.params = nullptr;
    }
 
     void SetFuncPointer( GSLMonteFuncPointer f) { fFunc.f = f; }
@@ -73,7 +73,7 @@ public:
     template<class FuncType>
     void SetFunction(const FuncType &f) {
        const void * p = &f;
-       assert (p != 0);
+       assert (p != nullptr);
        SetFuncPointer(&GSLMonteFunctionAdapter<FuncType >::F);
        SetDim( f.NDim() );
        SetParams(const_cast<void *>(p));
@@ -81,7 +81,7 @@ public:
 
    gsl_monte_function * GetFunc() { return &fFunc; }
 
-    // evaluate the function and derivatives
+    /// evaluate the function and derivatives
     double operator() (const double * x) {  return GSL_MONTE_FN_EVAL(&fFunc, const_cast<double *>(x) ); }
 
 

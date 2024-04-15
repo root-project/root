@@ -31,23 +31,23 @@
 class TSelectorList : public THashList {
 
 private:
-   Bool_t UnsetDirectory(TObject *obj);
-   Bool_t CheckDuplicateName(TObject *obj);
+   bool UnsetDirectory(TObject *obj);
+   bool CheckDuplicateName(TObject *obj);
 
 public:
    TSelectorList() : THashList() { SetOwner();}
 
-   void AddFirst(TObject *obj);
-   void AddFirst(TObject *obj, Option_t *opt);
-   void AddLast(TObject *obj);
-   void AddLast(TObject *obj, Option_t *opt);
-   void AddAt(TObject *obj, Int_t idx);
-   void AddAfter(const TObject *after, TObject *obj);
-   void AddAfter(TObjLink *after, TObject *obj);
-   void AddBefore(const TObject *before, TObject *obj);
-   void AddBefore(TObjLink *before, TObject *obj);
+   void AddFirst(TObject *obj) override;
+   void AddFirst(TObject *obj, Option_t *opt) override;
+   void AddLast(TObject *obj) override;
+   void AddLast(TObject *obj, Option_t *opt) override;
+   void AddAt(TObject *obj, Int_t idx) override;
+   void AddAfter(const TObject *after, TObject *obj) override;
+   void AddAfter(TObjLink *after, TObject *obj) override;
+   void AddBefore(const TObject *before, TObject *obj) override;
+   void AddBefore(TObjLink *before, TObject *obj) override;
 
-   ClassDef(TSelectorList,1)  //Special TList used in the TSelector
+   ClassDefOverride(TSelectorList,1)  //Special TList used in the TSelector
 };
 
 #endif

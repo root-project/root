@@ -4,7 +4,7 @@
 #include <TRandom2.h>
 #include <TMath.h>
 
-using namespace std;
+using std::cout, std::endl;
 
 const int nn = 20;
 const int maxint = 10;
@@ -14,7 +14,7 @@ template <typename T> void testBinarySearch()
 {
    T k[nn];
 
-   TRandom2 r( time( 0 ) );
+   TRandom2 r( time( nullptr ) );
    for ( Int_t i = 0; i < nn; i++) {
       T number = (T) r.Integer( maxint );
       while ( number == except )

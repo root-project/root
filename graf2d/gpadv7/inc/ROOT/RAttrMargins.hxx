@@ -1,5 +1,5 @@
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -9,7 +9,8 @@
 #ifndef ROOT7_RAttrMargins
 #define ROOT7_RAttrMargins
 
-#include <ROOT/RAttrBase.hxx>
+#include <ROOT/RAttrAggregation.hxx>
+#include <ROOT/RAttrValue.hxx>
 #include <ROOT/RPadLength.hxx>
 
 namespace ROOT {
@@ -23,46 +24,25 @@ namespace Experimental {
 \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 */
 
-class RAttrMargins : public RAttrBase {
+class RAttrMargins : public RAttrAggregation {
 
-   R__ATTR_CLASS(RAttrMargins, "margin_", AddString("left","").AddString("right","").AddString("top","").AddString("bottom",""));
+   R__ATTR_CLASS(RAttrMargins, "margins");
 
-   RAttrMargins &SetLeft(const RPadLength &pos) { return SetMargin("left", pos); }
-   RPadLength GetLeft() const { return GetMargin("left"); }
+public:
 
-   RAttrMargins &SetRight(const RPadLength &pos) { return SetMargin("right", pos); }
-   RPadLength GetRight() const { return GetMargin("right"); }
+   RAttrValue<RPadLength> left{this, "left", 0._normal};     ///<! left margin
+   RAttrValue<RPadLength> right{this, "right", 0._normal};   ///<! right margin
+   RAttrValue<RPadLength> top{this, "top", 0._normal};       ///<! top margin
+   RAttrValue<RPadLength> bottom{this, "bottom", 0._normal}; ///<! bottom margin
 
-   RAttrMargins &SetTop(const RPadLength &pos) { return SetMargin("top", pos); }
-   RPadLength GetTop() const { return GetMargin("top"); }
-
-   RAttrMargins &SetBottom(const RPadLength &pos) { return SetMargin("bottom", pos); }
-   RPadLength GetBottom() const { return GetMargin("bottom"); }
-
-protected:
-
-   RAttrMargins &SetMargin(const std::string &name, const RPadLength &pos)
+   RAttrMargins &operator=(const RPadLength &len)
    {
-      if (pos.Empty())
-         ClearValue(name);
-      else
-         SetValue(name, pos.AsString());
-
+      left = len;
+      right = len;
+      top = len;
+      bottom = len;
       return *this;
    }
-
-   RPadLength GetMargin(const std::string &name) const
-   {
-      RPadLength res;
-
-      auto value = GetValue<std::string>(name);
-
-      if (!value.empty())
-         res.ParseString(value);
-
-      return res;
-   }
-
 };
 
 } // namespace Experimental

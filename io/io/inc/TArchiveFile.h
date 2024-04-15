@@ -38,9 +38,9 @@ protected:
    static Bool_t ParseUrl(const char *url, TString &archive, TString &member, TString &type);
 
 public:
-   TArchiveFile() : fArchiveName(""), fMemberName(""), fMemberIndex(-1), fFile(0), fMembers(0), fCurMember(0) { }
+   TArchiveFile() : fArchiveName(""), fMemberName(""), fMemberIndex(-1), fFile(nullptr), fMembers(nullptr), fCurMember(nullptr) { }
    TArchiveFile(const char *archive, const char *member, TFile *file);
-   virtual ~TArchiveFile();
+   ~TArchiveFile() override;
 
    virtual Int_t   OpenArchive() = 0;
    virtual Int_t   SetCurrentMember() = 0;
@@ -58,7 +58,7 @@ public:
 
    static TArchiveFile *Open(const char *url, TFile *file);
 
-   ClassDef(TArchiveFile,1)  //An archive file containing multiple sub-files (like a ZIP archive)
+   ClassDefOverride(TArchiveFile,1)  //An archive file containing multiple sub-files (like a ZIP archive)
 };
 
 
@@ -81,9 +81,9 @@ public:
    TArchiveMember(const char *name);
    TArchiveMember(const TArchiveMember &member);
    TArchiveMember &operator=(const TArchiveMember &rhs);
-   virtual ~TArchiveMember() { }
+   ~TArchiveMember() override { }
 
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
    const char *GetComment() const { return fComment; }
    TDatime     GetModTime() const { return fModTime; }
    Long64_t    GetPosition() const { return fPosition; }
@@ -92,7 +92,7 @@ public:
    Long64_t    GetDecompressedSize() const { return fDsize; }
    Bool_t      IsDirectory() const { return fDirectory; }
 
-   ClassDef(TArchiveMember,1)  //An archive member file
+   ClassDefOverride(TArchiveMember,1)  //An archive member file
 };
 
 #endif
