@@ -91,6 +91,8 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
+   /// The ordered list of columns attached to this field
+   std::vector<DescriptorId_t> fLogicalColumnIds;
 
 public:
    RFieldDescriptor() = default;
@@ -117,6 +119,7 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
+   const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
 };
 
 
@@ -1081,6 +1084,9 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
+   // Called by AddColumn() to populate the fLogicalFieldIds member of the field descriptor
+   RResult<void> AttachColumn(DescriptorId_t fieldId, const RColumnDescriptor &columnDesc);
+
 public:
    /// Checks whether invariants hold:
    /// * NTuple name is valid
@@ -1100,8 +1106,10 @@ public:
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
-   void AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
-                  const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
+   // For both AddColumn() methods, the field has to be already available. For fields with multiple columns,
+   // the columns need to be added in order of the column index
+   RResult<void> AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
+                           const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);
