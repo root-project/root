@@ -5812,6 +5812,7 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
 /// Normalize a histogram to unit integral. (Works for TH1, TH2, TH3, ...)
 ///
 /// If option contains "width", this histogram is normalized by 1/(integral * bin width),
+/// else if "max", this histogram is normalized by 1/GetMaximum().
 /// else, this histogram is normalized by 1/integral.
 
 void TH1::Normalize(Option_t *option)
