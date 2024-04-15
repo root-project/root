@@ -4317,10 +4317,13 @@ TString TSystem::SplitAclicMode(const char *filename, TString &aclicMode,
          arguments = "";
          delete []fname;
          return "";
-      } else if (s2 && s2 > fname) {
-         s2--;
-         while (s2 > fname && *s2 == ' ') s2--;
-         s2++;
+      } else if (s2) {
+         if (s2 > fname) {
+            // Skip/trim spaces
+            s2--;
+            while (s2 > fname && *s2 == ' ') s2--;
+            s2++;
+         }
          io = s2; // ssave = *s2;
          *s2 = 0;
       } else
