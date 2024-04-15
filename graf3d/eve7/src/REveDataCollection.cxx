@@ -359,7 +359,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
    j["fPublicFunctions"] = nlohmann::json::array();
    TMethod *meth;
    TIter next(fItemClass->GetListOfAllPublicMethods());
-   int cnt = 0;
    while ((meth = (TMethod *)next())) {
       // Filter out ctor, dtor, some ROOT stuff.
 
@@ -400,8 +399,6 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
       jm["r"] = meth->GetReturnTypeName();
       jm["c"] = meth->GetClass()->GetName();
       j["fPublicFunctions"].push_back(jm);
-
-      cnt++;
    }
 }
 
