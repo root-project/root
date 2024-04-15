@@ -38,7 +38,8 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
           fFieldName == other.fFieldName && fFieldDescription == other.fFieldDescription &&
           fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
-          fStructure == other.fStructure && fParentId == other.fParentId && fLinkIds == other.fLinkIds;
+          fStructure == other.fStructure && fParentId == other.fParentId && fLinkIds == other.fLinkIds &&
+          fLogicalColumnIds == other.fLogicalColumnIds;
 }
 
 ROOT::Experimental::RFieldDescriptor
@@ -56,6 +57,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    clone.fStructure = fStructure;
    clone.fParentId = fParentId;
    clone.fLinkIds = fLinkIds;
+   clone.fLogicalColumnIds = fLogicalColumnIds;
    return clone;
 }
 
@@ -797,11 +799,10 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    return RResult<void>::Success();
 }
 
-void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId,
-                                                                       DescriptorId_t physicalId,
-                                                                       DescriptorId_t fieldId,
-                                                                       const RColumnModel &model, std::uint32_t index,
-                                                                       std::uint64_t firstElementIdx)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
+                                                                  DescriptorId_t fieldId, const RColumnModel &model,
+                                                                  std::uint32_t index, std::uint64_t firstElementIdx)
 {
    RColumnDescriptor c;
    c.fLogicalColumnId = logicalId;
@@ -810,11 +811,18 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(Descripto
    c.fModel = model;
    c.fIndex = index;
    c.fFirstElementIndex = firstElementIdx;
+
+   auto res = AttachColumn(fieldId, c);
+   if (!res)
+      R__FORWARD_ERROR(res);
+
    if (!c.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/c.IsAliasColumn());
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
+
+   return RResult<void>::Success();
 }
 
 ROOT::Experimental::RResult<void>
@@ -837,6 +845,9 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
       if (columnDesc.GetModel() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetModel())
          return R__FAIL("alias column type mismatch");
    }
+   auto res = AttachColumn(fieldId, columnDesc);
+   if (!res)
+      R__FORWARD_ERROR(res);
 
    auto logicalId = columnDesc.GetLogicalId();
    if (!columnDesc.IsAliasColumn())
@@ -844,6 +855,23 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/columnDesc.IsAliasColumn());
+
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AttachColumn(DescriptorId_t fieldId,
+                                                                     const RColumnDescriptor &columnDesc)
+{
+   auto itrFieldDesc = fDescriptor.fFieldDescriptors.find(fieldId);
+   if (itrFieldDesc == fDescriptor.fFieldDescriptors.end()) {
+      return R__FAIL("AttachColumn: invalid field ID");
+   }
+   auto &logicalColumnIds = itrFieldDesc->second.fLogicalColumnIds;
+   for (std::size_t i = logicalColumnIds.size(); i <= columnDesc.GetIndex(); ++i) {
+      logicalColumnIds.emplace_back(kInvalidDescriptorId);
+   }
+   logicalColumnIds.at(columnDesc.GetIndex()) = columnDesc.GetLogicalId();
 
    return RResult<void>::Success();
 }

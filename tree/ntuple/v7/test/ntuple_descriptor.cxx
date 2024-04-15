@@ -102,7 +102,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder3;
-   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(2).Index(0);
+   colBuilder3.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(1).Index(0);
    try {
       descBuilder.AddColumn(colBuilder3.MakeDescriptor().Unwrap()).ThrowOnError();
    } catch (const RException &err) {
