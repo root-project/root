@@ -46,6 +46,12 @@ RNTupleParallelWriter::CreateFillContext).  Each fill context prepares independe
 common ntuple with internal synchronization.  Before destruction, all fill contexts must have flushed their data and
 been destroyed (or data could be lost!).
 
+For user convenience, RNTupleParallelWriter::CreateFillContext is thread-safe and may be called from multiple threads
+in parallel at any time, also after some data has already been written.  Internally, the original model is cloned and
+ownership is passed to a newly created RNTupleFillContext.  For that reason, it is recommended to use
+RNTupleModel::CreateBare when creating the model for parallel writing and avoid the allocation of a useless default
+REntry per context.
+
 Note that the sequence of independently prepared clusters is indeterminate and therefore entries are only partially
 ordered:  Entries from one context are totally ordered as they were filled.  However, there is no orderering with other
 contexts and the entries may be appended to the ntuple either before or after other entries written in parallel into
@@ -86,7 +92,8 @@ public:
    ~RNTupleParallelWriter();
 
    /// Create a new RNTupleFillContext that can be used to fill entries and prepare clusters in parallel. This method is
-   /// thread-safe and may be called from multiple threads in parallel.
+   /// thread-safe and may be called from multiple threads in parallel at any time, also after some data has already
+   /// been written.
    ///
    /// Note that all fill contexts must be destroyed before the RNTupleParallelWriter is destructed.
    std::shared_ptr<RNTupleFillContext> CreateFillContext();
