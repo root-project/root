@@ -240,6 +240,7 @@ TEST(TChainParsing, RecursiveGlob)
    TChain none;
    TChain nested;
    TChain globDir;
+   TChain regex;
 
    nodir.Add("*");
    const auto *nodirFiles = nodir.GetListOfFiles();
@@ -274,6 +275,17 @@ TEST(TChainParsing, RecursiveGlob)
    for (std::size_t i = 0; i < expectedFileNamesGlobDir.size(); i++) {
       EXPECT_EQ(globDirChainFileNames[i], expectedFileNamesGlobDir[i]);
    }
+
+   regex.Add("test*/subdir?/[0-9]?.root?#events");
+   const auto *regexChainFiles = regex.GetListOfFiles();
+   ASSERT_TRUE(regexChainFiles);
+   EXPECT_EQ(regexChainFiles->GetEntries(), 3);
+   std::vector<std::string> expectedFileNamesRegex{
+      ConcatUnixFileName(cwd, "testglob/subdir1/1a.root"),
+      ConcatUnixFileName(cwd, "testglob/subdir1/1b.root"),
+      ConcatUnixFileName(cwd, "testglob/subdir3/3a.root")};
+   auto regexChainFileNames = GetFileNamesVec(regexChainFiles);
+   EXPECT_VEC_EQ(regexChainFileNames, expectedFileNamesRegex);
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
