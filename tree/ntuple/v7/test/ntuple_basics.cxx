@@ -314,7 +314,7 @@ TEST(RNTuple, ClusterEntries)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
-         if (i && ((i % 5) == 0))
+         if (((i + 1) % 5) == 0)
             ntuple->CommitCluster();
       }
    }
