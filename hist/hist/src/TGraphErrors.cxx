@@ -371,6 +371,11 @@ TGraphErrors::~TGraphErrors()
    delete [] fEY;
 }
 
+void TGraphErrors::AddPointError(Double_t x, Double_t y, Double_t ex, Double_t ey)
+{
+   SetPoint(fNpoints, x, y); // fNpoints will increase
+   SetPointError(fNpoints - 1, ex, ey);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply function to all the data points \f$ y = f(x,y) \f$.
