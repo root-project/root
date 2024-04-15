@@ -420,7 +420,10 @@ static PyObject* vectoriter_iternext(vectoriterobject* vi) {
     // that objects in vectors are simple and thus do not need to maintain object identity
     // (or at least not during the loop anyway). This gains 2x in performance.
         Cppyy::TCppObject_t cppobj = (Cppyy::TCppObject_t)((ptrdiff_t)vi->vi_data + vi->vi_stride * vi->ii_pos);
-        result = CPyCppyy::BindCppObjectNoCast(cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
+        if (vi->vi_flags & vectoriterobject::kIsPolymorphic)
+            result = CPyCppyy::BindCppObject(*(void**)cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
+        else
+            result = CPyCppyy::BindCppObjectNoCast(cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
         if ((vi->vi_flags & vectoriterobject::kNeedLifeLine) && result)
             PyObject_SetAttr(result, PyStrings::gLifeLine, vi->ii_container);
     } else {

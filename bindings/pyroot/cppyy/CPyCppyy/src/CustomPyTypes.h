@@ -102,6 +102,7 @@ struct vectoriterobject : public indexiterobject {
     enum EFlags {
         kDefault        = 0x0000,
         kNeedLifeLine   = 0x0001,
+        kIsPolymorphic  = 0x0002,
     };
 };
 

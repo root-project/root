@@ -563,11 +563,21 @@ static PyObject* vector_iter(PyObject* v) {
 
         if (CPyCppyy_PyText_Check(pyvalue_type)) {
             std::string value_type = CPyCppyy_PyText_AsString(pyvalue_type);
+            value_type = Cppyy::ResolveName(value_type);
             vi->vi_klass = Cppyy::GetScope(value_type);
+            if (!vi->vi_klass) {
+            // look for a special case of pointer to a class type (which is a builtin, but it
+            // is more useful to treat it polymorphically by allowing auto-downcasts)
+                const std::string& clean_type = TypeManip::clean_type(value_type, false, false);
+                Cppyy::TCppScope_t c = Cppyy::GetScope(clean_type);
+                if (c && TypeManip::compound(value_type) == "*") {
+                    vi->vi_klass = c;
+                    vi->vi_flags = vectoriterobject::kIsPolymorphic;
+                }
+            }
             if (vi->vi_klass) {
                 vi->vi_converter = nullptr;
                 if (!vi->vi_flags) {
-                    value_type = Cppyy::ResolveName(value_type);
                     if (value_type.back() != '*')     // meaning, object stored by-value
                         vi->vi_flags = vectoriterobject::kNeedLifeLine;
                 }
