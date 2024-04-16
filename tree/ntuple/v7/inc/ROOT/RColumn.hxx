@@ -53,10 +53,11 @@ private:
    RPageStorage::ColumnHandle_t fHandleSink;
    RPageStorage::ColumnHandle_t fHandleSource;
    /// A set of open pages into which new elements are being written. The pages are used
-   /// in rotation. They are 50% bigger than the target size given by the write options.
-   /// The current page is filled until the target size, but it is only committed once the other
-   /// write page is filled at least 50%. If a flush occurs earlier, a slightly oversized, single
-   /// page will be committed.
+   /// in rotation. If tail page optimization is enabled, they are 50% bigger than the target size
+   /// given by the write options. The current page is filled until the target size, but it is only
+   /// committed once the other write page is filled at least 50%. If a flush occurs earlier, a
+   /// slightly oversized, single page will be committed.
+   /// Without tail page optimization, only one page is allocated equal to the target size.
    RPage fWritePage[2];
    /// Index of the current write page
    int fWritePageIdx = 0;
@@ -77,15 +78,25 @@ private:
 
    RColumn(const RColumnModel &model, std::uint32_t index);
 
-   /// Used in Append() and AppendV() to switch pages when the main page reached the target size
-   /// The other page has been flushed when the main page reached 50%.
-   void SwapWritePagesIfFull() {
+   /// Used in Append() and AppendV() to handle the case when the main page reached the target size.
+   /// If tail page optimization is enabled, switch the pages; the other page has been flushed when
+   /// the main page reached 50%.
+   /// Without tail page optimization, flush the current page to make room for future writes.
+   void HandleWritePageIfFull()
+   {
       if (R__likely(fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage))
          return;
 
-      fWritePageIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
-      R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
-      fWritePage[fWritePageIdx].Reset(fNElements);
+      auto otherIdx = 1 - fWritePageIdx; // == (fWritePageIdx + 1) % 2
+      if (fWritePage[otherIdx].IsNull()) {
+         // There is only this page; we have to flush it now to make room for future writes.
+         fPageSink->CommitPage(fHandleSink, fWritePage[fWritePageIdx]);
+         fWritePage[fWritePageIdx].Reset(fNElements);
+      } else {
+         fWritePageIdx = otherIdx;
+         R__ASSERT(fWritePage[fWritePageIdx].IsEmpty());
+         fWritePage[fWritePageIdx].Reset(fNElements);
+      }
    }
 
    /// When the main write page surpasses the 50% fill level, the (full) shadow write page gets flushed
@@ -130,7 +141,7 @@ public:
       std::memcpy(dst, from, fElement->GetSize());
       fNElements++;
 
-      SwapWritePagesIfFull();
+      HandleWritePageIfFull();
    }
 
    void AppendV(const void *from, std::size_t count)
@@ -161,7 +172,7 @@ public:
       fNElements += count;
 
       // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
-      SwapWritePagesIfFull();
+      HandleWritePageIfFull();
    }
 
    void Read(const NTupleSize_t globalIndex, void *to)
