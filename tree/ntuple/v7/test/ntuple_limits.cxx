@@ -14,11 +14,11 @@
 
 TEST(RNTuple, DISABLED_Limits_ManyFields)
 {
-   // Writing and reading a model with 20k integer fields takes around 1.5s and seems to have more than linear
-   // complexity (40k fields take 7s).
+   // Writing and reading a model with 40k integer fields takes around 2s and seems to have more than linear
+   // complexity (80k fields take 9s).
    FileRaii fileGuard("test_ntuple_limits_manyFields.root");
 
-   static constexpr int NumFields = 20'000;
+   static constexpr int NumFields = 40'000;
 
    {
       auto model = RNTupleModel::Create();
