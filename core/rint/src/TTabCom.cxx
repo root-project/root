@@ -1364,9 +1364,9 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // 4. finally write text into the buffer.
    // ---------------------------------------
    {
-      const int old_len = strlen(fBuf);                 // old EOL position is i
+      const int old_len = strlen(fBuf);                 // old EOL position is old_len
       const int match_len = strlen(match);
-      const int added_len = match_len - (loc - start);  // new EOL position will be i+L
+      const int added_len = match_len - (loc - start);  // new EOL position will be old_len+added_len
 
       // first check for overflow
       if (old_len + added_len + 1 > BUF_SIZE || start > loc || start + match_len + 1 > BUF_SIZE) {
