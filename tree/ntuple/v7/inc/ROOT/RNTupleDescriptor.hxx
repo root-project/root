@@ -436,6 +436,8 @@ private:
    std::uint64_t fNClusters = 0;        ///< Updated by the descriptor builder when the cluster groups are added
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
+   DescriptorId_t fFieldZeroId = kInvalidDescriptorId; ///< Set by the descriptor builder
+
    /**
     * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
     * active the page locations.  During the lifetime of the descriptor, page location information for clusters
@@ -779,7 +781,7 @@ public:
    NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level NTuple data fields.
-   DescriptorId_t GetFieldZeroId() const;
+   DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
    const RFieldDescriptor &GetFieldZero() const { return GetFieldDescriptor(GetFieldZeroId()); }
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field

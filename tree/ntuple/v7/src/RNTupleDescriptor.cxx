@@ -227,6 +227,7 @@ bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &
           fDescription == other.fDescription &&
           fNEntries == other.fNEntries &&
           fGeneration == other.fGeneration &&
+          fFieldZeroId == other.fFieldZeroId &&
           fFieldDescriptors == other.fFieldDescriptors &&
           fColumnDescriptors == other.fColumnDescriptors &&
           fClusterGroupDescriptors == other.fClusterGroupDescriptors &&
@@ -258,9 +259,12 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName, D
       leafName = leafName.substr(posDot + 1);
       parentId = FindFieldId(parentName, parentId);
    }
-   for (const auto &fd : fFieldDescriptors) {
-      if (fd.second.GetParentId() == parentId && fd.second.GetFieldName() == leafName)
-         return fd.second.GetId();
+   auto itrFieldDesc = fFieldDescriptors.find(parentId);
+   if (itrFieldDesc == fFieldDescriptors.end())
+      return kInvalidDescriptorId;
+   for (const auto linkId : itrFieldDesc->second.GetLinkIds()) {
+      if (fFieldDescriptors.at(linkId).GetFieldName() == leafName)
+         return linkId;
    }
    return kInvalidDescriptorId;
 }
@@ -277,14 +281,6 @@ std::string ROOT::Experimental::RNTupleDescriptor::GetQualifiedFieldName(Descrip
       return fieldDescriptor.GetFieldName();
    return prefix + "." + fieldDescriptor.GetFieldName();
 }
-
-
-ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::GetFieldZeroId() const
-{
-   return FindFieldId("", kInvalidDescriptorId);
-}
-
 
 ROOT::Experimental::DescriptorId_t
 ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) const
@@ -486,6 +482,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
    clone->fNEntries = fNEntries;
    clone->fNClusters = fNClusters;
    clone->fNPhysicalColumns = fNPhysicalColumns;
+   clone->fFieldZeroId = fFieldZeroId;
    clone->fGeneration = fGeneration;
    for (const auto &d : fFieldDescriptors)
       clone->fFieldDescriptors.emplace(d.first, d.second.Clone());
@@ -772,6 +769,9 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddField(const RFie
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->AddFieldId(fieldDesc.GetId());
+   if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == kInvalidDescriptorId) {
+      fDescriptor.fFieldZeroId = fieldDesc.GetId();
+   }
 }
 
 ROOT::Experimental::RResult<void>
