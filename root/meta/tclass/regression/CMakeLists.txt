@@ -22,6 +22,11 @@ ROOTTEST_ADD_TEST(execROOT_6019
                   MACRO execROOT_6019.C
                   OUTREF execROOT_6019.ref)
 
+if(MSVC)
+    # needed on Windows to prevent having to run the test twice
+    # the first time being always failing and successful the second time
+    ROOTTEST_COMPILE_MACRO(execROOT_6277.cxx)
+endif()
 ROOTTEST_ADD_TEST(execROOT_6277
                   MACRO execROOT_6277.cxx+
                   OUTREF execROOT_6277.ref)
