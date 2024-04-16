@@ -20,7 +20,7 @@ else()
 endif()
 
 if(builtin_docu)
-  message(WARNING "ROOT HTML documentation will be built with doxygen as a step of the ROOT build. NOT YET SUPPORTED.")
+  message(STATUS "ROOT HTML documentation will be built with doxygen as a step of the ROOT build.")
   # TODO: https://stackoverflow.com/questions/16408060/how-do-i-add-a-dependency-on-a-script-to-a-target-in-cmake
   # A typical way is:
   # cd /tmp/ && mkdir builddocu && cd builddocu  cmake -B./ -S/opt/root_src/documentation/doxygen/ -DDOCU_INPUT="./mainpage.md;../../core" -DDOCU_LOCATION=/tmp/docoutput -DDOCU_THREADS=8 -DDOCU_LOGFILE=/tmp/warnings.txt -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator
@@ -307,18 +307,18 @@ add_dependencies(dox Preparation)
 #~ )
 
 add_custom_target(Finalization ALL
-    #COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} ./listlibs.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND touch ./cleanNamespaces.sh ./tutorialWorklist_py ./tutorialWorklist_root WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND cat cleanNamespaces*.sh >> cleanNamespaces.sh WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND cat tutorialWorklist_py* >> tutorialWorklist_py WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./cleanNamespaces.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./makeCollaborationDiagrams.sh WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./modifyClassWebpages.sh -j${DOCU_THREADS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_py -j${DOCU_THREADS} WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} < ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_root WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    # COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
-    # COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
+    COMMAND touch ./cleanNamespaces.sh ./tutorialWorklist_py ./tutorialWorklist_root
+    COMMAND cat cleanNamespaces*.sh >> cleanNamespaces.sh
+    COMMAND cat tutorialWorklist_py* >> tutorialWorklist_py
+    COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root
+    COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_BINARY_DIR}/cleanNamespaces.sh
+    COMMAND cmake -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh
+    COMMAND cmake -E env CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh -j${DOCU_THREADS}
+    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_py -j${DOCU_THREADS}
+    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} < ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_root
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(Finalization dox)
 
