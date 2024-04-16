@@ -609,7 +609,7 @@ TFile::~TFile()
 ///
 /// TFile implementations providing asynchronous open functionality need to
 /// override this method to run the appropriate checks before calling this
-/// standard initialization part. See TXNetFile::Init for an example.
+/// standard initialization part. See TNetXNGFile::Init for an example.
 
 void TFile::Init(Bool_t create)
 {
@@ -4333,7 +4333,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 ///     TFile::Open(const char *, ...)
 ///
 /// To be effective, the underlying TFile implementation must be able to
-/// support asynchronous open functionality. Currently, only TXNetFile
+/// support asynchronous open functionality. Currently, only TNetXNGFile
 /// supports it. If the functionality is not implemented, this call acts
 /// transparently by returning an handle with the arguments for the
 /// standard synchronous open run by TFile::Open(TFileOpenHandle *).
@@ -4390,7 +4390,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       if (type == kNet) {
          // Network files
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            (!strcmp(h->GetClass(),"TXNetFile") || !strcmp(h->GetClass(),"TNetXNGFile"))
+            !strcmp(h->GetClass(),"TNetXNGFile")
             && h->LoadPlugin() == 0) {
             f = (TFile*) h->ExecPlugin(6, name.Data(), option, ftitle, compress, netopt, kTRUE);
             notfound = kFALSE;

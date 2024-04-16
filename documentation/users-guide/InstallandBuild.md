@@ -635,7 +635,7 @@ Check of host equivalence via `/etc/hosts`.`equiv` or `$HOME/.rhosts`.
 SrvAuth.CheckHostsEquivalence: 1
 ```
 
-Force file opening via **`TNetFile`** (**`TXNetFile`**) if a hostname is
+Force file opening via **`TNetFile`** (**`TNetXNGFile`**) if a hostname is
 specified in the Url. By default, for local files `TFile::Open()`
 invokes directly **`TFile.`**
 

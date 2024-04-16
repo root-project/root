@@ -20,7 +20,7 @@
  local disk I/O). The cache makes sure that every I/O is done with
  a (large) fixed length buffer thereby avoiding many small I/O's.
  Currently the read cache system is used by the classes TNetFile,
- TXNetFile and TWebFile (via TFile::ReadBuffers()).
+ TNetXNGFile and TWebFile (via TFile::ReadBuffers()).
  When processing TTree, TChain, a specialized class TTreeCache that
  derives from this class is automatically created.
 */
