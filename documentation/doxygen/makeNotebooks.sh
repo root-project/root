@@ -64,3 +64,4 @@ xargs -L 1 -P ${nJobs:-1} ${Python3_EXECUTABLE:-python3} < $inputFile
 
 [ -e ${inputFile}.back ] && rm ${inputFile}.back
 
+exit 0

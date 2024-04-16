@@ -40,7 +40,7 @@ else()
     set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
   endif()
   set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
-  find_package(ROOT 6.30 CONFIG REQUIRED) # TODO change to 6.32
+  find_package(ROOT 6.32 CONFIG REQUIRED) # TODO change to 6.32
   set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 endif()
 
@@ -80,7 +80,6 @@ else()
 endif()
 
 # TODO run -x_noenv to see what's missing and diff makeInput
-# TODO CLANG_ASSISTED
 set (DOCU_INPUT
   ./mainpage.md
   ../../core/
@@ -328,7 +327,7 @@ add_custom_target(Tutorials ALL
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_dependencies(Tutorials CollaborationDiagrams)
+add_dependencies(Tutorials dox)
 
 if(COMMAND ${DOCU_QHG_LOCATION})
 add_custom_target(Zipping ALL
