@@ -685,16 +685,44 @@ public:
          } else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
          else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
          else if (tok.getIdentifierInfo()->getName() == "evolution") options.fRequestStreamerInfo = 1;
-         else if (tok.getIdentifierInfo()->getName() == "rntuplesplit") {
-            if (options.fRNTupleSplitMode == -1)
-               Error("Error: Can only specify a single rntuple option (either rntuplesplit or rntupleunsplit", tok, PP);
-            else
-               options.fRNTupleSplitMode = 1;
-         } else if (tok.getIdentifierInfo()->getName() == "rntupleunsplit") {
-            if (options.fRNTupleSplitMode == 1)
-               Error("Error: Can only specify a single rntuple option (either rntuplesplit or rntupleunsplit", tok, PP);
-            else
-               options.fRNTupleSplitMode = -1;
+         else if (tok.getIdentifierInfo()->getName() == "rntupleSplit") {
+            clang::Token start = tok;
+            PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::l_paren)) {
+               Error("Error: missing left parenthesis after rntupleSplit.", start, PP);
+               return false;
+            }
+            PP.Lex(tok);
+            clang::Token boolval = tok;
+            if (tok.isNot(clang::tok::eod))
+               PP.Lex(tok);
+            if (tok.is(clang::tok::eod) || tok.isNot(clang::tok::r_paren)) {
+               Error("Error: missing right parenthesis after rntupleSplit.", start, PP);
+               return false;
+            }
+            if (!boolval.getIdentifierInfo()) {
+               Error("Error: Malformed rntupleSplit option (either 'true' or 'false').", boolval, PP);
+            }
+
+            if (boolval.getIdentifierInfo()->getName() == "true") {
+               if (options.fRNTupleSplitMode == -1) {
+                  Error("Error: Can only specify a single rntuple option "
+                        "(either rntupleSplit(true) or rntupleSplit(false))",
+                        boolval, PP);
+               } else {
+                  options.fRNTupleSplitMode = 1;
+               }
+            } else if (boolval.getIdentifierInfo()->getName() == "false") {
+               if (options.fRNTupleSplitMode == 1) {
+                  Error("Error: Can only specify a single rntuple option "
+                        "(either rntupleSplit(true) or rntupleSplit(false))",
+                        boolval, PP);
+               } else {
+                  options.fRNTupleSplitMode = -1;
+               }
+            } else {
+               Error("Error: Malformed rntupleSplit option (either 'true' or 'false').", boolval, PP);
+            }
          } else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.
             // options.fUseStubs = 1;
