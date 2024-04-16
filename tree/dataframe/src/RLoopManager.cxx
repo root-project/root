@@ -12,10 +12,12 @@
 #include "ROOT/InternalTreeUtils.hxx" // GetTreeFullPaths
 #include "ROOT/RDF/RActionBase.hxx"
 #include "ROOT/RDF/RDefineBase.hxx"
+#include "ROOT/RDF/RDefineReader.hxx" // RDefinesWithReaders
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
+#include "ROOT/RDF/RVariationReader.hxx" // RVariationsWithReaders
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
 #include "TStopwatch.h"

@@ -46,6 +46,19 @@ public:
    }
 };
 
+class RVariationsWithReaders {
+   // this is a shared_ptr only because we have to track its lifetime with a weak_ptr that we pass to jitted code
+   // (see BookVariationJit). it is never null.
+   std::shared_ptr<RVariationBase> fVariation;
+   // Column readers for this RVariation for a given variation (map key) and a given slot (vector element).
+   std::vector<std::unordered_map<std::string, std::unique_ptr<RVariationReader>>> fReadersPerVariation;
+
+public:
+   RVariationsWithReaders(std::shared_ptr<RVariationBase> variation, unsigned int nSlots);
+   RVariationBase &GetVariation() const { return *fVariation; }
+   RVariationReader &GetReader(unsigned int slot, const std::string &colName, const std::string &variationName);
+};
+
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
