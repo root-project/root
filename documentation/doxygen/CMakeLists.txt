@@ -79,7 +79,7 @@ else()
     message(WARNING "Doxygen QCH file cannot be generated, no valid qhelpgenerator was found")
 endif()
 
-# TODO run -x_noenv to see what's missing and diff makeInput
+# TODO run -x_noenv to see what's missing
 set (DOCU_INPUT
   ./mainpage.md
   ../../core/
@@ -143,7 +143,6 @@ set (DOCU_INPUT
   #~ ../../html/
   #~ ../../io/doc/TFile
   #~ ../../io/dcache/
-  #~ ../../io/gfal/
   #~ ../../io/io/
   #~ ../../io/sql/
   #~ ../../io/xml/
@@ -151,10 +150,11 @@ set (DOCU_INPUT
   #~ ../../main/src/hadd.cxx
   #~ ../../math/
   #~ ../../montecarlo/
-  #~ ../../net/alien/
   #~ ../../net/auth/
   #~ ../../net/davix/
+  #~ ../../net/doc/
   #~ ../../net/http/
+  #~ ../../net/httpsniff/
   #~ ../../net/monalisa/
   #~ ../../net/net/
   #~ ../../net/netxng/
@@ -319,6 +319,8 @@ add_custom_target(CollaborationDiagrams ALL
 )
 add_dependencies(CollaborationDiagrams dox)
 
+option(DOCU_TUTORIALS "Integrate tutorials in Doxygen documentation" ON) # Disable for quicker builds
+if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
     COMMAND touch tutorialWorklist_root tutorialWorklist_py
     COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root
@@ -328,13 +330,14 @@ add_custom_target(Tutorials ALL
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(Tutorials dox)
+endif()
 
 if(COMMAND ${DOCU_QHG_LOCATION})
 add_custom_target(Zipping ALL
     COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
     COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
 )
-add_dependencies(Zipping Tutorials)
+add_dependencies(Zipping dox)
 endif()
 
 set_property(
