@@ -37,7 +37,7 @@
 // and keep track of the file Open latency. A packet is sent for each   //
 // successful Open, sending the measures of the latencies for the       //
 // various phases of the open. Currently exploited fully by TAlienFile  //
-// and TXNetFile. Easy to report from other TFiles too.                 //
+// and TNetXNGFile. Easy to report from other TFiles too.               //
 // - Now, the hook for the Close() func triggers sending of a packet    //
 // containing various information about the performance related to that //
 // file only.                                                           //
@@ -66,10 +66,7 @@ private:
    TFile       *fileinst;
 public:
    MonitoredTFileInfo(TFile *file, Double_t timenow): TObject(), fileinst(file) {
-      if (file->InheritsFrom("TXNetFile"))
-         fFileClassName = "TXNetFile";
-      else
-         fFileClassName = file->ClassName();
+      fFileClassName = file->ClassName();
 
       fLastBytesRead = 0;
       fLastBytesWritten = 0;
@@ -785,9 +782,6 @@ Bool_t TMonaLisaWriter::SendFileCloseEvent(TFile *file) {
 
    TString valname;
    TString pfx = file->ClassName();
-   if (file->InheritsFrom("TXNetFile"))
-      pfx = "TXNetFile";
-
    pfx += "_";
 
    // The info to be sent is the one relative to the specific file
