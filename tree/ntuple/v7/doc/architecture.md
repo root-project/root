@@ -305,7 +305,7 @@ For reading, the `RMiniFile` always uses an `RRawFile`.
 The RRawFile internal abstract class provides an interface to read byte ranges from a file, including vector reads.
 Concrete implementations exist for local files, XRootD and HTTP (the latter two through the ROOT plugin mechanism).
 The local file implementation on Linux uses uring for vector reads, if available.
-A raw file that uses a TFile (to be implemented) provides access to the full set of TFile implementations, e.g. TMemFile.
+`RRawFileTFile` wraps an existing `TFile` and provides access to the full set of implementations, e.g. `TMemFile`.
 
 Tooling
 -------
@@ -339,8 +339,10 @@ The parallel writer assumes exclusive access to the underlying file during the e
 
 A `TFile` does not take ownership of any `RNTuple` objects.
 
-When reading data, RNTuple uses the `RRawFile` class unless a `TFile` is explicitly enforced (e.g. for reading from a `TMemFile`).
-The `RRawFile` owns its own file descriptor and does not interfere with `TFile` objects concurrently reading the file.
+When reading data, RNTuple uses the `RMiniFile` and `RRawFile` classes to open a given storage path and find the `RNTuple` anchor.
+When creating a `RNTupleReader` from an existing anchor object, RNTuple uses `RRawFile` only for files of dynamic type `TFile`, `TDavixFile`, and `TNetXNGFile`.
+In either case, the `RRawFile` owns its own file descriptor and does not interfere with `TFile` objects concurrently reading the file.
+For anchors from files of other dynamic type, including all other `TFile` subclasses, the file is wrapped in a `RRawFileTFile` and access is shared.
 
 On-Disk Encoding
 ----------------
