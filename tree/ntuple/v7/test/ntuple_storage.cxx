@@ -229,6 +229,54 @@ TEST(RNTuple, PageFilling) {
    EXPECT_EQ(1u, pr3.fPageInfos[1].fNElements);
 }
 
+TEST(RNTuple, PageFillingTail)
+{
+   FileRaii fileGuard("test_ntuple_page_filling_tail.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int16_t>("x");
+
+      RNTupleWriteOptions options;
+      // Exercises the tail page optimization with pages to hold 4 elements
+      options.SetApproxUnzippedPageSize(8);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      for (std::int16_t i = 0; i < 16; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+         // Trigger tail page optimization; the page has 4 + 1 elements
+         if (i == 4)
+            ntuple->CommitCluster();
+         // Trigger another tail page optimization: the first page in this cluster had 4 elements and was flushed
+         // automatically; the second page has 4 + 1 elements
+         if (i == 13)
+            ntuple->CommitCluster();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewX = ntuple->GetView<std::int16_t>("x");
+   ASSERT_EQ(16u, ntuple->GetNEntries());
+   for (std::int16_t i = 0; i < 16; ++i)
+      EXPECT_EQ(i, viewX(i));
+
+   const auto &desc = ntuple->GetDescriptor();
+   EXPECT_EQ(3u, desc.GetNClusters());
+   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &pr1 = cd1.GetPageRange(0);
+   ASSERT_EQ(1u, pr1.fPageInfos.size());
+   EXPECT_EQ(5u, pr1.fPageInfos[0].fNElements);
+   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &pr2 = cd2.GetPageRange(0);
+   ASSERT_EQ(2u, pr2.fPageInfos.size());
+   EXPECT_EQ(4u, pr2.fPageInfos[0].fNElements);
+   EXPECT_EQ(5u, pr2.fPageInfos[1].fNElements);
+   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &pr3 = cd3.GetPageRange(0);
+   ASSERT_EQ(1u, pr3.fPageInfos.size());
+   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
+}
+
 TEST(RNTuple, PageFillingString) {
    FileRaii fileGuard("test_ntuple_page_filling_string.root");
 
