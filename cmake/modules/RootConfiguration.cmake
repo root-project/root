@@ -194,11 +194,6 @@ else()
 endif()
 
 set(buildnetxng ${value${netxng}})
-if(netxng)
-  set(useoldnetx no)
-else()
-  set(useoldnetx yes)
-endif()
 
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
