@@ -373,7 +373,7 @@ TGraphErrors::~TGraphErrors()
 
 void TGraphErrors::AddPointError(Double_t x, Double_t y, Double_t ex, Double_t ey)
 {
-   SetPoint(fNpoints, x, y); // fNpoints will increase
+   AddPoint(x, y); // fNpoints will increase
    SetPointError(fNpoints - 1, ex, ey);
 }
 
