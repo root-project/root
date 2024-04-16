@@ -340,7 +340,7 @@ void FilterTutorial(const int suffix)
    gFileName = StringFormat(CMAKE_BUILD_DIRECTORY "/%s", gMacroName.c_str());
 
    if (gPython) {
-      FILE *cn = fopen(StringFormat(CMAKE_BUILD_DIRECTORY "CleanNamespaces_%d.sh", suffix).c_str(), "a");
+      FILE *cn = fopen(StringFormat(CMAKE_BUILD_DIRECTORY "cleanNamespaces_%d.sh", suffix).c_str(), "a");
       string name = gMacroName;
       ReplaceAll(name,".py","");
       ReplaceAll(name,"_","__");

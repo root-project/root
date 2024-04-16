@@ -49,7 +49,7 @@ endif()
 set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to custom doxygen executable") # Use e.g. -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen for a local built doxygen. Leave empty for system-wide doxygen.
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
-find_package (Python3 COMPONENTS Interpreter)
+find_package(Python3 COMPONENTS Interpreter)
 
 # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
@@ -72,6 +72,12 @@ set (DOCU_LOCATION /tmp/rootdoc CACHE STRING "Documentation output directory")
 #Pass instead -DDOCU_LOCATION=$HOME/rootdoc if user-specific installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
 set (DOCU_LOGFILE "" CACHE STRING "File where to write warnings to (leave empty for printing into console)")
+
+if(COMMAND ${DOCU_QHG_LOCATION})
+    message(STATUS "Doxygen QCH file will be built with ${DOCU_QHG_LOCATION}")
+else()
+    message(WARNING "Doxygen QCH file cannot be generated, no valid qhelpgenerator was found")
+endif()
 
 # TODO run -x_noenv to see what's missing and diff makeInput
 # TODO CLANG_ASSISTED
@@ -152,7 +158,6 @@ set (DOCU_INPUT
   #~ ../../net/http/
   #~ ../../net/monalisa/
   #~ ../../net/net/
-  #~ ../../net/netx/
   #~ ../../net/netxng/
   #~ ../../proof/
   #~ ../../tmva/
@@ -181,10 +186,10 @@ add_custom_target(Preparation
   # COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
 
   # Precompile here to prevent later multithreading issues
-  COMMAND cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+' &&
-          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+' &&
-          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+' &&
-          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+'
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 if(builtin_docu)
@@ -199,8 +204,7 @@ set(DOXYGEN_ALWAYS_DETAILED_SEC    YES)
 set(DOXYGEN_JAVADOC_AUTOBRIEF      YES)
 set(DOXYGEN_QT_AUTOBRIEF           YES)
 set(DOXYGEN_TAB_SIZE               3)
-set(DOXYGEN_ALIASES                "legacy{1}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution.</div>\\endhtmlonly\n \\"
-"legacy{1}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution. \\2</div>\\endhtmlonly\n"
+set(DOXYGEN_ALIASES                "legacy{1}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution.</div>\\endhtmlonly" "legacy{2}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution. \\2</div>\\endhtmlonly"
 )
 set(DOXYGEN_EXTENSION_MAPPING      h=C++ icc=C++ def=C++ pyzdoc=C++ cu=C++ cuh=C++)
 set(DOXYGEN_TOC_INCLUDE_HEADINGS   3)
@@ -306,26 +310,38 @@ add_dependencies(dox Preparation)
   #~ OPTIONAL # because available only after "make doc"
 #~ )
 
-add_custom_target(Finalization ALL
-    COMMAND touch ./cleanNamespaces.sh ./tutorialWorklist_py ./tutorialWorklist_root
+add_custom_target(CollaborationDiagrams ALL
+    COMMAND touch ./cleanNamespaces.sh
     COMMAND cat cleanNamespaces*.sh >> cleanNamespaces.sh
-    COMMAND cat tutorialWorklist_py* >> tutorialWorklist_py
-    COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root
-    COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_BINARY_DIR}/cleanNamespaces.sh
-    COMMAND cmake -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh
-    COMMAND cmake -E env CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh -j${DOCU_THREADS}
-    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_py -j${DOCU_THREADS}
-    # COMMAND cmake -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" NTHREADS=${DOCU_THREADS} ROOT_CMD=${ROOT_root_CMD} xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} < ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_root
-    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
-    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh -j${DOCU_THREADS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
-add_dependencies(Finalization dox)
+add_dependencies(CollaborationDiagrams dox)
+
+add_custom_target(Tutorials ALL
+    COMMAND touch tutorialWorklist_root tutorialWorklist_py
+    COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root
+    COMMAND cat tutorialWorklist_py* >> tutorialWorklist_py
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} -l -q < tutorialWorklist_root
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_dependencies(Tutorials CollaborationDiagrams)
+
+if(COMMAND ${DOCU_QHG_LOCATION})
+add_custom_target(Zipping ALL
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
+)
+add_dependencies(Zipping Tutorials)
+endif()
 
 set_property(
   TARGET dox
   APPEND
-  PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html tutorialWorklist_py tutorialWorklist_root
+  PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html tutorialWorklist_py tutorialWorklist_root cleanNamespaces.sh
 )
 
 #TODO cleaning:
