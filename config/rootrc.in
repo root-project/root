@@ -455,7 +455,7 @@ RSA.KeyType:  1
 # UsrPwd: check of host equivalence via /etc/hosts.equiv or $HOME/.rhosts.
 #SrvAuth.CheckHostsEquivalence: 1
 
-# Force file opening via TNetFile (TXNetFile) if a hostname is specified
+# Force file opening via TNetFile (TNetXNGFile) if a hostname is specified
 # in the Url.
 # By default, for local files TFile::Open() invokes directly TFile
 #TFile.ForceRemote:  yes
@@ -504,8 +504,6 @@ Url.Special:         file: hpss: dcache:
 # Socket read timeout [in secs: default 10 secs]
 # XProof.ReadTimeout: 10
 
-# The following controls the verbosity of the TXNetFile XRootD client
-#
 # XNet.Debug            - log verbosity level (default 0)
 #                         (0 = nothing,
 #                          1 = Info  (messages of interest to the user)
@@ -521,7 +519,7 @@ Url.Special:         file: hpss: dcache:
 # The following env vars are handled by TNetXNGFile (new xrootd client interface)
 # and related classes (module netxng, libNetxNG.so).
 
-# The following controls the verbosity of the TXNetNGFile XRootD client
+# The following controls the verbosity of the TNetXNGFile XRootD client
 #
 # NetXNG.Debug            - ""       use default level
 #                         "Info"   messages of interest to the user
