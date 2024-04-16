@@ -18,7 +18,7 @@
 using namespace ROOT::Detail::RDF;
 
 RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
+   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(lm), /*columnNames*/ {}, variations)
 {
    // Jitted nodes of the computation graph (e.g. RJittedAction, RJittedDefine) usually don't need to register
    // themselves with the RLoopManager: the _concrete_ nodes will be registered with the RLoopManager right before
