@@ -181,10 +181,10 @@ add_custom_target(Preparation
   # COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
 
   # Precompile here to prevent later multithreading issues
-  COMMAND ${ROOT_root_CMD} -l -b -q -e '.L libs.C+' &&
-          ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+' &&
-          ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+' &&
-          ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+'
+  COMMAND cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+' &&
+          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+' &&
+          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+' &&
+          cmake -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+'
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 if(builtin_docu)
