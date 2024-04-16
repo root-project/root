@@ -52,7 +52,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 class RInterfaceBase {
 protected:
    ///< The RLoopManager at the root of this computation graph. Never null.
-   RDFDetail::RLoopManager *fLoopManager;
+   std::shared_ptr<ROOT::Detail::RDF::RLoopManager> fLoopManager;
    /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
    RDataSource *fDataSource = nullptr;
 
@@ -125,7 +125,7 @@ protected:
       }
    }
 
-   RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager; }
+   RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager.get(); }
 
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {

@@ -181,7 +181,7 @@ public:
       auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns, visitedMap);
 
       // Keep track of the columns defined up to this point.
-      thisNode->AddDefinedColumns(fColRegister.GetNames());
+      thisNode->AddDefinedColumns(fColRegister.GenerateColumnNames());
 
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
