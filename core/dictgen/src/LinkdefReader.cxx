@@ -685,11 +685,17 @@ public:
          } else if (tok.getIdentifierInfo()->getName() == "nostreamer") options.fNoStreamer = 1;
          else if (tok.getIdentifierInfo()->getName() == "noinputoper") options.fNoInputOper = 1;
          else if (tok.getIdentifierInfo()->getName() == "evolution") options.fRequestStreamerInfo = 1;
-         else if (tok.getIdentifierInfo()->getName() == "rntuplesplit")
-            options.fRNTupleSplitMode = 1;
-         else if (tok.getIdentifierInfo()->getName() == "rntupleunsplit")
-            options.fRNTupleSplitMode = -1;
-         else if (tok.getIdentifierInfo()->getName() == "stub") {
+         else if (tok.getIdentifierInfo()->getName() == "rntuplesplit") {
+            if (options.fRNTupleSplitMode == -1)
+               Error("Error: Can only specify a single rntuple option (either rntuplesplit or rntupleunsplit", tok, PP);
+            else
+               options.fRNTupleSplitMode = 1;
+         } else if (tok.getIdentifierInfo()->getName() == "rntupleunsplit") {
+            if (options.fRNTupleSplitMode == 1)
+               Error("Error: Can only specify a single rntuple option (either rntuplesplit or rntupleunsplit", tok, PP);
+            else
+               options.fRNTupleSplitMode = -1;
+         } else if (tok.getIdentifierInfo()->getName() == "stub") {
             // This was solely for CINT dictionary, ignore for now.
             // options.fUseStubs = 1;
          } else if (tok.getIdentifierInfo()->getName() == "version") {
