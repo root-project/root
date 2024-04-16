@@ -240,6 +240,7 @@ TEST(RNTuple, PageFillingTail)
       RNTupleWriteOptions options;
       // Exercises the tail page optimization with pages to hold 4 elements
       options.SetApproxUnzippedPageSize(8);
+      options.SetUseTailPageOptimization(true);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       for (std::int16_t i = 0; i < 16; ++i) {
          *fldX = i;
@@ -277,6 +278,56 @@ TEST(RNTuple, PageFillingTail)
    EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
 }
 
+TEST(RNTuple, PageFillingTailOff)
+{
+   FileRaii fileGuard("test_ntuple_page_filling_tail_off.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<std::int16_t>("x");
+
+      RNTupleWriteOptions options;
+      // Exercises the (disabled) tail page optimization with pages to hold 4 elements
+      options.SetApproxUnzippedPageSize(8);
+      options.SetUseTailPageOptimization(false);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      for (std::int16_t i = 0; i < 16; ++i) {
+         *fldX = i;
+         ntuple->Fill();
+         // Tail page optimization should not be active: the pages have 4 and 1 elements
+         if (i == 4)
+            ntuple->CommitCluster();
+         // Two pages of 4 elements and one undersized tail page with only 1 element
+         if (i == 13)
+            ntuple->CommitCluster();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewX = ntuple->GetView<std::int16_t>("x");
+   ASSERT_EQ(16u, ntuple->GetNEntries());
+   for (std::int16_t i = 0; i < 16; ++i)
+      EXPECT_EQ(i, viewX(i));
+
+   const auto &desc = ntuple->GetDescriptor();
+   EXPECT_EQ(3u, desc.GetNClusters());
+   const auto &cd1 = desc.GetClusterDescriptor(desc.FindClusterId(0, 0));
+   const auto &pr1 = cd1.GetPageRange(0);
+   ASSERT_EQ(2u, pr1.fPageInfos.size());
+   EXPECT_EQ(4u, pr1.fPageInfos[0].fNElements);
+   EXPECT_EQ(1u, pr1.fPageInfos[1].fNElements);
+   const auto &cd2 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd1.GetId()));
+   const auto &pr2 = cd2.GetPageRange(0);
+   ASSERT_EQ(3u, pr2.fPageInfos.size());
+   EXPECT_EQ(4u, pr2.fPageInfos[0].fNElements);
+   EXPECT_EQ(4u, pr2.fPageInfos[1].fNElements);
+   EXPECT_EQ(1u, pr2.fPageInfos[2].fNElements);
+   const auto &cd3 = desc.GetClusterDescriptor(desc.FindNextClusterId(cd2.GetId()));
+   const auto &pr3 = cd3.GetPageRange(0);
+   ASSERT_EQ(1u, pr3.fPageInfos.size());
+   EXPECT_EQ(2u, pr3.fPageInfos[0].fNElements);
+}
+
 TEST(RNTuple, PageFillingString) {
    FileRaii fileGuard("test_ntuple_page_filling_string.root");
 
@@ -287,6 +338,7 @@ TEST(RNTuple, PageFillingString) {
 
       RNTupleWriteOptions options;
       options.SetApproxUnzippedPageSize(16);
+      options.SetUseTailPageOptimization(true);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
       // 1 page: 17 characters
       *fldX = "01234567890123456";
