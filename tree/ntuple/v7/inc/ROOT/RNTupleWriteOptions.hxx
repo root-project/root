@@ -53,7 +53,10 @@ protected:
    /// fApproxUnzippedPageSize in size and tail pages (the last page in a cluster) is between
    /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
+   /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
+   /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
+   /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
    /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
