@@ -331,7 +331,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
    }
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
-   fFile->SetIsBuffering(false);
+   fFile->SetBuffering(false);
 
    return desc;
 }

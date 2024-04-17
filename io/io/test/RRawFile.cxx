@@ -231,18 +231,18 @@ TEST(RRawFile, SetBuffering)
    EXPECT_EQ(1u, f->fNumReadAt);
    f->fNumReadAt = 0;
 
-   f->SetIsBuffering(false);
+   f->SetBuffering(false);
    // idempotent
-   f->SetIsBuffering(false);
+   f->SetBuffering(false);
    EXPECT_EQ(1u, f->ReadAt(buffer, 1, 0));
    EXPECT_EQ(1u, f->ReadAt(buffer + 1, 1, 1));
    EXPECT_STREQ("ab", buffer);
    EXPECT_EQ(2u, f->fNumReadAt);
    f->fNumReadAt = 0;
 
-   f->SetIsBuffering(true);
+   f->SetBuffering(true);
    // idempotent
-   f->SetIsBuffering(true);
+   f->SetBuffering(true);
    EXPECT_EQ(1u, f->ReadAt(buffer, 1, 2));
    EXPECT_EQ(1u, f->ReadAt(buffer + 1, 1, 3));
    EXPECT_STREQ("cd", buffer);
