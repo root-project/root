@@ -127,6 +127,7 @@ private:
    /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
    void InitDescriptor(const RNTuple &anchor);
 
+   static ROOT::Internal::RRawFile::ROptions GetDefaultRawfileOptions();
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
 
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
