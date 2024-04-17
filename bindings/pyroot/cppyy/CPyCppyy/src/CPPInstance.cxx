@@ -339,7 +339,7 @@ static PyObject* op_reshape(CPPInstance* self, PyObject* shape)
     Py_RETURN_NONE;
 }
 
-static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
+static PyObject* op_item(CPPInstance* self, Py_ssize_t idx)
 {
 // In C, it is common to represent an array of structs as a pointer to the first
 // object in the array. If the caller indexes a pointer to an object that does not
@@ -350,10 +350,6 @@ static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
         PyErr_Format(PyExc_TypeError, "%s object does not support indexing", Py_TYPE(self)->tp_name);
         return nullptr;
     }
-
-    Py_ssize_t idx = PyInt_AsSsize_t(pyidx);
-    if (idx == (Py_ssize_t)-1 && PyErr_Occurred())
-        return nullptr;
 
     if (idx < 0) {
     // this is debatable, and probably should not care, but the use case is pretty
@@ -383,6 +379,21 @@ static PyObject* op_getitem(CPPInstance* self, PyObject* pyidx)
     return BindCppObjectNoCast(indexed_obj, ((CPPClass*)Py_TYPE(self))->fCppType, flags);
 }
 
+//- sequence methods --------------------------------------------------------
+static PySequenceMethods op_as_sequence = {
+    0,                             // sq_length
+    0,                             // sq_concat
+    0,                             // sq_repeat
+    (ssizeargfunc)op_item,         // sq_item
+    0,                             // sq_slice
+    0,                             // sq_ass_item
+    0,                             // sq_ass_slice
+    0,                             // sq_contains
+    0,                             // sq_inplace_concat
+    0,                             // sq_inplace_repeat
+};
+
+
 //----------------------------------------------------------------------------
 static PyMethodDef op_methods[] = {
     {(char*)"__destruct__", (PyCFunction)op_destruct, METH_NOARGS,
@@ -391,8 +402,6 @@ static PyMethodDef op_methods[] = {
       (char*)"dispatch to selected overload"},
     {(char*)"__smartptr__", (PyCFunction)op_get_smartptr, METH_NOARGS,
       (char*)"get associated smart pointer, if any"},
-    {(char*)"__getitem__",  (PyCFunction)op_getitem, METH_O,
-      (char*)"pointer dereferencing"},
     {(char*)"__reshape__",  (PyCFunction)op_reshape, METH_O,
         (char*)"cast pointer to 1D array type"},
     {(char*)nullptr, nullptr, 0, nullptr}
@@ -1034,7 +1043,7 @@ PyTypeObject CPPInstance_Type = {
     0,                             // tp_as_async / tp_compare
     (reprfunc)op_repr,             // tp_repr
     &op_as_number,                 // tp_as_number
-    0,                             // tp_as_sequence
+    &op_as_sequence,               // tp_as_sequence
     0,                             // tp_as_mapping
     (hashfunc)op_hash,             // tp_hash
     0,                             // tp_call
