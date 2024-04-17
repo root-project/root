@@ -14,3 +14,6 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 See LGPL2_1.txt next to this file for the text of the LGPL version 2.1.
 For questions regarding the ROOT license, please contact rootdev@cern.ch.
+
+The precompiled binary distributions provided as a service to our community 
+may feature packages released with licenses different from LGPL.
