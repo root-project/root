@@ -584,7 +584,7 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
             leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
-         while (auto obj = nexthist()) {
+         while ((obj = nexthist())) {
             TH1 *hist = (TH1*) obj;
             if (strlen(hist->GetTitle()))
                mes = hist->GetTitle();
