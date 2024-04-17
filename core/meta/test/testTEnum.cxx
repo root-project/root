@@ -2,8 +2,8 @@
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
+#include <climits>
 #include <type_traits>
 
 TEST(TEnum, UnderlyingType)
