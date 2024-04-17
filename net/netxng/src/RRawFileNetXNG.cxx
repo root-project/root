@@ -171,11 +171,11 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
       if (val == 0x7FFFFFFF)
          return *fIOVecLimits;
 
-      fIOVecLimits->fMaxSingleSize = val;
+      fIOVecLimits->fMaxReqs = val;
    }
 
    if (!readvIorMax.empty() && std::isdigit(readvIorMax[0])) {
-      fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
+      fIOVecLimits->fMaxSingleSize = std::stoi(readvIorMax);
    }
 
    return *fIOVecLimits;
