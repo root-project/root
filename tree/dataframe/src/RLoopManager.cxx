@@ -1112,9 +1112,9 @@ void RLoopManager::SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange
    fEmptyEntryRange = std::move(newRange);
 }
 
-void RLoopManager::ChangeBeginAndEndEntries(ULong64_t start, ULong64_t end)
+void RLoopManager::ChangeBeginAndEndEntries(ULong64_t begin, ULong64_t end)
 {
-   fBeginEntry = start;
+   fBeginEntry = begin;
    fEndEntry = end;
 }
 
