@@ -179,7 +179,7 @@ public:
 
    /// Turn off buffered reads; all scalar read requests go directly to the implementation. Buffering can be turned
    /// back on.
-   void SetIsBuffering(bool value);
+   void SetBuffering(bool value);
    bool IsBuffering() const { return fOptions.fBlockSize > 0; }
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.

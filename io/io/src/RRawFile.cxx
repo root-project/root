@@ -199,7 +199,7 @@ void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
    ReadVImpl(ioVec, nReq);
 }
 
-void ROOT::Internal::RRawFile::SetIsBuffering(bool value)
+void ROOT::Internal::RRawFile::SetBuffering(bool value)
 {
    if (value) {
       if (fOptions.fBlockSize < 0) {
