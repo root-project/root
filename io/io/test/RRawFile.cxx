@@ -217,6 +217,39 @@ TEST(RRawFile, ReadBuffered)
    EXPECT_EQ(1u, f->fNumReadAt); f->fNumReadAt = 0;
 }
 
+TEST(RRawFile, SetBuffering)
+{
+   char buffer[3];
+   RRawFile::ROptions options;
+   options.fBlockSize = 2;
+   std::unique_ptr<RRawFileMock> f(new RRawFileMock("abcd", options));
+
+   buffer[2] = '\0';
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 0));
+   EXPECT_EQ(1u, f->ReadAt(buffer + 1, 1, 1));
+   EXPECT_STREQ("ab", buffer);
+   EXPECT_EQ(1u, f->fNumReadAt);
+   f->fNumReadAt = 0;
+
+   f->SetIsBuffering(false);
+   // idempotent
+   f->SetIsBuffering(false);
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 0));
+   EXPECT_EQ(1u, f->ReadAt(buffer + 1, 1, 1));
+   EXPECT_STREQ("ab", buffer);
+   EXPECT_EQ(2u, f->fNumReadAt);
+   f->fNumReadAt = 0;
+
+   f->SetIsBuffering(true);
+   // idempotent
+   f->SetIsBuffering(true);
+   EXPECT_EQ(1u, f->ReadAt(buffer, 1, 2));
+   EXPECT_EQ(1u, f->ReadAt(buffer + 1, 1, 3));
+   EXPECT_STREQ("cd", buffer);
+   EXPECT_EQ(1u, f->fNumReadAt);
+   f->fNumReadAt = 0;
+}
+
 TEST(RRawFileTFile, TFile)
 {
    FileRaii tfileGuard("test_rawfile_tfile.root", "");

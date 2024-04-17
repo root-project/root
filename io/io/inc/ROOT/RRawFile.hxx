@@ -50,6 +50,8 @@ public:
       ELineBreaks fLineBreak = ELineBreaks::kAuto;
       /// Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
       /// that the protocol-dependent default block size should be used.
+      /// After construction, a negative block size is used to store the block size value when caching is turned off
+      /// (see `[Enable|Disable]Buffering()`).
       int fBlockSize = -1;
       // Define an empty constructor to work around a bug in Clang: https://github.com/llvm/llvm-project/issues/36032
       ROptions() {}
@@ -174,6 +176,11 @@ public:
    void ReadV(RIOVec *ioVec, unsigned int nReq);
    /// Returns the limits regarding the ioVec input to ReadV for this specific file; may open the file as a side-effect.
    virtual RIOVecLimits GetReadVLimits() { return RIOVecLimits(); }
+
+   /// Turn off buffered reads; all scalar read requests go directly to the implementation. Buffering can be turned
+   /// back on.
+   void SetIsBuffering(bool value);
+   bool IsBuffering() const { return fOptions.fBlockSize > 0; }
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);
