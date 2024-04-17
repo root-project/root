@@ -326,10 +326,14 @@ add_custom_target(Tutorials ALL
     COMMAND find . -name 'tutorialWorklist_root*' -exec cat {} + | tee tutorialWorklist_root
     COMMAND find . -name 'tutorialWorklist_py*' -exec cat {} + | tee tutorialWorklist_py
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} -l -q < tutorialWorklist_root
-    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(Tutorials dox)
+
+add_custom_target(Notebooks ALL
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh ${CMAKE_CURRENT_BINARY_DIR}/tutorialWorklist_py -j${DOCU_THREADS}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+add_dependencies(Notebooks Tutorials)
 endif()
 
 if(COMMAND ${DOCU_QHG_LOCATION})
