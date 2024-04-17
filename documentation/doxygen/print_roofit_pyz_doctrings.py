@@ -196,7 +196,12 @@ if __name__ == "__main__":
         from ROOT._pythonization import _roofit
     except ModuleNotFoundError as err:
         import sys
-        print('ROOT PYTHONPATH not set, or roofit not installed', file=sys.stderr)
+        print('ROOT PYTHONPATH not set, or roofit not installed, print_roofit_pyz_docstrings will abort', file=sys.stderr)
+        print(err, file=sys.stderr)
+        sys.exit()
+    except ImportError as err:
+        import sys
+        print('Some module was not used to build ROOT, print_roofit_pyz_docstrings will abort', file=sys.stderr)
         print(err, file=sys.stderr)
         sys.exit()
 
