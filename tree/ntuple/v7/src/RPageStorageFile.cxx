@@ -224,6 +224,14 @@ void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::Internal::RRawFile::ROptions ROOT::Experimental::Internal::RPageSourceFile::GetDefaultRawfileOptions()
+{
+   ROOT::Internal::RRawFile::ROptions options;
+   // No additional caching, the page source gets full control over the read byte ranges
+   options.fBlockSize = 0;
+   return options;
+}
+
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                                const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
@@ -246,7 +254,7 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
                                                                const RNTupleReadOptions &options)
-   : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path), options)
+   : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path, GetDefaultRawfileOptions()), options)
 {
 }
 
@@ -293,9 +301,9 @@ ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &a
    auto url = anchor.fFile->GetEndpointUrl();
    auto protocol = std::string(url->GetProtocol());
    if (className == "TFile") {
-      rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetFile(), GetDefaultRawfileOptions());
    } else if (className == "TDavixFile" || className == "TNetXNGFile") {
-      rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl());
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl(), GetDefaultRawfileOptions());
    } else {
       rawFile.reset(new ROOT::Internal::RRawFileTFile(anchor.fFile));
    }
