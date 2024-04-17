@@ -50,7 +50,6 @@ set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to custom doxyge
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
 find_package(Python3 COMPONENTS Interpreter)
-
 # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
 execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -182,16 +181,18 @@ add_custom_target(Preparation
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${DOCU_LOCATION}/images/
   COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/../../js ${DOCU_LOCATION}/
 
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
-  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${Python_EXECUTABLE}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++17 -O2
+  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${PYTHON_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${PYTHON_EXECUTABLE}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++17 -O2
 
-  # COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
-  # COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
+  COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
+  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
 
   # Precompile here to prevent later multithreading issues
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+O'
@@ -323,7 +324,7 @@ add_custom_target(CollaborationDiagrams ALL
     COMMAND find . -name 'cleanNamespaces*.sh' -exec cat {} + | tee cleanNamespaces.sh
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
-    COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash modifyClassWebpages.sh -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash modifyClassWebpages.sh -j${DOCU_THREADS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(CollaborationDiagrams dox)
@@ -339,7 +340,7 @@ add_custom_target(Tutorials ALL
 add_dependencies(Tutorials dox)
 
 add_custom_target(Notebooks ALL
-    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(Notebooks Tutorials)
