@@ -224,14 +224,6 @@ void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Internal::RRawFile::ROptions ROOT::Experimental::Internal::RPageSourceFile::GetDefaultRawfileOptions()
-{
-   ROOT::Internal::RRawFile::ROptions options;
-   // No additional caching, the page source gets full control over the read byte ranges
-   options.fBlockSize = 0;
-   return options;
-}
-
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                                const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
@@ -254,7 +246,7 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
 
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName, std::string_view path,
                                                                const RNTupleReadOptions &options)
-   : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path, GetDefaultRawfileOptions()), options)
+   : RPageSourceFile(ntupleName, ROOT::Internal::RRawFile::Create(path), options)
 {
 }
 
@@ -301,9 +293,9 @@ ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &a
    auto url = anchor.fFile->GetEndpointUrl();
    auto protocol = std::string(url->GetProtocol());
    if (className == "TFile") {
-      rawFile = ROOT::Internal::RRawFile::Create(url->GetFile(), GetDefaultRawfileOptions());
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetFile());
    } else if (className == "TDavixFile" || className == "TNetXNGFile") {
-      rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl(), GetDefaultRawfileOptions());
+      rawFile = ROOT::Internal::RRawFile::Create(url->GetUrl());
    } else {
       rawFile.reset(new ROOT::Internal::RRawFileTFile(anchor.fFile));
    }
@@ -337,6 +329,9 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 
       RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
+
+   // For the page reads, we rely on the I/O scheduler to define the read requests
+   fFile->SetIsBuffering(false);
 
    return desc;
 }
