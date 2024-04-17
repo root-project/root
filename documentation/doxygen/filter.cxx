@@ -7,7 +7,7 @@
 /// ## In the ROOT classes
 ///
 /// ### `Begin_Macro` and `End_Macro`
-/// The two tags where used the THtml version to generate images from ROOT code.
+/// The two tags were used by the THtml version to generate images from ROOT code.
 /// The generated picture is inlined exactly at the place where the macro is
 /// defined. The Macro can be defined in two way:
 ///  - by direct in-lining of the C++ code
@@ -81,7 +81,7 @@
 #include <stdarg.h>
 #include <memory>
 
-using std::string, std::ios_base, std::unique_ptr;
+using std::string, std::ios_base, std::unique_ptr, std::cerr, std::endl;
 
 // Auxiliary functions
 void   FilterClass(const int);
@@ -505,7 +505,7 @@ void ExecuteMacro(const int suffix)
 {
    // Name of the next Image to be generated
    gImageName = StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str());
-   //~ cerr << "Execute " << gClassName << " " << gImageID << " " << gLineString << endl;
+   // cerr << "Execute " << gClassName << " " << gImageID << " " << gLineString << endl;
 
    // Retrieve the macro to be executed.
    if (gLineString.find("../../..") != string::npos) {
@@ -516,13 +516,13 @@ void ExecuteMacro(const int suffix)
    int i1     = gLineString.rfind('/')+1;
    int i2     = gLineString.rfind('C');
    gMacroName = gLineString.substr(i1,i2-i1+1);
-   //~ cerr << "The macro is " << gMacroName << endl;
+   // cerr << "The macro is " << gMacroName << endl;
 
    // Build the ROOT command to be executed.
    gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\""));
    size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\"", gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
-   //~ cerr << "The line is " << gLineString << endl;
+   // cerr << "The line is " << gLineString << endl;
 
    // Execute the macro
    ExecuteCommand(gLineString);
@@ -537,6 +537,9 @@ void ExecuteMacro(const int suffix)
 
 void ExecuteCommand(string command)
 {
+#ifdef LD_LIBRARY_PATH
+   command = "export LD_LIBRARY_PATH=" LD_LIBRARY_PATH " && " + command;
+#endif
    int o = dup(fileno(stdout));
    if (freopen(gOutputName.c_str(), "a", stdout) != nullptr) {
       int i = system(command.c_str());
