@@ -18,10 +18,10 @@ void ROOT::Internal::RDF::ChangeEmptyEntryRange(const ROOT::RDF::RNode &node,
 }
 
 void ROOT::Internal::RDF::ChangeBeginAndEndEntries(const ROOT::RDF::RNode &node,
-                                                   ULong64_t start, ULong64_t end)
+                                                   ULong64_t begin, ULong64_t end)
 {
-   R__ASSERT(end >= start && "end is less than start in the passed entry range!");
-   node.GetLoopManager()->ChangeBeginAndEndEntries(start, end);
+   R__ASSERT(end >= begin && "end is less than begin in the passed entry range!");
+   node.GetLoopManager()->ChangeBeginAndEndEntries(begin, end);
 }
 
 /**

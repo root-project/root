@@ -87,7 +87,7 @@ namespace Internal {
 namespace RDF {
 class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
-void ChangeBeginAndEndEntries(const RNode &node, ULong64_t start, ULong64_t end);
+void ChangeBeginAndEndEntries(const RNode &node, ULong64_t begin, ULong64_t end);
 void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 void TriggerRun(ROOT::RDF::RNode node);
 } // namespace RDF
