@@ -29,7 +29,7 @@ class TUserHandler : public THttpWSHandler {
 
       Bool_t ProcessWS(THttpCallArg *arg) override
       {
-         if (!arg || (arg->GetWSId()==0)) return kTRUE;
+         if (!arg || (arg->GetWSId() == 0)) return kTRUE;
 
          // printf("Method %s\n", arg->GetMethod());
 
@@ -55,7 +55,7 @@ class TUserHandler : public THttpWSHandler {
            str.Append((const char *)arg->GetPostData(), arg->GetPostDataLength());
            printf("Client msg: %s\n", str.Data());
            TDatime now;
-           SendCharStarWS(arg->GetWSId(), Form("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
+           SendCharStarWS(arg->GetWSId(), TString::Format("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
            return kTRUE;
         }
 
@@ -66,7 +66,7 @@ class TUserHandler : public THttpWSHandler {
       Bool_t HandleTimer(TTimer *) override
       {
          TDatime now;
-         if (fWSId) SendCharStarWS(fWSId, Form("Server sends data:%s server counter:%d", now.AsString(), fServCnt++));
+         if (fWSId) SendCharStarWS(fWSId, TString::Format("Server sends data:%s server counter:%d", now.AsString(), fServCnt++));
          return kTRUE;
       }
 
@@ -87,11 +87,11 @@ void ws()
    printf("Please be sure that ws.htm is provided in current directory\n");
 
    if (gSystem->InheritsFrom("TMacOSXSystem"))
-      gSystem->Exec(Form("open %s", addr));
+      gSystem->Exec(TString::Format("open %s", addr));
    else if (gSystem->InheritsFrom("TWinNTSystem"))
-      gSystem->Exec(Form("start %s", addr));
+      gSystem->Exec(TString::Format("start %s", addr));
    else
-      gSystem->Exec(Form("xdg-open %s &", addr));
+      gSystem->Exec(TString::Format("xdg-open %s &", addr));
 
    // when connection will be established, data will be send to the client
    TTimer *tm = new TTimer(handler, 3700);
