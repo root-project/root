@@ -11,7 +11,7 @@ if [ ! -d "$HTMLPATH" -o ! -f "$WORKFILE" ]; then
 fi
 
 # Find the libraries for the class $2. $1 is the ROOT command
-libname=$(${1} -l -b -q "${CMAKE_CURRENT_SOURCE_DIR}/libs.C+(\"$2\")" | grep 'mainlib=')
+libname=$(${1} -l -b -q "libs.C+(\"$2\")" | grep 'mainlib=')
 
 # The class was not found. Remove the collaboration graph
 if [ -z "${libname}" ]; then

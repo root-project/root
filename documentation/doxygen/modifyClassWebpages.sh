@@ -25,4 +25,4 @@ if [ ! -s "${listOfClasses}" ]; then
    exit 0
 fi
 
-xargs -L 1 -P ${NJOB:-1} ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ${ROOT_CMD} < ${listOfClasses}
+xargs -L 1 -P ${NJOB:-1} ${CMAKE_CURRENT_BINARY_DIR}/modifyClassWebpage.sh ${ROOT_CMD} < ${listOfClasses}
