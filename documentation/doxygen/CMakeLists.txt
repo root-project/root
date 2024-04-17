@@ -311,7 +311,7 @@ add_dependencies(dox Preparation)
 
 add_custom_target(CollaborationDiagrams ALL
     COMMAND touch ./cleanNamespaces.sh
-    COMMAND cat cleanNamespaces*.sh >> cleanNamespaces.sh
+    COMMAND find . -name 'cleanNamespaces*.sh' -exec cat {} + | tee cleanNamespaces.sh
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh -j${DOCU_THREADS}
@@ -323,8 +323,8 @@ option(DOCU_TUTORIALS "Integrate tutorials in Doxygen documentation" ON) # Disab
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
     COMMAND touch tutorialWorklist_root tutorialWorklist_py
-    COMMAND cat tutorialWorklist_root* >> tutorialWorklist_root
-    COMMAND cat tutorialWorklist_py* >> tutorialWorklist_py
+    COMMAND find . -name 'tutorialWorklist_root*' -exec cat {} + | tee tutorialWorklist_root
+    COMMAND find . -name 'tutorialWorklist_py*' -exec cat {} + | tee tutorialWorklist_py
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} -l -q < tutorialWorklist_root
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
