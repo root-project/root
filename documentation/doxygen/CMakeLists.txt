@@ -38,7 +38,7 @@ else()
     set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
   endif()
   set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
-  find_package(ROOT 6.32 CONFIG REQUIRED) # TODO change to 6.32
+  find_package(ROOT 6.32 CONFIG REQUIRED)
   set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 endif()
 
@@ -203,8 +203,8 @@ if(DOCU_PYZDOC)
 add_custom_target(PreparationPyz
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
-    COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
+    COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
 )
 add_dependencies(Preparation PreparationPyz)
 endif()
@@ -229,7 +229,7 @@ set(DOXYGEN_EXTRACT_STATIC         YES)
 #set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
 set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
 set(DOXYGEN_CASE_SENSE_NAMES       YES) # default value is system dependent, so need to set this !
-set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
+set(DOXYGEN_WARN_NO_PARAMDOC       NO) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
 set(DOXYGEN_SORT_BRIEF_DOCS        YES)
 set(DOXYGEN_SORT_MEMBERS_CTORS_1ST YES)
 set(DOXYGEN_GENERATE_TODOLIST      NO)
