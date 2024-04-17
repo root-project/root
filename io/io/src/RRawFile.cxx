@@ -145,22 +145,23 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
    EnsureOpen();
-   R__ASSERT(fOptions.fBlockSize >= 0);
 
    // Early return for empty requests
    if (nbytes == 0)
       return 0;
 
    // "Large" reads are served directly, bypassing the cache; since nbytes > 0, fBlockSize == 0 is also handled here
-   if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
+   if ((fOptions.fBlockSize < 0) || nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return ReadAtImpl(buffer, nbytes, offset);
 
    R__ASSERT(fOptions.fBlockSize > 0);
 
    if (!fBufferSpace) {
       fBufferSpace.reset(new unsigned char[kNumBlockBuffers * fOptions.fBlockSize]);
-      for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
+      for (unsigned int i = 0; i < kNumBlockBuffers; ++i) {
          fBlockBuffers[i].fBuffer = fBufferSpace.get() + i * fOptions.fBlockSize;
+         fBlockBuffers[i].fBufferSize = 0;
+      }
    }
 
    size_t totalBytes = 0;
@@ -196,6 +197,20 @@ void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
    EnsureOpen();
    ReadVImpl(ioVec, nReq);
+}
+
+void ROOT::Internal::RRawFile::SetIsBuffering(bool value)
+{
+   if (value) {
+      if (fOptions.fBlockSize < 0) {
+         fOptions.fBlockSize = -fOptions.fBlockSize;
+      }
+   } else {
+      if (fOptions.fBlockSize > 0) {
+         fOptions.fBlockSize = -fOptions.fBlockSize;
+         fBufferSpace.reset();
+      }
+   }
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)
