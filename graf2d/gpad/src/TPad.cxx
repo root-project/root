@@ -504,55 +504,98 @@ TLegend *TPad::BuildLegend(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
 {
    TList *lop = GetListOfPrimitives();
    if (!lop) return nullptr;
+   TList *lof = nullptr;
    TLegend *leg = nullptr;
+   TObject *obj = nullptr;
    TIter next(lop);
    TString mes;
    TString opt;
+
+   auto AddEntryFromListOfFunctions = [&]() {
+      TIter nextobj(lof);
+      while ((obj = nextobj())) {
+         if (obj->InheritsFrom(TNamed::Class())) {
+            if (strlen(obj->GetTitle()))
+               mes = obj->GetTitle();
+            else
+               mes = obj->GetName();
+         } else {
+            mes = obj->ClassName();
+         }
+         leg->AddEntry(obj, mes.Data(), "lpf");
+      }
+   };
+
    while(auto o = next()) {
       if ((o->InheritsFrom(TAttLine::Class()) || o->InheritsFrom(TAttMarker::Class()) ||
           o->InheritsFrom(TAttFill::Class())) &&
          ( !(o->InheritsFrom(TFrame::Class())) && !(o->InheritsFrom(TPave::Class())) )) {
-            if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
-            if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
-               mes = o->GetTitle();
-            else if (strlen(o->GetName()))
-               mes = o->GetName();
-            else
-               mes = o->ClassName();
-            if (option && strlen(option)) {
-               opt = option;
-            } else {
-               if (o->InheritsFrom(TAttLine::Class()))   opt += "l";
-               if (o->InheritsFrom(TAttMarker::Class())) opt += "p";
-               if (o->InheritsFrom(TAttFill::Class()))   opt += "f";
-            }
-            leg->AddEntry(o,mes.Data(),opt.Data());
-      } else if ( o->InheritsFrom(TMultiGraph::Class() ) ) {
-         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
+         if (o->InheritsFrom(TNamed::Class()) && strlen(o->GetTitle()))
+            mes = o->GetTitle();
+         else if (strlen(o->GetName()))
+            mes = o->GetName();
+         else
+            mes = o->ClassName();
+         if (option && strlen(option)) {
+            opt = option;
+         } else {
+            if (o->InheritsFrom(TAttLine::Class()))
+               opt += "l";
+            if (o->InheritsFrom(TAttMarker::Class()))
+               opt += "p";
+            if (o->InheritsFrom(TAttFill::Class()))
+               opt += "f";
+         }
+         leg->AddEntry(o,mes.Data(), opt.Data());
+         if (o->InheritsFrom(TH1::Class())) {
+            lof = ((TH1 *)o)->GetListOfFunctions();
+            AddEntryFromListOfFunctions();
+         }
+         if (o->InheritsFrom(TGraph::Class())) {
+            lof = ((TGraph *)o)->GetListOfFunctions();
+            AddEntryFromListOfFunctions();
+         }
+      } else if (o->InheritsFrom(TMultiGraph::Class())) {
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
          TList * grlist = ((TMultiGraph *)o)->GetListOfGraphs();
          TIter nextgraph(grlist);
-         TGraph * gr;
-         TObject * obj;
+         TGraph *gr = nullptr;
          while ((obj = nextgraph())) {
             gr = (TGraph*) obj;
-            if      (strlen(gr->GetTitle())) mes = gr->GetTitle();
-            else if (strlen(gr->GetName()))  mes = gr->GetName();
-            else                             mes = gr->ClassName();
-            if (option && strlen(option))    opt = option;
-            else                             opt = "lpf";
-            leg->AddEntry( obj, mes.Data(), opt );
+            if (strlen(gr->GetTitle()))
+               mes = gr->GetTitle();
+            else if (strlen(gr->GetName()))
+               mes = gr->GetName();
+            else
+               mes = gr->ClassName();
+            if (option && strlen(option))
+               opt = option;
+            else
+               opt = "lpf";
+            leg->AddEntry(obj, mes.Data(), opt);
          }
-      } else if ( o->InheritsFrom(THStack::Class() ) ) {
-         if (!leg) leg = new TLegend(x1, y1, x2, y2, title);
+         lof = ((TMultiGraph *)o)->GetListOfFunctions();
+         AddEntryFromListOfFunctions();
+      } else if (o->InheritsFrom(THStack::Class())) {
+         if (!leg)
+            leg = new TLegend(x1, y1, x2, y2, title);
          TList * hlist = ((THStack *)o)->GetHists();
          TIter nexthist(hlist);
          while (auto obj = nexthist()) {
             TH1 *hist = (TH1*) obj;
-            if      (strlen(hist->GetTitle())) mes = hist->GetTitle();
-            else if (strlen(hist->GetName()))  mes = hist->GetName();
-            else                               mes = hist->ClassName();
-            if (option && strlen(option))      opt = option;
-            else                               opt = "lpf";
+            if (strlen(hist->GetTitle()))
+               mes = hist->GetTitle();
+            else if (strlen(hist->GetName()))
+               mes = hist->GetName();
+            else
+               mes = hist->ClassName();
+            if (option && strlen(option))
+               opt = option;
+            else
+               opt = "lpf";
             leg->AddEntry( obj, mes.Data(), opt );
          }
       }
