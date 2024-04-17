@@ -201,13 +201,6 @@ RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& 
   _isCategory = findCategoryServers(_origList);
 
   installFormulaOrThrow(formula);
-
-  RooArgList useList = usedVariables();
-  if (checkVariables && _origList.size() != useList.size()) {
-    coutI(InputArguments) << "The formula " << GetName() << " claims to use the variables " << _origList
-        << " but only " << useList << " seem to be in use."
-        << "\n  inputs:         " << formula << std::endl;
-  }
 }
 
 
