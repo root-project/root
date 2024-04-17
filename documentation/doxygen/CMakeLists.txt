@@ -1,7 +1,5 @@
 project(ROOT_documentation)
 
-#TODO cp ../../tutorials/unfold/*.xml ../../tutorials/unfold/*.dtd $(DOXYGEN_NOTEBOOK_PATH)/
-
 #set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging; or rather use --verbose when calling cmake
 cmake_minimum_required(VERSION 3.10)
 if(CMAKE_VERSION VERSION_LESS 3.21)
@@ -181,8 +179,7 @@ add_custom_target(Preparation
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
-  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
-  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
+
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${DOCU_LOCATION}/images/
   COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/../../js ${DOCU_LOCATION}/
@@ -191,18 +188,25 @@ add_custom_target(Preparation
 
   COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${PYTHON_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${PYTHON_EXECUTABLE}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++17 -O2
 
-  COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
-  COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
-
   # Precompile here to prevent later multithreading issues
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+O'
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+O'
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+O'
-  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+O'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+O' # TODO these 4 commands are printing a weird 'Welcome to the ROOT tutorials' message
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 if(builtin_docu)
     add_dependencies(Preparation hsimple)
+endif()
+option(DOCU_PYZDOC "Integrate Python docstrings into Doxygen documentation" ON) # Disable for quicker builds
+if(DOCU_PYZDOC)
+add_custom_target(PreparationPyz
+    COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
+    COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
+    COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc
+)
+add_dependencies(Preparation PreparationPyz)
 endif()
 set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
 set(DOXYGEN_PROJECT_NAME           "ROOT")
@@ -225,7 +229,7 @@ set(DOXYGEN_EXTRACT_STATIC         YES)
 #set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
 set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
 set(DOXYGEN_CASE_SENSE_NAMES       YES) # default value is system dependent, so need to set this !
-#set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
+set(DOXYGEN_WARN_NO_PARAMDOC       YES) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
 set(DOXYGEN_SORT_BRIEF_DOCS        YES)
 set(DOXYGEN_SORT_MEMBERS_CTORS_1ST YES)
 set(DOXYGEN_GENERATE_TODOLIST      NO)
@@ -340,7 +344,9 @@ add_custom_target(Tutorials ALL
 add_dependencies(Tutorials dox)
 
 add_custom_target(Notebooks ALL
+    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.xml ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.dtd ${DOCU_LOCATION}/notebooks
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    COMMAND rm -f ${DOCU_LOCATION}/notebooks/*.root
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 add_dependencies(Notebooks Tutorials)
