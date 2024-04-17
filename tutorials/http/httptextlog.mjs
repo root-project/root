@@ -33,7 +33,7 @@ function afterMsgListRequest(hitem, item, obj) {
    // change class name - it is only important for drawing
    obj._typename = 'TMsgList';
 
-   if (obj.arr.length>0) {
+   if (obj.arr.length > 0) {
       item['last-id'] = obj.arr[0].fString;
 
       // add clear function for item
@@ -42,11 +42,10 @@ function afterMsgListRequest(hitem, item, obj) {
    }
 }
 
-function drawMsgList(divid, lst, opt) {
+class TMsgListPainter extends BasePainter {
 
-   let painter = new BasePainter(divid);
-
-   painter.drawList = function(lst) {
+   /** @summary draw list entries */
+   drawList(lst) {
       if (!lst) return;
 
       let frame = this.selectDom(),
@@ -72,14 +71,20 @@ function drawMsgList(divid, lst, opt) {
          main.append('pre').style('margin', '2px').html(lst.arr[i].fString);
    }
 
-   painter.redrawObject = function(obj) {
+   /** @summary redraw list */
+   redrawObject(obj) {
       this.drawList(obj);
       return true;
    }
 
-   painter.drawList(lst);
-   return Promise.resolve(painter);
-}
+   /** @summary Draw TMsgList object */
+   static async draw(dom, obj /*, opt */) {
+      const painter = new TMsgListPainter(dom);
+      painter.drawList(obj);
+      return painter;
+   }
+
+} // class TMsgListPainter
 
 // register draw function to JSROOT
 addDrawFunc({
@@ -87,6 +92,6 @@ addDrawFunc({
    icon: 'img_text',
    make_request: makeMsgListRequest,
    after_request: afterMsgListRequest,
-   func: drawMsgList,
+   func: TMsgListPainter.draw,
    opt: 'list'
 });
