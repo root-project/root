@@ -673,6 +673,8 @@ static TString R__GetBranchPointerName(TLeaf *leaf, bool replace = true)
          if (*bname == ':') *bname='_';
          if (*bname == '<') *bname='_';
          if (*bname == '>') *bname='_';
+         if (*bname == '#') *bname='_';
+         if (*bname == '@') *bname='_';
          bname++;
       }
    }
