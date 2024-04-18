@@ -77,7 +77,8 @@ void ROOT::Internal::RRawFileNetXNG::OpenImpl()
    if( !st.IsOK() )
      throw std::runtime_error( "Cannot open '" + fUrl + "', " +
                                st.ToString() + "; " + st.GetErrorMessage() );
-   if( fOptions.fBlockSize < 0 ) fOptions.fBlockSize = kDefaultBlockSize;
+   if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
+      fOptions.fBlockSize = kDefaultBlockSize;
 }
 
 size_t ROOT::Internal::RRawFileNetXNG::ReadAtImpl(void *buffer, size_t nbytes, std::uint64_t offset)

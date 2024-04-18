@@ -58,7 +58,7 @@ void ROOT::Internal::RRawFileWin::OpenImpl()
    // Prevent double buffering
    int res = setvbuf(fFilePtr, nullptr, _IONBF, 0);
    R__ASSERT(res == 0);
-   if (fOptions.fBlockSize < 0)
+   if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
