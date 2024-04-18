@@ -1092,6 +1092,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
          fillSeq(elem[k->second], *l);
       }
+      if (auto l = dynamic_cast<RooSetProxy *>(p)) {
+         fillSeq(elem[k->second], *l);
+      }      
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
          if (isLiteralConstVar(*r->absArg())) {
             elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
