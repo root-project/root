@@ -47,12 +47,13 @@ public:
 
    /// On construction, an ROptions parameter can customize the RRawFile behavior
    struct ROptions {
+      static constexpr size_t kUseDefaultBlockSize = std::size_t(-1); ///< Use protocol-dependent default block size
+
       ELineBreaks fLineBreak = ELineBreaks::kAuto;
-      /// Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering. A negative value indicates
-      /// that the protocol-dependent default block size should be used.
+      /// Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering.
       /// After construction, a negative block size is used to store the block size value when buffering is turned off
       /// (see `SetBuffering()`).
-      int fBlockSize = -1;
+      size_t fBlockSize = kUseDefaultBlockSize;
       // Define an empty constructor to work around a bug in Clang: https://github.com/llvm/llvm-project/issues/36032
       ROptions() {}
    };
@@ -119,6 +120,8 @@ private:
    std::uint64_t fFileSize = kUnknownFileSize;
    /// Files are opened lazily and only when required; the open state is kept by this flag
    bool fIsOpen = false;
+   /// Runtime switch to decide if reads are buffered or directly sent to ReadAtImpl()
+   bool fIsBuffering = true;
 
 protected:
    std::string fUrl;
@@ -180,7 +183,7 @@ public:
    /// Turn off buffered reads; all scalar read requests go directly to the implementation. Buffering can be turned
    /// back on.
    void SetBuffering(bool value);
-   bool IsBuffering() const { return fOptions.fBlockSize > 0; }
+   bool IsBuffering() const { return fIsBuffering; }
 
    /// Read the next line starting from the current value of fFilePos. Returns false if the end of the file is reached.
    bool Readln(std::string &line);

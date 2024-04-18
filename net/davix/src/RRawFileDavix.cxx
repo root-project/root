@@ -75,7 +75,7 @@ void ROOT::Internal::RRawFileDavix::OpenImpl()
    if (fFileDes->fd == nullptr) {
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + err->getErrMsg());
    }
-   if (fOptions.fBlockSize < 0)
+   if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 
