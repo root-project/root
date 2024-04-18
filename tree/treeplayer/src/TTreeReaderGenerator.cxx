@@ -71,6 +71,12 @@ namespace Internal {
             }
          }
          name.ReplaceAll('.', '_'); // Replace dots with underscore
+         name.ReplaceAll(',', '_');
+         name.ReplaceAll(':', '_');
+         name.ReplaceAll('<', '_');
+         name.ReplaceAll('>', '_');
+         name.ReplaceAll('#', '_');
+         name.ReplaceAll('@', '_');
          // Remove array dimensions from name
          while (name.Index('[') >= 0 && name.Index(']') >= 0 && name.Index(']') > name.Index('[')) {
             name.Remove(name.Index('['), name.Index(']') - name.Index('[') + 1);
