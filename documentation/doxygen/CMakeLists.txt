@@ -20,27 +20,19 @@ endif()
 if(builtin_docu)
   message(STATUS "ROOT HTML documentation will be built with doxygen as a step of the ROOT build.")
   # TODO: https://stackoverflow.com/questions/16408060/how-do-i-add-a-dependency-on-a-script-to-a-target-in-cmake
-  # A typical way is:
-  # cd /tmp/ && mkdir builddocu && cd builddocu  cmake -B./ -S/opt/root_src/documentation/doxygen/ -DDOCU_INPUT="./mainpage.md;../../core" -DDOCU_LOCATION=/tmp/docoutput -DDOCU_THREADS=8 -DDOCU_LOGFILE=/tmp/warnings.txt -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator
-  if(DEFINED ROOTSYS)
-    set (ROOT_DIR ${ROOTSYS} CACHE STRING "ROOT build directory")
-  else()
-    set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
-  endif()
-  set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
-  find_package(ROOT 6.30 CONFIG REQUIRED)
-  set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 else()
   message(STATUS "ROOT HTML documentation will be built with doxygen as a standalone, with an external ROOT required.")
-  if(DEFINED ROOTSYS)
-    set (ROOT_DIR ${ROOTSYS} CACHE STRING "ROOT build directory")
-  else()
-    set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
-  endif()
-  set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
-  find_package(ROOT 6.32 CONFIG REQUIRED)
-  set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
+  # A typical way is:
+  # cd /tmp/ && mkdir builddocu && cd builddocu  cmake -B./ -S/opt/root_src/documentation/doxygen/ -DDOCU_INPUT="./mainpage.md;../../core" -DDOCU_LOCATION=/tmp/docoutput -DDOCU_THREADS=8 -DDOCU_LOGFILE=/tmp/warnings.txt -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator
 endif()
+
+if(DEFINED ROOTSYS)
+    set (ROOT_DIR ${ROOTSYS} CACHE STRING "ROOT build directory")
+else()
+    set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
+endif()
+set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
+find_package(ROOT 6.32 CONFIG REQUIRED)
 
 # Consider building Doxygen >1.9.3 and with Clang enabled (download as precompiled binary from GitHub):
 # cmake ../ -DCMAKE_PREFIX_PATH=/opt/clang+llvm-16.0.4-x86_64-linux-gnu-ubuntu-22.04/lib/cmake/llvm/ -Duse_libclang=ON -Dstatic_libclang=ON -DCMAKE_INSTALL_PREFIX=../install
@@ -168,7 +160,7 @@ set (DOCU_INPUT
   CACHE STRING "Doxyfile input files or folders")
 
 add_custom_target(Preparation
-  COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/images ${DOCU_LOCATION}/notebooks ${DOCU_LOCATION}/pyzdoc
+  COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/images ${DOCU_LOCATION}/notebooks
 
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.C ./
@@ -200,13 +192,17 @@ if(builtin_docu)
 endif()
 option(DOCU_PYZDOC "Integrate Python docstrings into Doxygen documentation" ON) # Disable for quicker builds
 if(DOCU_PYZDOC)
+set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 add_custom_target(PreparationPyz
+    COMMAND mkdir -p ${DOCU_LOCATION}/pyzdoc
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
     COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
     COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
 )
-add_dependencies(PreparationPyz Preparation)
+if(builtin_docu)
+    add_dependencies(PreparationPyz hsimple)
+endif()
 endif()
 set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
 set(DOXYGEN_PROJECT_NAME           "ROOT")
@@ -315,6 +311,9 @@ doxygen_add_docs(dox ALL
   COMMENT "Generating doxygen documentation for ${PROJECT_NAME}"
 )
 add_dependencies(dox Preparation)
+if(DOCU_PYZDOC)
+add_dependencies(dox PreparationPyz)
+endif()
 
 #~ # install generated files
 #~ install(
