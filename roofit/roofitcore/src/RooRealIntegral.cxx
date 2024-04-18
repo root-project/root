@@ -715,7 +715,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
      _intList("!intList", this, other._intList),
      _anaList("!anaList", this, other._anaList),
      _jacList("!jacList", this, other._jacList),
-     _facList("!facList", "Variables independent of function", this, false, true),
+     _facList("!facList", this, other._facList),
      _function("!func", this, other._function),
      _iconfig(other._iconfig),
      _sumCat("!sumCat", this, other._sumCat),
@@ -726,12 +726,6 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral &other, const char *name)
  if(other._funcNormSet) {
    _funcNormSet = std::make_unique<RooArgSet>();
    other._funcNormSet->snapshot(*_funcNormSet, false);
- }
-
- for (const auto arg : other._facList) {
-   std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
-   _facList.addOwned(*argClone);
-   addOwnedComponents(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;
