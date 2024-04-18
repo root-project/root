@@ -15,9 +15,21 @@ endif()
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
 # Test versions of Python dependencies
-if(NOT MSVC)
-    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
-endif()
+# This test is disabled because it is broken in ctest!
+# Even if you install all dependencies in a fresh virtual env with:
+#   pip install -r requirements.txt
+# it will not notice that some requirements like pytorch or tensorflow are
+# there. This is observed on both macOS and Linux.
+# Just running the test with python dependency_versions.py works fine, so the
+# problem relates to the ctest configuration.
+# It is likely that the problem comes also from the usage of the deprecated
+# pkg_resources module:
+# https://setuptools.pypa.io/en/latest/pkg_resources.html
+# If one wants to fix the tests, it's probably worth to first try to
+# re-implement it with non-deprecated Python libraries.
+# if(NOT MSVC)
+#     ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
+# endif()
 
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
