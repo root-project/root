@@ -536,8 +536,11 @@ bool RooAbsCollection::replace(const RooAbsCollection &other)
 {
   // check that this isn't a copy of a list
   if(_ownCont) {
-    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << std::endl;
-    return false;
+    std::stringstream errMsg;
+    errMsg << "RooAbsCollection: cannot replace variables in a copied list";
+    coutE(ObjectHandling) << errMsg.str() << std::endl;
+    // better than returning "false" and leaving the collection in a broken state:
+    throw std::invalid_argument(errMsg.str());
   }
 
   // loop over elements in the other list
@@ -561,8 +564,11 @@ bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
 {
   // check that this isn't a copy of a list
   if(_ownCont) {
-    coutE(ObjectHandling) << "RooAbsCollection: cannot replace variables in a copied list" << std::endl;
-    return false;
+    std::stringstream errMsg;
+    errMsg << "RooAbsCollection: cannot replace variables in a copied list";
+    coutE(ObjectHandling) << errMsg.str() << std::endl;
+    // better than returning "false" and leaving the collection in a broken state:
+    throw std::invalid_argument(errMsg.str());
   }
 
   // is var1 already in this list?
