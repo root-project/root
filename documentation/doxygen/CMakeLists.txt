@@ -206,7 +206,7 @@ add_custom_target(PreparationPyz
     COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
     COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
 )
-add_dependencies(Preparation PreparationPyz)
+add_dependencies(PreparationPyz Preparation)
 endif()
 set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
 set(DOXYGEN_PROJECT_NAME           "ROOT")
