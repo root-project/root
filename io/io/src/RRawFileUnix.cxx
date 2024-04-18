@@ -72,7 +72,7 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
    }
 
-   if (fOptions.fBlockSize >= 0)
+   if (fOptions.fBlockSize != ROptions::kUseDefaultBlockSize)
       return;
 
 #ifdef R__SEEK64
