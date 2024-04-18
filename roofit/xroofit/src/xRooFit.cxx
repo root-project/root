@@ -62,6 +62,8 @@
 #include "xRooFitVersion.h"
 
 #include <csignal>
+#include "TROOT.h"
+#include "TBrowser.h"
 
 BEGIN_XROOFIT_NAMESPACE;
 
@@ -301,7 +303,8 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const RooFitResult &_fr, bool expected, in
          // do subpdf's individually
          _obs->add(w);
          _out.first = std::make_unique<RooDataSet>(
-            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs, RooFit::WeightVar("weightVar"));
+            uuid, TString::Format("%s %s", _pdf->GetTitle(), (expected) ? "Expected" : "Toy"), *_obs,
+            RooFit::WeightVar("weightVar"));
 
          for (auto &c : s->indexCat()) {
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 22, 00)
@@ -497,11 +500,14 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::defaultFitConfig()
                                             // NLL. 1 = just caching, 2 = cache and track
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 29, 00)
    extraOpts->SetValue("StrategySequence", "0s01s12s2s3m");
-   extraOpts->SetValue("HesseStrategy", 3); // if hesse is run after minimization, will use this strategy
+   extraOpts->SetValue("HesseStrategySequence", "23");
 #else
    extraOpts->SetValue("StrategySequence", "0s01s12s2m");
-   extraOpts->SetValue("HesseStrategy", 2); // when hesse is run after minimization, will use this strategy
+   extraOpts->SetValue("HesseStrategySequence", "2");
 #endif
+   extraOpts->SetValue(
+      "HesseStrategy",
+      -1); // when hesse is run after minimization, will use this strategy. -1 means start at begin of strat sequence
    extraOpts->SetValue("LogSize", 0); // length of log to capture and save
    extraOpts->SetValue("BoundaryCheck",
                        0.); // if non-zero, warn if any post-fit value is close to boundary (e.g. 0.01 = within 1%)
@@ -513,6 +519,11 @@ std::shared_ptr<ROOT::Fit::FitConfig> xRooFit::defaultFitConfig()
    // extraOpts->SetValue("HessianG2Tolerance",0.);
 
    return sDefaultFitConfig;
+}
+
+ROOT::Math::IOptions *xRooFit::defaultFitConfigOptions()
+{
+   return const_cast<ROOT::Math::IOptions *>(defaultFitConfig()->MinimizerOptions().ExtraOptions());
 }
 
 class ProgressMonitor : public RooAbsReal {
@@ -556,6 +567,24 @@ public:
    }
    TObject *clone(const char *newname) const override { return new ProgressMonitor(*this, newname); }
 
+   // required forwarding methods for RooEvaluatorWrapper in 6.32 onwards
+   double defaultErrorLevel() const override { return fFunc->defaultErrorLevel(); }
+   bool getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool stripDisconnected) const override
+   {
+      return fFunc->getParameters(observables, outputSet, stripDisconnected);
+   }
+   bool setData(RooAbsData &data, bool cloneData) override { return fFunc->setData(data, cloneData); }
+   double getValV(const RooArgSet *) const override { return evaluate(); }
+   void applyWeightSquared(bool flag) override { fFunc->applyWeightSquared(flag); }
+   void printMultiline(std::ostream &os, Int_t contents, bool verbose = false, TString indent = "") const override
+   {
+      fFunc->printMultiline(os, contents, verbose, indent);
+   }
+   void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt) override
+   {
+      fFunc->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+   }
+
    double evaluate() const override
    {
       if (fInterrupt) {
@@ -579,12 +608,14 @@ public:
       if (s.RealTime() > fInterval) {
          double evalRate = (counter - prevCounter) / s.RealTime();
          s.Reset();
-         std::cerr << (counter) << ") (" << evalRate << "Hz) " << TDatime().AsString();
+         std::stringstream sout;
+
+         sout << (counter) << ") (" << evalRate << "Hz) " << TDatime().AsString();
          if (!fState.empty())
-            std::cerr << " : " << fState;
-         std::cerr << " : " << minVal << " Delta = " << (minVal - prevMin);
+            sout << " : " << fState;
+         sout << " : " << minVal << " Delta = " << (minVal - prevMin);
          if (minVal < prevMin) {
-            std::cerr << " : ";
+            sout << " : ";
             // compare minPars and prevPars, print biggest deltas
             std::vector<std::pair<double, std::string>> parDeltas;
             parDeltas.reserve(minPars.size());
@@ -599,16 +630,36 @@ public:
                if (parDeltas.at(i).first == 0)
                   break;
                if (i != 0)
-                  std::cerr << ",";
-               std::cerr << parDeltas.at(i).second << (parDeltas.at(i).first >= 0 ? "+" : "-") << "="
-                         << std::abs(parDeltas.at(i).first) << "("
-                         << minPars.getRealValue(parDeltas.at(i).second.c_str()) << ")";
+                  sout << ",";
+               sout << parDeltas.at(i).second << (parDeltas.at(i).first >= 0 ? "+" : "-") << "="
+                    << std::abs(parDeltas.at(i).first) << "(" << minPars.getRealValue(parDeltas.at(i).second.c_str())
+                    << ")";
             }
             if (i < int(parDeltas.size()) && parDeltas.at(i).first != 0)
-               std::cerr << " ...";
+               sout << " ...";
             prevPars.assignFast(minPars);
          }
-         std::cerr << std::endl;
+
+         if (gROOT->FromPopUp() && gROOT->GetListOfBrowsers()->At(0)) {
+            auto browser = dynamic_cast<TBrowser *>(gROOT->GetListOfBrowsers()->At(0));
+            std::string status = sout.str();
+            int col = 0;
+            while (col < 4) {
+               std::string status_part;
+               if (status.find(" : ") != std::string::npos) {
+                  status_part = status.substr(0, status.find(" : "));
+                  status = status.substr(status.find(" : ") + 3);
+               } else {
+                  status_part = status;
+                  status = "";
+               }
+               browser->SetStatusText(status_part.c_str(), col);
+               col++;
+            }
+            gSystem->ProcessEvents();
+         }
+         std::cerr << sout.str() << std::endl;
+
          prevMin = minVal;
          prevCounter = counter;
       } else {
@@ -680,6 +731,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
    int _progress = 0;
    double boundaryCheck = 0;
    std::string s;
+   std::string hs;
    int logSize = 0;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6, 29, 00)
    int hesseStrategy = 3; // uses most precise hesse settings (step sizes and g2 tolerances)
@@ -692,8 +744,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       fitConfig.MinimizerOptions().ExtraOptions()->GetRealValue("BoundaryCheck", boundaryCheck);
       fitConfig.MinimizerOptions().ExtraOptions()->GetIntValue("LogSize", logSize);
       fitConfig.MinimizerOptions().ExtraOptions()->GetIntValue("HesseStrategy", hesseStrategy);
+      fitConfig.MinimizerOptions().ExtraOptions()->GetNamedValue("HesseStrategySequence", hs);
    }
    TString m_strategy = s;
+   TString m_hessestrategy = hs;
 
    // if fit caching enabled, try to locate a valid fitResult
    // must have matching constPars
@@ -724,8 +778,18 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
                         for (auto &p : *constPars) {
                            auto v = dynamic_cast<RooAbsReal *>(p);
                            if (!v) {
-                              match = false;
-                              break;
+                              if (auto c = dynamic_cast<RooAbsCategory *>(p)) {
+                                 if (auto _p =
+                                        dynamic_cast<RooAbsCategory *>(cachedFit->constPars().find(p->GetName()));
+                                     _p && !_p->getAttribute("global") &&
+                                     _p->getCurrentIndex() != c->getCurrentIndex()) {
+                                    match = false;
+                                    break;
+                                 }
+                              } else {
+                                 match = false;
+                                 break;
+                              }
                            };
                            if (auto _p = dynamic_cast<RooAbsReal *>(cachedFit->constPars().find(p->GetName())); _p) {
                               // note: do not need global observable values to match (globals currently added to
@@ -776,7 +840,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       TMatrixDSym d;
       d.ResizeTo(parsList.size(), parsList.size());
       result->setCovarianceMatrix(d);
-      result->setCovQual(-1);
+      result->setCovQual(floatPars->empty() ? 3 : -1);
       result->setMinNLL(_nll->getVal());
       result->setEDM(0);
       result->setStatus(floatPars->empty() ? 0 : 1);
@@ -944,6 +1008,8 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
             algo = "migradImproved";
          } else if (m_strategy(sIdx) == 's') {
             algo = "Scan";
+         } else if (m_strategy(sIdx) == 'h') {
+            break; // jumping straight to a hesse evaluation
          } else {
             strategy = int(m_strategy(sIdx) - '0');
             _minimizer.setStrategy(strategy);
@@ -1034,7 +1100,7 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       // currently dont have a way to access the covariance "dcovar" which is a metric from iterative
       // covariance method that is used by minuit2 to say if the covariance is accurate or not
       // See MinimumError.h: IsAccurate if Dcovar < 0.1
-      // Note that if strategy=2 or strategy=1 and Dcovar>0.05 then hesse will be forced to be run (see
+      // Note that if strategy>=2 or (strategy=1 and Dcovar>0.05) then hesse will be forced to be run (see
       // VariadicMetricBuilder) So only in Strategy=0 can you skip hesse (even if SetParabErrors false).
 
       double dCovar = std::numeric_limits<double>::quiet_NaN();
@@ -1043,10 +1109,10 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
       //    dCovar = _minuit2->fMinimum->Error().Dcovar();
       // }
 
-      // only do hesse if was a valid min and not strat2 or above (since such strat already ran hesse, albeit with
-      // allowing for forced pos-def) or if requested hesse strategy is different to the strategy that minimization ran
-      // at
-      if (hesse && (strategy < 2 || strategy != hesseStrategy) && _minimizer.fitter()->Result().IsValid()) {
+      // only do hesse if was a valid min and not full accurate cov matrix already (can happen if e.g. ran strat2)
+      if (hesse &&
+          (m_strategy(sIdx) == 'h' || strategy < 2 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) &&
+          _minimizer.fitter()->Result().IsValid()) {
          // Note: minima where the covariance was made posdef are deemed 'valid' ...
 
          // remove limits on pars before calculation - CURRENTLY HAS NO EFFECT, minuit still holds the state as
@@ -1067,53 +1133,82 @@ std::shared_ptr<const RooFitResult> xRooFit::minimize(RooAbsReal &nll,
          // std::cout << "nIterations = " << _minimizer.fitter()->GetMinimizer()->NIterations() << std::endl;
          // std::cout << "covQual before hesse = " << _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() <<
          // std::endl;
-
-         _minimizer.fitter()->Config().MinimizerOptions().SetStrategy(hesseStrategy);
-
-         // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianStepTolerance",0.1);
-         // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianG2Tolerance",0.02);
-
-         if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
-            fff->fState = TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy());
+         sIdx = -1;
+         if (hesseStrategy == -1) {
+            sIdx = 0;
+         } else {
+            sIdx = m_hessestrategy.Index('0' + hesseStrategy);
          }
+         if (sIdx == -1) {
+            Warning("minimize",
+                    "HesseStrategy %d not specified in HesseStrategySequence %s ... defaulting to start of sequence",
+                    hesseStrategy, m_hessestrategy.Data());
+            sIdx = 0;
+         }
+         while (sIdx != -1) {
+            hesseStrategy = int(m_hessestrategy(sIdx) - '0');
+            _minimizer.fitter()->Config().MinimizerOptions().SetStrategy(hesseStrategy);
+            // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianStepTolerance",0.1);
+            // const_cast<ROOT::Math::IOptions*>(_minimizer.fitter()->Config().MinimizerOptions().ExtraOptions())->SetValue("HessianG2Tolerance",0.02);
 
-         //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? -
-         // and also becomes WRONG :-S
-
-         // auto _status = (_minimizer.fitter()->CalculateHessErrors()) ? _minimizer.fitter()->Result().Status() : -1;
-         auto _status = _minimizer.hesse(); // note: I have seen that you can get 'full covariance quality' without
-                                            // running hesse ... is that expected?
-         // note: hesse status will be -1 if hesse failed (no covariance matrix)
-         // otherwise the status appears to be whatever was the status before
-         // note that hesse succeeds even if the cov matrix it calculates is forced pos def. Failure is only
-         // if it cannot calculate a cov matrix at all.
-         if (_status != -1)
-            _status = 0; // mark as hesse succeeded, although need to look at covQual to see if was any good
-
-         /*for(auto f : *floatPars) {
-            auto v = dynamic_cast<RooRealVar*>(f);
-            if(v->hasRange("backup")) {
-               v->setRange(v->getMin(),v->getMax());
-               v->removeRange("backup");
+            if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff) {
+               fff->fState = TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy());
             }
-         }
-         _minimizer.fitter()->Config().SetParamsSettings(parSettings);*/
 
-         /*for (auto &ss : _minimizer.fitter()->Config().ParamsSettings()) {
-            if( ss.HasLowerLimit() || ss.HasUpperLimit() ) std::cout << ss.Name() << " limit restored " <<
-         ss.LowerLimit() << " - " << ss.UpperLimit() << std::endl;
-         }*/
+            //_nll->getVal(); // for reasons I dont understand, if nll evaluated before hesse call the edm is smaller? -
+            // and also becomes WRONG :-S
 
-         statusHistory.push_back(std::pair<std::string, int>(
-            TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy()), _status));
+            // auto _status = (_minimizer.fitter()->CalculateHessErrors()) ? _minimizer.fitter()->Result().Status() :
+            // -1;
+            auto _status = _minimizer.hesse(); // note: I have seen that you can get 'full covariance quality' without
+                                               // running hesse ... is that expected?
+            // note: hesse status will be -1 if hesse failed (no covariance matrix)
+            // otherwise the status appears to be whatever was the status before
+            // note that hesse succeeds even if the cov matrix it calculates is forced pos def. Failure is only
+            // if it cannot calculate a cov matrix at all.
+            if (_status != -1)
+               _status = 0; // mark as hesse succeeded, although need to look at covQual to see if was any good
 
-         if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff && fff->fInterrupt) {
-            delete _nll;
-            throw std::runtime_error("Keyboard interrupt while hesse calculating");
-         }
-         if (_status != 0 && status == 0 && printLevel >= -1) {
-            Warning("fitTo", "%s hesse status is %d", fitName.Data(), _status);
-         }
+            /*for(auto f : *floatPars) {
+               auto v = dynamic_cast<RooRealVar*>(f);
+               if(v->hasRange("backup")) {
+                  v->setRange(v->getMin(),v->getMax());
+                  v->removeRange("backup");
+               }
+            }
+            _minimizer.fitter()->Config().SetParamsSettings(parSettings);*/
+
+            /*for (auto &ss : _minimizer.fitter()->Config().ParamsSettings()) {
+               if( ss.HasLowerLimit() || ss.HasUpperLimit() ) std::cout << ss.Name() << " limit restored " <<
+            ss.LowerLimit() << " - " << ss.UpperLimit() << std::endl;
+            }*/
+
+            statusHistory.push_back(std::pair<std::string, int>(
+               TString::Format("Hesse%d", _minimizer.fitter()->Config().MinimizerOptions().Strategy()), _status));
+
+            if (auto fff = dynamic_cast<ProgressMonitor *>(_nll); fff && fff->fInterrupt) {
+               delete _nll;
+               throw std::runtime_error("Keyboard interrupt while hesse calculating");
+            }
+            if ((_status != 0 || _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() != 3) && status == 0 &&
+                printLevel >= -1) {
+               Warning("fitTo", "%s hesse status is %d, covQual=%d", fitName.Data(), _status,
+                       _minimizer.fitter()->GetMinimizer()->CovMatrixStatus());
+            }
+
+            if (sIdx >= m_hessestrategy.Length() - 1) {
+               break; // run out of strategies to try, stop
+            }
+
+            if (_status == 0 && _minimizer.fitter()->GetMinimizer()->CovMatrixStatus() == 3) {
+               // covariance is valid!
+               break;
+            } else if (_status == 0) {
+               // set the statusHistory to the cov status, since that's more informative
+               statusHistory.back().second = _minimizer.fitter()->GetMinimizer()->CovMatrixStatus();
+            }
+            sIdx++;
+         } // end of hesse attempt loop
       }
 
       // call minos if requested on any parameters

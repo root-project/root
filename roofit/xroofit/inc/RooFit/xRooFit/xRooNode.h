@@ -328,11 +328,11 @@ public:
 
    // following versions are for the menu in the GUI
    /** @private */
-   void _Add_(const char *name, const char *opt);                     // *MENU*
+   void _Add_(const char *name, const char *opt); // *MENU*
    /** @private */
-   xRooNode _Multiply_(const char *what) { return Multiply(what); }   // *MENU*
+   xRooNode _Multiply_(const char *what) { return Multiply(what); } // *MENU*
    /** @private */
-   void _Vary_(const char *what);                                     // *MENU*
+   void _Vary_(const char *what); // *MENU*
    /** @private */
    xRooNode _Constrain_(const char *what) { return Constrain(what); } // *MENU*
    /** @private */
@@ -362,7 +362,7 @@ public:
    bool SetBinData(int bin, double value, const char *dataName = "obsData"); // only valid for pdf nodes
 
    /** @private */
-   void _SetContent_(double value);                                                      // *MENU*
+   void _SetContent_(double value); // *MENU*
    /** @private */
    void _SetBinContent_(int bin, double value, const char *par = "", double parVal = 1); // *MENU*
 
@@ -411,7 +411,7 @@ public:
             int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
 
    /** @private */
-   void _fit_(const char *constParValues = "");                   // *MENU*
+   void _fit_(const char *constParValues = ""); // *MENU*
    /** @private */
    void _generate_(const char *name = "", bool expected = false); // *MENU*
    /** @private */
@@ -499,7 +499,7 @@ public:
 };
 
 namespace cling {
-std::string printValue(const xRooNode* val);
+std::string printValue(const xRooNode *val);
 }
 
 END_XROOFIT_NAMESPACE;
