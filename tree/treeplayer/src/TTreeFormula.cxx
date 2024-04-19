@@ -2689,9 +2689,9 @@ Int_t TTreeFormula::FindLeafForExpression(const char* expression, TLeaf*& leaf, 
 ///  - Leaf_name[index].Action().OtherAction(param)
 ///  - Leaf_name[index].Action()[val].OtherAction(param)
 ///
-/// The expected returns values are
+/// The expected returned values are
 /// -  -2 :  the name has been recognized but won't be usable
-/// -  -1 :  the name has not been recognized
+/// -  -1 :  the name has not been recognized, or is too long, or tree does not exist.
 /// -  >=0 :  the name has been recognized, return the internal code for this name.
 
 Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
@@ -2701,7 +2701,10 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
    if (!fTree) return -1;
 
    fNpar = 0;
-   if (name.Length() > kMaxLen) return -1;
+   if (name.Length() > kMaxLen) {
+        Error("TTreeFormula", "The length of the variable name (%d) exceeds the maximum allowed (%d)", name.Length(), kMaxLen);
+        return -1;
+   }
    Int_t i,k;
 
    if (name == "Entry$") {
