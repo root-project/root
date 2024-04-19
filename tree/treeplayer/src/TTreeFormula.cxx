@@ -828,8 +828,21 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
          alias = fTree->GetFriendAlias(leaf->GetBranch()->GetTree());
       }
    }
-   if (alias) snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName());
-   else if (leaf) strlcpy(scratch,leaf->GetName(),kMaxLen);
+   Int_t leafname_len = 0;
+   if (alias) {
+      leafname_len = strlen(alias) + strlen(leaf->GetName()) + 1;
+      snprintf(scratch,kMaxLen-1,"%s.%s",alias,leaf->GetName()); // does not null-terminate if truncation happens
+   }
+   else if (leaf) {
+      leafname_len = strlen(leaf->GetName());
+      strlcpy(scratch,leaf->GetName(),kMaxLen); // null-terminates if truncation happens
+   }
+   if (leafname_len > kMaxLen - 1) {
+      Error("TTreeFormula",
+            "Length of leafname (%d) exceeds maximum allowed by the buffer (%d), output will be truncated.",
+             leafname_len, kMaxLen - 1);
+   }
+
 
    TTree *tleaf = realtree;
    if (leaf) {
