@@ -4820,7 +4820,7 @@ char *TTreeFormula::PrintValue(Int_t mode) const
 
 char *TTreeFormula::PrintValue(Int_t mode, Int_t instance, const char *decform) const
 {
-   const int kMAXLENGTH = 1024;
+   const int kMAXLENGTH = kMaxLen;
    static char value[kMAXLENGTH];
 
    if (mode == -2) {
