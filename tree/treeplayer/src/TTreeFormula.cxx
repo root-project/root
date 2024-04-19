@@ -4006,7 +4006,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
       }
    }
 
-   T tab[kMAXFOUND];
+   T tab[kMAXFOUND]{};
    const Int_t kMAXSTRINGFOUND = 10;
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
@@ -4017,6 +4017,18 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
    Int_t pos  = 0;
    Int_t pos2 = 0;
    for (Int_t i=0; i<fNoper ; ++i) {
+      
+      if (pos >= kMAXFOUND) {
+         Error("TTreeFormula::EvalInstance",
+               "Position (%d) >= maximum table size (%d)",
+               pos, kMAXFOUND);
+         continue;
+      } else if (pos2 >= kMAXFOUND) {
+         Error("TTreeFormula::EvalInstance",
+               "Position2 (%d) >= maximum table size (%d)",
+               pos2, kMAXFOUND);
+         continue;
+      }
 
       const Int_t oper = GetOper()[i];
       const Int_t newaction = oper >> kTFOperShift;
@@ -4202,6 +4214,12 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
                if (nargs) {
                   UInt_t argloc = pos-nargs;
                   for(Int_t j=0;j<nargs;j++,argloc++,pos--) {
+                     if (argloc >= kMAXFOUND) {
+                         Error("TTreeFormula::EvalInstance",
+                               "Argloc (%d) for argument (%d) >= maximum table size (%d)",
+                               argloc, j, kMAXFOUND);
+                         continue;
+                     }
                      SetMethodParam(method, tab[argloc]);
                   }
                }
