@@ -1356,6 +1356,7 @@ to make RVec a drop-in replacement for `std::vector`.
 
 ## Table of Contents
 - [Example](\ref example)
+- [Arithmetic operations, logical operations and mathematical functions](\ref operationsandfunctions)
 - [Owning and adopting memory](\ref owningandadoptingmemory)
 - [Sorting and manipulation of indices](\ref sorting)
 - [Usage in combination with RDataFrame](\ref usagetdataframe)
@@ -1392,6 +1393,42 @@ auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -
 ~~~
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
+
+\anchor operationsandfunctions
+## Arithmetic operations, logical operations and mathematical functions
+Arithmetic operations on RVec instances can be performed: for example, they can be added, subtracted, multiplied.
+~~~{.cpp}
+RVec<double> v1 {1.,2.,3.,4.};
+RVec<float> v2 {5.f,6.f,7.f,8.f};
+auto v3 = v1+v2;
+auto v4 = 3 * v1;
+~~~
+The supported operators are 
+ - +, -, *, /
+ - +=, -=, *=, /=
+ - <, >, ==, !=, <=, >=, &&, ||
+ - ~, !
+ - &, |, ^
+ - &=, |=, ^=
+ - <<=, >>=
+
+The most common mathematical functions are supported. It is possible to invoke them passing 
+RVecs as arguments.
+ - abs, fdim, fmod, remainder
+ - floor, ceil, trunc, round, lround, llround
+ - exp, exp2, expm1
+ - log, log10, log2, log1p
+ - pow
+ - sqrt, cbrt
+ - sin, cos, tan, asin, acos, atan, atan2, hypot
+ - sinh, cosh, tanh, asinh, acosh
+ - erf, erfc
+ - lgamma, tgamma
+
+If the VDT library is available, the following functions can be invoked. Internally the calculations
+are vectorized:
+ - fast_expf, fast_logf, fast_sinf, fast_cosf, fast_tanf, fast_asinf, fast_acosf, fast_atanf
+ - fast_exp, fast_log, fast_sin, fast_cos, fast_tan, fast_asin, fast_acos, fast_atan
 
 \anchor owningandadoptingmemory
 ## Owning and adopting memory
