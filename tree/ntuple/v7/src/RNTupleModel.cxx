@@ -33,6 +33,33 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right,
+                                          std::string_view rightFieldPrefix)
+{
+   if (!left.IsFrozen() || !right.IsFrozen())
+      throw RException(R__FAIL("invalid attempt to merge unfrozen models"));
+
+   auto newModel = left.Clone();
+   newModel->Unfreeze();
+
+   for (const auto &f : right.GetFieldZero().GetSubFields()) {
+      std::string fieldName;
+      if (rightFieldPrefix.empty()) {
+         fieldName = f->GetFieldName();
+      } else {
+         fieldName = std::string(rightFieldPrefix) + ":" + f->GetFieldName();
+      }
+
+      newModel->AddField(f->Clone(fieldName));
+   }
+
+   newModel->Freeze();
+   return newModel;
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
                                                                        const FieldMap_t &fieldMap)
