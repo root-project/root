@@ -51,7 +51,6 @@
 #endif
 #ifdef HAVE_JPEG
 /* Include file for users of png library. */
-# undef HAVE_STDLIB_H
 # ifndef X_DISPLAY_MISSING
 #  include <X11/Xmd.h>
 # endif
@@ -75,7 +74,9 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #ifdef HAVE_STDARG_H
 #include <stdarg.h>
 #endif
