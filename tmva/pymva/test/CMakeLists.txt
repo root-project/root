@@ -88,7 +88,6 @@ if(PY_TORCH_FOUND)
          LIBRARIES
          ROOTTMVASofie
          TMVA
-         blas
          ${PYTHON_LIBRARIES}
          INCLUDE_DIRS
          SYSTEM
@@ -96,6 +95,7 @@ if(PY_TORCH_FOUND)
          ${NUMPY_INCLUDE_DIRS}
          ${CMAKE_CURRENT_BINARY_DIR}
       )
+   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
       target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
    endif()
@@ -183,7 +183,6 @@ endif()
    ROOT_ADD_GTEST(TestRModelParserKeras TestRModelParserKeras.C
     LIBRARIES
     ROOTTMVASofie
-    blas
     ${PYTHON_LIBRARIES}
     INCLUDE_DIRS
     SYSTEM
@@ -191,6 +190,7 @@ endif()
     ${NUMPY_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
    )
+   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
    target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS_Development_Main})
    endif()
