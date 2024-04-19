@@ -52,7 +52,7 @@
 #include <typeinfo>
 #include <algorithm>
 
-const Int_t kMaxLen     = 1024;
+const Int_t kMaxLen     = 2048;
 
 /** \class TTreeFormula
 Used to pass a selection expression to the Tree drawing routine. See TTree::Draw
