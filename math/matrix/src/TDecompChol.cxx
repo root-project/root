@@ -67,7 +67,7 @@ TDecompChol::TDecompChol(const TMatrixDSym &a,Double_t tol)
    const Int_t nCol = a.GetNcols();
 
    fU.ResizeTo(a);
-   memcpy(fU.GetMatrixArray(),a.GetMatrixArray(),nRow*nCol*sizeof(Double_t));
+   memcpy(fU.GetMatrixArray(), a.GetMatrixArray(), nRow * nCol * sizeof(Double_t));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
