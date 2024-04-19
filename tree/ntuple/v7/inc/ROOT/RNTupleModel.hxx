@@ -62,6 +62,13 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
+/// Merge two RNTuple models. The resulting model will take the description from the left model.
+/// When `rightFieldPrefix` is specified, the field names in the right-hand model will be prefixed by this string,
+/// separated by a colon (':'). This enables merging of models that contain identical fields.
+///
+/// Note that both models must be frozen before merging.
+std::unique_ptr<RNTupleModel>
+MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix = "");
 } // namespace Internal
 
 // clang-format off
@@ -80,6 +87,9 @@ added and modified.  Once the schema is finalized, the model gets frozen.  Only 
 */
 // clang-format on
 class RNTupleModel {
+   friend std::unique_ptr<RNTupleModel>
+   Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix);
+
 public:
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
    struct NameWithDescription_t {
