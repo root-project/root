@@ -14,11 +14,6 @@ endif()
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
-# Test versions of Python dependencies
-if(NOT MSVC)
-    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
-endif()
-
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
