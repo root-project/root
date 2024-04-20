@@ -140,7 +140,7 @@ Bool_t TDecompChol::Decompose()
             }
          }
          for (j = icol+1; j < n; j++)
-	    pU[rowOff + j] /= inv_ujj;
+	    pU[rowOff + j] *= inv_ujj;
       }
    }
 
