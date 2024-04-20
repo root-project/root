@@ -29,3 +29,6 @@ metakernel>=0.20.0
 pyspark>=2.4 # Spark backend
 dask>=2022.08.1 ; python_version >= "3.8" # Dask backend
 distributed>=2022.08.1 ; python_version >= "3.8" # Dask backend
+
+# Look for CPU-only versions of PyTorch to avoid pulling CUDA in the CI docker images.
+-f https://download.pytorch.org/whl/cpu/torch_stable.html
