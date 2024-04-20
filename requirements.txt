@@ -10,7 +10,7 @@ onnx
 
 # TMVA: PyMVA interfaces
 scikit-learn
-tensorflow<2.16
+tensorflow<2.16 ; python_version < "3.12"
 torch
 xgboost
 
