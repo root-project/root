@@ -90,14 +90,6 @@
             "mean"
         ]
     },
-    "power_dist": {
-        "class": "RooPower",
-        "arguments": [
-            "x",
-            "coefficients",
-            "exponents"
-        ]
-    },
     "product": {
         "class": "RooProduct",
         "arguments": [
