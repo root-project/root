@@ -1468,7 +1468,8 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                   fHasMultipleVarDim[code] = true;
                   numberOfVarDim += RegisterDimensions(code,leafinfo,maininfo,false);
                }
-               previnfo->fNext = leafinfo;
+               if (previnfo)
+                  previnfo->fNext = leafinfo;
                previnfo = leafinfo;
                leafinfo = nullptr;
             }
