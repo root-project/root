@@ -8,22 +8,22 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-/** \class RooExpPoly
+/** \class RooLegacyExpPoly
     \ingroup Roofit
 
-RooExpPoly implements a polynomial PDF of the form \f[ f(x) =
+RooLegacyExpPoly implements a polynomial PDF of the form \f[ f(x) =
 \mathcal{N} \cdot \exp( \sum_{i} a_{i} * x^{i} ) \f] \f$ \mathcal{N}
 \f$ is a normalisation constant that is automatically calculated when
 the function is used in computations.
 
 The sum can be truncated at the low end. See the main constructor
-RooExpPoly::RooExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&, int)
+RooLegacyExpPoly::RooLegacyExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&, int)
 
-\image html RooExpPoly.png
+\image html RooLegacyExpPoly.png
 
 **/
 
-#include <RooExpPoly.h>
+#include <RooLegacyExpPoly.h>
 
 #include <RooAbsReal.h>
 #include <RooArgList.h>
@@ -41,7 +41,7 @@ RooExpPoly::RooExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&,
 #include <complex>
 #include <sstream>
 
-ClassImp(RooExpPoly);
+ClassImp(RooLegacyExpPoly);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a polynomial in the variable `x`.
@@ -56,14 +56,14 @@ ClassImp(RooExpPoly);
 ///
 /// This means that
 /// \code{.cpp}
-/// RooExpPoly pol("pol", "pol", x, RooArgList(a, b), lowestOrder = 2)
+/// RooLegacyExpPoly pol("pol", "pol", x, RooArgList(a, b), lowestOrder = 2)
 /// \endcode
 /// computes
 /// \f[
 ///   \mathrm{pol}(x) = 1 * x^0 + (0 * x^{\ldots}) + a * x^2 + b * x^3.
 /// \f]
 
-RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder)
+RooLegacyExpPoly::RooLegacyExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder)
    : RooAbsPdf(name, title),
      _x("x", "Dependent", this, x),
      _coefList("coefList", "List of coefficients", this),
@@ -71,7 +71,7 @@ RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const
 {
    // Check lowest order
    if (_lowestOrder < 0) {
-      coutE(InputArguments) << "RooExpPoly::ctor(" << GetName()
+      coutE(InputArguments) << "RooLegacyExpPoly::ctor(" << GetName()
                             << ") WARNING: lowestOrder must be >=0, setting value to 0" << std::endl;
       _lowestOrder = 0;
    }
@@ -82,7 +82,7 @@ RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooExpPoly::RooExpPoly(const RooExpPoly &other, const char *name)
+RooLegacyExpPoly::RooLegacyExpPoly(const RooLegacyExpPoly &other, const char *name)
    : RooAbsPdf(other, name),
      _x("x", this, other._x),
      _coefList("coefList", this, other._coefList),
@@ -92,7 +92,7 @@ RooExpPoly::RooExpPoly(const RooExpPoly &other, const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooExpPoly::evaluateLog() const
+double RooLegacyExpPoly::evaluateLog() const
 {
    // Calculate and return value of polynomial
 
@@ -116,7 +116,7 @@ double RooExpPoly::evaluateLog() const
    }
 
    if (std::numeric_limits<double>::max_exponent < retval) {
-      coutE(InputArguments) << "RooExpPoly::evaluateLog(" << GetName() << ") ERROR: exponent at " << x
+      coutE(InputArguments) << "RooLegacyExpPoly::evaluateLog(" << GetName() << ") ERROR: exponent at " << x
                             << " larger than allowed maximum, result will be infinite! " << retval << " > "
                             << std::numeric_limits<double>::max_exponent << " in " << this->getFormulaExpression(true)
                             << std::endl;
@@ -127,7 +127,7 @@ double RooExpPoly::evaluateLog() const
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Compute multiple values of ExpPoly distribution.
-void RooExpPoly::doEval(RooFit::EvalContext &ctx) const
+void RooLegacyExpPoly::doEval(RooFit::EvalContext &ctx) const
 {
    std::vector<std::span<const double>> vars;
    vars.reserve(_coefList.size() + 1);
@@ -145,7 +145,7 @@ void RooExpPoly::doEval(RooFit::EvalContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooExpPoly::adjustLimits()
+void RooLegacyExpPoly::adjustLimits()
 {
    // Adjust the limits of all the coefficients to reflect the numeric boundaries
 
@@ -173,14 +173,14 @@ void RooExpPoly::adjustLimits()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooExpPoly::evaluate() const
+double RooLegacyExpPoly::evaluate() const
 {
    // Calculate and return value of function
 
    const double logval = this->evaluateLog();
    const double val = std::exp(logval);
    if (std::isinf(val)) {
-      coutE(InputArguments) << "RooExpPoly::evaluate(" << GetName()
+      coutE(InputArguments) << "RooLegacyExpPoly::evaluate(" << GetName()
                             << ") ERROR: result of exponentiation is infinite! exponent was " << logval << std::endl;
    }
    return val;
@@ -188,7 +188,7 @@ double RooExpPoly::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooExpPoly::getLogVal(const RooArgSet *nset) const
+double RooLegacyExpPoly::getLogVal(const RooArgSet *nset) const
 {
    return RooAbsPdf::getLogVal(nset);
    //  return this->evaluateLog();
@@ -196,7 +196,7 @@ double RooExpPoly::getLogVal(const RooArgSet *nset) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int RooExpPoly::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
+int RooLegacyExpPoly::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
 
    if ((_coefList.size() + _lowestOrder < 4) &&
@@ -245,7 +245,7 @@ double deltaerfi(double x1, double x2)
 }
 } // namespace
 
-double RooExpPoly::analyticalIntegral(int /*code*/, const char *rangeName) const
+double RooLegacyExpPoly::analyticalIntegral(int /*code*/, const char *rangeName) const
 {
    const double xmin = _x.min(rangeName);
    const double xmax = _x.max(rangeName);
@@ -296,7 +296,7 @@ double RooExpPoly::analyticalIntegral(int /*code*/, const char *rangeName) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::string RooExpPoly::getFormulaExpression(bool expand) const
+std::string RooLegacyExpPoly::getFormulaExpression(bool expand) const
 {
    std::stringstream ss;
    ss << "exp(";
