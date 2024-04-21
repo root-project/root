@@ -4006,7 +4006,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
       }
    }
 
-   T tab[kMAXFOUND]{};
+   T tab[kMAXFOUND];
    const Int_t kMAXSTRINGFOUND = 10;
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
