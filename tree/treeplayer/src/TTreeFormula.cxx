@@ -796,7 +796,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
       }
 
       TBranch *bmom = branch->GetMother();
-      if( bmom->IsA() == TBranchElement::Class() )
+      if( bmom->IsA() == TBranchElement::Class() && br)
       {
          TBranchElement *mom = (TBranchElement*)br->GetMother();
          if (mom!=br) {
@@ -1179,7 +1179,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                if ( cl ) break;
             }
             if ( !cl )  {
-               Error("DefinedVariable","Failed to access class type of reference target (%s)",element->GetName());
+               Error("DefinedVariable","Failed to access class type of reference target (%s)",element ? element->GetName() : "null");
                return -1;
             }
          }
@@ -1298,7 +1298,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                Error("DefinedVariable","Class probably unavailable:%s",cl->GetName());
                return -2;
             }
-            if (!useCollectionObject && cl == TClonesArray::Class()) {
+            if (!useCollectionObject && cl == TClonesArray::Class() && leaf) {
                // We are not interested in the ClonesArray object but only
                // in its contents.
                // We need to retrieve the class of its content.
@@ -1337,7 +1337,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                // in its contents.
                // We need to retrieve the class of its content.
 
-               if (previnfo==nullptr) {
+               if (previnfo==nullptr && leaf) {
 
                   bool top = (branch==((TBranchElement*)branch)->GetMother()
                                  || !leaf->IsOnTerminalBranch());
@@ -1379,7 +1379,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             } else if (cl->GetCollectionProxy() && strcmp(work,"size")==0) {
                if (maininfo==nullptr) {
                   TFormLeafInfo* collectioninfo=nullptr;
-                  if (useLeafCollectionObject) {
+                  if (useLeafCollectionObject && leaf) {
 
                      bool top = (branch==((TBranchElement*)branch)->GetMother()
                                  || !leaf->IsOnTerminalBranch());
@@ -1526,7 +1526,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
             }
 
             bool mustderef = false;
-            if ( !prevUseReferenceObject && cl && cl->GetReferenceProxy() )  {
+            if ( !prevUseReferenceObject && cl && cl->GetReferenceProxy() && leaf)  {
                R__LoadBranch(leaf->GetBranch(), readentry, fQuickLoad);
                if ( !maininfo )  {
                   maininfo = previnfo = new TFormLeafInfoReference(cl, element, offset);
@@ -1551,7 +1551,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                needClass = false;
                mustderef = true;
             }
-            else if (!prevUseCollectionObject && cl == TClonesArray::Class()) {
+            else if (!prevUseCollectionObject && cl == TClonesArray::Class() && leaf) {
                // We are not interested in the ClonesArray object but only
                // in its contents.
                // We need to retrieve the class of its content.
@@ -1611,7 +1611,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                   //strcpy(work,"fLast");
                }
 #endif
-            } else if (!prevUseCollectionObject && cl && cl->GetCollectionProxy() ) {
+            } else if (!prevUseCollectionObject && cl && cl->GetCollectionProxy() && leaf ) {
 
                // We are NEVER interested in the Collection object but only
                // in its contents.
@@ -1667,7 +1667,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                element = ((TStreamerInfo*)cl->GetStreamerInfo())->GetStreamerElement(work,offset);
             }
 
-            if (!element && !prevUseCollectionObject) {
+            if (!element && !prevUseCollectionObject && leaf) {
                // We allow for looking for a data member inside a class inside
                // a TClonesArray without mentioning the TClonesArrays variable name
                TIter next( cl->GetStreamerInfo()->GetElements() );
@@ -1894,7 +1894,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
                               else leafinfo->fNext = info;
                            }
                         }
-                     } else if ( (object || pointer) && !useReferenceObject && element->GetClassPointer()->GetReferenceProxy() ) {
+                     } else if ( (object || pointer) && !useReferenceObject && element->GetClassPointer()->GetReferenceProxy() && leaf) {
                         TClass* c = element->GetClassPointer();
                         R__LoadBranch(leaf->GetBranch(),readentry,fQuickLoad);
                         if ( object )  {
@@ -2011,11 +2011,11 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
       }
       if (last && last->GetClass() != objClass) {
-         TClass *mother_cl;
-         if (leaf->IsA()==TLeafObject::Class()) {
+         TClass *mother_cl = nullptr;
+         if (leaf && leaf->IsA()==TLeafObject::Class()) {
             // in this case mother_cl is not really used
             mother_cl = cl;
-         } else {
+         } else if (branch) {
             mother_cl = ((TBranchElement*)branch)->GetInfo()->GetClass();
          }
 
@@ -2690,6 +2690,7 @@ Int_t TTreeFormula::DefinedVariable(TString &name, Int_t &action)
 
    fNpar = 0;
    if (name.Length() > kMaxLen) return -1;
+   
    Int_t i,k;
 
    if (name == "Entry$") {
@@ -3275,7 +3276,7 @@ bool TTreeFormula::BranchHasMethod(TLeaf* leafcur, TBranch* branch, const char* 
       // unsplit and/or top leaf/branch.
       TClonesArray* clones = nullptr;
       R__LoadBranch(branch, readentry, fQuickLoad);
-      if (branch->InheritsFrom(TBranchObject::Class())) {
+      if (branch->InheritsFrom(TBranchObject::Class()) && lobj) {
          clones = (TClonesArray*) lobj->GetObject();
       } else if (branch->InheritsFrom(TBranchElement::Class())) {
          // We do not know exactly where the leaf of the TClonesArray is
@@ -4007,7 +4008,7 @@ T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
       }
    }
 
-   T tab[kMAXFOUND];
+   T tab[kMAXFOUND] {};
    const Int_t kMAXSTRINGFOUND = 10;
    const char *stringStackLocal[kMAXSTRINGFOUND];
    const char **stringStack = stringStackArg?stringStackArg:stringStackLocal;
