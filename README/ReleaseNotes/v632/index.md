@@ -216,6 +216,14 @@ Since the old constructors resulted in wrong computation graphs that caused
 trouble with the new CPU evaluation backend, they had to be removed without
 deprecation. Please adapt your code if necessary.
 
+### Renaming of some RooFit classes
+
+The `RooPower` was renamed to `RooPowerSum`, and `RooExpPoly` was renamed to `RooLegacyExpPoly`.
+
+This was a necessary change, because the names of these classes introduced in ROOT 6.28 collided with some classes in CMS combine, which were around already long before. Therefore, the classes had to be renamed to not cause any problems for CMS.
+
+In the unlikeliy case where you should have used these new classes for analysis already, please adapt your code to the new names and re-create your workspaces.
+
 ## RDataFrame
 
 * The RDataFrame constructors that take in input one or more file names (or globs thereof) will now infer the format of the dataset, either TTree or RNTuple, that is stored in the first input file. When multiple files are specified, it is assumed that all other files contain a coherent dataset of the same format and with the same schema, exactly as it used to happen with TChain. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.

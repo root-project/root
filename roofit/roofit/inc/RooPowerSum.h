@@ -8,8 +8,8 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooPower_h
-#define RooFit_RooPower_h
+#ifndef RooFit_RooPowerSum_h
+#define RooFit_RooPowerSum_h
 
 #include <RooAbsPdf.h>
 #include <RooRealProxy.h>
@@ -17,13 +17,13 @@
 
 #include <vector>
 
-class RooPower : public RooAbsPdf {
+class RooPowerSum : public RooAbsPdf {
 public:
-   RooPower() {}
-   RooPower(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, const RooArgList &expList);
+   RooPowerSum() {}
+   RooPowerSum(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, const RooArgList &expList);
 
-   RooPower(const RooPower &other, const char *name = nullptr);
-   TObject *clone(const char *newname) const override { return new RooPower(*this, newname); }
+   RooPowerSum(const RooPowerSum &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooPowerSum(*this, newname); }
 
    /// Get the base of the exponentiated terms (aka. x variable).
    RooAbsReal const &base() const { return *_x; }
@@ -53,7 +53,7 @@ protected:
    /// Evaluation
    double evaluate() const override;
 
-   ClassDefOverride(RooPower, 1) // Power PDF
+   ClassDefOverride(RooPowerSum, 1) // Power PDF
 };
 
 #endif

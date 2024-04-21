@@ -17,7 +17,7 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
-#include <RooExpPoly.h>
+#include <RooLegacyExpPoly.h>
 #include <RooExponential.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
@@ -262,7 +262,7 @@ public:
    }
 };
 
-class RooExpPolyFactory : public RooFit::JSONIO::Importer {
+class RooLegacyExpPolyFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
@@ -288,7 +288,7 @@ public:
          ++order;
       }
 
-      tool->wsEmplace<RooExpPoly>(name, *x, coefs, lowestOrder);
+      tool->wsEmplace<RooLegacyExpPoly>(name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -513,12 +513,12 @@ public:
    }
 };
 
-class RooExpPolyStreamer : public RooFit::JSONIO::Exporter {
+class RooLegacyExpPolyStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
    {
-      auto *pdf = static_cast<const RooExpPoly *>(func);
+      auto *pdf = static_cast<const RooLegacyExpPoly *>(func);
       elem["type"] << key();
       elem["x"] << pdf->x().GetName();
       auto &coefs = elem["coefficients"].set_seq();
@@ -638,7 +638,7 @@ public:
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer, "mixture_dist");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
-DEFINE_EXPORTER_KEY(RooExpPolyStreamer, "exp_poly_dist");
+DEFINE_EXPORTER_KEY(RooLegacyExpPolyStreamer, "legacy_exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic_function");
@@ -664,7 +664,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooAddPdfFactory>("mixture_dist", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   registerImporter<RooExpPolyFactory>("exp_poly_dist", false);
+   registerImporter<RooLegacyExpPolyFactory>("legacy_exp_poly_dist", false);
    registerImporter<RooExponentialFactory>("exponential_dist", false);
    registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic_function", false);
    registerImporter<RooFormulaArgFactory<RooGenericPdf>>("generic_dist", false);
@@ -680,7 +680,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooAddPdfStreamer>(RooAddPdf::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   registerExporter<RooExpPolyStreamer>(RooExpPoly::Class(), false);
+   registerExporter<RooLegacyExpPolyStreamer>(RooLegacyExpPoly::Class(), false);
    registerExporter<RooExponentialStreamer>(RooExponential::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooFormulaVar>>(RooFormulaVar::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooGenericPdf>>(RooGenericPdf::Class(), false);
