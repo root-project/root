@@ -12,3 +12,8 @@ if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64.*|x86.*|amd64.*|AMD64.*|i686.*|i386
                     COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/driveTabCom.py
                     INPUT BackslashNewline_input.txt)
 endif()
+
+# ROOT-10425
+ROOTTEST_ADD_TEST(missingSymbol
+                 MACRO missingSymbol.C
+                 PASSREGEX "You are probably missing the definition of.*MissingSymbol.*")
