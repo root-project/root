@@ -72,8 +72,8 @@
             "sigma": "sigma"
         }
     },
-    "RooPower": {
-        "type": "power_dist",
+    "RooPowerSum": {
+        "type": "power_sum_dist",
         "proxies": {
             "coefList": "coefficients",
             "expList": "exponents",

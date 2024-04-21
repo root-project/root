@@ -8,16 +8,16 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-/** \class RooPower
+/** \class RooPowerSum
     \ingroup Roofit
 
-RooPower implements a power law PDF of the form
+RooPowerSum implements a power law PDF of the form
 \f[ f(x) = \mathcal{N} \cdot \sum_{i} a_{i} * x^{b_i} \f]
 
-\image html RooPower.png
+\image html RooPowerSum.png
 **/
 
-#include <RooPower.h>
+#include <RooPowerSum.h>
 
 #include <RooAbsReal.h>
 #include <RooArgList.h>
@@ -31,7 +31,7 @@ RooPower implements a power law PDF of the form
 #include <cmath>
 #include <sstream>
 
-ClassImp(RooPower);
+ClassImp(RooPowerSum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a power law in the variable `x`.
@@ -46,14 +46,14 @@ ClassImp(RooPower);
 ///
 /// This means that
 /// \code{.cpp}
-/// RooPower powl("pow", "pow", x, RooArgList(a1, a2), RooArgList(b1,b2))
+/// RooPowerSum powl("pow", "pow", x, RooArgList(a1, a2), RooArgList(b1,b2))
 /// \endcode
 /// computes
 /// \f[
 ///   \mathrm{pol}(x) = a1 * x^b1 + a2 * x^b2
 /// \f]
 
-RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
+RooPowerSum::RooPowerSum(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
                    const RooArgList &expList)
    : RooAbsPdf(name, title),
      _x("x", "Dependent", this, x),
@@ -61,7 +61,7 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
      _expList("expList", "List of exponents", this)
 {
    if (coefList.size() != expList.size()) {
-      coutE(InputArguments) << "RooPower::ctor(" << GetName()
+      coutE(InputArguments) << "RooPowerSum::ctor(" << GetName()
                             << ") ERROR: coefficient list and exponent list must be of same length" << std::endl;
       return;
    }
@@ -72,7 +72,7 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooPower::RooPower(const RooPower &other, const char *name)
+RooPowerSum::RooPowerSum(const RooPowerSum &other, const char *name)
    : RooAbsPdf(other, name),
      _x("x", this, other._x),
      _coefList("coefList", this, other._coefList),
@@ -83,7 +83,7 @@ RooPower::RooPower(const RooPower &other, const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 
 /// Compute multiple values of Power distribution.
-void RooPower::doEval(RooFit::EvalContext &ctx) const
+void RooPowerSum::doEval(RooFit::EvalContext &ctx) const
 {
     std::vector<std::span<const double>> vars;
     vars.reserve(2 *  _coefList.size() + 1);
@@ -103,7 +103,7 @@ void RooPower::doEval(RooFit::EvalContext &ctx) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooPower::evaluate() const
+double RooPowerSum::evaluate() const
 {
    // Calculate and return value of polynomial
 
@@ -133,7 +133,7 @@ double RooPower::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise to RooFit that this function can be analytically integrated.
-int RooPower::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
+int RooPowerSum::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
    if (matchArgs(allVars, analVars, _x))
       return 1;
@@ -142,7 +142,7 @@ int RooPower::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, con
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Do the analytical integral according to the code that was returned by getAnalyticalIntegral().
-double RooPower::analyticalIntegral(int /*code*/, const char *rangeName) const
+double RooPowerSum::analyticalIntegral(int /*code*/, const char *rangeName) const
 {
    const double xmin = _x.min(rangeName);
    const double xmax = _x.max(rangeName);
@@ -174,7 +174,7 @@ double RooPower::analyticalIntegral(int /*code*/, const char *rangeName) const
    return retval;
 }
 
-std::string RooPower::getFormulaExpression(bool expand) const
+std::string RooPowerSum::getFormulaExpression(bool expand) const
 {
    std::stringstream ss;
    for (std::size_t i = 0; i < _coefList.size(); ++i) {

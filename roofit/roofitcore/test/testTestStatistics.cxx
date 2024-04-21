@@ -82,7 +82,7 @@ private:
 TEST_P(TestStatisticTest, IntegrateBins)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -128,7 +128,7 @@ TEST_P(TestStatisticTest, IntegrateBins)
 TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -177,7 +177,7 @@ TEST_P(TestStatisticTest, IntegrateBins_SubRange)
 TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[1.0, 5.], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[1.0, 5.], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -230,7 +230,7 @@ TEST_P(TestStatisticTest, IntegrateBins_CustomBinning)
 TEST_P(TestStatisticTest, IntegrateBins_RooDataHist)
 {
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.0], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");
@@ -329,7 +329,7 @@ TEST(RooChi2Var, IntegrateBins)
    RooRandom::randomGenerator()->SetSeed(1337ul);
 
    RooWorkspace ws;
-   ws.factory("Power::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
+   ws.factory("PowerSum::pow(x[0.1, 5.1], {1.0}, {a[-0.3, -5., 5.]})");
 
    RooRealVar &x = *ws.var("x");
    RooRealVar &a = *ws.var("a");

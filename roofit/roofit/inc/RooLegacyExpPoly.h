@@ -8,20 +8,20 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_RooExpPoly_h
-#define RooFit_RooExpPoly_h
+#ifndef RooFit_RooLegacyExpPoly_h
+#define RooFit_RooLegacyExpPoly_h
 
 #include <RooAbsPdf.h>
 #include <RooRealProxy.h>
 #include <RooListProxy.h>
 
-class RooExpPoly : public RooAbsPdf {
+class RooLegacyExpPoly : public RooAbsPdf {
 public:
-   RooExpPoly() {}
-   RooExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder = 1);
+   RooLegacyExpPoly() {}
+   RooLegacyExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder = 1);
 
-   RooExpPoly(const RooExpPoly &other, const char *name = nullptr);
-   TObject *clone(const char *newname) const override { return new RooExpPoly(*this, newname); }
+   RooLegacyExpPoly(const RooLegacyExpPoly &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooLegacyExpPoly(*this, newname); }
 
    /// Get the x variable.
    RooAbsReal const &x() const { return _x.arg(); }
@@ -54,7 +54,7 @@ protected:
    double evaluate() const override;
    double evaluateLog() const;
 
-   ClassDefOverride(RooExpPoly, 1) // ExpPoly PDF
+   ClassDefOverride(RooLegacyExpPoly, 1) // ExpPoly PDF
 };
 
 #endif
