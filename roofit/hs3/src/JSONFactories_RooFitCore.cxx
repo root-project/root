@@ -17,7 +17,6 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
-#include <RooExpPoly.h>
 #include <RooExponential.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
@@ -262,37 +261,6 @@ public:
    }
 };
 
-class RooExpPolyFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("coefficients")) {
-         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
-      }
-      RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooArgList coefs;
-      int order = 0;
-      int lowestOrder = 0;
-      for (const auto &coef : p["coefficients"].children()) {
-         // As long as the coefficients match the default coefficients in
-         // RooFit, we don't have to instantiate RooFit objects but can
-         // increase the lowestOrder flag.
-         if (order == 0 && coef.val() == "1.0") {
-            ++lowestOrder;
-         } else if (coefs.empty() && coef.val() == "0.0") {
-            ++lowestOrder;
-         } else {
-            coefs.add(*tool->request<RooAbsReal>(coef.val(), name));
-         }
-         ++order;
-      }
-
-      tool->wsEmplace<RooExpPoly>(name, *x, coefs, lowestOrder);
-      return true;
-   }
-};
-
 class RooMultiVarGaussianFactory : public RooFit::JSONIO::Importer {
 public:
    bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -513,28 +481,6 @@ public:
    }
 };
 
-class RooExpPolyStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override;
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      auto *pdf = static_cast<const RooExpPoly *>(func);
-      elem["type"] << key();
-      elem["x"] << pdf->x().GetName();
-      auto &coefs = elem["coefficients"].set_seq();
-      // Write out the default coefficient that RooFit uses for the lower
-      // orders before the order of the first coefficient. Like this, the
-      // output is more self-documenting.
-      for (int i = 0; i < pdf->lowestOrder(); ++i) {
-         coefs.append_child() << (i == 0 ? "1.0" : "0.0");
-      }
-      for (const auto &coef : pdf->coefList()) {
-         coefs.append_child() << coef->GetName();
-      }
-      return true;
-   }
-};
-
 class RooPoissonStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
@@ -638,7 +584,6 @@ public:
 DEFINE_EXPORTER_KEY(RooAddPdfStreamer, "mixture_dist");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
-DEFINE_EXPORTER_KEY(RooExpPolyStreamer, "exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooExponentialStreamer, "exponential_dist");
 template <>
 DEFINE_EXPORTER_KEY(RooFormulaArgStreamer<RooFormulaVar>, "generic_function");
@@ -664,7 +609,6 @@ STATIC_EXECUTE([]() {
    registerImporter<RooAddPdfFactory>("mixture_dist", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   registerImporter<RooExpPolyFactory>("exp_poly_dist", false);
    registerImporter<RooExponentialFactory>("exponential_dist", false);
    registerImporter<RooFormulaArgFactory<RooFormulaVar>>("generic_function", false);
    registerImporter<RooFormulaArgFactory<RooGenericPdf>>("generic_dist", false);
@@ -680,7 +624,6 @@ STATIC_EXECUTE([]() {
    registerExporter<RooAddPdfStreamer>(RooAddPdf::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   registerExporter<RooExpPolyStreamer>(RooExpPoly::Class(), false);
    registerExporter<RooExponentialStreamer>(RooExponential::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooFormulaVar>>(RooFormulaVar::Class(), false);
    registerExporter<RooFormulaArgStreamer<RooGenericPdf>>(RooGenericPdf::Class(), false);

@@ -184,21 +184,6 @@ TEST(RooFitHS3, RooExponential)
    EXPECT_EQ(status, 0);
 }
 
-TEST(RooFitHS3, RooExpPoly)
-{
-   // To silence the numeric integration
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   // Test different values for "lowestOrder"
-   int status = 0;
-   status = validate({"ExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
-   EXPECT_EQ(status, 0);
-   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
-   EXPECT_EQ(status, 0);
-}
-
 TEST(RooFitHS3, RooGamma)
 {
    int status = validate({"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"});
@@ -321,13 +306,6 @@ TEST(RooFitHS3, RooPolynomial)
    status = validate({"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
    EXPECT_EQ(status, 0);
    status = validate({"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
-   EXPECT_EQ(status, 0);
-}
-
-TEST(RooFitHS3, RooPower)
-{
-   int status = 0;
-   status = validate({"Power::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
    EXPECT_EQ(status, 0);
 }
 

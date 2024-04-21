@@ -72,14 +72,6 @@
             "sigma": "sigma"
         }
     },
-    "RooPower": {
-        "type": "power_dist",
-        "proxies": {
-            "coefList": "coefficients",
-            "expList": "exponents",
-            "x": "x"
-        }
-    },
     "RooProdPdf": {
         "type": "product_dist",
         "proxies": {
