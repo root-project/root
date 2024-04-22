@@ -1,8 +1,0 @@
-This directory contains the code implementing the daemons used to start a PROOF cluster.
-BEGIN_HTML
- See:
-<ul>
-<li><a href="http://root.cern.ch/twiki/bin/view/ROOT/PROOF">The PROOF system
-    </a></li>
-</ul>
-END_HTML
