@@ -260,11 +260,6 @@ BUILDXRDCLT    := @buildxrdclt@
 ALLOCLIB       := @alloclib@
 ALLOCLIBDIR    := @alloclibdir@
 
-BUILDMONALISA  := @buildmonalisa@
-MONALISALIBDIR := @monalisalibdir@
-MONALISACLILIB := @monalisalib@
-MONALISAINCDIR := $(filter-out /usr/include, @monalisaincdir@)
-
 BUILDTBB       := @buildtbb@
 TBBLIBDIR      := @tbblibdir@
 TBBLIB         := @tbblib@
