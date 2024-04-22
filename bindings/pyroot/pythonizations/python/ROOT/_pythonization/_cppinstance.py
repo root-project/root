@@ -8,11 +8,11 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-import libcppyy
-from libROOTPythonizations import AddCPPInstancePickling
-
 def pythonize_cppinstance():
-    klass = libcppyy.CPPInstance
+    import cppyy
+    from libROOTPythonizations import AddCPPInstancePickling
+
+    klass = cppyy._backend.CPPInstance
 
     AddCPPInstancePickling(klass)
 

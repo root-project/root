@@ -2,7 +2,6 @@ import unittest
 from array import array
 
 import ROOT
-from libcppyy import SetOwnership
 import numpy as np
 
 
@@ -45,7 +44,7 @@ class TTreeSetBranchAddress(unittest.TestCase):
         f = ROOT.TFile(self.filename)
         t = f.Get(self.treename)
         # Prevent double deletion of the tree (Python and C++ TFile)
-        SetOwnership(t, False)
+        ROOT.SetOwnership(t, False)
 
         c = ROOT.TChain(self.treename)
         c.Add(self.filename)
@@ -57,10 +56,10 @@ class TTreeSetBranchAddress(unittest.TestCase):
         f = ROOT.TFile(self.filename)
 
         nt = f.Get(self.tuplename)
-        SetOwnership(nt, False)
+        ROOT.SetOwnership(nt, False)
 
         ntd = f.Get(self.tuplename + 'D')
-        SetOwnership(ntd, False)
+        ROOT.SetOwnership(ntd, False)
 
         return f,nt,ntd
 

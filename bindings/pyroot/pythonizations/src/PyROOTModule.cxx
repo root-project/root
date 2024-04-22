@@ -120,9 +120,6 @@ extern "C" PyObject* PyInit_libROOTPythonizations()
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
    // or a self-referencing cycle would be created
 
-   // Make sure libcppyy has been imported
-   PyImport_ImportModule("libcppyy");
-
    // setup PyROOT
    PyROOT::Init();
 

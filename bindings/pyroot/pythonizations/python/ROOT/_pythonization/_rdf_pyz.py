@@ -11,8 +11,6 @@ import re
 import typing
 from .._numbadeclare import _NumbaDeclareDecorator
 
-import libcppyy
-
 class FunctionJitter:
     """
     This class allows to jit a python callable with Numba, being able to infer the signature of the function from the types of the RDF columns.
@@ -275,8 +273,10 @@ def _handle_cpp_callables(func, original_template, *args):
     three cases above, None otherwise
     """
 
-    is_cpp_functor  = lambda : isinstance(getattr(func, '__call__', None), libcppyy.CPPOverload)
-    is_std_function = lambda : isinstance(getattr(func, 'target_type', None), libcppyy.CPPOverload)
+    import cppyy
+
+    is_cpp_functor  = lambda : isinstance(getattr(func, '__call__', None), cppyy._backend.CPPOverload)
+    is_std_function = lambda : isinstance(getattr(func, 'target_type', None), cppyy._backend.CPPOverload)
 
     if is_cpp_functor() or is_std_function():
         return original_template[type(func)](*args)

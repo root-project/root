@@ -10,10 +10,12 @@
 
 from . import pythonization
 from cppyy.gbl import kCanDelete
-from libcppyy import SetOwnership
 
 
 def _Draw(self, *args):
+
+    import ROOT
+
     # Parameters:
     # self: Object being drawn
     # args: arguments for Draw
@@ -31,11 +33,14 @@ def _Draw(self, *args):
     # their constructors. Later, when being drawn, they are appended to
     # the list of primitives of gPad.
     if self.TestBit(kCanDelete):
-        SetOwnership(self, False)
+        ROOT.SetOwnership(self, False)
 
     self.Draw = self._OriginalDraw
 
 def _init(self, *args):
+
+    import ROOT
+
     # Parameters:
     # self: Object being initialized
     # args: arguments for __init__
@@ -47,7 +52,7 @@ def _init(self, *args):
     # Therefore, we need to set the ownership here and not in Draw
     # (TSlider does not need to be drawn). This is ROOT-10095.
     if self.TestBit(kCanDelete):
-        SetOwnership(self, False)
+        ROOT.SetOwnership(self, False)
         # We have already set the ownership while initializing,
         # so we do not need the custom Draw inherited from TPad to
         # do it again in case it is executed.
