@@ -16,7 +16,7 @@ from cppyy.gbl import gSystem
 
 from .. import pythonization
 
-from libROOTPythonizations import gROOT
+from ROOT.libROOTPythonizations import gROOT
 
 from ._factory import Factory
 from ._dataloader import DataLoader

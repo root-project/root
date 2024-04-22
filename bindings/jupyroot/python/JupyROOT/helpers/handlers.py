@@ -19,7 +19,7 @@ from os import path
 import queue
 
 from JupyROOT import helpers
-import libROOTPythonizations as _lib
+import ROOT.libROOTPythonizations as _lib
 
 
 class IOHandler(object):
