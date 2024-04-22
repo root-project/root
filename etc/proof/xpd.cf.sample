@@ -53,14 +53,6 @@ xrootd.export /pool/data
 ### Part three: enable PROOF serving
 ###
 
-### Load the XrdProofd protocol:
-### a) if the ROOT lib paths are known by the linker/loader
-xrd.protocol xproofd:1093 libXrdProofd.so
-### b) using absolute paths (<ROOT_sys> with the path to the ROOT distribution)
-# xrd.protocol xproofd:1093 <ROOT_sys>/lib/libXrdProofd.so
-### NB: envs vars are not expanded here, i.e. $ROOTSYS/lib/libXrdProofd.so will
-###     not work; they are supported for the remaining "xpd." directives
-
 ###
 ### Directives governing the behaviour of the XrdProofd plug-in.
 ### Except when explicitly indicated, all the following directives support
@@ -221,16 +213,6 @@ xrd.protocol xproofd:1093 libXrdProofd.so
 ### Defines the file containing the information about the composition
 ### of the group and their properties. See example in xpd.groups.sample .
 # xpd.groupfile $ROOTSYS/etc/proof/xpd.groups
-
-### xproofd specific security directives, allowing for independent
-### rules from the ones applying to data serving.
-### NB: 'if <pattern>' not supported for these directives (protbind can
-###     used for similar purposes).
-### In the example, GSI authentication is required with no control on CRL.
-### If this section is missing xproofd falls back to the security setup
-### defined for data serving.
-# xpd.seclib libXrdSec.so
-# xpd.sec.protocol gsi -crl:0 -gmapopt:1 -dlgpxy:1
 
 ###
 ### This directive may be used to set additional environment variables
