@@ -739,9 +739,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIREC
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
-if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
-  configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
-endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
   set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
@@ -791,14 +788,6 @@ install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
                           GROUP_EXECUTE GROUP_READ
                           WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
-                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                             GROUP_EXECUTE GROUP_READ
-                             WORLD_EXECUTE WORLD_READ
-                 DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/ginclude/compiledata.h
