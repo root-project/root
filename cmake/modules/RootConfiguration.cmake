@@ -268,11 +268,6 @@ set(xrdversion)
 set(alloclib)
 set(alloclibdir)
 
-set(buildmonalisa ${value${monalisa}})
-set(monalisalibdir ${MONALISA_LIBRARY_DIR})
-set(monalisalib ${MONALISA_LIBRARY})
-set(monalisaincdir ${MONALISA_INCLUDE_DIR})
-
 set(ssllib ${OPENSSL_LIBRARIES})
 set(ssllibdir)
 set(sslincdir ${OPENSSL_INCLUDE_DIR})

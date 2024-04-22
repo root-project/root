@@ -904,20 +904,6 @@ if(shadowpw)
   endif()
 endif()
 
-#---Monalisa support----------------------------------------------------------------
-if(monalisa)
-  if(fail-on-missing)
-    find_package(Monalisa REQUIRED)
-  else()
-    find_package(Monalisa)
-    if(NOT MONALISA_FOUND)
-      message(STATUS "Monalisa not found. Set variable MONALISA_DIR to point to your Monalisa installation")
-      message(STATUS "For the time being switching OFF 'monalisa' option")
-      set(monalisa OFF CACHE BOOL "Disabled because Monalisa not found (${monalisa_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Xrootd support---------------------------------------------------------
 
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
