@@ -112,5 +112,4 @@ win_broken_tests=OFF
 winrtdebug=OFF
 x11=ON
 xml=ON
-xproofd=OFF
 xrootd=ON
