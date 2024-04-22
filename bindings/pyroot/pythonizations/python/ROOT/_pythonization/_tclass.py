@@ -9,7 +9,7 @@
 ################################################################################
 
 import cppyy
-from libROOTPythonizations import AddTClassDynamicCastPyz
+from ROOT.libROOTPythonizations import AddTClassDynamicCastPyz
 
 
 def pythonize_tclass():

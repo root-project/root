@@ -94,7 +94,7 @@ def _rdataframe(local_rdf, distributed_rdf):
 
     def rdataframe(*args, **kwargs):
         import ROOT
-        from libROOTPythonizations import PyObjRefCounterAsStdAny
+        from ROOT.libROOTPythonizations import PyObjRefCounterAsStdAny
 
         if kwargs.get("executor", None) is not None:
             rdf = distributed_rdf(*args, **kwargs)
