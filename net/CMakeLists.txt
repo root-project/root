@@ -11,10 +11,6 @@ if(NOT WIN32 AND ssl)
   add_subdirectory(rpdutils)
 endif()
 
-if(monalisa)
-  add_subdirectory(monalisa)
-endif()
-
 if(davix)
    add_subdirectory(davix)
 endif()

@@ -65,7 +65,6 @@ macos_native=OFF
 mathmore=ON
 memory_termination=OFF
 minimal=OFF
-monalisa=OFF
 mpi=OFF
 mysql=ON
 odbc=OFF

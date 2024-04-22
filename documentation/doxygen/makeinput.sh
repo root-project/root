@@ -59,7 +59,6 @@ echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/http/                  \\" >> Doxyfile_INPUT
-echo "        ../../net/monalisa/              \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
 echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
