@@ -14,14 +14,6 @@ project(pymva-tests)
 set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
 include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
 
-# Look for needed python modules
-find_python_module(torch QUIET)
-find_python_module(keras QUIET)
-find_python_module(theano QUIET)
-find_python_module(tensorflow QUIET)
-find_python_module(sklearn QUIET)
-
-if(PY_SKLEARN_FOUND)
    # Test PyRandomForest: Classification
    ROOT_EXECUTABLE(testPyRandomForestClassification testPyRandomForestClassification.C
       LIBRARIES ${Libraries})
@@ -52,21 +44,14 @@ if(PY_SKLEARN_FOUND)
       LIBRARIES ${Libraries})
    ROOT_ADD_TEST(PyMVA-AdaBoost-Multiclass COMMAND testPyAdaBoostMulticlass DEPENDS PyMVA-GTB-Multiclass)
 
-endif(PY_SKLEARN_FOUND)
-
-
-# Enable tests based on available python modules
-if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelClassification.py generatePyTorchModelClassification.py COPYONLY)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
    configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
    # Test PyTorch: Binary classification${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
 
-   if (PY_SKLEARN_FOUND)
-      set(PyMVA-Torch-Classification-depends PyMVA-AdaBoost-Classification)
-      set(PyMVA-Torch-Multiclass-depends PyMVA-AdaBoost-Multiclass)
-   endif()
+   set(PyMVA-Torch-Classification-depends PyMVA-AdaBoost-Classification)
+   set(PyMVA-Torch-Multiclass-depends PyMVA-AdaBoost-Multiclass)
 
    ROOT_EXECUTABLE(testPyTorchClassification testPyTorchClassification.C
       LIBRARIES ${Libraries})
@@ -100,18 +85,12 @@ if(PY_TORCH_FOUND)
       target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS})
    endif()
 
-endif(PY_TORCH_FOUND)
-
-if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
    configure_file(generateKerasModels.py generateKerasModels.py COPYONLY)
    configure_file(scale_by_2_op.hxx scale_by_2_op.hxx COPYONLY)
 
-   if (PY_TORCH_FOUND)
-      set(PyMVA-Keras-Classification-depends PyMVA-Torch-Classification)
-      set(PyMVA-Keras-Regression-depends PyMVA-Torch-Regression)
-      set(PyMVA-Keras-Multiclass-depends PyMVA-Torch-Multiclass)
-   endif()
-
+   set(PyMVA-Keras-Classification-depends PyMVA-Torch-Classification)
+   set(PyMVA-Keras-Regression-depends PyMVA-Torch-Regression)
+   set(PyMVA-Keras-Multiclass-depends PyMVA-Torch-Multiclass)
 
    # Test PyKeras: Binary classification
    ROOT_EXECUTABLE(testPyKerasClassification testPyKerasClassification.C
@@ -147,5 +126,3 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
    if(APPLE)
       target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS})
    endif()
-
-endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))

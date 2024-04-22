@@ -116,15 +116,12 @@ add_dependencies(TestCustomModelsFromROOT SofieCompileModels_ROOT)
 endif()
 
 # gtest
-# Look for needed python modules
-find_python_module(torch QUIET)
-if(PY_TORCH_FOUND)
-  configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
-  configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
-  configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
-  configure_file(ConvTrans2dModelGenerator.py  ConvTrans2dModelGenerator.py COPYONLY)
-  configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
-  configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
+configure_file(Conv1dModelGenerator.py  Conv1dModelGenerator.py COPYONLY)
+configure_file(Conv2dModelGenerator.py  Conv2dModelGenerator.py COPYONLY)
+configure_file(Conv3dModelGenerator.py  Conv3dModelGenerator.py COPYONLY)
+configure_file(ConvTrans2dModelGenerator.py  ConvTrans2dModelGenerator.py COPYONLY)
+configure_file(LinearModelGenerator.py  LinearModelGenerator.py COPYONLY)
+configure_file(RecurrentModelGenerator.py  RecurrentModelGenerator.py COPYONLY)
 
 if (tmva-cpu)
   ROOT_ADD_GTEST(TestSofieModels TestSofieModels.cxx
@@ -136,7 +133,6 @@ if (tmva-cpu)
     INCLUDE_DIRS
       ${CMAKE_CURRENT_BINARY_DIR}
   )
- endif()
 endif()
 
 add_executable(emitGNN
