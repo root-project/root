@@ -321,6 +321,11 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Inference.py)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
   endif()
+  # The TMVA_SOFIE_RSofieReader test is disabled because it uses two differnt
+  # openblas versions via SOFIE and NumPy (indirectly from Keras) at the same
+  # time. This can cause crashes, for example on alma9.
+  # TODO: remove the next line once this problem is fixed.
+  list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
   if (NOT PY_SKLEARN_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
   endif()
