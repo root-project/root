@@ -130,7 +130,7 @@ Bool_t TDecompChol::Decompose()
       }
       ujj = TMath::Sqrt(ujj);
       pU[rowOff+icol] = ujj;
-      Double_t inv_ujj = 1.0 / ujj;
+      const Double_t inv_ujj = 1.0 / ujj;
 
       if (icol < n-1) {
          for (j = icol+1; j < n; j++) {
