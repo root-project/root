@@ -1,7 +1,6 @@
 import unittest
 
 import ROOT
-from libcppyy import SetOwnership
 
 
 class TCollectionListMethods(unittest.TestCase):
@@ -18,7 +17,7 @@ class TCollectionListMethods(unittest.TestCase):
         for _ in range(self.num_elems):
             o = ROOT.TObject()
             # Prevent immediate deletion of C++ TObjects
-            SetOwnership(o, False)
+            ROOT.SetOwnership(o, False)
             c.Add(o)
 
         return c

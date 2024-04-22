@@ -73,7 +73,6 @@ statement, you can use the context manager functionality offered by TContext.
 '''
 
 from . import pythonization
-from libcppyy import bind_object
 
 
 def _TFileConstructor(self, *args):
@@ -90,6 +89,9 @@ def _TFileConstructor(self, *args):
 
 
 def _TFileOpen(klass, *args):
+
+    import ROOT
+
     # Redefinition of ROOT.TFile.Open(str, ...):
     # check if the instance of TFile is a C++ nullptr and raise a
     # OSError if this is the case.
@@ -97,7 +99,7 @@ def _TFileOpen(klass, *args):
     # klass: TFile class
     # *args: arguments passed to the constructor
     f = klass._OriginalOpen(*args)
-    if f == bind_object(0, klass):
+    if f == ROOT.bind_object(0, klass):
         # args[0] can be either a string or a TFileOpenHandle
         raise OSError('Failed to open file {}'.format(str(args[0])))
     return f

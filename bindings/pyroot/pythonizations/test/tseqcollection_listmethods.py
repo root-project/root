@@ -1,7 +1,6 @@
 import unittest
 
 import ROOT
-from libcppyy import SetOwnership
 
 
 class TSeqCollectionListMethods(unittest.TestCase):

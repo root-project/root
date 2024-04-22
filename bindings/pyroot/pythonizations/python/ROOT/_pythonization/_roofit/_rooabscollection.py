@@ -12,7 +12,6 @@
 
 
 from ._utils import _kwargs_to_roocmdargs, cpp_signature
-from libcppyy import SetOwnership
 
 
 class RooAbsCollection(object):
@@ -28,6 +27,9 @@ class RooAbsCollection(object):
     """
 
     def addClone(self, arg, silent=False):
+
+        import ROOT
+
         clonedArg = self._addClone(arg, silent)
         # There are two overloads of RooAbsCollection::addClone():
         #
@@ -42,11 +44,14 @@ class RooAbsCollection(object):
         # need to change any ownership flags (in fact, calling
         # SetOwnership(None, False) would cause a crash).
         if clonedArg is not None:
-            SetOwnership(clonedArg, False)
+            ROOT.SetOwnership(clonedArg, False)
 
     def addOwned(self, arg, silent=False):
+
+        import ROOT
+
         self._addOwned(arg, silent)
-        SetOwnership(arg, False)
+        ROOT.SetOwnership(arg, False)
 
     @cpp_signature(
         "RooAbsCollection::printLatex(const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
