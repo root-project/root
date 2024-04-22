@@ -8,7 +8,7 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from libROOTPythonizations import AddTObjectEqNePyz
+from ROOT.libROOTPythonizations import AddTObjectEqNePyz
 import cppyy
 
 # Searching
