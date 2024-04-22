@@ -169,6 +169,19 @@ set(libname ROOTPythonizations)
 
 add_library(${libname} SHARED ${cpp_sources})
 
+# To make sure that the library also ends up in the right subdirectory in the
+# build directory tree.
+if(MSVC)
+  set_target_properties(${libname}
+      PROPERTIES
+          RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin/ROOT
+          RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/ROOT
+          RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/bin/ROOT
+          RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/bin/ROOT)
+else()
+  set_target_properties(${libname} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/ROOT)
+endif()
+
 # Insert the ROOTPythonizationsPySources in the dependency graph
 add_dependencies(${libname} ROOTPythonizationsPySources)
 
@@ -212,16 +225,16 @@ target_link_libraries(PyROOT INTERFACE cppyy_backend cppyy ROOTPythonizations)
 
 # Install library
 install(TARGETS ${libname} EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
+                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/ROOT COMPONENT libraries
+                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/ROOT COMPONENT libraries
+                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/ROOT COMPONENT libraries)
 
 # Install meta-target PyROOT3 (INTERFACE library)
 # Install library
 install(TARGETS PyROOT EXPORT ${CMAKE_PROJECT_NAME}Exports
-                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries
-                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries
-                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR} COMPONENT libraries)
+                            RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/ROOT COMPONENT libraries
+                            LIBRARY DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/ROOT COMPONENT libraries
+                            ARCHIVE DESTINATION ${CMAKE_INSTALL_PYTHONDIR}/ROOT COMPONENT libraries)
 
 # Install Python sources and bytecode
 install(DIRECTORY ${localruntimedir}/ROOT

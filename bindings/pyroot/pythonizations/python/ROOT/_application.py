@@ -13,7 +13,7 @@ import time
 
 from cppyy.gbl import gSystem, gInterpreter, gEnv
 
-from libROOTPythonizations import InitApplication, InstallGUIEventInputHook
+from ROOT.libROOTPythonizations import InitApplication, InstallGUIEventInputHook
 
 
 class PyROOTApplication(object):
