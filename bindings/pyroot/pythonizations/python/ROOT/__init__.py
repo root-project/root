@@ -8,23 +8,31 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from os import environ
+import importlib
+import os
+import sys
 
 # Prevent cppyy's check for the PCH
-environ["CLING_STANDARD_PCH"] = "none"
+os.environ["CLING_STANDARD_PCH"] = "none"
 
 # Prevent cppyy's check for extra header directory
-environ["CPPYY_API_PATH"] = "none"
+os.environ["CPPYY_API_PATH"] = "none"
 
 # Prevent cppyy from filtering ROOT libraries
-environ["CPPYY_NO_ROOT_FILTER"] = "1"
+os.environ["CPPYY_NO_ROOT_FILTER"] = "1"
+
+# The libROOTPythonizations CPython extension is also in the directory of the
+# ROOT Python module, so we need to add out directory to the seach path (only
+# needed on Windows)
+if 'win32' in sys.platform:
+    root_module_path = os.path.dirname(__file__)
+    os.add_dll_directory(root_module_path)
+    os.add_dll_directory(os.path.dirname(root_module_path))
 
 # Do setup specific to AddressSanitizer environments
 from . import _asan
 
 import cppyy
-import sys, importlib
-import libROOTPythonizations
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).

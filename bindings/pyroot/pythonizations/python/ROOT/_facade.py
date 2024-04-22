@@ -173,7 +173,7 @@ class ROOTFacade(types.ModuleType):
             "Double32_t&": "double&",
         }
 
-        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+        from ROOT.libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
 
         for name, target in converter_aliases.items():
             CPyCppyyRegisterConverterAlias(name, target)
