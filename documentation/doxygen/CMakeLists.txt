@@ -144,7 +144,6 @@ set (DOCU_INPUT
   #~ ../../net/doc/
   #~ ../../net/http/
   #~ ../../net/httpsniff/
-  #~ ../../net/monalisa/
   #~ ../../net/net/
   #~ ../../net/netxng/
   #~ ../../proof/
