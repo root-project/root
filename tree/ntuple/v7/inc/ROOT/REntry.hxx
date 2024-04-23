@@ -90,6 +90,11 @@ private:
       return ptr;
    }
 
+   /// Update the RValue for a field in the entry. To be used when its underlying RFieldBase changes, which typically
+   /// happens when page source the field values are read from changes.
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &&value) { std::swap(fValues.at(token.fIndex), value); }
+   void UpdateValue(RFieldToken token, RFieldBase::RValue &value) { std::swap(fValues.at(token.fIndex), value); }
+
    void Read(NTupleSize_t index)
    {
       for (auto &v : fValues) {
