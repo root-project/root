@@ -5311,7 +5311,7 @@ void TTreeFormula::ResetDimensions() {
       }
 
       // Add up the cumulative size
-      for (k = fNdimensions[i]; (k > 0); k--) {
+      for (k = fNdimensions[i] - 1; (k > 0); k--) {
          // NOTE: When support for inside variable dimension is added this
          // will become inaccurate (since one of the value in the middle of the chain
          // is unknown until GetNdata is called.
