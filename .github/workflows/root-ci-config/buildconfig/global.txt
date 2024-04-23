@@ -1,6 +1,6 @@
 alien=OFF
 all=OFF
-arrow=OFF
+arrow=ON
 asan=OFF
 asimage=ON
 asserts=OFF
