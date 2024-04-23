@@ -288,6 +288,17 @@ inline double nllEvaluate(double pdf, double weight, int binnedL, int doBinOffse
    }
 }
 
+inline double recursiveFractionEvaluate(double *a, unsigned int n)
+{
+   double prod = a[0];
+
+   for (unsigned int i = 1; i < n; ++i) {
+      prod *= 1.0 - a[i];
+   }
+
+   return prod;
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail

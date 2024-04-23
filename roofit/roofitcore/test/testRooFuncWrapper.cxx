@@ -499,7 +499,7 @@ FactoryTestParams param8{"Lognormal",
 FactoryTestParams param8p1{"LognormalStandard",
                            [](RooWorkspace &ws) {
                               ws.factory(
-                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 1.6], true)");
+                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 0.95], true)");
                               ws.defineSet("observables", "x");
                            },
                            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
@@ -584,12 +584,49 @@ FactoryTestParams param13{"RooFormulaVar",
                           1e-4,
                           /*randomizeParameters=*/false};
 
-auto testValues =
-   testing::Values(param1, param2,
+// Test for the uniform pdf. Since it doesn't depend on any parameters, we need
+// to add it with some other model like a Gaussian to get a meaningful model to
+// fit.
+FactoryTestParams param14{"Uniform",
+                          [](RooWorkspace &ws) {
+                             ws.factory("Gaussian::sig(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
+                             ws.factory("Uniform::bkg(x)");
+                             ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
+// Test for RooRecursiveFraction.
+FactoryTestParams param15{"RecursiveFraction",
+                          [](RooWorkspace &ws) {
+                             ws.factory("Gaussian::sig1(x[0, 10], 5.0, sigma1[0.50, .01, 10])");
+                             ws.factory("Gaussian::sig2(x, 2.0, sigma2[1.0, .01, 10])");
+                             ws.factory("Gaussian::sig3(x, 7.0, sigma3[1.5, .01, 10])");
+                             ws.factory("Gaussian::sig4(x, 6.0, sigma4[2.0, .01, 10])");
+                             ws.factory("RecursiveFraction::recfrac({a1[0.25, 0.0, 1.0], a2[0.25, 0.0, 1.0]})");
+                             ws.factory("SUM::model(a1 * sig1, a2 * sig2, recfrac * sig3, sig4)");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
+auto testValues = testing::Values(param1, param2,
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-                   param3,
+                                  param3,
 #endif
-                   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13);
+                                  param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12,
+                                  param13, param15);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {

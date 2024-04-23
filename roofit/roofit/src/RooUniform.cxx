@@ -50,6 +50,11 @@ double RooUniform::evaluate() const
   return 1 ;
 }
 
+void RooUniform::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   ctx.addResult(this, "1.0");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise analytical integral
 
@@ -86,6 +91,14 @@ double RooUniform::analyticalIntegral(Int_t code, const char* rangeName) const
     }
   }
   return ret ;
+}
+
+std::string RooUniform::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                    RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   // The integral of a uniform distribution is static, so we can just hardcode
+   // the result in a string.
+   return std::to_string(analyticalIntegral(code, rangeName));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
