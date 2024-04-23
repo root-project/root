@@ -34,6 +34,7 @@ HEADERS
   ROOT/RNTupleMetrics.hxx
   ROOT/RNTupleModel.hxx
   ROOT/RNTupleParallelWriter.hxx
+  ROOT/RNTupleProcessor.hxx
   ROOT/RNTupleReadOptions.hxx
   ROOT/RNTupleReader.hxx
   ROOT/RNTupleSerialize.hxx
@@ -67,6 +68,7 @@ SOURCES
   v7/src/RNTupleMetrics.cxx
   v7/src/RNTupleModel.cxx
   v7/src/RNTupleParallelWriter.cxx
+  v7/src/RNTupleProcessor.cxx
   v7/src/RNTupleReader.cxx
   v7/src/RNTupleSerialize.cxx
   v7/src/RNTupleUtil.cxx

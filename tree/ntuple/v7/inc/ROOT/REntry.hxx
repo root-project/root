@@ -33,6 +33,10 @@
 namespace ROOT {
 namespace Experimental {
 
+namespace Internal {
+class RNTupleProcessor;
+}
+
 // clang-format off
 /**
 \class ROOT::Experimental::REntry
@@ -48,6 +52,7 @@ class REntry {
    friend class RNTupleModel;
    friend class RNTupleReader;
    friend class RNTupleFillContext;
+   friend class Internal::RNTupleProcessor;
 
 public:
    /// The field token identifies a top-level field in this entry. It can be used for fast indexing in REntry's
