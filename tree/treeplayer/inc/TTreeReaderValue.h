@@ -190,4 +190,13 @@ protected:
    //ClassDefT(TTreeReaderValue, 0);//Accessor to data via TTreeReader
 };
 
+namespace cling {
+std::string printValue(ROOT::Internal::TTreeReaderValueBase *val);
+template <typename T>
+std::string printValue(TTreeReaderValue<T> *val)
+{
+   return printValue(static_cast<ROOT::Internal::TTreeReaderValueBase *>(val));
+}
+} // namespace cling
+
 #endif // ROOT_TTreeReaderValue

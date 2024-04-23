@@ -222,4 +222,12 @@ protected:
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
+namespace cling {
+template <typename T>
+std::string printValue(TTreeReaderArray<T> *val)
+{
+   return printValue(static_cast<ROOT::Internal::TTreeReaderValueBase *>(val));
+}
+} // namespace cling
+
 #endif // ROOT_TTreeReaderArray
