@@ -23,6 +23,17 @@ namespace RooFit {
 
 namespace Detail {
 
+// For RooCBShape
+inline double approxErf(double arg)
+{
+   if (arg > 5.0)
+      return 1.0;
+   if (arg < -5.0)
+      return -1.0;
+
+   return TMath::Erf(arg);
+}
+
 namespace AnalyticalIntegrals {
 
 /// @brief Function to calculate the integral of an un-normalized RooGaussian over x. To calculate the integral over
@@ -79,7 +90,8 @@ inline double bifurGaussIntegral(double xMin, double xMax, double mean, double s
    } else if (xMin > mean) {
       return resultScale * (sigmaR * (TMath::Erf((xMax - mean) / xscaleR) - TMath::Erf((xMin - mean) / xscaleR)));
    } else {
-      return resultScale * (sigmaR * TMath::Erf((xMax - mean) / xscaleR) - sigmaL * TMath::Erf((xMin - mean) / xscaleL));
+      return resultScale *
+             (sigmaR * TMath::Erf((xMax - mean) / xscaleR) - sigmaL * TMath::Erf((xMin - mean) / xscaleL));
    }
 }
 
@@ -271,6 +283,63 @@ inline double logNormalIntegralStandard(double xMin, double xMax, double mu, dou
       0.5 * (TMath::Erf((std::log(xMax) - mu) / (root2 * ln_k)) - TMath::Erf((std::log(xMin) - mu) / (root2 * ln_k)));
 
    return ret;
+}
+
+inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma, double alpha, double n)
+{
+   const double sqrtPiOver2 = 1.2533141373;
+   const double sqrt2 = 1.4142135624;
+
+   double result = 0.0;
+   bool useLog = false;
+
+   if (std::abs(n - 1.0) < 1.0e-05)
+      useLog = true;
+
+   double sig = std::abs((double)sigma);
+
+   double tmin = (mMin - m0) / sig;
+   double tmax = (mMax - m0) / sig;
+
+   if (alpha < 0) {
+      double tmp = tmin;
+      tmin = -tmax;
+      tmax = -tmp;
+   }
+
+   double absAlpha = std::abs((double)alpha);
+
+   if (tmin >= -absAlpha) {
+      result += sig * sqrtPiOver2 * (RooFit::Detail::approxErf(tmax / sqrt2) - RooFit::Detail::approxErf(tmin / sqrt2));
+   } else if (tmax <= -absAlpha) {
+      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double b = n / absAlpha - absAlpha;
+
+      if (useLog) {
+         result += a * sig * (std::log(b - tmin) - std::log(b - tmax));
+      } else {
+         result += a * sig / (1.0 - n) * (1.0 / (std::pow(b - tmin, n - 1.0)) - 1.0 / (std::pow(b - tmax, n - 1.0)));
+      }
+   } else {
+      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double b = n / absAlpha - absAlpha;
+
+      double term1 = 0.0;
+      if (useLog) {
+         term1 = a * sig * (std::log(b - tmin) - std::log(n / absAlpha));
+      } else {
+         term1 = a * sig / (1.0 - n) * (1.0 / (std::pow(b - tmin, n - 1.0)) - 1.0 / (std::pow(n / absAlpha, n - 1.0)));
+      }
+
+      double term2 =
+         sig * sqrtPiOver2 * (RooFit::Detail::approxErf(tmax / sqrt2) - RooFit::Detail::approxErf(-absAlpha / sqrt2));
+
+      result += term1 + term2;
+   }
+
+   if (result == 0)
+      return 1.E-300;
+   return result;
 }
 
 } // namespace AnalyticalIntegrals

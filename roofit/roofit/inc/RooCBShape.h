@@ -38,6 +38,10 @@ public:
   Int_t getMaxVal(const RooArgSet& vars) const override ;
   double maxVal(Int_t code) const override ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   double ApproxErf(double arg) const ;
