@@ -295,9 +295,14 @@ jobs:
                   --docu_input     '${{ inputs.docu_input }}'
            "
 
-    - name: Upload documentation
+    # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
+    - name: Create documentation archive
+      run: |
+        tar -czvf /github/home/rootdoc.gz /github/home/rootdoc
+
+    - name: Upload artifact
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v3
       with:
-        name: Doxygen documentation
-        path: /github/home/rootdoc # This is the DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
+        name: rootdoc
+        path: /github/home/rootdoc.gz
