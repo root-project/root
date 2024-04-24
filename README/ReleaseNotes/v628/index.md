@@ -997,6 +997,13 @@ List of issues solved:
 
 ## HEAD of the v6-28-00-patches branch
 
+The next patch release removes the `RooPower` and `RooExpPoly` classes from this release branch.
+It is an unfortunate but unavoidable change: different classes with the same name were used in the CMS collaboration since at least the Higgs discovery.
+This name collision caused massive problems in backwards compatibility and was blocking CMS from picking up ROOT 6.28+ for statistical analysis.
+These classes were only introduced with ROOT 6.28.00 and were not widely advertised, so you should not be affected by this removal.
+If you were using one of these classes, please copy the sources from a previous ROOT tag in your analysis as a temporary solution, and report this unsupported usecase by opening a GitHub issue.
+Based on the feedback to this patch release, the `RooPower` and `RooExpPoly` classes will either be removed or renamed in the upcoming ROOT 6.32.
+
 These changes will be part of a future 6.28/14.
 
 - None so far.
