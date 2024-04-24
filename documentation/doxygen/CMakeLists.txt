@@ -42,10 +42,27 @@ find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
 find_package(Python3 COMPONENTS Interpreter)
 # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
-execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e gROOT->GetGitBranch\(\) OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
-STRING(REGEX REPLACE "^\n\\(const char \\*\\) " "" ROOT_GIT_VERSION ${ROOT_GIT_VERSION})
-#message(${ROOT_GIT_VERSION})
+if(builtin_docu)
+    if(GIT_DESCRIBE_ALL)
+        set (ROOT_GIT_VERSION ${GIT_DESCRIBE_ALL})
+    else()
+        math(EXPR ROOT_PATCH_VERSION_ODD ${ROOT_PATCH_VERSION}%2)
+        if(${ROOT_PATCH_VERSION} EQUAL 0) # A release.
+            math(EXPR ROOT_MINOR_VERSION_ODD ${ROOT_MINOR_VERSION}%2)
+            if(${ROOT_MINOR_VERSION_ODD} EQUAL 1)
+                set (ROOT_GIT_VERSION "heads/master")
+            else() # Production release / patch release.
+                set (ROOT_GIT_VERSION "heads/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-patches")
+            endif()
+        else()
+            set (ROOT_GIT_VERSION "heads/master")
+        endif()
+    endif()
+else()
+    execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e gROOT->GetGitBranch\(\) OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+    STRING(REGEX REPLACE "^\n\\(const char \\*\\) " "" ROOT_GIT_VERSION ${ROOT_GIT_VERSION})
+endif()
 execute_process(COMMAND find ../../ -type d -name dictpch -prune -o -type d -name inc OUTPUT_VARIABLE ROOT_INC_FOLDERS OUTPUT_STRIP_TRAILING_WHITESPACE WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 string(REPLACE "\n" ";" ROOT_INC_FOLDERS ${ROOT_INC_FOLDERS})
 list(APPEND ROOT_INC_FOLDERS ../../interpreter/llvm/src/tools/clang/include)#different pattern
