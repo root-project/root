@@ -181,7 +181,8 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, co
      _referenceGrid(other._referenceGrid),
      _pdfList("pdfList", this, other._pdfList),
      _setting(other._setting),
-     _useHorizMorph(other._useHorizMorph)
+     _useHorizMorph(other._useHorizMorph),
+     _isPdfMode{other._isPdfMode}
 {
    // general initialization
    initialize();
