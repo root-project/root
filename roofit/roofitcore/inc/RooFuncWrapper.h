@@ -60,14 +60,14 @@ public:
 
    void writeDebugMacro(std::string const &) const;
 
+   std::string declareFunction(std::string const &funcBody);
+
+   std::string buildCode(RooAbsReal const &head);
+
 protected:
    double evaluate() const override;
 
 private:
-   std::string buildCode(RooAbsReal const &head);
-
-   std::string declareFunction(std::string const &funcBody);
-
    void updateGradientVarBuffer() const;
 
    void loadParamsAndData(RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data,

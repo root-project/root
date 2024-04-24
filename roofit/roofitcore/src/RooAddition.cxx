@@ -36,6 +36,7 @@ in the two sets.
 #include "RooNLLVarNew.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
+#include "RooFuncWrapper.h"
 
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
 #include "RooNLLVar.h"
@@ -158,40 +159,33 @@ void RooAddition::doEval(RooFit::EvalContext &ctx) const
 
 void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // else build a loop to sum over the values.
-   unsigned int eleSize = _set.size();
+   if (_set.empty()) {
+      ctx.addResult(this, "0.0");
+   }
    std::string result;
-   if (eleSize > 3) {
-      std::string className = GetName();
-      std::string varName = "elements" + className;
-      std::string sumName = "sum" + className;
-      std::string code;
-      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-      int idx = 0;
-      for (RooAbsArg *it : _set) {
-         decl += ctx.getResult(*it) + ",";
-         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-         idx++;
+   if (_set.size() > 1)
+      result += "(";
+
+   std::size_t i = 0;
+   for (auto *component : static_range_cast<RooAbsReal *>(_set)) {
+
+      // if (dynamic_cast<RooNLLVarNew *>(component)) {
+      //    result += ctx.getResultFrom
+      // } else {
+      if (!dynamic_cast<RooNLLVarNew *>(component) || _set.size() == 1) {
+         result += ctx.getResult(*component);
+         ++i;
+         if (i < _set.size()) result += '+';
+         continue;
       }
-      decl.back() = '}';
-      code += decl + ";\n";
-
-      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
-      std::string iterator = "i_" + className;
-      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
-              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
-      result = sumName;
-      ctx.addResult(this, result);
-
-      ctx.addToCodeBody(this, code);
+      auto &wrp = *ctx._wrapper;
+      auto funcName = wrp.declareFunction(wrp.buildCode(*component));
+      result += funcName + "(params, obs, xlArr)";
+      ++i;
+      if (i < _set.size()) result += '+';
    }
-
-   result = "(";
-   for (RooAbsArg *it : _set) {
-      result += ctx.getResult(*it) + '+';
-   }
-   result.back() = ')';
+   if (_set.size() > 1)
+      result += ')';
    ctx.addResult(this, result);
 }
 

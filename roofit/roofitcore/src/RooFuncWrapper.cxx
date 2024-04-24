@@ -199,7 +199,7 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
 
 std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 {
-   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr);
+   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr, *this);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
