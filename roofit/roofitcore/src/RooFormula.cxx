@@ -184,26 +184,21 @@ void replaceVarNamesWithIndexStyle(std::string &formula, RooArgList const &varLi
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a new formula.
 /// \param[in] name Name of the formula.
 /// \param[in] formula Formula to be evaluated. Parameters/observables are identified by name
 /// or ordinal position in `varList`.
 /// \param[in] varList List of variables to be passed to the formula.
-/// \param[in] checkVariables Check that the variables being passed in the `varList` are used in
-/// the formula expression.
-RooFormula::RooFormula(const char* name, const char* formula, const RooArgList& varList,
-    bool checkVariables) :
-  TNamed(name, formula)
+/// \param[in] checkVariables Unused parameter.
+RooFormula::RooFormula(const char *name, const char *formula, const RooArgList &varList, bool /*checkVariables*/)
+   : TNamed(name, formula)
 {
-  _origList.add(varList);
-  _isCategory = findCategoryServers(_origList);
+   _origList.add(varList);
+   _isCategory = findCategoryServers(_origList);
 
-  installFormulaOrThrow(formula);
+   installFormulaOrThrow(formula);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
