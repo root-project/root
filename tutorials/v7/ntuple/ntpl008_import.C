@@ -16,9 +16,11 @@
 #include <ROOT/RNTupleDS.hxx>
 #include <ROOT/RNTupleImporter.hxx>
 #include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RPageStorageFile.hxx>
 
 #include <TFile.h>
 #include <TROOT.h>
+#include <TSystem.h>
 
 // Import classes from experimental namespace for the time being.
 using RNTuple = ROOT::Experimental::RNTuple;

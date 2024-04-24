@@ -17,6 +17,7 @@
 #include <ROOT/RNTupleReader.hxx>
 #include <ROOT/RNTupleWriter.hxx>
 
+#include <TCanvas.h>
 #include <TH1F.h>
 #include <TRandom.h>
 
