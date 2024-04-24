@@ -2777,11 +2777,11 @@ void TROOT::SetMacroPath(const char *newpath)
 ///  - "chrome": select Google Chrome browser for interactive web display
 ///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "native": select one of the natively-supported web browsers firefox/chrome/edge for interactive web display
-///  - "qt5": uses QWebEngine from Qt5, no real http server started (require qt5web component build for ROOT)
-///  - "qt6": uses QWebEngine from Qt6, no real http server started (require qt6web component build for ROOT)
-///  - "cef": uses Chromium Embded Framework, no real http server started (require cefweb component build for ROOT)
+///  - "qt5": uses QWebEngine from Qt5, no real http server started (requires `qt5web` component build for ROOT)
+///  - "qt6": uses QWebEngine from Qt6, no real http server started (requires `qt6web` component build for ROOT)
+///  - "cef": uses Chromium Embeded Framework, no real http server started (requires `cefweb` component build for ROOT)
 ///  - "local": select on of available local (without http server) engines like qt5/qt6/cef
-///  - "default": system default web browser, invoked with xdg-open on Linux or open on Windows
+///  - "default": system default web browser, invoked with `xdg-open` on Linux, `start` on Mac or `open` on Windows
 ///  - "on": try "local", then "native", then "default" option
 ///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.

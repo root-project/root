@@ -144,9 +144,9 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 /// Recognized values:
 ///
 ///      chrome - use Google Chrome web browser
-///     firefox - use Mozilla Firefox browser
-///        edge - use Edge web browser (Windows only)
-///      native - either chrome or firefox, only these browsers support batch (headless) mode
+///     firefox - use Mozilla Firefox web browser
+///        edge - use Microsoft Edge web browser (Windows only)
+///      native - either chrome/edge or firefox, only these browsers support batch (headless) mode
 ///     default - default system web-browser, no batch mode
 ///         cef - Chromium Embeded Framework, local display, local communication
 ///         qt5 - Qt5 QWebEngine, local display, local communication
@@ -154,7 +154,7 @@ bool RWebDisplayArgs::SetPosAsStr(const std::string &str)
 ///       local - either cef or qt5 or qt6
 ///         off - disable web display
 ///          on - first try "local", then "native", then "default" (default option)
-///    `<prog>` - any program name which will be started instead of default browser, like /usr/bin/opera
+///    `<prog>` - any program name which will be started to open widget URL, like "/usr/bin/opera"
 
 RWebDisplayArgs &RWebDisplayArgs::SetBrowserKind(const std::string &_kind)
 {
