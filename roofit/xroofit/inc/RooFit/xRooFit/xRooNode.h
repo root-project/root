@@ -171,7 +171,7 @@ public:
          : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
       {
       }
-      std::iterator_traits<const std::shared_ptr<xRooNode>*>::reference operator*() const
+      std::iterator_traits<const std::shared_ptr<xRooNode> *>::reference operator*() const
       {
          const std::shared_ptr<xRooNode> &out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
          if (out->get() && out->empty()) {
@@ -349,7 +349,7 @@ public:
       operator=(obj);
       return true;
    } // populates the node's comp (creating if necessary)  from given object
-   bool SetData(const TObject &obj, const xRooNode& data = "obsData");
+   bool SetData(const TObject &obj, const xRooNode &data = "obsData");
 
    bool SetContent(double value);                                     // uses a RooConst
    bool SetContent(double value, const char *par, double parVal = 1); // shortcut to setting a variation content
@@ -360,7 +360,7 @@ public:
    }
    bool SetBinError(int bin, double value);
    bool SetBinContent(int bin, double value, const char *par = nullptr, double parVal = 1);
-   bool SetBinData(int bin, double value, const xRooNode& data = "obsData"); // only valid for pdf nodes
+   bool SetBinData(int bin, double value, const xRooNode &data = "obsData"); // only valid for pdf nodes
 
    /** @private */
    void _SetContent_(double value); // *MENU*
@@ -383,7 +383,7 @@ public:
 
    TAxis *GetXaxis() const;
 
-   double GetBinData(int bin, const xRooNode& data = "obsData");
+   double GetBinData(int bin, const xRooNode &data = "obsData");
    double GetBinContent(int bin) const { return GetBinContents(bin, bin).at(0); }
    std::vector<double> GetBinContents(int binStart = 1, int binEnd = 0) const; // default will get all bins
    double GetBinError(int bin, const xRooNode &fr = "") const;
@@ -396,7 +396,7 @@ public:
    {
       return (fBinNumber == -1) ? IntegralAndError(fr).second : GetBinError(fBinNumber, fr);
    }
-   double GetData(const xRooNode& data = "obsData") { return GetBinData(fBinNumber, data); }
+   double GetData(const xRooNode &data = "obsData") { return GetBinData(fBinNumber, data); }
 
    // methods to access content and covariances of the CHILDREN of a node
    std::vector<double> contents() const;
