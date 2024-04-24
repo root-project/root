@@ -34,7 +34,8 @@ inline double gaussianEvaluate(double x, double mean, double sigma)
 }
 
 // RooRatio evaluate function.
-inline double ratioEvaluate(double numerator, double denominator) {
+inline double ratioEvaluate(double numerator, double denominator)
+{
    return numerator / denominator;
 }
 
@@ -42,7 +43,8 @@ inline double bifurGaussEvaluate(double x, double mean, double sigmaL, double si
 {
    // Note: this simplification does not work with Clad as of v1.1!
    // return gaussianEvaluate(x, mean, x < mean ? sigmaL : sigmaR);
-   if(x < mean) return gaussianEvaluate(x, mean, sigmaL);
+   if (x < mean)
+      return gaussianEvaluate(x, mean, sigmaL);
    return gaussianEvaluate(x, mean, sigmaR);
 }
 
@@ -266,15 +268,16 @@ inline double logNormalEvaluateStandard(double x, double sigma, double mu)
    return ROOT::Math::lognormal_pdf(x, mu, std::abs(sigma));
 }
 
-inline double effProdEvaluate(double eff, double pdf) {
+inline double effProdEvaluate(double eff, double pdf)
+{
    return eff * pdf;
 }
 
 inline double nllEvaluate(double pdf, double weight, int binnedL, int doBinOffset)
 {
    if (binnedL) {
-      // Special handling of this case since log(Poisson(0,0)=0 but can't be
-      // calculated with usual log-formula since log(mu)=0. No update of result
+      // Special handling of this case since std::log(Poisson(0,0)=0 but can't be
+      // calculated with usual log-formula since std::log(mu)=0. No update of result
       // is required since term=0.
       if (std::abs(pdf) < 1e-10 && std::abs(weight) < 1e-10) {
          return 0.0;
@@ -297,6 +300,24 @@ inline double recursiveFractionEvaluate(double *a, unsigned int n)
    }
 
    return prod;
+}
+
+inline double cbShapeEvaluate(double m, double m0, double sigma, double alpha, double n)
+{
+   double t = (m - m0) / sigma;
+   if (alpha < 0)
+      t = -t;
+
+   double absAlpha = std::abs((double)alpha);
+
+   if (t >= -absAlpha) {
+      return std::exp(-0.5 * t * t);
+   } else {
+      double a = std::pow(n / absAlpha, n) * std::exp(-0.5 * absAlpha * absAlpha);
+      double b = n / absAlpha - absAlpha;
+
+      return a / std::pow(b - t, n);
+   }
 }
 
 } // namespace EvaluateFuncs
