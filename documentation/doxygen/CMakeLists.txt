@@ -36,6 +36,9 @@ find_package(ROOT 6.32 CONFIG REQUIRED)
 
 # Consider building Doxygen >1.9.3 and with Clang enabled (download as precompiled binary from GitHub):
 # cmake ../ -DCMAKE_PREFIX_PATH=/opt/clang+llvm-16.0.4-x86_64-linux-gnu-ubuntu-22.04/lib/cmake/llvm/ -Duse_libclang=ON -Dstatic_libclang=ON -DCMAKE_INSTALL_PREFIX=../install
+if(NOT DOXYGEN_EXECUTABLE)
+    set(DOXYGEN_EXECUTABLE "doxygen")
+endif()
 set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to custom doxygen executable") # Use e.g. -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen for a local built doxygen. Leave empty for system-wide doxygen.
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
 find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
@@ -391,3 +394,4 @@ set_property(
 #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
 #rm -f ${DOCU_LOCATION}/notebooks/*.root
 #rm -rf ${DOCU_LOCATION}
+unset(DOXYGEN_EXECUTABLE CACHE)
