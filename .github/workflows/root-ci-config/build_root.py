@@ -77,6 +77,11 @@ def main():
 
     options = build_utils.cmake_options_from_dict(options_dict)
 
+    if args.documentation:
+        options = "-Ddocu=ON " + options
+        if args.docu_input != "":
+            options = f"-DDOCU_INPUT=\"{args.docu_input}\" " + options
+
     if WINDOWS:
         options = "-Thost=x64 " + options
 
@@ -86,7 +91,16 @@ def main():
     # The sha1 of the build option string is used to find existing artifacts
     # with matching build options on s3 storage.
     option_hash = sha1(options.encode('utf-8')).hexdigest()
+
+    # TEMPORARY: force incremental build for faster debugging
+    option_hash = "a2bf4e78066e394ef22a80d94500b4a252512440"
+    # tmp_dict = options_dict.copy()
+    # if "docu" in tmp_dict: del tmp_dict["docu"]
+    # if "DOXYGEN_EXECUTABLE" in tmp_dict: del tmp_dict["DOXYGEN_EXECUTABLE"]
+    # tmp_options = build_utils.cmake_options_from_dict(tmp_dict)
+
     obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{option_hash}'
+
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
@@ -132,6 +146,13 @@ def main():
 
     if not WINDOWS:
         show_node_state()
+
+    # TEMPORARY FOR DEBUGGING: remove after removing forced incremental build
+    if args.documentation:
+        result = subprocess_with_log(f"""
+            rm -rf {os.path.join(WORKDIR, "build", "CMakeCache.txt")}
+        """)
+        cmake_configure(options, args.buildtype)
 
     build(options, args.buildtype)
 
@@ -192,6 +213,9 @@ def parse_args():
     parser.add_argument("--head_ref",        default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--head_sha",        default=None,      help="Sha of commit that triggered the event")
     parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
+    parser.add_argument("--documentation",   default="false",   help="Whether to generate Doxygen documentation")
+    parser.add_argument("--docu_input",      default="",
+                        help="Semi-colon seperated list of folders for documentation generation, if enabled. All folders are build if empty. ")
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
@@ -202,6 +226,7 @@ def parse_args():
     args.incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
     args.coverage = args.coverage.lower() in ('yes', 'true', '1', 'on')
     args.binaries = args.binaries.lower() in ('yes', 'true', '1', 'on')
+    args.documentation = args.documentation.lower() in ('yes', 'true', '1', 'on')
 
     if not args.base_ref:
         die(os.EX_USAGE, "base_ref not specified")
@@ -553,7 +578,6 @@ def create_coverage_xml() -> None:
 
     if result != 0:
         die(result, "Failed to create test coverage")
-
 
 if __name__ == "__main__":
     main()
