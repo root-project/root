@@ -19,7 +19,7 @@ An extensive Users Guide is available from that site (see below).
 	parser.add_argument('--version', help='Show the ROOT version')
 	parser.add_argument('--notebook', help='Execute ROOT notebook')
 	parser.add_argument('--web', help='Use web-based display for graphics, browser, geometry')
-	parser.add_argument('--web=<kind>', help='Use specified kind for web-based display like chrome, firefox, qt5\nMore available options see in TROOT::SetWebDisplay() documentation')
+	parser.add_argument('--web=<type>', help='Use the specified web-based display such as chrome, firefox, qt6\nFor more options see the documentation of TROOT::SetWebDisplay()')
 	parser.add_argument('--web=off', help='Disable any kind of web-based display')
 	parser.add_argument('[dir]', help='if dir is a valid directory cd to it before executing')
 	parser.add_argument('[data1.root...dataN.root]', help='Open the given ROOT files; remote protocols (such as http://) are supported')

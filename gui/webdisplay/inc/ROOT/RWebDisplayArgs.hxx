@@ -48,7 +48,7 @@ public:
       kServer,   ///< indicates that ROOT runs as server and just printouts window URL, browser should be started by the user
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
       kOff,      ///< disable web display, do not start any browser
-      kOn,       ///< enabled web display, first try use embed displays like Qt or CEF, then native browsers and at the end default system browser
+      kOn,       ///< web display enable, first try use embed displays like Qt or CEF, then native browsers and at the end default system browser
       kCustom    ///< custom web browser, execution string should be provided
    };
 
