@@ -1,0 +1,303 @@
+name: 'Generate Doxygen Documentation'
+
+on:
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  push:
+    branches:
+      - 'master'
+      - 'v*-*-*-patches'
+
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        default: master
+      base_ref:
+        type: string
+        default: master
+      ref_name:
+        type: string
+        default: master
+
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
+      docu_input:
+        description: Folders to build documentation for. All folders are built if empty.
+        type: string
+        default: ""
+        required: false
+
+jobs:
+  gen-docs:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
+    # TODO: it would be nice to use some global var for the platform, this doesn't work though :(
+    # env:
+    #   platform: alma9
+
+    permissions:
+      contents: read
+
+    container:
+      image: registry.cern.ch/root-ci/alma9:buildready # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    # - name: Set up Python
+    #   uses: actions/setup-python@master
+    #   with:
+    #     python-version: "3.10-dev"
+    #     architecture: x64
+    #     platform: linux
+    #     cache: 'pip' # caching pip dependencies
+    #   run: |
+    #     python3 -m pip install --upgrade pip setuptools
+    #     python3 -m pip install python-openstackclient
+
+    # - name: Install required packages
+    #   run: |
+    #     apt update -y && apt install -y sudo
+    #     sudo apt update -y
+    #     sudo apt upgrade -y
+    #     sudo apt-get install -y terminfo gfortran libpostgresql-ocaml-dev libtbb-dev libgl2ps-dev lzma-dev libgsl0-dev \
+    #                             libldap2-dev graphviz-dev libmysqlclient-dev python3.10-dev libxrootd-dev \
+    #                             libxrootd-client-dev xrootd-client libopengl-dev qhelpgenerator-qt5 xlibmesa-glu-dev
+
+    # - uses: tecolicom/actions-use-apt-tools@main
+    #   with:
+    #     tools: curl wget  git ninja-build gcc g++ make binutils cmake dpkg-dev
+    #             libssl-dev git libx11-dev libxext-dev libxft-dev libxpm-dev
+    #             libpcre3-dev libglew-dev libftgl-dev
+    #             libfftw3-dev libcfitsio-dev libavahi-compat-libdnssd-dev
+    #             python3-dev python3-numpy libxml2-dev libkrb5-dev
+    #             qtwebengine5-dev nlohmann-json3-dev
+    #             liblzma-dev xxhash libxxhash-dev libzstd-dev zstd liblz4-dev lz4
+    #             davix-dev libfreetype6-dev
+    #             libprotobuf-dev protobuf-compiler protobuf-c-compiler libblas-dev java-common
+    #             libsqlite3-dev libgif-dev libtiff-dev libjpeg-dev
+    #             libedit-dev googletest-tools graphviz
+      # run: |
+      #   apt update -y && apt install -y sudo
+      #   sudo apt update -y
+      #   sudo apt upgrade -y
+      #   sudo apt-get install -y curl wget python3
+      #   sudo apt-get install -y git ninja-build gcc g++ make binutils cmake dpkg-dev
+      #                           libssl-dev git libx11-dev libxext-dev libxft-dev libxpm-dev \
+      #                           gfortran libpcre3-dev xlibmesa-glu-dev libglew-dev libftgl-dev \
+      #                           libmysqlclient-dev libfftw3-dev libcfitsio-dev \
+      #                           graphviz-dev libavahi-compat-libdnssd-dev \
+      #                           libldap2-dev python3-dev python3-numpy libxml2-dev libkrb5-dev \
+      #                           libgsl0-dev qtwebengine5-dev nlohmann-json3-dev \
+      #                           lzma-dev liblzma-dev xxhash libxxhash-dev libzstd-dev zstd liblz4-dev lz4 \
+      #                           libgl2ps-dev davix-dev libfreetype6-dev libxrootd-dev libxrootd-client-dev xrootd-client \
+      #                           libtbb-dev libprotobuf-dev protobuf-compiler protobuf-c-compiler libblas-dev java-common \
+      #                           libpostgrcesql-ocaml-dev libsqlite3-dev libgif-dev libtiff-dev libjpeg-dev libopengl-dev \
+      #                           terminfo libedit-dev googletest-tools
+      #   sudo apt-get install -y graphviz qhelpgenerator-qt5
+
+    - name: Set up Python Virtual Env
+      # if the `if` expr is false, `if` still has exit code 0.
+      # if the `if` block is entered, the block's exit code becomes the exit
+      # code of the `if`.
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+    # - name: Install required packages
+    #   run: |
+    #     dnf update -y && dnf install -y sudo
+    #     sudo dnf update -y
+    #     sudo dnf upgrade -y
+    #     sudo dnf install -y flex bison
+    # - name: Install Python modules (for local testing only?)
+    #   run: |
+    #     sudo apt-get install python3-pip -y
+    #     python3 -m pip install --upgrade pip setuptools
+    #     python3 -m pip install python-openstackclient pytest pyspark distributed
+
+    # - name: Setup cmake
+    #   uses: jwlawson/actions-setup-cmake@v1.14
+    #   with:
+    #     cmake-version: '3.29.x'
+
+    # - name: cache doxygen for faster debugging
+    #   uses: actions/cache@v4
+    #   id: cache-doxygen
+    #   with:
+    #     path: ${{ github.workspace }}/doxygen
+    #     key: ${{ runner.os }}-doxygen
+
+    # - name: Build Doxygen
+    #   # if: steps.cache-doxygen.outputs.cache-hit != 'true'
+    #   run: |
+    #     git clone https://github.com/doxygen/doxygen.git --depth 1
+    #     cd doxygen
+    #     mkdir build && cd build
+    #     cmake ../ -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/doxygen/install
+    #     make -j $(nproc)
+    #     make install -j $(nproc)
+
+    # TODO: install latest version (in image)?
+    - name: Install Doxygen 1.10.0
+      run : |
+        mkdir -p ${{ github.workspace }}/doxygen
+        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+
+    - name: Apply option overrides
+      if: ${{ github.event_name != 'schedule' }}
+      env:
+        #TODO: DOXYGEN_EXECUTABLE doesn't have to be specified anymore if we have a valid version in PATH
+        OVERRIDES: "DOXYGEN_EXECUTABLE=${{ github.workspace }}/doxygen/bin/doxygen
+                    testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
+        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
+      shell: bash
+      run: |
+        set -x
+        echo '' >> "$CONFIGFILE"
+        for ENTRY in $OVERRIDES; do
+            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+            # Add entry to file if not exists, otherwise replace
+            if grep -q "$KEY=" "$CONFIGFILE"; then
+                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+            else
+                echo "$ENTRY" >> "$CONFIGFILE"
+            fi
+        done
+        cat "$CONFIGFILE" || true
+
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+    # for faster local testing
+    # - name: Download ROOT binary
+    #   run : |
+    #     mkdir -p root/ROOT-CI
+    #     curl -L https://s3.cern.ch/swift/v1/ROOT-build-artifacts/alma9/master/Release/a2bf4e78066e394ef22a80d94500b4a252512440/2024-04-24.tar.gz | tar xz -C root/ROOT-CI
+
+
+    - name: Print debug info
+      run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+              ls -la
+            '
+
+    # TODO: set docu_input to only the changed files
+    - name: Pull Request Build
+      if: github.event_name == 'pull_request'
+      env:
+        INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype       Release
+                  --platform        alma9
+                  --image           registry.cern.ch/root-ci/alma9:buildready
+                  --dockeropts      '--security-opt label=disable --rm'
+                  --incremental     true
+                  --base_ref        ${{ github.base_ref }}
+                  --sha             ${{ github.sha }}
+                  --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                  --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                  --head_sha        ${{ github.event.pull_request.head.sha }}
+                  --repository      ${{ github.server_url }}/${{ github.repository }}
+                  --documentation  true
+                  --docu_input      './mainpage.md;../../core/'
+            "
+
+      # - name: Nightly build
+      #   if:   github.event_name == 'schedule'
+      #   run: ".github/workflows/root-ci-config/build_root.py
+      #               --buildtype      Release
+      #               --platform       alma9
+      #               --incremental    false
+      #               --binaries       true
+      #               --base_ref       ${{ inputs.ref_name }}
+      #               --repository     ${{ github.server_url }}/${{ github.repository }}
+      #         "
+
+    - name: Update build cache after push to release branch
+      if:   github.event_name == 'push'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      RelWithDebInfo
+                  --platform       alma9
+                  --incremental    false
+                  --base_ref       ${{ github.ref_name }}
+                  --binaries       false
+                  --documentation  true
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+           "
+
+    - name: Workflow dispatch
+      if:   github.event_name == 'workflow_dispatch'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      Release
+                  --platform       alma9
+                  --incremental    ${{ inputs.incremental }}
+                  --base_ref       ${{ inputs.base_ref }}
+                  --head_ref       ${{ inputs.head_ref }}
+                  --binaries       ${{ inputs.binaries }}
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+                  --documentation  true
+                  --docu_input     '${{ inputs.docu_input }}'
+           "
+
+    - name: Upload documentation
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: Doxygen documentation
+        path: /github/home/rootdoc # This is the DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
