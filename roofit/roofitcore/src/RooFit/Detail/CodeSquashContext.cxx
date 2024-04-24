@@ -22,6 +22,12 @@ namespace RooFit {
 
 namespace Detail {
 
+CodeSquashContext::CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes,
+                                     std::vector<double> &xlarr, Experimental::RooFuncWrapper &wrapper)
+   : _wrapper{&wrapper}, _nodeOutputSizes(outputSizes), _xlArr(xlarr)
+{
+}
+
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
 /// @param value The new name to assign/overwrite.

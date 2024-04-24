@@ -26,6 +26,8 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <fstream>
+
 namespace RooFit {
 
 namespace Experimental {
@@ -129,6 +131,8 @@ std::string RooFuncWrapper::declareFunction(std::string const &funcBody)
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
                    << funcBody << "\n}";
+
+   _allCode << bodyWithSigStrm.str() << std::endl;
    bool comp = gInterpreter->Declare(bodyWithSigStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
@@ -156,6 +160,7 @@ void RooFuncWrapper::createGradient()
                       "}\n"
                       "#pragma clad OFF";
    // clang-format on
+   _allCode << requestFuncStrm.str() << std::endl;
    auto comp = gInterpreter->Declare(requestFuncStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
@@ -173,6 +178,7 @@ void RooFuncWrapper::createGradient()
                    "  " << gradName << "(params, obs, xlArr, cladOut);\n"
                    "}";
    // clang-format on
+   _allCode << dWrapperStrm.str() << std::endl;
    gInterpreter->Declare(dWrapperStrm.str().c_str());
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
    _hasGradient = true;
@@ -210,7 +216,7 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
 
 std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 {
-   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr);
+   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr, *this);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
@@ -245,6 +251,12 @@ void RooFuncWrapper::dumpCode()
 void RooFuncWrapper::dumpGradient()
 {
    gInterpreter->ProcessLine((_funcName + "_grad_0").c_str());
+}
+
+void RooFuncWrapper::codeToFile(std::string const& filename) const {
+    std::ofstream outFile;
+    outFile.open(filename);
+    outFile << _allCode.str();
 }
 
 } // namespace Experimental
