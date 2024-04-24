@@ -146,6 +146,8 @@ clang/LLVM technology.
 #include <functional>
 #include <optional>
 
+#error "Intentional error to test and close the GH issue #6441"
+
 #ifndef R__WIN32
 #include <cxxabi.h>
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
