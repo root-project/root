@@ -79,8 +79,8 @@ list(APPEND ROOT_INC_FOLDERS ../../interpreter/llvm/src/tools/clang/include)#dif
 set (DOCU_QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
 #Pass instead -DDOCU_QHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
 #Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.g. if custom installation
-set (DOCU_LOCATION /tmp/rootdoc CACHE STRING "Documentation output directory")
-#Pass instead -DDOCU_LOCATION=$HOME/rootdoc if user-specific installation
+set (DOCU_LOCATION ~/rootdoc CACHE STRING "Documentation output directory")
+#Pass instead e.g. -DDOCU_LOCATION=/tmp/rootdoc if system-wide installation
 set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
 set (DOCU_LOGFILE "" CACHE STRING "File where to write warnings to (leave empty for printing into console)")
 
