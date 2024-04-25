@@ -51,8 +51,6 @@ public:
 
       ELineBreaks fLineBreak = ELineBreaks::kAuto;
       /// Read at least fBlockSize bytes at a time. A value of zero turns off I/O buffering.
-      /// After construction, a negative block size is used to store the block size value when buffering is turned off
-      /// (see `SetBuffering()`).
       size_t fBlockSize = kUseDefaultBlockSize;
       // Define an empty constructor to work around a bug in Clang: https://github.com/llvm/llvm-project/issues/36032
       ROptions() {}
