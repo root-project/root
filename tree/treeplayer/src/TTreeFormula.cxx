@@ -839,7 +839,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
    }
    if (leafname_len > kMaxLen - 1) {
       Error("TTreeFormula",
-            "Length of leafname (%d) exceeds maximum allowed by the buffer (%d), output will be truncated.",
+            "Length of leafname (%d) exceeds maximum allowed by the buffer (%d), formula will be truncated.",
              leafname_len, kMaxLen - 1);
    }
 
