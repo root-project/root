@@ -201,9 +201,9 @@ public:
          //  old way ... now doing like in pCLs_asymp by calculating the two variations ... but this is pessimistic
          //  assumes p-values are anticorrelated!
          //  so reverting to old
-         return std::pair<double,double>(nom, (alt.first - alt.second <= 0)
-                                       ? std::numeric_limits<double>::infinity()
-                                       : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
+         return std::pair<double, double>(nom, (alt.first - alt.second <= 0)
+                                                  ? std::numeric_limits<double>::infinity()
+                                                  : (sqrt(pow(null.second, 2) + pow(alt.second * nom, 2)) / alt.first));
          // return std::pair(nom,std::max(std::abs(up - nom), std::abs(down - nom)));
       }
       xValueWithError ts_toys(double nSigma = std::numeric_limits<double>::quiet_NaN()); // test statistic value
