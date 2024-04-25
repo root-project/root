@@ -41,7 +41,7 @@ When citing ROOT, please use both the reference reported below and the DOI speci
     (Select the right link for your release here: https://zenodo.org/search?page=1&size=20&q=conceptrecid:848818&all_versions&sort=-version).
 
 ## Live Demo for CERN Users
-[![](https://swanserver.web.cern.ch/swanserver/images/badge_swan_white_150.png)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
+[![](https://img.shields.io/badge/Launch-SWAN-orange)](http://cern.ch/swanserver/cgi-bin/go?projurl=https://github.com/cernphsft/rootbinder.git)
 
 ## Screenshots
 These screenshots shows some of the plots (produced using ROOT) presented when the Higgs boson discovery was [announced at CERN](http://home.cern/topics/higgs-boson):
