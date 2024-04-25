@@ -89,10 +89,6 @@ def main():
     # The sha1 of the build option string is used to find existing artifacts
     # with matching build options on s3 storage.
     option_hash = sha1(options.encode('utf-8')).hexdigest()
-
-    # TEMPORARY: force incremental build for faster debugging
-    option_hash = "a2bf4e78066e394ef22a80d94500b4a252512440"
-
     obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{option_hash}'
 
     # Make testing of CI in forks not impact artifacts
@@ -139,12 +135,6 @@ def main():
 
     if not WINDOWS:
         show_node_state()
-
-    # TEMPORARY: force incremental build for faster debugging
-    result = subprocess_with_log(f"""
-        rm -rf {os.path.join(WORKDIR, "build", "CMakeCache.txt")}
-    """)
-    cmake_configure(options, args.buildtype)
 
     build(options, args.buildtype)
 
