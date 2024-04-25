@@ -1657,10 +1657,9 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::ts_toys(double nSigma)
       return std::pair(std::numeric_limits<double>::quiet_NaN(), std::numeric_limits<double>::quiet_NaN());
    int targetIdx =
       (altToys.size() - firstToy) * ROOT::Math::gaussian_cdf(nSigma) + firstToy; // TODO: Account for weights
-   return std::pair(
-      std::get<1>(altToys[targetIdx]),
-      (std::get<1>(altToys[std::min(int(altToys.size()), targetIdx)]) - std::get<1>(altToys[std::max(0, targetIdx)])) /
-         2.);
+   return std::pair(std::get<1>(altToys[targetIdx]), (std::get<1>(altToys[std::min(int(altToys.size()), targetIdx)]) -
+                                                      std::get<1>(altToys[std::max(0, targetIdx)])) /
+                                                        2.);
 }
 
 xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
@@ -1691,8 +1690,8 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pll(bool readOnly)
    if (!cfit_null(readOnly) || allowedStatusCodes.find(cfit_null(readOnly)->status()) == allowedStatusCodes.end())
       return std::pair<double, double>(std::numeric_limits<double>::quiet_NaN(), 0);
    // std::cout << cfit->minNll() << ":" << cfit->edm() << " " << ufit->minNll() << ":" << ufit->edm() << std::endl;
-   return std::pair<double,double>(2. * cFactor * (cfit_null(readOnly)->minNll() - _ufit->minNll()),
-                         2. * cFactor * sqrt(pow(cfit_null(readOnly)->edm(), 2) + pow(_ufit->edm(), 2)));
+   return std::pair<double, double>(2. * cFactor * (cfit_null(readOnly)->minNll() - _ufit->minNll()),
+                                    2. * cFactor * sqrt(pow(cfit_null(readOnly)->edm(), 2) + pow(_ufit->edm(), 2)));
    // return 2.*cFactor*(cfit->minNll()+cfit->edm() - ufit->minNll()+ufit->edm());
 }
 
@@ -1997,8 +1996,9 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::sigma_mu(bool readOnly)
    }
 
    auto out = asi->pll(readOnly);
-   return std::pair<double,double>(std::abs(fNullVal() - fAltVal()) / sqrt(out.first),
-                         out.second * 0.5 * std::abs(fNullVal() - fAltVal()) / (out.first * sqrt(out.first)));
+   return std::pair<double, double>(std::abs(fNullVal() - fAltVal()) / sqrt(out.first),
+                                    out.second * 0.5 * std::abs(fNullVal() - fAltVal()) /
+                                       (out.first * sqrt(out.first)));
 }
 
 xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double nSigma)
@@ -2054,7 +2054,7 @@ xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pX_toys(bool alt, double 
 
    // add to the result_err (in quadrature) the uncert due to limited stats
    result_err = sqrt(result_err * result_err + eff.GetEfficiencyErrorUp(1) * eff.GetEfficiencyErrorUp(1));
-   return std::pair<double,double>(result, result_err);
+   return std::pair<double, double>(result, result_err);
 }
 
 xRooNLLVar::xValueWithError xRooNLLVar::xRooHypoPoint::pNull_toys(double nSigma)
