@@ -62,7 +62,7 @@ on:
         required: false
 
 jobs:
-  gen-docs:
+  build-docs:
     runs-on:
       - self-hosted
       - linux
@@ -105,13 +105,13 @@ jobs:
       run : |
         mkdir -p ${{ github.workspace }}/doxygen
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+        echo PATH=$PATH:${{ github.workspace }}/doxygen/install/bin >> $GITHUB_ENV
 
+    # TEMPORARY: force incremental build for faster debugging
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
-        #TODO: DOXYGEN_EXECUTABLE doesn't have to be specified anymore if we have a valid version in PATH
-        OVERRIDES: "DOXYGEN_EXECUTABLE=${{ github.workspace }}/doxygen/bin/doxygen
-                    testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
+        OVERRIDES: "testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
@@ -183,13 +183,16 @@ jobs:
 
     - name: Run Doxygen
       env:
-        DOXYGEN_OUTPUT_DIRECTORY: /github/home/rootdoc
+        DOXYGEN_OUTPUT_DIRECTORY: /github/home/rootdoc_TMP
       shell: bash
       run: |
         source /github/home/ROOT-CI/build/bin/thisroot.sh
         cd /github/home/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOXYGEN_OUTPUT_DIRECTORY}
+        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc
+        if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks
+        fi
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archive
