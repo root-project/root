@@ -1327,7 +1327,7 @@ Int_t TTreeFormula::ParseWithLeaf(TLeaf* leaf, const char* subExpression, bool f
 
                   clones = (TClonesArray*)clonesinfo->GetLocalValuePointer(leaf,0);
                }
-               TClass * inside_cl = clones->GetClass();
+               TClass * inside_cl = clones ? clones->GetClass() : nullptr;
                cl = inside_cl;
 
             }
