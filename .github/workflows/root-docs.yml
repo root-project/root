@@ -107,7 +107,6 @@ jobs:
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
-    # TEMPORARY: force incremental build for faster debugging
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
@@ -135,9 +134,10 @@ jobs:
 
 
     - name: Print debug info
-      run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
-              ls -la
-            '
+      run: |
+        printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+        ls -la
+        doxygen --version
 
     - name: Pull Request Build
       if: github.event_name == 'pull_request'
@@ -183,18 +183,21 @@ jobs:
 
     - name: Run Doxygen
       env:
-        DOXYGEN_OUTPUT_DIRECTORY: /github/home/rootdoc_TMP
+        WORK_DIR: /github/home/
+        DOC_DIR: rootdoc
       shell: bash
       run: |
-        source /github/home/ROOT-CI/build/bin/thisroot.sh
-        cd /github/home/ROOT-CI/src/documentation/doxygen
+        source ${WORK_DIR}/ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY=${WORK_DIR}/${DOC_DIR}_TMP
+
+        cd ${WORK_DIR}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc
+        cd ${WORK_DIR}
+        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html ${WORK_DIR}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${WORK_DIR}/${DOC_DIR}/notebooks
         fi
 
-    # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archive
       run: |
         tar -czvf /github/home/rootdoc.gz /github/home/rootdoc
