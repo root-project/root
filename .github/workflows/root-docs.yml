@@ -100,14 +100,14 @@ jobs:
       # code of the `if`.
       run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
 
-    # TODO: install latest version (in image)?
+    # TODO: install latest version in image on root-ci-images
+    # TODO: install qhelpgenerator
     - name: Install Doxygen 1.10.0
       run : |
         mkdir -p ${{ github.workspace }}/doxygen
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
 
-    # TEMPORARY: force incremental build for faster debugging
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
@@ -149,7 +149,7 @@ jobs:
                   --platform        alma9
                   --image           registry.cern.ch/root-ci/alma9:buildready
                   --dockeropts      '--security-opt label=disable --rm'
-                  --incremental     true
+                  --incremental     $INCREMENTAL
                   --base_ref        ${{ github.base_ref }}
                   --sha             ${{ github.sha }}
                   --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
@@ -158,16 +158,16 @@ jobs:
                   --repository      ${{ github.server_url }}/${{ github.repository }}
             "
 
-      # - name: Nightly build
-      #   if:   github.event_name == 'schedule'
-      #   run: ".github/workflows/root-ci-config/build_root.py
-      #               --buildtype      Release
-      #               --platform       alma9
-      #               --incremental    false
-      #               --binaries       true
-      #               --base_ref       ${{ inputs.ref_name }}
-      #               --repository     ${{ github.server_url }}/${{ github.repository }}
-      #         "
+    # - name: Nightly build
+    #   if:   github.event_name == 'schedule'
+    #   run: ".github/workflows/root-ci-config/build_root.py
+    #               --buildtype      Release
+    #               --platform       alma9
+    #               --incremental    false
+    #               --binaries       false
+    #               --base_ref       ${{ inputs.ref_name }}
+    #               --repository     ${{ github.server_url }}/${{ github.repository }}
+    #         "
 
     - name: Workflow dispatch
       if:   github.event_name == 'workflow_dispatch'
@@ -183,15 +183,18 @@ jobs:
 
     - name: Run Doxygen
       env:
-        DOXYGEN_OUTPUT_DIRECTORY: /github/home/rootdoc_TMP
+        WORK_DIR: /github/home/
+        DOC_DIR: rootdoc
       shell: bash
       run: |
-        source /github/home/ROOT-CI/build/bin/thisroot.sh
-        cd /github/home/ROOT-CI/src/documentation/doxygen
+        source ${WORK_DIR}/ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY=${WORK_DIR}/${DOC_DIR}_TMP
+
+        cd ${WORK_DIR}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc
+        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html ${WORK_DIR}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${WORK_DIR}/${DOC_DIR}/notebooks
         fi
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
@@ -201,7 +204,8 @@ jobs:
 
     - name: Upload artifact
       if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: rootdoc
         path: /github/home/rootdoc.gz
+
