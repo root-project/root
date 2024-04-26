@@ -410,23 +410,24 @@ void operator delete(void *ptr, std::align_val_t /*al*/) noexcept
 {
    ::operator delete(ptr);
 }
-
 void operator delete(void *ptr, std::align_val_t al, const std::nothrow_t&) noexcept
 {
    ::operator delete(ptr, al);
 }
 
+
+#ifdef R__SIZEDDELETE
 ////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete(void *ptr, std::size_t) noexcept
 {
    ::operator delete(ptr);
 }
-
 void operator delete(void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Custom vector new operator.
@@ -463,17 +464,18 @@ void operator delete[](void *ptr, std::align_val_t al) noexcept
    ::operator delete(ptr, al);
 }
 
-///////////////////////////////////////////////////////////////////////////////
+#ifdef R__SIZEDDELETE
+////////////////////////////////////////////////////////////////////////////////
 /// Sized-delete calling non-sized one.
 void operator delete[](void *ptr, std::size_t) noexcept
 {
    ::operator delete[](ptr);
 }
-
 void operator delete[](void *ptr, std::size_t, std::align_val_t al) noexcept
 {
    ::operator delete(ptr, al);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reallocate (i.e. resize) block of memory.
