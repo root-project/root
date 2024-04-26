@@ -3,7 +3,7 @@ name: 'ROOT Main'
 
 on:
   schedule:
-    - cron: '30 1,13 * * *'
+    - cron: '0 0,12 * * *'
 
   workflow_dispatch:
     inputs:
