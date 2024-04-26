@@ -197,7 +197,7 @@ jobs:
 
         cd ${WORK_DIR}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        mv ${DOXYGEN_OUTPUT_DIRECTORY}/html ${WORK_DIR}/${DOC_DIR}
+        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${WORK_DIR}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${WORK_DIR}/${DOC_DIR}/notebooks
         fi
