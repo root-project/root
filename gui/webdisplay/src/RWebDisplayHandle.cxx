@@ -693,15 +693,22 @@ bool RWebDisplayHandle::NeedHttpServer(const RWebDisplayArgs &args)
       return false;
 
    if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)) {
+
+#ifdef WITH_QT6WEB
       auto &qt6 = FindCreator("qt6", "libROOTQt6WebDisplay");
       if (qt6 && qt6->IsActive())
          return false;
+#endif
+#ifdef WITH_QT5WEB
       auto &qt5 = FindCreator("qt5", "libROOTQt5WebDisplay");
       if (qt5 && qt5->IsActive())
          return false;
+#endif
+#ifdef WITH_CEFWEB
       auto &cef = FindCreator("cef", "libROOTCefDisplay");
       if (cef && cef->IsActive())
          return false;
+#endif
    }
 
    return true;
