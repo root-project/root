@@ -72,13 +72,13 @@
 /// of the macro header.
 
 #include <unistd.h>
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <cstring>
 #include <iostream>
 #include <fstream>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <cstdlib>
+#include <cstdarg>
 #include <memory>
 
 using std::string, std::ios_base, std::unique_ptr, std::cerr, std::endl;
@@ -270,9 +270,9 @@ void FilterClass(const int suffix)
             }
             //~ cerr << "Running " << gFileName << " " << endl;
             gImageWidth = "";
-            int wpos1 = gLineString.find("\"width=");
+            auto wpos1 = gLineString.find("\"width=");
             if (wpos1 != string::npos) {
-               int wpos2 = gLineString.find_first_of("\"", wpos1+1);
+               auto wpos2 = gLineString.find_first_of("\"", wpos1+1);
                gImageWidth = gLineString.substr(wpos1+1, wpos2-wpos1-1);
             } else {
                gImageWidth = "width=IMAGESIZE";
