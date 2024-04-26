@@ -67,7 +67,7 @@ echo "        ../../core/zip/inc/Compression.h \\" >> Doxyfile_INPUT
 # echo "        ../../roofit/                    \\" >> Doxyfile_INPUT
 # echo "        ../../tree/                      \\" >> Doxyfile_INPUT
 # echo "        ../../sql/                       \\" >> Doxyfile_INPUT
-echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
+# echo "        ../../tutorials/                 \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/tpython/          \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/pyroot/           \\" >> Doxyfile_INPUT
 # echo "        ../../bindings/r/                \\" >> Doxyfile_INPUT

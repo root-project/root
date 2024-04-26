@@ -203,7 +203,7 @@ jobs:
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archives
-      working-directory: ${DOC_LOCATION}
+      working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
       run: |
         tarnamegz=${DOC_DIR}.tar.gz
