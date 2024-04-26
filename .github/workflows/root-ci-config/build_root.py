@@ -215,7 +215,7 @@ def parse_args():
     parser.add_argument("--binaries",        default="false",   help="Whether to create binary artifacts")
     parser.add_argument("--documentation",   default="false",   help="Whether to generate Doxygen documentation")
     parser.add_argument("--docu_input",      default="",
-                        help="Semi-colon seperated list of folders for documentation generation, if enabled. All folders are build if empty. ")
+                        help="Semi-colon separated list of folders for documentation generation, if enabled. All default folders are built if empty. ")
     parser.add_argument("--architecture",    default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",      default="https://github.com/root-project/root.git",
                         help="url to repository")
