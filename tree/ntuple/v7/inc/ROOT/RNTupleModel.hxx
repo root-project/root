@@ -62,9 +62,10 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
-/// Merge two RNTuple models. The resulting model will take the description from the left model.
-/// When `rightFieldPrefix` is specified, the field names in the right-hand model will be prefixed by this string,
-/// separated by a colon (':'). This enables merging of models that contain identical fields.
+/// Merge two RNTuple models. The resulting model will take the description from the left-hand model.
+/// When `rightFieldPrefix` is specified, the right-hand model will be stored in an untyped sub-collection, identified
+/// by the prefix. This way, a field from the right-hand model is represented as `<prefix>.<fieldname>`.
+/// When no prefix is specified, the fields from the right-hand model get added directly to the resulting model.
 ///
 /// Note that both models must be frozen before merging.
 std::unique_ptr<RNTupleModel>
