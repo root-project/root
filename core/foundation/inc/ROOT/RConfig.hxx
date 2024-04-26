@@ -333,13 +333,11 @@
 #   endif
 #endif
 
-#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
-   // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
-   // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
-   // https://github.com/gperftools/gperftools/issues/794.
-#elif !defined(__GNUC__)
-#   define R__SIZEDDELETE
-#elif __GNUC__ > 4
+#if defined(__GLIBCXX__) && !defined(__cpp_sized_deallocation)
+   // Sized global deallocation functions in libstc++ are only enabled if
+   // __cpp_sized_deallocation is defined, which Clang only does if explicitly
+   // passed -fsized-deallocation.
+#else
 #   define R__SIZEDDELETE
 #endif
 
