@@ -226,7 +226,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    modelConfig->SetParametersOfInterest(*wspace->set("poi"));
    modelConfig->SetNuisanceParameters(*wspace->set("nuis"));
    wspace->import(*modelConfig);
-   wspace->writeToFile("FourBin.root");
+   // wspace->writeToFile("FourBin.root");
 
    // -------------------------------------------------
    // If you want to see the covariance matrix uncomment

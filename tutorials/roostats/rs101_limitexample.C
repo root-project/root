@@ -109,7 +109,7 @@ void rs101_limitexample()
    wspace.import(modelConfig);
    wspace.import(dataOrig);
    wspace.SetName("w");
-   wspace.writeToFile("rs101_ws.root");
+   // wspace.writeToFile("rs101_ws.root");
 
    // Make sure we reference the data in the workspace from now on
    RooDataSet &data = static_cast<RooDataSet &>(*wspace.data(dataOrig.GetName()));
