@@ -18,6 +18,4 @@ while [ "$1" != "" ]; do
    shift
 done
 
-echo "Running $firefox $args"
-
-$firefox $args
+$firefox $args >/dev/null 2>/dev/null
