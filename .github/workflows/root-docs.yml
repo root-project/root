@@ -118,7 +118,7 @@ jobs:
     - name: Apply option overrides
       if: ${{ github.event_name != 'schedule' }}
       env:
-        OVERRIDES: "testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
+        OVERRIDES: "testing=off roottest=off minimal=on" # can be removed if this workflow is merged with root-ci.yml
         CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
       shell: bash
       run: |
@@ -202,7 +202,8 @@ jobs:
         fi
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
-    - name: Create documentation archive
+    - name: Create documentation archives
+      working-directory: ${DOC_LOCATION}
       shell: bash
       run: |
         tarnamegz=${DOC_DIR}.tar.gz
@@ -210,20 +211,19 @@ jobs:
         tarnamexz1=${DOC_DIR}.tar
         tar cf $tarnamexz1 ${DOC_DIR}
         xz -T5 -f $tarnamexz1
-        tarnamexz2=${DOC_DIR}tar.xz
 
     # TODO: upload to website instead
-    - name: Upload artifact
+    - name: Upload tar.gz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_DIR}.tar.gz
-        path: ${DOC_DIR}.tar.gz
+        name: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
+        path: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
 
-    - name: Upload artifact
+    - name: Upload tar.xz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_DIR}.tar.xz
-        path: ${DOC_DIR}.tar.xz
+        name: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
+        path: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
 
