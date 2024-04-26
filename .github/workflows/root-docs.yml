@@ -205,12 +205,12 @@ jobs:
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archive
       run: |
-        tar -czvf /github/home/rootdoc.gz /github/home/rootdoc
+        tar -czvf /github/home/rootdoc.tar /github/home/rootdoc
 
     - name: Upload artifact
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: rootdoc
-        path: /github/home/rootdoc.gz
+        name: rootdoc.tar
+        path: /github/home/rootdoc.tar
 
