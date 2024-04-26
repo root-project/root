@@ -445,7 +445,7 @@ function saveLocalStorage(obj, expires, name) {
       localStorage.setItem(_storage_prefix + name, btoa_func(JSON.stringify(obj)));
 }
 
-/** @summary Read cookie with specified name
+/** @summary Read object from storage with specified name
   * @private */
 function readLocalStorage(name) {
    if (typeof localStorage === 'undefined')
@@ -455,9 +455,9 @@ function readLocalStorage(name) {
    return isObject(s) ? s : null;
 }
 
-/** @summary Save JSROOT settings as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT settings in local storage
+  * @param {Number} [expires] - delete settings when negative
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
 function saveSettings(expires = 365, name = 'settings') {
    saveLocalStorage(settings, expires, name);
@@ -465,7 +465,7 @@ function saveSettings(expires = 365, name = 'settings') {
 
 /** @summary Read JSROOT settings from specified cookie parameter
   * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+  * @param {String} [name] - storage name, 'settings' by default
   * @private */
 function readSettings(only_check = false, name = 'settings') {
    const s = readLocalStorage(name);
@@ -475,17 +475,17 @@ function readSettings(only_check = false, name = 'settings') {
    return true;
 }
 
-/** @summary Save JSROOT gStyle object as specified cookie parameter
-  * @param {Number} expires - days when cookie will be removed by browser, negative - delete immediately
-  * @param {String} name - cookie parameter name
+/** @summary Save JSROOT gStyle object in local storage
+  * @param {Number} [expires] - delete style when negative
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
 function saveStyle(expires = 365, name = 'style') {
    saveLocalStorage(gStyle, expires, name);
 }
 
-/** @summary Read JSROOT gStyle object specified cookie parameter
-  * @param {Boolean} only_check - when true just checks if settings were stored before with provided name
-  * @param {String} name - cookie parameter name
+/** @summary Read JSROOT gStyle object from local storage
+  * @param {Boolean} [only_check] - when true just checks if settings were stored before with provided name
+  * @param {String} [name] - storage name, 'style' by default
   * @private */
 function readStyle(only_check = false, name = 'style') {
    const s = readLocalStorage(name);

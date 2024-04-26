@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = 'dev',
+const version_id = 'ROOT 6.32',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/03/2024',
+version_date = '26/04/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -34,9 +34,11 @@ if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
       source_dir = _src.slice(0, pos);
-      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+      if (!nodejs)
+         console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
-      console.log(`jsroot bundle, ${version}`);
+      if (!nodejs)
+         console.log(`jsroot bundle, ${version}`);
       internals.ignore_v6 = true;
    }
 }

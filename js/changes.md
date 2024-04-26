@@ -12,6 +12,11 @@
 9. Fully integrate svg2pdf.js into jsroot repo
 10. Synchronize X/Y range selection with native ROOT
 11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
+12. Correctly scale size of axis ticks - take into account NDC axis length
+13. Remove source_dir output in node.js #296
+14. Fix - correctly draw only grids with AXIG draw option
+15. Fix - let read object from TFile with empty name
+16. Fix - graph drawing fix custom labels on X axis #297
 
 
 ## Changes in 7.6.0
