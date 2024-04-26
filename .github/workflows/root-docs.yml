@@ -55,7 +55,7 @@ on:
         - MinSizeRel
         default: Debug
         required: true
-      docu_input:
+      docu_input: # TODO: overwrite makeinput.sh with these args
         description: Folders to build documentation for. All folders are built if empty.
         type: string
         default: ""
@@ -69,8 +69,10 @@ jobs:
       - x64
 
     # TODO: it would be nice to use some global var for the platform, this doesn't work though :(
-    # env:
-    #   platform: alma9
+    env:
+      PLATFORM: alma9
+      DOC_DIR: rootdoc
+      DOC_LOCATION: /github/home
 
     permissions:
       contents: read
@@ -187,31 +189,41 @@ jobs:
            "
 
     - name: Run Doxygen
-      env:
-        WORK_DIR: /github/home/
-        DOC_DIR: rootdoc
       shell: bash
       run: |
-        source ${WORK_DIR}/ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=${WORK_DIR}/${DOC_DIR}_TMP
+        source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
 
-        cd ${WORK_DIR}/ROOT-CI/src/documentation/doxygen
+        cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${WORK_DIR}/${DOC_DIR}
+        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${WORK_DIR}/${DOC_DIR}/notebooks
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
         fi
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archive
+      shell: bash
       run: |
-        tar -xvzf /github/home/rootdoc.tar.gz /github/home/rootdoc
+        tarnamegz=${DOC_DIR}.tar.gz
+        tar zcf $tarnamegz ${DOC_DIR}
+        tarnamexz1=${DOC_DIR}.tar
+        tar cf $tarnamexz1 ${DOC_DIR}
+        xz -T5 -f $tarnamexz1
+        tarnamexz2=${DOC_DIR}tar.xz
 
     # TODO: upload to website instead
     - name: Upload artifact
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: rootdoc.tar
-        path: /github/home/rootdoc.tar.gz
+        name: ${DOC_DIR}.tar.gz
+        path: ${DOC_DIR}.tar.gz
+
+    - name: Upload artifact
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${DOC_DIR}.tar.xz
+        path: ${DOC_DIR}.tar.xz
 
