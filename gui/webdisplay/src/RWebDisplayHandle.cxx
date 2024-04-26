@@ -729,19 +729,32 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
    };
 
    bool handleAsLocal = (args.GetBrowserKind() == RWebDisplayArgs::kLocal) ||
-                        (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn));
+                        (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)),
+        has_qt5web = false, has_qt6web = false, has_cefweb = false;
 
-   if (handleAsLocal || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
+#ifdef WITH_QT5WEB
+   has_qt5web = true;
+#endif
+
+#ifdef WITH_QT6WEB
+   has_qt6web = true;
+#endif
+
+#ifdef WITH_CEFWEB
+   has_cefweb = true;
+#endif
+
+   if ((handleAsLocal && has_qt6web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
          return handle;
    }
 
-   if (handleAsLocal || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   if ((handleAsLocal && has_qt5web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
       if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
 
-   if (handleAsLocal || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
+   if ((handleAsLocal && has_cefweb) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
       if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
          return handle;
    }
