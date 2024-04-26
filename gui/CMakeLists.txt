@@ -15,7 +15,6 @@ if(proof)
 endif()
 
 if(webgui)
-   add_subdirectory(webdisplay)
    if(cefweb)
       add_subdirectory(cefdisplay)
    endif()
@@ -25,6 +24,9 @@ if(webgui)
    if(qt6web)
       add_subdirectory(qt6webdisplay)
    endif()
+
+   add_subdirectory(webdisplay)
+
    add_subdirectory(webgui6)
 
    if(root7)
