@@ -43,15 +43,12 @@ ROOT::Experimental::Internal::MergeModels(const RNTupleModel &left, const RNTupl
    auto newModel = left.Clone();
    newModel->Unfreeze();
 
-   for (const auto &f : right.GetFieldZero().GetSubFields()) {
-      std::string fieldName;
-      if (rightFieldPrefix.empty()) {
-         fieldName = f->GetFieldName();
-      } else {
-         fieldName = std::string(rightFieldPrefix) + ":" + f->GetFieldName();
+   if (!rightFieldPrefix.empty()) {
+      newModel->MakeCollection(std::string(rightFieldPrefix), right.Clone());
+   } else {
+      for (const auto &f : right.GetFieldZero().GetSubFields()) {
+         newModel->AddField(f->Clone(f->GetFieldName()));
       }
-
-      newModel->AddField(f->Clone(fieldName));
    }
 
    newModel->Freeze();
