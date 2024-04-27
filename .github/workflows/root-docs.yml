@@ -335,15 +335,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      #- name: Build Doxygen
+      # # if: steps.cache-doxygen.outputs.cache-hit != 'true'
+      #  run: |
+      #    
+      #    git clone https://github.com/doxygen/doxygen.git --depth 1 --branch Release_1_10_0
+      #    cd doxygen
+      #    mkdir build && cd build
+      #    cmake ../ -DCMAKE_INSTALL_PREFIX=${{ github.workspace }}/doxygen/install
+      #    make -j '{os.cpu_count()}'
+      #    make install -j '{os.cpu_count()}'
+
       - name: Install Doxygen 1.10.0
         run : |
-          mkdir -p ${{ github.workspace }}/doxygen
-          curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+          # curl --create-dirs -O --output-dir ${{ github.workspace }}/doxygen -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/Doxygen-1.10.0.dmg
+          # hdiutil attach ${{ github.workspace }}/doxygen/Doxygen-1.10.0.dmg
+          file /Volumes/Doxygen/Doxygen.app/Contents/Resources/doxygen # -v  # Fails with bad cpu type
+          uname -m
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+                    DOXYGEN_EXECUTABLE=${{ github.workspace }}/doxygen/install/doxygen
+                    testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
         shell: bash
         run: |
