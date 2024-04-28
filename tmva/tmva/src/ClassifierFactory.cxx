@@ -101,6 +101,7 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
+      return nullptr;
    }
 
    return (it->second)(job, title, dsi, option);
@@ -123,6 +124,7 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
+      return nullptr;
    }
 
    return (it->second)("", "", dsi, weightfile);
