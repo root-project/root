@@ -842,6 +842,7 @@ void collection_proxies(bool proj=true)
    auto b1 = new REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
+   b1->SetMainTransparency(90);
    eveMng->GetGlobalScene()->AddElement(b1);
 
    rhoZEventScene = eveMng->SpawnNewScene("RhoZ Scene","Projected");
