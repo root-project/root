@@ -1243,7 +1243,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
                "RooFit::JSONIO::printFactoryExpressions() "
                "to see what is available\n"
             << " 2 & 1: you might need to write a deserialization definition yourself. check "
-               "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
+               "https://github.com/root-project/root/blob/master/roofit/doc/developers/roofit_hs3.md to see "
                "how to do this!"
             << std::endl;
          RooJSONFactoryWSTool::error(ss.str());
