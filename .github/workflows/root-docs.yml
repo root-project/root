@@ -67,7 +67,7 @@ on:
         required: false
 
 jobs:
-  gen-docs:
+  gen-docs-alma9:
     runs-on:
       - self-hosted
       - linux
@@ -307,7 +307,7 @@ jobs:
         name: rootdoc
         path: /github/home/rootdoc.gz
   
-  gen-docs-mac:
+  gen-docs-mac12:
     permissions:
       contents: read
 
@@ -319,8 +319,8 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac13   
-            arch: ARM64
+          - platform: mac12   
+            arch: X64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
@@ -329,7 +329,7 @@ jobs:
       - ${{ matrix.arch }}
       - ${{ matrix.platform }}
 
-    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ join( matrix.overrides, ', ' ) }}
+    # name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ join( matrix.overrides, ', ' ) }}
 
     steps:
       - name: Checkout
@@ -348,17 +348,18 @@ jobs:
 
       - name: Install Doxygen 1.10.0
         run : |
-          # curl --create-dirs -O --output-dir ${{ github.workspace }}/doxygen -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/Doxygen-1.10.0.dmg
-          # hdiutil attach ${{ github.workspace }}/doxygen/Doxygen-1.10.0.dmg
-          file /Volumes/Doxygen/Doxygen.app/Contents/Resources/doxygen # -v  # Fails with bad cpu type
-          uname -m
+          diskutil umount /Volumes/Doxygen || true
+          curl --create-dirs -O --output-dir ${{ github.workspace }}/doxygen -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/Doxygen-1.10.0.dmg
+          hdiutil attach ${{ github.workspace }}/doxygen/Doxygen-1.10.0.dmg
+          # file /Volumes/Doxygen/Doxygen.app/Contents/Resources/doxygen # -v  # Fails with bad cpu type
+          # uname -m
+          /Volumes/Doxygen/Doxygen.app/Contents/Resources/doxygen -v
 
       - name: Apply option overrides from matrix for this job for non-release builds
         if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
-          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
-                    DOXYGEN_EXECUTABLE=${{ github.workspace }}/doxygen/install/doxygen
-                    testing=off roottest=off" # can be removed if this workflow is merged with root-ci.yml
+          OVERRIDES: "DOXYGEN_EXECUTABLE=/Volumes/Doxygen/Doxygen.app/Contents/Resources/doxygen
+                    testing=off roottest=off builtin_cfitsio=ON builtin_cppzmq=ON builtin_davix=ON builtin_fftw3=ON builtin_freetype=ON builtin_ftgl=ON builtin_gl2ps=ON builtin_glew=ON builtin_gsl=ON builtin_gtest=ON builtin_lz4=ON builtin_lzma=ON builtin_nlohmannjson=ON builtin_pcre=ON builtin_openssl=ON builtin_tbb=ON builtin_vc=ON builtin_vdt=ON builtin_veccore=ON builtin_xrootd=ON builtin_xxhash=ON builtin_zeromq=ON builtin_zstd=ON ccache=ON cocoa=ON mysql=OFF pgsql=OFF pythia8=OFF test_distrdf_dask=OFF test_distrdf_pyspark=OFF x11=OFF" # can be removed if this workflow is merged with root-ci.yml
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
         shell: bash
         run: |

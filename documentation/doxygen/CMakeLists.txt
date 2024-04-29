@@ -41,7 +41,11 @@ if(NOT DOXYGEN_EXECUTABLE)
 endif()
 set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to custom doxygen executable") # Use e.g. -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen for a local built doxygen. Leave empty for system-wide doxygen.
 #list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
+if(APPLE)
+find_package(Doxygen 1.9.4 OPTIONAL_COMPONENTS dot) # REQUIRED dot
+else()
 find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
+endif()
 find_package(Python3 COMPONENTS Interpreter)
 # TODO: should we remove output directory beforehand to ensure a clean rebuild?
 
