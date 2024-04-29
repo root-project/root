@@ -2152,7 +2152,7 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
 TString TGraph::SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr)
 {
-   const char *name = GetName();
+   const char *name = gInterpreter->MapCppName(GetName());
    if (!name || !*name)
       name = "Graph";
    TString arrname = TString::Format("%s_%s%d", name, suffix, frameNumber);
@@ -2189,7 +2189,7 @@ void TGraph::SaveHistogramAndFunctions(std::ostream &out, const char *varname, I
       TString hname = fHistogram->GetName();
       fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber).Data());
       fHistogram->SavePrimitive(out, "nodraw");
-      out << "   "<<varname<<"->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
+      out << "   "<<varname<<"->SetHistogram(" << gInterpreter->MapCppName(fHistogram->GetName()) << ");" << std::endl;
       out << "   " << std::endl;
       fHistogram->SetName(hname.Data());
    }
