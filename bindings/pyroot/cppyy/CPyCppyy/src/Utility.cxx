@@ -1090,23 +1090,17 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
         return;
     }
 
-// if a _single_ exception was from C++, assume it has priority
-    PyObject* exc_type = nullptr;
+// if a _single_ exception was thrown from C++, assume it has priority (see below)
     PyError_t* unique_from_cpp = nullptr;
     for (auto& e : errors) {
         if (e.fIsCpp) {
             if (!unique_from_cpp)
                 unique_from_cpp = &e;
             else {
-            // two C++ exceptions, resort to default
+            // two C++ exceptions, resort to default behavior
                 unique_from_cpp = nullptr;
-                exc_type = defexc;
                 break;
             }
-        } else if (!unique_from_cpp) {
-        // try to consolidate Python exceptions, otherwise select default
-            if (!exc_type) exc_type = e.fType;
-            else if (exc_type != e.fType) exc_type = defexc;
         }
     }
 
@@ -1120,6 +1114,16 @@ void CPyCppyy::Utility::SetDetailedException(std::vector<PyError_t>& errors, PyO
         Py_INCREF(unique_from_cpp->fType); Py_INCREF(unique_from_cpp->fValue); Py_XINCREF(unique_from_cpp->fTrace);
         PyErr_Restore(unique_from_cpp->fType, unique_from_cpp->fValue, unique_from_cpp->fTrace);
     } else {
+    // try to consolidate Python exceptions, otherwise select default
+        PyObject* exc_type = nullptr;
+        for (auto& e : errors) {
+            if (!exc_type) exc_type = e.fType;
+            else if (exc_type != e.fType) {
+                exc_type = defexc;
+                break;
+            }
+        }
+
     // add the details to the topmsg
         PyObject* separator = CPyCppyy_PyText_FromString("\n  ");
         for (auto& e : errors) {
