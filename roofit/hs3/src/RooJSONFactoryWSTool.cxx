@@ -1109,7 +1109,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
                 << " 3: you are reading a file with export keys - call RooFit::JSONIO::printExportKeys() to "
                    "see what is available\n"
                 << " 2 & 1: you might need to write a serialization definition yourself. check "
-                   "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
+                   "https://github.com/root-project/root/blob/master/roofit/doc/developers/roofit_hs3.md to "
                    "see how to do this!\n";
       return;
    }
