@@ -190,6 +190,8 @@ add_custom_target(Preparation
   COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/images # TODO move to clean target
 
   COMMAND mkdir -p ${DOCU_LOCATION}/macros ${CMAKE_CURRENT_BINARY_DIR}/images ${DOCU_LOCATION}/notebooks
+  COMMAND echo 'Starting DOCU_TIMER'
+  COMMAND date +'%H:%M:%S'
 
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.C ./
@@ -217,6 +219,7 @@ add_custom_target(Preparation
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+O'
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+O'
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+O' # TODO these 4 commands are printing a weird 'Welcome to the ROOT tutorials' message
+
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 if(builtin_docu)
@@ -397,6 +400,15 @@ add_custom_target(Zipping ALL
     COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
 )
 add_dependencies(Zipping dox)
+endif()
+
+add_custom_target(Finalize ALL
+    COMMAND echo 'Stopping DOCU_TIMER'
+    COMMAND date +'%H:%M:%S'
+)
+add_dependencies(Finalize CollaborationDiagrams)
+if(DOCU_TUTORIALS)
+add_dependencies(Finalize Notebooks)
 endif()
 
 set_property(
