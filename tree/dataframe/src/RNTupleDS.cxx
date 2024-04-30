@@ -24,9 +24,11 @@
 #include <string_view>
 
 #include <TError.h>
+#include <TSystem.h>
 
 #include <cassert>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -381,8 +383,35 @@ RNTupleDS::RNTupleDS(std::unique_ptr<Internal::RPageSource> pageSource) : fPrinc
             std::vector<ROOT::Experimental::RNTupleDS::RFieldInfo>());
 }
 
+namespace {
+
+const ROOT::Experimental::RNTupleReadOptions &GetOpts()
+{
+   // The setting is for now a global one, must be decided before running the
+   // program by setting the appropriate environment variable. Make sure that
+   // option configuration is thread-safe and happens only once.
+   static ROOT::Experimental::RNTupleReadOptions opts;
+   static std::once_flag flag;
+   std::call_once(flag, []() {
+      if (auto env = gSystem->Getenv("ROOT_RNTUPLE_CLUSTERBUNCHSIZE"); env != nullptr && strlen(env) > 0) {
+         std::string envStr{env};
+         auto envNum{std::stoul(envStr)};
+         envNum = envNum == 0 ? 1 : envNum;
+         opts.SetClusterBunchSize(envNum);
+      }
+   });
+   return opts;
+}
+
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
+CreatePageSource(std::string_view ntupleName, std::string_view fileName)
+{
+   return ROOT::Experimental::Internal::RPageSource::Create(ntupleName, fileName, GetOpts());
+}
+} // namespace
+
 RNTupleDS::RNTupleDS(std::string_view ntupleName, std::string_view fileName)
-   : RNTupleDS(ROOT::Experimental::Internal::RPageSource::Create(ntupleName, fileName))
+   : RNTupleDS(CreatePageSource(ntupleName, fileName))
 {
 }
 
@@ -392,7 +421,7 @@ RNTupleDS::RNTupleDS(RNTuple *ntuple)
 }
 
 RNTupleDS::RNTupleDS(std::string_view ntupleName, const std::vector<std::string> &fileNames)
-   : RNTupleDS(Internal::RPageSource::Create(ntupleName, fileNames[0]))
+   : RNTupleDS(CreatePageSource(ntupleName, fileNames[0]))
 {
    fNTupleName = ntupleName;
    fFileNames = fileNames;
@@ -449,7 +478,7 @@ void RNTupleDS::PrepareNextRanges()
             assert(fNextFileIndex == 0);
             std::swap(fPrincipalSource, range.fSource);
          } else {
-            range.fSource = Internal::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+            range.fSource = CreatePageSource(fNTupleName, fFileNames[fNextFileIndex]);
             range.fSource->Attach();
          }
          fNextFileIndex++;
@@ -475,7 +504,7 @@ void RNTupleDS::PrepareNextRanges()
          assert(fNextFileIndex == 0);
          std::swap(source, fPrincipalSource);
       } else {
-         source = Internal::RPageSource::Create(fNTupleName, fFileNames[fNextFileIndex]);
+         source = CreatePageSource(fNTupleName, fFileNames[fNextFileIndex]);
          source->Attach();
       }
       fNextFileIndex++;
