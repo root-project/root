@@ -1154,6 +1154,12 @@ void ROOT::Experimental::RFieldBase::AcceptVisitor(Detail::RFieldVisitor &visito
    visitor.VisitField(*this);
 }
 
+std::uint64_t ROOT::Experimental::RFieldBase::GetHash(void * /*from*/)
+{
+   R__ASSERT(false && "hashing is not supported for this field type");
+   return 0;
+}
+
 //-----------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
