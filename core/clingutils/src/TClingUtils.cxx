@@ -3251,6 +3251,12 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          case ')': repl = "cP"; break;
          case '[': repl = "oB"; break;
          case ']': repl = "cB"; break;
+         case '{': repl = "lB"; break;
+         case '}': repl = "rB"; break;
+         case ';': repl = "sC"; break;
+         case '#': repl = "hS"; break;
+         case '?': repl = "qM"; break;
+         case '`': repl = "bT"; break;
          case '!': repl = "nO"; break;
          case ',': repl = "cO"; break;
          case '$': repl = "dA"; break;
