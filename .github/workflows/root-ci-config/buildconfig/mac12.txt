@@ -24,6 +24,7 @@ builtin_zstd=ON
 ccache=ON
 cocoa=ON
 mysql=OFF
+fortran=OFF
 pgsql=OFF
 pythia8=OFF
 test_distrdf_dask=OFF
