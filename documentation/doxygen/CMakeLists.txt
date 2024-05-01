@@ -181,6 +181,9 @@ set (DOCU_INPUT
   CACHE STRING "Doxyfile input files or folders")
 
 add_custom_target(Preparation
+  COMMAND rm -f cleanNamespaces* # TODO move to clean target
+  COMMAND rm -f tutorialWorklist* # TODO move to clean target
+
   COMMAND mkdir -p ${DOCU_LOCATION}/macros ${CMAKE_CURRENT_BINARY_DIR}/images ${DOCU_LOCATION}/notebooks
 
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
@@ -345,7 +348,6 @@ endif()
 #~ )
 
 add_custom_target(CollaborationDiagrams ALL
-    COMMAND rm -f cleanNamespaces* # TODO move to clean target
     COMMAND touch cleanNamespaces.sh
     COMMAND find . -name 'cleanNamespaces*.sh' -exec cat {} + | tee cleanNamespaces.sh
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
@@ -358,7 +360,6 @@ add_dependencies(CollaborationDiagrams dox)
 set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
-    COMMAND rm -f tutorialWorklist* # TODO move to clean target
     COMMAND touch tutorialWorklist_root tutorialWorklist_py
     COMMAND find . -name 'tutorialWorklist_root*' -exec cat {} + | tee tutorialWorklist_root
     COMMAND find . -name 'tutorialWorklist_py*' -exec cat {} + | tee tutorialWorklist_py
