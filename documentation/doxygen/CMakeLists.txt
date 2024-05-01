@@ -185,6 +185,7 @@ add_custom_target(Preparation
 
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.C ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.py ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/MakeTCanvasJS.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/MakeRCanvasJS.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh ./

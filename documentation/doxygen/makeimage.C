@@ -77,7 +77,7 @@ void makeimage(const char *MacroName, const char *ImageName, const char *OutDir,
       ImageNum++;
       gStyle->SetImageScaling(3.);
       FindImageInCanvas(canvas);
-      canvas->SaveAs(TString::Format("%s/images/pict%d_%s",OutDir,ImageNum,ImageName));
+      canvas->SaveAs(TString::Format("%s/html/images/pict%d_%s",OutDir,ImageNum,ImageName));
       cw = canvas->GetWindowWidth();
       fprintf(s,"%d\n",cw);
    }

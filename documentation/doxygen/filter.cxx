@@ -200,7 +200,8 @@ void FilterClass(const int suffix)
             if (m) {
                fclose(m);
                m = 0;
-               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"" CMAKE_BUILD_DIRECTORY "/%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\""
+               ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"%s/makeimage.C+O(\\\"" CMAKE_BUILD_DIRECTORY "/%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\""
+                                           , CMAKE_BUILD_DIRECTORY
                                            , StringFormat("%s_%3.3d.C", gClassName.c_str(), gMacroID).c_str()
                                            , StringFormat("%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()).c_str()
                                            , gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
@@ -375,7 +376,7 @@ void FilterTutorial(const int suffix)
             } else {
                ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()));
             }
-            ExecuteCommand(StringFormat("mv %s %s/images/", image_name.c_str(), gOutDir.c_str()));
+            ExecuteCommand(StringFormat("mv %s %s/html/images/", image_name.c_str(), gOutDir.c_str()));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
          } else if (tcanvas_js) {
@@ -383,35 +384,35 @@ void FilterTutorial(const int suffix)
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"MakeTCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                        gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"%s/MakeTCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                        CMAKE_BUILD_DIRECTORY, gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else if (rcanvas_js) {
             string IN;
             IN = gImageName;
             int i = IN.find(".");
             IN.erase(i,IN.length());
-            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q --web=batch \"MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
-                                        gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
+            ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q --web=batch \"%s/MakeRCanvasJS.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,%d)\"",
+                                        CMAKE_BUILD_DIRECTORY, gFileName.c_str(), IN.c_str(), gOutDir.c_str(), gPython));//, CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image", StringFormat("htmlinclude %s.html",IN.c_str()));
          } else {
             if (gPython) {
                if (nobatch) {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s %s 0 1 0 '%d'",
-                                              gPythonExec.c_str(),
+                  ExecuteCommand(StringFormat("%s %s/makeimage.py %s %s %s %s 0 1 0 '%d'",
+                                              CMAKE_BUILD_DIRECTORY, gPythonExec.c_str(),
                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                } else {
-                  ExecuteCommand(StringFormat("%s makeimage.py %s %s %s %s 0 1 1 '%d'",
-                                              gPythonExec.c_str(),
+                  ExecuteCommand(StringFormat("%s %s/makeimage.py %s %s %s %s 0 1 1 '%d'",
+                                              CMAKE_BUILD_DIRECTORY, gPythonExec.c_str(),
                                               gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             } else {
                if (nobatch) {
-                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
-                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
+                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -q \"%s/makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
+                                              CMAKE_BUILD_DIRECTORY, gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                } else {
-                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
-                                              gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
+                  ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q \"%s/makeimage.C+O(\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",false,false,\\\"%d\\\")\"",
+                                              CMAKE_BUILD_DIRECTORY, gFileName.c_str(), gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
                }
             }
             ReplaceAll(gLineString, "\\macro_image", ImagesList(gImageName, suffix));//ImagesList calls NumberOfImages, which removes NumberOfImages%d.dat
@@ -519,7 +520,7 @@ void ExecuteMacro(const int suffix)
    // cerr << "The macro is " << gMacroName << endl;
 
    // Build the ROOT command to be executed.
-   gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"makeimage.C+O(\\\""));
+   gLineString.insert(0, StringFormat(ROOT_COMMAND " -l -b -q \"%s/makeimage.C+O(\\\"", CMAKE_BUILD_DIRECTORY));
    size_t l = gLineString.length();
    gLineString.replace(l-1,1,StringFormat("\\\",\\\"%s\\\",\\\"%s\\\",\\\"%s\\\",true,false,\\\"%d\\\")\"", gImageName.c_str(), gOutDir.c_str(), CMAKE_BUILD_DIRECTORY, suffix));
    // cerr << "The line is " << gLineString << endl;
