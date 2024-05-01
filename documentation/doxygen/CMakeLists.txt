@@ -181,7 +181,7 @@ set (DOCU_INPUT
   CACHE STRING "Doxyfile input files or folders")
 
 add_custom_target(Preparation
-  COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/images ${DOCU_LOCATION}/notebooks
+  COMMAND mkdir -p ${DOCU_LOCATION}/macros ${DOCU_LOCATION}/html/images ${DOCU_LOCATION}/notebooks
 
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.C ./
@@ -193,7 +193,7 @@ add_custom_target(Preparation
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
 
-  COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${DOCU_LOCATION}/images/
+  COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${DOCU_LOCATION}/html/images/
   COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/../../js ${DOCU_LOCATION}/
 
@@ -278,7 +278,7 @@ set(DOXYGEN_EXCLUDE_PATTERNS       */G__*
 #set(DOXYGEN_EXCLUDE_SYMBOLS        std
                                    #cling*)
 set(DOXYGEN_EXAMPLE_PATH           "${DOCU_LOCATION}/macros")
-set(DOXYGEN_IMAGE_PATH             "${DOCU_LOCATION}/images")
+set(DOXYGEN_IMAGE_PATH             "${DOCU_LOCATION}/html/images")
 set(DOXYGEN_INPUT_FILTER           "${CMAKE_CURRENT_BINARY_DIR}/filter")
 set(DOXYGEN_SOURCE_BROWSER         YES)
 set(DOXYGEN_STRIP_CODE_COMMENTS    NO)
