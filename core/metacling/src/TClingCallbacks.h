@@ -112,10 +112,6 @@ public:
    /// data about the old (global) decl.
    void DefinitionShadowed(const clang::NamedDecl *D) override;
 
-   // Used to inform client about a new decl read by the ASTReader.
-   //
-   void DeclDeserialized(const clang::Decl *D) override;
-
    void LibraryLoaded(const void *dyLibHandle, llvm::StringRef canonicalName) override;
    void LibraryUnloaded(const void *dyLibHandle, llvm::StringRef canonicalName) override;
 
