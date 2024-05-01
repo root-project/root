@@ -211,7 +211,7 @@ add_custom_target(Preparation
 if(builtin_docu)
     add_dependencies(Preparation hsimple)
 endif()
-option(DOCU_PYZDOC "Integrate Python docstrings into Doxygen documentation" ON) # Disable for quicker builds
+set(DOCU_PYZDOC ON CACHE BOOL "Integrate Python docstrings into Doxygen documentation") # Disable for quicker builds
 if(DOCU_PYZDOC)
 set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
 add_custom_target(PreparationPyz
@@ -353,7 +353,7 @@ add_custom_target(CollaborationDiagrams ALL
 )
 add_dependencies(CollaborationDiagrams dox)
 
-option(DOCU_TUTORIALS "Integrate tutorials in Doxygen documentation" ON) # Disable for quicker builds
+set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
     COMMAND touch tutorialWorklist_root tutorialWorklist_py
