@@ -255,7 +255,6 @@ jobs:
                   --head_sha        ${{ github.event.pull_request.head.sha }}
                   --repository      ${{ github.server_url }}/${{ github.repository }}
                   --documentation   true
-                  --docu_input      './mainpage.md;../../core/'
             "
 
       # - name: Nightly build
@@ -400,7 +399,6 @@ jobs:
                     --head_sha        ${{ github.event.pull_request.head.sha }}
                     --repository      ${{ github.server_url }}/${{ github.repository }}
                     --documentation   true
-                    --docu_input      './mainpage.md;../../core/'
                     --platform        ${{ matrix.platform }}"
 
       - name: Workflow dispatch
