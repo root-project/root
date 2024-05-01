@@ -199,7 +199,7 @@ add_custom_target(Preparation
 
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
-  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${PYTHON_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${PYTHON_EXECUTABLE}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++17 -O2
+  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${PYTHON_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${PYTHON_EXECUTABLE}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=${CMAKE_CXX_STANDARD} -O2
 
   # Precompile here to prevent later multithreading issues
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+O'
@@ -394,4 +394,4 @@ set_property(
 #rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
 #rm -f ${DOCU_LOCATION}/notebooks/*.root
 #rm -rf ${DOCU_LOCATION}
-unset(DOXYGEN_EXECUTABLE CACHE)
+#unset(DOXYGEN_EXECUTABLE CACHE)
