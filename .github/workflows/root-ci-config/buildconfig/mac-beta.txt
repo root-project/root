@@ -23,6 +23,7 @@ builtin_zeromq=ON
 builtin_zstd=ON
 ccache=ON
 cocoa=ON
+fortran=OFF
 mysql=OFF
 pgsql=OFF
 pythia8=OFF
