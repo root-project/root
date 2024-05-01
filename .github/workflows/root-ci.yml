@@ -353,8 +353,6 @@ jobs:
         include:
           - image: fedora39
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
-          - image: fedora38
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
