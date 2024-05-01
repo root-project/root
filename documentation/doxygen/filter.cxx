@@ -341,7 +341,7 @@ void FilterTutorial(const int suffix)
    gFileName = StringFormat(CMAKE_BUILD_DIRECTORY "/%s", gMacroName.c_str());
 
    if (gPython) {
-      FILE *cn = fopen(StringFormat(CMAKE_BUILD_DIRECTORY "cleanNamespaces_%d.sh", suffix).c_str(), "a");
+      FILE *cn = fopen(StringFormat(CMAKE_BUILD_DIRECTORY "/cleanNamespaces_%d.sh", suffix).c_str(), "a");
       string name = gMacroName;
       ReplaceAll(name,".py","");
       ReplaceAll(name,"_","__");
@@ -376,7 +376,7 @@ void FilterTutorial(const int suffix)
             } else {
                ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()));
             }
-            ExecuteCommand(StringFormat("mv %s %s/html/images/", image_name.c_str(), gOutDir.c_str()));
+            ExecuteCommand(StringFormat("mv %s %s/images/", image_name.c_str(), CMAKE_BUILD_DIRECTORY));
             ReplaceAll(gLineString, "macro_image (", "image html ");
             ReplaceAll(gLineString, ")", "");
          } else if (tcanvas_js) {

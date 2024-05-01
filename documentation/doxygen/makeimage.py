@@ -32,7 +32,7 @@ def makeimage(MacroName, ImageName, OutDir, AuxDir, cp, py, batch, suffix):
     canvases = ROOT.gROOT.GetListOfCanvases()
     for ImageNum,can in enumerate(canvases):
         ImageNum += 1
-        can.SaveAs("%s/html/images/pict%d_%s" %(OutDir,ImageNum,ImageName))
+        can.SaveAs("%s/images/pict%d_%s" %(AuxDir,ImageNum,ImageName))
         cw = can.GetWindowWidth()
         s.write("%d\n" %cw)
 
