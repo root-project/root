@@ -344,7 +344,8 @@ endif()
 #~ )
 
 add_custom_target(CollaborationDiagrams ALL
-    COMMAND touch ./cleanNamespaces.sh
+    COMMAND rm -f cleanNamespaces* # TODO move to clean target
+    COMMAND touch cleanNamespaces.sh
     COMMAND find . -name 'cleanNamespaces*.sh' -exec cat {} + | tee cleanNamespaces.sh
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
@@ -356,6 +357,7 @@ add_dependencies(CollaborationDiagrams dox)
 set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
+    COMMAND rm -f tutorialWorklist* # TODO move to clean target
     COMMAND touch tutorialWorklist_root tutorialWorklist_py
     COMMAND find . -name 'tutorialWorklist_root*' -exec cat {} + | tee tutorialWorklist_root
     COMMAND find . -name 'tutorialWorklist_py*' -exec cat {} + | tee tutorialWorklist_py
