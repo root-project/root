@@ -12,7 +12,6 @@
 project(pymva-tests)
 
 set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
-include_directories(SYSTEM ${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
 
 # Look for needed python modules
 find_python_module(torch QUIET)
@@ -61,7 +60,7 @@ if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
    configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
-   # Test PyTorch: Binary classification${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS}
+   # Test PyTorch: Binary classification
 
    if (PY_SKLEARN_FOUND)
       set(PyMVA-Torch-Classification-depends PyMVA-AdaBoost-Classification)
@@ -88,17 +87,13 @@ if(PY_TORCH_FOUND)
          LIBRARIES
          ROOTTMVASofie
          TMVA
+         Python3::NumPy
          Python3::Python
          INCLUDE_DIRS
          SYSTEM
-         ${Python3_INCLUDE_DIRS}
-         ${Python3_NumPy_INCLUDE_DIRS}
          ${CMAKE_CURRENT_BINARY_DIR}
       )
    target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
-   if(APPLE)
-      target_link_options(TestRModelParserPyTorch PRIVATE ${Python3_LINK_OPTIONS})
-   endif()
 
 endif(PY_TORCH_FOUND)
 
@@ -136,16 +131,12 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     LIBRARIES
     ROOTTMVASofie
     PyMVA
+    Python3::NumPy
     Python3::Python
     INCLUDE_DIRS
     SYSTEM
-    ${Python3_INCLUDE_DIRS}
-    ${Python3_NumPy_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
    )
    target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
-   if(APPLE)
-      target_link_options(TestRModelParserKeras PRIVATE ${Python3_LINK_OPTIONS})
-   endif()
 
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))

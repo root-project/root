@@ -10,8 +10,6 @@
 #Author: Omar Zapata, Lorenzo Moneta, Sergei Glayzer 22/08/2015
 #website:http://oproject.org
 
-include_directories(SYSTEM ${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
-
 ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
   HEADERS
     TMVA/MethodPyAdaBoost.h
@@ -32,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     src/RModelParser_PyTorch.cxx
     src/PyMethodBase.cxx
   LIBRARIES
+    Python3::NumPy
     Python3::Python
   DEPENDENCIES
     Core
@@ -41,9 +40,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyMVA
     TMVA
     ROOTTMVASofie
 )
-
-if(APPLE)
-    target_link_options(PyMVA PRIVATE ${Python3_LINK_OPTIONS})
-endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
