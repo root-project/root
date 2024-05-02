@@ -77,3 +77,7 @@ ROOTTEST_ADD_TEST(enumSize
                   MACRO execenumSize.C
                   OUTREF execenumSize.ref
                   DEPENDS ${GENERATE_DICTIONARY_TEST})
+
+ROOTTEST_ADD_TEST(testUsingEnum.cxx
+                  MACRO test_usingenum.cxx
+                  OUTREF test_usingenum.ref)
