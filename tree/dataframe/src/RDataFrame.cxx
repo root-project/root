@@ -1666,6 +1666,17 @@ RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
 {
 }
 
+RDataFrame::~RDataFrame()
+{
+   // If any node of the computation graph associated with this RDataFrame
+   // declared code to jit, we need to make sure the compilation actually
+   // happens. For example, a jitted Define could have been booked but
+   // if the computation graph is not actually run then the code of the
+   // Define node is not jitted. This in turn would cause memory leaks.
+   // See https://github.com/root-project/root/issues/15399
+   fLoopManager->Jit();
+}
+
 namespace RDF {
 namespace Experimental {
 
