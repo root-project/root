@@ -378,7 +378,7 @@ add_custom_target(Notebooks ALL
 add_dependencies(Notebooks Tutorials)
 endif()
 
-add_custom_target(Copying ALL # This is a hack due as alternative to https://github.com/root-project/root/pull/11614
+add_custom_target(Copying ALL # This is a hack as alternative to https://github.com/root-project/root/pull/11614
     COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/images/* ${DOCU_LOCATION}/html/
 )
 add_dependencies(Copying dox)
