@@ -198,6 +198,7 @@ add_custom_target(Preparation
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyNamespacesWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/converttonotebook.py ./
 
   COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${CMAKE_CURRENT_BINARY_DIR}/images/
   COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
@@ -370,8 +371,9 @@ add_custom_target(Tutorials ALL
 add_dependencies(Tutorials dox)
 
 add_custom_target(Notebooks ALL
-    COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.xml ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.dtd ${DOCU_LOCATION}/notebooks
-    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    COMMAND scp -p ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.xml ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.dtd ${DOCU_LOCATION}/notebooks
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} ROOTSYS=${ROOTSYS} JUPYTER_PATH=${ROOTSYS}/etc/notebook JUPYTER_CONFIG_DIR=${ROOTSYS}/etc/notebook bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    # pip3 install metakernel is needed to avoid issues in the conversion
     COMMAND rm -f ${DOCU_LOCATION}/notebooks/*.root
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
@@ -379,7 +381,7 @@ add_dependencies(Notebooks Tutorials)
 endif()
 
 add_custom_target(Copying ALL # This is a hack as alternative to https://github.com/root-project/root/pull/11614
-    COMMAND cp ${CMAKE_CURRENT_BINARY_DIR}/images/* ${DOCU_LOCATION}/html/
+    COMMAND scp -p ${CMAKE_CURRENT_BINARY_DIR}/images/* ${DOCU_LOCATION}/html/
 )
 add_dependencies(Copying dox)
 if(DOCU_TUTORIALS)
