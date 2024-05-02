@@ -52,6 +52,14 @@ public:
    RDataFrame(ULong64_t numEntries);
    RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource>, const ColumnNames_t &defaultColumns = {});
    RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec);
+
+   // Rule of five
+
+   RDataFrame(const RDataFrame &) = default;
+   RDataFrame &operator=(const RDataFrame &) = default;
+   RDataFrame(RDataFrame &&) = default;
+   RDataFrame &operator=(RDataFrame &&) = default;
+   ~RDataFrame();
 };
 
 namespace RDF {
