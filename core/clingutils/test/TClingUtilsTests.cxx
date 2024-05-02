@@ -71,5 +71,13 @@ TEST(TClingUtilsTests, GetRealPath)
    std::remove("./symlink_realfile2");
    std::remove("./realfile1");
    std::remove("./realfile2");
+
+   // Test for converting a string to a valid C/C++ variable name
+   std::string validVarName;
+   GetCppName(validVarName,
+              "some+input-string*with/special&characters123+-*/&%|^><=~.()[]{};#?`!,$:\"@\'\\@abc$and spaces");
+   ASSERT_EQ(validVarName, "somepLinputmIstringmUwithdIspecialaNcharacters123pLmImUdIaNpEoRhAgRlEeQwAdOoPcPoBcBlBrBsChS"
+                           "qMbTnOcOdAcLdQaTsQfIaTabcdAandsPspaces");
+
 #endif // not R__WIN32
 }
