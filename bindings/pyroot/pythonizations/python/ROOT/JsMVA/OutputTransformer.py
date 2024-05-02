@@ -7,6 +7,7 @@ from JsMVA import DataLoader
 import cgi
 import re
 
+
 ## The output transformer class. This class contains all the methods which are used to transform the C++ style output
 # to HTML formatted output.
 class transformTMVAOutputToHTML:
@@ -20,32 +21,38 @@ class transformTMVAOutputToHTML:
     # @param self object pointer
     # @param line line to transform
     def __processGroupContentLine(self, line):
-        if re.match(r"^\s*:?\s*-*\s*$", line)!=None:
+        if re.match(r"^\s*:?\s*-*\s*$", line) != None:
             return ""
         if len(self.__outputFlagClass) > 1:
             line = cgi.escape(str(line))
         self.addClassForOutputFlag(line)
-        if line.find("Booking method")!=-1:
-            line = "Booking method: <b>" + line.split(":")[1].replace("\033[1m", "").replace("[0m", "")+"</b>"
-        if line.find("time")!=-1:
+        if line.find("Booking method") != -1:
+            line = "Booking method: <b>" + line.split(":")[1].replace("\033[1m", "").replace("[0m", "") + "</b>"
+        if line.find("time") != -1:
             lr = line.split(":")
-            if len(lr)==2:
-                line = "<b>" + lr[0] + " : <b style='color:rgb(0,0,179)'>" +  lr[1].replace("\033[1;31m", "").replace("[0m", "") +"</b></b>"
+            if len(lr) == 2:
+                line = (
+                    "<b>"
+                    + lr[0]
+                    + " : <b style='color:rgb(0,0,179)'>"
+                    + lr[1].replace("\033[1;31m", "").replace("[0m", "")
+                    + "</b></b>"
+                )
         outFlag = self.__outputFlagClass
-        if line.find("\033[0;36m")!=-1:
+        if line.find("\033[0;36m") != -1:
             line = "<b style='color:#006666'>" + line.replace("\033[0;36m", "").replace("[0m", "") + "</b>"
-        if line.find("\033[1m")!=-1:
+        if line.find("\033[1m") != -1:
             line = "<b>" + line.replace("\033[1m", "").replace("[0m", "") + "</b>"
         lre = re.match(r"(\s*using\s*input\s*file\s*):?\s*(.*)", line, re.I)
         if lre:
-            line = lre.group(1)+":"+"<b>"+lre.group(2)+"</b>"
-        return "<td"+outFlag+">"+str(line)+"</td>"
+            line = lre.group(1) + ":" + "<b>" + lre.group(2) + "</b>"
+        return "<td" + outFlag + ">" + str(line) + "</td>"
 
     ## Checks if a line is empty.
     # @param self object pointer
     # @param line line to check
     def __isEmpty(self, line):
-        return re.match(r"^\s*:?\s*-*$", line)!=None
+        return re.match(r"^\s*:?\s*-*$", line) != None
 
     ## Transforms all data set specific content.
     # @param self object pointer
@@ -56,14 +63,14 @@ class transformTMVAOutputToHTML:
         tmp_str = ""
         count = 0
         for l in range(1, maxlen):
-            nextline = self.lines[startIndex+l]
+            nextline = self.lines[startIndex + l]
             if self.__isEmpty(nextline):
                 count += 1
                 continue
             DatasetName = re.match(r".*(\[.*\])\s*:\s*(.*)", nextline)
             if DatasetName:
                 count += 1
-                tmp_str += "<tr>"+self.__processGroupContentLine(DatasetName.group(2))
+                tmp_str += "<tr>" + self.__processGroupContentLine(DatasetName.group(2))
                 tmp_str += "<td class='tmva_output_hidden_td'></td></tr>"
             else:
                 break
@@ -72,8 +79,8 @@ class transformTMVAOutputToHTML:
         tbodyclass = ""
         if count > 0:
             tbodyclass = " class='tmva_output_tbody_multiple_row'"
-        rstr = "<table class='tmva_output_dataset'><tbody"+tbodyclass+">"
-        rstr += "<tr><td rowspan='"+str(count+1)+"'>Dataset: "+self.__lastDataSetName+"</td>"
+        rstr = "<table class='tmva_output_dataset'><tbody" + tbodyclass + ">"
+        rstr += "<tr><td rowspan='" + str(count + 1) + "'>Dataset: " + self.__lastDataSetName + "</td>"
         rstr += self.__processGroupContentLine(DatasetName.group(2)) + "<td class='tmva_output_hidden_td'></td></tr>"
         rstr += tmp_str
         rstr += "</tbody></table>"
@@ -89,11 +96,14 @@ class transformTMVAOutputToHTML:
         count = 0
         tmpmap = {}
         for l in range(1, maxlen):
-            nextline = self.lines[startIndex+l]
+            nextline = self.lines[startIndex + l]
             if self.__isEmpty(nextline):
                 count += 1
                 continue
-            NumberOfEvents = re.match(r"\s+:\s*\w+\s*-\s*-\s*((training\sevents)|(testing\sevents)|(training\sand\stesting\sevents))\s*:\s*\d+", nextline)
+            NumberOfEvents = re.match(
+                r"\s+:\s*\w+\s*-\s*-\s*((training\sevents)|(testing\sevents)|(training\sand\stesting\sevents))\s*:\s*\d+",
+                nextline,
+            )
             if NumberOfEvents:
                 lc = re.findall(r"\w+", nextline)
                 t = ""
@@ -107,15 +117,15 @@ class transformTMVAOutputToHTML:
             else:
                 break
         rstr = "<table class='tmva_output_traintestevents'>"
-        rstr += "<tr><td colspan='3'><center><b>"+firstLine+"</b></center></td></tr>"
+        rstr += "<tr><td colspan='3'><center><b>" + firstLine + "</b></center></td></tr>"
         for key in tmpmap:
             rstr += "<tr>"
-            rstr += "<td rowspan='"+str(len(tmpmap[key]))+"'>"+key+"</td>"
-            rstr += "<td>"+tmpmap[key][0]["name"]+"</td><td>"+tmpmap[key][0]["value"]+"</td>"
+            rstr += "<td rowspan='" + str(len(tmpmap[key])) + "'>" + key + "</td>"
+            rstr += "<td>" + tmpmap[key][0]["name"] + "</td><td>" + tmpmap[key][0]["value"] + "</td>"
             rstr += "<td class='tmva_output_hidden_td'></td>"
             rstr += "</tr>"
             for i in range(1, len(tmpmap[key])):
-                rstr += "<tr><td>"+tmpmap[key][i]["name"]+"</td><td>"+tmpmap[key][i]["value"]+"</td>"
+                rstr += "<tr><td>" + tmpmap[key][i]["name"] + "</td><td>" + tmpmap[key][i]["value"] + "</td>"
                 rstr += "<td class='tmva_output_hidden_td'></td></tr>"
         rstr += tmp_str
         rstr += "</table>"
@@ -136,7 +146,11 @@ class transformTMVAOutputToHTML:
             if self.__isEmpty(nextline):
                 count += 1
                 continue
-            VariableMean = re.match(r"\s*:\s*([\w\d]+)\s*:\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\[\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\]", nextline, re.I)
+            VariableMean = re.match(
+                r"\s*:\s*([\w\d]+)\s*:\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\[\s*(-?\d*\.?\d*)\s*(-?\d*\.?\d*)\s*\]",
+                nextline,
+                re.I,
+            )
             if VariableMean:
                 count += 1
                 tmp = []
@@ -162,42 +176,44 @@ class transformTMVAOutputToHTML:
     # @param varNames array with variable names
     # @param matrix the correlation matrix
     def __correlationMatrix(self, title, className, varNames, matrix):
-        id = "jsmva_outputtansformer_events_"+str(self.__eventsUID)+"_onclick"
+        id = "jsmva_outputtansformer_events_" + str(self.__eventsUID) + "_onclick"
         self.__eventsUID += 1
         json = DataLoader.GetCorrelationMatrixInJSON(className, varNames, matrix)
-        jsCall = "require(['JsMVA'],function(jsmva){jsmva.outputShowCorrelationMatrix('"+id+"');});"
-        rstr = "<div id='"+id+"' style='display: none; width: 600px; height:350'>"+json+"</div>"
-        rstr += self.__processGroupContentLine("<a onclick=\""+jsCall+"\" class='tmva_output_corrmat_link'>" + title + " (" + className + ")</a>")
+        jsCall = "require(['JsMVA'],function(jsmva){jsmva.outputShowCorrelationMatrix('" + id + "');});"
+        rstr = "<div id='" + id + "' style='display: none; width: 600px; height:350'>" + json + "</div>"
+        rstr += self.__processGroupContentLine(
+            '<a onclick="' + jsCall + "\" class='tmva_output_corrmat_link'>" + title + " (" + className + ")</a>"
+        )
         return rstr
 
     ## This function add different flag based on the line formation. It add's a specific class for each output type.
     # @param self object pointer
     # @param line current line
     def addClassForOutputFlag(self, line):
-        if self.__currentType==None:
+        if self.__currentType == None:
             self.__outputFlagClass = ""
             if line.find("\033[1;31m") != -1:
                 self.__outputFlagClass = " class='tmva_output_warning'"
-            elif line.find("\033[31m") !=-1:
+            elif line.find("\033[31m") != -1:
                 self.__outputFlagClass = " class='tmva_output_error'"
-            elif line.find("\033[37;41;1m") !=-1:
+            elif line.find("\033[37;41;1m") != -1:
                 self.__outputFlagClass = " class='tmva_output_fatal'"
-            elif line.find("\033[37;41;1m") !=-1:
+            elif line.find("\033[37;41;1m") != -1:
                 self.__outputFlagClass = " class='tmva_output_silent'"
-            elif line.find("\033[34m") !=-1:
+            elif line.find("\033[34m") != -1:
                 self.__outputFlagClass = " class='tmva_output_debug'"
             return
-        if self.__currentType.find("WARNING") != -1 or line.find("\033[1;31m")!=-1:
+        if self.__currentType.find("WARNING") != -1 or line.find("\033[1;31m") != -1:
             self.__outputFlagClass = " class='tmva_output_warning'"
-        elif self.__currentType.find("ERROR") !=-1:
+        elif self.__currentType.find("ERROR") != -1:
             self.__outputFlagClass = " class='tmva_output_error'"
-        elif self.__currentType.find("FATAL") !=-1:
+        elif self.__currentType.find("FATAL") != -1:
             self.__outputFlagClass = " class='tmva_output_fatal'"
-        elif self.__currentType.find("SILENT") !=-1:
+        elif self.__currentType.find("SILENT") != -1:
             self.__outputFlagClass = " class='tmva_output_silent'"
-        elif self.__currentType.find("DEBUG") !=-1:
+        elif self.__currentType.find("DEBUG") != -1:
             self.__outputFlagClass = " class='tmva_output_debug'"
-        elif self.__currentType=="impHead":
+        elif self.__currentType == "impHead":
             self.__outputFlagClass = " class='tmva_output_imphead'"
         else:
             self.__outputFlagClass = ""
@@ -219,9 +235,11 @@ class transformTMVAOutputToHTML:
             DatasetName = re.match(r".*(\[.*\])\s*:\s*(.*)", nextline)
             NumEvents = re.match(r"(.*)(number\sof\straining\sand\stesting\sevents)", nextline, re.I)
             CorrelationMatrixHeader = re.match(r".*\s*:?\s*(correlation\s*matrix)\s*\((\w+)\)\s*:\s*", nextline, re.I)
-            VariableMeanHeader = re.match(r".*\s*:?\s*(variable)\s*(mean)\s*(rms)\s*\[\s*(min)\s*(max)\s*\].*", nextline, re.I)
+            VariableMeanHeader = re.match(
+                r".*\s*:?\s*(variable)\s*(mean)\s*(rms)\s*\[\s*(min)\s*(max)\s*\].*", nextline, re.I
+            )
             WelcomeHeader = re.match(r"^\s*:?\s*(.*ROOT\s*version:.*)", nextline, re.I)
-            if (Header == None and EmptyHeader ==None) or j == 0:
+            if (Header == None and EmptyHeader == None) or j == 0:
                 if j != 0:
                     processed_lines += 1
                     self.iterLines.next()
@@ -268,8 +286,9 @@ class transformTMVAOutputToHTML:
                         for jj in range(len(matrixLines)):
                             mline.append(float(ll.group(jj + 1)))
                         matrix.append(mline)
-                    tmp_str += self.__correlationMatrix(CorrelationMatrixHeader.group(1),
-                                                        CorrelationMatrixHeader.group(2), varNames, matrix)
+                    tmp_str += self.__correlationMatrix(
+                        CorrelationMatrixHeader.group(1), CorrelationMatrixHeader.group(2), varNames, matrix
+                    )
                 elif WelcomeHeader:
                     kw = 0
                     while True:
@@ -297,10 +316,20 @@ class transformTMVAOutputToHTML:
         tbodyclass = ""
         if processed_lines > 0:
             tbodyclass = " class='tmva_output_tbody_multiple_row'"
-        extraHeaderClass=""
-        if self.__currentType=="impHead":
+        extraHeaderClass = ""
+        if self.__currentType == "impHead":
             extraHeaderClass = " tmva_output_imphead"
-        self.out += "<tbody"+tbodyclass+"><tr><td rowspan='" + str(processed_lines + 1) + "' class='tmva_output_header"+extraHeaderClass+"'>" + self.__currentHeaderName + "</td>"
+        self.out += (
+            "<tbody"
+            + tbodyclass
+            + "><tr><td rowspan='"
+            + str(processed_lines + 1)
+            + "' class='tmva_output_header"
+            + extraHeaderClass
+            + "'>"
+            + self.__currentHeaderName
+            + "</td>"
+        )
         self.out += tmp_str + "</tbody>"
 
     ## This is the main function, it will be registered as transformer function to JupyROOT, it will run every time
@@ -310,7 +339,7 @@ class transformTMVAOutputToHTML:
     # @param error the content of C++ error stream
     def transform(self, output, error):
         self.err = ""
-        if str(error).find(", time left:")==-1:
+        if str(error).find(", time left:") == -1:
             self.err = error
         self.out = ""
         self.lines = output.splitlines()
@@ -338,12 +367,14 @@ class transformTMVAOutputToHTML:
                 kw = 1
                 lines = []
                 while True:
-                    if (self.lineIndex + kw) >=len(self.lines):
+                    if (self.lineIndex + kw) >= len(self.lines):
                         break
                     nextline = self.lines[self.lineIndex + kw]
                     kw += 1
                     if re.match(r"^\s*:\s*$", nextline):
-                        Header = re.match(r"^\s*-*\s*(<\w+>\s*)*\s*(\w+.*\s+)(\s+)(:)\s*(.*)", self.lines[self.lineIndex+kw], re.I)
+                        Header = re.match(
+                            r"^\s*-*\s*(<\w+>\s*)*\s*(\w+.*\s+)(\s+)(:)\s*(.*)", self.lines[self.lineIndex + kw], re.I
+                        )
                         if Header:
                             self.iterLines.next()
                         break
@@ -355,13 +386,15 @@ class transformTMVAOutputToHTML:
                         lines.append(lre.group(1))
                     else:
                         lines.append(nextline)
-                if len(lines)==0:
+                if len(lines) == 0:
                     continue
                 if len(lines) > 1:
                     tbodyclass = " class='tmva_output_tbody_multiple_row'"
-                self.out += "<tbody"+tbodyclass+"><tr><td rowspan='"+str(len(lines))+"'><td>"+lines[0]+"</td></tr>"
+                self.out += (
+                    "<tbody" + tbodyclass + "><tr><td rowspan='" + str(len(lines)) + "'><td>" + lines[0] + "</td></tr>"
+                )
                 for ii in range(1, len(lines)):
-                    self.out += "<tr><td>"+lines[ii]+"</td></tr>"
+                    self.out += "<tr><td>" + lines[ii] + "</td></tr>"
             else:
                 lre = re.match(r"\s*:\s*(.*)", line)
                 if lre:
