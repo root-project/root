@@ -30,6 +30,8 @@
 #include <utility>
 #include <vector>
 
+#include "IOHandler.cxx"
+
 using namespace CPyCppyy;
 
 namespace PyROOT {
@@ -60,6 +62,26 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Deserialize a pickled object"},
    {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,
     (char *)"Clear proxied objects regulated by PyROOT"},
+   {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS,
+    (char *)"Create JupyROOTExecutor"},
+   {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS,
+    (char *)"Create JupyROOTDeclarer"},
+   {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
+    (char *)"Clear JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
+    (char *)"Create JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
+    (char *)"Poll JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
+    (char *)"End capture JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
+    (char *)"Init capture JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
+    (char *)"Get stdout JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
+    (char *)"Get stderr JupyROOTExecutorHandler"},
+   {(char *)"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
+    (char *)"Destruct JupyROOTExecutorHandler"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
