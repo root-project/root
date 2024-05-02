@@ -3223,7 +3223,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
+/// Return (in the argument 'output') a valid name of the C++ symbol/type (pass as 'input')
 /// that can be used in C++ as a variable name.
 
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
