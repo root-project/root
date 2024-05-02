@@ -12,7 +12,7 @@
 project(pymva-tests)
 
 set(Libraries Core MathCore TMVA PyMVA ROOTTMVASofie)
-include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS})
+include_directories(SYSTEM ${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS})
 
 # Look for needed python modules
 find_python_module(torch QUIET)
@@ -61,7 +61,7 @@ if(PY_TORCH_FOUND)
    configure_file(generatePyTorchModelMulticlass.py generatePyTorchModelMulticlass.py COPYONLY)
    configure_file(generatePyTorchModelRegression.py generatePyTorchModelRegression.py COPYONLY)
    configure_file(generatePyTorchModels.py generatePyTorchModels.py COPYONLY)
-   # Test PyTorch: Binary classification${PYTHON_INCLUDE_DIRS} ${NUMPY_INCLUDE_DIRS}
+   # Test PyTorch: Binary classification${Python3_INCLUDE_DIRS} ${Python3_NumPy_INCLUDE_DIRS}
 
    if (PY_SKLEARN_FOUND)
       set(PyMVA-Torch-Classification-depends PyMVA-AdaBoost-Classification)
@@ -91,13 +91,13 @@ if(PY_TORCH_FOUND)
          Python3::Python
          INCLUDE_DIRS
          SYSTEM
-         ${PYTHON_INCLUDE_DIRS}
-         ${NUMPY_INCLUDE_DIRS}
+         ${Python3_INCLUDE_DIRS}
+         ${Python3_NumPy_INCLUDE_DIRS}
          ${CMAKE_CURRENT_BINARY_DIR}
       )
    target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
-      target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS})
+      target_link_options(TestRModelParserPyTorch PRIVATE ${Python3_LINK_OPTIONS})
    endif()
 
 endif(PY_TORCH_FOUND)
@@ -139,13 +139,13 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     Python3::Python
     INCLUDE_DIRS
     SYSTEM
-    ${PYTHON_INCLUDE_DIRS}
-    ${NUMPY_INCLUDE_DIRS}
+    ${Python3_INCLUDE_DIRS}
+    ${Python3_NumPy_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
    )
    target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
-      target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS})
+      target_link_options(TestRModelParserKeras PRIVATE ${Python3_LINK_OPTIONS})
    endif()
 
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
