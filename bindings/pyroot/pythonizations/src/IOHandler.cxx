@@ -34,9 +34,6 @@
 // MODULE FUNCTIONALITY //
 //////////////////////////
 
-bool JupyROOTExecutorImpl(const char *code);
-bool JupyROOTDeclarerImpl(const char *code);
-
 class JupyROOTExecutorHandler {
 private:
    bool fCapturing = false;
@@ -268,70 +265,4 @@ PyObject *JupyROOTExecutorHandler_Dtor(PyObject * /*self*/, PyObject * /*args*/)
    JupyROOTExecutorHandler_ptr = nullptr;
 
    Py_RETURN_NONE;
-}
-
-
-//////////////////////
-// MODULE INTERFACE //
-//////////////////////
-
-PyObject *gJupyRootModule = 0;
-
-// Methods offered by the interface
-static PyMethodDef gJupyROOTMethods[] = {
-   {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS,
-    (char *)"Create JupyROOTExecutor"},
-   {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS,
-    (char *)"Create JupyROOTDeclarer"},
-   {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
-    (char *)"Clear JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
-    (char *)"Create JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
-    (char *)"Poll JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
-    (char *)"End capture JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
-    (char *)"Init capture JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
-    (char *)"Get stdout JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
-    (char *)"Get stderr JupyROOTExecutorHandler"},
-   {(char *)"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
-    (char *)"Destruct JupyROOTExecutorHandler"},
-   {NULL, NULL, 0, NULL}};
-
-struct module_state {
-   PyObject *error;
-};
-
-#define GETSTATE(m) ((struct module_state *)PyModule_GetState(m))
-
-static int jupyrootmodule_traverse(PyObject *m, visitproc visit, void *arg)
-{
-   Py_VISIT(GETSTATE(m)->error);
-   return 0;
-}
-
-static int jupyrootmodule_clear(PyObject *m)
-{
-   Py_CLEAR(GETSTATE(m)->error);
-   return 0;
-}
-
-static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libJupyROOT",        NULL,
-                                       sizeof(struct module_state), gJupyROOTMethods,     NULL,
-                                       jupyrootmodule_traverse,     jupyrootmodule_clear, NULL};
-
-/// Initialization of extension module libJupyROOT
-
-extern "C" PyObject *PyInit_libJupyROOT()
-{
-// setup PyROOT
-   gJupyRootModule = PyModule_Create(&moduledef);
-   if (!gJupyRootModule)
-      return nullptr;
-
-   Py_INCREF(gJupyRootModule);
-   return gJupyRootModule;
 }
