@@ -248,9 +248,9 @@ set(gvizincdir ${GVIZ_INCLUDE_DIR})
 set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
-set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARIES})
-set(pythonincdir ${PYTHON_INCLUDE_DIRS})
+set(pythonlibdir ${Python3_LIBRARY_DIR})
+set(pythonlib ${Python3_LIBRARIES})
+set(pythonincdir ${Python3_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
