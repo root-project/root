@@ -14,11 +14,6 @@ Variables set when Interpreter is found:
   - PYTHON_VERSION_MAJOR
   - PYTHON_VERSION_MINOR
 
-Variables set when Development is found:
-  - PYTHON_INCLUDE_DIRS
-  - PYTHON_LIBRARIES
-  - PYTHON_LINK_OPTIONS: necessary on MacOS to link to the XCode Python
-
 ^^^^^^^^
 
 Explanation of the machinery:
@@ -52,20 +47,6 @@ if(Python3_Interpreter_FOUND)
   set(PYTHON_VERSION_STRING "${Python3_VERSION}" CACHE INTERNAL "" FORCE)
   set(PYTHON_VERSION_MAJOR "${Python3_VERSION_MAJOR}" CACHE INTERNAL "" FORCE)
   set(PYTHON_VERSION_MINOR "${Python3_VERSION_MINOR}" CACHE INTERNAL "" FORCE )
-  if(Python3_Development_FOUND)
-    set(PYTHON_INCLUDE_DIRS "${Python3_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_LIBRARIES "${Python3_LIBRARIES}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_LIBRARY_DIR "${Python3_LIBRARY_DIRS}" CACHE INTERNAL "" FORCE)
-    set(PYTHON_LINK_OPTIONS "${Python3_LINK_OPTIONS}" CACHE INTERNAL "" FORCE)
-  endif()
-  if(Python3_NumPy_FOUND)
-    set(NUMPY_FOUND ${Python3_NumPy_FOUND})
-    set(NUMPY_INCLUDE_DIRS "${Python3_NumPy_INCLUDE_DIRS}" CACHE INTERNAL "" FORCE)
-  endif()
-endif()
-
-if(NOT Python3_Development_FOUND)
-  message(WARNING "No Python 3 development packages were found; PyROOT will not be built.")
 endif()
 
 # if development parts not found, one still need python executable to run some scripts

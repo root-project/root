@@ -89,7 +89,7 @@ endif()
 target_compile_definitions(${libname} PRIVATE NO_CPPYY_LEGACY_NAMESPACE)
 
 target_include_directories(${libname}
-    SYSTEM PUBLIC ${PYTHON_INCLUDE_DIRS})
+    SYSTEM PUBLIC ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PRIVATE

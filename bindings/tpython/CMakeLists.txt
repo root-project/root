@@ -31,7 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTPython
 )
 
 if(APPLE)
-    target_link_options(ROOTTPython PRIVATE ${PYTHON_LINK_OPTIONS})
+    target_link_options(ROOTTPython PRIVATE ${Python3_LINK_OPTIONS})
 endif()
 
 # Disables warnings originating from deprecated register keyword in Python
