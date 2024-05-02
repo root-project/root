@@ -20,8 +20,14 @@ class functions:
 
     ## Threaded functions
     ThreadedFunctions = {
-        "MethodBase": ["GetInteractiveTrainingError", "ExitFromTraining", "TrainingEnded", "TrainMethod",
-                       "GetMaxIter", "GetCurrentIter"]
+        "MethodBase": [
+            "GetInteractiveTrainingError",
+            "ExitFromTraining",
+            "TrainingEnded",
+            "TrainMethod",
+            "GetMaxIter",
+            "GetCurrentIter",
+        ]
     }
 
     ## The method inserter function
@@ -45,9 +51,11 @@ class functions:
             def wrapper(*args, **kwargs):
                 kwargs["originalFunction"] = originalFunction
                 return newFunction(*args, **kwargs)
+
             return wrapper
+
         for arg in args:
-            if arg.find("CallOriginal")!=-1:
+            if arg.find("CallOriginal") != -1:
                 originalName = arg.replace("Change", "").replace("CallOriginal", "")
                 setattr(target, originalName, rewriter(getattr(target, originalName), getattr(source, arg)))
             else:
@@ -106,7 +114,7 @@ class functions:
                         for kk in o:
                             sst += kk + "=" + str(o[kk]) + ","
                         ss += sst[:-1] + "|"
-                    elif key=="Layout":
+                    elif key == "Layout":
                         ss += str(o) + ","
                     else:
                         ss += str(o) + ";"
@@ -134,7 +142,7 @@ class functions:
     def __getMethods(module, selector):
         methods = []
         for method in dir(module):
-            if method.find(selector)!=-1:
+            if method.find(selector) != -1:
                 methods.append(method)
         return methods
 
@@ -143,9 +151,10 @@ class functions:
     @staticmethod
     def register(noOutput=False):
         from JupyROOT.helpers.utils import transformers
+
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
-        functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
-        functions.__changeMethod(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Change"))
+        functions.__register(ROOT.TMVA.Factory, Factory, *functions.__getMethods(Factory, "Draw"))
+        functions.__changeMethod(ROOT.TMVA.Factory, Factory, *functions.__getMethods(Factory, "Change"))
         functions.__changeMethod(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Change"))
         for key in functions.ThreadedFunctions:
             for func in functions.ThreadedFunctions[key]:
@@ -156,15 +165,18 @@ class functions:
             transformers.append(outputTransformer.transform)
             JsDraw.InitJsMVA()
         else:
+
             def noOutputFunc(out, err):
                 return ("", "", "html")
+
             transformers.append(noOutputFunc)
+
     ## This function will remove all functions which name contains "Draw" from TMVA.DataLoader and TMVA.Factory
     # if the function was inserted from DataLoader and Factory modules
     @staticmethod
     def unregister():
         functions.__register(ROOT.TMVA.DataLoader, DataLoader, *functions.__getMethods(DataLoader, "Draw"))
-        functions.__register(ROOT.TMVA.Factory,    Factory,    *functions.__getMethods(Factory,    "Draw"))
+        functions.__register(ROOT.TMVA.Factory, Factory, *functions.__getMethods(Factory, "Draw"))
 
     ## This function captures objects which are declared in noteboko cell. It's used to capture factory and data loader objects.
     # @param args classes
@@ -194,24 +206,27 @@ class JsDraw:
     __jsMVACSSDir = __jsMVARepo + "/css"
 
     ## Drawing are sizes
-    jsCanvasWidth   = 800
-    jsCanvasHeight  = 450
+    jsCanvasWidth = 800
+    jsCanvasHeight = 450
 
     ## id for drawing area
     __divUID = 0
 
     ## Template containing HTML code with draw area and drawing JavaScript
-    __jsCode = Template("""
+    __jsCode = Template(
+        """
 <div id="$divid" style="width: ${width}px; height:${height}px"></div>
 <script>
     require(['JsMVA'],function(jsmva){
         jsmva.$funcName('$divid','$dat');
     });
 </script>
-""")
+"""
+    )
 
     ## Template containing JsMVA initialization code (adding JsMVA script location, and CSS)
-    __JsMVAInitCode = Template("""
+    __JsMVAInitCode = Template(
+        """
     <script type="text/javascript">
         require.config({
             paths: {
@@ -220,55 +235,69 @@ class JsDraw:
         });
     </script>
     <link rel="stylesheet" href="$CSSFile"></link>
-    """)
+    """
+    )
 
     ## Template containing data insertion JavaScript code
-    __jsCodeForDataInsert = Template("""<script id="dataInserterScript">
+    __jsCodeForDataInsert = Template(
+        """<script id="dataInserterScript">
 require(['JsMVA'],function(jsmva){
 jsmva.$funcName('$divid', '$dat');
 var script = document.getElementById("dataInserterScript");
 script.parentElement.parentElement.remove();
 });
-</script>""")
-    __jsCodeForDataInsertNoRemove = Template("""<script>
+</script>"""
+    )
+    __jsCodeForDataInsertNoRemove = Template(
+        """<script>
 require(['JsMVA'],function(jsmva){
 jsmva.$funcName('$divid', '$dat');
 });
-</script>""")
+</script>"""
+    )
 
     ## Inserts initialization codes to notebook
     @staticmethod
     def InitJsMVA():
-        display(HTML(JsDraw.__JsMVAInitCode.substitute({
-            'PATH': JsDraw.__jsMVASourceDir,
-            'CSSFile': JsDraw.__jsMVACSSDir + '/TMVAHTMLOutput.min.css'
-        })))
+        display(
+            HTML(
+                JsDraw.__JsMVAInitCode.substitute(
+                    {"PATH": JsDraw.__jsMVASourceDir, "CSSFile": JsDraw.__jsMVACSSDir + "/TMVAHTMLOutput.min.css"}
+                )
+            )
+        )
 
     ## Inserts the draw area and drawing JavaScript to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawed
     # @param jsDrawMethod the JsMVA JavaScrip object method name to be used for drawing
     # @param objIsJSON obj is ROOT object or JSON
     @staticmethod
-    def Draw(obj, jsDrawMethod='draw', objIsJSON=False):
+    def Draw(obj, jsDrawMethod="draw", objIsJSON=False):
         if objIsJSON:
             dat = obj
         else:
             dat = ROOT.TBufferJSON.ConvertToJSON(obj)
             dat = str(dat).replace("\n", "")
         JsDraw.__divUID += 1
-        display(HTML(JsDraw.__jsCode.substitute({
-            'funcName': jsDrawMethod,
-            'divid':'jstmva_'+str(JsDraw.__divUID),
-            'dat': dat,
-            'width': JsDraw.jsCanvasWidth,
-            'height': JsDraw.jsCanvasHeight
-         })))
+        display(
+            HTML(
+                JsDraw.__jsCode.substitute(
+                    {
+                        "funcName": jsDrawMethod,
+                        "divid": "jstmva_" + str(JsDraw.__divUID),
+                        "dat": dat,
+                        "width": JsDraw.jsCanvasWidth,
+                        "height": JsDraw.jsCanvasHeight,
+                    }
+                )
+            )
+        )
 
     ## Inserts CSS file
     # @param cssName The CSS file name. File must be in jsMVACSSDir!
     @staticmethod
     def InsertCSS(cssName):
-        display(HTML('<link rel="stylesheet" href="' + JsDraw.__jsMVACSSDir + '/' +cssName+ '"></link>'))
+        display(HTML('<link rel="stylesheet" href="' + JsDraw.__jsMVACSSDir + "/" + cssName + '"></link>'))
 
     ## Inserts the data inserter JavaScript code to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be inserted
@@ -282,17 +311,13 @@ jsmva.$funcName('$divid', '$dat');
         else:
             dat = ROOT.TBufferJSON.ConvertToJSON(obj)
             dat = str(dat).replace("\n", "")
-        if len(divID)>1:
+        if len(divID) > 1:
             divid = divID
             jsCode = JsDraw.__jsCodeForDataInsertNoRemove
         else:
             divid = str(JsDraw.__divUID)
             jsCode = JsDraw.__jsCodeForDataInsert
-        display(HTML(jsCode.substitute({
-            'funcName': dataInserterMethod,
-            'divid': 'jstmva_'+divid,
-            'dat': dat
-        })))
+        display(HTML(jsCode.substitute({"funcName": dataInserterMethod, "divid": "jstmva_" + divid, "dat": dat})))
 
     ## Draws a signal and background histogram to a newly created TCanvas
     # @param sig signal histogram
@@ -301,8 +326,8 @@ jsmva.$funcName('$divid', '$dat');
     @staticmethod
     def sbPlot(sig, bkg, title):
         canvas = ROOT.TCanvas("csbplot", title["plot"], JsDraw.jsCanvasWidth, JsDraw.jsCanvasHeight)
-        sig.SetMaximum(ROOT.TMath.Max(sig.GetMaximum()*1.1,bkg.GetMaximum()*1.1))
-        sig.SetTitle(sig.GetTitle().replace("(Signal)",""))
+        sig.SetMaximum(ROOT.TMath.Max(sig.GetMaximum() * 1.1, bkg.GetMaximum() * 1.1))
+        sig.SetTitle(sig.GetTitle().replace("(Signal)", ""))
         sig.GetXaxis().SetTitle(title["xaxis"])
         sig.GetYaxis().SetTitle(title["yaxis"])
         sig.SetTitle(title["plot"])
@@ -312,8 +337,12 @@ jsmva.$funcName('$divid', '$dat');
         sig.Draw("hist")
         bkg.Draw("histsame")
 
-        legend = ROOT.TLegend(1-canvas.GetLeftMargin()-0.39, 1-canvas.GetTopMargin()-0.15,
-                              1-canvas.GetLeftMargin()-0.01, 1-canvas.GetTopMargin()-0.01)
+        legend = ROOT.TLegend(
+            1 - canvas.GetLeftMargin() - 0.39,
+            1 - canvas.GetTopMargin() - 0.15,
+            1 - canvas.GetLeftMargin() - 0.01,
+            1 - canvas.GetTopMargin() - 0.01,
+        )
         legend.SetFillStyle(1)
         legend.AddEntry(sig, "Signal", "F")
         legend.AddEntry(bkg, "Background", "F")

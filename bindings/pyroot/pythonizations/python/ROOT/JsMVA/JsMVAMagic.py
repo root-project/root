@@ -21,16 +21,17 @@ class JsMVAMagic(Magics):
     # @param line jsmva arguments: on/off
     @line_magic
     @magic_arguments()
-    @argument('arg', nargs="?", default="on", help='Enable/Disable JavaScript visualisation for TMVA')
+    @argument("arg", nargs="?", default="on", help="Enable/Disable JavaScript visualisation for TMVA")
     def jsmva(self, line):
         from JsMVA.JPyInterface import functions
+
         args = parse_argstring(self.jsmva, line)
-        if args.arg == 'on':
-           functions.register()
-        elif args.arg == 'off':
-           functions.unregister()
+        if args.arg == "on":
+            functions.register()
+        elif args.arg == "off":
+            functions.unregister()
         elif args.arg == "noOutput":
-           functions.register(True)   
+            functions.register(True)
 
 
 ## Function for registering the magic class

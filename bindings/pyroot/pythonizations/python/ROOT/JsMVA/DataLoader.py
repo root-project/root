@@ -20,35 +20,35 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
     vi = 0
     ivar = 0
     for i in range(dsinfo.GetNVariables()):
-        if dsinfo.GetVariableInfo(i).GetLabel()==variableName:
-            vi   = dsinfo.GetVariableInfo(i)
+        if dsinfo.GetVariableInfo(i).GetLabel() == variableName:
+            vi = dsinfo.GetVariableInfo(i)
             ivar = i
             break
-    if vi==0:
+    if vi == 0:
         return 0
 
-    h = TH1F(className, str(vi.GetExpression()) + " ("+className+")", numBin, vi.GetMin(), vi.GetMax())
+    h = TH1F(className, str(vi.GetExpression()) + " (" + className + ")", numBin, vi.GetMin(), vi.GetMax())
 
     clsn = dsinfo.GetClassInfo(className).GetNumber()
-    ds   = dsinfo.GetDataSet()
+    ds = dsinfo.GetDataSet()
 
-    trfsDef = processTrfs.split(';')
-    trfs    = []
+    trfsDef = processTrfs.split(";")
+    trfs = []
     for trfDef in trfsDef:
         trfs.append(TMVA.TransformationHandler(dsinfo, "DataLoader"))
-        TMVA.CreateVariableTransforms( trfDef, dsinfo, trfs[-1], dl.Log())
+        TMVA.CreateVariableTransforms(trfDef, dsinfo, trfs[-1], dl.Log())
 
     inputEvents = ds.GetEventCollection()
     transformed = 0
-    tmp         = 0
+    tmp = 0
     for trf in trfs:
-        if transformed==0:
+        if transformed == 0:
             transformed = trf.CalcTransformations(inputEvents, 1)
         else:
             tmp = trf.CalcTransformations(transformed, 1)
             transformed = tmp
 
-    if transformed!=0:
+    if transformed != 0:
         for event in transformed:
             if event.GetClass() != clsn:
                 continue
@@ -58,7 +58,7 @@ def GetInputVariableHist(dl, className, variableName, numBin, processTrfs=""):
             if event.GetClass() != clsn:
                 continue
             h.Fill(event.GetValue(ivar))
-    return (h)
+    return h
 
 
 ## Get correlation matrix in JSON format
@@ -72,14 +72,14 @@ def GetCorrelationMatrixInJSON(className, varNames, matrix):
         for j in range(len(matrix)):
             m[i][j] = matrix[i][j]
     th2 = ROOT.TH2D(m)
-    th2.SetTitle("Correlation matrix ("+className+")")
+    th2.SetTitle("Correlation matrix (" + className + ")")
     for i in range(len(varNames)):
-        th2.GetXaxis().SetBinLabel(i+1, varNames[i])
-        th2.GetYaxis().SetBinLabel(i+1, varNames[i])
+        th2.GetXaxis().SetBinLabel(i + 1, varNames[i])
+        th2.GetYaxis().SetBinLabel(i + 1, varNames[i])
     th2.Scale(100.0)
     for i in range(len(matrix)):
         for j in range(len(matrix)):
-            th2.SetBinContent(i+1, j+1, int(th2.GetBinContent(i+1, j+1)))
+            th2.SetBinContent(i + 1, j + 1, int(th2.GetBinContent(i + 1, j + 1)))
     th2.SetStats(0)
     th2.SetMarkerSize(1.5)
     th2.SetMarkerColor(0)
@@ -92,6 +92,7 @@ def GetCorrelationMatrixInJSON(className, varNames, matrix):
     th2.SetMaximum(+100.0)
     dat = TBufferJSON.ConvertToJSON(th2)
     return str(dat).replace("\n", "")
+
 
 ## Draw correlation matrix
 # This function uses the TMVA::DataLoader::GetCorrelationMatrix function added newly to root
@@ -106,7 +107,8 @@ def DrawCorrelationMatrix(dl, className):
     th2.GetYaxis().SetLabelSize(labelSize)
     th2.LabelsOption("d")
     th2.SetLabelOffset(0.011)
-    JPyInterface.JsDraw.Draw(th2, 'drawTH2')
+    JPyInterface.JsDraw.Draw(th2, "drawTH2")
+
 
 ## Draw input variables
 # This function uses the previously defined GetInputVariableHist function to create the histograms
@@ -116,22 +118,23 @@ def DrawCorrelationMatrix(dl, className):
 # @param processTrfs list of transformations to be used on input variable; eg. ["I", "N", "D", "P", "U", "G"]"
 def DrawInputVariable(dl, variableName, numBin=100, processTrfs=[]):
     processTrfsSTR = ""
-    if len(processTrfs)>0:
+    if len(processTrfs) > 0:
         for o in processTrfs:
             processTrfsSTR += str(o) + ";"
         processTrfsSTR = processTrfsSTR[:-1]
-    sig = GetInputVariableHist(dl, "Signal",     variableName, numBin, processTrfsSTR)
+    sig = GetInputVariableHist(dl, "Signal", variableName, numBin, processTrfsSTR)
     bkg = GetInputVariableHist(dl, "Background", variableName, numBin, processTrfsSTR)
-    c, l = JPyInterface.JsDraw.sbPlot(sig, bkg, {"xaxis": sig.GetTitle(),
-                                    "yaxis": "Number of events",
-                                    "plot": "Input variable: "+sig.GetTitle()})
+    c, l = JPyInterface.JsDraw.sbPlot(
+        sig, bkg, {"xaxis": sig.GetTitle(), "yaxis": "Number of events", "plot": "Input variable: " + sig.GetTitle()}
+    )
     JPyInterface.JsDraw.Draw(c)
+
 
 ## Rewrite TMVA::DataLoader::PrepareTrainingAndTestTree
 # @param *args positional parameters
 # @param **kwargs named parameters: this will be transformed to option string
 def ChangeCallOriginalPrepareTrainingAndTestTree(*args, **kwargs):
-    if len(kwargs)==0:
+    if len(kwargs) == 0:
         originalFunction, args = JPyInterface.functions.ProcessParameters(0, *args, **kwargs)
         return originalFunction(*args)
     try:

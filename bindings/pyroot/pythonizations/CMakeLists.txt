@@ -49,6 +49,12 @@ endif()
 
 if(tmva)
     list(APPEND PYROOT_EXTRA_PYTHON_SOURCES
+        ROOT/JsMVA/DataLoader.py
+        ROOT/JsMVA/Factory.py
+        ROOT/JsMVA/JPyInterface.py
+        ROOT/JsMVA/JsMVAMagic.py
+        ROOT/JsMVA/OutputTransformer.py
+        ROOT/JsMVA/__init__.py
         ROOT/_pythonization/_tmva/_crossvalidation.py
         ROOT/_pythonization/_tmva/_dataloader.py
         ROOT/_pythonization/_tmva/_factory.py
