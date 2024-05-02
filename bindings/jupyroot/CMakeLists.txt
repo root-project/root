@@ -46,7 +46,7 @@ else()
   target_link_libraries(${libname} PUBLIC -Wl,--unresolved-symbols=ignore-all Core)
 endif()
 
-target_include_directories(${libname} SYSTEM PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_include_directories(${libname} SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 # Compile .py files
 foreach(py_source ${py_sources})

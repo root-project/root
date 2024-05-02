@@ -160,7 +160,7 @@ else()
 endif()
 
 target_include_directories(${libname}
-    SYSTEM PRIVATE ${PYTHON_INCLUDE_DIRS})
+    SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)

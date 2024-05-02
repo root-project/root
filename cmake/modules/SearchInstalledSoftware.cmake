@@ -1640,10 +1640,10 @@ if(tmva)
     find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
-    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)))
+    if(fail-on-missing AND (NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND))
       message(FATAL_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
-    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND))
+    elseif(NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND)
       message(STATUS "TMVA: Numpy or Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
@@ -1665,7 +1665,7 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)
+  if(NOT Python3_Development_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
                           " (python executable: ${PYTHON_EXECUTABLE})")
