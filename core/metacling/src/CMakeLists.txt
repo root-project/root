@@ -103,6 +103,10 @@ if (clad)
   else()
     set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
   endif()
+  # Link our clad libraries to clang. If users use the clang from ROOT they will
+  # also be able to use clad out of the box.
+  add_dependencies(clang clad)
+  target_link_libraries(clang PUBLIC ${CLING_PLUGIN_LINK_LIBS})
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
