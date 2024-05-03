@@ -1,7 +1,6 @@
 #ifndef TMVA_CHUNKLOADER
 #define TMVA_CHUNKLOADER
 
-#include <iostream>
 #include <vector>
 
 #include "TMVA/RTensor.hxx"
@@ -25,15 +24,15 @@ private:
 
    float fVecPadding;
 
-   TMVA::Experimental::RTensor<float> &fChunkTensor;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
 
    /// \brief Load the final given value into fChunkTensor
    /// \tparam First_T
    /// \param first
    template <typename First_T>
    void AssignToTensor(First_T first)
-   {
-      fChunkTensor.GetData()[fOffset++] = first;
+   {  
+      fChunkTensor->GetData()[fOffset++] = first;
    }
 
    /// \brief Load the final given value into fChunkTensor
@@ -52,8 +51,8 @@ private:
    /// \param ...rest
    template <typename First_T, typename... Rest_T>
    void AssignToTensor(First_T first, Rest_T... rest)
-   {
-      fChunkTensor.GetData()[fOffset++] = first;
+   {  
+      fChunkTensor->GetData()[fOffset++] = first;
 
       AssignToTensor(std::forward<Rest_T>(rest)...);
    }
@@ -85,15 +84,15 @@ private:
 
       for (std::size_t i = 0; i < max_vec_size; i++) {
          if (i < vec_size) {
-            fChunkTensor.GetData()[fOffset++] = vec[i];
+            fChunkTensor->GetData()[fOffset++] = vec[i];
          } else {
-            fChunkTensor.GetData()[fOffset++] = fVecPadding;
+            fChunkTensor->GetData()[fOffset++] = fVecPadding;
          }
       }
    }
 
 public:
-   RChunkLoaderFunctor(TMVA::Experimental::RTensor<float> &chunkTensor,
+   RChunkLoaderFunctor(std::shared_ptr<TMVA::Experimental::RTensor<float>> chunkTensor,
                        const std::vector<std::size_t> &maxVecSizes = std::vector<std::size_t>(),
                        const float vecPadding = 0.0)
       : fChunkTensor(chunkTensor), fMaxVecSizes(maxVecSizes), fVecPadding(vecPadding)
@@ -110,6 +109,116 @@ public:
    }
 };
 
+
+template <typename First, typename... Rest>
+class RChunkLoaderFunctorFilters {
+
+private:
+   std::size_t fOffset = 0;
+   std::size_t fVecSizeIdx = 0;
+   std::vector<std::size_t> fMaxVecSizes;
+   std::size_t fEntries = 0;
+   std::size_t fChunkSize;
+
+   float fVecPadding;
+
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fRemainderTensor;
+
+   /// \brief Load the final given value into fChunkTensor
+   /// \tparam First_T
+   /// \param first
+   template <typename First_T>
+   void AssignToTensor(First_T first)
+   {  
+      fChunkTensor->GetData()[fOffset++] = first;
+      fEntries++;
+      if(fEntries == fChunkSize){
+         fChunkTensor = fRemainderTensor;
+         fOffset = 0;
+         }
+   }
+
+   /// \brief Load the final given value into fChunkTensor
+   /// \tparam VecType
+   /// \param first
+   template <typename VecType>
+   void AssignToTensor(const ROOT::RVec<VecType> &first)
+   {
+      AssignVector(first);
+   }
+
+   /// \brief Recursively loop through the given values, and load them onto the fChunkTensor
+   /// \tparam First_T
+   /// \tparam ...Rest_T
+   /// \param first
+   /// \param ...rest
+   template <typename First_T, typename... Rest_T>
+   void AssignToTensor(First_T first, Rest_T... rest)
+   {  
+      fChunkTensor->GetData()[fOffset++] = first;
+
+      AssignToTensor(std::forward<Rest_T>(rest)...);
+   }
+
+   /// \brief Recursively loop through the given values, and load them onto the fChunkTensor
+   /// \tparam VecType
+   /// \tparam ...Rest_T
+   /// \param first
+   /// \param ...rest
+   template <typename VecType, typename... Rest_T>
+   void AssignToTensor(const ROOT::RVec<VecType> &first, Rest_T... rest)
+   {
+      AssignVector(first);
+
+      AssignToTensor(std::forward<Rest_T>(rest)...);
+   }
+
+   /// \brief Loop through the values of a given vector and load them into the RTensor
+   /// Note: the given vec_size does not have to be the same size as the given vector
+   ///       If the size is bigger than the given vector, zeros are used as padding.
+   ///       If the size is smaller, the remaining values are ignored.
+   /// \tparam VecType
+   /// \param vec
+   template <typename VecType>
+   void AssignVector(const ROOT::RVec<VecType> &vec)
+   {
+      std::size_t max_vec_size = fMaxVecSizes[fVecSizeIdx++];
+      std::size_t vec_size = vec.size();
+
+      for (std::size_t i = 0; i < max_vec_size; i++) {
+         if (i < vec_size) {
+            fChunkTensor->GetData()[fOffset++] = vec[i];
+         } else {
+            fChunkTensor->GetData()[fOffset++] = fVecPadding;
+         }
+      }
+   }
+
+public:
+   RChunkLoaderFunctorFilters(std::shared_ptr<TMVA::Experimental::RTensor<float>> chunkTensor,
+                       std::shared_ptr<TMVA::Experimental::RTensor<float>> remainderTensor,
+                       std::size_t entries, std::size_t chunkSize, std::size_t && offset,
+                       const std::vector<std::size_t> &maxVecSizes = std::vector<std::size_t>(),
+                       const float vecPadding = 0.0)
+      : fChunkTensor(chunkTensor), fRemainderTensor(remainderTensor), fEntries(entries),
+        fChunkSize(chunkSize), fOffset(offset), fMaxVecSizes(maxVecSizes), fVecPadding(vecPadding)
+   {
+   }
+
+   /// \brief Loop through all columns of an event and put their values into an RTensor
+   /// \param first
+   /// \param ...rest
+   void operator()(First first, Rest... rest)
+   {
+      fVecSizeIdx = 0;
+      AssignToTensor(std::forward<First>(first), std::forward<Rest>(rest)...);
+   }
+
+   std::size_t & SetEntries(){ return fEntries; }
+   std::size_t & SetOffset(){ return fOffset; }
+};
+
 template <typename... Args>
 class RChunkLoader {
 
@@ -118,28 +227,27 @@ private:
    std::size_t fNumColumns;
 
    std::vector<std::string> fCols;
-   std::string fFilters;
 
    std::vector<std::size_t> fVecSizes;
    std::size_t fVecPadding;
 
    ROOT::RDF::RNode & f_rdf;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
 
 public:
    /// \brief Constructor for the RChunkLoader
    /// \param rdf
    /// \param chunkSize
    /// \param cols
-   /// \param filters
    /// \param vecSizes
    /// \param vecPadding
-   RChunkLoader(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
-                const std::vector<std::string> &cols, const std::string &filters = "",
+   RChunkLoader(ROOT::RDF::RNode &rdf, std::shared_ptr<TMVA::Experimental::RTensor<float>> chunkTensor,
+                const std::size_t chunkSize, const std::vector<std::string> &cols,
                 const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
       : f_rdf(rdf),
+        fChunkTensor(chunkTensor),
         fChunkSize(chunkSize),
         fCols(cols),
-        fFilters(filters),
         fVecSizes(vecSizes),
         fVecPadding(vecPadding),
         fNumColumns(cols.size())
@@ -151,58 +259,15 @@ public:
    /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
    std::pair<std::size_t, std::size_t>
-   LoadChunk(TMVA::Experimental::RTensor<float> &chunkTensor, const std::size_t currentRow)
-   {
-      RChunkLoaderFunctor<Args...> func(chunkTensor, fVecSizes, fVecPadding);
+   LoadChunk(const std::size_t currentRow)
+   {  
+      RChunkLoaderFunctor<Args...> func(fChunkTensor, fVecSizes, fVecPadding);
 
-      // Load events if filters are given
-      if (fFilters.size() > 0) {
-         return loadFiltered(func, currentRow);
-      }
-
-      // load events if no filters are given
-      return loadNonFiltered(func, currentRow);
-   }
-
-private:
-   /// \brief Add filters to the RDataFrame and load a chunk of data
-   /// \param func
-   /// \param currentRow
-   /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadFiltered(RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
-   {
-      // Add the given filters to the RDataFrame
-      auto x_filter = f_rdf.Filter(fFilters, "RBatchGenerator_Filter");
-
-      // add range to the DataFrame
-      auto x_ranged = x_filter.Range(currentRow, currentRow + fChunkSize);
-      auto myReport = x_ranged.Report();
+      ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, currentRow, currentRow + fChunkSize);
+      auto myCount = f_rdf.Count();
 
       // load data
-      x_ranged.Foreach(func, fCols);
-
-      // Use the report to gather the number of events processed and passed.
-      // passed_events is used to determine the starting event of the next chunk
-      // processed_events is used to determine if the end of the database is reached.
-      std::size_t processed_events = myReport.begin()->GetAll();
-      std::size_t passed_events = (myReport.end() - 1)->GetPass();
-
-      return std::make_pair(processed_events, passed_events);
-   }
-
-   /// \brief Loop over the events in the dataframe untill either the end of the dataframe
-   /// is reached, or a full chunk is loaded
-   /// \param func
-   /// \param currentRow
-   /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t> loadNonFiltered(RChunkLoaderFunctor<Args...> &func, const std::size_t currentRow=0)
-   {
-      // add range
-      auto x_ranged = f_rdf.Range(currentRow, currentRow + fChunkSize);
-      auto myCount = x_ranged.Count();
-
-      // load data
-      x_ranged.Foreach(func, fCols);
+      f_rdf.Foreach(func, fCols);
 
       // get loading info
       std::size_t processed_events = myCount.GetValue();
@@ -211,6 +276,97 @@ private:
    }
 };
 
+template <typename... Args>
+class RChunkLoaderFilters {
+
+private:
+   ROOT::RDF::RNode & f_rdf;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
+
+   std::size_t fChunkSize;
+   std::vector<std::string> fCols;
+   const std::size_t fNumEntries;
+   std::size_t fNumAllEntries;
+   std::vector<std::size_t> fVecSizes;
+   std::size_t fVecPadding;
+   std::size_t fNumColumns;
+
+   const std::size_t fPartOfChunkSize;
+   std::shared_ptr<TMVA::Experimental::RTensor<float>> fRemainderChunkTensor;
+   std::size_t fRemainderChunkTensorRow = 0;
+
+public:
+   /// \brief Constructor for the RChunkLoader
+   /// \param rdf
+   /// \param chunkSize
+   /// \param cols
+   /// \param filters
+   /// \param vecSizes
+   /// \param vecPadding
+   RChunkLoaderFilters(ROOT::RDF::RNode &rdf, std::shared_ptr<TMVA::Experimental::RTensor<float>> chunkTensor,
+                const std::size_t chunkSize, const std::vector<std::string> &cols,
+                std::size_t numEntries, std::size_t numAllEntries,
+                const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
+      : f_rdf(rdf),
+        fChunkTensor(chunkTensor),
+        fChunkSize(chunkSize),
+        fCols(cols),
+        fNumEntries(numEntries),
+        fNumAllEntries(numAllEntries),
+        fVecSizes(vecSizes),
+        fVecPadding(vecPadding),
+        fNumColumns(cols.size()),
+        fPartOfChunkSize(chunkSize/5),
+        fRemainderChunkTensor(
+            std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fPartOfChunkSize, fNumColumns}))
+   {
+   }
+
+   /// \brief Load a chunk of data using the RChunkLoaderFunctor
+   /// \param chunkTensor
+   /// \param currentRow
+   /// \return A pair of size_t defining the number of events processed and how many passed all filters
+   std::pair<std::size_t, std::size_t> LoadChunk(std::size_t currentRow)
+   {  
+      for (std::size_t i = 0; i < fRemainderChunkTensorRow; i++){
+         std::copy(fRemainderChunkTensor->GetData() + (i*fNumColumns), fRemainderChunkTensor->GetData() + ((i+1)*fNumColumns),
+                  fChunkTensor->GetData() + (i*fNumColumns));
+      }
+
+      RChunkLoaderFunctorFilters<Args...> func(fChunkTensor, fRemainderChunkTensor, fRemainderChunkTensorRow,
+         fChunkSize, fRemainderChunkTensorRow * fNumColumns, fVecSizes, fVecPadding);
+
+      std::size_t passedEvents = 0;
+      std::size_t processedEvents = 0;
+
+      while((passedEvents < fChunkSize && passedEvents < fNumEntries) && currentRow < fNumAllEntries){
+         ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, currentRow, currentRow + fPartOfChunkSize);
+         auto report = f_rdf.Report();
+
+         f_rdf.Foreach(func, fCols);
+
+         processedEvents += report.begin()->GetAll();
+         passedEvents += (report.end() - 1)->GetPass();
+
+         currentRow += fPartOfChunkSize;
+         func.SetEntries() = passedEvents;
+         func.SetOffset() = passedEvents * fNumColumns;
+      }
+
+      fRemainderChunkTensorRow = passedEvents > fChunkSize? passedEvents - fChunkSize: 0;
+
+      return std::make_pair(processedEvents, passedEvents);
+   }
+
+   std::size_t LastChunk(){
+      for (std::size_t i = 0; i < fRemainderChunkTensorRow; i++){
+         std::copy(fRemainderChunkTensor->GetData() + (i*fNumColumns), fRemainderChunkTensor->GetData() + ((i+1)*fNumColumns),
+                  fChunkTensor->GetData() + (i*fNumColumns));
+      }
+
+      return fRemainderChunkTensorRow;
+   }
+};
 } // namespace Internal
 } // namespace Experimental
 } // namespace TMVA

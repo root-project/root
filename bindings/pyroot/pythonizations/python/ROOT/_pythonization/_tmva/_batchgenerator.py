@@ -110,13 +110,10 @@ class BaseGenerator:
 
     def __init__(
         self,
+        rdataframe: RNode,
         batch_size: int,
         chunk_size: int,
-        tree_name: str = None,
-        file_names: str|list[str] = list(),
-        rdataframe: RNode = None,
         columns: list[str] = list(),
-        filters: list[str] = list(),
         max_vec_sizes: dict[str, int] = dict(),
         vec_padding: int = 0,
         target: str|list[str] = list(),
@@ -129,24 +126,13 @@ class BaseGenerator:
         """Wrapper around the Cpp RBatchGenerator
 
             Args:
-                batch_size (int): Size of the returned chunks.
+            rdataframe (RNode): Name of RNode object.
+            batch_size (int): Size of the returned chunks.
             chunk_size (int):
                 The size of the chunks loaded from the ROOT file. Higher chunk size
                 results in better randomization, but also higher memory usage.
-            tree_name (str, optional):
-                Name of the tree in the ROOT file. Must be given if file_names
-                are given.
-            file_names (str|list[str], optional):
-                Path(s) to the ROOT file(s). Only one of file_names or rdataframe
-                arguments must be given.
-            rdataframe (RNode, optional):
-            Name of RDataFrame or RNode object. Only one of file_names or
-            rdataframe arguments must be given.
             columns (list[str], optional):
                 Columns to be returned. If not given, all columns are used.
-            filters (list[str], optional):
-                Filters to apply during loading. If not given, no filters
-                are applied.
             max_vec_sizes (dict[std, int], optional):
                 Size of each column that consists of vectors.
                 Required when using vector based columns.
@@ -174,6 +160,7 @@ class BaseGenerator:
 
         try:
             import numpy as np
+
         except ImportError:
             raise ImportError(
                 "Failed to import NumPy during init. NumPy is required when \
@@ -192,28 +179,13 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
         
-        if isinstance(file_names, str):
-            file_names = [file_names]
-        
-        if file_names and rdataframe != None:
+        if str(rdataframe.Describe())[15:21] != "TChain" and\
+            str(rdataframe.Describe())[15:20] != "TTree":
             raise ValueError(
-                "Only one of rdataframe and file_names arguments must be given"
-            )
-        
-        if file_names and not tree_name:
-            raise ValueError(
-                "file_names is given while tree_name is not given"
-            )
-        
-        if tree_name and not file_names:
-            raise ValueError(
-                "tree_name is given while file_names are not given"
+                "RNode object must be created out of TTrees or files of TTree"
             )
         
         from ROOT import RDataFrame
-
-        if file_names:
-            rdataframe = RDataFrame(tree_name, file_names)
         
         if isinstance(target, str):
             target = [target]
@@ -273,8 +245,6 @@ class BaseGenerator:
         # cling via cppyy) and the I/O thread.
         EnableThreadSafety()
 
-        expanded_filter = " && ".join(["(" + fltr + ")" for fltr in filters])
-
         self.noded_rdf = RDF.AsRNode(rdataframe)
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
@@ -282,7 +252,6 @@ class BaseGenerator:
             chunk_size,
             batch_size,
             self.given_columns,
-            expanded_filter,
             max_vec_sizes_list,
             vec_padding,
             validation_split,
@@ -293,9 +262,6 @@ class BaseGenerator:
         )
 
         atexit.register(self.DeActivate)
-
-    def StartValidation(self):
-        self.generator.StartValidation()
 
     @property
     def is_active(self):
@@ -364,18 +330,11 @@ class BaseGenerator:
             raise ImportError("Failed to import numpy in batchgenerator init")
 
         data = batch.GetData()
-
-        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
-            batch_size, num_columns = tuple(batch.GetShape())
-        else:
-            batch_size = self.batch_size
-            num_columns = self.num_columns
+        batch_size, num_columns = tuple(batch.GetShape())
 
         data.reshape((batch_size * num_columns,))
 
         return_data = np.array(data).reshape(batch_size, num_columns)
-
-        print(return_data.shape)
 
         # Splice target column from the data if target is given
         if self.target_given:
@@ -410,12 +369,7 @@ class BaseGenerator:
         import torch
 
         data = batch.GetData()
-
-        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
-            batch_size, num_columns = tuple(batch.GetShape())
-        else:
-            batch_size = self.batch_size
-            num_columns = self.num_columns
+        batch_size, num_columns = tuple(batch.GetShape())
 
         data.reshape((batch_size * num_columns,))
 
@@ -455,12 +409,7 @@ class BaseGenerator:
         import tensorflow as tf
 
         data = batch.GetData()
-
-        if tuple(batch.GetShape()) != (self.batch_size,self.num_columns):
-            batch_size, num_columns = tuple(batch.GetShape())
-        else:
-            batch_size = self.batch_size
-            num_columns = self.num_columns
+        batch_size, num_columns = tuple(batch.GetShape())
         
         data.reshape((batch_size * num_columns,))
 
@@ -558,8 +507,8 @@ class TrainRBatchGenerator:
         return self.base_generator.train_columns
 
     @property
-    def target_column(self) -> str:
-        return self.base_generator.target_column
+    def target_columns(self) -> str:
+        return self.base_generator.target_columns
 
     @property
     def weights_column(self) -> str:
@@ -571,9 +520,6 @@ class TrainRBatchGenerator:
         return self
 
     def __next__(self):
-        if not hasattr(self, '_callable'):
-            self._callable = self.__call__()
-        
         batch = self._callable.__next__()
 
         if batch is None:
@@ -625,8 +571,8 @@ class ValidationRBatchGenerator:
         return self.base_generator.train_columns
 
     @property
-    def target_column(self) -> str:
-        return self.base_generator.target_column
+    def target_columns(self) -> str:
+        return self.base_generator.target_columns
 
     @property
     def weights_column(self) -> str:
@@ -638,9 +584,6 @@ class ValidationRBatchGenerator:
         return self
 
     def __next__(self):
-        if not hasattr(self, '_callable'):
-            self._callable = self.__call__()
-
         batch = self._callable.__next__()
 
         if batch is None:
@@ -657,8 +600,6 @@ class ValidationRBatchGenerator:
         if self.base_generator.is_active:
             self.base_generator.DeActivate()
 
-        self.base_generator.StartValidation()
-
         while True:
             batch = self.base_generator.GetValidationBatch()
 
@@ -669,13 +610,10 @@ class ValidationRBatchGenerator:
 
 
 def CreateNumPyGenerators(
+    rdataframe: RNode,
     batch_size: int,
     chunk_size: int,
-    tree_name: str = None,
-    file_names: str|list[str] = list(),
-    rdataframe: RNode = None,
     columns: list[str] = list(),
-    filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
     target: str|list[str] = list(),
@@ -691,23 +629,13 @@ def CreateNumPyGenerators(
     returns validation batches
 
     Args:
+        rdataframe (RNode): Name of RNode object.
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
-        tree_name (str, optional):
-            Name of the tree in the ROOT file. Must be given if file_names
-            are given.
-        file_names (str|list[str], optional):
-            Path(s) to the ROOT file(s). Only one of file_names or rdataframe
-            arguments must be given.
-        rdataframe (RNode, optional):
-            Name of RDataFrame or RNode object. Only one of file_names or
-            rdataframe arguments must be given.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
-        filters (list[str], optional):
-            Filters to apply. If not given, no filters are applied.
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
@@ -737,13 +665,10 @@ def CreateNumPyGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
+        rdataframe,
         batch_size,
         chunk_size,
-        tree_name,
-        file_names,
-        rdataframe,
         columns,
-        filters,
         max_vec_sizes,
         vec_padding,
         target,
@@ -764,14 +689,11 @@ def CreateNumPyGenerators(
     return train_generator, validation_generator
 
 
-def CreateTFGenerators(
+def CreateTFDatasets(
+    rdataframe: RNode,
     batch_size: int,
     chunk_size: int,
-    tree_name: str = None,
-    file_names: str|list[str] = list(),
-    rdataframe: RNode = None,
     columns: list[str] = list(),
-    filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
     target: str|list[str] = list(),
@@ -787,23 +709,13 @@ def CreateTFGenerators(
     returns validation batches
 
     Args:
+        rdataframe (RNode): Name of RNode object.
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
-        tree_name (str, optional):
-            Name of the tree in the ROOT file. Must be given if file_names
-            are given.
-        file_names (str|list[str], optional):
-            Path(s) to the ROOT file(s). Only one of file_names or rdataframe
-            arguments must be given.
-        rdataframe (RNode, optional):
-            Name of RDataFrame or RNode object. Only one of file_names or
-            rdataframe arguments must be given.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
-        filters (list[str], optional):
-            Filters to apply. If not given, no filters are applied.
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
@@ -833,13 +745,10 @@ def CreateTFGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
+        rdataframe,
         batch_size,
         chunk_size,
-        tree_name,
-        file_names,
-        rdataframe,
         columns,
-        filters,
         max_vec_sizes,
         vec_padding,
         target,
@@ -857,17 +766,58 @@ def CreateTFGenerators(
         base_generator, base_generator.ConvertBatchToTF
     )
 
-    return train_generator, validation_generator
+    num_train_columns = len(train_generator.train_columns)
+    num_target_columns = len(train_generator.target_columns)
+
+    # No target and weights given
+    if target == "":
+        batch_signature = tf.TensorSpec(
+            shape=(batch_size, num_train_columns), dtype=tf.float32
+        )
+
+    # Target given, no weights given
+    elif weights == "":
+        batch_signature = (
+            tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size, num_target_columns), dtype=tf.float32),
+        )
+
+    # Target and weights given
+    else:
+        batch_signature = (
+            tf.TensorSpec(shape=(batch_size, num_train_columns), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size, num_target_columns), dtype=tf.float32),
+            tf.TensorSpec(shape=(batch_size, 1), dtype=tf.float32),
+        )
+
+    ds_train = tf.data.Dataset.from_generator(
+        train_generator, output_signature=batch_signature
+    )
+
+    # Give access to the columns function of the training set
+    setattr(ds_train, "columns", train_generator.columns)
+    setattr(ds_train, "train_columns", train_generator.train_columns)
+    setattr(ds_train, "target_column", train_generator.target_columns)
+    setattr(ds_train, "weights_column", train_generator.weights_column)
+
+    ds_validation = tf.data.Dataset.from_generator(
+        validation_generator, output_signature=batch_signature
+    )
+
+    # Give access to the columns function of the validation set
+    setattr(ds_validation, "columns", train_generator.columns)
+    setattr(ds_validation, "train_columns", train_generator.train_columns)
+    setattr(ds_validation, "target_column", train_generator.target_columns)
+    setattr(ds_validation, "weights_column", train_generator.weights_column)
+
+    return ds_train, ds_validation
 
 
 def CreatePyTorchGenerators(
+    rdataframe: RNode,
     batch_size: int,
     chunk_size: int,
-    tree_name: str = None,
-    file_names: str|list[str] = list(),
-    rdataframe: RNode = None,
     columns: list[str] = list(),
-    filters: list[str] = list(),
     max_vec_sizes: dict[str, int] = dict(),
     vec_padding: int = 0,
     target: str|list[str] = list(),
@@ -883,23 +833,13 @@ def CreatePyTorchGenerators(
     returns validation batches
 
     Args:
+        rdataframe (RNode): Name of RNode object.
         batch_size (int): Size of the returned chunks.
         chunk_size (int):
             The size of the chunks loaded from the ROOT file. Higher chunk size
             results in better randomization, but also higher memory usage.
-        tree_name (str, optional):
-            Name of the tree in the ROOT file. Must be given if file_names
-            are given.
-        file_names (str|list[str], optional):
-            Path(s) to the ROOT file(s). Only one of file_names or rdataframe
-            arguments must be given.
-        rdataframe (RNode, optional):
-            Name of RDataFrame or RNode object. Only one of file_names or
-            rdataframe arguments must be given.
         columns (list[str], optional):
             Columns to be returned. If not given, all columns are used.
-        filters (list[str], optional):
-            Filters to apply. If not given, no filters are applied.
         max_vec_sizes (list[int], optional):
             Size of each column that consists of vectors.
             Required when using vector based columns
@@ -929,13 +869,10 @@ def CreatePyTorchGenerators(
             generator will return no batches.
     """
     base_generator = BaseGenerator(
+        rdataframe,
         batch_size,
         chunk_size,
-        tree_name,
-        file_names,
-        rdataframe,
         columns,
-        filters,
         max_vec_sizes,
         vec_padding,
         target,
