@@ -345,7 +345,7 @@ void FilterTutorial(const int suffix)
       ReplaceAll(name,".py","");
       ReplaceAll(name,"_","__");
       if (cn)
-         fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",StringFormat(CMAKE_BUILD_DIRECTORY "/%s", name.c_str()).c_str());
+         fprintf(cn,"./modifyNamespacesWebpage.sh %s\n",StringFormat("%s", name.c_str()).c_str());
       fclose(cn);
    }
 
@@ -422,7 +422,7 @@ void FilterTutorial(const int suffix)
       if (gLineString.find("\\macro_code") != string::npos) {
          showTutSource = 1;
          m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
-         ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
+         ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s/macros/%s",gOutDir.c_str(),gMacroName.c_str()));
       }
 
       // notebook found
@@ -443,7 +443,7 @@ void FilterTutorial(const int suffix)
          remove(gOutputName.c_str());
          if (!gPython) ExecuteCommand(StringFormat(ROOT_COMMAND " -l -b -q %s", gFileName.c_str()).c_str(), CMAKE_BUILD_DIRECTORY);
          else          ExecuteCommand(StringFormat("%s %s", gPythonExec.c_str(), gFileName.c_str()).c_str(), CMAKE_BUILD_DIRECTORY);
-         ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str());
+         ExecuteCommand(StringFormat("sed -i '/Processing/d' %s", gOutputName.c_str()).c_str(), CMAKE_BUILD_DIRECTORY);
          rename(gOutputName.c_str(), StringFormat("%s/macros/%s",gOutDir.c_str(), gOutputName.c_str()).c_str());
          ReplaceAll(gLineString, "\\macro_output", StringFormat("\\include %s",gOutputName.c_str()));
       }
@@ -539,6 +539,9 @@ void ExecuteCommand(string command, string workingDir)
 {
 #ifdef LD_LIBRARY_PATH
    command = "export LD_LIBRARY_PATH=" LD_LIBRARY_PATH " && " + command;
+#endif
+#ifdef PYTHONPATH
+   command = "export PYTHONPATH=" PYTHONPATH " && " + command;
 #endif
    if(!workingDir.empty()) {
       command = "cd " + workingDir + " && " + command + " && cd -";
