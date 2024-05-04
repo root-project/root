@@ -157,7 +157,13 @@ def load_config(filename) -> dict:
             if '=' not in line:
                 continue
 
-            key, val = line.rstrip().split('=')
+            split_line = line.rstrip().split('=')
+
+            if len(split_line) == 2:
+               key, val = split_line
+            else:
+               key = split_line[0]
+               val = split_line[1]+'='+split_line[2]
 
             if val.lower() in ["on", "off"]:
                 val = val.lower()
