@@ -1,4 +1,5 @@
 
+
 name: 'ROOT CI'
 
 on:
@@ -358,12 +359,17 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          # Special builds
+          - image: alma9
+            property: march_native
+            overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
+
     runs-on:
       - self-hosted
       - linux
       - x64
 
-    name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
+    name: ${{ matrix.image }} ${{ matrix.property }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
