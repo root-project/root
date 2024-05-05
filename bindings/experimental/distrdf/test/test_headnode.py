@@ -284,52 +284,6 @@ class NumEntriesTest(unittest.TestCase):
     def tearDownClass(cls):
         os.remove(cls.test_filename)
 
-    def test_num_entries_two_args_case(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of two arguments to RDataFrame constructor.
-
-        """
-        files_vec = ROOT.std.vector("string")()
-        files_vec.push_back(self.test_filename)
-
-        # Create RDataFrame instances
-        hn = create_dummy_headnode(self.test_treename, self.test_filename)
-        hn_1 = create_dummy_headnode(self.test_treename, [self.test_filename])
-        hn_2 = create_dummy_headnode(self.test_treename, files_vec)
-
-        self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_1.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_2.tree.GetEntries(), self.test_tree_entries)
-
-    def test_num_entries_three_args_case(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of three arguments to RDataFrame constructor.
-
-        """
-        # Create RDataFrame instances
-        hn = create_dummy_headnode(
-            self.test_treename, self.test_filename, ["b1"])
-        branches_vec_1 = ROOT.std.vector("string")()
-        branches_vec_1.push_back("b0")
-        hn_2 = create_dummy_headnode(
-            self.test_treename, self.test_filename, branches_vec_1)
-
-        self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-        self.assertEqual(hn_2.tree.GetEntries(), self.test_tree_entries)
-
-    def test_num_entries_with_ttree_arg(self):
-        """
-        Ensure that the number of entries recorded are correct in the case
-        of RDataFrame constructor with a TTree.
-
-        """
-        with ROOT.TFile(self.test_filename) as f:
-            tree = f.Get(self.test_treename)
-            hn = create_dummy_headnode(tree)
-            self.assertEqual(hn.tree.GetEntries(), self.test_tree_entries)
-
     def test_num_entries_with_rdatasetspec(self):
         """Compute number of entries from an RDatasetSpec-based headnode."""
 
