@@ -188,28 +188,6 @@ def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
 
     return ranges
 
-
-def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
-    """
-    Retrieve cluster boundaries and number of entries of a TTree.
-    """
-
-    with ROOT.TFile.Open(filename, "READ_WITHOUT_GLOBALREGISTRATION") as tfile:
-        ttree = tfile.Get(treename)
-
-        entries: int = ttree.GetEntriesFast()
-
-        it = ttree.GetClusterIterator(0)
-        cluster_startentry: int = it()
-        clusters: List[int] = [cluster_startentry]
-
-        while cluster_startentry < entries:
-            cluster_startentry = it()
-            clusters.append(cluster_startentry)
-
-    return clusters, entries
-
-
 def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
                           friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo],
                           exec_id: ExecutionIdentifier) -> List[TreeRangePerc]:
@@ -360,7 +338,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
     # are friends, all files in the dataset are opened and their number of
     # entries are retrieved in order to ensure friend alignment.
     all_clusters_entries = (
-        get_clusters_and_entries(treename, filename)
+        ROOT.Internal.TreeUtils.GetClustersAndEntries(treename, filename)
         for treename, filename in zip(percrange.treenames, percrange.filenames)
     )
     all_clusters, all_entries = zip(*all_clusters_entries)
