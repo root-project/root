@@ -181,8 +181,6 @@ set (DOCU_INPUT
   CACHE STRING "Doxyfile input files or folders")
 
 add_custom_target(Preparation
-  COMMAND rm -f cleanNamespaces* # TODO move to clean target
-  COMMAND rm -f tutorialWorklist* # TODO move to clean target
   COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/images # TODO move to clean target
 
   COMMAND mkdir -p ${DOCU_LOCATION}/macros ${CMAKE_CURRENT_BINARY_DIR}/images ${DOCU_LOCATION}/notebooks
@@ -351,8 +349,7 @@ endif()
 #~ )
 
 add_custom_target(CollaborationDiagrams ALL
-    COMMAND touch cleanNamespaces.sh
-    COMMAND find . -name 'cleanNamespaces*.sh' -exec cat {} + | tee cleanNamespaces.sh
+    COMMAND find . -name 'cleanNamespaces?*.sh' -exec cat {} + > cleanNamespaces.sh
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
     COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash modifyClassWebpages.sh -j${DOCU_THREADS}
@@ -363,9 +360,8 @@ add_dependencies(CollaborationDiagrams dox)
 set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
-    COMMAND touch tutorialWorklist_root tutorialWorklist_py
-    COMMAND find . -name 'tutorialWorklist_root*' -exec cat {} + | tee tutorialWorklist_root
-    COMMAND find . -name 'tutorialWorklist_py*' -exec cat {} + | tee tutorialWorklist_py
+    COMMAND find . -name 'tutorialWorklist_root?*' -exec cat {} + > tutorialWorklist_root
+    COMMAND find . -name 'tutorialWorklist_py?*' -exec cat {} + > tutorialWorklist_py
     COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} -l -q < tutorialWorklist_root
 )
 add_dependencies(Tutorials dox)
@@ -379,6 +375,7 @@ add_custom_target(Notebooks ALL
 )
 add_dependencies(Notebooks Tutorials)
 endif()
+# TODO what about parallelNotebooks.sh
 
 add_custom_target(Copying ALL # This is a hack as alternative to https://github.com/root-project/root/pull/11614
     COMMAND scp -p ${CMAKE_CURRENT_BINARY_DIR}/images/* ${DOCU_LOCATION}/html/
@@ -403,7 +400,7 @@ set_property(
 )
 
 #TODO cleaning:
-#rm cleanNamespaces* tutorialWorklist_py* tutorialWorklist_root*
+#rm cleanNamespaces?* tutorialWorklist_py?* tutorialWorklist_root*
 #rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 #rm -rf tmva* data* result* config* test* Roo* My* Freq*
 #rm -f MDF.C pca.C
