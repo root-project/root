@@ -6,6 +6,7 @@ import uuid
 import warnings
 
 from collections import Counter, deque
+from copy import deepcopy
 from dataclasses import dataclass
 from functools import partial, singledispatch
 from itertools import zip_longest
@@ -110,6 +111,16 @@ class HeadNode(Node, ABC):
         # and the values are the corresponding callback functions 
         # This attribute only gets set in case the LiveVisualize() function is called
         self.drawables_dict: Optional[Dict[int, List[Optional[Callable]]]] = None
+
+    def __del__(self):
+        """
+        Remove the reference to the local RDataFrame object as soon as this
+        object is garbage collected. This helps avoiding conflicts between
+        the garbage collector, the cppyy memory regulator and the C++ object
+        destructor.
+        """
+        if hasattr(self, "_localdf"):
+            del self._localdf
 
     @property
     def npartitions(self) -> Optional[int]:
@@ -276,7 +287,7 @@ def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
         # if first argument is a string, we want to check if the second argument
         # which is a ROOT file holds a TTree or RNTuple
         secondarg = args[1]
-               
+
         if (isinstance (secondarg, (str, ROOT.std.string, ROOT.std.string_view))):
             wildcards = ["[", "]", "*", "?"]
             if (any(wildcard in secondarg for wildcard in wildcards)):
@@ -287,16 +298,25 @@ def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
             path = secondarg[0]
 
         with ROOT.TDirectory.TContext(), ROOT.TFile.Open(path, "READ_WITHOUT_GLOBALREGISTRATION") as f:
-                dataset = f.Get(firstarg)
+            dataset = f.Get(firstarg)
+            try:
                 if isinstance(dataset, ROOT.TTree):
-                    return TreeHeadNode(backend, npartitions, localdf, *args) 
-        
+                    return TreeHeadNode(backend, npartitions, localdf, *args)
+
                 elif isinstance(dataset, ROOT.Experimental.RNTuple):
                     return RNTupleHeadNode(backend, npartitions, localdf, *args)
-            
+
                 else:
                     raise RuntimeError("")
-            
+            finally:
+                # Remove the reference to the object taken from the TFile
+                # This helps avoiding conflicts between the Python garbage
+                # collector, the cppyy memory regulator and the C++ object.
+                # TODO: Rewrite this whole section as a C++ function. Idea:
+                # the function should be a method of RInterfaceBase so that
+                # from the localdf object we could get a data source label and
+                # dispatch to the correct HeadNode type without reopening.
+                del dataset
     elif isinstance(firstarg, ROOT.RDF.Experimental.RDatasetSpec):
         # RDataFrame(rdatasetspec)
         return RDatasetSpecHeadNode(backend, npartitions, localdf, *args)      
@@ -442,49 +462,48 @@ class TreeHeadNode(HeadNode):
         # Retrieve the TTree/TChain that will be processed
         if isinstance(args[0], ROOT.TTree):
             # RDataFrame(tree, defaultBranches = {})
-            self.tree = args[0]
+            tree = args[0]
             # TTreeIndex is not supported in distributed RDataFrame
-            list_of_friends = self.tree.GetListOfFriends()
-            if list_of_friends and list_of_friends.GetEntries() > 0:
-                for friend_element in list_of_friends:
-                    if friend_element.GetTree().GetTreeIndex():
-                        raise ValueError(
-                            f"Friend tree '{friend_element.GetName()}' has a TTreeIndex. "
-                            "This is not supported in distributed mode."
-                        )
+            idx_found, friendname = ROOT.Internal.TreeUtils.TreeUsesIndexedFriends(
+                tree)
+            if idx_found:
+                raise ValueError(
+                    f"Friend tree '{friendname}' has a TTreeIndex. "
+                    "This is not supported in distributed mode."
+                )
             # Retrieve information about friend trees when user passes a TTree
             # or TChain object.
             fi = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
             self.friendinfo = fi if not fi.fFriendNames.empty() else None
             if len(args) == 2:
-                self.defaultbranches = args[1]
+                self.defaultbranches = deepcopy(args[1])
         else:
             if isinstance(args[1], ROOT.TDirectory):
                 # RDataFrame(treeName, dirPtr, defaultBranches = {})
                 # We can assume both the argument TDirectory* and the TTree*
                 # returned from TDirectory::Get are not nullptr since we already
                 # did and early check of the user arguments in get_headnode
-                self.tree = args[1].Get(args[0])
+                tree = args[1].Get(args[0])
             elif isinstance(args[1], (str, ROOT.std.string_view)):
                 # RDataFrame(treeName, filenameglob, defaultBranches = {})
-                self.tree = ROOT.TChain(args[0])
-                self.tree.Add(str(args[1]))
+                tree = ROOT.TChain(args[0])
+                tree.Add(str(args[1]))
             elif isinstance(args[1], (list, ROOT.std.vector[ROOT.std.string])):
                 # RDataFrame(treename, fileglobs, defaultBranches = {})
-                self.tree = ROOT.TChain(args[0])
+                tree = ROOT.TChain(args[0])
                 for filename in args[1]:
-                    self.tree.Add(str(filename))
+                    tree.Add(str(filename))
             # In any of the three constructors considered in this branch, if
             # the user supplied three arguments then the third argument is a
             # list of default branches
             if len(args) == 3:
-                self.defaultbranches = args[2]
+                self.defaultbranches = deepcopy(args[2])
 
         # maintreename: name of the tree or main name of the chain
-        self.maintreename = self.tree.GetName()
+        self.maintreename = str(tree.GetName())
         # subtreenames: names of all subtrees in the chain or full path to the tree in the file it belongs to
-        self.subtreenames = [str(treename) for treename in ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)]
-        self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.tree)]
+        self.subtreenames = [str(treename) for treename in ROOT.Internal.TreeUtils.GetTreeFullPaths(tree)]
+        self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(tree)]
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
@@ -655,8 +674,7 @@ class RDatasetSpecHeadNode(HeadNode):
         # Retrieve the RDatasetSpec that will be processed
         if isinstance(args[0], ROOT.RDF.Experimental.RDatasetSpec):
             # RDataFrame(rdatasetspec)
-            self.rdatasetspec = args[0]
-            fi = self.rdatasetspec.GetFriendInfo()
+            fi = args[0].GetFriendInfo()
             self.friendinfo = fi if not fi.fFriendNames.empty() else None
         else:
             raise RuntimeError(
@@ -665,9 +683,9 @@ class RDatasetSpecHeadNode(HeadNode):
 
         # subtreenames: names of all subtrees in the chain or full path to the tree in the file it belongs to
         self.subtreenames = [str(treename)
-                             for treename in self.rdatasetspec.GetTreeNames()]
+                             for treename in args[0].GetTreeNames()]
         self.inputfiles = [str(filename)
-                           for filename in self.rdatasetspec.GetFileNameGlobs()]
+                           for filename in args[0].GetFileNameGlobs()]
 
     def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
