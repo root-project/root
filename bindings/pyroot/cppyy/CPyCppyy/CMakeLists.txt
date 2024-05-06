@@ -82,7 +82,7 @@ endif()
 # (see https://github.com/python/cpython/blob/3.8/Include/cpython/object.h#L260).
 # Note that Python 3.8 is the lowers Python version that is still supported by
 # ROOT, so this compile option can be completely removed soon.
-if(NOT MSVC AND PYTHON_VERSION_STRING VERSION_LESS 3.9)
+if(NOT MSVC AND Python3_VERSION VERSION_LESS 3.9)
   target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
 endif()
 

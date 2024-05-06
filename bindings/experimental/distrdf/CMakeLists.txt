@@ -50,8 +50,8 @@ add_custom_target(DistRDF ALL DEPENDS ${py_sources_in_localruntimedir})
 # We include DistRDF in the build only if Python 3.8+ is used,
 # so we can directly use the main Python executable to compile the sources
 foreach(py_source ${py_sources})
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
-  install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
 
 # Install Python sources and bytecode

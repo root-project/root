@@ -120,7 +120,7 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8))
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         find_python_module(sonnet QUIET)
         find_python_module(graph_nets QUIET)
         if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)

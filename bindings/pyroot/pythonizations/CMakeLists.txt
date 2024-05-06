@@ -180,10 +180,10 @@ endif()
 # Compile .py files
 foreach(py_source ${py_sources})
   add_custom_command(TARGET ${libname}
-                      COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
-                      COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
                       DEPENDS ${localruntimedir}/${py_source}
-                      COMMENT "Compiling PyROOT source ${py_source} for Python ${PYTHON_VERSION_STRING}")
+                      COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
 endforeach()
 
 # Create meta-target PyROOT3 (INTERFACE library)

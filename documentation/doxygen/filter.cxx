@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
    ReplaceAll(gSourceDir,"\"","");
 
    // Retrieve the python executable
-   gPythonExec = getenv("PYTHON_EXECUTABLE");
+   gPythonExec = getenv("Python3_EXECUTABLE");
    ReplaceAll(gPythonExec,"\"","");
 
    // Open the input file name.
