@@ -34,7 +34,6 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(tEnumGetEnumClasses
 ROOTTEST_ADD_TEST(execTEnumGetEnum
                   MACRO execTEnumGetEnum.C
                   OUTREF execTEnumGetEnum.ref
-                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 
