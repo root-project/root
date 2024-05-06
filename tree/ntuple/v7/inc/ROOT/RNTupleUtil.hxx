@@ -40,7 +40,6 @@ enum ENTupleStructure {
    kCollection,
    kRecord,
    kVariant,
-   kReference, // unimplemented so far
    kUnsplit,
    kInvalid,
 };

@@ -343,9 +343,8 @@ The structural role of the field can have on of the following values
 | 0x00     | Leaf field in the schema tree                                            |
 | 0x01     | The field is the mother of a collection (e.g., a vector)                 |
 | 0x02     | The field is the mother of a record (e.g., a struct)                     |
-| 0x03     | The field is the mother of a variant (e.g., a union)                     |
-| 0x04     | The field is a reference (pointer), TODO                                 |
-| 0x05     | The field represents an unsplit object serialized with the ROOT streamer |
+| 0x03     | The field is the mother of a variant                                     |
+| 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
 
 
 #### Column Description
