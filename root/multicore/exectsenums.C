@@ -29,7 +29,10 @@ void exectsenums (){
    for (auto&& enName : enumNames){
       auto f = [&](){
          auto en = TEnum::GetEnum(enName);
-         names.addString(TEnum::GetEnum(enName)->GetQualifiedName());
+         if (en)
+            names.addString(TEnum::GetEnum(enName)->GetQualifiedName());
+         else
+            std::cerr << "Error: enum called " << enName << " was NOT found\n";
       };
       threads.emplace_back(f);
 //      f(); //just run serial
@@ -40,6 +43,7 @@ void exectsenums (){
 
    std::list<std::string> namesList (names.getStrings());
    namesList.sort();
-   for (auto&& name:namesList) printf("Enum called %s was found\n",name.c_str());
+   for (auto&& name:namesList)
+      printf("Enum called %s was found\n",name.c_str());
 
 }
