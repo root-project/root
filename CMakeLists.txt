@@ -22,8 +22,8 @@ endif()
 
 find_package(ROOT REQUIRED CONFIG)
 
-if(NOT DEFINED PYTHON_EXECUTABLE)
-  find_package(PythonInterp ${ROOT_PYTHON_VERSION} REQUIRED QUIET)
+if(NOT DEFINED Python3_EXECUTABLE)
+  find_package(Python3 ${ROOT_PYTHON_VERSION} REQUIRED QUIET COMPONENTS Interpreter)
 endif()
 
 if(MSVC)
@@ -48,7 +48,7 @@ if(MSVC)
   if(NOT win_broken_tests)
     set(WILLFAIL_ON_WIN32 WILLFAIL)
   endif()
-  if (NOT PYTHON_EXECUTABLE)
+  if (NOT Python3_EXECUTABLE)
     find_package(PythonInterp)
   endif()
 
@@ -262,14 +262,14 @@ set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${ROOTTEST_DIR}/cmake/modules")
 
 # Find python.
 if(ROOT_pyroot_FOUND)
-  if (NOT PYTHON_EXECUTABLE)
+  if (NOT Python3_EXECUTABLE)
     find_package(PythonInterp)
     if(PYTHONINTERP_FOUND)
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
+      execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sys;sys.stdout.write(sys.prefix)"
                        OUTPUT_VARIABLE PYTHON_PREFIX)
       set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${PYTHON_PREFIX})
     endif()
-    if (NOT PYTHON_LIBRARIES)
+    if (NOT Python3_LIBRARIES)
       find_package(PythonLibs)
     endif()
   endif()

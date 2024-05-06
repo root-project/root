@@ -23,7 +23,7 @@ ROOTTEST_ADD_TEST(ROOT5268
                   PASSREGEX "error: unknown type name 'Tbrowser'")
 
 ROOTTEST_ADD_TEST(rlibmap
-                  COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rlibmapLauncher.py
+                  COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/rlibmapLauncher.py
                   PASSRC 1
                   OUTREF  rlibmap.ref)
 
