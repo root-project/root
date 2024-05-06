@@ -9,7 +9,8 @@ bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNT
           a.GetVersionMinor() == b.GetVersionMinor() && a.GetVersionPatch() == b.GetVersionPatch() &&
           a.GetSeekHeader() == b.GetSeekHeader() && a.GetNBytesHeader() == b.GetNBytesHeader() &&
           a.GetLenHeader() == b.GetLenHeader() && a.GetSeekFooter() == b.GetSeekFooter() &&
-          a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter();
+          a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter() &&
+          a.GetMaxKeySize() == b.GetMaxKeySize();
 }
 
 struct RNTupleTester {

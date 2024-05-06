@@ -57,7 +57,6 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
          if (bcnt != expectedBytes)
             throw RException(R__FAIL("byte count mismatch in RNTuple anchor v4: expected=" +
                                      std::to_string(expectedBytes) + ", got=" + std::to_string(bcnt)));
-
          buf >> fVersionEpoch;
          buf >> fVersionMajor;
          buf >> fVersionMinor;
