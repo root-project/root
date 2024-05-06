@@ -93,6 +93,8 @@ private:
    std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint64_t fLenFooter = 0;
+   /// The maximum size for a TKey payload. Payloads bigger than this size will be chained as multiple blobs.
+   std::uint64_t fMaxKeySize = 0;
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
@@ -112,12 +114,17 @@ public:
    std::uint64_t GetSeekFooter() const { return fSeekFooter; }
    std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
    std::uint64_t GetLenFooter() const { return fLenFooter; }
+   std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
 
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   ClassDefNV(RNTuple, 5);
+   /// NOTE: if you change this version you also need to update:
+   ///    - RTFNTuple::fClassVersion in RMiniFile.cxx
+   ///    - RTFStreamerInfoObject::fVersionRNTuple in RMiniFile.cxx
+   ///    - RTFStreamerInfoObject::fStreamers in RMiniFile.cxx
+   ClassDefNV(RNTuple, 6);
 }; // class RNTuple
 
 } // namespace Experimental
