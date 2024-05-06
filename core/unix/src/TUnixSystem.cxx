@@ -744,6 +744,12 @@ Int_t TUnixSystem::GetCryptoRandom(void *buf, Int_t len)
    return len;
 #elif defined(R__GETRANDOM_CLIB)
    return getrandom(buf, len, GRND_NONBLOCK);
+#elif defined(R__USE_URANDOM)
+   std::ifstream urandom{"/dev/urandom"};
+   if (!urandom)
+      return -1;
+   urandom.read(reinterpret_cast<char *>(buf), len);
+   return len;
 #else
 #error "Reliable cryptographic random function not defined"
    return -1;
