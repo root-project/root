@@ -93,6 +93,8 @@ private:
    std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint64_t fLenFooter = 0;
+   /// The maximum size for a TKey payload. Payloads bigger than this size will be chained as multiple blobs.
+   std::uint64_t fMaxKeySize = 0;
    /// The xxhash3 checksum of the serialized other members of the struct (excluding byte count and class version).
    /// This member can only be interpreted during streaming.
    /// When adding new members to the class, this member must remain the last one.
@@ -116,6 +118,7 @@ public:
    std::uint64_t GetSeekFooter() const { return fSeekFooter; }
    std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
    std::uint64_t GetLenFooter() const { return fLenFooter; }
+   std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
 
    std::uint64_t GetChecksum() const { return fChecksum; }
 
@@ -123,7 +126,11 @@ public:
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   ClassDefNV(RNTuple, 4);
+   /// NOTE: if you change this version you also need to update:
+   ///    - RTFNTuple::fClassVersion in RMiniFile.cxx
+   ///    - RTFStreamerInfoObject::fVersionRNTuple in RMiniFile.cxx
+   ///    - RTFStreamerInfoObject::fStreamers in RMiniFile.cxx
+   ClassDefNV(RNTuple, 5);
 }; // class RNTuple
 
 } // namespace Experimental

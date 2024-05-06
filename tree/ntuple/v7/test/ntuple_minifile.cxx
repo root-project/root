@@ -10,7 +10,7 @@ bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNT
           a.GetSeekHeader() == b.GetSeekHeader() && a.GetNBytesHeader() == b.GetNBytesHeader() &&
           a.GetLenHeader() == b.GetLenHeader() && a.GetSeekFooter() == b.GetSeekFooter() &&
           a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter() &&
-          a.GetChecksum() == b.GetChecksum();
+          a.GetMaxKeySize() == b.GetMaxKeySize() && a.GetChecksum() == b.GetChecksum();
 }
 
 struct RNTupleTester {
