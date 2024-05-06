@@ -366,7 +366,7 @@ add_custom_target(CollaborationDiagrams ALL
 )
 add_dependencies(CollaborationDiagrams dox)
 
-set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
+set(DOCU_TUTORIALS OFF CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
 if(DOCU_TUTORIALS)
 add_custom_target(Tutorials ALL
     COMMAND find . -name 'tutorialWorklist_root?*' -exec cat {} + > tutorialWorklist_root
