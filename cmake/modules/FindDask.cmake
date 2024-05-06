@@ -18,7 +18,7 @@
 
 # Import `dask` and `distributed` using the main Python executable, print dask version
 execute_process(
-    COMMAND ${PYTHON_EXECUTABLE} -c "import distributed; import dask; print(dask.__version__)"
+    COMMAND ${Python3_EXECUTABLE} -c "import distributed; import dask; print(dask.__version__)"
     RESULT_VARIABLE _DASK_IMPORT_EXIT_STATUS
     OUTPUT_VARIABLE _DASK_VALUES_OUTPUT
     ERROR_VARIABLE _DASK_ERROR_VALUE
@@ -32,7 +32,7 @@ if(_DASK_IMPORT_EXIT_STATUS EQUAL 0)
     # Signal to CMake that the environment could import `dask` and `distributed` packages
     set(Dask_DEPENDENCIES_READY TRUE)
 else()
-    message(STATUS "Python package 'dask' could not be imported with ${PYTHON_EXECUTABLE}\n"
+    message(STATUS "Python package 'dask' could not be imported with ${Python3_EXECUTABLE}\n"
                    "${_DASK_ERROR_VALUE}"
     )
 endif()

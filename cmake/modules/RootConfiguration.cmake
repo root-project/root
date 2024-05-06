@@ -544,8 +544,8 @@ get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
-set(pythonvers ${PYTHON_VERSION_STRING})
-set(python${PYTHON_VERSION_MAJOR}vers ${PYTHON_VERSION_STRING})
+set(pythonvers ${Python3_VERSION})
+set(python${Python3_VERSION_MAJOR}vers ${Python3_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"

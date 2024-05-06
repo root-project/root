@@ -542,6 +542,23 @@ if(mathmore OR builtin_gsl)
   endif()
 endif()
 
+#---Check for Python installation-------------------------------------------------------
+
+message(STATUS "Looking for Python")
+
+# On macOS, prefer user-provided Pythons.
+set(Python3_FIND_FRAMEWORK LAST)
+
+# Even if we don't build PyROOT, one still need python executable to run some scripts
+list(APPEND python_components Interpreter)
+if(pyroot OR tmva-pymva)
+  list(APPEND python_components Development)
+endif()
+if(tmva-pymva)
+  list(APPEND python_components NumPy)
+endif()
+find_package(Python3 3.8 COMPONENTS ${python_components})
+
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
@@ -1642,9 +1659,9 @@ if(tmva)
   if(tmva-pymva)
     if(fail-on-missing AND (NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND))
       message(FATAL_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
-                          " (python executable: ${PYTHON_EXECUTABLE})")
+                          " (python executable: ${Python3_EXECUTABLE})")
     elseif(NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND)
-      message(STATUS "TMVA: Numpy or Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
+      message(STATUS "TMVA: Numpy or Python development package not found for python ${Python3_EXECUTABLE}. Switching off tmva-pymva option")
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
   endif()
@@ -1668,14 +1685,14 @@ if(pyroot)
   if(NOT Python3_Development_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
-                          " (python executable: ${PYTHON_EXECUTABLE})")
+                          " (python executable: ${Python3_EXECUTABLE})")
     else()
-      message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
-      set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${PYTHON_EXECUTABLE}" FORCE)
+      message(STATUS "PyROOT: Python development package not found for python ${Python3_EXECUTABLE}. Switching off pyroot option")
+      set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${Python3_EXECUTABLE}" FORCE)
     endif()
   endif()
 
-  message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
+  message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
 
 endif()
 
