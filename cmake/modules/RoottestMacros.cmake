@@ -635,7 +635,7 @@ macro(ROOTTEST_SETUP_MACROTEST)
   # Add python script to CTest.
   elseif(ARG_MACRO MATCHES "[.]py")
     get_filename_component(realfp ${ARG_MACRO} REALPATH)
-    set(command ${PYTHON_EXECUTABLE} ${realfp} ${PYROOT_EXTRAFLAGS})
+    set(command ${Python3_EXECUTABLE} ${realfp} ${PYROOT_EXTRAFLAGS})
 
   elseif(DEFINED ARG_MACRO)
     set(command ${root_cmd} ${ARG_MACRO})
@@ -671,7 +671,7 @@ macro(ROOTTEST_SETUP_EXECTEST)
 
   if(MSVC)
     if(${realexec} MATCHES "[.]py" AND NOT ${realexec} MATCHES "[.]exe")
-      set(realexec ${PYTHON_EXECUTABLE} ${realexec})
+      set(realexec ${Python3_EXECUTABLE} ${realexec})
     else()
       set(realexec ${realexec})
     endif()
@@ -995,7 +995,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${outref}
                         ${errref}
                         WORKING_DIR ${test_working_dir}
-                        DIFFCMD ${PYTHON_EXECUTABLE} ${ROOTTEST_DIR}/scripts/custom_diff.py
+                        DIFFCMD ${Python3_EXECUTABLE} ${ROOTTEST_DIR}/scripts/custom_diff.py
                         TIMEOUT ${timeout}
                         ${environment}
                         ${build}
@@ -1211,7 +1211,7 @@ function(find_python_module module)
       endif()
       # A module's location is usually a directory, but for binary modules
       # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+      execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
          "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
          RESULT_VARIABLE _${module}_status
          OUTPUT_VARIABLE _${module}_location
