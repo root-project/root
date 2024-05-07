@@ -2585,10 +2585,10 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
       RooArgSet cPars(constrainedParams); // start with full set of params every time
       std::unique_ptr<RooArgSet> compRet(
               pdf->getConstraints(observables,cPars,stripDisconnected,removeConstraintsFromPdf));
-      // cPars has now been reduced to just the params that had a constraint term
-      // add these to the list of params to keep
-      allcPars.add(cPars,true);
       if (compRet) {
+        // cPars has now been reduced to just the params that had a constraint term
+        // add these to the list of params to keep
+        allcPars.add(cPars,true);
         ret->add(*compRet,false) ;
       }
     }
