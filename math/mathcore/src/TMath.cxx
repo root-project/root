@@ -2335,7 +2335,7 @@ Double_t TMath::FDistI(Double_t F, Double_t N, Double_t M)
 ///   gdist->SetLineColor(6);
 ///   TF1 *gdist4 = gdist->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   auto legend = new TLegend(0.15, 0.15, 0.5, 0.35);
 ///   legend->AddEntry(gdist1, "gamma = 0.5, mu = 0, beta = 1", "L");
 ///   legend->AddEntry(gdist2, "gamma = 1.0, mu = 0, beta = 1", "L");
 ///   legend->AddEntry(gdist3, "gamma = 2.0, mu = 0, beta = 1", "L");
@@ -2425,7 +2425,7 @@ Double_t TMath::LaplaceDistI(Double_t x, Double_t alpha, Double_t beta)
 ///   logn->SetLineColor(6);
 ///   TF1 *logn4 = logn->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.15, 0.15, 0.5, 0.35);
+///   auto legend = new TLegend(0.15, 0.15, 0.5, 0.35);
 ///   legend->AddEntry(logn1, "sigma = 0.5, theta = 0, m = 1", "L");
 ///   legend->AddEntry(logn2, "sigma = 1.0, theta = 0, m = 1", "L");
 ///   legend->AddEntry(logn3, "sigma = 2.0, theta = 0, m = 1", "L");
@@ -2766,7 +2766,7 @@ Double_t TMath::StudentQuantile(Double_t p, Double_t ndf, Bool_t lower_tail)
 ///   vavilov->SetLineColor(6);
 ///   TF1 *vavilov4 = vavilov->DrawCopy("LSAME");
 ///
-///   legend = new TLegend(0.5, 0.65, 0.85, 0.85);
+///   auto legend = new TLegend(0.5, 0.65, 0.85, 0.85);
 ///   legend->AddEntry(vavilov1, "kappa = 0.5, beta2 = 0", "L");
 ///   legend->AddEntry(vavilov2, "kappa = 0.3, beta2 = 0", "L");
 ///   legend->AddEntry(vavilov3, "kappa = 0.2, beta2 = 0", "L");
