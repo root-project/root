@@ -666,6 +666,12 @@ void RNTupleDS::Finalize()
          r->Disconnect(false /* keepValue */);
       }
    }
+   // If we have a chain with more files than the number of slots, the files opened at the end of the
+   // event loop won't be reused when the event loop restarts, so we can close them.
+   if (fFileNames.size() > fNSlots) {
+      fCurrentRanges.clear();
+      fNextRanges.clear();
+   }
 }
 
 void RNTupleDS::SetNSlots(unsigned int nSlots)
