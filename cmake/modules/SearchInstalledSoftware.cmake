@@ -651,9 +651,9 @@ if(ssl AND NOT builtin_openssl)
   else()
     find_package(OpenSSL)
     if(NOT OPENSSL_FOUND)
-      if(WIN32) # builtin OpenSSL does not work on Windows
+      if(NOT APPLE) # builtin OpenSSL is only supported on macOS
         message(STATUS "Switching OFF 'ssl' option.")
-        set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version does not work on Windows (${ssl_description})" FORCE)
+        set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version only works on macOS (${ssl_description})" FORCE)
       else()
         if(NO_CONNECTION)
           if(fail-on-missing)
