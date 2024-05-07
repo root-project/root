@@ -283,7 +283,9 @@ if(builtin_all)
   set(builtin_lz4_defvalue ON)
   set(builtin_lzma_defvalue ON)
   set(builtin_nlohmannjson_defvalue ON)
-  set(builtin_openssl_defvalue ON)
+  if(APPLE)
+    set(builtin_openssl_defvalue ON)
+  endif()
   set(builtin_openui5_defvalue ON)
   set(builtin_pcre_defvalue ON)
   set(builtin_tbb_defvalue ON)
@@ -324,6 +326,11 @@ endif()
 #---Modules are disabled on aarch64 platform (due ODR violations)
 if(CMAKE_SYSTEM_PROCESSOR MATCHES aarch64)
   set(runtime_cxxmodules_defvalue OFF)
+endif()
+
+# builtin_openssl is only supported on macOS
+if(builtin_openssl AND NOT APPLE)
+    message(FATAL_ERROR ">>> Option 'builtin_openssl' is only supported on macOS.")
 endif()
 
 # MultiProcess is not possible on Windows, so fail if it is manually set:
