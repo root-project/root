@@ -192,7 +192,7 @@ add_custom_target(Preparation
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/MakeRCanvasJS.C ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh ./
-  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyNamespacesWebpage.sh ./
   COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
