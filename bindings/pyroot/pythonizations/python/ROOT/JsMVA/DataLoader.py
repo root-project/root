@@ -5,7 +5,7 @@
 
 
 from ROOT import TH1F, TMVA, TBufferJSON
-from JsMVA import JPyInterface
+from . import JPyInterface
 import ROOT
 
 
