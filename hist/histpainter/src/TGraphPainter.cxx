@@ -144,7 +144,7 @@ Begin_Macro(source)
       x[i] = i*0.1;
       y[i] = 10*sin(x[i]+0.2);
    }
-   gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetLineColor(2);
    gr->SetLineWidth(4);
    gr->SetMarkerColor(4);
