@@ -9,8 +9,8 @@ from IPython.core.display import display, HTML
 from string import Template
 import ROOT
 import sys
-from JsMVA import DataLoader, Factory
-from JsMVA import OutputTransformer
+from . import DataLoader, Factory
+from . import OutputTransformer
 
 
 ## Function inserter class
