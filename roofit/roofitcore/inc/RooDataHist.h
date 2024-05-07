@@ -216,6 +216,24 @@ public:
   std::string declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
                                            bool correctForBinSize) const;
 
+   /// Forwards to RooAbsData::reduce(), only with the return value casted to
+   /// the actual RooDataHist type.
+   template <typename... Args>
+   inline RooFit::OwningPtr<RooDataHist> reduce(Args && ...args)
+   {
+      return RooFit::OwningPtr<RooDataHist>{&dynamic_cast<RooDataHist &>(
+         *std::unique_ptr<RooAbsData>{RooAbsData::reduce(std::forward<Args>(args)...)}.release())};
+   }
+
+   /// Forwards to RooAbsData::reduce(), only with the return value casted to
+   /// the actual RooDataHist type.
+   template <typename... Args>
+   inline RooFit::OwningPtr<RooDataHist> reduce(RooArgSet const &varSubset, Args &&...args)
+   {
+      return RooFit::OwningPtr<RooDataHist>{&dynamic_cast<RooDataHist &>(
+         *std::unique_ptr<RooAbsData>{RooAbsData::reduce(varSubset, std::forward<Args>(args)...)}.release())};
+   }
+
   protected:
   friend class RooDataHistSliceIter ;
 
