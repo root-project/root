@@ -6,7 +6,7 @@
 
 import ROOT
 from ROOT import TMVA
-from JsMVA import JPyInterface
+from . import JPyInterface
 from xml.etree.ElementTree import ElementTree
 import json
 from IPython.core.display import display, HTML, clear_output
