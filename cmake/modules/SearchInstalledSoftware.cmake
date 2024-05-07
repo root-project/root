@@ -545,7 +545,17 @@ endif()
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
+
+  set(cmake_find_framework ${CMAKE_FIND_FRAMEWORK})
+  if(APPLE)
+    # Make sure we're using the macOS-native framework version in the OpenGL case.
+    # See: https://cmake.org/cmake/help/latest/module/FindOpenGL.html#macos-specific
+    set(CMAKE_FIND_FRAMEWORK ONLY)
+  endif()
   find_package(OpenGL)
+  set(CMAKE_FIND_FRAMEWORK ${cmake_find_framework})
+  unset(cmake_find_framework)
+
   if(NOT OPENGL_FOUND OR NOT OPENGL_GLU_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "OpenGL package (with GLU) not found and opengl option required")
