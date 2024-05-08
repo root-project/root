@@ -170,7 +170,7 @@ AutoDict_*.cxx
 /root/io/*.root
 
 # /root/io/TFile
-/root/io/TFile/geodemo-update.root
+/root/io/TFile/*.root
 
 # /root/io/ForeignCArray/
 
@@ -255,6 +255,9 @@ AutoDict_*.cxx
 /root/io/datamodelevolution/stl/stlinnerevo.root
 /root/io/datamodelevolution/stl/libcond/libcondProjectDict.cxx
 
+# /root/io/directory/
+/root/io/directory/example.root
+
 # /root/io/dirdelete/
 /root/io/dirdelete/test.root
 /root/io/dirdelete/test.xml
@@ -290,6 +293,9 @@ AutoDict_*.cxx
 
 # /root/io/evolution/array/
 /root/io/evolution/array/oldArrayObject.root
+
+# /root/io/evolution/issue-8083/
+/root/io/evolution/issue-8083/stringarray.root
 
 # /root/io/evolution/pragma_read
 /root/io/evolution/pragma_read/test.root
@@ -525,6 +531,7 @@ AutoDict_*.cxx
 /root/io/rootcint/cltest.root
 /root/io/rootcint/*Dict*
 /root/io/rootcint/*Cint*
+/root/io/rootcint/weirdpair_dict.cxx
 
 # /root/io/rootcint/doubleconst/
 /root/io/rootcint/doubleconst/*~
