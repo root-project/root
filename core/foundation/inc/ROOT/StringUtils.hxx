@@ -26,7 +26,7 @@ std::vector<std::string> Split(std::string_view str, std::string_view delims, bo
 
 /**
  * \brief Concatenate a list of strings with a separator
- * \tparm Any container of strings (vector, initializer_list, ...)
+ * \tparam StringCollection_t Any container of strings (vector, initializer_list, ...)
  * \param[in] sep Separator inbetween the strings.
  * \param[in] strings container of strings
  * \return the sep-delimited concatenation of strings
