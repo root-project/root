@@ -217,8 +217,6 @@ if(all)
  set(cefweb_defvalue ON)
  set(clad_defvalue ON)
  set(dataframe_defvalue ON)
- set(test_distrdf_pyspark_defvalue ON)
- set(test_distrdf_dask_defvalue ON)
  set(davix_defvalue ON)
  set(dcache_defvalue ON)
  set(fftw3_defvalue ON)
@@ -481,14 +479,6 @@ endif()
 
 
 #---distributed RDataFrame pyspark tests require both dataframe and pyroot----------------------------------
-if(test_distrdf_pyspark OR test_distrdf_dask)
-
-  if(NOT dataframe OR NOT pyroot)
-    message(STATUS "Running the tests for distributed RDataFrame requires both RDataFrame and PyROOT to be enabled")
-    message(STATUS "    Switching OFF the tests because either pyroot or dataframe option is disabled")
-    message(STATUS "    pyroot is set to ${pyroot} and dataframe is set to ${dataframe}")
-    set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
-    set(test_distrdf_dask OFF CACHE BOOL "Disabled because either dataframe or pyroot were disabled" FORCE)
-  endif()
-
+if(test_distrdf_pyspark OR test_distrdf_dask AND (NOT dataframe OR NOT pyroot))
+    message(FATAL_ERROR "Running the tests for distributed RDataFrame requires both RDataFrame and PyROOT to be enabled (build with -Ddataframe=ON and -Dpyroot=ON)")
 endif()
