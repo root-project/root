@@ -924,7 +924,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
    if (!is_none) {
       std::string hmac = HMAC(conn->fKey, fMgr->fSessionKey, buf, data_len);
 
-      is_match = strncmp(buf0, hmac.c_str(), code_len) == 0;
+      is_match = (code_len == (Int_t) hmac.length()) && (strncmp(buf0, hmac.c_str(), code_len) == 0);
    } else if (!fMgr->fUseSessionKey) {
       // no packet signing without session key
       is_match = true;
