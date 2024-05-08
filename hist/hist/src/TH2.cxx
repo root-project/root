@@ -61,7 +61,7 @@ ClassImp(TH2);
 \anchor intmax2 (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
 \anchor llongmax2 (**) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
 \anchor floatmax2 (***) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
-\anchor doublemax2 (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
+\anchor doublemax2 (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
 </sup>
 
 */
