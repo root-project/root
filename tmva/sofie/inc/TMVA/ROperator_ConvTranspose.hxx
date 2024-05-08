@@ -55,12 +55,12 @@ public:
 
    /*! \brief Constructor of ROperator_ConvTranspose from the attributes
     *
-    * \param auto_pad padding
+    * \param autopad padding
     * \param dilations dilations of the kernel
     * \param group number of groups
-    * \param kernel_shape shape of the kernel
-    * \param output_padding padding of the output
-    * \param output_shape shape of the output
+    * \param kernelShape shape of the kernel
+    * \param outputPadding padding of the output
+    * \param outputShape shape of the output
     * \param pads padding of the input
     * \param strides strides
     * \param nameX name of the input
