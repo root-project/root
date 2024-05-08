@@ -2013,38 +2013,12 @@ endif()
 # Needed to run tests of the distributed RDataFrame module that use pyspark.
 # The functionality has been tested with pyspark 2.4 and above.
 if(test_distrdf_pyspark)
-  message(STATUS "Looking for PySpark")
-
-  if(fail-on-missing)
-    find_package(PySpark 2.4 REQUIRED)
-  else()
-
-    find_package(PySpark 2.4)
-    if(NOT PySpark_FOUND)
-      message(STATUS "Switching OFF 'test_distrdf_pyspark' option")
-      set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
-    endif()
-
-  endif()
-
+  find_package(PySpark 2.4 REQUIRED)
 endif()
 
 #------------------------------------------------------------------------------------
 # Check if the dask package is installed on the system.
 # Needed to run tests of the distributed RDataFrame module that use dask.
 if(test_distrdf_dask)
-  message(STATUS "Looking for Dask")
-
-  if(fail-on-missing)
-    find_package(Dask 2022.08.1 REQUIRED)
-  else()
-
-    find_package(Dask 2022.08.1)
-    if(NOT Dask_FOUND)
-      message(STATUS "Switching OFF 'test_distrdf_dask' option")
-      set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)
-    endif()
-
-  endif()
-
+  find_package(Dask 2022.08.1 REQUIRED)
 endif()
