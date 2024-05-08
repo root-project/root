@@ -3,7 +3,7 @@ name: 'ROOT 6.26'
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 3 * * *'
 
   # Enables manual start of workflow
   workflow_dispatch:
