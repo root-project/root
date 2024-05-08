@@ -2,8 +2,8 @@
 requires = ["cmake", "setuptools", "wheel", "ninja", "numpy"]
 
 [project]
-name = "root-cern"
-version = "0.1a4"
+name = "ROOT"
+version = "0.1a5"
 
 requires-python = ">=3.8"
 authors = [
