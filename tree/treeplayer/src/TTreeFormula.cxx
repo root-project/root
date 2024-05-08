@@ -3757,7 +3757,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          R__LoadBranch(br,tentry,fQuickLoad);                                                   \
       } else {                                                                                  \
         Error("TTreeFormula::TT_EVAL_INIT",                                                     \
-          "Could not init branch associated to this leaf (%s).", leaf->GetName());              \ 
+          "Could not init branch associated to this leaf (%s).", leaf->GetName());              \
       }                                                                                         \
    }                                                                                            \
                                                                                                 \
@@ -3826,7 +3826,7 @@ const char* TTreeFormula::EvalStringInstance(Int_t instance)
          } else {                                                                               \
             Error("TTreeFormula::TT_EVAL_INIT_LOOP",                                            \
                   "Could not init branch associated to this leaf (%s).", leaf->GetName());      \
-         }                                                                                      \                                           
+         }                                                                                      \
       }                                                                                         \
    }                                                                                            \
    if (real_instance>=fNdata[code]) return 0;
