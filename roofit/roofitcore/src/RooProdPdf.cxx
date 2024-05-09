@@ -2265,11 +2265,8 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
   for(std::unique_ptr<RooArgSet> const& normSet : _pdfNSetList) {
     for(RooAbsArg * arg : *normSet) {
       if(RooAbsArg * newArg = arg->findNewServer(newServerList, nameChange)) {
-        // Need to do some tricks here because it's not possible to replace in
-        // an owning RooAbsCollection.
-        normSet->releaseOwnership();
-        normSet->replace(*std::unique_ptr<RooAbsArg>{arg}, *newArg->cloneTree());
-        normSet->takeOwnership();
+        // Since normSet is owning, the original arg is now deleted.
+        normSet->replace(arg, std::unique_ptr<RooAbsArg>{newArg->cloneTree()});
       }
     }
   }
