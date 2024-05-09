@@ -2533,8 +2533,6 @@ double RooAbsData::sumEntriesW2() const {
 /// Write information to retrieve data columns into `evalData.spans`.
 /// All spans belonging to variables of this dataset are overwritten. Spans to other
 /// variables remain intact.
-/// \param[out] evalData Store references to all data batches in this struct's `spans`.
-/// The key to retrieve an item is the pointer of the variable that owns the data.
 /// \param begin Index of first event that ends up in the batch.
 /// \param len   Number of events in each batch.
 RooAbsData::RealSpans RooAbsData::getBatches(std::size_t begin, std::size_t len) const {

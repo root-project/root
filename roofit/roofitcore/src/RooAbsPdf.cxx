@@ -683,7 +683,7 @@ void RooAbsPdf::getLogProbabilities(std::span<const double> pdfValues, double * 
 /// it is extendable by overloading `canBeExtended()`, and must
 /// implement the `expectedEvents()` function.
 ///
-/// \param[in] observed The number of observed events.
+/// \param[in] sumEntries The number of observed events.
 /// \param[in] nset The normalization set when asking the pdf for the expected
 ///            number of events.
 /// \param[in] observedSumW2 The number of observed events when weighting with
