@@ -1,4 +1,4 @@
-/// \file ROOT/RNTuplerImporter.hxx
+/// \file ROOT/RNTupleImporter.hxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \date 2022-11-22
