@@ -62,7 +62,6 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 /// \param lowSet  Set of down variations.
 /// \param highSet Set of up variations.
 /// \param paramSet Parameters that control the interpolation.
-/// \param takeOwnership If true, the PiecewiseInterpolation object will take ownership of the arguments in the low, high and parameter sets.
 PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal,
                                                const RooArgList &lowSet, const RooArgList &highSet,
                                                const RooArgList &paramSet)

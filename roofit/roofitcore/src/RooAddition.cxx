@@ -53,7 +53,6 @@ ClassImp(RooAddition);
 /// \param[in] name Name of the PDF
 /// \param[in] title Title
 /// \param[in] sumSet The value of the function will be the sum of the values in this set
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in `sumSet`
 
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
@@ -75,7 +74,6 @@ RooAddition::RooAddition(const char *name, const char *title, const RooArgList &
 /// \param[in] title Title
 /// \param[in] sumSet1 Left-hand element of the pair-wise products
 /// \param[in] sumSet2 Right-hand element of the pair-wise products
-/// \param[in] takeOwnership If true, the RooAddition object will take ownership of the arguments in the `sumSets`
 ///
 RooAddition::RooAddition(const char *name, const char *title, const RooArgList &sumSet1, const RooArgList &sumSet2)
    : RooAbsReal(name, title), _set("!set", "set of components", this), _cacheMgr(this, 10)
