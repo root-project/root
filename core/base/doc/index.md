@@ -11,3 +11,5 @@ classes providing basic services like strings, regular expression,
 timers, date/time, md5 checksumming, signal/slots event handling,
 plugin handler, run-config resource processor, etc. etc.
 
+\defgroup StdExt std Extension classes
+\brief Extension classes within libCore to backport or complement missing std:: features
