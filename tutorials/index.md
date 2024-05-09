@@ -62,6 +62,10 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \ingroup Tutorials
 \brief Examples showing the "Event display classes" usage.
 
+\defgroup tutorial_eve7 Event display ROOT7 tutorials
+\ingroup Tutorials
+\brief Examples showing the "Event display classes" usage with ROOT7.
+
 \defgroup tutorial_geom Geometry tutorials
 \ingroup Tutorials
 \brief Various ROOT geometry package examples.
@@ -197,6 +201,10 @@ The `$ROOTSYS/tutorials` directory includes several sub-directories:
 \defgroup tutorial_proof Proof tutorials
 \ingroup Tutorials
 \brief These examples aim to illustrate the usage of PROOF
+
+\defgroup tutorial_webgui Webgui tutorials
+\ingroup Tutorials
+\brief Webgui examples
 
 \defgroup tutorial_legacy Legacy tutorials
 \ingroup Tutorials
