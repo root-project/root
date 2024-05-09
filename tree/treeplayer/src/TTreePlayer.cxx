@@ -9,6 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+ * \defgroup treeplayer TreePlayer Library
+ * \brief It contains utilities to plot data stored in a TTree.
+ * \sa Tree package documentation
+ * \sa Chapter about Trees and Selectors in the Users Guide
+ * \sa ROOT examples in tutorials and test directories: Event application, benchmarks
+ */
+
 /** \class TTreePlayer
 
 Implement some of the functionality of the class TTree requiring access to
