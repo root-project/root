@@ -15,7 +15,7 @@
 #include <cstring>
 
 /** \class TGLSelectRecordBase
-\ingroup opengl TGLSelectRecordBase
+\ingroup opengl
 Base class for select records.
 Supports initialization from a raw GL record (UInt_t*) and
 copies the name-data into internal array.
