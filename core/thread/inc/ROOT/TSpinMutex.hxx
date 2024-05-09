@@ -19,7 +19,7 @@ namespace ROOT {
    /**
     * \class ROOT::TSpinMutex
     * \brief A spin mutex class which respects the STL interface for mutexes.
-    * \ingroup Multicore
+    * \ingroup Parallelism
     * This class allows to acquire spin locks also in combination with templates in the STL such as
     * <a href="http://en.cppreference.com/w/cpp/thread/unique_lock">std::unique_lock</a> or
     * <a href="http://en.cppreference.com/w/cpp/thread/condition_variable_any">std::condition_variable_any</a>.
