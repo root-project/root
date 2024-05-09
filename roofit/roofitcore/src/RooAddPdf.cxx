@@ -397,7 +397,6 @@ void RooAddPdf::fixCoefRange(const char* rangeName)
 /// Retrieve cache element for the computation of the PDF normalisation.
 /// \param[in] nset Current normalisation set (integration over these variables yields 1).
 /// \param[in] iset Integration set. Variables to be integrated over (if integrations are performed).
-/// \param[in] rangeName Reference range for the integrals.
 ///
 /// If a cache element does not exist, create and fill it on the fly. The cache also contains
 /// - Supplemental normalization terms (in case not all added p.d.f.s have the same observables)
