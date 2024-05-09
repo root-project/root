@@ -253,9 +253,6 @@ class HeadNode(Node, ABC):
         # Set the value of every action node
         for node, value in zip(local_nodes, final_values):
             Utils.set_value_on_node(value, node, self.backend)
-            
-    def GetColumnNames(self) -> Iterable[str]:
-        return self._localdf.GetColumnNames()
 
 
 def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
