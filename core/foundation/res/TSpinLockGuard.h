@@ -20,7 +20,7 @@ namespace Internal {
 /**
 * \class ROOT::Internal::TSpinLockGuard
 * \brief A spin mutex-as-code-guard class.
-* \ingroup Foundation
+* \ingroup Parallelism
 * This class allows to acquire spin locks in combination with a std::atomic_flag variable.
 * For example:
 * ~~~{.cpp}
