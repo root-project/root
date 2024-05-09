@@ -181,6 +181,8 @@ set (DOCU_INPUT
   CACHE STRING "Doxyfile input files or folders")
 
 add_custom_target(Preparation
+  COMMAND rm -f cleanNamespaces?* # TODO move to clean target
+  COMMAND rm -f tutorialWorklist?* # TODO move to clean target
   COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/images # TODO move to clean target
 
   COMMAND mkdir -p ${DOCU_LOCATION}/macros ${CMAKE_CURRENT_BINARY_DIR}/images ${DOCU_LOCATION}/notebooks
