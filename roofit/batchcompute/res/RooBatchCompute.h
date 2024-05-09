@@ -118,7 +118,7 @@ struct ReduceNLLOutput {
 
 /**
  * \class RooBatchComputeInterface
- * \ingroup Roobatchcompute
+ * \ingroup roofit_dev_docs_batchcompute
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of
  * RooAbsReal::doEval().
  *
