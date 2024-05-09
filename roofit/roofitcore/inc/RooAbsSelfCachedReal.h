@@ -12,7 +12,7 @@
 #define RooFit_RooAbsSelfCachedReal_h
 
 /**
-\file RooAbsSelfCached.h
+\file RooAbsSelfCachedReal.h
 \class RooAbsSelfCached
 \ingroup Roofitcore
 
