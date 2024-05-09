@@ -13,7 +13,7 @@
 /**
 \file RooBatchCompute.cxx
 \class RbcClass
-\ingroup Roobatchcompute
+\ingroup roofit_dev_docs_batchcompute
 
 This file contains the code for cpu computations using the RooBatchCompute library.
 **/
