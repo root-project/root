@@ -107,6 +107,14 @@ public:
       }
    };
 
+   struct RWrittenPage {
+      RNTupleLocator fLocator;
+      std::uint32_t fNElements = 0;
+
+      RWrittenPage() = default;
+      RWrittenPage(const RNTupleLocator &locator, std::uint32_t nElements) : fLocator(locator), fNElements(nElements) {}
+   };
+
 protected:
    Detail::RNTupleMetrics fMetrics;
 
@@ -242,6 +250,10 @@ public:
 
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
+   /// Write a preprocessed page's buffer to the storage.
+   virtual RWrittenPage WriteSealedPage(DescriptorId_t, const RSealedPage &) = 0;
+   /// Commit a previously written page.
+   virtual void CommitWrittenPage(DescriptorId_t, const RWrittenPage &) = 0;
    /// Write a preprocessed page to storage. The column must have been added before.
    virtual void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) = 0;
    /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
@@ -377,6 +389,8 @@ public:
    void InitFromDescriptor(const RNTupleDescriptor &descriptor);
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   RWrittenPage WriteSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitWrittenPage(DescriptorId_t physicalColumnId, const RWrittenPage &writtenPage) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;

@@ -150,6 +150,8 @@ public:
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   RWrittenPage WriteSealedPage(DescriptorId_t, const RSealedPage &) final;
+   void CommitWrittenPage(DescriptorId_t, const RWrittenPage &) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;

@@ -529,6 +529,24 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
+ROOT::Experimental::Internal::RPageStorage::RWrittenPage
+ROOT::Experimental::Internal::RPagePersistentSink::WriteSealedPage(DescriptorId_t physicalColumnId,
+                                                                   const RSealedPage &sealedPage)
+{
+   return RWrittenPage(CommitSealedPageImpl(physicalColumnId, sealedPage), sealedPage.fNElements);
+}
+
+void ROOT::Experimental::Internal::RPagePersistentSink::CommitWrittenPage(DescriptorId_t physicalColumnId,
+                                                                          const RWrittenPage &writtenPage)
+{
+   fOpenColumnRanges.at(physicalColumnId).fNElements += writtenPage.fNElements;
+
+   RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   pageInfo.fNElements = writtenPage.fNElements;
+   pageInfo.fLocator = writtenPage.fLocator;
+   fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
+}
+
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(DescriptorId_t physicalColumnId,
                                                                          const RPageStorage::RSealedPage &sealedPage)
 {

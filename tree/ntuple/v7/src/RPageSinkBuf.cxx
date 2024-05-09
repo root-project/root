@@ -166,6 +166,17 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    });
 }
 
+ROOT::Experimental::Internal::RPageStorage::RWrittenPage
+ROOT::Experimental::Internal::RPageSinkBuf::WriteSealedPage(DescriptorId_t, const RSealedPage &)
+{
+   throw RException(R__FAIL("should never commit sealed pages to RPageSinkBuf"));
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitWrittenPage(DescriptorId_t, const RWrittenPage &)
+{
+   throw RException(R__FAIL("should never commit written pages to RPageSinkBuf"));
+}
+
 void ROOT::Experimental::Internal::RPageSinkBuf::CommitSealedPage(DescriptorId_t /*physicalColumnId*/,
                                                                   const RSealedPage & /*sealedPage*/)
 {
