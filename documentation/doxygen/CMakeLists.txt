@@ -206,7 +206,7 @@ add_custom_target(Preparation
 
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
 
-  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${PYTHON_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${PYTHON_EXECUTABLE}\\\" -DPYTHONPATH=\\\"${PYTHONPATH}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++${CMAKE_CXX_STANDARD} -O2
+  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python3_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${Python3_EXECUTABLE}\\\" -DPYTHONPATH=\\\"${PYTHONPATH}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++${CMAKE_CXX_STANDARD} -O2
 
   # Precompile here to prevent later multithreading issues
   COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+O'
@@ -225,8 +225,8 @@ add_custom_target(PreparationPyz
     COMMAND mkdir -p ${DOCU_LOCATION}/pyzdoc
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
     COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
-    COMMAND ${PYTHON_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
-    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${PYTHON_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
+    COMMAND ${Python3_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python3_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
 )
 if(builtin_docu)
     add_dependencies(PreparationPyz hsimple)
@@ -370,7 +370,7 @@ add_dependencies(Tutorials dox)
 
 add_custom_target(Notebooks ALL
     COMMAND scp -p ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.xml ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.dtd ${DOCU_LOCATION}/notebooks
-    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${PYTHON_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} ROOTSYS=${ROOTSYS} JUPYTER_PATH=${ROOTSYS}/etc/notebook JUPYTER_CONFIG_DIR=${ROOTSYS}/etc/notebook bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python3_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} ROOTSYS=${ROOTSYS} JUPYTER_PATH=${ROOTSYS}/etc/notebook JUPYTER_CONFIG_DIR=${ROOTSYS}/etc/notebook bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
     # pip3 install metakernel is needed to avoid issues in the conversion
     COMMAND rm -f ${DOCU_LOCATION}/notebooks/*.root
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
