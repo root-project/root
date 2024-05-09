@@ -41,7 +41,7 @@
 #include <stdexcept>
 
 /** \class RooJSONFactoryWSTool
-\ingroup roofit
+\ingroup roofit_dev_docs_hs3
 
 When using \ref Roofitmain, statistical models can be conveniently handled and
 stored as a RooWorkspace. However, for the sake of interoperability
