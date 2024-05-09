@@ -25,6 +25,7 @@ The following people have contributed to this new version:
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
  Jonas Hahnfeld, CERN/EP-SFT,\
  Akeem Hart, Queen Mary University of London/DUNE and MINERvA,\
+ Dennis Klein, GSI,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/EP-SFT,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -46,6 +47,7 @@ The following people have contributed to this new version:
 - ROOT does not longer support Python 2. The minimum required Python version to build ROOT is 3.8.
 - Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
 - Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
+- The `TList::TList(TObject*)` constructor is deprecated and will be removed in ROOT 6.34
 
 ## Core Libraries
 
