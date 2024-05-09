@@ -2795,8 +2795,10 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
       if (int(low + 0.5) > 0) {
          out.AddPoints(parName, int(low + 0.5), high, alt_value);
       } else {
-         for (auto p : out.poi()) {
-            dynamic_cast<RooRealVar *>(p)->setRange("scan", high, alt_value);
+         if (!std::isnan(high) && !std::isnan(alt_value) && !(std::isinf(high) && std::isinf(alt_value))) {
+            for (auto p : out.poi()) {
+               dynamic_cast<RooRealVar *>(p)->setRange("scan", high, alt_value);
+            }
          }
       }
       return out;
@@ -2806,8 +2808,10 @@ xRooNLLVar::xRooHypoSpace xRooNLLVar::hypoSpace(const char *parName, int nPoints
    if (nPoints > 0)
       hs.AddPoints(parName, nPoints, low, high);
    else {
-      for (auto p : hs.poi()) {
-         dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+      if (!std::isnan(low) && !std::isnan(high) && !(std::isinf(low) && std::isinf(high))) {
+         for (auto p : hs.poi()) {
+            dynamic_cast<RooRealVar *>(p)->setRange("scan", low, high);
+         }
       }
    }
    return hs;

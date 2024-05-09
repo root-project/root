@@ -59,6 +59,9 @@ class xRooNLLVar;
 class xRooFit {
 
 public:
+   static const char *GetVersion();
+   static const char *GetVersionDate();
+
    // Extra options for NLL creation:
    static RooCmdArg ReuseNLL(bool flag); // if should try to reuse the NLL object when it changes dataset
    static RooCmdArg Tolerance(double value);
