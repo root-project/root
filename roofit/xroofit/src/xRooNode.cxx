@@ -4656,7 +4656,9 @@ std::shared_ptr<TObject> xRooNode::acquire(const std::shared_ptr<TObject> &arg, 
          }
          RooMsgService::instance().setGlobalKillBelow(msglevel);
          return std::shared_ptr<TObject>(_ws->embeddedData(arg->GetName()), [](TObject *) {});
-      } else if (arg->InheritsFrom("RooFitResult") || arg->InheritsFrom("TTree") || arg->IsA() == TStyle::Class()) {
+      } else if (arg->InheritsFrom("RooFitResult") || arg->InheritsFrom("TTree") || arg->IsA() == TStyle::Class() ||
+                 arg->InheritsFrom("RooStats::HypoTestInverterResult") ||
+                 arg->InheritsFrom("RooStats::HypoTestResult")) {
          // ensure will have a unique name for import if must be new
          TNamed *aNamed = dynamic_cast<TNamed *>(arg.get());
          TString aName = arg->GetName();
@@ -7982,8 +7984,14 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
 
    for (auto o : _obs) {
       if (auto rr = o->get<RooRealVar>(); rr && rr->hasRange("coordRange")) {
-         rr->removeRange("coordRange");
+         rr->removeRange("coordRange");                 // doesn't actually remove, just sets to -inf->+inf
+         rr->setStringAttribute("coordRange", nullptr); // removes the attribute
       }
+   }
+   // probably should also remove any range on the x-axis variable too, if there is one
+   if (auto rr = dynamic_cast<RooRealVar *>(v); rr && rr->hasRange("coordRange")) {
+      rr->removeRange("coordRange");                 // doesn't actually remove, just sets to -inf->+inf
+      rr->setStringAttribute("coordRange", nullptr); // removes the attribute
    }
    coords(); // loads current coordinates and populates coordRange, if any
 
@@ -7995,7 +8003,8 @@ TH1 *xRooNode::BuildHistogram(RooAbsLValue *v, bool empty, bool errors, int binS
       // check if any obs are restricted range
       bool hasRange = false;
       for (auto o : normSet) {
-         if (auto rr = dynamic_cast<RooRealVar *>(o); rr && rr->hasRange("coordRange")) {
+         if (auto rr = dynamic_cast<RooRealVar *>(o);
+             rr && (rr->getStringAttribute("coordRange")) && strlen(rr->getStringAttribute("coordRange"))) {
             hasRange = true;
             break;
          }
@@ -8396,8 +8405,11 @@ TLegend *getLegend(bool create = true, bool doPaint = false)
          return nullptr;
       l = new TLegend(0.6, 1. - gPad->GetTopMargin() - 0.08, 0.75, 1. - gPad->GetTopMargin() - 0.08);
       l->SetBorderSize(0);
-      if (l->GetTextSize() == 0)
+      // legend text will be required to match y-axis
+      if (l->GetTextSize() == 0) {
          l->SetTextSize(gStyle->GetTitleYSize());
+         l->SetTextFont(gStyle->GetTitleFont("Y"));
+      }
    }
    l->SetBit(kCanDelete);
    // l->SetMargin(0);
@@ -8727,7 +8739,9 @@ void xRooNode::Draw(Option_t *opt)
    }
 
    if (!hasSame) {
-      gPad->SetName(GetName());
+      if (gPad != gPad->GetCanvas()) {
+         gPad->SetName(GetName()); // only rename the pad if its not the parent canvas
+      }
       gPad->SetTitle(GetTitle());
    }
 
@@ -8950,7 +8964,16 @@ void xRooNode::Draw(Option_t *opt)
          //            }
          dynamic_cast<TPad *>(pad)->DivideSquare(_size, 1e-9, 1e-9);
          if (_size > 3) {
-            pad->GetPad(_size)->SetName("legend");
+            auto _pad = pad->GetPad(_size); // will use as the legend pad
+            _pad->SetName("legend");
+            // stretch the pad all the way to the left
+            _pad->SetPad(_pad->GetAbsXlowNDC(), _pad->GetAbsYlowNDC(), 1.0, _pad->GetAbsYlowNDC() + _pad->GetAbsHNDC());
+            // and make all the remaining pads transparent
+            int x = _size;
+            while (pad->GetPad(x + 1)) {
+               pad->GetPad(x + 1)->SetFillStyle(0);
+               x++;
+            }
          }
       }
       int i = 0;
@@ -9568,41 +9591,27 @@ void xRooNode::Draw(Option_t *opt)
 
          TGaxis *axis =
             new TGaxis(_axis->GetXmin(), -4, _axis->GetXmin(), 4, -1.2 * maxImpact, 1.2 * maxImpact, 510, "-S");
-         axis->SetTextFont(_axis->GetTitleFont());
-         axis->SetLabelFont(_axis->GetLabelFont());
-         axis->SetTextSize((axis->GetTextFont() % 10 > 2) ? (10 / factor)
-                                                          : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) /
-                                                             (gPad->GetY2() - gPad->GetY1())));
-         axis->SetTitle(TString::Format("#Delta %s", fr->floatParsFinal().find(poiName.c_str())->GetTitle()));
-         axis->SetTickSize(axis->GetTickSize() * factor);
 
          if (doHorizontal) {
-            axis->SetLabelSize(
-               (axis->GetLabelFont() % 10 > 2)
-                  ? (10 / factor)
-                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
-            // axis->SetTextSize(axis->GetTextSize()*factor);
-            axis->SetTitleSize(
-               (axis->GetTextFont() % 10 > 2)
-                  ? (10 / factor)
-                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
-            axis->SetTitleOffset(axis->GetTitleOffset() * factor);
-            // axis->SetLabelOffset(axis->GetLabelOffset()*factor);
-            _axis->SetLabelSize(
-               (_axis->GetLabelFont() % 10 > 2)
-                  ? (10 / factor)
-                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) / (gPad->GetY2() - gPad->GetY1())));
-            histCopy->GetXaxis()->SetTickLength(histCopy->GetXaxis()->GetTickLength() * factor);
-            hist->GetXaxis()->SetTickLength(hist->GetXaxis()->GetTickLength() * factor);
-            histCopy->GetYaxis()->SetTickLength(histCopy->GetYaxis()->GetTickLength() * factor);
-            hist->GetYaxis()->SetTickLength(hist->GetYaxis()->GetTickLength() * factor);
-            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
-            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
-            hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset() * factor);
-            hist->GetXaxis()->SetLabelOffset(hist->GetXaxis()->GetLabelOffset() * factor);
-            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
-            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
+            //            _axis->SetLabelSize(
+            //               (_axis->GetLabelFont() % 10 > 2)
+            //                  ? (20 / factor)
+            //                  : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(20 / factor)) / (gPad->GetY2() -
+            //                  gPad->GetY1())));
+            //            histCopy->GetXaxis()->SetTickLength(histCopy->GetXaxis()->GetTickLength() * factor);
+            //            hist->GetXaxis()->SetTickLength(hist->GetXaxis()->GetTickLength() * factor);
+            //            histCopy->GetYaxis()->SetTickLength(histCopy->GetYaxis()->GetTickLength() * factor);
+            //            hist->GetYaxis()->SetTickLength(hist->GetYaxis()->GetTickLength() * factor);
+            //            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
+            //            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
+            //            hist->GetXaxis()->SetTitleOffset(hist->GetXaxis()->GetTitleOffset() * factor);
+            //            hist->GetXaxis()->SetLabelOffset(hist->GetXaxis()->GetLabelOffset() * factor);
+            //            histCopy->GetXaxis()->SetTitleOffset(histCopy->GetXaxis()->GetTitleOffset() * factor);
+            //            histCopy->GetXaxis()->SetLabelOffset(histCopy->GetXaxis()->GetLabelOffset() * factor);
          }
+         // copy attributes from TAxis to TGaxis
+         axis->ImportAxisAttributes((doHorizontal) ? histCopy->GetXaxis() : histCopy->GetYaxis());
+         axis->SetTitle(TString::Format("#Delta %s", fr->floatParsFinal().find(poiName.c_str())->GetTitle()));
 
          // create impact bar charts
          for (int tt = 0; tt < 2; tt++) {
@@ -9657,11 +9666,8 @@ void xRooNode::Draw(Option_t *opt)
          leg1->SetMargin(0.25);
          leg1->SetNColumns(2);
 
-         leg1->SetTextSize((leg1->GetTextFont() % 10 > 2) ? (10 / factor)
-                                                          : ((gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(10 / factor)) /
-                                                             (gPad->GetY2() - gPad->GetY1())));
-         // leg1.SetTextFont(gStyle->GetTextFont());
-         // leg1.SetTextSize(gStyle->GetTextSize());
+         leg1->SetTextSize(_axis->GetLabelSize());
+         leg1->SetTextFont(_axis->GetLabelFont());
          leg1->AddEntry((TObject *)nullptr, "Hessian Pre-fit", "");
          leg1->AddEntry((TObject *)nullptr, "Impact:", "");
          leg1->AddEntry(hist->FindObject("prefit_impact+"), "#theta = #hat{#theta}+#Delta#theta", "f");
@@ -10469,6 +10475,7 @@ void xRooNode::Draw(Option_t *opt)
 
                if (createdStyle) {
                   // give hist a color, that isn't the same as any other hists color
+                  hh->SetFillStyle(1001); // solid fill style
                   bool used = false;
                   do {
                      hh->SetFillColor((count++));
