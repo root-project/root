@@ -70,5 +70,4 @@ Related classes
 \brief Interfaces and classes designed for future ROOT version 7 (experimental!)
 
 \defgroup NTuple NTuple-related classes
-\ingroup ROOT7
 \brief tuple classes designed for future ROOT version 7  (experimental!)
