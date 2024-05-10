@@ -95,6 +95,7 @@ public:
       fChunkTensor =
          std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fChunkSize, numColumns});
       
+
       if(fNotFiltered){
          fNumEntries = f_rdf.Count().GetValue();
 
@@ -189,7 +190,7 @@ public:
       if (std::size_t remainderRows = fNumEntries % fBatchSize;
           remainderRows == floor(remainderRows * fValidationSplit) ||
             (fDropRemainder && (std::size_t)floor(fNumEntries * fValidationSplit) % fBatchSize)){
-               
+
          return ((fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
             floor((fNumEntries % fChunkSize) * fValidationSplit)) / fBatchSize;
       }
