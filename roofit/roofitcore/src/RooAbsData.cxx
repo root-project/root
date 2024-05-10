@@ -1012,40 +1012,40 @@ RooFit::OwningPtr<TMatrixDSym> RooAbsData::corrcovMatrix(const RooArgList& vars,
     if (select && select->eval()==0) continue ;
     if (cutRange && dvars->allInRange(cutRange)) continue ;
 
-    for(std::size_t ix = 0; ix < varList.size(); ++ix) {
-      auto varx = static_cast<RooRealVar const&>(varList[ix]);
-      xsum[ix] += weight() * varx.getVal() ;
+    for(std::size_t iX = 0; iX < varList.size(); ++iX) {
+      auto varx = static_cast<RooRealVar const&>(varList[iX]);
+      xsum[iX] += weight() * varx.getVal() ;
       if (corr) {
-        x2sum[ix] += weight() * varx.getVal() * varx.getVal();
+        x2sum[iX] += weight() * varx.getVal() * varx.getVal();
       }
 
-      for(std::size_t iy = ix; iy < varList.size(); ++iy) {
-        auto vary = static_cast<RooRealVar const&>(varList[iy]);
-        xysum(ix,iy) += weight() * varx.getVal() * vary.getVal();
-        xysum(iy,ix) = xysum(ix,iy) ;
+      for(std::size_t iY = iX; iY < varList.size(); ++iY) {
+        auto vary = static_cast<RooRealVar const&>(varList[iY]);
+        xysum(iX,iY) += weight() * varx.getVal() * vary.getVal();
+        xysum(iY,iX) = xysum(iX,iY) ;
       }
     }
 
   }
 
   // Normalize sums
-  for (std::size_t ix=0 ; ix<varList.size() ; ix++) {
-    xsum[ix] /= sumEntries(cutSpec, cutRange) ;
+  for (std::size_t iX=0 ; iX<varList.size() ; iX++) {
+    xsum[iX] /= sumEntries(cutSpec, cutRange) ;
     if (corr) {
-      x2sum[ix] /= sumEntries(cutSpec, cutRange) ;
+      x2sum[iX] /= sumEntries(cutSpec, cutRange) ;
     }
-    for (std::size_t iy=0 ; iy<varList.size() ; iy++) {
-      xysum(ix,iy) /= sumEntries(cutSpec, cutRange) ;
+    for (std::size_t iY=0 ; iY<varList.size() ; iY++) {
+      xysum(iX,iY) /= sumEntries(cutSpec, cutRange) ;
     }
   }
 
   // Calculate covariance matrix
   auto C = std::make_unique<TMatrixDSym>(varList.size()) ;
-  for (std::size_t ix=0 ; ix<varList.size() ; ix++) {
-    for (std::size_t iy=0 ; iy<varList.size() ; iy++) {
-      (*C)(ix,iy) = xysum(ix,iy)-xsum[ix]*xsum[iy] ;
+  for (std::size_t iX=0 ; iX<varList.size() ; iX++) {
+    for (std::size_t iY=0 ; iY<varList.size() ; iY++) {
+      (*C)(iX,iY) = xysum(iX,iY)-xsum[iX]*xsum[iY] ;
       if (corr) {
-   (*C)(ix,iy) /= std::sqrt((x2sum[ix]-(xsum[ix]*xsum[ix]))*(x2sum[iy]-(xsum[iy]*xsum[iy]))) ;
+   (*C)(iX,iY) /= std::sqrt((x2sum[iX]-(xsum[iX]*xsum[iX]))*(x2sum[iY]-(xsum[iY]*xsum[iY]))) ;
       }
     }
   }

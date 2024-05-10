@@ -812,7 +812,7 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
    if (!_allExtendable) {
       // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
       // a conditional pdf and we don't need to do any transformation. See also
-      // RooAddPdf::compleForNormSet() for more explanations on a similar logic.
+      // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
       if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
          prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
       }

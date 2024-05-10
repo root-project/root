@@ -206,10 +206,10 @@ size_t ZeroMQPoller::unregister_socket(zmq::socket_t &socket)
    m_sockets.erase(it);
 
    // Remove from m_items
-   auto iit = std::find_if(begin(m_items), end(m_items),
+   auto found = std::find_if(begin(m_items), end(m_items),
                            [&it_first](const zmq::pollitem_t &item) { return it_first == item.socket; });
-   assert(iit != end(m_items));
-   m_items.erase(iit);
+   assert(found != end(m_items));
+   m_items.erase(found);
 
    return index;
 }
@@ -235,10 +235,10 @@ size_t ZeroMQPoller::unregister_socket(int fd)
    m_fds.erase(it);
 
    // Remove from m_items
-   auto iit = std::find_if(begin(m_items), end(m_items),
+   auto found = std::find_if(begin(m_items), end(m_items),
                            [&it_first](const zmq::pollitem_t &item) { return it_first == item.fd; });
-   assert(iit != end(m_items));
-   m_items.erase(iit);
+   assert(found != end(m_items));
+   m_items.erase(found);
 
    return index;
 }
