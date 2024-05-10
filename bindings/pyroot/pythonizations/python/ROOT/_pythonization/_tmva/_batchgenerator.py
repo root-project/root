@@ -513,6 +513,10 @@ class TrainRBatchGenerator:
     @property
     def weights_column(self) -> str:
         return self.base_generator.weights_column
+    
+    @property
+    def number_of_batches(self) -> int:
+        return self.base_generator.generator.NumberOfTrainingBatches()
 
     def __iter__(self):
         self._callable = self.__call__()
@@ -577,6 +581,10 @@ class ValidationRBatchGenerator:
     @property
     def weights_column(self) -> str:
         return self.base_generator.weights_column
+    
+    @property
+    def number_of_batches(self) -> int:
+        return self.base_generator.generator.NumberOfValidationBatches()
 
     def __iter__(self):
         self._callable = self.__call__()
