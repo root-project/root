@@ -175,6 +175,29 @@ public:
       return fBatchLoader->GetValidationBatch();
    }
 
+   std::size_t NumberOfTrainingBatches(){
+      if (fDropRemainder && (std::size_t)ceil(fNumEntries * (1 - fValidationSplit)) % fBatchSize){
+         return ((fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+            ceil((fNumEntries % fChunkSize) * (1 - fValidationSplit))) / fBatchSize;
+      }
+
+      return ((fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+         ceil((fNumEntries % fChunkSize) * (1 - fValidationSplit))) / fBatchSize + 1;
+   }
+
+   std::size_t NumberOfValidationBatches(){
+      if (std::size_t remainderRows = fNumEntries % fBatchSize;
+          remainderRows == floor(remainderRows * fValidationSplit) ||
+            (fDropRemainder && (std::size_t)floor(fNumEntries * fValidationSplit) % fBatchSize)){
+               
+         return ((fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+            floor((fNumEntries % fChunkSize) * fValidationSplit)) / fBatchSize;
+      }
+      
+      return ((fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+         floor((fNumEntries % fChunkSize) * fValidationSplit)) / fBatchSize + 1;
+   }
+
    void LoadChunksNoFilters()
    {
       for (std::size_t currentChunk = 0, currentRow = 0; ((currentChunk < fMaxChunks) || fUseWholeFile) && currentRow < fNumEntries;
@@ -259,7 +282,7 @@ public:
       }
 
       // calculate the number of events used for validation
-      std::size_t num_validation = ceil(events * fValidationSplit);
+      std::size_t num_validation = floor(events * fValidationSplit);
 
       // Devide the vector into training and validation and return
       std::vector<std::size_t> trainingIndices = std::vector<std::size_t>({row_order.begin(), row_order.end() - num_validation});

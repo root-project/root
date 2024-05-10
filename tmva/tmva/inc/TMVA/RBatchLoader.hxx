@@ -232,6 +232,7 @@ public:
          SaveRemainingData(*fTrainingRemainder, fTrainingRemainderRow, eventIndices);
          fBatchCondition.notify_one();
          fTrainingRemainderRow += eventIndices.size();
+         return;
       }
 
       // Create tasks of fBatchSize until all idx are used
@@ -274,6 +275,7 @@ public:
          SaveRemainingData(*fValidationRemainder, fValidationRemainderRow, eventIndices);
          fBatchCondition.notify_one();
          fValidationRemainderRow += eventIndices.size();
+         return;
       }
 
       // Create tasks of fBatchSize untill all idx are used
