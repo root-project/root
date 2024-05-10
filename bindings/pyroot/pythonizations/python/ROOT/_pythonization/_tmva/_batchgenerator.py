@@ -664,6 +664,12 @@ def CreateNumPyGenerators(
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
+            Let a data list [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] with batch_size=4 be
+            given.
+            If drop_remainder = True, then two batches [0, 1, 2, 3] and
+            [4, 5, 6, 7] will be returned.
+            If drop_remainder = False, then three batches [0, 1, 2, 3],
+            [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
         Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
@@ -744,6 +750,12 @@ def CreateTFDatasets(
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
+            Let a data list [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] with batch_size=4 be
+            given.
+            If drop_remainder = True, then two batches [0, 1, 2, 3] and
+            [4, 5, 6, 7] will be returned.
+            If drop_remainder = False, then three batches [0, 1, 2, 3],
+            [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
         Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
@@ -752,6 +764,8 @@ def CreateTFDatasets(
             are loaded during the training. Before training, the validation
             generator will return no batches.
     """
+    import tensorflow as tf
+
     base_generator = BaseGenerator(
         rdataframe,
         batch_size,
@@ -807,6 +821,7 @@ def CreateTFDatasets(
     setattr(ds_train, "train_columns", train_generator.train_columns)
     setattr(ds_train, "target_column", train_generator.target_columns)
     setattr(ds_train, "weights_column", train_generator.weights_column)
+    setattr(ds_train, "number_of_batches", train_generator.number_of_batches)
 
     ds_validation = tf.data.Dataset.from_generator(
         validation_generator, output_signature=batch_signature
@@ -817,6 +832,7 @@ def CreateTFDatasets(
     setattr(ds_validation, "train_columns", train_generator.train_columns)
     setattr(ds_validation, "target_column", train_generator.target_columns)
     setattr(ds_validation, "weights_column", train_generator.weights_column)
+    setattr(ds_validation, "number_of_batches", train_generator.number_of_batches)
 
     return ds_train, ds_validation
 
@@ -868,6 +884,12 @@ def CreatePyTorchGenerators(
         drop_remainder (bool):
             Drop the remainder of data that is too small to compose full batch.
             Defaults to True.
+            Let a data list [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] with batch_size=4 be
+            given.
+            If drop_remainder = True, then two batches [0, 1, 2, 3] and
+            [4, 5, 6, 7] will be returned.
+            If drop_remainder = False, then three batches [0, 1, 2, 3],
+            [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
         Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
