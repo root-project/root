@@ -674,6 +674,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType.substr(0, 13) == "std::variant<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(13, canonicalType.length() - 14));
       std::vector<RFieldBase *> items;
+      items.reserve(innerTypes.size());
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
       }
@@ -689,6 +690,7 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType.substr(0, 11) == "std::tuple<") {
       auto innerTypes = TokenizeTypeList(canonicalType.substr(11, canonicalType.length() - 12));
       std::vector<std::unique_ptr<RFieldBase>> items;
+      items.reserve(innerTypes.size());
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
       }
@@ -1085,6 +1087,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       GenerateColumnsImpl(desc);
       ColumnRepresentation_t onDiskColumnTypes;
+      onDiskColumnTypes.reserve(fColumns.size());
       for (const auto &c : fColumns) {
          onDiskColumnTypes.emplace_back(c->GetModel().GetType());
       }
@@ -1772,6 +1775,7 @@ ROOT::Experimental::RClassField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    auto basePtr = value.GetPtr<unsigned char>().get();
+   result.reserve(fSubFields.size());
    for (unsigned i = 0; i < fSubFields.size(); i++) {
       result.emplace_back(
          fSubFields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fSubFieldsInfo[i].fOffset)));
@@ -2292,6 +2296,7 @@ ROOT::Experimental::RRecordField::RRecordField(std::string_view fieldName,
    : ROOT::Experimental::RFieldBase(fieldName, "", ENTupleStructure::kRecord, false /* isSimple */)
 {
    fTraits |= kTraitTrivialType;
+   fOffsets.reserve(itemFields.size());
    for (auto &item : itemFields) {
       fSize += GetItemPadding(fSize, item->GetAlignment());
       fOffsets.push_back(fSize);
@@ -2384,6 +2389,7 @@ ROOT::Experimental::RRecordField::SplitValue(const RValue &value) const
 {
    auto basePtr = value.GetPtr<unsigned char>().get();
    std::vector<RValue> result;
+   result.reserve(fSubFields.size());
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       result.emplace_back(fSubFields[i]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), basePtr + fOffsets[i])));
    }
@@ -2522,6 +2528,7 @@ ROOT::Experimental::RVectorField::SplitValue(const RValue &value) const
    R__ASSERT((vec->size() % fItemSize) == 0);
    auto nItems = vec->size() / fItemSize;
    std::vector<RValue> result;
+   result.reserve(nItems);
    for (unsigned i = 0; i < nItems; ++i) {
       result.emplace_back(
          fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), vec->data() + (i * fItemSize))));
@@ -2858,6 +2865,7 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    const auto &typedValue = value.GetRef<std::vector<bool>>();
    auto count = typedValue.size();
    std::vector<RValue> result;
+   result.reserve(count);
    for (unsigned i = 0; i < count; ++i) {
       if (typedValue[i])
          result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<bool>(new bool(true))));
@@ -2954,6 +2962,7 @@ ROOT::Experimental::RArrayField::SplitValue(const RValue &value) const
 {
    auto arrayPtr = value.GetPtr<unsigned char>().get();
    std::vector<RValue> result;
+   result.reserve(fArrayLength);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       result.emplace_back(
          fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
@@ -3098,6 +3107,7 @@ ROOT::Experimental::RArrayAsRVecField::SplitValue(const ROOT::Experimental::RFie
 {
    auto arrayPtr = value.GetPtr<unsigned char>().get();
    std::vector<ROOT::Experimental::RFieldBase::RValue> result;
+   result.reserve(fArrayLength);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       result.emplace_back(
          fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), arrayPtr + (i * fItemSize))));
@@ -3210,6 +3220,7 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
 {
    auto nFields = fSubFields.size();
    std::vector<RFieldBase *> itemFields;
+   itemFields.reserve(nFields);
    for (unsigned i = 0; i < nFields; ++i) {
       // TODO(jblomer): use unique_ptr in RVariantField constructor
       itemFields.emplace_back(fSubFields[i]->Clone(fSubFields[i]->GetFieldName()).release());
