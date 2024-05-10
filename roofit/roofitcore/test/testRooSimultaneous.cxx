@@ -67,9 +67,9 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    RooRealVar x("x", "", 0, 1);
    RooRealVar rnd("rnd", "", 0, 1);
-   RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
-   catThr.addThreshold(1. / 3, "v0", 0);
-   catThr.addThreshold(2. / 3, "v1", 1);
+   RooThresholdCategory catThreshold("cat", "", rnd, "v2", 2);
+   catThreshold.addThreshold(1. / 3, "v0", 0);
+   catThreshold.addThreshold(2. / 3, "v1", 1);
 
    RooRealVar m0("m0", "", 0.5, 0, 1);
    RooRealVar m1("m1", "", 0.5, 0, 1);
@@ -79,7 +79,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
 
    std::unique_ptr<RooDataSet> ds{pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100))};
-   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
+   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThreshold));
 
    RooSimultaneous sim("sim", "", *cat);
    sim.addPdf(g0, "v0");
