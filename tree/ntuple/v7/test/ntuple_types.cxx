@@ -1166,6 +1166,89 @@ TYPED_TEST(UniquePtr, Basics)
    EXPECT_EQ(nullptr, pArray->get());
 }
 
+TEST(RNTuple, Optional)
+{
+   FileRaii fileGuard("test_ntuple_optional.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pOptChar = model->MakeField<std::optional<char>>("oc");
+      auto pOptCharArr3 = model->MakeField<std::optional<std::array<char, 3>>>("oac3");
+      auto pOptCharArr4 = model->MakeField<std::optional<std::array<char, 4>>>("oac4");
+      auto pOptInt16 = model->MakeField<std::optional<std::int16_t>>("oi");
+      auto pOptFloat = model->MakeField<std::optional<float>>("of");
+      auto pOptDouble = model->MakeField<std::optional<double>>("od");
+      model->AddField(RFieldBase::Create("ocs", "std::optional<CustomStruct>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      const auto &defaultEntry = writer->GetModel().GetDefaultEntry();
+      auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+      writer->Fill();
+      *pOptChar = 'x';
+      *pOptCharArr3 = {'1', '2', '3'};
+      *pOptCharArr4 = {'1', '2', '3', '4'};
+      *pOptInt16 = 137;
+      *pOptFloat = 1.0;
+      *pOptDouble = 2.0;
+      *pOptCustomStruct = CustomStruct();
+      writer->Fill();
+      pOptChar->reset();
+      pOptCharArr3->reset();
+      pOptCharArr4->reset();
+      pOptInt16->reset();
+      pOptFloat->reset();
+      pOptDouble->reset();
+      pOptCustomStruct->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   const auto &defaultEntry = reader->GetModel().GetDefaultEntry();
+   auto pOptChar = defaultEntry.GetPtr<std::optional<char>>("oc");
+   auto pOptCharArr3 = defaultEntry.GetPtr<std::optional<std::array<char, 3>>>("oac3");
+   auto pOptCharArr4 = defaultEntry.GetPtr<std::optional<std::array<char, 4>>>("oac4");
+   auto pOptInt16 = defaultEntry.GetPtr<std::optional<std::int16_t>>("oi");
+   auto pOptFloat = defaultEntry.GetPtr<std::optional<float>>("of");
+   auto pOptDouble = defaultEntry.GetPtr<std::optional<double>>("od");
+   auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+   reader->LoadEntry(0);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptCustomStruct);
+
+   reader->LoadEntry(1);
+
+   EXPECT_EQ('x', *pOptChar);
+   std::array<char, 3> expCharArr3{'1', '2', '3'};
+   EXPECT_EQ(expCharArr3, *pOptCharArr3);
+   std::array<char, 4> expCharArr4{'1', '2', '3', '4'};
+   EXPECT_EQ(expCharArr4, *pOptCharArr4);
+   EXPECT_EQ(137, *pOptInt16);
+   EXPECT_FLOAT_EQ(1.0, pOptFloat->value());
+   EXPECT_DOUBLE_EQ(2.0, pOptDouble->value());
+   EXPECT_EQ(CustomStruct(), *pOptCustomStruct);
+
+   reader->LoadEntry(2);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptCustomStruct);
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
