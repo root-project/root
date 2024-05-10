@@ -827,6 +827,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
  * <tr><th> Type of CmdArg    <th>    Effect on NLL
  * <tr><td> `ConditionalObservables(Args_t &&... argsOrArgSet)`  <td>  Do not normalize PDF over listed observables.
  *                                                 Arguments can either be multiple RooRealVar or a single RooArgSet containing them.
+ * <tr><td> `Extended(bool flag)`             <td> Add extended likelihood term, off by default.
  * <tr><td> `Range(const char* name)`         <td>  Fit only data inside range with given name. Multiple comma-separated range names can be specified.
  *                                                  In this case, the unnormalized PDF \f$f(x)\f$ is normalized by the integral over all ranges \f$r_i\f$:
  *                                                  \f[
