@@ -2092,7 +2092,7 @@ xRooNode xRooNode::Add(const xRooNode &child, Option_t *opt)
       child.convertForAcquisition(*this);
       if (child.get()) {
          if (auto _d = child.get<RooAbsData>()) {
-            // don't use acquire method to import, because that adds datasets as Embeddded
+            // don't use acquire method to import, because that adds datasets as Embedded
             if (!w->import(*_d)) {
                return xRooNode(child.GetName(), *w->data(child.GetName()), *this);
             } else {
@@ -10330,7 +10330,7 @@ void xRooNode::Draw(Option_t *opt)
                   }
                   hh->SetTitle(TString(hh->GetTitle())
                                   .ReplaceAll(TString(chan->get()->GetName()) + "_",
-                                              "")); // remove occurance of channelname_ in title (usually prefix)
+                                              "")); // remove occurrence of channelname_ in title (usually prefix)
                   titleMatchName &= (TString(samp->GetName()) == hh->GetTitle() ||
                                      TString(hh->GetTitle()).BeginsWith(TString(samp->GetName()) + "_"));
                   hh->SetBinContent(hh->GetXaxis()->FindFixBin(chanName), samp->GetContent());

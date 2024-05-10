@@ -2708,7 +2708,7 @@ public:
       // Define range "alt" as including bins 1,3,5,7,9
       xb->setRange("alt", "x_coarse_bin1,x_coarse_bin3,x_coarse_bin5,x_coarse_bin7,x_coarse_bin9");
 
-      // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the fram
+      // Construct subset of data matching range "alt" but only for the first 5000 events and plot it on the frame
       std::unique_ptr<RooAbsData> dataSel{data->reduce(CutRange("alt"), EventRange(0, 5000))};
       //   dataSel->plotOn(xframe,MarkerColor(kGreen),LineColor(kGreen),Name("data_sel")) ;
 
