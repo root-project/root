@@ -14,36 +14,25 @@ import ROOT
 tree_name = "sig_tree"
 file_name = "http://root.cern/files/Higgs_data.root"
 
-rdf = ROOT.RDataFrame(tree_name, file_name)
-
 batch_size = 128
 chunk_size = 5_000
 
-ds_train, ds_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+rdataframe = ROOT.RDataFrame(tree_name, file_name)
+
+gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+    rdataframe,
     batch_size,
     chunk_size,
-    rdataframe=rdf,
     validation_split=0.3,
     shuffle=True,
+    drop_remainder=False
 )
 
 # Loop through training set
-i = 1
-while True:
-    try:
-        b = next(ds_train)
-        print(f"Training batch {i} => {b.shape}")
-        i+=1
-    except StopIteration:
-        break
+for i, b in enumerate(gen_train):
+    print(f"Training batch {i} => {b.shape}")
 
 
 # Loop through Validation set
-i = 1
-while True:
-    try:
-        b = next(ds_validation)
-        print(f"Validation batch {i} => {b.shape}")
-        i+=1
-    except StopIteration:
-        break
+for i, b in enumerate(gen_validation):
+    print(f"Validation batch {i} => {b.shape}")
