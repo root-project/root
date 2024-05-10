@@ -39,6 +39,7 @@
 #include <map>
 #include <memory>
 #include <new>
+#include <optional>
 #include <set>
 #include <string>
 #include <tuple>
@@ -1521,6 +1522,44 @@ public:
    size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
 
+class ROptionalField : public RNullableField {
+   class ROptionalDeleter : public RDeleter {
+   private:
+      std::unique_ptr<RDeleter> fItemDeleter;
+
+   public:
+      explicit ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter) : fItemDeleter(std::move(itemDeleter)) {}
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   std::unique_ptr<RDeleter> fItemDeleter;
+
+   /// Given a pointer to an std::optional<T> in from, extract a pointer to the value T* and a pointer
+   /// to the engagement boolean. Assumes that an std::optional<T> is stored as
+   /// `struct { T t; bool engagement; };`
+   std::pair<const void *, const bool *> GetValueAndEngagementPtrs(const void *optionalPtr) const;
+   std::pair<void *, bool *> GetValueAndEngagementPtrs(void *optionalPtr) const;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+public:
+   ROptionalField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   ROptionalField(ROptionalField &&other) = default;
+   ROptionalField &operator=(ROptionalField &&other) = default;
+   ~ROptionalField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+};
+
 class RAtomicField : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -2914,6 +2953,16 @@ class RField<std::unique_ptr<ItemT>> final : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
+
+template <typename ItemT>
+class RField<std::optional<ItemT>> final : public ROptionalField {
+public:
+   static std::string TypeName() { return "std::optional<" + RField<ItemT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : ROptionalField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;

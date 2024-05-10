@@ -702,6 +702,12 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       auto normalizedInnerTypeName = itemField->GetTypeName();
       result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
+   } else if (canonicalType.substr(0, 14) == "std::optional<") {
+      std::string itemTypeName = canonicalType.substr(14, canonicalType.length() - 15);
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetTypeName();
+      result = std::make_unique<ROptionalField>(fieldName, "std::optional<" + normalizedInnerTypeName + ">",
+                                                std::move(itemField));
    } else if (canonicalType.substr(0, 9) == "std::set<") {
       std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
       auto itemField = Create("_0", itemTypeName).Unwrap();
@@ -3554,6 +3560,106 @@ ROOT::Experimental::RUniquePtrField::SplitValue(const RValue &value) const
       result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), ptr.get())));
    }
    return result;
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::ROptionalField::ROptionalField(std::string_view fieldName, std::string_view typeName,
+                                                   std::unique_ptr<RFieldBase> itemField)
+   : RNullableField(fieldName, typeName, std::move(itemField)), fItemDeleter(GetDeleterOf(*fSubFields[0]))
+{
+   if (fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)
+      fTraits |= kTraitTriviallyDestructible;
+}
+
+std::pair<void *, bool *> ROOT::Experimental::ROptionalField::GetValueAndEngagementPtrs(void *optionalPtr) const
+{
+   void *value = optionalPtr;
+   bool *engagement =
+      reinterpret_cast<bool *>(reinterpret_cast<unsigned char *>(optionalPtr) + fSubFields[0]->GetValueSize());
+   return {value, engagement};
+}
+
+std::pair<const void *, const bool *>
+ROOT::Experimental::ROptionalField::GetValueAndEngagementPtrs(const void *optionalPtr) const
+{
+   return GetValueAndEngagementPtrs(const_cast<void *>(optionalPtr));
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase>
+ROOT::Experimental::ROptionalField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetFieldName());
+   return std::make_unique<ROptionalField>(newName, GetTypeName(), std::move(newItemField));
+}
+
+std::size_t ROOT::Experimental::ROptionalField::AppendImpl(const void *from)
+{
+   const auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(from);
+   if (*engagementPtr) {
+      return AppendValue(valuePtr);
+   } else {
+      return AppendNull();
+   }
+}
+
+void ROOT::Experimental::ROptionalField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+{
+   auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(to);
+   auto itemIndex = GetItemIndex(globalIndex);
+   if (itemIndex.GetIndex() == kInvalidClusterIndex) {
+      *engagementPtr = false;
+   } else {
+      CallReadOn(*fSubFields[0], itemIndex, valuePtr);
+      *engagementPtr = true;
+   }
+}
+
+void ROOT::Experimental::ROptionalField::ConstructValue(void *where) const
+{
+   auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(where);
+   CallConstructValueOn(*fSubFields[0], valuePtr);
+   *engagementPtr = false;
+}
+
+void ROOT::Experimental::ROptionalField::ROptionalDeleter::operator()(void *objPtr, bool dtorOnly)
+{
+   fItemDeleter->operator()(objPtr, true /* dtorOnly */);
+   RDeleter::operator()(objPtr, dtorOnly);
+}
+
+std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::ROptionalField::GetDeleter() const
+{
+   return std::make_unique<ROptionalDeleter>(GetDeleterOf(*fSubFields[0]));
+}
+
+std::vector<ROOT::Experimental::RFieldBase::RValue>
+ROOT::Experimental::ROptionalField::SplitValue(const RValue &value) const
+{
+   std::vector<RValue> result;
+   const auto [valuePtr, engagementPtr] = GetValueAndEngagementPtrs(value.GetPtr<void>().get());
+   if (*engagementPtr) {
+      result.emplace_back(fSubFields[0]->BindValue(std::shared_ptr<void>(value.GetPtr<void>(), valuePtr)));
+   }
+   return result;
+}
+
+size_t ROOT::Experimental::ROptionalField::GetValueSize() const
+{
+   const auto alignment = GetAlignment();
+   const auto actualSize = fSubFields[0]->GetValueSize() + 1;
+   auto padding = 0;
+   if (alignment > 1) {
+      auto remainder = actualSize % alignment;
+      if (remainder != 0)
+         padding = alignment - remainder;
+   }
+   return actualSize + padding;
+}
+
+size_t ROOT::Experimental::ROptionalField::GetAlignment() const
+{
+   return fSubFields[0]->GetAlignment();
 }
 
 //------------------------------------------------------------------------------
