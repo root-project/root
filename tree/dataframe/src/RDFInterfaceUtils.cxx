@@ -777,10 +777,14 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
    const auto funcName = DeclareFunction(parsedExpr.fExpr, parsedExpr.fVarNames, exprVarTypes);
    const auto type = RetTypeOfFunc(funcName);
 
-   if (type.rfind("ROOT::VecOps::RVec", 0) != 0)
+   if (type.rfind("ROOT::VecOps::RVec", 0) != 0) {
+      // Avoid leak
+      delete upcastNodeOnHeap;
+      upcastNodeOnHeap = nullptr;
       throw std::runtime_error(
          "Jitted Vary expressions must return an RVec object. The following expression returns a " + type +
          " instead:\n" + parsedExpr.fExpr);
+   }
 
    auto colRegisterCopy = new RColumnRegister(colRegister);
    const auto colRegisterAddr = PrettyPrintAddr(colRegisterCopy);
