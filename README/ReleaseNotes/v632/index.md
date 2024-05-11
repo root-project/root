@@ -245,19 +245,26 @@ deprecation. Please adapt your code if necessary.
 
 ## PyROOT
 
-
-### Rebase of PyROOT on the current cppyy
-
 PyROOT was rebased on the latest version of the [cppyy library](https://cppyy.readthedocs.io/en/latest/).
 This means PyROOT benefits from many upstream improvements and fixes, for example related to the conversion of NumPy arrays to vectors, implicit conversion from nested Python tuples to nested initializer lists, and improved overload resolution.
 
-Related to this cppyy upgrade, there is one change in PyROOT behavior.
+Related to this cppyy upgrade, there are some changes in PyROOT behavior.
+
+### Different representation of `std::string`
+
+Calling `repr()` on a `cppyy.gbl.std.string` object now comes with a "b" prefix, i.e. a bytes object is returned instead of a Python string.
+This is an intentional change for better unicode support.
+
+See: https://github.com/root-project/root/issues/15153#issuecomment-2040504962
+
+### No more implicit conversion of static size `char` buffer to Python strings
+
 A static size character buffer of type `char[n]` is not converted to a Python string anymore. 
 The reason for this: since it was previously assumed the string was
 null-terminated, there was no way to get the bytes after a `null`, even if you
 wanted to.
 
-```
+```python
 import ROOT
 
 ROOT.gInterpreter.Declare("""
