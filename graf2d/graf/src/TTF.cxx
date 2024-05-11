@@ -25,6 +25,8 @@ Interface to the freetype 2 library.
 #include "TMath.h"
 #include "TError.h"
 
+#include <fontconfig/fontconfig.h>
+
 // to scale fonts to the same size as the old TT version
 const Float_t kScale = 0.93376068;
 
@@ -38,10 +40,11 @@ Int_t          TTF::fgTBlankW        = 0;
 Int_t          TTF::fgWidth          = 0;
 Int_t          TTF::fgAscent         = 0;
 Int_t          TTF::fgCurFontIdx     = -1;
-Int_t          TTF::fgSymbItaFontIdx = -1;
 Int_t          TTF::fgFontCount      = 0;
 Int_t          TTF::fgNumGlyphs      = 0;
 char          *TTF::fgFontName[kTTMaxFonts];
+Int_t          TTF::fgFontIdx[kTTMaxFonts];
+Int_t          TTF::fgFontIta[kTTMaxFonts];
 FT_Matrix     *TTF::fgRotMatrix      = nullptr;
 FT_Library     TTF::fgLibrary;
 FT_BBox        TTF::fgCBox;
@@ -70,6 +73,11 @@ void TTF::Init()
       Error("TTF::Init", "error initializing FreeType");
       return;
    }
+
+   // Add root's font directory
+   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
+                                       TROOT::GetTTFFontDir());
+   FcConfigAppFontAddDir (nullptr, (const FcChar8*)ttpath);
 
    // load default font (arialbd)
    SetTextFont(62);
@@ -108,12 +116,15 @@ Short_t TTF::CharToUnicode(UInt_t code)
          charmap  = fgFace[fgCurFontIdx]->charmaps[i];
          platform = charmap->platform_id;
          encoding = charmap->encoding_id;
-         if ((platform == 3 && encoding == 1) ||
+         if ((platform == 3 && encoding == 1 &&
+              (fgFontIta[fgCurFontIdx] & 2) == 0) ||
              (platform == 0 && encoding == 0) ||
+             (platform == 7 && encoding == 2 &&
+              (fgFontIta[fgCurFontIdx] & 2) != 0) ||
+             (platform == 0 && encoding == 3 &&
+              (fgFontIta[fgCurFontIdx] & 2) != 0) ||
              (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "wingding.ttf")) ||
-             (platform == 1 && encoding == 0 &&
-              !strcmp(fgFontName[fgCurFontIdx], "symbol.ttf")))
+              (fgFontIta[fgCurFontIdx] & 2) != 0))
          {
             fgCharMap[fgCurFontIdx] = charmap;
             if (FT_Set_Charmap(fgFace[fgCurFontIdx], fgCharMap[fgCurFontIdx]))
@@ -392,21 +403,145 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
    }
    const char *basename = gSystem->BaseName(fontname);
 
+   char *ttfont = nullptr;
+   int ttindex = 0;
+
+   FcPattern *pat = nullptr, *match;
+   FcResult result;
+
+   if (strcmp(basename, "timesi.ttf") == 0 ||
+       strcmp(basename, "FreeSerifItalic.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:italic");
+   }
+   else if (strcmp(basename, "timesbd.ttf") == 0 ||
+            strcmp(basename, "FreeSerifBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:bold");
+   }
+   else if (strcmp(basename, "timesbi.ttf") == 0 ||
+            strcmp(basename, "FreeSerifBoldItalic.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:bold:italic");
+   }
+   else if (strcmp(basename, "arial.ttf") == 0 ||
+            strcmp(basename, "FreeSans.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans");
+   }
+   else if (strcmp(basename, "ariali.ttf") == 0 ||
+            strcmp(basename, "FreeSansOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:italic");
+   }
+   else if (strcmp(basename, "arialbd.ttf") == 0 ||
+            strcmp(basename, "FreeSansBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:bold");
+   }
+   else if (strcmp(basename, "arialbi.ttf") == 0 ||
+            strcmp(basename, "FreeSansBoldOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:bold:italic");
+   }
+   else if (strcmp(basename, "cour.ttf") == 0 ||
+            strcmp(basename, "FreeMono.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono");
+   }
+   else if (strcmp(basename, "couri.ttf") == 0 ||
+            strcmp(basename, "FreeMonoOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:italic");
+   }
+   else if (strcmp(basename, "courbd.ttf") == 0 ||
+            strcmp(basename, "FreeMonoBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:bold");
+   }
+   else if (strcmp(basename, "courbi.ttf") == 0 ||
+            strcmp(basename, "FreeMonoBoldOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:bold:italic");
+   }
+   else if (strcmp(basename, "symbol.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "standardsymbolsps");
+      italic &= 2;
+   }
+   else if (strcmp(basename, "times.ttf") == 0 ||
+            strcmp(basename, "FreeSerif.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif");
+   }
+   else if (strcmp(basename, "wingding.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "dingbats");
+      italic &= 2;
+   }
+   else if (strcmp(basename, "STIXGeneral.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixgeneral");
+   }
+   else if (strcmp(basename, "STIXGeneralItalic.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixgeneral:italic");
+   }
+   else if (strcmp(basename, "STIXGeneralBol.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixgeneral:bold");
+   }
+   else if (strcmp(basename, "STIXGeneralBolIta.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixgeneral:bold:italic");
+   }
+   else if (strcmp(basename, "STIXSiz1Sym.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize1");
+   }
+   else if (strcmp(basename, "STIXSiz1SymBol.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize1:bold");
+   }
+   else if (strcmp(basename, "STIXSiz2Sym.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize2");
+   }
+   else if (strcmp(basename, "STIXSiz2SymBol.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize2:bold");
+   }
+   else if (strcmp(basename, "STIXSiz3Sym.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize3");
+   }
+   else if (strcmp(basename, "STIXSiz3SymBol.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize3:bold");
+   }
+   else if (strcmp(basename, "STIXSiz4Sym.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize4");
+   }
+   else if (strcmp(basename, "STIXSiz4SymBol.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize4:bold");
+   }
+   else if (strcmp(basename, "STIXSiz5Sym.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "stixsize5");
+   }
+   else if (strcmp(basename, "DroidSansFallback.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "droidsansfallback:charset=4e00 0410");
+   }
+   else if (strcmp(basename, "BlackChancery.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "urwchanceryl");
+   }
+   else if (gSystem->AccessPathName(fontname, kReadPermission) != 0) {
+      // Font name is not a file - usae as pattern
+      pat = FcNameParse ((const FcChar8*) fontname);
+   }
+
+   if (pat) {
+      FcConfigSubstitute (nullptr, pat, FcMatchPattern);
+      FcDefaultSubstitute (pat);
+      match = FcFontMatch (nullptr, pat, &result);
+      if (match) {
+         const char *ttfnt;
+         FcPatternGetString (match, FC_FILE, 0, (FcChar8**) &ttfnt);
+         ttfont = StrDup(ttfnt);
+         FcPatternGetInteger (match, FC_INDEX, 0, &ttindex);
+         FcPatternDestroy (match);
+      }
+      FcPatternDestroy (pat);
+   }
+
+   if (!ttfont) ttfont = StrDup(fontname);
+
+   basename = gSystem->BaseName(ttfont);
+
    // check if font is in cache
    int i;
    for (i = 0; i < fgFontCount; i++) {
-      if (!strcmp(fgFontName[i], basename)) {
-         if (italic) {
-            if (i==fgSymbItaFontIdx) {
-               fgCurFontIdx = i;
-               return 0;
-            }
-         } else {
-            if (i!=fgSymbItaFontIdx) {
-               fgCurFontIdx = i;
-               return 0;
-            }
-         }
+      if (!strcmp(fgFontName[i], basename) &&
+          (fgFontIdx[i] == ttindex) &&
+          (fgFontIta[i] == italic)) {
+         fgCurFontIdx = i;
+         delete [] ttfont;
+         return 0;
       }
    }
 
@@ -416,28 +551,13 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
             kTTMaxFonts);
       Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
       fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
+      delete [] ttfont;
       return 0;
-   }
-
-   // try to load font (font must be in Root.TTFontPath resource)
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-   char *ttfont = gSystem->Which(ttpath, fontname, kReadPermission);
-
-   if (!ttfont) {
-      Error("TTF::SetTextFont", "font file %s not found in path %s", fontname, ttpath);
-      if (fgFontCount) {
-         Warning("TTF::SetTextFont", "using default font %s", fgFontName[0]);
-         fgCurFontIdx = 0;    // use font 0 (default font, set in ctor)
-         return 0;
-      } else {
-         return 1;
-      }
    }
 
    FT_Face  tface = (FT_Face) 0;
 
-   if (FT_New_Face(fgLibrary, ttfont, 0, &tface)) {
+   if (FT_New_Face(fgLibrary, ttfont, ttindex, &tface)) {
       Error("TTF::SetTextFont", "error loading font %s", ttfont);
       delete [] ttfont;
       if (tface) FT_Done_Face(tface);
@@ -450,23 +570,24 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
       }
    }
 
-   delete [] ttfont;
-
    fgFontName[fgFontCount] = StrDup(basename);
+   fgFontIdx[fgFontCount]  = ttindex;
+   fgFontIta[fgFontCount]  = italic;
    fgCurFontIdx            = fgFontCount;
    fgFace[fgCurFontIdx]    = tface;
    fgCharMap[fgCurFontIdx] = (FT_CharMap) 0;
    fgFontCount++;
 
-   if (italic) {
-      fgSymbItaFontIdx = fgCurFontIdx;
+   if ((italic & 1) != 0) {
       FT_Matrix slantMat;
       slantMat.xx = (1 << 16);
       slantMat.xy = ((1 << 16) >> 2);
       slantMat.yx = 0;
       slantMat.yy = (1 << 16);
-      FT_Set_Transform( fgFace[fgSymbItaFontIdx], &slantMat, NULL );
+      FT_Set_Transform( fgFace[fgCurFontIdx], &slantMat, nullptr );
    }
+
+   delete [] ttfont;
 
    return 0;
 }
@@ -494,70 +615,50 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 
 void TTF::SetTextFont(Font_t fontnumber)
 {
-   // Added by cholm for use of DFSG - fonts - based on Kevins fix.
-   // Table of Microsoft and (for non-MSFT operating systems) backup
-   // FreeFont TTF fonts.
-   static const char *fonttable[][2] = {
-     { "Root.TTFont.0", "FreeSansBold.otf" },
-     { "Root.TTFont.1", "FreeSerifItalic.otf" },
-     { "Root.TTFont.2", "FreeSerifBold.otf" },
-     { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-     { "Root.TTFont.4", "texgyreheros-regular.otf" },
-     { "Root.TTFont.5", "texgyreheros-italic.otf" },
-     { "Root.TTFont.6", "texgyreheros-bold.otf" },
-     { "Root.TTFont.7", "texgyreheros-bolditalic.otf" },
-     { "Root.TTFont.8", "FreeMono.otf" },
-     { "Root.TTFont.9", "FreeMonoOblique.otf" },
-     { "Root.TTFont.10", "FreeMonoBold.otf" },
-     { "Root.TTFont.11", "FreeMonoBoldOblique.otf" },
-     { "Root.TTFont.12", "symbol.ttf" },
-     { "Root.TTFont.13", "FreeSerif.otf" },
-     { "Root.TTFont.14", "wingding.ttf" },
-     { "Root.TTFont.15", "symbol.ttf" },
-     { "Root.TTFont.STIXGen", "STIXGeneral.otf" },
-     { "Root.TTFont.STIXGenIt", "STIXGeneralItalic.otf" },
-     { "Root.TTFont.STIXGenBd", "STIXGeneralBol.otf" },
-     { "Root.TTFont.STIXGenBdIt", "STIXGeneralBolIta.otf" },
-     { "Root.TTFont.STIXSiz1Sym", "STIXSiz1Sym.otf" },
-     { "Root.TTFont.STIXSiz1SymBd", "STIXSiz1SymBol.otf" },
-     { "Root.TTFont.STIXSiz2Sym", "STIXSiz2Sym.otf" },
-     { "Root.TTFont.STIXSiz2SymBd", "STIXSiz2SymBol.otf" },
-     { "Root.TTFont.STIXSiz3Sym", "STIXSiz3Sym.otf" },
-     { "Root.TTFont.STIXSiz3SymBd", "STIXSiz3SymBol.otf" },
-     { "Root.TTFont.STIXSiz4Sym", "STIXSiz4Sym.otf" },
-     { "Root.TTFont.STIXSiz4SymBd", "STIXSiz4SymBol.otf" },
-     { "Root.TTFont.STIXSiz5Sym", "STIXSiz5Sym.otf" },
-     { "Root.TTFont.ME", "DroidSansFallback.ttf" },
-     { "Root.TTFont.CJKMing", "DroidSansFallback.ttf" },
-     { "Root.TTFont.CJKGothic", "DroidSansFallback.ttf" }
+   static const char *fonttable[] = {
+      "freesans:bold",
+      "freeserif:italic",
+      "freeserif:bold",
+      "freeserif:bold:italic",
+      "freesans",
+      "freesans:italic",
+      "freesans:bold",
+      "freesans:bold:italic",
+      "freemono",
+      "freemono:italic",
+      "freemono:bold",
+      "freemono:bold:italic",
+      "standardsymbolsps",
+      "freeserif",
+      "dingbats",
+      "standardsymbolsps",
+      "stixgeneral",
+      "stixgeneral:italic",
+      "stixgeneral:bold",
+      "stixgeneral:bold:italic",
+      "stixsize1",
+      "stixsize1:bold",
+      "stixsize2",
+      "stixsize2:bold",
+      "stixsize3",
+      "stixsize3:bold",
+      "stixsize4",
+      "stixsize4:bold",
+      "stixsize5",
+      "droidsansfallback:charset=4e00 0410",
+      "droidsansfallback:charset=4e00 0410",
+      "droidsansfallback:charset=4e00 0410"
    };
-
-   static int fontset = -1;
-   int        thisset = fontset;
 
    int fontid = fontnumber / 10;
    if (fontid < 0 || fontid > 31) fontid = 0;
 
-   if (thisset == -1) {
-      // try to load font (font must be in Root.TTFontPath resource)
-      // to see which fontset we have available
-      const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                          TROOT::GetTTFFontDir());
-      char *ttfont = gSystem->Which(ttpath, gEnv->GetValue(fonttable[fontid][0], fonttable[fontid][1]), kReadPermission);
-      if (ttfont) {
-         delete [] ttfont;
-         thisset = 0;
-      } else {
-         // try backup free font
-         thisset = 1;
-      }
-   }
    Int_t italic = 0;
-   if (fontid==15) italic = 1;
-   int ret = SetTextFont(gEnv->GetValue(fonttable[fontid][thisset], fonttable[fontid][1]), italic);
-   // Do not define font set is we're loading the symbol.ttf - it's
-   // the same in both cases.
-   if (ret == 0 && fontid != 12) fontset = thisset;
+   if (fontid==12) italic = 2;
+   if (fontid==14) italic = 2;
+   if (fontid==15) italic = 3;
+
+   SetTextFont(fonttable[fontid], italic);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

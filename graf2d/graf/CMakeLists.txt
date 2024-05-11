@@ -91,6 +91,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     Freetype::Freetype
     ZLIB::ZLIB
     mathtext
+    fontconfig
   DEPENDENCIES
     Hist
     Matrix
