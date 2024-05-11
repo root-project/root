@@ -177,6 +177,15 @@ if(LLVM_EXE_LINKER_FLAGS)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_EXE_LINKER_FLAGS}")
 endif()
 
+# Suppress warnings compiling the builtin LLVM and clang. It is not
+# maintained by ROOT, so warnings are not necessary here.
+set(cxx_flags_prev ${CMAKE_CXX_FLAGS})
+if(WIN32)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /w")
+else()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -w")
+endif()
+
 if(builtin_llvm)
   # Since debug builds of LLVM are quite large, we want to be able
   # to control the build types of ROOT and LLVM independently. The
@@ -459,6 +468,11 @@ if (builtin_clang)
 else()
   set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
+
+# Reset the warning suppression for compiling LLVM and clang
+set(CMAKE_CXX_FLAGS ${cxx_flags_prev})
+unset(cxx_flags_prev)
+
 
 add_custom_target(CLING)
 set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
