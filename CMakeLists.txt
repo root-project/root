@@ -96,15 +96,6 @@ else()
   set(NO_CONNECTION TRUE)
 endif()
 
-if(NO_CONNECTION)
-  if(clad AND fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  elseif(clad)
-    message(STATUS "No internet connection, disabling the 'clad' option")
-  endif()
-  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-endif()
-
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
@@ -117,6 +108,15 @@ include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+if(clad AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'clad' option")
+    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
