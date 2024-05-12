@@ -48,6 +48,7 @@ The following people have contributed to this new version:
 - Support for wildcard imports like `from ROOT import *` is dropped from PyROOT
 - Support for external (ie. non-builtin) libAfterImage is now deprecated and it will be removed in next release 6.34.
 - The `TList::TList(TObject*)` constructor is deprecated and will be removed in ROOT 6.34
+- The deprecated `TProofOutputList::TProofOutputList(TObject *o)` constructor was removed
 
 ## Core Libraries
 
