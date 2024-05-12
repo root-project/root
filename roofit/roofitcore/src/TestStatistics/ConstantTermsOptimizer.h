@@ -24,13 +24,15 @@ namespace TestStatistics {
 // this is a class only for convenience: it saves multiple friend definitions in RooAbsData for otherwise free functions
 struct ConstantTermsOptimizer {
    static void enableConstantTermsOptimization(RooAbsReal *function, RooArgSet *norm_set, RooAbsData *dataset,
-                                           bool applyTrackingOpt);
-   static void optimizeCaching(RooAbsReal *function, RooArgSet *norm_set, RooArgSet* observables, RooAbsData *dataset);
-   static void disableConstantTermsOptimization(RooAbsReal *function, RooArgSet *norm_set, RooArgSet* observables, RooAbsData *dataset);
+                                               bool applyTrackingOpt);
+   static void
+   optimizeCaching(RooAbsReal *function, RooArgSet *norm_set, RooAbsData *dataset, RooArgSet *observables = nullptr);
+   static void disableConstantTermsOptimization(RooAbsReal *function, RooArgSet *norm_set, RooAbsData *dataset,
+                                                RooArgSet *observables = nullptr);
    static RooArgSet requiredExtraObservables();
 };
 
-}
-}
+} // namespace TestStatistics
+} // namespace RooFit
 
 #endif // ROOT_ROOFIT_TESTSTATISTICS_ConstantTermsOptimizer
