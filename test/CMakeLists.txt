@@ -218,10 +218,6 @@ ROOT_ADD_TEST(test-stressmathcore COMMAND stressMathCore FAILREGEX "FAILED|Error
 ROOT_ADD_TEST(test-stressmathcore-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/stressMathCore.cxx
               FAILREGEX "FAILED|Error in" DEPENDS test-stressmathcore)
 
-if(ROOT_roofit_FOUND)
-  add_subdirectory(fit)
-endif()
-
 #--stressFit---------------------------------------------------------------------------------
 ROOT_EXECUTABLE(stressFit stressFit.cxx LIBRARIES MathCore Matrix)
 ROOT_ADD_TEST(test-stressfit COMMAND stressFit FAILREGEX "FAILED|Error in" LABELS longtest)
