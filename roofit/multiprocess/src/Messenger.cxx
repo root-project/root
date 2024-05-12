@@ -465,10 +465,6 @@ void Messenger::set_send_flag(zmq::send_flags flag)
    send_flag_ = flag;
 }
 
-// -- MASTER - WORKER COMMUNICATION --
-
-void Messenger::send_from_worker_to_master() {}
-
 // for debugging
 #define PROCESS_VAL(p) \
    case (p): s = #p; break;
