@@ -321,3 +321,5 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    // See comment in BinnedDatasetTest.EventSections for explanation on why no EXPECT_EQ.
    EXPECT_DOUBLE_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
 }
+
+// TODO: add tests covering all constOptimizeTestStatistic opcode cases.
