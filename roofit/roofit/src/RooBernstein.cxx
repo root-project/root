@@ -37,8 +37,7 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 #include <RooRealVar.h>
 #include <RooBatchCompute.h>
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 ClassImp(RooBernstein);
 
@@ -79,13 +78,13 @@ void RooBernstein::fillBuffer() const
 double RooBernstein::evaluate() const
 {
    fillBuffer();
-   return RooFit::Detail::EvaluateFuncs::bernsteinEvaluate(_x, xmin(), xmax(), _buffer.data(), _coefList.size());
+   return RooFit::Detail::MathFuncs::bernstein(_x, xmin(), xmax(), _buffer.data(), _coefList.size());
 }
 
 void RooBernstein::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    fillBuffer();
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::bernsteinEvaluate", _x, xmin(), xmax(), _coefList,
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::bernstein", _x, xmin(), xmax(), _coefList,
                                      _coefList.size()));
 }
 
@@ -104,7 +103,7 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVar
 double RooBernstein::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
    fillBuffer();
-   return RooFit::Detail::AnalyticalIntegrals::bernsteinIntegral(_x.min(rangeName), _x.max(rangeName), xmin(), xmax(),
+   return RooFit::Detail::MathFuncs::bernsteinIntegral(_x.min(rangeName), _x.max(rangeName), xmin(), xmax(),
                                                                  _buffer.data(), _coefList.size());
 }
 
@@ -112,6 +111,6 @@ std::string RooBernstein::buildCallToAnalyticIntegral(Int_t /*code*/, const char
                                                       RooFit::Detail::CodeSquashContext &ctx) const
 {
    fillBuffer(); // to get the right xmin() and xmax()
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::bernsteinIntegral", _x.min(rangeName), _x.max(rangeName),
+   return ctx.buildCall("RooFit::Detail::MathFuncs::bernsteinIntegral", _x.min(rangeName), _x.max(rangeName),
                         xmin(), xmax(), _coefList, _coefList.size());
 }

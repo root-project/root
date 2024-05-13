@@ -26,7 +26,7 @@ Landau distribution p.d.f
 #include "RooRandom.h"
 #include "RooBatchCompute.h"
 
-#include "RooFit/Detail/EvaluateFuncs.h"
+#include "RooFit/Detail/MathFuncs.h"
 
 #include "TMath.h"
 #include "Math/ProbFunc.h"
@@ -58,14 +58,14 @@ RooLandau::RooLandau(const RooLandau& other, const char* name) :
 
 double RooLandau::evaluate() const
 {
-  return RooFit::Detail::EvaluateFuncs::landauEvaluate(x, mean, sigma);
+  return RooFit::Detail::MathFuncs::landau(x, mean, sigma);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooLandau::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::landauEvaluate", x, mean, sigma));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::landau", x, mean, sigma));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
