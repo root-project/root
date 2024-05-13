@@ -14,6 +14,8 @@
 #ifndef RooFit_Detail_AnalyticalIntegrals_h
 #define RooFit_Detail_AnalyticalIntegrals_h
 
+#include <RooFit/Detail/EvaluateFuncs.h>
+
 #include <TMath.h>
 #include <Math/ProbFuncMathCore.h>
 
@@ -267,7 +269,7 @@ inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
 {
    const double root2 = std::sqrt(2.);
 
-   double ln_k = TMath::Abs(std::log(k));
+   double ln_k = std::abs(std::log(k));
    double ret =
       0.5 * (TMath::Erf(std::log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(std::log(xMin / m0) / (root2 * ln_k)));
 
@@ -340,6 +342,32 @@ inline double cbShapeIntegral(double mMin, double mMax, double m0, double sigma,
    if (result == 0)
       return 1.E-300;
    return result;
+}
+
+inline double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax, double *coefs, int nCoefs)
+{
+   double xloScaled = (xlo - xmin) / (xmax - xmin);
+   double xhiScaled = (xhi - xmin) / (xmax - xmin);
+
+   int degree = nCoefs - 1; // n+1 polys of degree n
+   double norm = 0.;
+
+   for (int i = 0; i <= degree; ++i) {
+      // for each of the i Bernstein basis polynomials
+      // represent it in the 'power basis' (the naive polynomial basis)
+      // where the integral is straight forward.
+      double temp = 0.;
+      for (int j = i; j <= degree; ++j) { // power basis≈ß
+         double binCoefs = binomial(degree, j) * binomial(j, i);
+         double oneOverJPlusOne = 1. / (j + 1.);
+         double powDiff = std::pow(xhiScaled, j + 1.) - std::pow(xloScaled, j + 1.);
+         temp += std::pow(-1., j - i) * binCoefs * powDiff * oneOverJPlusOne;
+      }
+      temp *= coefs[i]; // include coeff
+      norm += temp;     // add this basis's contribution to total
+   }
+
+   return norm * (xmax - xmin);
 }
 
 } // namespace AnalyticalIntegrals
