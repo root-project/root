@@ -177,26 +177,27 @@ public:
    }
 
    std::size_t NumberOfTrainingBatches(){
-      if (fDropRemainder && (std::size_t)ceil(fNumEntries * (1 - fValidationSplit)) % fBatchSize){
-         return ((fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
-            ceil((fNumEntries % fChunkSize) * (1 - fValidationSplit))) / fBatchSize;
+      std::size_t entriesForTraining = (fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+            fNumEntries % fChunkSize - floor(fValidationSplit * (fNumEntries % fChunkSize));
+
+      if (fDropRemainder || !(entriesForTraining % fBatchSize))
+      {
+         return entriesForTraining / fBatchSize;
       }
 
-      return ((fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
-         ceil((fNumEntries % fChunkSize) * (1 - fValidationSplit))) / fBatchSize + 1;
+      return entriesForTraining / fBatchSize + 1;
    }
 
    std::size_t NumberOfValidationBatches(){
-      if (std::size_t remainderRows = fNumEntries % fBatchSize;
-          remainderRows == floor(remainderRows * fValidationSplit) ||
-            (fDropRemainder && (std::size_t)floor(fNumEntries * fValidationSplit) % fBatchSize)){
+      std::size_t entriesForValidation = (fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+            floor((fNumEntries % fChunkSize) * fValidationSplit);
 
-         return ((fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
-            floor((fNumEntries % fChunkSize) * fValidationSplit)) / fBatchSize;
+      if (fDropRemainder || !(entriesForValidation%fBatchSize)){
+
+         return entriesForValidation / fBatchSize;
       }
       
-      return ((fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
-         floor((fNumEntries % fChunkSize) * fValidationSplit)) / fBatchSize + 1;
+      return entriesForValidation / fBatchSize + 1; 
    }
 
    void LoadChunksNoFilters()
