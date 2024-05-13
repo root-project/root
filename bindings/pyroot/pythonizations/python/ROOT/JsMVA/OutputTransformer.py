@@ -273,7 +273,7 @@ class transformTMVAOutputToHTML:
                         ltmp = re.match(r"\s*:\s*(.*)", self.lines[self.lineIndex + j + ik]).group(1)
                         if ltmp.find(":") != -1:
                             matrixLines.append(ltmp.split(":"))
-                    rmatch = "^\s*"
+                    rmatch = r"^\s*"
                     for ii in range(len(matrixLines)):
                         rmatch += r"(\+\d+\.?\d*|-\d+\.?\d*)\s*"
                     rmatch += "$"
