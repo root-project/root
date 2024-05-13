@@ -1534,7 +1534,7 @@ class ROptionalField : public RNullableField {
 
    std::unique_ptr<RDeleter> fItemDeleter;
 
-   /// Given a pointer to an std::optional<T> in from, extract a pointer to the value T* and a pointer
+   /// Given a pointer to an std::optional<T> in `optionalPtr`, extract a pointer to the value T* and a pointer
    /// to the engagement boolean. Assumes that an std::optional<T> is stored as
    /// `struct { T t; bool engagement; };`
    std::pair<const void *, const bool *> GetValueAndEngagementPtrs(const void *optionalPtr) const;
