@@ -26,8 +26,7 @@ PDF implementing the Crystal Ball line shape.
 #include "RooMath.h"
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "TMath.h"
 
@@ -62,12 +61,12 @@ RooCBShape::RooCBShape(const RooCBShape& other, const char* name) :
 
 double RooCBShape::evaluate() const
 {
-   return RooFit::Detail::EvaluateFuncs::cbShapeEvaluate(m, m0, sigma, alpha, n);
+   return RooFit::Detail::MathFuncs::cbShape(m, m0, sigma, alpha, n);
 }
 
 void RooCBShape::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::cbShapeEvaluate", m, m0, sigma, alpha, n));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::cbShape", m, m0, sigma, alpha, n));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,14 +91,14 @@ Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 double RooCBShape::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
-   using namespace RooFit::Detail::AnalyticalIntegrals;
+   using namespace RooFit::Detail::MathFuncs;
    return cbShapeIntegral(m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
 }
 
 std::string
 RooCBShape::buildCallToAnalyticIntegral(Int_t /*code*/, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
 {
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::cbShapeIntegral",
+   return ctx.buildCall("RooFit::Detail::MathFuncs::cbShapeIntegral",
                         m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
 }
 
