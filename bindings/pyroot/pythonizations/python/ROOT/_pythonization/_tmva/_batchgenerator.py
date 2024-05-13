@@ -157,6 +157,8 @@ class BaseGenerator:
                 Drop the remainder of data that is too small to compose full batch.
                 Defaults to True.
         """
+        import ROOT
+        from ROOT import RDF
 
         try:
             import numpy as np
@@ -179,13 +181,12 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
         
-        if str(rdataframe.Describe())[15:21] != "TChain" and\
-            str(rdataframe.Describe())[15:20] != "TTree":
+        self.noded_rdf = RDF.AsRNode(rdataframe)
+
+        if not ROOT.Internal.RDF.TTreeTChainOrigin(self.noded_rdf):
             raise ValueError(
                 "RNode object must be created out of TTrees or files of TTree"
             )
-        
-        from ROOT import RDataFrame
         
         if isinstance(target, str):
             target = [target]
@@ -237,15 +238,13 @@ class BaseGenerator:
         self.train_columns = [c for c in self.all_columns if c not in self.target_columns+[self.weights_column]]
 
 
-        from ROOT import TMVA, EnableThreadSafety, RDF
+        from ROOT import TMVA, EnableThreadSafety
 
         # The RBatchGenerator will create a separate C++ thread for I/O.
         # Enable thread safety in ROOT from here, to make sure there is no
         # interference between the main Python thread (which might call into
         # cling via cppyy) and the I/O thread.
         EnableThreadSafety()
-
-        self.noded_rdf = RDF.AsRNode(rdataframe)
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             self.noded_rdf,
