@@ -18,7 +18,7 @@
 #include <RooMsgService.h>
 #include <RooTrace.h>
 
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 
 #include <Riostream.h>
@@ -207,8 +207,8 @@ double FlexibleInterpVar::evaluate() const
          code = 5;
       }
       double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
-      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
-                                                             paramVal, total);
+      total += RooFit::Detail::MathFuncs::flexibleInterpSingle(code, _low[i], _high[i], _interpBoundary, _nominal,
+                                                               paramVal, total);
    }
 
    if (total <= 0) {
@@ -240,7 +240,7 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
       }
    }
 
-   std::string const &resName = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterpEvaluate", interpCode,
+   std::string const &resName = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", interpCode,
                                               _paramList, n, _low, _high, _interpBoundary, _nominal);
    ctx.addResult(this, resName);
 }
@@ -259,7 +259,7 @@ void FlexibleInterpVar::doEval(RooFit::EvalContext &ctx) const
       if (code == 4) {
          code = 5;
       }
-      total += RooFit::Detail::EvaluateFuncs::flexibleInterp(code, _low[i], _high[i], _interpBoundary, _nominal,
+      total += RooFit::Detail::MathFuncs::flexibleInterpSingle(code, _low[i], _high[i], _interpBoundary, _nominal,
                                                              ctx.at(&_paramList[i])[0], total);
    }
 

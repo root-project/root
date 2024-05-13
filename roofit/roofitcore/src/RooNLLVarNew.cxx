@@ -33,7 +33,7 @@ computation times.
 #include <RooRealVar.h>
 #include <RooSetProxy.h>
 #include "RooFit/Detail/Buffers.h"
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "RooFitImplHelpers.h"
 
@@ -229,7 +229,7 @@ void RooNLLVarNew::doEvalBinnedL(RooFit::EvalContext &ctx, std::span<const doubl
          // Catch error condition: data present where zero events are predicted
          logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
       } else {
-         result += RooFit::Detail::EvaluateFuncs::nllEvaluate(mu, N, true, _doBinOffset);
+         result += RooFit::Detail::MathFuncs::nll(mu, N, true, _doBinOffset);
          sumWeightKahanSum += N;
       }
    }
@@ -365,7 +365,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(this);
-      std::string term = ctx.buildCall("RooFit::Detail::EvaluateFuncs::nllEvaluate", _pdf, _weightVar, _binnedL, 0);
+      std::string term = ctx.buildCall("RooFit::Detail::MathFuncs::nll", _pdf, _weightVar, _binnedL, 0);
       ctx.addToCodeBody(this, resName + " += " + term + ";");
    }
    if (_expectedEvents) {

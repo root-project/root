@@ -20,7 +20,7 @@
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
-#include "RooFit/Detail/EvaluateFuncs.h"
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "Riostream.h"
 #include "TBuffer.h"
@@ -43,8 +43,6 @@
 using std::endl, std::cout;
 
 ClassImp(PiecewiseInterpolation);
-
-using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -169,7 +167,8 @@ double PiecewiseInterpolation::evaluate() const
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
                  << " with unknown interpolation code" << icode << endl ;
     }
-    sum += flexibleInterp(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
+    using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+    sum += flexibleInterpSingle(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -240,7 +239,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
    code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
 
-   std::string funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolationEvaluate", _interpCode[0],
+   std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::piecewiseInterpolation", _interpCode[0],
                                         lowName, highName, nominalName, _paramSet, n);
    code += "double " + resName + " = " + funcCall + ";\n";
 
@@ -277,7 +276,8 @@ void PiecewiseInterpolation::doEval(RooFit::EvalContext & ctx) const
     }
 
     for (unsigned int j=0; j < nominal.size(); ++j) {
-       sum[j] += flexibleInterp(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
+       using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+       sum[j] += flexibleInterpSingle(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
     }
   }
 
