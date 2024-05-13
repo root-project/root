@@ -415,6 +415,9 @@ class BaseGenerator:
 
         return_data = tf.constant(data, shape=(batch_size, num_columns))
 
+        if batch_size != self.batch_size:
+            return_data = tf.pad(return_data, tf.constant([[0, self.batch_size - batch_size], [0, 0]]))
+
         # Splice target column from the data if weight is given
         if self.target_given:
             train_data = tf.gather(return_data, indices=self.train_indices, axis=1)
@@ -678,6 +681,9 @@ def CreateNumPyGenerators(
             are loaded during the training. Before training, the validation
             generator will return no batches.
     """
+
+    import numpy as np
+
     base_generator = BaseGenerator(
         rdataframe,
         batch_size,
