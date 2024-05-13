@@ -30,7 +30,7 @@ range and values of the arguments.
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <algorithm>
 #include <cmath>
@@ -108,7 +108,7 @@ double RooExponential::analyticalIntegral(Int_t code, const char *rangeName) con
       max = -max;
    }
 
-   return RooFit::Detail::AnalyticalIntegrals::exponentialIntegral(min, max, constant);
+   return RooFit::Detail::MathFuncs::exponentialIntegral(min, max, constant);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,5 +148,5 @@ std::string RooExponential::buildCallToAnalyticIntegral(Int_t code, const char *
       max = -max;
    }
 
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::exponentialIntegral", min, max, constant);
+   return ctx.buildCall("RooFit::Detail::MathFuncs::exponentialIntegral", min, max, constant);
 }

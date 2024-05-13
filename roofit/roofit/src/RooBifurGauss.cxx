@@ -25,8 +25,7 @@ side of maximum value.
 
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 ClassImp(RooBifurGauss);
 
@@ -58,14 +57,14 @@ RooBifurGauss::RooBifurGauss(const RooBifurGauss &other, const char *name)
 
 double RooBifurGauss::evaluate() const
 {
-   return RooFit::Detail::EvaluateFuncs::bifurGaussEvaluate(x, mean, sigmaL, sigmaR);
+   return RooFit::Detail::MathFuncs::bifurGauss(x, mean, sigmaL, sigmaR);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void RooBifurGauss::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::bifurGaussEvaluate", x, mean, sigmaL, sigmaR));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::bifurGauss", x, mean, sigmaL, sigmaR));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +93,7 @@ double RooBifurGauss::analyticalIntegral(Int_t code, const char *rangeName) cons
    auto &constant = code == 1 ? mean : x;
    auto &integrand = code == 1 ? x : mean;
 
-   return RooFit::Detail::AnalyticalIntegrals::bifurGaussIntegral(integrand.min(rangeName), integrand.max(rangeName),
+   return RooFit::Detail::MathFuncs::bifurGaussIntegral(integrand.min(rangeName), integrand.max(rangeName),
                                                                   constant, sigmaL, sigmaR);
 }
 
@@ -106,6 +105,6 @@ std::string RooBifurGauss::buildCallToAnalyticIntegral(Int_t code, const char *r
    auto &constant = code == 1 ? mean : x;
    auto &integrand = code == 1 ? x : mean;
 
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::bifurGaussIntegral", integrand.min(rangeName),
+   return ctx.buildCall("RooFit::Detail::MathFuncs::bifurGaussIntegral", integrand.min(rangeName),
                         integrand.max(rangeName), constant, sigmaL, sigmaR);
 }

@@ -81,7 +81,7 @@ double RooConstraintSum::evaluate() const
 
 void RooConstraintSum::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::constraintSumEvaluate", _set1, _set1.size()));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::constraintSum", _set1, _set1.size()));
 }
 
 void RooConstraintSum::doEval(RooFit::EvalContext &ctx) const
