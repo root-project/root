@@ -39,16 +39,16 @@ that may arise from approximating derivatives using finite differences.
 
 ### AD Support essentially requires Code Generation
 
-As we'll discuss in upcoming sections, *AD support* can be added using *C++ 
-Code generation*. 
-These two terms may be used interchangeably in this document, since the term 
-*Code Generation* better helps visualize the transformation that is enabling 
+As we'll discuss in upcoming sections, *AD support* can be added using *C++
+Code generation*.
+These two terms may be used interchangeably in this document, since the term
+*Code Generation* better helps visualize the transformation that is enabling
 AD support.
 
 ## Current Status of Code Generation in RooFit
 
-RooFit is an extensive toolkit. 
-The initiative to add AD support/ Code Generation has been started, but has 
+RooFit is an extensive toolkit.
+The initiative to add AD support/ Code Generation has been started, but has
 not yet achieved full coverage for the models defined/maintained in RooFit.
 
 ## How Clad enables AD support using Source Code Transformation
@@ -70,18 +70,18 @@ For more technical details, please see the following paper:
 In RooFit jargon, what is meant by a "RooFit class" is a class inheriting from
 RooAbsArg that represents a mathematical function, a PDF, or any other
 transformation of inputs that are also represented by RooAbsArg objects.
-Almost all final classes deriving from RooAbsArg have RooAbsReal as an 
-intermediate base class, which is the base class for all RooAbsArg that 
+Almost all final classes deriving from RooAbsArg have RooAbsReal as an
+intermediate base class, which is the base class for all RooAbsArg that
 represent real-valued nodes in the computation graph.
-As such RooFit objects are so prevalent in practice, the names RooAbsArg and 
+As such RooFit objects are so prevalent in practice, the names RooAbsArg and
 RooAbsReal are used interchangeably in this guide.
 
 Users take these classes to build a computational graph that represents the
 PDF (also called "model") that they want to use for fitting the data.
-The user then passes his final PDF and a RooAbsData object to the 
-RooAbsPdf::fitTo() method, which implicitly creates a negative-log likelihood 
+The user then passes his final PDF and a RooAbsData object to the
+RooAbsPdf::fitTo() method, which implicitly creates a negative-log likelihood
 (NLL) that RooFit minimizes for parameter estimation.
-The NLL object, internally created by RooAbsPdf::createNLL(), is a RooAbsArg 
+The NLL object, internally created by RooAbsPdf::createNLL(), is a RooAbsArg
 itself.
 In technical terms, it's another larger computation graph that encompasses the
  computation graph representing the PDF.
@@ -93,10 +93,10 @@ computation, but without any overhead that is hard to digest by the AD tool.
 
 On a high level, this *code generation* is implemented as follows:
 
-1. The computation graph is visited recursively by a 
-   RooFit::Detail::CodeSquashContext object, via the virtual 
-   RooAbsArg::translate() function that implements the   translation of a 
-   given RooFit class to minimal C++ code. This is an example of the visitor 
+1. The computation graph is visited recursively by a
+   RooFit::Detail::CodeSquashContext object, via the virtual
+   RooAbsArg::translate() function that implements the   translation of a
+   given RooFit class to minimal C++ code. This is an example of the visitor
    pattern.
 
 2. The generated code is processed by a RooFuncWrapper object, which takes care
@@ -108,31 +108,31 @@ On a high level, this *code generation* is implemented as follows:
    original computation graph, with the added benefit that it can be queried for
    the gradient.
 
-In summary, the important ingredient to enable AD in RooFit is to support the 
+In summary, the important ingredient to enable AD in RooFit is to support the
 **C++ code generation** from RooFit classes.
 
 # Steps to enable Code Generation in RooFit classes
 
 There are multiple code generation approaches that can be followed to add Code
- Generation support in RooFit classes. 
+ Generation support in RooFit classes.
 
 **Approach 1:** For very simple cases like `RooRatio`, it may be preferable to
  write the entire code in a single string.
 
-**Approach 2:** Another approach could be to extract free functions in a 
-separate header file. 
+**Approach 2:** Another approach could be to extract free functions in a
+separate header file.
 Since Clad prefers the code for models to be within a single translation unit,
- in many classes, this has been implemented by moving the computational 
+ in many classes, this has been implemented by moving the computational
 aspects of the RooFit class
-to free functions in a single header file named [EvaluateFuncs] (and/or 
-[AnalyticalIntegrals], where relevant). This approach enables easier debugging
- (e.g., you can standalone-compile the generated code with just a few header 
+to free functions in a single header file named [MathFuncs] (and/or
+[MathFuncs], where relevant). This approach enables easier debugging
+ (e.g., you can standalone-compile the generated code with just a few header
 files copied outside ROOT)
 
 *Refactoring* It is important to refactor the code such that:
 
-- the footprint of the generated code is minimized by referring to existing 
-functions with the definition known by interpreter (i.e., they are in public 
+- the footprint of the generated code is minimized by referring to existing
+functions with the definition known by interpreter (i.e., they are in public
 header files).
 
 - to reuse common code, both in the generated code, and in the existing
@@ -143,36 +143,36 @@ optional, but it is recommended).
 <div class="pyrootbox">
 \endhtmlonly
 
-*Implement Code Generation support in custom classes*: Framework developers 
-that want to implement Code Generation support for their custom classes, this 
-approach of extracting free functions in a separate header file is not 
-suitable, since they can't put the code in a header that is part of the ROOT 
+*Implement Code Generation support in custom classes*: Framework developers
+that want to implement Code Generation support for their custom classes, this
+approach of extracting free functions in a separate header file is not
+suitable, since they can't put the code in a header that is part of the ROOT
 installation. Please note the following recommendations:
 
-- while developing your custom class, add these functions to your classes 
+- while developing your custom class, add these functions to your classes
 header file (e.g., as part of the class definition), and
 
-- if/when your class is upstreamed to RooFit, expect to move into the 
-`RooFit::detail` namespace and their implementations into `EvaluateFuncs.h`.
+- if/when your class is upstreamed to RooFit, expect to move into the
+`RooFit::detail` namespace and their implementations into `MathFuncs.h`.
 
 \htmlonly
 </div>
 \endhtmlonly
 
-*Overriding the Translate Function*: The `RooAbsArg::translate()` function 
-needs to be overridden to specify how the class is translating to C++ code 
+*Overriding the Translate Function*: The `RooAbsArg::translate()` function
+needs to be overridden to specify how the class is translating to C++ code
 that is using the aforementioned free function.
 
-**Sample Steps**: To add Code Generation support to an existing RooFit class, 
-following is a sample set of steps (using the aforementioned approach of 
+**Sample Steps**: To add Code Generation support to an existing RooFit class,
+following is a sample set of steps (using the aforementioned approach of
 extracting free functions in a separate file.).
 
-**1. Extract logic into a separate file** Implement what your class is 
-supposed to do as a free function in [EvaluateFuncs].
+**1. Extract logic into a separate file** Implement what your class is
+supposed to do as a free function in [MathFuncs].
 This implementation must be compatible with the syntax supported by Clad.
 
 **2. Refactor evaluate():** Refactor the existing `RooAbsReal::evaluate()`
- function to use the `EvaluateFuncs.h` implementation. This is optional, but
+ function to use the `MathFuncs.h` implementation. This is optional, but
 can reduce code duplication and potential for bugs. This may require some
 effort if an extensive caching infrastructure is used in your model.
 
@@ -182,9 +182,9 @@ properties out of the RooFit classes that make up the statistical model.
 
 The `translate()` function helps implement the Code Squashing logic that is
 used to optimize numerical evaluations. It accomplishes this by using a small
-subset of helper functions that are available in the 
-`RooFit::Detail::CodeSquashContext` and `RooFuncWrapper` classes 
-(see Appendix B). It converts a RooFit expression into a form that can be 
+subset of helper functions that are available in the
+`RooFit::Detail::CodeSquashContext` and `RooFuncWrapper` classes
+(see Appendix B). It converts a RooFit expression into a form that can be
 efficiently evaluated by Clad.
 
 The `translate()` function returns an `std::string` representing the
@@ -228,7 +228,7 @@ double RooPoisson::evaluate() const
 ```
 `TMath::Poisson()` is a simple mathematical function. For this example, the
 relevant part is `return TMath::Poisson(k,mean);`. This needs to be extracted
-into the `EvaluateFuncs.h` file and the fully qualified name of the function
+into the `MathFuncs.h` file and the fully qualified name of the function
 referencing that file should be used here instead.
 
 ## After Code Generation Support
@@ -248,22 +248,22 @@ double RooPoisson::evaluate() const
     np.setPayload(-mean);
     return np._payload;
   }
-  return RooFit::Detail::EvaluateFuncs::poissonEvaluate(k, mean);
+  return RooFit::Detail::MathFuncs::poisson(k, mean);
 }
 ```
 
 Note that the `evaluate()` function was refactored in such a way that the
 mathematical parts were moved to an inline function in a separate header file
-named `EvaluateFuncs`, so that Clad could see and differentiate that function.
+named `MathFuncs`, so that Clad could see and differentiate that function.
 The rest of the contents of the function remain unchanged.
 
 > All contents of the `evaluate()` function don't always need to be pulled
 out, only the required parts (mathematical  logic) should be moved to
-`EvaluateFuncs`.
+`MathFuncs`.
 
-**What is EvaluateFuncs?**
+**What is MathFuncs?**
 
-Moving away from the class-based hierarchy design, `EvaluateFuncs.h` a simply
+Moving away from the class-based hierarchy design, `MathFuncs.h` a simply
 a flat file of function implementations.
 
 This file is required since Clad will not be able to see anything that is not
@@ -275,7 +275,7 @@ file and make them inline.
 Theoretically, multiple header files can also be used and then mashed
 together.
 
-> Directory path: [roofit/roofitcore/inc/RooFit/Detail/EvaluateFuncs.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/EvaluateFuncs.h)
+> Directory path: [roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h)
 
 ### Step 2. Override RooAbsArg::translate()
 
@@ -290,7 +290,7 @@ void RooPoisson::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ct
    std::string xName = ctx.getResult(x);
    if (!_noRounding)
       xName = "std::floor(" + xName + ")";
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::poissonEvaluate", xName, mean));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::poissonEvaluate", xName, mean));
 }
 ```
 
@@ -302,8 +302,8 @@ it to the nearest integer, depending on the condition).
 The important part is where the `RooPoisson::addResult()` function helps add
  the result of evaluating the Poisson function to the context (`ctx`). It uses
 the `RooPoisson::buildCall()` method to construct a function call to the fully
-qualified name of `EvaluateFuncs::poissonEvaluate` (which now resides in the
-`EvaluateFuncs` file), with arguments `xName` and `mean`.
+qualified name of `MathFuncs::poissonEvaluate` (which now resides in the
+`MathFuncs` file), with arguments `xName` and `mean`.
 
 Essentially, the `RooPoisson::translate()` function constructs a function call
  to evaluate the Poisson function using 'x' and 'mean' variables, and adds the
@@ -328,20 +328,20 @@ more complicated. For a specific class, it will add whatever is represented on
 ``` {.cpp}
 void RooGaussian::translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const
 {
-   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::gaussianEvaluate", x, mean, sigma));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::gaussianEvaluate", x, mean, sigma));
 }
 ```
 
 Here we can see that the `RooGaussian::translate()` function constructs a
 function call using the `buildCall()` method. It specifies the fully qualified
 name of the `gaussianEvaluate` function (which is now part of the
-`EvaluateFuncs` file), and includes the x, mean, and sigma variables as
+`MathFuncs` file), and includes the x, mean, and sigma variables as
 arguments to this function call.
 
 Helper Function:
 
 - `buildCall()` helps build a function call. Requires the fully qualified name
- (`RooFit::Detail::EvaluateFuncs::gaussianEvaluate`) of the function. When
+ (`RooFit::Detail::MathFuncs::gaussianEvaluate`) of the function. When
 this external `buildCall()` function is called, internally, the `getResult()`
 function is called on the input RooFit objects (e.g., x, mean, sigma). That's
 the only way to propagate these upwards into the compute graph.
@@ -478,20 +478,20 @@ Similarly, the `analyticalIntegral()` function calls a specific function (
 
 Before creating the translate() function, move the mathematical logic (
 `doFoo()` function in this example) out of the source class (RooFoo in this
-example) and into a separate header file called `EvaluateFuncs.h`. Also note
+example) and into a separate header file called `MathFuncs.h`. Also note
 that the parameters a and b have been defined as inputs, instead of them just
 being class members.
 
 ``` {.cpp}
-///// The EvaluateFuncs.h file
+///// The MathFuncs.h file
 int doFoo(int a, int b) { return a* b + a + b; }
 ```
 
-> Directory path: [roofit/roofitcore/inc/RooFit/Detail/EvaluateFuncs.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/EvaluateFuncs.h)
+> Directory path: [roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h](https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h)
 
-So now that the `doFoo()` function exists in the `EvaluateFuncs` namespace, we
+So now that the `doFoo()` function exists in the `MathFuncs` namespace, we
  need to comment out its original function definition in the RooFoo class and
-also add the namespace `EvaluateFuncs` to wherever `doFoo()` it is referenced
+also add the namespace `MathFuncs` to wherever `doFoo()` it is referenced
 (and also define input parameters for it).
 
 ``` {.cpp}
@@ -501,13 +501,13 @@ class RooFoo : public RooAbsReal {
 
     double evaluate() override {
         ...
-        return EvaluateFuncs::doFoo(a, b);
+        return MathFuncs::doFoo(a, b);
     };
  ```
 
 Next, create the translate function. Most translate functions include a
 `buildCall()` function, that includes the fully qualified name (including
-'EvaluateFuncs') of the function to be called along with the input parameters
+'MathFuncs') of the function to be called along with the input parameters
 as they appear in the function (a,b in the following example).
 
 Also, each `translate()` function requires the `addResult()` function. It will
@@ -517,7 +517,7 @@ propagated in the rest of the compute graph.
 
 ``` {.cpp}
      void translate(RooFit::Detail::RooFit::Detail::CodeSquashContext &ctx) const override {
-            std::string res = ctx.buildCall("EvaluateFuncs::doFoo", a, b);
+            std::string res = ctx.buildCall("MathFuncs::doFoo", a, b);
             ctx.addResult(this, res);
     }
 
@@ -532,18 +532,17 @@ call one or more integral functions using the `code` parameter. Our RooFoo
 example above only contains one integral function (`integralFoo()`).
 
 Similar to `doFoo()`, comment out `integralFoo()' in the original file and
-move it to a separate file called 'AnalyticalIntegrals.h' (this is not the
-same file as the `EvaluateFuncs.h`, but it works in a similar manner).
+move it to 'MathFuncs.h'.
 
 As with `doFoo()`. add the relevant inputs (a,b) as parameters, instead of
 just class members.
 
 ``` {.cpp}
-///// The AnalyticalIntegrals.h file
+///// The MathFuncs.h file
 int integralFoo(int a, int b) { return /* whatever */;}
 ```
 
-> Directory path: [hist/hist/src/AnalyticalIntegrals.h](https://github.com/root-project/root/blob/master/hist/hist/src/AnalyticalIntegrals.h)
+> Directory path: [hist/hist/src/MathFuncs.h](https://github.com/root-project/root/blob/master/hist/hist/src/MathFuncs.h)
 
 Next, in the original RooFoo class, update all references to the
 `integralFoo()` function with its new fully qualified path (
@@ -609,13 +608,13 @@ class RooFoo : public RooAbsReal {
 
 ```
 
-Mathematical code moved to `EvaluateFuncs.h` file.
+Mathematical code moved to `MathFuncs.h` file.
 
 ``` {.cpp}
 int doFoo(int a, int b) { return a* b + a + b; }
 ```
 
-Integrals moved to the 'AnalyticalIntegrals.h' file.
+Integrals moved to the 'MathFuncs.h' file.
 
 ``` {.cpp}
 int integralFoo(int a, int b) { return /* whatever */;}
@@ -644,7 +643,7 @@ This requires further research.
 
 In some cases. the `evaluate()` function is written in a piece-wise format
 (multiple evaluations based on multiple chunks of code). You can review the
-`EvaluateFuncs.h` file to find AD support for several piece-wise (`if code==1
+`MathFuncs.h` file to find AD support for several piece-wise (`if code==1
 {...} else if code==2 {...}` ) code snippets.
 
 However, there may still be some cases where AD support may not be possible
@@ -653,7 +652,7 @@ due to the way that `evaluate()` function works in that instance.
 ### What if my evaluate() function depends heavily on caching?
 
 For simple caching, the caching logic can be separated from the
-mathematical code that is being moved to `EvaluateFuncs.h`, so that it can
+mathematical code that is being moved to `MathFuncs.h`, so that it can
 retained in the original file.
 
 For more complicated scenarios, the `code` variable can be used to identify
@@ -678,14 +677,14 @@ well-tested in Clad.
 To handle this, either define a custom derivative for that external function,
 or find a way to expose it to Clad.
 
-An example of this can be seen with `gamma_cdf()` in AnalyticalIntegrals.h`,
+An example of this can be seen with `gamma_cdf()` in MathFuncs.h`,
 for which the custom derivative is not supported, but in this specific
 instance, it falls back to Numeric Differentiation and works fine, since `
 gamma_cdf()` doesn't have a lot of parameters.
 
 > In such cases, Numeric Differentiation fallback is only used for that
 specific function. In above example, `gamma_cdf()` falls back to Numeric
-Differentiation but other functions in `AnalyticalIntegrals.h` will still be
+Differentiation but other functions in `MathFuncs.h` will still be
 able to use AD. This is because Clad is going to assume that you have a
 derivative for this `gamma_cdf()` function, and the remaining functions will
 use AD as expected. In the end, the remaining functions (including
@@ -947,6 +946,6 @@ Binned Likelihoods with Roofit and Clad]
 
 [Clad]: https://compiler-research.org/clad/
 
-[EvaluateFuncs]: https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/EvaluateFuncs.h
+[MathFuncs]: https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h
 
-[AnalyticalIntegrals]: https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/AnalyticalIntegrals.h
+[MathFuncs]: https://github.com/root-project/root/blob/master/roofit/roofitcore/inc/RooFit/Detail/MathFuncs.h

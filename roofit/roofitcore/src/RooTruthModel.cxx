@@ -31,7 +31,7 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <RooBatchCompute.h>
 #include <RooGenContext.h>
 
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include <Riostream.h>
 
