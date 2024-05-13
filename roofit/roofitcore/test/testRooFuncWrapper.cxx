@@ -91,7 +91,7 @@ void randomizeParameters(const RooArgSet &parameters)
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()});
+   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()}, RooFit::Silence());
    ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
    ws.factory("prod::sigma_scaled(sigma[2.0, 0.01, 10], 1.5)");
    ws.factory("Gaussian::gauss(x, mu_shifted, sigma_scaled)");
@@ -635,16 +635,44 @@ FactoryTestParams param16{"RooCBShape",
                           5e-3,
                           /*randomizeParameters=*/true};
 
+FactoryTestParams param17{
+   "RooBernstein",
+   [](RooWorkspace &ws) {
+      ws.factory(
+         "Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.], c3[0.5, 0., 10.]})");
+
+      ws.defineSet("observables", "x");
+   },
+   [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+      using namespace RooFit;
+      return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+   },
+   5e-3,
+   /*randomizeParameters=*/true};
+
+FactoryTestParams param18{"RooLandau",
+                          [](RooWorkspace &ws) {
+                             ws.factory("Landau::model(x[0., 30.], ml[5., -20., 20.], sl[1., 0.1, 10.])");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
 auto testValues = testing::Values(param1, param2,
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
                                   param3,
 #endif
                                   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12,
-                                  param13, param15
+                                  param13, param15,
                                   // TODO: the RooCBShape test is disabled for now,
                                   // because the gradient doesn't work with Clad v1.4.
                                   // , param16
-                                  );
+                                  param17, param18);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
