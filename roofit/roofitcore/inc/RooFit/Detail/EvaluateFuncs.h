@@ -23,7 +23,63 @@ namespace RooFit {
 
 namespace Detail {
 
+/// Calculates the binomial coefficient n over k.
+/// Equivalent to TMath::Binomial, but inlined.
+inline double binomial(int n, int k)
+{
+   if (n < 0 || k < 0 || n < k)
+      return TMath::SignalingNaN();
+   if (k == 0 || n == k)
+      return 1;
+
+   int k1 = std::min(k, n - k);
+   int k2 = n - k1;
+   double fact = k2 + 1;
+   for (double i = k1; i > 1.; --i) {
+      fact *= (k2 + i) / i;
+   }
+   return fact;
+}
+
 namespace EvaluateFuncs {
+
+/// The caller needs to make sure that there is at least one coefficient.
+inline double bernsteinEvaluate(double x, double xmin, double xmax, double *coefs, int nCoefs)
+{
+   double xScaled = (x - xmin) / (xmax - xmin); // rescale to [0,1]
+   int degree = nCoefs - 1;                     // n+1 polys of degree n
+
+   // in case list of arguments passed is empty
+   if(degree < 0) {
+      return TMath::SignalingNaN();
+   } else if (degree == 0) {
+      return coefs[0];
+   } else if (degree == 1) {
+
+      double a0 = coefs[0];      // c0
+      double a1 = coefs[1] - a0; // c1 - c0
+      return a1 * xScaled + a0;
+
+   } else if (degree == 2) {
+
+      double a0 = coefs[0];            // c0
+      double a1 = 2 * (coefs[1] - a0); // 2 * (c1 - c0)
+      double a2 = coefs[2] - a1 - a0;  // c0 - 2 * c1 + c2
+      return (a2 * xScaled + a1) * xScaled + a0;
+   }
+
+   double t = xScaled;
+   double s = 1. - xScaled;
+
+   double result = coefs[0] * s;
+   for (int i = 1; i < degree; i++) {
+      result = (result + t * binomial(degree, i) * coefs[i]) * s;
+      t *= xScaled;
+   }
+   result += t * coefs[degree];
+
+   return result;
+}
 
 /// @brief Function to evaluate an un-normalized RooGaussian.
 inline double gaussianEvaluate(double x, double mean, double sigma)
@@ -256,6 +312,13 @@ inline double piecewiseInterpolationEvaluate(unsigned int code, double *low, dou
    }
 
    return total;
+}
+
+inline double landauEvaluate(double x, double mu, double sigma)
+{
+   if (sigma <= 0.)
+      return 0.;
+   return ROOT::Math::landau_pdf((x - mu) / sigma);
 }
 
 inline double logNormalEvaluate(double x, double k, double m0)
