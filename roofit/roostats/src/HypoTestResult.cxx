@@ -62,14 +62,16 @@ be larger than one.
 
 #include "RooStats/RooStatsUtils.h"
 
+#include <TMath.h>
+
 #include <limits>
 #define NaN numeric_limits<float>::quiet_NaN()
 #define IsNaN(a) TMath::IsNaN(a)
 
-ClassImp(RooStats::HypoTestResult); ;
+ClassImp(RooStats::HypoTestResult);
 
 using namespace RooStats;
-using namespace std;
+using std::numeric_limits, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -79,27 +81,27 @@ HypoTestResult::HypoTestResult(const char* name) :
    fNullPValue(NaN), fAlternatePValue(NaN),
    fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
-   fPValueIsRightTail(kTRUE),
-   fBackgroundIsAlt(kFALSE)
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
+   fPValueIsRightTail(true),
+   fBackgroundIsAlt(false)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Alternate constructor
 
-HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) :
+HypoTestResult::HypoTestResult(const char* name, double nullp, double altp) :
    TNamed(name,name),
    fNullPValue(nullp), fAlternatePValue(altp),
    fNullPValueError(0), fAlternatePValueError(0),
    fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
-   fPValueIsRightTail(kTRUE),
-   fBackgroundIsAlt(kFALSE)
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
+   fPValueIsRightTail(true),
+   fBackgroundIsAlt(false)
 {
 }
 
@@ -108,12 +110,12 @@ HypoTestResult::HypoTestResult(const char* name, Double_t nullp, Double_t altp) 
 
 HypoTestResult::HypoTestResult(const HypoTestResult& other) :
    TNamed(other),
-   fNullPValue(NaN), fAlternatePValue(NaN),
-   fNullPValueError(0), fAlternatePValueError(0),
-   fTestStatisticData(NaN),
-   fAllTestStatisticsData(NULL),
-   fNullDistr(NULL), fAltDistr(NULL),
-   fNullDetailedOutput(NULL), fAltDetailedOutput(NULL),
+   fNullPValue(other.fNullPValue), fAlternatePValue(other.fAlternatePValue),
+   fNullPValueError(other.fNullPValueError), fAlternatePValueError(other.fAlternatePValueError),
+   fTestStatisticData(other.fTestStatisticData),
+   fAllTestStatisticsData(nullptr),
+   fNullDistr(nullptr), fAltDistr(nullptr),
+   fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
    fPValueIsRightTail( other.GetPValueIsRightTail() ),
    fBackgroundIsAlt( other.GetBackGroundIsAlt() )
 {
@@ -148,11 +150,11 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
    fTestStatisticData = other.fTestStatisticData;
 
    if( fAllTestStatisticsData ) delete fAllTestStatisticsData;
-   fAllTestStatisticsData = NULL;
-   if( fNullDistr ) { delete fNullDistr; fNullDistr = NULL; }
-   if( fAltDistr ) { delete fAltDistr; fAltDistr = NULL; }
-   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = NULL; }
-   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = NULL; }
+   fAllTestStatisticsData = nullptr;
+   if( fNullDistr ) { delete fNullDistr; fNullDistr = nullptr; }
+   if( fAltDistr ) { delete fAltDistr; fAltDistr = nullptr; }
+   if( fNullDetailedOutput ) { delete fNullDetailedOutput; fNullDetailedOutput = nullptr; }
+   if( fAltDetailedOutput ) { delete fAltDetailedOutput;  fAltDetailedOutput = nullptr; }
    fFitInfo = nullptr;
 
    fPValueIsRightTail =  other.GetPValueIsRightTail();
@@ -169,16 +171,17 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
 /// set (otherwise, ignore the new one).
 
 void HypoTestResult::Append(const HypoTestResult* other) {
-   if(fNullDistr)
+   if (fNullDistr) {
       fNullDistr->Add(other->GetNullDistribution());
-   else
-      if(other->GetNullDistribution()) fNullDistr = new SamplingDistribution( *other->GetNullDistribution() );
+   } else if (other->GetNullDistribution()) {
+      fNullDistr = new SamplingDistribution(*other->GetNullDistribution());
+   }
 
-   if(fAltDistr)
+   if (fAltDistr) {
       fAltDistr->Add(other->GetAltDistribution());
-   else
-      if(other->GetAltDistribution()) fAltDistr = new SamplingDistribution( *other->GetAltDistribution() );
-
+   } else if (other->GetAltDistribution()) {
+      fAltDistr = new SamplingDistribution(*other->GetAltDistribution());
+   }
 
    if( fNullDetailedOutput ) {
       if( other->GetNullDetailedOutput() ) fNullDetailedOutput->append( *other->GetNullDetailedOutput() );
@@ -195,37 +198,37 @@ void HypoTestResult::Append(const HypoTestResult* other) {
    if( fFitInfo ) {
       if( other->GetFitInfo() ) fFitInfo->append( *other->GetFitInfo() );
    }else{
-      if( other->GetFitInfo() ) fFitInfo.reset(new RooDataSet( *other->GetFitInfo() ));
+      if( other->GetFitInfo() ) fFitInfo = std::make_unique<RooDataSet>( *other->GetFitInfo());
    }
 
    // if no data is present use the other HypoTestResult's data
    if(IsNaN(fTestStatisticData)) fTestStatisticData = other->GetTestStatisticData();
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetAltDistribution(SamplingDistribution *alt) {
    fAltDistr = alt;
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void HypoTestResult::SetNullDistribution(SamplingDistribution *null) {
    fNullDistr = null;
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
+void HypoTestResult::SetTestStatisticData(const double tsd) {
    fTestStatisticData = tsd;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,34 +236,34 @@ void HypoTestResult::SetTestStatisticData(const Double_t tsd) {
 void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
    if (fAllTestStatisticsData) {
       delete fAllTestStatisticsData;
-      fAllTestStatisticsData = 0;
+      fAllTestStatisticsData = nullptr;
    }
-   if (tsd) fAllTestStatisticsData = (const RooArgList*)tsd->snapshot();
+   if (tsd) fAllTestStatisticsData = static_cast<const RooArgList*>(tsd->snapshot());
 
-   if( fAllTestStatisticsData  &&  fAllTestStatisticsData->getSize() > 0 ) {
-      RooRealVar* firstTS = (RooRealVar*)fAllTestStatisticsData->at(0);
+   if( fAllTestStatisticsData  &&  !fAllTestStatisticsData->empty() ) {
+      RooRealVar* firstTS = static_cast<RooRealVar*>(fAllTestStatisticsData->at(0));
       if( firstTS ) SetTestStatisticData( firstTS->getVal() );
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void HypoTestResult::SetPValueIsRightTail(Bool_t pr) {
+void HypoTestResult::SetPValueIsRightTail(bool pr) {
    fPValueIsRightTail = pr;
 
-   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, kTRUE);
-   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, kFALSE);
+   UpdatePValue(fNullDistr, fNullPValue, fNullPValueError, true);
+   UpdatePValue(fAltDistr, fAlternatePValue, fAlternatePValueError, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t HypoTestResult::HasTestStatisticData(void) const {
+bool HypoTestResult::HasTestStatisticData(void) const {
    return !IsNaN(fTestStatisticData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestResult::NullPValueError() const {
+double HypoTestResult::NullPValueError() const {
    // compute error on Null pvalue
    return fNullPValueError;
 }
@@ -270,20 +273,20 @@ Double_t HypoTestResult::NullPValueError() const {
 /// \f$CL_{b}\f$ = 1 - NullPValue()
 /// must use opposite condition that routine above
 
-Double_t HypoTestResult::CLbError() const {
+double HypoTestResult::CLbError() const {
    return fBackgroundIsAlt ? fAlternatePValueError : fNullPValueError;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t HypoTestResult::CLsplusbError() const {
+double HypoTestResult::CLsplusbError() const {
    return fBackgroundIsAlt ? fNullPValueError : fAlternatePValueError;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Taylor expansion series approximation for standard deviation (error propagation)
 
-Double_t HypoTestResult::SignificanceError() const {
+double HypoTestResult::SignificanceError() const {
    return NullPValueError() / ROOT::Math::normal_pdf(Significance());
 }
 
@@ -295,7 +298,7 @@ Double_t HypoTestResult::SignificanceError() const {
 /// \sqrt{\left( \frac{\sigma_{CL_{s+b}}}{CL_{s+b}} \right)^2 + \left( \frac{\sigma_{CL_{b}}}{CL_{b}} \right)^2}
 /// \f]
 
-Double_t HypoTestResult::CLsError() const {
+double HypoTestResult::CLsError() const {
    if(!fAltDistr || !fNullDistr) return 0.0;
 
    // unsigned const int n_b = fNullDistr->GetSamplingDistribution().size();
@@ -313,7 +316,7 @@ Double_t HypoTestResult::CLsError() const {
 ////////////////////////////////////////////////////////////////////////////////
 /// updates the pvalue if sufficient data is available
 
-void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &pvalue, Double_t &perror, Bool_t /*isNull*/) {
+void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, double &pvalue, double &perror, bool /*isNull*/) {
    if(IsNaN(fTestStatisticData)) return;
    if(!distr) return;
 
@@ -322,12 +325,12 @@ void HypoTestResult::UpdatePValue(const SamplingDistribution* distr, Double_t &p
     * include the value of fTestStatistic both for Alt and Null cases
     */
    if(fPValueIsRightTail) {
-      pvalue = distr->IntegralAndError(perror, fTestStatisticData, RooNumber::infinity(), kTRUE,
-                                       kTRUE , kTRUE );   // always closed interval [ fTestStatistic, inf ]
+      pvalue = distr->IntegralAndError(perror, fTestStatisticData, RooNumber::infinity(), true,
+                                       true , true );   // always closed interval [ fTestStatistic, inf ]
 
    }else{
-      pvalue = distr->IntegralAndError(perror, -RooNumber::infinity(), fTestStatisticData, kTRUE,
-                                       kTRUE,  kTRUE  ); // // always closed  [ -inf, fTestStatistic ]
+      pvalue = distr->IntegralAndError(perror, -RooNumber::infinity(), fTestStatisticData, true,
+                                       true,  true  ); // // always closed  [ -inf, fTestStatistic ]
    }
 }
 

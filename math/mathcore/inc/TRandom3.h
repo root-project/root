@@ -32,16 +32,19 @@ private:
 
 public:
    TRandom3(UInt_t seed=4357);
-   virtual ~TRandom3();
-   // get the current seed (only first element of the seed table)
-   virtual  UInt_t    GetSeed() const { return fMt[0];}
+   ~TRandom3() override;
+    /// Return one element of the generator state used to generate the random numbers.
+    /// Note that it is not the seed of the generator that was used in the SetSeed function and 
+    /// the full state (624 numbers) is required to define the generator and have a reproducible output.
+    UInt_t    GetSeed() const override { return fMt[fCount624 % 624];}
    using TRandom::Rndm;
-   virtual  Double_t  Rndm( );
-   virtual  void      RndmArray(Int_t n, Float_t *array);
-   virtual  void      RndmArray(Int_t n, Double_t *array);
-   virtual  void      SetSeed(ULong_t seed=0);
+    Double_t  Rndm( ) override;
+    void      RndmArray(Int_t n, Float_t *array) override;
+    void      RndmArray(Int_t n, Double_t *array) override;
+    void      SetSeed(ULong_t seed=0) override;
+   virtual const UInt_t *GetState() const { return fMt; }
 
-   ClassDef(TRandom3,2)  //Random number generator: Mersenne Twister
+   ClassDefOverride(TRandom3,2)  //Random number generator: Mersenne Twister
 };
 
 R__EXTERN TRandom *gRandom;

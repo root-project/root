@@ -16,18 +16,20 @@
 ClassImp(TF12);
 
 /** \class TF12
-    \ingroup Hist
+    \ingroup Functions
  A projection of a TF2 along X or Y
 
 It has the same behaviour as a TF1
 
 Example of a function
 
-~~~ {.cpp}
-    TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
-    TF12 *f12 = new TF12("f12",f2,0.1,"y");
+Begin_Macro(source)
+{
+    auto f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
+    auto f12 = new TF12("f12",f2,0.1,"y");
     f12->Draw();
-~~~
+}
+End_Macro
 
 */
 
@@ -37,7 +39,7 @@ Example of a function
 TF12::TF12(): TF1()
 {
    fCase = 0;
-   fF2   = 0;
+   fF2   = nullptr;
    fXY   = 0;
 }
 
@@ -86,7 +88,7 @@ TF12::~TF12()
 
 TF12::TF12(const TF12 &f12) : TF1(f12)
 {
-   ((TF12&)f12).Copy(*this);
+   f12.TF12::Copy(*this);
 }
 
 
@@ -189,8 +191,8 @@ void TF12::SetXY(Double_t xy)
 {
    fXY = xy;
    if (!fF2) return;
-   if (fCase == 0) SetTitle(Form("%s (y=%g)",fF2->GetTitle(),xy));
-   else            SetTitle(Form("%s (x=%g)",fF2->GetTitle(),xy));
+   if (fCase == 0) SetTitle(TString::Format("%s (y=%g)",fF2->GetTitle(),xy));
+   else            SetTitle(TString::Format("%s (x=%g)",fF2->GetTitle(),xy));
    if (fHistogram) fHistogram->SetTitle(GetTitle());
    if (gPad) gPad->Modified();
 }

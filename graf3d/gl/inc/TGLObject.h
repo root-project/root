@@ -50,20 +50,20 @@ protected:
    }
 
 public:
-   TGLObject() : TGLLogicalShape(0), fMultiColor(kFALSE) {}
-   virtual ~TGLObject() {}
+   TGLObject() : TGLLogicalShape(nullptr), fMultiColor(kFALSE) {}
+   ~TGLObject() override {}
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
+   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
 
    // Kept from TGLLogicalShape
    // virtual ELODAxes SupportedLODAxes() const { return kLODAxesNone; }
 
    // Changed from TGLLogicalShape
-   virtual Bool_t KeepDuringSmartRefresh() const { return kTRUE; }
-   virtual void   UpdateBoundingBox();
+   Bool_t KeepDuringSmartRefresh() const override { return kTRUE; }
+   void   UpdateBoundingBox() override;
 
    // TGLObject virtuals
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0) = 0;
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) = 0;
    virtual void   SetBBox() = 0;
    // Abstract method from TGLLogicalShape:
    // virtual void DirectDraw(TGLRnrCtx & rnrCtx) const = 0;
@@ -71,7 +71,7 @@ public:
    // Interface to class .vs. classGL map.
    static TClass* GetGLRenderer(TClass* isa);
 
-   ClassDef(TGLObject, 0); // Base-class for direct OpenGL renderers
+   ClassDefOverride(TGLObject, 0); // Base-class for direct OpenGL renderers
 };
 
 #endif

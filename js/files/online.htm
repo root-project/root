@@ -2,20 +2,24 @@
 <html lang="en">
    <head>
       <!--  this file used by THttpServer to display objects hierarchy -->
-      <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta charset="utf-8">
       <title>Online server</title>
       <link rel="shortcut icon" href="jsrootsys/img/RootIcon.ico"/>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js?gui"></script>
-      <script type="text/javascript">
-         function GetCachedHierarchy() { return "$$$h.json$$$"; }
-      </script>
    </head>
 
    <body>
       <div id="onlineGUI">
-         loading scripts...
+         loading ...
       </div>
+
    </body>
+
+   <script type="module">
+      import { buildGUI, internals } from './jsrootsys/modules/gui.mjs';
+
+      internals.getCachedHierarchy = function() { return "$$$h.json$$$"; }
+
+      buildGUI("onlineGUI", "online");
+   </script>
 
 </html>

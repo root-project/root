@@ -36,7 +36,7 @@ protected :
    static void   Diag_3       (TMatrixD &v,TMatrixD &u,TVectorD &sDiag,TVectorD &oDiag,Int_t k,Int_t l);
    static void   SortSingular (TMatrixD &v,TMatrixD &u,TVectorD &sDiag);
 
-   virtual const TMatrixDBase &GetDecompMatrix() const { return fU; }
+   const TMatrixDBase &GetDecompMatrix() const override { return fU; }
 
 public :
 
@@ -47,11 +47,11 @@ public :
    TDecompSVD(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TDecompSVD(const TMatrixD &m,Double_t tol = 0.0);
    TDecompSVD(const TDecompSVD &another);
-   virtual ~TDecompSVD() {}
+   ~TDecompSVD() override {}
 
            const TMatrixD  GetMatrix ();
-   virtual Int_t     GetNrows  () const;
-   virtual Int_t     GetNcols  () const;
+   Int_t     GetNrows  () const override;
+   Int_t     GetNcols  () const override;
            const TMatrixD &GetU      ()       { if ( !TestBit(kDecomposed) ) Decompose();
                                                  return fU; }
            const TMatrixD &GetV      ()       { if ( !TestBit(kDecomposed) ) Decompose();
@@ -61,31 +61,31 @@ public :
 
    virtual       void      SetMatrix (const TMatrixD &a);
 
-   virtual Bool_t   Decompose  ();
-   virtual Bool_t   Solve      (      TVectorD &b);
-   virtual TVectorD Solve      (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = Solve(x);
+   Bool_t   Decompose  () override;
+   Bool_t   Solve      (      TVectorD &b) override;
+   TVectorD Solve      (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = Solve(x);
                                                                 const Int_t rowLwb = GetRowLwb();
                                                                 x.ResizeTo(rowLwb,rowLwb+GetNcols()-1);
                                                                 return x; }
-   virtual Bool_t   Solve      (      TMatrixDColumn &b);
-   virtual Bool_t   TransSolve (      TVectorD &b);
-   virtual TVectorD TransSolve (const TVectorD& b,Bool_t &ok) { TVectorD x = b; ok = TransSolve(x);
+   Bool_t   Solve      (      TMatrixDColumn &b) override;
+   Bool_t   TransSolve (      TVectorD &b) override;
+   TVectorD TransSolve (const TVectorD& b,Bool_t &ok) override { TVectorD x = b; ok = TransSolve(x);
                                                                 const Int_t rowLwb = GetRowLwb();
                                                                 x.ResizeTo(rowLwb,rowLwb+GetNcols()-1);
                                                                 return x; }
-   virtual Bool_t   TransSolve (      TMatrixDColumn &b);
-   virtual Double_t Condition  ();
-   virtual void     Det        (Double_t &d1,Double_t &d2);
+   Bool_t   TransSolve (      TMatrixDColumn &b) override;
+   Double_t Condition  () override;
+   void     Det        (Double_t &d1,Double_t &d2) override;
 
            Bool_t   Invert     (TMatrixD &inv);
            TMatrixD Invert     (Bool_t &status);
            TMatrixD Invert     () {Bool_t status; return Invert(status); }
 
-   void Print(Option_t *opt ="") const; // *MENU*
+   void Print(Option_t *opt ="") const override; // *MENU*
 
    TDecompSVD &operator= (const TDecompSVD &source);
 
-   ClassDef(TDecompSVD,1) // Matrix Decompositition SVD
+   ClassDefOverride(TDecompSVD,1) // Matrix Decompositition SVD
 };
 
 #endif

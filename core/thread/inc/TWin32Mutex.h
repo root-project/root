@@ -25,10 +25,6 @@
 
 #include "Windows4Root.h"
 
-#ifdef __CINT__
-struct CRITICAL_SECTION;
-#endif
-
 class TWin32Mutex : public TMutexImp {
 
 friend class TWin32Condition;
@@ -42,11 +38,11 @@ public:
    TWin32Mutex(Bool_t recursive=kFALSE);
    virtual ~TWin32Mutex();
 
-   Int_t  Lock();
-   Int_t  UnLock();
-   Int_t  TryLock();
+   Int_t  Lock() override;
+   Int_t  UnLock() override;
+   Int_t  TryLock() override;
 
-   ClassDef(TWin32Mutex,0)  // Win32 mutex lock
+   ClassDefOverride(TWin32Mutex,0)  // Win32 mutex lock
 };
 
 #endif

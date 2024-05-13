@@ -108,7 +108,7 @@ public:
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
 
-   ClassDef(THttpWSHandler, 0) // abstract class for handling websocket requests
+   ClassDefOverride(THttpWSHandler, 0) // abstract class for handling websocket requests
 };
 
 #endif

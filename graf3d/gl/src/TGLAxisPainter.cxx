@@ -24,7 +24,7 @@
 #include "TMath.h"
 #include "TPRegexp.h"
 
-/** \class TGLAxisPainterBox
+/** \class TGLAxisPainter
 \ingroup opengl
 Utility class to paint axis in GL.
 */
@@ -38,7 +38,7 @@ TGLAxisPainter::TGLAxisPainter():
    fMaxDigits(5),
    fDecimals(0),
 
-   fAttAxis(0), fUseAxisColors(kTRUE),
+   fAttAxis(nullptr), fUseAxisColors(kTRUE),
 
    fFontMode(TGLFont::kTexture),
    fDir(1, 0, 0),
@@ -48,7 +48,7 @@ TGLAxisPainter::TGLAxisPainter():
 
    fLabelAlignH(TGLFont::kCenterH),
    fLabelAlignV(TGLFont::kCenterV),
-   fAllZeroesRE(0)
+   fAllZeroesRE(nullptr)
 {
    // Constructor.
 
@@ -138,14 +138,14 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
       Int_t clog = Int_t(af) + 1;
 
       if (clog > fMaxDigits) {
-         while (1) {
+         while (true) {
             fExp++;
             absMax    /= 10;
             if (fExp % 3 == 0 && absMax <= TMath::Power(10, fMaxDigits - 1)) break;
          }
       } else if (clog < -fMaxDigits) {
          Double_t rne   = 1 / TMath::Power(10, fMaxDigits - 2);
-         while (1) {
+         while (true) {
             fExp--;
             absMax  *= 10;
             if (fExp % 3 == 0 && absMax >= rne) break;
@@ -451,7 +451,7 @@ ClassImp(TGLAxisPainterBox);
 TGLAxisPainterBox::TGLAxisPainterBox() :
    TGLAxisPainter()
 {
-   fAxis[0] = fAxis[1] = fAxis[2] = 0;
+   fAxis[0] = fAxis[1] = fAxis[2] = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -571,7 +571,6 @@ void TGLAxisPainterBox::DrawAxis3D(TGLRnrCtx &rnrCtx)
    // Z axis
    //
    // tick-mark vector = 10 pixels left
-   fAxis[2]->SetTickLength(1.); // leave this relative factor neutral
    TGLVertex3 worldRef(fAxisTitlePos[2].X(), fAxisTitlePos[2].Y(), fAxisTitlePos[2].Z());
    RefTMOff(0) = rnrCtx.RefCamera().ViewportDeltaToWorld(worldRef, -10, 0, &mm);
    SetTMNDim(1);
@@ -621,9 +620,6 @@ void TGLAxisPainterBox::PlotStandard(      TGLRnrCtx      &rnrCtx,
    fAxis[0] = histo->GetXaxis();
    fAxis[1] = histo->GetYaxis();
    fAxis[2] = histo->GetZaxis();
-   // fAxis[2]->SetTitle("Z");
-   // fAxis[2]->SetLabelSize(0.04);
-   // fAxis[2]->SetTitleSize(0.05);
 
    Double_t sx = (bbox.XMax() - bbox.XMin()) / (fAxis[0]->GetXmax() - fAxis[0]->GetXmin());
    Double_t sy = (bbox.YMax() - bbox.YMin()) / (fAxis[1]->GetXmax() - fAxis[1]->GetXmin());

@@ -44,7 +44,9 @@ else()
    set(CEF_LIB_DEPENDENCY ${X11_LIBRARIES})
    file(COPY ${CEF_RELEASE_DIR}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
    file(COPY ${CEF_RESOURCES}/ DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-   file(COPY ${CEF_RELEASE_DIR}/swiftshader DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   if(EXISTS ${CEF_RELEASE_DIR}/swiftshader)
+      file(COPY ${CEF_RELEASE_DIR}/swiftshader DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+   endif()
 endif()
 
 include_directories($ENV{CEF_ROOT} inc)
@@ -53,6 +55,8 @@ set(CEF_MAIN src/cef_main.cxx)
 ROOT_LINKER_LIBRARY(${libname} ${CEF_sources} ${CEF_platform}
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
                     DEPENDENCIES RHTTP ROOTWebDisplay)
+
+target_compile_definitions(${libname} PRIVATE NDEBUG)
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})
 

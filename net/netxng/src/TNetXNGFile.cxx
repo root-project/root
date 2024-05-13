@@ -53,8 +53,8 @@ class TAsyncOpenHandler: public XrdCl::ResponseHandler
       // Called when a response to open arrives
       //////////////////////////////////////////////////////////////////////////
 
-      virtual void HandleResponse(XrdCl::XRootDStatus *status,
-                                  XrdCl::AnyObject    *response)
+      void HandleResponse(XrdCl::XRootDStatus *status,
+                          XrdCl::AnyObject    *response) override
       {
          if (status->IsOK())
          {
@@ -95,8 +95,8 @@ class TAsyncReadvHandler: public XrdCl::ResponseHandler
       // Handle readv response
       //////////////////////////////////////////////////////////////////////////
 
-      virtual void HandleResponse(XrdCl::XRootDStatus *status,
-                                  XrdCl::AnyObject    *response)
+      void HandleResponse(XrdCl::XRootDStatus *status,
+                          XrdCl::AnyObject    *response) override
       {
          fStatuses->at(fStatusIndex) = status;
          fSemaphore->Post();
@@ -131,14 +131,11 @@ TNetXNGFile::TNetXNGFile(const char *url,
                          Bool_t      parallelopen) :
 	TNetXNGFile(url,0,mode,title,compress,netopt,parallelopen){}
 
-TNetXNGFile::TNetXNGFile(const char *url,
-		         const char *lurl,
-                         Option_t   *mode,
-                         const char *title,
-                         Int_t       compress,
-                         Int_t       /*netopt*/,
-                         Bool_t      parallelopen) :
-   TFile((lurl ? lurl : url), "NET", title, compress)
+TNetXNGFile::TNetXNGFile(const char *url, const char *lurl, Option_t *mode, const char *title, Int_t compress,
+                         Int_t /*netopt*/, Bool_t parallelopen)
+   : TFile((lurl ? lurl : url),
+           strstr(mode, "_WITHOUT_GLOBALREGISTRATION") != nullptr ? "NET_WITHOUT_GLOBALREGISTRATION" : "NET", title,
+           compress)
 {
    using namespace XrdCl;
 
@@ -230,7 +227,6 @@ TNetXNGFile::~TNetXNGFile()
 {
    if (IsOpen())
       Close();
-   delete fFile;
    delete fUrl;
    delete fInitCondVar;
 }
@@ -303,7 +299,7 @@ Long64_t TNetXNGFile::GetSize() const
 
 Bool_t TNetXNGFile::IsOpen() const
 {
-   return fFile->IsOpen();
+   return fFile && fFile->IsOpen();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -326,11 +322,15 @@ void TNetXNGFile::Close(const Option_t */*option*/)
 {
    TFile::Close();
 
+   if (!fFile) return;
+
    XrdCl::XRootDStatus status = fFile->Close();
    if (!status.IsOK()) {
       Error("Close", "%s", status.ToStr().c_str());
       MakeZombie();
    }
+   delete fFile;
+   fFile = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

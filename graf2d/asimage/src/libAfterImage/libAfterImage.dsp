@@ -7,19 +7,19 @@
 CFG=libAfterImage - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "libAfterImage.mak".
-!MESSAGE 
+!MESSAGE
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
-!MESSAGE 
+!MESSAGE
 !MESSAGE NMAKE /f "libAfterImage.mak" CFG="libAfterImage - Win32 Debug"
-!MESSAGE 
+!MESSAGE
 !MESSAGE Possible choices for configuration are:
-!MESSAGE 
+!MESSAGE
 !MESSAGE "libAfterImage - Win32 Release" (based on "Win32 (x86) Static Library")
 !MESSAGE "libAfterImage - Win32 Debug" (based on "Win32 (x86) Static Library")
-!MESSAGE 
+!MESSAGE
 
 # Begin Project
 # PROP AllowPerConfigDependencies 0
@@ -75,7 +75,7 @@ LIB32=link.exe -lib
 # ADD BASE LIB32 /nologo
 # ADD LIB32 /nologo
 
-!ENDIF 
+!ENDIF
 
 # Begin Target
 
@@ -434,10 +434,6 @@ SOURCE=.\asimage.c
 # End Source File
 # Begin Source File
 
-SOURCE=.\asimagexml.c
-# End Source File
-# Begin Source File
-
 SOURCE=.\asstorage.c
 # End Source File
 # Begin Source File
@@ -467,10 +463,6 @@ SOURCE=.\imencdec.c
 # Begin Source File
 
 SOURCE=.\import.c
-# End Source File
-# Begin Source File
-
-SOURCE=.\pixmap.c
 # End Source File
 # Begin Source File
 
@@ -522,10 +514,6 @@ SOURCE=.\asimage.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\asimagexml.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\asvisual.h
 # End Source File
 # Begin Source File
@@ -555,10 +543,6 @@ SOURCE=.\imencdec.h
 # Begin Source File
 
 SOURCE=.\import.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\pixmap.h
 # End Source File
 # Begin Source File
 

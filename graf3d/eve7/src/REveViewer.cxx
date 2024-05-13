@@ -17,6 +17,8 @@
 #include <ROOT/REveManager.hxx>
 #include <ROOT/REveSelection.hxx>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
 namespace REX = ROOT::Experimental;
 
@@ -98,6 +100,70 @@ void REveViewer::RemoveElementsLocal()
 \ingroup REve
 List of Viewers providing common operations on REveViewer collections.
 */
+
+////////////////////////////////////////////////////////////////////////////////
+//
+void REveViewer::SetAxesType(int at)
+{
+   fAxesType = (EAxesType)at;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+void REveViewer::SetBlackBackground(bool x)
+{
+   fBlackBackground = x;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stream Camera Info.
+/// Virtual from REveElement.
+int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   std::string ct;
+   switch (fCameraType)
+   {
+      case kCameraPerspXOZ: ct = "PerspXOZ"; break;
+      case kCameraOrthoXOY: ct = "OrthoXOY"; break;
+   }
+   j["CameraType"] = ct;
+   j["Mandatory"] = fMandatory;
+   j["AxesType"] = fAxesType;
+   j["BlackBg"] = fBlackBackground;
+
+   j["UT_PostStream"] = "UT_EveViewerUpdate";
+
+   return REveElement::WriteCoreJson(j, rnr_offset);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function called from MIR when user closes one of the viewer window.
+//  Client id stored in thread local data
+void REveViewer::DisconnectClient()
+{
+   gEve->DisconnectEveViewer(this);
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Function called from MIR when user wants to stream unsubscribed view.
+//  Client id stored in thread local data
+void REveViewer::ConnectClient()
+{
+   gEve->ConnectEveViewer(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+//  Set Flag if this viewer is presented on connect
+void REveViewer::SetMandatory(bool x)
+{
+   fMandatory = x;
+   for (auto &c : RefChildren()) {
+      REveSceneInfo *sinfo = dynamic_cast<REveSceneInfo *>(c);
+      sinfo->GetScene()->GetScene()->SetMandatory(fMandatory);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -329,7 +395,7 @@ void REveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserRePickedElement(el);
@@ -351,7 +417,7 @@ void REveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    // void *qsender = gTQSender;
    // REX::gEve->GetHighlight()->UserUnPickedElement(el);
@@ -373,7 +439,7 @@ void REveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }
 
@@ -390,7 +456,7 @@ void REveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserRePickedElement(el);
 }
 
@@ -407,7 +473,7 @@ void REveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    REveElement* el = dynamic_cast<REveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    REX::gEve->GetSelection()->UserUnPickedElement(el);
 }
 
@@ -416,7 +482,7 @@ void REveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 
 void REveViewerList::SetColorBrightness(Float_t b)
 {
-   REveUtil::SetColorBrightness(b, 1);
+   REveUtil::SetColorBrightness(b, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

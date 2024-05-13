@@ -27,7 +27,7 @@
  *  x^4 + a x^3 + b x^2 + c x + d = 0
  */
 
-#include <math.h>
+#include <cmath>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_complex.h>
 #include <gsl/gsl_complex_math.h>
@@ -40,11 +40,14 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
                                 gsl_complex * z0, gsl_complex * z1,
                                 gsl_complex * z2, gsl_complex * z3)
 {
+  /* Relative tolerance below which disc is treated as zero. */
+  static constexpr double ZeroTolerance = 1e-15;
+
   gsl_complex i, zarr[4], w1, w2, w3;
   double r4 = 1.0 / 4.0;
   double q2 = 1.0 / 2.0, q4 = 1.0 / 4.0, q8 = 1.0 / 8.0;
   double q1 = 3.0 / 8.0, q3 = 3.0 / 16.0;
-  double u[3], v[3], v1, v2, disc;
+  double u[3], v[3], v1, v2, disc, disc_tol;
   double aa, pp, qq, rr, rc, sc, tc, q, h;
   int k1 = 0, k2 = 0, mt;
 
@@ -149,11 +152,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
         double R2 = R * R;
 
         disc = R2 - Q3;
-
-//       more numerical problems with this calculation of disc
-//       double CR2 = 729 * rcub * rcub;
-//       double CQ3 = 2916 * qcub * qcub * qcub;
-//       disc = (CR2 - CQ3) / 2125764.0;
+        disc_tol = std::max(ZeroTolerance, ZeroTolerance * (fabs(R2) + fabs(Q3)));
 
 
         if (0 == R && 0 == Q)
@@ -162,8 +161,9 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
             u[1] = -rc / 3;
             u[2] = -rc / 3;
           }
-        else if (R2 == Q3)
+        else if (fabs(disc) < disc_tol)
           {
+            // R2 and Q3 are considered equal here
             double sqrtQ = sqrt (Q);
             if (R > 0)
               {
@@ -220,7 +220,7 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
        * mt=3 : 2 real roots
        */
       // when disc == 0  2 roots are identicals
-      if (0 >= disc)
+      if (disc_tol >= disc)
         {
           mt = 2;
           v[0] = fabs (u[0]);
@@ -398,4 +398,3 @@ gsl_poly_complex_solve_quartic (double a, double b, double c, double d,
 
   return 4;
 }
-

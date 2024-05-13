@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::TNeuron                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Neuron class to be used in MethodANNBase and its derivatives.             *
@@ -18,7 +18,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TNeuron
@@ -113,8 +113,8 @@ namespace TMVA {
       void      SetOutputNeuron()               { NullifyLinks(fLinksOut);                }
       void      SetBiasNeuron()                 { NullifyLinks(fLinksIn);                 }
       void      SetDEDw( Double_t DEDw )        { fDEDw = DEDw;                           }
-      Bool_t    IsInputNeuron() const           { return fLinksIn == NULL;                }
-      Bool_t    IsOutputNeuron() const          { return fLinksOut == NULL;               }
+      Bool_t    IsInputNeuron() const           { return fLinksIn == nullptr;             }
+      Bool_t    IsOutputNeuron() const          { return fLinksOut == nullptr;            }
       void      PrintPreLinks() const           { PrintLinks(fLinksIn); return;           }
       void      PrintPostLinks() const          { PrintLinks(fLinksOut); return;          }
 
@@ -141,16 +141,16 @@ namespace TMVA {
       }
 
       // private member variables
-      TObjArray*    fLinksIn;                 // array of input synapses
-      TObjArray*    fLinksOut;                // array of output synapses
-      Double_t      fValue;                   // input value
-      Double_t      fActivationValue;         // activation/output value
-      Double_t      fDelta;                   // error field of neuron
-      Double_t      fDEDw;                    // sum of all deltas
-      Double_t      fError;                   // error, only set for output neurons
-      Bool_t        fForcedValue;             // flag for forced input value
-      TActivation*  fActivation;              // activation equation
-      TNeuronInput* fInputCalculator;         // input calculator
+      TObjArray*    fLinksIn;                 ///< array of input synapses
+      TObjArray*    fLinksOut;                ///< array of output synapses
+      Double_t      fValue;                   ///< input value
+      Double_t      fActivationValue;         ///< activation/output value
+      Double_t      fDelta;                   ///< error field of neuron
+      Double_t      fDEDw;                    ///< sum of all deltas
+      Double_t      fError;                   ///< error, only set for output neurons
+      Bool_t        fForcedValue;             ///< flag for forced input value
+      TActivation*  fActivation;              ///< activation equation
+      TNeuronInput* fInputCalculator;         ///< input calculator
 
       MsgLogger& Log() const;
 

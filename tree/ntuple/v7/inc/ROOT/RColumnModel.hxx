@@ -16,7 +16,7 @@
 #ifndef ROOT7_RColumnModel
 #define ROOT7_RColumnModel
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <string>
 
@@ -30,31 +30,56 @@ namespace Experimental {
 \brief The available trivial, native content types of a column
 
 More complex types, such as classes, get translated into columns of such simple types by the RField.
+New types need to be accounted for in RColumnElementBase::Generate() and RColumnElementBase::GetBitsOnStorage(), too.
+When changed, remember to update
+  - RColumnElement::Generate()
+  - RColumnElement::GetBitsOnStorage()
+  - RColumnElement::GetTypeName()
+  - RColumnElement template specializations / packing & unpacking
+  - If necessary, endianess handling for the packing + unit test in ntuple_endian
+  - RNTupleSerializer::[Des|S]erializeColumnType
 */
 // clang-format on
 enum class EColumnType {
    kUnknown = 0,
-   // type for root columns of (nested) collections; 32bit integers that count relative to the current cluster
-   kIndex,
-   // 64 bit column that uses the lower 32bits as kIndex and the higher 32bits as a dispatch tag; used, e.g.,
-   // in order to serialize std::variant
+   // type for root columns of (nested) collections; offsets are relative to the current cluster
+   kIndex64,
+   kIndex32,
+   // 96 bit column that is a pair of a kIndex64 and a 32bit dispatch tag to a column ID;
+   // used to serialize std::variant.
    kSwitch,
    kByte,
+   kChar,
    kBit,
    kReal64,
    kReal32,
    kReal16,
-   kReal8,
    kInt64,
+   kUInt64,
    kInt32,
+   kUInt32,
    kInt16,
+   kUInt16,
+   kInt8,
+   kUInt8,
+   kSplitIndex64,
+   kSplitIndex32,
+   kSplitReal64,
+   kSplitReal32,
+   kSplitInt64,
+   kSplitUInt64,
+   kSplitInt32,
+   kSplitUInt32,
+   kSplitInt16,
+   kSplitUInt16,
+   kMax,
 };
 
 // clang-format off
 /**
 \class ROOT::Experimental::RColumnModel
 \ingroup NTuple
-\brief Holds the static meta-data of a column in a tree
+\brief Holds the static meta-data of an RNTuple column
 */
 // clang-format on
 class RColumnModel {
@@ -64,6 +89,10 @@ private:
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
+   explicit RColumnModel(EColumnType type)
+      : fType(type), fIsSorted(type == EColumnType::kIndex32 || type == EColumnType::kSplitIndex32)
+   {
+   }
    RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
    EColumnType GetType() const { return fType; }
@@ -72,6 +101,7 @@ public:
    bool operator ==(const RColumnModel &other) const {
       return (fType == other.fType) && (fIsSorted == other.fIsSorted);
    }
+   bool operator!=(const RColumnModel &other) const { return !(other == *this); }
 };
 
 } // namespace Experimental

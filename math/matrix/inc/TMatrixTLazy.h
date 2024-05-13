@@ -64,14 +64,14 @@ public:
        : fRowUpb(nrows-1),fRowLwb(0),fColUpb(ncols-1),fColLwb(0) { }
    TMatrixTLazy(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
        : fRowUpb(row_upb),fRowLwb(row_lwb),fColUpb(col_upb),fColLwb(col_lwb) { }
-   virtual ~TMatrixTLazy() {}
+   ~TMatrixTLazy() override {}
 
    inline Int_t GetRowLwb() const { return fRowLwb; }
    inline Int_t GetRowUpb() const { return fRowUpb; }
    inline Int_t GetColLwb() const { return fColLwb; }
    inline Int_t GetColUpb() const { return fColUpb; }
 
-   ClassDef(TMatrixTLazy,3)  // Template of Lazy Matrix class
+   ClassDefOverride(TMatrixTLazy,3)  // Template of Lazy Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -105,12 +105,12 @@ public:
        : fRowUpb(nrows-1),fRowLwb(0) { }
    TMatrixTSymLazy(Int_t row_lwb,Int_t row_upb)
        : fRowUpb(row_upb),fRowLwb(row_lwb) { }
-   virtual ~TMatrixTSymLazy() {}
+   ~TMatrixTSymLazy() override {}
 
    inline Int_t GetRowLwb() const { return fRowLwb; }
    inline Int_t GetRowUpb() const { return fRowUpb; }
 
-   ClassDef(TMatrixTSymLazy,2)  // Template of Lazy Symmeytric class
+   ClassDefOverride(TMatrixTSymLazy,2)  // Template of Lazy Symmeytric class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -122,14 +122,14 @@ public:
 template<class Element> class THaarMatrixT: public TMatrixTLazy<Element> {
 
 private:
-   void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const override;
 
 public:
    THaarMatrixT() {}
    THaarMatrixT(Int_t n,Int_t no_cols = 0);
    virtual ~THaarMatrixT() {}
 
-   ClassDef(THaarMatrixT,2)  // Template of Haar Matrix class
+   ClassDefOverride(THaarMatrixT,2)  // Template of Haar Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -141,7 +141,7 @@ public:
 template<class Element> class THilbertMatrixT : public TMatrixTLazy<Element> {
 
 private:
-   void FillIn(TMatrixT<Element> &m) const;
+   void FillIn(TMatrixT<Element> &m) const override;
 
 public:
    THilbertMatrixT() {}
@@ -149,7 +149,7 @@ public:
    THilbertMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    virtual ~THilbertMatrixT() {}
 
-   ClassDef(THilbertMatrixT,2)  // Template of Hilbert Matrix class
+   ClassDefOverride(THilbertMatrixT,2)  // Template of Hilbert Matrix class
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -161,7 +161,7 @@ public:
 template<class Element> class THilbertMatrixTSym : public TMatrixTSymLazy<Element> {
 
 private:
-   void FillIn(TMatrixTSym<Element> &m) const;
+   void FillIn(TMatrixTSym<Element> &m) const override;
 
 public:
    THilbertMatrixTSym() {}
@@ -169,7 +169,7 @@ public:
    THilbertMatrixTSym(Int_t row_lwb,Int_t row_upb);
    virtual ~THilbertMatrixTSym() {}
 
-   ClassDef(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
+   ClassDefOverride(THilbertMatrixTSym,2)  // Template of Symmetric Hilbert Matrix class
 };
 
 #endif

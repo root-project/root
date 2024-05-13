@@ -20,17 +20,18 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextView                                                           //
-//                                                                      //
-// A TGTextView is a text viewer widget. It is a specialization of      //
-// TGView. It uses the TGText class (which contains all text            //
-// manipulation code, i.e. loading a file in memory, changing,          //
-// removing lines, etc.). Use a TGTextView to view non-editable text.   //
-// For supported messages see TGView.                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextView
+    \ingroup guiwidgets
+
+A TGTextView is a text viewer widget. It is a specialization of
+TGView. It uses the TGText class (which contains all text
+manipulation code, i.e. loading a file in memory, changing,
+removing lines, etc.). Use a TGTextView to view non-editable text.
+For supported messages see TGView.
+
+*/
+
 
 #include "TGTextView.h"
 #include "TGScrollBar.h"
@@ -115,7 +116,7 @@ void TGTextView::Init(ULong_t back)
 /// Create a text view widget.
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
-                       UInt_t sboptions, ULong_t back) :
+                       UInt_t sboptions, Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);
@@ -125,7 +126,7 @@ TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
 /// Create a text view widget.
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-                       Int_t id, UInt_t sboptions, ULong_t back) :
+                       Int_t id, UInt_t sboptions, Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);
@@ -142,7 +143,7 @@ TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
 
 TGTextView::TGTextView(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
-                       ULong_t back) :
+                       Pixel_t back) :
      TGView(parent, w, h, id, 3, 3, kSunkenFrame | kDoubleBorder, sboptions, back)
 {
    Init(back);
@@ -999,7 +1000,7 @@ Bool_t TGTextView::HandleSelectionRequest(Event_t *event)
 
    pos.fY = pos.fX = 0;
    buffer = new char[len+1];
-   prev_len = temp_len = 0;
+   prev_len = 0;
    for (pos.fY = 0; pos.fY < fClipText->RowCount(); pos.fY++) {
       temp_len = fClipText->GetLineLength(pos.fY);
       if (temp_len < 0) break;
@@ -1091,7 +1092,7 @@ Bool_t TGTextView::HandleDNDDrop(TDNDData *data)
    if (fText->RowCount() > 1) {
       Int_t ret;
       new TGMsgBox(fClient->GetRoot(), GetMainFrame(),
-                   "Overvrite", "Do you want to replace existing text?",
+                   "Overwrite", "Do you want to replace existing text?",
                    kMBIconExclamation, kMBYes | kMBNo, &ret);
       if (ret == kMBNo)
          return kTRUE;

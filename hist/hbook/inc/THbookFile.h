@@ -42,8 +42,8 @@ public:
 
    THbookFile();
    THbookFile(const char *fname, Int_t lrecl=1024);
-   virtual ~THbookFile();
-   virtual void      Browse(TBrowser *b);
+   ~THbookFile() override;
+   void      Browse(TBrowser *b) override;
    virtual Bool_t    cd(const char *dirname="");
    virtual void      Close(Option_t *option="");
    virtual TFile    *Convert2root(const char *rootname="", Int_t lrecl=0, Option_t *option=""); // *MENU*
@@ -53,8 +53,8 @@ public:
    virtual TObject  *Convert1D(Int_t id);
    virtual TObject  *Convert2D(Int_t id);
            void      DeleteID(Int_t id);
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
+   TObject  *FindObject(const char *name) const override;
+   TObject  *FindObject(const TObject *obj) const override;
    TObject          *Get(Int_t id);
    const char       *GetCurDir() const {return fCurDir.Data();}
    Int_t             GetEntry(Int_t entry,Int_t id, Int_t atype, Float_t *x);
@@ -63,12 +63,12 @@ public:
    TList            *GetList() const {return fList;}
    TList            *GetListOfKeys() const { return fKeys; }
    void              InitLeaves(Int_t id, Int_t var, TTreeFormula *formula);
-   Bool_t            IsFolder() const { return kTRUE; }
+   Bool_t            IsFolder() const override { return kTRUE; }
    virtual Bool_t    IsOpen() const;
-   virtual void      ls(const char *path="") const;
+   void      ls(const char *path="") const override;
    virtual void      SetBranchAddress(Int_t id, const char *bname, void *add);
 
-   ClassDef(THbookFile,1)  //ROOT interface to Hbook/PAW files
+   ClassDefOverride(THbookFile,1)  //ROOT interface to Hbook/PAW files
 };
 
 #endif

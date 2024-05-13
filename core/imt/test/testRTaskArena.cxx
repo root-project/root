@@ -1,6 +1,10 @@
 #include "TROOT.h"
 #include "ROOT/RTaskArena.hxx"
 #include "ROOT/TThreadExecutor.hxx"
+#include "../src/ROpaqueTaskArena.hxx"
+
+#include "ROOT/TestSupport.hxx"
+
 #include <fstream>
 #include <random>
 #include <thread>
@@ -8,13 +12,17 @@
 #include <condition_variable>
 #include <mutex>
 #include "gtest/gtest.h"
-#include "tbb/task_arena.h"
 
 #ifdef R__USE_IMT
 
-const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
+const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwidthControl();
 std::mt19937 randGenerator(0);                                      // seed the generator
 std::uniform_int_distribution<> plausibleNCores(1, maxConcurrency); // define the range
+
+/// Suppress the task arena diagnostics for tests where we try to create the task arena multiple times.
+#define SUPPRESS_DIAG \
+   ROOT::TestSupport::CheckDiagsRAII raii; \
+   raii.optionalDiag(kWarning, "RTaskArenaWrapper", "There's already an active task arena", false);
 
 TEST(RTaskArena, Size0WhenNoInstance)
 {
@@ -52,6 +60,7 @@ TEST(RTaskArena, Reconstruction)
 
 TEST(RTaskArena, SingleInstance)
 {
+   SUPPRESS_DIAG;
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
@@ -68,6 +77,7 @@ TEST(RTaskArena, AccessWorkingTBBtaskArena)
 
 TEST(RTaskArena, KeepSize)
 {
+   SUPPRESS_DIAG
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena(nCores);
    auto gTAInstance2 = ROOT::Internal::GetGlobalTaskArena(plausibleNCores(randGenerator));
@@ -79,6 +89,7 @@ TEST(RTaskArena, KeepSize)
 
 TEST(RTaskArena, CorrectSizeIMT)
 {
+   SUPPRESS_DIAG
    auto gTAInstance1 = ROOT::Internal::GetGlobalTaskArena();
    ROOT::EnableImplicitMT(plausibleNCores(randGenerator));
    ASSERT_EQ(ROOT::Internal::RTaskArenaWrapper::TaskArenaSize(), maxConcurrency);
@@ -87,6 +98,7 @@ TEST(RTaskArena, CorrectSizeIMT)
 
 TEST(RTaskArena, KeepSizeTThreadExecutor)
 {
+   SUPPRESS_DIAG
    const unsigned nCores = plausibleNCores(randGenerator);
    auto gTAInstance = ROOT::Internal::GetGlobalTaskArena(nCores);
    ROOT::TThreadExecutor threadExecutor(plausibleNCores(randGenerator));
@@ -95,6 +107,7 @@ TEST(RTaskArena, KeepSizeTThreadExecutor)
 
 TEST(RTaskArena, InterleaveAndNest)
 {
+   SUPPRESS_DIAG
    unsigned nCores;
 
    // IMT + GTA
@@ -231,6 +244,58 @@ TEST(TThreadExecutor, ThreadSafety) {
    std::for_each(threads.begin(), threads.end(), [](std::thread& thr){thr.join();});
 
    EXPECT_TRUE(std::equal(counters.begin(), counters.end(), target.begin()));
+}
+
+// Checking if we correctly handle uneven chunks
+TEST(TThreadExecutor, StdVectorChunks)
+{
+   ROOT::TThreadExecutor ttex;
+   auto func = [](int x) -> int { return x; };
+   // redfunc must be such that does not have 0 as identity (i.e. not addition but multiplication)
+   auto redfunc = [](const std::vector<int> &v) {
+      return std::accumulate(v.begin(), v.end(), 1, std::multiplies<int>());
+   };
+
+   // will be calculating 7 factorial = 5040, const and non-const vectors to invoke different overloads
+   std::vector<int> vec{1, 2, 3, 4, 5, 6, 7};
+   const std::vector<int> cvec{1, 2, 3, 4, 5, 6, 7};
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 3), 5040); // with 3 chunks, last chunk is smaller
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 3), 5040);
+
+   EXPECT_EQ(ttex.MapReduce(func, vec, redfunc, 9), 5040); // with 9 chunks, 2 empty chunks
+   EXPECT_EQ(ttex.MapReduce(func, cvec, redfunc, 9), 5040);
+}
+
+TEST(TThreadExecutor, TSeqActions)
+{
+   ROOT::TThreadExecutor ttex;
+   auto func = [](int x) -> int { return x; };
+   auto redfunc = [](const std::vector<int> &v) { return std::accumulate(v.begin(), v.end(), 0); };
+
+   // MapReduce on TSeq with end specified only
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5), redfunc, 3), 10); // with 3 chunks
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5), redfunc), 10);    // with 0 chunks
+
+   // MapReduce on TSeq with begin and end specified only
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5), redfunc, 3), 9);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5), redfunc), 9);
+
+   // MapReduce on increasing and decreasing TSeq with begin, end and step specified
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5, 2), redfunc, 3), 6);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(2, 5, 2), redfunc), 6);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5, 2, -2), redfunc, 3), 8);
+   EXPECT_EQ(ttex.MapReduce(func, ROOT::TSeqI(5, 2, -2), redfunc), 8);
+
+   // Map on TSeq with end specified only
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(5))), 10);
+
+   // Map on TSeq with begin and end specified only
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(2, 5))), 9);
+
+   // Map on increasing and decreasing TSeq with begin, end and step specified
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(2, 5, 2))), 6);
+   EXPECT_EQ(redfunc(ttex.Map(func, ROOT::TSeqI(5, 2, -2))), 8);
 }
 
 #endif

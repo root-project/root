@@ -10,9 +10,11 @@
 #---------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------
-# Package up needed system libraries - only for WIN32?
+# Package up needed system libraries - except for WIN32
 #
-include(InstallRequiredSystemLibraries)
+if(NOT WIN32)
+  include(InstallRequiredSystemLibraries)
+endif()
 
 #----------------------------------------------------------------------------------------------------
 # General packaging setup - variable relavant to all package formats
@@ -29,12 +31,24 @@ string(REGEX REPLACE "^([0-9]+).*$" "\\1" CXX_MAJOR ${CMAKE_CXX_COMPILER_VERSION
 string(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*$" "\\2" CXX_MINOR ${CMAKE_CXX_COMPILER_VERSION})
 
 #---Resource Files-----------------------------------------------------------------------------------
-configure_file(README.md README.md COPYONLY)
 configure_file(LICENSE LICENSE.txt COPYONLY)
 configure_file(LGPL2_1.txt LGPL2_1.txt COPYONLY)
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_BINARY_DIR}/LICENSE.txt")
-set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+if (APPLE)
+  # Apple productbuild cannot handle .md files as CPACK_PACKAGE_DESCRIPTION_FILE;
+  # convert to HTML instead.
+  find_program(CONVERTER textutil)
+  if (NOT CONVERTER)
+    message(FATAL_ERROR "textutil executable not found")
+  endif()
+  execute_process(COMMAND ${CONVERTER} -convert html "${CMAKE_SOURCE_DIR}/README.md" -output "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.html")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.html")
+else()
+  configure_file(README.md README.md COPYONLY)
+  set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_BINARY_DIR}/README.md")
+  set(CPACK_RESOURCE_FILE_README "${CMAKE_BINARY_DIR}/README.md")
+endif()
 
 #---Source package settings--------------------------------------------------------------------------
 set(CPACK_SOURCE_IGNORE_FILES
@@ -60,10 +74,14 @@ if(MSVC)
     math(EXPR VS_VERSION "${VC_MAJOR} - 6")
   elseif(MSVC_VERSION LESS 1910)
     math(EXPR VS_VERSION "${VC_MAJOR} - 5")
-  elseif(MSVC_VERSION LESS 1919)
+  elseif(MSVC_VERSION LESS 1920)
     math(EXPR VS_VERSION "${VC_MAJOR} - 4")
-  elseif(MSVC_VERSION LESS 1925)
+  elseif(MSVC_VERSION LESS 1930)
     math(EXPR VS_VERSION "${VC_MAJOR} - 3")
+  elseif(MSVC_VERSION LESS 1950)
+    math(EXPR VS_VERSION "${VC_MAJOR} - 2")
+  else()
+    message(FATAL_ERROR "MSVC_VERSION ${MSVC_VERSION} not implemented")
   endif()
   set(COMPILER_NAME_VERSION ".vc${VS_VERSION}")
 else()
@@ -83,36 +101,42 @@ if(APPLE)
   execute_process(COMMAND sw_vers "-productVersion"
                   COMMAND cut -d . -f 1-2
                   OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(OS_NAME_VERSION macosx64-${osvers})
+  set(OS_NAME_VERSION macos-${osvers}-${CMAKE_SYSTEM_PROCESSOR})
 elseif(WIN32)
-  set(OS_NAME_VERSION win32)
-else()
-  execute_process(COMMAND lsb_release -is OUTPUT_VARIABLE osid OUTPUT_STRIP_TRAILING_WHITESPACE)
-  execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
-  if(osid MATCHES Ubuntu)
-    string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(OS_NAME_VERSION Linux-ubuntu${osvers}-${arch})
-  elseif(osid MATCHES Scientific)
-    string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(OS_NAME_VERSION Linux-slc${osvers}-${arch})
-  elseif(osid MATCHES Fedora)
-    string(REGEX REPLACE "([0-9]+)" "\\1" osvers "${osvers}")
-    set(OS_NAME_VERSION Linux-fedora${osvers}-${arch})
-  elseif(osid MATCHES CentOS)
-    string(REGEX REPLACE "([0-9]+)[.].*" "\\1" osvers "${osvers}")
-    set(OS_NAME_VERSION Linux-centos${osvers}-${arch})
+  if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(OS_NAME_VERSION win64)
   else()
-    set(OS_NAME_VERSION Linux-${osid}${osvers}${arch})
+    set(OS_NAME_VERSION win32)
   endif()
+else()
+  if(EXISTS "/etc/os-release")
+    file(STRINGS /etc/os-release osid REGEX "^NAME=")
+    string(REGEX REPLACE "NAME=\"(.*)\"" "\\1" osid "${osid}")
+    file(STRINGS /etc/os-release osvers REGEX "^VERSION_ID=")
+    string(REGEX REPLACE "VERSION_ID=\"?([^\"]*)\"?" "\\1" osvers "${osvers}")
+  else()
+    execute_process(COMMAND lsb_release -is OUTPUT_VARIABLE osid OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
+  endif()
+  string(TOLOWER "${osid}" osid)
+  # "fedora linux" => "fedora"
+  string(REGEX REPLACE " linux$" "" osid "${osid}")
+  if(osid MATCHES ubuntu)
+    string(REGEX REPLACE "([0-9]+[.][0-9]+)[.].*" "\\1" osvers "${osvers}")
+  endif()
+  set(OS_NAME_VERSION Linux-${osid}${osvers}-${arch})
 endif()
+
 #---Build type---------------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-  string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE)
+  if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
+    string(TOLOWER .${CMAKE_BUILD_TYPE} BUILD_TYPE_FOR_NAME)
+  endif()
 endif()
 
 set(CPACK_PACKAGE_RELOCATABLE True)
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "root_v${ROOT_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME "root_v${ROOT_VERSION}.${OS_NAME_VERSION}${COMPILER_NAME_VERSION}${BUILD_TYPE}")
+set(CPACK_PACKAGE_FILE_NAME "root_v${ROOT_VERSION}.${OS_NAME_VERSION}${COMPILER_NAME_VERSION}${BUILD_TYPE_FOR_NAME}")
 set(CPACK_PACKAGE_EXECUTABLES "root" "ROOT")
 
 if(WIN32)
@@ -127,18 +151,10 @@ else()
 endif()
 
 #----------------------------------------------------------------------------------------------------
-# Execute pre packaging script
-#
-# We want to defer markdown to html conversion; CPACK_INSTALL_SCRIPTS allows this
-# but only takes a .cmake file as argument
-#
-set(CPACK_INSTALL_SCRIPTS ${CMAKE_SOURCE_DIR}/cmake/modules/CPackREADME.cmake)
-
-#----------------------------------------------------------------------------------------------------
 # Finally, generate the CPack per-generator options file and include the
 # base CPack configuration.
 #
-configure_file(cmake/modules/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
+configure_file(cmake/scripts/CMakeCPackOptions.cmake.in CMakeCPackOptions.cmake @ONLY)
 set(CPACK_PROJECT_CONFIG_FILE ${CMAKE_BINARY_DIR}/CMakeCPackOptions.cmake)
 include(CPack)
 

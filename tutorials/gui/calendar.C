@@ -422,7 +422,7 @@ void CalendarWindow::UpdateHTML()
    fHtmlText->fMonthTable.fCellFontSize = fFontEntry->GetNumberEntry()->GetText();
 
    Pixel_t pixel = 0;
-   TColor *color = 0;
+   TColor *color = nullptr;
 
    // table background
    pixel = fTableColor->GetColor();

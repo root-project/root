@@ -141,10 +141,10 @@ void TEmulatedMapProxy::ReadMap(UInt_t nElements, TBuffer &b)
          case kIsPointer|kIsClass:
             helper->set(b.ReadObjectAny(v->fType));
             break;
-         case kIsPointer|kBIT_ISSTRING:
+         case 0U|kIsPointer|kBIT_ISSTRING:
             helper->read_std_string_pointer(b);
             break;
-         case kIsPointer|kBIT_ISTSTRING|kIsClass:
+         case 0U|kIsPointer|kBIT_ISTSTRING|kIsClass:
             helper->read_tstring_pointer(vsn3,b);
             break;
          }
@@ -200,10 +200,10 @@ void TEmulatedMapProxy::WriteMap(UInt_t nElements, TBuffer &b)
          case kIsPointer|kIsClass:
             b.WriteObjectAny(i->ptr(),v->fType);
             break;
-         case kBIT_ISSTRING|kIsPointer:
+         case 0U|kBIT_ISSTRING|kIsPointer:
             i->write_std_string_pointer(b);
             break;
-         case kBIT_ISTSTRING|kIsClass|kIsPointer:
+         case 0U|kBIT_ISTSTRING|kIsClass|kIsPointer:
             i->write_tstring_pointer(b);
             break;
          }

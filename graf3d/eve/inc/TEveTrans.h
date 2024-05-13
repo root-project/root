@@ -50,7 +50,7 @@ public:
    TEveTrans(const TEveTrans& t);
    TEveTrans(const Double_t arr[16]);
    TEveTrans(const Float_t  arr[16]);
-   virtual ~TEveTrans() {}
+   ~TEveTrans() override {}
 
    // General operations
 
@@ -156,7 +156,7 @@ public:
    void     RotateIP(Float_t*  v) const;
    TVector3 Rotate(const TVector3& v) const;
 
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
 
    // TEveUtil stuff
 
@@ -178,7 +178,7 @@ public:
 
    Bool_t IsScale(Double_t low=0.9, Double_t high=1.1) const;
 
-   ClassDef(TEveTrans, 1); // Column-major 4x4 transforamtion matrix for homogeneous coordinates.
+   ClassDefOverride(TEveTrans, 1); // Column-major 4x4 transforamtion matrix for homogeneous coordinates.
 };
 
 std::ostream& operator<<(std::ostream& s, const TEveTrans& t);

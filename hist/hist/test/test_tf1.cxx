@@ -7,8 +7,6 @@
 
 #include <iostream>
 
-using namespace std;
-
 class MyClass {
 public:
    double operator()(double *x, double *p) { return *x + *p; };
@@ -28,7 +26,7 @@ double functionConst(const double *x, const double *p)
    return *x + *p;
 }
 
-Float_t delta = 0.00000000001;
+constexpr Float_t delta = 1.E-11f;
 
 void coeffNamesGeneric(TString &formula, TObjArray *coeffNames)
 {
@@ -117,7 +115,10 @@ void test_setRange()
    TF1 f2("f2", "CONV(gaus, breitwigner)", 0, 1);
    f2.SetParameters(1, 1, 1, 1, 1, 1);
    f2.SetRange(-100, 100); // making our convolution much more accurate
-   EXPECT_NEAR(f2.Integral(-20, 20), 2.466, .005);
+   // Numeric integration of this function suffers from roundoff errors, so the default 1.E-12 accuracy won't be reached.
+   // By reducing the tolerance, we get rid of a GSL warning, which was picked up by the log checkers.
+   constexpr double tolerance = 1.E-6;
+   EXPECT_NEAR(f2.Integral(-20, 20, tolerance), 2.466, .005);
 }
 
 // Test that we can copy and clone TF1 objects based on NSUM and CONV
@@ -219,4 +220,57 @@ TEST(TF1, Constructors)
 
    for (auto tf1 : vtf1)
       EXPECT_EQ(tf1(&x, &p), 2);
+}
+
+TEST(TF1, Save)
+{
+   TF1 linear("linear", "x", -10., 10.);
+   linear.SetNpx(20);
+
+   Double_t args[1];
+
+   // save with explicit range
+   linear.Save(-10, 10, 0, 0, 0, 0);
+
+   // test at position of saved bins
+   for (Double_t x = -10.; x <= 10.; x += 1.) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test linear approximation
+   for (Double_t x = -10.; x <= 10.; x += 0.77) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test outside range
+   args[0] = -11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+   args[0] = 11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+
+   // now test saved at middle of bins
+   linear.Save(0, 0, 0, 0, 0, 0);
+
+   // test at position of saved bins
+   for (Double_t x = -9.5; x <= 9.5; x += 1.) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test linear approximation
+   for (Double_t x = -9.5; x <= 9.5; x += 0.77) {
+      args[0] = x;
+      EXPECT_NEAR(x, linear.GetSave(args), 1e-10);
+   }
+
+   // test outside range
+   args[0] = -11;
+   EXPECT_EQ(0., linear.GetSave(args));
+
+   args[0] = 11;
+   EXPECT_EQ(0., linear.GetSave(args));
 }

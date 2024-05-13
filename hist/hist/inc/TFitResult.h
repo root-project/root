@@ -50,10 +50,10 @@ public:
    // constructor from an FitResult
    TFitResult(const ROOT::Fit::FitResult& f);
 
-   virtual ~TFitResult() {}
+   ~TFitResult() override {}
 
 
-   virtual void  Print(Option_t *option="") const;
+   void  Print(Option_t *option="") const override;
 
    TMatrixDSym GetCovarianceMatrix() const;
 
@@ -76,7 +76,7 @@ public:
    }
 
 private:
-   ClassDef(TFitResult, 0);  // Class holding the result of the fit
+   ClassDefOverride(TFitResult, 0);  // Class holding the result of the fit
 };
 
 namespace cling {

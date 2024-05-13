@@ -2,17 +2,17 @@
 // Author: Pasha Murat , Peter Malzacher  12/02/99
 //    Oct  8 1999: changed Warning to Error and
 //                 return fX in Double_t & operator()
-//    Oct 20 1999: dito in Double_t operator()
+//    Oct 20 1999: ditto in Double_t operator()
 //    Jan 25 2000: implemented as (fP,fE) instead of (fX,fY,fZ,fE)
 
 /** \class TLorentzVector
     \ingroup Physics
 
-## Disclaimer
+\attention \parblock
 TLorentzVector is a legacy class.
-It is slower and worse for serialization than the recommended superior ROOT::Math::LorentzVector.
+It is slower and worse for serialization than the recommended superior alternative ROOT::Math::LorentzVector.
 ROOT provides specialisations of the ROOT::Math::LorentzVector template which
-are superior from the runtime performance offered, i.e.:
+offer superior runtime performance, i.e.:
   - ROOT::Math::PtEtaPhiMVector based on pt (rho),eta,phi and M (t) coordinates in double precision
   - ROOT::Math::PtEtaPhiEVector based on pt (rho),eta,phi and E (t) coordinates in double precision
   - ROOT::Math::PxPyPzMVector based on px,py,pz and M (mass) coordinates in double precision
@@ -20,7 +20,9 @@ are superior from the runtime performance offered, i.e.:
   - ROOT::Math::XYZTVector based on x,y,z,t coordinates (cartesian) in double precision (same as PxPyPzEVector)
   - ROOT::Math::XYZTVectorF based on x,y,z,t coordinates (cartesian) in float precision (same as PxPyPzEVector but float)
 
-More details about the GenVector package can be found [here](Vector.html).
+More details can be found in the documentation of the @ref GenVector package.
+\endparblock
+
 
 ### Description
 TLorentzVector is a general four-vector class, which can be used

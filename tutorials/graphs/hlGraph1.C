@@ -8,21 +8,35 @@
 /// \date March 2018
 /// \author Jan Musinsky
 
-TList *l = 0;
+TList *l = nullptr;
 
-void HighlightHisto(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y);
+void HighlightHisto(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y)
+{
+   auto Pad = (TVirtualPad *)pad->FindObject("Pad");
+   if (!Pad) return;
 
+   if (ihp == -1) { // after highlight disabled
+      Pad->Clear();
+      return;
+   }
+
+   if (l && l->At(ihp)) {
+      Pad->cd();
+      l->At(ihp)->Draw();
+      gPad->Update();
+   }
+}
 
 void hlGraph1()
 {
    auto Canvas = new TCanvas("Canvas", "Canvas", 0, 0, 700, 500);
+   Canvas->HighlightConnect("HighlightHisto(TVirtualPad*,TObject*,Int_t,Int_t)");
    const Int_t n = 500;
    Double_t x[n], y[n];
-   TH1F *h;
    l = new TList();
 
    for (Int_t i = 0; i < n; i++) {
-      h = new TH1F(TString::Format("h_%03d", i), "", 100, -3.0, 3.0);
+      auto h = new TH1F(TString::Format("h_%03d", i), "", 100, -3.0, 3.0);
       h->FillRandom("gaus", 1000);
       h->Fit("gaus", "Q");
       h->SetMaximum(250.0); // for n > 200
@@ -45,21 +59,4 @@ void hlGraph1()
    Canvas->cd();
 
    g->SetHighlight();
-   Canvas->HighlightConnect("HighlightHisto(TVirtualPad*,TObject*,Int_t,Int_t)");
-}
-
-
-void HighlightHisto(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y)
-{
-   auto Pad = (TVirtualPad *)pad->FindObject("Pad");
-   if (!Pad) return;
-
-   if (ihp == -1) { // after highlight disabled
-      Pad->Clear();
-      return;
-   }
-
-   Pad->cd();
-   l->At(ihp)->Draw();
-   gPad->Update();
 }

@@ -1,17 +1,15 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Multidimensional models: use of tailored p.d.f as conditional p.d.fs.s
+/// Multidimensional models: use of tailored pdf as conditional pdfs.s
 ///
 /// `pdf = gauss(x,f(y),sx | y )` with `f(y) = a0 + a1*y`
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -55,16 +53,17 @@ void rf303_conditional()
    // ---------------------------------------------------------------------------------------------
 
    // Make subset of experimental data with only y values
-   RooDataSet *expDataY = (RooDataSet *)expDataXY->reduce(y);
+   std::unique_ptr<RooAbsData> expAbsDataY{expDataXY->reduce(y)};
+   RooDataSet *expDataY = static_cast<RooDataSet*>(expAbsDataY.get());
 
    // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
-   RooDataSet *data = model.generate(x, ProtoData(*expDataY));
+   std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(*expDataY))};
    data->Print();
 
    // F i t   c o n d i t i o n a l   p . d . f   m o d e l ( x | y )   t o   d a t a
    // ---------------------------------------------------------------------------------------------
 
-   model.fitTo(*expDataXY, ConditionalObservables(y));
+   model.fitTo(*expDataXY, ConditionalObservables(y), PrintLevel(-1));
 
    // P r o j e c t   c o n d i t i o n a l   p . d . f   o n   x   a n d   y   d i m e n s i o n s
    // ---------------------------------------------------------------------------------------------
@@ -75,12 +74,12 @@ void rf303_conditional()
    model.plotOn(xframe, ProjWData(*expDataY));
 
    // Speed up (and approximate) projection by using binned clone of data for projection
-   RooAbsData *binnedDataY = expDataY->binnedClone();
+   std::unique_ptr<RooDataHist> binnedDataY{expDataY->binnedClone()};
    model.plotOn(xframe, ProjWData(*binnedDataY), LineColor(kCyan), LineStyle(kDotted));
 
    // Show effect of projection with too coarse binning
    ((RooRealVar *)expDataY->get()->find("y"))->setBins(5);
-   RooAbsData *binnedDataY2 = expDataY->binnedClone();
+   std::unique_ptr<RooDataHist> binnedDataY2{expDataY->binnedClone()};
    model.plotOn(xframe, ProjWData(*binnedDataY2), LineColor(kRed));
 
    // Make canvas and draw RooPlots
@@ -99,11 +98,11 @@ RooDataSet *makeFakeDataXY()
    RooDataSet *d = new RooDataSet("d", "d", RooArgSet(x, y));
 
    for (int i = 0; i < 10000; i++) {
-      Double_t tmpy = gRandom->Gaus(0, 10);
-      Double_t tmpx = gRandom->Gaus(0.5 * tmpy, 1);
+      double tmpy = gRandom->Gaus(0, 10);
+      double tmpx = gRandom->Gaus(0.5 * tmpy, 1);
       if (fabs(tmpy) < 10 && fabs(tmpx) < 10) {
-         x = tmpx;
-         y = tmpy;
+         x.setVal(tmpx);
+         y.setVal(tmpy);
          d->add(coord);
       }
    }

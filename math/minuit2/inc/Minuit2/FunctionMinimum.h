@@ -10,9 +10,14 @@
 #ifndef ROOT_Minuit2_FunctionMinimum
 #define ROOT_Minuit2_FunctionMinimum
 
-#include "Minuit2/BasicFunctionMinimum.h"
+#include "Minuit2/MinimumSeed.h"
+#include "Minuit2/MinimumState.h"
+#include "Minuit2/MnUserParameterState.h"
+#include "Minuit2/MnUserTransformation.h"
 
 #include <vector>
+#include <memory>
+#include <cmath>
 
 #ifdef G__DICTIONARY
 typedef ROOT::Minuit2::MinimumState MinimumState;
@@ -20,7 +25,7 @@ typedef ROOT::Minuit2::MinimumState MinimumState;
 
 namespace ROOT {
 
-   namespace Minuit2 {
+namespace Minuit2 {
 
 //______________________________________________________________________________________________
 /**
@@ -32,85 +37,95 @@ namespace ROOT {
 class FunctionMinimum {
 
 public:
-
-   class MnReachedCallLimit {};
-   class MnAboveMaxEdm {};
+   enum Status {
+      MnValid,
+      MnReachedCallLimit,
+      MnAboveMaxEdm,
+   };
 
 public:
-
-
-   /// constructor from only MinimumSeed. Minimum is only from seed result not full minimization
-   FunctionMinimum(const MinimumSeed& seed, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, up))) {}
-
-   /// constructor at the end of a successfull minimization from seed and vector of states
-   FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up))) {}
-
-   /// constructor at the end of a failed minimization due to exceeding function call limit
-   FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnReachedCallLimit) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnReachedCallLimit()))) {}
-
-   /// constructor at the end of a failed minimization due to edm above maximum value
-   FunctionMinimum(const MinimumSeed& seed, const std::vector<MinimumState>& states, double up, MnAboveMaxEdm) : fData(MnRefCountedPointer<BasicFunctionMinimum>(new BasicFunctionMinimum(seed, states, up, BasicFunctionMinimum::MnAboveMaxEdm()))) {}
-
-   /// copy constructo
-   FunctionMinimum(const FunctionMinimum& min) : fData(min.fData) {}
-
-   FunctionMinimum& operator=(const FunctionMinimum& min) {
-      fData = min.fData;
-      return *this;
+   /// Constructor from only MinimumSeed. Minimum is only from seed result not the full minimization
+   FunctionMinimum(const MinimumSeed &seed, double up)
+      : FunctionMinimum(seed,
+                        std::vector<MinimumState>(1, MinimumState(seed.Parameters(), seed.Error(), seed.Gradient(),
+                                                                  seed.Parameters().Fval(), seed.NFcn())),
+                        up)
+   {
    }
 
-   ~FunctionMinimum() {}
-
-   // add new state
-   void Add(const MinimumState& state) {fData->Add(state);}
-
-   // add new state
-   void Add(const MinimumState& state, MnAboveMaxEdm) {fData->Add(state,BasicFunctionMinimum::MnAboveMaxEdm());}
-
-   const MinimumSeed& Seed() const {return fData->Seed();}
-   const std::vector<ROOT::Minuit2::MinimumState>& States() const {return fData->States();}
-
-// user representation of state at Minimum
-   const MnUserParameterState& UserState() const {
-      return fData->UserState();
-   }
-   const MnUserParameters& UserParameters() const {
-      return fData->UserParameters();
-   }
-   const MnUserCovariance& UserCovariance() const {
-      return fData->UserCovariance();
+   /// Constructor at the end of a minimization from seed and vector of states
+   FunctionMinimum(const MinimumSeed &seed, const std::vector<MinimumState> &states, double up, Status status = MnValid)
+      : fPtr{new Data{seed, states, up, status == MnAboveMaxEdm, status == MnReachedCallLimit, {}}}
+   {
    }
 
-// forward interface of last state
-   const MinimumState& State() const {return fData->State();}
-   const MinimumParameters& Parameters() const {return fData->Parameters();}
-   const MinimumError& Error() const {return fData->Error();}
-   const FunctionGradient& Grad() const {return fData->Grad();}
-   double Fval() const {return fData->Fval();}
-   double Edm() const {return fData->Edm();}
-   int NFcn() const {return fData->NFcn();}
+   /// add latest minimization state (for example add Hesse result after Migrad)
+   void Add(const MinimumState &state, Status status = MnValid)
+   {
+      fPtr->fStates.push_back(state);
+      // LM : update also the user state
+      fPtr->fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
+      // reset maxedm flag. If new state has edm over max other method must be used
+      fPtr->fAboveMaxEdm = status == MnAboveMaxEdm;
+      fPtr->fReachedCallLimit = status == MnReachedCallLimit;
+   }
 
-   double Up() const {return fData->Up();}
-   bool IsValid() const {return fData->IsValid();}
-   bool HasValidParameters() const {return fData->HasValidParameters();}
-   bool HasValidCovariance() const {return fData->HasValidCovariance();}
-   bool HasAccurateCovar() const {return fData->HasAccurateCovar();}
-   bool HasPosDefCovar() const {return fData->HasPosDefCovar();}
-   bool HasMadePosDefCovar() const {return fData->HasMadePosDefCovar();}
-   bool HesseFailed() const {return fData->HesseFailed();}
-   bool HasCovariance() const {return fData->HasCovariance();}
-   bool IsAboveMaxEdm() const {return fData->IsAboveMaxEdm();}
-   bool HasReachedCallLimit() const {return fData->HasReachedCallLimit();}
+   const MinimumSeed &Seed() const { return fPtr->fSeed; }
+   const std::vector<MinimumState> &States() const { return fPtr->fStates; }
 
-   void SetErrorDef( double up) { return fData->SetErrorDef(up);}
+   // user representation of state at Minimum
+   const MnUserParameterState &UserState() const
+   {
+      if (!fPtr->fUserState.IsValid())
+         fPtr->fUserState = MnUserParameterState(State(), Up(), Seed().Trafo());
+      return fPtr->fUserState;
+   }
+   const MnUserParameters &UserParameters() const { return UserState().Parameters(); }
+   const MnUserCovariance &UserCovariance() const { return UserState().Covariance(); }
+
+   // forward interface of last state
+   const MinimumState &State() const { return States().back(); }
+   const MinimumParameters &Parameters() const { return States().back().Parameters(); }
+   const MinimumError &Error() const { return States().back().Error(); }
+   const FunctionGradient &Grad() const { return States().back().Gradient(); }
+   double Fval() const { return States().back().Fval(); }
+   double Edm() const { return States().back().Edm(); }
+   int NFcn() const { return States().back().NFcn(); }
+
+   double Up() const { return fPtr->fErrorDef; }
+   bool IsValid() const { return State().IsValid() && !IsAboveMaxEdm() && !HasReachedCallLimit(); }
+   bool HasValidParameters() const { return State().Parameters().IsValid(); }
+   bool HasValidCovariance() const { return State().Error().IsValid(); }
+   bool HasAccurateCovar() const { return State().Error().IsAccurate(); }
+   bool HasPosDefCovar() const { return State().Error().IsPosDef(); }
+   bool HasMadePosDefCovar() const { return State().Error().IsMadePosDef(); }
+   bool HesseFailed() const { return State().Error().HesseFailed(); }
+   bool HasCovariance() const { return State().Error().IsAvailable(); }
+   bool IsAboveMaxEdm() const { return fPtr->fAboveMaxEdm || std::isnan(Edm()); }
+   bool HasReachedCallLimit() const { return fPtr->fReachedCallLimit; }
+
+   void SetErrorDef(double up)
+   {
+      fPtr->fErrorDef = up;
+      // update user state for new value of up (scaling of errors)
+      fPtr->fUserState = MnUserParameterState(State(), up, Seed().Trafo());
+   }
 
 private:
+   struct Data {
+      MinimumSeed fSeed;
+      std::vector<MinimumState> fStates;
+      double fErrorDef;
+      bool fAboveMaxEdm;
+      bool fReachedCallLimit;
+      mutable MnUserParameterState fUserState;
+   };
 
-   MnRefCountedPointer<BasicFunctionMinimum> fData;
+   std::shared_ptr<Data> fPtr;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_FunctionMinimum
+#endif // ROOT_Minuit2_FunctionMinimum

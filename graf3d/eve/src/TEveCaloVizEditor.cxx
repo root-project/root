@@ -43,24 +43,24 @@ ClassImp(TEveCaloVizEditor);
 TEveCaloVizEditor::TEveCaloVizEditor(const TGWindow *p, Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+   fM(nullptr),
 
-   fPlotE(0),
-   fPlotEt(0),
+   fPlotE(nullptr),
+   fPlotEt(nullptr),
 
-   fScaleAbs(0),
-   fMaxValAbs(0),
-   fMaxTowerH(0),
+   fScaleAbs(nullptr),
+   fMaxValAbs(nullptr),
+   fMaxTowerH(nullptr),
 
-   fEtaRng(0),
-   fPhi(0),
-   fPhiOffset(0),
-   fDataFrame(0),
-   fSliceFrame(0)
+   fEtaRng(nullptr),
+   fPhi(nullptr),
+   fPhiOffset(nullptr),
+   fDataFrame(nullptr),
+   fSliceFrame(nullptr)
 {
    MakeTitle("TEveCaloViz");
 
-   TGLabel* label  = 0;
+   TGLabel* label  = nullptr;
    Int_t    labelW = 45;
 
    // scaling
@@ -392,8 +392,8 @@ ClassImp(TEveCalo3DEditor);
 TEveCalo3DEditor::TEveCalo3DEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fFrameTransparency(0)
+   fM(nullptr),
+   fFrameTransparency(nullptr)
 {
    MakeTitle("TEveCalo3D");
 

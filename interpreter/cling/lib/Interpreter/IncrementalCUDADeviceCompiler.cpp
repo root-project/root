@@ -7,8 +7,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-#include "IncrementalCUDADeviceCompiler.h"
-
+#include "cling/Interpreter/IncrementalCUDADeviceCompiler.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InvocationOptions.h"
 #include "cling/Interpreter/Transaction.h"
@@ -21,13 +20,14 @@
 #include "llvm/Support/Program.h"
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Support/TargetRegistry.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 
 #include <algorithm>
 #include <bitset>
+#include <optional>
 #include <string>
 #include <system_error>
 
@@ -38,9 +38,7 @@ namespace cling {
       const cling::InvocationOptions& invocationOptions,
       const clang::CompilerInstance& CI)
       : m_FilePath(filePath),
-        m_FatbinFilePath(CI.getCodeGenOpts().CudaGpuBinaryFileNames.empty()
-                             ? ""
-                             : CI.getCodeGenOpts().CudaGpuBinaryFileNames[0]) {
+        m_FatbinFilePath(CI.getCodeGenOpts().CudaGpuBinaryFileName) {
     if (m_FatbinFilePath.empty()) {
       llvm::errs() << "Error: CudaGpuBinaryFileNames can't be empty\n";
       return;
@@ -52,16 +50,15 @@ namespace cling {
 
     // cling -std=c++xx -Ox -x cuda -S --cuda-gpu-arch=sm_xx --cuda-device-only
     // ${include headers} ${-I/paths} [-v] [-g] ${m_CuArgs->additionalPtxOpt}
-    std::vector<std::string> argv = {
-        "cling",
-        m_CuArgs->cppStdVersion.c_str(),
-        "-O" + std::to_string(optLevel),
-        "-x",
-        "cuda",
-        "-S",
-        std::string("--cuda-gpu-arch=sm_")
-            .append(std::to_string(m_CuArgs->smVersion)),
-        "--cuda-device-only"};
+    argv = {"cling",
+            m_CuArgs->cppStdVersion.c_str(),
+            "-O" + std::to_string(optLevel),
+            "-x",
+            "cuda",
+            "-S",
+            std::string("--cuda-gpu-arch=sm_")
+                .append(std::to_string(m_CuArgs->smVersion)),
+            "--cuda-device-only"};
 
     addHeaderSearchPathFlags(argv, CI.getHeaderSearchOptsPtr());
 
@@ -116,16 +113,16 @@ namespace cling {
       cppStdVersion = "-std=c++11";
     if (langOpts.CPlusPlus14)
       cppStdVersion = "-std=c++14";
-    if (langOpts.CPlusPlus1z)
+    if (langOpts.CPlusPlus17)
       cppStdVersion = "-std=c++1z";
-    if (langOpts.CPlusPlus2a)
-      cppStdVersion = "-std=c++2a";
+    if (langOpts.CPlusPlus20)
+      cppStdVersion = "-std=c++20";
 
     if (cppStdVersion.empty())
       llvm::errs()
           << "IncrementalCUDADeviceCompiler: No valid c++ standard is set.\n";
 
-    uint32_t smVersion = 20;
+    uint32_t smVersion = 35;
     if (!invocationOptions.CompilerOpts.CUDAGpuArch.empty()) {
       llvm::StringRef(invocationOptions.CompilerOpts.CUDAGpuArch)
           .drop_front(3 /* sm_ */)
@@ -157,6 +154,11 @@ namespace cling {
       std::string s = arg;
       if (s.compare(0, 2, "-D") == 0)
         additionalPtxOpt.push_back(s);
+    }
+
+    // use custom CUDA SDK path
+    if(!invocationOptions.CompilerOpts.CUDAPath.empty()){
+      additionalPtxOpt.push_back("--cuda-path=" + invocationOptions.CompilerOpts.CUDAPath);
     }
 
     enum FatBinFlags {
@@ -279,8 +281,7 @@ namespace cling {
     // delete compiled PTX code of last input
     m_PTX_code = "";
 
-    std::shared_ptr<llvm::Module> module =
-        m_PTX_interp->getLastTransaction()->getModule();
+    llvm::Module* module = m_PTX_interp->getLastTransaction()->getModule();
 
     std::string error;
     auto Target =
@@ -292,8 +293,8 @@ namespace cling {
     }
 
     // is not important, because PTX does not use any object format
-    llvm::Optional<llvm::Reloc::Model> RM =
-        llvm::Optional<llvm::Reloc::Model>(llvm::Reloc::Model::PIC_);
+    std::optional<llvm::Reloc::Model> RM =
+        std::optional<llvm::Reloc::Model>(llvm::Reloc::Model::PIC_);
 
     llvm::TargetOptions TO = llvm::TargetOptions();
 
@@ -308,9 +309,10 @@ namespace cling {
     llvm::legacy::PassManager pass;
     // it's important to use the type assembler
     // object file is not supported and do not make sense
-    auto FileType = llvm::TargetMachine::CGFT_AssemblyFile;
+    llvm::CodeGenFileType FileType = llvm::CGFT_AssemblyFile;
 
-    if (targetMachine->addPassesToEmitFile(pass, dest, FileType)) {
+    if (targetMachine->addPassesToEmitFile(pass, dest, /*DwoOut*/ nullptr,
+                                           FileType)) {
       llvm::errs() << "TargetMachine can't emit assembler code";
       return 1;
     }
@@ -323,7 +325,7 @@ namespace cling {
     // CodeGen can use it. This should be replaced by a in-memory solution
     // (e.g. virtual file).
     std::error_code EC;
-    llvm::raw_fd_ostream os(m_FatbinFilePath, EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream os(m_FatbinFilePath, EC, llvm::sys::fs::OF_None);
     if (EC) {
       llvm::errs() << "ERROR: cannot generate file " << m_FatbinFilePath
                    << "\n";

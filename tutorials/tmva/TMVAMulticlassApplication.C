@@ -101,7 +101,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    // book output histograms
    UInt_t nbin = 100;
    TH1F *histMLP_signal(0), *histBDTG_signal(0), *histFDAGA_signal(0), *histPDEFoam_signal(0);
-   TH1F *histDLCPU_signal(0), *histDLGPU_signal(0); 
+   TH1F *histDLCPU_signal(0), *histDLGPU_signal(0);
    if (Use["MLP"])
       histMLP_signal    = new TH1F( "MVA_MLP_signal",    "MVA_MLP_signal",    nbin, 0., 1.1 );
    if (Use["BDTG"])
@@ -123,7 +123,7 @@ void TMVAMulticlassApplication( TString myMethodList = "" )
    }
    else {
       TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_multiclass_example.root", "CACHEREAD");
+      input = TFile::Open("http://root.cern/files/tmva_multiclass_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;

@@ -16,6 +16,7 @@
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
+#include "TString.h"
 
 #include "TMath.h"
 
@@ -52,7 +53,7 @@ protected:
 
    bool fIsRaw;                           ///< 0: for TH1 projection, 1: using raw data
    bool fIsCalculated;
-   TH1D * fProj;
+   TH1D *fProj{nullptr};
    bool fDismiss;                         ///< True if the candle cannot be painted
 
    Double_t fPosCandleAxis;               ///< x-pos for a vertical candle
@@ -67,7 +68,7 @@ protected:
    Double_t fWhiskerUp;                   ///< Position of the upper whisker end
    Double_t fWhiskerDown;                 ///< Position of the lower whisker end
 
-   Double_t * fDatapoints;                ///< position of all Datapoints within this candle
+   Double_t *fDatapoints{nullptr};        ///< position of all Datapoints within this candle
    Long64_t fNDatapoints;                 ///< Number of Datapoints within this candle
 
    Double_t fDrawPointsX[kNMAXPOINTS];    ///< x-coord for every outlier, ..
@@ -79,7 +80,7 @@ protected:
    int  fNHistoPoints;
 
    CandleOption fOption;                  ///< Setting the style of the candle
-   char fOptionStr[128];                  ///< String to draw the candle
+   TString fOptionStr;                    ///< String to draw the candle
    int fLogX;                             ///< make the candle appear logx-like
    int fLogY;                             ///< make the candle appear logy-like
    int fLogZ;                             ///< make the candle appear logz-like
@@ -87,15 +88,9 @@ protected:
    Double_t fAxisMin;                     ///< The Minimum which is visible by the axis (used by zero indicator)
    Double_t fAxisMax;                     ///< The Maximum which is visible by the axis (used by zero indicator)
 
-   static Double_t fWhiskerRange;         ///< The fraction which is covered by the whiskers (0 < x < 1), default 1
-   static Double_t fBoxRange;             ///< The fraction which is covered by the box (0 < x < 1), default 0.5
-
-   static Bool_t fScaledCandle;           ///< shall the box-width be scaled to each other by the integral of a box?
-   static Bool_t fScaledViolin;           ///< shall the violin or histos be scaled to each other by the maximum height?
-
    void Calculate();
 
-   int  GetCandleOption(const int pos) {return (fOption/(long)TMath::Power(10,pos))%10;}
+   int  GetCandleOption(const int pos) const {return (fOption/(long)TMath::Power(10,pos))%10;}
 
    void PaintBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY);
    void PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY);
@@ -107,17 +102,17 @@ public:
    TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t n, Double_t * points);
    TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *proj);
    TCandle(const TCandle &candle);
-   virtual ~TCandle();
+   ~TCandle() override;
 
    Double_t       GetMean() const {return fMean;}
    Double_t       GetMedian() const {return fMedian;}
    Double_t       GetQ1() const {return fBoxUp;}
    Double_t       GetQ2() const {return fMedian;}
    Double_t       GetQ3() const {return fBoxDown;}
-   Bool_t         IsHorizontal() {return (IsOption(kHorizontal)); }
-   Bool_t         IsVertical() {return (!IsOption(kHorizontal)); }
-   Bool_t         IsCandleScaled();
-   Bool_t         IsViolinScaled();
+   Bool_t         IsHorizontal() const {return IsOption(kHorizontal); }
+   Bool_t         IsVertical() const {return !IsOption(kHorizontal); }
+   Bool_t         IsCandleScaled() const;
+   Bool_t         IsViolinScaled() const;
 
    void           SetOption(CandleOption opt) { fOption = opt; }
    void           SetLog(int x, int y, int z) { fLogX = x; fLogY = y; fLogZ = z;}
@@ -137,14 +132,14 @@ public:
    virtual void   SetQ3(Double_t q3) { fBoxDown = q3; }
 
    int            ParseOption(char *optin);
-   const char *   GetDrawOption() { return fOptionStr; }
-   long           GetOption() { return fOption; }
-   bool           IsOption(CandleOption opt);
+   const char    *GetDrawOption() const { return fOptionStr.Data(); }
+   long           GetOption() const { return fOption; }
+   bool           IsOption(CandleOption opt) const;
    static void    SetWhiskerRange(const Double_t wRange);
    static void    SetBoxRange(const Double_t bRange);
    static void    SetScaledCandle(const Bool_t cScale = true);
    static void    SetScaledViolin(const Bool_t vScale = true);
 
-   ClassDef(TCandle,2)  //A Candle
+   ClassDefOverride(TCandle,2)  //A Candle
 };
 #endif

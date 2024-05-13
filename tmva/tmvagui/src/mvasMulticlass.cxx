@@ -91,15 +91,15 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
 
 
             // chop off useless stuff
-            ((TH1*)hists.First())->SetTitle( Form("TMVA response for classifier: %s", methodTitle.Data() ));
+            ((TH1*)hists.First())->SetTitle( TString::Format("TMVA response for classifier: %s", methodTitle.Data() ));
 
             // create new canvas
             //cout << "Create canvas..." << endl;
             TString ctitle = ((htype == kMVAType) ?
-                              Form("TMVA response for class %s %s", classnames.at(icls).Data(),methodTitle.Data()) :
-                              Form("TMVA comparison for class %s %s", classnames.at(icls).Data(),methodTitle.Data())) ;
+                              TString::Format("TMVA response for class %s %s", classnames.at(icls).Data(),methodTitle.Data()) :
+                              TString::Format("TMVA comparison for class %s %s", classnames.at(icls).Data(),methodTitle.Data())) ;
 
-            c = new TCanvas( Form("canvas%d", countCanvas+1), ctitle,
+            c = new TCanvas( TString::Format("canvas%d", countCanvas+1), ctitle,
                              countCanvas*50+200, countCanvas*20, width, (Int_t)width*0.78 );
 
             // set the histogram style
@@ -125,9 +125,11 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
             TString hFrameName(TString::Format("frame_class%d_",icls) + methodTitle);
             TObject *o = gROOT->FindObject(hFrameName);
             if(o) delete o;
-            TH2F* frame = new TH2F( hFrameName, ((TH1*)hists.First())->GetTitle(),
-                                    nb, xmin, xmax, nb, ymin, ymax );
-            frame->GetXaxis()->SetTitle( methodTitle + " response for "+classnames.at(icls));
+            TH1F* frame = new TH1F( hFrameName, ((TH1*)hists.First())->GetTitle(),
+                                    nb, xmin, xmax);
+            frame->SetMinimum(ymin);
+            frame->SetMaximum(ymax);
+            frame->GetXaxis()->SetTitle(methodTitle + " response for " + classnames.at(icls));
             frame->GetYaxis()->SetTitle("(1/N) dN^{ }/^{ }dx");
             TMVAGlob::SetFrameStyle( frame );
 
@@ -207,7 +209,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                }
 
                ymax = histmax*maxMult;
-               frame->GetYaxis()->SetLimits( 0, ymax );
+               frame->SetMaximum( ymax );
 
                // for better visibility, plot thinner lines
                TMVAGlob::SetMultiClassStyle( &othists );
@@ -224,7 +226,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
                for(Int_t j=0; j<othists.GetEntriesFast(); ++j){
                   Float_t kol = ((TH1*)hists[j])->KolmogorovTest(((TH1*)othists[j]),"X");
                   cout <<  classnames.at(j) << ": " << kol  << endl;
-                  //probatext.Append(classnames.at(j)+Form(" %.3f ",kol));
+                  //probatext.Append(classnames.at(j)+TString::Format(" %.3f ",kol));
                }
 
 
@@ -242,7 +244,7 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
             //Int_t    nbin = sig->GetNbinsX();
             //Double_t dxu  = sig->GetBinWidth(0);
             //Double_t dxo  = sig->GetBinWidth(nbin+1);
-            //TString uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%",
+            //TString uoflow = TString::Format( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%",
             //                       sig->GetBinContent(0)*dxu*100, bgd->GetBinContent(0)*dxu*100,
             //                      sig->GetBinContent(nbin+1)*dxo*100, bgd->GetBinContent(nbin+1)*dxo*100 );
             //TText* t = new TText( 0.975, 0.115, uoflow );
@@ -258,8 +260,8 @@ void TMVA::mvasMulticlass(TString dataset, TString fin , HistType htype , Bool_t
 
             TMVAGlob::plot_logo(1.058);
             if (Save_Images) {
-               if      (htype == kMVAType)     TMVAGlob::imgconv( c, Form("%s/plots/mva_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
-               else if      (htype == kCompareType)     TMVAGlob::imgconv( c, Form("%s/plots/overtrain_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
+               if      (htype == kMVAType)     TMVAGlob::imgconv( c, TString::Format("%s/plots/mva_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
+               else if      (htype == kCompareType)     TMVAGlob::imgconv( c, TString::Format("%s/plots/overtrain_%s_%s",dataset.Data(),classnames.at(icls).Data(), methodTitle.Data()) );
 
             }
             countCanvas++;

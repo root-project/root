@@ -9,24 +9,12 @@ import gc
 # Check whether these tests should be skipped
 skip = False
 skip_reason = ""
-if sys.version_info[:3] <= (2, 7, 5):
-    skip = True
-    skip_reason = "Python version <= 2.7.5"
-elif sys.version_info[0] == 2 and "ROOTTEST_IGNORE_NUMBA_PY2" in os.environ:
-    skip = True
-    skip_reason = "Running python2 and ROOTTEST_IGNORE_NUMBA_PY2 was set"
-elif sys.version_info[0] == 3 and "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
+if "ROOTTEST_IGNORE_NUMBA_PY3" in os.environ:
     skip = True
     skip_reason = "Running python3 and ROOTTEST_IGNORE_NUMBA_PY3 was set"
 
 if not skip:
     import numba as nb
-
-
-# long does not exist anymore on Python 3, map it to int
-if sys.version_info[0] > 2:
-    long = int
-
 
 default_test_inputs = [-1.0, 0.0, 100.0]
 
@@ -61,10 +49,7 @@ class NumbaDeclareSimple(unittest.TestCase):
         fn0 = ROOT.Numba.Declare(["float"], "float")(f1)
         ref = nb.cfunc("float32(float32)", nopython=True)(f2)
         gc.collect()
-        if sys.version_info.major == 2:
-            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 1)
-        else:
-            self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
+        self.assertEqual(sys.getrefcount(f1), sys.getrefcount(f2) + 2)
 
     # Test optional name
     @unittest.skipIf(skip, skip_reason)
@@ -92,7 +77,7 @@ class NumbaDeclareSimple(unittest.TestCase):
 
         self.assertTrue(hasattr(fn1, "__cpp_wrapper__"))
         self.assertTrue(type(fn1.__cpp_wrapper__) == str)
-        self.assertEqual(sys.getrefcount(fn1.__cpp_wrapper__), 2)
+        self.assertEqual(sys.getrefcount(fn1.__cpp_wrapper__), 3)
 
         self.assertTrue(hasattr(fn1, "__py_wrapper__"))
         self.assertTrue(type(fn1.__py_wrapper__) == str)
@@ -127,6 +112,23 @@ class NumbaDeclareSimple(unittest.TestCase):
         mean_y = df.Mean("y")
         self.assertEqual(mean_x.GetValue(), 1.5)
         self.assertEqual(mean_y.GetValue(), 3.0)
+
+    @unittest.skipIf(skip, skip_reason)
+    def test_rdataframe_temporary(self):
+        """
+        Test passing a temporary from an RDataFrame operation
+        """
+        @ROOT.Numba.Declare(["const RVecF"], "RVecF")
+        def pass_temporary(v):
+            return v*np.array([2.]).astype(np.float32)
+
+        df = ROOT.RDataFrame(1)\
+                 .Define("v", "ROOT::RVecF{0.f,2.f}")\
+                 .Define("v2", "Numba::pass_temporary(v[v > 0])")
+
+        rvecf = df.Take['RVecF']('v2').GetValue()[0]
+
+        self.assertTrue(np.array_equal(rvecf, np.array([4.])))
 
     # Test wrappings
     @unittest.skipIf(skip, skip_reason)
@@ -197,7 +199,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn4(v)
             x2 = ROOT.Numba.fn4(v)
             self.assertEqual(x1, x2)
-            self.assertEqual(long, type(x2))
+            self.assertEqual(int, type(x2))
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_u(self):
@@ -211,9 +213,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn5(v)
             x2 = ROOT.Numba.fn5(v)
             self.assertEqual(x1, x2)
-            # NOTE: cppyy does not return an Python int for unsigned int but a long.
-            # This could be fixed but as well should not have any impact.
-            self.assertEqual(type(x2), long)
+            self.assertEqual(type(x2), int)
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_k(self):
@@ -227,7 +227,7 @@ class NumbaDeclareSimple(unittest.TestCase):
             x1 = fn6(v)
             x2 = ROOT.Numba.fn6(v)
             self.assertEqual(x1, x2)
-            self.assertEqual(long, type(x2))
+            self.assertEqual(int, type(x2))
 
     @unittest.skipIf(skip, skip_reason)
     def test_wrapper_out_b(self):
@@ -536,7 +536,7 @@ class NumbaDeclareArray(unittest.TestCase):
             return x[::-1]
 
         for v in [[True, False]]:
-            x1 = g2b(np.array(v, dtype=np.bool))
+            x1 = g2b(np.array(v, dtype=bool))
             x2 = ROOT.Numba.g2b(ROOT.VecOps.RVec('bool')(v))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
@@ -551,10 +551,36 @@ class NumbaDeclareArray(unittest.TestCase):
             return (x > 1) | y
 
         for vf, vb in [[[1.0, 2.0], [True, False]]]:
-            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=np.bool))
+            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=bool))
             x2 = ROOT.Numba.g2fb(ROOT.VecOps.RVec('float')(vf), ROOT.VecOps.RVec('bool')(vb))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
+
+    @unittest.skipIf(skip, skip_reason)
+    def test_const_modifier(self):
+        """
+        Test const modifier in input argument type
+        """
+        @ROOT.Numba.Declare(["const ROOT::VecOps::RVec<float>"], "RVecF")
+        def const_mod(v):
+            return v*np.array([1.,2.]).astype(np.float32)
+
+        rvecf = ROOT.Numba.const_mod(ROOT.RVecF([1.,2.]))
+
+        self.assertTrue(np.array_equal(rvecf, np.array([1.,4.])))
+
+    @unittest.skipIf(skip, skip_reason)
+    def test_reference(self):
+        """
+        Test passing a reference as input argument
+        """
+        @ROOT.Numba.Declare(["RVec<float>&"], "RVecF")
+        def pass_reference(v):
+            return v*np.array([1.,2.]).astype(np.float32)
+
+        rvecf = ROOT.Numba.pass_reference(ROOT.RVecF([1.,2.]))
+
+        self.assertTrue(np.array_equal(rvecf, np.array([1.,4.])))
 
 
 if __name__ == '__main__':

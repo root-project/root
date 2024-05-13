@@ -92,56 +92,56 @@ protected:
       Int_t fVirtAccumCache = 0;
    };
 
-   TTree      *fTree;             //! pointer to Tree
-   Int_t       fCodes[kMAXCODES]; //  List of leaf numbers referenced in formula
-   Int_t       fNdata[kMAXCODES]; //! This caches the physical number of element in the leaf or data member.
-   Int_t       fNcodes;           //  Number of leaves referenced in formula
-   Bool_t      fHasCast;          //  Record whether the formula contain a cast operation or not
-   Int_t       fMultiplicity;     //  Indicator of the variability of the formula
-   Int_t       fNindex;           //  Size of fIndex
-   Int_t      *fLookupType;       //[fNindex] array indicating how each leaf should be looked-up
-   TObjArray   fLeaves;           //!  List of leaf used in this formula.
-   TObjArray   fDataMembers;      //!  List of leaf data members
-   TObjArray   fMethods;          //!  List of leaf method calls
-   TObjArray   fExternalCuts;     //!  List of TCutG and TEntryList used in the formula
-   TObjArray   fAliases;          //!  List of TTreeFormula for each alias used.
-   TObjArray   fLeafNames;        //   List of TNamed describing leaves
-   TObjArray   fBranches;         //!  List of branches to read.  Similar to fLeaves but duplicates are zeroed out.
-   Bool_t      fQuickLoad;        //!  If true, branch GetEntry is only called when the entry number changes.
-   Bool_t      fNeedLoading;      //!  If true, the current entry has not been loaded yet.
+   TTree      *fTree;             ///<! Pointer to Tree
+   Int_t       fCodes[kMAXCODES]; ///<  List of leaf numbers referenced in formula
+   Int_t       fNdata[kMAXCODES]; ///<! This caches the physical number of element in the leaf or data member.
+   Int_t       fNcodes;           ///<  Number of leaves referenced in formula
+   bool        fHasCast;          ///<  Record whether the formula contain a cast operation or not
+   Int_t       fMultiplicity;     ///<  Indicator of the variability of the formula
+   Int_t       fNindex;           ///<  Size of fIndex
+   Int_t      *fLookupType;       ///<[fNindex] Array indicating how each leaf should be looked-up
+   TObjArray   fLeaves;           ///<!  List of leaf used in this formula.
+   TObjArray   fDataMembers;      ///<!  List of leaf data members
+   TObjArray   fMethods;          ///<!  List of leaf method calls
+   TObjArray   fExternalCuts;     ///<!  List of TCutG and TEntryList used in the formula
+   TObjArray   fAliases;          ///<!  List of TTreeFormula for each alias used.
+   TObjArray   fLeafNames;        ///<   List of TNamed describing leaves
+   TObjArray   fBranches;         ///<!  List of branches to read.  Similar to fLeaves but duplicates are zeroed out.
+   bool        fQuickLoad;        ///<!  If true, branch GetEntry is only called when the entry number changes.
+   bool        fNeedLoading;      ///<!  If true, the current entry has not been loaded yet.
 
-   Int_t       fNdimensions[kMAXCODES];              //Number of array dimensions in each leaf
-   Int_t       fFixedSizes[kMAXCODES][kMAXFORMDIM];  //Physical sizes of lower dimensions for each leaf
-   UChar_t     fHasMultipleVarDim[kMAXCODES];        //True if the corresponding variable is an array with more than one variable dimension.
+   Int_t       fNdimensions[kMAXCODES];               ///< Number of array dimensions in each leaf
+   Int_t       fFixedSizes[kMAXCODES][kMAXFORMDIM];   ///< Physical sizes of lower dimensions for each leaf
+   UChar_t     fHasMultipleVarDim[kMAXCODES];         ///< True if the corresponding variable is an array with more than one variable dimension.
 
    //the next line should have a mutable in front. See GetNdata()
-   Int_t       fCumulSizes[kMAXCODES][kMAXFORMDIM];  //Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
-   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];     //Index of array selected by user for each leaf
-   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM];  //Pointer to a variable index.
+   Int_t       fCumulSizes[kMAXCODES][kMAXFORMDIM];   ///< Accumulated sizes of lower dimensions for each leaf after variable dimensions has been calculated
+   Int_t       fIndexes[kMAXCODES][kMAXFORMDIM];      ///< Index of array selected by user for each leaf
+   TTreeFormula *fVarIndexes[kMAXCODES][kMAXFORMDIM]; ///< Pointer to a variable index.
 
-   TAxis                    *fAxis;           //! pointer to histogram axis if this is a string
-   Bool_t                    fDidBooleanOptimization;  //! True if we executed one boolean optimization since the last time instance number 0 was evaluated
-   TTreeFormulaManager      *fManager;        //! The dimension coordinator.
+   TAxis                    *fAxis;                   ///<! pointer to histogram axis if this is a string
+   bool                      fDidBooleanOptimization; ///<! True if we executed one boolean optimization since the last time instance number 0 was evaluated
+   TTreeFormulaManager      *fManager;                ///<! The dimension coordinator.
 
    // Helper members and function used during the construction and parsing
-   TList                    *fDimensionSetup; //! list of dimension setups, for delayed creation of the dimension information.
-   std::vector<std::string>  fAliasesUsed;    //! List of aliases used during the parsing of the expression.
+   TList                    *fDimensionSetup;         ///<! list of dimension setups, for delayed creation of the dimension information.
+   std::vector<std::string>  fAliasesUsed;            ///<! List of aliases used during the parsing of the expression.
 
-   LongDouble_t*        fConstLD;   //! local version of fConsts able to store bigger numbers
+   LongDouble_t*        fConstLD;                     ///<! local version of fConsts able to store bigger numbers
 
-   RealInstanceCache fRealInstanceCache; //! Cache accelerating the GetRealInstance function
+   RealInstanceCache fRealInstanceCache;              ///<! Cache accelerating the GetRealInstance function
 
    TTreeFormula(const char *name, const char *formula, TTree *tree, const std::vector<std::string>& aliases);
    void Init(const char *name, const char *formula);
-   Bool_t      BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
+   bool        BranchHasMethod(TLeaf* leaf, TBranch* branch, const char* method,const char* params, Long64_t readentry) const;
    Int_t       DefineAlternate(const char* expression);
    void        DefineDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * info, Int_t& virt_dim);
-   Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, Bool_t &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>& aliasUsed, Bool_t &useLeafCollectionObject, const char *fullExpression);
+   Int_t       FindLeafForExpression(const char* expression, TLeaf *&leaf, TString &leftover, bool &final, UInt_t &paran_level, TObjArray &castqueue, std::vector<std::string>& aliasUsed, bool &useLeafCollectionObject, const char *fullExpression);
    TLeaf*      GetLeafWithDatamember(const char* topchoice, const char* nextchice, Long64_t readentry) const;
-   Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, Bool_t final, UInt_t paran_level, TObjArray &castqueue, Bool_t useLeafCollectionObject, const char *fullExpression);
-   Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim * multidim = 0);
+   Int_t       ParseWithLeaf(TLeaf *leaf, const char *expression, bool final, UInt_t paran_level, TObjArray &castqueue, bool useLeafCollectionObject, const char *fullExpression);
+   Int_t       RegisterDimensions(Int_t code, Int_t size, TFormLeafInfoMultiVarDim *multidim = nullptr);
    Int_t       RegisterDimensions(Int_t code, TBranchElement *branch);
-   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, TFormLeafInfo *maininfo, Bool_t useCollectionObject);
+   Int_t       RegisterDimensions(Int_t code, TFormLeafInfo *info, TFormLeafInfo *maininfo, bool useCollectionObject);
    Int_t       RegisterDimensions(Int_t code, TLeaf *leaf);
    Int_t       RegisterDimensions(const char *size, Int_t code);
 
@@ -150,17 +150,17 @@ protected:
    Int_t             GetRealInstance(Int_t instance, Int_t codeindex);
 
    void              LoadBranches();
-   Bool_t            LoadCurrentDim();
+   bool              LoadCurrentDim();
    void              ResetDimensions();
 
    virtual TClass*   EvalClass(Int_t oper) const;
-   virtual Bool_t    IsLeafInteger(Int_t code) const;
-   virtual Bool_t    IsString(Int_t oper) const;
-   virtual Bool_t    IsLeafString(Int_t code) const;
-   virtual Bool_t    SwitchToFormLeafInfo(Int_t code);
-   virtual Bool_t    StringToNumber(Int_t code);
+   virtual bool      IsLeafInteger(Int_t code) const;
+   bool      IsString(Int_t oper) const override;
+   virtual bool      IsLeafString(Int_t code) const;
+   virtual bool      SwitchToFormLeafInfo(Int_t code);
+   bool      StringToNumber(Int_t code) override;
 
-   void              Convert(UInt_t fromVersion);
+   void              Convert(UInt_t fromVersion) override;
 
 private:
    // Not implemented yet
@@ -172,15 +172,15 @@ private:
 public:
    TTreeFormula();
    TTreeFormula(const char *name,const char *formula, TTree *tree);
-   virtual   ~TTreeFormula();
+     ~TTreeFormula() override;
 
-   virtual Int_t       DefinedVariable(TString &variable, Int_t &action);
+   Int_t       DefinedVariable(TString &variable, Int_t &action) override;
    virtual TClass*     EvalClass() const;
 
-   template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[]=0);
-   virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Double_t>(i, stringStack); }
-   virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<Long64_t>(i, stringStack); }
-   virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[]=0) {return EvalInstance<LongDouble_t>(i, stringStack); }
+   template<typename T> T EvalInstance(Int_t i=0, const char *stringStack[] = nullptr);
+   virtual Double_t       EvalInstance(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Double_t>(i, stringStack); }
+   virtual Long64_t       EvalInstance64(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<Long64_t>(i, stringStack); }
+   virtual LongDouble_t   EvalInstanceLD(Int_t i=0, const char *stringStack[] = nullptr) {return EvalInstance<LongDouble_t>(i, stringStack); }
 
    virtual const char *EvalStringInstance(Int_t i=0);
    virtual void*       EvalObject(Int_t i=0);
@@ -197,20 +197,20 @@ public:
    //mutable.  We will be able to do that only when all the compilers supported for ROOT actually implemented
    //the mutable keyword.
    //NOTE: Also modify the code in PrintValue which current goes around this limitation :(
-   virtual Bool_t      IsInteger(Bool_t fast=kTRUE) const;
-           Bool_t      IsQuickLoad() const { return fQuickLoad; }
-   virtual Bool_t      IsString() const;
-   virtual Bool_t      Notify() { UpdateFormulaLeaves(); return kTRUE; }
+   virtual bool        IsInteger(bool fast=true) const;
+           bool        IsQuickLoad() const { return fQuickLoad; }
+   virtual bool        IsString() const;
+   bool        Notify() override { UpdateFormulaLeaves(); return true; }
    virtual char       *PrintValue(Int_t mode=0) const;
    virtual char       *PrintValue(Int_t mode, Int_t instance, const char *decform = "9.9") const;
-   virtual void        SetAxis(TAxis *axis=0);
-           void        SetQuickLoad(Bool_t quick) { fQuickLoad = quick; }
+   virtual void        SetAxis(TAxis *axis = nullptr);
+           void        SetQuickLoad(bool quick) { fQuickLoad = quick; }
    virtual void        SetTree(TTree *tree) {fTree = tree;}
    virtual void        ResetLoading();
    virtual TTree*      GetTree() const {return fTree;}
    virtual void        UpdateFormulaLeaves();
 
-   ClassDef(TTreeFormula, 10);  //The Tree formula
+   ClassDefOverride(TTreeFormula, 10);  //The Tree formula
 };
 
 #endif

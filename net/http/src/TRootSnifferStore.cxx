@@ -11,13 +11,12 @@
 
 #include "TRootSnifferStore.h"
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStore                                                    //
-//                                                                      //
-// Used to store different results of objects scanning by TRootSniffer  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootSnifferStore
+\ingroup http
+
+Used to store different results of objects scanning by TRootSniffer
+*/
 
 ClassImp(TRootSnifferStore);
 
@@ -35,13 +34,11 @@ void TRootSnifferStore::SetResult(void *_res, TClass *_rescl, TDataMember *_resm
 
 // =================================================================================
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStoreXml                                                 //
-//                                                                      //
-// Used to store scanned objects hierarchy in XML form                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRootSnifferStoreXml
+\ingroup http
+
+Used to store scanned objects hierarchy in XML form
+*/
 
 ClassImp(TRootSnifferStoreXml);
 
@@ -63,7 +60,7 @@ void TRootSnifferStoreXml::SetField(Int_t, const char *field, const char *value,
    } else {
       fBuf.Append(TString::Format(" %s=\"", field));
       const char *v = value;
-      while (*v != 0) {
+      while (*v) {
          switch (*v) {
          case '<': fBuf.Append("&lt;"); break;
          case '>': fBuf.Append("&gt;"); break;
@@ -88,7 +85,8 @@ void TRootSnifferStoreXml::BeforeNextChild(Int_t, Int_t nchld, Int_t)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// called when node should be closed
+/// Called when node should be closed
+///
 /// depending from number of childs different xml format is applied
 
 void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
@@ -101,13 +99,11 @@ void TRootSnifferStoreXml::CloseNode(Int_t lvl, Int_t numchilds)
 
 // ============================================================================
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootSnifferStoreJson                                                //
-//                                                                      //
-// Used to store scanned objects hierarchy in JSON form                 //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TRootSnifferStoreJson
+\ingroup http
+
+Used to store scanned objects hierarchy in JSON form
+*/
 
 ClassImp(TRootSnifferStoreJson);
 
@@ -128,13 +124,15 @@ void TRootSnifferStoreJson::CreateNode(Int_t lvl, const char *nodename)
 void TRootSnifferStoreJson::SetField(Int_t lvl, const char *field, const char *value, Bool_t with_quotes)
 {
    fBuf.Append(",");
-   if (!fCompact) fBuf.Append("\n");
+   if (!fCompact)
+      fBuf.Append("\n");
    fBuf.Append(TString::Format("%*s\"%s\"%s", fCompact ? 0 : lvl * 4 + 2, "", field, (fCompact ? ":" : " : ")));
    if (!with_quotes) {
       fBuf.Append(value);
    } else {
       fBuf.Append("\"");
-      for (const char *v = value; *v != 0; v++) switch (*v) {
+      for (const char *v = value; *v != 0; v++)
+         switch (*v) {
          case '\n': fBuf.Append("\\n"); break;
          case '\t': fBuf.Append("\\t"); break;
          case '\"': fBuf.Append("\\\""); break;

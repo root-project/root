@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8">
+      <title>Geometry viewer</title>
+      <style>
+         html { height: 100%; }
+         body { min-height: 100%; margin: 0; overflow: hidden }
+         #GeomDiv {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding: 1px
+         }
+
+         .geomColorBox {                /* style the CSS class that has been written by the renderer method */
+            display: inline-block;      /* enable squares to appear next to each other within one line */
+            position: absolute;
+            top: 1px;
+            bottom: 1px;
+            left: 1px;
+            right: 1px;
+         }
+
+         /* this is style for IconTabBar header - by default is uses too large space for header */
+
+         .sapMITBHead {
+             margin: 0 !important;
+         }
+
+        .masterExpanded {
+           width: 40% !important;
+         }
+
+       </style>
+
+   </head>
+
+   <body>
+      <div id="GeomDiv">
+      </div>
+   </body>
+
+   <script type='module'>
+
+     import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+     import { parse, decodeUrl, toJSON, source_dir, browser } from './jsrootsys/modules/core.mjs';
+
+     // create global EVE and THREE handles
+
+     connectWebWindow({
+        ui5: true,
+        openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
+     }).then(handle => {
+        let is_hierarchy = handle?.getUserArgs('only_hierarchy');
+        if (is_hierarchy && document)
+           document.title = 'Geometry hierarchy';
+
+         sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+             XMLView.create({
+                viewName: is_hierarchy ? "rootui5.geom.view.GeomHierarchy" : "rootui5.geom.view.GeomViewer",
+                viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir, browser } }
+             }).then(oView => oView.placeAt("GeomDiv"));
+          });
+     });
+
+   </script>
+
+</html>

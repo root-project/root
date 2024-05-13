@@ -32,7 +32,7 @@
 
 #include <iostream>
 
-// CINT does not understand some files included by LorentzVector
+// CLING does not understand some files included by LorentzVector
 #include "Math/Vector3D.h"
 #include "Math/Vector4D.h"
 
@@ -101,7 +101,7 @@ double read() {
    // create tree
    TTree *t1 = (TTree*)f1.Get("t1");
 
-   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > * pTracks = 0;
+   std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > > * pTracks = nullptr;
    t1->SetBranchAddress("tracks",&pTracks);
 
    timer.Start();

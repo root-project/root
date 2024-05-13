@@ -8,16 +8,7 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
-file(WRITE ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
-  "${GIT_DESCRIBE_ALL}\n${GIT_DESCRIBE_ALWAYS}\n${GIT_TIMESTAMP}\n")
-
-file(WRITE ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-"#ifndef ROOT_RGITCOMMIT_H
-#define ROOT_RGITCOMMIT_H
-  #define ROOT_GIT_BRANCH \"${GIT_DESCRIBE_ALL}\"
-  #define ROOT_GIT_COMMIT \"${GIT_DESCRIBE_ALWAYS}\"
-#endif"
-)
+include(SetROOTVersion)
 
 set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RConfigure.h
   PROPERTIES GENERATED TRUE)
@@ -33,130 +24,62 @@ add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RConfigure.h
 
 add_custom_target(rconfigure ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RConfigure.h)
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+ROOT_LINKER_LIBRARY(Core BUILTINS LZMA)
+
+generateHeader(Core
+  ${CMAKE_SOURCE_DIR}/core/base/src/root-argparse.py
+  ${CMAKE_BINARY_DIR}/ginclude/TApplicationCommandLineOptionsHelp.h
 )
 
-add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
-    ${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  DEPENDS
-    ${CMAKE_BINARY_DIR}/RGitCommit.h.tmp
+add_dependencies(Core CLING rconfigure)
+
+target_link_libraries(Core
+  PRIVATE
+    ${CMAKE_DL_LIBS}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${ROOT_ATOMIC_LIBS}
 )
 
-add_custom_target(gitcommit ALL DEPENDS ${CMAKE_BINARY_DIR}/include/RGitCommit.h)
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(Core PUBLIC util procstat)
+endif()
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+target_include_directories(Core PUBLIC
+   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
+)
 
-set_source_files_properties(${CMAKE_BINARY_DIR}/include/RGitCommit.h
-  PROPERTIES GENERATED TRUE HEADER_FILE_ONLY TRUE)
+# Must be first because it defines ROOTStaticSanitizerConfig which needs
+# to be linked into rootcling_stage1 (via ROOT_EXECUTABLE).
+add_subdirectory(sanitizer)
 
-install(FILES ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+add_subdirectory(rootcling_stage1)
 
+add_subdirectory(base)
 add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
 add_subdirectory(dictgen)
 add_subdirectory(foundation)
 add_subdirectory(gui)
+add_subdirectory(imt)
 add_subdirectory(meta)
 add_subdirectory(metacling)
-if(NOT WIN32)
 add_subdirectory(multiproc)
-endif()
+add_subdirectory(newdelete)
 add_subdirectory(rint)
+add_subdirectory(testsupport)
 add_subdirectory(textinput)
 add_subdirectory(thread)
-add_subdirectory(imt)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
 add_subdirectory(zstd)
-if(asan)
-  add_subdirectory(sanitizer)
-endif()
 
-if(NOT WIN32)
-  add_subdirectory(newdelete)
-endif()
-
-add_subdirectory(base)
-
-if(UNIX)
-  add_subdirectory(unix)
-  set(unix_objects $<TARGET_OBJECTS:Unix>)
-endif()
-if(WIN32)
-  add_subdirectory(winnt)
-  set(winnt_objects $<TARGET_OBJECTS:Winnt>)
-endif()
-if(cocoa)
-  add_subdirectory(macosx)
-  set(macosx_objects $<TARGET_OBJECTS:Macosx>)
-endif()
-
-if(CMAKE_CXX_STANDARD GREATER 11)
-  set(dict_v7dirs base/v7/inc)
-endif()
-
-#---G__Core--------------------------------------------------------------------
-
-# Uses includes path as defined by Core module.
-
-set(objectlibs $<TARGET_OBJECTS:Base>
-               $<TARGET_OBJECTS:Clib>
-               $<TARGET_OBJECTS:Cont>
-               $<TARGET_OBJECTS:Foundation>
-               $<TARGET_OBJECTS:Lzma>
-               $<TARGET_OBJECTS:Lz4>
-               $<TARGET_OBJECTS:Zstd>
-               $<TARGET_OBJECTS:Zip>
-               $<TARGET_OBJECTS:Meta>
-               $<TARGET_OBJECTS:GuiCore>
-               $<TARGET_OBJECTS:TextInput>
-               ${macosx_objects}
-               ${unix_objects}
-               ${winnt_objects})
-
-ROOT_OBJECT_LIBRARY(BaseTROOT ${CMAKE_SOURCE_DIR}/core/base/src/TROOT.cxx ${CMAKE_BINARY_DIR}/ginclude/RGitCommit.h)
-target_include_directories(BaseTROOT PRIVATE 
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_SOURCE_DIR}/core/clib/inc
-   ${CMAKE_SOURCE_DIR}/core/meta/inc
-   ${CMAKE_SOURCE_DIR}/core/cont/inc
-   ${CMAKE_SOURCE_DIR}/core/foundation/inc
-   ${CMAKE_SOURCE_DIR}/core/thread/inc
-   ${CMAKE_SOURCE_DIR}/core/gui/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
-
-add_dependencies(BaseTROOT gitcommit rconfigure)
-#----------------------------------------------------------------------------------------
-
-if(WIN32)
-  set(corelinklibs shell32.lib WSock32.lib Oleaut32.lib Iphlpapi.lib)
-elseif(APPLE)
-  if(cocoa)
-     set(corelinklibs "-framework Cocoa -F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  else()
-     set(corelinklibs "-F/System/Library/PrivateFrameworks -framework CoreSymbolication")
-  endif()
-endif()
-
-add_subdirectory(rootcling_stage1)
+add_subdirectory(macosx)
+add_subdirectory(unix)
+add_subdirectory(winnt)
 
 #-------------------------------------------------------------------------------
-ROOT_LINKER_LIBRARY(Core $<TARGET_OBJECTS:BaseTROOT> ${objectlibs} BUILTINS LZMA)
 
 if (libcxx AND NOT APPLE)
   # In case we use libcxx and glibc together there is a mismatch of the
@@ -166,39 +89,27 @@ if (libcxx AND NOT APPLE)
   target_compile_definitions(Core PRIVATE __CORRECT_ISO_CPP_WCHAR_H_PROTO)
 endif()
 
-#while basic libs do not depend on Core, we have to add includes directly
-
-target_include_directories(Core PUBLIC
-   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/foundation/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/cont/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/gui/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/meta/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clib/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/rint/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/zip/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/thread/inc>
-   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/textinput/inc>
-)
-
-target_include_directories(Core PRIVATE $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/clingutils/inc>)
-
-if(root7 OR CMAKE_CXX_STANDARD GREATER 11)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/base/v7/inc>)
+if(MSVC)
+  # Definitions of MATH Macros (required in MathCore) like M_PI are only
+  # exposed on Windows after defining the _USE_MATH_DEFINES macro. By
+  # specifying it as a property for Core, we ensure that the macros are
+  # properly exposed when using Modules on Windows.
+  target_compile_definitions(Core PRIVATE _USE_MATH_DEFINES)
 endif()
 
+# Inclusion of `complex.h` causes havoc: `complex` and `I` become CPP macros.
+# Darwin's complex.h does not implement C11's __STDC_NO_COMPLEX__, use the
+# header guard instead. This prevents inclusion of complex.h in Darwin.pcm.
+# GCC <=5 has _COMPLEX_H but none of the others.
+# __CLANG_STDATOMIC_H prevents inclusion of stdatomic in our Darwin.pcm: its
+# macros cause conflics with boost.
+target_compile_definitions(Core PRIVATE
+  __STDC_NO_COMPLEX__
+  __COMPLEX_H__
+  _COMPLEX_H
 
-if(ROOT_ARCHITECTURE MATCHES macosx)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc> $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/macosx/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc ${CMAKE_SOURCE_DIR}/core/macosx/inc)
-elseif(ROOT_ARCHITECTURE MATCHES win32)
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/winnt/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
-else()
-  target_include_directories(Core PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/core/unix/inc>)
-  target_include_directories(BaseTROOT PRIVATE ${CMAKE_SOURCE_DIR}/core/unix/inc)
-endif()
+  __CLANG_STDATOMIC_H
+ )
 
 if (runtime_cxxmodules)
   if(MSVC)
@@ -211,18 +122,10 @@ if (runtime_cxxmodules)
   list(APPEND core_implicit_modules "-mByproduct" "ROOT_Rtypes")
 endif(runtime_cxxmodules)
 
+get_target_property(CORE_DICT_HEADERS Core DICT_HEADERS)
+
 ROOT_GENERATE_DICTIONARY(G__Core
-  ${Core_dict_headers}
-  ${Clib_dict_headers}
-  ${Cont_dict_headers}
-  ${Foundation_dict_headers}
-  ${Macosx_dict_headers}
-  ${Unix_dict_headers}
-  ${Winnt_dict_headers}
-  ${ClingUtils_dict_headers}
-  ${GuiCore_dict_headers}
-  ${Meta_dict_headers}
-  ${TextInput_dict_headers}
+  ${CORE_DICT_HEADERS}
   STAGE1
   MODULE
     Core
@@ -232,20 +135,3 @@ ROOT_GENERATE_DICTIONARY(G__Core
   LINKDEF
     base/inc/LinkDef.h
 )
-
-target_include_directories(G__Core PRIVATE ${CMAKE_SOURCE_DIR}/core/clingutils/inc)
-
-target_link_libraries(Core
-  PRIVATE
-    PCRE::PCRE
-    ${LIBLZMA_LIBRARIES}
-    xxHash::xxHash
-    LZ4::LZ4
-    ZLIB::ZLIB
-    ${ZSTD_LIBRARIES}
-    ${CMAKE_DL_LIBS}
-    ${CMAKE_THREAD_LIBS_INIT}
-    ${corelinklibs}
-)
-
-add_dependencies(Core CLING)

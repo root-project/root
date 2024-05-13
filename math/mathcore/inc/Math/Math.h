@@ -69,7 +69,7 @@ namespace Math {
 // name, so the code here has to use `sqrt()`, not `std::sqrt()`. To still
 // find `std::sqrt()` we pull `std::sqrt()` into the surrounding namespace.
 //
-// We don't want to use 'using namespace std' because it would polute the including headers.
+// We don't want to use 'using namespace std' because it would pollute the including headers.
 using std::atan2;
 using std::cos;
 using std::cosh;
@@ -94,7 +94,7 @@ inline double Pi()
        declarations for functions which are not implemented by some compilers
    */
 
-   /// log(1+x) with error cancelatio when x is small
+   /// log(1+x) with error cancelation when x is small
    inline double log1p(double x)
    {
 #ifndef HAVE_NO_LOG1P

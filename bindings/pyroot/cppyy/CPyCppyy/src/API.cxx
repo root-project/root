@@ -49,25 +49,36 @@ static bool Initialize()
 #if PY_VERSION_HEX < 0x03020000
         PyEval_InitThreads();
 #endif
+#if PY_VERSION_HEX < 0x03080000
         Py_Initialize();
+#else
+        PyConfig config;
+        PyConfig_InitPythonConfig(&config);
+        PyConfig_SetString(&config, &config.program_name, L"cppyy");
+        Py_InitializeFromConfig(&config);
+#endif
 #if PY_VERSION_HEX >= 0x03020000
+#if PY_VERSION_HEX < 0x03090000
         PyEval_InitThreads();
+#endif
 #endif
 
     // try again to see if the interpreter is initialized
         if (!Py_IsInitialized()) {
         // give up ...
-            std::cerr << "Error: python has not been intialized; returning." << std::endl;
+            std::cerr << "Error: python has not been initialized; returning." << std::endl;
             return false;
         }
 
    // set the command line arguments on python's sys.argv
 #if PY_VERSION_HEX < 0x03000000
         char* argv[] = {const_cast<char*>("cppyy")};
-#else
+#elif PY_VERSION_HEX < 0x03080000
         wchar_t* argv[] = {const_cast<wchar_t*>(L"cppyy")};
 #endif
+#if PY_VERSION_HEX < 0x03080000
         PySys_SetArgv(sizeof(argv)/sizeof(argv[0]), argv);
+#endif
 
     // force loading of the cppyy module
         PyRun_SimpleString(const_cast<char*>("import cppyy"));
@@ -121,6 +132,12 @@ PyObject* CPyCppyy::Instance_FromVoidPtr(
     return pyobject;
 }
 
+namespace CPyCppyy {
+// version with C type arguments only for use with Numba
+PyObject* Instance_FromVoidPtr(void* addr, const char* classname, int python_owns) {
+    return Instance_FromVoidPtr(addr, std::string(classname), (bool)python_owns);
+}
+} // namespace CPyCppyy
 
 //-----------------------------------------------------------------------------
 bool CPyCppyy::Scope_Check(PyObject* pyobject)
@@ -167,7 +184,7 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 //-----------------------------------------------------------------------------
 bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
 {
-// Test whether the given instance can safely return to C++, or whether
+// Test whether the given instance can safely return to C++
     if (!CPPInstance_Check(pyobject))
         return true;    // simply don't know
 
@@ -298,7 +315,7 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
         oldargv = l;
     }
 
-// create and set (add progam name) the new command line
+// create and set (add program name) the new command line
 #if PY_VERSION_HEX < 0x03000000
     int argc = args.size() + 1;
     const char** argv = new const char*[argc];
@@ -369,7 +386,7 @@ const CPyCppyy::PyResult CPyCppyy::Eval(const std::string& expr)
         return PyResult();
     }
 
-// results that require no convserion
+// results that require no conversion
     if (result == Py_None || CPPInstance_Check(result) ||
             PyBytes_Check(result) ||
             PyFloat_Check(result) || PyLong_Check(result) || PyInt_Check(result))

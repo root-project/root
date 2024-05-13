@@ -36,7 +36,7 @@ void south_gate()
 
   TGeoVolume *top = geom->MakeBox("top",Air,1000,1000,1000);
   geom->SetTopVolume(top);
-  geom->SetTopVisible(0);
+  geom->SetTopVisible(false);
   // If you want to see the boundary, please input the number, 1 instead of 0.
   // Like this, geom->SetTopVisible(1);
 
@@ -1883,7 +1883,7 @@ while(k<6){
 
 
 
-  top->SetVisibility(0);
+  top->SetVisibility(false);
   geom->CloseGeometry();
 
   top->Draw("ogl");

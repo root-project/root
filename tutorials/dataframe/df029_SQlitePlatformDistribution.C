@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-///
-/// \brief Use RDataFrame to display data about ROOT downloads.
+/// Use RDataFrame to display data about ROOT downloads.
 ///
 /// In order to display the Platform Distribution of ROOT, we choose to create two TH1F
 /// histograms: one that includes all types of platforms, other filtering and classifying them.
@@ -18,7 +17,7 @@
 
 void df029_SQlitePlatformDistribution() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame( "http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   auto rdf = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
    TH1F hRootPlatform("hrootPlatform", "Platform Distribution", 7, 0, -1);
    TH1F hShortRootPlatform("hShortRootPlatform", "Short Platform Distribution", 7, 0, -1);

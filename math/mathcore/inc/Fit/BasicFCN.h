@@ -33,7 +33,7 @@ namespace ROOT {
 //___________________________________________________________________________________
 /**
    BasicFCN class: base class  for the objective functions used in the fits
-   It has a reference to the data and th emodel function used in the fit.
+   It has a reference to the data and the model function used in the fit.
    It cannot be instantiated but constructed from the derived classes
 */
 template<class DerivFunType, class ModelFunType, class DataType>
@@ -47,6 +47,7 @@ protected:
    typedef typename  BaseObjFunction::BaseFunction BaseFunction;
 
    typedef  ::ROOT::Math::IParamMultiFunctionTempl<T> IModelFunction;
+   typedef  ::ROOT::Math::IParametricGradFunctionMultiDimTempl<T> IGradModelFunction;
 
    /**
       Constructor from data set  and model function
@@ -78,6 +79,15 @@ public:
 
    /// access to function pointer
    std::shared_ptr<IModelFunction> ModelFunctionPtr() const { return fFunc; }
+
+   /// flag to indicate if can compute Hessian
+   virtual bool HasHessian() const {
+      if (!BaseObjFunction::IsAGradFCN()) return false;
+      auto gfunc = dynamic_cast<const IGradModelFunction *>( fFunc.get());
+      if (!gfunc) return false;
+      return gfunc->HasParameterHessian();
+   }
+
 
 
 

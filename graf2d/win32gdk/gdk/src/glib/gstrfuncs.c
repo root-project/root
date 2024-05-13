@@ -482,7 +482,7 @@ g_strlcat (gchar       *dest,
  **/
 gchar*
 g_ascii_strdown (const gchar *str,
-		 gint         len)
+		 gssize         len)
 {
   gchar *result, *s;
   
@@ -513,7 +513,7 @@ g_ascii_strdown (const gchar *str,
  **/
 gchar*
 g_ascii_strup (const gchar *str,
-	       gint         len)
+	       gssize         len)
 {
   gchar *result, *s;
 
@@ -798,7 +798,7 @@ g_strcasecmp (const gchar *s1,
 gint
 g_strncasecmp (const gchar *s1,
 	       const gchar *s2,
-	       gsize n)     
+	       gssize n)     
 {
 #ifdef HAVE_STRNCASECMP
   return strncasecmp (s1, s2, n);

@@ -33,15 +33,15 @@ private:
 public:
    TFileCacheWrite();
    TFileCacheWrite(TFile *file, Int_t buffersize);
-   virtual ~TFileCacheWrite();
+   ~TFileCacheWrite() override;
    virtual Bool_t      Flush();
    virtual Int_t       GetBytesInCache() const { return fNtot; }
-   virtual void        Print(Option_t *option="") const;
+           void        Print(Option_t *option="") const override;
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
    virtual Int_t       WriteBuffer(const char *buf, Long64_t pos, Int_t len);
    virtual void        SetFile(TFile *file);
 
-   ClassDef(TFileCacheWrite,1)  //TFile cache when writing
+   ClassDefOverride(TFileCacheWrite,1)  //TFile cache when writing
 };
 
 #endif

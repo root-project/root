@@ -28,15 +28,15 @@ class TProofMgrLite : public TProofMgr {
 
 public:
    TProofMgrLite(const char *url, Int_t loglevel = -1, const char *alias = "");
-   virtual ~TProofMgrLite() { }
+   ~TProofMgrLite() override { }
 
-   TProof     *CreateSession(const char * = 0, const char * = 0, Int_t = -1);
+   TProof     *CreateSession(const char * = 0, const char * = 0, Int_t = -1) override;
    TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0,
-                              const char *pattern = "-v | SvcMsg", Bool_t rescan = kFALSE);
-   TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len);
-   TObjString *ReadBuffer(const char *file, const char *pattern);
+                              const char *pattern = "-v | SvcMsg", Bool_t rescan = kFALSE) override;
+   TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len) override;
+   TObjString *ReadBuffer(const char *file, const char *pattern) override;
 
-   ClassDef(TProofMgrLite,0)  // XrdProofd PROOF manager interface
+   ClassDefOverride(TProofMgrLite,0)  // XrdProofd PROOF manager interface
 };
 
 #endif

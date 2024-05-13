@@ -30,7 +30,7 @@
 
 #include "TBench.h"
 
-using namespace std;
+using std::vector;
 
 struct TBenchData {
    TBenchData() : cp1(0), nbytes1(0), cp2w(0), cp2r(0), cx3(0), nbytes3(0), cp3w(0), cp3r(0)  {}
@@ -295,10 +295,6 @@ int main(int argc, char **argv)
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";

@@ -105,7 +105,7 @@ void FitConfig::SetFromFitResult(const FitResult &result) {
 
          // query if parameter needs to run Minos
          if (result.HasMinosError(i) ) {
-            if (fMinosParams.size() == 0) {
+            if (fMinosParams.empty()) {
                fMinosErrors = true;
                fMinosParams.reserve(npar-i);
             }
@@ -135,7 +135,7 @@ void FitConfig::SetFromFitResult(const FitResult &result) {
 void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const double * vstep ) {
    // initialize FitConfig from given parameter values and step sizes
    // if npar different than existing one - clear old one and create new ones
-   if (params == 0) {
+   if (params == nullptr) {
       fSettings =  std::vector<ParameterSettings>(npar);
       return;
    }
@@ -151,7 +151,7 @@ void FitConfig::SetParamsSettings(unsigned int npar, const double *params, const
    for (const double * ipar = params; ipar !=  end; ++ipar) {
       double val = *ipar;
       double step = 0;
-      if (vstep == 0) {
+      if (vstep == nullptr) {
          step = 0.3*std::fabs(val);   // step size is 30% of par value
          //double step = 2.0*std::fabs(val);   // step size is 30% of par value
          if (val ==  0) step  =  0.3;
@@ -190,7 +190,7 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    const std::string & minim_newDefault = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    if (defaultMinim != minim_newDefault )  fMinimizerOpts.SetMinimizerType(minim_newDefault.c_str());
 
-   if (min == 0) {
+   if (min == nullptr) {
       // if creation of minimizer failed force the use by default of Minuit
       std::string minim2 = "Minuit";
       if (minimType == "Minuit") minim2 = "Minuit2";
@@ -198,16 +198,16 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
          std::string msg = "Could not create the " + minimType + " minimizer. Try using the minimizer " + minim2;
          MATH_WARN_MSG("FitConfig::CreateMinimizer",msg.c_str());
          min = ROOT::Math::Factory::CreateMinimizer(minim2,"Migrad");
-         if (min == 0) {
+         if (min == nullptr) {
             MATH_ERROR_MSG("FitConfig::CreateMinimizer","Could not create the Minuit2 minimizer");
-            return 0;
+            return nullptr;
          }
          SetMinimizer( minim2.c_str(),"Migrad");
       }
       else {
          std::string msg = "Could not create the Minimizer " + minimType;
          MATH_ERROR_MSG("FitConfig::CreateMinimizer",msg.c_str());
-         return 0;
+         return nullptr;
       }
    }
 
@@ -229,7 +229,9 @@ ROOT::Math::Minimizer * FitConfig::CreateMinimizer() {
    min->SetValidError( fParabErrors );
    min->SetStrategy( fMinimizerOpts.Strategy() );
    min->SetErrorDef( fMinimizerOpts.ErrorDef() );
-
+   // set extra options if existing
+   if (fMinimizerOpts.ExtraOptions())
+      min->SetExtraOptions(*fMinimizerOpts.ExtraOptions());
 
    return min;
 }
@@ -241,7 +243,7 @@ std::string FitConfig::MinimizerName() const
 
    // append algorithm name for minimizer that support it
    if ((name.find("Fumili") == std::string::npos) && (name.find("GSLMultiFit") == std::string::npos)) {
-      if (MinimizerAlgoType() != "")
+      if (!MinimizerAlgoType().empty())
          name += " / " + MinimizerAlgoType();
    }
    return name;

@@ -33,21 +33,21 @@ private:
 public:
    TObjString(const char *s = "") : fString(s) { }
    ~TObjString();
-   Int_t       Compare(const TObject *obj) const;
+   Int_t       Compare(const TObject *obj) const override;
    TString     CopyString() const { return fString; }
-   const char *GetName() const { return fString; }
-   ULong_t     Hash() const { return fString.Hash(); }
+   const char *GetName() const override { return fString; }
+   ULong_t     Hash() const override { return fString.Hash(); }
    void        FillBuffer(char *&buffer) { fString.FillBuffer(buffer); }
-   void        Print(Option_t *) const { Printf("TObjString = %s", (const char*)fString); }
-   Bool_t      IsSortable() const { return kTRUE; }
-   Bool_t      IsEqual(const TObject *obj) const;
+   void        Print(Option_t *) const override { Printf("TObjString = %s", (const char*)fString); }
+   Bool_t      IsSortable() const override { return kTRUE; }
+   Bool_t      IsEqual(const TObject *obj) const override;
    void        ReadBuffer(char *&buffer) { fString.ReadBuffer(buffer); }
    void        SetString(const char *s) { fString = s; }
    const TString &GetString() const { return fString; }
    Int_t       Sizeof() const { return fString.Sizeof(); }
    TString    &String() { return fString; }
 
-   ClassDef(TObjString,1)  //Collectable string class
+   ClassDefOverride(TObjString,1)  //Collectable string class
 };
 
 #endif

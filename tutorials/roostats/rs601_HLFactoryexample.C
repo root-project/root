@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief High Level Factory: creation of a simple model
+/// High Level Factory: creation of a simple model
 ///
 /// \macro_image
 /// \macro_output
@@ -23,7 +23,7 @@
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::ofstream;
 
 void rs601_HLFactoryexample()
 {

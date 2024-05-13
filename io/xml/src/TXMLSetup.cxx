@@ -95,7 +95,7 @@ const char *String = "string";
 const char *CharStar = "CharStar";
 };
 
-TString TXMLSetup::fgNameSpaceBase = "http://root.cern.ch/root/htmldoc/";
+TString TXMLSetup::fgNameSpaceBase = "http://root.cern/root/htmldoc/";
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return default value for XML setup
@@ -227,7 +227,7 @@ const char *TXMLSetup::XmlClassNameSpaceRef(const TClass *cl)
    TString clname = XmlConvertClassName(cl->GetName());
    fStrBuf = fgNameSpaceBase;
    fStrBuf += clname;
-   if (fgNameSpaceBase == "http://root.cern.ch/root/htmldoc/")
+   if (fgNameSpaceBase == "http://root.cern/root/htmldoc/")
       fStrBuf += ".html";
    return fStrBuf.Data();
 }
@@ -264,7 +264,7 @@ const char *TXMLSetup::GetElItemName(TStreamerElement *el)
 
 TClass *TXMLSetup::XmlDefineClass(const char *xmlClassName)
 {
-   if (strchr(xmlClassName, '_') == 0)
+   if (!strchr(xmlClassName, '_'))
       return TClass::GetClass(xmlClassName);
 
    TIter iter(gROOT->GetListOfClasses());

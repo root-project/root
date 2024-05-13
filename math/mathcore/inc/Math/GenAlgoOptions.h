@@ -17,6 +17,7 @@
 #include <map>
 #include <iomanip>
 #include <string>
+#include <vector>
 
 namespace ROOT {
       namespace Math {
@@ -34,59 +35,83 @@ public:
 
    GenAlgoOptions() /* : fExtraOptions(0) */  {}
 
-   virtual ~GenAlgoOptions() {}// { if (fExtraOptions) delete fExtraOptions; }
+   ~GenAlgoOptions() override {}// { if (fExtraOptions) delete fExtraOptions; }
 
    // use default copy constructor and assignment operator
 
-   /** generic  methods for  retrivieng options */
+   /** generic  methods for  retrieving options */
 
 
    // methods implementing the  IOptions interface
 
-   virtual IOptions * Clone() const {
+   IOptions * Clone() const override {
       return new GenAlgoOptions(*this);
    }
 
    // t.b.d need probably to implement in a .cxx file for CINT
 
 
-   virtual bool GetRealValue(const char * name, double & val) const {
+   bool GetRealValue(const char * name, double & val) const override {
       const double * pval = FindValue(name, fRealOpts);
       if (!pval) return false;
       val = *pval;
       return true;
    }
 
-   virtual bool GetIntValue(const char * name, int & val) const {
+   bool GetIntValue(const char * name, int & val) const override {
       const int * pval = FindValue(name, fIntOpts);
       if (!pval) return false;
       val = *pval;
       return true;
    }
 
-   virtual bool GetNamedValue(const char * name, std::string & val) const {
+   bool GetNamedValue(const char * name, std::string & val) const override {
       const std::string * pval = FindValue(name, fNamOpts);
       if (!pval) return false;
       val = *pval;
       return true;
    }
 
-   /// method wich need to be re-implemented by the derived classes
-   virtual void SetRealValue(const char * name, double val)  {
+   /// Method that needs to be re-implemented by the derived classes.
+   void SetRealValue(const char * name, double val) override  {
       InsertValue(name, fRealOpts, val);
    }
 
-   virtual void SetIntValue(const char * name , int val) {
+   void SetIntValue(const char * name , int val) override {
       InsertValue(name, fIntOpts, val);
    }
 
-   virtual void SetNamedValue(const char * name, const char * val) {
+   void SetNamedValue(const char * name, const char * val) override {
       InsertValue(name, fNamOpts, std::string(val));
    }
 
+   std::vector<std::string>  GetAllNamedKeys() {
+      std::vector<std::string> names;
+      names.reserve(fNamOpts.size());
+      // start by named options
+      for (auto const & e : fNamOpts)
+         names.push_back(e.first);
+      return names;
+   }
+   std::vector<std::string>  GetAllRealKeys() {
+      std::vector<std::string> names;
+      names.reserve(fRealOpts.size());
+      // start by named options
+      for (auto const & e : fRealOpts)
+         names.push_back(e.first);
+      return names;
+   }
+   std::vector<std::string>  GetAllIntKeys() {
+      std::vector<std::string> names;
+      names.reserve(fIntOpts.size());
+      // start by named options
+      for (auto const & e : fIntOpts)
+         names.push_back(e.first);
+      return names;
+   }
 
    /// print options
-   virtual void Print(std::ostream & os = std::cout ) const {
+   void Print(std::ostream & os = std::cout ) const override {
       Print(fNamOpts,os);
       Print(fIntOpts,os);
       Print(fRealOpts,os);
@@ -118,7 +143,7 @@ private:
       typename M::const_iterator pos;
       pos = opts.find(name);
       if (pos == opts.end()) {
-         return 0;
+         return nullptr;
       }
       return  &((*pos).second);
    }
@@ -142,10 +167,9 @@ private:
          os << std::setw(25) << pos->first << " : " << std::setw(15) << pos->second << std::endl;
    }
 
-
-   std::map<std::string, double>      fRealOpts;   // map of the real options
-   std::map<std::string, int>         fIntOpts;    // map of the integer options
-   std::map<std::string, std::string> fNamOpts;    // map of the named options
+   std::map<std::string, int>         fIntOpts;    ///< map of the integer options
+   std::map<std::string, double>      fRealOpts;   ///< map of the real options
+   std::map<std::string, std::string> fNamOpts;    ///< map of the named options
 
 };
 

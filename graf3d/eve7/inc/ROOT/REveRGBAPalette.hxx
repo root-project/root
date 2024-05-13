@@ -12,16 +12,16 @@
 #ifndef ROOT_REveRGBAPalette
 #define ROOT_REveRGBAPalette
 
+#include "ROOT/REveElement.hxx"
 #include "ROOT/REveUtil.hxx"
-
-#include "TObject.h"
 
 #include "TMath.h"
 
 namespace ROOT {
 namespace Experimental {
 
-class REveRGBAPalette : public TObject,
+class REveRGBAPalette : public REveElement,
+                        public REveAuntAsList,
                         public REveRefCnt
 {
    friend class REveRGBAPaletteEditor;
@@ -33,8 +33,8 @@ public:
    enum ELimitAction_e { kLA_Cut, kLA_Mark, kLA_Clip, kLA_Wrap };
 
 private:
-   REveRGBAPalette(const REveRGBAPalette&);            // Not implemented
-   REveRGBAPalette& operator=(const REveRGBAPalette&); // Not implemented
+   REveRGBAPalette(const REveRGBAPalette&) = delete;
+   REveRGBAPalette& operator=(const REveRGBAPalette&) = delete;
 
 protected:
    Double_t  fUIf;       // UI representation calculated as: d = fUIf*i + fUIc
@@ -74,11 +74,12 @@ protected:
 
    static REveRGBAPalette* fgDefaultPalette;
 
+   void StampNieces();
 public:
    REveRGBAPalette();
    REveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
                    Bool_t showdef=kTRUE, Bool_t fixcolrng=kFALSE);
-   virtual ~REveRGBAPalette();
+   ~REveRGBAPalette() override;
 
    void SetupColorArray() const;
    void ClearColorArray();
@@ -116,8 +117,8 @@ public:
 
    Int_t GetUnderflowAction() const  { return fUnderflowAction; }
    Int_t GetOverflowAction()  const  { return fOverflowAction;  }
-   void  SetUnderflowAction(Int_t a) { fUnderflowAction = a;    }
-   void  SetOverflowAction(Int_t a)  { fOverflowAction  = a;    }
+   void  SetUnderflowAction(Int_t a) { fUnderflowAction = a; StampNieces(); }
+   void  SetOverflowAction(Int_t a)  { fOverflowAction  = a; StampNieces(); }
 
    // ================================================================
 
@@ -152,11 +153,9 @@ public:
    void   SetOverColorPixel(Pixel_t pix);
    void   SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
-   // ================================================================
-
-   ClassDef(REveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
+   void OnZeroRefCount() override { delete this; }
+   Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
 };
-
 
 /******************************************************************************/
 // Inlines for REveRGBAPalette

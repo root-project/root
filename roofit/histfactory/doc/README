@@ -10,7 +10,7 @@ This package was written by
 V2 Update (Feb. 2011)
 
 The original HistFactory made models that consisted of a Poisson term for each bin.  
-In this "number counting form" the dataset has one row and the collumns corresponded to the number of 
+In this "number counting form" the dataset has one row and the columns corresponded to the number of 
 events for each bin. This led to severe performance problems in statistical tools that generated 
 pseudo-experiments and evaluated likelihood ratio test statistics.  Now the HistFactory can produce the equivalent
 model as an ExtendedPdf, with a histogram shape and an overall Poisson for the total number of events.  

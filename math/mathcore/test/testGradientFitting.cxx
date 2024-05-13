@@ -1,6 +1,7 @@
 // @(#)root/test:$Id$
 // Author: Alejandro García Montoro 08/2017
 
+#include "RConfigure.h"
 #include "Fit/BinData.h"
 #include "Fit/UnBinData.h"
 #include "Fit/Fitter.h"
@@ -20,26 +21,26 @@
 template <class T>
 class GradFunc2D : public ROOT::Math::IParamMultiGradFunctionTempl<T> {
 public:
-   void SetParameters(const double *p) {
+   void SetParameters(const double *p) override {
       std::copy(p, p + NPar(), fParameters);
       // compute integral in interval [0,1][0,1]
       fIntegral = Integral(p);
    }
 
-   const double *Parameters() const { return fParameters; }
+   const double *Parameters() const override { return fParameters; }
 
-   ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const
+   ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const override
    {
       GradFunc2D<T> *f = new GradFunc2D<T>();
       f->SetParameters(fParameters);
       return f;
    }
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   unsigned int NPar() const { return 5; }
+   unsigned int NPar() const override { return 5; }
 
-   void ParameterGradient(const T *x, const double * p, T *grad) const
+   void ParameterGradient(const T *x, const double * p, T *grad) const override
    {
       if (p == nullptr) {
          ParameterGradient(x, fParameters, grad);
@@ -72,14 +73,14 @@ private:
       return fval;
    }
 
-   T DoEvalPar(const T *x, const double *p) const
+   T DoEvalPar(const T *x, const double *p) const override
    {
       if (p == nullptr)
          return DoEvalPar(x, fParameters);
       return p[0] * FVal(x,p) / fIntegral;
    }
 
-   T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const
+   T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const override
    {
       std::vector<T> grad(NPar());
       ParameterGradient(x, p, &grad[0]);
@@ -117,7 +118,7 @@ int printLevel = 0;
 template <class T>
 class GradientFittingTest : public ::testing::Test {
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       // Create TF2 from model function and initialize the fit function
       std::stringstream streamTF2;
@@ -231,15 +232,15 @@ protected:
 
    // function actually running the test.
    // We define here the condition to say that the test is valid
-   bool RunFit(ROOT::Fit::ExecutionPolicy executionPolicy) {
+   bool RunFit(ROOT::EExecutionPolicy executionPolicy) {
       fExecutionPolicy = executionPolicy;
       if (printLevel>0) {
          std::cout << "**************************************\n";
-         if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kSerial)
+         if (fExecutionPolicy == ROOT::EExecutionPolicy::kSequential)
             std::cout << "   RUN SEQUENTIAL \n";
-         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread)
+         else if (fExecutionPolicy == ROOT::EExecutionPolicy::kMultiThread)
             std::cout << "   RUN MULTI-THREAD \n";
-         else if (fExecutionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess)
+         else if (fExecutionPolicy == ROOT::EExecutionPolicy::kMultiProcess)
             std::cout << "   RUN MULTI-PROCESS \n";
 
          std::cout << "**************************************\n";
@@ -254,7 +255,7 @@ protected:
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
-   ROOT::Fit::ExecutionPolicy fExecutionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+   ROOT::EExecutionPolicy fExecutionPolicy = ROOT::EExecutionPolicy::kSequential;
    static const unsigned fNumPoints = 401;
 };
 
@@ -275,22 +276,25 @@ TYPED_TEST_SUITE_P(GradientFittingTest);
 // Test the fitting using the gradient is successful
 TYPED_TEST_P(GradientFittingTest, Sequential)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kSerial));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::EExecutionPolicy::kSequential));
 }
 
+#ifdef R__HAS_IMT
 TYPED_TEST_P(GradientFittingTest, Multithread)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Fit::ExecutionPolicy::kMultithread));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::EExecutionPolicy::kMultiThread));
 }
-
 REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential,Multithread);
+#else
+REGISTER_TYPED_TEST_SUITE_P(GradientFittingTest,Sequential);
+#endif
 
 INSTANTIATE_TYPED_TEST_SUITE_P(GradientFitting, GradientFittingTest, TestTypes);
 
 int main(int argc, char** argv) {
 
-// Disables elapsed time by default.
-  //::testing::GTEST_FLAG(print_time) = false;
+   // Disables elapsed time by default.
+   //::testing::GTEST_FLAG(print_time) = false;
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {

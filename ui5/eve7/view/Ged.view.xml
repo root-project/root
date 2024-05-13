@@ -14,7 +14,7 @@
             </OverflowToolbar>
         </headerToolbar>
         <content>
-           <l:VerticalLayout id="GED">
+           <l:VerticalLayout id="GED" width="100%">
            </l:VerticalLayout>
         </content>
     </Panel>

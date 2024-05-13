@@ -68,7 +68,7 @@ private:
 // ----------------------------------------------------------------------
 // Epilog
 
-/// throw explicity GenVector exceptions
+/// throw explicitly GenVector exceptions
 inline void Throw(GenVector_exception &e)
 {
    if (GenVector_exception::IsOn())

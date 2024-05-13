@@ -2,9 +2,7 @@
 #include "Api.h"
 #include "FastAllocString.h"
 
-#ifndef __CINT__
 static const char *what = WHAT;
-#endif
 
 static int stlLoader()
 {

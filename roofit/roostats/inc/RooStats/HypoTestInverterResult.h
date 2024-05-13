@@ -28,7 +28,7 @@ class HypoTestInverterResult : public SimpleInterval {
 public:
 
    /// default constructor
-   explicit HypoTestInverterResult(const char* name = 0);
+   explicit HypoTestInverterResult(const char *name = nullptr);
 
    /// constructor
    HypoTestInverterResult( const char* name,
@@ -38,7 +38,7 @@ public:
    HypoTestInverterResult( const HypoTestInverterResult& other, const char* name );
 
    /// destructor
-   virtual ~HypoTestInverterResult();
+   ~HypoTestInverterResult() override;
 
    /// operator =
    HypoTestInverterResult& operator = (const HypoTestInverterResult& other);
@@ -50,7 +50,7 @@ public:
    bool Add( const HypoTestInverterResult& otherResult );
 
    ///add the result of a single point (an HypoTestRsult)
-   bool Add( Double_t x, const HypoTestResult & result );
+   bool Add( double x, const HypoTestResult & result );
 
    /// function to return the value of the parameter of interest for the i^th entry in the results
    double GetXValue( int index ) const ;
@@ -96,13 +96,13 @@ public:
    int FindIndex(double xvalue) const;
 
    /// set the size of the test (rate of Type I error) (eg. 0.05 for a 95% Confidence Interval)
-   virtual void SetTestSize( Double_t size ) { fConfidenceLevel = 1.-size; }
+   virtual void SetTestSize( double size ) { fConfidenceLevel = 1.-size; }
 
    /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-   virtual void SetConfidenceLevel( Double_t cl ) { fConfidenceLevel = cl; }
+   void SetConfidenceLevel( double cl ) override { fConfidenceLevel = cl; }
 
    /// set CLs threshold for exclusion cleanup function
-   inline void SetCLsCleanupThreshold( Double_t th ) { fCLsCleanupThreshold = th; }
+   inline void SetCLsCleanupThreshold( double th ) { fCLsCleanupThreshold = th; }
 
    /// flag to switch between using CLsb (default) or CLs as confidence level
    void UseCLs( bool on = true ) { fUseCLs = on; }
@@ -113,17 +113,17 @@ public:
    bool IsTwoSided() const { return fIsTwoSided; }
 
    /// lower and upper bound of the confidence interval (to get upper/lower limits, multiply the size( = 1-confidence level ) by 2
-   Double_t LowerLimit();
-   Double_t UpperLimit();
+   double LowerLimit() override;
+   double UpperLimit() override;
 
    /// rough estimation of the error on the computed bound of the confidence interval
    /// Estimate of lower limit error
    ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
-   Double_t LowerLimitEstimatedError();
+   double LowerLimitEstimatedError();
 
    /// Estimate of lower limit error
    ///function evaluates only a rough error on the lower limit. Be careful when using this estimation
-   Double_t UpperLimitEstimatedError();
+   double UpperLimitEstimatedError();
 
    /// return expected distribution of p-values (Cls or Clsplusb)
 
@@ -157,7 +157,7 @@ public:
    double GetExpectedUpperLimit(double nsig = 0, const char * opt = "") const ;
 
 
-   double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0);
+   double FindInterpolatedLimit(double target, bool lowSearch = false, double xmin=1, double xmax=0.0);
 
    enum InterpolOption_t { kLinear, kSpline };
 
@@ -169,7 +169,7 @@ public:
 private:
 
 
-   double CalculateEstimatedError(double target, bool lower = true, double xmin = 1, double xmax = 0);
+   double CalculateEstimatedError(double target, bool lower = true, double xmin = 1, double xmax = 0.0);
 
    int FindClosestPointIndex(double target, int mode = 0, double xtarget = 0);
 
@@ -187,31 +187,30 @@ private:
 protected:
 
    bool fUseCLs;
-   bool fIsTwoSided;                  /// two sided scan (look for lower/upper limit)
+   bool fIsTwoSided;                  ///< two sided scan (look for lower/upper limit)
    bool fInterpolateLowerLimit;
    bool fInterpolateUpperLimit;
    bool fFittedLowerLimit;
    bool fFittedUpperLimit;
-   InterpolOption_t fInterpolOption;  /// interpolation option (linear or spline)
+   InterpolOption_t fInterpolOption;  ///< interpolation option (linear or spline)
 
    double fLowerLimitError;
    double fUpperLimitError;
 
    double fCLsCleanupThreshold;
 
-   static double fgAsymptoticMaxSigma;  /// max sigma value used to scan asymptotic expected p values
-   static int fgAsymptoticNumPoints;    /// number of points used to build expected p-values
+   static double fgAsymptoticMaxSigma;  ///< max sigma value used to scan asymptotic expected p values
+   static int fgAsymptoticNumPoints;    ///< number of points used to build expected p-values
 
    std::vector<double> fXValues;
 
-   TList fYObjects;       /// list of HypoTestResult for each point
-   TList fExpPValues;     /// list of expected sampling distribution for each point
+   TList fYObjects;       ///< list of HypoTestResult for each point
+   TList fExpPValues;     ///< list of expected sampling distribution for each point
 
    friend class HypoTestInverter;
    friend class HypoTestInverterPlot;
-   friend class HypoTestInverterOriginal;
 
-   ClassDef(HypoTestInverterResult,5)  /// HypoTestInverterResult class
+   ClassDefOverride(HypoTestInverterResult,5)  // HypoTestInverterResult class
 };
 }
 

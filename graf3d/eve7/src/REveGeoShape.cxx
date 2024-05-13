@@ -37,8 +37,6 @@
 #include "TGeoMatrix.h"
 #include "TVirtualGeoPainter.h"
 
-#include "json.hpp"
-
 
 namespace
 {
@@ -82,7 +80,7 @@ it gets forwarded to geo-manager and this tesselation detail is
 used when creating the buffer passed to GL.
 */
 
-TGeoManager *REX::REveGeoShape::fgGeoManager = init_geo_mangeur();
+TGeoManager *REveGeoShape::fgGeoManager = init_geo_mangeur();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return static geo-manager that is used internally to make shapes
@@ -148,26 +146,18 @@ void REveGeoShape::BuildRenderData()
 {
    if (!fShape) return;
 
-   REveGeoPolyShape *egps = nullptr;
-   std::unique_ptr<REveGeoPolyShape> tmp_egps;
+   fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
+   REveElement::BuildRenderData();
 
    if (fCompositeShape) {
-
-      egps = dynamic_cast<REveGeoPolyShape *>(fShape);
-
+      REveGeoPolyShape* egps = dynamic_cast<REveGeoPolyShape *>(fShape);
+      egps->FillRenderData(*fRenderData);
    } else {
-
-      tmp_egps = std::make_unique<REveGeoPolyShape>();
-
+      REveGeoManagerHolder gmgr(fgGeoManager);
+      std::unique_ptr<REveGeoPolyShape> tmp_egps = std::make_unique<REveGeoPolyShape>();
       tmp_egps->BuildFromShape(fShape, fNSegments);
-
-      egps = tmp_egps.get();
+      tmp_egps->FillRenderData(*fRenderData);
    }
-
-   fRenderData = std::make_unique<REveRenderData>("makeEveGeoShape");
-
-   REveElement::BuildRenderData();
-   egps->FillRenderData(*fRenderData);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,7 +309,6 @@ REveGeoShape *REveGeoShape::ImportShapeExtract(REveGeoShapeExtract* gse,
                                                REveElement*         parent)
 {
    REveGeoManagerHolder gmgr(fgGeoManager);
-   REveManager::RRedrawDisabler redrawOff(REX::gEve);
    REveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->StampObjProps();
    return gsre;

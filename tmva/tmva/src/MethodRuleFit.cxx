@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodRuleFit                                                         *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -20,7 +20,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodRuleFit
@@ -186,44 +186,44 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///
 /// #### general
 ///
-///  - RuleFitModule  <string>
+///  - RuleFitModule  `<string>`
 ///    available values are:
 ///    - RFTMVA      - use TMVA implementation
 ///    - RFFriedman  - use Friedmans original implementation
 ///
 /// #### Path search (fitting)
 ///
-///  - GDTau          <float>      gradient-directed path: fit threshold, default
-///  - GDTauPrec      <float>      gradient-directed path: precision of estimated tau
-///  - GDStep         <float>      gradient-directed path: step size
-///  - GDNSteps       <float>      gradient-directed path: number of steps
-///  - GDErrScale     <float>      stop scan when error>scale*errmin
+///  - GDTau          `<float>`      gradient-directed path: fit threshold, default
+///  - GDTauPrec      `<float>`      gradient-directed path: precision of estimated tau
+///  - GDStep         `<float>`      gradient-directed path: step size
+///  - GDNSteps       `<float>`      gradient-directed path: number of steps
+///  - GDErrScale     `<float>`      stop scan when error>scale*errmin
 ///
 /// #### Tree generation
 ///
-///  - fEventsMin     <float>      minimum fraction of events in a splittable node
-///  - fEventsMax     <float>      maximum fraction of events in a splittable node
-///  - nTrees         <float>      number of trees in forest.
-///  - ForestType     <string>
+///  - fEventsMin     `<float>`      minimum fraction of events in a splittable node
+///  - fEventsMax     `<float>`      maximum fraction of events in a splittable node
+///  - nTrees         `<float>`      number of trees in forest.
+///  - ForestType     `<string>`
 ///    available values are:
 ///    - Random    - create forest using random subsample and only random variables subset at each node
 ///    - AdaBoost  - create forest with boosted events
 ///
 /// #### Model creation
 ///
-///  - RuleMinDist    <float>      min distance allowed between rules
-///  - MinImp         <float>      minimum rule importance accepted
-///  - Model          <string>     model to be used
+///  - RuleMinDist    `<float>`      min distance allowed between rules
+///  - MinImp         `<float>`      minimum rule importance accepted
+///  - Model          `<string>`     model to be used
 ///    available values are:
-///    - ModRuleLinear <default>
+///    - ModRuleLinear `<default>`
 ///    - ModRule
 ///    - ModLinear
 ///
 /// #### Friedmans module
 ///
-///  - RFWorkDir      <string>     directory where Friedmans module (rf_go.exe) is installed
-///  - RFNrules       <int>        maximum number of rules allowed
-///  - RFNendnodes    <int>        average number of end nodes in the forest of trees
+///  - RFWorkDir      `<string>`     directory where Friedmans module (rf_go.exe) is installed
+///  - RFNrules       `<int>`        maximum number of rules allowed
+///  - RFNendnodes    `<int>`        average number of end nodes in the forest of trees
 
 void TMVA::MethodRuleFit::DeclareOptions()
 {
@@ -704,7 +704,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
          }
       }
       fout << ") rval+=" << std::setprecision(10) << (*rules)[ir]->GetCoefficient() << ";" << std::flush;
-      fout << "   // importance = " << Form("%3.3f",impr) << std::endl;
+      fout << "   // importance = " << TString::Format("%3.3f",impr) << std::endl;
    }
    fout << std::setprecision(dp);
 }
@@ -737,7 +737,7 @@ void TMVA::MethodRuleFit::MakeClassLinear( std::ostream& fout ) const
               << "*std::min( double(" << std::setprecision(10) << rens->GetLinDP(il)
               << "), std::max( double(inputValues[" << il << "]), double(" << std::setprecision(10) << rens->GetLinDM(il) << ")));"
               << std::flush;
-         fout << "   // importance = " << Form("%3.3f",imp) << std::endl;
+         fout << "   // importance = " << TString::Format("%3.3f",imp) << std::endl;
       }
    }
 }

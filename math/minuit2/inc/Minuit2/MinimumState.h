@@ -10,17 +10,15 @@
 #ifndef ROOT_Minuit2_MinimumState
 #define ROOT_Minuit2_MinimumState
 
-#include "Minuit2/MnRefCountedPointer.h"
-#include "Minuit2/BasicMinimumState.h"
+#include "Minuit2/MinimumParameters.h"
+#include "Minuit2/MinimumError.h"
+#include "Minuit2/FunctionGradient.h"
+
+#include <memory>
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
-
-class MinimumParameters;
-class MinimumError;
-class FunctionGradient;
+namespace Minuit2 {
 
 /** MinimumState keeps the information (position, Gradient, 2nd deriv, etc)
     after one minimization step (usually in MinimumBuilder).
@@ -29,54 +27,70 @@ class FunctionGradient;
 class MinimumState {
 
 public:
+   /// Invalid state.
+   MinimumState(unsigned int n) : MinimumState(MinimumParameters(n, 0.0), MinimumError(n), FunctionGradient(n), 0.0, 0)
+   {
+   }
 
-  /** invalid state */
-   MinimumState(unsigned int n) :
-      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(n,0.,0.,0.))) {}
-   /** state without parameters and errors (only function value an, edm and nfcn) */
-   MinimumState(double fval, double edm, int nfcn) :
-      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(0, fval, edm, nfcn))) {}
-  /** state with parameters only (from stepping methods like Simplex, Scan) */
-   MinimumState(const MinimumParameters& states, double edm, int nfcn) :
-      fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, edm, nfcn))) {}
+   /// Constructor without parameter values, but with function value, edm and nfcn.
+   /// This constructor will result in a state that is flagged as not valid
+   MinimumState(double fval, double edm, int nfcn)
+      : MinimumState(MinimumParameters(0, fval), MinimumError(0), FunctionGradient(0), edm, nfcn)
+   {
+   }
 
-  /** state with parameters, Gradient and covariance (from Gradient methods
-      such as Migrad) */
-  MinimumState(const MinimumParameters& states, const MinimumError& err,
-               const FunctionGradient& grad, double edm, int nfcn) :
-     fData(MnRefCountedPointer<BasicMinimumState>(new BasicMinimumState(states, err, grad, edm, nfcn))) {}
+   /// Constructor with only parameter values, edm and nfcn, but without errors (covariance).
+   /// The resulting state it will be considered valid, since it contains the parameter values,
+   /// although it has not the error matrix (MinimumError) and  HasCovariance() returns false.
+   MinimumState(const MinimumParameters &states, double edm, int nfcn)
+      : MinimumState(states, MinimumError(states.Vec().size()), FunctionGradient(states.Vec().size()), edm, nfcn)
+   {
+   }
 
-  ~MinimumState() {}
+   /// Constructor with parameters values, errors and gradient
+   MinimumState(const MinimumParameters &states, const MinimumError &err, const FunctionGradient &grad, double edm,
+                int nfcn)
+      : fPtr{new Data{states, err, grad, edm, nfcn}}
+   {
+   }
 
-  MinimumState(const MinimumState& state) : fData(state.fData) {}
+   const MinimumParameters &Parameters() const { return fPtr->fParameters; }
+   const MnAlgebraicVector &Vec() const { return Parameters().Vec(); }
+   int size() const { return Vec().size(); }
 
-  MinimumState& operator=(const MinimumState& state) {
-    fData = state.fData;
-    return *this;
-  }
+   const MinimumError &Error() const { return fPtr->fError; }
+   const FunctionGradient &Gradient() const { return fPtr->fGradient; }
+   double Fval() const { return Parameters().Fval(); }
+   double Edm() const { return fPtr->fEDM; }
+   int NFcn() const { return fPtr->fNFcn; }
 
-  const MinimumParameters& Parameters() const {return fData->Parameters();}
-  const MnAlgebraicVector& Vec() const {return fData->Vec();}
-  int size() const {return fData->size();}
+   bool IsValid() const
+   {
+      if (HasParameters() && HasCovariance())
+         return Parameters().IsValid() && Error().IsValid();
+      else if (HasParameters())
+         return Parameters().IsValid();
+      else
+         return false;
+   }
 
-  const MinimumError& Error() const {return fData->Error();}
-  const FunctionGradient& Gradient() const {return fData->Gradient();}
-  double Fval() const {return fData->Fval();}
-  double Edm() const {return fData->Edm();}
-  int NFcn() const {return fData->NFcn();}
-
-  bool IsValid() const {return fData->IsValid();}
-
-  bool HasParameters() const {return fData->HasParameters();}
-  bool HasCovariance() const {return fData->HasCovariance();}
+   bool HasParameters() const { return Parameters().IsValid(); }
+   bool HasCovariance() const { return Error().IsAvailable(); }
 
 private:
+   struct Data {
+      MinimumParameters fParameters;
+      MinimumError fError;
+      FunctionGradient fGradient;
+      double fEDM;
+      int fNFcn;
+   };
 
-  MnRefCountedPointer<BasicMinimumState> fData;
+   std::shared_ptr<Data> fPtr;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_MinimumState
+#endif // ROOT_Minuit2_MinimumState

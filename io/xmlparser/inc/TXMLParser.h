@@ -44,7 +44,7 @@ protected:
 
 public:
    TXMLParser();
-   virtual ~TXMLParser();
+   ~TXMLParser() override;
 
    void                SetValidate(Bool_t val = kTRUE);
    Bool_t              GetValidate() const { return fValidate; }
@@ -66,7 +66,7 @@ public:
    const char         *GetValidateError() const { return fValidateError; }
    const char         *GetValidateWarning() const { return fValidateWarning; }
 
-   ClassDef(TXMLParser,0);  // XML SAX parser
+   ClassDefOverride(TXMLParser,0);  // XML SAX parser
 };
 
 #endif

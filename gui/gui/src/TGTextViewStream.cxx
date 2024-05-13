@@ -8,16 +8,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextViewStream                                                     //
-//                                                                      //
-// A TGTextViewStream is a text viewer widget. It is a specialization   //
-// of TGTextView and std::ostream, and it uses a TGTextViewStreamBuf,   //
-// who inherits from std::streambuf, allowing to stream text directly   //
-// to the text view in a cout-like fashion                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextViewStream
+    \ingroup guiwidgets
+
+A TGTextViewStream is a text viewer widget. It is a specialization
+of TGTextView and std::ostream, and it uses a TGTextViewStreamBuf,
+who inherits from std::streambuf, allowing to stream text directly
+to the text view in a cout-like fashion
+
+*/
+
 
 #include "TGTextViewStream.h"
 #include "TSystem.h"
@@ -36,7 +37,7 @@ TGTextViewStreamBuf::TGTextViewStreamBuf(TGTextView *textview) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Method called to put a character into the controlled output sequence 
+/// Method called to put a character into the controlled output sequence
 /// without changing the current position.
 
 Int_t TGTextViewStreamBuf::overflow(Int_t c)

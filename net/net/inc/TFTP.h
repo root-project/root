@@ -52,10 +52,10 @@ private:
 
    TFTP(): fHost(), fUser(), fPort(0), fParallel(0), fWindowSize(0),
       fProtocol(0), fLastBlock(0), fBlockSize(0), fMode(0),
-      fRestartAt(0), fCurrentFile(), fSocket(0), fBytesWrite(0),
+      fRestartAt(0), fCurrentFile(), fSocket(nullptr), fBytesWrite(0),
       fBytesRead(0), fDir(kFALSE) { }
-   TFTP(const TFTP &);              // not implemented
-   void   operator=(const TFTP &);  // idem
+   TFTP(const TFTP &) = delete;
+   void   operator=(const TFTP &) = delete;
    void   Init(const char *url, Int_t parallel, Int_t wsize);
    void   PrintError(const char *where, Int_t err) const;
    Int_t  Recv(Int_t &status, EMessageTypes &kind) const;
@@ -73,7 +73,7 @@ public:
    };
 
    TFTP(const char *url, Int_t parallel = 1, Int_t wsize = kDfltWindowSize,
-        TSocket *sock = 0);
+        TSocket *sock = nullptr);
    virtual ~TFTP();
 
    void     SetBlockSize(Int_t blockSize);
@@ -83,10 +83,10 @@ public:
    Int_t    GetMode() const { return fMode; }
 
    Bool_t   IsOpen() const { return fSocket ? kTRUE : kFALSE; }
-   void     Print(Option_t *opt = "") const;
+   void     Print(Option_t *opt = "") const override;
 
-   Long64_t PutFile(const char *file, const char *remoteName = 0);
-   Long64_t GetFile(const char *file, const char *localName = 0);
+   Long64_t PutFile(const char *file, const char *remoteName = nullptr);
+   Long64_t GetFile(const char *file, const char *localName = nullptr);
 
    Bool_t   AccessPathName(const char *path, EAccessMode mode = kFileExists,
                            Bool_t print = kFALSE);
@@ -108,12 +108,12 @@ public:
    TSocket *GetSocket() const { return fSocket; }
 
    // standard ftp equivalents...
-   void put(const char *file, const char *remoteName = 0) { PutFile(file, remoteName); }
-   void get(const char *file, const char *localName = 0) { GetFile(file, localName); }
+   void put(const char *file, const char *remoteName = nullptr) { PutFile(file, remoteName); }
+   void get(const char *file, const char *localName = nullptr) { GetFile(file, localName); }
    void cd(const char *dir) const { ChangeDirectory(dir); }
    void mkdir(const char *dir) const { MakeDirectory(dir); }
    void rmdir(const char *dir) const { DeleteDirectory(dir); }
-   void ls(Option_t *cmd = "") const { ListDirectory(cmd); }
+   void ls(Option_t *cmd = "") const override { ListDirectory(cmd); }
    void pwd() const { PrintDirectory(); }
    void mv(const char *file1, const char *file2) const { RenameFile(file1, file2); }
    void rm(const char *file) const { DeleteFile(file); }
@@ -122,7 +122,7 @@ public:
    void bin() { Binary(); }
    void ascii() { Ascii(); }
 
-   ClassDef(TFTP, 1)  // File Transfer Protocol class using rootd
+   ClassDefOverride(TFTP, 1)  // File Transfer Protocol class using rootd
 };
 
 #endif

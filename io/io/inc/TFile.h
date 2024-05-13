@@ -39,7 +39,6 @@
 #include <mutex>
 #endif
 
-
 class TMap;
 class TFree;
 class TArrayC;
@@ -113,10 +112,12 @@ protected:
    TList           *fInfoCache{nullptr};      ///<!Cached list of the streamer infos in this file
    TList           *fOpenPhases{nullptr};     ///<!Time info about open phases
 
+   bool             fGlobalRegistration = true; ///<! if true, bypass use of global lists
+
 #ifdef R__USE_IMT
    std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
-   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 #endif
+   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
@@ -180,6 +181,13 @@ private:
 public:
    /// TFile status bits. BIT(13) is taken up by TObject
    enum EStatusBits {
+      // Produce files forward compatible with (unpatched) version older than
+      // v6.30 by recording the internal bits kIsOnHeap and kNotDeleted; Older
+      // releases were not explicitly setting those bits to the correct value
+      // but instead used verbatim the value stored in the file.
+      // Note that to avoid a circular dependency, this value is used
+      // hard coded in TObject.cxx.
+      k630forwardCompatibility = BIT(2),
       kRecovered     = BIT(10),
       kHasReferences = BIT(11),
       kDevNull       = BIT(12),
@@ -195,7 +203,7 @@ public:
 
    TFile();
    TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
-   virtual ~TFile();
+   ~TFile() override;
 
            void        Close(Option_t *option="") override; // *MENU*
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
@@ -271,7 +279,7 @@ public:
    virtual Int_t       Recover();
    virtual Int_t       ReOpen(Option_t *mode);
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
+   virtual void        SetCacheRead(TFileCacheRead *cache, TObject *tree = nullptr, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
    virtual void        SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
@@ -321,9 +329,6 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
-   static Bool_t       SetCacheFileDir(ROOT::Internal::TStringView cacheDir, Bool_t operateDisconnected = kTRUE,
-                                       Bool_t forceCacheread = kFALSE)
-     { return SetCacheFileDir(std::string_view(cacheDir), operateDisconnected, forceCacheread); }
    static Bool_t       SetCacheFileDir(std::string_view cacheDir, Bool_t operateDisconnected = kTRUE,
                                        Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();
@@ -339,13 +344,7 @@ public:
    ClassDefOverride(TFile,8)  //ROOT file
 };
 
-#ifndef __CINT__
 #define gFile (TFile::CurrentFile())
-
-#elif defined(__MAKECINT__)
-// To properly handle the use of gFile in header files (in static declarations)
-R__EXTERN TFile   *gFile;
-#endif
 
 /**
 \class TFileOpenHandle
@@ -355,7 +354,6 @@ Class holding info about the file being opened
 class TFileOpenHandle : public TNamed {
 
 friend class TFile;
-friend class TAlienFile;
 
 private:
    TString  fOpt;            ///< Options
@@ -374,7 +372,7 @@ private:
    TFile      *GetFile() const { return fFile; }
 
 public:
-   ~TFileOpenHandle() { }
+   ~TFileOpenHandle() override { }
 
    Bool_t      Matches(const char *name);
 

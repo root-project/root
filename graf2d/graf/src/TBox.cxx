@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <iostream>
 #include "TROOT.h"
@@ -41,7 +41,7 @@ A box has line attributes (see TAttLine) and fill area attributes (see TAttFill)
 
 TBox::TBox(): TObject(), TAttLine(), TAttFill()
 {
-   fTip = 0;
+   fTip      = nullptr;
    fX1       = 0.;
    fY1       = 0.;
    fX2       = 0.;
@@ -60,7 +60,7 @@ TBox::TBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
    if (y2 >= y1) {fY1  =y1; fY2 = y2;}
    else          {fY1 = y2; fY2 = y1;}
    fResizing = kFALSE;
-   fTip = 0;
+   fTip = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,7 +119,7 @@ void TBox::Copy(TObject &obj) const
    ((TBox&)obj).fX2 = fX2;
    ((TBox&)obj).fY2 = fY2;
    ((TBox&)obj).fResizing = fResizing;
-   ((TBox&)obj).fTip = 0;   //FIXME
+   ((TBox&)obj).fTip = nullptr;   //FIXME
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +134,7 @@ void TBox::Copy(TObject &obj) const
 
 Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);
@@ -619,7 +620,7 @@ void TBox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       ExecuteEvent(kButton1Down, px, py);
 
-      while (1) {
+      while (true) {
          px = py = 0;
          event = gVirtualX->RequestLocator(1, 1, px, py);
 
@@ -668,7 +669,7 @@ void TBox::ls(Option_t *) const
 
 void TBox::Paint(Option_t *option)
 {
-   PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
+   if(gPad) PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,6 +677,8 @@ void TBox::Paint(Option_t *option)
 
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
+   if (!gPad) return;
+
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
 
@@ -735,7 +738,7 @@ void TBox::SetToolTipText(const char *text, Long_t delayms)
 
    if (fTip) {
       gPad->DeleteToolTip(fTip);
-      fTip = 0;
+      fTip = nullptr;
    }
 
    if (text && strlen(text))
@@ -776,7 +779,8 @@ void TBox::Streamer(TBuffer &R__b)
 
 Rectangle_t TBox::GetBBox()
 {
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
    px2 = gPad->XtoPixel(fX2);
@@ -800,7 +804,8 @@ Rectangle_t TBox::GetBBox()
 
 TPoint TBox::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
@@ -811,6 +816,7 @@ TPoint TBox::GetBBoxCenter()
 
 void TBox::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fX2>fX1) {
@@ -836,6 +842,7 @@ void TBox::SetBBoxCenter(const TPoint &p)
 
 void TBox::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    if (x<0) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
@@ -853,6 +860,7 @@ void TBox::SetBBoxCenterX(const Int_t x)
 
 void TBox::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    if (y<0) return;
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
@@ -872,6 +880,7 @@ void TBox::SetBBoxCenterY(const Int_t y)
 void TBox::SetBBoxX1(const Int_t x)
 {
    if (x<0) return;
+   if (!gPad) return;
    fX1 = gPad->PixeltoX(x);
 }
 
@@ -882,6 +891,7 @@ void TBox::SetBBoxX1(const Int_t x)
 void TBox::SetBBoxX2(const Int_t x)
 {
    if (x<0) return;
+   if (!gPad) return;
    fX2 = gPad->PixeltoX(x);
 }
 
@@ -891,6 +901,7 @@ void TBox::SetBBoxX2(const Int_t x)
 void TBox::SetBBoxY1(const Int_t y)
 {
    if (y<0) return;
+   if (!gPad) return;
    fY2 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }
 
@@ -901,5 +912,6 @@ void TBox::SetBBoxY1(const Int_t y)
 void TBox::SetBBoxY2(const Int_t y)
 {
    if (y<0) return;
+   if (!gPad) return;
    fY1 = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }

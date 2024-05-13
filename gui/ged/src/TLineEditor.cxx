@@ -9,18 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TLineEditor                                                        //
-//                                                                      //
-//  Implements GUI for editing line attributes: shape, size, angle.    //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TLineEditor.gif">
+/** \class TLineEditor
+    \ingroup ged
+
+Implements GUI for editing line attributes: shape, size, angle.
+
 */
-//End_Html
 
 
 #include "TLineEditor.h"

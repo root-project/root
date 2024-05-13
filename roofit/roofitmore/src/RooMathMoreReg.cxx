@@ -24,7 +24,11 @@
 #include "Math/SpecFuncMathMore.h"
 #include "Math/DistFuncMathMore.h"
 
-static RooMathMoreReg dummy ;
+namespace {
+
+RooMathMoreReg dummy ;
+
+}
 
 RooMathMoreReg::RooMathMoreReg()
 {

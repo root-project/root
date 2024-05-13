@@ -60,8 +60,8 @@ ClassImp(TDCacheFile);
 ///
 /// A dCache file is the same as a TFile
 /// except that it is being accessed via a dCache server. The url
-/// argument must be of the form: \a dcache:/pnfs/<path>/<file>.root or
-/// \a dcap://<nodename.org>/<path>/<file>.root. If the file specified in the
+/// argument must be of the form: `dcache:/pnfs/<path>/<file>.root` or
+/// `dcap://<nodename.org>/<path>/<file>.root`. If the file specified in the
 /// URL does not exist, is not accessable or can not be created the kZombie
 /// bit will be set in the TDCacheFile object. Use IsZombie() to see if the
 /// file is accessable. For a description of the option and other arguments
@@ -520,6 +520,7 @@ Int_t TDCacheFile::SysSync(Int_t fd)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get info about a file: id, size, flags, modification time.
 ///
+/// \param[in] fd ignored
 /// \param[in] id (statbuf.st_dev << 24) + statbuf.st_ino
 /// \param[in] size The file size
 /// \param[in] flags File type: 0 is regular file, bit 0 set executable, bit 1 set directory, bit 2 set special file (socket, fifo, pipe, etc.)
@@ -527,7 +528,7 @@ Int_t TDCacheFile::SysSync(Int_t fd)
 /// The function returns 0 in case of success and 1 if the file could
 /// not be stat'ed.
 
-Int_t TDCacheFile::SysStat(Int_t, Long_t *id, Long64_t *size,
+Int_t TDCacheFile::SysStat(Int_t /*fd*/, Long_t *id, Long64_t *size,
                            Long_t *flags, Long_t *modtime)
 {
    // If in read mode, uses the cached file status, if available, to avoid

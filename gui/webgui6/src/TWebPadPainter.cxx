@@ -11,17 +11,17 @@
 #include "TWebPadPainter.h"
 #include "TError.h"
 #include "TImage.h"
-#include "TVirtualPad.h"
+#include "TPad.h"
 #include "TWebCanvas.h"
-#include "TBufferJSON.h"
-
-#include <ROOT/RMakeUnique.hxx>
 
 
 /** \class TWebPadPainter
-\ingroup gpad
+\ingroup webgui6
+\brief Implement TVirtualPadPainter which abstracts painting operations.
 
-Implement TVirtualPadPainter which abstracts painting operations.
+TWebPadPainter tries to support old Paint methods of the ROOT classes.
+Main classes (like histograms or graphs) should be painted on JavaScript side
+
 */
 
 
@@ -293,7 +293,8 @@ void TWebPadPainter::DrawTextNDC(Double_t  u , Double_t v, const wchar_t * /*tex
 
 void TWebPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t gtype) const
 {
-   if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
-      TWebCanvas::ProduceImage(pad->GetCanvas(), fileName);
+   (void) gtype;
+   // if ((gtype == TImage::kPng) || (gtype == TImage::kJpeg))
+   TWebCanvas::ProduceImage(dynamic_cast<TPad *>(pad), fileName);
 }
 

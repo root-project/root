@@ -43,8 +43,6 @@ master server.
 #include <exception>
 #include <new>
 
-using namespace std;
-
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
@@ -156,7 +154,7 @@ class TProofServTerminationHandler : public TSignalHandler {
 public:
    TProofServTerminationHandler(TProofServ *s)
       : TSignalHandler(kSigTermination, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +175,7 @@ class TProofServInterruptHandler : public TSignalHandler {
 public:
    TProofServInterruptHandler(TProofServ *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -200,7 +198,7 @@ class TProofServSigPipeHandler : public TSignalHandler {
 public:
    TProofServSigPipeHandler(TProofServ *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -220,8 +218,8 @@ class TProofServInputHandler : public TFileHandler {
 public:
    TProofServInputHandler(TProofServ *s, Int_t fd) : TFileHandler(fd, 1)
       { fServ = s; }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1277,7 +1275,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and handle command line options. Fixed format:
-/// "proofserv"|"proofslave" <confdir>
+/// "proofserv"|"proofslave" `<confdir>`
 
 void TProofServ::GetOptions(Int_t *argc, char **argv)
 {
@@ -2574,7 +2572,7 @@ void TProofServ::Reset(const char *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Receive a file, either sent by a client or a master server.
 /// If bin is true it is a binary file, other wise it is an ASCII
-/// file and we need to check for Windows \r tokens. Returns -1 in
+/// file and we need to check for Windows \\r tokens. Returns -1 in
 /// case of error, 0 otherwise.
 
 Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
@@ -3079,7 +3077,6 @@ Int_t TProofServ::SetupCommon()
       Info("SetupCommon", "data directory set to %s", fDataDir.Data());
 
    // Check and apply possible options
-   // (see http://root.cern.ch/drupal/content/configuration-reference-guide#datadir)
    TString dataDirOpts = gEnv->GetValue("ProofServ.DataDirOpts","");
    if (!dataDirOpts.IsNull()) {
       // Do they apply to this server type
@@ -5985,7 +5982,7 @@ Int_t TProofServ::GetPriority()
 ////////////////////////////////////////////////////////////////////////////////
 /// Send an asychronous message to the master / client .
 /// Masters will forward up the message to the client.
-/// The client prints 'msg' of stderr and adds a '\n'/'\r' depending on
+/// The client prints 'msg' of stderr and adds a '\\n'/'\\r' depending on
 /// 'lf' being kTRUE (default) or kFALSE.
 /// Returns the return value from TSocket::Send(TMessage &) .
 

@@ -18,7 +18,7 @@
 // TSelectorScalar                                                      //
 //                                                                      //
 // Named scalar type, based on Long64_t, streamable, storable and       //
-// mergable. Ideally to be used in tree selectors in the PROOF          //
+// mergeable. Ideally to be used in tree selectors in the PROOF         //
 // environment due to its merge functionality which allows a single     //
 // merged value to be returned to the user.                             //
 //                                                                      //
@@ -37,12 +37,12 @@ class TSelectorScalar : public TParameter<Long64_t> {
 public:
    TSelectorScalar(const char *name = "", Long64_t val = 0)
              : TParameter<Long64_t>(name, val) { }
-   ~TSelectorScalar() { }
+   ~TSelectorScalar() override { }
 
    void     Inc(Long_t n = 1);
-   Int_t    Merge(TCollection *list);
+   Int_t    Merge(TCollection *list) override;
 
-   ClassDef(TSelectorScalar,1)  //Mergable scalar
+   ClassDefOverride(TSelectorScalar,1)  // Mergeable scalar
 };
 
 

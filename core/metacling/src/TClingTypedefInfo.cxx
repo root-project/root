@@ -57,7 +57,7 @@ TClingTypedefInfo::TClingTypedefInfo(cling::Interpreter *interp,
 
 void TClingTypedefInfo::Init(const char *name)
 {
-   fDecl = 0;
+   fDecl = nullptr;
 
    // Reset the iterator to invalid.
    fFirstTime = true;
@@ -149,7 +149,7 @@ int TClingTypedefInfo::InternalNext()
          // Check for final termination.
          if (!*fIter) {
             // We have reached the end of the translation unit, all done.
-            fDecl = 0;
+            fDecl = nullptr;
             return 0;
          }
       }
@@ -200,6 +200,8 @@ int TClingTypedefInfo::Size() const
    }
    clang::ASTContext &context = fDecl->getASTContext();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
+   if (!td)
+      return 0; // should never happens
    clang::QualType qt = td->getUnderlyingType();
    if (qt->isDependentType()) {
       // The underlying type is dependent on a template parameter,
@@ -235,6 +237,8 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    TTHREAD_TLS_DECL( std::string, truename);
    truename.clear();
    const clang::TypedefNameDecl *td = llvm::dyn_cast<clang::TypedefNameDecl>(fDecl);
+   if (!td)
+      return "(badcast)";
    clang::QualType underlyingType = td->getUnderlyingType();
    if (underlyingType->isBooleanType()) {
       return "bool";
@@ -242,7 +246,7 @@ const char *TClingTypedefInfo::TrueName(const ROOT::TMetaUtils::TNormalizedCtxt 
    const clang::ASTContext &ctxt = fInterp->getCI()->getASTContext();
    ROOT::TMetaUtils::GetNormalizedName(truename, ctxt.getTypedefType(td), *fInterp, normCtxt);
 
-   return truename.c_str();
+   return truename.c_str();  // NOLINT
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -267,7 +271,7 @@ const char *TClingTypedefInfo::Name() const
 const char *TClingTypedefInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
    //if (fTitle.size())

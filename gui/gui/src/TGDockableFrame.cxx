@@ -20,16 +20,19 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A TGDockableFrame is a frame with handles that allow it to be        //
-// undocked (i.e. put in a transient frame of its own) and to be docked //
-// again or hidden and shown again. It uses the TGDockButton, which is  //
-// a button with two vertical bars (||) and TGDockHideButton, which is  //
-// a button with a small triangle. The TGUndockedFrame is a transient   //
-// frame that on closure will put the frame back in the dock.           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGDockableFrame
+    \ingroup guiwidgets
+
+A frame with handles that allow it to be
+undocked (i.e. put in a transient frame of its own) and to be docked
+again or hidden and shown again. It uses the TGDockButton, which is
+a button with two vertical bars (||) and TGDockHideButton, which is
+a button with a small triangle. The TGUndockedFrame is a transient
+frame that on closure will put the frame back in the dock.
+
+*/
+
 
 #include "TColor.h"
 #include "TGFrame.h"
@@ -216,7 +219,7 @@ void TGUndockedFrame::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dockable frame widget.
 
-TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
+TGDockableFrame::TGDockableFrame(const TGWindow *p, Int_t id, UInt_t /*options*/)
    : TGCompositeFrame(p, 10, 10, kHorizontalFrame), TGWidget(id)
 {
    fMsgWindow = fParent;
@@ -385,7 +388,7 @@ void TGDockableFrame::HideContainer()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process dockable frame messages.
 
-Bool_t TGDockableFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGDockableFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

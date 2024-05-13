@@ -10,12 +10,11 @@
 #ifndef ROOT_Minuit2_MnMachinePrecision
 #define ROOT_Minuit2_MnMachinePrecision
 
-#include <math.h>
+#include <cmath>
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 /**
     Sets the relative floating point (double) arithmetic precision.
@@ -33,34 +32,32 @@ namespace ROOT {
 class MnMachinePrecision {
 
 public:
+   MnMachinePrecision();
 
-  MnMachinePrecision();
+   /// eps returns the smallest possible number so that 1.+eps > 1.
+   double Eps() const { return fEpsMac; }
 
+   /// eps2 returns 2*sqrt(eps)
+   double Eps2() const { return fEpsMa2; }
 
-  /// eps returns the smallest possible number so that 1.+eps > 1.
-  double Eps() const {return fEpsMac;}
-
-  /// eps2 returns 2*sqrt(eps)
-  double Eps2() const {return fEpsMa2;}
-
-  /// override Minuit's own determination
-  void SetPrecision(double prec) {
-    fEpsMac = prec;
-    fEpsMa2 = 2.*sqrt(fEpsMac);
-  }
+   /// override Minuit's own determination
+   void SetPrecision(double prec)
+   {
+      fEpsMac = prec;
+      fEpsMa2 = 2. * std::sqrt(fEpsMac);
+   }
 
    /// compute Machine precision directly instead
    /// of using default values from std::numeric_limits
-   void ComputePrecision(); 
+   void ComputePrecision();
 
 private:
-
-  double fEpsMac;
-  double fEpsMa2;
+   double fEpsMac;
+   double fEpsMa2;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_MnMachinePrecision
+#endif // ROOT_Minuit2_MnMachinePrecision

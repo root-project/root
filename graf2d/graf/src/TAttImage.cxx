@@ -92,7 +92,7 @@ This class provides a way to edit the palette via a GUI.
 #include "TColor.h"
 #include "TMath.h"
 #include "TStyle.h"
-
+#include <vector>
 
 ClassImp(TPaletteEditor);
 ClassImp(TAttImage);
@@ -161,18 +161,21 @@ public:
       }
    }
 
-   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) {
+   Int_t FindColor(UShort_t r, UShort_t g, UShort_t b) override
+   {
       Int_t ri = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)r);
       Int_t gi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)g);
       Int_t bi = TMath:: BinarySearch(6, (const Short_t*)gWebBase, (Short_t)b);
       return fCLUT[ri][gi][bi];
    }
 
-   Int_t *GetRootColors() {
-      static Int_t *gRootColors = 0;
-      if (gRootColors) return gRootColors;
+   Int_t *GetRootColors() override
+   {
+      static std::vector<Int_t> gRootColors;
+      if (!gRootColors.empty())
+         return gRootColors.data();
 
-      gRootColors = new Int_t[216];
+      gRootColors.resize(216);
 
       int i = 0;
       for (int r = 0; r < 6; r++) {
@@ -183,7 +186,7 @@ public:
             }
          }
       }
-      return gRootColors;
+      return gRootColors.data();
    }
 };
 
@@ -242,7 +245,7 @@ public:
       }
    }
 
-   Int_t *GetRootColors() { return gDefHistRoot; }
+   Int_t *GetRootColors() override { return gDefHistRoot; }
 };
 
 TImagePalette *gHistImagePalette = new TDefHistImagePalette();
@@ -269,12 +272,6 @@ void TPaletteEditor::CloseWindow()
 
 TImagePalette::TImagePalette()
 {
-   fNumPoints     = 0;
-   fPoints        = 0;
-   fColorRed      = 0;
-   fColorGreen    = 0;
-   fColorBlue     = 0;
-   fColorAlpha    = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,20 +313,13 @@ TImagePalette::TImagePalette(const TImagePalette &palette) : TObject(palette)
 
 TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
 {
-   fNumPoints  = 0;
-   fPoints     = 0;
-   fColorRed   = 0;
-   fColorGreen = 0;
-   fColorBlue  = 0;
-   fColorAlpha = 0;
-
    Int_t i;
    static Int_t palette[50] = {19,18,17,16,15,14,13,12,11,20,
                         21,22,23,24,25,26,27,28,29,30, 8,
                         31,32,33,34,35,36,37,38,39,40, 9,
                         41,42,43,44,45,47,48,49,46,50, 2,
                          7, 6, 5, 4, 3, 112,1};
-   TColor *col = 0;
+   TColor *col = nullptr;
    Float_t step = 0;
    // set default palette (pad type)
    if (ncolors <= 0) {
@@ -355,7 +345,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
    }
 
    // set Pretty Palette Spectrum Violet->Red
-   if (ncolors == 1 && colors == 0) {
+   if (ncolors == 1 && !colors) {
       ncolors = 50;
       fNumPoints  = ncolors;
       step = 1./fNumPoints;
@@ -386,7 +376,7 @@ TImagePalette::TImagePalette(Int_t ncolors, Int_t *colors)
    }
 
    // set DeepSea palette
-   if (colors == 0 && ncolors > 50) {
+   if (!colors && ncolors > 50) {
       static const Int_t nRGBs = 5;
       static Float_t stops[nRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
       static Float_t red[nRGBs] = { 0.00, 0.09, 0.18, 0.09, 0.00 };
@@ -506,15 +496,16 @@ Int_t TImagePalette::FindColor(UShort_t r, UShort_t g, UShort_t b)
 
 Int_t *TImagePalette::GetRootColors()
 {
-   static Int_t *gRootColors = 0;
-   if (gRootColors) return gRootColors;
+   static std::vector<Int_t> gRootColors;
+   if (!gRootColors.empty())
+      return gRootColors.data();
 
-   gRootColors = new Int_t[fNumPoints];
+   gRootColors.resize(fNumPoints);
 
-   for (UInt_t i = 0; i < fNumPoints; i++) {
+   for (UInt_t i = 0; i < fNumPoints; i++)
       gRootColors[i] = TColor::GetColor(fColorRed[i], fColorGreen[i], fColorBlue[i]);
-   }
-   return gRootColors;
+
+   return gRootColors.data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -524,7 +515,7 @@ Int_t *TImagePalette::GetRootColors()
 TAttImage::TAttImage()
 {
    ResetAttImage();
-   fPaletteEditor = 0;
+   fPaletteEditor = nullptr;
    fPaletteEnabled = kTRUE;
 }
 
@@ -549,7 +540,7 @@ TAttImage::TAttImage(EImageQuality lquality, UInt_t lcompression,
    fImageQuality = lquality;
    fImageCompression = (lcompression > 100) ? 100 : lcompression;
    fConstRatio = constRatio;
-   fPaletteEditor = 0;
+   fPaletteEditor = nullptr;
    fPaletteEnabled = kTRUE;
 }
 
@@ -779,13 +770,10 @@ TImagePalette* TImagePalette::CreateCOLPalette(Int_t ncontours)
 
 void TAttImage::StartPaletteEditor()
 {
-   if (fPaletteEditor == 0) {
-      TPluginHandler *h;
-
-      if ((h = gROOT->GetPluginManager()->FindHandler("TPaletteEditor"))) {
+   if (!fPaletteEditor)
+      if (auto h = gROOT->GetPluginManager()->FindHandler("TPaletteEditor")) {
          if (h->LoadPlugin() == -1)
             return;
          fPaletteEditor = (TPaletteEditor *) h->ExecPlugin(3, this, 80, 25);
       }
-   }
 }

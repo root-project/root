@@ -1,9 +1,7 @@
 /// \file gui_handler.cxx
-/// \ingroup WebGui
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2017-06-29
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2017-06-29
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -41,6 +39,13 @@
 #include "TSystem.h"
 #include "TBase64.h"
 #include <ROOT/RLogger.hxx>
+
+
+ROOT::Experimental::RLogChannel &CefWebDisplayLog()
+{
+   static ROOT::Experimental::RLogChannel sChannel("ROOT.CefWebDisplay");
+   return sChannel;
+}
 
 
 GuiHandler::GuiHandler(bool use_views) : fUseViews(use_views), is_closing_(false)
@@ -118,9 +123,8 @@ void GuiHandler::OnBeforeClose(CefRefPtr<CefBrowser> browser)
 // Returns a data: URI with the specified contents.
 std::string GuiHandler::GetDataURI(const std::string& data, const std::string& mime_type)
 {
-    return "data:" + mime_type + ";base64," +
-           CefURIEncode(CefBase64Encode(data.data(), data.size()), false)
-            .ToString();
+    return std::string("data:") + mime_type + ";base64," +
+           CefURIEncode(CefBase64Encode(data.data(), data.size()), false).ToString();
 }
 
 
@@ -134,12 +138,14 @@ void GuiHandler::OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> 
       return;
 
    // Display a load error message.
+   /*
    std::stringstream ss;
    ss << "<html><body bgcolor=\"white\">"
          "<h2>Failed to load URL "
       << failedUrl.ToString().substr(0,100) << " with error " << errorText.ToString() << " (" << errorCode
       << ").</h2></body></html>";
-   // frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+   frame->LoadURL(GetDataURI(ss.str(), "text/html"));
+   */
 
    printf("Fail to load URL %s\n", failedUrl.ToString().substr(0,100).c_str());
 }
@@ -148,7 +154,7 @@ void GuiHandler::CloseAllBrowsers(bool force_close)
 {
    if (!CefCurrentlyOn(TID_UI)) {
       // Execute on the UI thread.
-      CefPostTask(TID_UI, base::Bind(&GuiHandler::CloseAllBrowsers, this, force_close));
+      CefPostTask(TID_UI, base::BindOnce(&GuiHandler::CloseAllBrowsers, this, force_close));
       return;
    }
 
@@ -169,15 +175,15 @@ bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
    switch (level) {
    case LOGSEVERITY_WARNING:
       if (fConsole > -1)
-         R__WARNING_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_WARNING(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    case LOGSEVERITY_ERROR:
       if (fConsole > -2)
-         R__ERROR_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_ERROR(CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    default:
       if (fConsole > 0)
-         R__DEBUG_HERE("CEF") << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
+         R__LOG_DEBUG(0, CefWebDisplayLog()) << Form("CEF: %s:%d: %s", src.c_str(), line, message.ToString().c_str());
       break;
    }
 
@@ -188,16 +194,12 @@ cef_return_value_t GuiHandler::OnBeforeResourceLoad(
     CefRefPtr<CefBrowser> browser,
     CefRefPtr<CefFrame> frame,
     CefRefPtr<CefRequest> request,
-    CefRefPtr<CefRequestCallback> callback) {
+    CefRefPtr<CefCallback> callback) {
   CEF_REQUIRE_IO_THREAD();
-
-  // std::string url = request->GetURL().ToString();
-  // printf("OnBeforeResourceLoad url %s\n", url.c_str());
 
   return fResourceManager->OnBeforeResourceLoad(browser, frame, request,
                                                  callback);
 }
-
 
 
 class TCefHttpCallArg : public THttpCallArg {
@@ -205,16 +207,14 @@ protected:
 
    CefRefPtr<CefCallback> fCallBack{nullptr};
 
-   void CheckWSPageContent(THttpWSHandler *) override
-   {
-      std::string search = "JSROOT.ConnectWebWindow({";
-      std::string replace = search + "platform:\"cef3\",socket_kind:\"longpoll\",";
-
-      ReplaceAllinContent(search, replace, true);
-   }
-
 public:
    explicit TCefHttpCallArg() = default;
+
+   /** provide WS kind  */
+   const char *GetWSKind() const override { return "longpoll"; }
+
+   /** provide WS platform */
+   const char *GetWSPlatform() const override { return "cef3"; }
 
    void AssignCallback(CefRefPtr<CefCallback> cb) { fCallBack = cb; }
 
@@ -249,11 +249,11 @@ public:
          fArg = std::make_shared<TCefHttpCallArg>();
    }
 
-   virtual ~TGuiResourceHandler() {}
+   ~TGuiResourceHandler() override {}
 
-   void Cancel() OVERRIDE { CEF_REQUIRE_IO_THREAD(); }
+   void Cancel() override { CEF_REQUIRE_IO_THREAD(); }
 
-   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) OVERRIDE
+   bool ProcessRequest(CefRefPtr<CefRequest> request, CefRefPtr<CefCallback> callback) override
    {
       CEF_REQUIRE_IO_THREAD();
 
@@ -266,8 +266,11 @@ public:
 
       return true;
    }
-
-   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) OVERRIDE
+#if CEF_VERSION_MAJOR > 114
+   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64_t &response_length, CefString &redirectUrl) override
+#else
+   void GetResponseHeaders(CefRefPtr<CefResponse> response, int64 &response_length, CefString &redirectUrl) override
+#endif
    {
       CEF_REQUIRE_IO_THREAD();
 
@@ -281,24 +284,19 @@ public:
          response_length = fArg->GetContentLength();
 
          if (fArg->NumHeader() > 0) {
-            // printf("******* Response with extra headers\n");
             CefResponse::HeaderMap headers;
             for (Int_t n = 0; n < fArg->NumHeader(); ++n) {
                TString name = fArg->GetHeaderName(n);
                TString value = fArg->GetHeader(name.Data());
                headers.emplace(CefString(name.Data()), CefString(value.Data()));
-               // printf("   header %s %s\n", name.Data(), value.Data());
             }
             response->SetHeaderMap(headers);
          }
-//         if (strstr(fArg->GetQuery(),"connection="))
-//            printf("Reply %s %s %s  len: %d %s\n", fArg->GetPathName(), fArg->GetFileName(), fArg->GetQuery(),
-//                  fArg->GetContentLength(), (const char *) fArg->GetContent() );
       }
       // DCHECK(!fArg->Is404());
    }
 
-   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) OVERRIDE
+   bool ReadResponse(void *data_out, int bytes_to_read, int &bytes_read, CefRefPtr<CefCallback> callback) override
    {
       CEF_REQUIRE_IO_THREAD();
 
@@ -345,14 +343,14 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   int indx = std::stoi(addr.substr(prefix.length(), addr.find("/", prefix.length()) - prefix.length()));
 
   if ((indx < 0) || (indx >= (int) fServers.size()) || !fServers[indx]) {
-     R__ERROR_HERE("CEF") << "No THttpServer with index " << indx;
+     R__LOG_ERROR(CefWebDisplayLog()) << "No THttpServer with index " << indx;
      return nullptr;
   }
 
   THttpServer *serv = fServers[indx];
   if (serv->IsZombie()) {
      fServers[indx] = nullptr;
-     R__ERROR_HERE("CEF") << "THttpServer with index " << indx << " is zombie now";
+     R__LOG_ERROR(CefWebDisplayLog()) << "THttpServer with index " << indx << " is zombie now";
      return nullptr;
   }
 
@@ -382,8 +380,6 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
 
   std::string inp_method = request->GetMethod().ToString();
 
-  // printf("REQUEST METHOD %s\n", inp_method.c_str());
-
   TGuiResourceHandler *handler = new TGuiResourceHandler(serv);
   handler->fArg->SetMethod(inp_method.c_str());
   handler->fArg->SetPathAndFileName(inp_path);
@@ -394,7 +390,7 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
      CefRefPtr< CefPostData > post_data = request->GetPostData();
 
      if (!post_data) {
-        R__ERROR_HERE("CEF") << "FATAL - NO POST DATA in CEF HANDLER!!!";
+        R__LOG_ERROR(CefWebDisplayLog()) << "FATAL - NO POST DATA in CEF HANDLER!!!";
         exit(1);
      } else {
         CefPostData::ElementVector elements;

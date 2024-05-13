@@ -31,8 +31,8 @@ ClassImp(TFileInfoMeta);
 
 TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
                      const char *md5, TObject *meta)
-   : fCurrentUrl(0), fUrlList(0), fSize(-1), fUUID(0), fMD5(0),
-     fMetaDataList(0), fIndex(-1)
+   : fCurrentUrl(nullptr), fUrlList(nullptr), fSize(-1), fUUID(nullptr), fMD5(nullptr),
+     fMetaDataList(nullptr), fIndex(-1)
 {
    // Get initializations form the input string: this will set at least the
    // current URL; but it may set more: see TFileInfo::ParseInput(). Please note
@@ -72,15 +72,15 @@ TFileInfo::TFileInfo(const char *in, Long64_t size, const char *uuid,
 /// Copy constructor.
 
 TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
-                                            fCurrentUrl(0), fUrlList(0),
-                                            fSize(fi.fSize), fUUID(0), fMD5(0),
-                                            fMetaDataList(0), fIndex(fi.fIndex)
+                                            fCurrentUrl(nullptr), fUrlList(nullptr),
+                                            fSize(fi.fSize), fUUID(nullptr), fMD5(nullptr),
+                                            fMetaDataList(nullptr), fIndex(fi.fIndex)
 {
    if (fi.fUrlList) {
       fUrlList = new TList;
       fUrlList->SetOwner();
       TIter nxu(fi.fUrlList);
-      TUrl *u = 0;
+      TUrl *u = nullptr;
       while ((u = (TUrl *)nxu())) {
          fUrlList->Add(new TUrl(u->GetUrl(), kTRUE));
       }
@@ -104,7 +104,7 @@ TFileInfo::TFileInfo(const TFileInfo &fi) : TNamed(fi.GetName(), fi.GetTitle()),
       fMetaDataList = new TList;
       fMetaDataList->SetOwner();
       TIter nxm(fi.fMetaDataList);
-      TFileInfoMeta *fim = 0;
+      TFileInfoMeta *fim = nullptr;
       while ((fim = (TFileInfoMeta *)nxm())) {
          fMetaDataList->Add(new TFileInfoMeta(*fim));
       }
@@ -261,7 +261,7 @@ TUrl *TFileInfo::GetCurrentUrl() const
 TUrl *TFileInfo::NextUrl()
 {
    if (!fUrlList)
-      return 0;
+      return nullptr;
 
    TUrl *returl = fCurrentUrl;
 
@@ -285,7 +285,7 @@ TUrl *TFileInfo::FindByUrl(const char *url, Bool_t withDeflt)
          return urlelement;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +337,7 @@ Bool_t TFileInfo::RemoveUrl(const char *url)
 Bool_t TFileInfo::RemoveUrlAt(Int_t i)
 {
    TUrl *tUrl;
-   if ((tUrl = dynamic_cast<TUrl *>(fUrlList->At(i))) != NULL) {
+   if ((tUrl = dynamic_cast<TUrl *>(fUrlList->At(i))) != nullptr) {
       fUrlList->Remove(tUrl);
       if (tUrl == fCurrentUrl)
          ResetUrl();
@@ -432,10 +432,10 @@ TFileInfoMeta *TFileInfo::GetMetaData(const char *meta) const
          m = (TFileInfoMeta *) fMetaDataList->FindObject(meta);
       if (m) {
          TClass *c = m->IsA();
-         return (c && c->InheritsFrom(TFileInfoMeta::Class())) ? m : 0;
+         return (c && c->InheritsFrom(TFileInfoMeta::Class())) ? m : nullptr;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -493,7 +493,7 @@ void TFileInfo::Print(Option_t *option) const
          Printf(" URL:  %s", u->GetUrl());
 
       TIter nextm(fMetaDataList);
-      TObject *m = 0;   // can be any TObject not only TFileInfoMeta
+      TObject *m = nullptr;   // can be any TObject not only TFileInfoMeta
       while ((m = (TObject*) nextm())) {
          Printf(" === Meta Data Object ===");
          m->Print();
@@ -504,7 +504,7 @@ void TFileInfo::Print(Option_t *option) const
       // Extract the default tree name, if any
       TString deft;
       if (opt.Contains("T:")) deft = opt(opt.Index("T:")+2, opt.Length());
-      TFileInfoMeta *meta = 0;
+      TFileInfoMeta *meta = nullptr;
       if (fMetaDataList && !deft.IsNull()) meta = (TFileInfoMeta *) fMetaDataList->FindObject(deft);
       if (fMetaDataList && !meta) meta = (TFileInfoMeta *) fMetaDataList->First();
       if (meta) out.ReplaceAll("-|-|-", TString::Format("%s|%s|%lld", meta->GetName(),

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Example showing confidence intervals with four techniques.
+/// Example showing confidence intervals with four techniques.
 ///
 /// An example that shows confidence intervals with four techniques.
 /// The model is a Normal Gaussian G(x|mu,sigma) with 100 samples of x.
@@ -81,7 +81,7 @@ void IntervalExamples()
    modelConfig->SetObservables(*wspace->set("obs"));
 
    // create a toy dataset
-   RooDataSet *data = wspace->pdf("normal")->generate(*wspace->set("obs"), 100);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("normal")->generate(*wspace->set("obs"), 100)};
    data->Print();
 
    // for convenience later on

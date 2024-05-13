@@ -1,10 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+## Data and categories: tools for manipulation of (un)binned datasets
 ##
-## \brief Data and categories: tools for manipulation of (un)binned datasets
-##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -31,7 +32,7 @@ c.defineType("Minus", -1)
 
 # ROOT.RooDataSet is an unbinned dataset (a collection of points in
 # N-dimensional space)
-d = ROOT.RooDataSet("d", "d", ROOT.RooArgSet(x, y, c))
+d = ROOT.RooDataSet("d", "d", {x, y, c})
 
 # Unlike ROOT.RooAbsArgs (ROOT.RooAbsPdf, ROOT.RooFormulaVar,....) datasets are not attached to
 # the variables they are constructed from. Instead they are attached to an internal
@@ -41,7 +42,7 @@ d = ROOT.RooDataSet("d", "d", ROOT.RooArgSet(x, y, c))
 for i in range(1000):
     x.setVal(i / 50 - 10)
     y.setVal(math.sqrt(1.0 * i))
-    if (i % 2):
+    if i % 2:
         c.setLabel("Plus")
     else:
         c.setLabel("Minus")
@@ -51,7 +52,7 @@ for i in range(1000):
     if i < 3:
         print(x, y, c)
         print(type(x))
-    d.add(ROOT.RooArgSet(x, y, c))
+    d.add({x, y, c})
 
 d.Print("v")
 print("")
@@ -74,11 +75,11 @@ print("")
 # The reduce() function returns a dataset which is a subset of the
 # original
 print("\n >> d1 has only columns x,c")
-d1 = d.reduce(ROOT.RooArgSet(x, c))
+d1 = d.reduce({x, c})
 d1.Print("v")
 
 print("\n >> d2 has only column y")
-d2 = d.reduce(ROOT.RooArgSet(y))
+d2 = d.reduce({y})
 d2.Print("v")
 
 print("\n >> d3 has only the points with y>5.17")
@@ -86,7 +87,7 @@ d3 = d.reduce("y>5.17")
 d3.Print("v")
 
 print("\n >> d4 has only columns x, for data points with y>5.17")
-d4 = d.reduce(ROOT.RooArgSet(x, c), "y>5.17")
+d4 = d.reduce({x, c}, "y>5.17")
 d4.Print("v")
 
 # The merge() function adds two data set column-wise
@@ -94,7 +95,7 @@ print("\n >> merge d2(y) with d1(x,c) to form d1(x,c,y)")
 d1.merge(d2)
 d1.Print("v")
 
-# The append() function addes two datasets row-wise
+# The append() function adds two datasets row-wise
 print("\n >> append data points of d3 to d1")
 d1.append(d3)
 d1.Print("v")
@@ -114,25 +115,24 @@ print(">> the category 'c' will be projected in the filling process")
 # state
 x.setBins(10)
 y.setBins(10)
-dh = ROOT.RooDataHist("dh", "binned version of d", ROOT.RooArgSet(x, y), d)
+dh = ROOT.RooDataHist("dh", "binned version of d", {x, y}, d)
 dh.Print("v")
 
-yframe = y.frame(ROOT.RooFit.Bins(10), ROOT.RooFit.Title(
-    "Operations on binned datasets"))
+yframe = y.frame(Bins=10, Title="Operations on binned datasets")
 dh.plotOn(yframe)  # plot projection of 2D binned data on y
 
 # Examine the statistics of a binned dataset
 print(">> number of bins in dh   : ", dh.numEntries())
-print(">> sum of weights in dh   : ", dh.sum(ROOT.kFALSE))
+print(">> sum of weights in dh   : ", dh.sum(False))
 # accounts for bin volume
-print(">> integral over histogram: ", dh.sum(ROOT.kTRUE))
+print(">> integral over histogram: ", dh.sum(True))
 
 # Locate a bin from a set of coordinates and retrieve its properties
 x.setVal(0.3)
 y.setVal(20.5)
 print(">> retrieving the properties of the bin enclosing coordinate (x,y) = (0.3,20.5) bin center:")
 # load bin center coordinates in internal buffer
-dh.get(ROOT.RooArgSet(x, y)).Print("v")
+dh.get({x, y}).Print("v")
 print(" weight = ", dh.weight())  # return weight of last loaded coordinates
 
 # Reduce the 2-dimensional binned dataset to a 1-dimensional binned dataset
@@ -141,12 +141,11 @@ print(" weight = ", dh.weight())  # return weight of last loaded coordinates
 # demonstrated on unbinned datasets can be applied to binned datasets as
 # well.
 print(">> Creating 1-dimensional projection on y of dh for bins with x>0")
-dh2 = dh.reduce(ROOT.RooArgSet(y), "x>0")
+dh2 = dh.reduce({y}, "x>0")
 dh2.Print("v")
 
 # Add dh2 to yframe and redraw
-dh2.plotOn(yframe, ROOT.RooFit.LineColor(ROOT.kRed),
-           ROOT.RooFit.MarkerColor(ROOT.kRed))
+dh2.plotOn(yframe, LineColor="r", MarkerColor="r")
 
 # Saving and loading from file
 # -------------------------------------------------------

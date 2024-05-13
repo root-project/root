@@ -12,13 +12,6 @@
 #ifndef ROOT_TArrowEditor
 #define ROOT_TArrowEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TArrowEditor                                                        //
-//                                                                      //
-//  Implements GUI for editing arrow attributes: shape, size, angle.    //                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "GuiTypes.h"
 #include "TGedFrame.h"
@@ -31,28 +24,28 @@ class TArrow;
 class TArrowEditor : public TGedFrame {
 
 protected:
-   TArrow               *fArrow;            // arrow object
-   TGComboBox           *fOptionCombo;      // arrow shapes combo box
-   TGNumberEntry        *fAngleEntry;       // opening angle entry
-   TGNumberEntry        *fSizeEntry;        // size entry
+   TArrow               *fArrow;            ///< arrow object
+   TGComboBox           *fOptionCombo;      ///< arrow shapes combo box
+   TGNumberEntry        *fAngleEntry;       ///< opening angle entry
+   TGNumberEntry        *fSizeEntry;        ///< size entry
 
    virtual void   ConnectSignals2Slots();
    TGComboBox    *BuildOptionComboBox(TGFrame* parent, Int_t id);
    Int_t          GetShapeEntry(Option_t *opt);
 
 public:
-   TArrowEditor(const TGWindow *p = 0,
+   TArrowEditor(const TGWindow *p = nullptr,
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TArrowEditor();
+   ~TArrowEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoAngle();
    virtual void   DoOption(Int_t id);
    virtual void   DoSize();
 
-   ClassDef(TArrowEditor,0)  // GUI for editing arrow attributes
+   ClassDefOverride(TArrowEditor,0)  // GUI for editing arrow attributes
 };
 
 #endif

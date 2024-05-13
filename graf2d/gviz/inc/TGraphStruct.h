@@ -34,21 +34,21 @@ protected:
 public:
 
    TGraphStruct();
-   virtual ~TGraphStruct();
+   ~TGraphStruct() override;
 
    void         AddEdge(TGraphEdge *edge);
    void         AddNode(TGraphNode *node);
    TGraphEdge  *AddEdge(TGraphNode *n1, TGraphNode *n2);
    TGraphNode  *AddNode(const char *name, const char *title="");
-   void         Draw(Option_t *option="");
+   void         Draw(Option_t *option="") override;
    void         DumpAsDotFile(const char *filename);
    TList       *GetListOfNodes() const { return fNodes; }
    TList       *GetListOfEdges() const { return fEdges; }
    Int_t        Layout();
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void         SetMargin(Double_t m=10) {fMargin = m;}
 
-   ClassDef(TGraphStruct,2)  //Graph structure class
+   ClassDefOverride(TGraphStruct,2)  //Graph structure class
 };
 
 #endif

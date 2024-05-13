@@ -19,7 +19,6 @@ INPUT_MDS := \
 	ConfigProofPoD.md \
 	DeployVirtualAnalysisFacility.md \
 	UsingVirtualAnalysisFacility.md \
-	TDataSetManagerAliEn.md \
 	DatasetStager.md
 
 INDEX_MD := index.md

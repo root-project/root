@@ -17,8 +17,6 @@
 #define ROO_CONST_VAR
 
 #include "RooAbsReal.h"
-#include "RooArgList.h"
-#include "RooListProxy.h"
 
 class RooArgSet ;
 
@@ -26,33 +24,39 @@ class RooConstVar final : public RooAbsReal {
 public:
   // Constructors, assignment etc
   RooConstVar() { }
-  RooConstVar(const char *name, const char *title, Double_t value);
-  RooConstVar(const RooConstVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooConstVar(*this,newname); }
-  virtual ~RooConstVar();
+  RooConstVar(const char *name, const char *title, double value);
+  RooConstVar(const RooConstVar& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooConstVar(*this,newname); }
 
-  ////////////////////////////////////////////////////////////////////////////////
   /// Return (constant) value.
-  virtual Double_t getValV(const RooArgSet*) const {
+  double getValV(const RooArgSet*) const override {
     return _value;
   }
 
-  void writeToStream(std::ostream& os, Bool_t compact) const ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
-  virtual Bool_t isDerived() const { 
-    // Does value or shape of this arg depend on any other arg?
-    return kFALSE ;
+  /// Returns false, as the value of the constant doesn't depend on other objects.
+  bool isDerived() const override {
+    return false;
   }
+
+  /// Change the value of this constant.
+  /// On purpose, this is not `setVal`, as this could be confused with the `setVal`
+  /// that is available for variables. Constants, however, should remain mostly constant.
+  /// This function is e.g. useful when reading the constant from a file.
+  void changeVal(double value) {
+    _value = value;
+  }
+
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 
-  Double_t evaluate() const {
+  double evaluate() const override {
     return _value;
   }
 
-  Double_t _value{0.}; // Constant value of self
-
-  ClassDef(RooConstVar,1) // Constant RooAbsReal value object
+  ClassDefOverride(RooConstVar,2) // Constant RooAbsReal value object
 };
 
 #endif

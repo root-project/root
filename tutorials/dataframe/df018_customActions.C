@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Implement a custom action to fill THns.
+/// Implement a custom action to fill THns.
 ///
 /// This tutorial shows how to implement a custom action.
 /// As an example, we build a helper for filling THns.
@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date April 2018
-/// \author Enrico Guiraud, Danilo Piparo
+/// \authors Enrico Guiraud, Danilo Piparo (CERN)
 
 // This is a custom action which respects a well defined interface. It supports parallelism,
 // in the sense that it behaves correctly if implicit multi threading is enabled.

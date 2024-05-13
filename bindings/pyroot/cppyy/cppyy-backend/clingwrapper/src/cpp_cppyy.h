@@ -26,7 +26,9 @@ namespace Cppyy {
 
 // direct interpreter access -------------------------------------------------
     RPY_EXPORTED
-    bool Compile(const std::string& code);
+    bool Compile(const std::string& code, bool silent = false);
+    RPY_EXPORTED
+    std::string ToString(TCppType_t klass, TCppObject_t obj);
 
 // name to opaque C++ scope representation -----------------------------------
     RPY_EXPORTED
@@ -56,7 +58,7 @@ namespace Cppyy {
     RPY_EXPORTED
     void         Deallocate(TCppType_t type, TCppObject_t instance);
     RPY_EXPORTED
-    TCppObject_t Construct(TCppType_t type);
+    TCppObject_t Construct(TCppType_t type, void* arena = nullptr);
     RPY_EXPORTED
     void         Destruct(TCppType_t type, TCppObject_t instance);
 
@@ -114,6 +116,10 @@ namespace Cppyy {
     bool IsAbstract(TCppType_t type);
     RPY_EXPORTED
     bool IsEnum(const std::string& type_name);
+    RPY_EXPORTED
+    bool IsAggregate(TCppType_t type);
+    RPY_EXPORTED
+    bool IsDefaultConstructable(TCppType_t type);
 
     RPY_EXPORTED
     void GetAllCppNames(TCppScope_t scope, std::set<std::string>& cppnames);
@@ -134,6 +140,8 @@ namespace Cppyy {
     RPY_EXPORTED
     TCppIndex_t GetNumBases(TCppType_t type);
     RPY_EXPORTED
+    TCppIndex_t GetNumBasesLongestBranch(TCppType_t type);
+    RPY_EXPORTED
     std::string GetBaseName(TCppType_t type, TCppIndex_t ibase);
     RPY_EXPORTED
     bool        IsSubtype(TCppType_t derived, TCppType_t base);
@@ -144,6 +152,9 @@ namespace Cppyy {
     RPY_EXPORTED
     void        AddSmartPtrType(const std::string&);
 
+    RPY_EXPORTED
+    void        AddTypeReducer(const std::string& reducable, const std::string& reduced);
+
 // calculate offsets between declared and actual type, up-cast: direction > 0; down-cast: direction < 0
     RPY_EXPORTED
     ptrdiff_t GetBaseOffset(
@@ -151,7 +162,7 @@ namespace Cppyy {
 
 // method/function reflection information ------------------------------------
     RPY_EXPORTED
-    TCppIndex_t GetNumMethods(TCppScope_t scope);
+    TCppIndex_t GetNumMethods(TCppScope_t scope, bool accept_namespace = false);
     RPY_EXPORTED
     std::vector<TCppIndex_t> GetMethodIndicesFromName(TCppScope_t scope, const std::string& name);
 
@@ -175,6 +186,8 @@ namespace Cppyy {
     RPY_EXPORTED
     std::string GetMethodArgType(TCppMethod_t, TCppIndex_t iarg);
     RPY_EXPORTED
+    TCppIndex_t CompareMethodArgType(TCppMethod_t, TCppIndex_t iarg, const std::string &req_type);
+    RPY_EXPORTED
     std::string GetMethodArgDefault(TCppMethod_t, TCppIndex_t iarg);
     RPY_EXPORTED
     std::string GetMethodSignature(TCppMethod_t, bool show_formalargs, TCppIndex_t maxargs = (TCppIndex_t)-1);
@@ -184,7 +197,7 @@ namespace Cppyy {
     bool        IsConstMethod(TCppMethod_t);
 
     RPY_EXPORTED
-    TCppIndex_t GetNumTemplatedMethods(TCppScope_t scope);
+    TCppIndex_t GetNumTemplatedMethods(TCppScope_t scope, bool accept_namespace = false);
     RPY_EXPORTED
     std::string GetTemplatedMethodName(TCppScope_t scope, TCppIndex_t imeth);
     RPY_EXPORTED
@@ -215,7 +228,7 @@ namespace Cppyy {
 
 // data member reflection information ----------------------------------------
     RPY_EXPORTED
-    TCppIndex_t GetNumDatamembers(TCppScope_t scope);
+    TCppIndex_t GetNumDatamembers(TCppScope_t scope, bool accept_namespace = false);
     RPY_EXPORTED
     std::string GetDatamemberName(TCppScope_t scope, TCppIndex_t idata);
     RPY_EXPORTED

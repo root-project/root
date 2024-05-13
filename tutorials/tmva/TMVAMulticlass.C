@@ -103,7 +103,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    }
    else {
       TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_multiclass_example.root", "CACHEREAD");
+      input = TFile::Open("http://root.cern/files/tmva_multiclass_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
@@ -137,7 +137,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    if (Use["DL_CPU"]) {
       TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
       TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
-                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100");
+                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100,MaxEpochs=20");
       TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
                         "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
       nnOptions.Append(":");
@@ -149,7 +149,7 @@ void TMVAMulticlass( TString myMethodList = "" )
    if (Use["DL_GPU"]) {
       TString layoutString("Layout=TANH|100,TANH|50,TANH|10,LINEAR");
       TString trainingStrategyString("TrainingStrategy=Optimizer=ADAM,LearningRate=1e-3,"
-                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100");
+                                     "TestRepetitions=1,ConvergenceSteps=10,BatchSize=100,MaxEpochs=20");
       TString nnOptions("!H:V:ErrorStrategy=CROSSENTROPY:VarTransform=N:"
                         "WeightInitialization=XAVIERUNIFORM:Architecture=GPU");
       nnOptions.Append(":");

@@ -26,7 +26,6 @@
 // Author: Lorenzo Moneta , Nov 2010
 //
 //
-
 #include "Math/MCParameters.h"
 #include "Math/GenAlgoOptions.h"
 
@@ -70,9 +69,9 @@ namespace Math {
       return *this;
    }
 
-   IOptions * VegasParameters::operator() () const {
+   std::unique_ptr<ROOT::Math::IOptions> VegasParameters::MakeIOptions() const {
       // convert to options (return object is managed by the user)
-      GenAlgoOptions * opt = new GenAlgoOptions();
+      auto opt = std::make_unique<GenAlgoOptions>();
       opt->SetRealValue("alpha",alpha);
       opt->SetIntValue("iterations",iterations);
       opt->SetIntValue("stage",stage);
@@ -120,9 +119,9 @@ namespace Math {
       return *this;
    }
 
-   IOptions * MiserParameters::operator() () const {
+   std::unique_ptr<ROOT::Math::IOptions>  MiserParameters::MakeIOptions() const {
       // convert to options (return object is managed by the user)
-      GenAlgoOptions * opt = new GenAlgoOptions();
+      auto opt = std::make_unique<GenAlgoOptions>();
       opt->SetRealValue("alpha",alpha);
       opt->SetRealValue("dither",dither);
       opt->SetRealValue("estimate_frac",estimate_frac);

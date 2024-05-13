@@ -1,23 +1,22 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include <ROOT/RDataFrame.hxx>
-#include <ROOT/RDF/RSlotStack.hxx>
 #include <TStatistic.h> // To check reading of columns with types which are mothers of the column type
 #include <TSystem.h>
 
-#include <mutex>
 #include <thread>
 #include <stdexcept> // std::runtime_error
 
 #include "gtest/gtest.h"
 
-#ifndef NDEBUG
+#if defined(R__USE_IMT) && !defined(NDEBUG)
+#include <ROOT/RSlotStack.hxx>
 
 TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 {
    auto theTest = []() {
       unsigned int n(2);
-      ROOT::Internal::RDF::RSlotStack s(n);
+      ROOT::Internal::RSlotStack s(n);
 
       std::vector<std::thread> ts;
 
@@ -35,7 +34,7 @@ TEST(RDataFrameNodes, RSlotStackGetOneTooMuch)
 TEST(RDataFrameNodes, RSlotStackPutBackTooMany)
 {
    auto theTest = []() {
-      ROOT::Internal::RDF::RSlotStack s(1);
+      ROOT::Internal::RSlotStack s(1);
       s.ReturnSlot(0);
    };
 

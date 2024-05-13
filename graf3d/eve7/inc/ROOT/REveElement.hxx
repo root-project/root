@@ -17,49 +17,14 @@
 #include <ROOT/REveProjectionBases.hxx>
 
 #include <memory>
+#include <list>
+#include <ostream>
+#include <set>
+#include <string>
+
+#include <nlohmann/json.hpp>
 
 class TGeoMatrix;
-
-/// use temporary solution for forwarding of nlohmann::json
-/// after version of 3.1.0 it is included in official releases
-/// see https://github.com/nlohmann/json/issues/314
-
-#ifndef INCLUDE_NLOHMANN_JSON_FWD_HPP_
-#define INCLUDE_NLOHMANN_JSON_FWD_HPP_
-
-#include <cstdint> // int64_t, uint64_t
-#include <map> // map
-#include <memory> // allocator
-#include <string> // string
-#include <vector> // vector
-
-namespace nlohmann
-{
-
-// see json_fwd.hpp
-template<typename T = void, typename SFINAE = void>
-struct adl_serializer;
-
-template<template<typename U, typename V, typename... Args> class ObjectType =
-         std::map,
-         template<typename U, typename... Args> class ArrayType = std::vector,
-         class StringType = std::string, class BooleanType = bool,
-         class NumberIntegerType = std::int64_t,
-         class NumberUnsignedType = std::uint64_t,
-         class NumberFloatType = double,
-         template<typename U> class AllocatorType = std::allocator,
-         template<typename T, typename SFINAE = void> class JSONSerializer =
-         adl_serializer>
-class basic_json;
-
-template<typename BasicJsonType>
-class json_pointer;
-
-using json = basic_json<>;
-}  // namespace nlohmann
-
-#endif
-
 
 namespace ROOT {
 namespace Experimental {
@@ -154,7 +119,7 @@ public:
    const std::string &GetTitle()  const { return fTitle; }
    const char* GetCTitle() const { return fTitle.c_str();  }
 
-   virtual std::string GetHighlightTooltip() const { return fTitle; }
+   virtual std::string GetHighlightTooltip(const std::set<int>&) const;
 
    void SetName (const std::string &name);
    void SetTitle(const std::string &title);
@@ -321,7 +286,7 @@ protected:
    };
 
    Short_t fImpliedSelected{0};   // How many times the element is implied selected -- needed during destruction.
-   Bool_t  fPickable{0};          // Can element be selected.
+   Bool_t  fPickable{false};          // Can element be selected.
    UChar_t fCSCBits{0};           // Compound Selection Color flags.
 
 public:
@@ -329,10 +294,10 @@ public:
    void   SetPickable(Bool_t p) { fPickable = p; }
    void   SetPickableRecursively(Bool_t p);
 
-   REveElement* GetSelectionMaster();
+   virtual REveElement* GetSelectionMaster();
    void         SetSelectionMaster(REveElement *el) { fSelectionMaster = el; }
 
-   virtual void FillImpliedSelectedSet(Set_t& impSelSet);
+   virtual void FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>&);
 
    void   IncImpliedSelected() { ++fImpliedSelected; }
    void   DecImpliedSelected() { --fImpliedSelected; }
@@ -352,6 +317,8 @@ public:
    void   CSCApplyMainTransparencyToAllChildren()      { fCSCBits |= kCSCBApplyMainTransparencyToAllChildren; }
    void   CSCApplyMainTransparencyToMatchingChildren() { fCSCBits |= kCSCBApplyMainTransparencyToMatchingChildren; }
 
+   virtual bool RequiresExtraSelectionData() const { return false; }
+   virtual void FillExtraSelectionData(nlohmann::json&, const std::set<int>&) const {}
 
    // Change-stamping and change bits
    //---------------------------------
@@ -437,7 +404,7 @@ protected:
    REveElement::List_t fNieces;
 
 public:
-   virtual ~REveAuntAsList()
+   ~REveAuntAsList() override
    {
       for (auto &n : fNieces) n->RemoveAunt(this);
    }

@@ -73,6 +73,7 @@ TEST(TreeProcessorMT, ManyFiles)
    const auto nFiles = 100u;
    const std::string treename = "t";
    std::vector<std::string> filenames;
+   filenames.reserve(nFiles);
    for (auto i = 0u; i < nFiles; ++i)
       filenames.emplace_back("treeprocmt_manyfiles" + std::to_string(i) + ".root");
 
@@ -94,6 +95,7 @@ TEST(TreeProcessorMT, ManyFiles)
 
    // TTreeProcMT requires a vector<string_view>
    std::vector<std::string_view> fnames;
+   fnames.reserve(filenames.size());
    for (const auto &f : filenames)
       fnames.emplace_back(f);
 
@@ -163,6 +165,7 @@ TEST(TreeProcessorMT, TreesWithDifferentNamesVecCtor)
 
    // TTreeProcMT requires a vector<string_view>
    std::vector<std::string_view> fnames;
+   fnames.reserve(filenames.size());
    for (const auto &f : filenames)
       fnames.emplace_back(f);
 
@@ -294,14 +297,27 @@ TEST(TreeProcessorMT, LimitNTasks_CheckEntries)
       }
    };
 
-   ROOT::EnableImplicitMT(4);
+   const unsigned int nslots = std::min(4U, std::thread::hardware_concurrency());
+   ROOT::EnableImplicitMT(nslots);
 
    ROOT::TTreeProcessorMT p(filename, treename);
    p.Process(f);
 
-   EXPECT_EQ(nTasks, 96U) << "Wrong number of tasks generated!\n";
-   EXPECT_EQ(nEntriesCountsMap[10], 65U) << "Wrong number of tasks with 10 clusters each!\n";
-   EXPECT_EQ(nEntriesCountsMap[11], 31U) << "Wrong number of tasks with 11 clusters each!\n";
+   if (nslots == 4) {
+      EXPECT_EQ(nTasks, 40U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[24], 9U) << "Wrong number of tasks with 24 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[25], 31U) << "Wrong number of tasks with 25 clusters each!\n";
+   }
+   else if (nslots == 2) {
+      EXPECT_EQ(nTasks, 20U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[49], 9U) << "Wrong number of tasks with 49 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[50], 11U) << "Wrong number of tasks with 50 clusters each!\n";
+   }
+   else if (nslots == 1) {
+      EXPECT_EQ(nTasks, 10U) << "Wrong number of tasks generated!\n";
+      EXPECT_EQ(nEntriesCountsMap[99], 9U) << "Wrong number of tasks with 99 clusters each!\n";
+      EXPECT_EQ(nEntriesCountsMap[100], 1U) << "Wrong number of tasks with 100 clusters each!\n";
+   }
 
    gSystem->Unlink(filename);
    ROOT::DisableImplicitMT();
@@ -467,4 +483,41 @@ TEST(TreeProcessorMT, SetNThreads)
       EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
       gSystem->Unlink("treeprocmt_setnthreads.root");
    }
+}
+
+TEST(TreeProcessorMT, TreesInSameFile)
+{
+   const std::string fname = "treeprocmt_treesinsamefile.root";
+   std::vector<std::string> treeNames = {"t1", "t2"};
+   TFile f(fname.c_str(), "recreate");
+   int x = 0;
+   for (auto &name : treeNames) {
+      TTree t(name.c_str(), name.c_str());
+      t.Branch("x", &x);
+      t.Fill();
+      t.Write();
+      ++x;
+   }
+   f.Close();
+
+   ROOT::EnableImplicitMT(1);
+   int expected = 0;
+   auto procLambda = [&expected](TTreeReader &r) {
+      TTreeReaderValue<int> rx(r, "x");
+      ASSERT_TRUE(r.Next());
+      EXPECT_EQ(*rx, expected);
+      ASSERT_FALSE(r.Next());
+      ++expected;
+   };
+
+   TChain c;
+   c.AddFile((fname + "/" + treeNames[0]).c_str());
+   c.AddFile((fname + "/" + treeNames[1]).c_str());
+
+   ROOT::TTreeProcessorMT tp(c);
+   tp.Process(procLambda);
+
+   // Clean-up
+   gSystem->Unlink(fname.c_str());
+   ROOT::DisableImplicitMT();
 }

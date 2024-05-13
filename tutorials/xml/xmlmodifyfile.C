@@ -1,11 +1,10 @@
 /// \file
 /// \ingroup tutorial_xml
-/// \notebook -nodraw
+///
 /// Example to read, modify and store xml file, using TXMLEngine class
 /// The input file, produced by xmlnewfile.C macro is used
 /// If you need full xml syntax support, use TXMLParser instead
 ///
-/// \macro_output
 /// \macro_code
 ///
 /// \author Sergey Linev
@@ -27,7 +26,7 @@ int ScanNode(TXMLEngine &xml, XMLNodePointer_t node)
       XMLNodePointer_t info = xml.NewChild(node, xml.GetNS(child), "info");
 
       // set name and num attributes of info node
-      xml.NewAttr(info, 0, "name", xml.GetNodeName(child));
+      xml.NewAttr(info, nullptr, "name", xml.GetNodeName(child));
       if (numsub > 0) xml.NewIntAttr(info, "num", numsub);
 
       // move it after current node

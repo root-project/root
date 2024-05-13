@@ -1,8 +1,3 @@
-\defgroup tutorial_proof Proof tutorials
-\ingroup Tutorials
-\brief These examples aim to illustrate the usage of PROOF
-
-
 \defgroup tutorial_ProcFileElements ProcFileElements
 \ingroup tutorial_proof
 \brief Class to hold information about the processed elements of a file
@@ -28,7 +23,7 @@ example of how to run this selector.
 
 Example of TSelector implementation to process trees
 containing 'Event' structures, e.g. the files under
-http://root.cern.ch/files/data .
+http://root.cern/files/data .
 See tutorials/proof/runProof.C, option "eventproc", for
 an example of how to run this selector.
 

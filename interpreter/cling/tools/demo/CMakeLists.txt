@@ -11,8 +11,8 @@ cmake_minimum_required(VERSION 3.5)
 # Keep symbols for JIT resolution
 set(LLVM_NO_DEAD_STRIP 1)
 
-# Cling needs at least C++11; so does this demo.
-set(CMAKE_CXX_STANDARD 11)
+# Cling needs at least C++17; so does this demo.
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if (CMAKE_PROJECT_NAME)
@@ -39,8 +39,4 @@ set_target_properties(cling-demo
 
 if(MSVC)
   set_target_properties(cling-demo PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
-  set_property(TARGET cling-demo APPEND_STRING PROPERTY LINK_FLAGS
-              "/EXPORT:?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00D_K@Z
-               /EXPORT:?setValueNoAlloc@internal@runtime@cling@@YAXPEAX00DM@Z
-               /EXPORT:cling_runtime_internal_throwIfInvalidPointer")
 endif()

@@ -34,7 +34,7 @@ protected:
    TIterator(const TIterator &) { }
 
 public:
-   virtual TIterator &operator=(const TIterator &) { return *this; }
+   virtual TIterator &operator=(const TIterator &) = 0;
    virtual ~TIterator() { }
    virtual const TCollection *GetCollection() const = 0;
    virtual Option_t *GetOption() const { return ""; }

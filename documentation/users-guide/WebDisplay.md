@@ -11,11 +11,11 @@ For the communication between application and browser websockets are used.
 
 ## Creating web-window
 
-**`ROOT::Experimental::TWebWindow`** class is represent window instance, which can be displayed in the browser
+**`ROOT::RWebWindow`** class is represent window instance, which can be displayed in the browser
 
 ```{.cpp}
 
-std::shared_ptr<ROOT::Experimental::TWebWindow> win = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow();
+auto win = ROOT::RWebWindow::Create();
 
 // set HTML page which is showed when window displayed
 win->SetDefaultPage("file:page.html"); // set
@@ -70,7 +70,7 @@ configured for the window. As argument of `Show()` method one can specify browse
 With the method `win->GetUrl()` one obtains URL string, which can be typed in the browser address string directly.
 
 Same window can be displayed several times in different browsers or different browser tabs - one only
-must allow appropriate number of connections calling ``win->SetConnLimit(3)``
+must allow appropriate number of connections calling `win->SetConnLimit(3)`
 
 For the local displays **Chromium Embeded Framework (CEF)** is used. It provides functionality
 of Chrome web browser in ROOT application without need to create and start real http server.
@@ -86,33 +86,30 @@ The minimal HTML/JavaScript code, which establish connection with the server, lo
 <!DOCTYPE HTML>
 <html>
     <head>
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta charset="utf-8">
-        <title>Web Window Example</title>
-        <script src="/jsrootsys/scripts/JSRootCore.js" type="text/javascript"></script>
-        <script>
-          JSROOT.ConnectWebWindow(function(handle) {
-             handle.SetReceiver({
-                 OnWebsocketOpened: function(h) {
-                     console.log('Connected');
-                     handle.Send("Init msg from client");
-                 },
-                 OnWebsocketMsg: function(h, msg) {
-                     console.log('Get message ' + msg);
-                     document.getElementById("main").innerHTML = msg;
-                 },
-                 OnWebsocketClosed: function(h) {
-                    // when connection closed, close panel as well
-                    if (window) window.close();
-                 }
-             });
-            // only here connection is established
-           handle.Connect();
-         });
-      </script>
+        <title>RWebWindow Example</title>
     </head>
    <body>
-      <div id="main"></div>
+     <div id="main"></div>
+     <script type="module">
+       import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+       connectWebWindow({
+          receiver: {
+              onWebsocketOpened(handle) {
+                  console.log('Connected');
+                  handle.send('Init msg from client');
+              },
+              onWebsocketMsg(handle, msg) {
+                  console.log('Get message ' + msg);
+                  document.getElementById('main').innerHTML = msg;
+              },
+              onWebsocketClosed(handle) {
+                 // when connection closed, close panel as well
+                 if (window) window.close();
+              }
+          }
+       });
+   </script>
    </body>
 </html>
 

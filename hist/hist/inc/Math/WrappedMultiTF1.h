@@ -19,6 +19,7 @@
 #include "TF1.h"
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace ROOT {
 
@@ -54,7 +55,7 @@ namespace ROOT {
          /**
             constructor from a function pointer to a TF1
             If dim = 0 dimension is taken from TF1::GetNdim().
-            IN case of multi-dimensional function created using directly TF1 object the dimension
+            In case of multi-dimensional function created using directly TF1 object the dimension
             returned by TF1::GetNdim is always 1. The user must then pass the correct value of dim
          */
          WrappedMultiTF1Templ(TF1 &f, unsigned int dim = 0);
@@ -62,7 +63,7 @@ namespace ROOT {
          /**
             Destructor (no operations). Function pointer is not owned
          */
-         ~WrappedMultiTF1Templ()
+         ~WrappedMultiTF1Templ() override
          {
             if (fOwnFunc && fFunc) delete fFunc;
          }
@@ -82,7 +83,7 @@ namespace ROOT {
          /**
              Clone the wrapper but not the original function
          */
-         IMultiGenFunctionTempl<T> *Clone() const
+         IMultiGenFunctionTempl<T> *Clone() const override
          {
             return new WrappedMultiTF1Templ<T>(*this);
          }
@@ -90,39 +91,50 @@ namespace ROOT {
          /**
               Retrieve the dimension of the function
           */
-         unsigned int NDim() const
+         unsigned int NDim() const override
          {
             return fDim;
          }
 
          /// get the parameter values (return values from TF1)
-         const double *Parameters() const
+         const double *Parameters() const override
          {
             //return  (fParams.size() > 0) ? &fParams.front() : 0;
             return  fFunc->GetParameters();
          }
 
          /// set parameter values (only the cached one in this class,leave unchanges those of TF1)
-         void SetParameters(const double *p)
+         void SetParameters(const double *p) override
          {
             //std::copy(p,p+fParams.size(),fParams.begin());
             fFunc->SetParameters(p);
          }
 
          /// return number of parameters
-         unsigned int NPar() const
+         unsigned int NPar() const override
          {
             // return fParams.size();
             return fFunc->GetNpar();
          }
 
          /// return parameter name (from TF1)
-         std::string ParameterName(unsigned int i) const {
+         std::string ParameterName(unsigned int i) const override {
             return std::string(fFunc->GetParName(i));
          }
 
          // evaluate the derivative of the function with respect to the parameters
-         void ParameterGradient(const T *x, const double *par, T *grad) const;
+         void ParameterGradient(const T *x, const double *par, T *grad) const override;
+
+         // evaluate the hessian of the function with respect to the parameters
+         bool ParameterHessian(const T *x, const double *par, T *h) const override;
+
+         // return capability of computing parameter Hessian
+         bool HasParameterHessian() const override;
+
+         // evaluate the 2nd derivatives of the function with respect to the parameters
+         bool ParameterG2(const T *, const double *, T *) const override {
+            return false; // not yet implemented
+         }
 
          /// precision value used for calculating the derivative step-size
          /// h = eps * |x|. The default is 0.001, give a smaller in case function changes rapidly
@@ -139,11 +151,11 @@ namespace ROOT {
 
          /// method to set a new function pointer and copy it inside.
          /// By calling this method the class manages now the passed TF1 pointer
-         void SetAndCopyFunction(const TF1 *f = 0);
+         void SetAndCopyFunction(const TF1 *f = nullptr);
 
       private:
          /// evaluate function passing coordinates x and vector of parameters
-         T DoEvalPar(const T *x, const double *p) const
+         T DoEvalPar(const T *x, const double *p) const override
          {
             return fFunc->EvalPar(x, p);
          }
@@ -157,16 +169,17 @@ namespace ROOT {
 
          /// evaluate function using the cached parameter values (of TF1)
          /// re-implement for better efficiency
-         T DoEval(const T *x) const
+         T DoEval(const T *x) const override
          {
             // no need to call InitArg for interpreted functions (done in ctor)
 
             //const double * p = (fParams.size() > 0) ? &fParams.front() : 0;
-            return fFunc->EvalPar(x, 0);
+
+            return fFunc->EvalPar(x, nullptr);
          }
 
          /// evaluate the partial derivative with respect to the parameter
-         T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const;
+         T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const override;
 
          bool fLinear;                 // flag for linear functions
          bool fPolynomial;             // flag for polynomial functions
@@ -203,7 +216,7 @@ namespace ROOT {
          DoParameterDerivative(const WrappedMultiTF1Templ<double> *wrappedFunc, const double *x, unsigned int ipar)
          {
             const TFormula *df = dynamic_cast<const TFormula *>(wrappedFunc->GetFunction()->GetLinearPart(ipar));
-            assert(df != 0);
+            assert(df != nullptr);
             return (const_cast<TFormula *>(df))->EvalPar(x); // derivatives should not depend on parameters since
             // function  is linear
          }
@@ -231,7 +244,7 @@ namespace ROOT {
             int ip = 0;
             fLinear = true;
             while (fLinear && ip < fFunc->GetNpar())  {
-               fLinear &= (fFunc->GetLinearPart(ip) != 0) ;
+               fLinear &= (fFunc->GetLinearPart(ip) != nullptr);
                ip++;
             }
          }
@@ -288,6 +301,62 @@ namespace ROOT {
             for (unsigned int i = 0; i < np; ++i)
                grad[i] = DoParameterDerivative(x, par, i);
          }
+      }
+
+      // struct for dealing of generic Hessian computation, since it is available only in TFormula
+      template <class T>
+      struct GeneralHessianCalc {
+         static bool Hessian(TF1 *, const T *, const double *, T *)
+         {
+            Error("Hessian", "The vectorized implementation of ParameterHessian is not supported");
+            return false;
+         }
+         static bool IsAvailable(TF1 * ) { return false;}
+      };
+
+      template <>
+      struct GeneralHessianCalc<double> {
+         static bool Hessian(TF1 * func, const double *x, const double * par, double * h)
+         {
+            // compute Hessian if TF1 is a formula based
+            unsigned int np = func->GetNpar();
+            auto formula = func->GetFormula();
+            if (!formula) return false;
+            std::vector<double> h2(np*np);
+            func->SetParameters(par);
+            formula->HessianPar(x,h2);
+            for (unsigned int i = 0; i < np; i++) {
+               for (unsigned int j = 0; j <= i; j++) {
+                  unsigned int ih = j + i *(i+1)/2;  // formula for j <= i
+                  unsigned int im = i*np + j;
+                  h[ih] = h2[im];
+               }
+            }
+            return true;
+         }
+         static bool IsAvailable(TF1 * func) {
+            auto formula = func->GetFormula();
+            if (!formula) return false;
+            return formula->GenerateHessianPar();
+         }
+      };
+
+
+
+      template <class T>
+      bool WrappedMultiTF1Templ<T>::ParameterHessian(const T *x, const double *par, T *h) const
+      {
+         if (fLinear) {
+            std::fill(h, h + NPar()*(NPar()+1)/2, 0.0);
+            return true;
+         }
+         return GeneralHessianCalc<T>::Hessian(fFunc, x, par, h);
+      }
+
+      template <class T>
+      bool WrappedMultiTF1Templ<T>::HasParameterHessian() const
+      {
+         return GeneralHessianCalc<T>::IsAvailable(fFunc);
       }
 
       template <class T>

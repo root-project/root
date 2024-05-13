@@ -37,17 +37,6 @@
 #include <strings.h>
 #endif
 
-#if (defined(R__AIX) && !defined(_AIX43)) || \
-    (defined(R__SUNGCC3) && !defined(__arch64__))
-#   define USE_SIZE_T
-#elif defined(R__GLIBC) || defined(R__FBSD) || \
-      (defined(R__SUNGCC3) && defined(__arch64__)) || \
-      defined(R__OBSD) || defined(MAC_OS_X_VERSION_10_4) || \
-      (defined(R__AIX) && defined(_AIX43)) || \
-      (defined(R__SOLARIS) && defined(_SOCKLEN_T))
-#   define USE_SOCKLEN_T
-#endif
-
 #include "rpdp.h"
 
 extern int gDebug;
@@ -201,13 +190,7 @@ int NetParOpen(int port, int size)
    struct sockaddr_in remote_addr;
    memset(&remote_addr, 0, sizeof(remote_addr));
 
-#if defined(USE_SIZE_T)
-   size_t remlen = sizeof(remote_addr);
-#elif defined(USE_SOCKLEN_T)
    socklen_t remlen = sizeof(remote_addr);
-#else
-   int remlen = sizeof(remote_addr);
-#endif
 
    if (!getpeername(NetGetSockFd(), (struct sockaddr *)&remote_addr, &remlen)) {
       remote_addr.sin_family = AF_INET;

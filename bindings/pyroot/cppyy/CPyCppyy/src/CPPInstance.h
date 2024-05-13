@@ -32,24 +32,27 @@ public:
         kIsExtended  = 0x0004,
         kIsReference = 0x0008,
         kIsRValue    = 0x0010,
-        kIsValue     = 0x0020,
-        kIsPtrPtr    = 0x0040,
-        kIsSmartPtr  = 0x0080,
-        kNoMemReg    = 0x0100,
-        kHasLifeline = 0x0200,
-        kIsRegulated = 0x0400 };
+        kIsLValue    = 0x0020,
+        kIsValue     = 0x0040,
+        kIsPtrPtr    = 0x0080,
+        kIsArray     = 0x0100,
+        kIsSmartPtr  = 0x0200,
+        kNoMemReg    = 0x0400,
+        kHasLifeLine = 0x0800,
+        kIsRegulated = 0x1000,
+        kIsActual    = 0x2000 };
 
 public:                 // public, as the python C-API works with C structs
     PyObject_HEAD
     void*     fObject;
-    int       fFlags;
+    uint32_t  fFlags;
 
 public:
 // construction (never done directly)
     CPPInstance() = delete;
 
     void Set(void* address, EFlags flags = kDefault);
-    CPPInstance* Copy(void* cppinst);
+    CPPInstance* Copy(void* cppinst, PyTypeObject* target = nullptr);
 
 // state checking
     bool  IsExtended() const { return fFlags & kIsExtended; }
@@ -64,16 +67,20 @@ public:
     void PythonOwns();
     void CppOwns();
 
+// data member cache
+    CI_DatamemberCache_t& GetDatamemberCache();
+
 // smart pointer management
     void SetSmart(PyObject* smart_type);
     void* GetSmartObject() { return GetObjectRaw(); }
     Cppyy::TCppType_t GetSmartIsA() const;
 
-// data member cache
-    CI_DatamemberCache_t& GetDatamemberCache();
-
-// cross-inheritence dispatch
+// cross-inheritance dispatch
     void SetDispatchPtr(void*);
+
+// redefine pointer to object as fixed-size array
+    void CastToArray(Py_ssize_t sz);
+    Py_ssize_t ArrayLength();
 
 private:
     void  CreateExtension();

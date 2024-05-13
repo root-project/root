@@ -33,7 +33,7 @@ protected:
 
 public:
    TEveWindowManager(const char* n="TEveWindowManager", const char* t="");
-   virtual ~TEveWindowManager();
+   ~TEveWindowManager() override;
 
    void SelectWindow(TEveWindow* w);
    void DeleteWindow(TEveWindow* w);
@@ -48,7 +48,7 @@ public:
    TEveWindowSlot* GetCurrentWindowAsSlot() const;
 
    TEveWindow*     GetDefaultContainer() const { return fDefaultContainer; }
-   Bool_t          HasDefaultContainer() const { return fDefaultContainer != 0; }
+   Bool_t          HasDefaultContainer() const { return fDefaultContainer != nullptr; }
    void            SetDefaultContainer(TEveWindow* w);
 
    void            DestroyWindows();
@@ -59,7 +59,7 @@ public:
    void ShowNormalEveDecorations();
    void SetShowTitleBars(Bool_t state);
 
-   ClassDef(TEveWindowManager, 0); // Manager for EVE windows.
+   ClassDefOverride(TEveWindowManager, 0); // Manager for EVE windows.
 };
 
 #endif

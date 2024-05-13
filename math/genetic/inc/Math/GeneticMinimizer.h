@@ -64,30 +64,30 @@ public:
 
    //GeneticMinimizer (int = 0);
    GeneticMinimizer (int i = 0);
-   virtual ~GeneticMinimizer ();
+   ~GeneticMinimizer () override;
 
-   virtual void Clear();
+   void Clear() override;
    using ROOT::Math::Minimizer::SetFunction;
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
-   virtual bool SetLimitedVariable(unsigned int , const std::string& , double , double , double, double);
-   virtual bool SetVariable(unsigned int ivar, const std::string & name, double val, double step);
-   virtual bool SetFixedVariable(unsigned int ivar  , const std::string & name , double val);
+   bool SetLimitedVariable(unsigned int , const std::string& , double , double , double, double) override;
+   bool SetVariable(unsigned int ivar, const std::string & name, double val, double step) override;
+   bool SetFixedVariable(unsigned int ivar  , const std::string & name , double val) override;
 
-   virtual  bool Minimize();
-   virtual double MinValue() const;
-   virtual double Edm() const;
-   virtual const double *  X() const;
-   virtual const double *  MinGradient() const;
-   virtual unsigned int NCalls() const;
+    bool Minimize() override;
+   double MinValue() const override;
+   double Edm() const override;
+   const double *  X() const override;
+   const double *  MinGradient() const override;
+   unsigned int NCalls() const override;
 
-   virtual unsigned int NDim() const;
-   virtual unsigned int NFree() const;
+   unsigned int NDim() const override;
+   unsigned int NFree() const override;
 
-   virtual bool ProvidesError() const;
-   virtual const double * Errors() const;
+   bool ProvidesError() const override;
+   const double * Errors() const override;
 
-   virtual double CovMatrix(unsigned int i, unsigned int j) const;
+   double CovMatrix(unsigned int i, unsigned int j) const override;
 
    void SetParameters(const GeneticMinimizerParameters & params );
 
@@ -95,7 +95,7 @@ public:
 
    const GeneticMinimizerParameters & MinimizerParameters() const { return fParameters; }
 
-   virtual ROOT::Math::MinimizerOptions Options() const;
+   ROOT::Math::MinimizerOptions Options() const override;
 
    virtual void SetOptions(const ROOT::Math::MinimizerOptions & opt);
 

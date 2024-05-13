@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrixDSym                                                          //
 //                                                                      //
-//  Instantation of TMatrixTSym<Double_t>                               //
+//  Instantiation of TMatrixTSym<Double_t>                               //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

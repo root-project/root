@@ -20,8 +20,8 @@ class TGLLightSet;
 class TGLLightSetSubEditor : public TGVerticalFrame
 {
 private:
-   TGLLightSetSubEditor(const TGLLightSetSubEditor&);            // Not implemented
-   TGLLightSetSubEditor& operator=(const TGLLightSetSubEditor&); // Not implemented
+   TGLLightSetSubEditor(const TGLLightSetSubEditor&) = delete;
+   TGLLightSetSubEditor& operator=(const TGLLightSetSubEditor&) = delete;
 
 protected:
    TGLLightSet      *fM;
@@ -39,7 +39,7 @@ protected:
 
 public:
    TGLLightSetSubEditor(const TGWindow* p);
-   virtual ~TGLLightSetSubEditor() {}
+   ~TGLLightSetSubEditor() override {}
 
    void SetModel(TGLLightSet* m);
 
@@ -47,27 +47,27 @@ public:
 
    void DoButton();
 
-   ClassDef(TGLLightSetSubEditor, 0) // Sub-editor for TGLLightSet.
+   ClassDefOverride(TGLLightSetSubEditor, 0) // Sub-editor for TGLLightSet.
 };
 
 
 class TGLLightSetEditor : public TGedFrame
 {
 private:
-   TGLLightSetEditor(const TGLLightSetEditor&);            // Not implemented
-   TGLLightSetEditor& operator=(const TGLLightSetEditor&); // Not implemented
+   TGLLightSetEditor(const TGLLightSetEditor&) = delete;
+   TGLLightSetEditor& operator=(const TGLLightSetEditor&) = delete;
 
 protected:
    TGLLightSet          *fM;  // fModel dynamic-casted to TGLLightSetEditor
    TGLLightSetSubEditor *fSE;
 
 public:
-   TGLLightSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TGLLightSetEditor();
+   TGLLightSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   ~TGLLightSetEditor() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TGLLightSetEditor, 0); // Editor for TGLLightSet.
+   ClassDefOverride(TGLLightSetEditor, 0); // Editor for TGLLightSet.
 }; // endclass TGLLightSetEditor
 
 #endif

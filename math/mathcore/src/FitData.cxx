@@ -209,6 +209,8 @@ namespace ROOT {
       }
 
       FitData::FitData(const FitData &rhs)
+         : fWrapped(false), fMaxPoints(0), fNPoints(0), fDim(0),
+           fpTmpCoordVector(nullptr)
       {
          *this = rhs;
       }
@@ -218,8 +220,9 @@ namespace ROOT {
          fWrapped = rhs.fWrapped;
          fOptions = rhs.fOptions;
          fRange = rhs.fRange;
-         fDim = rhs.fDim;
          fMaxPoints = rhs.fMaxPoints;
+         fNPoints = rhs.fNPoints;
+         fDim = rhs.fDim;
 
          if (fWrapped) {
             fCoords.clear();

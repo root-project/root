@@ -111,7 +111,7 @@
  where \f$ P_{li}\f$ is the leading power of variable \f$ x_i\f$ in function \f$ F_l\f$ (TMultiDimFit::MakeCandidates).
  So the number of functions increase with \f$ Q\f$ (1, 2 is fine, 5 is way out).
 
- ## Gram-Schmidt Orthogonalisation</A>
+ ## Gram-Schmidt Orthogonalisation
  To further reduce the number of functions in the final expression,
  only those functions that significantly reduce \f$ S\f$ is chosen. What
  `significant' means, is chosen by the user, and will be
@@ -205,7 +205,7 @@
 
  ## Test 1
  Denoting by \f$ H_{L-1}\f$ the subspace spanned by \f$\textbf{w}_1,\ldots,\textbf{w}_{L-1}\f$
- the function \d$\textbf{w}_L\d$ is by construction (see 4) the projection of the function
+ the function \f$\textbf{w}_L\f$ is by construction (see 4) the projection of the function
  \f$ F_L\f$ onto the direction perpendicular to \f$ H_{L-1}\f$. Now, if the
  length of \f$\textbf{w}_L\f$ (given by \f$\textbf{w}_L\bullet\textbf{w}_L\f$)
  is very small compared to the length of \f$\textbf{f}_L\f$ this new
@@ -215,7 +215,7 @@
  (see also figure 1) and requiring that it's
  *greater* then a threshold value which the user must set (TMultiDimFit::SetMinAngle).
 
- \image html multidimfit_img86.gif "Figure 1: (a) angle \f$\theta\f$ between \f$\textbf{w}_l\f$ and \f$\textbf{f}_L\f$, (b) angle \f$ \phi \f$ between \f$\textbf{w}_L\f$ and \f$\textbf{D}\f$"
+ \image html multidimfit_img86.gif "Figure 1: (a) angle \\f$\\theta\\f$ between \\f$\\textbf{w}_l\\f$ and \\f$\\textbf{f}_L\\f$, (b) angle \\f$ \\phi \\f$ between \\f$\\textbf{w}_L\\f$ and \\f$\\textbf{D}\\f$"
 
  ## Test 2
  Let \f$\textbf{D}\f$ be the data vector to be fitted. As illustrated in
@@ -424,7 +424,7 @@ ClassImp(TMultiDimFit);
 
 //____________________________________________________________________
 // Static instance. Used with mdfHelper and TMinuit
-TMultiDimFit* TMultiDimFit::fgInstance = 0;
+TMultiDimFit* TMultiDimFit::fgInstance = nullptr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,17 +446,17 @@ TMultiDimFit::TMultiDimFit()
    fMaxAngle               = 0;
    fMaxTerms               = 0;
    fMinRelativeError       = 0;
-   fMaxPowers              = 0;
+   fMaxPowers              = nullptr;
    fPowerLimit             = 0;
 
    fMaxFunctions           = 0;
-   fFunctionCodes          = 0;
+   fFunctionCodes          = nullptr;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
 
-   fMaxPowersFinal         = 0;
-   fPowers                 = 0;
-   fPowerIndex             = 0;
+   fMaxPowersFinal         = nullptr;
+   fPowers                 = nullptr;
+   fPowerIndex             = nullptr;
 
    fMaxResidual            = 0;
    fMinResidual            = 0;
@@ -476,12 +476,12 @@ TMultiDimFit::TMultiDimFit()
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
 
-   fHistograms             = 0;
+   fHistograms             = nullptr;
    fHistogramMask          = 0;
    fBinVarX                = 100;
    fBinVarY                = 100;
 
-   fFitter                 = 0;
+   fFitter                 = nullptr;
    fPolyType               = kMonomials;
    fShowCorrelation        = kFALSE;
    fIsUserFunction         = kFALSE;
@@ -536,13 +536,13 @@ fMinVariables(dimension)
    fPowerLimit             = 1;
 
    fMaxFunctions           = 0;
-   fFunctionCodes          = 0;
+   fFunctionCodes          = nullptr;
    fMaxStudy               = 0;
    fMaxFuncNV              = 0;
 
    fMaxPowersFinal         = new Int_t[dimension];
-   fPowers                 = 0;
-   fPowerIndex             = 0;
+   fPowers                 = nullptr;
+   fPowerIndex             = nullptr;
 
    fMaxResidual            = 0;
    fMinResidual            = 0;
@@ -562,12 +562,12 @@ fMinVariables(dimension)
    fCorrelationCoeff       = 0;
    fTestCorrelationCoeff   = 0;
 
-   fHistograms             = 0;
+   fHistograms             = nullptr;
    fHistogramMask          = 0;
    fBinVarX                = 100;
    fBinVarY                = 100;
 
-   fFitter                 = 0;
+   fFitter                 = nullptr;
    fPolyType               = type;
    fShowCorrelation        = kFALSE;
    fIsUserFunction         = kFALSE;
@@ -738,7 +738,7 @@ void TMultiDimFit::Browse(TBrowser* b)
 {
    if (fHistograms) {
       TIter next(fHistograms);
-      TH1* h = 0;
+      TH1* h = nullptr;
       while ((h = (TH1*)next()))
          b->Add(h,h->GetName());
    }
@@ -1052,7 +1052,7 @@ void TMultiDimFit::Fit(Option_t *option)
       return;
    }
 
-   fFitter = TVirtualFitter::Fitter(0,fNCoefficients);
+   fFitter = TVirtualFitter::Fitter(nullptr,fNCoefficients);
    if (!fFitter) {
       Error("Fit", "Cannot create Fitter");
       delete [] x;
@@ -1069,7 +1069,7 @@ void TMultiDimFit::Fit(Option_t *option)
    for (i = 0; i < fNCoefficients; i++) {
       Double_t startVal = fCoefficients(i);
       Double_t startErr = fCoefficientsRMS(i);
-      fFitter->SetParameter(i, Form("coeff%02d",i),
+      fFitter->SetParameter(i, TString::Format("coeff%02d",i).Data(),
                             startVal, startErr, 0, 0);
    }
 
@@ -1080,12 +1080,17 @@ void TMultiDimFit::Fit(Option_t *option)
 
    for (i = 0; i < fNCoefficients; i++) {
       Double_t val = 0, err = 0, low = 0, high = 0;
-      fFitter->GetParameter(i, Form("coeff%02d",i),
+
+      // use big enough string buffer to get variable name which is not used
+      char namebuf[512];
+      fFitter->GetParameter(i, namebuf,
                             val, err, low, high);
+      (void) namebuf;
       fCoefficients(i)    = val;
       fCoefficientsRMS(i) = err;
    }
    delete [] x;
+   delete [] arglist;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1125,11 +1130,6 @@ void TMultiDimFit::MakeCandidates()
 
       // Number of funcs selected
       Int_t     numberFunctions = 0;
-
-      // Absolute max number of functions
-      Int_t maxNumberFunctions = 1;
-      for (i = 0; i < fNVariables; i++)
-         maxNumberFunctions *= fMaxPowers[i];
 
       while (kTRUE) {
          // Get the control value for this function
@@ -1263,11 +1263,11 @@ Double_t TMultiDimFit::MakeChi2(const Double_t* coeff)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <filename> with .C appended if argument doesn't
+/// Generate the file `<filename>` with .C appended if argument doesn't
 /// end in .cxx or .C. The contains the implementation of the
 /// function:
 ///
-///   Double_t <funcname>(Double_t *x)
+///   `Double_t <funcname>(Double_t *x)`
 ///
 /// which does the same as TMultiDimFit::Eval. Please refer to this
 /// method.
@@ -1430,7 +1430,7 @@ void TMultiDimFit::MakeCoefficients()
 
          if (TESTBIT(fHistogramMask,HIST_RX))
             for (j = 0; j < fNVariables; j++)
-               ((TH2D*)fHistograms->FindObject(Form("res_x_%d",j)))
+               ((TH2D*)fHistograms->FindObject(TString::Format("res_x_%d",j)))
                ->Fill(fVariables(i * fNVariables + j),fResiduals(i));
       }
    } // If histograms
@@ -1612,9 +1612,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("x") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_XORIG);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("x_%d_orig",i)))
-            fHistograms->Add(new TH1D(Form("x_%d_orig",i),
-                                      Form("Original variable # %d",i),
+         if (!fHistograms->FindObject(TString::Format("x_%d_orig",i)))
+            fHistograms->Add(new TH1D(TString::Format("x_%d_orig",i),
+                                      TString::Format("Original variable # %d",i),
                                       fBinVarX, fMinVariables(i),
                                       fMaxVariables(i)));
    }
@@ -1631,9 +1631,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("n") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_XNORM);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("x_%d_norm",i)))
-            fHistograms->Add(new TH1D(Form("x_%d_norm",i),
-                                      Form("Normalized variable # %d",i),
+         if (!fHistograms->FindObject(TString::Format("x_%d_norm",i)))
+            fHistograms->Add(new TH1D(TString::Format("x_%d_norm",i),
+                                      TString::Format("Normalized variable # %d",i),
                                       fBinVarX, -1,1));
    }
 
@@ -1650,9 +1650,9 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
    if (opt.Contains("r1") || opt.Contains("a")) {
       SETBIT(fHistogramMask,HIST_RX);
       for (i = 0; i < fNVariables; i++)
-         if (!fHistograms->FindObject(Form("res_x_%d",i)))
-            fHistograms->Add(new TH2D(Form("res_x_%d",i),
-                                      Form("Computed residual versus x_%d", i),
+         if (!fHistograms->FindObject(TString::Format("res_x_%d",i)))
+            fHistograms->Add(new TH2D(TString::Format("res_x_%d",i),
+                                      TString::Format("Computed residual versus x_%d", i),
                                       fBinVarX, -1,    1,
                                       fBinVarY,
                                       fMinQuantity - fMeanQuantity,
@@ -1695,16 +1695,16 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <classname>MDF.cxx which contains the
+/// Generate the file `<classname>MDF.cxx` which contains the
 /// implementation of the method:
 ///
-///   Double_t <classname>::MDF(Double_t *x)
+///   `Double_t <classname>::%MDF(Double_t *x)`
 ///
 /// which does the same as  TMultiDimFit::Eval. Please refer to this
 /// method.
 ///
 /// Further, the public static members:
-///
+///   \code{.cpp}
 ///   Int_t    <classname>::fgNVariables
 ///   Int_t    <classname>::fgNCoefficients
 ///   Double_t <classname>::fgDMean
@@ -1713,15 +1713,16 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 ///   Double_t <classname>::fgXMax[]        //[fgNVariables]
 ///   Double_t <classname>::fgCoefficient[] //[fgNCoeffficents]
 ///   Int_t    <classname>::fgPower[]       //[fgNCoeffficents*fgNVariables]
+///   \endcode
 ///
 /// are initialized, and assumed to exist. The class declaration is
-/// assumed to be in <classname>.h and assumed to be provided by the
+/// assumed to be in `<classname>.h` and assumed to be provided by the
 /// user.
 ///
-/// See TMultiDimFit::MakeRealCode for a list of options
+/// \see TMultiDimFit::MakeRealCode for a list of options
 ///
 /// The minimal class definition is:
-///
+///   \code{.cpp}
 ///   class <classname> {
 ///   public:
 ///     Int_t    <classname>::fgNVariables;     // Number of variables
@@ -1735,13 +1736,14 @@ void TMultiDimFit::MakeHistograms(Option_t *option)
 ///
 ///     Double_t Eval(Double_t *x);
 ///   };
+///   \endcode
 ///
-/// Whether the method <classname>::Eval should be static or not, is
+/// Whether the method `<classname>::%Eval` should be static or not, is
 /// up to the user.
 
 void TMultiDimFit::MakeMethod(const Char_t* classname, Option_t* option)
 {
-   MakeRealCode(Form("%sMDF.cxx", classname), classname, option);
+   MakeRealCode(TString::Format("%sMDF.cxx", classname), classname, option);
 }
 
 
@@ -1773,7 +1775,7 @@ void TMultiDimFit::MakeNormalized()
 
          // Fill histograms of original independent variables
          if (TESTBIT(fHistogramMask,HIST_XORIG))
-            ((TH1D*)fHistograms->FindObject(Form("x_%d_orig",j)))
+            ((TH1D*)fHistograms->FindObject(TString::Format("x_%d_orig",j)))
             ->Fill(fVariables(k));
 
          // Normalise independent variables
@@ -1781,7 +1783,7 @@ void TMultiDimFit::MakeNormalized()
 
          // Fill histograms of normalised independent variables
          if (TESTBIT(fHistogramMask,HIST_XNORM))
-            ((TH1D*)fHistograms->FindObject(Form("x_%d_norm",j)))
+            ((TH1D*)fHistograms->FindObject(TString::Format("x_%d_norm",j)))
             ->Fill(fVariables(k));
 
       }
@@ -1965,8 +1967,10 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    Int_t i, j;
 
    Bool_t  isMethod     = (classname[0] == '\0' ? kFALSE : kTRUE);
-   const char *prefix   = (isMethod ? Form("%s::", classname) : "");
-   const char *cv_qual  = (isMethod ? "" : "static ");
+   TString prefix;
+   const char *cv_qual  = isMethod ? "" : "static ";
+   if (isMethod)
+      prefix.Form("%s::", classname);
 
    std::ofstream outFile(filename,std::ios::out|std::ios::trunc);
    if (!outFile) {
@@ -2116,8 +2120,8 @@ void TMultiDimFit::MakeRealCode(const char *filename,
    << "        for (k = 3; k <= power; k++) { " << std::endl
    << "          p3 = p2 * v;" << std::endl;
    if (fPolyType == kLegendre)
-      outFile << "          p3 = ((2 * i - 3) * p2 * v - (i - 2) * p1)"
-      << " / (i - 1);" << std::endl;
+      outFile << "          p3 = ((2 * k - 3) * p2 * v - (k - 2) * p1)"
+      << " / (k - 1);" << std::endl;
    if (fPolyType == kChebyshev)
       outFile << "          p3 = 2 * v * p2 - p1; " << std::endl;
    outFile << "          p1 = p2; p2 = p3; " << std::endl << "        }" << std::endl

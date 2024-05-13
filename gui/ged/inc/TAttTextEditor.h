@@ -12,17 +12,8 @@
 #ifndef ROOT_TAttTextEditor
 #define ROOT_TAttTextEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAttTextEditor                                                      //
-//                                                                      //
-//  Implements GUI for editing text attributes.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGedFrame.h"
-
-#include "TGSlider.h"
 
 class TGComboBox;
 class TGFontTypeComboBox;
@@ -33,12 +24,12 @@ class TGNumberEntryField;
 class TAttTextEditor : public TGedFrame {
 
 protected:
-   TAttText            *fAttText;         // text attribute object
-   TGFontTypeComboBox  *fTypeCombo;       // font style combo box
-   TGComboBox          *fSizeCombo;       // font size combo box
-   TGComboBox          *fAlignCombo;      // font aligh combo box
-   TGColorSelect       *fColorSelect;     // color selection widget
-   TGHSlider           *fAlpha;           // fill opacity
+   TAttText            *fAttText;         ///< text attribute object
+   TGFontTypeComboBox  *fTypeCombo;       ///< font style combo box
+   TGComboBox          *fSizeCombo;       ///< font size combo box
+   TGComboBox          *fAlignCombo;      ///< font aligh combo box
+   TGColorSelect       *fColorSelect;     ///< color selection widget
+   TGHSlider           *fAlpha;           ///< fill opacity
    TGNumberEntryField  *fAlphaField;
 
    void             ConnectSignals2Slots();
@@ -47,22 +38,22 @@ protected:
    static  TGComboBox *BuildTextAlignComboBox(TGFrame *parent, Int_t id);
 
 public:
-   TAttTextEditor(const TGWindow *p = 0,
+   TAttTextEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttTextEditor();
+   ~TAttTextEditor() override;
 
-   virtual void     SetModel(TObject* obj);
-   virtual Bool_t   ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
-   virtual void     DoTextAlphaColor(ULong_t p);
+   void     SetModel(TObject* obj) override;
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   virtual void     DoTextAlphaColor(ULongptr_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();
    virtual void     DoLiveAlpha(Int_t a);
    virtual void     GetCurAlpha();
    virtual void     DoTextColor(Pixel_t color);
 
-   ClassDef(TAttTextEditor,0)  //GUI for editing text attributes
+   ClassDefOverride(TAttTextEditor,0)  //GUI for editing text attributes
 };
 
 #endif

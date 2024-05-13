@@ -94,7 +94,7 @@ namespace Math {
       @param relTol desired relative Error  (this parameter is actually not used and it can be ignored. The tolerance is fixed by the number of given calls)
       @param calls maximum number of function calls
 
-      NOTE: When the default values are used , the options are taken from teh static method of ROOT::Math::IntegratorMultiDimOptions
+      NOTE: When the default values are used , the options are taken from the static method of ROOT::Math::IntegratorMultiDimOptions
       */
       explicit
       GSLMCIntegrator(MCIntegration::Type type = MCIntegration::kVEGAS, double absTol = -1, double relTol = -1, unsigned int calls = 0 );
@@ -112,7 +112,7 @@ namespace Math {
       /**
           destructor
       */
-      virtual ~GSLMCIntegrator();
+      ~GSLMCIntegrator() override;
 
       // disable copy ctrs
 
@@ -130,34 +130,36 @@ public:
          /**
          method to set the a generic integration function
 
-          @param f integration function. The function type must implement the assigment operator, <em>  double  operator() (  double  x ) </em>
+          @param f integration function. The function type must implement the assignment operator, <em>  double  operator() (  double  x ) </em>
 
           */
 
 
-      void SetFunction(const IMultiGenFunction &f);
+      void SetFunction(const IMultiGenFunction &f) override;
 
 
       typedef double ( * GSLMonteFuncPointer ) ( double *, size_t, void *);
 
-      void SetFunction( GSLMonteFuncPointer f, unsigned int dim, void * p = 0 );
+      void SetFunction( GSLMonteFuncPointer f, unsigned int dim, void * p = nullptr );
 
       // methods using GSLMonteFuncPointer
 
       /**
          evaluate the Integral of a function f over the defined hypercube (a,b)
        @param f integration function. The function type must implement the mathlib::IGenFunction interface
+       @param dim the dimension
        @param a lower value of the integration interval
        @param b upper value of the integration interval
+       @param p pointer to parameter array
        */
 
-      double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = 0);
+      double Integral(const GSLMonteFuncPointer & f, unsigned int dim, double* a, double* b, void * p = nullptr);
 
 
       /**
          evaluate the integral using the previously defined function
        */
-      double Integral(const double* a, const double* b);
+      double Integral(const double* a, const double* b) override;
 
 
       // to be added later
@@ -173,24 +175,24 @@ public:
       /**
          return  the Result of the last Integral calculation
        */
-      double Result() const;
+      double Result() const override;
 
       /**
          return the estimate of the absolute Error of the last Integral calculation
        */
-      double Error() const;
+      double Error() const override;
 
       /**
          return the Error Status of the last Integral calculation
        */
-      int Status() const;
+      int Status() const override;
 
 
       /**
           return number of function evaluations in calculating the integral
           (This is an fixed by the user)
       */
-      int NEval() const { return fCalls; }
+      int NEval() const override { return fCalls; }
 
 
       // setter for control Parameters  (getters are not needed so far )
@@ -198,18 +200,18 @@ public:
       /**
          set the desired relative Error
        */
-      void SetRelTolerance(double relTolerance);
+      void SetRelTolerance(double relTolerance) override;
 
 
       /**
          set the desired absolute Error
        */
-      void SetAbsTolerance(double absTolerance);
+      void SetAbsTolerance(double absTolerance) override;
 
       /**
          set the integration options
        */
-      void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt);
+      void SetOptions(const ROOT::Math::IntegratorMultiDimOptions & opt) override;
 
 
       /**
@@ -233,7 +235,7 @@ public:
          The possible MODE are :
          MCIntegration::kIMPORTANCE (default) : VEGAS will use importance sampling
          MCIntegration::kSTRATIFIED           : VEGAS will use stratified sampling  if certain condition are satisfied
-         MCIntegration::kIMPORTANCE_ONLY      : VEGAS will always use importance smapling
+         MCIntegration::kIMPORTANCE_ONLY      : VEGAS will always use importance sampling
       */
 
       void SetMode(MCIntegration::Mode mode);
@@ -252,7 +254,7 @@ public:
       /**
        set parameters for PLAIN method
       */
-      //void SetPParameters(const PlainParameters &p);
+      //void SetParameters(const PlainParameters &p);
 
       /**
        returns the error sigma from the last iteration of the Vegas algorithm
@@ -266,7 +268,7 @@ public:
 
       /**
           return the type
-          (need to be called GetType to avois a conflict with typedef)
+          (need to be called GetType to avoid a conflict with typedef)
       */
       MCIntegration::Type GetType() const { return fType; }
 
@@ -278,13 +280,19 @@ public:
       /**
          get the option used for the integration
       */
-      ROOT::Math::IntegratorMultiDimOptions Options() const;
+      ROOT::Math::IntegratorMultiDimOptions Options() const override;
 
       /**
          get the specific options (for Vegas or Miser)
-         in term of string-  name
+         in term of string-  name. This is for querying existing options and
+         return object is managed by the user
       */
-      ROOT::Math::IOptions * ExtraOptions() const;
+      std::unique_ptr<ROOT::Math::IOptions> ExtraOptions() const;
+
+      /**
+       * Set the extra options for Vegas and Miser.
+      */
+      void SetExtraOptions(const ROOT::Math::IOptions & opt);
 
 
    protected:
@@ -297,7 +305,7 @@ public:
 
 
    private:
-      //type of intergation method
+      //type of integration method
       MCIntegration::Type fType;
 
       GSLRngWrapper * fRng;

@@ -1,10 +1,11 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
+## Basic functionality: plotting unbinned data with alternate and variable binnings
 ##
-## \brief Basic functionality: plotting unbinned data with alternate and variable binnings
-##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -14,19 +15,15 @@ import ROOT
 # Set up model
 # ---------------------
 
-# Build a B decay p.d.f with mixing
+# Build a B decay pdf with mixing
 dt = ROOT.RooRealVar("dt", "dt", -20, 20)
 dm = ROOT.RooRealVar("dm", "dm", 0.472)
 tau = ROOT.RooRealVar("tau", "tau", 1.547)
 w = ROOT.RooRealVar("w", "mistag rate", 0.1)
-dw = ROOT.RooRealVar("dw", "delta mistag rate", 0.)
+dw = ROOT.RooRealVar("dw", "delta mistag rate", 0.0)
 
-mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state")
-mixState.defineType("mixed", -1)
-mixState.defineType("unmixed", 1)
-tagFlav = ROOT.RooCategory("tagFlav", "Flavour of the tagged B0")
-tagFlav.defineType("B0", 1)
-tagFlav.defineType("B0bar", -1)
+mixState = ROOT.RooCategory("mixState", "B0/B0bar mixing state", {"mixed": -1, "unmixed": 1})
+tagFlav = ROOT.RooCategory("tagFlav", "Flavour of the tagged B0", {"B0": 1, "B0bar": -1})
 
 # Build a gaussian resolution model
 dterr = ROOT.RooRealVar("dterr", "dterr", 0.1, 1.0)
@@ -35,14 +32,13 @@ sigma1 = ROOT.RooRealVar("sigma1", "sigma1", 0.1)
 gm1 = ROOT.RooGaussModel("gm1", "gauss model 1", dt, bias1, sigma1)
 
 # Construct Bdecay (x) gauss
-bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav,
-                         tau, dm, w, dw, gm1, ROOT.RooBMixDecay.DoubleSided)
+bmix = ROOT.RooBMixDecay("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, type="DoubleSided")
 
 # Sample data from model
 # --------------------------------------------
 
 # Sample 2000 events in (dt,mixState,tagFlav) from bmix
-data = bmix.generate(ROOT.RooArgSet(dt, mixState, tagFlav), 2000)
+data = bmix.generate({dt, mixState, tagFlav}, 2000)
 
 # Show dt distribution with custom binning
 # -------------------------------------------------------------------------------
@@ -60,9 +56,8 @@ tbins.addUniform(60, -15, 0)
 tbins.addUniform(15, 0, 15)
 
 # Make plot with specified binning
-dtframe = dt.frame(ROOT.RooFit.Range(-15, 15),
-                   ROOT.RooFit.Title("dt distribution with custom binning"))
-data.plotOn(dtframe, ROOT.RooFit.Binning(tbins))
+dtframe = dt.frame(Range=(-15, 15), Title="dt distribution with custom binning")
+data.plotOn(dtframe, Binning=tbins)
 bmix.plotOn(dtframe)
 
 # NB: Note that bin density for each bin is adjusted to that of default frame binning as shown
@@ -87,15 +82,13 @@ abins.addBoundaryPair(4)
 abins.addBoundaryPair(6)
 
 # Create plot frame in dt
-aframe = dt.frame(ROOT.RooFit.Range(-10, 10), ROOT.RooFit.Title(
-    "mixState asymmetry distribution with custom binning"))
+aframe = dt.frame(Range=(-10, 10), Title="mixState asymmetry distribution with custom binning")
 
 # Plot mixState asymmetry of data with specified customg binning
-data.plotOn(aframe, ROOT.RooFit.Asymmetry(
-    mixState), ROOT.RooFit.Binning(abins))
+data.plotOn(aframe, Asymmetry=mixState, Binning=abins)
 
-# Plot corresponding property of p.d.f
-bmix.plotOn(aframe, ROOT.RooFit.Asymmetry(mixState))
+# Plot corresponding property of pdf
+bmix.plotOn(aframe, Asymmetry=mixState)
 
 # Adjust vertical range of plot to sensible values for an asymmetry
 aframe.SetMinimum(-1.1)

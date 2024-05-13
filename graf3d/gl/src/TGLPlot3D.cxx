@@ -33,7 +33,7 @@ ClassImp(TGLPlot3D);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TGLPlot3D::TGLPlot3D() : TGLObject(), fPlotPainter(0)
+TGLPlot3D::TGLPlot3D() : TGLObject(), fPlotPainter(nullptr)
 {
    fDLCache = kFALSE; // Disable display list.
 }
@@ -78,7 +78,7 @@ TGLPlot3D* TGLPlot3D::InstantiatePlot(TObject* obj)
       return new TGLParametricEquationGL();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

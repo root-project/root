@@ -4,7 +4,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodDL                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Deep Neural Network Method                                                *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #include "TFormula.h"
@@ -45,6 +45,13 @@
 #include "TMVA/DNN/RMSProp.h"
 #include "TMVA/DNN/Adadelta.h"
 #include "TMVA/Timer.h"
+
+#ifdef R__HAS_TMVAGPU
+#include "TMVA/DNN/Architectures/Cuda.h"
+#ifdef R__HAS_CUDNN
+#include "TMVA/DNN/Architectures/TCudnn.h"
+#endif
+#endif
 
 #include <chrono>
 
@@ -360,6 +367,25 @@ void MethodDL::ProcessOptions()
          settings.optimizer = DNN::EOptimizer::kAdam;
          settings.optimizerName = "ADAM";
       }
+      // check for specific optimizer parameters
+      std::vector<TString> optimParamLabels = {"_beta1", "_beta2", "_eps", "_rho"};
+      //default values
+      std::map<TString, double> defaultValues = {
+         {"ADADELTA_eps", 1.E-8}, {"ADADELTA_rho", 0.95},
+         {"ADAGRAD_eps", 1.E-8},
+         {"ADAM_beta1", 0.9},     {"ADAM_beta2", 0.999}, {"ADAM_eps", 1.E-7},
+         {"RMSPROP_eps", 1.E-7}, {"RMSPROP_rho", 0.9},
+      };
+      for (auto &pN : optimParamLabels) {
+         TString optimParamName = settings.optimizerName + pN;
+         // check if optimizer has default values for this specific  parameters
+         if (defaultValues.count(optimParamName) > 0) {
+            double defValue = defaultValues[optimParamName];
+            double val = fetchValueTmp(block, optimParamName, defValue);
+            // create entry in settings for this optimizer parameter
+            settings.optimizerParams[optimParamName] = val;
+         }
+      }
 
       fTrainingSettings.push_back(settings);
    }
@@ -441,11 +467,11 @@ void MethodDL::ParseInputLayout()
    // when we will support 3D convolutions we would need to add extra 1's
    if (inputShape.size() == 2) {
       // case of dense layer where only width is specified
-      inputShape.insert(inputShape.begin() + 1, {1,1});
+      inputShape = {inputShape[0], 1, 1, inputShape[1]};
    }
    else if (inputShape.size() == 3) {
       //e.g. case of RNN T,W -> T,1,W
-      inputShape.insert(inputShape.begin() + 2, 1);
+      inputShape = {inputShape[0], inputShape[1], 1, inputShape[2]};
    }
 
    this->SetInputShape(inputShape);
@@ -570,13 +596,11 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TObjArray *subStrings = layerString.Tokenize(delim);
    TIter nextToken(subStrings);
    TObjString *token = (TObjString *)nextToken();
-   int idxToken = 0;
 
    // loop on the tokens
    // order of sepcifying width and activation function is not relevant
    // both  100|TANH and TANH|100 are valid cases
    for (; token != nullptr; token = (TObjString *)nextToken()) {
-      idxToken++;
       // try a match with the activation function
       TString strActFnc(token->GetString());
       // if first token defines the layer type- skip it
@@ -1334,24 +1358,32 @@ void MethodDL::TrainDeepNet()
             new DNN::TSGD<Architecture_t, Layer_t, DeepNet_t>(settings.learningRate, deepNet, settings.momentum));
          break;
 
-      case EOptimizer::kAdam:
+      case EOptimizer::kAdam: {
          optimizer = std::unique_ptr<DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdam<Architecture_t, Layer_t, DeepNet_t>(
+               deepNet, settings.learningRate, settings.optimizerParams["ADAM_beta1"],
+               settings.optimizerParams["ADAM_beta2"], settings.optimizerParams["ADAM_eps"]));
          break;
+      }
 
       case EOptimizer::kAdagrad:
          optimizer = std::unique_ptr<DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdagrad<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                  settings.optimizerParams["ADAGRAD_eps"]));
          break;
 
       case EOptimizer::kRMSProp:
          optimizer = std::unique_ptr<DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum));
+            new DNN::TRMSProp<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate, settings.momentum,
+                                                                  settings.optimizerParams["RMSPROP_rho"],
+                                                                  settings.optimizerParams["RMSPROP_eps"]));
          break;
 
       case EOptimizer::kAdadelta:
          optimizer = std::unique_ptr<DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>>(
-            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate));
+            new DNN::TAdadelta<Architecture_t, Layer_t, DeepNet_t>(deepNet, settings.learningRate,
+                                                                   settings.optimizerParams["ADADELTA_rho"],
+                                                                   settings.optimizerParams["ADADELTA_eps"]));
          break;
       }
 
@@ -1367,20 +1399,36 @@ void MethodDL::TrainDeepNet()
       std::chrono::time_point<std::chrono::system_clock> tstart, tend;
       tstart = std::chrono::system_clock::now();
 
+      // function building string with optimizer parameters values for logging
+      auto optimParametersString = [&]() {
+         TString optimParameters;
+         for ( auto & element :  settings.optimizerParams) {
+            TString key = element.first;
+            key.ReplaceAll(settings.optimizerName + "_", "");  // strip optimizerName_
+            double value = element.second;
+            if (!optimParameters.IsNull())
+               optimParameters += ",";
+            else
+               optimParameters += " (";
+            optimParameters += TString::Format("%s=%g", key.Data(), value);
+         }
+         if (!optimParameters.IsNull())
+            optimParameters += ")";
+         return optimParameters;
+      };
+
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ": "
             << " Optimizer " << settings.optimizerName
-            << " Learning rate = " << settings.learningRate
-            << " regularization " << (char) settings.regularization
-            << " minimum error = " << minValError
-            << Endl;
+            << optimParametersString()
+            << " Learning rate = " << settings.learningRate << " regularization " << (char)settings.regularization
+            << " minimum error = " << minValError << Endl;
       if (!fInteractive) {
          std::string separator(62, '-');
          Log() << separator << Endl;
          Log() << std::setw(10) << "Epoch"
-               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err."
-               << std::setw(12) << "t(s)/epoch" << std::setw(12)  << "t(s)/Loss"
-               << std::setw(12) << "nEvents/s"
-               << std::setw(12) << "Conv. Steps" << Endl;
+               << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Val. Err." << std::setw(12)
+               << "t(s)/epoch" << std::setw(12) << "t(s)/Loss" << std::setw(12) << "nEvents/s" << std::setw(12)
+               << "Conv. Steps" << Endl;
          Log() << separator << Endl;
       }
 
@@ -1652,30 +1700,25 @@ void MethodDL::Train()
 
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
-Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
+void TMVA::MethodDL::FillInputTensor()
 {
-
-   // note that fNet  should have been build with a batch size of  1
+   // fill the input tensor fXInput from the current Event data
+   // with the correct shape depending on the model used
+   // The input tensor is used for network prediction after training 
+   // using a single event. The network batch size must be equal to 1. 
+   // The architecture specified at compile time  in ArchitectureImpl_t
+   // is used. This should be the CPU architecture
 
    if (!fNet || fNet->GetDepth() == 0) {
-       Log() << kFATAL << "The network has not been trained and fNet is not built"
-             << Endl;
+      Log() << kFATAL << "The network has not been trained and fNet is not built" << Endl;
    }
-
-   // input  size must be equal to  1 which is the batch size of fNet
-   R__ASSERT(fNet->GetBatchSize() == 1);
-
-   // int batchWidth = fNet->GetBatchWidth();
-   // int batchDepth = fNet->GetBatchDepth();
-   // int batchHeight = fNet->GetBatchHeight();
-//   int noutput = fNet->GetOutputWidth();
-
+   if (fNet->GetBatchSize() != 1) {
+      Log() << kFATAL << "FillINputTensor::Network batch size must be equal to 1 when doing single event predicition" << Endl;
+   }
 
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
-
    size_t nVariables = GetEvent()->GetNVariables();
 
    // for Columnlayout tensor memory layout is   HWC while for rowwise is CHW
@@ -1683,26 +1726,24 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
       R__ASSERT(fXInput.GetShape().size() < 4);
       size_t nc, nhw = 0;
       if (fXInput.GetShape().size() == 2) {
-         nc =  fXInput.GetShape()[0];
-         if (nc != 1 ) {
-             ArchitectureImpl_t::PrintTensor(fXInput);
-             Log() << kFATAL << "First tensor dimension should be equal to batch size, i.e. = 1"
-                   << Endl;
+         nc = fXInput.GetShape()[0];
+         if (nc != 1) {
+            ArchitectureImpl_t::PrintTensor(fXInput);
+            Log() << kFATAL << "First tensor dimension should be equal to batch size, i.e. = 1" << Endl;
          }
          nhw = fXInput.GetShape()[1];
       } else {
          nc = fXInput.GetCSize();
          nhw = fXInput.GetWSize();
       }
-      if ( nVariables != nc * nhw)  {
-          Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw
-            << Endl;
+      if (nVariables != nc * nhw) {
+         Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
+               << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nhw << Endl;
       }
       for (size_t j = 0; j < nc; j++) {
          for (size_t k = 0; k < nhw; k++) {
             // note that in TMVA events images are stored as C H W while in the buffer we stored as H W C
-            fXInputBuffer[ k * nc + j] = inputValues[j*nhw + k];  // for column layout !!!
+            fXInputBuffer[k * nc + j] = inputValues[j * nhw + k]; // for column layout !!!
          }
       }
    } else {
@@ -1712,18 +1753,26 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
       size_t nh = fXInput.GetHSize();
       size_t nw = fXInput.GetWSize();
       size_t n = nc * nh * nw;
-      if ( nVariables != n) {
+      if (nVariables != n) {
          Log() << kFATAL << "Input Event variable dimensions are not compatible with the built network architecture"
-            << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nh << " x " << nw
-            << Endl;
+               << " n-event variables " << nVariables << " expected input tensor " << nc << " x " << nh << " x " << nw
+               << Endl;
       }
       for (size_t j = 0; j < n; j++) {
          // in this case TMVA event has same order as input tensor
-         fXInputBuffer[ j ] = inputValues[j];  // for column layout !!!
+         fXInputBuffer[j] = inputValues[j]; // for column layout !!!
       }
    }
    // copy buffer in input
-   fXInput.GetDeviceBuffer().CopyFrom( fXInputBuffer);
+   fXInput.GetDeviceBuffer().CopyFrom(fXInputBuffer);
+   return;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
+{
+
+   FillInputTensor();
 
    // perform the prediction
    fNet->Prediction(*fYHat, fXInput, fOutputFunction);
@@ -1906,80 +1955,72 @@ std::vector<Double_t> MethodDL::PredictDeepNet(Long64_t firstEvt, Long64_t lastE
    return mvaValues;
 }
 
+//////////////////////////////////////////////////////////////////////////
+///  Get the regression output values for a single event
+//////////////////////////////////////////////////////////////////////////
 const std::vector<Float_t> & TMVA::MethodDL::GetRegressionValues()
 {
-   size_t nVariables = GetEvent()->GetNVariables();
-   MatrixImpl_t X(1, nVariables);
-   TensorImpl_t X_vec ( 1,  1, nVariables);  // needs to be really 1
-   const Event *ev = GetEvent();
-   const std::vector<Float_t>& inputValues = ev->GetValues();
-   for (size_t i = 0; i < nVariables; i++) {
-       X_vec(0,i,0) = inputValues[i];   // in case of column format !!
-   }
-   //X_vec.emplace_back(X);
 
-   size_t nTargets = std::max(1u, ev->GetNTargets());
-   MatrixImpl_t YHat(1, nTargets);
+   FillInputTensor ();
+
+   // perform the network prediction
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
+
+   size_t nTargets = DataInfo().GetNTargets();
+   R__ASSERT(nTargets == fYHat->GetNcols());
+
    std::vector<Float_t> output(nTargets);
-   fNet->Prediction(YHat, X_vec, fOutputFunction);
-
    for (size_t i = 0; i < nTargets; i++)
-       output[i] = YHat(0, i);
+      output[i] = (*fYHat)(0, i);
 
-   if (fRegressionReturnVal == NULL) {
-       fRegressionReturnVal = new std::vector<Float_t>();
-   }
-   fRegressionReturnVal->clear();
+   // ned to transform back output values
+   if (fRegressionReturnVal == NULL)
+      fRegressionReturnVal = new std::vector<Float_t>(nTargets);
+   R__ASSERT(fRegressionReturnVal->size() == nTargets);
 
-   Event * evT = new Event(*ev);
+   // N.B. one should cache here temporary event class
+   Event *evT = new Event(*GetEvent());
    for (size_t i = 0; i < nTargets; ++i) {
       evT->SetTarget(i, output[i]);
    }
-
-   const Event* evT2 = GetTransformationHandler().InverseTransform(evT);
+   const Event *evT2 = GetTransformationHandler().InverseTransform(evT);
    for (size_t i = 0; i < nTargets; ++i) {
-      fRegressionReturnVal->push_back(evT2->GetTarget(i));
+      (*fRegressionReturnVal)[i] = evT2->GetTarget(i);
    }
    delete evT;
    return *fRegressionReturnVal;
 }
-
-const std::vector<Float_t> & TMVA::MethodDL::GetMulticlassValues()
+//////////////////////////////////////////////////////////////////////////
+///  Get the multi-class output values for a single event
+//////////////////////////////////////////////////////////////////////////
+const std::vector<Float_t> &TMVA::MethodDL::GetMulticlassValues()
 {
-   size_t nVariables = GetEvent()->GetNVariables();
-   MatrixImpl_t X(1, nVariables);
-   TensorImpl_t X_vec ( 1, 1, nVariables);
-   MatrixImpl_t YHat(1, DataInfo().GetNClasses());
-   if (fMulticlassReturnVal == NULL) {
-      fMulticlassReturnVal = new std::vector<Float_t>(DataInfo().GetNClasses());
-   }
 
-   const std::vector<Float_t>& inputValues = GetEvent()->GetValues();
-   for (size_t i = 0; i < nVariables; i++) {
-      X_vec(0,i, 0) = inputValues[i];
+   FillInputTensor();
+
+   fNet->Prediction(*fYHat, fXInput, fOutputFunction);
+
+   size_t nClasses = DataInfo().GetNClasses();
+   R__ASSERT(nClasses == fYHat->GetNcols());
+
+   if (fMulticlassReturnVal == NULL) {
+      fMulticlassReturnVal = new std::vector<Float_t>(nClasses);
    }
-   //X_vec.emplace_back(X);
-   fNet->Prediction(YHat, X_vec, fOutputFunction);
-   for (size_t i = 0; i < (size_t) YHat.GetNcols(); i++) {
-      (*fMulticlassReturnVal)[i] = YHat(0, i);
+   R__ASSERT(fMulticlassReturnVal->size() == nClasses);
+
+   for (size_t i = 0; i < nClasses; i++) {
+      (*fMulticlassReturnVal)[i] = (*fYHat)(0, i);
    }
    return *fMulticlassReturnVal;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate the DeepNet on a vector of input values stored in the TMVA Event class
+/// Here we will evaluate using a default batch size and the same architecture used for 
+/// Training
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<Double_t> MethodDL::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
 {
-   // Long64_t nEvents = Data()->GetNEvents();
-   // std::vector<Double_t>  v(nEvents);
-   // for (Long64_t i = 0; i < nEvents; ++i) {
-   //    Data()->SetCurrentEvent(i);
-   //    v[i] = GetMvaValue();
-   // }
-   // return v;
-
 
    Long64_t nEvents = Data()->GetNEvents();
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;

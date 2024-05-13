@@ -121,7 +121,6 @@
 #include "xpm.h"
 #include "ungif.h"
 #include "import.h"
-#include "asimagexml.h"
 #include "transform.h"
 
 #ifdef jmpbuf
@@ -183,7 +182,7 @@ const char *as_image_file_type_names[ASIT_Unknown+1] =
 	"Unknown"
 };
 
-char *locate_image_file_in_path( const char *file, ASImageImportParams *iparams ) 
+char *locate_image_file_in_path( const char *file, ASImageImportParams *iparams )
 {
 	int 		  filename_len ;
 	char 		 *realfilename = NULL, *tmp = NULL ;
@@ -197,7 +196,7 @@ char *locate_image_file_in_path( const char *file, ASImageImportParams *iparams 
 	{
 		filename_len = strlen(file);
 #ifdef _WIN32
-		for( i = 0 ; iparams->search_path[i] != NULL ; ++i ) 
+		for( i = 0 ; iparams->search_path[i] != NULL ; ++i )
 			unix_path2dos_path( iparams->search_path[i] );
 #endif
 
@@ -254,13 +253,13 @@ file2ASImage_extra( const char *file, ASImageImportParams *iparams )
 	char *realfilename ;
 	ASImage *im = NULL;
 	ASImageImportParams dummy_iparams = {0};
-	
+
 	if( iparams == NULL )
 		iparams = &dummy_iparams ;
 
-	realfilename = locate_image_file_in_path( file, iparams ); 
-	
-	if( realfilename != NULL ) 
+	realfilename = locate_image_file_in_path( file, iparams );
+
+	if( realfilename != NULL )
 	{
 		ASImageFileTypes file_type = check_image_type( realfilename );
 
@@ -275,15 +274,15 @@ file2ASImage_extra( const char *file, ASImageImportParams *iparams )
 		}else
 			show_error( "Support for the format of image file \"%s\" has not been implemented yet.", realfilename );
 		/* returned image must not be tracked by any ImageManager yet !!! */
-		if( im != NULL && im->imageman != NULL ) 
+		if( im != NULL && im->imageman != NULL )
 		{
-			if( im->ref_count == 1 ) 
+			if( im->ref_count == 1 )
 			{
 				forget_asimage( im );
 			}else
 			{
-				ASImage *tmp = clone_asimage( im , 0xFFFFFFFF); 
-				if( tmp ) 
+				ASImage *tmp = clone_asimage( im , 0xFFFFFFFF);
+				if( tmp )
 				{
 					release_asimage( im );
 					im = tmp ;
@@ -292,7 +291,7 @@ file2ASImage_extra( const char *file, ASImageImportParams *iparams )
 		}
 
 #ifndef NO_DEBUG_OUTPUT
-		if( im != NULL ) 
+		if( im != NULL )
 			show_progress( "image loaded from \"%s\"", realfilename );
 #endif
 		free( realfilename );
@@ -302,9 +301,9 @@ file2ASImage_extra( const char *file, ASImageImportParams *iparams )
 	return im;
 }
 
-void init_asimage_import_params( ASImageImportParams *iparams ) 
+void init_asimage_import_params( ASImageImportParams *iparams )
 {
-	if( iparams ) 
+	if( iparams )
 	{
 		iparams->flags = 0 ;
 		iparams->width = 0 ;
@@ -332,16 +331,16 @@ file2ASImage( const char *file, ASFlagType what, double gamma, unsigned int comp
 	iparams.compression = compression ;
 	iparams.search_path = &(paths[0]);
 #if 0
-	iparams.width = 1024 ; 
-	iparams.height = -1 ; 	
+	iparams.width = 1024 ;
+	iparams.height = -1 ;
 	iparams.flags |= AS_IMPORT_SCALED_H|AS_IMPORT_SCALED_V ;
 #endif
 	va_start (ap, compression);
 	for( i = 0 ; i < MAX_SEARCH_PATHS ; i++ )
-	{	
+	{
 		if( (paths[i] = va_arg(ap,char*)) == NULL )
 			break;
-	}		   
+	}
 	paths[MAX_SEARCH_PATHS] = NULL ;
 	va_end (ap);
 
@@ -409,12 +408,12 @@ get_asimage_file_type( ASImageManager* imageman, const char *file )
 	{
 		ASImageImportParams iparams ;
 		char *realfilename ;
-	
+
 		init_asimage_import_params( &iparams );
 		iparams.search_path = imageman?&(imageman->search_path[0]):NULL;
-		realfilename = locate_image_file_in_path( file, &iparams ); 
-	
-		if( realfilename != NULL ) 
+		realfilename = locate_image_file_in_path( file, &iparams );
+
+		if( realfilename != NULL )
 		{
 			file_type = check_image_type( realfilename );
 			free( realfilename );
@@ -437,24 +436,24 @@ get_asimage( ASImageManager* imageman, const char *file, ASFlagType what, unsign
 				store_asimage( imageman, im, file );
 				set_flags( im->flags, ASIM_NAME_IS_FILENAME );
 			}
-				
+
 		}
 	return im;
 }
 
-void 
-calculate_proportions( int src_w, int src_h, int *pdst_w, int *pdst_h ) 
+void
+calculate_proportions( int src_w, int src_h, int *pdst_w, int *pdst_h )
 {
-	int dst_w = pdst_w?*pdst_w:0 ; 
-	int dst_h = pdst_h?*pdst_h:0 ; 
-	
-	if( src_w > 0 && src_w >= src_h && (dst_w > 0 || dst_h <= 0)) 
-		dst_h = (src_h*dst_w)/src_w ; 
-	else if( src_h > 0 ) 
-		dst_w = (src_w*dst_h)/src_h ; 
+	int dst_w = pdst_w?*pdst_w:0 ;
+	int dst_h = pdst_h?*pdst_h:0 ;
 
-	if( pdst_w ) *pdst_w = dst_w ; 	
-	if( pdst_h ) *pdst_h = dst_h ; 
+	if( src_w > 0 && src_w >= src_h && (dst_w > 0 || dst_h <= 0))
+		dst_h = (src_h*dst_w)/src_w ;
+	else if( src_h > 0 )
+		dst_w = (src_w*dst_h)/src_h ;
+
+	if( pdst_w ) *pdst_w = dst_w ;
+	if( pdst_h ) *pdst_h = dst_h ;
 }
 
 void print_asimage_func (ASHashableValue value);
@@ -462,32 +461,32 @@ ASImage *
 get_thumbnail_asimage( ASImageManager* imageman, const char *file, int thumb_width, int thumb_height, ASFlagType flags )
 {
 	ASImage *im = NULL ;
-	
+
 	if( imageman && file )
 	{
 #define AS_THUMBNAIL_NAME_FORMAT	"%s_scaled_to_%dx%d"
 		char *thumbnail_name = safemalloc( strlen(file)+sizeof(AS_THUMBNAIL_NAME_FORMAT)+32 );
 		ASImage *original_im = query_asimage(imageman, file );
 
-		if( thumb_width <= 0 && thumb_height <= 0 ) 
+		if( thumb_width <= 0 && thumb_height <= 0 )
 		{
 			thumb_width = 48 ;
 			thumb_height = 48 ;
 		}
 
-		if( get_flags(flags, AS_THUMBNAIL_PROPORTIONAL ) ) 
+		if( get_flags(flags, AS_THUMBNAIL_PROPORTIONAL ) )
 		{
-			if( original_im != NULL )		
+			if( original_im != NULL )
 				calculate_proportions( original_im->width, original_im->height, &thumb_width, &thumb_height );
 		}else
 		{
-			if( thumb_width == 0 ) 
-				thumb_width = thumb_height ; 
-			if( thumb_height == 0 ) 
-				thumb_height = thumb_width ; 
+			if( thumb_width == 0 )
+				thumb_width = thumb_height ;
+			if( thumb_height == 0 )
+				thumb_height = thumb_width ;
 		}
 
-		if( thumb_width > 0 && thumb_height > 0 ) 
+		if( thumb_width > 0 && thumb_height > 0 )
 		{
 			sprintf( thumbnail_name, AS_THUMBNAIL_NAME_FORMAT, file, thumb_width, thumb_height ) ;
 			im = fetch_asimage(imageman, thumbnail_name );
@@ -499,43 +498,43 @@ get_thumbnail_asimage( ASImageManager* imageman, const char *file, int thumb_wid
 						(( (int)original_im->width < thumb_width || (int)original_im->height < thumb_height ) && !get_flags( flags, AS_THUMBNAIL_DONT_ENLARGE ) ) )
 					{
 						im = scale_asimage( NULL, original_im, thumb_width, thumb_height, ASA_ASImage, 100, ASIMAGE_QUALITY_FAST );
-						if( im != NULL ) 
+						if( im != NULL )
 							store_asimage( imageman, im, thumbnail_name );
 					}else
 						im = dup_asimage( original_im );
 				}
 			}
 		}
-		
-		if( im == NULL ) 	
+
+		if( im == NULL )
 		{
-			ASImage *tmp ; 
+			ASImage *tmp ;
 			ASImageImportParams iparams ;
 
 			init_asimage_import_params( &iparams );
 			iparams.gamma = imageman->gamma ;
 			iparams.search_path = &(imageman->search_path[0]);
-			
-			iparams.width = thumb_width ; 
-			iparams.height = thumb_height ; 
+
+			iparams.width = thumb_width ;
+			iparams.height = thumb_height ;
 			if( !get_flags( flags, AS_THUMBNAIL_DONT_ENLARGE|AS_THUMBNAIL_DONT_REDUCE ) )
-				iparams.flags |= AS_IMPORT_RESIZED|AS_IMPORT_SCALED_BOTH ; 
-			
+				iparams.flags |= AS_IMPORT_RESIZED|AS_IMPORT_SCALED_BOTH ;
+
 			if( get_flags( flags, AS_THUMBNAIL_DONT_ENLARGE ) )
-				iparams.flags |= AS_IMPORT_FAST ; 
-			
+				iparams.flags |= AS_IMPORT_FAST ;
+
 			tmp = file2ASImage_extra( file, &iparams );
-			if( tmp ) 
+			if( tmp )
 			{
-				im = tmp ; 
-				if( (int)tmp->width != thumb_width || (int)tmp->height != thumb_height ) 
+				im = tmp ;
+				if( (int)tmp->width != thumb_width || (int)tmp->height != thumb_height )
 				{
-					if( get_flags(flags, AS_THUMBNAIL_PROPORTIONAL ) ) 
+					if( get_flags(flags, AS_THUMBNAIL_PROPORTIONAL ) )
 					{
 						calculate_proportions( tmp->width, tmp->height, &thumb_width, &thumb_height );
 						sprintf( thumbnail_name, AS_THUMBNAIL_NAME_FORMAT, file, thumb_width, thumb_height );
-						if( (im = query_asimage( imageman, thumbnail_name )) == NULL ) 
-							im = tmp ; 
+						if( (im = query_asimage( imageman, thumbnail_name )) == NULL )
+							im = tmp ;
 					}
 					if( im == tmp )
 					{
@@ -543,11 +542,11 @@ get_thumbnail_asimage( ASImageManager* imageman, const char *file, int thumb_wid
 							(( (int)tmp->width < thumb_width || (int)tmp->height < thumb_height ) && !get_flags( flags, AS_THUMBNAIL_DONT_ENLARGE ) ) )
 						{
 							im = scale_asimage( NULL, tmp, thumb_width, thumb_height, ASA_ASImage, 100, ASIMAGE_QUALITY_FAST );
-							if( im == NULL ) 
+							if( im == NULL )
 								im = tmp ;
 						}
 					}
-				}			
+				}
 
 				if( im != NULL )
 				{
@@ -556,14 +555,14 @@ get_thumbnail_asimage( ASImageManager* imageman, const char *file, int thumb_wid
 					else
 						dup_asimage( im );
 				}
-				
-				if( im != tmp ) 
-					destroy_asimage( &tmp );				
+
+				if( im != tmp )
+					destroy_asimage( &tmp );
 			}
-		
+
 		}
-								 
-		if( thumbnail_name ) 
+
+		if( thumbnail_name )
 			free( thumbnail_name );
 	}
 	return im;
@@ -574,7 +573,7 @@ Bool
 reload_asimage_manager( ASImageManager *imman )
 {
 #if (HAVE_AFTERBASE_FLAG==1)
-	if( imman != NULL ) 
+	if( imman != NULL )
 	{
 		ASHashIterator iter ;
 		if( start_hash_iteration (imman->image_hash, &iter) )
@@ -587,17 +586,17 @@ reload_asimage_manager( ASImageManager *imman )
 				{
 /*fprintf( stderr, "reloading image \"%s\" ...", im->name );*/
 					ASImage *reloaded_im = load_image_from_path( im->name, &(imman->search_path[0]), imman->gamma);
-/*fprintf( stderr, "Done. reloaded_im = %p.\n", reloaded_im );*/					
-					if( reloaded_im ) 
+/*fprintf( stderr, "Done. reloaded_im = %p.\n", reloaded_im );*/
+					if( reloaded_im )
 					{
-						if( asimage_replace (im, reloaded_im) ) 
+						if( asimage_replace (im, reloaded_im) )
 							free( reloaded_im );
 						else
 							destroy_asimage( &reloaded_im );
-					}				
+					}
 				}
 			}while( next_hash_item( &iter ) );
-			return True;		
+			return True;
 		}
 	}
 #endif
@@ -605,64 +604,64 @@ reload_asimage_manager( ASImageManager *imman )
 }
 
 
-ASImageListEntry * 
+ASImageListEntry *
 ref_asimage_list_entry( ASImageListEntry *entry )
 {
-	if( entry ) 
+	if( entry )
 	{
 		if( IS_ASIMAGE_LIST_ENTRY(entry) )
 			++(entry->ref_count);
 		else
-			entry = NULL ; 
+			entry = NULL ;
 	}
 	return entry;
 }
-	 
+
 ASImageListEntry *
 unref_asimage_list_entry( ASImageListEntry *entry )
 {
-	if( entry ) 
-	{	
+	if( entry )
+	{
 		if( IS_ASIMAGE_LIST_ENTRY(entry) )
 		{
 			--(entry->ref_count);
 			if( entry->ref_count  <= 0 )
 			{
-				ASImageListEntry *prev = entry->prev ; 
-				ASImageListEntry *next = entry->next ; 
+				ASImageListEntry *prev = entry->prev ;
+				ASImageListEntry *next = entry->next ;
 				if( !IS_ASIMAGE_LIST_ENTRY(prev) )
-					prev = NULL ; 
+					prev = NULL ;
 				if( !IS_ASIMAGE_LIST_ENTRY(next) )
-					next = NULL ; 
-				if( prev ) 
-					prev->next = next ; 
-				if( next ) 
-					next->prev = prev ; 
+					next = NULL ;
+				if( prev )
+					prev->next = next ;
+				if( next )
+					next->prev = prev ;
 
-				if( entry->preview ) 
+				if( entry->preview )
 					safe_asimage_destroy( entry->preview );
 				if( entry->name )
 					free( entry->name );
 				if( entry->fullfilename )
 					free( entry->fullfilename );
-				if( entry->buffer ) 
+				if( entry->buffer )
 					destroy_asimage_list_entry_buffer( &(entry->buffer) );
 				memset( entry, 0x00, sizeof(ASImageListEntry));
 				free( entry );
-				entry = NULL ; 
-			}	 
+				entry = NULL ;
+			}
 		}else
 			entry = NULL ;
 	}
 	return entry;
-}	 
+}
 
 ASImageListEntry *
 create_asimage_list_entry()
 {
 	ASImageListEntry *entry = safecalloc( 1, sizeof(ASImageListEntry));
-	entry->ref_count = 1 ; 
-	entry->magic = MAGIC_ASIMAGE_LIST_ENTRY ; 
+	entry->ref_count = 1 ;
+	entry->magic = MAGIC_ASIMAGE_LIST_ENTRY ;
 	return entry;
 }
 
@@ -670,11 +669,11 @@ void
 destroy_asimage_list( ASImageListEntry **plist )
 {
 	if( plist )
-	{		   
+	{
 		ASImageListEntry *curr = *plist ;
 		while( IS_ASIMAGE_LIST_ENTRY(curr) )
-		{	
-			ASImageListEntry *to_delete = curr ; 
+		{
+			ASImageListEntry *to_delete = curr ;
 			curr = curr->next ;
 		 	unref_asimage_list_entry( to_delete );
 		}
@@ -684,14 +683,14 @@ destroy_asimage_list( ASImageListEntry **plist )
 
 void destroy_asimage_list_entry_buffer( ASImageListEntryBuffer **pbuffer )
 {
-	if( pbuffer && *pbuffer ) 
-	{		 
-		if( (*pbuffer)->data ) 
+	if( pbuffer && *pbuffer )
+	{
+		if( (*pbuffer)->data )
 			free( (*pbuffer)->data ) ;
 		free( *pbuffer );
 		*pbuffer = NULL ;
 	}
-}	 
+}
 
 struct ASImageListAuxData
 {
@@ -705,23 +704,23 @@ struct ASImageListAuxData
 };
 
 #ifndef _WIN32
-Bool 
-direntry2ASImageListEntry( const char *fname, const char *fullname, 
+Bool
+direntry2ASImageListEntry( const char *fname, const char *fullname,
 						   struct stat *stat_info, void *aux_data)
 {
 	struct ASImageListAuxData *data = (struct ASImageListAuxData*)aux_data;
 	ASImageFileTypes file_type ;
 	ASImageListEntry *curr ;
-	   	
+
 	if (S_ISDIR (stat_info->st_mode))
 		return False;
-	
+
 	file_type = check_image_type( fullname );
 	if( file_type != ASIT_Unknown && as_image_file_loaders[file_type] == NULL )
 		file_type = ASIT_Unknown ;
 
 	curr = create_asimage_list_entry();
-	*(data->pcurr) = curr ; 
+	*(data->pcurr) = curr ;
 	if( data->last )
 		data->last->next = curr ;
 	curr->prev = data->last ;
@@ -796,18 +795,18 @@ get_asimage_list( ASVisual *asv, const char *dir,
 {
 	ASImageListEntry *im_list = NULL ;
 #ifndef _WIN32
-	struct ASImageListAuxData aux_data ; 
-	int count ; 
-	
+	struct ASImageListAuxData aux_data ;
+	int count ;
+
 	aux_data.pcurr = &im_list;
 	aux_data.last = NULL;
 	aux_data.preview_type = preview_type;
 	aux_data.preview_width = preview_width;
 	aux_data.preview_height = preview_height;
 	aux_data.preview_compression  = preview_compression;
-	aux_data.asv = asv ; 
-	
-	
+	aux_data.asv = asv ;
+
+
 	if( asv == NULL || dir == NULL )
 		return NULL ;
 
@@ -823,71 +822,71 @@ char *format_asimage_list_entry_details( ASImageListEntry *entry, Bool vertical 
 {
 	char *details_text ;
 
-	if( entry ) 
-	{	
-		int type = (entry->type>ASIT_Unknown)?ASIT_Unknown:entry->type ; 
+	if( entry )
+	{
+		int type = (entry->type>ASIT_Unknown)?ASIT_Unknown:entry->type ;
 		details_text = safemalloc(128);
-		if( entry->preview ) 
-			sprintf( details_text, vertical?"File type: %s\nSize %dx%d":"File type: %s; Size %dx%d", as_image_file_type_names[type], entry->preview->width, entry->preview->height ); 	  
-		else 
+		if( entry->preview )
+			sprintf( details_text, vertical?"File type: %s\nSize %dx%d":"File type: %s; Size %dx%d", as_image_file_type_names[type], entry->preview->width, entry->preview->height );
+		else
 			sprintf( details_text, "File type: %s", as_image_file_type_names[type]);
 	}else
-		details_text = mystrdup("");		   
+		details_text = mystrdup("");
 	return details_text;
-}	 
+}
 
-Bool 
+Bool
 load_asimage_list_entry_data( ASImageListEntry *entry, size_t max_bytes )
 {
-	char * new_buffer ; 
+	char * new_buffer ;
 	size_t new_buffer_size ;
 	FILE *fp;
-	Bool binary = False ; 
-	if( entry == NULL ) 
+	Bool binary = False ;
+	if( entry == NULL )
 		return False;
-	if( entry->buffer == NULL ) 
+	if( entry->buffer == NULL )
 		entry->buffer = safecalloc( 1, sizeof(ASImageListEntryBuffer) );
 	if( (int)entry->buffer->size == entry->d_size || entry->buffer->size >= max_bytes )
 		return True;
-	new_buffer_size = min( max_bytes, (size_t)entry->d_size ); 
+	new_buffer_size = min( max_bytes, (size_t)entry->d_size );
 	new_buffer = malloc( new_buffer_size );
-	if( new_buffer == NULL ) 
+	if( new_buffer == NULL )
 		return False ;
-	if( entry->buffer->size > 0 ) 
-	{	
+	if( entry->buffer->size > 0 )
+	{
 		memcpy( new_buffer, entry->buffer->data, entry->buffer->size ) ;
 		free( entry->buffer->data );
 	}
-	entry->buffer->data = new_buffer ; 
+	entry->buffer->data = new_buffer ;
 	/* TODO read new_buffer_size - entry->buffer_size bytes into the end of the buffer */
 	fp = fopen(entry->fullfilename, "rb");
-	if ( fp != NULL ) 
+	if ( fp != NULL )
 	{
 		int len = new_buffer_size - entry->buffer->size ;
-		if( entry->buffer->size > 0 ) 
+		if( entry->buffer->size > 0 )
 			fseek( fp, entry->buffer->size, SEEK_SET );
 		len = fread(entry->buffer->data, 1, len, fp);
-		if( len > 0 ) 
+		if( len > 0 )
 			entry->buffer->size += len ;
 		fclose(fp);
 	}
 
-	if( entry->type == ASIT_Unknown ) 
+	if( entry->type == ASIT_Unknown )
 	{
-		int i = entry->buffer->size ; 
+		int i = entry->buffer->size ;
 		register char *ptr = entry->buffer->data ;
-		while ( --i >= 0 )	
-			if( !isprint(ptr[i]) && ptr[i] != '\n'&& ptr[i] != '\r'&& ptr[i] != '\t' )	
+		while ( --i >= 0 )
+			if( !isprint(ptr[i]) && ptr[i] != '\n'&& ptr[i] != '\r'&& ptr[i] != '\t' )
 				break;
-		binary = (i >= 0);				
+		binary = (i >= 0);
 	}else
 		binary = (entry->type != ASIT_Xpm  && entry->type != ASIT_XMLScript &&
-			  	  entry->type != ASIT_HTML && entry->type != ASIT_XML ); 
-	if( binary ) 
+			  	  entry->type != ASIT_HTML && entry->type != ASIT_XML );
+	if( binary )
 		set_flags( entry->buffer->flags, ASILEB_Binary );
    	else
 		clear_flags( entry->buffer->flags, ASILEB_Binary );
-	 
+
 
 
 	return True;
@@ -906,7 +905,7 @@ locate_image_file( const char *file, char **paths )
 #ifdef _WIN32
 		unix_path2dos_path( realfilename );
 #endif
-		
+
 		if( CheckFile( realfilename ) != 0 )
 		{
 			free( realfilename ) ;
@@ -916,10 +915,10 @@ locate_image_file( const char *file, char **paths )
 				register int i = 0;
 				do
 				{
-					if( i > 0 ) 
-					{	
+					if( i > 0 )
+					{
 						show_progress( "looking for image \"%s\" in path [%s]", file, paths[i] );
-					}		
+					}
 					realfilename = find_file( file, paths[i], R_OK );
 				}while( realfilename == NULL && paths[i++] != NULL );
 			}
@@ -950,7 +949,7 @@ check_image_type( const char *realfilename )
 #define FILE_HEADER_SIZE	512
 
 	/* lets check if we have compressed xpm file : */
-	if( filename_len > 5 && (mystrncasecmp( realfilename+filename_len-5, ".html", 5 ) == 0 || 
+	if( filename_len > 5 && (mystrncasecmp( realfilename+filename_len-5, ".html", 5 ) == 0 ||
 							 mystrncasecmp( realfilename+filename_len-4, ".htm", 4 ) == 0 ))
 		type = ASIT_HTML;
 	else if( filename_len > 7 && mystrncasecmp( realfilename+filename_len-7, ".xpm.gz", 7 ) == 0 )
@@ -995,8 +994,8 @@ check_image_type( const char *realfilename )
 		if( type == ASIT_Unknown && bytes_in  > 6 )
 		{
 			if( mystrncasecmp( head, "<HTML>", 6 ) == 0 )
-				type = ASIT_HTML;	
-		}	 
+				type = ASIT_HTML;
+		}
 		if( type == ASIT_Unknown && bytes_in  > 8 )
 		{
 			if( strncmp(&(head[0]), XCF_SIGNATURE, (size_t) XCF_SIGNATURE_LEN) == 0)
@@ -1017,27 +1016,27 @@ check_image_type( const char *realfilename )
 				while( bytes_in > 0 && type == ASIT_XMLScript )
 				{
 					if( i >= bytes_in )
-					{	
+					{
 						bytes_in = fread( &(head[0]), sizeof(CARD8), FILE_HEADER_SIZE, fp );
 						for( i = 0 ; i < bytes_in ; ++i ) if( !isspace(head[i]) ) break;
 					}
 					else if( head[i] != '<' )
 						type = ASIT_Unknown ;
-					else if( mystrncasecmp( &(head[i]), "<svg", 4 ) == 0 ) 
+					else if( mystrncasecmp( &(head[i]), "<svg", 4 ) == 0 )
 					{
 						type = ASIT_SVG ;
-					}else if( mystrncasecmp( &(head[i]), "<!DOCTYPE ", 10 ) == 0 ) 
-					{	
+					}else if( mystrncasecmp( &(head[i]), "<!DOCTYPE ", 10 ) == 0 )
+					{
 						type = ASIT_XML ;
 						for( i += 9 ; i < bytes_in ; ++i ) if( !isspace(head[i]) ) break;
-						if( i < bytes_in ) 
+						if( i < bytes_in )
 						{
-					 		if( mystrncasecmp( &(head[i]), "afterstep-image-xml", 19 ) == 0 ) 			
+					 		if( mystrncasecmp( &(head[i]), "afterstep-image-xml", 19 ) == 0 )
 							{
-								i += 19 ;	  
+								i += 19 ;
 								type = ASIT_XMLScript ;
 							}
-						}	 
+						}
 					}else
 					{
 						while( bytes_in > 0 && type == ASIT_XMLScript )
@@ -1054,14 +1053,14 @@ check_image_type( const char *realfilename )
 								}
 
 							if( i >= bytes_in )
-							{	
+							{
 								bytes_in = fread( &(head[0]), sizeof(CARD8), FILE_HEADER_SIZE, fp );
-								i = 0 ; 
+								i = 0 ;
 							}else
 								break ;
 						}
 						break;
-					}	
+					}
 				}
 			}
 		}
@@ -1074,7 +1073,7 @@ check_image_type( const char *realfilename )
 ASImageFileTypes
 check_asimage_file_type( const char *realfilename )
 {
-	if( realfilename == NULL ) 
+	if( realfilename == NULL )
 		return ASIT_Unknown;
 	return check_image_type( realfilename );
 }
@@ -1101,7 +1100,7 @@ xpm_file2ASImage( ASXpmFile *xpm_file, unsigned int compression )
 			ASFlagType alpha_flags = ASStorage_RLEDiffCompress|ASStorage_32Bit ;
 			int old_storage_block_size = set_asstorage_block_size( NULL, xpm_file->width*xpm_file->height*3/2 );
 
-			if( !xpm_file->full_alpha ) 
+			if( !xpm_file->full_alpha )
 				alpha_flags |= ASStorage_Bitmap ;
 			for( line = 0 ; line < xpm_file->height ; ++line )
 			{
@@ -1206,7 +1205,7 @@ static inline void
 apply_gamma( register CARD8* raw, register CARD8 *gamma_table, unsigned int width )
 {
 	if( gamma_table )
-	{	
+	{
 		register unsigned int i ;
 		for( i = 0 ; i < width ; ++i )
 			raw[i] = gamma_table[raw[i]] ;
@@ -1254,34 +1253,34 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 			{
 				ASFlagType rgb_flags = ASStorage_RLEDiffCompress|ASStorage_32Bit ;
 
-	         if(read_fn == NULL ) 
-	         {	
+	         if(read_fn == NULL )
+	         {
 		         png_init_io(png_ptr, (FILE*)data);
 	         }else
 	         {
 	            png_set_read_fn(png_ptr, (void*)data, (png_rw_ptr) read_fn);
-	         }	 
+	         }
 
 		    	png_read_info (png_ptr, info_ptr);
 				png_get_IHDR (png_ptr, info_ptr, &width, &height, &bit_depth, &color_type, &interlace_type, NULL, NULL);
 
-/*fprintf( stderr, "bit_depth = %d, color_type = %d, width = %d, height = %d\n", 
-         bit_depth, color_type, width, height); 
+/*fprintf( stderr, "bit_depth = %d, color_type = %d, width = %d, height = %d\n",
+         bit_depth, color_type, width, height);
 */
 				if (bit_depth < 8)
 				{/* Extract multiple pixels with bit depths of 1, 2, and 4 from a single
 				  * byte into separate bytes (useful for paletted and grayscale images).
 				  */
-					if( bit_depth == 1 ) 
+					if( bit_depth == 1 )
 					{
 						set_flags( rgb_flags, ASStorage_Bitmap );
 						png_set_packing (png_ptr);
 					}else
 					{
-						/* even though 2 and 4 bit values get expanded into a whole bytes the 
-						   values don't get scaled accordingly !!! 
+						/* even though 2 and 4 bit values get expanded into a whole bytes the
+						   values don't get scaled accordingly !!!
 						   WE will have to take care of it ourselves :
-						*/	
+						*/
 						upscaled_gray = safemalloc(width+8);
 					}
 				}else if (bit_depth == 16)
@@ -1317,16 +1316,14 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
    				else
 					color_type = PNG_COLOR_TYPE_GRAY_ALPHA ;
   */
-				if (png_get_sRGB (png_ptr, info_ptr, &intent))
-				{
-                    png_set_gamma (png_ptr, params->gamma, DEFAULT_PNG_IMAGE_GAMMA);
-				}else if (png_get_gAMA (png_ptr, info_ptr, &image_gamma) && bit_depth >= 8)
-				{/* don't gamma-correct 1, 2, 4 bpp grays as we loose data this way */
-					png_set_gamma (png_ptr, params->gamma, image_gamma);
-				}else
-				{
-                    png_set_gamma (png_ptr, params->gamma, DEFAULT_PNG_IMAGE_GAMMA);
-				}
+			if (png_get_sRGB (png_ptr, info_ptr, &intent)) {
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA, DEFAULT_PNG_IMAGE_GAMMA);
+			} else if (png_get_gAMA (png_ptr, info_ptr, &image_gamma) && bit_depth >= 8) {
+				/* don't gamma-correct 1, 2, 4 bpp grays as we loose data this way */
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA , image_gamma);
+			} else {
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA, DEFAULT_PNG_IMAGE_GAMMA);
+			}
 
 				/* Optional call to gamma correct and add the background to the palette
 				 * and update info structure.  REQUIRED if you are expecting libpng to
@@ -1342,10 +1339,10 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 				grayscale = ( color_type == PNG_COLOR_TYPE_GRAY_ALPHA ||
 				              color_type == PNG_COLOR_TYPE_GRAY) ;
 
-/* fprintf( stderr, "do_alpha = %d, grayscale = %d, bit_depth = %d, color_type = %d, width = %d, height = %d\n", 
+/* fprintf( stderr, "do_alpha = %d, grayscale = %d, bit_depth = %d, color_type = %d, width = %d, height = %d\n",
          do_alpha, grayscale, bit_depth, color_type, width, height); */
 
-				if( !do_alpha && grayscale ) 
+				if( !do_alpha && grayscale )
 					clear_flags( rgb_flags, ASStorage_32Bit );
 				else
 					prepare_scanline( im->width, 0, &buf, False );
@@ -1364,8 +1361,8 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 				old_storage_block_size = set_asstorage_block_size( NULL, width*height*3/2 );
 				for (y = 0; y < height; y++)
 				{
-					if( do_alpha || !grayscale ) 
-					{	
+					if( do_alpha || !grayscale )
+					{
 						raw2scanline( row_pointers[y], &buf, NULL, buf.width, grayscale, do_alpha );
 						im->channels[IC_RED][y] = store_data( NULL, (CARD8*)buf.red, buf.width*4, rgb_flags, 0);
 					}else
@@ -1397,16 +1394,16 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 						}else
 							im->channels[IC_RED][y] = store_data( NULL, row_pointers[y], row_bytes, rgb_flags, 1);
 					}
-					
-					if( grayscale ) 
-					{	
+
+					if( grayscale )
+					{
 						im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y] );
 						im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y] );
 					}else
 					{
-						im->channels[IC_GREEN][y] = store_data( NULL, (CARD8*)buf.green, buf.width*4, rgb_flags, 0);	
+						im->channels[IC_GREEN][y] = store_data( NULL, (CARD8*)buf.green, buf.width*4, rgb_flags, 0);
 						im->channels[IC_BLUE][y] = store_data( NULL, (CARD8*)buf.blue, buf.width*4, rgb_flags, 0);
-					}	 
+					}
 
 					if( do_alpha )
 					{
@@ -1415,20 +1412,20 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 						for ( i = 0 ; i < buf.width ; ++i)
 						{
 							if( buf.alpha[i] != 0x00FF )
-							{	
+							{
 								if( buf.alpha[i] == 0 )
 									has_zero = True ;
 								else
-								{	
+								{
 									has_nozero = True ;
 									break;
 								}
-							}		
+							}
 						}
-						if( has_zero || has_nozero ) 
+						if( has_zero || has_nozero )
 						{
 							ASFlagType alpha_flags = ASStorage_32Bit|ASStorage_RLEDiffCompress ;
-							if( !has_nozero ) 
+							if( !has_nozero )
 								set_flags( alpha_flags, ASStorage_Bitmap );
 							im->channels[IC_ALPHA][y] = store_data( NULL, (CARD8*)buf.alpha, buf.width*4, alpha_flags, 0);
 						}
@@ -1438,7 +1435,7 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 				if (upscaled_gray)
 					free(upscaled_gray);
 				free (row_pointers);
-				if( do_alpha || !grayscale ) 
+				if( do_alpha || !grayscale )
 					free_scanline(&buf, True);
 				/* read rest of file, and get additional chunks in info_ptr - REQUIRED */
 				png_read_end (png_ptr, info_ptr);
@@ -1461,8 +1458,8 @@ print_asimage( im, ASFLAGS_EVERYTHING, __FUNCTION__, __LINE__ );
 /****** VO ******/
 typedef struct ASImPNGReadBuffer
 {
-	CARD8 *buffer ; 
-		 
+	CARD8 *buffer ;
+
 } ASImPNGReadBuffer;
 
 static void asim_png_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
@@ -1598,58 +1595,58 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
 	/* Adjust default decompression parameters */
 	cinfo.quantize_colors = FALSE;		       /* we don't want no stinking colormaps ! */
 	cinfo.output_gamma = params->gamma;
-	
+
 	if( get_flags( params->flags, AS_IMPORT_SCALED_BOTH ) == AS_IMPORT_SCALED_BOTH )
 	{
-		int w = params->width ; 
+		int w = params->width ;
 		int h = params->height ;
-		int ratio ; 
+		int ratio ;
 
 		if( w == 0 )
 		{
-			if( h == 0 ) 
+			if( h == 0 )
 			{
-				w = cinfo.image_width ; 
-				h = cinfo.image_height ; 
+				w = cinfo.image_width ;
+				h = cinfo.image_height ;
 			}else
 				w = (cinfo.image_width * h)/cinfo.image_height ;
 		}else if( h == 0 )
 			h = (cinfo.image_height * w)/cinfo.image_width ;
-		
-		ratio = cinfo.image_height/h ; 
+
+		ratio = cinfo.image_height/h ;
 		if( ratio > (int)cinfo.image_width/w )
-			ratio = cinfo.image_width/w ; 
-		
-		cinfo.scale_num = 1 ; 
+			ratio = cinfo.image_width/w ;
+
+		cinfo.scale_num = 1 ;
 		/* only supported values are 1, 2, 4, and 8 */
-		cinfo.scale_denom = 1 ; 
-		if( ratio >= 2 ) 
+		cinfo.scale_denom = 1 ;
+		if( ratio >= 2 )
 		{
-			if( ratio >= 4 ) 
+			if( ratio >= 4 )
 			{
-				if( ratio >= 8 ) 
-					cinfo.scale_denom = 8 ; 
+				if( ratio >= 8 )
+					cinfo.scale_denom = 8 ;
 				else
-					cinfo.scale_denom = 4 ; 
+					cinfo.scale_denom = 4 ;
 			}else
-				cinfo.scale_denom = 2 ; 
+				cinfo.scale_denom = 2 ;
 		}
 	}
-	
+
 	if( get_flags( params->flags, AS_IMPORT_FAST ) )
 	{/* this does not really makes much of a difference */
-		cinfo.do_fancy_upsampling = FALSE ; 
-		cinfo.do_block_smoothing = FALSE ; 
-		cinfo.dct_method = JDCT_IFAST ; 
+		cinfo.do_fancy_upsampling = FALSE ;
+		cinfo.do_block_smoothing = FALSE ;
+		cinfo.dct_method = JDCT_IFAST ;
 	}
-	
+
 	/* Step 5: Start decompressor */
 	(void)jpeg_start_decompress (&cinfo);
 	LOCAL_DEBUG_OUT("stored image size %dx%d", cinfo.output_width,  cinfo.output_height);
 
 	im = create_asimage( cinfo.output_width,  cinfo.output_height, params->compression );
-	
-	if( cinfo.output_components != 1 ) 
+
+	if( cinfo.output_components != 1 )
 		prepare_scanline( im->width, 0, &buf, False );
 
 	/* Make a one-row-high sample array that will go away when done with image */
@@ -1673,14 +1670,14 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
 		 * more than one scanline at a time if that's more convenient.
 		 */
 		(void)jpeg_read_scanlines (&cinfo, buffer, 1);
-		if( cinfo.output_components==1 ) 
-		{	
+		if( cinfo.output_components==1 )
+		{
 			apply_gamma( (CARD8*)buffer[0], params->gamma_table, im->width );
 			im->channels[IC_RED][y] = store_data( NULL, (CARD8*)buffer[0], im->width, ASStorage_RLEDiffCompress, 0);
 			im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y] );
 			im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y] );
 		}else
-		{		   
+		{
 			raw2scanline( (CARD8*)buffer[0], &buf, params->gamma_table, im->width, (cinfo.output_components==1), False);
 			im->channels[IC_RED][y] = store_data( NULL, (CARD8*)buf.red, buf.width*4, ASStorage_32BitRLE, 0);
 			im->channels[IC_GREEN][y] = store_data( NULL, (CARD8*)buf.green, buf.width*4, ASStorage_32BitRLE, 0);
@@ -1696,7 +1693,7 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
  */
 	}
 	set_asstorage_block_size( NULL, old_storage_block_size );
-	if( cinfo.output_components != 1 ) 
+	if( cinfo.output_components != 1 )
 		free_scanline(&buf, True);
 	SHOW_TIME("read",started);
 
@@ -1883,23 +1880,23 @@ gif_interlaced2y(int line /* 0 -- (height - 1) */, int height)
    	int lines_in_current_pass;
    	/* pass 1 */
    	lines_in_current_pass = height / 8 + (height%8?1:0);
-   	if (line < lines_in_current_pass) 
+   	if (line < lines_in_current_pass)
     	return line * 8;
-   
+
    	passed_lines = lines_in_current_pass;
    	/* pass 2 */
-   	if (height > 4) 
+   	if (height > 4)
    	{
       	lines_in_current_pass = (height - 4) / 8 + ((height - 4)%8 ? 1 : 0);
-      	if (line < lines_in_current_pass + passed_lines) 
+      	if (line < lines_in_current_pass + passed_lines)
          	return 4 + 8*(line - passed_lines);
       	passed_lines += lines_in_current_pass;
    	}
    	/* pass 3 */
-   	if (height > 2) 
+   	if (height > 2)
    	{
       	lines_in_current_pass = (height - 2) / 4 + ((height - 2)%4 ? 1 : 0);
-      	if (line < lines_in_current_pass + passed_lines) 
+      	if (line < lines_in_current_pass + passed_lines)
         	return 2 + 4*(line - passed_lines);
     	passed_lines += lines_in_current_pass;
    	}
@@ -1924,8 +1921,8 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 
 	START_TIME(started);
 
-	params->return_animation_delay = 0 ; 
-	
+	params->return_animation_delay = 0 ;
+
 	if ((fp = open_image_file(path)) == NULL)
 		return NULL;
 #if (GIFLIB_MAJOR>=5)
@@ -1936,7 +1933,7 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 	{
 		SavedImage	*sp = NULL ;
 		int count = 0 ;
-		
+
 		status = get_gif_saved_images(gif, params->subimage, &sp, &count );
 		if( status == GIF_OK && sp != NULL && count > 0 )
 		{
@@ -1950,7 +1947,7 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 #ifdef DEBUG_TRANSP_GIF
 					fprintf( stderr, "%d: func = %X, bytes[0] = 0x%X\n", y, sp->ExtensionBlocks[y].Function, sp->ExtensionBlocks[y].Bytes[0]);
 #endif
-					if( sp->ExtensionBlocks[y].Function == GRAPHICS_EXT_FUNC_CODE ) 
+					if( sp->ExtensionBlocks[y].Function == GRAPHICS_EXT_FUNC_CODE )
 					{
 						if( sp->ExtensionBlocks[y].Bytes[0]&0x01 )
 						{
@@ -1959,16 +1956,16 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 							fprintf( stderr, "transp = %u\n", transparent );
 #endif
 						}
-		   		 		params->return_animation_delay = (((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_GCE_DELAY_BYTE_LOW])&0x00FF) + 
+		   		 		params->return_animation_delay = (((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_GCE_DELAY_BYTE_LOW])&0x00FF) +
 												   		((((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_GCE_DELAY_BYTE_HIGH])<<8)&0x00FF00);
 					}else if(  sp->ExtensionBlocks[y].Function == APPLICATION_EXT_FUNC_CODE && sp->ExtensionBlocks[y].ByteCount == 11 ) /* application extension */
 					{
-						if( strncmp((const char*)(&sp->ExtensionBlocks[y].Bytes[0]), "NETSCAPE2.0", 11 ) == 0 ) 
+						if( strncmp((const char*)(&sp->ExtensionBlocks[y].Bytes[0]), "NETSCAPE2.0", 11 ) == 0 )
 						{
 							++y ;
 							if( y < (unsigned int)sp->ExtensionBlockCount && sp->ExtensionBlocks[y].ByteCount == 3 )
 							{
-				   		 		params->return_animation_repeats = (((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_NETSCAPE_REPEAT_BYTE_LOW])&0x00FF) + 
+				   		 		params->return_animation_repeats = (((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_NETSCAPE_REPEAT_BYTE_LOW])&0x00FF) +
 														   		((((unsigned int) sp->ExtensionBlocks[y].Bytes[GIF_NETSCAPE_REPEAT_BYTE_HIGH])<<8)&0x00FF00);
 
 #ifdef DEBUG_TRANSP_GIF
@@ -1992,9 +1989,9 @@ gif2ASImage( const char * path, ASImageImportParams *params )
                 int image_y;
 				CARD8 		 *r = NULL, *g = NULL, *b = NULL, *a = NULL ;
 				int 	old_storage_block_size ;
-				r = safemalloc( width );	   
-				g = safemalloc( width );	   
-				b = safemalloc( width );	   
+				r = safemalloc( width );
+				g = safemalloc( width );
+				b = safemalloc( width );
 				a = safemalloc( width );
 
 				im = create_asimage( width, height, params->compression );
@@ -2015,14 +2012,14 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 							a[x] = 0 ;
 						}else
 							a[x] = 0x00FF ;
-						
+
 						r[x] = cmap->Colors[c].Red;
 		        		g[x] = cmap->Colors[c].Green;
 						b[x] = cmap->Colors[c].Blue;
 	        		}
 					row_pointer += x ;
 					im->channels[IC_RED][image_y]  = store_data( NULL, r, width, ASStorage_RLEDiffCompress, 0);
-				 	im->channels[IC_GREEN][image_y] = store_data( NULL, g, width, ASStorage_RLEDiffCompress, 0);	
+				 	im->channels[IC_GREEN][image_y] = store_data( NULL, g, width, ASStorage_RLEDiffCompress, 0);
 					im->channels[IC_BLUE][image_y]  = store_data( NULL, b, width, ASStorage_RLEDiffCompress, 0);
 					if( do_alpha )
 						im->channels[IC_ALPHA][image_y]  = store_data( NULL, a, im->width, ASStorage_RLEDiffCompress|ASStorage_Bitmap, 0);
@@ -2034,7 +2031,7 @@ gif2ASImage( const char * path, ASImageImportParams *params )
 				free(r);
 			}
 			free_gif_saved_images( sp, count );
-		}else if( status != GIF_OK ) 
+		}else if( status != GIF_OK )
 #if (GIFLIB_MAJOR>=5)
 			ASIM_PrintGifError(status);
 #else
@@ -2098,7 +2095,7 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 		{
 			TIFFClose(tif);
 			show_error("Image file \"%s\" does not contain subimage %d.", path, params->subimage);
-			return NULL ;		
+			return NULL ;
 		}
 
 	TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
@@ -2108,32 +2105,32 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 	if( !TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bits) )
 		bits = 8 ;
 	if( !TIFFGetField(tif, TIFFTAG_ROWSPERSTRIP, &rows_per_strip ) )
-		rows_per_strip = height ;	
+		rows_per_strip = height ;
 	if( !TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photo) )
 		photo = 0 ;
-		
+
 #ifndef PHOTOMETRIC_CFA
-#define PHOTOMETRIC_CFA 32803		
+#define PHOTOMETRIC_CFA 32803
 #endif
-		
+
 	TIFFGetField(tif, TIFFTAG_PLANARCONFIG, &planar_config);
-	
+
 	if( TIFFGetField(tif, TIFFTAG_TILEWIDTH, &tile_width) ||
 		TIFFGetField(tif, TIFFTAG_TILELENGTH, &tile_length) )
 	{
 		show_error( "Tiled TIFF image format is not supported yet." );
 		TIFFClose(tif);
-		return NULL;   
-	}		
+		return NULL;
+	}
 
 
-	if( rows_per_strip == 0 || rows_per_strip > height ) 
+	if( rows_per_strip == 0 || rows_per_strip > height )
 		rows_per_strip = height ;
-	if( depth <= 0 ) 
+	if( depth <= 0 )
 		depth = 4 ;
 	if( depth <= 2 && get_flags( photo, PHOTOMETRIC_RGB) )
 		depth += 2 ;
-	LOCAL_DEBUG_OUT ("size = %ldx%ld, depth = %d, bits = %d, rps = %ld, photo = %d, tile_size = %dx%d, config = %d", 
+	LOCAL_DEBUG_OUT ("size = %ldx%ld, depth = %d, bits = %d, rps = %ld, photo = %d, tile_size = %dx%d, config = %d",
 					 width, height, depth, bits, rows_per_strip, photo, tile_width, tile_length, planar_config);
 	if( width < MAX_IMPORT_IMAGE_SIZE && height < MAX_IMPORT_IMAGE_SIZE )
 	{
@@ -2145,20 +2142,20 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 			ASFlagType store_flags = ASStorage_RLEDiffCompress	;
 			int first_row = 0 ;
 			int old_storage_block_size;
-			if( bits == 1 ) 
+			if( bits == 1 )
 				set_flags( store_flags, ASStorage_Bitmap );
-			
+
 			im = create_asimage( width, height, params->compression );
 			old_storage_block_size = set_asstorage_block_size( NULL, im->width*im->height*3/2 );
-			
-			if( depth == 2 || depth == 4 ) 
+
+			if( depth == 2 || depth == 4 )
 				a = safemalloc( width );
-			r = safemalloc( width );	   
-			if( depth > 2 ) 
+			r = safemalloc( width );
+			if( depth > 2 )
 			{
-				g = safemalloc( width );	   
-				b = safemalloc( width );	   
-			}	 
+				g = safemalloc( width );
+				b = safemalloc( width );
+			}
 			if (photo == PHOTOMETRIC_CFA)
 			{/* need alternative - more complicated method */
 				Bool success = False;
@@ -2171,7 +2168,7 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 				if (strip && imout)
 				{
 					int cfa_type = 0;
-					ASIMStripLoader line_loaders[2][2] = 
+					ASIMStripLoader line_loaders[2][2] =
 						{	{decode_RG_12_be, decode_GB_12_be},
 	 						{decode_BG_12_be, decode_GR_12_be}
 						};
@@ -2196,15 +2193,15 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 							data = _TIFFmalloc(data_size);
 						}
 
-						if (planar_config == PLANARCONFIG_CONTIG) 
+						if (planar_config == PLANARCONFIG_CONTIG)
 						{
 							for (strip_no = 0; strip_no < TIFFNumberOfStrips(tif); strip_no++)
 							{
 								int bytes_in;
 								if (bits == 12) /* can't use libTIFF's function - it can't handle 12bit data ! */
 								{
-									/* PENTAX cameras claim that data is compressed as runlength packbits - 
-									   it is not in fact run-length, which confuses libTIFF 
+									/* PENTAX cameras claim that data is compressed as runlength packbits -
+									   it is not in fact run-length, which confuses libTIFF
 									 */
 									bytes_in = TIFFReadRawStrip(tif, strip_no, data+loaded_data_size, data_size-loaded_data_size);
 								}else
@@ -2213,12 +2210,12 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_no], bytes_in, bytes_per_row);
 								if (bytes_in >= 0)
 									loaded_data_size += bytes_in;
-								else 
+								else
 								{
 									LOCAL_DEBUG_OUT( "failed reading strip %d", strip_no);
 								}
-							}	
-						} else if (planar_config == PLANARCONFIG_SEPARATE) 
+							}
+						} else if (planar_config == PLANARCONFIG_SEPARATE)
 						{
 							/* TODO: do something with split channels */
 						}
@@ -2234,8 +2231,8 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 						do
 						{
 							offset = data_row * bytes_per_row;
-							int loaded_rows = load_asim_strip (strip, (CARD8*)data + offset, loaded_data_size-offset, 
-																data_row, bytes_per_row, 
+							int loaded_rows = load_asim_strip (strip, (CARD8*)data + offset, loaded_data_size-offset,
+																data_row, bytes_per_row,
 																line_loaders[cfa_type], line_loaders_num[cfa_type]);
 
 							if (loaded_rows == 0)
@@ -2253,20 +2250,20 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 									set_flags (strip->lines[0]->flags, SCL_DO_RED);
 									set_flags (strip->lines[1]->flags, SCL_DO_BLUE);
 								}
-#endif								
+#endif
 //clear_flags (strip->lines[0]->flags, SCL_DO_GREEN|SCL_DO_BLUE);
 								imout->output_image_scanline( imout, strip->lines[0], 1);
-								
+
 								advance_asim_strip (strip);
 
-							}	
+							}
 							data_row += loaded_rows;
 						}while (offset < loaded_data_size);
 						success = True;
 					}
 				}
 				destroy_asim_strip (&strip);
-				stop_image_output( &imout );					
+				stop_image_output( &imout );
 
 				if (!success)
 					destroy_asimage (&im);
@@ -2277,7 +2274,7 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 				{
 					register CARD32 *row = data ;
 					int y = first_row + rows_per_strip ;
-					if( y > height ) 
+					if( y > height )
 						y = height ;
 					while( --y >= first_row )
 					{
@@ -2285,27 +2282,27 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 						for( x = 0 ; x < width ; ++x )
 						{
 							CARD32 c = row[x] ;
-							if( depth == 4 || depth == 2 ) 
+							if( depth == 4 || depth == 2 )
 								a[x] = TIFFGetA(c);
 							r[x]   = TIFFGetR(c);
-							if( depth > 2 ) 
+							if( depth > 2 )
 							{
 								g[x] = TIFFGetG(c);
 								b[x]  = TIFFGetB(c);
 							}
 						}
 						im->channels[IC_RED][y]  = store_data( NULL, r, width, store_flags, 0);
-						if( depth > 2 ) 
+						if( depth > 2 )
 						{
-					 		im->channels[IC_GREEN][y] = store_data( NULL, g, width, store_flags, 0);	
+					 		im->channels[IC_GREEN][y] = store_data( NULL, g, width, store_flags, 0);
 							im->channels[IC_BLUE][y]  = store_data( NULL, b, width, store_flags, 0);
 						}else
 						{
-					 		im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y]);	  
+					 		im->channels[IC_GREEN][y] = dup_data( NULL, im->channels[IC_RED][y]);
 							im->channels[IC_BLUE][y]  = dup_data( NULL, im->channels[IC_RED][y]);
-						}		 
+						}
 
-						if( depth == 4 || depth == 2 ) 
+						if( depth == 4 || depth == 2 )
 							im->channels[IC_ALPHA][y]  = store_data( NULL, a, width, store_flags, 0);
 						row += width ;
 					}
@@ -2346,42 +2343,26 @@ tiff2ASImage( const char * path, ASImageImportParams *params )
 static ASImage *
 load_xml2ASImage( ASImageManager *imman, const char *path, unsigned int compression, int width, int height )
 {
-	ASVisual fake_asv ;
-	char *slash, *curr_path = NULL ;
-	char *doc_str = NULL ;
-	ASImage *im = NULL ;
-
-	memset( &fake_asv, 0x00, sizeof(ASVisual) );
-	if( (slash = strrchr( path, '/' )) != NULL )
-		curr_path = mystrndup( path, slash-path );
-
-	if((doc_str = load_file(path)) == NULL )
-		show_error( "unable to load file \"%s\" file is either too big or is not readable.\n", path );
-	else
-	{
-		im = compose_asimage_xml_at_size(&fake_asv, imman, NULL, doc_str, 0, 0, None, curr_path, width, height);
-		free( doc_str );
-	}
-
-	if( curr_path )
-		free( curr_path );
-	return im ;
+   // Incompatible license
+   fprintf(stderr, "ERROR in load_xml2ASImage: XML import is disabled.\n");
+   ASImage *im = NULL ;
+   return im;
 }
 
 
 ASImage *
 xml2ASImage( const char *path, ASImageImportParams *params )
 {
-	int width = -1, height = -1 ; 
+	int width = -1, height = -1 ;
 	static ASImage 	 *im = NULL ;
 	START_TIME(started);
 
  	if( get_flags( params->flags, AS_IMPORT_SCALED_H ) )
 		width = (params->width <= 0)?((params->height<=0)?-1:params->height):params->width ;
-	
+
  	if( get_flags( params->flags, AS_IMPORT_SCALED_V ) )
 		height = (params->height <= 0)?((params->width <= 0)?-1:params->width):params->height ;
-		
+
 	im = load_xml2ASImage( NULL, path, params->compression, width, height );
 
 	SHOW_TIME("image loading",started);
@@ -2393,36 +2374,36 @@ ASImage *
 svg2ASImage( const char * path, ASImageImportParams *params )
 {
    	static int gType_inited = 0;
-   
+
    	ASImage *im = NULL;
    	GdkPixbuf *pixbuf;
 	int channels ;
-	Bool do_alpha ; 
-	int width = -1, height = -1 ; 
- 
+	Bool do_alpha ;
+	int width = -1, height = -1 ;
+
 	START_TIME(started);
 #if 1
 	/* Damn gtk mess... must init once atleast.. can we just init
 	   several times or do we bork then? */
-	if (gType_inited == 0) 
+	if (gType_inited == 0)
 	{
 	   g_type_init();
 	   gType_inited = 1;
 	}
- 
+
  	if( get_flags( params->flags, AS_IMPORT_SCALED_H ) )
 		width = (params->width <= 0)?((params->height<=0)?-1:params->height):params->width ;
-	
+
  	if( get_flags( params->flags, AS_IMPORT_SCALED_V ) )
 		height = (params->height <= 0)?((params->width <= 0)?-1:params->width):params->height ;
-		
+
 	if( (pixbuf = rsvg_pixbuf_from_file_at_size( path, width, height, NULL)) == NULL )
 		return NULL ;
-	
+
 	channels = gdk_pixbuf_get_n_channels(pixbuf) ;
 	do_alpha = gdk_pixbuf_get_has_alpha(pixbuf) ;
 	if ( ((channels == 4 && do_alpha) ||(channels == 3 && !do_alpha)) &&
-		gdk_pixbuf_get_bits_per_sample(pixbuf) == 8 ) 
+		gdk_pixbuf_get_bits_per_sample(pixbuf) == 8 )
 	{
 	   	int width, height;
 		register CARD8 *row = gdk_pixbuf_get_pixels(pixbuf);
@@ -2433,16 +2414,16 @@ svg2ASImage( const char * path, ASImageImportParams *params )
 		width = gdk_pixbuf_get_width(pixbuf);
 		height = gdk_pixbuf_get_height(pixbuf);
 
-		r = safemalloc( width );	   
-		g = safemalloc( width );	   
-		b = safemalloc( width );	   
+		r = safemalloc( width );
+		g = safemalloc( width );
+		b = safemalloc( width );
 		if( do_alpha )
 			a = safemalloc( width );
 
 
 		im = create_asimage(width, height, params->compression );
 		old_storage_block_size = set_asstorage_block_size( NULL, im->width*im->height*3/2 );
-		for (y = 0; y < height; ++y) 
+		for (y = 0; y < height; ++y)
 		{
 			int x, i = 0 ;
 			for( x = 0 ; x < width ; ++x )
@@ -2450,11 +2431,11 @@ svg2ASImage( const char * path, ASImageImportParams *params )
 				r[x] = row[i++];
 				g[x] = row[i++];
 				b[x] = row[i++];
-				if( do_alpha ) 
+				if( do_alpha )
 					a[x] = row[i++];
 			}
 			im->channels[IC_RED][y]  = store_data( NULL, r, width, ASStorage_RLEDiffCompress, 0);
-		 	im->channels[IC_GREEN][y] = store_data( NULL, g, width, ASStorage_RLEDiffCompress, 0);	
+		 	im->channels[IC_GREEN][y] = store_data( NULL, g, width, ASStorage_RLEDiffCompress, 0);
 			im->channels[IC_BLUE][y]  = store_data( NULL, b, width, ASStorage_RLEDiffCompress, 0);
 
 			if( do_alpha )
@@ -2473,10 +2454,10 @@ svg2ASImage( const char * path, ASImageImportParams *params )
 		if( a )
 			free(a);
 	}
-	
+
 	if (pixbuf)
 		gdk_pixbuf_unref(pixbuf);
-#endif	
+#endif
 	SHOW_TIME("image loading",started);
 
 	return im ;
@@ -2507,14 +2488,14 @@ typedef struct ASTGAHeader
 #define TGA_RLETrueColorImage		10
 #define TGA_RLEBWImage				11
 	CARD8 ImageType;
-	struct 
+	struct
 	{
 		CARD16 FirstEntryIndex ;
-		CARD16 ColorMapLength ;  /* number of entries */ 
-		CARD8  ColorMapEntrySize ;  /* number of bits per entry */ 
+		CARD16 ColorMapLength ;  /* number of entries */
+		CARD8  ColorMapEntrySize ;  /* number of bits per entry */
 	}ColormapSpec;
 	struct
-	{		
+	{
 		CARD16 XOrigin;
 		CARD16 YOrigin;
 		CARD16 Width;
@@ -2530,21 +2511,21 @@ typedef struct ASTGAHeader
 typedef struct ASTGAColorMap
 {
 	int bytes_per_entry;
-	int bytes_total ; 
-	CARD8 *data ; 
+	int bytes_total ;
+	CARD8 *data ;
 }ASTGAColorMap;
 
 typedef struct ASTGAImageData
 {
 	int bytes_per_pixel;
 	int image_size;
-	int bytes_total ; 
-	CARD8 *data ; 
+	int bytes_total ;
+	CARD8 *data ;
 }ASTGAImageData;
 
 static Bool load_tga_colormapped(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-		
+
 	return True;
 }
 
@@ -2556,63 +2537,63 @@ static Bool load_tga_truecolor(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cm
 	CARD32 *b = buf->blue ;
 	int bpp = (tga->ImageSpec.Depth+7)/8;
 	int bpl = buf->width*bpp;
-	if( fread( read_buf, 1, bpl, infile ) != (unsigned int)bpl ) 		   
+	if( fread( read_buf, 1, bpl, infile ) != (unsigned int)bpl )
 		return False;
-	if( bpp == 3 ) 
-	{	
+	if( bpp == 3 )
+	{
 		unsigned int i;
 		if( gamma_table )
-			for( i = 0 ; i < buf->width ; ++i ) 
+			for( i = 0 ; i < buf->width ; ++i )
 			{
-				b[i] = gamma_table[*(read_buf++)];	
-				g[i] = gamma_table[*(read_buf++)];	  
-				r[i] = gamma_table[*(read_buf++)];	  
-			}	 
+				b[i] = gamma_table[*(read_buf++)];
+				g[i] = gamma_table[*(read_buf++)];
+				r[i] = gamma_table[*(read_buf++)];
+			}
 		else
-			for( i = 0 ; i < buf->width ; ++i ) 
+			for( i = 0 ; i < buf->width ; ++i )
 			{
-				b[i] = *(read_buf++);	
-				g[i] = *(read_buf++);	  
-				r[i] = *(read_buf++);	  
-			}	 
+				b[i] = *(read_buf++);
+				g[i] = *(read_buf++);
+				r[i] = *(read_buf++);
+			}
 		set_flags( buf->flags, SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE );
 	}else if( bpp == 4 )
 	{
 		unsigned int i;
-		for( i = 0 ; i < buf->width ; ++i ) 
+		for( i = 0 ; i < buf->width ; ++i )
 		{
-			b[i] = *(read_buf++);	
-			g[i] = *(read_buf++);	  
-			r[i] = *(read_buf++);	  
-			a[i] = *(read_buf++);	  
-		}	 
+			b[i] = *(read_buf++);
+			g[i] = *(read_buf++);
+			r[i] = *(read_buf++);
+			a[i] = *(read_buf++);
+		}
 		set_flags( buf->flags, SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE|SCL_DO_ALPHA );
-	}	 
+	}
 
 	return True;
 }
 
 static Bool load_tga_bw(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-		
+
 	return True;
 }
 
 static Bool load_tga_rle_colormapped(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-		
+
 	return True;
 }
 
 static Bool load_tga_rle_truecolor(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-		
+
 	return True;
 }
 
 static Bool load_tga_rle_bw(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table )
 {
-		
+
 	return True;
 }
 
@@ -2632,37 +2613,37 @@ tga2ASImage( const char * path, ASImageImportParams *params )
 
 	if ((infile = open_image_file(path)) == NULL)
 		return NULL;
-	if( fread( &tga, 1, 3, infile ) == 3 ) 
-	if( fread( &tga.ColormapSpec, 1, 5, infile ) == 5 ) 
-	if( fread( &tga.ImageSpec, 1, 10, infile ) == 10 ) 
+	if( fread( &tga, 1, 3, infile ) == 3 )
+	if( fread( &tga.ColormapSpec, 1, 5, infile ) == 5 )
+	if( fread( &tga.ImageSpec, 1, 10, infile ) == 10 )
 	{
 		Bool success = True ;
 		Bool (*load_row_func)(FILE *infile, ASTGAHeader *tga, ASTGAColorMap *cmap, ASScanline *buf, CARD8 *read_buf, CARD8 *gamma_table );
 
-		if( tga.IDLength > 0 ) 
+		if( tga.IDLength > 0 )
 			success = (fseek( infile, tga.IDLength, SEEK_CUR )==0);
-		if( success && tga.ColorMapType != 0 ) 
+		if( success && tga.ColorMapType != 0 )
 		{
 			cmap = safecalloc( 1, sizeof(ASTGAColorMap));
 			cmap->bytes_per_entry = (tga.ColormapSpec.ColorMapEntrySize+7)/8;
-			cmap->bytes_total = cmap->bytes_per_entry*tga.ColormapSpec.ColorMapLength; 
+			cmap->bytes_total = cmap->bytes_per_entry*tga.ColormapSpec.ColorMapLength;
 			cmap->data = safemalloc( cmap->bytes_total);
 			success = ( fread( cmap->data, 1, cmap->bytes_total, infile ) == (unsigned int)cmap->bytes_total );
 		}else if( tga.ImageSpec.Depth != 24 && tga.ImageSpec.Depth != 32 )
 			success = False ;
-	 
-		if( success ) 
+
+		if( success )
 		{
 			success = False;
 			if( tga.ImageType != TGA_NoImageData )
-			{	
-				width = tga.ImageSpec.Width ; 
-				height = tga.ImageSpec.Height ; 
+			{
+				width = tga.ImageSpec.Width ;
+				height = tga.ImageSpec.Height ;
 				if( width < MAX_IMPORT_IMAGE_SIZE && height < MAX_IMPORT_IMAGE_SIZE )
 					success = True;
 			}
 		}
-		switch( tga.ImageType ) 
+		switch( tga.ImageType )
 		{
 			case TGA_ColormappedImage	:load_row_func = load_tga_colormapped ; break ;
 			case TGA_TrueColorImage		:load_row_func = load_tga_truecolor ; break ;
@@ -2672,10 +2653,10 @@ tga2ASImage( const char * path, ASImageImportParams *params )
 			case TGA_RLEBWImage			:load_row_func = load_tga_rle_bw ; break ;
 			default:
 				load_row_func = NULL ;
-		}	 
-		
-		if( success && load_row_func != NULL ) 
-		{	
+		}
+
+		if( success && load_row_func != NULL )
+		{
 			ASImageOutput  *imout ;
 			int old_storage_block_size;
 			im = create_asimage( width, height, params->compression );
@@ -2686,15 +2667,15 @@ tga2ASImage( const char * path, ASImageImportParams *params )
         		destroy_asimage( &im );
 				success = False;
 			}else
-			{	
+			{
 				ASScanline    buf;
 				int y ;
-				CARD8 *read_buf = safemalloc( width*4*2 ); 
+				CARD8 *read_buf = safemalloc( width*4*2 );
 				prepare_scanline( im->width, 0, &buf, True );
-				if( !get_flags( tga.ImageSpec.Descriptor, TGA_TopToBottom ) )			
+				if( !get_flags( tga.ImageSpec.Descriptor, TGA_TopToBottom ) )
 					toggle_image_output_direction( imout );
-				for( y = 0 ; y < height ; ++y ) 
-				{	
+				for( y = 0 ; y < height ; ++y )
+				{
 					if( !load_row_func( infile, &tga, cmap, &buf, read_buf, params->gamma_table ) )
 						break;
 					imout->output_image_scanline( imout, &buf, 1);
@@ -2702,11 +2683,11 @@ tga2ASImage( const char * path, ASImageImportParams *params )
 				stop_image_output( &imout );
 				free_scanline( &buf, True );
 				free( read_buf );
-			}   
+			}
 			set_asstorage_block_size( NULL, old_storage_block_size );
 
-		}	  
-	}	 
+		}
+	}
 	if( im == NULL )
 		show_error( "invalid or unsupported TGA format in image file \"%s\"", path );
 
@@ -2729,33 +2710,33 @@ convert_argb2ASImage( ASVisual *asv, int width, int height, ARGB32 *argb, CARD8 
    		destroy_asimage( &im );
 		return NULL;
 	}else
-	{	
+	{
 		ASScanline    buf;
 		int y ;
 		int old_storage_block_size = set_asstorage_block_size( NULL, im->width*im->height*3 );
 
 		prepare_scanline( im->width, 0, &buf, True );
-		for( y = 0 ; y < height ; ++y ) 
-		{	  
+		for( y = 0 ; y < height ; ++y )
+		{
 			int x ;
-			for( x = 0 ; x < width ; ++x ) 
+			for( x = 0 ; x < width ; ++x )
 			{
 				ARGB32 c = argb[x];
-				buf.alpha[x] 	= ARGB32_ALPHA8(c);	
-				buf.red[x] 	= ARGB32_RED8(c);	  
-				buf.green[x] 	= ARGB32_GREEN8(c);	  
-				buf.blue[x] 	= ARGB32_BLUE8(c);	  
-			}	 
-			argb += width ;			
+				buf.alpha[x] 	= ARGB32_ALPHA8(c);
+				buf.red[x] 	= ARGB32_RED8(c);
+				buf.green[x] 	= ARGB32_GREEN8(c);
+				buf.blue[x] 	= ARGB32_BLUE8(c);
+			}
+			argb += width ;
 			set_flags( buf.flags, SCL_DO_RED|SCL_DO_GREEN|SCL_DO_BLUE|SCL_DO_ALPHA );
 			imout->output_image_scanline( imout, &buf, 1);
 		}
 		set_asstorage_block_size( NULL, old_storage_block_size );
 		stop_image_output( &imout );
 		free_scanline( &buf, True );
-	}   
-						
-	return im ;	
+	}
+
+	return im ;
 }
 
 
@@ -2763,7 +2744,7 @@ ASImage *
 argb2ASImage( const char *path, ASImageImportParams *params )
 {
 	ASVisual fake_asv ;
-	long argb_data_len = -1; 
+	long argb_data_len = -1;
 	char *argb_data = NULL ;
 	ASImage *im = NULL ;
 
@@ -2782,9 +2763,9 @@ argb2ASImage( const char *path, ASImageImportParams *params )
 		}else
 			im = convert_argb2ASImage( &fake_asv, width, height, (ARGB32*)argb_data+2, params->gamma_table );
 	}
-	if( argb_data ) 
+	if( argb_data )
 		free( argb_data );
-	
+
 	return im ;
 }
 

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : BinarySearchTree                                                      *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header file for description)                          *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
 
@@ -261,7 +261,6 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
 {
    UInt_t n=events.size();
 
-   UInt_t nevents = 0;
    if (fSumOfWeights != 0) {
       Log() << kWARNING
             << "You are filling a search three that is not empty.. "
@@ -272,7 +271,6 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
       // insert event into binary tree
       if (theType == -1 || (Int_t(events[ievt]->GetClass()) == theType) ) {
          this->Insert( events[ievt] );
-         nevents++;
          fSumOfWeights += events[ievt]->GetWeight();
       }
    } // end of event loop

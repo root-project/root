@@ -25,15 +25,15 @@ public:
    TXTRU(const char *name, const char *title, const char *material,
          Int_t nyx, Int_t nz);
    TXTRU(const TXTRU &xtru);
-   virtual ~TXTRU();
+   ~TXTRU() override;
    TXTRU& operator=(const TXTRU& rhs);
 
-   virtual void     Copy(TObject &xtru) const;
+   void     Copy(TObject &xtru) const override;
    virtual void     DefineSection(Int_t secNum, Float_t z, Float_t scale=1.,
                                   Float_t x0=0., Float_t y0=0.);
    virtual void     DefineVertex(Int_t pointNum, Float_t x, Float_t y);
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual const    TBuffer3D &GetBuffer3D(Int_t) const;
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   const    TBuffer3D &GetBuffer3D(Int_t) const override;
    virtual Int_t    GetNxy() const { return fNxy; }
    virtual Int_t    GetNz() const { return fNz; }
    virtual Float_t  GetOutlinePointX(Int_t pointNum) const;
@@ -48,26 +48,26 @@ public:
    virtual Float_t *GetScale() const {return fScale; }
    virtual Float_t *GetX0() const {return fX0; }
    virtual Float_t *GetY0() const {return fY0; }
-   virtual void     Print(Option_t *option="") const;
-   virtual void     Sizeof3D() const;
+   void     Print(Option_t *option="") const override;
+   void     Sizeof3D() const override;
    void             SplitConcavePolygon(Bool_t split = kTRUE);
    virtual void     TruncateNxy(Int_t npts);
    virtual void     TruncateNz(Int_t npts);
 
 protected:
    void            CheckOrdering();
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
 
-   Int_t       fNxy;       // number of x-y points in the cross section
-   Int_t       fNxyAlloc;  // number of x-y points allocated
-   Int_t       fNz;        // number of z planes
-   Int_t       fNzAlloc;   // number of z planes allocated
-   Float_t    *fXvtx;      //[fNxyAlloc] array of x positions
-   Float_t    *fYvtx;      //[fNxyAlloc] array of y positions
-   Float_t    *fZ;         //[fNzAlloc] array of z planes
-   Float_t    *fScale;     //[fNzAlloc] array of scale factors (for each z)
-   Float_t    *fX0;        //[fNzAlloc] array of x offsets (for each z)
-   Float_t    *fY0;        //[fNzAlloc] array of y offsets (for each z)
+   Int_t       fNxy{0};             // number of x-y points in the cross section
+   Int_t       fNxyAlloc{0};        // number of x-y points allocated
+   Int_t       fNz{0};              // number of z planes
+   Int_t       fNzAlloc{0};         // number of z planes allocated
+   Float_t    *fXvtx{nullptr};      //[fNxyAlloc] array of x positions
+   Float_t    *fYvtx{nullptr};      //[fNxyAlloc] array of y positions
+   Float_t    *fZ{nullptr};         //[fNzAlloc] array of z planes
+   Float_t    *fScale{nullptr};     //[fNzAlloc] array of scale factors (for each z)
+   Float_t    *fX0{nullptr};        //[fNzAlloc] array of x offsets (for each z)
+   Float_t    *fY0{nullptr};        //[fNzAlloc] array of y offsets (for each z)
 
    enum EXYChecked {kUncheckedXY, kMalformedXY,
                     kConvexCCW,   kConvexCW,
@@ -76,20 +76,20 @@ protected:
                     kConvexIncZ,  kConvexDecZ,
                     kConcaveIncZ, kConcaveDecZ};
 
-   EXYChecked  fPolygonShape;   // CCW vs. CW, convex vs. concave
-   EZChecked   fZOrdering;      // increasing or decreasing
+   EXYChecked  fPolygonShape{kUncheckedXY};   // CCW vs. CW, convex vs. concave
+   EZChecked   fZOrdering{kUncheckedZ};      // increasing or decreasing
 
    // Concave polygon division (into convex polygons) is not yet supported
    // but if split one gets correct solid rendering but extra lines
    // in wire mode; if not split....the converse.
-   Bool_t      fSplitConcave;
+   Bool_t      fSplitConcave{kFALSE};
 
 private:
    void DumpPoints(int npoints, float *pointbuff) const;
    void DumpSegments(int nsegments, int *segbuff) const;
    void DumpPolygons(int npolygons, int *polybuff, int buffsize) const;
 
-   ClassDef(TXTRU,1)  //TXTRU shape
+   ClassDefOverride(TXTRU,1)  //TXTRU shape
 };
 
 #endif

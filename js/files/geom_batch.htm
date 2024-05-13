@@ -1,0 +1,64 @@
+<!-- file used in batch mode to produce geometry images with headless chrome or firefox -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="utf-8">
+   <title>Batch geometry production</title>
+   <style>
+     @media print {
+        @page { margin: 0; }
+        body { margin: 1.6cm; }
+        div.page { page-break-after: always; page-break-inside: avoid; }
+     }
+  </style>
+  <script src="$jsrootsys/build/jsroot.js"></script>
+</head>
+
+<body>
+  <div id="drawing" style="width:$draw_widthpx; height:$draw_heightpx; overflow:hidden; margin:0; padding:0"></div>
+</body>
+
+<script id="data">
+   globalThis.main_object = JSROOT.parse($draw_object);
+</script>
+
+<script>
+
+   JSROOT.setBatchMode(true);
+
+   let kind = '$draw_kind';
+
+   function complete() {
+      if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
+         window.dump(document.body.innerHTML);
+         window.close();
+      }
+   }
+
+   let msg = globalThis.main_object;
+
+   let geo_painter = JSROOT.createGeoPainter(document.getElementById('drawing'), null, msg.cfg?.drawopt || '');
+
+   geo_painter.ctrl.cfg = msg.cfg ?? {};
+
+   geo_painter.extractRawShapes(msg, true);
+
+   geo_painter.prepareObjectDraw(msg.visibles, '__geom_viewer_selection__').then(() => {
+      document.getElementById('data').remove();
+      if (kind == 'draw')
+         return complete();
+
+      let dataUrl = geo_painter._renderer.domElement.toDataURL(`image/${kind}`);
+
+      let elem = document.getElementById('drawing');
+      elem.innerHTML = '';
+      let img = document.createElement('img');
+      img.setAttribute('src', dataUrl);
+      elem.appendChild(img);
+
+      complete();
+   });
+
+</script>
+
+</html>

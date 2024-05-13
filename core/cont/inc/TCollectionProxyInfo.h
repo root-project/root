@@ -39,6 +39,10 @@
 class TVirtualCollectionProxy;
 
 namespace ROOT {
+namespace VecOps {
+template <typename T>
+class RVec;
+}
 
 namespace Internal {
 template <typename T> class TStdBitsetHelper {
@@ -109,7 +113,7 @@ namespace Detail {
                ++(*iter);
                return result;
             }
-            return 0;
+            return nullptr;
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);
@@ -135,8 +139,8 @@ namespace Detail {
          static void create(void *coll, void **begin_arena, void **end_arena, TVirtualCollectionProxy*) {
             PCont_t c = PCont_t(coll);
             if (c->empty()) {
-               *begin_arena = 0;
-               *end_arena = 0;
+               *begin_arena = nullptr;
+               *end_arena = nullptr;
                return;
             }
             *begin_arena = &(*c->begin());
@@ -161,7 +165,7 @@ namespace Detail {
             // *not* update where its points to (which in the case of vector
             // would require update the value of fBegin).
             R__ASSERT(0 && "Intentionally not implemented, do not use.");
-            return 0;
+            return nullptr;
          }
          static void destruct1(void  * /* iter_ptr */) {
             // Nothing to do
@@ -193,7 +197,7 @@ namespace Detail {
                ++(*iter);
                return result;
             }
-            return 0;
+            return nullptr;
          }
          static void destruct1(void *begin_ptr) {
             iterator *start = (iterator *)(begin_ptr);
@@ -221,7 +225,7 @@ namespace Detail {
       EnvironBase(const EnvironBase&); // Intentionally not implement, copy is not supported
       EnvironBase &operator=(const EnvironBase&); // Intentionally not implement, copy is not supported
    public:
-      EnvironBase() : fIdx(0), fSize(0), fObject(0), fStart(0), fTemp(0), fUseTemp(kFALSE), fRefCount(1), fSpace(0)
+      EnvironBase() : fIdx(0), fSize(0), fObject(nullptr), fStart(nullptr), fTemp(nullptr), fUseTemp(kFALSE), fRefCount(1), fSpace(0)
       {
       }
       virtual ~EnvironBase() {}
@@ -254,7 +258,7 @@ namespace Detail {
       PairHolder(const PairHolder& c) : first(c.first), second(c.second) {}
       virtual ~PairHolder() {}
    private:
-      PairHolder& operator=(const PairHolder&);  // not implemented
+      PairHolder& operator=(const PairHolder&) = delete;
    };
 
    template <class T> struct Address {
@@ -309,7 +313,7 @@ namespace Detail {
       }
       static void* clear(void* env)  {
          object(env)->clear();
-         return 0;
+         return nullptr;
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -320,7 +324,7 @@ namespace Detail {
 #endif
          e->fIterator = c->begin();
          e->fSize  = SfinaeHelper::GetContainerSize(*c);
-         if ( 0 == e->fSize ) return e->fStart = 0;
+         if ( 0 == e->fSize ) return e->fStart = nullptr;
          TYPENAME T::const_reference ref = *(e->iter());
          return e->fStart = Type<T>::address(ref);
       }
@@ -329,7 +333,7 @@ namespace Detail {
          PCont_t c = PCont_t(e->fObject);
          for (; e->fIdx > 0 && e->iter() != c->end(); ++(e->iter()), --e->fIdx){ }
          // TODO: Need to find something for going backwards....
-         if ( e->iter() == c->end() ) return 0;
+         if ( e->iter() == c->end() ) return nullptr;
          TYPENAME T::const_reference ref = *(e->iter());
          return Type<T>::address(ref);
       }
@@ -337,14 +341,14 @@ namespace Detail {
          PValue_t m = PValue_t(what);
          for (size_t i=0; i<size; ++i, ++m)
             ::new(m) Value_t();
-         return 0;
+         return nullptr;
       }
       static void* collect(void *coll, void *array)  {
          PCont_t  c = PCont_t(coll);
          PValue_t m = PValue_t(array);
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
-         return 0;
+         return nullptr;
       }
       static void destruct(void *what, size_t size)  {
          PValue_t m = PValue_t(what);
@@ -383,7 +387,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
@@ -413,13 +417,13 @@ namespace Detail {
       }
       static void* feed(void *from, void *to, size_t size)  {
          PCont_t  c = PCont_t(to);
-         if (size==0) return 0;
+         if (size==0) return nullptr;
          PValue_t m = &(PValue_t(from)[size-1]); // Take the last item
          // Iterate backwards not to revert ordering
          for (size_t i=0; i<size; ++i, --m){
             c->push_front(*m);
          }
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
@@ -448,7 +452,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
-         return 0;
+         return nullptr;
       }
       static void resize(void* /* obj */, size_t )  {
          ;
@@ -480,7 +484,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->insert(*m);
-         return 0;
+         return nullptr;
       }
       static void resize(void* /* obj */, size_t )  {
          ;
@@ -544,11 +548,11 @@ namespace Detail {
                            void*  (*feed_func)(void*,void*,size_t),
                            void*  (*collect_func)(void*,void*),
                            void*  (*create_env)(),
-                           void   (*getIterators)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy) = 0,
-                           void*  (*copyIterator)(void *dest, const void *source) = 0,
-                           void*  (*next)(void *iter, const void *end) = 0,
-                           void   (*deleteSingleIterator)(void *iter) = 0,
-                           void   (*deleteTwoIterators)(void *begin, void *end) = 0
+                           void   (*getIterators)(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy *proxy) = nullptr,
+                           void*  (*copyIterator)(void *dest, const void *source) = nullptr,
+                           void*  (*next)(void *iter, const void *end) = nullptr,
+                           void   (*deleteSingleIterator)(void *iter) = nullptr,
+                           void   (*deleteTwoIterators)(void *begin, void *end) = nullptr
                            ) :
          fInfo(info), fIterSize(iter_size), fValueDiff(value_diff),
          fValueOffset(value_offset),
@@ -643,7 +647,7 @@ namespace Detail {
       }
       static void* clear(void* env)  {
          object(env)->clear();
-         return 0;
+         return nullptr;
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -654,25 +658,25 @@ namespace Detail {
 #endif
          e->fIterator = c->begin();
          e->fSize  = c->size();
-         return 0;
+         return nullptr;
       }
       static void* next(void* env)  {
          PEnv_t  e = PEnv_t(env);
          PCont_t c = PCont_t(e->fObject);
          for (; e->fIdx > 0 && e->iter() != c->end(); ++(e->iter()), --e->fIdx){ }
          // TODO: Need to find something for going backwards....
-         return 0;
+         return nullptr;
       }
       static void* construct(void*,size_t)  {
          // Nothing to construct.
-         return 0;
+         return nullptr;
       }
       static void* collect(void *coll, void *array)  {
          PCont_t  c = PCont_t(coll);
          PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (Iter_t i=c->begin(); i != c->end(); ++i, ++m )
             ::new(m) Value_t(*i);
-         return 0;
+         return nullptr;
       }
       static void destruct(void*,size_t)  {
          // Nothing to destruct.
@@ -694,16 +698,9 @@ namespace Detail {
             new (dest_arena) iterator(*source);
             return dest_arena;
          }
-         static void* next(void *iter_loc, const void *end_loc) {
-            const iterator *end = (const iterator *)(end_loc);
-            iterator *iter = (iterator *)(iter_loc);
-            if (*iter != *end) {
-               ++(*iter);
-               //if (*iter != *end) {
-               //   return IteratorValue<Cont_t, Cont_t::value_type>::get(*iter);
-               //}
-            }
-            return 0;
+         static void* next(void *, const void *) {
+            R__ASSERT(false && "Intentionally not implemented, should use VectorLooper or similar for vector<bool>.");
+            return {};
          }
          static void destruct1(void *iter_ptr) {
             iterator *start = (iterator *)(iter_ptr);
@@ -738,7 +735,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->push_back(*m);
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;
@@ -748,10 +745,10 @@ namespace Detail {
    // Need specialization for boolean references due to stupid STL std::vector<bool>
    template <class A> struct TCollectionProxyInfo::Address<std::vector<Bool_t, A>> {
       virtual ~Address() {}
-      static void* address(typename std::vector<Bool_t, A>::const_reference ref) {
-         (void) ref; // This is to prevent the unused variable warning.
-         R__ASSERT(0);
-         return 0;
+      static void* address(typename std::vector<Bool_t, A>::const_reference) {
+         R__ASSERT(false && "Intentionally not implemented, should use VectorLooper or other functions specialized for "
+                            "vector<bool> instead");
+         return {};
       }
    };
 
@@ -777,7 +774,7 @@ namespace Detail {
       }
       static void* clear(void* env)  {
          object(env)->reset();
-         return 0;
+         return nullptr;
       }
       static void* first(void* env)  {
          PEnv_t  e = PEnv_t(env);
@@ -796,14 +793,14 @@ namespace Detail {
       }
       static void* construct(void*,size_t)  {
          // Nothing to construct.
-         return 0;
+         return nullptr;
       }
       static void* collect(void *coll, void *array)  {
          PCont_t  c = PCont_t(coll);
          PValue_t m = PValue_t(array); // 'start' is a buffer outside the container.
          for (size_t i=0; i != c->size(); ++i, ++m )
             *m = c->test(i);
-         return 0;
+         return nullptr;
       }
       static void destruct(void*,size_t)  {
          // Nothing to destruct.
@@ -875,7 +872,7 @@ namespace Detail {
          PValue_t m = PValue_t(from);
          for (size_t i=0; i<size; ++i, ++m)
             c->set(i,*m);
-         return 0;
+         return nullptr;
       }
       static int value_offset()  {
          return 0;

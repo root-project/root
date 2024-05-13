@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
+## An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
 ##
 ## This tutorial is a simplified but yet complex example of an analysis reconstructing the Higgs boson decaying to two Z
 ## bosons from events with four leptons. The data and simulated events are taken from CERN OpenData representing a
@@ -33,7 +33,7 @@
 ## \macro_output
 ##
 ## \date July 2019
-## \author Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
+## \authors Stefan Wunsch (KIT, CERN), Vincenzo Eduardo Padulano (UniMiB, CERN)
 
 import ROOT
 import os
@@ -193,7 +193,7 @@ def plot(sig, bkg, data, x_label, filename):
     # Canvas and general style options
     ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
-    d = ROOT.TCanvas("d", "", 800, 700)
+    d = ROOT.TCanvas("", "", 800, 700)
     # Make sure the canvas stays in the list of canvases after the macro execution
     ROOT.SetOwnership(d, False)
     d.SetLeftMargin(0.15)
@@ -252,10 +252,11 @@ def plot(sig, bkg, data, x_label, filename):
     d.SaveAs(filename)
 
 
-def df103_NanoAODHiggsAnalysis(run_fast = True):
+def df103_NanoAODHiggsAnalysis():
     # In fast mode, take samples from */cms_opendata_2012_nanoaod_skimmed/*, which has
     # the preselections from the selection_* functions already applied.
     path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/"
+    run_fast = True # Run on skimmed data, set to False to run on full dataset
     if run_fast: path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod_skimmed/"
 
     # Create dataframes for signal, background and data samples
@@ -351,7 +352,15 @@ def df103_NanoAODHiggsAnalysis(run_fast = True):
     df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", "1.0")\
                                           .Histo1D(("h_data_2el2mu_doublemu", "", nbins, 70, 180), "H_mass", "weight")
 
-    # Trigger event loops and retrieve histograms
+    # RunGraphs allows to run the event loops of the separate RDataFrame graphs
+    # concurrently. This results in an improved usage of the available resources
+    # if each separate RDataFrame can not utilize all available resources, e.g.,
+    # because not enough data is available.
+    ROOT.RDF.RunGraphs([df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu,
+                        df_h_sig_4el, df_h_bkg_4el, df_h_data_4el,
+                        df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu])
+
+    # Get histograms (does not rerun the event loop)
     signal_4mu = df_h_sig_4mu.GetValue()
     background_4mu = df_h_bkg_4mu.GetValue()
     data_4mu = df_h_data_4mu.GetValue()
@@ -391,5 +400,4 @@ def df103_NanoAODHiggsAnalysis(run_fast = True):
 
 
 if __name__ == "__main__":
-    run_fast = True
-    df103_NanoAODHiggsAnalysis(run_fast)
+    df103_NanoAODHiggsAnalysis()

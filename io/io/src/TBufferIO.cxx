@@ -169,17 +169,17 @@ void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
       if (obj) {
          CheckCount(offset);
          ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
+         fMap->Add(hash, (Longptr_t)obj, offset);
          // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
+         // fClassMap->Add(hash, (Longptr_t)obj, (Longptr_t)((TObject*)obj)->IsA());
          fMapCount++;
       }
    } else {
       if (!fMap || !fClassMap)
          InitMap();
 
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (obj && obj != (TObject *)-1) ? (Long_t)((TObject *)obj)->IsA() : 0);
+      fMap->Add(offset, (Longptr_t)obj);
+      fClassMap->Add(offset, (obj && obj != (TObject *)-1) ? (Longptr_t)((TObject *)obj)->IsA() : 0);
       fMapCount++;
    }
 }
@@ -202,17 +202,17 @@ void TBufferIO::MapObject(const void *obj, const TClass *cl, UInt_t offset)
       if (obj) {
          CheckCount(offset);
          ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
+         fMap->Add(hash, (Longptr_t)obj, offset);
          // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
+         // fClassMap->Add(hash, (Longptr_t)obj, (Longptr_t)cl);
          fMapCount++;
       }
    } else {
       if (!fMap || !fClassMap)
          InitMap();
 
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (Long_t)cl);
+      fMap->Add(offset, (Longptr_t)obj);
+      fClassMap->Add(offset, (Longptr_t)cl);
       fMapCount++;
    }
 }
@@ -239,14 +239,14 @@ Bool_t TBufferIO::CheckObject(const void *obj, const TClass *ptrClass)
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   ULong_t idx;
+   ULongptr_t idx;
 
    if (clActual && (ptrClass != clActual)) {
       const char *temp = (const char *)obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
+      idx = (ULongptr_t)fMap->GetValue(Void_Hash(temp), (Longptr_t)temp);
    } else {
-      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+      idx = (ULongptr_t)fMap->GetValue(Void_Hash(obj), (Longptr_t)obj);
    }
 
    return idx ? kTRUE : kFALSE;
@@ -265,8 +265,8 @@ void TBufferIO::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
    //     ptr = nullptr;
    //     ClassPtr = nullptr;
    //   } else {
-   ptr = (void *)(Long_t)fMap->GetValue(tag);
-   ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
+   ptr = (void *)(Longptr_t)fMap->GetValue(tag);
+   ClassPtr = (TClass *)(Longptr_t)fClassMap->GetValue(tag);
    //  }
 }
 
@@ -279,7 +279,7 @@ Long64_t TBufferIO::GetObjectTag(const void *obj)
    if (!obj || !fMap)
       return 0;
 
-   return fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+   return fMap->GetValue(Void_Hash(obj), (Longptr_t)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

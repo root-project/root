@@ -10,7 +10,7 @@
  *************************************************************************/
 
 //////////////////////////////////////////////////////////////////
-// Implementation for the DataLoader for the the multi-threaded //
+// Implementation for the DataLoader for the multi-threaded //
 // CPU implementation of DNNs.                                  //
 //////////////////////////////////////////////////////////////////
 

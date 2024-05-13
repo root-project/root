@@ -31,8 +31,8 @@ TLeafI::TLeafI(): TLeaf()
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,8 +44,8 @@ TLeafI::TLeafI(TBranch *parent, const char *name, const char *type)
    fLenType = 4;
    fMinimum = 0;
    fMaximum = 0;
-   fValue   = 0;
-   fPointer = 0;
+   fValue   = nullptr;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ TLeafI::TLeafI(TBranch *parent, const char *name, const char *type)
 
 TLeafI::~TLeafI()
 {
-   if (ResetAddress(0,kTRUE)) delete [] fValue;
+   if (ResetAddress(nullptr,true)) delete [] fValue;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,16 +113,16 @@ Double_t TLeafI::GetValue(Int_t i) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafI::IncludeRange(TLeaf *input)
+bool TLeafI::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             this->SetMaximum( input->GetMaximum() );
         if (input->GetMinimum() < this->GetMinimum())
             this->SetMinimum( input->GetMinimum() );
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
@@ -240,7 +240,7 @@ void TLeafI::SetAddress(void *add)
          Int_t ncountmax = fLen;
          if (fLeafCount) ncountmax = fLen*(fLeafCount->GetMaximum() + 1);
          if ((fLeafCount && ncountmax > Int_t(fLeafCount->GetValue())) ||
-             ncountmax > fNdata || *fPointer == 0) {
+             ncountmax > fNdata || *fPointer == nullptr) {
             if (*fPointer) delete [] *fPointer;
             if (ncountmax > fNdata) fNdata = ncountmax;
             *fPointer = new Int_t[fNdata];

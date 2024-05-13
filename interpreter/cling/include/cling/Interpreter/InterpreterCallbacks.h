@@ -12,13 +12,13 @@
 
 #include "clang/AST/DeclarationName.h"
 #include "clang/Basic/SourceLocation.h"
+#include "clang/Basic/SourceManager.h"
 
 #include "llvm/ADT/ArrayRef.h"
 
 #include <memory>
 
 namespace clang {
-  class ASTDeserializationListener;
   class Decl;
   class DeclContext;
   class DeclarationName;
@@ -36,7 +36,6 @@ namespace clang {
 namespace cling {
   class Interpreter;
   class InterpreterCallbacks;
-  class InterpreterDeserializationListener;
   class InterpreterExternalSemaSource;
   class InterpreterPPCallbacks;
   class Transaction;
@@ -55,12 +54,6 @@ namespace cling {
     /// callbacks. RefOwned by Sema & ASTContext.
     ///
     InterpreterExternalSemaSource* m_ExternalSemaSource;
-
-    ///\brief Our custom ASTDeserializationListener, translating interesting
-    /// events into callbacks.
-    ///
-    std::unique_ptr
-    <InterpreterDeserializationListener> m_DeserializationListener;
 
     ///\brief Our custom PPCallbacks, translating interesting
     /// events into interpreter callbacks.
@@ -82,15 +75,11 @@ namespace cling {
     ///\param[in] interp - an interpreter.
     ///\param[in] enableExternalSemaSourceCallbacks  - creates a default
     ///           InterpreterExternalSemaSource and attaches it to Sema.
-    ///\param[in] enableDeserializationListenerCallbacks - creates a default
-    ///           InterpreterDeserializationListener and attaches it to the
-    ///           ModuleManager if it is set.
     ///\param[in] enablePPCallbacks  - creates a default InterpreterPPCallbacks
     ///           and attaches it to the Preprocessor.
     ///
     InterpreterCallbacks(Interpreter* interp,
                          bool enableExternalSemaSourceCallbacks = false,
-                         bool enableDeserializationListenerCallbacks = false,
                          bool enablePPCallbacks = false);
 
     virtual ~InterpreterCallbacks();
@@ -98,24 +87,21 @@ namespace cling {
     cling::Interpreter* getInterpreter() const { return m_Interpreter; }
     clang::ExternalSemaSource* getInterpreterExternalSemaSource() const;
 
-    clang::ASTDeserializationListener*
-    getInterpreterDeserializationListener() const;
-
    virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
                                    const clang::Token& /*IncludeTok*/,
-                                   llvm::StringRef FileName,
+                                   llvm::StringRef /*FileName*/,
                                    bool /*IsAngled*/,
                                    clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry* /*File*/,
+                                   clang::OptionalFileEntryRef /*File*/,
                                    llvm::StringRef /*SearchPath*/,
                                    llvm::StringRef /*RelativePath*/,
-                                   const clang::Module* /*Imported*/) {}
-    virtual void EnteredSubmodule(clang::Module* M,
-                                  clang::SourceLocation ImportLoc,
-                                  bool ForPragma) {}
+                                   const clang::Module* /*Imported*/,
+                              clang::SrcMgr::CharacteristicKind /*FileType*/) {}
+    virtual void EnteredSubmodule(clang::Module* /*M*/,
+                                  clang::SourceLocation /*ImportLoc*/,
+                                  bool /*ForPragma*/) {}
 
-    virtual bool FileNotFound(llvm::StringRef FileName,
-                              llvm::SmallVectorImpl<char>& RecoveryPath);
+    virtual bool FileNotFound(llvm::StringRef FileName);
 
     /// \brief This callback is invoked whenever the interpreter needs to
     /// resolve the type and the adress of an object, which has been marked for
@@ -172,16 +158,6 @@ namespace cling {
     ///
     ///\param[in] - The declaration that has been shadowed.
     virtual void DefinitionShadowed(const clang::NamedDecl*) {}
-
-    /// \brief Used to inform client about a new decl read by the ASTReader.
-    ///
-    ///\param[in] - The Decl read by the ASTReader.
-    virtual void DeclDeserialized(const clang::Decl*) {}
-
-    /// \brief Used to inform client about a new type read by the ASTReader.
-    ///
-    ///\param[in] - The Type read by the ASTReader.
-    virtual void TypeDeserialized(const clang::Type*) {}
 
     virtual void LibraryLoaded(const void*, llvm::StringRef) {}
     virtual void LibraryUnloaded(const void*, llvm::StringRef) {}
@@ -272,11 +248,12 @@ namespace cling {
       SymbolResolverCallback(Interpreter* interp, bool resolve = true);
       ~SymbolResolverCallback();
 
-      bool LookupObject(clang::LookupResult& R, clang::Scope* S);
-      bool LookupObject(const clang::DeclContext*, clang::DeclarationName) {
+      bool LookupObject(clang::LookupResult& R, clang::Scope* S) override;
+      bool
+      LookupObject(const clang::DeclContext*, clang::DeclarationName) override {
         return false;
       }
-      bool LookupObject(clang::TagDecl* Tag) {
+      bool LookupObject(clang::TagDecl*) override {
         return false;
       }
       bool ShouldResolveAtRuntime(clang::LookupResult& R, clang::Scope* S);

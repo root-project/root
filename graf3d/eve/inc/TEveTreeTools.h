@@ -21,19 +21,19 @@
 
 class TEveSelectorToEventList : public TSelectorDraw
 {
-   TEveSelectorToEventList(const TEveSelectorToEventList&);            // Not implemented
-   TEveSelectorToEventList& operator=(const TEveSelectorToEventList&); // Not implemented
+   TEveSelectorToEventList(const TEveSelectorToEventList&) = delete;
+   TEveSelectorToEventList& operator=(const TEveSelectorToEventList&) = delete;
 
 protected:
    TEventList* fEvList;
-   TList       fInput;
+   TList       fInputList;
 public:
    TEveSelectorToEventList(TEventList* evl, const char* sel);
 
-   virtual Int_t  Version() const { return 1; }
-   virtual Bool_t Process(Long64_t entry);
+   Int_t  Version() const override { return 1; }
+   Bool_t Process(Long64_t entry) override;
 
-   ClassDef(TEveSelectorToEventList, 1); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDefOverride(TEveSelectorToEventList, 2); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /******************************************************************************/
@@ -65,11 +65,11 @@ public:
 
 class TEvePointSelector : public TSelectorDraw
 {
-   TEvePointSelector(const TEvePointSelector&);            // Not implemented
-   TEvePointSelector& operator=(const TEvePointSelector&); // Not implemented
+   TEvePointSelector(const TEvePointSelector&) = delete;
+   TEvePointSelector& operator=(const TEvePointSelector&) = delete;
 
 protected:
-   TTree                  *fTree;
+   TTree                  *fSelectTree;
    TEvePointSelectorConsumer *fConsumer;
 
    TString                 fVarexp;
@@ -78,20 +78,20 @@ protected:
    TString                 fSubIdExp;
    Int_t                   fSubIdNum;
 
-   TList                   fInput;
+   TList                   fInputList;
 
 public:
-   TEvePointSelector(TTree* t=0, TEvePointSelectorConsumer* c=0,
+   TEvePointSelector(TTree* t=nullptr, TEvePointSelectorConsumer* c=nullptr,
                      const char* vexp="", const char* sel="");
-   virtual ~TEvePointSelector() {}
+   ~TEvePointSelector() override {}
 
-   virtual Long64_t Select(const char* selection=0);
-   virtual Long64_t Select(TTree* t, const char* selection=0);
-   virtual void  TakeAction();
+   virtual Long64_t Select(const char* selection=nullptr);
+   virtual Long64_t Select(TTree* t, const char* selection=nullptr);
+   void  TakeAction() override;
 
 
-   TTree* GetTree() const   { return fTree; }
-   void   SetTree(TTree* t) { fTree = t; }
+   TTree* GetTree() const   { return fSelectTree; }
+   void   SetTree(TTree* t) { fSelectTree = t; }
 
    TEvePointSelectorConsumer* GetConsumer() const { return fConsumer; }
    void SetConsumer(TEvePointSelectorConsumer* c) { fConsumer = c; }
@@ -107,7 +107,7 @@ public:
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 
-   ClassDef(TEvePointSelector, 1); // TSelector for direct extraction of point-like data from a Tree.
+   ClassDefOverride(TEvePointSelector, 2); // TSelector for direct extraction of point-like data from a Tree.
 };
 
 #endif

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : ResultsClassification                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::ResultsClassification
@@ -51,7 +51,7 @@ namespace TMVA {
 TMVA::ResultsClassification::ResultsClassification( const DataSetInfo* dsi, TString resultsName  )
    : Results( dsi,resultsName  ),
      fRet(1),
-     fLogger( new MsgLogger(Form("ResultsClassification%s",resultsName.Data()) , kINFO) )
+     fLogger( new MsgLogger(TString::Format("ResultsClassification%s",resultsName.Data()).Data() , kINFO) )
 {
 }
 
@@ -66,8 +66,9 @@ TMVA::ResultsClassification::~ResultsClassification()
 ////////////////////////////////////////////////////////////////////////////////
 /// set MVA response
 
-void TMVA::ResultsClassification::SetValue( Float_t value, Int_t ievt )
+void TMVA::ResultsClassification::SetValue( Float_t value, Int_t ievt, Bool_t type )
 {
-   if (ievt >= (Int_t)fMvaValues.size()) fMvaValues.resize( ievt+1 );
+   assert(ievt < (int) fMvaValues.size() && ievt < (int) fMvaValuesTypes.size());
    fMvaValues[ievt] = value;
+   fMvaValuesTypes[ievt] = type;
 }

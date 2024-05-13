@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : VariableDecorrTransform                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::VariableDecorrTransform
@@ -143,13 +143,13 @@ std::vector<TString>* TMVA::VariableDecorrTransform::GetTransformationStrings( I
 
          switch( type ) {
          case 'v':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Variables()[idx].GetLabel().Data() );
             break;
          case 't':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Targets()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Targets()[idx].GetLabel().Data() );
             break;
          case 's':
-            str += Form( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Spectators()[idx].GetLabel().Data() );
+            str += TString::Format( "%10.5g*[%s]", TMath::Abs((*m)(ivar,jvar)), Spectators()[idx].GetLabel().Data() );
             break;
          default:
             Log() << kFATAL << "VariableDecorrTransform::GetTransformationStrings : unknown type '" << type << "'." << Endl;
@@ -301,9 +301,9 @@ void TMVA::VariableDecorrTransform::AttachXMLTo(void* parent)
 
    for (std::vector<TMatrixD*>::const_iterator itm = fDecorrMatrices.begin(); itm != fDecorrMatrices.end(); ++itm) {
       TMatrixD* mat = (*itm);
-      /*void* decmat = gTools().xmlengine().NewChild(trf, 0, "Matrix");
-        gTools().xmlengine().NewAttr(decmat,0,"Rows", gTools().StringFromInt(mat->GetNrows()) );
-        gTools().xmlengine().NewAttr(decmat,0,"Columns", gTools().StringFromInt(mat->GetNcols()) );
+      /*void* decmat = gTools().xmlengine().NewChild(trf, nullptr, "Matrix");
+        gTools().xmlengine().NewAttr(decmat, nullptr, "Rows", gTools().StringFromInt(mat->GetNrows()) );
+        gTools().xmlengine().NewAttr(decmat, nullptr, "Columns", gTools().StringFromInt(mat->GetNcols()) );
 
         std::stringstream s;
         for (Int_t row = 0; row<mat->GetNrows(); row++) {

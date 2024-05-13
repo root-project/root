@@ -22,13 +22,12 @@ class TColor;
 
 #include <string>
 
-/** Object used to store paint operations and deliver them to JSROOT */
 class TWebPainting : public TObject {
 
    protected:
-      std::string fOper;      /// list of operations, separated by semicolons
+      std::string fOper;      ///< list of operations, separated by semicolons
       Int_t fSize{0};         ///<! filled buffer size
-      TArrayF fBuf;           /// array of points for all operations
+      TArrayF fBuf;           ///< array of points for all operations
       TAttLine fLastLine;     ///<! last line attributes
       TAttFill fLastFill;     ///<! last fill attributes
       TAttMarker fLastMarker; ///<! last marker attributes
@@ -36,7 +35,7 @@ class TWebPainting : public TObject {
    public:
 
       TWebPainting();
-      virtual ~TWebPainting() = default;
+      ~TWebPainting() override = default;
 
       Bool_t IsEmpty() const { return fOper.empty() && (fBuf.GetSize() == 0); }
 
@@ -57,7 +56,7 @@ class TWebPainting : public TObject {
       static std::string MakeTextOper(const char *str);
 
 
-   ClassDef(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
+   ClassDefOverride(TWebPainting, 1) // store for all paint operation of TVirtualPadPainter
 };
 
 #endif

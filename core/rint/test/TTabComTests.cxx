@@ -14,7 +14,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include <ROOT/RConfig.hxx>
 
 #include "TTabCom.h"
@@ -68,7 +68,7 @@ TEST(TTabComTests, CompleteTH1)
       // FIXME: See ROOT-10989
       " TH1DModel"
 #endif
-      " TH1Editor TH1F TH1I TH1K TH1S";
+      " TH1Editor TH1F TH1I TH1K TH1L TH1S";
 
    ASSERT_STREQ(expected.c_str(), GetCompletions("TH1").c_str());
 }
@@ -92,16 +92,10 @@ TEST(TTabComTests, CompleteTProfile)
 
 TEST(TTabComTests, CompleteTObj)
 {
-#ifdef _MSC_VER
-   std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
-      " TObject TObject::EDeprecatedStatusBits TObject::EStatusBits TObjectRefSpy"
-      " TObjectSpy TObjectTable";
-#else
    std::string expected = "TObjArray TObjArrayIter TObjLink TObjOptLink TObjString"
       " TObject TObjectRefSpy TObjectSpy TObjectTable";
-#endif
    // FIXME: See ROOT-10989
    ASSERT_STREQ(expected.c_str(), GetCompletions("TObj",
-                                                 /*ignore=*/{"TObjectHolder",
-                                                             "TObjectItem"}).c_str());
+                                                 /*ignore=*/{"TObjectDisplayItem", "TObjectDrawable", "TObjectHolder",
+                                                             "TObjectItem", "TObjectElement", "TObject::EDeprecatedStatusBits", "TObject::EStatusBits"}).c_str());
 }

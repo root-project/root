@@ -81,7 +81,7 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
       // create new canvas
       if (countPad%noPadPerCanv==0) {
          ++countCanvas;
-         canv = new TCanvas( Form("canvas%d", countCanvas), title,
+         canv = new TCanvas( TString::Format("canvas%d", countCanvas), title,
                              countCanvas*50+50, countCanvas*20, width, height );
          canv->Divide(xPad,yPad);
          canv->Draw();
@@ -152,11 +152,11 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
       Double_t dxo  = sig->GetBinWidth(nbin+1);
       TString uoflow = "";
       if (isRegression) {
-         uoflow = Form( "U/O-flow: %.1f%% / %.1f%%", 
+         uoflow = TString::Format( "U/O-flow: %.1f%% / %.1f%%", 
                         sig->GetBinContent(0)*dxu*100, sig->GetBinContent(nbin+1)*dxo*100 );
       }
       else {
-         uoflow = Form( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%", 
+         uoflow = TString::Format( "U/O-flow (S,B): (%.1f, %.1f)%% / (%.1f, %.1f)%%", 
                         sig->GetBinContent(0)*dxu*100, bgd->GetBinContent(0)*dxu*100,
                         sig->GetBinContent(nbin+1)*dxo*100, bgd->GetBinContent(nbin+1)*dxo*100 );
       }
@@ -169,7 +169,7 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
 
       // save canvas to file
       if (countPad%noPadPerCanv==0) {
-         TString fname = Form( "%s/plots/%s_c%i",dataset.Data(), outfname.Data(), countCanvas );
+         TString fname = TString::Format( "%s/plots/%s_c%i",dataset.Data(), outfname.Data(), countCanvas );
          TMVAGlob::plot_logo();
          TMVAGlob::imgconv( canv, fname );
          createNewFig = kFALSE;
@@ -180,7 +180,7 @@ void TMVA::variables(TString dataset, TString fin, TString dirName , TString tit
    }
    
    if (createNewFig) {
-      TString fname = Form( "%s/plots/%s_c%i",dataset.Data(), outfname.Data(), countCanvas );
+      TString fname = TString::Format( "%s/plots/%s_c%i",dataset.Data(), outfname.Data(), countCanvas );
       TMVAGlob::plot_logo();
       TMVAGlob::imgconv( canv, fname );
       createNewFig = kFALSE;

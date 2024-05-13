@@ -316,7 +316,7 @@ TObject *TCollection::FindObject(const char *name) const
 
    while ((obj = next()))
       if (!strcmp(name, obj->GetName())) return obj;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -341,7 +341,7 @@ TObject *TCollection::FindObject(const TObject *obj) const
 
    while ((ob = next()))
       if (ob->IsEqual(obj)) return ob;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -388,7 +388,7 @@ void TCollection::ls(Option_t *option) const
    TRegexp re(option,kTRUE);
    TIter next(this);
    TObject *object;
-   char *star = 0;
+   char *star = nullptr;
    if (option) star = (char*)strchr(option,'*');
 
    TROOT::IncreaseDirLevel();
@@ -584,7 +584,7 @@ void TCollection::RecursiveRemove(TObject *obj)
    TObject *object;
 
    while ((object = next())) {
-      if (object->TestBit(kNotDeleted)) object->RecursiveRemove(obj);
+      if (!ROOT::Detail::HasBeenDeleted(object)) object->RecursiveRemove(obj);
    }
 }
 
@@ -683,7 +683,7 @@ TCollection *TCollection::GetCurrentCollection()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set this collection to be the globally accesible collection.
+/// Set this collection to be the globally accessible collection.
 
 void TCollection::SetCurrentCollection()
 {
@@ -740,7 +740,7 @@ void TCollection::GarbageCollect(TObject *obj)
 /// Set whether this collection is the owner (enable==true)
 /// of its content.  If it is the owner of its contents,
 /// these objects will be deleted whenever the collection itself
-/// is delete.   The objects might also be deleted or destructed when Clear
+/// is deleted. The objects might also be deleted or destructed when Clear
 /// is called (depending on the collection).
 
 void TCollection::SetOwner(Bool_t enable)
@@ -758,10 +758,14 @@ void TCollection::SetOwner(Bool_t enable)
 /// Note: To test whether the usage is enabled do:
 ///    collection->TestBit(TCollection::kUseRWLock);
 
-bool TCollection::UseRWLock()
+bool TCollection::UseRWLock(Bool_t enable)
 {
    bool prev = TestBit(TCollection::kUseRWLock);
-   SetBit(TCollection::kUseRWLock);
+   if (enable) {
+      SetBit(TCollection::kUseRWLock);
+   } else {
+      ResetBit(TCollection::kUseRWLock);
+   }
    return prev;
 }
 
@@ -775,7 +779,7 @@ TIter::TIter(const TIter &iter)
       fIterator = iter.GetCollection()->MakeIterator();
       fIterator->operator=(*iter.fIterator);
    } else
-      fIterator = 0;
+      fIterator = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

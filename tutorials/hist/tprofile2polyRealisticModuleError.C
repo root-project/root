@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <fstream>
-using namespace std;
+#include <vector>
 
 void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
 {
@@ -22,7 +22,7 @@ void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
    auto avg = new TProfile2Poly();
    auto err = new TProfile2Poly();
 
-   ifstream infile;
+   std::ifstream infile;
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/hist/data/tprofile2poly_tutorial.data");
    infile.open(dir.Data());
@@ -30,19 +30,17 @@ void tprofile2polyRealisticModuleError(Int_t numEvents = 1000000)
    if (!infile) // Verify that the file was open successfully
    {
       std::cerr << dir.Data() << std::endl; // Report error
-      std::cerr << "Error code: " << strerror(errno) << std::endl; // Get some info as to why
+      std::cerr << "Error code: " << std::strerror(errno) << std::endl; // Get some info as to why
       return;
    }
 
-   vector<pair<Double_t, Double_t>> allCoords;
+   std::vector<std::pair<Double_t, Double_t>> allCoords;
    Double_t a, b;
-   while (infile >> a >> b) {
-      pair<Double_t, Double_t> coord(a, b);
-      allCoords.push_back(coord);
-   }
+   while (infile >> a >> b) 
+      allCoords.emplace_back(a, b);
 
    if (allCoords.size() % 3 != 0) {
-      cout << "[ERROR] Bad file" << endl;
+      std::cout << "[ERROR] Bad file" << std::endl;
       return;
    }
 

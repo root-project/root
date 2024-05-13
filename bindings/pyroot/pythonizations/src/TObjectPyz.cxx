@@ -10,21 +10,45 @@
  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
-#include "CPPInstance.h"
-#include "Utility.h"
+#include "CPyCppyy/API.h"
+
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/Utility.h"
+
 #include "PyROOTPythonize.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TObject.h"
+
+namespace {
+
+// Convert generic python object into a boolean value
+PyObject *BoolNot(PyObject *value)
+{
+   if (PyObject_IsTrue(value) == 1) {
+      Py_DECREF(value);
+      Py_RETURN_FALSE;
+   } else {
+      Py_XDECREF(value);
+      Py_RETURN_TRUE;
+   }
+}
+
+// Call method with signature: obj->meth(arg1)
+PyObject *CallPyObjMethod(PyObject *obj, const char *meth, PyObject *arg1)
+{
+   return PyObject_CallMethod(obj, meth, "O", arg1);
+}
+
+} // namespace
 
 using namespace CPyCppyy;
 
 // Implement Python's __eq__ with TObject::IsEqual
 PyObject *TObjectIsEqual(PyObject *self, PyObject *obj)
 {
-   if (!CPPInstance_Check(obj) || !((CPPInstance *)obj)->fObject)
+   if (!CPyCppyy::Instance_Check(obj) || !((CPPInstance *)obj)->fObject)
       return CPPInstance_Type.tp_richcompare(self, obj, Py_EQ);
 
    return CallPyObjMethod(self, "IsEqual", obj);
@@ -33,7 +57,7 @@ PyObject *TObjectIsEqual(PyObject *self, PyObject *obj)
 // Implement Python's __ne__ with TObject::IsEqual
 PyObject *TObjectIsNotEqual(PyObject *self, PyObject *obj)
 {
-   if (!CPPInstance_Check(obj) || !((CPPInstance *)obj)->fObject)
+   if (!CPyCppyy::Instance_Check(obj) || !((CPPInstance *)obj)->fObject)
       return CPPInstance_Type.tp_richcompare(self, obj, Py_NE);
 
    return BoolNot(CallPyObjMethod(self, "IsEqual", obj));

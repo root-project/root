@@ -42,13 +42,6 @@ typedef char* caddr_t;
 #include <cygwin/version.h>
 #endif /* __CYGWIN__ */
 
-#if defined(R__LINUX) && !defined(R__GLIBC) && !defined(__CYGWIN__) \
-   || (defined(__CYGWIN__) && (CYGWIN_VERSION_API_MAJOR > 0 || CYGWIN_VERSION_API_MINOR < 213))
-extern size_t getpagesize PARAMS ((void));
-#else
-extern int getpagesize PARAMS ((void));
-#endif
-
 #ifndef SEEK_SET
 #define SEEK_SET 0
 #endif
@@ -67,10 +60,7 @@ static size_t pagesize;
     amount to either add to or subtract from the existing region.  Works
     like sbrk(), but using mmap(). */
 
-PTR
-__mmalloc_mmap_morecore (mdp, size)
-  struct mdesc *mdp;
-  int size;
+PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
 {
   PTR result = NULL;
   off_t foffset;        /* File offset at which new mapping will start */
@@ -181,8 +171,14 @@ __mmalloc_mmap_morecore (mdp, size)
           } else {
             /*fprintf(stderr, "mmap_morecore: try to extend mapping by %d bytes, use bigger TMapFile\n", mapbytes);*/
 #ifndef WIN32
+            if (mdp -> top != PAGE_ALIGN(mdp -> top)) {
+              fprintf(stderr,
+                      "mmap_morecore error: base memory location (%p) is not aligned with %zu as required.\n",
+                      mdp -> top, (long)pagesize);
+              return result;
+            }
             mapto = mmap (mdp -> top, mapbytes, PROT_READ | PROT_WRITE,
-                          MAP_SHARED | MAP_FIXED, mdp -> fd, foffset);
+                          MAP_SHARED /* | MAP_FIXED */, mdp -> fd, foffset);
 #else
             hMap = CreateFileMapping(mdp -> fd, NULL, PAGE_READWRITE,
                           0, mapbytes, NULL);
@@ -196,6 +192,11 @@ __mmalloc_mmap_morecore (mdp, size)
                 result = (PTR) mdp -> breakval;
                 mdp -> breakval += size;
               }
+            else
+              {
+                fprintf(stderr, "mmap_morecore unexpected mmap result: mapto=%p vs top=%p mapbytes=%ld offset=%ld\n",
+                        mapto, mdp -> top, (long)mapbytes, (long)foffset);
+              }
           }
         }
       else
@@ -207,9 +208,7 @@ __mmalloc_mmap_morecore (mdp, size)
   return (result);
 }
 
-PTR
-__mmalloc_remap_core (mdp)
-  struct mdesc *mdp;
+PTR __mmalloc_remap_core(struct mdesc *mdp)
 {
   caddr_t base;
   int rdonly = 0;
@@ -236,7 +235,7 @@ __mmalloc_remap_core (mdp)
   if (rdonly) {
 #ifndef WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
-                 PROT_READ, MAP_SHARED | MAP_FIXED,
+                 PROT_READ, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
     if (base == (char *)-1)
        base = mmap (0, mdp -> top - mdp -> base,
@@ -265,7 +264,7 @@ __mmalloc_remap_core (mdp)
   } else {
 #ifndef WIN32
     base = mmap (mdp -> base, mdp -> top - mdp -> base,
-                 PROT_READ | PROT_WRITE, MAP_SHARED | MAP_FIXED,
+                 PROT_READ | PROT_WRITE, MAP_SHARED /* | MAP_FIXED */,
                  mdp -> fd, 0);
 #else
     HANDLE hMap;
@@ -290,9 +289,7 @@ __mmalloc_remap_core (mdp)
   return ((PTR) base);
 }
 
-int
-mmalloc_update_mapping(md)
-  PTR md;
+int mmalloc_update_mapping(PTR md)
 {
   /*
    * In case of a read-only mapping, we need to call this routine to
@@ -309,7 +306,7 @@ mmalloc_update_mapping(md)
 #endif
 
   oldtop = mdp->top;
-  top    = ((struct mdesc *)mdp->base)->top;
+  top    = ((struct mdesc *)(mdp->base + mdp->offset))->top;
 
   if (oldtop == top) return 0;
 
@@ -328,7 +325,7 @@ mmalloc_update_mapping(md)
     foffset = oldtop - mdp->base;
 #ifndef WIN32
     mapto = mmap (oldtop, mapbytes, PROT_READ,
-                  MAP_SHARED | MAP_FIXED, mdp -> fd, foffset);
+                  MAP_SHARED /* | MAP_FIXED */, mdp -> fd, foffset);
 #else
 //    hMap = OpenFileMapping(FILE_MAP_READ, FALSE, (LPTSTR)mdp->magic);
     hMap = CreateFileMapping(mdp -> fd, NULL, PAGE_READWRITE,

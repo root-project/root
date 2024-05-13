@@ -77,7 +77,7 @@
  * make it concave, and re-enable the tails. Especially \f$ \beta \f$ needs to be close to zero.
  *
  * ## Relation to RooIpatia2
- * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/blob/master/PhysFit/P2VV/src/RooIpatia2.cxx,
+ * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/-/blob/master/PhysFit/B2DXFitters/src/RooIpatia2.cxx,
  * but there are differences:
  * - At construction time, the Hypatia implementation checks if the range of parameters extends into regions where
  *   the function might be undefined.
@@ -90,10 +90,9 @@
  */
 
 #include "RooHypatia2.h"
-
+#include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
-#include "BatchHelpers.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"
@@ -111,7 +110,7 @@
 /// \param[in] zeta Shape parameter (\f$ \zeta >= 0 \f$).
 /// \param[in] beta Asymmetry parameter \f$ \beta \f$. Symmetric case is \f$ \beta = 0 \f$,
 /// choose values close to zero.
-/// \param[in] sigma Width parameter. If \f$ \beta = 0, \ \sigma \f$ is the RMS width.
+/// \param[in] argSigma Width parameter. If \f$ \beta = 0, \ \sigma \f$ is the RMS width.
 /// \param[in] mu Location parameter. Shifts the distribution left/right.
 /// \param[in] a Start of the left tail (\f$ a \geq 0 \f$, to the left of the peak). Note that when setting \f$ a = \sigma = 1 \f$,
 /// the tail region is to the left of \f$ x = \mu - 1 \f$, so a should be positive.
@@ -139,10 +138,6 @@ RooHypatia2::RooHypatia2(const char *name, const char *title, RooAbsReal& x, Roo
     RooHelpers::checkRangeOfParameters(this, {&lambda}, -std::numeric_limits<double>::max(), 0., false,
         std::string("Lambda needs to be negative when ") + _zeta.GetName() + " is zero.");
   }
-
-#ifndef R__HAS_MATHMORE
-  throw std::logic_error("RooHypatia2 needs ROOT with mathmore enabled to access gsl functions.");
-#endif
 }
 
 
@@ -163,9 +158,6 @@ RooHypatia2::RooHypatia2(const RooHypatia2& other, const char* name) :
                    _a2("a2", this, other._a2),
                    _n2("n2", this, other._n2)
 {
-#ifndef R__HAS_MATHMORE
-  throw std::logic_error("RooHypatia2 needs ROOT with mathmore enabled to access gsl functions.");
-#endif
 }
 
 namespace {
@@ -182,32 +174,23 @@ double low_x_LnBK(double nu, double x){
 }
 
 double besselK(double ni, double x) {
-  const double nu = std::fabs(ni);
+  const double nu = std::abs(ni);
   if ((x < 1.e-06 && nu > 0.) ||
       (x < 1.e-04 && nu > 0. && nu < 55.) ||
       (x < 0.1 && nu >= 55.) )
     return low_x_BK(nu, x);
 
-#ifdef R__HAS_MATHMORE
   return ROOT::Math::cyl_bessel_k(nu, x);
-#else
-  return std::numeric_limits<double>::signaling_NaN();
-#endif
-
 }
 
 double LnBesselK(double ni, double x) {
-  const double nu = std::fabs(ni);
+  const double nu = std::abs(ni);
   if ((x < 1.e-06 && nu > 0.) ||
       (x < 1.e-04 && nu > 0. && nu < 55.) ||
       (x < 0.1 && nu >= 55.) )
     return low_x_LnBK(nu, x);
 
-#ifdef R__HAS_MATHMORE
   return std::log(ROOT::Math::cyl_bessel_k(nu, x));
-#else
-  return std::numeric_limits<double>::signaling_NaN();
-#endif
 }
 
 
@@ -219,7 +202,7 @@ double LogEval(double d, double l, double alpha, double beta, double delta) {
 
   return std::exp(logno + beta*d
       + (0.5-l)*(std::log(alpha)-0.5*std::log(thing))
-      + LnBesselK(l-0.5, alpha*std::sqrt(thing)) );// + std::log(std::fabs(beta)+0.0001) );
+      + LnBesselK(l-0.5, alpha*std::sqrt(thing)) );// + std::log(std::abs(beta)+0.0001) );
 
 }
 
@@ -243,7 +226,7 @@ double diff_eval(double d, double l, double alpha, double beta, double delta){
 
 /*
 double Gauss2F1(double a, double b, double c, double x){
-  if (fabs(x) <= 1.) {
+  if (std::abs(x) <= 1.) {
     return ROOT::Math::hyperg(a, b, c, x);
   } else {
     return ROOT::Math::hyperg(c-a, b, c, 1-1/(1-x))/std::pow(1-x, b);
@@ -336,7 +319,7 @@ namespace {
 /// This is only needed in the rare case where a parameter is used as an observable.
 template<typename Tx, typename Tl, typename Tz, typename Tb, typename Ts, typename Tm, typename Ta, typename Tn,
 typename Ta2, typename Tn2>
-void compute(RooSpan<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
+void compute(std::span<double> output, Tx x, Tl lambda, Tz zeta, Tb beta, Ts sigma, Tm mu, Ta a, Tn n, Ta2 a2, Tn2 n2) {
   const auto N = output.size();
   const bool zetaIsAlwaysLargerZero = !zeta.isBatch() && zeta[0] > 0.;
   const bool zetaIsAlwaysZero = !zeta.isBatch() && zeta[0] == 0.;
@@ -428,11 +411,11 @@ std::pair<double, double> computeAB_zetaZero(double beta, double asigma, double 
   return {A, B};
 }
 
-using BatchHelpers::BracketAdapter;
+using RooBatchCompute::BracketAdapter;
 //////////////////////////////////////////////////////////////////////////////////////////
 /// A specialised compute function where x is an observable, and all parameters are used as
 /// parameters. Since many things can be calculated outside of the loop, it is faster.
-void compute(RooSpan<double> output, RooSpan<const double> x,
+void compute(std::span<double> output, std::span<const double> x,
     BracketAdapter<double> lambda, BracketAdapter<double> zeta, BracketAdapter<double> beta,
     BracketAdapter<double> sigma, BracketAdapter<double> mu,
     BracketAdapter<double> a, BracketAdapter<double> n, BracketAdapter<double> a2, BracketAdapter<double> n2) {
@@ -488,42 +471,41 @@ void compute(RooSpan<double> output, RooSpan<const double> x,
 
 }
 
-RooSpan<double> RooHypatia2::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
+void RooHypatia2::doEval(RooFit::EvalContext & ctx) const
+{
+  using namespace RooBatchCompute;
 
-  auto x = _x.getValBatch(begin, batchSize);
-  auto lambda = _lambda.getValBatch(begin, batchSize);
-  auto zeta = _zeta.getValBatch(begin, batchSize);
-  auto beta = _beta.getValBatch(begin, batchSize);
-  auto sig = _sigma.getValBatch(begin, batchSize);
-  auto mu = _mu.getValBatch(begin, batchSize);
-  auto a = _a.getValBatch(begin, batchSize);
-  auto n = _n.getValBatch(begin, batchSize);
-  auto a2 = _a2.getValBatch(begin, batchSize);
-  auto n2 = _n2.getValBatch(begin, batchSize);
+  auto x = ctx.at(_x);
+  auto lambda = ctx.at(_lambda);
+  auto zeta = ctx.at(_zeta);
+  auto beta = ctx.at(_beta);
+  auto sig = ctx.at(_sigma);
+  auto mu = ctx.at(_mu);
+  auto a = ctx.at(_a);
+  auto n = ctx.at(_n);
+  auto a2 = ctx.at(_a2);
+  auto n2 = ctx.at(_n2);
 
-  batchSize = BatchHelpers::findSize({x, lambda, zeta, beta, sig, mu, a, n, a2, n2});
+  size_t paramSizeSum=0;
+  for (const auto& i:{lambda, zeta, beta, sig, mu, a, n, a2, n2}) {
+    paramSizeSum += i.size();
+  }
 
-  auto output = _batchData.makeWritableBatchInit(begin, batchSize, 0.);
-
-  const std::vector<RooSpan<const double>> params = {lambda, zeta, beta, sig, mu, a, n, a2, n2};
-  auto emptySpan = [](const RooSpan<const double>& span) { return span.empty(); };
-  if (!x.empty() && std::all_of(params.begin(), params.end(), emptySpan)) {
-    compute(output, x,
+  // Run high performance compute if only x has multiple values
+  if (x.size()>1 && paramSizeSum==9) {
+    compute(ctx.output(), x,
         BracketAdapter<double>(_lambda), BracketAdapter<double>(_zeta),
         BracketAdapter<double>(_beta), BracketAdapter<double>(_sigma), BracketAdapter<double>(_mu),
         BracketAdapter<double>(_a), BracketAdapter<double>(_n),
         BracketAdapter<double>(_a2), BracketAdapter<double>(_n2));
   } else {
-    compute(output, BracketAdapterWithMask(_x, x),
+    compute(ctx.output(), BracketAdapterWithMask(_x, x),
         BracketAdapterWithMask(_lambda, lambda), BracketAdapterWithMask(_zeta, zeta),
         BracketAdapterWithMask(_beta, beta), BracketAdapterWithMask(_sigma, sig),
         BracketAdapterWithMask(_mu, mu),
         BracketAdapterWithMask(_a, a), BracketAdapterWithMask(_n, n),
         BracketAdapterWithMask(_a2, a2), BracketAdapterWithMask(_n2, n2));
   }
-
-  return output;
 }
 
 

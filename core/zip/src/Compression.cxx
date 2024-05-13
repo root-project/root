@@ -34,4 +34,16 @@ namespace ROOT {
     if (algorithm >= ROOT::ECompressionAlgorithm::kUndefinedCompressionAlgorithm) algo = 0;
     return algo * 100 + compressionLevel;
   }
+
+  std::string RCompressionSetting::AlgorithmToString(RCompressionSetting::EAlgorithm::EValues algorithm)
+  {
+     switch (algorithm) {
+     case EAlgorithm::EValues::kZLIB: return "zlib"; break;
+     case EAlgorithm::EValues::kLZMA: return "LZMA"; break;
+     case EAlgorithm::EValues::kOldCompressionAlgo: return "Old compression algorithm"; break;
+     case EAlgorithm::EValues::kLZ4: return "lz4"; break;
+     case EAlgorithm::EValues::kZSTD: return "zstd"; break;
+     default: return "Undefined compression algorithm";
+     }
+  }
 }

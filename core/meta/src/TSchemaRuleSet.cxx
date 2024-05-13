@@ -25,8 +25,8 @@ using namespace ROOT::Detail;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( 0 ), fRemainingRules( 0 ),
-                                  fAllRules( 0 ), fVersion(-3), fCheckSum( 0 )
+TSchemaRuleSet::TSchemaRuleSet(): fPersistentRules( nullptr ), fRemainingRules( nullptr ),
+                                  fAllRules( nullptr ), fVersion(-3), fCheckSum( 0 )
 {
    fPersistentRules = new TObjArray();
    fRemainingRules  = new TObjArray();
@@ -53,7 +53,7 @@ void TSchemaRuleSet::ls(Option_t *) const
    TROOT::IndentLevel();
    std::cout << "TSchemaRuleSet for " << fClassName << ":\n";
    TROOT::IncreaseDirLevel();
-   TObject *object = 0;
+   TObject *object = nullptr;
    TIter next(fPersistentRules);
    while ((object = next())) {
       object->ls(fClassName);
@@ -113,9 +113,10 @@ Bool_t TSchemaRuleSet::AddRule( TSchemaRule* rule, EConsistencyCheck checkConsis
    bool streamerInfosTest;
    {
      R__LOCKGUARD(gInterpreterMutex);
-     streamerInfosTest = (fClass->GetStreamerInfos()==0 || fClass->GetStreamerInfos()->GetEntries()==0);
+     streamerInfosTest = (fClass->GetStreamerInfos()==nullptr || fClass->GetStreamerInfos()->IsEmpty());
    }
-   if( rule->GetTarget()  && !(fClass->TestBit(TClass::kIsEmulation) && streamerInfosTest) ) {
+   if (rule->GetTarget()  && fClass->GetState() > TClass::kEmulated && streamerInfosTest)
+   {
       TObjArrayIter titer( rule->GetTarget() );
       TObject* obj;
       while( (obj = titer.Next()) ) {
@@ -206,14 +207,14 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
    }
    // There was no explicit rule, let's see we have implicit rules.
    if (fClass->GetCollectionProxy()) {
-      if (fClass->GetCollectionProxy()->GetValueClass() == 0) {
+      if (fClass->GetCollectionProxy()->GetValueClass() == nullptr) {
          // We have a numeric collection, let see if the target is
          // also a numeric collection.
          TClass *src = TClass::GetClass(source);
          if (src && src->GetCollectionProxy() &&
              src->GetCollectionProxy()->HasPointers() == fClass->GetCollectionProxy()->HasPointers()) {
             TVirtualCollectionProxy *proxy = src->GetCollectionProxy();
-            if (proxy->GetValueClass() == 0) {
+            if (proxy->GetValueClass() == nullptr) {
                return kTRUE;
             }
          }
@@ -230,8 +231,8 @@ Bool_t TSchemaRuleSet::HasRuleWithSourceClass( const TString &source ) const
             }
          }
       }
-   } else if (!strncmp(fClass->GetName(),"std::pair<",10) || !strncmp(fClass->GetName(),"pair<",5)) {
-      if (!strncmp(source,"std::pair<",10) || !strncmp(source,"pair<",5)) {
+   } else if (TClassEdit::IsStdPair(fClass->GetName())) {
+      if (TClassEdit::IsStdPair(source)) {
          // std::pair can be converted into each other if both its parameter can be converted into
          // each other.
          TClass *src = TClass::GetClass(source);
@@ -469,7 +470,7 @@ const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithSource( const TString& n
    for( auto rule : *this ) {
       if( rule->HasSource( name ) ) return rule;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -480,7 +481,7 @@ const TSchemaRule* TSchemaRuleSet::TMatches::GetRuleWithTarget( const TString& n
    for( auto rule : *this ) {
       if( rule->HasTarget( name ) ) return rule;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -495,7 +496,7 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithSource( const TString& name, Bool_t 
       if( rule->HasSource( name ) ) {
          if (needingAlloc) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             if (targets && name != targets->UncheckedAt(0)->GetName() ) {
@@ -525,11 +526,11 @@ Bool_t TSchemaRuleSet::TMatches::HasRuleWithTarget( const TString& name, Bool_t 
       if( rule->HasTarget( name ) ) {
          if (willset) {
             const TObjArray *targets = rule->GetTarget();
-            if (targets && (targets->GetEntries() > 1 || targets->GetEntries()==0) ) {
+            if (targets && (targets->GetEntriesFast() > 1 || targets->IsEmpty()) ) {
                return kTRUE;
             }
             const TObjArray *sources = rule->GetSource();
-            if (sources && (sources->GetEntries() > 1 || sources->GetEntries()==0) ) {
+            if (sources && (sources->GetEntriesFast() > 1 || sources->IsEmpty()) ) {
                return kTRUE;
             }
             if (sources && name != sources->UncheckedAt(0)->GetName() ) {

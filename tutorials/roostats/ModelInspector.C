@@ -72,8 +72,10 @@ enum ETestCommandIdentifiers {
    HSId1
 };
 
+using std::map, std::vector, std::cout, std::endl;
 using namespace RooFit;
 using namespace RooStats;
+
 class ModelInspectorGUI : public TGMainFrame {
 
 private:
@@ -108,18 +110,17 @@ private:
 
 public:
    ModelInspectorGUI(RooWorkspace *, ModelConfig *, RooAbsData *);
-   virtual ~ModelInspectorGUI();
+   ~ModelInspectorGUI() override;
 
-   void CloseWindow();
+   void CloseWindow() override;
    void DoText(const char *text);
    void DoSlider();
    void DoSlider(const char *);
    void DoFit();
    void DoExit();
    void HandleButtons();
-
-   ClassDef(ModelInspectorGUI, 0)
 };
+
 
 //______________________________________________________________________________
 ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsData *data)
@@ -130,7 +131,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    fWS = w;
    fMC = mc;
    fData = data;
-   RooSimultaneous *simPdf = NULL;
+   RooSimultaneous *simPdf = nullptr;
    Int_t numCats = 1;
    if (strcmp(fMC->GetPdf()->ClassName(), "RooSimultaneous") == 0) {
       cout << "Is a simultaneous PDF" << endl;
@@ -141,7 +142,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    } else {
       cout << "Is not a simultaneous PDF" << endl;
    }
-   fFitRes = 0;
+   fFitRes = nullptr;
 
    SetCleanup(kDeepCleanup);
 
@@ -201,8 +202,6 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    RooArgSet parameters;
    parameters.add(*fMC->GetParametersOfInterest());
    parameters.add(*fMC->GetNuisanceParameters());
-   TIterator *it = parameters.createIterator();
-   RooRealVar *param = NULL;
 
    // BB: This is the part needed in order to have scrollbars
    fCan = new TGCanvas(this, 100, 100, kFixedSize);
@@ -212,7 +211,7 @@ ModelInspectorGUI::ModelInspectorGUI(RooWorkspace *w, ModelConfig *mc, RooAbsDat
    // And that't it!
    // Obviously, the parent of other subframes is now fVFrame instead of "this"...
 
-   while ((param = (RooRealVar *)it->Next())) {
+   for (auto *param : static_range_cast<RooRealVar *>(parameters)) {
       cout << "Adding Slider for " << param->GetName() << endl;
       TGHorizontalFrame *hframek = new TGHorizontalFrame(fVFrame, 0, 0, 0);
 
@@ -273,9 +272,9 @@ void ModelInspectorGUI::DoText(const char * /*text*/)
    Int_t id = te->WidgetId();
 
    switch (id) {
-   case HId1: fHslider1->SetPosition(atof(fTbh1->GetString()), fHslider1->GetMaxPosition()); break;
+   case HId1: fHslider1->SetPosition(atof(fTbh1->GetString()), static_cast<double>(fHslider1->GetMaxPosition())); break;
    case HId2: fHslider1->SetPointerPosition(atof(fTbh2->GetString())); break;
-   case HId3: fHslider1->SetPosition(fHslider1->GetMinPosition(), atof(fTbh1->GetString())); break;
+   case HId3: fHslider1->SetPosition(static_cast<double>(fHslider1->GetMinPosition()), atof(fTbh1->GetString())); break;
    default: break;
    }
    DoSlider();
@@ -310,7 +309,7 @@ void ModelInspectorGUI::DoSlider()
 
    // char buf[32];
 
-   RooSimultaneous *simPdf = NULL;
+   RooSimultaneous *simPdf = nullptr;
    Int_t numCats = 0;
    if (strcmp(fMC->GetPdf()->ClassName(), "RooSimultaneous") == 0) {
       simPdf = (RooSimultaneous *)(fMC->GetPdf());
@@ -373,15 +372,15 @@ void ModelInspectorGUI::DoSlider()
       ////////////////////////////////////////////////////////////////////////////
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
       //    TIterator* iter = simPdf->indexCat().typeIterator() ;
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
       Int_t frameIndex = 0;
-      while ((tt = (RooCatType *)iter->Next())) {
+      for (auto const& tt : *channelCat) {
+         auto const& catName = tt.first;
+
          ++frameIndex;
          fCanvas->GetCanvas()->cd(frameIndex);
 
          // pre loop
-         RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+         RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
          RooArgSet *obstmp = pdftmp->getObservables(*fMC->GetObservables());
          RooRealVar *obs = ((RooRealVar *)obstmp->first());
 
@@ -394,7 +393,7 @@ void ModelInspectorGUI::DoSlider()
          RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
          RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
          fData->plotOn(fPlot, MarkerSize(1),
-                       Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                       Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                        DataError(RooAbsData::None));
          RooMsgService::instance().setGlobalKillBelow(msglevel);
 
@@ -448,7 +447,7 @@ void ModelInspectorGUI::DoSlider()
             msglevel = RooMsgService::instance().globalKillBelow();
             RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
             fData->plotOn(fPlot, MarkerSize(1),
-                          Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                          Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                           DataError(RooAbsData::None));
             RooMsgService::instance().setGlobalKillBelow(msglevel);
          }
@@ -484,7 +483,6 @@ void ModelInspectorGUI::DoExit()
 void ModelInspector(const char *infile = "", const char *workspaceName = "combined",
                     const char *modelConfigName = "ModelConfig", const char *dataName = "obsData")
 {
-
    // -------------------------------------------------------
    // First part is just to access a user-defined file
    // or create the standard example file if it doesn't exist
@@ -495,10 +493,6 @@ void ModelInspector(const char *infile = "", const char *workspaceName = "combin
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");

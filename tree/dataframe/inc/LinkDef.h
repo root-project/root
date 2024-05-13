@@ -17,9 +17,12 @@
 #pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RFilterBase>-;
 #pragma link C++ class ROOT::RDF::RInterface<ROOT::Detail::RDF::RDefineBase>-;
 #pragma link C++ namespace ROOT::Internal::RDF;
+#pragma link C++ namespace ROOT::Internal::RDF::GraphDrawing;
 #pragma link C++ namespace ROOT::Detail::RDF;
 #pragma link C++ namespace ROOT::RDF;
+#pragma link C++ class ROOT::RDF::RDisplay-;
 #pragma link C++ class ROOT::Internal::RDF::RActionBase-;
+#pragma link C++ class ROOT::Internal::RDF::RJittedAction-;
 #pragma link C++ class ROOT::Detail::RDF::RFilterBase-;
 #pragma link C++ class ROOT::Detail::RDF::RJittedFilter-;
 #pragma link C++ class ROOT::Detail::RDF::RDefineBase-;
@@ -33,12 +36,12 @@
 #pragma link C++ class ROOT::RDF::TProfile1DModel-;
 #pragma link C++ class ROOT::RDF::TProfile2DModel-;
 #pragma link C++ class ROOT::Internal::RDF::RIgnoreErrorLevelRAII-;
-#pragma link C++ class ROOT::Internal::RDF::FillHelper-;
+#pragma link C++ class ROOT::Internal::RDF::BufferedFillHelper-;
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
 #pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
 #pragma link C++ class ROOT::Internal::RDF::MeanHelper-;
-#pragma link C++ class ROOT::Internal::RDF::RBookedDefines-;
+#pragma link C++ class ROOT::Internal::RDF::RColumnRegister-;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValueBase+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<int>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<unsigned int>+;
@@ -50,10 +53,16 @@
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH1D>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH2D>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TH3D>+;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableValue<THnD>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TGraph>+;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TGraphAsymmErrors>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TStatistic>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile2D>+;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableVariationsBase+;
+#pragma link C++ class TNotifyLink<ROOT::Internal::RDF::RNewSampleFlag>;
+#pragma link C++ class ROOT::RDF::RCutFlowReport;
+#pragma link C++ class ROOT::RDF::TCutInfo;
 
 #endif
 

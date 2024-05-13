@@ -2,14 +2,13 @@
 #define ROOT_TBENCH
 
 #include "TClonesArray.h"
-namespace stdext {}
+
 #include <vector>
 #include <deque>
 #include <list>
 #include <set>
 #include <map>
 
-#ifndef WIN32
 using std::vector;
 using std::list;
 using std::deque;
@@ -17,10 +16,6 @@ using std::set;
 using std::multiset;
 using std::map;
 using std::multimap;
-#else
-using namespace std;
-using namespace stdext;
-#endif
 
 //-------------------------------------------------------------
 class THit {
@@ -50,20 +45,6 @@ public:
 
 TBuffer &operator<<(TBuffer &b, const THit *hit);
 
-namespace stdext {
-  template<class T>  inline size_t __gnu_cxx_hash_obj(const T& __o) {
-    unsigned long __h = 0;
-    const char* s = (const char*)&__o;
-    for (size_t i=0; i<sizeof(T); ++s, ++i)
-      __h = 5*__h + *s;
-    return size_t(__h);
-  }
-
-  template <class _Key> struct hash { };
-  inline size_t hash_value(const THit& s)  {
-    return __gnu_cxx_hash_obj(s);
-  }
-}
 #if defined R__TEMPLATE_OVERLOAD_BUG
 template <>
 #endif
@@ -81,9 +62,9 @@ public:
 
   TObjHit();
   TObjHit(int time);
-  virtual ~TObjHit(){;}
+  ~TObjHit() override{;}
 
-  ClassDef(TObjHit,1) // the hit class
+  ClassDefOverride(TObjHit,1) // the hit class
 };
 
 //-------------------------------------------------------------
@@ -232,7 +213,7 @@ public:
   Int_t MakeTree(int mode, int nevents, int compression, int split, float &cx);
   Int_t ReadTree();
 
-  ClassDef(TSTLhitHashSet,1) // STL vector of THit
+  ClassDefOverride(TSTLhitHashSet,1) // STL vector of THit
 };
 //-------------------------------------------------------------
 class TSTLhitHashMultiSet {
@@ -250,7 +231,7 @@ public:
   Int_t MakeTree(int mode, int nevents, int compression, int split, float &cx);
   Int_t ReadTree();
 
-  ClassDef(TSTLhitHashMultiSet,1) // STL vector of THit
+  ClassDefOverride(TSTLhitHashMultiSet,1) // STL vector of THit
 };
 #endif
 //-------------------------------------------------------------

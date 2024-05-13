@@ -88,7 +88,7 @@ via the command gObjectTable->Print()
 #include "TError.h"
 
 
-TObjectTable *gObjectTable;
+TObjectTable *gObjectTable = nullptr;
 
 
 ClassImp(TObjectTable);
@@ -109,7 +109,7 @@ TObjectTable::TObjectTable(Int_t tableSize)
 
 TObjectTable::~TObjectTable()
 {
-   delete [] fTable; fTable = 0;
+   delete [] fTable; fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ void TObjectTable::Print(Option_t *option) const
          if (!fTable[i]) continue;
          num++;
          obj = fTable[i];
-         printf("%-8d 0x%-16lx %-24s %s\n", num, (Long_t)obj, obj->ClassName(),
+         printf("%-8d 0x%-16zx %-24s %s\n", num, (size_t)obj, obj->ClassName(),
                 obj->GetName());
       }
       Printf("================================================================================\n");
@@ -154,7 +154,7 @@ void TObjectTable::Add(TObject *op)
       return;
 
    Int_t slot = FindElement(op);
-   if (fTable[slot] == 0) {
+   if (!fTable[slot]) {
       fTable[slot] = op;
       fTally++;
       if (HighWaterMark())
@@ -197,7 +197,7 @@ void TObjectTable::Delete(Option_t *)
    for (int i = 0; i < fSize; i++) {
       if (fTable[i]) {
          delete fTable[i];
-         fTable[i] = 0;
+         fTable[i] = nullptr;
       }
    }
    fTally = 0;
@@ -208,7 +208,7 @@ void TObjectTable::Delete(Option_t *)
 
 void TObjectTable::Remove(TObject *op)
 {
-   if (op == 0) {
+   if (!op) {
       Error("Remove", "remove 0 from TObjectTable");
       return;
    }
@@ -217,18 +217,18 @@ void TObjectTable::Remove(TObject *op)
       return;
 
    Int_t i = FindElement(op);
-   if (fTable[i] == 0) {
-      Warning("Remove", "0x%lx not found at %d", (Long_t)op, i);
+   if (!fTable[i]) {
+      Warning("Remove", "0x%zx not found at %d", (size_t)op, i);
       for (int j = 0; j < fSize; j++) {
          if (fTable[j] == op) {
-            Error("Remove", "0x%lx found at %d !!!", (Long_t)op, j);
+            Error("Remove", "0x%zx found at %d !!!", (size_t)op, j);
             i = j;
          }
       }
    }
 
    if (fTable[i]) {
-      fTable[i] = 0;
+      fTable[i] = nullptr;
       FixCollisions(i);
       fTally--;
    }
@@ -242,18 +242,18 @@ void TObjectTable::Remove(TObject *op)
 
 void TObjectTable::RemoveQuietly(TObject *op)
 {
-   if (op == 0) return;
+   if (!op) return;
 
    if (!fTable)
       return;
 
    Int_t i = FindElement(op);
-   if (fTable[i] == 0)
+   if (!fTable[i])
       for (int j = 0; j < fSize; j++)
          if (fTable[j] == op)
             i = j;
 
-   fTable[i] = 0;
+   fTable[i] = nullptr;
    FixCollisions(i);
    fTally--;
 }
@@ -264,7 +264,8 @@ void TObjectTable::RemoveQuietly(TObject *op)
 void TObjectTable::Terminate()
 {
    InstanceStatistics();
-   delete [] fTable; fTable = 0;
+   delete [] fTable;
+   fTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,7 +284,7 @@ Int_t TObjectTable::FindElement(TObject *op)
    //slot = Int_t(((ULong_t) op >> 2) % fSize);
    slot = Int_t(TString::Hash(&op, sizeof(TObject*)) % fSize);
    for (n = 0; n < fSize; n++) {
-      if ((slotOp = fTable[slot]) == 0)
+      if ((slotOp = fTable[slot]) == nullptr)
          break;
       if (op == slotOp)
          break;
@@ -305,12 +306,12 @@ void TObjectTable::FixCollisions(Int_t index)
       if (oldIndex >= fSize)
          oldIndex = 0;
       nextObject = fTable[oldIndex];
-      if (nextObject == 0)
+      if (!nextObject)
          break;
       nextIndex = FindElement(nextObject);
       if (nextIndex != oldIndex) {
          fTable[nextIndex] = nextObject;
-         fTable[oldIndex] = 0;
+         fTable[oldIndex] = nullptr;
       }
    }
 }
@@ -382,10 +383,10 @@ void TObjectTable::UpdateInstCount() const
 
    for (int i = 0; i < fSize; i++)
       if ((op = fTable[i])) {                // attention: no ==
-         if (op->TestBit(TObject::kNotDeleted))
+         if (!ROOT::Detail::HasBeenDeleted(op))
             op->IsA()->AddInstance(op->IsOnHeap());
          else
-            Error("UpdateInstCount", "oops 0x%lx\n", (Long_t)op);
+            Error("UpdateInstCount", "oops 0x%zx\n", (size_t)op);
       }
 }
 
@@ -397,7 +398,7 @@ void *TObjectTable::CheckPtrAndWarn(const char *msg, void *vp)
 {
    if (fTable && vp && fTable[FindElement((TObject*)vp)]) {
       Remove((TObject*)vp);
-      Warning("CheckPtrAndWarn", "%s (0x%lx)\n", msg, (Long_t)vp);
+      Warning("CheckPtrAndWarn", "%s (0x%zx)\n", msg, (size_t)vp);
    }
    return vp;
 }

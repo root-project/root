@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RHolder.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class RAnyObjectHolder
@@ -54,13 +53,19 @@ public:
          fClass->Destructor(fObj);
    }
 
+   void Forget() final
+   {
+      fClass = nullptr;
+      fObj = nullptr;
+      fOwner = false;
+   }
+
    const TClass *GetClass() const final { return fClass; }
    const void *GetObject() const final { return fObj; }
 };
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

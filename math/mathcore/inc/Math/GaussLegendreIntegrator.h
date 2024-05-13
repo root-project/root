@@ -37,24 +37,24 @@ namespace Math {
 class GaussLegendreIntegrator: public GaussIntegrator {
 public:
 
-   /** Basic contructor of GaussLegendreIntegrator.
+   /** Basic constructor of GaussLegendreIntegrator.
        \@param num Number of desired points to calculate the integration.
        \@param eps Desired relative error.
    */
    GaussLegendreIntegrator(int num = 10 ,double eps=1e-12);
 
    /** Default Destructor */
-   virtual ~GaussLegendreIntegrator();
+   ~GaussLegendreIntegrator() override;
 
    /** Set the number of points used in the calculation of the
        integral */
    void SetNumberPoints(int num);
 
    /** Set the desired relative Error. */
-   virtual void SetRelTolerance (double);
+   void SetRelTolerance (double) override;
 
    /** This method is not implemented. */
-   virtual void SetAbsTolerance (double);
+   void SetAbsTolerance (double) override;
 
 
    /** Returns the arrays x and w containing the abscissa and weight of
@@ -71,22 +71,22 @@ public:
        return number of function evaluations in calculating the integral
        This is equivalent to the number of points
    */
-   int NEval() const { return fNum; }
+   int NEval() const override { return fNum; }
 
 
    ///  get the option used for the integration
-   virtual ROOT::Math::IntegratorOneDimOptions Options() const;
+   ROOT::Math::IntegratorOneDimOptions Options() const override;
 
    // set the options
-   virtual void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt);
+   void SetOptions(const ROOT::Math::IntegratorOneDimOptions & opt) override;
 
 private:
 
    /**
-      Integration surrugate method. Return integral of passed function in  interval [a,b]
+      Integration surrogate method. Return integral of passed function in  interval [a,b]
       Reimplement method of GaussIntegrator using CalcGaussLegendreSamplingPoints
    */
-   virtual double DoIntegral (double a, double b, const IGenFunction* func);
+   double DoIntegral (double a, double b, const IGenFunction* func) override;
 
    /**
       Type: unsafe but fast interface filling the arrays x and w (static method)
@@ -110,9 +110,9 @@ private:
 
 
 protected:
-   int fNum;                         // Number of points used in the stimation of the integral.
-   double* fX;                       // Abscisa of the points used.
-   double* fW;                       // Weights of the points used.
+   int fNum;                 ///< Number of points used in the estimation of the integral.
+   double* fX;               ///< Abscisa of the points used.
+   double* fW;               ///< Weights of the points used.
 
 };
 

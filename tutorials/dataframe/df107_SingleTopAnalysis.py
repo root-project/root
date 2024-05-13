@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief A single top analysis using the ATLAS Open Data release of 2020, with RDataFrame.
+## A single top analysis using the ATLAS Open Data release of 2020, with RDataFrame.
 ##
 ## This tutorial is the analysis of single top production adapted from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was recorded with the ATLAS detector
@@ -12,6 +12,8 @@
 ## By default the analysis runs on a preskimmed dataset to reduce the runtime. The full dataset can be used with
 ## the --full-dataset argument and you can also run only on a fraction of the original dataset using the argument --lumi-scale.
 ##
+## See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df107_SingleTopAnalysis.json).
+##
 ## \macro_image
 ## \macro_code
 ## \macro_output
@@ -20,6 +22,7 @@
 ## \author Stefan Wunsch (KIT, CERN)
 
 import ROOT
+import sys
 import json
 import argparse
 import os
@@ -32,7 +35,12 @@ parser.add_argument("--full-dataset", action="store_true", default=False,
                     help="Use the full dataset (use --lumi-scale to run only on a fraction of it)")
 parser.add_argument("-b", action="store_true", default=False, help="Use ROOT batch mode")
 parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
-args = parser.parse_args()
+if 'df107_SingleTopAnalysis.py' in sys.argv[0]:
+    # Script
+    args = parser.parse_args()
+else:
+    # Notebook
+    args = parser.parse_args(args=[])
 
 if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
@@ -47,7 +55,7 @@ else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opend
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df107_SingleTopAnalysis.json")))
+files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe/df107_SingleTopAnalysis.json")))
 processes = files.keys()
 df = {}
 xsecs = {}
@@ -72,9 +80,9 @@ for p in processes:
 
 # Just-in-time compile custom helper function performing complex computations
 ROOT.gInterpreter.Declare("""
-using VecF_t = const ROOT::RVec<float>&;
-using VecI_t = const ROOT::RVec<int>&;
-int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, VecF_t lep_phi, VecF_t lep_e, VecF_t trackd0pv, VecF_t tracksigd0pv, VecF_t z0)
+using cRVecF = const ROOT::RVecF &;
+using cRVecI = const ROOT::RVecI &;
+int FindGoodLepton(cRVecI goodlep, cRVecI type, cRVecF lep_pt, cRVecF lep_eta, cRVecF lep_phi, cRVecF lep_e, cRVecF trackd0pv, cRVecF tracksigd0pv, cRVecF z0)
 {
     int idx = -1; // Return -1 if no good lepton is found.
     for(auto i = 0; i < type.size(); i++) {
@@ -99,7 +107,7 @@ int FindGoodLepton(VecI_t goodlep, VecI_t type, VecF_t lep_pt, VecF_t lep_eta, V
 """)
 
 for s in samples:
-    # Select events with electron or muon trigger and with a missing tranverse energy above 30 GeV
+    # Select events with electron or muon trigger and with a missing transverse energy above 30 GeV
     df[s] = df[s].Filter("trigE || trigM")\
                  .Filter("met_et > 30000")
 
@@ -112,7 +120,7 @@ for s in samples:
                  .Filter("idx_lep != -1")
 
     # Compute transverse mass of the W boson using the missing transverse energy and the good lepton
-    # Use only events with a transverse mass of the reconstruced W boson larger than 60 GeV
+    # Use only events with a transverse mass of the reconstructed W boson larger than 60 GeV
     df[s] = df[s].Define("mtw", "sqrt(2 * lep_pt[idx_lep] * met_et * (1 - cos(lep_phi[idx_lep] - met_phi)))")\
                  .Filter("mtw > 60000")
 
@@ -162,6 +170,12 @@ for s in samples:
     histos[s] = df[s].Histo1D(ROOT.RDF.TH1DModel("top_mass", "", 10, 100, 400), "top_mass", "weight")
 
 # Run the event loop and merge histograms of the respective processes
+
+# RunGraphs allows to run the event loops of the separate RDataFrame graphs
+# concurrently. This results in an improved usage of the available resources
+# if each separate RDataFrame can not utilize all available resources, e.g.,
+# because not enough data is available.
+ROOT.RDF.RunGraphs([histos[s] for s in samples])
 
 def merge_histos(label):
     h = None
@@ -244,4 +258,4 @@ text.DrawLatex(0.21, 0.80, "#sqrt{{s}} = 13 TeV, {:.1f} fb^{{-1}}".format(lumi *
 
 # Save the plot
 c.SaveAs("df107_SingleTopAnalysis.png")
-print("Save figure to df107_SingleTopAnalysis.png")
+print("Saved figure to df107_SingleTopAnalysis.png")

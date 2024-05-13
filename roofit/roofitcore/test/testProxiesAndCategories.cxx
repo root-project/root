@@ -14,8 +14,7 @@
 #include "TFile.h"
 #include "TMemFile.h"
 
-#include "gtest/gtest.h"
-
+#include "gtest_wrapper.h"
 
 TEST(RooCategory, CategoryDefineMultiState) {
   RooCategory myCat("myCat", "A category", { {"0Lep", 0}, {"1Lep", 1}, {"2Lep", 2}, {"3Lep", 3} });
@@ -127,7 +126,7 @@ TEST_P(RooCategoryIO, TestThatRangesAreShared) {
 }
 
 INSTANTIATE_TEST_SUITE_P(IO_SchemaEvol, RooCategoryIO,
-    testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root"));
+    testing::Values("categories_v620.root", "categories_v621.root", "categories_v622.root", "categories_v624.root"));
 
 
 
@@ -171,7 +170,7 @@ struct DummyClass : public RooAbsPdf {
       }
     }
 
-    double evaluate() const {
+    double evaluate() const override {
       return 1.;
     }
 
@@ -179,7 +178,7 @@ struct DummyClass : public RooAbsPdf {
       clearValueAndShapeDirty();
     }
 
-    TObject* clone(const char*) const {
+    TObject* clone(const char*) const override {
       return new TObject();
     }
 
@@ -208,7 +207,7 @@ TEST(RooTemplateProxy, CategoryProxy) {
   EXPECT_TRUE(dummy.cat == 2);
   EXPECT_STREQ(dummy.cat.label(), "B");
 
-  dummy.cat = longStr.c_str();
+  dummy.cat = longStr;
   EXPECT_TRUE(dummy.isValueDirty());
   dummy.clear();
   EXPECT_TRUE(dummy.cat == 500);
@@ -241,91 +240,4 @@ TEST(RooProxy, Read6_20) {
   for (int i=0; i<3; ++i) {
     ASSERT_NE(pdf->findServer(names[i]), nullptr);
   }
-}
-
-
-TEST(RooTemplateProxy, DISABLED_CategoryProxyBatchAccess) {
-  RooCategory myCat("myCat", "A category");
-  myCat.defineType("A", 1);
-  myCat.defineType("B", 2);
-  myCat.defineType("NotA", -1);
-  std::string longStr(500, '*');
-  myCat.defineType(longStr, 500);
-
-  RooRealVar x("x", "x", -10, 10);
-
-  DummyClass dummy(myCat, x);
-
-  RooDataSet data("data", "data", RooArgSet(x, myCat));
-  auto& xData = dynamic_cast<RooRealVar&>((*data.get())["x"]);
-  auto& catData = dynamic_cast<RooAbsCategoryLValue&>((*data.get())["myCat"]);
-  for (unsigned int i=0; i < 9; ++i) {
-    xData = i;
-    catData = i%2 + 1;
-    data.fill();
-  }
-  xData = 9;
-  catData = -1;
-  data.fill();
-
-  data.attachBuffers(*dummy.getVariables());
-
-  auto theBatch = dummy.cat->getValBatch(0, 10);
-  ASSERT_FALSE(theBatch.empty());
-  EXPECT_EQ(theBatch.size(), 10ul);
-  EXPECT_EQ(theBatch[0], 1);
-  EXPECT_EQ(theBatch[1], 2);
-  EXPECT_EQ(theBatch[8], 1);
-  EXPECT_EQ(theBatch[9], -1);
-}
-
-
-TEST(RooTemplateProxy, RealProxyBatchAccess) {
-  RooCategory myCat("myCat", "A category");
-  RooRealVar x("x", "x", -10, 10);
-  DummyClass dummy(myCat, x);
-
-  RooDataSet data("data", "data", x);
-  RooRealVar& xData = dynamic_cast<RooRealVar&>((*data.get())["x"]);
-  for (unsigned int i=0; i < 10; ++i) {
-    xData = i;
-    data.fill();
-  }
-
-  auto dummyObservables = dummy.getObservables(data);
-  data.attachBuffers(*dummyObservables);
-
-  auto theBatch = dummy.var->getValBatch(0, 10);
-  ASSERT_FALSE(theBatch.empty());
-  EXPECT_EQ(theBatch.size(), 10ul);
-  EXPECT_EQ(theBatch[2], 2.);
-  EXPECT_EQ(theBatch[9], 9.);
-
-  auto largerBatch = dummy.var.getValBatch(0, 100);
-  EXPECT_EQ(largerBatch.size(), 10ul);
-
-  dummy.var = 1.337;
-  EXPECT_EQ(dummy.var * 1., 1.337);
-}
-
-
-TEST(RooTemplateProxy, PdfProxyBatchAccess) {
-  RooCategory myCat("myCat", "A category");
-  RooRealVar x("x", "x", -10, 10);
-  RooGenericPdf generic("generic", "generic", "1.+x", x);
-  DummyClass dummy(myCat, x, &generic);
-
-  RooDataSet data("data", "data", x);
-  RooRealVar& xData = dynamic_cast<RooRealVar&>((*data.get())["x"]);
-  for (unsigned int i=0; i < 10; ++i) {
-    xData = i;
-    data.fill();
-  }
-  data.attachBuffers(*dummy.getVariables());
-
-  auto theBatch = dummy.pdf->getValBatch(0, 10);
-  ASSERT_FALSE(theBatch.empty());
-  EXPECT_EQ(theBatch.size(), 10ul);
-  EXPECT_EQ(theBatch[2], 3.);
-  EXPECT_EQ(theBatch[9], 10.);
 }

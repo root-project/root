@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+/// Addition and convolution: tools and utilities for manipulation of composite objects
 ///
-///
-/// \brief Addition and convolution: tools and utilities for manipulation of composite objects
-///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -38,7 +36,7 @@ void rf207_comptools()
    RooRealVar sigma("sigma", "width of gaussians", 0.5);
    RooGaussian sig("sig", "Signal component 1", x, mean, sigma);
 
-   // Build Chebychev polynomial p.d.f.
+   // Build Chebychev polynomial pdf
    RooRealVar a0("a0", "a0", 0.5, 0., 1.);
    RooRealVar a1("a1", "a1", 0.2, 0., 1.);
    RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
@@ -47,7 +45,7 @@ void rf207_comptools()
    RooRealVar alpha("alpha", "alpha", -1);
    RooExponential bkg2("bkg2", "Background 2", x, alpha);
 
-   // Sum the background components into a composite background p.d.f.
+   // Sum the background components into a composite background pdf
    RooRealVar bkg1frac("bkg1frac", "fraction of component 1 in background", 0.2, 0., 1.);
    RooAddPdf bkg("bkg", "Signal", RooArgList(bkg1, bkg2), bkg1frac);
 
@@ -72,26 +70,26 @@ void rf207_comptools()
    // shared between a model and a dataset. In this case
    // that is the variable 'x'
 
-   RooArgSet *model_obs = model.getObservables(data);
+   std::unique_ptr<RooArgSet> model_obs{model.getObservables(data)};
    model_obs->Print("v");
 
    // G e t   l i s t   o f   p a r a m e t e r s
    // -------------------------------------------
 
    // Get list of parameters, given list of observables
-   RooArgSet *model_params = model.getParameters(x);
+   std::unique_ptr<RooArgSet> model_params{model.getParameters(x)};
    model_params->Print("v");
 
    // Get list of parameters, given a dataset
    // (Gives identical results to operation above)
-   RooArgSet *model_params2 = model.getParameters(data);
+   std::unique_ptr<RooArgSet> model_params2{model.getParameters(data)};
    model_params2->Print();
 
    // G e t   l i s t   o f   c o m p o n e n t s
    // -------------------------------------------
 
    // Get list of component objects, including top-level node
-   RooArgSet *model_comps = model.getComponents();
+   std::unique_ptr<RooArgSet> model_comps{model.getComponents()};
    model_comps->Print("v");
 
    // -------------------------------------------------------------------------------
@@ -120,7 +118,7 @@ void rf207_comptools()
    // The returned head node own all nodes that were cloned as part of
    // the build process so when cust_clone is deleted so will all other
    // nodes that were created in the process.
-   RooAbsPdf *cust_clone = (RooAbsPdf *)cust.build(kTRUE);
+   RooAbsPdf *cust_clone = (RooAbsPdf *)cust.build(true);
 
    // Print structure of clone of model with sig->sigsum replacement.
    cust_clone->Print("t");

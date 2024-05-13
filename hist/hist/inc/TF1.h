@@ -24,9 +24,11 @@
 #include "RConfigure.h"
 #include <functional>
 #include <cassert>
+#include <memory>
 #include <string>
 #include <vector>
 #include "TFormula.h"
+#include "TMethodCall.h"
 #include "TAttLine.h"
 #include "TAttFill.h"
 #include "TAttMarker.h"
@@ -35,10 +37,11 @@
 #include "Math/Types.h"
 #include "Math/ParamFunctor.h"
 
+#include <string>
+
 class TF1;
 class TH1;
 class TAxis;
-class TMethodCall;
 class TRandom;
 
 namespace ROOT {
@@ -109,9 +112,8 @@ public:
    {
       std::copy(params, params + fParameters.size(), fParameters.begin());
    }
-   void  SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0, Double_t p3 = 0, Double_t p4 = 0,
-                       Double_t p5 = 0, Double_t p6 = 0, Double_t p7 = 0, Double_t p8 = 0,
-                       Double_t p9 = 0, Double_t p10 = 0);
+   template <typename... Args>
+   void   SetParameters(Double_t arg1, Args &&... args);
 
    void   SetParameter(const char *name, Double_t value)
    {
@@ -122,12 +124,8 @@ public:
       if (!CheckIndex(iparam)) return;
       fParNames[iparam] = std::string(name);
    }
-   void   SetParNames(const char *name0 = "p0", const char *name1 = "p1", const char *name2 = "p2",
-                      const char *name3 = "p3", const char *name4 = "p4", const char *name5 = "p5",
-                      const char *name6 = "p6", const char *name7 = "p7", const char *name8 = "p8",
-                      const char *name9 = "p9", const char *name10 = "p10");
-
-
+   template <typename... Args>
+   void   SetParNames(Args &&... args);
 
    ClassDef(TF1Parameters, 1)  // The Parameters of a parameteric function
 private:
@@ -141,9 +139,31 @@ private:
    std::vector<std::string> fParNames;   // parameter names
 };
 
+/// Set parameter values.
+/// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
+template <typename... Args>
+void TF1Parameters::SetParameters(Double_t arg1, Args &&...args)
+{
+   int i = 0;
+   for (double val : {arg1, static_cast<Double_t>(args)...}) {
+      if(!TMath::IsNaN(val)) SetParameter(i++, val);
+   }
+}
+
+/// Set parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
+template <typename... Args>
+void TF1Parameters::SetParNames(Args &&...args)
+{
+   int i = 0;
+   for (auto name : {static_cast<std::string const&>(args)...}) {
+      if(!name.empty()) SetParName(i++, name.c_str());
+   }
+}
+
 namespace ROOT {
    namespace Internal {
-      /// Internal class used by TF1 for defining
+      /// %Internal class used by TF1 for defining
       /// template specialization for different TF1 constructors
       template<class Func>
       struct TF1Builder {
@@ -155,8 +175,8 @@ namespace ROOT {
          static void Build(TF1 *f, Func *func);
       };
 
-      // Internal class used by TF1 for obtaining the type from a functor
-      // out of the set of valid operator() signatures.
+      /// %Internal class used by TF1 for obtaining the type from a functor
+      /// out of the set of valid operator() signatures.
       template<typename T>
       struct GetFunctorType {
       };
@@ -181,8 +201,8 @@ namespace ROOT {
          using type = T;
       };
 
-      // Internal class used by TF1 to get the right operator() signature
-      // from a Functor with several ones.
+      /// %Internal class used by TF1 to get the right operator() signature
+      /// from a Functor with several ones.
       template<typename T, typename F>
       auto GetTheRightOp(T(F::*opPtr)(const T *, const double *)) -> decltype(opPtr)
       {
@@ -216,67 +236,68 @@ class TF1 : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
    friend struct ROOT::Internal::TF1Builder;
 
 public:
-   // Add to list behavior
+   /// Add to list behavior
    enum class EAddToList {
       kDefault,
       kAdd,
       kNo
    };
 
-protected:
 
    struct TF1FunctorPointer {
       virtual  ~TF1FunctorPointer() {}
       virtual  TF1FunctorPointer * Clone() const = 0;
    };
 
+protected:
 
    enum EFType {
-      kFormula = 0,      // formula functions which can be stored,
-      kPtrScalarFreeFcn, // pointer to scalar free function,
-      kInterpreted,      // interpreted functions constructed by name,
-      kTemplVec,         // vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
-      kTemplScalar,      // TemplScalar functors evaluating on scalar parameters
+      kFormula = 0,      ///< Formula functions which can be stored,
+      kPtrScalarFreeFcn, ///< Pointer to scalar free function,
+      kInterpreted,      ///< Interpreted functions constructed by name,
+      kTemplVec,         ///< Vectorized free functions or TemplScalar functors evaluating on vectorized parameters,
+      kTemplScalar,      ///< TemplScalar functors evaluating on scalar parameters
       kCompositionFcn
    }; // formula based on composition class (e.g. NSUM, CONV)
 
-   Double_t    fXmin{-1111};        //Lower bounds for the range
-   Double_t    fXmax{-1111};        //Upper bounds for the range
-   Int_t       fNpar{};        //Number of parameters
-   Int_t       fNdim{};        //Function dimension
-   Int_t       fNpx{100};   //Number of points used for the graphical representation
+   Double_t    fXmin{-1111};                        ///<  Lower bounds for the range
+   Double_t    fXmax{-1111};                        ///<  Upper bounds for the range
+   Int_t       fNpar{};                             ///<  Number of parameters
+   Int_t       fNdim{};                             ///<  Function dimension
+   Int_t       fNpx{100};                           ///<  Number of points used for the graphical representation
    EFType      fType{EFType::kTemplScalar};
-   Int_t       fNpfits{};    //Number of points used in the fit
-   Int_t       fNDF{};       //Number of degrees of freedom in the fit
-   Double_t    fChisquare{}; //Function fit chisquare
-   Double_t    fMinimum{-1111};     //Minimum value for plotting
-   Double_t    fMaximum{-1111};     //Maximum value for plotting
-   std::vector<Double_t>    fParErrors;  //Array of errors of the fNpar parameters
-   std::vector<Double_t>    fParMin;     //Array of lower limits of the fNpar parameters
-   std::vector<Double_t>    fParMax;     //Array of upper limits of the fNpar parameters
-   std::vector<Double_t>    fSave;       //Array of fNsave function values
-   std::vector<Double_t>    fIntegral;   //!Integral of function binned on fNpx bins
-   std::vector<Double_t>    fAlpha;      //!Array alpha. for each bin in x the deconvolution r of fIntegral
-   std::vector<Double_t>    fBeta;       //!Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
-   std::vector<Double_t>    fGamma;      //!Array gamma.
-   TObject     *fParent{nullptr};     //!Parent object hooking this function (if one)
-   TH1         *fHistogram{nullptr};  //!Pointer to histogram used for visualisation
-   TMethodCall *fMethodCall{nullptr}; //!Pointer to MethodCall in case of interpreted function
-   Bool_t      fNormalized{false};    //Normalization option (false by default)
-   Double_t    fNormIntegral{};        //Integral of the function before being normalized
-   TF1FunctorPointer  *fFunctor{nullptr}; //! Functor object to wrap any C++ callable object
-   TFormula    *fFormula{nullptr};        //Pointer to TFormula in case when user define formula
-   TF1Parameters *fParams{nullptr};   //Pointer to Function parameters object (exists only for not-formula functions)
-   std::unique_ptr<TF1AbsComposition> fComposition; //! Pointer to composition (NSUM or CONV)
-   TF1AbsComposition *fComposition_ptr{nullptr};   // saved pointer (unique_ptr is transient)
+   Int_t       fNpfits{};                           ///<  Number of points used in the fit
+   Int_t       fNDF{};                              ///<  Number of degrees of freedom in the fit
+   Double_t    fChisquare{};                        ///<  Function fit chisquare
+   Double_t    fMinimum{-1111};                     ///<  Minimum value for plotting
+   Double_t    fMaximum{-1111};                     ///<  Maximum value for plotting
+   std::vector<Double_t>    fParErrors;             ///<  Array of errors of the fNpar parameters
+   std::vector<Double_t>    fParMin;                ///<  Array of lower limits of the fNpar parameters
+   std::vector<Double_t>    fParMax;                ///<  Array of upper limits of the fNpar parameters
+   std::vector<Double_t>    fSave;                  ///<  Array of fNsave function values
+   std::vector<Double_t>    fIntegral;              ///<! Integral of function binned on fNpx bins
+   std::vector<Double_t>    fAlpha;                 ///<! Array alpha. for each bin in x the deconvolution r of fIntegral
+   std::vector<Double_t>    fBeta;                  ///<! Array beta.  is approximated by x = alpha +beta*r *gamma*r**2
+   std::vector<Double_t>    fGamma;                 ///<! Array gamma.
+   TObject     *fParent{nullptr};                   ///<! Parent object hooking this function (if one)
+   TH1         *fHistogram{nullptr};                ///<! Pointer to histogram used for visualisation
+   std::unique_ptr<TMethodCall> fMethodCall;        ///<! Pointer to MethodCall in case of interpreted function
+   Bool_t      fNormalized{false};                  ///<  Normalization option (false by default)
+   Double_t    fNormIntegral{};                     ///<  Integral of the function before being normalized
+   std::unique_ptr<TF1FunctorPointer>  fFunctor;    ///<! Functor object to wrap any C++ callable object
+   std::unique_ptr<TFormula>   fFormula;            ///<  Pointer to TFormula in case when user define formula
+   std::unique_ptr<TF1Parameters> fParams;          ///<  Pointer to Function parameters object (exists only for not-formula functions)
+   std::unique_ptr<TF1AbsComposition> fComposition; ///<  Pointer to composition (NSUM or CONV)
 
    /// General constructor for TF1. Most of the other constructors delegate on it
    TF1(EFType functionType, const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList, TF1Parameters *params = nullptr, TF1FunctorPointer * functor = nullptr):
       TNamed(name, name), TAttLine(), TAttFill(), TAttMarker(), fXmin(xmin), fXmax(xmax), fNpar(npar), fNdim(ndim),
-      fType(functionType), fParErrors(npar), fParMin(npar), fParMax(npar), fFunctor(functor), fParams(params)
+      fType(functionType), fParErrors(npar), fParMin(npar), fParMax(npar)
    {
+      fParams.reset(params);
+      fFunctor.reset(functor);
       DoInitialize(addToGlobList);
-   };
+   }
 
 private:
    // NSUM parsing helper functions
@@ -292,8 +313,8 @@ protected:
    struct TF1FunctorPointerImpl: TF1FunctorPointer {
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
       TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
-      virtual ~TF1FunctorPointerImpl() {}
-      virtual  TF1FunctorPointer * Clone() const { return new TF1FunctorPointerImpl<T>(fImpl); }
+      ~TF1FunctorPointerImpl() override {}
+       TF1FunctorPointer * Clone() const override { return new TF1FunctorPointerImpl<T>(fImpl); }
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
@@ -342,13 +363,18 @@ public:
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor using a pointer to function.
    ///
-   /// \param npar is the number of free parameters used by the function
+   /// \param[in] name object name
+   /// \param[in] fcn pointer to function
+   /// \param[in] xmin,xmax x axis limits
+   /// \param[in] npar is the number of free parameters used by the function
+   /// \param[in] ndim number of dimensions
+   /// \param[in] addToGlobList boolean marking if it should be added to global list
    ///
    /// This constructor creates a function of type C when invoked
    /// with the normal C++ compiler.
    ///
    ///
-   /// WARNING! A function created with this constructor cannot be Cloned
+   /// \warning A function created with this constructor cannot be Cloned
 
 
    template <class T>
@@ -405,7 +431,7 @@ public:
 
    TF1(const TF1 &f1);
    TF1 &operator=(const TF1 &rhs);
-   virtual   ~TF1();
+     ~TF1() override;
    virtual void     AddParameter(const TString &name, Double_t value)
    {
       if (fFormula) fFormula->AddParameter(name, value);
@@ -415,31 +441,32 @@ public:
    // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
-   virtual void     Browse(TBrowser *b);
-   virtual void     Copy(TObject &f1) const;
-   TObject*         Clone(const char* newname=0) const;
-   virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
+   void     Browse(TBrowser *b) override;
+   void     Copy(TObject &f1) const override;
+   TObject         *Clone(const char *newname = nullptr) const override;
+   virtual Double_t Derivative(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative2(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative3(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
    static  Double_t DerivativeError();
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option = "");
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option = "") override;
    virtual TF1     *DrawCopy(Option_t *option = "") const;
    virtual TObject *DrawDerivative(Option_t *option = "al"); // *MENU*
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const;
-   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
-   template <class T> T EvalPar(const T *x, const Double_t *params = 0);
+   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = nullptr);
+   template <class T> T EvalPar(const T *x, const Double_t *params = nullptr);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
    {
       return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
+   /// Return the Chisquare after fitting. See ROOT::Fit::FitResult::Chi2()
    Double_t     GetChisquare() const
    {
       return fChisquare;
@@ -451,15 +478,15 @@ public:
    }
    virtual TFormula *GetFormula()
    {
-      return fFormula;
+      return fFormula.get();
    }
    virtual const TFormula *GetFormula() const
    {
-      return fFormula;
+      return fFormula.get();
    }
    virtual TString  GetExpFormula(Option_t *option = "") const
    {
-      return (fFormula) ? fFormula->GetExpFormula(option) : "";
+      return (fFormula) ? fFormula->GetExpFormula(option) : TString();
    }
    virtual const TObject *GetLinearPart(Int_t i) const
    {
@@ -492,7 +519,7 @@ public:
    }
    TMethodCall    *GetMethodCall() const
    {
-      return fMethodCall;
+      return fMethodCall.get();
    }
    virtual Int_t    GetNumber() const
    {
@@ -503,7 +530,7 @@ public:
    {
       return fNpfits;
    }
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+   char    *GetObjectInfo(Int_t px, Int_t py) const override;
    TObject    *GetParent() const
    {
       return fParent;
@@ -579,10 +606,10 @@ public:
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, Double_t epsrel = 1.e-12);
    virtual Double_t IntegralOneDim(Double_t a, Double_t b, Double_t epsrel, Double_t epsabs, Double_t &err);
-   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
-   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = 0, Double_t epsilon = 1e-12);
+   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params = nullptr);
+   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = nullptr, Double_t epsilon = 1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs , Double_t &relerr, Int_t &nfnevl, Int_t &ifail);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr, Int_t &nfnevl, Int_t &ifail)
    {
@@ -603,16 +630,16 @@ public:
       return (fFormula) ? fFormula->IsLinear() : false;
    }
    virtual Bool_t   IsValid() const;
-   virtual void     Print(Option_t *option = "") const;
-   virtual void     Paint(Option_t *option = "");
+   void     Print(Option_t *option = "") const override;
+   void     Paint(Option_t *option = "") override;
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetChisquare(Double_t chi2)
    {
       fChisquare = chi2;
    }
-   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = 0);
+   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = nullptr);
    template <class PtrObj, typename MemFn>
    void SetFunction(PtrObj &p, MemFn memFn);
    template <typename Func>
@@ -645,23 +672,31 @@ public:
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
       Update();
    }
-   virtual void     SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0, Double_t p3 = 0, Double_t p4 = 0,
-                                  Double_t p5 = 0, Double_t p6 = 0, Double_t p7 = 0, Double_t p8 = 0,
-                                  Double_t p9 = 0, Double_t p10 = 0)
+   /// Set parameter values.
+   /// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
+   virtual void SetParameters(double p0, double p1 = TMath::QuietNaN(), double p2 = TMath::QuietNaN(),
+                              double p3 = TMath::QuietNaN(), double p4 = TMath::QuietNaN(), double p5 = TMath::QuietNaN(),
+                              double p6 = TMath::QuietNaN(), double p7 = TMath::QuietNaN(), double p8 = TMath::QuietNaN(),
+                              double p9 = TMath::QuietNaN(), double p10 = TMath::QuietNaN())
    {
+      // Note: this is not made a variadic template method because it would
+      // presumably break the context menu in the TBrowser. Also, probably this
+      // method should not be virtual, because if the user wants to change
+      // parameter setting behavior, the SetParameter() method can be
+      // overridden.
       if (fFormula) fFormula->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       else          fParams->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       Update();
    } // *MENU*
    virtual void     SetParName(Int_t ipar, const char *name);
-   virtual void     SetParNames(const char *name0 = "p0", const char *name1 = "p1", const char *name2 = "p2",
-                                const char *name3 = "p3", const char *name4 = "p4", const char *name5 = "p5",
-                                const char *name6 = "p6", const char *name7 = "p7", const char *name8 = "p8",
-                                const char *name9 = "p9", const char *name10 = "p10"); // *MENU*
+   virtual void     SetParNames(const char *name0 = "", const char *name1 = "", const char *name2 = "",
+                                const char *name3 = "", const char *name4 = "", const char *name5 = "",
+                                const char *name6 = "", const char *name7 = "", const char *name8 = "",
+                                const char *name9 = "", const char *name10 = ""); // *MENU*
    virtual void     SetParError(Int_t ipar, Double_t error);
    virtual void     SetParErrors(const Double_t *errors);
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
-   virtual void     SetParent(TObject *p = 0)
+   virtual void     SetParent(TObject *p = nullptr)
    {
       fParent = p;
    }
@@ -669,7 +704,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
-   virtual void     SetTitle(const char *title = ""); // *MENU*
+   void     SetTitle(const char *title = "") override; // *MENU*
    virtual void     SetVectorized(Bool_t vectorized)
    {
       if (fType == EFType::kFormula && fFormula)
@@ -686,13 +721,13 @@ public:
    static  void     SetCurrent(TF1 *f1);
 
    //Moments
-   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return Moment(1, a, b, params, epsilon);
    }
-   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return CentralMoment(2, a, b, params, epsilon);
    }
@@ -704,13 +739,13 @@ public:
 
 private:
    template <class T>
-   T EvalParTempl(const T *data, const Double_t *params = 0);
+   T EvalParTempl(const T *data, const Double_t *params = nullptr);
 
 #ifdef R__HAS_VECCORE
    inline double EvalParVec(const Double_t *data, const Double_t *params);
 #endif
 
-   ClassDef(TF1, 10) // The Parametric 1-D function
+   ClassDefOverride(TF1, 12) // The Parametric 1-D function
 };
 
 namespace ROOT {
@@ -721,8 +756,8 @@ namespace ROOT {
       {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-         f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
-         f->fParams = new TF1Parameters(f->fNpar);
+         f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
+         f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 
       template<class Func>
@@ -730,8 +765,8 @@ namespace ROOT {
       {
          using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
          f->fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-         f->fFunctor = new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func));
-         f->fParams = new TF1Parameters(f->fNpar);
+         f->fFunctor.reset(new TF1::TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(func)));
+         f->fParams = std::make_unique<TF1Parameters>(f->fNpar);
       }
 
       /// TF1 building from a string
@@ -741,7 +776,7 @@ namespace ROOT {
          static void Build(TF1 *f, const char *formula)
          {
             f->fType = TF1::EFType::kFormula;
-            f->fFormula = new TFormula("tf1lambda", formula, f->fNdim, f->fNpar, false);
+            f->fFormula = std::make_unique<TFormula>("tf1lambda", formula, f->fNdim, f->fNpar, false);
             TString formulaExpression(formula);
             Ssiz_t first = formulaExpression.Index("return") + 7;
             Ssiz_t last  = formulaExpression.Last(';');
@@ -796,7 +831,7 @@ inline T TF1::EvalParTempl(const T *data, const Double_t *params)
    assert(fType == EFType::kTemplScalar || fType == EFType::kTemplVec);
    if (!params) params = (Double_t *)fParams->GetParameters();
    if (fFunctor)
-      return ((TF1FunctorPointerImpl<T> *)fFunctor)->fImpl(data, params);
+      return ((TF1FunctorPointerImpl<T> *)fFunctor.get())->fImpl(data, params);
 
    // this should throw an error
    // we nned to implement a vectorized GetSave(x)
@@ -816,7 +851,7 @@ inline double TF1::EvalParVec(const Double_t *data, const Double_t *params)
    }
 
    if (fFunctor) {
-      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *) fFunctor)->fImpl(d.data(), params);
+      res = ((TF1FunctorPointerImpl<ROOT::Double_v> *) fFunctor.get())->fImpl(d.data(), params);
    } else {
       //    res = GetSave(x);
       return TMath::SignalingNaN();
@@ -839,14 +874,14 @@ void TF1::SetFunction(Func f)
 {
    // set function from a generic C++ callable object
    fType = EFType::kPtrScalarFreeFcn;
-   fFunctor = new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(f));
+   fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctor(f));
 }
 template <class PtrObj, typename MemFn>
 void TF1::SetFunction(PtrObj &p, MemFn memFn)
 {
    // set from a pointer to a member function
    fType = EFType::kPtrScalarFreeFcn;
-   fFunctor = new TF1::TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(p, memFn));
+   fFunctor = std::make_unique<TF1::TF1FunctorPointerImpl<double>>(ROOT::Math::ParamFunctor(p, memFn));
 }
 
 template <class T>

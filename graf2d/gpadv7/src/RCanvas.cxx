@@ -15,21 +15,22 @@
 #include <mutex>
 #include <thread>
 #include <chrono>
-#include <stdio.h>
-#include <string.h>
+#include <cstdio>
+#include <cstring>
 
 #include "TList.h"
 #include "TROOT.h"
+#include "TString.h"
 
 namespace {
 
-static std::mutex &GetHeldCanvasesMutex()
+std::mutex &GetHeldCanvasesMutex()
 {
    static std::mutex sMutex;
    return sMutex;
 }
 
-static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
+std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> &GetHeldCanvases()
 {
    static std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> sCanvases;
    return sCanvases;
@@ -76,26 +77,11 @@ bool ROOT::Experimental::RCanvas::IsModified() const
 
 void ROOT::Experimental::RCanvas::Update(bool async, CanvasCallback_t callback)
 {
+   fUpdated = true;
+
    if (fPainter)
       fPainter->CanvasUpdated(fModified, async, callback);
 }
-
-class RCanvasCleanup : public TObject {
-public:
-
-   static RCanvasCleanup *gInstance;
-
-   RCanvasCleanup() : TObject() { gInstance = this; }
-
-   virtual ~RCanvasCleanup()
-   {
-      gInstance = nullptr;
-      ROOT::Experimental::RCanvas::ReleaseHeldCanvases();
-   }
-};
-
-RCanvasCleanup *RCanvasCleanup::gInstance = nullptr;
-
 
 ///////////////////////////////////////////////////////////////////////////////////////
 /// Create new canvas instance
@@ -107,13 +93,6 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
    {
       std::lock_guard<std::mutex> grd(GetHeldCanvasesMutex());
       GetHeldCanvases().emplace_back(pCanvas);
-   }
-
-   if (!RCanvasCleanup::gInstance) {
-      auto cleanup = new RCanvasCleanup();
-      TDirectory *dummydir = new TDirectory("rcanvas_cleanup_dummydir","title");
-      dummydir->GetList()->Add(cleanup);
-      gROOT->GetListOfClosedObjects()->Add(dummydir);
    }
 
    return pCanvas;
@@ -135,6 +114,12 @@ std::shared_ptr<ROOT::Experimental::RCanvas> ROOT::Experimental::RCanvas::Create
 
 void ROOT::Experimental::RCanvas::Show(const std::string &where)
 {
+   fShown = true;
+
+   // Do not display canvas in batch mode
+   if (gROOT->IsWebDisplayBatch())
+      return;
+
    if (fPainter) {
       bool isany = (fPainter->NumDisplays() > 0);
 
@@ -167,6 +152,18 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
    return "";
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Returns window URL which can be used for connection
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
+
+std::string ROOT::Experimental::RCanvas::GetWindowUrl(bool remote)
+{
+   if (fPainter)
+      return fPainter->GetWindowUrl(remote);
+
+   return "";
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 /// Hide all canvas displays
@@ -174,12 +171,12 @@ std::string ROOT::Experimental::RCanvas::GetWindowAddr() const
 void ROOT::Experimental::RCanvas::Hide()
 {
    if (fPainter)
-      delete fPainter.release();
+      fPainter = nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Create image file for the canvas
-/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg) and PNG (extension .png)
+/// Supported SVG (extension .svg), JPEG (extension .jpg or .jpeg), PNG (extension .png) or JSON (extension .json)
 
 bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
 {
@@ -189,10 +186,37 @@ bool ROOT::Experimental::RCanvas::SaveAs(const std::string &filename)
    if (!fPainter)
       return false;
 
-   auto width = fSize[0].fVal;
-   auto height = fSize[1].fVal;
+   int width = GetWidth();
+   int height = GetHeight();
 
-   return fPainter->ProduceBatchOutput(filename, width > 1 ? (int) width : 800, height > 1 ? (int) height : 600);
+   return fPainter->ProduceBatchOutput(filename, width > 1 ? width : 800, height > 1 ? height : 600);
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Return unique identifier for the canvas
+/// Used in iPython display
+
+std::string ROOT::Experimental::RCanvas::GetUID() const
+{
+   const void *ptr = this;
+   auto hash = TString::Hash(&ptr, sizeof(void*));
+   TString fmt = TString::Format("rcanv_%x", hash);
+   return fmt.Data();
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Create JSON data for the canvas
+/// Can be used of offline display with JSROOT
+
+std::string ROOT::Experimental::RCanvas::CreateJSON()
+{
+   if (!fPainter)
+      fPainter = Internal::RVirtualCanvasPainter::Create(*this);
+
+   if (!fPainter)
+      return "";
+
+   return fPainter->ProduceJSON();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -207,6 +231,15 @@ void ROOT::Experimental::RCanvas::Remove()
       if (held[indx].get() == this)
          held.erase(held.begin() + indx);
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+
+void ROOT::Experimental::RCanvas::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fPainter)
+      fPainter->SetClearOnClose(handle);
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -277,7 +310,7 @@ void ROOT::Experimental::RCanvas::ResolveSharedPtrs()
       for (auto n2 = n+1; n2 < vect.size(); ++n2) {
          if (vect[n2]->GetIOPtr() == vect[n]->GetIOPtr()) {
             if (vect[n2]->HasShared())
-               R__ERROR_HERE("Gpadv7") << "FATAL Shared pointer for same IO ptr already exists";
+               R__LOG_ERROR(GPadLog()) << "FATAL Shared pointer for same IO ptr already exists";
             else
                vect[n2]->SetShared(shrd_ptr);
          }
@@ -301,7 +334,7 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
    if (!canv) return nullptr;
 
    if ((ids.size() != names.size()) || (ids.size() != values.size())) {
-      R__ERROR_HERE("Gpadv7") << "Mismatch of arrays size in RChangeAttrRequest";
+      R__LOG_ERROR(GPadLog()) << "Mismatch of arrays size in RChangeAttrRequest";
       return nullptr;
    }
 
@@ -326,3 +359,4 @@ std::unique_ptr<ROOT::Experimental::RDrawableReply> ROOT::Experimental::RChangeA
 
    return nullptr; // no need for any reply
 }
+

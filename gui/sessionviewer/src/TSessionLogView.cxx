@@ -14,12 +14,14 @@
 #include "TProof.h"
 #include "KeySymbols.h"
 
-//_____________________________________________________________________________
-//
-// TSessionLogView
-//
-// Dialog used to display session logs from the session viewer
-//_____________________________________________________________________________
+
+/** \class TSessionLogView
+    \ingroup sessionviewer
+
+Dialog used to display session logs from the session viewer
+
+*/
+
 
 ClassImp(TSessionLogView);
 
@@ -130,7 +132,7 @@ void TSessionLogView::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process OK button.
 
-Bool_t TSessionLogView::ProcessMessage(Long_t msg, Long_t, Long_t)
+Bool_t TSessionLogView::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

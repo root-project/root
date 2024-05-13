@@ -21,19 +21,24 @@ from tmva101_Training import load_data
 x, y_true, w = load_data("test_signal.root", "test_background.root")
 
 # Load trained model
-bdt = ROOT.TMVA.Experimental.RBDT[""]("myBDT", "tmva101.root")
+File = "tmva101.root"
+if (ROOT.gSystem.AccessPathName(File)) :
+    ROOT.Info("tmva102_Testing.py", File+"does not exist")
+    exit()
+
+bdt = ROOT.TMVA.Experimental.RBDT("myBDT", File)
 
 # Make prediction
 y_pred = bdt.Compute(x)
 
 # Compute ROC using sklearn
 from sklearn.metrics import roc_curve, auc
-fpr, tpr, _ = roc_curve(y_true, y_pred, sample_weight=w)
-score = auc(fpr, tpr, reorder=True)
+false_positive_rate, true_positive_rate, _ = roc_curve(y_true, y_pred, sample_weight=w)
+score = auc(false_positive_rate, true_positive_rate)
 
 # Plot ROC
 c = ROOT.TCanvas("roc", "", 600, 600)
-g = ROOT.TGraph(len(fpr), fpr, tpr)
+g = ROOT.TGraph(len(false_positive_rate), false_positive_rate, true_positive_rate)
 g.SetTitle("AUC = {:.2f}".format(score))
 g.SetLineWidth(3)
 g.SetLineColor(ROOT.kRed)

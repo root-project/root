@@ -16,9 +16,7 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
-
-
+namespace Minuit2 {
 
 class MnFcn;
 class MnUserTransformation;
@@ -32,38 +30,37 @@ class MnStrategy;
 class HessianGradientCalculator : public GradientCalculator {
 
 public:
+   HessianGradientCalculator(const MnFcn &fcn, const MnUserTransformation &par, const MnStrategy &stra)
+      : fFcn(fcn), fTransformation(par), fStrategy(stra)
+   {
+   }
 
-  HessianGradientCalculator(const MnFcn& fcn, const MnUserTransformation& par,
-                            const MnStrategy& stra) :
-    fFcn(fcn), fTransformation(par), fStrategy(stra) {}
+   ~HessianGradientCalculator() override {}
 
-  virtual ~HessianGradientCalculator() {}
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-  virtual FunctionGradient operator()(const MinimumParameters&) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
-  virtual FunctionGradient operator()(const MinimumParameters&,
-                                      const FunctionGradient&) const;
+   std::pair<FunctionGradient, MnAlgebraicVector>
+   DeltaGradient(const MinimumParameters &, const FunctionGradient &) const;
 
-  std::pair<FunctionGradient, MnAlgebraicVector> DeltaGradient(const MinimumParameters&, const FunctionGradient&) const;
+   const MnFcn &Fcn() const { return fFcn; }
+   const MnUserTransformation &Trafo() const { return fTransformation; }
+   const MnMachinePrecision &Precision() const;
+   const MnStrategy &Strategy() const { return fStrategy; }
 
-  const MnFcn& Fcn() const {return fFcn;}
-  const MnUserTransformation& Trafo() const {return fTransformation;}
-  const MnMachinePrecision& Precision() const;
-  const MnStrategy& Strategy() const {return fStrategy;}
-
-  unsigned int Ncycle() const;
-  double StepTolerance() const;
-  double GradTolerance() const;
+   unsigned int Ncycle() const;
+   double StepTolerance() const;
+   double GradTolerance() const;
 
 private:
-
-  const MnFcn& fFcn;
-  const MnUserTransformation& fTransformation;
-  const MnStrategy& fStrategy;
+   const MnFcn &fFcn;
+   const MnUserTransformation &fTransformation;
+   const MnStrategy &fStrategy;
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_HessianGradientCalculator
+#endif // ROOT_Minuit2_HessianGradientCalculator

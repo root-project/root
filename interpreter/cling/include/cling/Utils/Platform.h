@@ -82,26 +82,7 @@ namespace platform {
   bool Popen(const std::string& Cmd, llvm::SmallVectorImpl<char>& Buf,
              bool StdErrToStdOut = false);
 
-#if defined(LLVM_ON_UNIX)
-
-#if defined(__APPLE__)
-
-inline namespace osx {
-  ///\brief Get a path to an OSX SDK that can be used for -isysroot. Matches
-  ///  1. Version matching the running system
-  ///  2. Version that cling was compiled
-  ///  3. Highest installed version
-  ///
-  /// \param [out] SysRoot - The path to the SDK
-  /// \param [in] Verbose - Log progress
-  ///
-  bool GetISysRoot(std::string& SysRoot, bool Verbose = false);
-
-} // namespace osx
-
-#endif // __APPLE__
-
-#elif defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
 
 inline namespace windows {
 
@@ -182,7 +163,7 @@ inline namespace windows {
 #endif // CLING_WIN_SEH_EXCEPTIONS
 
 } // namespace windows
-#endif // LLVM_ON_WIN32
+#endif // _WIN32
 
 } // namespace platform
 } // namespace utils

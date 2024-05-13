@@ -46,7 +46,7 @@ struct CallableTraitsImpl<T, true> {
 // lambdas, std::function, const member functions
 template <typename R, typename T, typename... Args>
 struct CallableTraitsImpl<R (T::*)(Args...) const, false> {
-   using arg_types = ROOT::TypeTraits::TypeList<typename std::decay<Args>::type...>;
+   using arg_types = ROOT::TypeTraits::TypeList<std::decay_t<Args>...>;
    using arg_types_nodecay = ROOT::TypeTraits::TypeList<Args...>;
    using ret_type = R;
 };
@@ -54,7 +54,7 @@ struct CallableTraitsImpl<R (T::*)(Args...) const, false> {
 // mutable lambdas and functor classes, non-const member functions
 template <typename R, typename T, typename... Args>
 struct CallableTraitsImpl<R (T::*)(Args...), false> {
-   using arg_types = ROOT::TypeTraits::TypeList<typename std::decay<Args>::type...>;
+   using arg_types = ROOT::TypeTraits::TypeList<std::decay_t<Args>...>;
    using arg_types_nodecay = ROOT::TypeTraits::TypeList<Args...>;
    using ret_type = R;
 };
@@ -62,7 +62,7 @@ struct CallableTraitsImpl<R (T::*)(Args...), false> {
 // function pointers
 template <typename R, typename... Args>
 struct CallableTraitsImpl<R (*)(Args...), false> {
-   using arg_types = ROOT::TypeTraits::TypeList<typename std::decay<Args>::type...>;
+   using arg_types = ROOT::TypeTraits::TypeList<std::decay_t<Args>...>;
    using arg_types_nodecay = ROOT::TypeTraits::TypeList<Args...>;
    using ret_type = R;
 };
@@ -70,7 +70,7 @@ struct CallableTraitsImpl<R (*)(Args...), false> {
 // free functions
 template <typename R, typename... Args>
 struct CallableTraitsImpl<R(Args...), false> {
-   using arg_types = ROOT::TypeTraits::TypeList<typename std::decay<Args>::type...>;
+   using arg_types = ROOT::TypeTraits::TypeList<std::decay_t<Args>...>;
    using arg_types_nodecay = ROOT::TypeTraits::TypeList<Args...>;
    using ret_type = R;
 };
@@ -192,6 +192,14 @@ struct HasBeginAndEnd {
 
    static constexpr bool const value = Check<T>(0);
 };
+
+/// An adapter for std::invoke_result that falls back to std::result_of if the former is not available.
+template <typename F, typename... Args>
+#ifdef __cpp_lib_is_invocable
+using InvokeResult_t = std::invoke_result_t<F, Args...>;
+#else
+using InvokeResult_t = std::result_of_t<F(Args...)>;
+#endif
 
 } // ns TypeTraits
 } // ns ROOT

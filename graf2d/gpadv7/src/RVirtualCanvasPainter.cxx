@@ -8,19 +8,20 @@
 
 #include <ROOT/RVirtualCanvasPainter.hxx>
 
+#include "ROOT/RAttrBase.hxx" // for GPadLog()
 #include <ROOT/RLogger.hxx>
 #include <TSystem.h> // TSystem::Load
 
 #include <exception>
 
 namespace {
-static int LoadCanvasPainterLibraryOnce() {
+int LoadCanvasPainterLibraryOnce() {
   static int loadResult = gSystem->Load("libROOTCanvasPainter");
   if (loadResult != 0)
-     R__ERROR_HERE("Gpad") << "Loading of libROOTCanvasPainter failed!";
+     R__LOG_ERROR(ROOT::Experimental::GPadLog()) << "Loading of libROOTCanvasPainter failed!";
   return loadResult;
 }
-static void LoadCanvasPainterLibrary() {
+void LoadCanvasPainterLibrary() {
   static int loadResult = LoadCanvasPainterLibraryOnce();
   (void) loadResult;
 }
@@ -43,7 +44,7 @@ std::unique_ptr<RVirtualCanvasPainter> RVirtualCanvasPainter::Create(ROOT::Exper
    if (!GetGenerator()) {
       LoadCanvasPainterLibrary();
       if (!GetGenerator()) {
-         R__ERROR_HERE("Gpad") << "RVirtualCanvasPainter::Generator failed to register!";
+         R__LOG_ERROR(GPadLog()) << "RVirtualCanvasPainter::Generator failed to register!";
          throw std::runtime_error("RVirtualCanvasPainter::Generator failed to initialize");
       }
    }

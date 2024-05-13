@@ -1,5 +1,5 @@
 /// \file ROOT/RHistImpl.hxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -19,12 +19,13 @@
 #include <cassert>
 #include <cctype>
 #include <functional>
+#include <tuple>
 #include "ROOT/RSpan.hxx"
-#include "ROOT/RTupleApply.hxx"
 
 #include "ROOT/RAxis.hxx"
 #include "ROOT/RHistBinIter.hxx"
 #include "ROOT/RHistUtils.hxx"
+#include "ROOT/RLogger.hxx"
 
 class TRootIOCtor;
 
@@ -209,17 +210,17 @@ public:
    int GetNOverflowBins() const noexcept final { return fStatistics.sizeUnderOver(); }
 
    /// Get the bin content (sum of weights) for bin index `binidx`.
-   Weight_t GetBinContent(int binidx) const 
+   Weight_t GetBinContent(int binidx) const
    {
       assert(binidx != 0);
-      return fStatistics[binidx]; 
+      return fStatistics[binidx];
    }
 
    /// Get the bin content (sum of weights) for bin index `binidx` (non-const).
-   Weight_t &GetBinContent(int binidx) 
+   Weight_t &GetBinContent(int binidx)
    {
       assert(binidx != 0);
-      return fStatistics[binidx]; 
+      return fStatistics[binidx];
    }
 
    /// Const access to statistics.
@@ -233,10 +234,10 @@ public:
    double GetBinContentAsDouble(int binidx) const final { return (double)GetBinContent(binidx); }
 
    /// Add `w` to the bin at index `bin`.
-   void AddBinContent(int binidx, Weight_t w) 
+   void AddBinContent(int binidx, Weight_t w)
    {
       assert(binidx != 0);
-      fStatistics[binidx] += w; 
+      fStatistics[binidx] += w;
    }
 };
 } // namespace Detail
@@ -409,7 +410,7 @@ struct RComputeGlobalBin {
       // will be no regular bins in there.
       if (localBins[I] < 1)
          return total_regular_bins_before;
-      
+
       return RComputeGlobalBin<I - 1, NDIMS, BINS, AXES>()(total_regular_bins_before, axes, virtualBins, binSizes, localBins);
    }
 };
@@ -532,7 +533,7 @@ struct RComputeLocalBins {
       // overflow bins that were associated with regular bins.
       if (unprocessed_previous_overflow_bin == 0)
          return;
-      
+
       return Internal::RComputeLocalBins<I - 1, NDIMS, AXES>()
                                  (axes, unprocessed_previous_overflow_bin, num_regular_bins_before, bins_per_hyperplane,
                                  regular_bins_per_hyperplane, curr_bins_per_hyperplane, curr_regular_bins_per_hyperplane);
@@ -746,8 +747,8 @@ public:
 
    /// Retrieve the fill function for this histogram implementation, to prevent
    /// the virtual function call for high-frequency fills.
-   FillFunc_t GetFillFunc() const final { 
-      return (FillFunc_t)&RHistImpl::Fill; 
+   FillFunc_t GetFillFunc() const final {
+      return (FillFunc_t)&RHistImpl::Fill;
    }
 
    /// Get the axes of this histogram.
@@ -930,10 +931,10 @@ public:
       // hyperplane (overflow and regular) and the number of regular bins per
       // hyperplane on the hyperplanes that have them.
       //
-      std::array<int, NDIMS - 1> bins_per_hyperplane;
-      std::array<int, NDIMS - 1> regular_bins_per_hyperplane;
+      std::array<int, NDIMS - 1> bins_per_hyperplane{};
+      std::array<int, NDIMS - 1> regular_bins_per_hyperplane{};
       Internal::RComputeLocalBinsInitialisation<NDIMS - 1, NDIMS, decltype(fAxes)>()(bins_per_hyperplane, regular_bins_per_hyperplane, fAxes);
-      
+
       int curr_bins_per_hyperplane = Internal::RGetNBinsCount<NDIMS - 1, decltype(fAxes)>()(fAxes);
       int curr_regular_bins_per_hyperplane = Internal::RGetNBinsNoOverCount<NDIMS - 1, decltype(fAxes)>()(fAxes);
 
@@ -1052,7 +1053,7 @@ public:
    {
 #ifndef NDEBUG
       if (xN.size() != weightN.size()) {
-         R__ERROR_HERE("HIST") << "Not the same number of points and weights!";
+         R__LOG_ERROR(HistLog()) << "Not the same number of points and weights!";
          return;
       }
 #endif

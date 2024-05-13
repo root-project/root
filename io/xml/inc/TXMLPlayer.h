@@ -25,7 +25,7 @@ class TList;
 class TXMLPlayer : public TObject {
 public:
    TXMLPlayer();
-   virtual ~TXMLPlayer();
+   ~TXMLPlayer() override;
 
    Bool_t ProduceCode(TList *cllist, const char *filename);
 
@@ -49,7 +49,7 @@ protected:
    TString fSetterName; //!  buffer for name of setter method
    TXMLSetup fXmlSetup; //!  buffer for xml names conversion
 
-   ClassDef(TXMLPlayer, 1) // Generation of external xml streamers
+   ClassDefOverride(TXMLPlayer, 1) // Generation of external xml streamers
 };
 
 #endif

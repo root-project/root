@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Basic functionality: various plotting styles of data, functions in a RooPlot
+/// Basic functionality: various plotting styles of data, functions in a RooPlot
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -35,10 +33,10 @@ void rf107_plotstyles()
    RooGaussian gauss("gauss", "gauss", x, mean, sigma);
 
    // Generate a sample of 100 events with sigma=3
-   RooDataSet *data = gauss.generate(x, 100);
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 100)};
 
    // Fit pdf to data
-   gauss.fitTo(*data);
+   gauss.fitTo(*data, PrintLevel(-1));
 
    // M a k e   p l o t   f r a m e s
    // -------------------------------

@@ -14,19 +14,18 @@ set(py_sources
   cppyy/_version.py
   cppyy/interactive.py
   cppyy/ll.py
+  cppyy/numba_ext.py
+  cppyy/reflex.py
+  cppyy/types.py
 )
 
 set(cppyyPySrcDir python/cppyy)
 file(COPY ${cppyyPySrcDir} DESTINATION ${localruntimedir})
 
-foreach(val RANGE ${how_many_pythons})
-  list(GET python_executables ${val} python_executable)
-
-  # Compile .py files
-  foreach(py_source ${py_sources})
-    install(CODE "execute_process(COMMAND ${python_executable} -m py_compile ${localruntimedir}/${py_source})")
-    install(CODE "execute_process(COMMAND ${python_executable} -O -m py_compile ${localruntimedir}/${py_source})")
-  endforeach()
+# Compile .py files
+foreach(py_source ${py_sources})
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source})")
+  install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source})")
 endforeach()
 
 # Install Python sources and bytecode

@@ -23,9 +23,6 @@ ClassImp(TFoamCell);
 
 TFoamCell::TFoamCell()
 {
-   fParent  = 0;
-   fDaught0 = 0;
-   fDaught1 = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +35,6 @@ TFoamCell::TFoamCell(Int_t kDim)
       fDim     = kDim;
       fSerial   = 0;
       fStatus   = 1;
-      fParent   = 0;
-      fDaught0  = 0;
-      fDaught1  = 0;
       fXdiv     = 0.0;
       fBest     = 0;
       fVolume   = 0.0;
@@ -52,24 +46,6 @@ TFoamCell::TFoamCell(Int_t kDim)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor (not tested!)
-
-TFoamCell::TFoamCell(TFoamCell &From): TObject(From)
-{
-   Error("TFoamCell", "+++++ NEVER USE Copy constructor for TFoamCell \n");
-   fStatus      = From.fStatus;
-   fParent      = From.fParent;
-   fDaught0     = From.fDaught0;
-   fDaught1     = From.fDaught1;
-   fXdiv        = From.fXdiv;
-   fBest        = From.fBest;
-   fVolume      = From.fVolume;
-   fIntegral    = From.fIntegral;
-   fDrive       = From.fDrive;
-   fPrimary     = From.fPrimary;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
 TFoamCell::~TFoamCell()
@@ -77,35 +53,14 @@ TFoamCell::~TFoamCell()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Substitution operator = (never used)
-
-TFoamCell& TFoamCell::operator=(const TFoamCell &From)
-{
-   Info("TFoamCell", "operator=\n ");
-   if (&From == this) return *this;
-   fStatus      = From.fStatus;
-   fParent      = From.fParent;
-   fDaught0     = From.fDaught0;
-   fDaught1     = From.fDaught1;
-   fXdiv        = From.fXdiv;
-   fBest        = From.fBest;
-   fVolume      = From.fVolume;
-   fIntegral    = From.fIntegral;
-   fDrive       = From.fDrive;
-   fPrimary     = From.fPrimary;
-   return *this;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Fills in certain data into newly allocated cell
 
 void TFoamCell::Fill(Int_t Status, TFoamCell *Parent, TFoamCell *Daugh1, TFoamCell *Daugh2)
 {
    fStatus  = Status;
-   fParent  = Parent;
-   fDaught0 = Daugh1;
-   fDaught1 = Daugh2;
+   fParentIdx  = Parent ? Parent->fSerial : -1;
+   fDaught0Idx = Daugh1 ? Daugh1->fSerial : -1;
+   fDaught1Idx = Daugh2 ? Daugh2->fSerial : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,9 +74,9 @@ void    TFoamCell::GetHcub( TFoamVect &cellPosi, TFoamVect &cellSize)  const
    const TFoamCell *pCell,*dCell;
    cellPosi = 0.0; cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while(dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if( pCell== nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0()  ) {
@@ -148,9 +103,9 @@ void    TFoamCell::GetHSize( TFoamVect &cellSize)  const
    const TFoamCell *pCell,*dCell;
    cellSize=1.0; // load all components
    dCell = this;
-   while(dCell != 0) {
+   while(dCell != nullptr) {
       pCell = dCell->GetPare();
-      if( pCell== 0) break;
+      if( pCell== nullptr) break;
       Int_t    kDiv = pCell->fBest;
       Double_t xDivi = pCell->fXdiv;
       if(dCell == pCell->GetDau0() ) {

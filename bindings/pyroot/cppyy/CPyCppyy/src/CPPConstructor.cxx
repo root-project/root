@@ -5,11 +5,17 @@
 #include "Executors.h"
 #include "MemoryRegulator.h"
 #include "ProxyWrappers.h"
-
-#include "CPyCppyy/DispatchPtr.h"
+#include "PyStrings.h"
 
 // Standard
+#include <memory>
 #include <string>
+
+
+//- data _____________________________________________________________________
+namespace CPyCppyy {
+    extern PyObject* gNullPtrObject;
+}
 
 
 //- protected members --------------------------------------------------------
@@ -30,80 +36,102 @@ PyObject* CPyCppyy::CPPConstructor::GetDocString()
 }
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CPPConstructor::Call(
-    CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
+PyObject* CPyCppyy::CPPConstructor::Reflex(
+    Cppyy::Reflex::RequestId_t request, Cppyy::Reflex::FormatId_t format)
+{
+// C++ reflection tooling for constructors.
+
+    if (request == Cppyy::Reflex::RETURN_TYPE) {
+        std::string fn = Cppyy::GetScopedFinalName(this->GetScope());
+        if (format == Cppyy::Reflex::OPTIMAL || format == Cppyy::Reflex::AS_TYPE)
+            return CreateScopeProxy(fn);
+        else if (format == Cppyy::Reflex::AS_STRING)
+            return CPyCppyy_PyText_FromString(fn.c_str());
+    }
+
+    return PyCallable::Reflex(request, format);
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPConstructor::Call(CPPInstance*& self,
+    CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt)
 {
 // setup as necessary
     if (fArgsRequired == -1 && !this->Initialize(ctxt))
         return nullptr;                     // important: 0, not Py_None
 
 // fetch self, verify, and put the arguments in usable order
-    if (!(args = this->PreProcessArgs(self, args, kwds)))
+    PyCallArgs cargs{self, args, nargsf, kwds};
+    if (!this->ProcessArgs(cargs))
         return nullptr;
 
+// verify existence of self (i.e. tp_new called)
+    if (!self) {
+        PyErr_SetString(PyExc_ReferenceError, "no python object allocated");
+        return nullptr;
+    }
+
     if (self->GetObject()) {
-        Py_DECREF(args);
         PyErr_SetString(PyExc_ReferenceError,
             "object already constructed; use __assign__ instead of __init__");
         return nullptr;
     }
 
-// translate the arguments
-    if (!this->ConvertAndSetArgs(args, ctxt)) {
-        Py_DECREF(args);
-        return nullptr;
-    }
-
-// verify existence of self (i.e. tp_new called)
-    if (!self) {
-        PyErr_Print();
-        PyErr_SetString(PyExc_ReferenceError, "no python object allocated");
-        return nullptr;
-    }
+// self provides the python context for lifelines
+    if (!ctxt->fPyContext)
+        ctxt->fPyContext = (PyObject*)cargs.fSelf;    // no Py_INCREF as no ownership
 
 // perform the call, nullptr 'this' makes the other side allocate the memory
     Cppyy::TCppScope_t disp = self->ObjectIsA(false /* check_smart */);
-    Cppyy::TCppMethod_t curMethod = GetMethod();
+    intptr_t address = 0;
     if (GetScope() != disp) {
-    // happens for Python derived types, which have a dispatcher inserted that
-    // is not otherwise user-visible: temporarily reset fMethod
-    // TODO: these lookups are slow and need caching
-        const std::string& dispName = Cppyy::GetFinalName(disp);
-    // select proper overload based on signature match
-        const std::string& sig =
-            (curMethod && PyTuple_GET_SIZE(args)) ? Cppyy::GetMethodSignature(curMethod, false, PyTuple_GET_SIZE(args)) : "()";
-        Cppyy::TCppMethod_t method = (Cppyy::TCppMethod_t)0;
-        const auto& v = Cppyy::GetMethodIndicesFromName(disp, dispName);
-        for (auto idx : v) {
-            Cppyy::TCppMethod_t mm = Cppyy::GetMethod(disp, idx);
-            if (Cppyy::GetMethodSignature(mm, false) == sig) {
-                method = mm;
-                break;
-            }
-        }
+    // happens for Python derived types (which have a dispatcher inserted that
+    // is not otherwise user-visible: call it instead) and C++ derived classes
+    // without public constructors
 
-        if (method) SetMethod(method);
-        else {
-            PyErr_Format(PyExc_TypeError, "no constructor available for \'%s\'",
-                Cppyy::GetScopedFinalName(this->GetScope()).c_str());
+    // first, check whether we at least had a proper meta class, or whether that
+    // was also replaced user-side
+        if (!GetScope() || !disp) {
+            PyErr_SetString(PyExc_TypeError, "can not construct incomplete C++ class");
             return nullptr;
         }
-    }
-    ptrdiff_t address = (ptrdiff_t)this->Execute(nullptr, 0, ctxt);
-    if (GetMethod() != curMethod) {
-    // restore the original constructor
-        SetMethod(curMethod);
 
-    // set m_self (TODO: get this from the compiler in case of some unorthodox padding
-    // or if the inheritance hierarchy extends back into C++ land)
-        if (address) {
-            ptrdiff_t self_address = address + Cppyy::SizeOf(GetScope());
-            new ((void*)self_address) DispatchPtr{(PyObject*)self};
+    // get the dispatcher class and verify
+        PyObject* dispproxy = CPyCppyy::GetScopeProxy(disp);
+        if (!dispproxy) {
+            PyErr_SetString(PyExc_TypeError, "dispatcher proxy was never created");
+            return nullptr;
         }
-    }
 
-// done with filtered args
-    Py_DECREF(args);
+        if (!(((CPPClass*)dispproxy)->fFlags & CPPScope::kIsPython)) {
+            PyErr_SetString(PyExc_TypeError, const_cast<char*>((
+                "constructor for " + Cppyy::GetScopedFinalName(disp) + " is not a dispatcher").c_str()));
+            return nullptr;
+        }
+
+        PyObject* pyobj = CPyCppyy_PyObject_Call(dispproxy, cargs.fArgs, cargs.fNArgsf, kwds);
+        if (!pyobj)
+            return nullptr;
+
+    // retrieve the actual pointer, take over control, and set set _internal_self
+        address = (intptr_t)((CPPInstance*)pyobj)->GetObject();
+        if (address) {
+            ((CPPInstance*)pyobj)->CppOwns();    // b/c self will control the object on address
+            PyObject* res = PyObject_CallMethodObjArgs(
+                dispproxy, PyStrings::gDispInit, pyobj, (PyObject*)self, nullptr);
+            Py_XDECREF(res);
+        }
+        Py_DECREF(dispproxy);
+
+    } else {
+    // translate the arguments
+        if (((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kNoImplicit)
+            ctxt->fFlags |= CallContext::kNoImplicit;
+        if (!this->ConvertAndSetArgs(cargs.fArgs, cargs.fNArgsf, ctxt))
+            return nullptr;
+
+        address = (intptr_t)this->Execute(nullptr, 0, ctxt);
+    }
 
 // return object if successful, lament if not
     if (address) {
@@ -113,8 +141,10 @@ PyObject* CPyCppyy::CPPConstructor::Call(
     // decided by the method proxy (which carries a creator flag) upon return
         self->Set((void*)address);
 
-    // TODO: consistent up or down cast ...
-        MemoryRegulator::RegisterPyObject(self, (Cppyy::TCppObject_t)address);
+    // mark as actual to prevent needless auto-casting and register on its class
+        self->fFlags |= CPPInstance::kIsActual;
+        if (!(((CPPClass*)Py_TYPE(self))->fFlags & CPPScope::kIsSmart))
+            MemoryRegulator::RegisterPyObject(self, (Cppyy::TCppObject_t)address);
 
     // handling smart types this way is deeply fugly, but if CPPInstance sets the proper
     // types in op_new first, then the wrong init is called
@@ -123,7 +153,7 @@ PyObject* CPyCppyy::CPPConstructor::Call(
             if (pyclass) {
                 self->SetSmart((PyObject*)Py_TYPE(self));
                 Py_DECREF((PyObject*)Py_TYPE(self));
-                Py_TYPE(self) = (PyTypeObject*)pyclass;
+                Py_SET_TYPE(self, (PyTypeObject*)pyclass);
             }
         }
 
@@ -144,13 +174,167 @@ PyObject* CPyCppyy::CPPConstructor::Call(
 
 
 //----------------------------------------------------------------------------
-PyObject* CPyCppyy::CPPAbstractClassConstructor::Call(
-    CPPInstance*& self, PyObject* args, PyObject* kwds, CallContext* ctxt)
+CPyCppyy::CPPMultiConstructor::CPPMultiConstructor(Cppyy::TCppScope_t scope, Cppyy::TCppMethod_t method) :
+    CPPConstructor(scope, method)
+{
+    fNumBases = Cppyy::GetNumBases(scope);
+}
+
+//----------------------------------------------------------------------------
+CPyCppyy::CPPMultiConstructor::CPPMultiConstructor(const CPPMultiConstructor& s) :
+    CPPConstructor(s), fNumBases(s.fNumBases)
+{
+}
+
+//----------------------------------------------------------------------------
+CPyCppyy::CPPMultiConstructor& CPyCppyy::CPPMultiConstructor::operator=(const CPPMultiConstructor& s)
+{
+    if (this != &s) {
+        CPPConstructor::operator=(s);
+        fNumBases = s.fNumBases;
+    }
+    return *this;
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPMultiConstructor::Call(CPPInstance*& self,
+    CPyCppyy_PyArgs_t argsin, size_t nargsf, PyObject* kwds, CallContext* ctxt)
+{
+// By convention, initialization parameters of multiple base classes are grouped
+// by target base class. Here, we disambiguate and put in "sentinel" parameters
+// that allow the dispatcher to propagate them.
+
+// Three options supported:
+//  0. empty args: default constructor call
+//  1. fNumBases tuples, each handed to individual constructors
+//  2. less than fNumBases, assuming (void) for the missing base constructors
+//  3. normal arguments, going to the first base only
+
+// TODO: this way of forwarding is expensive as the loop is external to this call;
+// it would be more efficient to have the argument handling happen beforehand
+
+#if PY_VERSION_HEX >= 0x03080000
+// fetch self, verify, and put the arguments in usable order (if self is not handled
+// first, arguments can not be reordered with sentinels in place)
+    PyCallArgs cargs{self, argsin, nargsf, kwds};
+    if (!this->ProcessArgs(cargs))
+        return nullptr;
+
+// to re-use the argument handling, simply change the argument array into a tuple (the
+// benefits of not allocating the tuple are relatively minor in this case)
+    Py_ssize_t nargs = CPyCppyy_PyArgs_GET_SIZE(cargs.fArgs, cargs.fNArgsf);
+    PyObject* args = PyTuple_New(nargs);
+    for (Py_ssize_t i = 0; i < nargs; ++i) {
+        Py_INCREF(cargs.fArgs[i]);
+        PyTuple_SET_ITEM(args, i, cargs.fArgs[i]);
+    }
+
+// copy out self as it may have been updated
+    self = cargs.fSelf;
+
+#else
+    PyObject* args = argsin;
+    Py_INCREF(args);
+#endif
+
+    if (PyTuple_CheckExact(args) && PyTuple_GET_SIZE(args)) {   // case 0. falls through
+        Py_ssize_t nArgs = PyTuple_GET_SIZE(args);
+
+        bool isAllTuples = true;
+        Py_ssize_t nArgsTot = 0;
+        for (Py_ssize_t i = 0; i < nArgs; ++i) {
+            PyObject* argi = PyTuple_GET_ITEM(args, i);
+            if (!PyTuple_CheckExact(argi)) {
+                isAllTuples = false;
+                break;
+            }
+            nArgsTot += PyTuple_GET_SIZE(argi);
+        }
+
+        if (isAllTuples) {
+        // copy over the arguments, while filling in the sentinels (case 1. & 2.), with
+        // just sentinels for the remaining (void) calls (case 2.)
+            PyObject* newArgs = PyTuple_New(nArgsTot + fNumBases - 1);
+            Py_ssize_t idx = 0;
+            for (Py_ssize_t i = 0; i < nArgs; ++i) {
+                if (i != 0) {
+                // add sentinel
+                    Py_INCREF(gNullPtrObject);
+                    PyTuple_SET_ITEM(newArgs, idx, gNullPtrObject);
+                    idx += 1;
+                }
+
+                PyObject* argi = PyTuple_GET_ITEM(args, i);
+                for (Py_ssize_t j = 0; j < PyTuple_GET_SIZE(argi); ++j) {
+                    PyObject* item = PyTuple_GET_ITEM(argi, j);
+                    Py_INCREF(item);
+                    PyTuple_SET_ITEM(newArgs, idx, item);
+                    idx += 1;
+                }
+            }
+
+        // add final sentinels as needed
+            while (idx < (nArgsTot+fNumBases-1)) {
+                Py_INCREF(gNullPtrObject);
+                PyTuple_SET_ITEM(newArgs, idx, gNullPtrObject);
+                idx += 1;
+            }
+
+            Py_DECREF(args);
+            args = newArgs;
+        } else {                                               // case 3. add sentinels
+        // copy arguments as-is, then add sentinels at the end
+            PyObject* newArgs = PyTuple_New(PyTuple_GET_SIZE(args) + fNumBases - 1);
+            for (Py_ssize_t i = 0; i < nArgs; ++i) {
+                PyObject* item = PyTuple_GET_ITEM(args, i);
+                Py_INCREF(item);
+                PyTuple_SET_ITEM(newArgs, i, item);
+            }
+            for (Py_ssize_t i = 0; i < fNumBases - 1; ++i) {
+                Py_INCREF(gNullPtrObject);
+                PyTuple_SET_ITEM(newArgs, i+nArgs, gNullPtrObject);
+            }
+            Py_DECREF(args);
+            args = newArgs;
+        }
+    }
+
+#if PY_VERSION_HEX < 0x03080000
+    Py_ssize_t
+#endif
+    nargs = PyTuple_GET_SIZE(args);
+
+#if PY_VERSION_HEX >= 0x03080000
+// now unroll the new args tuple into a vector of objects
+    auto argsu = std::unique_ptr<PyObject*[]>{new PyObject*[nargs]};
+    for (Py_ssize_t i = 0; i < nargs; ++i)
+        argsu[i] = PyTuple_GET_ITEM(args, i);
+    CPyCppyy_PyArgs_t _args = argsu.get();
+#else
+    CPyCppyy_PyArgs_t _args = args;
+#endif
+
+    PyObject* result = CPPConstructor::Call(self, _args, nargs, kwds, ctxt);
+    Py_DECREF(args);
+
+    return result;
+}
+
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPAbstractClassConstructor::Call(CPPInstance*& self,
+    CPyCppyy_PyArgs_t args, size_t nargsf, PyObject* kwds, CallContext* ctxt)
 {
 // do not allow instantiation of abstract classes
-    if (self && GetScope() != self->ObjectIsA()) {
+    if ((self && GetScope() != self->ObjectIsA()
+#if PY_VERSION_HEX >= 0x03080000
+        ) || (!self && !(ctxt->fFlags & CallContext::kFromDescr) && \
+              CPyCppyy_PyArgs_GET_SIZE(args, nargsf) && CPPInstance_Check(args[0]) && \
+              GetScope() != ((CPPInstance*)args[0])->ObjectIsA()
+#endif
+        )) {
     // happens if a dispatcher is inserted; allow constructor call
-        return CPPConstructor::Call(self, args, kwds, ctxt);
+        return CPPConstructor::Call(self, args, nargsf, kwds, ctxt);
     }
 
     PyErr_Format(PyExc_TypeError, "cannot instantiate abstract class \'%s\'"
@@ -159,9 +343,10 @@ PyObject* CPyCppyy::CPPAbstractClassConstructor::Call(
     return nullptr;
 }
 
+
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPNamespaceConstructor::Call(
-    CPPInstance*&, PyObject*, PyObject*, CallContext*)
+    CPPInstance*&, CPyCppyy_PyArgs_t, size_t, PyObject*, CallContext*)
 {
 // do not allow instantiation of namespaces
     PyErr_Format(PyExc_TypeError, "cannot instantiate namespace \'%s\'",
@@ -169,12 +354,23 @@ PyObject* CPyCppyy::CPPNamespaceConstructor::Call(
     return nullptr;
 }
 
+
 //----------------------------------------------------------------------------
 PyObject* CPyCppyy::CPPIncompleteClassConstructor::Call(
-    CPPInstance*&, PyObject*, PyObject*, CallContext*)
+    CPPInstance*&, CPyCppyy_PyArgs_t, size_t, PyObject*, CallContext*)
 {
 // do not allow instantiation of incomplete (forward declared) classes)
     PyErr_Format(PyExc_TypeError, "cannot instantiate incomplete class \'%s\'",
+        Cppyy::GetScopedFinalName(this->GetScope()).c_str());
+    return nullptr;
+}
+
+//----------------------------------------------------------------------------
+PyObject* CPyCppyy::CPPAllPrivateClassConstructor::Call(
+    CPPInstance*&, CPyCppyy_PyArgs_t, size_t, PyObject*, CallContext*)
+{
+// do not allow instantiation of classes with only private constructors
+    PyErr_Format(PyExc_TypeError, "cannot instantiate class \'%s\' that has no public constructors",
         Cppyy::GetScopedFinalName(this->GetScope()).c_str());
     return nullptr;
 }

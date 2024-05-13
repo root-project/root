@@ -15,7 +15,7 @@
 #include <unordered_map>
 
 #include <ROOT/RPadLength.hxx>
-#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/RColor.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -152,6 +152,14 @@ public:
          m[name] = std::make_unique<StringValue_t>(value.AsString());
       return *this;
    }
+   RAttrMap &AddColor(const std::string &name, const RColor &value)
+   {
+      if (value.IsEmpty())
+         Clear(name);
+      else
+         m[name] = std::make_unique<StringValue_t>(value.AsString());
+      return *this;
+   }
    RAttrMap &AddDefaults(const RAttrBase &vis);
 
    RAttrMap &AddValue(const std::string &name, bool value) { return AddBool(name, value); }
@@ -159,6 +167,7 @@ public:
    RAttrMap &AddValue(const std::string &name, double value) { return AddDouble(name, value); }
    RAttrMap &AddValue(const std::string &name, const std::string &value) { return AddString(name, value); }
    RAttrMap &AddValue(const std::string &name, const RPadLength &value) { return AddPadLength(name, value); }
+   RAttrMap &AddValue(const std::string &name, const RColor &value) { return AddColor(name, value); }
 
    RAttrMap(const RAttrMap &src)
    {
@@ -199,12 +208,14 @@ template<> int RAttrMap::Value_t::Get<int>() const;
 template<> double RAttrMap::Value_t::Get<double>() const;
 template<> std::string RAttrMap::Value_t::Get<std::string>() const;
 template<> RPadLength RAttrMap::Value_t::Get<RPadLength>() const;
+template<> RColor RAttrMap::Value_t::Get<RColor>() const;
 
 template<> bool RAttrMap::Value_t::GetValue<bool,void>(const Value_t *rec);
 template<> int RAttrMap::Value_t::GetValue<int,void>(const Value_t *rec);
 template<> double RAttrMap::Value_t::GetValue<double,void>(const Value_t *rec);
 template<> std::string RAttrMap::Value_t::GetValue<std::string,void>(const Value_t *rec);
 template<> RPadLength RAttrMap::Value_t::GetValue<RPadLength,void>(const Value_t *rec);
+template<> RColor RAttrMap::Value_t::GetValue<RColor,void>(const Value_t *rec);
 
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,void>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,bool>(const Value_t *rec);
@@ -212,6 +223,7 @@ template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,double>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,std::string>(const Value_t *rec);
 template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,RPadLength>(const Value_t *rec);
+template<> const RAttrMap::Value_t *RAttrMap::Value_t::GetValue<const RAttrMap::Value_t *,RColor>(const Value_t *rec);
 
 } // namespace Experimental
 } // namespace ROOT

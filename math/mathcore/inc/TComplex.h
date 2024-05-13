@@ -21,7 +21,9 @@
 #include "TMath.h"
 
 #include "Rtypes.h"
+
 #include <string>
+#include <type_traits>
 
 
 class TComplex {
@@ -74,25 +76,32 @@ public:
    TComplex operator +()
       {return *this;}
 
-   // Simple operators complex - double
-   TComplex operator *(Double_t c) const
-      {return TComplex(fRe*c,fIm*c);}
-   TComplex operator +(Double_t c) const
-      {return TComplex(fRe+c, fIm);}
-   TComplex operator /(Double_t c) const
-      {return TComplex(fRe/c,fIm/c);}
-   TComplex operator -(Double_t c) const
-      {return TComplex(fRe-c, fIm);}
+   // Metafunction to figure out whether a type is arithmetic. This is used for
+   // the arithmetic operator implementation, so we can be sure that nothing
+   // unexpected will happen for non-arithmetic types that implement these
+   // operators with `double` themselves.
+   template<class T>
+   using enable_if_arithmetic = typename std::enable_if<std::is_arithmetic<T>::value, bool>::type;
 
-   // Simple operators double - complex
-   friend TComplex operator *(Double_t d, const TComplex & c)
-      {return TComplex(d*c.fRe,d*c.fIm);}
-   friend TComplex operator +(Double_t d, const TComplex & c)
-      {return TComplex(d+c.fRe, c.fIm);}
-   friend TComplex operator /(Double_t d, const TComplex & c)
-      {return TComplex(d*c.fRe,-d*c.fIm)/c.Rho2();}
-   friend TComplex operator -(Double_t d, const TComplex & c)
-      {return TComplex(d-c.fRe, -c.fIm);}
+   // Simple operators complex - arithmetic
+   template <class T, enable_if_arithmetic<T> = true>
+   TComplex operator *(T c) const { return {fRe*c,fIm*c}; }
+   template <class T, enable_if_arithmetic<T> = true>
+   TComplex operator +(T c) const { return {fRe+c, fIm}; }
+   template <class T, enable_if_arithmetic<T> = true>
+   TComplex operator /(T c) const { return {fRe/c,fIm/c}; }
+   template <class T, enable_if_arithmetic<T> = true>
+   TComplex operator -(T c) const { return {fRe-c, fIm}; }
+
+   // Simple operators arithmetic - complex
+   template <class T, enable_if_arithmetic<T> = true>
+   friend TComplex operator *(T d, const TComplex & c) { return {d*c.fRe,d*c.fIm}; }
+   template <class T, enable_if_arithmetic<T> = true>
+   friend TComplex operator +(T d, const TComplex & c) { return {d+c.fRe, c.fIm}; }
+   template <class T, enable_if_arithmetic<T> = true>
+   friend TComplex operator /(T d, const TComplex & c) { return TComplex{d*c.fRe,-d*c.fIm} / c.Rho2(); }
+   template <class T, enable_if_arithmetic<T> = true>
+   friend TComplex operator -(T d, const TComplex & c) { return {d-c.fRe, -c.fIm}; }
 
    // Convertors
    operator Double_t () const {return fRe;}

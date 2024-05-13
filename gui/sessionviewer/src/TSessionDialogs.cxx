@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionDialogs                                                      //
-//                                                                      //
-// This file defines several dialogs that are used by TSessionViewer.   //
-// The following dialogs are available: TNewChainDlg and TNewQueryDlg.  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TSessionDialogs
+    \ingroup sessionviewer
+
+This file defines several dialogs that are used by TSessionViewer.
+The following dialogs are available: TNewChainDlg and TNewQueryDlg.
+
+*/
+
 
 #include "TSessionDialogs.h"
 #include "TSessionViewer.h"
@@ -180,7 +181,7 @@ void TNewChainDlg::OnElementSelected(TObject *obj)
 {
    if (obj && (obj->IsA() == TChain::Class() ||
        obj->IsA() == TDSet::Class())) {
-      Emit("OnElementSelected(TObject *)", (Long_t)obj);
+      Emit("OnElementSelected(TObject *)", (Longptr_t)obj);
    }
 }
 
@@ -281,7 +282,7 @@ void TNewChainDlg::OnDoubleClick(TGLVEntry* f, Int_t btn)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for new chain dialog.
 
-Bool_t TNewChainDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TNewChainDlg::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -790,7 +791,7 @@ void TNewQueryDlg::UpdateFields(TQueryDescription *desc)
 /// Process messages for new query dialog.
 /// Essentially used to navigate between text entry fields.
 
-Bool_t TNewQueryDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TNewQueryDlg::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
@@ -1023,7 +1024,7 @@ void TUploadDataSetDlg::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages for upload dataset dialog.
 
-Bool_t TUploadDataSetDlg::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TUploadDataSetDlg::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:

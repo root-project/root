@@ -99,7 +99,7 @@ TArrow::TArrow(const TArrow &arrow) : TLine(), TAttFill()
 {
    fAngle     = fgDefaultAngle;
    fArrowSize = 0.;
-   arrow.Copy(*this);
+   arrow.TArrow::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ void TArrow::Draw(Option_t *option)
 ///  - if `arrowsize` is <= 0, `arrowsize` will be the current arrow size
 ///  - if `option=""`, `option` will be the current arrow option
 
-void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+TArrow *TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                      Float_t arrowsize ,Option_t *option)
 {
 
@@ -148,6 +148,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    TAttFill::Copy(*newarrow);
    newarrow->SetBit(kCanDelete);
    newarrow->AppendPad(opt);
+   return newarrow;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,6 +156,7 @@ void TArrow::DrawArrow(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 void TArrow::Paint(Option_t *option)
 {
+   if (!gPad) return;
    Option_t *opt;
    if (option && strlen(option)) opt = option;
    else                          opt = (char*)GetOption();
@@ -168,18 +170,12 @@ void TArrow::Paint(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this arrow
+/// Draw this arrow with new coordinates.
 
 void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
                         Float_t arrowsize, Option_t *option)
 {
-
-   // Option and attributes
-   TString opt = option;
-   opt.ToLower();
-   TAttLine::Modify();
-   TAttFill::Modify();
-
+   if (!gPad) return;
    // Compute the gPad coordinates in TRUE normalized space (NDC)
    Int_t iw = gPad->GetWw();
    Int_t ih = gPad->GetWh();
@@ -189,6 +185,15 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    Int_t iy1 = (Int_t)(ih*y1p);
    Int_t ix2 = (Int_t)(iw*x2p);
    Int_t iy2 = (Int_t)(ih*y2p);
+   if (ix1==ix2||iy1==iy2) return;
+
+   // Option and attributes
+   TString opt = option;
+   opt.ToLower();
+   TAttLine::Modify();
+   TAttFill::Modify();
+
+
    Double_t wndc  = TMath::Min(1.,(Double_t)iw/(Double_t)ih);
    Double_t hndc  = TMath::Min(1.,(Double_t)ih/(Double_t)iw);
    Double_t rh    = hndc/(Double_t)ih;
@@ -339,6 +344,19 @@ void TArrow::PaintArrow(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          gPad->PaintPolyLine(3,x1ar,y1ar);
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this arrow with new coordinates in NDC.
+
+void TArrow::PaintArrowNDC(Double_t u1, Double_t v1,Double_t u2 ,Double_t v2,
+                           Float_t arrowsize, Option_t *option)
+{
+   if (!gPad) return;
+   PaintArrow(gPad->GetX1() + u1 * (gPad->GetX2() - gPad->GetX1()),
+              gPad->GetY1() + v1 * (gPad->GetY2() - gPad->GetY1()),
+              gPad->GetX1() + u2 * (gPad->GetX2() - gPad->GetX1()),
+              gPad->GetY1() + v2 * (gPad->GetY2() - gPad->GetY1()), arrowsize, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

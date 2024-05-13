@@ -1,13 +1,9 @@
-/// \file ROOT/RBrowser.hxx
-/// \ingroup rbrowser
-/// \author Bertrand Bellenot <bertrand.bellenot@cern.ch>
-/// \author Sergey Linev <S.Linev@gsi.de>
-/// \date 2019-02-28
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Authors: Bertrand Bellenot <bertrand.bellenot@cern.ch> Sergey Linev <S.Linev@gsi.de>
+// Date: 2019-02-28
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -22,59 +18,72 @@
 
 #include <vector>
 #include <memory>
-#include <stdint.h>
-
-class TString;
-class TCanvas;
-class TFile;
 
 namespace ROOT {
-namespace Experimental {
 
-class RCanvas;
-
-/** Web-based ROOT file browser */
+class RBrowserWidget;
+class RBrowserTimer;
 
 class RBrowser {
+
+   friend class RBrowserTimer;
 
 protected:
 
    std::string fTitle;  ///<! title
    unsigned fConnId{0}; ///<! default connection id
 
-   bool fUseRCanvas{false};             ///<!  which canvas should be used
-   std::vector<std::unique_ptr<TCanvas>> fCanvases;  ///<! canvases created by browser, should be closed at the end
-   std::string fActiveCanvas;            ///<! name of active for RBrowser canvas, not a gPad!
-   std::vector<std::shared_ptr<ROOT::Experimental::RCanvas>> fRCanvases; ///<!  ROOT7 canvases
+   bool fUseRCanvas{false};              ///<!  which canvas should be used
+   bool fCatchWindowShow{true};          ///<! if arbitrary RWebWindow::Show calls should be catched by browser
+   std::string fActiveWidgetName;        ///<! name of active widget
+   std::vector<std::shared_ptr<RBrowserWidget>> fWidgets; ///<!  all browser widgets
+   int fWidgetCnt{0};                                     ///<! counter for created widgets
+   std::string fPromptFileOutput;        ///<! file name for prompt output
+   float fLastProgressSend{0};           ///<! last value of send progress
+   long long fLastProgressSendTm{0};      ///<! time when last progress message was send
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
-   RBrowserData  fBrowsable;                   ///<! central browsing element
+   RBrowserData  fBrowsable;                 ///<! central browsing element
+   std::unique_ptr<RBrowserTimer>    fTimer; ///<!  timer to handle postponed requests
+   std::vector<std::vector<std::string>> fPostponed; ///<! postponed messages, handled in timer
 
-   TCanvas *AddCanvas();
-   TCanvas *GetActiveCanvas() const;
-   std::string GetCanvasUrl(TCanvas *canv);
-   void CloseCanvas(const std::string &name);
+   std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
+   std::shared_ptr<RBrowserWidget> AddCatchedWidget(RWebWindow *win, const std::string &kind);
+   std::shared_ptr<RBrowserWidget> FindWidget(const std::string &name, const std::string &kind = "") const;
+   std::shared_ptr<RBrowserWidget> GetActiveWidget() const { return FindWidget(fActiveWidgetName); }
 
-   std::shared_ptr<RCanvas> AddRCanvas();
-   std::shared_ptr<RCanvas> GetActiveRCanvas() const;
-   std::string GetRCanvasUrl(std::shared_ptr<RCanvas> &canv);
+   void CloseTab(const std::string &name);
 
    std::string ProcessBrowserRequest(const std::string &msg);
-   std::string ProcessDblClick(const std::string &path, const std::string &drawingOptions);
-   long ProcessRunCommand(const std::string &file_path);
-   void ProcessSaveFile(const std::string &file_path);
+   std::string ProcessDblClick(unsigned connid, std::vector<std::string> &args);
+   std::string NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget);
+   void ProcessRunMacro(const std::string &file_path);
+   void ProcessSaveFile(const std::string &fname, const std::string &content);
    std::string GetCurrentWorkingDirectory();
+
+   std::vector<std::string> GetRootHistory();
+   std::vector<std::string> GetRootLogs();
 
    void SendInitMsg(unsigned connid);
    void ProcessMsg(unsigned connid, const std::string &arg);
+   void SendProgress(unsigned connid, float progr);
+
+   void AddInitWidget(const std::string &kind);
+
+   void CheckWidgtesModified();
+
+   void ProcessPostponedRequests();
 
 public:
-   RBrowser(bool use_rcanvas = true);
+   RBrowser(bool use_rcanvas = false);
    virtual ~RBrowser();
 
    bool GetUseRCanvas() const { return fUseRCanvas; }
    void SetUseRCanvas(bool on = true) { fUseRCanvas = on; }
+
+   void AddTCanvas() { AddInitWidget("tcanvas"); }
+   void AddRCanvas() { AddInitWidget("rcanvas"); }
 
    /// show Browser in specified place
    void Show(const RWebDisplayArgs &args = "", bool always_start_new_browser = false);
@@ -82,9 +91,22 @@ public:
    /// hide Browser
    void Hide();
 
+   std::string GetWindowUrl(bool remote);
+
+   void SetWorkingPath(const std::string &path);
+
+   /// Enable/disable catch of RWebWindow::Show calls to embed created widgets, default on
+   void SetCatchWindowShow(bool on = true) { fCatchWindowShow = on; }
+
+   /// Is RWebWindow::Show calls catched for embeding of created widgets
+   bool GetCatchWindowShow() const { return fCatchWindowShow; }
+
+   bool ActivateWidget(const std::string &title, const std::string &kind = "");
+
+   void ClearOnClose(const std::shared_ptr<void> &handle);
+
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

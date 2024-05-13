@@ -9,10 +9,8 @@
 //  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
 //  *************************************************************************/
 
-// Bindings
-// CPyCppyy.h must be go first, since it includes Python.h, which must be
-// included before any standard header
-#include "CPyCppyy.h"
+#include "Python.h"
+
 #include "TPyClassGenerator.h"
 #include "TPyReturn.h"
 
@@ -26,14 +24,6 @@
 #include <sstream>
 #include <string>
 #include <typeinfo>
-
-// needed to properly resolve (dllimport) symbols on Windows
-namespace CPyCppyy {
-   R__EXTERN bool gDictLookupActive;
-   namespace PyStrings {
-      R__EXTERN PyObject *gBases;
-   }
-}
 
 namespace {
    class PyGILRAII {
@@ -56,10 +46,6 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 {
    // Class generator to make python classes available to Cling
 
-   // called if all other class generators failed, attempt to build from python class
-   if (CPyCppyy::gDictLookupActive == kTRUE)
-      return 0; // call originated from python
-
    if (!load || !name)
       return 0;
 
@@ -67,7 +53,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
    // first, check whether the name is of a module
    PyObject *modules = PySys_GetObject(const_cast<char *>("modules"));
-   PyObject *pyname = CPyCppyy_PyText_FromString(name);
+   PyObject *pyname = PyUnicode_FromString(name);
    PyObject *keys = PyDict_Keys(modules);
    Bool_t isModule = PySequence_Contains(keys, pyname);
    Py_DECREF(keys);
@@ -84,6 +70,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
       nsCode << "namespace " << name << " {\n";
 
       // add all free functions
+      PyObject *bases = PyUnicode_FromString("__bases__");
       PyObject *mod = PyDict_GetItemString(modules, const_cast<char *>(name));
       PyObject *dct = PyModule_GetDict(mod);
       keys = PyDict_Keys(dct);
@@ -96,8 +83,8 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
          Py_INCREF(attr);
 
          // TODO: refactor the code below with the class method code
-         if (PyCallable_Check(attr) && !(PyClass_Check(attr) || PyObject_HasAttr(attr, CPyCppyy::PyStrings::gBases))) {
-            std::string func_name = CPyCppyy_PyText_AsString(key);
+         if (PyCallable_Check(attr) && !(PyType_Check(attr) || PyObject_HasAttr(attr, bases))) {
+            std::string func_name = PyUnicode_AsUTF8(key);
 
             // figure out number of variables required
             PyObject *func_code = PyObject_GetAttrString(attr, (char *)"func_code");
@@ -130,6 +117,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
       }
 
       Py_DECREF(keys);
+      Py_DECREF(bases);
 
       nsCode << " }";
 
@@ -201,7 +189,7 @@ TClass *TPyClassGenerator::GetClass(const char *name, Bool_t load, Bool_t silent
 
       // collect only member functions (i.e. callable elements in __dict__)
       if (PyCallable_Check(attr)) {
-         std::string mtName = CPyCppyy_PyText_AsString(label);
+         std::string mtName = PyUnicode_AsUTF8(label);
 
          if (mtName == "__del__") {
             hasDestructor = kTRUE;

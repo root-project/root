@@ -42,8 +42,8 @@ class TBaseClass : public TDictionary {
 #endif
 
 private:
-   TBaseClass(const TBaseClass &);          // Not implemented
-   TBaseClass&operator=(const TBaseClass&); // Not implemented
+   TBaseClass(const TBaseClass &) = delete;
+   TBaseClass&operator=(const TBaseClass &) = delete;
 
 private:
    BaseClassInfo_t    *fInfo;      //!pointer to CINT base class info
@@ -54,18 +54,19 @@ private:
    Int_t               fSTLType;   // cache of IsSTLContainer()
 
 public:
-   TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
-   virtual     ~TBaseClass();
-   virtual void   Browse(TBrowser *b);
-   const char    *GetTitle() const;
+   TBaseClass(BaseClassInfo_t *info = nullptr, TClass *cl = nullptr);
+   virtual ~TBaseClass();
+
+   void           Browse(TBrowser *b) override;
+   const char    *GetTitle() const override;
    TClass        *GetClassPointer(Bool_t load=kTRUE);
    Int_t          GetDelta();
-   Bool_t         IsFolder() const {return kTRUE;}
+   Bool_t         IsFolder() const override {return kTRUE;}
    ROOT::ESTLType IsSTLContainer();
-   Long_t         Property() const;
+   Long_t         Property() const override;
    void           SetClass(TClass* cl) { fClass = cl; }
 
-   ClassDef(TBaseClass,2)  //Description of a base class
+   ClassDefOverride(TBaseClass,2)  //Description of a base class
 };
 
 #endif

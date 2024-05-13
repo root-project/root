@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief StandardFrequentistDiscovery
+/// StandardFrequentistDiscovery
 ///
 ///  This is a standard demo that can be used with any ROOT file
 ///  prepared in the standard way.  You specify:
@@ -74,10 +74,6 @@ double StandardFrequentistDiscovery(const char *infile = "", const char *workspa
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return -1;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");

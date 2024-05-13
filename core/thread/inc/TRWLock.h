@@ -36,8 +36,8 @@ private:
    TMutex       fMutex;     // rwlock mutex
    TCondition   fLockFree;  // rwlock condition variable
 
-   TRWLock(const TRWLock &);           // not implemented
-   TRWLock& operator=(const TRWLock&); // not implemented
+   TRWLock(const TRWLock &) = delete;
+   TRWLock& operator=(const TRWLock&) = delete;
 
 public:
    TRWLock();
@@ -48,7 +48,7 @@ public:
    Int_t  WriteLock();
    Int_t  WriteUnLock();
 
-   ClassDef(TRWLock,0)  // Reader/writer lock
+   ClassDefOverride(TRWLock,0)  // Reader/writer lock
 };
 
 #endif

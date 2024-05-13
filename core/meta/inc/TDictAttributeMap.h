@@ -39,13 +39,13 @@ public:
    Int_t       GetPropertySize() const { return fStringProperty.GetSize(); }
    TString     RemovePropertyString(const char* key);
    Bool_t      RemoveProperty(const char* key);
-   void        Clear(Option_t* option = "");
+   void        Clear(Option_t* option = "") override;
 
 private:
 
    THashTable     fStringProperty;         //all properties of String type
 
-   ClassDef(TDictAttributeMap,2)  // Container for name/value pairs of TDictionary attributes
+   ClassDefOverride(TDictAttributeMap,2)  // Container for name/value pairs of TDictionary attributes
 };
 
 #endif // ROOT_TDictAttributeMap

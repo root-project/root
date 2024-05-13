@@ -354,7 +354,6 @@ int unuranGraf2D() {
    return iret;
 }
 
-#ifndef __CINT__
 int main(int argc, char **argv)
 {
    int iret = 0;
@@ -377,4 +376,3 @@ int main(int argc, char **argv)
       std::cout << "\n\nUnuRan  Empirical Distribution Test:\t OK\n" << std::endl;
    return iret;
 }
-#endif

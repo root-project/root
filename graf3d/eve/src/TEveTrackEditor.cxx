@@ -37,8 +37,8 @@ ClassImp(TEveTrackEditor);
 TEveTrackEditor::TEveTrackEditor(const TGWindow *p, Int_t width, Int_t height,
                                  UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fRSEditor(0)
+   fM(nullptr),
+   fRSEditor(nullptr)
 {
    MakeTitle("TEveTrack");
 
@@ -82,10 +82,10 @@ TEveTrackListEditor::TEveTrackListEditor(const TGWindow *p,
                                          UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
 
-   fTC         (0),
-   fPtRange    (0),
-   fPRange     (0),
-   fRSSubEditor(0)
+   fTC         (nullptr),
+   fPtRange    (nullptr),
+   fPRange     (nullptr),
+   fRSSubEditor(nullptr)
 {
    {
       TGHorizontalFrame* f = new TGHorizontalFrame(this);
@@ -141,7 +141,7 @@ void TEveTrackListEditor::CreateRefsTab()
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fRefs, 145, 10,
                                                    kHorizontalFrame |
-                                                   kLHintsExpandX   |
+                                                   kFitWidth        |
                                                    kFixedWidth      |
                                                    kOwnBackground);
    title1->AddFrame(new TGLabel(title1, "PathMarks"),

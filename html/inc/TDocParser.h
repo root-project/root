@@ -130,7 +130,7 @@ protected:
    virtual void   ExpandCPPLine(TString& line, Ssiz_t& pos);
    virtual Bool_t HandleDirective(TString& keyword, Ssiz_t& pos,
       TString& word, Ssiz_t& copiedToCommentUpTo);
-   virtual void   InitKeywords() const;
+   void           InitKeywords() const;
    virtual TClass* IsDirective(const TString& line, Ssiz_t pos, const TString& word, Bool_t& begin) const;
    TMethod*       LocateMethodInCurrentLine(Ssiz_t& posMethodName, TString& ret,
       TString& name, TString& params, Bool_t& isconst,
@@ -158,7 +158,7 @@ protected:
 public:
    TDocParser(TClassDocOutput& docOutput, TClass* cl);
    TDocParser(TDocOutput& docOutput);
-   virtual       ~TDocParser();
+         ~TDocParser() override;
 
    static void   AnchorFromLine(const TString& line, TString& anchor);
    void          Convert(std::ostream& out, std::istream& in, const char* relpath,
@@ -184,7 +184,7 @@ public:
    virtual void  Parse(std::ostream& out);
    static Bool_t Strip(TString& s);
 
-   ClassDef(TDocParser,0); // parser for reference documentation
+   ClassDefOverride(TDocParser,0); // parser for reference documentation
 };
 
 #endif // ROOT_TDocParser

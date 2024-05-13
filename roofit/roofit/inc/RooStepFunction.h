@@ -17,42 +17,39 @@
 #ifndef ROO_STEP_FUNCTION
 #define ROO_STEP_FUNCTION
 
-#include "TArrayD.h"
-#include "RooAbsReal.h"
-#include "RooRealProxy.h"
-#include "RooListProxy.h"
+#include <RooAbsReal.h>
+#include <RooListProxy.h>
+#include <RooRealProxy.h>
 
-class RooRealVar;
 class RooArgList ;
 
 class RooStepFunction : public RooAbsReal {
  public:
 
-  RooStepFunction() ;
+  RooStepFunction() {}
   RooStepFunction(const char *name, const char *title,
-        RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, Bool_t interpolate=kFALSE) ;
+        RooAbsReal& x, const RooArgList& coefList, const RooArgList& limits, bool interpolate=false) ;
 
-  RooStepFunction(const RooStepFunction& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooStepFunction(*this, newname); }
-  virtual ~RooStepFunction() ;
+  RooStepFunction(const RooStepFunction& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooStepFunction(*this, newname); }
 
   const RooArgList& coefficients() { return _coefList; }
   const RooArgList& boundaries() { return _boundaryList; }
 
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+
  protected:
 
-  Double_t evaluate() const;
+  double evaluate() const override;
 
  private:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
   RooListProxy _boundaryList ;
-  Bool_t       _interpolate ;
-  TIterator* _coefIter ;  //! do not persist
-  TIterator* _boundIter ;  //! do not persist
+  bool       _interpolate = false;
 
-  ClassDef(RooStepFunction,1) //  Step Function
+  ClassDefOverride(RooStepFunction,1) //  Step Function
 };
 
 #endif

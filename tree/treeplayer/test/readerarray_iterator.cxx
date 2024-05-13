@@ -1,7 +1,7 @@
+#include "TInterpreter.h"
 #include "TTree.h"
 #include "TTreeReader.h"
 #include "TTreeReaderArray.h"
-#include "ROOT/RMakeUnique.hxx"
 
 #include <array>
 #include <memory>
@@ -126,4 +126,16 @@ TEST(ReaderArrayIterator, ModifyContent)
 TEST(ReaderArrayIterator, Const)
 {
    TestReaderArray<ConstTag>();
+}
+
+// ROOT-11006
+TEST(ReaderArrayIterator, ValuePrinter)
+{
+   std::vector<int> v{1, 2, 3};
+   TTree t("a", "b");
+   t.Branch("v", "v", &v);
+   t.Fill();
+   TTreeReader r(&t);
+   TTreeReaderArray<int> rv(r, "v");
+   gInterpreter->ToString("TTreeReaderArray<int>", &rv);
 }

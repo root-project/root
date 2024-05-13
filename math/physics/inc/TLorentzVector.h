@@ -24,10 +24,9 @@
 #include "TMath.h"
 #include "TVector3.h"
 #include "TRotation.h"
-
+#include "Math/Vector4D.h"
 
 class TLorentzRotation;
-
 
 class TLorentzVector : public TObject {
 
@@ -58,7 +57,7 @@ public:
    TLorentzVector(const TLorentzVector & lorentzvector);
    // Copy constructor.
 
-   virtual ~TLorentzVector(){};
+   ~TLorentzVector() override{};
    // Destructor
 
    // inline operator TVector3 () const;
@@ -181,8 +180,9 @@ public:
    // Transverse energy w.r.t. given axis.
 
    inline Double_t DeltaPhi(const TLorentzVector &) const;
-   inline Double_t DeltaR(const TLorentzVector &) const;
+   inline Double_t DeltaR(const TLorentzVector &, Bool_t useRapidity=kFALSE) const;
    inline Double_t DrEtaPhi(const TLorentzVector &) const;
+   inline Double_t DrRapidityPhi(const TLorentzVector &) const;
    inline TVector2 EtaPhiVector();
 
    inline Double_t Angle(const TVector3 & v) const;
@@ -256,9 +256,13 @@ public:
    TLorentzVector & Transform(const TLorentzRotation &);
    // Transformation with HepLorenzRotation.
 
-   virtual void        Print(Option_t *option="") const;
+   operator ROOT::Math::PxPyPzEVector() const {
+      return {Px(), Py(), Pz(), E()};
+   }
 
-   ClassDef(TLorentzVector,4) // A four vector with (-,-,-,+) metric
+   void        Print(Option_t *option="") const override;
+
+   ClassDefOverride(TLorentzVector,4) // A four vector with (-,-,-,+) metric
 };
 
 
@@ -460,14 +464,25 @@ inline Double_t TLorentzVector::DeltaPhi(const TLorentzVector & v) const {
 inline Double_t TLorentzVector::Eta() const {
    return PseudoRapidity();
 }
-inline Double_t TLorentzVector::DeltaR(const TLorentzVector & v) const {
-   Double_t deta = Eta()-v.Eta();
-   Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
-   return TMath::Sqrt( deta*deta+dphi*dphi );
+
+inline Double_t TLorentzVector::DeltaR(const TLorentzVector & v, const Bool_t useRapidity) const {
+  if(useRapidity){
+     Double_t drap = Rapidity()-v.Rapidity();
+     Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
+     return TMath::Sqrt( drap*drap+dphi*dphi );
+  } else {
+    Double_t deta = Eta()-v.Eta();
+    Double_t dphi = TVector2::Phi_mpi_pi(Phi()-v.Phi());
+    return TMath::Sqrt( deta*deta+dphi*dphi );
+  }
 }
 
 inline Double_t TLorentzVector::DrEtaPhi(const TLorentzVector & v) const{
    return DeltaR(v);
+}
+
+inline Double_t TLorentzVector::DrRapidityPhi(const TLorentzVector & v) const{
+   return DeltaR(v, kTRUE);
 }
 
 inline TVector2 TLorentzVector::EtaPhiVector() {

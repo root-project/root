@@ -319,7 +319,7 @@ extern "C" {
       GdkAtom selection;
       GdkAtom target;
       GdkAtom property;
-      guint32 requestor;
+      uintptr_t requestor;
       guint32 time;
    };
 
@@ -344,7 +344,7 @@ extern "C" {
       union {
          char b[20];
          short s[10];
-         long l[5];
+         glong l[5];
       } data;
    };
 

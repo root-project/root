@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : DataSetManager                                                        *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Singleton class for dataset management                                    *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_DataSetManager
@@ -75,14 +75,14 @@ namespace TMVA {
       // access to input data
       DataInputHandler& DataInput() { return *fDataInput; }
 
-      DataInputHandler           *fDataInput;             // source of input data
-      TList                      fDataSetInfoCollection; // all registered dataset definitions
-      MsgLogger*                 fLogger;   //! message logger
+      DataInputHandler           *fDataInput;            ///< source of input data
+      TList                      fDataSetInfoCollection; ///< all registered dataset definitions
+      MsgLogger*                 fLogger;                ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
-       
+
        ClassDef(DataSetManager,1);
-       
+
    };
 }
 

@@ -42,22 +42,20 @@ namespace {
     BreakProtection::resetCachedLinkage(ND);
     if (const CXXRecordDecl* CXXRD = dyn_cast<CXXRecordDecl>(ND))
       clearLinkageForClass(CXXRD);
-    else
-    if (ClassTemplateDecl *temp = dyn_cast<ClassTemplateDecl>(ND)) {
+    else if (ClassTemplateDecl *CTD = dyn_cast<ClassTemplateDecl>(ND)) {
       // Clear linkage for the template pattern.
-      CXXRecordDecl *record = temp->getTemplatedDecl();
+      CXXRecordDecl *record = CTD->getTemplatedDecl();
       clearLinkageForClass(record);
 
       // We need to clear linkage for specializations, too.
       for (ClassTemplateDecl::spec_iterator
-             i = temp->spec_begin(), e = temp->spec_end(); i != e; ++i)
+             i = CTD->spec_begin(), e = CTD->spec_end(); i != e; ++i)
         clearLinkage(*i);
-    } else
+    } else if (FunctionTemplateDecl *FTD= dyn_cast<FunctionTemplateDecl>(ND)) {
       // Clear cached linkage for function template decls, too.
-    if (FunctionTemplateDecl *temp = dyn_cast<FunctionTemplateDecl>(ND)) {
-      clearLinkage(temp->getTemplatedDecl());
+      clearLinkage(FTD->getTemplatedDecl());
       for (FunctionTemplateDecl::spec_iterator
-             i = temp->spec_begin(), e = temp->spec_end(); i != e; ++i)
+             i = FTD->spec_begin(), e = FTD->spec_end(); i != e; ++i)
         clearLinkage(*i);
     }
   }
@@ -114,10 +112,13 @@ namespace cling {
     CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody());
     assert(CS && "Function body not a CompoundStmt?");
     assert(utils::Analyze::IsWrapper(FD) && "FD not a Cling wrapper?");
-    // DC is the internal `__cling_N5xxx' namespace or (if decl shadowing if off), the TU
+    // DC is the internal `__cling_N5xxx' namespace or (if decl shadowing is off), the TU
     DeclContext* WrapperDC = FD->getDeclContext();
     Scope* TUScope = m_Sema->TUScope;
     llvm::SmallVector<Stmt*, 4> Stmts;
+
+    if (CS->body_empty())
+      return FD;
 
     for (CompoundStmt::body_iterator I = CS->body_begin(), EI = CS->body_end();
          I != EI; ++I) {
@@ -155,14 +156,12 @@ namespace cling {
           // In the particular context this definition is inside a function
           // already, but clang thinks it as a lambda, so we need to ignore the
           // check decl context vs lexical decl context.
-          DeclContext *NewDC = isa<TagDecl>(ND) ? m_Context->getTranslationUnitDecl()
-		                                : WrapperDC;
           if (ND->getDeclContext() == ND->getLexicalDeclContext()
               || isa<FunctionDecl>(ND))
-            ND->setLexicalDeclContext(NewDC);
+            ND->setLexicalDeclContext(WrapperDC);
           else
             assert(0 && "Not implemented: Decl with different lexical context");
-          ND->setDeclContext(NewDC);
+          ND->setDeclContext(WrapperDC);
 
           if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
             if (!ValidateCXXRecord(VD))
@@ -178,22 +177,12 @@ namespace cling {
         }
       }
     }
-    bool hasNoErrors = !CheckForClashingNames(TouchedDecls, WrapperDC, TUScope);
+    bool hasNoErrors = !CheckForClashingNames(TouchedDecls, WrapperDC);
     if (hasNoErrors) {
       for (size_t i = 0; i < TouchedDecls.size(); ++i) {
-        // We should skip the checks for annonymous decls and we should not
-        // register them in the lookup.
-        if (!TouchedDecls[i]->getDeclName())
-          continue;
-
-        Sema::ContextRAII RAII(*m_Sema, TouchedDecls[i]->getDeclContext());
-        m_Sema->PushOnScopeChains(TouchedDecls[i],
-                                  TUScope,
-                    /*AddCurContext*/!isa<UsingDirectiveDecl>(TouchedDecls[i]));
-
         // The transparent DeclContexts (eg. scopeless enum) doesn't have
         // scopes. While extracting their contents we need to update the
-        // lookup tables and telling them to pick up the new possitions
+        // lookup tables and telling them to pick up the new positions
         // in the AST.
         if (DeclContext* InnerDC = dyn_cast<DeclContext>(TouchedDecls[i])) {
           if (InnerDC->isTransparentContext()) {
@@ -207,10 +196,27 @@ namespace cling {
             }
           }
         }
+
+        // We should skip the checks for anonymous decls and we should not
+        // register them in the lookup. Their inner decls have been added above.
+        if (!TouchedDecls[i]->getDeclName())
+          continue;
+
+        Sema::ContextRAII RAII(*m_Sema, TouchedDecls[i]->getDeclContext());
+        m_Sema->PushOnScopeChains(TouchedDecls[i],
+                                  TUScope,
+                    /*AddCurContext*/!isa<UsingDirectiveDecl>(TouchedDecls[i]));
       }
     }
 
-    CS->setStmts(*m_Context, Stmts);
+    // Create a new body.
+    FPOptionsOverride FPFeatures;
+    if (CS->hasStoredFPFeatures()) {
+      FPFeatures = CS->getStoredFPFeatures();
+    }
+    auto newCS = CompoundStmt::Create(*m_Context, Stmts, FPFeatures,
+                                      CS->getLBracLoc(), CS->getRBracLoc());
+    FD->setBody(newCS);
 
     if (hasNoErrors && !TouchedDecls.empty()) {
       // Put the wrapper after its declarations. (Nice when AST dumping)
@@ -218,7 +224,7 @@ namespace cling {
       WrapperDC->addDecl(FD);
     }
 
-    return hasNoErrors ? FD : 0;
+    return hasNoErrors ? FD != nullptr : false;
   }
 
   void DeclExtractor::createUniqueName(std::string& out) {
@@ -237,58 +243,59 @@ namespace cling {
 
     std::string FunctionName = "__fd";
     createUniqueName(FunctionName);
-    IdentifierInfo& IIFD = m_Context->Idents.get(FunctionName);
+    clang::DeclarationName DeclName = &m_Context->Idents.get(FunctionName);
     SourceLocation Loc;
-    NamedDecl* ND = m_Sema->ImplicitlyDefineFunction(Loc, IIFD, TUScope);
-    if (FunctionDecl* FD = dyn_cast_or_null<FunctionDecl>(ND)) {
-      FD->setImplicit(false); // Better for debugging
+    clang::QualType FnTy =
+        m_Context->getFunctionType(m_Context->IntTy, {},
+                                   clang::FunctionProtoType::ExtProtoInfo());
+    clang::FunctionDecl* FD = clang::FunctionDecl::Create(
+        *m_Context, m_Context->getTranslationUnitDecl(), Loc, Loc, DeclName,
+        FnTy, m_Context->getTrivialTypeSourceInfo(FnTy), clang::SC_None);
 
-      // Add a return statement if it doesn't exist
-      if (!isa<ReturnStmt>(Stmts.back())) {
-        Sema::ContextRAII pushedDC(*m_Sema, FD);
-        // Generate the return statement:
-        // First a literal 0, then the return taking that literal.
-        // One bit is enough:
-        llvm::APInt ZeroInt(m_Context->getIntWidth(m_Context->IntTy), 0,
-                            /*isSigned=*/true);
-        IntegerLiteral* ZeroLit
-          = IntegerLiteral::Create(*m_Context, ZeroInt, m_Context->IntTy,
-                                   SourceLocation());
-        Stmts.push_back(m_Sema->ActOnReturnStmt(ZeroLit->getExprLoc(),
-                                                ZeroLit,
-                                                m_Sema->getCurScope()).get());
-      }
+    Sema::SynthesizedFunctionScope Scope(*m_Sema, FD);
+    FD->setImplicit(false); // Better for debugging
 
-      // Wrap Stmts into a function body.
-      llvm::ArrayRef<Stmt*> StmtsRef(Stmts.data(), Stmts.size());
-      CompoundStmt* CS = new (*m_Context)CompoundStmt(*m_Context, StmtsRef,
-                                                      Loc, Loc);
-      FD->setBody(CS);
-      Emit(FD);
-
-      // Create the VarDecl with the init
-      std::string VarName = "__vd";
-      createUniqueName(VarName);
-      IdentifierInfo& IIVD = m_Context->Idents.get(VarName);
-      VarDecl* VD = VarDecl::Create(*m_Context, TUDC, Loc, Loc, &IIVD,
-                                    FD->getReturnType(), (TypeSourceInfo*)0,
-                                    SC_None);
-      LookupResult R(*m_Sema, FD->getDeclName(), Loc, Sema::LookupMemberName);
-      R.addDecl(FD);
-      CXXScopeSpec CSS;
-      Expr* UnresolvedLookup
-        = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).get();
-      Expr* TheCall = m_Sema->ActOnCallExpr(TUScope, UnresolvedLookup, Loc,
-                                            MultiExprArg(), Loc).get();
-      assert(VD && TheCall && "Missing VD or its init!");
-      VD->setInit(TheCall);
-
-      Emit(VD); // Add it to the transaction for codegenning
-      TUDC->addHiddenDecl(VD);
-      Stmts.clear();
-      return;
+    // Add a return statement if it doesn't exist
+    if (!isa<ReturnStmt>(Stmts.back())) {
+      Sema::ContextRAII pushedDC(*m_Sema, FD);
+      // Generate the return statement:
+      // First a literal 0, then the return taking that literal.
+      // One bit is enough:
+      llvm::APInt ZeroInt(m_Context->getIntWidth(m_Context->IntTy), 0,
+                          /*isSigned=*/true);
+      IntegerLiteral* ZeroLit
+        = IntegerLiteral::Create(*m_Context, ZeroInt, m_Context->IntTy,
+                                 SourceLocation());
+      Stmts.push_back(
+          m_Sema->BuildReturnStmt(ZeroLit->getExprLoc(), ZeroLit).get());
     }
-    llvm_unreachable("Must be able to enforce init order.");
+
+    // Wrap Stmts into a function body.
+    llvm::ArrayRef<Stmt*> StmtsRef(Stmts.data(), Stmts.size());
+    CompoundStmt* CS = CompoundStmt::Create(*m_Context, StmtsRef, {}, Loc, Loc);
+    FD->setBody(CS);
+    Emit(FD);
+
+    // Create the VarDecl with the init
+    std::string VarName = "__vd";
+    createUniqueName(VarName);
+    IdentifierInfo& IIVD = m_Context->Idents.get(VarName);
+    VarDecl* VD = VarDecl::Create(*m_Context, TUDC, Loc, Loc, &IIVD,
+                                  FD->getReturnType(), (TypeSourceInfo*)0,
+                                  SC_None);
+    LookupResult R(*m_Sema, FD->getDeclName(), Loc, Sema::LookupMemberName);
+    R.addDecl(FD);
+    CXXScopeSpec CSS;
+    Expr* UnresolvedLookup
+      = m_Sema->BuildDeclarationNameExpr(CSS, R, /*ADL*/ false).get();
+    Expr* TheCall = m_Sema->ActOnCallExpr(TUScope, UnresolvedLookup, Loc,
+                                          MultiExprArg(), Loc).get();
+    assert(VD && TheCall && "Missing VD or its init!");
+    VD->setInit(TheCall);
+
+    Emit(VD); // Add it to the transaction for codegenning
+    TUDC->addHiddenDecl(VD);
+    Stmts.clear();
   }
 
   ///\brief Checks for clashing names when trying to extract a declaration.
@@ -296,13 +303,13 @@ namespace cling {
   ///\returns true if there is another declaration with the same name
   bool DeclExtractor::CheckForClashingNames(
                                   const llvm::SmallVector<NamedDecl*, 4>& Decls,
-                                            DeclContext* DC, Scope* S) {
+                                            DeclContext* DC) {
     for (size_t i = 0; i < Decls.size(); ++i) {
       NamedDecl* ND = Decls[i];
 
       if (TagDecl* TD = dyn_cast<TagDecl>(ND)) {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
-                              Sema::LookupTagName, Sema::ForRedeclaration
+                              Sema::LookupTagName, Sema::ForVisibleRedeclaration
                               );
 
         m_Sema->LookupQualifiedName(Previous, DC);
@@ -316,7 +323,7 @@ namespace cling {
       }
       else if (VarDecl* VD = dyn_cast<VarDecl>(ND)) {
         LookupResult Previous(*m_Sema, ND->getDeclName(), ND->getLocation(),
-                              Sema::LookupOrdinaryName, Sema::ForRedeclaration
+                              Sema::LookupOrdinaryName, Sema::ForVisibleRedeclaration
                               );
         m_Sema->LookupQualifiedName(Previous, DC);
         m_Sema->CheckVariableDeclaration(VD, Previous);
@@ -338,7 +345,7 @@ namespace cling {
 
     IdentifierInfo* Name = NewTD->getIdentifier();
     // If this is not a definition, it must have a name.
-    assert((Name != 0 || NewTD->isThisDeclarationADefinition()) &&
+    assert((Name != nullptr || NewTD->isThisDeclarationADefinition()) &&
            "Nameless record must be a definition!");
 
     // Figure out the underlying type if this a enum declaration. We need to do
@@ -365,7 +372,7 @@ namespace cling {
         // integral type; any cv-qualification is ignored.
 
         SourceLocation UnderlyingLoc;
-        TypeSourceInfo* TI = 0;
+        TypeSourceInfo* TI = nullptr;
         if ((TI = ED->getIntegerTypeSourceInfo()))
           UnderlyingLoc = TI->getTypeLoc().getBeginLoc();
 
@@ -538,7 +545,7 @@ namespace cling {
                                   isExplicitSpecialization)) {
           // Make sure that this wasn't declared as an enum and now used as a
           // struct or something similar.
-          SourceLocation KWLoc = NewTD->getLocStart();
+          SourceLocation KWLoc = NewTD->getBeginLoc();
           if (!m_Sema->isAcceptableTagRedeclaration(PrevTagDecl, Kind,
                                           NewTD->isThisDeclarationADefinition(),
                                                     KWLoc, Name)) {
@@ -558,7 +565,7 @@ namespace cling {
               Kind = PrevTagDecl->getTagKind();
             else {
               // Recover by making this an anonymous redefinition.
-              Name = 0;
+              Name = nullptr;
               Previous.clear();
               Invalid = true;
             }
@@ -620,7 +627,7 @@ namespace cling {
                   // If this is a redefinition, recover by making this
                   // struct be anonymous, which will make any later
                   // references get the previous definition.
-                  Name = 0;
+                  Name = nullptr;
                   Previous.clear();
                   Invalid = true;
                 }
@@ -633,7 +640,7 @@ namespace cling {
                   m_Sema->Diag(NameLoc, diag::err_nested_redefinition) << Name;
                   m_Sema->Diag(PrevTagDecl->getLocation(),
                                diag::note_previous_definition);
-                  Name = 0;
+                  Name = nullptr;
                   Previous.clear();
                   Invalid = true;
                 }
@@ -687,7 +694,7 @@ namespace cling {
           // issue an error and recover by making this tag be anonymous.
           m_Sema->Diag(NameLoc, diag::err_redefinition_different_kind) << Name;
           m_Sema->Diag(PrevDecl->getLocation(), diag::note_previous_definition);
-          Name = 0;
+          Name = nullptr;
           Invalid = true;
         }
 

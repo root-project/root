@@ -30,17 +30,23 @@ data = ROOT.RDataFrame(4).Define('x', '(float)rdfentry_')\
                          .Define('x_pow3', 'Numba::pypow(x, 3)')\
                          .AsNumpy()
 
-print('pypow({}) = {}'.format(data['x'], data['x_pow3']))
+print('pypow({}, 3) = {}'.format(data['x'], data['x_pow3']))
 
 # ROOT uses the numba Python package to create C++ functions from python ones.
 # We support as input and return types of the callable fundamental types and
 # ROOT::RVec thereof. See the following callable computing the power of the
 # elements in an array.
-@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
+@ROOT.Numba.Declare(['RVecF', 'int'], 'RVecF')
 def pypowarray(x, y):
     return x**y
 
 ROOT.gInterpreter.ProcessLine('''
-ROOT::RVec<float> x = {0, 1, 2, 3};
-cout << "pypowarray(" << x << ") =  " << Numba::pypowarray(x, 3) << endl;
+ROOT::RVecF x = {0, 1, 2, 3};
+cout << "pypowarray(" << x << ", 3) =  " << Numba::pypowarray(x, 3) << endl;
 ''')
+
+# and now with RDataFrame
+s = ROOT.RDataFrame(1).Define('x', 'ROOT::RVecF{1,2,3}')\
+                      .Define('x2', 'Numba::pypowarray(x, 2)')\
+                      .Sum('x2') # 1 + 4 + 9 == 14
+print('sum(pypowarray({ 1, 2, 3 }, 2)) = ', s.GetValue())

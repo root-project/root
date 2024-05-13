@@ -10,7 +10,6 @@
  *************************************************************************/
 
 #include "ROOT/RRawFileWin.hxx"
-#include "ROOT/RMakeUnique.hxx"
 
 #include "TError.h"
 
@@ -19,6 +18,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 
@@ -26,10 +26,7 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // Read files in 4k pages unless told otherwise
 } // anonymous namespace
 
-ROOT::Internal::RRawFileWin::RRawFileWin(std::string_view url, ROptions options)
-   : RRawFile(url, options), fFilePtr(nullptr)
-{
-}
+ROOT::Internal::RRawFileWin::RRawFileWin(std::string_view url, ROptions options) : RRawFile(url, options) {}
 
 ROOT::Internal::RRawFileWin::~RRawFileWin()
 {
@@ -61,7 +58,7 @@ void ROOT::Internal::RRawFileWin::OpenImpl()
    // Prevent double buffering
    int res = setvbuf(fFilePtr, nullptr, _IONBF, 0);
    R__ASSERT(res == 0);
-   if (fOptions.fBlockSize < 0)
+   if (fOptions.fBlockSize == ROptions::kUseDefaultBlockSize)
       fOptions.fBlockSize = kDefaultBlockSize;
 }
 

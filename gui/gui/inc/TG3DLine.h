@@ -13,46 +13,35 @@
 #define ROOT_TG3DLine
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGHorizontal3DLine and TGVertical3DLine                              //
-//                                                                      //
-// A horizontal 3D line is a line that typically separates a toolbar    //
-// from the menubar.                                                    //
-// A vertical 3D line is a line that can be used to separate groups of  //
-// widgets.                                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGHorizontal3DLine : public TGFrame {
 
 public:
-   TGHorizontal3DLine(const TGWindow *p = 0, UInt_t w = 4, UInt_t h = 2,
+   TGHorizontal3DLine(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 2,
                       UInt_t options = kChildFrame,
                       Pixel_t back = GetDefaultFrameBackground());
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGHorizontal3DLine,0)  //A horizontal 3D separator line
+   ClassDefOverride(TGHorizontal3DLine,0)  //A horizontal 3D separator line
 };
 
 
 class TGVertical3DLine : public TGFrame {
 
 public:
-   TGVertical3DLine(const TGWindow *p = 0, UInt_t w = 2, UInt_t h = 4,
+   TGVertical3DLine(const TGWindow *p = nullptr, UInt_t w = 2, UInt_t h = 4,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
 
-   virtual void DrawBorder();
+   void DrawBorder() override;
 
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGVertical3DLine,0)  //A vertical 3D separator line
+   ClassDefOverride(TGVertical3DLine,0)  //A vertical 3D separator line
 };
 
 #endif

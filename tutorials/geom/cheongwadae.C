@@ -32,7 +32,7 @@ void cheongwadae()
    //creat volume
    TGeoVolume *top = geom->MakeBox("top",Air,300,300,300);
    geom->SetTopVolume(top);
-   geom->SetTopVisible(0);
+   geom->SetTopVisible(false);
    // If you want to see the boundary, please input the number, 1 instead of 0.
    // Like this, geom->SetTopVisible(1);
 
@@ -345,7 +345,7 @@ TGeoVolume *mBlock;
    top->AddNodeOverlap(mBlock,1,new TGeoTranslation(0,-24,100));
 
    geom->CloseGeometry();
-   top->SetVisibility(0);
+   top->SetVisibility(false);
 
    top->Draw("ogl");
 }

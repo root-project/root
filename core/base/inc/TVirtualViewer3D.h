@@ -54,26 +54,26 @@ public:
    virtual void   EndScene() = 0;
 
    // Simple object addition - buffer represents a unique single positioned object
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual Int_t  AddObject(const TBuffer3D &buffer, Bool_t *addChildren = nullptr) = 0;
 
    // Complex object addition - for adding physical objects which have common logical
    // shapes. In this case buffer describes template shape (aside from kCore).
-   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual Int_t  AddObject(UInt_t physicalID, const TBuffer3D &buffer, Bool_t *addChildren = nullptr) = 0;
 
-   virtual Bool_t OpenComposite(const TBuffer3D & buffer, Bool_t * addChildren = 0) = 0;
+   virtual Bool_t OpenComposite(const TBuffer3D &buffer, Bool_t *addChildren = nullptr) = 0;
    virtual void   CloseComposite() = 0;
    virtual void   AddCompositeOp(UInt_t operation) = 0;
 
-   virtual TObject *SelectObject(Int_t, Int_t){return 0;}
+   virtual TObject *SelectObject(Int_t, Int_t) { return nullptr; }
    virtual void   DrawViewer(){}
 
    virtual void PrintObjects(){}
    virtual void ResetCameras(){}
    virtual void ResetCamerasAfterNextUpdate(){}
 
-   static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = 0, Option_t *type = "");
+   static  TVirtualViewer3D *Viewer3D(TVirtualPad *pad = nullptr, Option_t *type = "");
 
-   ClassDef(TVirtualViewer3D,0) // Abstract interface to 3D viewers
+   ClassDefOverride(TVirtualViewer3D,0) // Abstract interface to 3D viewers
 };
 
 #endif

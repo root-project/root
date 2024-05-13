@@ -101,9 +101,9 @@ void AtlasExample()
       data[icut]->Draw("P");
    }
 
-   auto t = new TLatex; t->SetNDC();
-   t->DrawLatex(0.3,  0.85, "#sqrt{s}= 14 TeV");
-   t->DrawLatex(0.57, 0.85, "|#eta_{jet}|<0.5");
+   TLatex t; t.SetNDC();
+   t.DrawLatex(0.3,  0.85, "#sqrt{s}= 14 TeV");
+   t.DrawLatex(0.57, 0.85, "|#eta_{jet}|<0.5");
 
    auto l = new TLegend(0.45,0.65,0.8,0.8,"","NDC");
    l->SetBorderSize(0.);
@@ -126,7 +126,7 @@ TGraphErrors* GetGraph(Int_t ir, Int_t ifs,Int_t icut, Int_t ipdf)
    const double muf[] = {1.0,0.25,4.0};
 
    TFile::SetCacheFileDir(".");
-   TFile *file = TFile::Open("http://root.cern.ch/files/AtlasGraphs.root", "CACHEREAD");
+   TFile *file = TFile::Open("http://root.cern/files/AtlasGraphs.root", "CACHEREAD");
 
    char gname[100];
    char tname[100];

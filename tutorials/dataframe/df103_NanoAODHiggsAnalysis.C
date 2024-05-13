@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -draw
-/// \brief An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
+/// An example of complex analysis with RDataFrame: reconstructing the Higgs boson.
 ///
 /// This tutorial is a simplified but yet complex example of an analysis reconstructing
 /// the Higgs boson decaying to two Z bosons from events with four leptons. The data
@@ -35,6 +35,7 @@
 /// \author Stefan Wunsch (KIT, CERN)
 
 #include "ROOT/RDataFrame.hxx"
+#include "ROOT/RDFHelpers.hxx"
 #include "ROOT/RVec.hxx"
 #include "ROOT/RDF/RInterface.hxx"
 #include "TCanvas.h"
@@ -49,8 +50,7 @@
 
 using namespace ROOT::VecOps;
 using RNode = ROOT::RDF::RNode;
-using rvec_f = const RVec<float> &;
-using rvec_i = const RVec<int> &;
+using cRVecF = const ROOT::RVecF &;
 
 const auto z_mass = 91.2;
 
@@ -91,7 +91,7 @@ RNode selection_2el2mu(RNode df)
 {
    auto df_ge2el2mu = df.Filter("nElectron>=2 && nMuon>=2", "At least two electrons and two muons");
    auto df_eta = df_ge2el2mu.Filter("All(abs(Electron_eta)<2.5) && All(abs(Muon_eta)<2.4)", "Eta cuts");
-   auto pt_cuts = [](rvec_f mu_pt, rvec_f el_pt) {
+   auto pt_cuts = [](cRVecF mu_pt, cRVecF el_pt) {
       auto mu_pt_sorted = Reverse(Sort(mu_pt));
       if (mu_pt_sorted[0] > 20 && mu_pt_sorted[1] > 10) {
          return true;
@@ -103,7 +103,7 @@ RNode selection_2el2mu(RNode df)
       return false;
    };
    auto df_pt = df_eta.Filter(pt_cuts, {"Muon_pt", "Electron_pt"}, "Pt cuts");
-   auto dr_cuts = [](rvec_f mu_eta, rvec_f mu_phi, rvec_f el_eta, rvec_f el_phi) {
+   auto dr_cuts = [](cRVecF mu_eta, cRVecF mu_phi, cRVecF el_eta, cRVecF el_phi) {
       auto mu_dr = DeltaR(mu_eta[0], mu_eta[1], mu_phi[0], mu_phi[1]);
       auto el_dr = DeltaR(el_eta[0], el_eta[1], el_phi[0], el_phi[1]);
       if (mu_dr < 0.02 || el_dr < 0.02) {
@@ -131,7 +131,7 @@ RNode selection_2el2mu(RNode df)
 }
 
 // Reconstruct two Z candidates from four leptons of the same kind
-RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass, rvec_i charge)
+RVec<RVec<size_t>> reco_zz_to_4l(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF mass, const ROOT::RVecI & charge)
 {
    RVec<RVec<size_t>> idx(2);
    idx[0].reserve(2); idx[1].reserve(2);
@@ -169,9 +169,9 @@ RVec<RVec<size_t>> reco_zz_to_4l(rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass,
 }
 
 // Compute Z masses from four leptons of the same kind and sort ascending in distance to Z mass
-RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass)
+ROOT::RVecF compute_z_masses_4l(const RVec<RVec<size_t>> &idx, cRVecF pt, cRVecF eta, cRVecF phi, cRVecF mass)
 {
-   RVec<float> z_masses(2);
+   ROOT::RVecF z_masses(2);
    for (size_t i = 0; i < 2; i++) {
       const auto i1 = idx[i][0]; const auto i2 = idx[i][1];
       ROOT::Math::PtEtaPhiMVector p1(pt[i1], eta[i1], phi[i1], mass[i1]);
@@ -186,7 +186,7 @@ RVec<float> compute_z_masses_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f
 }
 
 // Compute mass of Higgs from four leptons of the same kind
-float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, rvec_f pt, rvec_f eta, rvec_f phi, rvec_f mass)
+float compute_higgs_mass_4l(const RVec<RVec<size_t>> &idx, cRVecF pt, cRVecF eta, cRVecF phi, cRVecF mass)
 {
    const auto i1 = idx[0][0]; const auto i2 = idx[0][1];
    const auto i3 = idx[1][0]; const auto i4 = idx[1][1];
@@ -216,7 +216,7 @@ RNode reco_higgs_to_4mu(RNode df)
       df_base.Define("Z_idx", reco_zz_to_4l, {"Muon_pt", "Muon_eta", "Muon_phi", "Muon_mass", "Muon_charge"});
 
    // Cut on distance between muons building Z systems
-   auto filter_z_dr = [](const RVec<RVec<size_t>> &idx, rvec_f eta, rvec_f phi) {
+   auto filter_z_dr = [](const RVec<RVec<size_t>> &idx, cRVecF eta, cRVecF phi) {
       for (size_t i = 0; i < 2; i++) {
          const auto i1 = idx[i][0];
          const auto i2 = idx[i][1];
@@ -255,7 +255,7 @@ RNode reco_higgs_to_4el(RNode df)
                                   {"Electron_pt", "Electron_eta", "Electron_phi", "Electron_mass", "Electron_charge"});
 
    // Cut on distance between Electrons building Z systems
-   auto filter_z_dr = [](const RVec<RVec<size_t>> &idx, rvec_f eta, rvec_f phi) {
+   auto filter_z_dr = [](const RVec<RVec<size_t>> &idx, cRVecF eta, cRVecF phi) {
       for (size_t i = 0; i < 2; i++) {
          const auto i1 = idx[i][0];
          const auto i2 = idx[i][1];
@@ -284,8 +284,8 @@ RNode reco_higgs_to_4el(RNode df)
 }
 
 // Compute mass of two Z candidates from two electrons and two muons and sort ascending in distance to Z mass
-RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt,
-                                  rvec_f mu_eta, rvec_f mu_phi, rvec_f mu_mass)
+ROOT::RVecF compute_z_masses_2el2mu(cRVecF el_pt, cRVecF el_eta, cRVecF el_phi, cRVecF el_mass, cRVecF mu_pt,
+                                    cRVecF mu_eta, cRVecF mu_phi, cRVecF mu_mass)
 {
    ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
    ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
@@ -293,7 +293,7 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
    ROOT::Math::PtEtaPhiMVector p4(el_pt[1], el_eta[1], el_phi[1], el_mass[1]);
    auto mu_z = (p1 + p2).M();
    auto el_z = (p3 + p4).M();
-   RVec<float> z_masses(2);
+   ROOT::RVecF z_masses(2);
    if (std::abs(mu_z - z_mass) < std::abs(el_z - z_mass)) {
       z_masses[0] = mu_z;
       z_masses[1] = el_z;
@@ -305,8 +305,8 @@ RVec<float> compute_z_masses_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, 
 }
 
 // Compute Higgs mass from two electrons and two muons
-float compute_higgs_mass_2el2mu(rvec_f el_pt, rvec_f el_eta, rvec_f el_phi, rvec_f el_mass, rvec_f mu_pt, rvec_f mu_eta,
-                                rvec_f mu_phi, rvec_f mu_mass)
+float compute_higgs_mass_2el2mu(cRVecF el_pt, cRVecF el_eta, cRVecF el_phi, cRVecF el_mass, cRVecF mu_pt, cRVecF mu_eta,
+                                cRVecF mu_phi, cRVecF mu_mass)
 {
    ROOT::Math::PtEtaPhiMVector p1(mu_pt[0], mu_eta[0], mu_phi[0], mu_mass[0]);
    ROOT::Math::PtEtaPhiMVector p2(mu_pt[1], mu_eta[1], mu_phi[1], mu_mass[1]);
@@ -345,7 +345,7 @@ void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &f
    // Canvas and general style options
    gStyle->SetOptStat(0);
    gStyle->SetTextFont(42);
-   auto c = new TCanvas("c", "", 800, 700);
+   auto c = new TCanvas("", "", 800, 700);
    c->SetLeftMargin(0.15);
 
    // Get signal and background histograms and stack them to show Higgs signal
@@ -389,7 +389,7 @@ void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &f
    legend.AddEntry(&h_data, "Data", "PE1");
    legend.AddEntry(&h_bkg, "ZZ", "f");
    legend.AddEntry(&h_cmb, "m_{H} = 125 GeV", "f");
-   legend.Draw();
+   legend.DrawClone();
 
    // Add header
    TLatex cms_label;
@@ -438,7 +438,7 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    const auto nevt_SMHiggsToZZTo4L = 299973.0; // H->4l: Number of simulated events
    const auto nbins = 36;                      // Number of bins for the invariant mass spectrum
    auto df_h_sig_4mu = df_sig_4mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto scale_ZZTo4l = 1.386;     // ZZ->4mu: Scale factor for ZZ to four leptons
@@ -446,49 +446,57 @@ void df103_NanoAODHiggsAnalysis(const bool run_fast = true)
    const auto nevt_ZZTo4mu = 1499064.0; // ZZ->4mu: Number of simulated events
    auto df_bkg_4mu_reco = reco_higgs_to_4mu(df_bkg_4mu);
    auto df_h_bkg_4mu = df_bkg_4mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo4mu * scale_ZZTo4l / nevt_ZZTo4mu; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo4mu * scale_ZZTo4l / nevt_ZZTo4mu; })
          .Histo1D({"h_bkg_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_4mu_reco = reco_higgs_to_4mu(df_data_doublemu);
    auto df_h_data_4mu = df_data_4mu_reco
-         .Define("weight", []() { return 1.0; }, {})
+         .Define("weight", [] { return 1.0; })
          .Histo1D({"h_data_4mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    // Reconstruct Higgs to 4 electrons
    auto df_sig_4el_reco = reco_higgs_to_4el(df_sig_4l);
    auto df_h_sig_4el = df_sig_4el_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto xsec_ZZTo4el = xsec_ZZTo4mu; // ZZ->4el: Standard Model cross-section
    const auto nevt_ZZTo4el = 1499093.0;    // ZZ->4el: Number of simulated events
    auto df_bkg_4el_reco = reco_higgs_to_4el(df_bkg_4el);
    auto df_h_bkg_4el = df_bkg_4el_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo4el * scale_ZZTo4l / nevt_ZZTo4el; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo4el * scale_ZZTo4l / nevt_ZZTo4el; })
          .Histo1D({"h_bkg_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_4el_reco = reco_higgs_to_4el(df_data_doubleel);
-   auto df_h_data_4el = df_data_4el_reco.Define("weight", []() { return 1.0; }, {})
+   auto df_h_data_4el = df_data_4el_reco.Define("weight", [] { return 1.0; })
                            .Histo1D({"h_data_4el", "", nbins, 70, 180}, "H_mass", "weight");
 
    // Reconstruct Higgs to 2 electrons and 2 muons
    auto df_sig_2el2mu_reco = reco_higgs_to_2el2mu(df_sig_4l);
    auto df_h_sig_2el2mu = df_sig_2el2mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; }, {})
+         .Define("weight", [&] { return luminosity * xsec_SMHiggsToZZTo4L / nevt_SMHiggsToZZTo4L; })
          .Histo1D({"h_sig_2el2mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    const auto xsec_ZZTo2el2mu = 0.18;      // ZZ->2el2mu: Standard Model cross-section
    const auto nevt_ZZTo2el2mu = 1497445.0; // ZZ->2el2mu: Number of simulated events
    auto df_bkg_2el2mu_reco = reco_higgs_to_2el2mu(df_bkg_2el2mu);
    auto df_h_bkg_2el2mu = df_bkg_2el2mu_reco
-         .Define("weight", [&]() { return luminosity * xsec_ZZTo2el2mu * scale_ZZTo4l / nevt_ZZTo2el2mu; }, {})
+         .Define("weight", [&] { return luminosity * xsec_ZZTo2el2mu * scale_ZZTo4l / nevt_ZZTo2el2mu; })
          .Histo1D({"h_bkg_2el2mu", "", nbins, 70, 180}, "H_mass", "weight");
 
    auto df_data_2el2mu_reco = reco_higgs_to_2el2mu(df_data_doublemu);
-   auto df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", []() { return 1.0; }, {})
+   auto df_h_data_2el2mu = df_data_2el2mu_reco.Define("weight", [] { return 1.0; })
                               .Histo1D({"h_data_2el2mu_doublemu", "", nbins, 70, 180}, "H_mass", "weight");
 
-   // Produce histograms for different channels and make plots
+   // RunGraphs allows to run the event loops of the separate RDataFrame graphs
+   // concurrently. This results in an improved usage of the available resources
+   // if each separate RDataFrame can not utilize all available resources, e.g.,
+   // because not enough data is available.
+   ROOT::RDF::RunGraphs({df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu,
+                         df_h_sig_4el, df_h_bkg_4el, df_h_data_4el,
+                         df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu});
+
+   // Make plots
    plot(df_h_sig_4mu, df_h_bkg_4mu, df_h_data_4mu, "m_{4#mu} (GeV)", "higgs_4mu.pdf");
    plot(df_h_sig_4el, df_h_bkg_4el, df_h_data_4el, "m_{4e} (GeV)", "higgs_4el.pdf");
    plot(df_h_sig_2el2mu, df_h_bkg_2el2mu, df_h_data_2el2mu, "m_{2e2#mu} (GeV)", "higgs_2el2mu.pdf");

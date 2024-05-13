@@ -56,7 +56,7 @@ ClassImp(TBufferSQL2);
 /// Default constructor, should not be used
 
 TBufferSQL2::TBufferSQL2()
-   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
      fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
@@ -68,7 +68,7 @@ TBufferSQL2::TBufferSQL2()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
-   : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
      fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
@@ -136,7 +136,7 @@ void *TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void 
    if (!fSQL)
       return nullptr;
 
-   fCurrentData = 0;
+   fCurrentData = nullptr;
    fErrorFlag = 0;
 
    fReadVersionBuffer = -1;
@@ -219,7 +219,7 @@ TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinf
             Info("SqlObjectData", "Before request to %s", sqlinfo->GetClassTableName());
          TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
          if (gDebug > 4)
-            Info("SqlObjectData", "After request res = 0x%lx", (Long_t)alldata);
+            Info("SqlObjectData", "After request res = 0x%zx", (size_t)alldata);
          if (!alldata) {
             Error("SqlObjectData", "Cannot get data from table %s", sqlinfo->GetClassTableName());
             return nullptr;
@@ -327,7 +327,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    Bool_t findptr = kFALSE;
 
    const char *refid = fCurrentData->GetValue();
-   if ((refid == 0) || (strlen(refid) == 0)) {
+   if (!refid || (strlen(refid) == 0)) {
       Error("SqlReadObject", "Invalid object reference value");
       fErrorFlag = 1;
       return obj;
@@ -850,7 +850,7 @@ UInt_t TBufferSQL2::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 
 void *TBufferSQL2::ReadObjectAny(const TClass *)
 {
-   return SqlReadObject(0);
+   return SqlReadObject(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -885,7 +885,7 @@ R__ALWAYS_INLINE void TBufferSQL2::SqlReadArrayContent(T *arr, Int_t arrsize, Bo
    if (fCurrentData->IsBlobData()) {
       while (indx < arrsize) {
          const char *name = fCurrentData->GetBlobPrefixName();
-         if (strstr(name, sqlio::IndexSepar) == 0) {
+         if (!strstr(name, sqlio::IndexSepar)) {
             sscanf(name, "[%d", &first);
             last = first;
          } else {
@@ -1374,8 +1374,15 @@ Int_t TBufferSQL2::SqlReadArraySize()
 }
 
 template <typename T>
-R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize)
+R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Long64_t arrsize, Bool_t withsize)
 {
+   constexpr Int_t dataWidth = 1; // at least 1
+   const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
+   if (arrsize < 0 || arrsize > maxElements)
+   {
+      Fatal("SqlWriteArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
+      return; // In case the user re-routes the error handler to not die when Fatal is called)
+   }
    if (!withsize && (arrsize <= 0))
       return;
    PushStack()->SetArray(withsize ? arrsize : -1);
@@ -1504,7 +1511,7 @@ void TBufferSQL2::WriteArray(const Double_t *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Bool_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Bool_t *b, Int_t n)
+void TBufferSQL2::WriteFastArray(const Bool_t *b, Long64_t n)
 {
    SqlWriteArray(b, n);
 }
@@ -1513,14 +1520,14 @@ void TBufferSQL2::WriteFastArray(const Bool_t *b, Int_t n)
 /// Write array of Char_t to buffer
 /// it will be reproduced as CharStar node with string as attribute
 
-void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
+void TBufferSQL2::WriteFastArray(const Char_t *c, Long64_t n)
 {
    Bool_t usedefault = (n == 0);
 
    const Char_t *ccc = c;
    // check if no zeros in the array
    if (!usedefault)
-      for (int i = 0; i < n; i++)
+      for (Long64_t i = 0; i < n; i++)
          if (*ccc++ == 0) {
             usedefault = kTRUE;
             break;
@@ -1540,7 +1547,7 @@ void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UChar_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
+void TBufferSQL2::WriteFastArray(const UChar_t *c, Long64_t n)
 {
    SqlWriteArray(c, n);
 }
@@ -1548,7 +1555,7 @@ void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Short_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
+void TBufferSQL2::WriteFastArray(const Short_t *h, Long64_t n)
 {
    SqlWriteArray(h, n);
 }
@@ -1556,7 +1563,7 @@ void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UShort_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
+void TBufferSQL2::WriteFastArray(const UShort_t *h, Long64_t n)
 {
    SqlWriteArray(h, n);
 }
@@ -1564,7 +1571,7 @@ void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Int_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
+void TBufferSQL2::WriteFastArray(const Int_t *i, Long64_t n)
 {
    SqlWriteArray(i, n);
 }
@@ -1572,7 +1579,7 @@ void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of UInt_t to buffer
 
-void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
+void TBufferSQL2::WriteFastArray(const UInt_t *i, Long64_t n)
 {
    SqlWriteArray(i, n);
 }
@@ -1580,7 +1587,7 @@ void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Long_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const Long_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1588,7 +1595,7 @@ void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of ULong_t to buffer
 
-void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const ULong_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1596,7 +1603,7 @@ void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Long64_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const Long64_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1604,7 +1611,7 @@ void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of ULong64_t to buffer
 
-void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
+void TBufferSQL2::WriteFastArray(const ULong64_t *l, Long64_t n)
 {
    SqlWriteArray(l, n);
 }
@@ -1612,7 +1619,7 @@ void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Float_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
+void TBufferSQL2::WriteFastArray(const Float_t *f, Long64_t n)
 {
    SqlWriteArray(f, n);
 }
@@ -1620,7 +1627,7 @@ void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Double_t to buffer
 
-void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
+void TBufferSQL2::WriteFastArray(const Double_t *d, Long64_t n)
 {
    SqlWriteArray(d, n);
 }
@@ -1629,7 +1636,7 @@ void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
 /// Write array of n characters into the I/O buffer.
 /// Used only by TLeafC, just dummy implementation here
 
-void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
+void TBufferSQL2::WriteFastArrayString(const Char_t *c, Long64_t n)
 {
    SqlWriteArray(c, n);
 }
@@ -1640,7 +1647,7 @@ void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
 /// buf.StreamObject(obj, cl). In that case it is easy to understand where
 /// object data is started and finished
 
-void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
+void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Long64_t n, TMemberStreamer *streamer)
 {
    if (streamer) {
       StreamObjectExtra(start, streamer, cl, 0);
@@ -1653,7 +1660,7 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
       n = 1;
    int size = cl->Size();
 
-   for (Int_t j = 0; j < n; j++, obj += size)
+   for (Long64_t j = 0; j < n; j++, obj += size)
       StreamObject(obj, cl);
 }
 
@@ -1663,7 +1670,7 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 /// buf.StreamObject(obj, cl). In that case it is easy to understand where
 /// object data is started and finished
 
-Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
+Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Long64_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
 
    Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp
@@ -1689,7 +1696,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 
    if (!isPreAlloc) {
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
          if (!strInfo && !start[j] && !oldStyle)
             ForceWriteInfo(((TClass *)cl)->GetStreamerInfo(), kFALSE);
@@ -1703,7 +1710,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
    } else {
       // case //-> in comment
 
-      for (Int_t j = 0; j < n; j++) {
+      for (Long64_t j = 0; j < n; j++) {
          if (!start[j])
             start[j] = ((TClass *)cl)->New();
          StreamObject(start[j], cl);
@@ -1733,7 +1740,7 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
    if (gDebug > 1)
       Info("StreamObject", "class  %s", (cl ? cl->GetName() : "none"));
    if (IsReading())
-      SqlReadObject(obj, 0, nullptr, 0, onFileClass);
+      SqlReadObject(obj, nullptr, nullptr, 0, onFileClass);
    else
       SqlWriteObject(obj, cl, kTRUE);
 }
@@ -1752,7 +1759,7 @@ void TBufferSQL2::StreamObjectExtra(void *obj, TMemberStreamer *streamer, const 
    //   (*streamer)(*this, obj, n);
 
    if (IsReading())
-      SqlReadObject(obj, 0, streamer, n, onFileClass);
+      SqlReadObject(obj, nullptr, streamer, n, onFileClass);
    else
       SqlWriteObject(obj, cl, kTRUE, streamer, n);
 }
@@ -1868,7 +1875,7 @@ void TBufferSQL2::ReadCharP(Char_t *c)
 {
    const char *buf = SqlReadCharStarValue();
    if (buf)
-      strcpy(c, buf);
+      strcpy(c, buf);  // NOLINT unfortunately, we do not know size of target buffer
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1890,7 +1897,7 @@ void TBufferSQL2::ReadTString(TString &s)
          else
             nbig = nwh;
 
-         char *data = new char[nbig];
+         char *data = new char[nbig+1];
          data[nbig] = 0;
          ReadFastArray(data, nbig);
          s = data;
@@ -2434,18 +2441,18 @@ void TBufferSQL2::SqlReadBasic(ULong64_t &value)
 const char *TBufferSQL2::SqlReadValue(const char *tname)
 {
    if (fErrorFlag > 0)
-      return 0;
+      return nullptr;
 
    if (!fCurrentData) {
       Error("SqlReadValue", "No object data to read from");
       fErrorFlag = 1;
-      return 0;
+      return nullptr;
    }
 
    if (!fIgnoreVerification)
       if (!fCurrentData->VerifyDataType(tname)) {
          fErrorFlag = 1;
-         return 0;
+         return nullptr;
       }
 
    fReadBuffer = fCurrentData->GetValue();

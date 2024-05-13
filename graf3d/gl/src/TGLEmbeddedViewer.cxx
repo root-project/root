@@ -34,7 +34,7 @@ ClassImp(TGLEmbeddedViewer);
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
                                      Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
-   fFrame(0),
+   fFrame(nullptr),
    fBorder(border)
 {
    Init(parent);
@@ -48,7 +48,7 @@ TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
 TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
                                      TGedEditor *ged, Int_t border) :
    TGLViewer(pad, 0, 0, 400, 300),
-   fFrame(0),
+   fFrame(nullptr),
    fBorder(border)
 {
    fGedEditor = ged;
@@ -61,7 +61,7 @@ TGLEmbeddedViewer::TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad,
 TGLEmbeddedViewer::~TGLEmbeddedViewer()
 {
    delete fFrame;
-   fGLWidget = 0;
+   fGLWidget = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,10 +83,10 @@ void TGLEmbeddedViewer::Init(const TGWindow *parent)
 
 void TGLEmbeddedViewer::CreateFrames()
 {
-   fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
+   fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, nullptr, 10, 10);
 
    // Direct events from the TGWindow directly to the base viewer
-   fEventHandler = new TGLEventHandler(0, this);
+   fEventHandler = new TGLEventHandler(nullptr, this);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
@@ -104,7 +104,7 @@ void TGLEmbeddedViewer::CreateGLWidget()
       return;
    }
 
-   fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, 0, 10, 10);
+   fGLWidget = TGLWidget::Create(fFrame, kTRUE, kTRUE, nullptr, 10, 10);
    fGLWidget->SetEventHandler(fEventHandler);
 
    fFrame->AddFrame(fGLWidget, new TGLayoutHints(kLHintsExpandX | kLHintsExpandY,
@@ -120,15 +120,15 @@ void TGLEmbeddedViewer::CreateGLWidget()
 
 void TGLEmbeddedViewer::DestroyGLWidget()
 {
-   if (fGLWidget == 0) {
+   if (fGLWidget == nullptr) {
       Error("DestroyGLWidget", "Widget does not exist.");
       return;
    }
 
    fGLWidget->UnmapWindow();
-   fGLWidget->SetEventHandler(0);
+   fGLWidget->SetEventHandler(nullptr);
 
    fFrame->RemoveFrame(fGLWidget);
    fGLWidget->DeleteWindow();
-   fGLWidget = 0;
+   fGLWidget = nullptr;
 }

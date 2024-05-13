@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGGC and TGGCPool                                                    //
-//                                                                      //
-// Encapsulate a graphics context used in the low level graphics.       //
-// TGGCPool provides a pool of graphics contexts.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGGC
+    \ingroup guiwidgets
+
+Encapsulate a graphics context used in the low level graphics.
+TGGCPool provides a pool of graphics contexts.
+
+*/
+
 
 #include "TGClient.h"
 #include "TGGC.h"

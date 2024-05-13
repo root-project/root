@@ -35,3 +35,22 @@ void some_empty() {
 template void some_empty<int>();
 
 } // namespace T_WithRValue
+
+
+// The following is hidden from the Cling interpreter, but available to the
+// linker; it allows for testing whether a function return is picked up from
+// the compiled instantation or from the interpreter.
+
+namespace FailedTypeDeducer {
+
+template<class T>
+class A {
+public:
+    T result() { return T{42}; }
+};
+
+template class A<int>;
+
+template class B<int>;
+
+} // namespace FailedTypeDeducer

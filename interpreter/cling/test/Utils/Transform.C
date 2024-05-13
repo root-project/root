@@ -6,7 +6,7 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
-// RUN: cat %s | %built_cling -fno-rtti | FileCheck %s
+// RUN: cat %s | %cling -fno-rtti | FileCheck %s
 
 // The test verifies the expected behavior in cling::utils::Transform class,
 // which is supposed to provide different transformation of AST nodes and types.
@@ -215,6 +215,7 @@ Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str()
 clang::PrintingPolicy Policy(Ctx.getPrintingPolicy());
 Policy.SuppressTagKeyword = true; // Never get the class or struct keyword
 Policy.SuppressScope = true;      // Force the scope to be coming from a clang::ElaboratedType.
+Policy.SplitTemplateClosers = true; // Print a<b<c> >' rather than 'a<b<c>>'.
 std::string name;
 Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStringInternal(name,Policy);
 name.c_str()
@@ -428,7 +429,7 @@ std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsStr
 if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(decl)) {
   clang::RecordDecl::field_iterator field_iter = rdecl->field_begin();
   // For some reason we can not call field_end:
-  // cling: root/interpreter/llvm/src/tools/clang/lib/CodeGen/CGCall.cpp:1839: void checkArgMatches(llvm::Value*, unsigned int&, llvm::FunctionType*): Assertion `Elt->getType() == FTy->getParamType(ArgNo)' failed.
+  // cling: root/interpreter/llvm-project/clang/lib/CodeGen/CGCall.cpp:1839: void checkArgMatches(llvm::Value*, unsigned int&, llvm::FunctionType*): Assertion `Elt->getType() == FTy->getParamType(ArgNo)' failed.
   // so just 'guess' the size
   int i = 0;
   while( i < 2 )  {
@@ -474,7 +475,7 @@ if (const clang::RecordDecl *rdecl = llvm::dyn_cast_or_null<clang::RecordDecl>(d
   std::cout << Transform::GetPartiallyDesugaredType(Ctx, QT, transConfig).getAsString().c_str() << std::endl;
   clang::RecordDecl::field_iterator field_iter = rdecl->field_begin();
   // For some reason we can not call field_end:
-  // cling: root/interpreter/llvm/src/tools/clang/lib/CodeGen/CGCall.cpp:1839: void checkArgMatches(llvm::Value*, unsigned int&, llvm::FunctionType*): Assertion `Elt->getType() == FTy->getParamType(ArgNo)' failed.
+  // cling: root/interpreter/llvm-project/clang/lib/CodeGen/CGCall.cpp:1839: void checkArgMatches(llvm::Value*, unsigned int&, llvm::FunctionType*): Assertion `Elt->getType() == FTy->getParamType(ArgNo)' failed.
   // so just 'guess' the size
   int i = 0;
   while( i < 2 )  {

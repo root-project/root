@@ -8,6 +8,11 @@
 # CMakeLists.txt file for building ROOT graf3d/gviz3d package
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
   HEADERS
     TStructNode.h
@@ -28,4 +33,5 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gviz3d
     Ged
     Geom
     RGL
+   ${EXTRA_DICT_OPTS}
 )

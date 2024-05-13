@@ -35,7 +35,7 @@
 #include "TFitResultPtr.h"
 #include "TFitResult.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cmath>
 #include <memory>
 #include <limits>
@@ -77,7 +77,7 @@ namespace HFit {
    void StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::DataRange & range, bool, bool, const char *goption);
 
    template <class FitObject>
-   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, bool usePL );
+   double ComputeChi2(const FitObject & h1, TF1 &f1, bool useRange, ROOT::Fit::EChisquareType type );
 
 
 
@@ -178,6 +178,11 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    if (fitOption.NoErrX) opt.fCoordErrors = false;  // do not use coordinate errors when requested
    if (fitOption.W1 ) opt.fErrors1 = true;
    if (fitOption.W1 > 1) opt.fUseEmpty = true; // use empty bins with weight=1
+   if (fitOption.PChi2 == 1) {
+      opt.fErrors1 = true; // we are not using errors in chi2, it is like setting = 1
+   } else if (fitOption.PChi2 == 2) {
+      opt.fErrors1 = false;  // we need the errors in weighted likelihood fit
+   }
 
    if (fitOption.BinVolume) {
       opt.fBinVolume = true; // scale by bin volume
@@ -347,8 +352,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
 
    // check if can use option user
-   //typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
-   TVirtualFitter::FCNFunc_t  userFcn = 0;
+   TVirtualFitter::FCNFunc_t  userFcn = nullptr;
+   // option user is enabled only when running in serial mode
    if (fitOption.User && TVirtualFitter::GetFitter() ) {
       userFcn = (TVirtualFitter::GetFitter())->GetFCN();
       (TVirtualFitter::GetFitter())->SetUserFunc(f1);
@@ -402,6 +407,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       // if using Fitter class must be done here
       // use old style Minuit for TMinuit and if no corrections have been applied
       if (!fitOption.Quiet) {
+         R__LOCKGUARD(gROOTMutex);
          if (fitter->GetMinimizer() && fitConfig.MinimizerType() == "Minuit" &&
              !fitConfig.NormalizeErrors() && fitOption.Like <= 1) {
             fitter->GetMinimizer()->PrintResults(); // use old style Minuit
@@ -413,10 +419,9 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          }
       }
 
-
-      // store result in the backward compatible VirtualFitter
-      // in case multi-thread is not enabled
-      if (!gGlobalMutex) {
+      // store result in the backward compatible TVirtualFitter
+      {
+         R__LOCKGUARD(gROOTMutex);
          TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
          TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
          bcfitter->SetFitOption(fitOption);
@@ -438,10 +443,6 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          //N.B=  this might create a memory leak if user does not delete the fitter they create
          TVirtualFitter::SetFitter( bcfitter );
       }
-
-      // use old-style for printing the results
-      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
       if (fitOption.StoreResult)
       {
@@ -522,7 +523,7 @@ void HFit::GetDrawingRange(TMultiGraph * mg,  ROOT::Fit::DataRange & range) {
       double xmin = std::numeric_limits<double>::infinity();
       double xmax = -std::numeric_limits<double>::infinity();
       TIter next(mg->GetListOfGraphs() );
-      TGraph * g = 0;
+      TGraph * g = nullptr;
       while (  (g = (TGraph*) next() ) ) {
          double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
          g->ComputeRange(x1,y1,x2,y2);
@@ -588,7 +589,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
 #endif
 
    TList * funcList = h1->GetListOfFunctions();
-   if (funcList == 0){
+   if (funcList == nullptr){
       Error("StoreAndDrawFitFunction","Function list has not been created - cannot store the fitted function");
       return;
    }
@@ -614,9 +615,9 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       }
    }
 
-   TF1 *fnew1 = 0;
-   TF2 *fnew2 = 0;
-   TF3 *fnew3 = 0;
+   TF1 *fnew1 = nullptr;
+   TF2 *fnew2 = nullptr;
+   TF3 *fnew3 = nullptr;
 
    // copy TF1 using TClass to avoid slicing in case of derived classes
    if (ndim < 2) {
@@ -658,7 +659,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
          funcList->Add(fnew3);
       }
       else {
-         fnew2 = dynamic_cast<TF3*>(f1);
+         fnew3 = dynamic_cast<TF3*>(f1);
          R__ASSERT(fnew3);
       }
       fnew3->SetRange(xmin,ymin,zmin,xmax,ymax,zmax);
@@ -672,7 +673,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
    if (drawFunction && ndim < 3 && h1->InheritsFrom(TH1::Class() ) ) {
       // no need to re-draw the histogram if the histogram is already in the pad
       // in that case the function will be just drawn (if option N is not set)
-      if (!gPad || (gPad && gPad->GetListOfPrimitives()->FindObject(h1) == NULL ) )
+      if (!gPad || (gPad && gPad->GetListOfPrimitives()->FindObject(h1) == nullptr ) )
          h1->Draw(goption);
    }
    if (gPad) gPad->Modified(); // this is not in TH1 code (needed ??)
@@ -685,17 +686,17 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    //   - Decode list of options into fitOption (used by both TGraph and TH1)
    //  works for both histograms and graph depending on the enum FitObjectType defined in HFit
    if(ROOT::IsImplicitMTEnabled()) {
-      fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
+      fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
    }
 
-   if (option == 0) return;
+   if (option == nullptr) return;
    if (!option[0]) return;
 
    TString opt = option;
    opt.ToUpper();
 
    // parse firt the specific options
-   if (type == kHistogram) {
+   if (type == EFitObjectType::kHistogram) {
 
       if (opt.Contains("WIDTH")) {
          fitOption.BinVolume = 1;  // scale content by the bin width
@@ -715,21 +716,44 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kSequential;
          opt.ReplaceAll("SERIAL","");
       }
 
       if (opt.Contains("MULTITHREAD")) {
-         fitOption.ExecPolicy = ROOT::Fit::ExecutionPolicy::kMultithread;
+         fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
          opt.ReplaceAll("MULTITHREAD","");
       }
 
       if (opt.Contains("I"))  fitOption.Integral= 1;   // integral of function in the bin (no sense for graph)
+      if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins or points have weight =1 (for chi2 fit)
       if (opt.Contains("WW")) fitOption.W1      = 2; //all bins have weight=1, even empty bins
-   }
+      if (opt.Contains("L")) fitOption.Like    = 1;
+      if (opt.Contains("X")) fitOption.Chi2    = 1;
+      if (opt.Contains("P")) {
+         fitOption.PChi2    = 1;
+         if (fitOption.W1) {  // option contains also w is a weighted Pearson chi2 fit
+            fitOption.PChi2 = 2;
+            fitOption.W1 = 0;   // does not make sense to have errors=1 in Pearson chi2 fits
+         }
+      }
 
+      // specific likelihood fit options
+      if (fitOption.Like == 1) {
+          //if (opt.Contains("LL")) fitOption.Like    = 2;
+         if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
+         if (opt.Contains("MULTI")) {
+            if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial
+            else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
+            opt.ReplaceAll("MULTI","");
+         }
+         // give precedence for likelihood options
+         if (fitOption.Chi2 || fitOption.PChi2 )
+            Warning("Fit","Cannot use P or X option in combination of L. Ignore the chi2 option and perform a likelihood fit");
+      }
+   }
    // specific Graph options (need to be parsed before)
-   else if (type == kGraph) {
+   else if (type == EFitObjectType::kGraph) {
       opt.ReplaceAll("ROB", "H");
       opt.ReplaceAll("EX0", "T");
 
@@ -750,40 +774,21 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
 
       if (opt.Contains("H")) { fitOption.Robust  = 1;   fitOption.hRobust = h; }
       if (opt.Contains("T")) fitOption.NoErrX   = 1;  // no error in X
-
+      if (opt.Contains("W")) fitOption.W1     = 1; // ignorer all point errors when fitting
    }
 
-   if (opt.Contains("U")) fitOption.User    = 1;
+   if (opt.Contains("U")) {
+      // user option can work only when not running in multiple threads
+      if (gGlobalMutex || !ROOT::IsImplicitMTEnabled()) {
+         fitOption.User    = 1;
+      } else {
+         Warning("FitOptionsMake","Cannot use User (U) fit option when running in multi-thread mode. The option is ignored");
+         fitOption.User = 0;
+      }
+   }
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
-   if (opt.Contains("L")) fitOption.Like    = 1;
-   if (opt.Contains("X")) fitOption.Chi2    = 1;
-   if (opt.Contains("P")) fitOption.PChi2    = 1;
 
-
-   // likelihood fit options
-   if (fitOption.Like == 1) {
-      //if (opt.Contains("LL")) fitOption.Like    = 2;
-      if (opt.Contains("W")){ fitOption.Like    = 2;  fitOption.W1=0;}//  (weighted likelihood)
-      if (opt.Contains("MULTI")) {
-         if (fitOption.Like == 2) fitOption.Like = 6; // weighted multinomial
-         else fitOption.Like    = 4; // multinomial likelihood fit instead of Poisson
-         opt.ReplaceAll("MULTI","");
-      }
-      // in case of histogram give precedence for likelihood options
-      if (type == kHistogram) {
-         if (fitOption.Chi2 == 1 || fitOption.PChi2 == 1)
-            Warning("Fit","Cannot use P or X option in combination of L. Ignore the chi2 option and perform a likelihood fit");
-      }
-
-   } else {
-      if (opt.Contains("W")) fitOption.W1     = 1; // all non-empty bins have weight =1 (for chi2 fit)
-   }
-
-   if (fitOption.PChi2 && fitOption.W1) {
-      Warning("FitOptionsMake", "Ignore option W or WW when used together with option P (Pearson chi2)");
-      fitOption.W1 = 0; // with Pearson chi2 W option is ignored
-   }
 
    if (opt.Contains("E")) fitOption.Errors  = 1;
    if (opt.Contains("R")) fitOption.Range   = 1;
@@ -927,29 +932,25 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
 
    }
 
-   // store result in the backward compatible VirtualFitter
-   // in case not running in a multi-thread enabled mode
-   if (gGlobalMutex) {
+   // store fitting result in the backward compatible TVirtualFitter object
+   // lock in case running in a multi-thread enabled mode
+   {
+      R__LOCKGUARD(gROOTMutex);
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
-      // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
       TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
       // cannot use anymore now fitdata (given away ownership)
-      fitdata = 0;
+      fitdata = nullptr;
       bcfitter->SetFitOption(fitOption);
-      //bcfitter->SetObjectFit(fTree);
       bcfitter->SetUserFunc(fitfunc);
-
+      // delete previous fitter and replace with the new one
       if (lastFitter) delete lastFitter;
       TVirtualFitter::SetFitter( bcfitter );
 
-      // use old-style for printing the results
-      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
-
+      // print results
+      if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
+      else if (!fitOption.Quiet) fitResult.Print(std::cout);
    }
-   // print results
-   if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
-   else if (!fitOption.Quiet) fitResult.Print(std::cout);
+
 
    if (fitOption.StoreResult)
    {
@@ -1022,20 +1023,24 @@ TFitResultPtr ROOT::Fit::FitObject(THnBase * s1, TF1 *f1 , Foption_t & foption ,
 
 // function to compute the simple chi2 for graphs and histograms
 
-double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, bool usePL) {
-   return HFit::ComputeChi2(h1,f1,useRange, usePL);
+
+double ROOT::Fit::Chisquare(const TH1 & h1,  TF1 & f1, bool useRange, ROOT::Fit::EChisquareType type) {
+   return HFit::ComputeChi2(h1,f1,useRange, type);
 }
 
 double ROOT::Fit::Chisquare(const TGraph & g, TF1 & f1, bool useRange) {
-   return HFit::ComputeChi2(g,f1, useRange, false);
+   return HFit::ComputeChi2(g,f1, useRange, ROOT::Fit::EChisquareType::kNeyman);
 }
 
 template<class FitObject>
-double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool usePL ) {
+double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, ROOT::Fit::EChisquareType type ) {
 
    // implement using the fitting classes
    ROOT::Fit::DataOptions opt;
-   if (usePL) opt.fUseEmpty=true;
+   opt.fUseEmpty = (type != ROOT::Fit::EChisquareType::kNeyman);  // use empty bin when not using Neyman chisquare (observed error)
+   opt.fExpErrors = (type == ROOT::Fit::EChisquareType::kPearson);
+   opt.fErrors1 = (type == ROOT::Fit::EChisquareType::kPearson);  // not using observed errors in Pearson chi2
+
    ROOT::Fit::DataRange range;
    // get range of function
    if (useRange) HFit::GetFunctionRange(f1,range);
@@ -1047,7 +1052,7 @@ double HFit::ComputeChi2(const FitObject & obj,  TF1  & f1, bool useRange, bool 
       return -1;
    }
    ROOT::Math::WrappedMultiTF1  wf1(f1);
-   if (usePL) {
+   if (type == ROOT::Fit::EChisquareType::kPLikeRatio) {
       // use the poisson log-lokelihood (Baker-Cousins chi2)
       ROOT::Fit::PoissonLLFunction nll(data, wf1);
       return 2.* nll( f1.GetParameters() ) ;

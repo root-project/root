@@ -76,7 +76,7 @@ protected:
 
 public:
    REvePolygonSetProjected(const std::string &n = "REvePolygonSetProjected", const std::string &t = "");
-   virtual ~REvePolygonSetProjected();
+   ~REvePolygonSetProjected() override;
 
    void ComputeBBox() override;
    // TClass* ProjectedClass() same as for REveShape

@@ -42,14 +42,14 @@ namespace ROOT {
 class TBinomialEfficiencyFitter: public TObject {
 
 protected:
-   TH1             *fDenominator;    //Denominator histogram
-   TH1             *fNumerator;      //Numerator histogram
-   TF1             *fFunction;       //Function to fit
-   Double_t         fEpsilon;        //Precision required for function integration (option "I")
-   Bool_t           fFitDone;        //Set to kTRUE when the fit has been done
-   Bool_t           fAverage;        //True if the fit function must be averaged over the bin
-   Bool_t           fRange;          //True if the fit range must be taken from the function range
-   ROOT::Fit::Fitter *fFitter;       //pointer to the real fitter
+   TH1             *fDenominator;    ///< Denominator histogram
+   TH1             *fNumerator;      ///< Numerator histogram
+   TF1             *fFunction;       ///< Function to fit
+   Double_t         fEpsilon;        ///< Precision required for function integration (option "I")
+   Bool_t           fFitDone;        ///< Set to kTRUE when the fit has been done
+   Bool_t           fAverage;        ///< True if the fit function must be averaged over the bin
+   Bool_t           fRange;          ///< True if the fit range must be taken from the function range
+   ROOT::Fit::Fitter *fFitter;       ///< pointer to the real fitter
 
 private:
 
@@ -58,7 +58,7 @@ private:
 public:
    TBinomialEfficiencyFitter();
    TBinomialEfficiencyFitter(const TH1 *numerator, const TH1 *denominator);
-   virtual ~TBinomialEfficiencyFitter();
+   ~TBinomialEfficiencyFitter() override;
 
    void   Set(const TH1 *numerator, const TH1 *denominator);
    void   SetPrecision(Double_t epsilon);
@@ -70,7 +70,7 @@ public:
       return f;
    }
 
-   ClassDef(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms
+   ClassDefOverride(TBinomialEfficiencyFitter, 1) //Binomial Fitter for the division of two histograms
 
 
 };

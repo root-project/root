@@ -20,14 +20,16 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
-#include "TFriendElement.h"
-#include "ROOT/RMakeUnique.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TThreadExecutor.hxx"
+#include "ROOT/InternalTreeUtils.hxx" // RNoCleanupNotifier
+#include "ROOT/RFriendInfo.hxx"
 
 #include <functional>
-#include <utility> // std::pair
+#include <memory>
 #include <vector>
+#include <limits>
+#include <RtypesCore.h> // Long64_t
 
 /** \class TTreeView
     \brief A helper class that encapsulates a file and a tree.
@@ -47,37 +49,30 @@ the threaded object.
 */
 
 namespace ROOT {
+
 namespace Internal {
-/// Names, aliases, and file names of a TTree's or TChain's friends
-using NameAlias = std::pair<std::string, std::string>;
-struct FriendInfo {
-   /// Pairs of names and aliases of friend trees/chains
-   std::vector<Internal::NameAlias> fFriendNames;
-   /// Names of the files where each friend is stored. fFriendFileNames[i] is the list of files for friend with
-   /// name fFriendNames[i]
-   std::vector<std::vector<std::string>> fFriendFileNames;
-};
 
 class TTreeView {
-private:
+   ROOT::Internal::TreeUtils::RNoCleanupNotifier fNoCleanupNotifier;
+
    std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain, if present
    std::unique_ptr<TEntryList> fEntryList;        ///< TEntryList for fChain, if present
    // NOTE: fFriends and fEntryList MUST come before fChain to be deleted after it, because neither friend trees nor
    // entrylists are deregistered from the main tree at destruction (ROOT-9283 tracks the issue for friends).
-   std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
+   std::unique_ptr<TChain> fChain; ///< Chain on which to operate
 
    void MakeChain(const std::vector<std::string> &treeName, const std::vector<std::string> &fileNames,
-                  const FriendInfo &friendInfo, const std::vector<Long64_t> &nEntries,
-                  const std::vector<std::vector<Long64_t>> &friendEntries);
+                  const ROOT::TreeUtils::RFriendInfo &friendInfo, const std::vector<Long64_t> &nEntries);
 
 public:
    TTreeView() = default;
    // no-op, we don't want to copy the local TChains
    TTreeView(const TTreeView &) {}
    std::unique_ptr<TTreeReader> GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::string> &treeName,
-                                              const std::vector<std::string> &fileNames, const FriendInfo &friendInfo,
-                                              const TEntryList &entryList, const std::vector<Long64_t> &nEntries,
-                                              const std::vector<std::vector<Long64_t>> &friendEntries);
+                                              const std::vector<std::string> &fileNames,
+                                              const ROOT::TreeUtils::RFriendInfo &friendInfo,
+                                              const TEntryList &entryList, const std::vector<Long64_t> &nEntries);
+   void Reset();
 };
 } // End of namespace Internal
 
@@ -87,27 +82,35 @@ private:
    const std::vector<std::string> fTreeNames; ///< TTree names (always same size and ordering as fFileNames)
    /// User-defined selection of entry numbers to be processed, empty if none was provided
    TEntryList fEntryList;
-   const Internal::FriendInfo fFriendInfo;
+   ROOT::TreeUtils::RFriendInfo fFriendInfo;
    ROOT::TThreadExecutor fPool; ///<! Thread pool for processing.
 
    /// Thread-local TreeViews
    // Must be declared after fPool, for IMT to be initialized first!
    ROOT::TThreadedObject<ROOT::Internal::TTreeView> fTreeView{TNumSlots{ROOT::GetThreadPoolSize()}};
 
-   Internal::FriendInfo GetFriendInfo(TTree &tree);
    std::vector<std::string> FindTreeNames();
-   static unsigned int fgMaxTasksPerFilePerWorker;
+   static unsigned int fgTasksPerWorkerHint;
+
+   std::pair<Long64_t, Long64_t> fGlobalRange{0, std::numeric_limits<Long64_t>::max()};
 
 public:
-   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u);
+   TTreeProcessorMT(std::string_view filename, std::string_view treename = "", UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
    TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
-                    UInt_t nThreads = 0u);
+                    UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
+   TTreeProcessorMT(std::initializer_list<std::string_view> filenames, std::string_view treename = "", UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()}):
+                    TTreeProcessorMT(std::vector<std::string_view>(filenames), treename, nThreads, globalRange) {}
    TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u);
-   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u);
+   TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
 
    void Process(std::function<void(TTreeReader &)> func);
-   static void SetMaxTasksPerFilePerWorker(unsigned int m);
-   static unsigned int GetMaxTasksPerFilePerWorker();
+
+   static void SetTasksPerWorkerHint(unsigned int m);
+   static unsigned int GetTasksPerWorkerHint();
 };
 
 } // End of namespace ROOT

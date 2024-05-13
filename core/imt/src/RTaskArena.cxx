@@ -1,11 +1,19 @@
+// Require TBB without captured exceptions
+#define TBB_USE_CAPTURED_EXCEPTION 0
+
 #include "ROOT/RTaskArena.hxx"
+#include "ROpaqueTaskArena.hxx"
 #include "TError.h"
 #include "TROOT.h"
+#include "TSystem.h"
 #include "TThread.h"
 #include <fstream>
 #include <mutex>
+#include <string>
 #include <thread>
 #include "tbb/task_arena.h"
+#define TBB_PREVIEW_GLOBAL_CONTROL 1 // required for TBB versions preceding 2019_U4
+#include "tbb/global_control.h"
 
 //////////////////////////////////////////////////////////////////////////
 ///
@@ -37,8 +45,24 @@
 namespace ROOT {
 namespace Internal {
 
-int LogicalCPUBandwithControl()
+// Honor environment variable `ROOT_MAX_THREADS` if set.
+// Also honor cgroup quotas if set: see https://github.com/oneapi-src/oneTBB/issues/190
+int LogicalCPUBandwidthControl()
 {
+   if (const char *envMaxThreads = gSystem->Getenv("ROOT_MAX_THREADS")) {
+      char *str_end = nullptr;
+      long maxThreads = std::strtol(envMaxThreads, &str_end, 0 /*auto-detect base*/);
+      if (str_end == envMaxThreads && maxThreads == 0) {
+         Error("ROOT::Internal::LogicalCPUBandwidthControl()",
+               "cannot parse number in environment variable ROOT_MAX_THREADS; ignoring.");
+      } else if (maxThreads < 1) {
+         Error("ROOT::Internal::LogicalCPUBandwidthControl()",
+               "environment variable ROOT_MAX_THREADS must be >= 1, but set to %ld; ignoring.",
+               maxThreads);
+      } else
+         return maxThreads;
+   }
+
 #ifdef R__LINUX
    // Check for CFS bandwith control
    std::ifstream f("/sys/fs/cgroup/cpuacct/cpu.cfs_quota_us"); // quota file
@@ -66,14 +90,18 @@ int LogicalCPUBandwithControl()
 /// * If no BC in place and maxConcurrency<1, defaults to the default tbb number of threads,
 /// which is CPU affinity aware
 ////////////////////////////////////////////////////////////////////////////////
-RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new tbb::task_arena{})
+RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new ROpaqueTaskArena{})
 {
    const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
    maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
-   const unsigned bcCpus = LogicalCPUBandwithControl();
+   const unsigned bcCpus = LogicalCPUBandwidthControl();
    if (maxConcurrency > bcCpus) {
       Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly", bcCpus);
       maxConcurrency = bcCpus;
+   }
+   if (maxConcurrency > tbb::global_control::active_value(tbb::global_control::max_allowed_parallelism)) {
+      Warning("RTaskArenaWrapper", "tbb::global_control is active, limiting the number of parallel workers"
+                                   "from this task arena available for execution.");
    }
    fTBBArena->initialize(maxConcurrency);
    fNWorkers = maxConcurrency;
@@ -94,7 +122,7 @@ unsigned RTaskArenaWrapper::TaskArenaSize()
 ////////////////////////////////////////////////////////////////////////////////
 /// Provides access to the wrapped tbb::task_arena.
 ////////////////////////////////////////////////////////////////////////////////
-tbb::task_arena &RTaskArenaWrapper::Access()
+ROOT::ROpaqueTaskArena &RTaskArenaWrapper::Access()
 {
    return *fTBBArena;
 }

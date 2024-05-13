@@ -120,8 +120,17 @@ void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    //Check some conditions first.
    if (fDirectDraw) {
-      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap)
+      if (!fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap) {
+         QuartzView * const view = (QuartzView *)fPimpl->GetWindow(fSelectedDrawable).fContentView;
+         if (!view) {
+            ::Warning("DrawLine", "Invalid view/window for XOR-mode");
+            return;
+         }
+
+         if (![view.fQuartzWindow findXorWindow])
+            [view.fQuartzWindow addXorWindow];
          fPimpl->fX11CommandBuffer.AddDrawBoxXor(fSelectedDrawable, x1, y1, x2, y2);
+      }
       return;
    }
 
@@ -254,7 +263,8 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
              return;
          }
 
-         [view.fQuartzWindow addCrosshairWindow];
+         if (![view.fQuartzWindow findXorWindow])
+            [view.fQuartzWindow addXorWindow];
          fPimpl->fX11CommandBuffer.AddDrawLineXor(fSelectedDrawable, x1, y1, x2, y2);
       }
 

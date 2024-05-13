@@ -1,7 +1,7 @@
 from cppyy import gbl as gbl_namespace
 
 
-def _NumbaDeclareDecorator(input_types, return_type, name=None):
+def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
     '''
     Decorator for making Python callables accessible in C++ by just-in-time compilation
     with numba and cling
@@ -34,6 +34,9 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         raise Exception('Failed to import cffi')
     import re, sys
 
+    if hasattr(nb, 'version_info') and nb.version_info >= (0, 54):
+        import cppyy.numba_ext
+
     # Normalize input types by stripping ROOT and VecOps namespaces from input types
     def normalize_typename(t):
         '''
@@ -42,7 +45,7 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         return t.replace('ROOT::', '').replace('VecOps::', '')
 
     input_types = [normalize_typename(t) for t in input_types]
-    return_type = normalize_typename(return_type)
+    return_type = normalize_typename(return_type) if return_type is not None else None
 
     # Helper functions to determine types
     def get_inner_type(t):
@@ -50,6 +53,24 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         Get inner typename of a templated C++ typename
         '''
         try:
+            if '<' not in t:
+                # therefore, type must use a shorthand alias
+                typemap = {
+                        'F': 'float',
+                        'D': 'double',
+                        'I': 'int',
+                        'U': 'unsigned int',
+                        'L': 'long',
+                        'UL': 'unsigned long',
+                        'B': 'bool'
+                        }
+                rvec_start = t.find('RVec') # discard a possible const modifier before "RVec"
+                try:
+                    return typemap[t[rvec_start+4:]] # alias type characters come after "RVec"
+                except KeyError:
+                    raise Exception(
+                        'Unrecognized type {}. Valid shorthand aliases of RVec are {}'
+                        .format(t, list('RVec' + i for i in typemap.keys())))
             g = re.match('(.*)<(.*)>', t).groups(0)
             return g[1]
         except:
@@ -112,11 +133,34 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
                 nb_input_types.append(get_numba_type(get_inner_type(t))[:])
             else:
                 nb_input_types.append(get_numba_type(t))
-        if 'RVec' in return_type:
-            nb_return_type = get_numba_type(get_inner_type(return_type))[:]
+        if return_type is not None:
+            if 'RVec' in return_type:
+                nb_return_type = get_numba_type(get_inner_type(return_type))[:]
+            else:
+                nb_return_type = get_numba_type(return_type)
         else:
-            nb_return_type = get_numba_type(return_type)
+            nb_return_type = None
         return nb_return_type, nb_input_types
+
+    def add_rvec_input_type_ref(input_types_ref, const_mod, rvect):
+        '''
+        Construct the type of an RVec input parameter for its use in the C++
+        wrapper function signature.
+        '''
+        tref = '{}ROOT::{}&'.format(const_mod, rvect)
+        input_types_ref.append(tref)
+
+    def add_rvec_func_ptr_input_type(func_ptr_input_types, const_mod, rvect):
+        '''
+        Construct the type of an RVec input parameter for its use in the cast
+        of the function pointer of the jitted Python wrapper.
+        '''
+        innert = get_inner_type(rvect)
+        if innert == 'bool':
+            # Special treatment for bool: In numpy, bools have 1 byte
+            innert = 'char'
+
+        func_ptr_input_types += ['{}{}*, int'.format(const_mod, innert)]
 
     def inner(func, input_types=input_types, return_type=return_type, name=name):
         '''
@@ -126,11 +170,35 @@ def _NumbaDeclareDecorator(input_types, return_type, name=None):
         # Jit the given Python callable with numba
         nb_return_type, nb_input_types = get_numba_signature(input_types, return_type)
         try:
-            nbjit = nb.jit(nb_return_type(*nb_input_types), nopython=True, inline='always')(func)
+            if nb_return_type is not None:
+                nbjit = nb.jit(nb_return_type(*nb_input_types), nopython=True, inline='always')(func)
+            else:
+                nbjit = nb.jit(tuple(nb_input_types), nopython=True, inline='always')(func)
+                nb_return_type = nbjit.nopython_signatures[-1].return_type
         except:
             raise Exception('Failed to jit Python callable {} with numba.jit'.format(func))
         func.numba_func = nbjit
+        # return_type = "int"
+        if return_type is None:
+            type_map = {
+                nb.types.boolean: 'bool',
+                nb.types.uint8: 'unsigned int',
+                nb.types.uint16: 'unsigned int',
+                nb.types.uint32: 'unsigned int',
+                nb.types.uint64: 'unsigned long',
+                nb.types.char: 'int',
+                nb.types.int8: 'int',
+                nb.types.int16: 'int',
+                nb.types.int32: 'int',
+                nb.types.int64: 'long',
+                nb.types.float32: 'float',
+                nb.types.float64: 'double',
+            }
 
+            if nb_return_type in type_map:
+                return_type = type_map[nb_return_type]
+            elif "array" in nb.typeof(nb_return_type).name:
+                return_type = "RVec<" + type_map[nb_return_type.dtype] + ">"
         # Create Python wrapper with C++ friendly signature
 
         # Define signature
@@ -195,10 +263,9 @@ def pywrapper({SIGNATURE}):
         if 'RVec' in return_type:
             glob['dtype_r'] = get_numba_type(get_inner_type(return_type))
 
-        if sys.version_info[0] >= 3:
-            exec(pywrappercode, glob, locals()) in {}
-        else:
-            exec(pywrappercode) in glob, locals()
+        # Execute the pywrapper code and generate the wrapper function
+        # which calls the jitted C function
+        exec(pywrappercode, glob, locals()) in {}
 
         if not 'pywrapper' in locals():
             raise Exception('Failed to create Python wrapper function:\n{}'.format(pywrappercode))
@@ -221,22 +288,25 @@ def pywrapper({SIGNATURE}):
 
         # Build C++ wrapper for jitting with cling
 
-        # Define input signature
-        input_types_ref = ['ROOT::{}&'.format(t) if 'RVec' in t else t for t in input_types]
-        input_signature = ', '.join('{} x_{}'.format(t, i) for i, t in enumerate(input_types_ref))
-
-        # Define function pointer types
+        # Define:
+        # - Input signature
+        # - Function pointer types
+        input_types_ref = []
         func_ptr_input_types = []
         for t in input_types:
-            if 'RVec' in t:
-                innert = get_inner_type(t)
-                if innert == 'bool':
-                    # Special treatment for bool: In numpy, bools have 1 byte
-                    func_ptr_input_types += ['char*, int']
-                else:
-                    func_ptr_input_types += ['{}*, int'.format(innert)]
+            m = re.match(r'\s*(const\s+)?(RVec\w+|RVec<[\w\s]+>)', t)
+            if m:
+                const_mod = '' if m.group(1) is None else 'const '
+                rvect = m.group(2)
+
+                add_rvec_input_type_ref(input_types_ref, const_mod, rvect)
+                add_rvec_func_ptr_input_type(func_ptr_input_types, const_mod, rvect)
             else:
-                func_ptr_input_types += [t]
+                input_types_ref.append(t)
+                func_ptr_input_types.append(t)
+
+        input_signature = ', '.join('{} x_{}'.format(t, i) for i, t in enumerate(input_types_ref))
+
         if 'RVec' in return_type:
             # See C++ wrapper code for the reason using these types
             innert = get_inner_type(return_type)

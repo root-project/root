@@ -22,12 +22,6 @@
 // in case we compile C++ code with std-17 and cuda with lower standard
 // use experimental string_view, otherwise keep as is
 #include "RConfigure.h"
-#ifdef R__HAS_STD_STRING_VIEW
-#ifndef R__CUDA_HAS_STD_STRING_VIEW
-#undef R__HAS_STD_STRING_VIEW
-#define R__HAS_STD_EXPERIMENTAL_STRING_VIEW
-#endif
-#endif
 
 #include "cuda.h"
 #include "cuda_runtime.h"
@@ -151,7 +145,7 @@ public:
     * accumulator. */
    inline static void ResetDeviceReturn(AFloat value = 0.0);
    /** Transfer the value in the device return buffer to the host. This
-    *  tranfer is synchronous */
+    *  transfer is synchronous */
    inline static AFloat GetDeviceReturn();
    /** Return device pointer to the device return buffer */
    inline static AFloat *        GetDeviceReturnPointer() {return fDeviceReturn;}

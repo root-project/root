@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief A typical search for a new particle by studying an invariant mass distribution
+/// A typical search for a new particle by studying an invariant mass distribution
 ///
 /// The macro creates a simple signal model and two background models,
 /// which are added to a RooWorkspace.
@@ -27,7 +27,6 @@
 #include "TCanvas.h"
 #include "RooChebychev.h"
 #include "RooAbsPdf.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "RooAbsArg.h"
@@ -163,7 +162,7 @@ void AddData(RooWorkspace *wks)
    RooAbsPdf *model = wks->pdf("model");
    RooRealVar *invMass = wks->var("invMass");
 
-   RooDataSet *data = model->generate(*invMass, nEvents);
+   std::unique_ptr<RooDataSet> data{model->generate(*invMass, nEvents)};
 
    wks->import(*data, Rename("data"));
 }

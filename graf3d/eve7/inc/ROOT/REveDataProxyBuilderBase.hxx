@@ -14,7 +14,7 @@
 
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveCompound.hxx>
-#include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveDataCollection.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -38,11 +38,11 @@ public:
    // ---------- const member functions ---------------------
 
    const REveViewContext&    Context()    const;
-   const REveDataCollection* Collection() const { return m_collection;  }
+   REveDataCollection* Collection() const { return m_collection;  }
 
    // ---------- constructor/destructor  ---------------------
 
-   REveDataProxyBuilderBase(const std::string &type);
+   REveDataProxyBuilderBase();
    virtual ~REveDataProxyBuilderBase() {}
 
    virtual void SetCollection(REveDataCollection*);
@@ -50,22 +50,23 @@ public:
 
    virtual void CollectionBeingDestroyed(const REveDataCollection*);
 
-   void Build();
+   virtual void Build();
    // virtual void Build(REveElement* product);
 
-   REveElement* CreateProduct(std::string viewType, const REveViewContext*);
+   virtual REveElement* CreateProduct(const std::string& viewType, const REveViewContext*);
    //  void removePerViewProduct(const REveViewContext* vc);
 
+   void FillImpliedSelected(REveElement::Set_t& impSet, const std::set<int>&);
    void ModelChanges(const REveDataCollection::Ids_t&);
    void CollectionChanged(const REveDataCollection*);
 
-   void SetupElement(REveElement* el, bool color = true) const;
-   void SetupAddElement(REveElement* el, REveElement* parent,  bool set_color = true) const;
+   virtual void ScaleChanged();
+
+   void SetupElement(REveElement* el, bool color = true);
+   void SetupAddElement(REveElement* el, REveElement* parent,  bool set_color = true);
 
    bool GetHaveAWindow() const { return m_haveWindow; }
    void SetHaveAWindow(bool);
-
-   std::string Type() const { return m_type; }
 
    // const member functions
    virtual bool HaveSingleProduct() const { return true; }
@@ -73,29 +74,27 @@ public:
 protected:
    // Override this if visibility changes can cause (re)-creation of proxies.
    // Returns true if new proxies were created.
-   virtual bool VisibilityModelChanges(int idx, REveElement*, const REveViewContext*);
+   virtual bool VisibilityModelChanges(int idx, REveElement*, const std::string& viewType, const REveViewContext*);
 
-   virtual void Build(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
-   virtual void BuildViewType(const REveDataCollection* iItem, REveElement* product, std::string viewType, const REveViewContext*);
+   virtual void BuildProduct(const REveDataCollection* iItem, REveElement* product, const REveViewContext*);
+   virtual void BuildProductViewType(const REveDataCollection* iItem, REveElement* product, const std::string& viewType, const REveViewContext*);
 
-   virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*);
+   virtual void ModelChanges(const REveDataCollection::Ids_t&, Product*) = 0;
+   virtual void FillImpliedSelected( REveElement::Set_t& /*impSet*/, const std::set<int>&, Product*) {};
    virtual void LocalModelChanges(int idx, REveElement* el, const REveViewContext* ctx);
 
-   // Utility
-   REveCompound* CreateCompound(bool set_color=true, bool propagate_color_to_all_children=false) const;
+   virtual void ScaleProduct(REveElement*, const std::string&) {};
+
    virtual void Clean();
    virtual void CleanLocal();
 
    std::vector<Product*> m_products;
 
 private:
-   std::string              m_type;
-   const REveDataCollection *m_collection{nullptr};
+   REveDataCollection *m_collection{nullptr};
 
-   float                 m_layer;
-   // REveDataInteractionList*  m_interactionList;
-   bool                  m_haveWindow;
-   bool                  m_modelsChanged;
+   bool                  m_haveWindow{false};
+   bool                  m_modelsChanged{false};
 };
 
 } // namespace Experimental

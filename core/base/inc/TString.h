@@ -26,7 +26,7 @@
 #include "Rtypes.h"
 
 #include "TMathBase.h"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/TypeTraits.hxx"
 #include "snprintf.h"
 
@@ -35,6 +35,9 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#if (__cplusplus >= 202002L)
+#  include <compare>
+#endif
 
 class TRegexp;
 class TPRegexp;
@@ -166,6 +169,14 @@ operator+(T f, const TString &s);
 
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
+#if __cplusplus >= 202002L
+friend std::strong_ordering operator<=>(const TString &s1, const TString &s2) {
+   const int cmp = s1.CompareTo(s2);
+   if (cmp == 0) return std::strong_ordering::equal;
+   if (cmp < 0) return std::strong_ordering::less;
+   return std::strong_ordering::greater;
+}
+#endif
 
 private:
 #ifdef R__BYTESWAP
@@ -210,14 +221,12 @@ private:
    };
 
 protected:
-#ifndef __CINT__
    Rep_t          fRep;           //! String data
-#endif
 
    // Special concatenation constructor
    TString(const char *a1, Ssiz_t n1, const char *a2, Ssiz_t n2);
    void           AssertElement(Ssiz_t nc) const; // Index in range
-   void           Clobber(Ssiz_t nc);             // Remove old contents
+   Ssiz_t         Clobber(Ssiz_t nc);             // Remove old contents
    void           InitChar(char c);               // Initialize from char
 
    enum { kAlignment = 16 };
@@ -266,7 +275,8 @@ private:
 public:
    enum EStripType   { kLeading = 0x1, kTrailing = 0x2, kBoth = 0x3 };
    enum ECaseCompare { kExact, kIgnoreCase };
-   static const Ssiz_t kNPOS = ::kNPOS;
+   static constexpr Ssiz_t kNPOS = ::kNPOS;
+   using size_type = Ssiz_t;
 
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
@@ -298,15 +308,12 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
-#if (__cplusplus >= 201700L) && (!defined(__clang_major__) || __clang_major__ > 5)
+#if !defined(_MSC_VER) && (!defined(__clang_major__) || __clang_major__ > 5)
    // Clang 5.0 support for explicit conversion is still inadequate even in c++17 mode.
    // (It leads to extraneous ambiguous overload errors)
-   explicit operator std::string() const { return std::string(GetPointer(),Length()); }
-   explicit operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
-   operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
-#else
-   operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
+   inline explicit operator std::string() const { return std::string(GetPointer(),Length()); }
 #endif
+   inline operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
 
    // Assignment
    TString    &operator=(char s);                // Replace string
@@ -373,7 +380,7 @@ public:
    Ssiz_t       First(char c) const;
    Ssiz_t       First(const char *cs) const;
    void         Form(const char *fmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 2, 3)))   /* 1 is the this pointer */
 #endif
    ;
@@ -434,6 +441,7 @@ public:
    TString     &ReplaceAll(const    char *s1, const TString &s2); // Find&Replace all s1 with s2 if any
    TString     &ReplaceAll(const char *s1, const char *s2);       // Find&Replace all s1 with s2 if any
    TString     &ReplaceAll(const char *s1, Ssiz_t ls1, const char *s2, Ssiz_t ls2);  // Find&Replace all s1 with s2 if any
+   TString     &ReplaceSpecialCppChars();
    void         Resize(Ssiz_t n);                       // Truncate or add blanks as necessary
    TSubString   Strip(EStripType s = kTrailing, char c = ' ') const;
    TString     &Swap(TString &other); // Swap the contents of this and other without reallocation
@@ -457,7 +465,7 @@ public:
    static TString ULLtoa (ULong64_t value, Int_t base);
    static TString BaseConvert(const TString& s_in, Int_t base_in, Int_t base_out);  // Converts string from base base_in to base base_out (supported bases 2-36)
    static TString Format(const char *fmt, ...)
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
    __attribute__((format(printf, 1, 2)))
 #endif
    ;
@@ -488,12 +496,12 @@ inline UInt_t Hash(const TString *s) { return s->Hash(); }
        UInt_t Hash(const char *s);
 
 extern char *Form(const char *fmt, ...)      // format in circular buffer
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 1, 2)))
 #endif
 ;
 extern void  Printf(const char *fmt, ...)    // format and print
-#if defined(__GNUC__) && !defined(__CINT__)
+#if defined(__GNUC__)
 __attribute__((format(printf, 1, 2)))
 #endif
 ;
@@ -562,7 +570,7 @@ operator+(T f, const TString &s)
 }
 
 inline TString &TString::Append(const char *cs)
-{ return Replace(Length(), 0, cs, cs ? strlen(cs) : 0); }
+{ return Replace(Length(), 0, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
 
 inline TString &TString::Append(const char *cs, Ssiz_t n)
 { return Replace(Length(), 0, cs, n); }
@@ -574,7 +582,7 @@ inline TString &TString::Append(const TString &s, Ssiz_t n)
 { return Replace(Length(), 0, s.Data(), TMath::Min(n, s.Length())); }
 
 inline TString &TString::operator+=(const char *cs)
-{ return Append(cs, cs ? strlen(cs) : 0); }
+{ return Append(cs, cs ? (Ssiz_t)strlen(cs) : 0); }
 
 inline TString &TString::operator+=(const TString &s)
 { return Append(s.Data(), s.Length()); }
@@ -613,7 +621,7 @@ inline typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TStrin
 }
 
 inline Bool_t TString::BeginsWith(const char *s, ECaseCompare cmp) const
-{ return Index(s, s ? strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }
+{ return Index(s, s ? (Ssiz_t)strlen(s) : (Ssiz_t)0, (Ssiz_t)0, cmp) == 0; }
 
 inline Bool_t TString::BeginsWith(const TString &pat, ECaseCompare cmp) const
 { return Index(pat.Data(), pat.Length(), (Ssiz_t)0, cmp) == 0; }
@@ -622,8 +630,12 @@ inline Bool_t TString::Contains(const TString &pat, ECaseCompare cmp) const
 { return Index(pat.Data(), pat.Length(), (Ssiz_t)0, cmp) != kNPOS; }
 
 inline Bool_t TString::Contains(const char *s, ECaseCompare cmp) const
-{ return Index(s, s ? strlen(s) : 0, (Ssiz_t)0, cmp) != kNPOS; }
+{ return Index(s, s ? (Ssiz_t)strlen(s) : 0, (Ssiz_t)0, cmp) != kNPOS; }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns whether the string matches the input TRegexp.
+/// \warning Matching regular expressions of type ".?" is not supported. Use
+///          std::regex instead.
 inline Bool_t TString::Contains(const TRegexp &pat) const
 { return Index(pat, (Ssiz_t)0) != kNPOS; }
 
@@ -637,7 +649,7 @@ inline Bool_t TString::EqualTo(const TString &st, ECaseCompare cmp) const
 { return (CompareTo(st, cmp) == 0) ? kTRUE : kFALSE; }
 
 inline Ssiz_t TString::Index(const char *s, Ssiz_t i, ECaseCompare cmp) const
-{ return Index(s, s ? strlen(s) : 0, i, cmp); }
+{ return Index(s, s ? (Ssiz_t)strlen(s) : 0, i, cmp); }
 
 inline Ssiz_t TString::Index(const TString &s, Ssiz_t i, ECaseCompare cmp) const
 { return Index(s.Data(), s.Length(), i, cmp); }
@@ -647,7 +659,7 @@ inline Ssiz_t TString::Index(const TString &pat, Ssiz_t patlen, Ssiz_t i,
 { return Index(pat.Data(), patlen, i, cmp); }
 
 inline TString &TString::Insert(Ssiz_t pos, const char *cs)
-{ return Replace(pos, 0, cs, cs ? strlen(cs) : 0); }
+{ return Replace(pos, 0, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
 
 inline TString &TString::Insert(Ssiz_t pos, const char *cs, Ssiz_t n)
 { return Replace(pos, 0, cs, n); }
@@ -659,7 +671,7 @@ inline TString &TString::Insert(Ssiz_t pos, const TString &s, Ssiz_t n)
 { return Replace(pos, 0, s.Data(), TMath::Min(n, s.Length())); }
 
 inline TString &TString::Prepend(const char *cs)
-{ return Replace(0, 0, cs, cs ? strlen(cs) : 0); }
+{ return Replace(0, 0, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
 
 inline TString &TString::Prepend(const char *cs, Ssiz_t n)
 { return Replace(0, 0, cs, n); }
@@ -671,16 +683,16 @@ inline TString &TString::Prepend(const TString &s, Ssiz_t n)
 { return Replace(0, 0, s.Data(), TMath::Min(n, s.Length())); }
 
 inline TString &TString::Remove(Ssiz_t pos)
-{ return Replace(pos, TMath::Max(0, Length()-pos), 0, 0); }
+{ return Replace(pos, TMath::Max(0, Length()-pos), nullptr, 0); }
 
 inline TString &TString::Remove(Ssiz_t pos, Ssiz_t n)
-{ return Replace(pos, n, 0, 0); }
+{ return Replace(pos, n, nullptr, 0); }
 
 inline TString &TString::Chop()
 { return Remove(TMath::Max(0, Length()-1)); }
 
 inline TString &TString::Replace(Ssiz_t pos, Ssiz_t n, const char *cs)
-{ return Replace(pos, n, cs, cs ? strlen(cs) : 0); }
+{ return Replace(pos, n, cs, cs ? (Ssiz_t)strlen(cs) : 0); }
 
 inline TString &TString::Replace(Ssiz_t pos, Ssiz_t n, const TString& s)
 { return Replace(pos, n, s.Data(), s.Length()); }
@@ -693,21 +705,19 @@ inline TString &TString::ReplaceAll(const TString &s1, const TString &s2)
 { return ReplaceAll(s1.Data(), s1.Length(), s2.Data(), s2.Length()) ; }
 
 inline TString &TString::ReplaceAll(const TString &s1, const char *s2)
-{ return ReplaceAll(s1.Data(), s1.Length(), s2, s2 ? strlen(s2) : 0); }
+{ return ReplaceAll(s1.Data(), s1.Length(), s2, s2 ? (Ssiz_t)strlen(s2) : 0); }
 
 inline TString &TString::ReplaceAll(const char *s1, const TString &s2)
-{ return ReplaceAll(s1, s1 ? strlen(s1) : 0, s2.Data(), s2.Length()); }
+{ return ReplaceAll(s1, s1 ? (Ssiz_t)strlen(s1) : 0, s2.Data(), s2.Length()); }
 
 inline TString &TString::ReplaceAll(const char *s1,const char *s2)
-{ return ReplaceAll(s1, s1 ? strlen(s1) : 0, s2, s2 ? strlen(s2) : 0); }
+{ return ReplaceAll(s1, s1 ? (Ssiz_t)strlen(s1) : 0, s2, s2 ? (Ssiz_t)strlen(s2) : 0); }
 
 inline TString &TString::Swap(TString &other) {
    // Swap the contents of other and this without reallocation.
-#ifndef __CINT__
    Rep_t tmp = other.fRep;
    other.fRep = fRep;
    fRep = tmp;
-#endif
    return *this;
 }
 
@@ -833,19 +843,6 @@ inline Bool_t operator!=(const TString &s1, const TSubString &s2)
 
 inline Bool_t operator!=(const char *s1, const TSubString &s2)
 { return !(s2 == s1); }
-
-#ifndef WIN32
-// To avoid ambiguities.
-inline Bool_t operator==(const char *s1, const std::string_view &s2)
-{
-  return std::string_view(s1) == s2;
-}
-
-inline Bool_t operator==(const std::string_view &s1, const char *s2)
-{
-  return s1 == std::string_view(s2);
-}
-#endif
 
 namespace llvm {
    class raw_ostream;

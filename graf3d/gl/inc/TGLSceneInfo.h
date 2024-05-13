@@ -76,7 +76,7 @@ protected:
    // For TGLScene these data include draw-lists after clipping.
 
 public:
-   TGLSceneInfo(TGLViewerBase* view=0, TGLSceneBase* scene=0);
+   TGLSceneInfo(TGLViewerBase* view=nullptr, TGLSceneBase* scene=nullptr);
    virtual ~TGLSceneInfo() {}
 
    TGLViewerBase * GetViewer() const { return  fViewer; }

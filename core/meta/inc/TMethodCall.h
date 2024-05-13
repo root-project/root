@@ -52,7 +52,7 @@ public:
 
 private:
    CallFunc_t    *fFunc;      //CINT method invocation environment
-   Long_t         fOffset;    //offset added to object pointer before method invocation
+   Longptr_t      fOffset;    //offset added to object pointer before method invocation
    TClass        *fClass;     //pointer to the class info
    TFunction     *fMetPtr;    //pointer to the method or function info
    TString        fMethod;    //method name
@@ -61,14 +61,14 @@ private:
    Bool_t         fDtorOnly;  //call only dtor and not delete when calling ~xxx
    EReturnType    fRetType;   //method return type
 
-   void Execute(const char *,  const char *, int * /*error*/ = 0) { }    // versions of TObject
-   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+   void Execute(const char *,  const char *, int * /*error*/ = nullptr) override { }    // versions of TObject
+   void Execute(TMethod *, TObjArray *, int * /*error*/ = nullptr) override { }
 
    void InitImplementation(const char *methodname, const char *params, const char *proto, Bool_t objectIsConst, TClass *cl, const ClassInfo_t *cinfo, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 
 public:
    TMethodCall();
-   TMethodCall(TClass *cl, CallFunc_t *callfunc, Long_t offset = 0);
+   TMethodCall(TClass *cl, CallFunc_t *callfunc, Longptr_t offset = 0);
    TMethodCall(TClass *cl, const char *method, const char *params);
    TMethodCall(const char *function, const char *params);
    TMethodCall(const TFunction *func);
@@ -77,13 +77,13 @@ public:
    ~TMethodCall();
 
    void           Init(const TFunction *func);
-   void           Init(TClass *cl, CallFunc_t *func, Long_t offset = 0);
+   void           Init(TClass *cl, CallFunc_t *func, Longptr_t offset = 0);
    void           Init(TClass *cl, const char *method, const char *params, Bool_t objectIsConst = kFALSE);
    void           Init(const char *function, const char *params);
    void           InitWithPrototype(TClass *cl, const char *method, const char *proto, Bool_t objectIsConst = kFALSE, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    void           InitWithPrototype(const char *function, const char *proto, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
    Bool_t         IsValid() const;
-   TObject       *Clone(const char *newname="") const;
+   TObject       *Clone(const char *newname="") const override;
    void           CallDtorOnly(Bool_t set = kTRUE) { fDtorOnly = set; }
 
    TFunction     *GetMethod();
@@ -108,8 +108,8 @@ public:
 
    void     Execute(void *object);
    void     Execute(void *object, const char *params);
-   void     Execute(void *object, Long_t &retLong);
-   void     Execute(void *object, const char *params, Long_t &retLong);
+   void     Execute(void *object, Longptr_t &retLong);
+   void     Execute(void *object, const char *params, Longptr_t &retLong);
    void     Execute(void *object, Double_t &retDouble);
    void     Execute(void *object, const char *params, Double_t &retDouble);
 
@@ -118,23 +118,23 @@ public:
 
    void     Execute();
    void     Execute(const char *params);
-   void     Execute(Long_t &retLong);
-   void     Execute(const char *params, Long_t &retLong);
+   void     Execute(Longptr_t &retLong);
+   void     Execute(const char *params, Longptr_t &retLong);
    void     Execute(Double_t &retDouble);
    void     Execute(const char *params, Double_t &retDouble);
 
-   void     Execute(void *objAddress, const void* args[], int nargs, void *ret = 0);
+   void     Execute(void *objAddress, const void* args[], int nargs, void *ret = nullptr);
 
-   ClassDef(TMethodCall,0)  //Method calling interface
+   ClassDefOverride(TMethodCall,0)  //Method calling interface
 };
 
 inline void TMethodCall::Execute()
    { Execute((void *)0); }
 inline void TMethodCall::Execute(const char *params)
    { Execute((void *)0, params); }
-inline void TMethodCall::Execute(Long_t &retLong)
+inline void TMethodCall::Execute(Longptr_t &retLong)
    { Execute((void *)0, retLong); }
-inline void TMethodCall::Execute(const char *params, Long_t &retLong)
+inline void TMethodCall::Execute(const char *params, Longptr_t &retLong)
    { Execute((void *)0, params, retLong); }
 inline void TMethodCall::Execute(Double_t &retDouble)
    { Execute((void *)0, retDouble); }

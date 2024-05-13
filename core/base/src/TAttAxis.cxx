@@ -28,17 +28,18 @@ Manages histogram axis attributes.
 
 They are:
 
-  - The number of divisions
-  - The line axis' color
-  - The labels' color
-  - The labels' font
-  - The labels' offset
-  - The labels' size
-  - The tick marks'
-  - The axis title's offset
-  - The axis title's size
-  - The axis title's color
-  - The axis title's font
+  - The number of divisions: TAttAxis::SetNdivisions.
+  - The line axis' color: TAttAxis::SetAxisColor.
+  - The axis labels' color: TAttAxis::SetLabelColor.
+  - The axis labels' font: TAttAxis::SetLabelFont.
+  - The axis labels' offset: TAttAxis::SetLabelOffset.
+  - The axis labels' size: TAttAxis::SetLabelSize.
+  - The tick marks's length: TAttAxis::SetTickLength or TAttAxis::SetTickSize .
+  - The axis title's offset: TAttAxis::SetTitleOffset.
+  - The axis title's size: TAttAxis::SetTitleSize.
+  - The axis title's color: TAttAxis::SetTitleColor.
+  - The axis title's font: TAttAxis::SetTitleFont.
+
 */
 
 TAttAxis::TAttAxis()
@@ -113,17 +114,15 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
       out<<"   "<<name<<subname<<"->SetNdivisions("<<fNdivisions<<");"<<std::endl;
    }
    if (fAxisColor != 1) {
-      if (fAxisColor > 228) {
-         TColor::SaveColor(out, fAxisColor);
+      if (TColor::SaveColor(out, fAxisColor))
          out<<"   "<<name<<subname<<"->SetAxisColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetAxisColor("<<fAxisColor<<");"<<std::endl;
    }
    if (fLabelColor != 1) {
-      if (fLabelColor > 228) {
-         TColor::SaveColor(out, fLabelColor);
+      if (TColor::SaveColor(out, fLabelColor))
          out<<"   "<<name<<subname<<"->SetLabelColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetLabelColor("<<fLabelColor<<");"<<std::endl;
    }
    if (fLabelFont != 62) {
@@ -145,10 +144,9 @@ void TAttAxis::SaveAttributes(std::ostream &out, const char *name, const char *s
       out<<"   "<<name<<subname<<"->SetTitleOffset("<<fTitleOffset<<");"<<std::endl;
    }
    if (fTitleColor != 1) {
-      if (fTitleColor > 228) {
-         TColor::SaveColor(out, fTitleColor);
+      if (TColor::SaveColor(out, fTitleColor))
          out<<"   "<<name<<subname<<"->SetTitleColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<subname<<"->SetTitleColor("<<fTitleColor<<");"<<std::endl;
    }
    if (fTitleFont != 62) {
@@ -188,6 +186,7 @@ void TAttAxis::SetLabelFont(Style_t font)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set distance between the axis and the labels.
 /// The distance is expressed in per cent of the pad width.
+/// A negative value allow to draw the label on the other side of the axis.
 
 void TAttAxis::SetLabelOffset(Float_t offset)
 {
@@ -198,7 +197,8 @@ void TAttAxis::SetLabelOffset(Float_t offset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of axis labels.
-/// The size is expressed in per cent of the pad size.
+/// The size is expressed in per cent of the pad size, unless the font precision
+/// is 3 and in that case the size is expressed in pixels.
 
 void TAttAxis::SetLabelSize(Float_t size)
 {
@@ -220,10 +220,15 @@ void TAttAxis::SetLabelSize(Float_t size)
 /// n2 is the number of second order divisions and
 /// n3 is the number of third order divisions.
 ///
-/// e.g. 512 means 12 primary and 5 secondary divisions.
-///
 /// If the number of divisions is "optimized" (see above) n1, n2, n3 are
 /// maximum values.
+///
+/// Examples:
+///
+///  - ndiv = 0: no tick marks.
+///  - ndiv = 2: 2 divisions, one tick mark in the middle of the axis.
+///  - ndiv = 510: 10 primary divisions, 5 secondary divisions.
+///  - ndiv = -10: exactly 10 primary divisions.
 
 void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {
@@ -298,7 +303,8 @@ void TAttAxis::SetTitleOffset(Float_t offset)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set size of axis title.
-/// The size is expressed in per cent of the pad width
+/// The size is expressed in per cent of the pad size, unless the font precision
+/// is 3 and in that case the size is expressed in pixels.
 
 void TAttAxis::SetTitleSize(Float_t size)
 {

@@ -1,20 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Multidimensional models: full p.d.f. with per-event errors
+/// Multidimensional models: full pdf with per-event errors
 ///
 /// \macro_code
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
 #include "RooGaussModel.h"
-#include "RooConstVar.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooProdPdf.h"
@@ -46,12 +43,12 @@ void rf307_fullpereventerrors()
    // C o n s t r u c t   e m p i r i c a l   p d f   f o r   p e r - e v e n t   e r r o r
    // -----------------------------------------------------------------
 
-   // Use landau p.d.f to get empirical distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
-   RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
+   // Use landau pdf to get empirical distribution with long tail
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
+   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // Construct a histogram pdf to describe the shape of the dtErr distribution
-   RooDataHist *expHistDterr = expDataDterr->binnedClone();
+   std::unique_ptr<RooDataHist> expHistDterr{expDataDterr->binnedClone()};
    RooHistPdf pdfErr("pdfErr", "pdfErr", dterr, *expHistDterr);
 
    // C o n s t r u c t   c o n d i t i o n a l   p r o d u c t   d e c a y _ d m ( d t | d t e r r ) * p d f ( d t e r
@@ -67,19 +64,19 @@ void rf307_fullpereventerrors()
    // S a m p l e,   f i t   a n d   p l o t   p r o d u c t   m o d e l
    // ------------------------------------------------------------------
 
-   // Specify external dataset with dterr values to use model_dm as conditional p.d.f.
-   RooDataSet *data = model.generate(RooArgSet(dt, dterr), 10000);
+   // Specify external dataset with dterr values to use model_dm as conditional pdf
+   std::unique_ptr<RooDataSet> data{model.generate({dt, dterr}, 10000)};
 
    // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------
 
    // Specify dterr as conditional observable
-   model.fitTo(*data);
+   model.fitTo(*data, PrintLevel(-1));
 
    // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------
 
-   // Make two-dimensional plot of conditional p.d.f in (dt,dterr)
+   // Make two-dimensional plot of conditional pdf in (dt,dterr)
    TH1 *hh_model = model.createHistogram("hh_model", dt, Binning(50), YVar(dterr, Binning(50)));
    hh_model->SetLineColor(kBlue);
 

@@ -26,8 +26,8 @@ class TH3;
 class TH3GL : public TGLPlot3D
 {
 private:
-   TH3GL(const TH3GL&);            // Not implemented
-   TH3GL& operator=(const TH3GL&); // Not implemented
+   TH3GL(const TH3GL&) = delete;
+   TH3GL& operator=(const TH3GL&) = delete;
 
 protected:
    TH3                *fM;  // Model object dynamic-casted to TH3.
@@ -35,18 +35,18 @@ protected:
 public:
    TH3GL();
    TH3GL(TH3 *h, TPolyMarker3D *pm);
-   virtual ~TH3GL();
+   ~TH3GL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
-   ClassDef(TH3GL, 0); // GL renderer class for TH3.
+   ClassDefOverride(TH3GL, 0); // GL renderer class for TH3.
 };
 
 #endif

@@ -122,6 +122,7 @@ void TCurlyArc::Build()
 
 Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    // Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
@@ -516,9 +517,11 @@ Bool_t TCurlyArc::GetDefaultIsCurly()
 
 Rectangle_t TCurlyArc::GetBBox()
 {
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
+
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
-   Rectangle_t BBox;
    BBox.fX = gPad->XtoPixel(fX1-fR1);
    BBox.fY = gPad->YtoPixel(fY1+R2);
    BBox.fWidth = gPad->XtoPixel(fX1+fR1)-gPad->XtoPixel(fX1-fR1);
@@ -531,7 +534,8 @@ Rectangle_t TCurlyArc::GetBBox()
 
 TPoint TCurlyArc::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX1));
    p.SetY(gPad->YtoPixel(fY1));
    return(p);
@@ -542,6 +546,7 @@ TPoint TCurlyArc::GetBBoxCenter()
 
 void TCurlyArc::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    fX1 = gPad->PixeltoX(p.GetX());
    fY1 = gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0));
    Build();
@@ -552,6 +557,7 @@ void TCurlyArc::SetBBoxCenter(const TPoint &p)
 
 void TCurlyArc::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    fX1 = gPad->PixeltoX(x);
    Build();
 }
@@ -561,6 +567,7 @@ void TCurlyArc::SetBBoxCenterX(const Int_t x)
 
 void TCurlyArc::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    fY1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
    Build();
 }
@@ -571,6 +578,7 @@ void TCurlyArc::SetBBoxCenterY(const Int_t y)
 
 void TCurlyArc::SetBBoxX1(const Int_t x)
 {
+   if (!gPad) return;
    Double_t x1 = gPad->PixeltoX(x);
    if (x1>fX1+fR1) return;
 
@@ -584,6 +592,7 @@ void TCurlyArc::SetBBoxX1(const Int_t x)
 
 void TCurlyArc::SetBBoxX2(const Int_t x)
 {
+   if (!gPad) return;
    Double_t x2 = gPad->PixeltoX(x);
    if (x2<fX1-fR1) return;
 
@@ -596,6 +605,7 @@ void TCurlyArc::SetBBoxX2(const Int_t x)
 
 void TCurlyArc::SetBBoxY1(const Int_t y)
 {
+   if (!gPad) return;
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
    Double_t y1 = gPad->PixeltoY(y-gPad->VtoPixel(0));
@@ -611,6 +621,7 @@ void TCurlyArc::SetBBoxY1(const Int_t y)
 
 void TCurlyArc::SetBBoxY2(const Int_t y)
 {
+   if (!gPad) return;
    Double_t R2 = fR1 * TMath::Abs(gPad->GetY2()-gPad->GetY1())/TMath::Abs(gPad->GetX2()-gPad->GetX1());
 
    Double_t y2 = gPad->PixeltoY(y-gPad->VtoPixel(0));

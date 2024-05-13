@@ -387,7 +387,7 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       // get T[end[]]
 
       Tensor_t tmp = arrOutput.At(fTimeSteps - 1); // take last time step
-      // shape of tmp is  for CPU (columnwise) B x D ,   need to reshape to  make a B x D x 1
+      // shape of tmp is  for CPU (column wise) B x D ,   need to reshape to  make a B x D x 1
       //  and transpose it to 1 x D x B  (this is how output is expected in columnmajor format)
       tmp = tmp.Reshape({tmp.GetShape()[0], tmp.GetShape()[1], 1});
       assert(tmp.GetSize() == this->GetOutput().GetSize());
@@ -593,14 +593,14 @@ auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
 template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
 {
-   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "RNNLayer");
+   auto layerxml = gTools().xmlengine().NewChild(parent, nullptr, "RNNLayer");
 
    // write All other info like stateSize, inputSize, timeSteps,rememberState
-   gTools().xmlengine().NewAttr(layerxml, 0, "StateSize", gTools().StringFromInt(this->GetStateSize()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "InputSize", gTools().StringFromInt(this->GetInputSize()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
-   gTools().xmlengine().NewAttr(layerxml, 0, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "StateSize", gTools().StringFromInt(this->GetStateSize()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "InputSize", gTools().StringFromInt(this->GetInputSize()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "TimeSteps", gTools().StringFromInt(this->GetTimeSteps()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "RememberState", gTools().StringFromInt(this->DoesRememberState()));
+   gTools().xmlengine().NewAttr(layerxml, nullptr, "ReturnSequence", gTools().StringFromInt(this->DoesReturnSequence()));
 
    // write weights and bias matrices
    this->WriteMatrixToXML(layerxml, "InputWeights", this -> GetWeightsAt(0));

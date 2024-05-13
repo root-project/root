@@ -22,31 +22,43 @@ This function can be analytically convolved with any RooResolutionModel implemen
 */
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 #include "RooBCPEffDecay.h"
 #include "RooRealIntegral.h"
 
-using namespace std;
-
 ClassImp(RooBCPEffDecay);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// \brief Constructor for RooBCPEffDecay.
+///
+/// Creates an instance of RooBCPEffDecay with the specified parameters.
+///
+/// \param[in] name         The name of the PDF.
+/// \param[in] title        The title of the PDF.
+/// \param[in] t            The time variable.
+/// \param[in] tag          The CP state category.
+/// \param[in] tau          The decay time parameter.
+/// \param[in] dm           The mixing frequency parameter.
+/// \param[in] avgMistag    The average mistag rate parameter.
+/// \param[in] CPeigenval   The CP eigen value parameter.
+/// \param[in] absLambda    The absolute value of the complex lambda parameter.
+/// \param[in] argLambda    The argument of the complex lambda parameter.
+/// \param[in] effRatio     The B0/B0bar efficiency ratio.
+/// \param[in] delMistag    Delta mistag rate parameter.
+/// \param[in] model        The resolution model.
+/// \param[in] type         The decay type.
 
 RooBCPEffDecay::RooBCPEffDecay(const char *name, const char *title,
                 RooRealVar& t, RooAbsCategory& tag,
                 RooAbsReal& tau, RooAbsReal& dm,
                 RooAbsReal& avgMistag, RooAbsReal& CPeigenval,
-                RooAbsReal& a, RooAbsReal& b,
+                RooAbsReal& absLambda, RooAbsReal& argLambda,
                 RooAbsReal& effRatio, RooAbsReal& delMistag,
                 const RooResolutionModel& model, DecayType type) :
   RooAbsAnaConvPdf(name,title,model,t),
-  _absLambda("absLambda","Absolute value of lambda",this,a),
-  _argLambda("argLambda","Arg(Lambda)",this,b),
+  _absLambda("absLambda","Absolute value of lambda",this,absLambda),
+  _argLambda("argLambda","Arg(Lambda)",this,argLambda),
   _effRatio("effRatio","B0/B0bar efficiency ratio",this,effRatio),
   _CPeigenval("CPeigenval","CP eigen value",this,CPeigenval),
   _avgMistag("avgMistag","Average mistag rate",this,avgMistag),
@@ -101,19 +113,12 @@ RooBCPEffDecay::RooBCPEffDecay(const RooBCPEffDecay& other, const char* name) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor.
-
-RooBCPEffDecay::~RooBCPEffDecay()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// B0    : _tag = +1
 ///
 /// B0bar : _tag = -1
 /// \param[in] basisIndex
 
-Double_t RooBCPEffDecay::coefficient(Int_t basisIndex) const
+double RooBCPEffDecay::coefficient(Int_t basisIndex) const
 {
   if (basisIndex==_basisExp) {
     //exp term: (1 -/+ dw)(1+a^2)/2
@@ -148,7 +153,7 @@ Int_t RooBCPEffDecay::getCoefAnalyticalIntegral(Int_t /*code*/, RooArgSet& allVa
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
+double RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, const char* /*rangeName*/) const
 {
   switch(code) {
     // No integration
@@ -174,7 +179,7 @@ Double_t RooBCPEffDecay::coefAnalyticalIntegral(Int_t basisIndex, Int_t code, co
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK) const
+Int_t RooBCPEffDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK) const
 {
   if (staticInitOK) {
     if (matchArgs(directVars,generateVars,_t,_tag)) return 2 ;
@@ -189,9 +194,9 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 {
   if (code==2) {
     // Calculate the fraction of mixed events to generate
-    Double_t sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
+    double sumInt = RooRealIntegral("sumInt","sum integral",*this,RooArgSet(_t.arg(),_tag.arg())).getVal() ;
     _tag = 1 ;
-    Double_t b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
+    double b0Int = RooRealIntegral("mixInt","mix integral",*this,RooArgSet(_t.arg())).getVal() ;
     _genB0Frac = b0Int/sumInt ;
   }
 }
@@ -203,14 +208,14 @@ void RooBCPEffDecay::initGenerator(Int_t code)
 void RooBCPEffDecay::generateEvent(Int_t code)
 {
   if (code==2) {
-    Double_t rand = RooRandom::uniform() ;
+    double rand = RooRandom::uniform() ;
     _tag = (rand<=_genB0Frac) ? 1 : -1 ;
   }
 
   // Generate delta-t dependent
-  while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+  while(true) {
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:
@@ -225,14 +230,14 @@ void RooBCPEffDecay::generateEvent(Int_t code)
     }
 
     // Accept event if T is in generated range
-    Double_t maxDil = 1.0 ;
-    Double_t al2 = _absLambda*_absLambda ;
-    Double_t maxAcceptProb = (1+al2) + fabs(maxDil*_CPeigenval*_absLambda*_argLambda) + fabs(maxDil*(1-al2)/2);
-    Double_t acceptProb    = (1+al2)/2*(1-_tag*_delMistag)
+    double maxDil = 1.0 ;
+    double al2 = _absLambda*_absLambda ;
+    double maxAcceptProb = (1+al2) + std::abs(maxDil*_CPeigenval*_absLambda*_argLambda) + std::abs(maxDil*(1-al2)/2);
+    double acceptProb    = (1+al2)/2*(1-_tag*_delMistag)
                            - (_tag*(1-2*_avgMistag))*(_CPeigenval*_absLambda*_argLambda)*sin(_dm*tval)
                            - (_tag*(1-2*_avgMistag))*(1-al2)/2*cos(_dm*tval);
 
-    Bool_t accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? kTRUE : kFALSE ;
+    bool accept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
     if (tval<_t.max() && tval>_t.min() && accept) {
       _t = tval ;

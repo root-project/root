@@ -136,6 +136,8 @@ protected:
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
+   virtual Bool_t CallProduceImage(const std::string &kind, const std::string &path, const std::string &options, std::string &res);
+
    void
    ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = nullptr, TCollection *keys_lst = nullptr);
 
@@ -165,6 +167,8 @@ protected:
 
    virtual Bool_t ProduceBinary(const std::string &path, const std::string &options, std::string &res);
 
+   virtual Bool_t ProduceRootFile(const std::string &path, const std::string &options, std::string &res);
+
    virtual Bool_t ProduceImage(Int_t kind, const std::string &path, const std::string &options, std::string &res);
 
    virtual Bool_t ProduceExe(const std::string &path, const std::string &options, Int_t reskind, std::string &res);
@@ -178,7 +182,7 @@ protected:
    ProduceMulti(const std::string &path, const std::string &options, std::string &res, Bool_t asjson = kTRUE);
 
 public:
-   TRootSniffer(const char *name, const char *objpath = "Objects");
+   TRootSniffer(const char *name = "sniff", const char *objpath = "Objects");
    virtual ~TRootSniffer();
 
    /** When readonly on (default), sniffer is not allowed to change ROOT structures
@@ -220,7 +224,7 @@ public:
 
    const char *GetItemField(const char *fullname, const char *name);
 
-   void SetCurrentCallArg(THttpCallArg *arg);
+   THttpCallArg *SetCurrentCallArg(THttpCallArg *arg);
 
    /** Method scans normal objects, registered in ROOT */
    void ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store, Bool_t only_fields = kFALSE);
@@ -242,7 +246,7 @@ public:
 
    Bool_t Produce(const std::string &path, const std::string &file, const std::string &options, std::string &res);
 
-   ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
+   ClassDefOverride(TRootSniffer, 0) // Sniffer of ROOT objects (basic version)
 };
 
 #endif

@@ -183,6 +183,10 @@ D: updates in PDG codes and eventgenerator interface classes
 D: TSpline, TComplex classes
 D: Support for gcc option -weffc++
 
+N: James Carroll
+E: eloquism@gmail.com
+D: Original maintainer of the ROOT Snap
+
 N: Gian Paolo Ciceri
 E: gp.ciceri@acm.org
 D: PostgreSQL interface
@@ -419,6 +423,10 @@ N: Stephan Hageboeck
 E: stephan.hageboeck@cern.ch
 D: Roofit support and developments
 
+N: Jonas Hahnfeld
+E: jonas.hahnfeld@cern.ch
+D: Portable implementation of RANLUX++
+
 N: Andy Hanushevsky
 E: abh@slac.stanford.edu
 D: the eXtended ROOT daemon (xrootd)
@@ -443,6 +451,10 @@ D: apply method in the TGraph classes
 N: Marc Hemberger
 E: hemberg@clri6a.gsi.de
 D: contributions to the thread classes, SapDB interface
+
+N: Johannes Hentrich
+E: info@johannes-hentrich.net
+D: ROOT web site, in particular the Manual part.
 
 N: Fabio Hernandez
 E: fabio@in2p3.fr
@@ -475,6 +487,10 @@ D: debian and redhat packaging scripts, port to GNU/Hurd (Debian)
 N: Burt Holzman
 E: burt@fnal.gov
 D: Contribution to TWebFile,rpdutils and sockets.
+
+N: Fernando Hueso-González
+E: fernando.hueso@uv.es
+D: Improve ROOT stability, add GUI functionalities, improve documentation
 
 N: Raphael Isemann
 E: teemperor@gmail.com
@@ -603,8 +619,9 @@ E: loizides@MIT.EDU
 D: PROOF testing and debugging
 
 N: Javier Lopez-Gomez
-E: jalopezg@inf.uc3m.es
-D: Cling support for redefinitions
+E: j.lopez@cern.ch
+D: Cling support for redefinitions; cling improvements
+D: RNTuple/DAOS integration
 
 N: Johan Lundberg
 E: johan.lundberg@cern.ch
@@ -767,6 +784,10 @@ N: Katerina Opocenska
 E: opocenska@gmail.com
 D: author of the Event Recorder
 D: author of the sub-merging technology in PROOF
+
+N: Max Orok
+E: maxwellorok@gmail.com
+D: Contributions to the I/O and RNTuple
 
 N: Vincenzo Eduardo Padulano
 E: v.e.padulano@gmail.com
@@ -1079,3 +1100,7 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
+
+N: Marco Meyer-conde
+E: marco.meyer@cern.ch
+D: contour drawing options "MOLLWEIDE"

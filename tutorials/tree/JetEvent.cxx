@@ -11,10 +11,10 @@
 #include "TRandom.h"
 #include "JetEvent.h"
 
-TClonesArray *JetEvent::fgJets   = 0;
-TClonesArray *JetEvent::fgTracks = 0;
-TClonesArray *JetEvent::fgHitsA  = 0;
-TClonesArray *JetEvent::fgHitsB  = 0;
+TClonesArray *JetEvent::fgJets   = nullptr;
+TClonesArray *JetEvent::fgTracks = nullptr;
+TClonesArray *JetEvent::fgHitsA  = nullptr;
+TClonesArray *JetEvent::fgHitsB  = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a JetEvent object.
@@ -153,10 +153,10 @@ void JetEvent::Clear(Option_t *option)
 
 void JetEvent::Reset(Option_t *)
 {
-   delete fgJets;   fgJets = 0;
-   delete fgTracks; fgTracks = 0;
-   delete fgHitsA;  fgHitsA = 0;
-   delete fgHitsB;  fgHitsB = 0;
+   delete fgJets;   fgJets = nullptr;
+   delete fgTracks; fgTracks = nullptr;
+   delete fgHitsA;  fgHitsA = nullptr;
+   delete fgHitsB;  fgHitsB = nullptr;
 }
 
 

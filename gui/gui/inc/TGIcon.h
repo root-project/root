@@ -13,14 +13,6 @@
 #define ROOT_TGIcon
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGIcon                                                               //
-//                                                                      //
-// This class handles GUI icons.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 #include "TGDimension.h"
 
@@ -30,24 +22,24 @@ class TImage;
 class TGIcon : public TGFrame {
 
 protected:
-   const TGPicture  *fPic;     // icon picture
-   TImage           *fImage;   // image
-   TString           fPath;    // directory of image
+   const TGPicture  *fPic;     ///< icon picture
+   TImage           *fImage;   ///< image
+   TString           fPath;    ///< directory of image
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 private:
-   TGIcon(const TGIcon &);            // not implemented
-   TGIcon& operator=(const TGIcon&);  // not implemented
+   TGIcon(const TGIcon &) = delete;
+   TGIcon& operator=(const TGIcon&) = delete;
 
 public:
    TGIcon(const TGWindow *p, const TGPicture *pic, UInt_t w, UInt_t h,
       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground()) :
-         TGFrame(p, w, h, options, back), fPic(pic), fImage(0), fPath() { SetWindowName(); }
+         TGFrame(p, w, h, options, back), fPic(pic), fImage(nullptr), fPath() { SetWindowName(); }
 
-   TGIcon(const TGWindow *p = 0, const char *image = 0);
+   TGIcon(const TGWindow *p = nullptr, const char *image = nullptr);
 
-   virtual ~TGIcon();
+   ~TGIcon() override;
 
    virtual void Reset();         //*MENU*
    const TGPicture *GetPicture() const { return fPic; }
@@ -57,15 +49,15 @@ public:
    virtual void SetImage(TImage *img);
    virtual void SetImagePath(const char *path);
 
-   virtual void Resize(UInt_t w = 0, UInt_t h = 0);
-   virtual void Resize(TGDimension size) { Resize(size.fWidth, size.fHeight); }
-   virtual void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
-   virtual void ChangeBackgroundColor() { }
+   void Resize(UInt_t w = 0, UInt_t h = 0) override;
+   void Resize(TGDimension size) override { Resize(size.fWidth, size.fHeight); }
+   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   virtual void ChangeBackgroundColor() {}
 
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGIcon,0)  // Icon GUI class
+   ClassDefOverride(TGIcon,0)  // Icon GUI class
 };
 
 #endif

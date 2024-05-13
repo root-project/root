@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedCanvas                                                  //
-//                                                                      //
-// This class creates a TGCanvas in which a TCanvas is created. Use     //
-// GetCanvas() to get a pointer to the TCanvas.                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootEmbeddedCanvas
+    \ingroup guiwidgets
+
+This class creates a TGCanvas in which a TCanvas is created.
+Use GetCanvas() to get a pointer to the TCanvas.
+
+*/
+
 
 #include "TRootEmbeddedCanvas.h"
 #include "TCanvas.h"
@@ -33,17 +34,18 @@
 
 #include <iostream>
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootEmbeddedContainer                                               //
-//                                                                      //
-// Utility class used by TRootEmbeddedCanvas. The TRootEmbeddedContainer//
-// is the frame embedded in the TGCanvas widget. The ROOT graphics goes //
-// into this frame. This class is used to enable input events on this   //
-// graphics frame and forward the events to the TRootEmbeddedCanvas     //
-// handlers.                                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TRootEmbeddedContainer
+    \ingroup guiwidgets
+
+Utility class used by TRootEmbeddedCanvas. The TRootEmbeddedContainer
+is the frame embedded in the TGCanvas widget. The ROOT graphics goes
+into this frame. This class is used to enable input events on this
+graphics frame and forward the events to the TRootEmbeddedCanvas
+handlers.
+
+*/
+
 
 class TRootEmbeddedContainer : public TGCompositeFrame {
 private:
@@ -51,22 +53,22 @@ private:
 public:
    TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev)
+   Bool_t  HandleButton(Event_t *ev) override
                { return fCanvas->HandleContainerButton(ev); }
-   Bool_t  HandleDoubleClick(Event_t *ev)
+   Bool_t  HandleDoubleClick(Event_t *ev) override
                { return fCanvas->HandleContainerDoubleClick(ev); }
-   Bool_t  HandleConfigureNotify(Event_t *ev)
+   Bool_t  HandleConfigureNotify(Event_t *ev) override
                { TGFrame::HandleConfigureNotify(ev);
                   return fCanvas->HandleContainerConfigure(ev); }
-   Bool_t  HandleKey(Event_t *ev)
+   Bool_t  HandleKey(Event_t *ev) override
                { return fCanvas->HandleContainerKey(ev); }
-   Bool_t  HandleMotion(Event_t *ev)
+   Bool_t  HandleMotion(Event_t *ev) override
                { return fCanvas->HandleContainerMotion(ev); }
-   Bool_t  HandleExpose(Event_t *ev)
+   Bool_t  HandleExpose(Event_t *ev) override
                { return fCanvas->HandleContainerExpose(ev); }
-   Bool_t  HandleCrossing(Event_t *ev)
+   Bool_t  HandleCrossing(Event_t *ev) override
                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SetEditable(Bool_t) { }
+   void    SetEditable(Bool_t) override {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,9 +89,6 @@ TRootEmbeddedContainer::TRootEmbeddedContainer(TRootEmbeddedCanvas *c, Window_t 
    fEditDisabled = kEditDisableGrab;
 }
 
-
-
-
 ClassImp(TRootEmbeddedCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -105,7 +104,7 @@ ClassImp(TRootEmbeddedCanvas);
 ///        destroyed by it ]
 
 TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
-            UInt_t w, UInt_t h, UInt_t options, ULong_t back)
+            UInt_t w, UInt_t h, UInt_t options, Pixel_t back)
    : TGCanvas(p, w, h, options, back)
 {
    fCanvas  = 0;
@@ -135,14 +134,14 @@ TRootEmbeddedCanvas::TRootEmbeddedCanvas(const char *name, const TGWindow *p,
       }
 
       if (gGLManager)
-         fCWinId = gGLManager->InitGLWindow((ULong_t)GetViewPort()->GetId());
+         fCWinId = gGLManager->InitGLWindow((ULongptr_t)GetViewPort()->GetId());
       //Context creation deferred till TCanvas creation (since there is no way to pass it to TCanvas).
 
       if (!gGLManager || fCWinId == -1)
          gStyle->SetCanvasPreferGL(kFALSE);//TCanvas should not use gl.
    }
    if (fCWinId == -1)
-      fCWinId = gVirtualX->InitWindow((ULong_t)GetViewPort()->GetId());
+      fCWinId = gVirtualX->InitWindow((ULongptr_t)GetViewPort()->GetId());
 
    Window_t win = gVirtualX->GetWindowID(fCWinId);
    fCanvasContainer = new TRootEmbeddedContainer(this, win, GetViewPort());
@@ -439,7 +438,7 @@ Bool_t TRootEmbeddedCanvas::HandleDNDDrop(TDNDData *data)
       if (!obj) return kTRUE;
       gPad->Clear();
       if (obj->InheritsFrom("TKey")) {
-         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%lx)->ReadObj();", (ULong_t)obj));
+         TObject *object = (TObject *)gROOT->ProcessLine(Form("((TKey *)0x%zx)->ReadObj();", (size_t)obj));
          if (!object) return kTRUE;
          if (object->InheritsFrom("TGraph"))
             object->Draw("ALP");

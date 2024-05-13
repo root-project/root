@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <cmath>
+
 TEST(Metrics, Counters)
 {
    RNTupleMetrics metrics("test");
@@ -25,6 +27,29 @@ TEST(Metrics, Counters)
    EXPECT_EQ(1, ctrTwo->XAdd(5));
    EXPECT_EQ(1, ctrOne->GetValue());
    EXPECT_EQ(6, ctrTwo->GetValue());
+
+   RNTupleCalcPerf *ctrCalc = metrics.MakeCounter<RNTupleCalcPerf *>("calc", "s/s", "example 1/example2",
+      metrics, [](const RNTupleMetrics &met) -> std::pair<bool, double> {
+         auto ctr1 = met.GetCounter("test.plain");
+         EXPECT_NE(ctr1, nullptr);
+         auto ctr2 = met.GetCounter("test.atomic");
+         EXPECT_NE(ctr2, nullptr);
+         EXPECT_NE(ctr2->GetValueAsInt(), 0);
+         return {true, (1.*ctr1->GetValueAsInt()) / ctr2->GetValueAsInt()};
+      }
+   );
+   EXPECT_NE(ctrCalc, nullptr);
+   EXPECT_DOUBLE_EQ(ctrCalc->GetValue(), 1./6.);
+   EXPECT_NE(ctrCalc->ToString().find("calc"), std::string::npos);
+
+   RNTupleCalcPerf *ctrCalcBad = metrics.MakeCounter<RNTupleCalcPerf *>("calcBad", "apples or oranges", "just bad",
+      metrics, [](const RNTupleMetrics &) -> std::pair<bool, double> {
+         return {false, 42.};
+      }
+   );
+   EXPECT_NE(ctrCalcBad, nullptr);
+   EXPECT_TRUE(std::isnan(ctrCalcBad->GetValue()));
+   EXPECT_NE(ctrCalcBad->ToString(), ""); // whatever it is, it should not be empty or crash.
 }
 
 TEST(Metrics, Nested)
@@ -63,4 +88,27 @@ TEST(Metrics, Timer)
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
    }
    EXPECT_GT(ctrWallTime.GetValue(), 0U);
+}
+
+TEST(Metrics, RNTupleWriter)
+{
+   std::string rootFileName{"test_ntuple_writer_metrics.root"};
+   FileRaii fileGuard(rootFileName);
+
+   auto model = RNTupleModel::Create();
+   auto int_field = model->MakeField<int>("ints");
+   auto float_field = model->MakeField<float>("floats");
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", rootFileName);
+   EXPECT_FALSE(ntuple->GetMetrics().IsEnabled());
+   ntuple->EnableMetrics();
+   EXPECT_TRUE(ntuple->GetMetrics().IsEnabled());
+   *int_field = 0;
+   *float_field = 10.0;
+   ntuple->Fill();
+   ntuple->CommitCluster();
+   auto* page_counter = ntuple->GetMetrics().GetCounter(
+      "RNTupleWriter.RPageSinkBuf.RPageSinkFile.nPageCommitted");
+   ASSERT_FALSE(page_counter == nullptr);
+   // one page for the int field, one for the float field
+   EXPECT_EQ(2, page_counter->GetValueAsInt());
 }

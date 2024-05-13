@@ -19,7 +19,6 @@
 #include <utility>
 
 namespace ROOT {
-namespace Experimental {
 
 TBufferMerger::TBufferMerger(const char *name, Option_t *option, Int_t compress)
 {
@@ -47,8 +46,11 @@ TBufferMerger::~TBufferMerger()
    for (const auto &f : fAttachedFiles)
       if (!f.expired()) Fatal("TBufferMerger", " TBufferMergerFiles must be destroyed before the server");
 
-   if (!fQueue.empty())
-      Merge();
+   // Since we support purely incremental merging, Merge does not write the target objects
+   // that are attached to the file (TTree and histograms) and thus we need to write them
+   // now.
+   if (TFile *out = fMerger.GetOutputFile())
+      out->Write("",TObject::kOverwrite);
 }
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
@@ -60,65 +62,25 @@ std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
    return f;
 }
 
-size_t TBufferMerger::GetQueueSize() const
-{
-   return fQueue.size();
-}
-
-void TBufferMerger::Push(TBufferFile *buffer)
-{
-   {
-      std::lock_guard<std::mutex> lock(fQueueMutex);
-      fBuffered += buffer->BufferSize();
-      fQueue.push(buffer);
-   }
-
-   if (fBuffered > fAutoSave)
-      Merge();
-}
-
-size_t TBufferMerger::GetAutoSave() const
-{
-   return fAutoSave;
-}
-
 const char *TBufferMerger::GetMergeOptions()
 {
    return fMerger.GetMergeOptions();
 }
 
 
-void TBufferMerger::SetAutoSave(size_t size)
-{
-   fAutoSave = size;
-}
-
 void TBufferMerger::SetMergeOptions(const TString& options)
 {
    fMerger.SetMergeOptions(options);
 }
 
-void TBufferMerger::Merge()
+void TBufferMerger::Merge(ROOT::TBufferMergerFile *memfile)
 {
-   if (fMergeMutex.try_lock()) {
-      std::queue<TBufferFile *> queue;
-      {
-         std::lock_guard<std::mutex> q(fQueueMutex);
-         std::swap(queue, fQueue);
-         fBuffered = 0;
-      }
-
-      while (!queue.empty()) {
-         std::unique_ptr<TBufferFile> buffer{queue.front()};
-         fMerger.AddAdoptFile(new TMemFile(fMerger.GetOutputFileName(), std::move(buffer)));
-         queue.pop();
-      }
-
-      fMerger.PartialMerge();
-      fMerger.Reset();
-      fMergeMutex.unlock();
-   }
+   std::lock_guard q(fMergeMutex);
+   memfile->WriteStreamerInfo();
+   fMerger.AddFile(memfile);
+   fMerger.PartialMerge(TFileMerger::kAll | TFileMerger::kIncremental | TFileMerger::kDelayWrite |
+                        TFileMerger::kKeepCompression);
+   fMerger.Reset();
 }
 
-} // namespace Experimental
 } // namespace ROOT

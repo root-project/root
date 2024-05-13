@@ -23,7 +23,7 @@
 /// we create a signal and background 2D histograms from 2d gaussians
 /// with a location (means in X and Y)  different for each event
 /// The difference between signal and background is in the gaussian width.
-/// The width for the bakground gaussian is slightly larger than the signal width by few % values
+/// The width for the background gaussian is slightly larger than the signal width by few % values
 ///
 ///
 void MakeImagesTree(int n, int nh, int nw)
@@ -32,6 +32,7 @@ void MakeImagesTree(int n, int nh, int nw)
    // image size (nh x nw)
    const int ntot = nh * nw;
    const TString fileOutName = TString::Format("images_data_%dx%d.root", nh, nw);
+   TFile f(fileOutName, "RECREATE");
 
    const int nRndmEvts = 10000; // number of events we use to fill each image
    double delta_sigma = 0.1;    // 5% difference in the sigma
@@ -42,15 +43,15 @@ void MakeImagesTree(int n, int nh, int nw)
    double sX2 = sX1 + delta_sigma;
    double sY2 = sY1 - delta_sigma;
 
-   auto h1 = new TH2D("h1", "h1", nh, 0, 10, nw, 0, 10);
-   auto h2 = new TH2D("h2", "h2", nh, 0, 10, nw, 0, 10);
+   TH2D h1("h1", "h1", nh, 0, 10, nw, 0, 10);
+   TH2D h2("h2", "h2", nh, 0, 10, nw, 0, 10);
 
-   auto f1 = new TF2("f1", "xygaus");
-   auto f2 = new TF2("f2", "xygaus");
+   TF2 f1("f1", "xygaus");
+   TF2 f2("f2", "xygaus");
+
    TTree sgn("sig_tree", "signal_tree");
-   TTree bkg("bkg_tree", "bakground_tree");
+   TTree bkg("bkg_tree", "background_tree");
 
-   TFile f(fileOutName, "RECREATE");
 
    std::vector<float> x1(ntot);
    std::vector<float> x2(ntot);
@@ -69,30 +70,30 @@ void MakeImagesTree(int n, int nh, int nw)
    sgn.SetDirectory(&f);
    bkg.SetDirectory(&f);
 
-   f1->SetParameters(1, 5, sX1, 5, sY1);
-   f2->SetParameters(1, 5, sX2, 5, sY2);
+   f1.SetParameters(1, 5, sX1, 5, sY1);
+   f2.SetParameters(1, 5, sX2, 5, sY2);
    gRandom->SetSeed(0);
    std::cout << "Filling ROOT tree " << std::endl;
    for (int i = 0; i < n; ++i) {
       if (i % 1000 == 0)
          std::cout << "Generating image event ... " << i << std::endl;
-      h1->Reset();
-      h2->Reset();
+      h1.Reset();
+      h2.Reset();
       // generate random means in range [3,7] to be not too much on the border
-      f1->SetParameter(1, gRandom->Uniform(3, 7));
-      f1->SetParameter(3, gRandom->Uniform(3, 7));
-      f2->SetParameter(1, gRandom->Uniform(3, 7));
-      f2->SetParameter(3, gRandom->Uniform(3, 7));
+      f1.SetParameter(1, gRandom->Uniform(3, 7));
+      f1.SetParameter(3, gRandom->Uniform(3, 7));
+      f2.SetParameter(1, gRandom->Uniform(3, 7));
+      f2.SetParameter(3, gRandom->Uniform(3, 7));
 
-      h1->FillRandom("f1", nRndmEvts);
-      h2->FillRandom("f2", nRndmEvts);
+      h1.FillRandom("f1", nRndmEvts);
+      h2.FillRandom("f2", nRndmEvts);
 
       for (int k = 0; k < nh; ++k) {
          for (int l = 0; l < nw; ++l) {
             int m = k * nw + l;
             // add some noise in each bin
-            x1[m] = h1->GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
-            x2[m] = h2->GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
+            x1[m] = h1.GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
+            x2[m] = h2.GetBinContent(k + 1, l + 1) + gRandom->Gaus(0, pixelNoise);
          }
       }
       sgn.Fill();
@@ -107,14 +108,33 @@ void MakeImagesTree(int n, int nh, int nw)
    f.Close();
 }
 
-void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
+/// @brief Run the TMVA CNN Classification example
+/// @param nevts : number of signal/background events. Use by default a low value (1000)
+///                but increase to at least 5000 to get a good result
+/// @param opt :   vector of bool with method used (default all on if available). The order is:
+///                   - TMVA CNN
+///                   - Keras CNN
+///                   - TMVA DNN
+///                   - TMVA BDT
+///                   - PyTorch CNN
+void TMVA_CNN_Classification(int nevts = 1000, std::vector<bool> opt = {1, 1, 1, 1, 1})
 {
+
+   int imgSize = 16 * 16;
+   TString inputFileName = "images_data_16x16.root";
+
+   bool fileExist = !gSystem->AccessPathName(inputFileName);
+
+   // if file does not exists create it
+   if (!fileExist) {
+      MakeImagesTree(nevts, 16, 16);
+   }
 
    bool useTMVACNN = (opt.size() > 0) ? opt[0] : false;
    bool useKerasCNN = (opt.size() > 1) ? opt[1] : false;
    bool useTMVADNN = (opt.size() > 2) ? opt[2] : false;
    bool useTMVABDT = (opt.size() > 3) ? opt[3] : false;
-
+   bool usePyTorchCNN = (opt.size() > 4) ? opt[4] : false;
 #ifndef R__HAS_TMVACPU
 #ifndef R__HAS_TMVAGPU
    Warning("TMVA_CNN_Classification",
@@ -125,17 +145,19 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    bool writeOutputFile = true;
 
-   int num_threads = 0;  // use default threads
-
-   TMVA::Tools::Instance();
+#ifdef R__USE_IMT
+   int num_threads = 4;  // use by default 4 threads if value is not set before
+   // switch off MT in OpenBLAS to avoid conflict with tbb
+   gSystem->Setenv("OMP_NUM_THREADS", "1");
 
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
-      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
    }
-   else
-      gSystem->Setenv("OMP_NUM_THREADS", "1");
+#endif
+
+   TMVA::Tools::Instance();
+
 
    std::cout << "Running with nthreads  = " << ROOT::GetThreadPoolSize() << std::endl;
 
@@ -145,6 +167,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
    TMVA::PyMethodBase::PyInitialize();
 #else
    useKerasCNN = false;
+   usePyTorchCNN = false;
 #endif
 
    TFile *outputFile = nullptr;
@@ -160,7 +183,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
     The factory is the major TMVA object you have to interact with. Here is the list of parameters you need to pass
 
     - The first argument is the base of the name of all the output
-    weightfiles in the directory weight/ that will be created with the
+    weight files in the directory weight/ that will be created with the
     method parameters
 
     - The second argument is the output file for the training results
@@ -190,7 +213,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    **/
 
-   TMVA::DataLoader *loader = new TMVA::DataLoader("dataset");
+   TMVA::DataLoader loader("dataset");
 
    /***
 
@@ -200,20 +223,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    **/
 
-   int imgSize = 16 * 16;
-   TString inputFileName = "images_data_16x16.root";
-   // TString inputFileName = "/home/moneta/data/sample_images_32x32.gsoc.root";
-
-   bool fileExist = !gSystem->AccessPathName(inputFileName);
-
-   // if file does not exists create it
-   if (!fileExist) {
-      MakeImagesTree(5000, 16, 16);
-   }
-
-   // TString inputFileName = "tmva_class_example.root";
-
-   auto inputFile = TFile::Open(inputFileName);
+   std::unique_ptr<TFile> inputFile{TFile::Open(inputFileName)};
    if (!inputFile) {
       Error("TMVA_CNN_Classification", "Error opening input file %s - exit", inputFileName.Data());
       return;
@@ -221,8 +231,17 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    // --- Register the training and test trees
 
-   TTree *signalTree = (TTree *)inputFile->Get("sig_tree");
-   TTree *backgroundTree = (TTree *)inputFile->Get("bkg_tree");
+   auto signalTree = inputFile->Get<TTree>("sig_tree");
+   auto backgroundTree = inputFile->Get<TTree>("bkg_tree");
+
+   if (!signalTree) {
+      Error("TMVA_CNN_Classification", "Could not find signal tree in file '%s'", inputFileName.Data());
+      return;
+   }
+   if (!backgroundTree) {
+      Error("TMVA_CNN_Classification", "Could not find background tree in file '%s'", inputFileName.Data());
+      return;
+   }
 
    int nEventsSig = signalTree->GetEntries();
    int nEventsBkg = backgroundTree->GetEntries();
@@ -232,17 +251,17 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
    Double_t backgroundWeight = 1.0;
 
    // You can add an arbitrary number of signal or background trees
-   loader->AddSignalTree(signalTree, signalWeight);
-   loader->AddBackgroundTree(backgroundTree, backgroundWeight);
+   loader.AddSignalTree(signalTree, signalWeight);
+   loader.AddBackgroundTree(backgroundTree, backgroundWeight);
 
    /// add event variables (image)
    /// use new method (from ROOT 6.20 to add a variable array for all image data)
-   loader->AddVariablesArray("vars", imgSize);
+   loader.AddVariablesArray("vars", imgSize);
 
    // Set individual event weights (the variables must exist in the original TTree)
    //    for signal    : factory->SetSignalWeightExpression    ("weight1*weight2");
    //    for background: factory->SetBackgroundWeightExpression("weight1*weight2");
-   // loader->SetBackgroundWeightExpression( "weight" );
+   // loader.SetBackgroundWeightExpression( "weight" );
 
    // Apply additional cuts on the signal and background samples (can be different)
    TCut mycuts = ""; // for example: TCut mycuts = "abs(var1)<0.5 && abs(var2-0.5)<1";
@@ -252,7 +271,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
    //
    // If no numbers of events are given, half of the events in the tree are used
    // for training, and the other half for testing:
-   //    loader->PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
+   //    loader.PrepareTrainingAndTestTree( mycut, "SplitMode=random:!V" );
    // It is possible also to specify the number of training and testing events,
    // note we disable the computation of the correlation matrix of the input variables
 
@@ -264,7 +283,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       "nTrain_Signal=%d:nTrain_Background=%d:SplitMode=Random:SplitSeed=100:NormMode=NumEvents:!V:!CalcCorrelations",
       nTrainSig, nTrainBkg);
 
-   loader->PrepareTrainingAndTestTree(mycuts, mycutb, prepareOptions);
+   loader.PrepareTrainingAndTestTree(mycuts, mycutb, prepareOptions);
 
    /***
 
@@ -277,8 +296,6 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    **/
 
-   // signalTree->Print();
-
    /****
         # Booking Methods
 
@@ -288,8 +305,8 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    // Boosted Decision Trees
    if (useTMVABDT) {
-      factory.BookMethod(loader, TMVA::Types::kBDT, "BDT",
-                         "!V:NTrees=400:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
+      factory.BookMethod(&loader, TMVA::Types::kBDT, "BDT",
+                         "!V:NTrees=200:MinNodeSize=2.5%:MaxDepth=2:BoostType=AdaBoost:AdaBoostBeta=0.5:"
                          "UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType=GiniIndex:nCuts=20");
    }
    /**
@@ -311,7 +328,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       // parameters) The training string must be concatenates with the `|` delimiter
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -335,7 +352,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       dnnOptions += ":Architecture=CPU";
 #endif
 
-      factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
+      factory.BookMethod(&loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
    }
 
    /***
@@ -355,7 +372,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
        - note in this case we are using a filer 3x3 and padding=1 and stride=1 so we get the output dimension of the
    conv layer equal to the input
 
-      - note we use after the first convolutional layer a batch normalization layer. This seems to help significatly the
+      - note we use after the first convolutional layer a batch normalization layer. This seems to help significantly the
    convergence
 
      - For the MaxPool layer:
@@ -379,7 +396,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       // Training strategies.
       TString trainingString1("LearningRate=1e-3,Momentum=0.9,Repetitions=1,"
                               "ConvergenceSteps=5,BatchSize=100,TestRepetitions=1,"
-                              "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
+                              "MaxEpochs=10,WeightDecay=1e-4,Regularization=None,"
                               "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.0");
 
       TString trainingStrategyString("TrainingStrategy=");
@@ -408,7 +425,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       cnnMethodName = "TMVA_CNN_CPU";
 #endif
 
-      factory.BookMethod(loader, TMVA::Types::kDL, cnnMethodName, cnnOptions);
+      factory.BookMethod(&loader, TMVA::Types::kDL, cnnMethodName, cnnOptions);
    }
 
    /**
@@ -416,19 +433,24 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    **/
 
+#ifdef R__HAS_PYMVA
+   // The next section uses Python packages, execute it only if PyMVA is available
+   TString tmva_python_exe{TMVA::Python_Executable()};
+   TString python_exe = tmva_python_exe.IsNull() ? "python" : tmva_python_exe;
+
    if (useKerasCNN) {
 
       Info("TMVA_CNN_Classification", "Building convolutional keras model");
       // create python script which can be executed
-      // crceate 2 conv2d layer + maxpool + dense
+      // create 2 conv2d layer + maxpool + dense
       TMacro m;
-      m.AddLine("import keras");
-      m.AddLine("from keras.models import Sequential");
-      m.AddLine("from keras.optimizers import Adam");
+      m.AddLine("import tensorflow");
+      m.AddLine("from tensorflow.keras.models import Sequential");
+      m.AddLine("from tensorflow.keras.optimizers import Adam");
       m.AddLine(
-         "from keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape, BatchNormalization");
+         "from tensorflow.keras.layers import Input, Dense, Dropout, Flatten, Conv2D, MaxPooling2D, Reshape, BatchNormalization");
       m.AddLine("");
-      m.AddLine("model = keras.models.Sequential() ");
+      m.AddLine("model = Sequential() ");
       m.AddLine("model.add(Reshape((16, 16, 1), input_shape = (256, )))");
       m.AddLine("model.add(Conv2D(10, kernel_size = (3, 3), kernel_initializer = 'glorot_normal',activation = "
                 "'relu', padding = 'same'))");
@@ -440,26 +462,45 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
       m.AddLine("model.add(Flatten())");
       m.AddLine("model.add(Dense(256, activation = 'relu')) ");
       m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
-      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
       m.AddLine("model.save('model_cnn.h5')");
       m.AddLine("model.summary()");
 
       m.SaveSource("make_cnn_model.py");
       // execute
-      gSystem->Exec("python make_cnn_model.py");
+      gSystem->Exec(python_exe + " make_cnn_model.py");
 
       if (gSystem->AccessPathName("model_cnn.h5")) {
          Warning("TMVA_CNN_Classification", "Error creating Keras model file - skip using Keras");
       } else {
          // book PyKeras method only if Keras model could be created
-         Info("TMVA_CNN_Classification", "Booking Keras CNN model");
+         Info("TMVA_CNN_Classification", "Booking tf.Keras CNN model");
          factory.BookMethod(
-            loader, TMVA::Types::kPyKeras, "PyKeras",
-            "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:"
-            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=20:BatchSize=100:"
+            &loader, TMVA::Types::kPyKeras, "PyKeras",
+            "H:!V:VarTransform=None:FilenameModel=model_cnn.h5:tf.keras:"
+            "FilenameTrainedModel=trained_model_cnn.h5:NumEpochs=10:BatchSize=100:"
             "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
       }
    }
+
+   if (usePyTorchCNN) {
+
+      Info("TMVA_CNN_Classification", "Using Convolutional PyTorch Model");
+      TString pyTorchFileName = gROOT->GetTutorialDir() + TString("/tmva/PyTorch_Generate_CNN_Model.py");
+      // check that pytorch can be imported and file defining the model and used later when booking the method is
+      // existing
+      if (gSystem->Exec(python_exe + " -c 'import torch'") || gSystem->AccessPathName(pyTorchFileName)) {
+         Warning("TMVA_CNN_Classification", "PyTorch is not installed or model building file is not existing - skip using PyTorch");
+      } else {
+         // book PyTorch method only if PyTorch model could be created
+         Info("TMVA_CNN_Classification", "Booking PyTorch CNN model");
+         TString methodOpt = "H:!V:VarTransform=None:FilenameModel=PyTorchModelCNN.pt:"
+                             "FilenameTrainedModel=PyTorchTrainedModelCNN.pt:NumEpochs=10:BatchSize=100";
+         methodOpt += TString(":UserCode=") + pyTorchFileName;
+         factory.BookMethod(&loader, TMVA::Types::kPyTorch, "PyTorch", methodOpt);
+      }
+   }
+#endif
 
    ////  ## Train Methods
 
@@ -473,7 +514,7 @@ void TMVA_CNN_Classification(std::vector<bool> opt = {1, 1, 1, 1})
 
    /// ## Plot ROC Curve
 
-   auto c1 = factory.GetROCCurve(loader);
+   auto c1 = factory.GetROCCurve(&loader);
    c1->Draw();
 
    // close outputfile to save output file

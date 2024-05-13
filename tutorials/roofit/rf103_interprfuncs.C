@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Basic functionality: interpreted functions and PDFs.
+/// Basic functionality: interpreted functions and PDFs.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -20,7 +18,6 @@
 #include "RooPlot.h"
 #include "RooFitResult.h"
 #include "RooGenericPdf.h"
-#include "RooConstVar.h"
 
 using namespace RooFit;
 
@@ -36,7 +33,7 @@ void rf103_interprfuncs()
    // C o n s t r u c t   g e n e r i c   p d f   f r o m   i n t e r p r e t e d   e x p r e s s i o n
    // -------------------------------------------------------------------------------------------------
 
-   // To construct a proper p.d.f, the formula expression is explicitly normalized internally by dividing
+   // To construct a proper pdf, the formula expression is explicitly normalized internally by dividing
    // it by a numeric integral of the expression over x in the range [-20,20]
    //
    RooRealVar alpha("alpha", "alpha", 5, 0.1, 10);
@@ -45,13 +42,13 @@ void rf103_interprfuncs()
    // S a m p l e ,   f i t   a n d   p l o t   g e n e r i c   p d f
    // ---------------------------------------------------------------
 
-   // Generate a toy dataset from the interpreted p.d.f
-   RooDataSet *data = genpdf.generate(x, 10000);
+   // Generate a toy dataset from the interpreted pdf
+   std::unique_ptr<RooDataSet> data{genpdf.generate(x, 10000)};
 
-   // Fit the interpreted p.d.f to the generated data
-   genpdf.fitTo(*data);
+   // Fit the interpreted pdf to the generated data
+   genpdf.fitTo(*data, PrintLevel(-1));
 
-   // Make a plot of the data and the p.d.f overlaid
+   // Make a plot of the data and the pdf overlaid
    RooPlot *xframe = x.frame(Title("Interpreted expression pdf"));
    data->plotOn(xframe);
    genpdf.plotOn(xframe);
@@ -78,15 +75,15 @@ void rf103_interprfuncs()
    // ---------------------------------
 
    // Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian dataset with mean 10 and width 3
-   RooGaussian g1("g1", "g1", x, RooConst(10), RooConst(3));
-   RooDataSet *data2 = g1.generate(x, 1000);
+   RooGaussian g1("g1", "g1", x, 10.0, 3.0);
+   std::unique_ptr<RooDataSet> data2{g1.generate(x, 1000)};
 
    // F i t   a n d   p l o t   t a i l o r e d   s t a n d a r d   p d f
    // -------------------------------------------------------------------
 
    // Fit g2 to data from g1
-   RooFitResult *r = g2.fitTo(*data2, Save());
-   r->Print();
+   std::unique_ptr<RooFitResult> fitResult{g2.fitTo(*data2, Save(), PrintLevel(-1))};
+   fitResult->Print();
 
    // Plot data on frame and overlay projection of g2
    RooPlot *xframe2 = x.frame(Title("Tailored Gaussian pdf"));

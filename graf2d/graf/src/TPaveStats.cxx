@@ -32,11 +32,12 @@ The histogram statistics painter class.
 
 To draw histogram statistics and fit parameters.
 
-- [Statistics Display](#PS01)
-- [Fit Statistics](#PS02)
-- [Statistics box editing](#PS03)
+- [Statistics Display](\ref PS01)
+- [Fit Statistics](\ref PS02)
+- [Statistics box editing](\ref PS03)
 
-## <a name="PS01"></a> Statistics Display
+\anchor PS01
+## Statistics Display
 
 The type of information shown in the histogram statistics box can be selected
 with:
@@ -166,6 +167,8 @@ its position with these lines ("`h`" being the pointer to the histogram):
       Root > st->SetX2NDC(newx2); //new x end position
 ~~~
 
+To remove the border or shadow of the TPaveStats, use the function TPave::SetBorderSize
+
 To change the type of information for an histogram with an existing
 `TPaveStats` one should do:
 ~~~ {.cpp}
@@ -184,7 +187,8 @@ and activate it again with:
       h->SetStats(1).
 ~~~
 
-## <a name="PS02"></a> Fit Statistics
+\anchor PS02
+## Fit Statistics
 
 The type of information about fit parameters printed in the histogram statistics
 box can be selected via the parameter mode. The parameter mode can be
@@ -208,7 +212,8 @@ print fit probability, parameter names/values and errors.
 Note: `gStyle->SetOptFit(1)` means "default value", so it is equivalent
 to `gStyle->SetOptFit(111)`
 
-## <a name="PS03"></a> Statistics box editing
+\anchor PS03
+## Statistics box editing
 
 The following example show how to remove and add a line in a statistics box.
 
@@ -225,7 +230,7 @@ const UInt_t kTakeStyle = BIT(17); //see TStyle::SetOptFit/Stat
 
 TPaveStats::TPaveStats(): TPaveText()
 {
-   fParent  = 0;
+   fParent  = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
 }
@@ -236,7 +241,7 @@ TPaveStats::TPaveStats(): TPaveText()
 TPaveStats::TPaveStats(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)
 {
-   fParent = 0;
+   fParent  = nullptr;
    fOptFit  = gStyle->GetOptFit();
    fOptStat = gStyle->GetOptStat();
    SetFitFormat(gStyle->GetFitFormat());
@@ -341,38 +346,35 @@ void TPaveStats::Paint(Option_t *option)
    Float_t margin    = fMargin*dx;
    Double_t yspace   = dy/Double_t(nlines);
    Double_t textsave = textsize;
-   TObject *line;
-   TLatex *latex, *latex_tok;
    TIter next(fLines);
    Double_t longest = 0, titlelength = 0;
    Double_t w, wtok[2];
-   char *st, *sl=0;
+   char *st, *sl = nullptr;
    if (textsize == 0)  {
       textsize = 0.92*yspace/(y2 - y1);
       titlesize = textsize;
-      wtok[0] = 0; wtok[1] = 0;
-      while ((line = (TObject*) next())) {
+      wtok[0] = wtok[1] = 0;
+      while (auto line = (TObject*) next()) {
          if (line->IsA() == TLatex::Class()) {
-            latex = (TLatex*)line;
+            TLatex *latex = (TLatex*)line;
             Int_t nchs = strlen(latex->GetTitle());
             sl = new char[nchs+1];
             strlcpy(sl, latex->GetTitle(),nchs+1);
-            if (strpbrk(sl, "=") !=0 && print_name == 0) {
+            if (strpbrk(sl, "=") && print_name == 0) {
                st = strtok(sl, "=");
                Int_t itok = 0;
-               while ( st !=0 ) {
-                  latex_tok = new TLatex(0.,0.,st);
+               while (st && (itok < 2)) {
+                  TLatex latex_tok(0., 0., st);
                   Style_t tfont = latex->GetTextFont();
                   if (tfont == 0) tfont = GetTextFont();
-                  latex_tok->SetTextFont(tfont);
-                  latex_tok->SetTextSize(textsize);
-                  w = latex_tok->GetXsize();
+                  latex_tok.SetTextFont(tfont);
+                  latex_tok.SetTextSize(textsize);
+                  w = latex_tok.GetXsize();
                   if (w > wtok[itok]) wtok[itok] = w;
-                  st = strtok(0, "=");
+                  st = strtok(nullptr, "=");
                   ++itok;
-                  delete latex_tok;
                }
-            } else if (strpbrk(sl, "|") !=0) {
+            } else if (strpbrk(sl, "|")) {
             } else {
                print_name = 0;
                Style_t tfont = latex->GetTextFont();
@@ -382,7 +384,7 @@ void TPaveStats::Paint(Option_t *option)
                if (titlelength > 0.98*dx) titlesize *= 0.98*dx/titlelength;
                latex->SetTextFont(tfont);
             }
-            delete [] sl; sl = 0;
+            delete [] sl; sl = nullptr;
          }
       }
       longest = wtok[0]+wtok[1]+2.*margin;
@@ -398,9 +400,9 @@ void TPaveStats::Paint(Option_t *option)
    // Iterate over all lines
    // Copy pavetext attributes to line attributes if line attributes not set
    next.Reset();
-   while ((line = (TObject*) next())) {
+   while (auto line = (TObject*) next()) {
       if (line->IsA() == TLatex::Class()) {
-         latex = (TLatex*)line;
+         TLatex *latex = (TLatex*)line;
          ytext -= yspace;
          Double_t xl    = latex->GetX();
          Double_t yl    = latex->GetY();
@@ -414,12 +416,12 @@ void TPaveStats::Paint(Option_t *option)
 
          Int_t nchs = strlen(latex->GetTitle());
          sl = new char[nchs+1];
-         strlcpy(sl, latex->GetTitle(),nchs+1);
+         strlcpy(sl, latex->GetTitle(), nchs+1);
          // Draw all the histogram stats except the 2D under/overflow
-         if (strpbrk(sl, "=") !=0 && print_name == 0) {
+         if (strpbrk(sl, "=") && print_name == 0) {
             st = strtok(sl, "=");
             Int_t halign = 12;
-            while ( st !=0 ) {
+            while ( st ) {
                typolabel = st;
                latex->SetTextAlign(halign);
                if (halign == 12) xtext = x1ref + margin;
@@ -431,11 +433,11 @@ void TPaveStats::Paint(Option_t *option)
                latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                              latex->GetTextSize(),
                                              typolabel.Data());
-               st = strtok(0, "=");
+               st = strtok(nullptr, "=");
                halign = 32;
             }
          // Draw the 2D under/overflow
-         } else if (strpbrk(sl, "|") !=0) {
+         } else if (strpbrk(sl, "|")) {
             Double_t yline1 = ytext+yspace/2.;
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
@@ -445,7 +447,7 @@ void TPaveStats::Paint(Option_t *option)
             gPad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
-            while ( st !=0 ) {
+            while ( st ) {
                latex->SetTextAlign(22);
                if (theIndex == 0) xtext = 0.5*(x1ref+xline1);
                if (theIndex == 1) xtext = 0.5*(x1ref+x2ref);
@@ -456,7 +458,7 @@ void TPaveStats::Paint(Option_t *option)
                                              latex->GetTextSize(),
                                              typolabel.Data());
                theIndex++;
-               st = strtok(0, "|");
+               st = strtok(nullptr, "|");
             }
          // Draw the histogram identifier
          } else {
@@ -488,12 +490,11 @@ void TPaveStats::Paint(Option_t *option)
       x2 = x2ref - 0.25*dx;
       y1 = y2ref - 0.02*dy;
       y2 = y2ref + 0.02*dy;
-      TPaveLabel *title = new TPaveLabel(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
-      title->SetFillColor(GetFillColor());
-      title->SetTextColor(GetTextColor());
-      title->SetTextFont(GetTextFont());
-      title->Paint();
-      delete title;
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      title.SetFillColor(GetFillColor());
+      title.SetTextColor(GetTextColor());
+      title.SetTextFont(GetTextFont());
+      title.Paint();
    }
 }
 

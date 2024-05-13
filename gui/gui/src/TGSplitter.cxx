@@ -9,15 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSplitter, TGVSplitter and TGHSplitter                              //
-//                                                                      //
-// A splitter allows the frames left and right or above and below of    //
-// it to be resized. The frame to be resized must have the kFixedWidth  //
-// or kFixedHeight property set.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGSplitter
+    \ingroup guiwidgets
+
+A splitter allows the frames left and right or above and below of
+it to be resized. The frame to be resized must have the kFixedWidth
+or kFixedHeight property set.
+
+*/
+
 
 #include "TGSplitter.h"
 #include "TGPicture.h"
@@ -36,7 +37,7 @@ ClassImp(TGVFileSplitter);
 /// Create a splitter.
 
 TGSplitter::TGSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
    TGFrame(p, w, h, options, back),
    fDragging        (kFALSE),
    fExternalHandler (kFALSE),
@@ -66,7 +67,7 @@ void TGSplitter::Moved(Int_t delta)
 /// Create a vertical splitter.
 
 TGVSplitter::TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
+              UInt_t options, Pixel_t back) : TGSplitter(p, w, h, options, back)
 {
    fSplitCursor = kNone;
    fSplitterPic = fClient->GetPicture("splitterv.xpm");
@@ -261,7 +262,7 @@ void TGVSplitter::DrawBorder()
 /// Create a horizontal splitter.
 
 TGHSplitter::TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h,
-              UInt_t options, ULong_t back) : TGSplitter(p, w, h, options, back)
+              UInt_t options, Pixel_t back) : TGSplitter(p, w, h, options, back)
 {
    fSplitCursor = kNone;
    fSplitterPic = 0;
@@ -532,7 +533,7 @@ Bool_t TGVFileSplitter::HandleButton(Event_t *event)
 
 void TGVFileSplitter::LayoutHeader(TGFrame *f)
 {
-   Emit("LayoutHeader(TGFrame*)", (Long_t)f);
+   Emit("LayoutHeader(TGFrame*)", (Longptr_t)f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -564,7 +565,7 @@ void TGVFileSplitter::ButtonReleased()
 
 void TGVFileSplitter::DoubleClicked(TGVFileSplitter* splitter)
 {
-   Emit("DoubleClicked(TGVFileSplitter*)", (Long_t) splitter);
+   Emit("DoubleClicked(TGVFileSplitter*)", (Longptr_t) splitter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

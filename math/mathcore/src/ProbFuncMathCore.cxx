@@ -7,9 +7,9 @@
 #include "Math/Error.h"
 #include "Math/ProbFuncMathCore.h"
 #include "Math/SpecFuncMathCore.h"
-#include <stdio.h>
+#include <cstdio>
 #include <limits>
-using namespace std;
+
 namespace ROOT {
 namespace Math {
 

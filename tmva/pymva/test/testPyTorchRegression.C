@@ -15,13 +15,13 @@ int testPyTorchRegression(){
    std::cout << "Get test data..." << std::endl;
    TString fname = "./tmva_reg_example.root";
    if (gSystem->AccessPathName(fname))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_reg_example.root");
+      gSystem->Exec("curl -L -O http://root.cern.ch/files/tmva_reg_example.root");
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("python generatePyTorchModelRegression.py");
+   ret = gSystem->Exec(TMVA::Python_Executable() + " generatePyTorchModelRegression.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;
@@ -49,7 +49,7 @@ int testPyTorchRegression(){
 
    // Book and train method
    factory->BookMethod(dataloader, TMVA::Types::kPyTorch, "PyTorch",
-      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelRegression.pt:FilenameTrainedModel=trainedPyTorchModelRegression.h5:NumEpochs=10:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelRegression.py");
+      "!H:!V:VarTransform=D,G:FilenameModel=PyTorchModelRegression.pt:FilenameTrainedModel=trainedPyTorchModelRegression.pt:NumEpochs=10:BatchSize=32:SaveBestOnly=false:UserCode=generatePyTorchModelRegression.py");
    std::cout << "Train model..." << std::endl;
    factory->TrainAllMethods();
 

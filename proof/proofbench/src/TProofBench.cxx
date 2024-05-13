@@ -13,7 +13,6 @@
   \ingroup proof
 
   Set of utilities to benchmark a PROOF facility.
-  See also https://root.cern.ch/proof-benchmark-framework-tproofbench .
 
 */
 
@@ -745,7 +744,7 @@ public:
    TString fDesc; // Test description string, if any
    fileDesc(const char *n, const char *o,
             Long_t t, const char *d) : TNamed(n, o), fMtime(t), fDesc(d) { }
-   Int_t   Compare(const TObject *o) const {
+   Int_t   Compare(const TObject *o) const override {
       const fileDesc *fd = static_cast<const fileDesc *>(o);
       if (!fd || (fd && fd->fMtime == fMtime)) return 0;
       if (fMtime < fd->fMtime) return -1;
@@ -1331,10 +1330,10 @@ Int_t TProofBench::RemoveDataSet(const char *dset)
 /// The string 'fnroot' defines the location of the files, interpreted as an URL.
 /// Examples:
 ///          fnroot             files
-///          'event'            <datadir>/event_<ord>_<#>.root
-///          '/mss/event'       /mss/event_<ord>_<#>.root
+///          'event'            `<datadir>`/event_`<ord>`_`<#>`.root
+///          '/mss/event'       /mss/event_`<ord>`_`<#>`.root
 ///          'root://srv//mss/event?remote=1'
-///                             root://srv//mss/event_<ord>_<#>?remote=1.root
+///                             root://srv//mss/event_`<ord>`_`<#>`?remote=1.root
 /// Default selector is TSelEventGen. Use SetDataGenSel and SetDataGenPar to change it
 /// and to pass the list of PARs defining the alternative selector.
 /// The argument 'nevt' controls the number of events per file (-1 for the default,

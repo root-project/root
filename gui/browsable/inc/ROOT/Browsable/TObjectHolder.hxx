@@ -12,7 +12,6 @@
 #include <ROOT/Browsable/RHolder.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class TObjectHolder
@@ -24,26 +23,45 @@ namespace Browsable {
 */
 
 class TObjectHolder : public RHolder {
-   TObject* fObj{nullptr};   ///<! plain holder without IO
-   bool fOwner;              ///<! is TObject owner
+   TObject *fObj{nullptr};   ///<! plain holder without IO
+   void *fAdjusted{nullptr}; ///<! pointer on real class returned by fObj->IsA()
+   bool fOwner{false};       ///<! is TObject owner
 protected:
    void *AccessObject() final { return fOwner ? nullptr : fObj; }
    void *TakeObject() final;
    RHolder *DoCopy() const final { return new TObjectHolder(fObj); }
+   void ClearROOTOwnership(TObject *obj);
 public:
-   TObjectHolder(TObject *obj, bool owner = false) { fObj = obj; fOwner = owner; }
+   TObjectHolder(TObject *obj, bool owner = false)
+   {
+      fAdjusted = fObj = obj;
+      fOwner = owner;
+      if (fOwner && fObj)
+         ClearROOTOwnership(fObj);
+      if (fAdjusted) {
+         auto offset = fObj->IsA()->GetBaseClassOffset(TObject::Class());
+         if (offset > 0)
+            fAdjusted = (char *) fAdjusted - offset;
+      }
+   }
+
    virtual ~TObjectHolder()
    {
       if (fOwner) delete fObj;
    }
 
+   void Forget() final
+   {
+      fAdjusted = fObj = nullptr;
+      fOwner = false;
+   }
+
    const TClass *GetClass() const final { return fObj ? fObj->IsA() : nullptr; }
-   const void *GetObject() const final { return fObj; }
+   const void *GetObject() const final { return fAdjusted; }
 };
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

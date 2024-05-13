@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief Neutrino Oscillation Example from Feldman & Cousins
+/// Neutrino Oscillation Example from Feldman & Cousins
 ///
 /// This tutorial shows a more complex example using the FeldmanCousins utility
 /// to create a confidence interval for a toy neutrino oscillation experiment.
@@ -37,7 +37,6 @@
 #include "RooPolynomial.h"
 #include "RooRandom.h"
 
-#include "RooNLLVar.h"
 #include "RooProfileLL.h"
 
 #include "RooPlot.h"
@@ -50,14 +49,6 @@
 #include "TStopwatch.h"
 
 #include <iostream>
-
-// PDF class created for this macro
-#if !defined(__CINT__) || defined(__MAKECINT__)
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.h"
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx" // so that it can be executed directly
-#else
-#include "../tutorials/roostats/NuMuToNuE_Oscillation.cxx+" // so that it can be executed directly
-#endif
 
 // use this order for safety on library loading
 using namespace RooFit;
@@ -97,10 +88,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // RooRealVar deltaMSq("deltaMSq","#Delta m^{2}",40,20,70,"eV/c^{2}");
    //  RooRealVar sinSq2theta("sinSq2theta","sin^{2}(2#theta)", .006,.001,.01);
    // PDF for oscillation only describes deltaMSq dependence, sinSq2theta goes into sigNorm
-   // 1) The code for this PDF was created by issuing these commands
-   //    root [0] RooClassFactory x
-   //    root [1] x.makePdf("NuMuToNuE_Oscillation","L,E,deltaMSq","","pow(sin(1.27*deltaMSq*L/E),2)")
-   NuMuToNuE_Oscillation PnmuTone("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", L, E, deltaMSq);
+   auto oscillationFormula = "std::pow(std::sin(1.27 * x[2] * x[0] / x[1]), 2)";
+   RooGenericPdf PnmuTone("PnmuTone", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, {L, E, deltaMSq});
 
    // only E is observable, so create the signal model by integrating out L
    RooAbsPdf *sigModel = PnmuTone.createProjection(L);
@@ -117,7 +106,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // Independent copy for Integral
    RooRealVar EPrime("EPrime", "", 15, 10, 60, "GeV");
    RooRealVar LPrime("LPrime", "", .800, .600, 1.0, "km"); // need these units in formula
-   NuMuToNuE_Oscillation PnmuTonePrime("PnmuTonePrime", "P(#nu_{#mu} #rightarrow #nu_{e}", LPrime, EPrime, deltaMSq);
+   RooGenericPdf PnmuTonePrime("PnmuTonePrime", "P(#nu_{#mu} #rightarrow #nu_{e}", oscillationFormula, {LPrime, EPrime, deltaMSq});
    RooAbsReal *intProbToOscInExp = PnmuTonePrime.createIntegral(RooArgSet(EPrime, LPrime));
 
    // Getting the flux is a bit tricky.  It is more clear to include a cross section term that is not
@@ -187,8 +176,8 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
    // plot the likelihood function
    dataCanvas->cd(3);
-   RooNLLVar nll("nll", "nll", model, *data, Extended());
-   RooProfileLL pll("pll", "", nll, RooArgSet(deltaMSq, sinSq2theta));
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, Extended(true))};
+   RooProfileLL pll("pll", "", *nll, RooArgSet(deltaMSq, sinSq2theta));
    //  TH1* hhh = nll.createHistogram("hhh",sinSq2theta,Binning(40),YVar(deltaMSq,Binning(40))) ;
    TH1 *hhh = pll.createHistogram("hhh", sinSq2theta, Binning(40), YVar(deltaMSq, Binning(40)), Scaling(kFALSE));
    hhh->SetLineColor(kBlue);
@@ -258,7 +247,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
    // first plot a small dot for every point tested
    if (doFeldmanCousins) {
       RooDataHist *parameterScan = (RooDataHist *)fc.GetPointsToScan();
-      TH2F *hist = (TH2F *)parameterScan->createHistogram("sinSq2theta:deltaMSq", 30, 30);
+      TH2F *hist = parameterScan->createHistogram(deltaMSq,sinSq2theta, 30, 30);
       //  hist->Draw();
       TH2F *forContour = (TH2F *)hist->Clone();
 

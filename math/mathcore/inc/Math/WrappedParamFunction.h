@@ -1,12 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Author: L. Moneta Thu Nov 23 10:38:32 2006
 
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2006  LCG ROOT Math Team, CERN/PH-SFT                *
- *                                                                    *
- *                                                                    *
- **********************************************************************/
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2006  CERN                                           *
+  * All rights reserved.                                               *
+  *                                                                    *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+  *                                                                    *
+  **********************************************************************/
 
 // Header file for class WrappedParamFunction
 
@@ -29,7 +32,7 @@ namespace ROOT {
 typedef double( * FreeParamMultiFunctionPtr ) (const double *, const double * );
 
 /**
-   WrappedParamFunction class to wrap any multi-dimensional function pbject
+   WrappedParamFunction class to wrap any multi-dimensional function object
    implementing the operator()(const double * x, const double * p)
    in an interface-like IParamFunction with a vector storing and caching internally the
    parameter values
@@ -46,12 +49,12 @@ public:
       Constructor a wrapped function from a pointer to a callable object, the function dimension and number of parameters
       which are set to zero by default
    */
-   WrappedParamFunction (FuncPtr  func, unsigned int dim = 1, unsigned int npar = 0, double * par = 0) :
+   WrappedParamFunction (FuncPtr  func, unsigned int dim = 1, unsigned int npar = 0, double * par = nullptr) :
       fFunc(func),
       fDim(dim),
       fParams(std::vector<double>(npar) )
    {
-      if (par != 0) std::copy(par,par+npar,fParams.begin() );
+      if (par) std::copy(par, par+npar, fParams.begin());
    }
 
 //    /**
@@ -90,27 +93,27 @@ public:
 //    {}
 
    /// clone the function
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       return new WrappedParamFunction(fFunc, fDim, fParams.begin(), fParams.end());
    }
 
-   const double * Parameters() const {
+   const double * Parameters() const override {
       return fParams.empty() ? nullptr : &fParams.front();
    }
 
-   void SetParameters(const double * p)  {
+   void SetParameters(const double * p) override  {
       std::copy(p, p+NPar(), fParams.begin() );
    }
 
-   unsigned int NPar() const { return fParams.size(); }
+   unsigned int NPar() const override { return fParams.size(); }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
 
 private:
 
    /// evaluate the function given values and parameters (requested interface)
-   double DoEvalPar(const double * x, const double * p) const {
+   double DoEvalPar(const double * x, const double * p) const override {
       return (*fFunc)( x, p );
    }
 
@@ -142,7 +145,7 @@ class WrappedParamFunctionGen : public IParamMultiFunction {
 public:
 
    /**
-      Constructor a wrapped function from a pointer to a generic callable object implemention operator()(const double *), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables which becames
+      Constructor a wrapped function from a pointer to a generic callable object implementation operator()(const double *), the new function dimension, the number of parameters (number of fixed variables) and an array specifying the index of the fixed variables which became
       parameters in the new API
    */
 
@@ -171,30 +174,30 @@ public:
    }
 
    /// clone the function
-   IMultiGenFunction * Clone() const {
+   IMultiGenFunction * Clone() const override {
       return new WrappedParamFunctionGen(fFunc, fDim, fParams.size(), fParams.empty() ? nullptr : &fParams.front(), fParIndices.empty() ? nullptr : &fParIndices.front());
    }
 
 private:
    // copy ctor
-   WrappedParamFunctionGen(const  WrappedParamFunctionGen &);   // not implemented
-   WrappedParamFunctionGen & operator=(const  WrappedParamFunctionGen &); // not implemented
+   WrappedParamFunctionGen(const  WrappedParamFunctionGen &) = delete;   // not implemented
+   WrappedParamFunctionGen & operator=(const  WrappedParamFunctionGen &) = delete; // not implemented
 
 public:
 
-   const double * Parameters() const {
+   const double * Parameters() const override {
       return fParams.empty() ? nullptr : &fParams.front();
    }
 
-   void SetParameters(const double * p)  {
+   void SetParameters(const double * p) override  {
       unsigned int npar = NPar();
       std::copy(p, p+ npar, fParams.begin() );
       SetParValues(npar, p);
    }
 
-   unsigned int NPar() const { return fParams.size(); }
+   unsigned int NPar() const override { return fParams.size(); }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
 //    // re-implement this since is more efficient
 //    double operator() (const double * x, const double * p) {
@@ -207,7 +210,7 @@ public:
 private:
 
    /// evaluate the function (re-implement for being more efficient)
-   double DoEval(const double * x) const {
+   double DoEval(const double * x) const override {
 
 //       std::cout << this << fDim << " x : ";
 //       std::ostream_iterator<double> oix(std::cout," ,  ");
@@ -234,7 +237,7 @@ private:
    /**
        implement the required IParamFunction interface
    */
-   double DoEvalPar(const double * x, const double * p ) const {
+   double DoEvalPar(const double * x, const double * p ) const override {
       SetParValues(NPar(), p);
       return DoEval(x);
    }
@@ -274,7 +277,7 @@ private:
    }
 
    // set the parameter values in the cached fX vector
-   // makme const because it might be called from const methods
+   // make const because it might be called from const methods
    void SetParValues(unsigned int npar, const double * p) const {
       for (unsigned int i = 0; i < npar; ++i) {
          unsigned int j = fParIndices[i];

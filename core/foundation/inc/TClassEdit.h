@@ -31,6 +31,7 @@ extern "C" {
 #include <string>
 #include <vector>
 #include <array>
+#include <typeinfo>
 
 #include "ESTLType.h"
 
@@ -62,7 +63,7 @@ namespace ROOT {
       class TNormalizedCtxt;
    }
 }
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 
 // TClassEdit is used to manipulate class and type names.
 //
@@ -148,13 +149,14 @@ namespace TClassEdit {
       bool IsTemplate();
 
    private:
-      TSplitType(const TSplitType&); // intentionally not implemented
-      TSplitType &operator=(const TSplitType &); // intentionally not implemented
+      TSplitType(const TSplitType&) = delete;
+      TSplitType &operator=(const TSplitType &) = delete;
    };
 
    void        Init(TClassEdit::TInterpreterLookupHelper *helper);
 
-   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail=0);
+   std::string CleanType (const char *typeDesc,int mode = 0,const char **tail = nullptr);
+   inline bool IsArtificial(std::string_view name) { return name.find('@') != name.npos; }
    bool        IsDefAlloc(const char *alloc, const char *classname);
    bool        IsDefAlloc(const char *alloc, const char *keyclassname, const char *valueclassname);
    bool        IsDefComp (const char *comp , const char *classname);
@@ -163,28 +165,30 @@ namespace TClassEdit {
    bool        IsInterpreterDetail(const char *type);
    bool        IsSTLBitset(const char *type);
    ROOT::ESTLType UnderlyingIsSTLCont(std::string_view type);
-   inline ROOT::ESTLType UnderlyingIsSTLCont (ROOT::Internal::TStringView type) { return UnderlyingIsSTLCont(std::string_view(type)); }
    ROOT::ESTLType IsSTLCont (std::string_view type);
-   inline ROOT::ESTLType IsSTLCont (ROOT::Internal::TStringView type) { return IsSTLCont(std::string_view(type)); }
    int         IsSTLCont (const char *type,int testAlloc);
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);
    void        GetNormalizedName(std::string &norm_name, std::string_view name);
-   inline void GetNormalizedName (std::string &norm_name, ROOT::Internal::TStringView name) { return GetNormalizedName(norm_name, std::string_view(name)); }
    std::string GetLong64_Name(const char *original);
    std::string GetLong64_Name(const std::string& original);
    int         GetSplit  (const char *type, std::vector<std::string> &output, int &nestedLoc, EModType mode = TClassEdit::kNone);
    ROOT::ESTLType STLKind(std::string_view type);    //Kind of stl container
-   inline ROOT::ESTLType STLKind(ROOT::Internal::TStringView type) { return STLKind(std::string_view(type)); }
    int         STLArgs   (int kind);            //Min number of arguments without allocator
    std::string ResolveTypedef(const char *tname, bool resolveAll = false);
    std::string ShortType (const char *typeDesc, int mode);
    std::string InsertStd(const char *tname);
    const char* GetUnqualifiedName(const char*name);
    inline bool IsUniquePtr(std::string_view name) {return 0 == name.compare(0, 11, "unique_ptr<");}
-   inline bool IsUniquePtr(ROOT::Internal::TStringView name) {return IsUniquePtr(std::string_view(name)); }
    inline bool IsStdArray(std::string_view name) {return 0 == name.compare(0, 6, "array<");}
-   inline bool IsStdArray(ROOT::Internal::TStringView name) {return IsStdArray(std::string_view(name)); }
+   inline bool IsStdPair(std::string_view name)
+   {
+      return 0 == name.compare(0, 10, "std::pair<") || 0 == name.compare(0, 5, "pair<");
+   }
+   inline bool IsStdPairBase(std::string_view name)
+   {
+      return 0 == name.compare(0, 17, "std::__pair_base<") || 0 == name.compare(0, 12, "__pair_base<");
+   }
    inline std::string GetUniquePtrType(std::string_view name)
    {
       // Find the first template parameter
@@ -193,7 +197,6 @@ namespace TClassEdit {
       GetSplit(name.data(), v, i);
       return v[1];
    }
-   inline std::string GetUniquePtrType(ROOT::Internal::TStringView name) {return GetUniquePtrType(std::string_view(name)); }
    std::string GetNameForIO(const std::string& templateInstanceName,
                            TClassEdit::EModType mode = TClassEdit::kNone,
                            bool* hasChanged = nullptr);
@@ -221,7 +224,7 @@ namespace TClassEdit {
       demangledName.erase(0, 7);
    strcpy(demangled_name, demangledName.c_str());
 #else
-   char *demangled_name = abi::__cxa_demangle(mangled_name, 0, 0, &errorCode);
+   char *demangled_name = abi::__cxa_demangle(mangled_name, nullptr, nullptr, &errorCode);
    if (!demangled_name || errorCode) {
       free(demangled_name);
       return nullptr;

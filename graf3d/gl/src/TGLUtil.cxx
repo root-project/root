@@ -1421,6 +1421,12 @@ Float_t TGLUtil::fgScreenScalingFactor     = 1.0f;
 Float_t TGLUtil::fgPointLineScalingFactor  = 1.0f;
 Int_t   TGLUtil::fgPickingRadius           = 1;
 
+Float_t TGLUtil::fgSimpleAxisWidthScale = 1.0f;
+Float_t TGLUtil::fgSimpleAxisBBoxScale  = 1.0f;
+
+void TGLUtil::SetSimpleAxisWidthScale(Float_t s) { fgSimpleAxisWidthScale = s; }
+void TGLUtil::SetSimpleAxisBBoxScale(Float_t s) { fgSimpleAxisBBoxScale = s; }
+
 const UChar_t TGLUtil::fgRed[4]    = { 230,   0,   0, 255 };
 const UChar_t TGLUtil::fgGreen[4]  = {   0, 230,   0, 255 };
 const UChar_t TGLUtil::fgBlue[4]   = {   0,   0, 230, 255 };
@@ -1455,7 +1461,7 @@ protected:
 public:
    GLUtesselator *fTess;
 
-   TGLTesselatorWrap(tessfuncptr_t vertex_func) : fTess(0)
+   TGLTesselatorWrap(tessfuncptr_t vertex_func) : fTess(nullptr)
    {
       fTess = gluNewTess();
       if (!fTess)
@@ -2487,7 +2493,8 @@ void TGLUtil::DrawReferenceMarker(const TGLCamera  & camera,
 
 void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
                              const TGLBoundingBox & bbox,
-                                   Int_t            axesType)
+                                   Int_t            axesType,
+                                   Float_t          labelScale)
 {
    if (axesType == kAxesNone)
       return;
@@ -2512,8 +2519,10 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
    Double_t   pixelSize   = pixelVector.Mag();
 
    // Find x/y/z min/max values
-   Double_t min[3] = { bbox.XMin(), bbox.YMin(), bbox.ZMin() };
-   Double_t max[3] = { bbox.XMax(), bbox.YMax(), bbox.ZMax() };
+   TGLBoundingBox bb(bbox);
+   bb.Scale(fgSimpleAxisBBoxScale);
+   Double_t min[3] = { bb.XMin(), bb.YMin(), bb.ZMin() };
+   Double_t max[3] = { bb.XMax(), bb.YMax(), bb.ZMax() };
 
    for (UInt_t i = 0; i < 3; i++) {
       TGLVertex3 start;
@@ -2541,7 +2550,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = max[i];
             vector[i] = min[i] - max[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2]);
       }
       // +ive axis?
       if (max[i] > 0.0) {
@@ -2553,7 +2562,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = min[i];
             vector[i] = max[i] - min[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2 + 1]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2 + 1]);
       }
    }
 
@@ -2608,8 +2617,8 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
       maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
                                                     padPixels*axisViewport.Y()/axisViewport.Mag());
 
-      DrawNumber(Form("%.0f", min[k]), minPos, kTRUE); // Min value
-      DrawNumber(Form("%.0f", max[k]), maxPos, kTRUE); // Max value
+      DrawNumber(Form("%.0f", labelScale * min[k]), minPos, kTRUE); // Min value
+      DrawNumber(Form("%.0f", labelScale * max[k]), maxPos, kTRUE); // Max value
 
       // Axis name beside max value
       TGLVertex3 namePos = maxPos -
@@ -2893,7 +2902,7 @@ void ObjectIDToColor(Int_t objectID, Bool_t highColor)
    if (!highColor)
       glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
    else {
-      if (!gObjectIDToColor.size()) {
+      if (gObjectIDToColor.empty()) {
       //Initialize lookup tables.
          for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
             gObjectIDToColor[id] = gColorTriplets[i];
@@ -2919,7 +2928,7 @@ Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
    if (!highColor)
       return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
    else {
-      if (!gObjectIDToColor.size())
+      if (gObjectIDToColor.empty())
          return 0;
 
       RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};
@@ -3197,8 +3206,8 @@ void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
 void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
                              const Double_t *rgba1, const Double_t *rgba2)
 {
-   assert(rgba1 != 0 && "DrawBoxWithGradientFill, parameter 'rgba1' is null");
-   assert(rgba2 != 0 && "DrawBoxWithGradientFill, parameter 'rgba2' is null");
+   assert(rgba1 != nullptr && "DrawBoxWithGradientFill, parameter 'rgba1' is null");
+   assert(rgba2 != nullptr && "DrawBoxWithGradientFill, parameter 'rgba2' is null");
 
    glBegin(GL_POLYGON);
    glColor4dv(rgba1);
@@ -3219,13 +3228,13 @@ void DrawQuadStripWithRadialGradientFill(unsigned nPoints, const Double_t *inner
 {
    assert(nPoints != 0 &&
           "DrawQuadStripWithRadialGradientFill, invalid number of points");
-   assert(inner != 0 &&
+   assert(inner != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'inner' is null");
-   assert(innerRGBA != 0 &&
+   assert(innerRGBA != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'innerRGBA' is null");
-   assert(outer != 0 &&
+   assert(outer != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'outer' is null");
-   assert(outerRGBA != 0 &&
+   assert(outerRGBA != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'outerRGBA' is null");
 
    glBegin(GL_QUAD_STRIP);
@@ -4148,7 +4157,7 @@ void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba)
 ///Ctor.
 
 TGLLevelPalette::TGLLevelPalette()
-                  : fContours(0),
+                  : fContours(nullptr),
                     fPaletteSize(0),
                     fTexture(0),
                     fMaxPaletteSize(0)

@@ -4,14 +4,13 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.12)
 
 if(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
   project(Minuit2 LANGUAGES CXX)
+  option(minuit2_mpi "Enable support for MPI in Minuit2")
+  option(minuit2_omp "Enable support for OpenMP in Minuit2")
 endif(NOT CMAKE_PROJECT_NAME STREQUAL ROOT)
-
-option(minuit2_mpi "Enable support for MPI in Minuit2")
-option(minuit2_omp "Enable support for OpenMP in Minuit2")
 
 # This package can be built separately
 # or as part of ROOT.
@@ -24,16 +23,11 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ABTypes.h
       Minuit2/AnalyticalGradientCalculator.h
       Minuit2/BFGSErrorUpdator.h
-      Minuit2/BasicFunctionGradient.h
-      Minuit2/BasicFunctionMinimum.h
-      Minuit2/BasicMinimumError.h
-      Minuit2/BasicMinimumParameters.h
-      Minuit2/BasicMinimumSeed.h
-      Minuit2/BasicMinimumState.h
       Minuit2/CombinedMinimizer.h
       Minuit2/CombinedMinimumBuilder.h
       Minuit2/ContoursError.h
       Minuit2/DavidonErrorUpdator.h
+      Minuit2/ExternalInternalGradientCalculator.h
       Minuit2/FCNAdapter.h
       Minuit2/FCNBase.h
       Minuit2/FCNGradAdapter.h
@@ -87,6 +81,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnLineSearch.h
       Minuit2/MnMachinePrecision.h
       Minuit2/MnMatrix.h
+      Minuit2/MnMatrixfwd.h
       Minuit2/MnMigrad.h
       Minuit2/MnMinimize.h
       Minuit2/MnMinos.h
@@ -97,8 +92,6 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/MnPlot.h
       Minuit2/MnPosDef.h
       Minuit2/MnPrint.h
-      Minuit2/MnRefCountedPointer.h
-      Minuit2/MnReferenceCounter.h
       Minuit2/MnScan.h
       Minuit2/MnSeedGenerator.h
       Minuit2/MnSimplex.h
@@ -114,6 +107,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       Minuit2/ModularFunctionMinimizer.h
       Minuit2/NegativeG2LineSearch.h
       Minuit2/Numerical2PGradientCalculator.h
+      Minuit2/NumericalDerivator.h
       Minuit2/ParametricFunction.h
       Minuit2/ScanBuilder.h
       Minuit2/ScanMinimizer.h
@@ -133,11 +127,10 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
     SOURCES
       src/AnalyticalGradientCalculator.cxx
       src/BFGSErrorUpdator.cxx
-      src/BasicMinimumError.cxx
       src/CMakeLists.txt
       src/CombinedMinimumBuilder.cxx
       src/DavidonErrorUpdator.cxx
-      src/FitterUtil.h
+      src/ExternalInternalGradientCalculator.cxx
       src/FumiliBuilder.cxx
       src/FumiliErrorUpdator.cxx
       src/FumiliGradientCalculator.cxx
@@ -172,6 +165,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/MnPlot.cxx
       src/MnPosDef.cxx
       src/MnPrint.cxx
+      src/MnPrintImpl.cxx
       src/MnScan.cxx
       src/MnSeedGenerator.cxx
       src/MnStrategy.cxx
@@ -184,6 +178,7 @@ if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       src/ModularFunctionMinimizer.cxx
       src/NegativeG2LineSearch.cxx
       src/Numerical2PGradientCalculator.cxx
+      src/NumericalDerivator.cxx
       src/ParametricFunction.cxx
       src/ScanBuilder.cxx
       src/SimplexBuilder.cxx
@@ -249,7 +244,7 @@ if(minuit2_mpi)
 endif()
 
 if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-  add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+  add_definitions(-DUSE_ROOT_ERROR)
   ROOT_ADD_TEST_SUBDIRECTORY(test)
 else()
   include(StandAlone.cmake)

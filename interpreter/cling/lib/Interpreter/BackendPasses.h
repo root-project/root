@@ -10,6 +10,11 @@
 #ifndef CLING_BACKENDPASSES_H
 #define CLING_BACKENDPASSES_H
 
+#include "llvm/Analysis/CGSCCPassManager.h"
+#include "llvm/Analysis/LoopAnalysisManager.h"
+#include "llvm/IR/PassManager.h"
+#include "llvm/Passes/StandardInstrumentations.h"
+
 #include <array>
 #include <memory>
 
@@ -17,13 +22,7 @@ namespace llvm {
   class Function;
   class LLVMContext;
   class Module;
-  class PassManagerBuilder;
   class TargetMachine;
-
-  namespace legacy {
-    class FunctionPassManager;
-    class PassManager;
-  }
 }
 
 namespace clang {
@@ -33,30 +32,26 @@ namespace clang {
 }
 
 namespace cling {
+  class IncrementalJIT;
+
   ///\brief Runs passes on IR. Remove once we can migrate from ModuleBuilder to
   /// what's in clang's CodeGen/BackendUtil.
   class BackendPasses {
-    std::array<std::unique_ptr<llvm::legacy::PassManager>, 4> m_MPM;
-    std::array<std::unique_ptr<llvm::legacy::FunctionPassManager>, 4> m_FPM;
-
     llvm::TargetMachine& m_TM;
+    IncrementalJIT &m_JIT;
     const clang::CodeGenOptions &m_CGOpts;
-    //const clang::TargetOptions &m_TOpts;
-    //const clang::LangOptions &m_LOpts;
 
-    void CreatePasses(llvm::Module& M, int OptLevel);
+    void CreatePasses(int OptLevel, llvm::ModulePassManager& MPM,
+                      llvm::LoopAnalysisManager& LAM,
+                      llvm::FunctionAnalysisManager& FAM,
+                      llvm::CGSCCAnalysisManager& CGAM,
+                      llvm::ModuleAnalysisManager& MAM,
+                      llvm::PassInstrumentationCallbacks& PIC,
+                      llvm::StandardInstrumentations& SI);
 
   public:
-    BackendPasses(const clang::CodeGenOptions &CGOpts,
-                  const clang::TargetOptions & /*TOpts*/,
-                  const clang::LangOptions & /*LOpts*/,
-                  llvm::TargetMachine& TM):
-      m_TM(TM),
-      m_CGOpts(CGOpts) //,
-      //m_TOpts(TOpts),
-      //m_LOpts(LOpts)
-    {}
-
+    BackendPasses(const clang::CodeGenOptions &CGOpts, IncrementalJIT &JIT,
+                  llvm::TargetMachine& TM);
     ~BackendPasses();
 
     void runOnModule(llvm::Module& M, int OptLevel);

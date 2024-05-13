@@ -49,7 +49,6 @@ RDrawableDisplayItem::~RDrawableDisplayItem()
       fDrawable->OnDisplayItemDestroyed(this);
 }
 
-
 ///////////////////////////////////////////////////////////
 /// Constructor
 
@@ -59,5 +58,3 @@ RIndirectDisplayItem::RIndirectDisplayItem(const RDrawable &dr)
    fCssClass = &dr.fCssClass;
    fId = &dr.fId;
 }
-
-

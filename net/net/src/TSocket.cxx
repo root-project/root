@@ -523,7 +523,7 @@ Int_t TSocket::Send(const TMessage &mess)
 {
    TSystem::ResetErrno();
 
-   if (!IsValid()) return -1;
+   if (fSocket < 0) return -1;
 
    if (mess.IsReading()) {
       Error("Send", "cannot send a message used for reading");
@@ -696,6 +696,7 @@ void TSocket::SendProcessIDs(const TMessage &mess)
          //if not add it to the fUUIDs list
          if (!fUUIDs) {
             fUUIDs = new TList();
+            fUUIDs->SetOwner(kTRUE);
          } else {
             if (fUUIDs->FindObject(pid->GetTitle()))
                continue;

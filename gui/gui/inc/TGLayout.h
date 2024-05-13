@@ -13,13 +13,6 @@
 #define ROOT_TGLayout
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// A number of different layout classes (TGLayoutManager,               //
-// TGVerticalLayout, TGHorizontalLayout, TGLayoutHints, etc.).          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TObject.h"
 #include "TGDimension.h"
 #include "TRefCnt.h"
@@ -46,13 +39,13 @@ class TGLayoutHints;
 class TList;
 class TGFrameElement;
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLayoutHints                                                        //
-//                                                                      //
-// This class describes layout hints used by the layout classes.        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLayoutHints
+    \ingroup guiwidgets
+
+This class describes layout hints used by the layout classes.
+
+*/
+
 
 class TGLayoutHints : public TObject, public TRefCnt {
 
@@ -63,7 +56,7 @@ private:
    TGFrameElement *fFE;       // back pointer to the last frame element
    TGFrameElement *fPrev;     // previous element sharing this layout_hints
 
-   TGLayoutHints& operator=(const TGLayoutHints&);
+   TGLayoutHints& operator=(const TGLayoutHints&) = delete;
 
 protected:
    ULong_t  fLayoutHints;     // layout hints (combination of ELayoutHints)
@@ -78,13 +71,13 @@ public:
    TGLayoutHints(ULong_t hints = kLHintsNormal,
                  Int_t padleft = 0, Int_t padright = 0,
                  Int_t padtop = 0, Int_t padbottom = 0):
-     fFE(0), fPrev(0), fLayoutHints(hints), fPadtop(padtop), fPadbottom(padbottom),
+     fFE(nullptr), fPrev(nullptr), fLayoutHints(hints), fPadtop(padtop), fPadbottom(padbottom),
      fPadleft(padleft), fPadright(padright)
      { SetRefCount(0); }
 
    TGLayoutHints(const TGLayoutHints &lh);
 
-   virtual ~TGLayoutHints();
+   ~TGLayoutHints() override;
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
    Int_t   GetPadTop() const { return fPadtop; }
@@ -98,12 +91,12 @@ public:
    virtual void SetPadLeft(Int_t v)  {  fPadleft = v; }
    virtual void SetPadRight(Int_t v)  {  fPadright = v; }
 
-   void Print(Option_t* option = "") const;
-   void ls(Option_t* option = "") const { Print(option); }
+   void Print(Option_t* option = "") const override;
+   void ls(Option_t* option = "") const override { Print(option); }
 
-   virtual void SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGLayoutHints,0)  // Class describing GUI layout hints
+   ClassDefOverride(TGLayoutHints,0)  // Class describing GUI layout hints
 };
 
 // Temporarily public as we need to share this class definition
@@ -120,24 +113,24 @@ public:
    Int_t           fState;    // EFrameState defined in TGFrame.h
    TGLayoutHints  *fLayout;   // layout hints used in layout
 
-   TGFrameElement() : fFrame(0), fState(0), fLayout(0) { }
+   TGFrameElement() : fFrame(nullptr), fState(0), fLayout(nullptr) { }
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
-   ~TGFrameElement();
+   ~TGFrameElement() override;
 
-   void Print(Option_t* option = "") const;
-   void ls(Option_t* option = "") const { Print(option); }
+   void Print(Option_t* option = "") const override;
+   void ls(Option_t* option = "") const override { Print(option); }
 
-   ClassDef(TGFrameElement, 0); // Base class used in GUI containers
+   ClassDefOverride(TGFrameElement, 0); // Base class used in GUI containers
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGLayoutManager                                                      //
-//                                                                      //
-// Frame layout manager. This is an abstract class.                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGLayoutManager
+    \ingroup guiwidgets
+
+Frame layout manager. This is an abstract class.
+
+*/
+
 
 class TGLayoutManager : public TObject {
 protected:
@@ -151,17 +144,17 @@ public:
    virtual void SetDefaultWidth(UInt_t /* w */) {}
    virtual void SetDefaultHeight(UInt_t /* h */) {}
    virtual Bool_t IsModified() const { return fModified; }
-   virtual void   SetModified(Bool_t flag = kTRUE) { fModified = flag; }
+   virtual void SetModified(Bool_t flag = kTRUE) { fModified = flag; }
 
-   ClassDef(TGLayoutManager,0)  // Layout manager abstract base class
+   ClassDefOverride(TGLayoutManager,0)  // Layout manager abstract base class
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGVerticalLayout and TGHorizontalLayout managers.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGVerticalLayout
+    \ingroup guiwidgets
+
+*/
+
 
 class TGVerticalLayout : public TGLayoutManager {
 
@@ -178,32 +171,38 @@ protected:
 public:
    TGVerticalLayout(TGCompositeFrame *main);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGVerticalLayout,0)  // Vertical layout manager
+   ClassDefOverride(TGVerticalLayout,0)  // Vertical layout manager
 };
+
+/** \class TGHorizontalLayout
+    \ingroup guiwidgets
+
+*/
+
 
 class TGHorizontalLayout : public TGVerticalLayout {
 public:
    TGHorizontalLayout(TGCompositeFrame *main) : TGVerticalLayout(main) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGHorizontalLayout,0)  // Horizontal layout manager
+   ClassDefOverride(TGHorizontalLayout,0)  // Horizontal layout manager
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGRowLayout and TGColumnLayout managers.                             //
-//                                                                      //
-// The follwing two layout managers do not make use of TGLayoutHints.   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGRowLayout
+    \ingroup guiwidgets
+
+The following two layout managers do not make use of TGLayoutHints.
+
+*/
+
 
 class TGRowLayout : public TGVerticalLayout {
 public:
@@ -212,102 +211,146 @@ public:
    TGRowLayout(TGCompositeFrame *main, Int_t s = 0) :
       TGVerticalLayout(main), fSep(s) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGRowLayout,0)  // Row layout manager
+   ClassDefOverride(TGRowLayout,0)  // Row layout manager
 };
+
+/** \class TGColumnLayout
+    \ingroup guiwidgets
+
+The following layout manager do not make use of TGLayoutHints.
+
+*/
+
 
 class TGColumnLayout : public TGRowLayout {
 public:
    TGColumnLayout(TGCompositeFrame *main, Int_t s = 0) : TGRowLayout(main, s) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGColumnLayout,0)  // Column layout manager
+   ClassDefOverride(TGColumnLayout,0)  // Column layout manager
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMatrixLayout manager.                                              //
-//                                                                      //
-// This layout managers does not make use of TGLayoutHints.             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGMatrixLayout
+    \ingroup guiwidgets
+
+This layout managers does not make use of TGLayoutHints.
+
+
+It arranges frames in a matrix-like way.
+This manager provides :
+- a column number (0 means unlimited)
+- a row number (0 means unlimited)
+- horizontal & vertical separators
+
+Notes : If both column and row are fixed values, any remaining
+        frames outside the count won't be managed.
+        Unlimited rows means the frame can expand downward
+        (the default behaviour in most UI).
+        Both unlimited rows and columns is undefined (read: will
+        crash the algorithm ;-).
+        With fixed dimensions, frames are always arranged in rows.
+        That is: 1st frame is at position (0,0), next one is at
+        row(0), column(1) and so on...
+        When specifying one dimension as unlimited (i.e. row=0 or
+        column=0) the frames are arranged according to the direction
+        of the fixed dimension. This layout manager does not make
+        use of TGLayoutHints.
+*/
+
 
 class TGMatrixLayout : public TGLayoutManager {
 
 private:
-   TGMatrixLayout(const TGMatrixLayout&);
-   TGMatrixLayout& operator=(const TGMatrixLayout&);
+   TGMatrixLayout(const TGMatrixLayout&) = delete;
+   TGMatrixLayout& operator=(const TGMatrixLayout&) = delete;
 
 protected:
-   TGCompositeFrame *fMain;      // container frame
-   TList            *fList;      // list of frames to arrange
+   TGCompositeFrame *fMain;           ///< container frame
+   TList            *fList;           ///< list of frames to arrange
 
 public:
-   Int_t   fSep;                      // interval between frames
-   Int_t   fHints;                    // layout hints (currently not used)
-   UInt_t  fRows;                     // number of rows
-   UInt_t  fColumns;                  // number of columns
+   Int_t   fSep;                      ///< interval between frames
+   Int_t   fHints;                    ///< layout hints (currently not used)
+   UInt_t  fRows;                     ///< number of rows
+   UInt_t  fColumns;                  ///< number of columns
 
    TGMatrixLayout(TGCompositeFrame *main, UInt_t r, UInt_t c, Int_t s=0, Int_t h=0);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGMatrixLayout,0)  // Matrix layout manager
+   ClassDefOverride(TGMatrixLayout,0)  // Matrix layout manager
 };
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTileLayout, TGListLayout and TGListDetailsLayout managers.         //
-//                                                                      //
-// This are layout managers for the TGListView widget.                  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGTileLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
 
 class TGTileLayout : public TGLayoutManager {
 
 private:
-   TGTileLayout(const TGTileLayout&);
-   TGTileLayout& operator=(const TGTileLayout&);
+   TGTileLayout(const TGTileLayout&) = delete;
+   TGTileLayout& operator=(const TGTileLayout&) = delete;
 
 protected:
-   Int_t             fSep;    // separation between tiles
-   TGCompositeFrame *fMain;   // container frame
-   TList            *fList;   // list of frames to arrange
-   Bool_t            fModified;// layout changed
+   Int_t             fSep;     ///< separation between tiles
+   TGCompositeFrame *fMain;    ///< container frame
+   TList            *fList;     ///< list of frames to arrange
+   Bool_t            fModified; ///< layout changed
 
 
 public:
    TGTileLayout(TGCompositeFrame *main, Int_t sep = 0);
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual Bool_t IsModified() const { return fModified; }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   Bool_t IsModified() const override { return fModified; }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGTileLayout,0)  // Tile layout manager
+   ClassDefOverride(TGTileLayout,0)  // Tile layout manager
 };
+
+/** \class TGListLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
 
 class TGListLayout : public TGTileLayout {
 public:
    TGListLayout(TGCompositeFrame *main, Int_t sep = 0) :
       TGTileLayout(main, sep) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGListLayout,0)  // Layout manager for TGListView widget
+   ClassDefOverride(TGListLayout,0)  // Layout manager for TGListView widget
 };
+
+/** \class TGListDetailsLayout
+    \ingroup guiwidgets
+
+This is a layout manager for the TGListView widget.
+
+*/
+
 
 class TGListDetailsLayout : public TGTileLayout {
 private:
@@ -317,12 +360,12 @@ public:
    TGListDetailsLayout(TGCompositeFrame *main, Int_t sep = 0, UInt_t w = 0) :
       TGTileLayout(main, sep), fWidth(w) { }
 
-   virtual void Layout();
-   virtual TGDimension GetDefaultSize() const;
-   virtual void SetDefaultWidth(UInt_t w) { fWidth = w; }
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void Layout() override;
+   TGDimension GetDefaultSize() const override;
+   void SetDefaultWidth(UInt_t w) override { fWidth = w; }
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
-   ClassDef(TGListDetailsLayout,0)  // Layout manager for TGListView details
+   ClassDefOverride(TGListDetailsLayout,0)  // Layout manager for TGListView details
 };
 
 #endif

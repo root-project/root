@@ -22,13 +22,13 @@ public:
    TFoamMaxwt();                            // NOT IMPLEMENTED (NEVER USED)
    TFoamMaxwt(Double_t, Int_t);             // Principal Constructor
    TFoamMaxwt(TFoamMaxwt &From);            // Copy constructor
-   virtual ~TFoamMaxwt();                   // Destructor
+   ~TFoamMaxwt() override;                   // Destructor
    void Reset();                            // Reset
    TFoamMaxwt& operator=(const TFoamMaxwt &);    // operator =
    void Fill(Double_t);
    void Make(Double_t, Double_t&);
    void GetMCeff(Double_t, Double_t&, Double_t&);  // get MC efficiency= <w>/wmax
 
-   ClassDef(TFoamMaxwt,1); //Controlling of the MC weight (maximum weight)
+   ClassDefOverride(TFoamMaxwt,1); //Controlling of the MC weight (maximum weight)
 };
 #endif

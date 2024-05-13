@@ -38,7 +38,46 @@ void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
    TIter iter(&lst);
    TMethod *m = nullptr;
 
+   TClass *last_class = nullptr;
+   bool has_editor = false;
+
+   auto match = [](const TObject *v, const char *name) { return !strcmp(v->GetName(), name); };
+
    while ((m = (TMethod *)iter()) != nullptr) {
+
+      TClass *m_cl = m->GetClass();
+      bool is_editor = false;
+      TNamed *tn = nullptr;
+
+      if (match(m_cl, "TH1")) {
+         if (match(m, "SetHighlight")) continue;
+         if (match(m, "DrawPanel")) is_editor = true;
+      } else if (match(m_cl, "TGraph")) {
+         if (match(m, "SetHighlight")) continue;
+         if (match(m, "DrawPanel")) is_editor = true;
+      } else if (match(m_cl, "TAttFill")) {
+         if (match(m, "SetFillAttributes")) is_editor = true;
+      } else if (match(m_cl, "TAttLine")) {
+         if (match(m, "SetLineAttributes")) is_editor = true;
+      } else if (match(m_cl, "TAttMarker")) {
+         if (match(m, "SetMarkerAttributes")) is_editor = true;
+      } else if (match(m_cl, "TAttText")) {
+         if (match(m, "SetTextAttributes")) is_editor = true;
+      } else if (match(m_cl, "TNamed")) {
+         auto offset = cl->GetBaseClassOffset(TNamed::Class());
+         if (offset >= 0)
+            tn = (TNamed *) ((char *) obj + offset);
+      }
+
+      if (is_editor) {
+         if (!has_editor) {
+            AddMenuItem("Editor", "Attributes editor", "Show:Editor", last_class ? last_class : m_cl);
+            has_editor = true;
+         }
+         continue;
+      }
+
+      last_class = m_cl;
 
       if (m->IsMenuItem() == kMenuToggle) {
          TString getter;
@@ -62,10 +101,10 @@ void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
             auto call = std::make_unique<TMethodCall>(cl, getter, "");
 
             if (call->ReturnType() == TMethodCall::kLong) {
-               Long_t l(0);
+               Longptr_t l = 0;
                call->Execute(obj, l);
 
-               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"));
+               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, TString::Format("%s(%s)", m->GetName(), (l != 0) ? "0" : "1").Data(), m_cl);
 
             } else {
                // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
@@ -75,17 +114,23 @@ void RMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          TList *args = m->GetListOfMethodArgs();
 
          if (!args || (args->GetSize() == 0)) {
-            AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()));
+            AddMenuItem(m->GetName(), m->GetTitle(), TString::Format("%s()", m->GetName()).Data(), m_cl);
          } else {
             auto item = std::make_unique<Detail::RArgsMenuItem>(m->GetName(), m->GetTitle());
-            item->SetExec(Form("%s()", m->GetName()));
+            item->SetExec(TString::Format("%s()", m->GetName()).Data());
+            item->SetClassName(m_cl->GetName());
 
             TIter args_iter(args);
             TMethodArg *arg = nullptr;
 
             while ((arg = dynamic_cast<TMethodArg *>(args_iter())) != nullptr) {
                Detail::RMenuArgument menu_arg(arg->GetName(), arg->GetTitle(), arg->GetFullTypeName());
-               if (arg->GetDefault()) menu_arg.SetDefault(arg->GetDefault());
+               if (tn && match(m, "SetTitle"))
+                  menu_arg.SetDefault(tn->GetTitle());
+               else if (tn && match(m, "SetName"))
+                  menu_arg.SetDefault(tn->GetName());
+               else if (arg->GetDefault())
+                  menu_arg.SetDefault(arg->GetDefault());
                item->AddArg(menu_arg);
             }
 

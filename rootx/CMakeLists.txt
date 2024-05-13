@@ -25,6 +25,11 @@ if(x11)
       ${X11_Xpm_LIB}
       ${X11_LIBRARIES}
   )
+
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  target_link_libraries(root PRIVATE util procstat)
+endif()
+
 elseif(cocoa)
   if (cxxmodules)
     # FIXME: Disable modules for ObjC/ObjC++. It has problems when compiling
@@ -58,6 +63,7 @@ if(x11 OR cocoa)
   )
 
   target_include_directories(root PRIVATE
+    ${CMAKE_SOURCE_DIR}/core/foundation/inc
     ${CMAKE_SOURCE_DIR}/core/base/inc
     ${CMAKE_SOURCE_DIR}/core/clib/inc    # for snprintf.h
     ${CMAKE_SOURCE_DIR}/core/meta/inc    # for TGenericClassInfo.h

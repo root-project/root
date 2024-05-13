@@ -1,3 +1,5 @@
+#include <memory>
+
 #include "TFile.h"
 #include "TTree.h"
 #include "TBranch.h"
@@ -6,6 +8,7 @@
 #include "TLeafElement.h"
 #include "TRandom.h"
 
+#include "ROOT/TestSupport.hxx"
 #include "gtest/gtest.h"
 
 #include "ElementStruct.h"
@@ -14,7 +17,17 @@ class TOffsetGeneration : public ::testing::Test {
 protected:
    static constexpr int fEventCount = 10000;
 
-   virtual void SetUp()
+   // FIXME: Global suppression of PCM-related warnings for windows
+   static void SetUpTestSuite() {
+      // Suppress file-related warning on Windows throughout
+      // this entire test suite
+      static ROOT::TestSupport::CheckDiagsRAII diags;
+      diags.optionalDiag(kError,
+         "TCling::LoadPCM",
+         "ROOT PCM", false);
+   }
+
+   void SetUp() override
    {
       TRandom *random = new TRandom(837);
       auto file = new TFile("TOffsetGeneration1.root", "RECREATE");
@@ -49,6 +62,8 @@ protected:
          tree->Fill();
       }
       file->Write();
+      file->Close();
+      delete file;
 
       file = new TFile("TOffsetGeneration3.root", "RECREATE");
       tree = new TTree("tree", "A test tree");
@@ -99,9 +114,9 @@ protected:
       sample2.i = 1;
       sample2.d = d;
       auto br = tree->Branch("sample", &sample2, 32*1024, 99);
-      br->SetAutoDelete(kFALSE);
+      br->SetAutoDelete(false);
       auto br2 = tree2->Branch("sample", &sample2, 32*1024, 99);
-      br2->SetAutoDelete(kFALSE);
+      br2->SetAutoDelete(false);
       tree->Branch("elem", &elem, "elem/I");
       tree->Branch("sample2", &sample, "sample2[elem]/I");
 
@@ -159,7 +174,7 @@ TEST_F(TOffsetGeneration, primitiveTest)
    auto br = tree->GetBranch("sample");
    ASSERT_TRUE(br->GetTotalSize() < fEventCount * 14);
 
-   file.reset(new TFile("TOffsetGeneration2.root"));
+   file = std::make_unique<TFile>("TOffsetGeneration2.root");
    tree = static_cast<TTree *>(file->Get("tree"));
    br = tree->GetBranch("sample");
    ASSERT_TRUE(br->GetTotalSize() > fEventCount * 14);
@@ -172,7 +187,7 @@ TEST_F(TOffsetGeneration, elementsTest)
    auto br = tree->GetBranch("d");
    ASSERT_TRUE(br->GetTotalSize() > fEventCount * 10);
 
-   file.reset(new TFile("TOffsetGeneration4.root"));
+   file = std::make_unique<TFile>("TOffsetGeneration4.root");
    tree = static_cast<TTree *>(file->Get("tree2"));
    br = tree->GetBranch("d");
    TClass *expectedClass = nullptr;

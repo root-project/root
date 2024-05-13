@@ -1,8 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -js
-///
-/// \brief Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads.
+/// Read an sqlite3 databases with RDataFrame and plot statistics on ROOT downloads.
 ///
 /// Plot the downloads of different ROOT versions reading a remote sqlite3 file with RSqliteDS.
 /// Then a TH1F histogram is created and filled
@@ -18,7 +17,8 @@
 
 void df030_SQliteVersionsOfROOT() {
 
-   auto rdf = ROOT::RDF::MakeSqliteDataFrame("http://root.cern/files/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
+   auto rdf =
+      ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT Version FROM accesslog;");
 
    TH1F hVersionOfRoot("hVersionOfRoot", "Development Versions of ROOT", 8, 0, -1);
 

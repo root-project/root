@@ -25,30 +25,25 @@ namespace RooStats {
 
    public:
 
-      // Translate the given fit result to a RooArgSet in a generic way.
-      // Prefix is prepended to all variable names.
-      // Note that the returned set is managed by the user and the user must
-      // explicitly delete all the set content (the returned set does not own the content)
+      /// Translate the given fit result to a RooArgSet in a generic way.
+      /// Prefix is prepended to all variable names.
+      /// Note that the returned set is managed by the user and the user must
+      /// explicitly delete all the set content (the returned set does not own the content)
       static RooArgSet *GetAsArgSet(RooFitResult *result, TString prefix="", bool withErrorsAndPulls=false);
 
-      DetailedOutputAggregator() {
-         fResult = NULL;
-         fBuiltSet = NULL;
-      }
-
-      // For each variable in aset, prepend prefix to its name and add
-      // to the internal store. Note this will not appear in the produced
-      // dataset unless CommitSet is called.
+      /// For each variable in aset, prepend prefix to its name and add
+      /// to the internal store. Note this will not appear in the produced
+      /// dataset unless CommitSet is called.
       void AppendArgSet(const RooAbsCollection *aset, TString prefix="");
 
       const RooArgList* GetAsArgList() const {
          // Returns this set of detailed output.
-         // Note that the ownership of the returned list is not transfered
+         // Note that the ownership of the returned list is not transferred
          // It is managed by the DetailedOutputAggregator class
          return fBuiltSet;
       }
 
-      // Commit to the result RooDataSet.
+      /// Commit to the result RooDataSet.
       void CommitSet(double weight=1.0);
 
       RooDataSet *GetAsDataSet(TString name, TString title);
@@ -57,10 +52,9 @@ namespace RooStats {
 
    private:
 
-      RooDataSet *fResult;
-      RooArgList *fBuiltSet;
+      RooDataSet *fResult = nullptr;
+      RooArgList *fBuiltSet = nullptr;
 
-   protected:
       ClassDef(DetailedOutputAggregator,1)
    };
 }

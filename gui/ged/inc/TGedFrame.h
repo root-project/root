@@ -12,13 +12,6 @@
 #ifndef ROOT_TGedFrame
 #define ROOT_TGedFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGedFrame                                                           //
-//                                                                      //
-//  Base editor's attribute frame - a service class.                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 
@@ -29,6 +22,7 @@ class TGToolTip;
 class TList;
 class TGTab;
 class TGedEditor;
+class TGHSlider;
 
 class TGedFrame : public TGCompositeFrame {
 
@@ -36,8 +30,8 @@ public:
    // Inner class to store information for each extra tab.
    class TGedSubFrame : public TObject {
    private:
-      TGedSubFrame(const TGedSubFrame&);            // Not implemented
-      TGedSubFrame& operator=(const TGedSubFrame&); // Not implemented
+      TGedSubFrame(const TGedSubFrame&) = delete;
+      TGedSubFrame& operator=(const TGedSubFrame&) = delete;
    public:
       TString            fName;
       TGCompositeFrame  *fFrame;
@@ -46,30 +40,30 @@ public:
    };
 
 private:
-   TGedFrame(const TGedFrame&);            // Not implemented
-   TGedFrame& operator=(const TGedFrame&); // Not implemented
+   TGedFrame(const TGedFrame&) = delete;
+   TGedFrame& operator=(const TGedFrame&) = delete;
 
 protected:
-   Bool_t          fInit;        // init flag for setting signals/slots
-   TGedEditor     *fGedEditor;   // manager of this frame
-   TClass         *fModelClass;  // class corresponding to instantiated GedFrame
-   Bool_t          fAvoidSignal; // flag for executing slots
+   Bool_t          fInit;        ///< init flag for setting signals/slots
+   TGedEditor     *fGedEditor;   ///< manager of this frame
+   TClass         *fModelClass;  ///< class corresponding to instantiated GedFrame
+   Bool_t          fAvoidSignal; ///< flag for executing slots
 
-   TList          *fExtraTabs;   // addtional tabs in ged editor
-   Int_t           fPriority;    // location in GedEditor
+   TList          *fExtraTabs;   ///< addtional tabs in ged editor
+   Int_t           fPriority;    ///< location in GedEditor
 
    virtual void MakeTitle(const char *title);
 
 public:
-   TGedFrame(const TGWindow *p = 0,
+   TGedFrame(const TGWindow *p = nullptr,
              Int_t width = 140, Int_t height = 30,
              UInt_t options = kChildFrame,
              Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGedFrame();
+   ~TGedFrame() override;
 
    virtual void      Update();
 
-   virtual Option_t *GetDrawOption() const;
+   Option_t *GetDrawOption() const override;
 
    TClass*           GetModelClass()              { return fModelClass;  }
    Int_t             GetPriority()                { return fPriority;    }
@@ -79,20 +73,20 @@ public:
    virtual TGVerticalFrame* CreateEditorTabSubFrame(const char* name);
 
    virtual void      Refresh(TObject *model);
-   virtual void      SetDrawOption(Option_t *option="");
+   void      SetDrawOption(Option_t *option="") override;
    virtual Bool_t    AcceptModel(TObject*) { return kTRUE; }
    void              SetModelClass(TClass* mcl)   { fModelClass = mcl; }
    virtual void      SetModel(TObject* obj) = 0;
    virtual void      SetGedEditor(TGedEditor* ed) { fGedEditor = ed; }
    virtual void      ActivateBaseClassEditors(TClass* cl);
 
-   ClassDef(TGedFrame, 0); //base editor's frame
+   ClassDefOverride(TGedFrame, 0); //base editor's frame
 };
 
 class TGedNameFrame : public TGedFrame {
 private:
-   TGedNameFrame(const TGedNameFrame&);            // not implemented
-   TGedNameFrame& operator=(const TGedNameFrame&); // not implemented
+   TGedNameFrame(const TGedNameFrame&) = delete;
+   TGedNameFrame& operator=(const TGedNameFrame&) = delete;
 
 protected:
    TGLabel          *fLabel;      //label of attribute frame
@@ -100,18 +94,18 @@ protected:
    TGToolTip        *fTip;        //tool tip associated with button
 
 public:
-   TGedNameFrame(const TGWindow *p =0 ,
+   TGedNameFrame(const TGWindow *p = nullptr,
                  Int_t width = 170, Int_t height = 30,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGedNameFrame();
+   ~TGedNameFrame() override;
 
-   virtual Bool_t   HandleButton(Event_t *event);
-   virtual Bool_t   HandleCrossing(Event_t *event);
+   Bool_t   HandleButton(Event_t *event) override;
+   Bool_t   HandleCrossing(Event_t *event) override;
 
-   virtual void     SetModel(TObject* obj);
+   void     SetModel(TObject* obj) override;
 
-   ClassDef(TGedNameFrame,0)      //frame showing the selected object name
+   ClassDefOverride(TGedNameFrame,0)      //frame showing the selected object name
 };
 
 #endif

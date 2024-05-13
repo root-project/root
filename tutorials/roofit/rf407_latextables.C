@@ -1,20 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+/// Data and categories: latex printing of lists and sets of RooArgSets
 ///
-///
-/// \brief Data and categories: latex printing of lists and sets of RooArgSets
-///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
 #include "RooExponential.h"
@@ -38,11 +35,11 @@ void rf407_latextables()
    RooGaussian sig1("sig1", "Signal component 1", x, mean, sigma1);
    RooGaussian sig2("sig2", "Signal component 2", x, mean, sigma2);
 
-   // Sum the signal components into a composite signal p.d.f.
+   // Sum the signal components into a composite signal pdf
    RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
    RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
 
-   // Build Chebychev polynomial p.d.f.
+   // Build Chebychev polynomial pdf
    RooRealVar a0("a0", "a0", 0.5, 0., 1.);
    RooRealVar a1("a1", "a1", 0.2, 0., 1.);
    RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
@@ -51,7 +48,7 @@ void rf407_latextables()
    RooRealVar alpha("alpha", "alpha", -1);
    RooExponential bkg2("bkg2", "Background 2", x, alpha);
 
-   // Sum the background components into a composite background p.d.f.
+   // Sum the background components into a composite background pdf
    RooRealVar bkg1frac("sig1frac", "fraction of component 1 in background", 0.2, 0., 1.);
    RooAddPdf bkg("bkg", "Signal", RooArgList(bkg1, bkg2), sig1frac);
 
@@ -63,14 +60,14 @@ void rf407_latextables()
    // ----------------------------------------------------------------------------------------
 
    // Make list of model parameters
-   RooArgSet *params = model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
 
    // Save snapshot of prefit parameters
-   RooArgSet *initParams = (RooArgSet *)params->snapshot();
+   std::unique_ptr<RooArgSet> initParams{static_cast<RooArgSet *>(params->snapshot())};
 
    // Do fit to data, to obtain error estimates on parameters
-   RooDataSet *data = model.generate(x, 1000);
-   model.fitTo(*data);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
+   model.fitTo(*data, PrintLevel(-1));
 
    // P r i n t   l a t ex   t a b l e   o f   p a r a m e t e r s   o f   p d f
    // --------------------------------------------------------------------------

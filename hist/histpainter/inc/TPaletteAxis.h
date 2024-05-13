@@ -23,15 +23,13 @@
 
 #include "TPave.h"
 #include "TGaxis.h"
-
-class TH1;
+#include "TH1.h"
 
 class TPaletteAxis : public TPave {
 
 protected:
-   TGaxis       fAxis;          //  palette axis
-   TH1         *fH;             //! pointer to parent histogram
-   TString      fName;          //  Pave name
+   TGaxis       fAxis;          ///<  Palette axis
+   TH1         *fH;             ///<! Pointer to parent histogram
 
 public:
    // TPaletteAxis status bits
@@ -39,34 +37,41 @@ public:
 
    TPaletteAxis();
    TPaletteAxis(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, TH1 *h);
+   TPaletteAxis(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Double_t min, Double_t max);
+   TPaletteAxis(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, TAxis *ax);
    TPaletteAxis(const TPaletteAxis &palette);
-   virtual ~TPaletteAxis();
-   void Copy(TObject &palette) const;
+   ~TPaletteAxis() override;
+   void Copy(TObject &palette) const override;
    TPaletteAxis& operator=(const TPaletteAxis&);
 
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    TGaxis       *GetAxis() {return &fAxis;}
    Int_t         GetBinColor(Int_t i, Int_t j);
    TH1*          GetHistogram(){return fH;}
-   Option_t     *GetName() const {return fName.Data();}
-   virtual char *GetObjectInfo(Int_t px, Int_t py) const;
+   char *GetObjectInfo(Int_t px, Int_t py) const override;
    Int_t         GetValueColor(Double_t zc);
-   virtual void  Paint(Option_t *option="");
-   virtual void  SavePrimitive(std::ostream &out, Option_t *option = "");
+   void  Paint(Option_t *option="") override;
+   void  SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetHistogram(TH1* h) {fH = h;}
-   virtual void  SetName(const char *name="") {fName = name;} // *MENU*
-   virtual void  SetLabelColor(Int_t labelcolor) {fAxis.SetLabelColor(labelcolor);} // *MENU*
-   virtual void  SetLabelFont(Int_t labelfont) {fAxis.SetLabelFont(labelfont);} // *MENU*
-   virtual void  SetLabelOffset(Float_t labeloffset) {fAxis.SetLabelOffset(labeloffset);} // *MENU*
-   virtual void  SetLabelSize(Float_t labelsize) {fAxis.SetLabelSize(labelsize);} // *MENU*
-   virtual void  SetTitleOffset(Float_t titleoffset=1) {fAxis.SetTitleOffset(titleoffset);} // *MENU*
-   virtual void  SetTitleSize(Float_t titlesize) {fAxis.SetTitleSize(titlesize);} // *MENU*
-   virtual void  SetLineColor(Color_t linecolor) {fAxis.SetLineColor(linecolor);} // *MENU*
-   virtual void  SetLineWidth(Width_t linewidth) {fAxis.SetLineWidth(linewidth);} // *MENU*
+   virtual void  SetNdivisions(Int_t ndiv=10)                 {if (fH) fH->GetZaxis()->SetNdivisions(ndiv);       else fAxis.SetNdivisions(ndiv);}     // *MENU*
+   virtual void  SetLabelColor(Int_t color=1)                 {if (fH) fH->GetZaxis()->SetLabelColor(color);      else fAxis.SetLabelColor(color);}    // *MENU*
+   virtual void  SetLabelFont(Int_t font=42)                  {if (fH) fH->GetZaxis()->SetLabelFont(font);        else fAxis.SetLabelFont(font);}      // *MENU*
+   virtual void  SetLabelOffset(Float_t offset=0.005)         {if (fH) fH->GetZaxis()->SetLabelOffset(offset);    else fAxis.SetLabelOffset(offset);}  // *MENU*
+   virtual void  SetLabelSize(Float_t size=0.035)             {if (fH) fH->GetZaxis()->SetLabelSize(size);        else fAxis.SetLabelSize(size);}      // *MENU*
+   virtual void  SetMaxDigits(Float_t maxdigits=5)            {if (fH) fH->GetZaxis()->SetMaxDigits(maxdigits);   else fAxis.SetMaxDigits(maxdigits);} // *MENU*
+   virtual void  SetTickLength(Float_t length=0.03)           {if (fH) fH->GetZaxis()->SetTickLength(length);     else fAxis.SetTickLength(length);}   // *MENU*
+   virtual void  SetTitleOffset(Float_t offset=1)             {if (fH) fH->GetZaxis()->SetTitleOffset(offset);    else fAxis.SetTitleOffset(offset);}  // *MENU*
+   virtual void  SetTitleSize(Float_t size=0.035)             {if (fH) fH->GetZaxis()->SetTitleSize(size);        else fAxis.SetTitleSize(size);}      // *MENU*
+   virtual void  SetTitleColor(Int_t color=1)                 {if (fH) fH->GetZaxis()->SetTitleColor(color);      else fAxis.SetTitleColor(color);}    // *MENU*
+   virtual void  SetTitleFont(Int_t font=42)                  {if (fH) fH->GetZaxis()->SetTitleFont(font);        else fAxis.SetTitleFont(font);}      // *MENU*
+   virtual void  SetTitle(const char *title="")               {if (fH) fH->GetZaxis()->SetTitle(title);           else fAxis.SetTitle(title);}         // *MENU*
+   virtual void  SetAxisColor(Int_t color=1, Float_t alpha=1) {if (fH) fH->GetZaxis()->SetAxisColor(color,alpha);} // *MENU*
+   void  SetLineWidth(Width_t width) override {fAxis.SetLineWidth(width);} // *MENU*
+
    virtual void  UnZoom();  // *MENU*
 
-   ClassDef(TPaletteAxis,3)  //class used to display a color palette axis for 2-d plots
+   ClassDefOverride(TPaletteAxis,4)  //class used to display a color palette axis for 2-d plots
 };
 
 #endif

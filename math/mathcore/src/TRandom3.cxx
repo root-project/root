@@ -18,7 +18,7 @@ For more information see the Mersenne Twister homepage
 Advantage:
 
 -  large period 2**19937 -1
--  relativly fast (slightly slower than TRandom2 but much faster than TRandom1)
+-  relatively fast (slightly slower than TRandom2 but much faster than TRandom1)
 
 Drawback:
 -  a relative large internal state of 624 integers 

@@ -27,6 +27,7 @@
 #include "TAttMarker.h"
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
+#include "TFitResultPtr.h"
 
 class TBrowser;
 class TAxis;
@@ -35,8 +36,7 @@ class TH1F;
 class TCollection;
 class TF1;
 class TSpline;
-
-#include "TFitResultPtr.h"
+class TList;
 
 class TGraph : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
@@ -50,9 +50,11 @@ protected:
    TH1F              *fHistogram; ///< Pointer to histogram used for drawing axis
    Double_t           fMinimum;   ///< Minimum value for plotting along y
    Double_t           fMaximum;   ///< Maximum value for plotting along y
+   TString fOption;               ///< Options used for drawing the graph
 
    static void        SwapValues(Double_t* arr, Int_t pos1, Int_t pos2);
    virtual void       SwapPoints(Int_t pos1, Int_t pos2);
+   virtual void       UpdateArrays(const std::vector<Int_t> &sorting_indices, Int_t numSortedPoints, Int_t low);
 
    virtual Double_t **Allocate(Int_t newsize);
    Double_t         **AllocateArrays(Int_t Narrays, Int_t arraySize);
@@ -64,14 +66,18 @@ protected:
    Double_t         **ShrinkAndCopy(Int_t size, Int_t iend);
    virtual Bool_t     DoMerge(const TGraph * g);
 
+   TString            SaveArray(std::ostream &out, const char *suffix, Int_t frameNumber, Double_t *arr);
+   void               SaveHistogramAndFunctions(std::ostream &out, const char *varname, Int_t &frameNumber, Option_t *option);
+
 public:
    // TGraph status bits
    enum EStatusBits {
-      kClipFrame     = BIT(10),  ///< clip to the frame boundary
+      kNoStats       = BIT(9),   ///< Don't draw stats box
+      kClipFrame     = BIT(10),  ///< Clip to the frame boundary
       kResetHisto    = BIT(17),  ///< fHistogram must be reset in GetHistogram
-      kNotEditable   = BIT(18),  ///< bit set if graph is non editable
-      kIsSortedX     = BIT(19),  ///< graph is sorted in X points
-      kIsHighlight   = BIT(20)   ///< bit set if graph is highlight
+      kNotEditable   = BIT(18),  ///< Bit set if graph is non editable
+      kIsSortedX     = BIT(19),  ///< Graph is sorted in X points
+      kIsHighlight   = BIT(20)   ///< Bit set if graph is highlight
    };
 
    TGraph();
@@ -79,6 +85,7 @@ public:
    TGraph(Int_t n, const Int_t *x, const Int_t *y);
    TGraph(Int_t n, const Float_t *x, const Float_t *y);
    TGraph(Int_t n, const Double_t *x, const Double_t *y);
+   TGraph(Int_t n, const Double_t *y, Double_t start=0., Double_t step=1.);
    TGraph(const TGraph &gr);
    TGraph& operator=(const TGraph&);
    TGraph(const TVectorF &vx, const TVectorF &vy);
@@ -86,34 +93,35 @@ public:
    TGraph(const TH1 *h);
    TGraph(const TF1 *f, Option_t *option="");
    TGraph(const char *filename, const char *format="%lg %lg", Option_t *option="");
-   virtual ~TGraph();
+   ~TGraph() override;
 
+   virtual void          AddPoint(Double_t x, Double_t y) { SetPoint(fNpoints, x, y); } ///< Append a new point to the graph.
    virtual void          Apply(TF1 *f);
-   virtual void          Browse(TBrowser *b);
+   void                  Browse(TBrowser *b) override;
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;
    static Bool_t         CompareArg(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareX(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareY(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareRadius(const TGraph* gr, Int_t left, Int_t right);
    virtual void          ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
-   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void          Draw(Option_t *chopt="");
+   Int_t                 DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                  Draw(Option_t *chopt="") override;
    virtual void          DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
    virtual void          DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
-   virtual void          DrawGraph(Int_t n, const Double_t *x=0, const Double_t *y=0, Option_t *option="");
+   virtual void          DrawGraph(Int_t n, const Double_t *x=nullptr, const Double_t *y=nullptr, Option_t *option="");
    virtual void          DrawPanel(); // *MENU*
-   virtual Double_t      Eval(Double_t x, TSpline *spline=0, Option_t *option="") const;
-   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   virtual Double_t      Eval(Double_t x, TSpline *spline=nullptr, Option_t *option="") const;
+   void                  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void          Expand(Int_t newsize);
    virtual void          Expand(Int_t newsize, Int_t step);
-   virtual TObject      *FindObject(const char *name) const;
-   virtual TObject      *FindObject(const TObject *obj) const;
+   TObject              *FindObject(const char *name) const override;
+   TObject              *FindObject(const TObject *obj) const override;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
    virtual TFitResultPtr Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
    virtual void          FitPanel(); // *MENU*
    Bool_t                GetEditable() const;
    TF1                  *GetFunction(const char *name) const;
-   TH1F                 *GetHistogram() const;
+   virtual TH1F         *GetHistogram() const;
    TList                *GetListOfFunctions() const { return fFunctions; }
    virtual Double_t      GetCorrelationFactor() const;
    virtual Double_t      GetCovariance() const;
@@ -129,21 +137,21 @@ public:
    virtual Double_t      GetErrorYlow(Int_t bin)  const;
    Double_t             *GetX()  const {return fX;}
    Double_t             *GetY()  const {return fY;}
-   virtual Double_t     *GetEX() const {return 0;}
-   virtual Double_t     *GetEY() const {return 0;}
-   virtual Double_t     *GetEXhigh() const {return 0;}
-   virtual Double_t     *GetEXlow()  const {return 0;}
-   virtual Double_t     *GetEYhigh() const {return 0;}
-   virtual Double_t     *GetEYlow()  const {return 0;}
-   virtual Double_t     *GetEXlowd()  const {return 0;}
-   virtual Double_t     *GetEXhighd() const {return 0;}
-   virtual Double_t     *GetEYlowd()  const {return 0;}
-   virtual Double_t     *GetEYhighd() const {return 0;}
+   virtual Double_t     *GetEX() const {return nullptr;}
+   virtual Double_t     *GetEY() const {return nullptr;}
+   virtual Double_t     *GetEXhigh() const {return nullptr;}
+   virtual Double_t     *GetEXlow()  const {return nullptr;}
+   virtual Double_t     *GetEYhigh() const {return nullptr;}
+   virtual Double_t     *GetEYlow()  const {return nullptr;}
+   virtual Double_t     *GetEXlowd()  const {return nullptr;}
+   virtual Double_t     *GetEXhighd() const {return nullptr;}
+   virtual Double_t     *GetEYlowd()  const {return nullptr;}
+   virtual Double_t     *GetEYhighd() const {return nullptr;}
    Double_t              GetMaximum()  const {return fMaximum;}
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
-   virtual char         *GetObjectInfo(Int_t px, Int_t py) const;
+   char                 *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
    virtual Double_t      GetPointX(Int_t i) const;
    virtual Double_t      GetPointY(Int_t i) const;
@@ -161,33 +169,37 @@ public:
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);
    virtual void          MovePoints(Double_t dx, Double_t dy, Bool_t logx = kFALSE, Bool_t logy = kFALSE);
-   virtual void          Paint(Option_t *chopt="");
+   void                  Paint(Option_t *chopt="") override;
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    virtual void          PaintStats(TF1 *fit);
-   virtual void          Print(Option_t *chopt="") const;
-   virtual void          RecursiveRemove(TObject *obj);
+   void                  Print(Option_t *chopt="") const override;
+   void                  RecursiveRemove(TObject *obj) override;
    virtual Int_t         RemovePoint(); // *MENU*
    virtual Int_t         RemovePoint(Int_t ipoint);
-   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
+   void                  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                  SaveAs(const char *filename = "graph", Option_t *option = "") const override; // *MENU*
+   virtual void          Scale(Double_t c1=1., Option_t *option="y"); // *MENU*
    virtual void          SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
    virtual void          SetHighlight(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHighlight
    virtual void          SetHistogram(TH1F *h) {fHistogram = h;}
    virtual void          SetMaximum(Double_t maximum=-1111); // *MENU*
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
+   virtual void SetOption(Option_t *option = " ") { fOption = option; }
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
    virtual void          SetPointX(Int_t i, Double_t x);
    virtual void          SetPointY(Int_t i, Double_t y);
-   virtual void          SetName(const char *name=""); // *MENU*
-   virtual void          SetNameTitle(const char *name="", const char *title="");
-   virtual void          SetTitle(const char *title="");    // *MENU*
+   void                  SetName(const char *name="") override; // *MENU*
+   void                  SetNameTitle(const char *name="", const char *title="") override;
+   virtual void          SetStats(Bool_t stats=kTRUE); // *MENU*
+   void                  SetTitle(const char *title="") override;    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
-   virtual void          UseCurrentStyle();
+   void                  UseCurrentStyle() override;
    void                  Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y,Int_t maxiterations);
 
-   ClassDef(TGraph,4)  //Graph graphics class
+   ClassDefOverride(TGraph, 5) // Graph graphics class
 };
 
 #endif

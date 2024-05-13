@@ -80,39 +80,14 @@ static const Int_t gAlignValues[] = {
     0
 };
 
-/*
-static const char *gFontList[] = {
-   "Arial",
-   "Comic Sans MS",
-   "Courier New",
-   "Georgia",
-   "Impact",
-   "Monotype",
-   "Symbol",
-   "Times New Roman",
-   "Trebuchet MS",
-   "Verdana",
-   "Webdings",
-   "Wingdings",
-   0,
-};
 
-static const char *gFontList2[] = {
-   "FreeSans",
-   "FreeSerif",
-   "FreeMono",
-   "OpenSymbol",
-   0
-};
+/** \class TGFontDialog
+    \ingroup guiwidgets
+
+Font selection dialog, allowing to select one in the list of available fonts in the system.
+
 */
 
-//_____________________________________________________________________________
-//
-// TGFontDialog
-//
-// Font selection dialog, allowing to select one in the list of available fonts
-// in the system.
-//_____________________________________________________________________________
 
 ClassImp(TGFontDialog);
 
@@ -444,7 +419,7 @@ void TGFontDialog::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle dialog events.
 
-Bool_t TGFontDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGFontDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
       case kC_COMMAND:
@@ -653,7 +628,6 @@ void TGFontDialog::UpdateStyleSize(const char *family)
       n2 = name.Index("-", n1);
       n1 = n2 + 1;
       n2 = name.Index("-", n1);
-      n1 = n2 + 1;
 
       if (n2 != kNPOS) {
          n1 = n2 + 2;
@@ -906,7 +880,6 @@ void TGFontDialog::SetFont(TGFont *font)
    n2 = name.Index("-", n1);
    n1 = n2 + 1;
    n2 = name.Index("-", n1);
-   n1 = n2 + 1;
    if (n2 != kNPOS) {
       n1 = n2 + 1;
       n2 = name.Index("-", n1);

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : RegressionVariance                                                    *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description: Calculate the separation criteria used in regression              *
  *                                                                                *
@@ -31,7 +31,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_RegressionVariance
@@ -89,7 +89,7 @@ namespace TMVA {
 
    protected:
 
-      TString fName;  // name of the concrete Separation Index implementation
+      TString fName;  ///< name of the concrete Separation Index implementation
 
       ClassDef(RegressionVariance,0); // Interface to different separation criteria used in training algorithms
    };

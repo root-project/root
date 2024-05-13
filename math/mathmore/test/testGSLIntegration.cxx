@@ -204,7 +204,7 @@ void  testIntegPerf(){
   }
   timer.Stop();
   std::cout << "Time using TF1::Integral :\t\t" << timer.RealTime() << std::endl;
-  pr = std::cout.precision(18);  std::cout << s1 << std::endl;  std::cout.precision(pr);
+  pr = std::cout.precision(18);  std::cout << s2 << std::endl;  std::cout.precision(pr);
 
 #endif
 

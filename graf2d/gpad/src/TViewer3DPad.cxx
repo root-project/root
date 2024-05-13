@@ -2,7 +2,7 @@
 // Author: Richard Maunder  10/3/2005
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -45,7 +45,7 @@ void TViewer3DPad::BeginScene()
    // Create a 3D view if none exists
    TView *view = fPad.GetView();
    if (!view) {
-      view = TView::CreateView(1,0,0); // Cartesian view by default
+      view = TView::CreateView(1, nullptr, nullptr); // Cartesian view by default
       if (!view) {
          assert(kFALSE);
          return;
@@ -171,9 +171,11 @@ Bool_t TViewer3DPad::OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * /*addC
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::CloseComposite()
-{}
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TViewer3DPad::AddCompositeOp(UInt_t /*operation*/)
-{}
+{
+}

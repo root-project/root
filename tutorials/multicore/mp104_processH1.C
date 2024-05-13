@@ -31,10 +31,10 @@ static std::string tutname = "mp104_processH1: ";
 static std::string logfile = "mp104_processH1.log";
 static RedirectHandle_t gRH;
 
-std::vector<std::string> files {"http://root.cern.ch/files/h1/dstarmb.root",
-                                "http://root.cern.ch/files/h1/dstarp1a.root",
-                                "http://root.cern.ch/files/h1/dstarp1b.root",
-                                "http://root.cern.ch/files/h1/dstarp2.root"};
+std::vector<std::string> files {"http://root.cern/files/h1/dstarmb.root",
+                                "http://root.cern/files/h1/dstarp1a.root",
+                                "http://root.cern/files/h1/dstarp1b.root",
+                                "http://root.cern/files/h1/dstarp2.root"};
 
 int mp104_processH1()
 {
@@ -74,7 +74,7 @@ int mp104_processH1()
    // In a second run we use sel
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
    auto hListSel = pool.Process(files, *sel, "h42");
-   gSystem->RedirectOutput(0, 0, &gRH);
+   gSystem->RedirectOutput(nullptr, nullptr, &gRH);
 
    // Check the output
    if (checkH1(hListSel) < 0)

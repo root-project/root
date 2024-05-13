@@ -176,15 +176,15 @@ public:
                       ExistingTypeCheck_t existingTypeCheck,
                       AutoParse_t autoParse,
                       bool *shuttingDownPtr,
-                      const int *pgDebug = 0);
+                      const int *pgDebug = nullptr);
    virtual ~TClingLookupHelper() { /* we're not owner */ }
 
-   virtual bool ExistingTypeCheck(const std::string &tname, std::string &result);
-   virtual void GetPartiallyDesugaredName(std::string &nameLong);
-   virtual bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong);
-   virtual bool IsDeclaredScope(const std::string &base, bool &isInlined);
-   virtual bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true);
-   virtual void ShuttingDownSignal();
+   bool ExistingTypeCheck(const std::string &tname, std::string &result) override;
+   void GetPartiallyDesugaredName(std::string &nameLong) override;
+   bool IsAlreadyPartiallyDesugaredName(const std::string &nondef, const std::string &nameLong) override;
+   bool IsDeclaredScope(const std::string &base, bool &isInlined) override;
+   bool GetPartiallyDesugaredNameWithScopeHandling(const std::string &tname, std::string &result, bool dropstd = true) override;
+   void ShuttingDownSignal() override;
 };
 
 //______________________________________________________________________________
@@ -197,21 +197,30 @@ private:
    std::string fRequestedName;
    std::string fNormalizedName;
    std::string fDemangledTypeInfo;
+   // clang-format off
    bool fRequestStreamerInfo;
    bool fRequestNoStreamer;
    bool fRequestNoInputOperator;
    bool fRequestOnlyTClass;
    int  fRequestedVersionNumber;
+   int  fRequestedRNTupleSplitMode;
+   // clang-format on
 
 public:
+   // clang-format off
    enum ERootFlag {
-      kNoStreamer      = 0x01,
+      kNoStreamer = 0x01,
       kNoInputOperator = 0x02,
-      kUseByteCount    = 0x04,
-      kStreamerInfo    = 0x04,
-      kHasVersion      = 0x08
+      kUseByteCount = 0x04,
+      kStreamerInfo = 0x04,
+      kHasVersion = 0x08,
+      // kHasCustomStreamerMember = 0x10 (see TClingUtils.cxx and TClassTable.h)
+      kNtplForceSplit = 0x20,
+      kNtplForceUnsplit = 0x40
    };
+   // clang-format on
 
+   // clang-format off
    AnnotatedRecordDecl(long index,
                        const clang::RecordDecl *decl,
                        bool rStreamerInfo,
@@ -219,6 +228,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -230,6 +240,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -242,6 +253,7 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
 
@@ -255,8 +267,10 @@ public:
                        bool rRequestNoInputOperator,
                        bool rRequestOnlyTClass,
                        int rRequestedVersionNumber,
+                       int rRequestedRNTupleSplitMode,
                        const cling::Interpreter &interpret,
                        const TNormalizedCtxt &normCtxt);
+   // clang-format on
 
    ~AnnotatedRecordDecl() {
       // Nothing to do we do not own the pointer;
@@ -273,10 +287,13 @@ public:
       // Equivalent to CINT's cl.RootFlag() & G__USEBYTECOUNT
       return fRequestStreamerInfo;
    }
+   // clang-format off
    bool RequestNoInputOperator() const { return fRequestNoInputOperator; }
    bool RequestNoStreamer() const { return fRequestNoStreamer; }
    bool RequestOnlyTClass() const { return fRequestOnlyTClass; }
    int  RequestedVersionNumber() const { return fRequestedVersionNumber; }
+   int  RequestedRNTupleSplitMode() const { return fRequestedRNTupleSplitMode; }
+   // clang-format on
    int  RootFlag() const {
       // Return the request (streamerInfo, has_version, etc.) combined in a single
       // int.  See RScanner::AnnotatedRecordDecl::ERootFlag.
@@ -285,6 +302,12 @@ public:
       if (fRequestNoInputOperator) result |= kNoInputOperator;
       if (fRequestStreamerInfo) result |= kStreamerInfo;
       if (fRequestedVersionNumber > -1) result |= kHasVersion;
+      switch (fRequestedRNTupleSplitMode) {
+      case 0: break;
+      case 1: result |= kNtplForceSplit; break;
+      case -1: result |= kNtplForceUnsplit; break;
+      default: assert(false && "invalid setting of fRequestedRNTupleSplitMode");
+      }
       return result;
    }
    const clang::RecordDecl* GetRecordDecl() const { return fDecl; }
@@ -354,7 +377,7 @@ clang::QualType AddDefaultParameters(clang::QualType instanceType,
                                      const TNormalizedCtxt &normCtxt);
 
 //______________________________________________________________________________
-llvm::StringRef DataMemberInfo__ValidArrayIndex(const clang::DeclaratorDecl &m, int *errnum = 0, llvm::StringRef  *errstr = 0);
+llvm::StringRef DataMemberInfo__ValidArrayIndex(const cling::Interpreter& interp, const clang::DeclaratorDecl &m, int *errnum = nullptr, llvm::StringRef *errstr = nullptr);
 
 enum class EIOCtorCategory : short { kAbsent, kDefault, kIOPtrType, kIORefType };
 
@@ -371,16 +394,13 @@ EIOCtorCategory CheckIOConstructor(const clang::CXXRecordDecl*, const char *, co
 const clang::FunctionDecl* ClassInfo__HasMethod(const clang::DeclContext *cl, char const*, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
-void CreateNameTypeMap(clang::CXXRecordDecl const&, std::map<std::string, ROOT::Internal::TSchemaType>&);
-
-//______________________________________________________________________________
 int ElementStreamer(std::ostream& finalString,
                     const clang::NamedDecl &forcontext,
                     const clang::QualType &qti,
                     const char *t,
                     int rwmode,
                     const cling::Interpreter &interp,
-                    const char *tcl=0);
+                    const char *tcl = nullptr);
 
 //______________________________________________________________________________
 bool IsBase(const clang::CXXRecordDecl *cl, const clang::CXXRecordDecl *base, const clang::CXXRecordDecl *context,const cling::Interpreter &interp);
@@ -561,8 +581,7 @@ bool HasCustomConvStreamerMemberFunction(const AnnotatedRecordDecl &cl,
 
 //______________________________________________________________________________
 // Return the header file to be included to declare the Decl
-llvm::StringRef GetFileName(const clang::Decl& decl,
-                            const cling::Interpreter& interp);
+std::string GetFileName(const clang::Decl& decl, const cling::Interpreter& interp);
 
 //______________________________________________________________________________
 // Return the dictionary file name for a module
@@ -572,6 +591,24 @@ std::string GetModuleFileName(const char* moduleName);
 // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
 // that can be used in C++ as a variable name.
 void GetCppName(std::string &output, const char *input);
+
+//______________________________________________________________________________
+// Demangle the input symbol name for dlsym.
+static inline std::string DemangleNameForDlsym(const std::string& name)
+{
+   std::string nameForDlsym = name;
+
+#if defined(R__MACOSX) || defined(R__WIN32)
+   // The JIT gives us a mangled name which has an additional leading underscore
+   // on macOS and Windows, for instance __ZN8TRandom34RndmEv. However, dlsym
+   // requires us to remove it.
+   // FIXME: get this information from the DataLayout via getGlobalPrefix()!
+   if (nameForDlsym[0] == '_')
+      nameForDlsym.erase(0, 1);
+#endif //R__MACOSX
+
+   return nameForDlsym;
+}
 
 //______________________________________________________________________________
 // Return the type with all parts fully qualified (most typedefs),
@@ -622,7 +659,11 @@ std::pair<std::string,clang::QualType> GetNameTypeForIO(const clang::QualType& t
 
 //______________________________________________________________________________
 // Returns comment in a meaningful way
-llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = 0);
+llvm::StringRef GetComment(const clang::Decl &decl, clang::SourceLocation *loc = nullptr);
+
+//______________________________________________________________________________
+// Returns true if class def macro exists
+bool HasClassDefMacro(const clang::Decl *decl, const cling::Interpreter &interpreter);
 
 //______________________________________________________________________________
 // Returns the comment of the ClassDef macro
@@ -752,7 +793,7 @@ inline void LevelPrint(bool prefix, int level, const char *location, const char 
    if (level < GetErrorIgnoreLevel())
       return;
 
-   const char *type = 0;
+   const char *type = nullptr;
 
    if (level >= ROOT::TMetaUtils::kInfo)
       type = "Info";
@@ -855,7 +896,7 @@ namespace AST2SourceTools {
 //______________________________________________________________________________
 const std::string Decls2FwdDecls(const std::vector<const clang::Decl*> &decls,
                                  bool (*ignoreFiles)(const clang::PresumedLoc&) ,
-                                 const cling::Interpreter& interp);
+                                 const cling::Interpreter& interp, std::string *logs);
 
 //______________________________________________________________________________
 int PrepareArgsForFwdDecl(std::string& templateArgs,
@@ -878,6 +919,12 @@ int FwdDeclFromRcdDecl(const clang::RecordDecl& recordDecl,
 int FwdDeclFromTmplDecl(const clang::TemplateDecl& tmplDecl,
                         const cling::Interpreter& interpreter,
                         std::string& defString);
+
+//______________________________________________________________________________
+int FwdDeclIfTmplSpec(const clang::RecordDecl& recordDecl,
+                      const cling::Interpreter& interpreter,
+                      std::string& defString,
+                      const std::string &normalizedName);
 //______________________________________________________________________________
 int GetDefArg(const clang::ParmVarDecl& par, std::string& valAsString, const clang::PrintingPolicy& pp);
 

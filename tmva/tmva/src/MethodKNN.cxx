@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodKNN                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
@@ -20,7 +20,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodKNN
@@ -364,7 +364,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
    }
 
    UInt_t count_all = 0;
-   Double_t weight_all = 0, weight_sig = 0, weight_bac = 0;
+   Double_t weight_all = 0, weight_sig = 0;
 
    for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit) {
 
@@ -393,8 +393,6 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
          else          ++weight_sig;
       }
       else if (node.GetEvent().GetType() == 2) { // background type = 2
-         if (fUseWeight) weight_bac += evweight;
-         else          ++weight_bac;
       }
       else {
          Log() << kFATAL << "Unknown type for training event" << Endl;
@@ -688,7 +686,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 
    kNN::Event *event = new kNN::Event();
    TTree *tree = new TTree("knn", "event tree");
-   tree->SetDirectory(0);
+   tree->SetDirectory(nullptr);
    tree->Branch("event", "TMVA::kNN::Event", &event);
 
    Double_t size = 0.0;

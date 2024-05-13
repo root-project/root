@@ -9,6 +9,11 @@
 # @author Pere Mato, CERN
 ############################################################################
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
   HEADERS
     RooStats/AsymptoticCalculator.h
@@ -25,13 +30,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     RooStats/Heaviside.h
     RooStats/HLFactory.h
     RooStats/HybridCalculator.h
-    RooStats/HybridCalculatorOriginal.h
     RooStats/HybridPlot.h
     RooStats/HybridResult.h
     RooStats/HypoTestCalculatorGeneric.h
     RooStats/HypoTestCalculator.h
     RooStats/HypoTestInverter.h
-    RooStats/HypoTestInverterOriginal.h
     RooStats/HypoTestInverterPlot.h
     RooStats/HypoTestInverterResult.h
     RooStats/HypoTestPlot.h
@@ -85,12 +88,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/Heaviside.cxx
     src/HLFactory.cxx
     src/HybridCalculator.cxx
-    src/HybridCalculatorOriginal.cxx
     src/HybridPlot.cxx
     src/HybridResult.cxx
     src/HypoTestCalculatorGeneric.cxx
     src/HypoTestInverter.cxx
-    src/HypoTestInverterOriginal.cxx
     src/HypoTestInverterPlot.cxx
     src/HypoTestInverterResult.cxx
     src/HypoTestPlot.cxx
@@ -102,7 +103,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/MCMCInterval.cxx
     src/MCMCIntervalPlot.cxx
     src/MetropolisHastings.cxx
-    src/ModelConfig.cxx
     src/NeymanConstruction.cxx
     src/NumberCountingPdfFactory.cxx
     src/NumberCountingUtils.cxx
@@ -140,6 +140,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     Foam
     Graf
     Gpad
+  ${EXTRA_DICT_OPTS}
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)

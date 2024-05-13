@@ -13,7 +13,7 @@
 #define ROOT_StringConv
 
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "Rtypes.h"
 #include "RConfigure.h"
 #include <cmath>
@@ -152,12 +152,6 @@ EFromHumanReadableSize FromHumanReadableSize(std::string_view str, T &value)
       return EFromHumanReadableSize::kParseFail;
    }
 
-}
-
-template <typename T>
-EFromHumanReadableSize FromHumanReadableSize(ROOT::Internal::TStringView str, T &value)
-{
-   return FromHumanReadableSize(std::string_view(str),value);
 }
 
 } // namespace ROOT.

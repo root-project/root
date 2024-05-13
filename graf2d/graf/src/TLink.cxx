@@ -33,7 +33,6 @@ Clicking on one link, inspect the corresponding object.
 
 TLink::TLink() : TText()
 {
-   fLink  = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -46,7 +45,7 @@ TLink::TLink(Double_t x, Double_t y, void *pointer)
 {
    fLink  = pointer;
    static char line[16];
-   snprintf(line,16,"->%lx ", (Long_t)pointer);
+   snprintf(line,16,"->%zx ", (size_t)pointer);
    SetTitle(line);
 }
 

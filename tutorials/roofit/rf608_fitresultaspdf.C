@@ -1,22 +1,19 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Likelihood and minimization: representing the parabolic approximation of the fit as a multi-variate Gaussian on the
-/// parameters of the fitted p.d.f.
+/// Likelihood and minimization: representing the parabolic approximation of the fit as a multi-variate Gaussian on the
+/// parameters of the fitted pdf
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooChebychev.h"
 #include "RooFitResult.h"
@@ -50,12 +47,12 @@ void rf608_fitresultaspdf()
    RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // F i t   m o d e l   t o   d a t a
    // ----------------------------------
 
-   RooFitResult *r = model.fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save(), PrintLevel(-1))};
 
    // C r e a t e M V   G a u s s i a n   p d f   o f   f i t t e d    p a r a m e t e r s
    // ------------------------------------------------------------------------------------
@@ -65,21 +62,21 @@ void rf608_fitresultaspdf()
    // S o m e   e x e c e r c i s e s   w i t h   t h e   p a r a m e t e r   p d f
    // -----------------------------------------------------------------------------
 
-   // Generate 100K points in the parameter space, sampled from the MVGaussian p.d.f.
-   RooDataSet *d = parabPdf->generate(RooArgSet(mean, sigma_g2, frac), 100000);
+   // Generate 100K points in the parameter space, sampled from the MVGaussian pdf
+   std::unique_ptr<RooDataSet> d{parabPdf->generate({mean, sigma_g2, frac}, 100000)};
 
-   // Sample a 3-D histogram of the p.d.f. to be visualized as an error ellipsoid using the GLISO draw option
+   // Sample a 3-D histogram of the pdf to be visualized as an error ellipsoid using the GLISO draw option
    TH3 *hh_3d = (TH3 *)parabPdf->createHistogram("mean,sigma_g2,frac", 25, 25, 25);
    hh_3d->SetFillColor(kBlue);
 
-   // Project 3D parameter p.d.f. down to 3 permutations of two-dimensional p.d.f.s
+   // Project 3D parameter pdf down to 3 permutations of two-dimensional pdfs
    // The integrations corresponding to these projections are performed analytically
-   // by the MV Gaussian p.d.f.
+   // by the MV Gaussian pdf
    RooAbsPdf *pdf_sigmag2_frac = parabPdf->createProjection(mean);
    RooAbsPdf *pdf_mean_frac = parabPdf->createProjection(sigma_g2);
    RooAbsPdf *pdf_mean_sigmag2 = parabPdf->createProjection(frac);
 
-   // Make 2D plots of the 3 two-dimensional p.d.f. projections
+   // Make 2D plots of the 3 two-dimensional pdf projections
    TH2 *hh_sigmag2_frac = (TH2 *)pdf_sigmag2_frac->createHistogram("sigma_g2,frac", 50, 50);
    TH2 *hh_mean_frac = (TH2 *)pdf_mean_frac->createHistogram("mean,frac", 50, 50);
    TH2 *hh_mean_sigmag2 = (TH2 *)pdf_mean_sigmag2->createHistogram("mean,sigma_g2", 50, 50);
@@ -91,7 +88,7 @@ void rf608_fitresultaspdf()
    new TCanvas("rf608_fitresultaspdf_1", "rf608_fitresultaspdf_1", 600, 600);
    hh_3d->Draw("iso");
 
-   // Draw the 2D projections of the 3D p.d.f.
+   // Draw the 2D projections of the 3D pdf
    TCanvas *c2 = new TCanvas("rf608_fitresultaspdf_2", "rf608_fitresultaspdf_2", 900, 600);
    c2->Divide(3, 2);
    c2->cd(1);
@@ -107,10 +104,10 @@ void rf608_fitresultaspdf()
    hh_mean_frac->GetZaxis()->SetTitleOffset(1.4);
    hh_mean_frac->Draw("surf3");
 
-   // Draw the distributions of parameter points sampled from the p.d.f.
-   TH1 *tmp1 = d->createHistogram("mean,sigma_g2", 50, 50);
-   TH1 *tmp2 = d->createHistogram("sigma_g2,frac", 50, 50);
-   TH1 *tmp3 = d->createHistogram("mean,frac", 50, 50);
+   // Draw the distributions of parameter points sampled from the pdf
+   TH1 *tmp1 = d->createHistogram("mean,sigma_g2", Binning(50), Binning(50));
+   TH1 *tmp2 = d->createHistogram("sigma_g2,frac", Binning(50), Binning(50));
+   TH1 *tmp3 = d->createHistogram("mean,frac", Binning(50), Binning(50));
 
    c2->cd(4);
    gPad->SetLeftMargin(0.15);

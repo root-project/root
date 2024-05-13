@@ -4,16 +4,16 @@
 /// This macro provides an example of how to use TMVA for k-folds cross
 /// evaluation.
 ///
-/// As input data is used a toy-MC sample consisting of two guassian
+/// As input data is used a toy-MC sample consisting of two gaussian
 /// distributions.
 ///
-/// The output file "TMVA.root" can be analysed with the use of dedicated
+/// The output file "TMVACV.root" can be analysed with the use of dedicated
 /// macros (simply say: root -l <macro.C>), which can be conveniently
 /// invoked through a GUI that will appear at the end of the run of this macro.
 /// Launch the GUI via the command:
 ///
 /// ```
-/// root -l -e 'TMVA::TMVAGui("TMVA.root")'
+/// root -l -e 'TMVA::TMVAGui("TMVACV.root")'
 /// ```
 ///
 /// ## Cross Evaluation
@@ -121,12 +121,12 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    TTree *bkgTree = genTree(1000, -1.0, 1.0, 101);
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName("TMVA.root");
+   TString outfileName("TMVACV.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    // DataLoader definitions; We declare variables in the tree so that TMVA can
    // find them. For more information see TMVAClassification tutorial.
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("datasetcv");
 
    // Data variables
    dataloader->AddVariable("x", 'F');
@@ -150,7 +150,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
 
    // The CV mechanism of TMVA splits up the training set into several folds.
    // The test set is currently left unused. The `nTest_ClassName=1` assigns
-   // one event to the the test set for each class and puts the rest in the
+   // one event to the test set for each class and puts the rest in the
    // training set. A value of 0 is a special value and would split the
    // datasets 50 / 50.
    dataloader->PrepareTrainingAndTestTree("", "",
@@ -174,7 +174,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    //
    UInt_t numFolds = 2;
    TString analysisType = "Classification";
-   
+
    TString splitType = (useRandomSplitting) ? "Random" : "Deterministic";
 
    //
@@ -185,14 +185,14 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    // random and independent of the data, generated only once. This last
    // property ensures that if a calibration is changed the same event will
    // still be assigned the same fold.
-   // 
+   //
    // This can be used to use the cross validated classifiers in application,
    // a technique that can simplify statistical analysis.
-   // 
-   // If you want to run TMVACrossValidationApplication, make sure you have 
+   //
+   // If you want to run TMVACrossValidationApplication, make sure you have
    // run this tutorial with Deterministic splitting type, i.e.
    // with the option useRandomSPlitting = false
-   // 
+   //
 
    TString splitExpr = (!useRandomSplitting) ? "int(fabs([eventID]))%int([NumFolds])" : "";
 
@@ -233,7 +233,7 @@ int TMVACrossValidation(bool useRandomSplitting = false)
    // --------------------------------------------------------------------------
 
    //
-   // Process some output programatically, printing the ROC score for each
+   // Process some output programmatically, printing the ROC score for each
    // booked method.
    //
    size_t iMethod = 0;

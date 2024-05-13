@@ -37,6 +37,7 @@ compiler, not CINT.
 #include "cling/Utils/AST.h"
 
 #include "clang/AST/ASTContext.h"
+#include "clang/AST/CXXInheritance.h"
 #include "clang/AST/Decl.h"
 #include "clang/AST/DeclBase.h"
 #include "clang/AST/DeclCXX.h"
@@ -61,7 +62,7 @@ compiler, not CINT.
 using namespace clang;
 
 TClingCXXRecMethIter::SpecFuncIter::SpecFuncIter(cling::Interpreter *interp, clang::DeclContext *DC,
-                                                 llvm::SmallVectorImpl<clang::Decl *> &&specFuncs)
+                                                 llvm::SmallVectorImpl<clang::CXXMethodDecl *> &&specFuncs)
 {
    auto *CXXRD = llvm::dyn_cast<CXXRecordDecl>(DC);
    if (!CXXRD)
@@ -70,12 +71,12 @@ TClingCXXRecMethIter::SpecFuncIter::SpecFuncIter(cling::Interpreter *interp, cla
    // Could trigger deserialization of decls.
    cling::Interpreter::PushTransactionRAII RAII(interp);
 
-   auto emplaceSpecFunIfNeeded = [&](clang::Decl *D) {
+   auto emplaceSpecFunIfNeeded = [&](clang::CXXMethodDecl *D) {
       if (!D)
          return; // Handle "structor not found" case.
 
       if (std::find(CXXRD->decls_begin(), CXXRD->decls_end(), D) == CXXRD->decls_end()) {
-         fDefDataSpecFuns.emplace_back(llvm::dyn_cast<clang::FunctionDecl>(D));
+         fDefDataSpecFuns.emplace_back(D);
       }
    };
 
@@ -106,11 +107,16 @@ bool TClingCXXRecMethIter::ShouldSkip(const clang::UsingShadowDecl *USD) const
 {
    if (auto *FD = llvm::dyn_cast<clang::FunctionDecl>(USD->getTargetDecl())) {
       if (const auto *CXXMD = llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-         if (GetInterpreter()->getSema().getSpecialMember(CXXMD) != clang::Sema::CXXInvalid) {
+         auto SpecMemKind = GetInterpreter()->getSema().getSpecialMember(CXXMD);
+         if ((SpecMemKind == clang::Sema::CXXDefaultConstructor && CXXMD->getNumParams() == 0) ||
+             ((SpecMemKind == clang::Sema::CXXCopyConstructor || SpecMemKind == clang::Sema::CXXMoveConstructor) &&
+              CXXMD->getNumParams() == 1)) {
             // This is a special member pulled in through a using decl. Special
             // members of derived classes cannot be replaced; ignore this using decl,
             // and keep only the (still possibly compiler-generated) special member of the
             // derived class.
+            // NOTE that e.g. `Klass(int = 0)` has SpecMemKind == clang::Sema::CXXDefaultConstructor,
+            // yet this signature must be exposed, so check the argument count.
             return true;
          }
       }
@@ -141,22 +147,6 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    if (templateParms->getMinRequiredArguments() > 0)
       return nullptr;
 
-   if (templateParms->size() > 0) {
-      NamedDecl *arg0 = *templateParms->begin();
-      if (arg0->isTemplateParameterPack())
-         return nullptr;
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(*templateParms->begin())) {
-         if (!TTP->hasDefaultArgument())
-            return nullptr;
-      } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(*templateParms->begin())) {
-         if (!NTTP->hasDefaultArgument())
-            return nullptr;
-      } else {
-         // TemplateTemplateParmDecl, pack
-         return nullptr;
-      }
-   }
-
    const FunctionDecl *templatedDecl = llvm::dyn_cast<FunctionDecl>(TD->getTemplatedDecl());
    const Decl *declCtxDecl = dyn_cast<Decl>(TD->getDeclContext());
 
@@ -168,26 +158,29 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    // If the function argument type is dependent (a1 and a2) we need to
    // substitute the types first, using the template arguments derived from the
    // template parameters' defaults.
-   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs(templateParms->size());
-   for (int iParam = 0, nParams = templateParms->size(); iParam < nParams; ++iParam) {
-      const NamedDecl *templateParm = templateParms->getParam(iParam);
+   llvm::SmallVector<TemplateArgument, 8> defaultTemplateArgs;
+   for (const NamedDecl *templateParm: *templateParms) {
       if (templateParm->isTemplateParameterPack()) {
-         // shouldn't end up here
-         assert(0 && "unexpected template parameter pack");
+         // This would inject an emprt parameter pack, which is a good default.
+         // But for cases where instantiation fails, this hits bug in unloading
+         // of the failed instantiation, causing a missing symbol in subsequent
+         // transactions where a Decl instantiated by the failed instatiation
+         // is not re-emitted. So for now just give up default-instantiating
+         // templates with parameter packs, even if this is simply a work-around.
+         //defaultTemplateArgs.emplace_back(ArrayRef<TemplateArgument>{}); // empty pack.
          return nullptr;
-      }
-      if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
+      } else if (auto TTP = dyn_cast<TemplateTypeParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument());
       } else if (auto NTTP = dyn_cast<NonTypeTemplateParmDecl>(templateParm)) {
          if (!NTTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(NTTP->getDefaultArgument());
+         defaultTemplateArgs.emplace_back(NTTP->getDefaultArgument());
       } else if (auto TTP = dyn_cast<TemplateTemplateParmDecl>(templateParm)) {
          if (!TTP->hasDefaultArgument())
             return nullptr;
-         defaultTemplateArgs[iParam] = TemplateArgument(TTP->getDefaultArgument().getArgument());
+         defaultTemplateArgs.emplace_back(TTP->getDefaultArgument().getArgument());
       } else {
          // shouldn't end up here
          assert(0 && "unexpected template parameter kind");
@@ -204,14 +197,15 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    SmallVector<DeducedTemplateArgument, 4> DeducedArgs;
    sema::TemplateDeductionInfo Info{SourceLocation()};
 
+   auto *FTD = const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD));
    Sema::InstantiatingTemplate Inst(
-      S, Info.getLocation(), const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD)),
+      S, Info.getLocation(), FTD,
       defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, Info);
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
    TemplateArgumentList templArgList(TemplateArgumentList::OnStack, defaultTemplateArgs);
-   MultiLevelTemplateArgumentList MLTAL{templArgList};
+   MultiLevelTemplateArgumentList MLTAL{FTD, templArgList.asArray(), /*Final=*/false};
    for (const clang::ParmVarDecl *param : templatedDecl->parameters()) {
       QualType paramType = param->getOriginalType();
 
@@ -243,6 +237,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
                                    TClingClassInfo *ci)
    : TClingDeclInfo(nullptr), fInterp(interp), fFirstTime(true), fTitle("")
 {
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
 
    if (!ci || !ci->IsValid()) {
@@ -251,7 +246,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
    clang::Decl *D = const_cast<clang::Decl *>(ci->GetDecl());
    auto *DC = llvm::dyn_cast<clang::DeclContext>(D);
 
-   llvm::SmallVector<clang::Decl*, 8> SpecFuncs;
+   llvm::SmallVector<clang::CXXMethodDecl*, 8> SpecFuncs;
 
    if (auto *CXXRD = llvm::dyn_cast<CXXRecordDecl>(DC)) {
       // Initialize the CXXRecordDecl's special functions; could change the
@@ -265,8 +260,11 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
       // Assemble special functions (or FunctionTemplate-s) that are synthesized from DefinitionData but
       // won't be enumerated as part of decls_begin()/decls_end().
-      auto Ctors = SemaRef.LookupConstructors(CXXRD);
-      SpecFuncs.append(Ctors.begin(), Ctors.end());
+      for (clang::NamedDecl *ctor : SemaRef.LookupConstructors(CXXRD)) {
+         // Filter out constructor templates, they are not functions we can iterate over:
+         if (auto *CXXCD = llvm::dyn_cast<clang::CXXConstructorDecl>(ctor))
+            SpecFuncs.emplace_back(CXXCD);
+      }
       SpecFuncs.emplace_back(SemaRef.LookupCopyingAssignment(CXXRD, /*Quals*/ 0, /*RValueThis*/ false, 0 /*ThisQuals*/));
       SpecFuncs.emplace_back(SemaRef.LookupMovingAssignment(CXXRD, /*Quals*/ 0, /*RValueThis*/ false, 0 /*ThisQuals*/));
       SpecFuncs.emplace_back(SemaRef.LookupDestructor(CXXRD));
@@ -274,8 +272,6 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
    fIter = TClingCXXRecMethIter(interp, DC, std::move(SpecFuncs));
    fIter.Init();
-
-   // Could trigger deserialization of decls.
 }
 
 TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
@@ -291,6 +287,8 @@ TDictionary::DeclId_t TClingMethodInfo::GetDeclId() const
    if (!IsValid()) {
       return TDictionary::DeclId_t();
    }
+   // Next part interacts with clang, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    if (auto *FD = GetAsFunctionDecl())
       return (const clang::Decl*)(FD->getCanonicalDecl());
    return (const clang::Decl*)(GetAsUsingShadowDecl()->getCanonicalDecl());
@@ -303,11 +301,13 @@ const clang::FunctionDecl *TClingMethodInfo::GetAsFunctionDecl() const
 
 const clang::UsingShadowDecl *TClingMethodInfo::GetAsUsingShadowDecl() const
 {
-   return cast_or_null<UsingShadowDecl>(GetDecl());
+   return dyn_cast<UsingShadowDecl>(GetDecl());
 }
 
 const clang::FunctionDecl *TClingMethodInfo::GetTargetFunctionDecl() const
 {
+   // May need to resolve the declaration interacting with clang, needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    const Decl *D = GetDecl();
    do {
       if (auto FD = dyn_cast<FunctionDecl>(D))
@@ -357,13 +357,14 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fDecl = decl;
 }
 
-void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+void *TClingMethodInfo::InterfaceMethod() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
+   // TODO: can this lock be moved further deep?
    R__LOCKGUARD(gInterpreterMutex);
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
 }
@@ -378,6 +379,7 @@ int TClingMethodInfo::NArg() const
    if (!IsValid()) {
       return -1;
    }
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
    // Truncate cast to fit cint interface.
@@ -389,6 +391,7 @@ int TClingMethodInfo::NDefaultArg() const
    if (!IsValid()) {
       return -1;
    }
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    unsigned num_params = fd->getNumParams();
    unsigned min_args = fd->getMinRequiredArguments();
@@ -428,7 +431,7 @@ int TClingMethodInfo::Next()
    } else {
       fIter.Next();
    }
-   return 1;
+   return fIter.IsValid();
 }
 
 long TClingMethodInfo::Property() const
@@ -438,13 +441,43 @@ long TClingMethodInfo::Property() const
    }
    long property = 0L;
    property |= kIsCompiled;
-   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
-   if (fd->isConstexpr())
-      property |= kIsConstexpr;
+
    // NOTE: this uses `GetDecl()`, to capture the access of the UsingShadowDecl,
    // which is defined in the derived class and might differ from the access of fd
    // in the base class.
-   switch (GetDecl()->getAccess()) {
+   const Decl *declAccess = GetDecl();
+   if (llvm::isa<UsingShadowDecl>(declAccess))
+      property |= kIsUsing;
+
+   // The next call locks the interpreter mutex.
+   const clang::FunctionDecl *fd = GetTargetFunctionDecl();
+   clang::AccessSpecifier Access = clang::AS_public;
+   if (!declAccess->getDeclContext()->isNamespace())
+      Access = declAccess->getAccess();
+
+   // From here on the method interacts with clang directly, needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
+   if ((property & kIsUsing) && llvm::isa<CXXConstructorDecl>(fd)) {
+      Access = clang::AS_public;
+      clang::CXXRecordDecl *typeCXXRD = llvm::cast<RecordType>(Type()->GetQualType())->getAsCXXRecordDecl();
+      clang::CXXBasePaths basePaths;
+      if (typeCXXRD->isDerivedFrom(llvm::dyn_cast<CXXRecordDecl>(fd->getDeclContext()), basePaths)) {
+         // Access of the ctor is access of the base inheritance, and
+         // cannot be overruled by the access of the using decl.
+
+         for (auto el: basePaths) {
+            if (el.Access > Access)
+               Access = el.Access;
+         }
+      } else {
+         Error("Property()", "UsingDecl of ctor not shadowing a base ctor!");
+      }
+
+      // But a private ctor stays private:
+      if (fd->getAccess() > Access)
+         Access = fd->getAccess();
+   }
+   switch (Access) {
       case clang::AS_public:
          property |= kIsPublic;
          break;
@@ -455,13 +488,16 @@ long TClingMethodInfo::Property() const
          property |= kIsPrivate;
          break;
       case clang::AS_none:
-         if (fd->getDeclContext()->isNamespace())
+         if (declAccess->getDeclContext()->isNamespace())
             property |= kIsPublic;
          break;
       default:
          // IMPOSSIBLE
          break;
    }
+
+   if (fd->isConstexpr())
+      property |= kIsConstexpr;
    if (fd->getStorageClass() == clang::SC_Static) {
       property |= kIsStatic;
    }
@@ -471,7 +507,7 @@ long TClingMethodInfo::Property() const
 
    if (const clang::CXXMethodDecl *md =
             llvm::dyn_cast<clang::CXXMethodDecl>(fd)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          property |= kIsConstant | kIsConstMethod;
       }
       if (md->isVirtual()) {
@@ -504,6 +540,7 @@ long TClingMethodInfo::ExtraProperty() const
       return 0L;
    }
    long property = 0;
+   // The next call locks the interpreter mutex.
    const clang::FunctionDecl *fd = GetTargetFunctionDecl();
    if (fd->isOverloadedOperator())
       property |= kIsOperator;
@@ -515,6 +552,8 @@ long TClingMethodInfo::ExtraProperty() const
       property |= kIsDestructor;
    if (fd->isInlined())
       property |= kIsInlined;
+   if (fd->getTemplatedKind() != clang::FunctionDecl::TK_NonTemplate)
+      property |= kIsTemplateSpec;
    return property;
 }
 
@@ -525,6 +564,9 @@ TClingTypeInfo *TClingMethodInfo::Type() const
       ti.Init(clang::QualType());
       return &ti;
    }
+
+   // The next part interacts with clang, thus needs locking.
+   R__LOCKGUARD(gInterpreterMutex);
    if (llvm::isa<clang::CXXConstructorDecl>(GetTargetFunctionDecl())) {
       // CINT claims that constructors return the class object.
       // For using-ctors of a base, claim that it "returns" the derived class.
@@ -552,6 +594,7 @@ std::string TClingMethodInfo::GetMangledName() const
    mangled_name.clear();
    const FunctionDecl* D = GetTargetFunctionDecl();
 
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
    cling::Interpreter::PushTransactionRAII RAII(fInterp);
    GlobalDecl GD;
@@ -569,16 +612,19 @@ std::string TClingMethodInfo::GetMangledName() const
 const char *TClingMethodInfo::GetPrototype()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    TTHREAD_TLS_DECL( std::string, buf );
    buf.clear();
    buf += Type()->Name();
    buf += ' ';
+   // The next call locks the interpreter mutex.
    const FunctionDecl *FD = GetTargetFunctionDecl();
    // Use the DeclContext of the decl, not of the target decl:
    // Used base functions should show as if they are part of the derived class,
    // e.g. `Derived Derived::Derived(int)`, not `Derived Base::Derived(int)`.
+   // Interacting with clang in the next part, needs locking
+   R__LOCKGUARD(gInterpreterMutex);
    if (const clang::TypeDecl *td = llvm::dyn_cast<clang::TypeDecl>(GetDecl()->getDeclContext())) {
       std::string name;
       clang::QualType qualType(td->getTypeForDecl(),0);
@@ -602,22 +648,28 @@ const char *TClingMethodInfo::GetPrototype()
 
    if (const clang::CXXMethodDecl *md =
        llvm::dyn_cast<clang::CXXMethodDecl>(FD)) {
-      if (md->getTypeQualifiers() & clang::Qualifiers::Const) {
+      if (md->getMethodQualifiers().hasConst()) {
          buf += " const";
       }
    }
-   return buf.c_str();
+   return buf.c_str();  // NOLINT
 }
 
 const char *TClingMethodInfo::Name() const
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
    if (!fNameCache.empty())
      return fNameCache.c_str();
 
-   ((TCling*)gCling)->GetFunctionName(GetDecl(), fNameCache);
+   {
+      // The data member needs to be filled. This calls into the interpreter,
+      // needs locking.
+      // TODO: Check if the lock can be moved further deep.
+      R__LOCKGUARD(gInterpreterMutex);
+      ((TCling *)gCling)->GetFunctionName(GetDecl(), fNameCache);
+   }
    return fNameCache.c_str();
 }
 
@@ -625,15 +677,18 @@ const char *TClingMethodInfo::TypeName() const
 {
    if (!IsValid()) {
       // FIXME: Cint does not check!
-      return 0;
+      return nullptr;
    }
+   // The next *two* calls lock the interpreter mutex. Lock here first instead
+   // of locking/unlocking twice.
+   R__LOCKGUARD(gInterpreterMutex);
    return Type()->Name();
 }
 
 const char *TClingMethodInfo::Title()
 {
    if (!IsValid()) {
-      return 0;
+      return nullptr;
    }
 
    //NOTE: We can't use it as a cache due to the "thoughtful" self iterator
@@ -646,6 +701,7 @@ const char *TClingMethodInfo::Title()
    // redecl chain (came from merging of pcms).
    const FunctionDecl *FD = GetTargetFunctionDecl();
 
+   // Creating an interpreter transaction, needs locking.
    R__LOCKGUARD(gInterpreterMutex);
 
    // Could trigger deserialization of decls.

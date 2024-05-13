@@ -3,22 +3,11 @@
 
  /**********************************************************************
   *                                                                    *
-  * Copyright (c) 2004 ROOT Foundation,  CERN/PH-SFT                   *
+  * Copyright (c) 2004  CERN                                           *
+  * All rights reserved.                                               *
   *                                                                    *
-  * This library is free software; you can redistribute it and/or      *
-  * modify it under the terms of the GNU General Public License        *
-  * as published by the Free Software Foundation; either version 2     *
-  * of the License, or (at your option) any later version.             *
-  *                                                                    *
-  * This library is distributed in the hope that it will be useful,    *
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of     *
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU   *
-  * General Public License for more details.                           *
-  *                                                                    *
-  * You should have received a copy of the GNU General Public License  *
-  * along with this library (see file COPYING); if not, write          *
-  * to the Free Software Foundation, Inc., 59 Temple Place, Suite      *
-  * 330, Boston, MA 02111-1307 USA, or contact the author.             *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
   *                                                                    *
   **********************************************************************/
 
@@ -40,8 +29,8 @@
 /**
    @defgroup RootFinders One-dimensional Root-Finding
    Classes implementing algorithms for finding the roots of a one-dimensional function.
-   Various implementation esists in MathCore and MathMore
-   The user interacts with a proxy class ROOT::Math::RootFinder which creates behing
+   Various implementations exist in MathCore and MathMore
+   The user interacts with a proxy class ROOT::Math::RootFinder which creates behind
    the chosen algorithms which are implemented using the ROOT::Math::IRootFinderMethod interface
 
    @ingroup NumAlgo
@@ -221,6 +210,16 @@ namespace ROOT {
 
 #include "Math/Functor.h"
 
+/**
+ * Solve `f(x) = 0`, given a derivative `d`.
+ * @param f Function whose root should be found.
+ * @param d Derivative of the function.
+ * @param start Starting point for iteration.
+ * @param maxIter Maximum number of iterations, passed to Solve(int,double,double)
+ * @param absTol Absolute tolerance, as in Solve(int,double,double)
+ * @param relTol Relative tolerance, passed to Solve(int,double,double)
+ * @return true if a root was found. Retrieve the result using Root().
+ */
 template<class Function, class Derivative>
 bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
                                   int maxIter, double absTol, double relTol)
@@ -232,6 +231,16 @@ bool ROOT::Math::RootFinder::Solve(Function &f, Derivative &d, double start,
    return Solve(maxIter, absTol, relTol);
 }
 
+/**
+ * Solve `f(x) = 0` numerically.
+ * @param f Function whose root should be found.
+ * @param min Minimum allowed value of `x`.
+ * @param max Maximum allowed value of `x`.
+ * @param maxIter Maximum number of iterations, passed to Solve(int,double,double)
+ * @param absTol Absolute tolerance, as in Solve(int,double,double)
+ * @param relTol Relative tolerance, passed to Solve(int,double,double)
+ * @return true if a root was found. Retrieve the result using Root().
+ */
 template<class Function>
 bool ROOT::Math::RootFinder::Solve(Function &f, double min, double max,
                                   int maxIter, double absTol, double relTol)

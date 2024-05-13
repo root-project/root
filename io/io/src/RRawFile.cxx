@@ -58,16 +58,7 @@ size_t ROOT::Internal::RRawFile::RBlockBuffer::CopyTo(void *buffer, size_t nbyte
    return copiedBytes;
 }
 
-ROOT::Internal::RRawFile::RRawFile(std::string_view url, ROptions options)
-   : fBlockBufferIdx(0), fBufferSpace(nullptr), fFileSize(kUnknownFileSize), fIsOpen(false), fUrl(url),
-     fOptions(options), fFilePos(0)
-{
-}
-
-ROOT::Internal::RRawFile::~RRawFile()
-{
-   delete[] fBufferSpace;
-}
+ROOT::Internal::RRawFile::RRawFile(std::string_view url, ROptions options) : fUrl(url), fOptions(options) {}
 
 std::unique_ptr<ROOT::Internal::RRawFile>
 ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
@@ -80,22 +71,29 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
    }
-   if (transport == "http" || transport == "https") {
-      if (TPluginHandler *h = gROOT->GetPluginManager()->FindHandler("ROOT::Internal::RRawFile")) {
+   if (transport == "http" || transport == "https" ||
+       transport == "root" || transport == "roots" ) {
+      std::string plgclass = transport.compare( 0, 4, "http" ) == 0 ?
+                             "RRawFileDavix" : "RRawFileNetXNG";
+      if (TPluginHandler *h = gROOT->GetPluginManager()->
+          FindHandler("ROOT::Internal::RRawFile", std::string(url).c_str())) {
          if (h->LoadPlugin() == 0) {
             return std::unique_ptr<RRawFile>(reinterpret_cast<RRawFile *>(h->ExecPlugin(2, &url, &options)));
          }
-         throw std::runtime_error("Cannot load plugin handler for RRawFileDavix");
+         throw std::runtime_error("Cannot load plugin handler for " + plgclass);
       }
-      throw std::runtime_error("Cannot find plugin handler for RRawFileDavix");
+      throw std::runtime_error("Cannot find plugin handler for " + plgclass);
    }
    throw std::runtime_error("Unsupported transport protocol: " + transport);
 }
 
-void *ROOT::Internal::RRawFile::MapImpl(size_t /* nbytes */, std::uint64_t /* offset */,
-   std::uint64_t& /* mapdOffset */)
+void ROOT::Internal::RRawFile::EnsureOpen()
 {
-   throw std::runtime_error("Memory mapping unsupported");
+   if (fIsOpen)
+      return;
+
+   OpenImpl();
+   fIsOpen = true;
 }
 
 void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
@@ -103,11 +101,6 @@ void ROOT::Internal::RRawFile::ReadVImpl(RIOVec *ioVec, unsigned int nReq)
    for (unsigned i = 0; i < nReq; ++i) {
       ioVec[i].fOutBytes = ReadAt(ioVec[i].fBuffer, ioVec[i].fSize, ioVec[i].fOffset);
    }
-}
-
-void ROOT::Internal::RRawFile::UnmapImpl(void * /* region */, size_t /* nbytes */)
-{
-   throw std::runtime_error("Memory mapping unsupported");
 }
 
 std::string ROOT::Internal::RRawFile::GetLocation(std::string_view url)
@@ -120,12 +113,11 @@ std::string ROOT::Internal::RRawFile::GetLocation(std::string_view url)
 
 std::uint64_t ROOT::Internal::RRawFile::GetSize()
 {
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
+   if (fFileSize != kUnknownFileSize)
+      return fFileSize;
 
-   if (fFileSize == kUnknownFileSize)
-      fFileSize = GetSizeImpl();
+   EnsureOpen();
+   fFileSize = GetSizeImpl();
    return fFileSize;
 }
 
@@ -143,14 +135,6 @@ std::string ROOT::Internal::RRawFile::GetTransport(std::string_view url)
    return transport;
 }
 
-void *ROOT::Internal::RRawFile::Map(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
-{
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
-   return MapImpl(nbytes, offset, mapdOffset);
-}
-
 size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
 {
    size_t res = ReadAt(buffer, nbytes, fFilePos);
@@ -160,19 +144,22 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
 
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   if (!fIsOpen)
-      OpenImpl();
-   R__ASSERT(fOptions.fBlockSize >= 0);
-   fIsOpen = true;
+   EnsureOpen();
 
-   // "Large" reads are served directly, bypassing the cache
-   if (nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
+   // Early return for empty requests
+   if (nbytes == 0)
+      return 0;
+
+   // "Large" reads are served directly, bypassing the cache; since nbytes > 0, fBlockSize == 0 is also handled here
+   if (!fIsBuffering || nbytes > static_cast<unsigned int>(fOptions.fBlockSize))
       return ReadAtImpl(buffer, nbytes, offset);
 
-   if (fBufferSpace == nullptr) {
-      fBufferSpace = new unsigned char[kNumBlockBuffers * fOptions.fBlockSize];
-      for (unsigned int i = 0; i < kNumBlockBuffers; ++i)
-         fBlockBuffers[i].fBuffer = fBufferSpace + i * fOptions.fBlockSize;
+   if (!fBufferSpace) {
+      fBufferSpace.reset(new unsigned char[kNumBlockBuffers * fOptions.fBlockSize]);
+      for (unsigned int i = 0; i < kNumBlockBuffers; ++i) {
+         fBlockBuffers[i].fBuffer = fBufferSpace.get() + i * fOptions.fBlockSize;
+         fBlockBuffers[i].fBufferSize = 0;
+      }
    }
 
    size_t totalBytes = 0;
@@ -206,10 +193,15 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
 
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
-   if (!fIsOpen)
-      OpenImpl();
-   fIsOpen = true;
+   EnsureOpen();
    ReadVImpl(ioVec, nReq);
+}
+
+void ROOT::Internal::RRawFile::SetBuffering(bool value)
+{
+   fIsBuffering = value;
+   if (!fIsBuffering)
+      fBufferSpace.reset();
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)
@@ -248,11 +240,4 @@ bool ROOT::Internal::RRawFile::Readln(std::string &line)
 void ROOT::Internal::RRawFile::Seek(std::uint64_t offset)
 {
    fFilePos = offset;
-}
-
-void ROOT::Internal::RRawFile::Unmap(void *region, size_t nbytes)
-{
-   if (!fIsOpen)
-      throw std::runtime_error("Cannot unmap, file not open");
-   UnmapImpl(region, nbytes);
 }

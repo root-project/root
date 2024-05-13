@@ -9,73 +9,72 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGNumberEntry, TGNumberEntryField and TGNumberFormat                 //
-//                                                                      //
-// TGNumberEntry is a number entry input widget with up/down buttons.   //
-// TGNumberEntryField is a number entry input widget.                   //
-// TGNumberFormat contains enum types to specify the numeric format.    //
-//                                                                      //
-// The number entry widget is based on TGTextEntry but allows only      //
-// numerical input. The widget support numerous formats including       //
-// integers, hex numbers, real numbers, fixed fraction reals and        //
-// time/date formats. The widget also allows to restrict input values   //
-// to non-negative or positive numbers and to specify explicit limits.  //
-//                                                                      //
-// The following styles are supported:                                  //
-// kNESInteger:        integer number                                   //
-// kNESRealOne:        real number with one digit (no exponent)         //
-// kNESRealTwo:        real number with two digits (no exponent)        //
-// kNESRealThree:      real number with three digits (no exponent)      //
-// kNESRealFour:       real number with four digits (no exponent)       //
-// kNESReal:           arbitrary real number                            //
-// kNESDegree:         angle in degree:minutes:seconds format           //
-// kNESMinSec:         time in minutes:seconds format                   //
-// kNESHourMin:        time in hour:minutes format                      //
-// kNESHourMinSec:     time in hour:minutes:seconds format              //
-// kNESDayMYear:       date in day/month/year format                    //
-// kNESMDayYear:       date in month/day/year format                    //
-// kNESHex:            hex number                                       //
-//                                                                      //
-// The following attributes can be specified:                           //
-// kNEAAnyNumber:      any number is allowed                            //
-// kNEANonNegative:    only non-negative numbers are allowed            //
-// kNEAPositive:       only positive numbers are allowed                //
-//                                                                      //
-// Explicit limits can be specified individually:                       //
-// kNELNoLimits:       no limits                                        //
-// kNELLimitMin:       lower limit only                                 //
-// kNELLimitMax        upper limit only                                 //
-// kNELLimitMinMax     both lower and upper limits                      //
-//                                                                      //
-// TGNumberEntryField is a plain vanilla entry field, whereas           //
-// TGNumberEntry adds two small buttons to increase and decrease the    //
-// numerical value in the field. The number entry widgets also support  //
-// using the up and down cursor keys to change the numerical values.    //
-// The step size can be selected with control and shift keys:           //
-// --                  small step (1 unit/factor of 3)                  //
-// shift               medium step (10 units/factor of 10)              //
-// control             large step (100 units/factor of 30)              //
-// shift-control       huge step (1000 units/factor of 100)             //
-//                                                                      //
-// The steps are either linear or logarithmic. The default behaviour    //
-// is set when the entry field is created, but it can be changed by     //
-// pressing the alt key at the same time.                               //
-//                                                                      //
-// Changing the number in the widget will generate the event:           //
-// kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.                         //
-// Hitting the enter key will generate:                                 //
-// kC_TEXTENTRY, kTE_ENTER, widget id, 0.                               //
-// Hitting the tab key will generate:                                   //
-// kC_TEXTENTRY, kTE_TAB, widget id, 0.                                 //
-//                                                                      //
-//Begin_Html
-/*
-<img src="numberentry.jpg">
+
+/** \class TGNumberEntry
+    \ingroup guiwidgets
+
+TGNumberEntry is a number entry input widget with up/down buttons.
+TGNumberEntryField is a number entry input widget.
+TGNumberFormat contains enum types to specify the numeric format.
+
+The number entry widget is based on TGTextEntry but allows only
+numerical input. The widget support numerous formats including
+integers, hex numbers, real numbers, fixed fraction reals and
+time/date formats. The widget also allows to restrict input values
+to non-negative or positive numbers and to specify explicit limits.
+
+The following styles are supported:
+  - kNESInteger:        integer number
+  - kNESRealOne:        real number with one digit (no exponent)
+  - kNESRealTwo:        real number with two digits (no exponent)
+  - kNESRealThree:      real number with three digits (no exponent)
+  - kNESRealFour:       real number with four digits (no exponent)
+  - kNESReal:           arbitrary real number
+  - kNESDegree:         angle in degree:minutes:seconds format
+  - kNESMinSec:         time in minutes:seconds format
+  - kNESMinSecCent:     time in minutes:seconds.centiseconds format
+  - kNESHourMin:        time in hour:minutes format
+  - kNESHourMinSec:     time in hour:minutes:seconds format
+  - kNESDayMYear:       date in day/month/year format
+  - kNESMDayYear:       date in month/day/year format
+  - kNESHex:            hex number
+
+The following attributes can be specified:
+  - kNEAAnyNumber:      any number is allowed
+  - kNEANonNegative:    only non-negative numbers are allowed
+  - kNEAPositive:       only positive numbers are allowed
+
+Explicit limits can be specified individually:
+  - kNELNoLimits:       no limits
+  - kNELLimitMin:       lower limit only
+  - kNELLimitMax        upper limit only
+  - kNELLimitMinMax     both lower and upper limits
+
+TGNumberEntryField is a plain vanilla entry field, whereas
+TGNumberEntry adds two small buttons to increase and decrease the
+numerical value in the field. The number entry widgets also support
+using the up and down cursor keys to change the numerical values.
+The step size can be selected with control and shift keys:
+  - --                  small step (1 unit/factor of 3)
+  - shift               medium step (10 units/factor of 10)
+  - control             large step (100 units/factor of 30)
+  - shift-control       huge step (1000 units/factor of 100)
+
+The steps are either linear or logarithmic. The default behaviour
+is set when the entry field is created, but it can be changed by
+pressing the alt key at the same time.
+
+Changing the number in the widget will generate the event:
+  - kC_TEXTENTRY, kTE_TEXTCHANGED, widget id, 0.
+
+Hitting the enter key will generate:
+  - kC_TEXTENTRY, kTE_ENTER, widget id, 0.
+
+Hitting the tab key will generate:
+  - kC_TEXTENTRY, kTE_TAB, widget id, 0.
+
 */
-//End_Html
-//
+
 
 #include "TGNumberEntry.h"
 #include "KeySymbols.h"
@@ -100,7 +99,7 @@ ClassImp(TGNumberEntry);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// Miscellanous routines for handling numeric values <-> strings        //
+// Miscellaneous routines for handling numeric values <-> strings       //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -115,13 +114,13 @@ enum ERealStyle {         // Style of real
 ////////////////////////////////////////////////////////////////////////////////
 
 struct RealInfo_t {
-   ERealStyle fStyle;     // Style of real
-   Int_t fFracDigits;     // Number of fractional digits
-   Int_t fFracBase;       // Base of fractional digits
-   Int_t fIntNum;         // Integer number
-   Int_t fFracNum;        // Fraction
-   Int_t fExpoNum;        // Exponent
-   Int_t fSign;           // Sign
+   ERealStyle fStyle{kRSInt};  // Style of real
+   Int_t fFracDigits{0};       // Number of fractional digits
+   Int_t fFracBase{0};         // Base of fractional digits
+   Int_t fIntNum{0};           // Integer number
+   Int_t fFracNum{0};          // Fraction
+   Int_t fExpoNum{0};          // Exponent
+   Int_t fSign{0};             // Sign
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,7 +187,8 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
         (style == TGNumberFormat::kNESRealFour) ||
         (style == TGNumberFormat::kNESReal) ||
         (style == TGNumberFormat::kNESDegree) ||
-        (style == TGNumberFormat::kNESMinSec)) &&
+        (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent)) &&
        (attr == TGNumberFormat::kNEAAnyNumber)) {
       return kTRUE;
    }
@@ -203,6 +203,7 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
         (style == TGNumberFormat::kNESReal) ||
         (style == TGNumberFormat::kNESDegree) ||
         (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent) ||
         (style == TGNumberFormat::kNESHourMin) ||
         (style == TGNumberFormat::kNESHourMinSec) ||
         (style == TGNumberFormat::kNESDayMYear) ||
@@ -212,6 +213,7 @@ static Bool_t IsGoodChar(char c, TGNumberFormat::EStyle style,
    if ((c == ':') &&
        ((style == TGNumberFormat::kNESDegree) ||
         (style == TGNumberFormat::kNESMinSec) ||
+        (style == TGNumberFormat::kNESMinSecCent) ||
         (style == TGNumberFormat::kNESHourMin) ||
         (style == TGNumberFormat::kNESHourMinSec) ||
         (style == TGNumberFormat::kNESDayMYear) ||
@@ -509,6 +511,22 @@ static char *DIntToStr(char *text, Long_t l, Bool_t Sec, char Del)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// For kNESMinSecCent
+
+static char *DIntToStr(char *text, Long_t l, char Del, char Del2)
+{
+   TString s;
+   s = StringInt(TMath::Abs(l) / 6000, 0) + Del +
+       StringInt((TMath::Abs(l) % 6000) / 100, 2) + Del2 +
+       StringInt(TMath::Abs(l) % 100, 2);
+   if (l < 0) {
+      s = "-" + s;
+   }
+   strlcpy(text, (const char *) s, 256);
+   return text;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void GetNumbers(const char *s, Int_t & Sign,
                        Long_t & n1, Int_t maxd1,
@@ -661,6 +679,10 @@ static Long_t TranslateToNum(const char *text,
    case TGNumberFormat::kNESMinSec:
       GetNumbers(text, sign, n1, 12, n2, 2, n3, 0, ".,:");
       return sign * (60 * n1 + GetSignificant(n2, 60));
+   case TGNumberFormat::kNESMinSecCent:
+      GetNumbers(text, sign, n1, 12, n2, 2, n3, 2, ".,:");
+      return 6000 * n1 + 100*GetSignificant(n2, 60) +
+          GetSignificant(n3, 100);
    case TGNumberFormat::kNESHourMin:
       GetNumbers(text, sign, n1, 12, n2, 2, n3, 0, ".,:");
       return 60 * n1 + GetSignificant(n2, 60);
@@ -701,6 +723,8 @@ static char *TranslateToStr(char *text, Long_t l,
       return DIntToStr(text, l % (24 * 3600), kTRUE, ':');
    case TGNumberFormat::kNESMinSec:
       return DIntToStr(text, l, kFALSE, ':');
+   case TGNumberFormat::kNESMinSecCent:
+      return DIntToStr(text, l % (60 * 6000), ':', '.');       
    case TGNumberFormat::kNESHourMin:
       return DIntToStr(text, l % (24 * 60), kFALSE, ':');
    case TGNumberFormat::kNESDayMYear:
@@ -909,7 +933,7 @@ static void IncreaseReal(RealInfo_t & ri, Double_t mag, Bool_t logstep,
          if (ri.fStyle == kRSInt)
             break;
 
-         // caluclate first digit
+         // calculate first digit
          Double_t y;
          if ((ri.fStyle == kRSExpo) || (ri.fStyle == kRSFracExpo)) {
             y = TMath::Abs(x) * TMath::Power(10, -ri.fExpoNum);
@@ -1085,7 +1109,7 @@ static void IncreaseDate(Long_t & l, TGNumberFormat::EStepSize step, Int_t sign)
 TGNumberEntryField::TGNumberEntryField(const TGWindow * p, Int_t id,
                                        Double_t val, GContext_t norm,
                                        FontStruct_t font, UInt_t option,
-                                       ULong_t back)
+                                       Pixel_t back)
    : TGTextEntry(p, new TGTextBuffer(), id, norm, font, option, back),
      fNeedsVerification(kFALSE), fNumStyle(kNESReal), fNumAttr(kNEAAnyNumber),
      fNumLimits(kNELNoLimits), fNumMin(0.0), fNumMax(1.0)
@@ -1116,52 +1140,54 @@ TGNumberEntryField::TGNumberEntryField(const TGWindow * parent,
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (floating point representation).
 
-void TGNumberEntryField::SetNumber(Double_t val)
+void TGNumberEntryField::SetNumber(Double_t val, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESInteger:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESRealOne:
-      SetIntNumber(Round(10.0 * val));
+      SetIntNumber(Round(10.0 * val), emit);
       break;
    case kNESRealTwo:
-      SetIntNumber(Round(100.0 * val));
+      SetIntNumber(Round(100.0 * val), emit);
       break;
    case kNESRealThree:
-      SetIntNumber(Round(1000.0 * val));
+      SetIntNumber(Round(1000.0 * val), emit);
       break;
    case kNESRealFour:
-      SetIntNumber(Round(10000.0 * val));
-
+      SetIntNumber(Round(10000.0 * val), emit);
       break;
    case kNESReal:
       {
          char text[256];
          snprintf(text, 255, "%g", val);
-         SetText(text);
+         SetText(text, emit);
          break;
       }
    case kNESDegree:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHourMinSec:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESMinSec:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
+      break;
+   case kNESMinSecCent:
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHourMin:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESDayMYear:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESMDayYear:
-      SetIntNumber(Round(val));
+      SetIntNumber(Round(val), emit);
       break;
    case kNESHex:
-      SetIntNumber((UInt_t) (TMath::Abs(val) + 0.5));
+      SetIntNumber((UInt_t) (TMath::Abs(val) + 0.5), emit);
       break;
    }
 }
@@ -1169,7 +1195,7 @@ void TGNumberEntryField::SetNumber(Double_t val)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (integer representation).
 
-void TGNumberEntryField::SetIntNumber(Long_t val)
+void TGNumberEntryField::SetIntNumber(Long_t val, Bool_t emit)
 {
    char text[256];
    RealInfo_t ri;
@@ -1178,26 +1204,28 @@ void TGNumberEntryField::SetIntNumber(Long_t val)
    } else {
       TranslateToStr(text, val, fNumStyle, ri);
    }
-   SetText(text);
+   SetText(text, emit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the numeric value (time format).
+/// Set the numeric value (time format). In case of kNESMinSecCent, pass the
+/// centiseconds in the hour variable.
 
-void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
+void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESHourMinSec:
       SetIntNumber(3600 * TMath::Abs(hour) + 60 * TMath::Abs(min) +
-                   TMath::Abs(sec));
+                   TMath::Abs(sec), emit);
       break;
    case kNESMinSec:
-      {
-         SetIntNumber(60 * min + sec);
-         break;
-      }
+      SetIntNumber(60 * TMath::Abs(min) + TMath::Abs(sec), emit);
+      break;
+   case kNESMinSecCent:
+      SetIntNumber(6000 *TMath::Abs(min) + 100 * TMath::Abs(sec) + TMath::Abs(hour), emit);
+      break;
    case kNESHourMin:
-      SetIntNumber(60 * TMath::Abs(hour) + TMath::Abs(min));
+      SetIntNumber(60 * TMath::Abs(hour) + TMath::Abs(min), emit);
       break;
    default:
       break;
@@ -1207,14 +1235,14 @@ void TGNumberEntryField::SetTime(Int_t hour, Int_t min, Int_t sec)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (date format).
 
-void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
+void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day, Bool_t emit)
 {
    switch (fNumStyle) {
    case kNESDayMYear:
    case kNESMDayYear:
       {
          SetIntNumber(10000 * TMath::Abs(year) + 100 * TMath::Abs(month) +
-                      TMath::Abs(day));
+                      TMath::Abs(day), emit);
       }
    default:
       {
@@ -1226,9 +1254,9 @@ void TGNumberEntryField::SetDate(Int_t year, Int_t month, Int_t day)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the numeric value (hex format).
 
-void TGNumberEntryField::SetHexNumber(ULong_t val)
+void TGNumberEntryField::SetHexNumber(ULong_t val, Bool_t emit)
 {
-   SetIntNumber((Long_t) val);
+   SetIntNumber((Long_t) val, emit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1272,6 +1300,8 @@ Double_t TGNumberEntryField::GetNumber() const
       return (Double_t) GetIntNumber();
    case kNESMinSec:
       return (Double_t) GetIntNumber();
+   case kNESMinSecCent:
+      return (Double_t) GetIntNumber();
    case kNESHourMin:
       return (Double_t) GetIntNumber();
    case kNESDayMYear:
@@ -1294,7 +1324,8 @@ Long_t TGNumberEntryField::GetIntNumber() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the numeric value (time format).
+/// Get the numeric value (time format). In case of kNESMinSecCent, the first
+/// variable (hour) will store instead the centiseconds.
 
 void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
 {
@@ -1317,6 +1348,14 @@ void TGNumberEntryField::GetTime(Int_t & hour, Int_t & min, Int_t & sec) const
             min *= -1;
             sec *= -1;
          }
+         break;
+      }
+   case kNESMinSecCent:
+      {
+         Long_t l = GetIntNumber();
+         min = TMath::Abs(l) / 6000;
+         sec = (TMath::Abs(l) % 60) / 100;
+         hour = TMath::Abs(l) % 100;// centisec is stored in variable named hour
          break;
       }
    case kNESHourMin:
@@ -1390,7 +1429,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
    Double_t rmag = 0.0;
    Int_t sign = stepsign;
 
-   // svae old text field
+   // save old text field
    TString oldtext = GetText();
    // Get number
    if (fNumStyle != kNESReal) {
@@ -1403,7 +1442,7 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
    if ((fNumStyle == kNESDegree) || (fNumStyle == kNESHourMinSec) ||
        (fNumStyle == kNESMinSec) || (fNumStyle == kNESHourMin) ||
        (fNumStyle == kNESDayMYear) || (fNumStyle == kNESMDayYear) ||
-       (fNumStyle == kNESHex)) {
+       (fNumStyle == kNESHex) || (fNumStyle == kNESMinSecCent)) {
       logstep = kFALSE;
       switch (step) {
       case kNSSSmall:
@@ -1523,6 +1562,21 @@ void TGNumberEntryField::IncreaseNumber(EStepSize step,
             l = 1;
          break;
       }
+   case kNESMinSecCent:
+      {
+         if (mag > 60)
+            l += sign * 36 * mag;
+         else if (mag > 6)
+            l += sign * 6 * mag;
+         else
+            l += sign * mag;
+         CheckMinMax(l, fNumStyle, fNumLimits, fNumMin, fNumMax);
+         if (l < 0)
+            l = (60 * 6000) - ((-l) % (60 * 6000));
+         if (l > 0)
+            l = l % (60 * 6000);
+         break;
+      }
    case kNESHourMin:
       {
          if (mag > 6)
@@ -1579,7 +1633,7 @@ void TGNumberEntryField::SetFormat(EStyle style, EAttribute attr)
    if ((fNumAttr != kNEAAnyNumber) && (val < 0))
       val = 0;
    SetNumber(val);
-   // make sure we have a valid number by increasaing it by 0
+   // make sure we have a valid number by increasing it by 0
    IncreaseNumber(kNSSSmall, 0, kFALSE);
 }
 
@@ -1594,7 +1648,7 @@ void TGNumberEntryField::SetLimits(ELimit limits,
    fNumMin = min;
    fNumMax = max;
    SetNumber(val);
-   // make sure we have a valid number by increasaing it by 0
+   // make sure we have a valid number by increasing it by 0
    IncreaseNumber(kNSSSmall, 0, kFALSE);
 }
 
@@ -1604,7 +1658,7 @@ void TGNumberEntryField::SetLimits(ELimit limits,
 void TGNumberEntryField::SetState(Bool_t state)
 {
    if (!state && fNeedsVerification) {
-      // make sure we have a valid number by increasaing it by 0
+      // make sure we have a valid number by increasing it by 0
       IncreaseNumber(kNSSSmall, 0, kFALSE);
    }
    TGTextEntry::SetState(state);
@@ -1816,7 +1870,7 @@ private:
 public:
    TRepeatTimer(TGRepeatFireButton * button, Long_t ms)
     : TTimer(ms, kTRUE), fButton(button) { }
-   virtual Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 
@@ -1825,7 +1879,7 @@ public:
 //                                                                      //
 // TRepeatFireButton                                                    //
 //                                                                      //
-// Picture button which fires repeatly as long as the button is pressed //
+// Picture button which fires repeatedly as long as the button is pressed //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -1847,10 +1901,10 @@ public:
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
        fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep), fDoLogStep(logstep)
        { fEditDisabled = kEditDisable | kEditDisableGrab; }
-   virtual ~TGRepeatFireButton() { delete fTimer; }
+   ~TGRepeatFireButton() override { delete fTimer; }
 
-   virtual  Bool_t HandleButton(Event_t *event);
-            void   FireButton();
+   Bool_t HandleButton(Event_t *event) override;
+   void   FireButton();
    virtual  void   SetLogStep(Bool_t on = kTRUE) { fStepLog = on; }
 };
 
@@ -1879,7 +1933,7 @@ Bool_t TGRepeatFireButton::HandleButton(Event_t * event)
    if (fTip)
       fTip->Hide();
 
-   // disable button handling while guibuilding
+   // disable button handling while gui building
    if (IsEditableParent()) {
       return kTRUE;
    }
@@ -1971,6 +2025,8 @@ TGNumberEntry::TGNumberEntry(const TGWindow *parent,
                                           limits, min, max);
    fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
                           "ValueSet(Long_t=0)");
+   fNumericEntry->Connect("ReturnPressed()", "TGNumberEntry", this,
+                          "Modified()");
    fNumericEntry->Associate(fMsgWindow);
    AddFrame(fNumericEntry, 0);
    fButtonUp = new TGRepeatFireButton(this, fPicUp, 1,
@@ -2057,7 +2113,7 @@ void TGNumberEntry::SetButtonToNum(Bool_t state)
 /// param % 10000 / 100 != 0 indicates log step
 /// param / 10000 != 0 indicates button down
 
-Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGNumberEntry::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    switch (GET_MSG(msg)) {
    case kC_COMMAND:
@@ -2076,6 +2132,7 @@ Bool_t TGNumberEntry::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
             }
          // Emit a signal needed by pad editor
          ValueSet(10000 * (parm1 - 1) + parm2);
+         Modified();
          }
          break;
       }
@@ -2120,6 +2177,15 @@ void TGNumberEntry::ValueChanged(Long_t val)
 void TGNumberEntry::ValueSet(Long_t val)
 {
    Emit("ValueSet(Long_t)", val);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Emit Modified() signal. This signal is emitted when the
+/// number entry value is changed.
+
+void TGNumberEntry::Modified()
+{
+   Emit("Modified()");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2176,6 +2242,11 @@ void TGNumberEntry::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          break;
       case kNESMinSec:
          out << min*60 + sec << "," << digits << "," << WidgetId()
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMinSecCent:
+         //GetTime returns the centisecs in the hour variable
+         out << min*6000 + sec*100 + hour << "," << digits << "," << WidgetId()
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       case kNESHourMin:
@@ -2291,6 +2362,11 @@ void TGNumberEntryField::SavePrimitive(std::ostream &out, Option_t *option /*= "
          break;
       case kNESMinSec:
          out << min*60 + sec
+             << ",(TGNumberFormat::EStyle) " << GetNumStyle();
+         break;
+      case kNESMinSecCent:
+         //GetTime returns centisec in the hour variable
+         out << min*6000 + sec*100 + hour
              << ",(TGNumberFormat::EStyle) " << GetNumStyle();
          break;
       case kNESHourMin:

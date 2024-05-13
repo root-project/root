@@ -16,6 +16,31 @@
 #ifndef ROO_ABS_OPT_TEST_STATISTIC
 #define ROO_ABS_OPT_TEST_STATISTIC
 
+// We can't print deprecation warnings when including headers in cling, because
+// this will be done automatically anyway.
+#ifdef __CLING__
+#ifndef ROOFIT_BUILDS_ITSELF
+// These warnings should only be suppressed when building ROOT itself!
+#warning "Including RooAbsOptTestStatistic.h is deprecated, and this header will be removed in ROOT v6.34: it is an implementation detail that should not be part of the public user interface"
+#else
+// If we are builting RooFit itself, this will serve as a reminder to actually
+// remove this deprecate public header. Here is now this needs to be done:
+//    1. Move this header file from inc/ to src/
+//    2. Remove the LinkDef entry, ClassDefOverride, and ClassImpl macros for
+//       this class
+//    3. If there are are tests using this class in the test/ directory, change
+//       the include to use a relative path the moved header file in the src/
+//       directory, e.g. #include <RemovedInterface.h> becomes #include
+//       "../src/RemovedInterface.h"
+//    4. Remove this ifndef-else-endif block from the header
+//    5. Remove the deprecation warning at the end of the class declaration
+#include <RVersion.h>
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 34, 00)
+#error "Please remove this deprecated public interface."
+#endif
+#endif
+#endif
+
 #include "RooAbsTestStatistic.h"
 #include "RooSetProxy.h"
 #include "RooCategoryProxy.h"
@@ -29,15 +54,13 @@ class RooAbsOptTestStatistic : public RooAbsTestStatistic {
 public:
 
   // Constructors, assignment etc
-  RooAbsOptTestStatistic() ;
   RooAbsOptTestStatistic(const char *name, const char *title, RooAbsReal& real, RooAbsData& data,
-			 const RooArgSet& projDeps, const char* rangeName=0, const char* addCoefRangeName=0,
-			 Int_t nCPU=1, RooFit::MPSplit interleave=RooFit::BulkPartition, Bool_t verbose=kTRUE, Bool_t splitCutRange=kFALSE,
-			 Bool_t cloneInputData=kTRUE) ;
-  RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=0);
-  virtual ~RooAbsOptTestStatistic();
+                         const RooArgSet& projDeps,
+                         RooAbsTestStatistic::Configuration const& cfg);
+  RooAbsOptTestStatistic(const RooAbsOptTestStatistic& other, const char* name=nullptr);
+  ~RooAbsOptTestStatistic() override;
 
-  virtual Double_t combinedValue(RooAbsReal** gofArray, Int_t nVal) const ;
+  double combinedValue(RooAbsReal** gofArray, Int_t nVal) const override ;
 
   RooAbsReal& function() { return *_funcClone ; }
   const RooAbsReal& function() const { return *_funcClone ; }
@@ -46,49 +69,59 @@ public:
   const RooAbsData& data() const ;
 
 
-  virtual const char* cacheUniqueSuffix() const { return Form("_%lx", (ULong_t)_dataClone) ; }
+  const char* cacheUniqueSuffix() const override;
 
   // Override this to be always true to force calculation of likelihood without parameters
-  virtual Bool_t isDerived() const { return kTRUE ; }
+  bool isDerived() const override { return true ; }
 
-  void seal(const char* notice="") { _sealed = kTRUE ; _sealNotice = notice ; }
-  Bool_t isSealed() const { return _sealed ; }
+  void seal(const char* notice="") { _sealed = true ; _sealNotice = notice ; }
+  bool isSealed() const { return _sealed ; }
   const char* sealNotice() const { return _sealNotice.Data() ; }
 
+private:
+  void setUpBinSampling();
 
 protected:
 
-  Bool_t setDataSlave(RooAbsData& data, Bool_t cloneData=kTRUE, Bool_t ownNewDataAnyway=kFALSE) ;
-  void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName, 
-		 const char* addCoefRangeName)  ;
+  bool setDataSlave(RooAbsData& data, bool cloneData=true, bool ownNewDataAnyway=false) override ;
+  void initSlave(RooAbsReal& real, RooAbsData& indata, const RooArgSet& projDeps, const char* rangeName,
+       const char* addCoefRangeName)  ;
 
   friend class RooAbsReal ;
+  friend class RooAbsTestStatistic ;
 
-  virtual Bool_t allowFunctionCache() { return kTRUE ;  }
-  void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  virtual bool allowFunctionCache() { return true ;  }
+  void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) override ;
 
-  virtual Bool_t redirectServersHook(const RooAbsCollection& newServerList, Bool_t mustReplaceAll, Bool_t nameChange, Bool_t isRecursive) ;
-  virtual void printCompactTreeHook(std::ostream& os, const char* indent="") ;
+  bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
+  void printCompactTreeHook(std::ostream& os, const char* indent="") override ;
   virtual RooArgSet requiredExtraObservables() const { return RooArgSet() ; }
   void optimizeCaching() ;
-  void optimizeConstantTerms(Bool_t,Bool_t=kTRUE) ;
+  void optimizeConstantTerms(bool,bool=true) ;
+  void runRecalculateCache(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
-  RooArgSet*  _normSet ; // Pointer to set with observables used for normalization
-  RooArgSet*  _funcCloneSet ; // Set owning all components of internal clone of input function
-  RooAbsData* _dataClone{nullptr}; // Pointer to internal clone if input data
-  RooAbsReal* _funcClone ; // Pointer to internal clone of input function
-  RooArgSet*  _projDeps ; // Set of projected observable
-  Bool_t      _ownData  ; // Do we own the dataset
-  Bool_t      _sealed ; // Is test statistic sealed -- i.e. no access to data 
-  TString     _sealNotice ; // User-defined notice shown when reading a sealed likelihood 
-  RooArgSet*  _funcObsSet ; // List of observables in the pdf expression
-  RooArgSet   _cachedNodes ; //! List of nodes that are cached as constant expressions
-  
-  RooAbsReal* _origFunc ; // Original function 
-  RooAbsData* _origData ; // Original data 
-  Bool_t      _optimized ; //!
+  RooArgSet*  _normSet = nullptr;           ///< Pointer to set with observables used for normalization
+  RooArgSet*  _funcCloneSet = nullptr;      ///< Set owning all components of internal clone of input function
+  RooAbsData* _dataClone = nullptr; ///< Pointer to internal clone if input data
+  RooAbsReal* _funcClone = nullptr;   ///< Pointer to internal clone of input function
+  RooArgSet*  _projDeps = nullptr;    ///< Set of projected observable
+  bool      _ownData = false;    ///< Do we own the dataset
+  bool      _sealed = false;      ///< Is test statistic sealed -- i.e. no access to data
+  TString     _sealNotice ;  ///< User-defined notice shown when reading a sealed likelihood
+  RooArgSet*  _funcObsSet = nullptr;  ///< List of observables in the pdf expression
+  RooArgSet   _cachedNodes ; ///<! List of nodes that are cached as constant expressions
+  bool _skipZeroWeights = false; ///<! Whether to skip entries with weight zero in the evaluation
 
-  ClassDef(RooAbsOptTestStatistic,4) // Abstract base class for optimized test statistics
+  RooAbsReal* _origFunc = nullptr;  ///< Original function
+  RooAbsData* _origData = nullptr;  ///< Original data
+  bool      _optimized = false; ///<!
+  double      _integrateBinsPrecision{-1.}; // Precision for finer sampling of bins.
+
+  ClassDefOverride(RooAbsOptTestStatistic,0) // Abstract base class for optimized test statistics
+#ifndef ROOFIT_BUILDS_ITSELF
+} R__DEPRECATED(6,34, "RooAbsOptTestStatistic is a RooFit implementation detail that should not be instantiated in user code.");
+#else
 };
+#endif
 
 #endif

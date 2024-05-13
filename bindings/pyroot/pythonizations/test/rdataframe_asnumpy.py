@@ -3,6 +3,8 @@ import ROOT
 import numpy as np
 import pickle
 
+from ROOT._pythonization._rdataframe import _clone_asnumpyresult
+
 
 def make_tree(*dtypes):
     """
@@ -280,10 +282,69 @@ class RDataFrameAsNumpy(unittest.TestCase):
         npy = df.AsNumpy(["x"])
         arr = npy["x"]
 
-        pickle.dump(arr, open("rdataframe_asnumpy.pickle", "wb"))
-        arr2 = pickle.load(open("rdataframe_asnumpy.pickle", "rb"))
+        with open("rdataframe_asnumpy.pickle", "wb") as f:
+            pickle.dump(arr, f)
+        with open("rdataframe_asnumpy.pickle", "rb") as f:
+            arr2 = pickle.load(f)
         self.assertTrue(all(arr == arr2))
 
+    def test_memory_adoption_fundamental_types(self):
+        """
+        Testing the adoption of the memory from the C++ side for fundamental types
+        """
+        df = ROOT.ROOT.RDataFrame(1).Define("x", "1.0")
+        npy = df.AsNumpy(["x"])
+        pyarr = npy["x"]
+        cpparr = pyarr.result_ptr.GetValue()
+        pyarr[0] = 42
+        self.assertTrue(cpparr[0] == pyarr[0])
+
+    def test_memory_adoption_complex_types(self):
+        """
+        Testing the adoption of the memory from the C++ side for complex types
+        """
+        df = ROOT.ROOT.RDataFrame(1).Define("x", "std::vector<float>({1, 2, 3})")
+        npy = df.AsNumpy(["x"])
+        pyarr = npy["x"]
+        cpparr = pyarr.result_ptr.GetValue()
+        pyarr[0][0] = 42
+        self.assertTrue(cpparr[0][0] == pyarr[0][0])
+
+    def test_cloning(self):
+        """
+        Testing cloning of AsNumpy results
+        """
+        df = ROOT.RDataFrame(20).Define("x", "rdfentry_")
+        ranges = [(0, 5), (5, 10), (10, 15), (15, 20)]
+
+        # Get the result for the first range
+        (begin, end) = ranges.pop(0)
+        ROOT.Internal.RDF.ChangeEmptyEntryRange(
+            ROOT.RDF.AsRNode(df), (begin, end))
+        asnumpyres = df.AsNumpy(["x"], lazy=True)  # To return an AsNumpyResult
+        self.assertSequenceEqual(
+            asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
+
+        # Clone the result for following ranges
+        for (begin, end) in ranges:
+            ROOT.Internal.RDF.ChangeEmptyEntryRange(
+                ROOT.RDF.AsRNode(df), (begin, end))
+            asnumpyres = _clone_asnumpyresult(asnumpyres)
+            self.assertSequenceEqual(
+                asnumpyres.GetValue()["x"].tolist(), np.arange(begin, end).tolist())
+
+    def test_bool_column(self):
+        """
+        Testing converting bool columns to NumPy arrays.
+        """
+        name = "bool_branch"
+        n_events = 100
+        cut = 50
+        df = ROOT.RDataFrame(n_events).Define(name, f"(int)rdfentry_ > {cut}")
+        arr = df.AsNumpy([name])[name]
+        ref = np.arange(0, n_events) > cut
+        self.assertTrue(all(arr == ref)) # test values
+        self.assertEqual(arr.dtype, ref.dtype) # test type
 
 if __name__ == '__main__':
     unittest.main()

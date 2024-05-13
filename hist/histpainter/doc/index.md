@@ -1,5 +1,5 @@
 \defgroup Histpainter Histograms and graphs painting classes.
-\ingroup Hist
+\ingroup HistPainting
 
 The histograms and graphs plotting options are described in details in the THistPainter and TGraphPainter classes.
 Some related  tutorials:

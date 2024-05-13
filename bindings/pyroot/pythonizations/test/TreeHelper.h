@@ -5,6 +5,14 @@ struct MyStruct {
    int myint2;
 };
 
+// Helper class to test branch with array member
+class MyClass {
+  public:
+    double foo[2];
+    MyClass() { foo[0] = 0; foo[1] = 0; }
+    virtual ~MyClass() { }
+};
+
 // Writes a `TTree` on a file. The `TTree` has the following branches:
 // - floatb: branch of basic type (`float`)
 // - arrayb: branch of type array of doubles, size `arraysize`
@@ -39,6 +47,10 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
    t.Branch("structb", &mystruct);
    t.Branch("structleaflistb", &mystruct, "myintll1/I:myintll2/I");
 
+   // Class branch with array member
+   MyClass myclass;
+   t.Branch("clarrmember", &myclass);
+
    for (int i = 0; i < nentries; ++i) {
       n = i + more;
 
@@ -53,6 +65,9 @@ void CreateTTree(const char *filename, const char *treename, int nentries, int a
 
       mystruct.myint1 = i + more;
       mystruct.myint2 = i * more;
+
+      myclass.foo[0] = i;
+      myclass.foo[1] = i + 1;
 
       t.Fill();
    }

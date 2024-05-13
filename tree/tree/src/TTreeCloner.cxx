@@ -40,7 +40,7 @@ Class implementing or helping  the various TTree cloning method
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
+bool TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketSeek[i1] ==  fObject->fBasketSeek[i2]) {
       if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
@@ -53,7 +53,7 @@ Bool_t TTreeCloner::CompareSeek::operator()(UInt_t i1, UInt_t i2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
+bool TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 {
    if (fObject->fBasketEntry[i1] ==  fObject->fBasketEntry[i2]) {
       return i1 < i2;
@@ -102,15 +102,40 @@ Bool_t TTreeCloner::CompareEntry::operator()(UInt_t i1, UInt_t i2)
 /// sequentially.
 
 TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options) :
+   TTreeCloner(from, to, to ? to->GetDirectory() : nullptr, method, options)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.  In place cloning.
+//// This object would transfer the data from
+/// 'from' the original location to 'newdirectory' the new directory
+/// using the sorting method indicated in method.
+/// It updates the 'from' TTree with the new information.
+/// See TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t options)
+/// for details on the sorting methods.
+
+TTreeCloner::TTreeCloner(TTree *from, TDirectory *newdirectory, Option_t *method, UInt_t options) :
+   TTreeCloner(from, from, newdirectory, method, options)
+{
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor implementation.
+TTreeCloner::TTreeCloner(TTree *from, TTree *to, TDirectory *newdirectory, Option_t *method, UInt_t options) :
    fWarningMsg(),
-   fIsValid(kTRUE),
-   fNeedConversion(kFALSE),
+   fIsValid(true),
+   fNeedConversion(false),
    fOptions(options),
    fFromTree(from),
    fToTree(to),
+   fToDirectory(newdirectory),
+   fToFile(fToDirectory ? fToDirectory->GetFile() : nullptr),
    fMethod(method),
-   fFromBranches( from ? from->GetListOfLeaves()->GetEntries()+1 : 0),
-   fToBranches( to ? to->GetListOfLeaves()->GetEntries()+1 : 0),
+   fFromBranches( from ? from->GetListOfLeaves()->GetEntriesFast()+1 : 0),
+   fToBranches( to ? to->GetListOfLeaves()->GetEntriesFast()+1 : 0),
    fMaxBaskets(CollectBranches()),
    fBasketBranchNum(new UInt_t[fMaxBaskets]),
    fBasketNum(new UInt_t[fMaxBaskets]),
@@ -147,7 +172,7 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;
+      fIsValid = false;
    }
    if (fToTree == nullptr) {
       fWarningMsg.Form("An output TTree is required (cloning %s).",
@@ -155,33 +180,33 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;
-   } else if (fToTree->GetDirectory() == nullptr) {
+      fIsValid = false;
+   } else if (fToDirectory == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory.",
                        fToTree->GetName());
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;
-   } else if (fToTree->GetCurrentFile() == nullptr) {
+      fIsValid = false;
+   } else if (fToFile == nullptr) {
       fWarningMsg.Form("The output TTree (%s) must be associated with a directory (%s) that is in a file.",
-                       fToTree->GetName(),fToTree->GetDirectory()->GetName());
+                       fToTree->GetName(),fToDirectory->GetName());
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;
-   } else if (! fToTree->GetDirectory()->IsWritable()) {
-      if (fToTree->GetDirectory()==fToTree->GetCurrentFile()) {
+      fIsValid = false;
+   } else if (! fToDirectory->IsWritable()) {
+      if (fToDirectory==fToFile) {
          fWarningMsg.Form("The output TTree (%s) must be associated with a writable file (%s).",
-                          fToTree->GetName(),fToTree->GetCurrentFile()->GetName());
+                          fToTree->GetName(),fToFile->GetName());
       } else {
          fWarningMsg.Form("The output TTree (%s) must be associated with a writable directory (%s in %s).",
-                          fToTree->GetName(),fToTree->GetDirectory()->GetName(),fToTree->GetCurrentFile()->GetName());
+                          fToTree->GetName(),fToDirectory->GetName(),fToFile->GetName());
       }
       if (!(fOptions & kNoWarnings)) {
          Warning("TTreeCloner::TTreeCloner", "%s", fWarningMsg.Data());
       }
-      fIsValid = kFALSE;
+      fIsValid = false;
    }
 
    if (fIsValid && (!(fOptions & kNoFileCache))) {
@@ -189,13 +214,15 @@ TTreeCloner::TTreeCloner(TTree *from, TTree *to, Option_t *method, UInt_t option
    }
 }
 
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute the cloning.
 
-Bool_t TTreeCloner::Exec()
+bool TTreeCloner::Exec()
 {
    if (!IsValid()) {
-      return kFALSE;
+      return false;
    }
    CreateCache();
    ImportClusterRanges();
@@ -207,8 +234,10 @@ Bool_t TTreeCloner::Exec()
    WriteBaskets();
    CopyMemoryBaskets();
    RestoreCache();
+   if (IsInPlace())
+      fToTree->SetDirectory(fToDirectory);
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,7 +261,10 @@ TTreeCloner::~TTreeCloner()
 
 void TTreeCloner::CloseOutWriteBaskets()
 {
-   for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
+   if (IsInPlace())
+      return;
+
+   for(Int_t i=0; i<fToBranches.GetEntriesFast(); ++i) {
       TBranch *to = (TBranch*)fToBranches.UncheckedAt(i);
       to->FlushOneBasket(to->GetWriteBasket());
    }
@@ -254,8 +286,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       numBaskets += CollectBranches(fromclones->fBranchCount, toclones->fBranchCount);
 
    } else if (from->InheritsFrom(TBranchElement::Class())) {
-      Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      Int_t nb = from->GetListOfLeaves()->GetEntriesFast();
+      Int_t fnb = to->GetListOfLeaves()->GetEntriesFast();
       if (nb != fnb && (nb == 0 || fnb == 0)) {
          // We might be in the case where one branch is split
          // while the other is not split.  We must reject this match.
@@ -264,8 +296,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          if (!(fOptions & kNoWarnings)) {
             Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
-         fNeedConversion = kTRUE;
-         fIsValid = kFALSE;
+         fNeedConversion = true;
+         fIsValid = false;
          return 0;
       }
       if (((TBranchElement*) from)->GetStreamerType() != ((TBranchElement*) to)->GetStreamerType()) {
@@ -274,7 +306,7 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
          if (!(fOptions & kNoWarnings)) {
             Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
-         fIsValid = kFALSE;
+         fIsValid = false;
          return 0;
       }
       TBranchElement *fromelem = (TBranchElement*) from;
@@ -282,15 +314,15 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
       if (fromelem->fMaximum > toelem->fMaximum) toelem->fMaximum = fromelem->fMaximum;
    } else {
 
-      Int_t nb = from->GetListOfLeaves()->GetEntries();
-      Int_t fnb = to->GetListOfLeaves()->GetEntries();
+      Int_t nb = from->GetListOfLeaves()->GetEntriesFast();
+      Int_t fnb = to->GetListOfLeaves()->GetEntriesFast();
       if (nb != fnb) {
          fWarningMsg.Form("The export branch and the import branch (%s) do not have the same number of leaves (%d vs %d)",
                           from->GetName(), fnb, nb);
          if (!(fOptions & kNoWarnings)) {
             Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
          }
-         fIsValid = kFALSE;
+         fIsValid = false;
          return 0;
       }
       for (Int_t i=0;i<nb;i++)  {
@@ -304,8 +336,8 @@ UInt_t TTreeCloner::CollectBranches(TBranch *from, TBranch *to) {
             if (! (fOptions & kNoWarnings) ) {
                Warning("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
             }
-            fIsValid = kFALSE;
-            fNeedConversion = kTRUE;
+            fIsValid = false;
+            fNeedConversion = true;
             return 0;
          }
          toleaf->IncludeRange( fromleaf );
@@ -334,8 +366,8 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
 {
    // Since this is called from the constructor, this can not be a virtual function
 
-   Int_t fnb = from->GetEntries();
-   Int_t tnb = to->GetEntries();
+   Int_t fnb = from->GetEntriesFast();
+   Int_t tnb = to->GetEntriesFast();
    if (!fnb || !tnb) {
       return 0;
    }
@@ -355,7 +387,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
          }
          if (fi==firstfi) {
             // We tried all the branches and there is not match.
-            fb = 0;
+            fb = nullptr;
             break;
          }
          fb = (TBranch*) from->UncheckedAt(fi);
@@ -375,7 +407,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
                if (!(fOptions & kNoWarnings)) {
                   Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
                }
-               fIsValid = kFALSE;
+               fIsValid = false;
             }
          } else {
             fWarningMsg.Form("One of the export sub-branches (%s) is not present in the import TTree.",
@@ -383,7 +415,7 @@ UInt_t TTreeCloner::CollectBranches(TObjArray *from, TObjArray *to)
             if (!(fOptions & kNoWarnings)) {
                Error("TTreeCloner::CollectBranches", "%s", fWarningMsg.Data());
             }
-            fIsValid = kFALSE;
+            fIsValid = false;
          }
       }
       ++ti;
@@ -418,7 +450,7 @@ UInt_t TTreeCloner::CollectBranches()
 
 void TTreeCloner::CollectBaskets()
 {
-   UInt_t len = fFromBranches.GetEntries();
+   UInt_t len = fFromBranches.GetEntriesFast();
 
    for(UInt_t i=0,bi=0; i<len; ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt(i);
@@ -440,7 +472,7 @@ void TTreeCloner::CollectBaskets()
 void TTreeCloner::CopyStreamerInfos()
 {
    TFile *fromFile = fFromTree->GetDirectory()->GetFile();
-   TFile *toFile = fToTree->GetDirectory()->GetFile();
+   TFile *toFile = fToDirectory->GetFile();
    TList *l = fromFile->GetStreamerInfoList();
    TIter next(l);
    TStreamerInfo *oldInfo;
@@ -448,7 +480,7 @@ void TTreeCloner::CopyStreamerInfos()
       if (oldInfo->IsA() != TStreamerInfo::Class()) {
          continue;
       }
-      TStreamerInfo *curInfo = 0;
+      TStreamerInfo *curInfo = nullptr;
       TClass *cl = TClass::GetClass(oldInfo->GetName());
 
       if (!cl->IsLoaded() || cl->GetNew()) {
@@ -480,22 +512,25 @@ void TTreeCloner::CopyStreamerInfos()
 
 void TTreeCloner::CopyMemoryBaskets()
 {
-   TBasket *basket = 0;
-   for(Int_t i=0; i<fToBranches.GetEntries(); ++i) {
+   if (IsInPlace())
+      return;
+
+   TBasket *basket = nullptr;
+   for(Int_t i=0; i<fToBranches.GetEntriesFast(); ++i) {
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( i );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( i );
 
-      basket = from->GetListOfBaskets()->GetEntries() ? from->GetBasket(from->GetWriteBasket()) : 0;
-      if (basket) {
+      basket = (!from->GetListOfBaskets()->IsEmpty()) ? from->GetBasket(from->GetWriteBasket()) : nullptr;
+      if (basket && basket->GetNevBuf()) {
          basket = (TBasket*)basket->Clone();
          basket->SetBranch(to);
-         to->AddBasket(*basket, kFALSE, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
+         to->AddBasket(*basket, false, fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()]);
       } else {
          to->AddLastBasket(  fToStartEntries+from->GetBasketEntry()[from->GetWriteBasket()] );
       }
       // In older files, if the branch is a TBranchElement non-terminal 'object' branch, it's basket will contain 0
       // events, in newer file in the same case, the write basket will be missing.
-      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && (basket==0 || basket->GetNevBuf()==0)) {
+      if (from->GetEntries()!=0 && from->GetWriteBasket()==0 && (basket==nullptr || basket->GetNevBuf()==0)) {
          to->SetEntries(to->GetEntries()+from->GetEntries());
       }
    }
@@ -510,7 +545,7 @@ void TTreeCloner::CopyProcessIds()
    // NOTE: We actually need to merge the ProcessId somehow :(
 
    TFile *fromfile = fFromTree->GetDirectory()->GetFile();
-   TFile *tofile = fToTree->GetDirectory()->GetFile();
+   TFile *tofile = fToFile;
 
    fPidOffset = tofile->GetNProcessIDs();
 
@@ -519,16 +554,16 @@ void TTreeCloner::CopyProcessIds()
    TDirectory::TContext cur(fromfile);
    while ((key = (TKey*)next())) {
       if (!strcmp(key->GetClassName(),"TProcessID")) {
-         TProcessID *pid = (TProcessID*)key->ReadObjectAny(0);
+         TProcessID *pid = (TProcessID*)key->ReadObjectAny(nullptr);
          if (!pid) continue;
 
          //UShort_t out = TProcessID::WriteProcessID(id,tofile);
          UShort_t out = 0;
          TObjArray *pids = tofile->GetListOfProcessIDs();
          Int_t npids = tofile->GetNProcessIDs();
-         Bool_t wasIn = kFALSE;
+         bool wasIn = false;
          for (Int_t i=0;i<npids;i++) {
-            if (pids->At(i) == pid) {out = (UShort_t)i; wasIn = kTRUE; break;}
+            if (pids->At(i) == pid) {out = (UShort_t)i; wasIn = true; break;}
          }
 
          if (!wasIn) {
@@ -590,6 +625,9 @@ void TTreeCloner::RestoreCache() {
 
 void TTreeCloner::ImportClusterRanges()
 {
+   if (IsInPlace())
+      return;
+
    // First undo, the external call to SetEntries
    // We could improve the interface to optional tell the TTreeCloner that the
    // SetEntries was not done.
@@ -606,12 +644,16 @@ void TTreeCloner::ImportClusterRanges()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the TFile cache size to be used.
+/// Set the cache size used by the matching TFile.
 /// Note that the default is to use the same size as the default TTreeCache for
 /// the input tree.
-/// \param size Size of the cache. Zero disable the use of the cache.
+/// \param size Size of the cache.
+/// \note If size=0, or if it does not match the fileCache buffer size, 
+/// the fileCache will be deleted so that it be created later with the right size
+/// (or not created if the size is 0) at the beginning of Exec.
 
-void TTreeCloner::SetCacheSize(Int_t size)
+
+void TTreeCloner::SetCacheSize(Long64_t size)
 {
    fCacheSize = size;
    if (IsValid() && fFileCache) {
@@ -691,13 +733,29 @@ void TTreeCloner::WriteBaskets()
       TBranch *from = (TBranch*)fFromBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
       TBranch *to   = (TBranch*)fToBranches.UncheckedAt( fBasketBranchNum[ fBasketIndex[j] ] );
 
-      TFile *tofile = to->GetFile(0);
+      TFile *tofile = fToFile;
       TFile *fromfile = from->GetFile(0);
 
       Int_t index = fBasketNum[ fBasketIndex[j] ];
 
       Long64_t pos = from->GetBasketSeek(index);
-      if (pos!=0) {
+      if (IsInPlace()) {
+         if (pos != 0) {
+            if (fFileCache && j >= notCached) {
+               notCached = FillCache(notCached);
+            }
+            Int_t len = from->GetBasketBytes()[index];
+            if (len == 0) {
+               len = basket->ReadBasketBytes(pos, fromfile);
+               from->GetBasketBytes()[index] = len;
+            }
+
+            basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
+            basket->IncrementPidOffset(fPidOffset);
+            basket->CopyTo(tofile);
+            to->fBasketSeek[index] = basket->GetSeekKey();
+         }
+      } else if (pos!=0) {
          if (fFileCache && j >= notCached) {
             notCached = FillCache(notCached);
          }
@@ -709,13 +767,13 @@ void TTreeCloner::WriteBaskets()
          basket->LoadBasketBuffers(pos,len,fromfile,fFromTree);
          basket->IncrementPidOffset(fPidOffset);
          basket->CopyTo(tofile);
-         to->AddBasket(*basket,kTRUE,fToStartEntries + from->GetBasketEntry()[index]);
+         to->AddBasket(*basket,true,fToStartEntries + from->GetBasketEntry()[index]);
       } else {
          TBasket *frombasket = from->GetBasket( index );
          if (frombasket && frombasket->GetNevBuf()>0) {
             TBasket *tobasket = (TBasket*)frombasket->Clone();
             tobasket->SetBranch(to);
-            to->AddBasket(*tobasket, kFALSE, fToStartEntries+from->GetBasketEntry()[index]);
+            to->AddBasket(*tobasket, false, fToStartEntries+from->GetBasketEntry()[index]);
             to->FlushOneBasket(to->GetWriteBasket());
          }
       }

@@ -40,7 +40,7 @@ E.g.:
   Unix.Rint.Root.DynamicPath: .:$(ROOTSYS)/lib:~/lib
   myapp.Root.Debug:  FALSE
   TH.Root.Debug: YES
-  *.Root.MemStat: 1
+  *.Root.ObjStat: 1
 ~~~
 `<SystemName>` and `<ProgName>` or `<RootName>` may be the wildcard "*".
 A # in the first column starts comment line.
@@ -95,7 +95,7 @@ static struct BoolNameTable_t {
    { "NO",    0 },
    { "OK",    1 },
    { "NOT",   0 },
-   { 0, 0 }
+   { nullptr, 0 }
 };
 
 
@@ -231,8 +231,8 @@ private:
    EEnvLevel fLevel;
 
 public:
-   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type)
+   TReadEnvParser(TEnv *e, FILE *f, EEnvLevel l) : TEnvParser(e, f), fLevel(l) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override
       { fEnv->SetValue(name, value, fLevel, type); }
 };
 
@@ -245,9 +245,9 @@ private:
    FILE *fOfp;
 
 public:
-   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) { }
-   void KeyValue(const TString &name, const TString &value, const TString &type);
-   void Char(Int_t c) { fputc(c, fOfp); }
+   TWriteEnvParser(TEnv *e, FILE *f, FILE *of) : TEnvParser(e, f), fOfp(of) {}
+   void KeyValue(const TString &name, const TString &value, const TString &type) override;
+   void Char(Int_t c) override { fputc(c, fOfp); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -403,7 +403,7 @@ TEnv::TEnv(const char *name)
    fIgnoreDup = kFALSE;
 
    if (!name || !name[0] || !gSystem)
-      fTable = 0;
+      fTable = nullptr;
    else {
       fTable  = new THashList(1000);
       fRcName = name;
@@ -445,42 +445,42 @@ const char *TEnv::Getvalue(const char *name) const
       haveProgName = kTRUE;
 
    TString aname;
-   TEnvRec *er = 0;
+   TEnvRec *er = nullptr;
    if (haveProgName && gSystem && gProgName) {
       aname = gSystem->GetName(); aname += "."; aname += gProgName;
       aname += "."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0 && gSystem && gROOT) {
+   if (er == nullptr && gSystem && gROOT) {
       aname = gSystem->GetName(); aname += "."; aname += gROOT->GetName();
       aname += "."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0 && gSystem) {
+   if (er == nullptr && gSystem) {
       aname = gSystem->GetName(); aname += ".*."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0 && haveProgName && gProgName) {
+   if (er == nullptr && haveProgName && gProgName) {
       aname = gProgName; aname += "."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0 && gROOT) {
+   if (er == nullptr && gROOT) {
       aname = gROOT->GetName(); aname += "."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0) {
+   if (er == nullptr) {
       aname = "*.*."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0) {
+   if (er == nullptr) {
       aname = "*."; aname += name;
       er = Lookup(aname);
    }
-   if (er == 0) {
+   if (er == nullptr) {
       er = Lookup(name);
    }
-   if (er == 0)
-      return 0;
+   if (er == nullptr)
+      return nullptr;
    return er->fValue;
 }
 
@@ -546,7 +546,7 @@ const char *TEnv::GetValue(const char *name, const char *dflt) const
 
 TEnvRec *TEnv::Lookup(const char *name) const
 {
-   if (!fTable) return 0;
+   if (!fTable) return nullptr;
    return (TEnvRec*) fTable->FindObject(name);
 }
 
@@ -581,7 +581,7 @@ void TEnv::PrintEnv(EEnvLevel level) const
 
    while ((er = (TEnvRec*) next()))
       if (er->fLevel == level || level == kEnvAll)
-         Printf("%-25s %-30s [%s]", Form("%s:", er->fName.Data()),
+         Printf("%-25s %-30s [%s]", TString::Format("%s:", er->fName.Data()).Data(),
                 er->fValue.Data(), lc[er->fLevel]);
 }
 
@@ -632,7 +632,7 @@ Int_t TEnv::WriteFile(const char *fname, EEnvLevel level)
       TEnvRec *er;
       while ((er = (TEnvRec*) next()))
          if (er->fLevel == level || level == kEnvAll)
-            fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+            fprintf(ofp, "%-40s %s\n", TString::Format("%s:", er->fName.Data()).Data(),
                     er->fValue.Data());
       fclose(ofp);
       return 0;
@@ -692,13 +692,13 @@ void TEnv::SaveLevel(EEnvLevel level)
    else
       return;
 
-   if ((ofp = fopen(Form("%s.new", rootrcdir.Data()), "w"))) {
+   if ((ofp = fopen(TString::Format("%s.new", rootrcdir.Data()).Data(), "w"))) {
       ifp = fopen(rootrcdir.Data(), "r");
-      if (ifp == 0) {     // try to create file
+      if (ifp == nullptr) {     // try to create file
          ifp = fopen(rootrcdir.Data(), "w");
          if (ifp) {
             fclose(ifp);
-            ifp = 0;
+            ifp = nullptr;
          }
       }
       if (ifp || (ifp = fopen(rootrcdir.Data(), "r"))) {
@@ -714,15 +714,15 @@ void TEnv::SaveLevel(EEnvLevel level)
                if (er->fLevel == kEnvChange) er->fLevel = level;
                if (er->fLevel == level) {
                   er->fModified = kFALSE;
-                  fprintf(ofp, "%-40s %s\n", Form("%s:", er->fName.Data()),
+                  fprintf(ofp, "%-40s %s\n", TString::Format("%s:", er->fName.Data()).Data(),
                           er->fValue.Data());
                }
             }
          }
          fclose(ifp);
          fclose(ofp);
-         gSystem->Rename(rootrcdir.Data(), Form("%s.bak", rootrcdir.Data()));
-         gSystem->Rename(Form("%s.new", rootrcdir.Data()), rootrcdir.Data());
+         gSystem->Rename(rootrcdir.Data(), TString::Format("%s.bak", rootrcdir.Data()).Data());
+         gSystem->Rename(TString::Format("%s.new", rootrcdir.Data()).Data(), rootrcdir.Data());
          return;
       }
       fclose(ofp);
@@ -775,15 +775,15 @@ void TEnv::SetValue(const char *name, EEnvLevel level)
 
 void TEnv::SetValue(const char *name, Int_t value)
 {
-   SetValue(name, Form("%d", value));
+   SetValue(name, TString::Format("%d", value).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set or create a double resource value.
 
-void TEnv::SetValue(const char *name, double value)
+void TEnv::SetValue(const char *name, Double_t value)
 {
-   SetValue(name, Form("%g", value));
+   SetValue(name, TString::Format("%g", value).Data());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

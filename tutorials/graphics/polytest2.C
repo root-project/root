@@ -28,7 +28,7 @@ class PolyTest2 : public TNamed, public TAttLine, public TAttFill {
 public:
    PolyTest2();
 
-   void Paint(const Option_t *notUsed);
+   void Paint(const Option_t *notUsed) override;
 
 private:
    enum TestSize {
@@ -52,9 +52,9 @@ PolyTest2::PolyTest2()
    //Polygon 2, n of points is 10003, after 'compression' : 2093
 
    //Some canvas must already exist by this point.
-   assert(gPad != 0 && "PolyTest2, gPad is null");
+   assert(gPad != nullptr && "PolyTest2, gPad is null");
    //We need a gRandom to exist.
-   assert(gRandom != 0 && "PolyTest2, gRandom is null");
+   assert(gRandom != nullptr && "PolyTest2, gRandom is null");
 
    Double_t xMin = 0., xMax = 0., yMin = 0., yMax = 0.;
    gPad->GetRange(xMin, yMin, xMax, yMax);
@@ -123,7 +123,7 @@ PolyTest2::PolyTest2()
 //_____________________________________________________________
 void PolyTest2::Paint(const Option_t * /*notUsed*/)
 {
-   assert(gPad != 0 && "Paint, gPad is null");
+   assert(gPad != nullptr && "Paint, gPad is null");
 
    SetFillColor(kGreen);
    TAttFill::Modify();

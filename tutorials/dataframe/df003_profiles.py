@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Use TProfiles with RDataFrame.
+## Use TProfiles with RDataFrame.
 ##
 ## This tutorial illustrates how to use TProfiles in combination with the
 ## RDataFrame. See the documentation of TProfile and TProfile2D to better
@@ -11,7 +11,7 @@
 ## \macro_image
 ##
 ## \date February 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 
@@ -30,15 +30,11 @@ treeName = "myTree"
 fill_tree(treeName, fileName)
 
 # We read the tree from the file and create a RDataFrame.
-columns = ROOT.vector('string')()
-columns.push_back("px")
-columns.push_back("py")
-columns.push_back("pz")
-d = ROOT.RDataFrame(treeName, fileName, columns)
+d = ROOT.RDataFrame(treeName, fileName)
 
 # Create the profiles
-hprof1d = d.Profile1D(("hprof1d", "Profile of pz versus px", 64, -4, 4))
-hprof2d = d.Profile2D(("hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20))
+hprof1d = d.Profile1D(("hprof1d", "Profile of pz versus px", 64, -4, 4), "px", "py")
+hprof2d = d.Profile2D(("hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20), "px", "py", "pz")
 
 # And Draw
 c1 = ROOT.TCanvas("c1", "Profile histogram example", 200, 10, 700, 500)

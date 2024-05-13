@@ -22,7 +22,7 @@ private:
 
 public:
    MyMainFrame(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~MyMainFrame();
+   ~MyMainFrame() override;
 
    ClassDef(MyMainFrame, 0)
 };

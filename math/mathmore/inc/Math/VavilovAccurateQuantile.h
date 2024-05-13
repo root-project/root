@@ -86,36 +86,36 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
       /**
          Destructor
       */
-      virtual ~VavilovAccurateQuantile ();
+      ~VavilovAccurateQuantile () override;
 
       /**
          Access the parameter values
       */
-      virtual const double * Parameters() const;
+      const double * Parameters() const override;
 
       /**
          Set the parameter values
          @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2).
 
       */
-      virtual void SetParameters(const double * p );
+      void SetParameters(const double * p ) override;
 
       /**
          Return the number of Parameters
       */
-      virtual unsigned int NPar() const;
+      unsigned int NPar() const override;
 
       /**
          Return the name of the i-th parameter (starting from zero)
        */
-      virtual std::string ParameterName(unsigned int i) const;
+      std::string ParameterName(unsigned int i) const override;
 
       /**
          Evaluate the function
 
        @param x The Quantile \f$z\f$ , \f$0 \le z \le 1\f$
        */
-      virtual double DoEval(double x) const;
+      double DoEval(double x) const override;
 
       /**
          Evaluate the function, using parameters p
@@ -123,12 +123,12 @@ class VavilovAccurateQuantile: public IParametricFunctionOneDim {
        @param x The Quantile \f$z\f$, \f$0 \le z \le 1\f$
          @param p vector of doubles containing the parameter values (Norm, x0, xi, kappa, beta2).
        */
-      virtual double DoEvalPar(double x, const double * p) const;
+      double DoEvalPar(double x, const double * p) const override;
 
       /**
          Return a clone of the object
        */
-      virtual IBaseFunctionOneDim  * Clone() const;
+      IBaseFunctionOneDim  * Clone() const override;
 
    private:
      double fP[5];

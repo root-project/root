@@ -13,7 +13,6 @@
 #include <ROOT/Browsable/RLevelIter.hxx>
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
 /** \class RWrapper
@@ -27,6 +26,7 @@ namespace Browsable {
 class RWrapper : public RElement {
    std::string fName;
    std::shared_ptr<RElement> fElem;
+   bool fExapndByDefault{false};
 
 public:
    RWrapper() = default;
@@ -49,11 +49,19 @@ public:
 
    /** Access object */
    std::unique_ptr<RHolder> GetObject() override { return fElem->GetObject(); }
+
+   /** Get default action */
+   EActionKind GetDefaultAction() const override { return fElem->GetDefaultAction(); }
+
+   /** Check if want to perform action */
+   bool IsCapable(EActionKind action) const override { return fElem->IsCapable(action); }
+
+   bool IsExpandByDefault() const override { return fExapndByDefault || fElem->IsExpandByDefault(); }
+   void SetExpandByDefault(bool on = true) { fExapndByDefault = on; }
 };
 
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 #endif

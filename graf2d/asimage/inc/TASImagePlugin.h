@@ -27,14 +27,16 @@ class TASImagePlugin : public TImagePlugin {
 
 public:
    TASImagePlugin(const char *ext) : TImagePlugin(ext) { }
-   virtual ~TASImagePlugin() { }
+   ~TASImagePlugin() override { ROOT::CallRecursiveRemoveIfNeeded(*this); }
 
-   virtual unsigned char *ReadFile(const char * /*filename*/, UInt_t & /*w*/,  UInt_t & /*h*/) { return 0; }
-   virtual Bool_t WriteFile(const char * /*filename*/, unsigned char * /*argb*/, UInt_t /*w*/,  UInt_t  /*h*/) { return kFALSE; }
-   virtual ASImage *File2ASImage(const char * /*filename*/) {  return 0; }
+   ULong_t Hash() const override { return fExtension.Hash(); }
+
+   unsigned char *ReadFile(const char * /*filename*/, UInt_t & /*w*/,  UInt_t & /*h*/) override { return nullptr; }
+   Bool_t WriteFile(const char * /*filename*/, unsigned char * /*argb*/, UInt_t /*w*/,  UInt_t  /*h*/) override { return kFALSE; }
+   virtual ASImage *File2ASImage(const char * /*filename*/) {  return nullptr; }
    virtual Bool_t ASImage2File(ASImage * /*asimage*/) { return kFALSE; }
 
-   ClassDef(TASImagePlugin, 0)  // asimage plugin
+   ClassDefOverride(TASImagePlugin, 0)  // asimage plugin
 };
 
 #endif

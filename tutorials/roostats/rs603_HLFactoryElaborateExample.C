@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief High Level Factory: creating a complex combined model.
+/// High Level Factory: creating a complex combined model.
 ///
 /// \macro_image
 /// \macro_output
@@ -24,7 +24,7 @@
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::ofstream, std::cout;
 
 void rs603_HLFactoryElaborateExample()
 {

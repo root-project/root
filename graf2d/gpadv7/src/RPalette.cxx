@@ -9,6 +9,7 @@
 #include "ROOT/RPalette.hxx"
 
 #include "ROOT/RLogger.hxx"
+#include "ROOT/RAttrBase.hxx" // for GPadLog()
 
 #include <algorithm>
 #include <cmath>
@@ -37,7 +38,7 @@ RPalette::RPalette(bool interpolate, bool knownNormalized, const std::vector<RPa
 }
 
 namespace {
-static std::vector<RPalette::OrdinalAndColor> AddOrdinals(const std::vector<RColor> &points)
+std::vector<RPalette::OrdinalAndColor> AddOrdinals(const std::vector<RColor> &points)
 {
    std::vector<RPalette::OrdinalAndColor> ret(points.size());
    auto addOneOrdinal = [&](const RColor &col) -> RPalette::OrdinalAndColor {
@@ -54,7 +55,7 @@ RPalette::RPalette(bool interpolate, const std::vector<RColor> &points)
 
 RColor RPalette::GetColor(double ordinal)
 {
-   if (fColors.size() == 0)
+   if (fColors.empty())
       return RColor();
 
    if (fColors.size() == 1)
@@ -74,7 +75,7 @@ RColor RPalette::GetColor(double ordinal)
    auto diff2 = iColor2->fOrdinal - ordinal;
 
    if ((diff1 < -epsilon) || (diff2 < -epsilon)) {
-      R__ERROR_HERE("Gpad") << "Wrong palette settings";
+      R__LOG_ERROR(GPadLog()) << "Wrong palette settings";
       return fColors.back().fColor;
    }
 
@@ -105,7 +106,7 @@ RColor RPalette::GetColor(double ordinal)
          return res;
       }
 
-      R__ERROR_HERE("Gpad") << "Fail to interpolate color";
+      R__LOG_ERROR(GPadLog()) << "Fail to interpolate color";
    }
 
    return (diff2 < diff1) ? iColor2->fColor : iColor1->fColor;
@@ -113,7 +114,7 @@ RColor RPalette::GetColor(double ordinal)
 
 namespace {
 using GlobalPalettes_t = std::unordered_map<std::string, RPalette>;
-static GlobalPalettes_t CreateDefaultPalettes()
+GlobalPalettes_t CreateDefaultPalettes()
 {
    GlobalPalettes_t ret;
    ret["default"] = RPalette({RColor::kRed, RColor::kBlue});
@@ -127,7 +128,7 @@ static GlobalPalettes_t CreateDefaultPalettes()
    return ret;
 }
 
-static GlobalPalettes_t &GetGlobalPalettes()
+GlobalPalettes_t &GetGlobalPalettes()
 {
    static GlobalPalettes_t globalPalettes = CreateDefaultPalettes();
    return globalPalettes;

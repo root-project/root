@@ -51,7 +51,7 @@
 #pragma link C++ class TStreamerInfoActions::TActionSequence+;
 #pragma link C++ class TStreamerInfoActions::TConfiguration-;
 #pragma link C++ class ROOT::Internal::RRawFile+;
-#pragma link C++ class ROOT::Experimental::TBufferMerger;
-#pragma link C++ class ROOT::Experimental::TBufferMergerFile;
+#pragma link C++ class ROOT::TBufferMerger;
+#pragma link C++ class ROOT::TBufferMergerFile;
 
 #endif

@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Using the RooCustomizer to create multiple PDFs that share a lot of properties, but have unique parameters for each category.
+/// Using the RooCustomizer to create multiple PDFs that share a lot of properties, but have unique parameters for each category.
 /// As an extra complication, some of the new parameters need to be functions
 /// of a mass parameter.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \author Stephan Hageboeck, CERN
 
@@ -71,7 +69,7 @@ void rf514_RooCustomizer() {
 
   // 2. Each sample should have its own signal yield, but there is an extra complication:
   // We need the yields 1 and 2 to be a function of the variable "mass".
-  // For this, we pre-define nodes with exacly the names that the customiser would have created automatically,
+  // For this, we pre-define nodes with exactly the names that the customiser would have created automatically,
   // that is, "<nodeName>_<categoryName>", and we register them in the set of customiser nodes.
   // The customiser will pick them up instead of creating new ones.
   // If we don't provide one (e.g. for "yieldSig_Sample3"), it will be created automatically by cloning `yieldSig`.

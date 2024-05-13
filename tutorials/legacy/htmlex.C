@@ -2,9 +2,9 @@
 /// \ingroup tutorial_legacy
 /// This file demonstrates how THtml can document sources.
 ///
-/// See the [Users Guide](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html)
-/// chapter [Automatic HTML Documentation](https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf), and
-/// [THtml's class documentation](https://root.cern.ch/doc/master/classTHtml.html).
+/// See the [Users Guide](https://root.cern/root/htmldoc/guides/users-guide/ROOTUsersGuide.html)
+/// chapter [Automatic HTML Documentation](https://root.cern/root/htmldoc/guides/users-guide/ROOTUsersGuideChapters/HTMLDoc.pdf), and
+/// [THtml's class documentation](https://root.cern/doc/master/classTHtml.html).
 ///
 /// To see this demo script in action start up ROOT and run
 /// ~~~{.cpp}
@@ -22,11 +22,11 @@
 
 class THtmlDemo: public TObject {
 public:
-   THtmlDemo(): fHtml(0)
+   THtmlDemo(): fHtml(nullptr)
    {
       printf("This class is for demonstration purposes only!\n");
    }
-   ~THtmlDemo() { if (fHtml) delete fHtml; }
+   ~THtmlDemo() override { if (fHtml) delete fHtml; }
 
    // inline methods can have their documentation in front
    // of the declaration. DontDoMuch is so short - where
@@ -88,7 +88,7 @@ protected:
 private:
    Int_t fVeryUselessMember; // This is a very useless member.
    THtml* fHtml; // our local THtml instance.
-   ClassDef(THtmlDemo, 0); // A demo of THtml.
+   ClassDefOverride(THtmlDemo, 0); // A demo of THtml.
 };
 
 void htmlex() {

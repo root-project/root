@@ -1,11 +1,9 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+/// Addition and convolution: convolution in cyclical angular observables theta
 ///
-///
-/// \brief Addition and convolution: convolution in cyclical angular observables theta
-///
-/// and construction of p.d.f in terms of transformed angular coordinates, e.g. cos(theta),
+/// and construction of pdf in terms of transformed angular coordinates, e.g. cos(theta),
 /// where the convolution is performed in theta rather than cos(theta)
 ///
 /// ```
@@ -16,10 +14,10 @@
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 04/2009
+/// \date April 2009
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -42,7 +40,7 @@ void rf210_angularconv()
    // Define angle psi
    RooRealVar psi("psi", "psi", 0, 3.14159268);
 
-   // Define physics p.d.f T(psi)
+   // Define physics pdf T(psi)
    RooGenericPdf Tpsi("Tpsi", "1+sin(2*@0)", psi);
 
    // Define resolution R(psi)
@@ -54,13 +52,13 @@ void rf210_angularconv()
    RooRealVar cpsi("cpsi", "cos(psi)", -1, 1);
    RooFormulaVar psif("psif", "acos(cpsi)", cpsi);
 
-   // Define physics p.d.f. also as function of cos(psi): T(psif(cpsi)) = T(cpsi) ;
+   // Define physics pdf also as function of cos(psi): T(psif(cpsi)) = T(cpsi) ;
    RooGenericPdf Tcpsi("T", "1+sin(2*@0)", psif);
 
    // C o n s t r u c t   c o n v o l u t i o n   p d f  i n   p s i
    // --------------------------------------------------------------
 
-   // Define convoluted p.d.f. as function of psi: M=[T(x)R](psi) = M(psi)
+   // Define convoluted pdf as function of psi: M=[T(x)R](psi) = M(psi)
    RooFFTConvPdf Mpsi("Mf", "Mf", psi, Tpsi, Rpsi);
 
    // Set the buffer fraction to zero to obtain a true cyclical convolution
@@ -70,23 +68,23 @@ void rf210_angularconv()
    // --------------------------------------------------------------------------------
 
    // Generate some events in observable psi
-   RooDataSet *data_psi = Mpsi.generate(psi, 10000);
+   std::unique_ptr<RooDataSet> data_psi{Mpsi.generate(psi, 10000)};
 
    // Fit convoluted model as function of angle psi
-   Mpsi.fitTo(*data_psi);
+   Mpsi.fitTo(*data_psi, PrintLevel(-1));
 
    // Plot cos(psi) frame with Mf(cpsi)
    RooPlot *frame1 = psi.frame(Title("Cyclical convolution in angle psi"));
    data_psi->plotOn(frame1);
    Mpsi.plotOn(frame1);
 
-   // Overlay comparison to unsmeared physics p.d.f T(psi)
+   // Overlay comparison to unsmeared physics pdf T(psi)
    Tpsi.plotOn(frame1, LineColor(kRed));
 
    // C o n s t r u c t   c o n v o l u t i o n   p d f   i n   c o s ( p s i )
    // --------------------------------------------------------------------------
 
-   // Define convoluted p.d.f. as function of cos(psi): M=[T(x)R](psif(cpsi)) = M(cpsi)
+   // Define convoluted pdf as function of cos(psi): M=[T(x)R](psif(cpsi)) = M(cpsi)
    //
    // Need to give both observable psi here (for definition of convolution)
    // and function psif here (for definition of observables, ultimately in cpsi)
@@ -99,20 +97,20 @@ void rf210_angularconv()
    // --------------------------------------------------------------------------------
 
    // Generate some events
-   RooDataSet *data_cpsi = Mcpsi.generate(cpsi, 10000);
+   std::unique_ptr<RooDataSet> data_cpsi{Mcpsi.generate(cpsi, 10000)};
 
    // set psi constant to exclude to be a parameter of the fit
    psi.setConstant(true);
 
    // Fit convoluted model as function of cos(psi)
-   Mcpsi.fitTo(*data_cpsi);
+   Mcpsi.fitTo(*data_cpsi, PrintLevel(-1));
 
    // Plot cos(psi) frame with Mf(cpsi)
    RooPlot *frame2 = cpsi.frame(Title("Same convolution in psi, expressed in cos(psi)"));
    data_cpsi->plotOn(frame2);
    Mcpsi.plotOn(frame2);
 
-   // Overlay comparison to unsmeared physics p.d.f Tf(cpsi)
+   // Overlay comparison to unsmeared physics pdf Tf(cpsi)
    Tcpsi.plotOn(frame2, LineColor(kRed));
 
    // Draw frame on canvas

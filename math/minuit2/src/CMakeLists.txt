@@ -13,16 +13,11 @@ set(MINUIT2_HEADERS
     ABTypes.h
     AnalyticalGradientCalculator.h
     BFGSErrorUpdator.h
-    BasicFunctionGradient.h
-    BasicFunctionMinimum.h
-    BasicMinimumError.h
-    BasicMinimumParameters.h
-    BasicMinimumSeed.h
-    BasicMinimumState.h
     CombinedMinimizer.h
     CombinedMinimumBuilder.h
     ContoursError.h
     DavidonErrorUpdator.h
+    ExternalInternalGradientCalculator.h
     FCNAdapter.h
     FCNBase.h
     FCNGradAdapter.h
@@ -76,6 +71,7 @@ set(MINUIT2_HEADERS
     MnLineSearch.h
     MnMachinePrecision.h
     MnMatrix.h
+    MnMatrixfwd.h
     MnMigrad.h
     MnMinimize.h
     MnMinos.h
@@ -86,8 +82,6 @@ set(MINUIT2_HEADERS
     MnPlot.h
     MnPosDef.h
     MnPrint.h
-    MnRefCountedPointer.h
-    MnReferenceCounter.h
     MnScan.h
     MnSeedGenerator.h
     MnSimplex.h
@@ -123,9 +117,9 @@ set(MINUIT2_HEADERS
 set(MINUIT2_SOURCES
     AnalyticalGradientCalculator.cxx
     BFGSErrorUpdator.cxx
-    BasicMinimumError.cxx
     CombinedMinimumBuilder.cxx
     DavidonErrorUpdator.cxx
+    ExternalInternalGradientCalculator.cxx
     FumiliBuilder.cxx
     FumiliErrorUpdator.cxx
     FumiliGradientCalculator.cxx
@@ -160,6 +154,7 @@ set(MINUIT2_SOURCES
     MnPlot.cxx
     MnPosDef.cxx
     MnPrint.cxx
+    MnPrintImpl.cxx
     MnScan.cxx
     MnSeedGenerator.cxx
     MnStrategy.cxx
@@ -214,12 +209,6 @@ target_include_directories(
     $<INSTALL_INTERFACE:include/Minuit2>
     )
 
-target_compile_definitions(
-    Minuit2
-    PRIVATE
-    WARNINGMSG
-    )
-
 target_compile_features(Minuit2 PUBLIC cxx_nullptr cxx_nonstatic_member_init)
 set_target_properties(Minuit2 PROPERTIES CXX_EXTENSIONS OFF)
 
@@ -227,8 +216,8 @@ target_link_libraries(Minuit2 PUBLIC Minuit2Math Minuit2Common)
 
 install(TARGETS Minuit2
         EXPORT Minuit2Targets
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         )
 
 install(FILES ${MINUIT2_HEADERS} DESTINATION include/Minuit2/Minuit2)

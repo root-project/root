@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::DecisionTreeNode                                                *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation of a Decision Tree Node                                    *
@@ -24,7 +24,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::
@@ -81,7 +81,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode()
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -105,7 +105,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(TMVA::Node* p, char pos)
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -138,7 +138,7 @@ TMVA::DecisionTreeNode::DecisionTreeNode(const TMVA::DecisionTreeNode &n,
    }
    else {
       //std::cout << "**Node constructor WITHOUT TrainingINFO"<<std::endl;
-      fTrainInfo = 0;
+      fTrainInfo = nullptr;
    }
 }
 
@@ -227,10 +227,10 @@ void TMVA::DecisionTreeNode::Print(std::ostream& os) const
       << " nType: " << this->GetNodeType()
       << std::endl;
 
-   os << "My address is " << long(this) << ", ";
-   if (this->GetParent() != NULL) os << " parent at addr: "         << long(this->GetParent()) ;
-   if (this->GetLeft()   != NULL) os << " left daughter at addr: "  << long(this->GetLeft());
-   if (this->GetRight()  != NULL) os << " right daughter at addr: " << long(this->GetRight()) ;
+   os << "My address is " << (Longptr_t)this << ", ";
+   if (this->GetParent() != NULL) os << " parent at addr: "         << (Longptr_t)this->GetParent();
+   if (this->GetLeft()   != NULL) os << " left daughter at addr: "  << (Longptr_t)this->GetLeft();
+   if (this->GetRight()  != NULL) os << " right daughter at addr: " << (Longptr_t)this->GetRight();
 
    os << " **** > " << std::endl;
 }
@@ -399,6 +399,7 @@ void TMVA::DecisionTreeNode::PrintRecPrune( std::ostream& os ) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set CC, if traininfo defined, otherwise Log Fatal
 
 void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 {
@@ -408,7 +409,8 @@ void TMVA::DecisionTreeNode::SetCC(Double_t cc)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the minimum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined, otherwise Log Fatal
+/// and return -9999
 
 Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMin[ivar];
@@ -419,7 +421,8 @@ Float_t TMVA::DecisionTreeNode::GetSampleMin(UInt_t ivar) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the maximum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined, otherwise Log Fatal and 
+/// return 9999
 
 Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
    if (fTrainInfo && ivar < fTrainInfo->fSampleMin.size()) return fTrainInfo->fSampleMax[ivar];
@@ -430,7 +433,7 @@ Float_t TMVA::DecisionTreeNode::GetSampleMax(UInt_t ivar) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set the minimum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined
 
 void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
    if ( fTrainInfo) {
@@ -441,7 +444,7 @@ void TMVA::DecisionTreeNode::SetSampleMin(UInt_t ivar, Float_t xmin){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set the maximum of variable ivar from the training sample
-/// that pass/end up in this node
+/// that pass/end up in this node, if traininfo defined
 
 void TMVA::DecisionTreeNode::SetSampleMax(UInt_t ivar, Float_t xmax){
    if( ! fTrainInfo ) return;
@@ -462,7 +465,7 @@ void TMVA::DecisionTreeNode::ReadAttributes(void* node, UInt_t /* tmva_Version_C
       this->SetNFisherCoeff(nCoef);
       Double_t tmp;
       for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++) {
-         gTools().ReadAttr(node, Form("fC%d",i),  tmp          );
+         gTools().ReadAttr(node, TString::Format("fC%d",i).Data(),  tmp);
          this->SetFisherCoeff(i,tmp);
       }
    }else{
@@ -493,7 +496,7 @@ void TMVA::DecisionTreeNode::AddAttributesToNode(void* node) const
 {
    gTools().AddAttr(node, "NCoef", GetNFisherCoeff());
    for (Int_t i=0; i< (Int_t) this->GetNFisherCoeff(); i++)
-      gTools().AddAttr(node, Form("fC%d",i),  this->GetFisherCoeff(i));
+      gTools().AddAttr(node, TString::Format("fC%d",i).Data(),  this->GetFisherCoeff(i));
 
    gTools().AddAttr(node, "IVar",  GetSelector());
    gTools().AddAttr(node, "Cut",   GetCutValue());

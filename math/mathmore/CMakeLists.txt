@@ -28,10 +28,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathMore
     Math/GSLSimAnMinimizer.h
     Math/InterpolationTypes.h
     Math/Interpolator.h
-    Math/KelvinFunctions.h
     Math/MCParameters.h
     Math/PdfFuncMathMore.h
     Math/Polynomial.h
+    Math/ParamFunction.h
     Math/QuasiRandom.h
     Math/RootFinderAlgorithms.h
     Math/SpecFuncMathMore.h
@@ -61,7 +61,6 @@ SOURCES
     src/GSLSimAnMinimizer.cxx
     src/GSLSimAnnealing.cxx
     src/Interpolator.cxx
-    src/KelvinFunctions.cxx
     src/MCParameters.cxx
     src/MultiNumGradFunction.cxx
     src/PdfFuncMathMore.cxx

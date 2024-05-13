@@ -7,18 +7,21 @@ ROOT supports the following histogram types:
     *   TH1C : histograms with one byte per channel. Maximum bin content = 127
     *   TH1S : histograms with one short per channel. Maximum bin content = 32767
     *   TH1I : histograms with one int per channel. Maximum bin content = 2147483647
+    *   TH1L : histograms with one long64 per channel. Maximum bin content = 9223372036854775807
     *   TH1F : histograms with one float per channel. Maximum precision 7 digits
     *   TH1D : histograms with one double per channel. Maximum precision 14 digits
 *   2-D histograms:
     *   TH2C : histograms with one byte per channel. Maximum bin content = 127
     *   TH2S : histograms with one short per channel. Maximum bin content = 32767
     *   TH2I : histograms with one int per channel. Maximum bin content = 2147483647
+    *   TH2L : histograms with one long64 per channel. Maximum bin content = 9223372036854775807
     *   TH2F : histograms with one float per channel. Maximum precision 7 digits
     *   TH2D : histograms with one double per channel. Maximum precision 14 digits
 *   3-D histograms:
     *   TH3C : histograms with one byte per channel. Maximum bin content = 127
     *   TH3S : histograms with one short per channel. Maximum bin content = 32767
     *   TH3I : histograms with one int per channel. Maximum bin content = 2147483647
+    *   TH3L : histograms with one long64 per channel. Maximum bin content = 9223372036854775807
     *   TH3F : histograms with one float per channel. Maximum precision 7 digits
     *   TH3D : histograms with one double per channel. Maximum precision 14 digits
 
@@ -26,8 +29,11 @@ ROOT supports the following histogram types:
 
   - [The Chapter about the Histogram classes in the Users Guide](ftp://root.cern.ch/root/doc/3Histograms.pdf)
   - [The Chapter about Fitting Histogram in the Users Guide](ftp://root.cern.ch/root/doc/5FittingHistograms.pdf)
-  - [How to use the Histogram classes](http://root.cern.ch/drupal/content/how-use-histograms-classes)
-  - [How to Merge files with histograms and Trees](http://root.cern.ch/drupal/content/how-merge-histograms-files)
-  - [How to Fit Histograms](http://root.cern.ch/drupal/content/how-fit-histograms-or-data-points)
-  - [How to Fit find peaks in histograms](http://root.cern.ch/root/html/tutorials/spectrum/peaks.C.html)
-  - [How to convert Hbook/PAW files to ROOT](http://root.cern.ch/drupal/content/how-convert-hbookpaw-files-root-files)
+  - [How to use the Histogram classes](https://root.cern/manual/histograms/)
+  - [How to Merge files with histograms and Trees](https://root.cern/manual/storing_root_objects/#merging-root-files-with-hadd)
+  - [How to Fit Histograms](https://root.cern/manual/fitting/)
+  - [How to Fit find peaks in histograms](https://root.cern/doc/master/peaks_8C.html)
+  - [How to convert Hbook/PAW files to ROOT](https://root-forum.cern.ch/t/how-to-convert-hbook-paw-files-to-root/)
+
+\defgroup HistPainting Painting classes
+\ingroup Hist

@@ -351,7 +351,7 @@ namespace mathtext {
 
       std::vector<std::string> ret;
 
-      if(code.size() <= 0) {
+      if(code.empty()) {
          return ret;
       }
 

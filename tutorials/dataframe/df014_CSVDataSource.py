@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Process a CSV file with RDataFrame and the CSV data source.
+## Process a CSV file with RDataFrame and the CSV data source.
 ##
 ## This tutorial illustrates how use the RDataFrame in combination with a
 ## RDataSource. In this case we use a TCsvDS. This data source allows to read
@@ -17,20 +17,19 @@
 ## \macro_image
 ##
 ## \date October 2017
-## \author Enric Tejedor
+## \author Enric Tejedor (CERN)
 
 import ROOT
 import os
 
 # Let's first create a RDF that will read from the CSV file.
 # The types of the columns will be automatically inferred.
-fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
+fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv"
 fileName = "df014_CsvDataSource_MuRun2010B_py.csv"
 if not os.path.isfile(fileName):
     ROOT.TFile.Cp(fileNameUrl, fileName)
 
-MakeCsvDataFrame = ROOT.RDF.MakeCsvDataFrame
-df = MakeCsvDataFrame(fileName)
+df = ROOT.RDF.FromCSV(fileName)
 
 # Now we will apply a first filter based on two columns of the CSV,
 # and we will define a new column that will contain the invariant mass.
@@ -49,7 +48,7 @@ invMass.Draw()
 c.SaveAs("df014_invMass.png")
 
 # We will now produce a plot also for the J/Psi particle. We will plot
-# on the same canvas the full spectrum and the zoom in the J/psi particle.
+# on the same canvas the full spectrum and the zoom in on the J/psi particle.
 # First we will create the full spectrum histogram from the invariant mass
 # column, using a different histogram model than before.
 fullSpectrum = filteredEvents.Histo1D(("Spectrum", "Subset of CMS Run 2010B;#mu#mu mass [GeV];Events", 1024, 2, 110), "m")
@@ -70,6 +69,7 @@ leftPad.SetLogx()
 leftPad.SetLogy()
 fullSpectrum.Draw("Hist")
 dualCanvas.cd(2)
+jpsi.SetMarkerStyle(20)
 jpsi.Draw("HistP")
 dualCanvas.SaveAs("df014_jpsi.png")
 

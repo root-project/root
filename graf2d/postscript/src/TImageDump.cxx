@@ -52,8 +52,8 @@ ClassImp(TImageDump);
 
 TImageDump::TImageDump() : TVirtualPS()
 {
-   fStream    = 0;
-   fImage     = 0;
+   fStream    = nullptr;
+   fImage     = nullptr;
    gVirtualPS = this;
    fType      = 0;
    SetTitle("IMG");
@@ -81,7 +81,7 @@ TImageDump::TImageDump(const char *fname, Int_t wtype) : TVirtualPS(fname, wtype
 
 void TImageDump::Open(const char *fname, Int_t type)
 {
-   fStream = 0;
+   fStream = nullptr;
    fImage  = TImage::Create();
    fType   = type;
    SetName(fname);
@@ -95,9 +95,9 @@ TImageDump::~TImageDump()
    Close();
 
    delete fImage;
-   fImage = 0;
+   fImage = nullptr;
 
-   gVirtualPS = 0;
+   gVirtualPS = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -647,7 +647,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    fImage->BeginPaint();
 
-   TColor *col = 0;
+   TColor *col = nullptr;
    Int_t  fais = 0 , fasi = 0;
    Bool_t line = nn > 1;
    UInt_t n = TMath::Abs(nn);
@@ -658,14 +658,10 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    Short_t px1, py1, px2, py2;
    static const UInt_t gCachePtSize = 200;
    static TPoint gPointCache[gCachePtSize];
-   Bool_t del = kTRUE;
-
 
    // SetLineStyle
    Int_t ndashes = 0;
-   char *dash = 0;
    static char dashList[10];
-   Int_t dashLength = 0;
    Int_t dashSize = 0;
 
    if (line) {
@@ -675,7 +671,7 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          TString st = gStyle->GetLineStyleString(fLineStyle);
          TObjArray *tokens = st.Tokenize(" ");
          ndashes = tokens->GetEntries();
-         dash = new char[ndashes];
+         char *dash = new char[ndashes];
 
          for (int j = 0; j < ndashes; j++) {
             Int_t it;
@@ -684,10 +680,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
 
          dashSize = TMath::Min((int)sizeof(dashList), ndashes);
-         dashLength = 0;
          for (int i = 0; i < dashSize; i++ ) {
             dashList[i] = dash[i];
-            dashLength += dashList[i];
          }
          delete tokens;
          delete [] dash;
@@ -738,7 +732,9 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
       return;
    }
 
-   TPoint *pt = 0;
+   TPoint *pt = nullptr;
+   Bool_t del = kTRUE;
+
    if (n+1 < gCachePtSize) {
       pt = (TPoint*)&gPointCache;
       del = kFALSE;
@@ -766,11 +762,14 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
    pt[n].fX = pt[0].fX;
    pt[n].fY = pt[0].fY;
 
-   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : 0;
+   const char *stipple = (fais == 3) && (fasi > 0) && (fasi < 26) ? (const char*)gStipples[fasi] : nullptr;
 
    // filled polygon
    if (!line && fFillStyle && (fFillStyle != 4000)) {
-      if (!fcol) return;
+      if (!fcol) {
+         if (del) delete [] pt;
+         return;
+      }
 
       if (n < 5) {   // convex
          fImage->FillPolygon(n, pt, fcol->AsHexString(), stipple);
@@ -781,7 +780,11 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
 
    // hollow polygon or polyline is drawn
    if (line || !fFillStyle || (fFillStyle == 4000)) {
-      if (!lcol) return;
+      if (!lcol) {
+         if (del)
+            delete [] pt;
+         return;
+      }
       if (!line) {
          fImage->DrawPolyLine(n+1, pt, fcol->AsHexString(), 1);
       } else {
@@ -793,7 +796,8 @@ void TImageDump::DrawPS(Int_t nn, Double_t *x, Double_t *y)
          }
       }
    }
-   if (del) delete [] pt;
+   if (del)
+      delete [] pt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -889,7 +893,7 @@ void TImageDump::Text(Double_t x, Double_t y, const wchar_t *chars)
 
 
 ////////////////////////// CellArray code ////////////////////////////////////
-static UInt_t *gCellArrayColors = 0;
+static UInt_t *gCellArrayColors = nullptr;
 static Int_t   gCellArrayN = 0;
 static Int_t   gCellArrayW = 0;
 static Int_t   gCellArrayH = 0;
@@ -956,7 +960,7 @@ void TImageDump::CellArrayEnd()
                          gCellArrayW, gCellArrayH, gCellArrayColors);
 
    delete [] gCellArrayColors;
-   gCellArrayColors = 0;
+   gCellArrayColors = nullptr;
    gCellArrayN = 0;
    gCellArrayW = 0;
    gCellArrayH = 0;

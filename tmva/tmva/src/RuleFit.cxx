@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Rule                                                                  *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      A class describing a 'rule'                                               *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::RuleFit
@@ -228,8 +228,6 @@ void TMVA::RuleFit::MakeForest()
    //
    Timer timer( fMethodRuleFit->GetNTrees(), "RuleFit" );
 
-   // Double_t fsig;
-   Int_t nsig,nbkg;
    //
    TRandom3 rndGen;
    //
@@ -244,14 +242,6 @@ void TMVA::RuleFit::MakeForest()
    for (Int_t i=0; i<fMethodRuleFit->GetNTrees(); i++) {
       //      timer.DrawProgressBar(i);
       if (!useBoost) ReshuffleEvents();
-      nsig=0;
-      nbkg=0;
-      for (UInt_t ie = 0; ie<fNTreeSample; ie++) {
-         if (fMethodBase->DataInfo().IsSignal(fTrainingEventsRndm[ie])) nsig++; // ignore weights here
-         else nbkg++;
-      }
-      // fsig = Double_t(nsig)/Double_t(nsig+nbkg);
-      // do not implement the above in this release...just set it to default
 
       DecisionTree *dt=nullptr;
       Bool_t tryAgain=kTRUE;

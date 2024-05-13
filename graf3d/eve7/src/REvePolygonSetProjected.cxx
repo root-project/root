@@ -18,11 +18,11 @@
 #include "TBuffer3D.h"
 #include "TBuffer3DTypes.h"
 
-#include "json.hpp"
 #include <cassert>
 
+#include <nlohmann/json.hpp>
+
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 namespace
 {
@@ -154,7 +154,7 @@ void REvePolygonSetProjected::BuildRenderData()
 
 void REvePolygonSetProjected::ComputeBBox()
 {
-   if (fPnts.size() > 0) {
+   if (!fPnts.empty()) {
       BBoxInit();
       for (unsigned pi = 0; pi < fPnts.size(); ++pi)
          BBoxCheckPoint(fPnts[pi].fX, fPnts[pi].fY, fPnts[pi].fZ);

@@ -25,19 +25,19 @@ ClassImp(TEveVSD);
 TEveVSD::TEveVSD(const char* , const char*) :
    TObject(),
 
-   fFile      (0),
-   fDirectory (0),
+   fFile      (nullptr),
+   fDirectory (nullptr),
    fBuffSize  (32000),
    fVerbose   (0),
 
-   fTreeK  (0),
-   fTreeH  (0),
-   fTreeC  (0),
-   fTreeR  (0),
-   fTreeKK (0),
-   fTreeV0 (0),
-   fTreeCC (0),
-   fTreeGI (0),
+   fTreeK  (nullptr),
+   fTreeH  (nullptr),
+   fTreeC  (nullptr),
+   fTreeR  (nullptr),
+   fTreeKK (nullptr),
+   fTreeV0 (nullptr),
+   fTreeCC (nullptr),
+   fTreeGI (nullptr),
 
    fK(),  fpK (&fK),
    fH(),  fpH (&fH),
@@ -86,13 +86,13 @@ void TEveVSD::CreateTrees()
 
 void TEveVSD::DeleteTrees()
 {
-   delete fTreeK;  fTreeK  = 0;
-   delete fTreeH;  fTreeH  = 0;
-   delete fTreeC;  fTreeC  = 0;
-   delete fTreeR;  fTreeR  = 0;
-   delete fTreeV0; fTreeV0 = 0;
-   delete fTreeKK; fTreeKK = 0;
-   delete fTreeGI; fTreeGI = 0;
+   delete fTreeK;  fTreeK  = nullptr;
+   delete fTreeH;  fTreeH  = nullptr;
+   delete fTreeC;  fTreeC  = nullptr;
+   delete fTreeR;  fTreeR  = nullptr;
+   delete fTreeV0; fTreeV0 = nullptr;
+   delete fTreeKK; fTreeKK = nullptr;
+   delete fTreeGI; fTreeGI = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,47 +149,47 @@ void TEveVSD::LoadTrees()
 {
    static const TEveException eH("TEveVSD::LoadTrees ");
 
-   if (fDirectory == 0)
+   if (fDirectory == nullptr)
       throw eH + "directory not set.";
 
    fTreeK = (TTree*) fDirectory->Get("Kinematics");
-   if (fTreeK == 0 && fVerbose) {
+   if (fTreeK == nullptr && fVerbose) {
       printf("%s Kinematics not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeH = (TTree*) fDirectory->Get("Hits");
-   if (fTreeH == 0 && fVerbose) {
+   if (fTreeH == nullptr && fVerbose) {
       printf("%s Hits not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeC = (TTree*) fDirectory->Get("Clusters");
-   if (fTreeC == 0 && fVerbose) {
+   if (fTreeC == nullptr && fVerbose) {
       printf("%s Clusters not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeR = (TTree*) fDirectory->Get("RecTracks");
-   if (fTreeR == 0 && fVerbose) {
+   if (fTreeR == nullptr && fVerbose) {
       printf("%s RecTracks not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeKK =  (TTree*) fDirectory->Get("RecKinks");
-   if (fTreeKK == 0 && fVerbose) {
+   if (fTreeKK == nullptr && fVerbose) {
       printf("%s Kinks not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeV0 =  (TTree*) fDirectory->Get("RecV0s");
-   if (fTreeV0 == 0 && fVerbose) {
+   if (fTreeV0 == nullptr && fVerbose) {
       printf("%s V0 not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }
 
    fTreeGI = (TTree*)fDirectory->Get("TEveMCRecCrossRef");
-   if(fTreeGI == 0 && fVerbose) {
+   if(fTreeGI == nullptr && fVerbose) {
       printf("%s TEveMCRecCrossRef not available in fDirectory %s.\n",
              eH.Data(), fDirectory->GetName());
    }

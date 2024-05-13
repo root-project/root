@@ -32,7 +32,7 @@ TProofNodeInfo::TProofNodeInfo()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor from a string containing all the information in a serialized
 /// way. Used to decode thr information coming from the coordinator
-/// <type>|<host@user>|<port>|<ord>|<id>|<perfidx>|<img>|<workdir>|<msd>|<cfg>
+/// `<type>`|`<host@user>`|`<port>`|`<ord>`|`<id>`|`<perfidx>`|`<img>`|`<workdir>`|`<msd>`|`<cfg>`
 
 TProofNodeInfo::TProofNodeInfo(const char *str)
                : fNodeType(kWorker), fPort(-1), fPerfIndex(100), fNWrks(1)

@@ -24,17 +24,8 @@
 #include "TSystem.h"
 #include <string>
 
-#if !defined(__CINT__)
- #include "Windows4Root.h"
- #include <commctrl.h>
-#else
- typedef void* HANDLE;
- struct WIN32_FIND_DATA;
- typedef void* HIMAGELIST;
- typedef void* HICON;
- typedef UChar_t BOOL;
- struct FILE;
-#endif
+#include "Windows4Root.h"
+#include <commctrl.h>
 
 #ifndef MAX_SID_SIZE
 #define MAX_SID_SIZE   1024
@@ -76,13 +67,11 @@ private:
    int               fNbGroups{0};               // Number of groups on local computer
    int               fActUser{-1};               // Index of actual user in User list
    Bool_t            fGroupsInitDone{kFALSE};    // Flag used for Users and Groups initialization
-   Bool_t            fFirstFile{kFALSE};         // Flag used by OpenDirectory/GetDirEntry
 
    HANDLE            fhProcess;                  // Handle of the current process
    void             *fGUIThreadHandle{nullptr};  // handle of GUI server (aka command) thread
    ULong_t           fGUIThreadId{0};            // id of GUI server (aka command) thread
    std::string       fDirNameBuffer;             // The string buffer to hold path name
-   WIN32_FIND_DATA   fFindFileData;              // Structure to look for files (aka OpenDir under UNIX)
 
    Bool_t            DispatchTimers(Bool_t mode);
    Bool_t            CheckDescriptors();
@@ -120,6 +109,7 @@ public:
    const char       *BaseName(const char *name) override;
    void              SetProgname(const char *name) override;
    const char       *GetError() override;
+   Int_t             GetCryptoRandom(void *buf, Int_t len) override;
    const char       *HostName() override;
    void             *GetGUIThreadHandle() const {return fGUIThreadHandle;}
    ULong_t           GetGUIThreadId() const {return fGUIThreadId;}
@@ -153,9 +143,10 @@ public:
    int               Exec(const char *shellcmd) override;
    FILE             *OpenPipe(const char *shellcmd, const char *mode) override;
    int               ClosePipe(FILE *pipe) override;
-   void              Exit(int code, Bool_t mode = kTRUE) override;
-   void              Abort(int code = 0) override;
    int               GetPid() override;
+
+   [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
+   [[ noreturn ]] void Abort (int code = 0) override;
 
    //---- Environment manipulation -----------------------------
    const char       *Getenv(const char *name) override;
@@ -176,7 +167,7 @@ public:
    const char       *HomeDirectory(const char *userName=0) override;
    std::string       GetHomeDirectory(const char *userName = nullptr) const override;
    const char       *TempDirectory() const override;
-   FILE             *TempFileName(TString &base, const char *dir = nullptr) override;
+   FILE             *TempFileName(TString &base, const char *dir = nullptr, const char *suffix = nullptr) override;
 
    //---- Users & Groups ---------------------------------------
    Int_t             GetUid(const char *user = nullptr) override;
@@ -263,6 +254,6 @@ public:
    ClassDefOverride(TWinNTSystem, 0)
 };
 
-R__EXTERN ULong_t gConsoleWindow;   // console window handle
+R__EXTERN ULongptr_t gConsoleWindow;   // console window handle
 
 #endif

@@ -12,9 +12,9 @@ public:
    NdbFormFactors()
       : NdbMF(27, "Atomic form factors or scattering functions "
          "for photo-atomic interactions") {}
-   ~NdbFormFactors() {}
+   ~NdbFormFactors() override {}
 
-   ClassDef(NdbFormFactors,1)
+   ClassDefOverride(NdbFormFactors,1)
 
 }; // NdbFormFactors
 

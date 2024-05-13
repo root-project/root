@@ -60,10 +60,10 @@ public:
 
    TSecContext(const char *url, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr);
    TSecContext(const char *user, const char *host, Int_t meth, Int_t offset,
                const char *id, const char *token,
-               TDatime expdate = kROOTTZERO, void *ctx = 0);
+               TDatime expdate = kROOTTZERO, void *ctx = nullptr);
    virtual    ~TSecContext();
 
    void        AddForCleanup(Int_t port, Int_t proto, Int_t type);
@@ -84,14 +84,14 @@ public:
    Bool_t      IsA(const char *methodname);
    Bool_t      IsActive()   const;
 
-   virtual void Print(Option_t *option = "F") const;
+   void Print(Option_t *option = "F") const override;
 
    void        SetExpDate(TDatime expdate)  { fExpDate= expdate; }
    void        SetID(const char *id)        { fID= id; }
    void        SetOffSet(Int_t offset)      { fOffSet = offset; }
    void        SetUser(const char *user)    { fUser   = user; }
 
-   ClassDef(TSecContext,0)  // Class providing host specific authentication information
+   ClassDefOverride(TSecContext,0)  // Class providing host specific authentication information
 };
 
 //
@@ -121,7 +121,7 @@ public:
    Int_t   GetProtocol() const { return fServerProtocol; }
    Int_t   GetType() const { return fServerType; }
 
-   ClassDef(TSecContextCleanup,0) //Update the remote authentication table
+   ClassDefOverride(TSecContextCleanup,0) //Update the remote authentication table
 };
 
 //
@@ -143,7 +143,6 @@ public:
    Bool_t      IsPwHash() const { return fPwHash; }
 
 };
-
 
 
 #endif

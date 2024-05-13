@@ -1,21 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Special p.d.f.'s: histogram-based p.d.f.s and functions
+/// Special pdf's: histogram-based pdfs and functions
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooHistPdf.h"
 #include "TCanvas.h"
@@ -29,17 +26,17 @@ void rf706_histpdf()
    // ---------------------------------------------
 
    RooRealVar x("x", "x", 0, 20);
-   RooPolynomial p("p", "p", x, RooArgList(RooConst(0.01), RooConst(-0.01), RooConst(0.0004)));
+   RooPolynomial p("p", "p", x, RooArgList(0.01, -0.01, 0.0004));
 
    // C r e a t e   l o w   s t a t s   h i s t o g r a m
    // ---------------------------------------------------
 
    // Sample 500 events from p
    x.setBins(20);
-   RooDataSet *data1 = p.generate(x, 500);
+   std::unique_ptr<RooDataSet> data1{p.generate(x, 500)};
 
    // Create a binned dataset with 20 bins and 500 events
-   RooDataHist *hist1 = data1->binnedClone();
+   std::unique_ptr<RooDataHist> hist1{data1->binnedClone()};
 
    // Represent data in dh as pdf in x
    RooHistPdf histpdf1("histpdf1", "histpdf1", x, *hist1, 0);
@@ -54,10 +51,10 @@ void rf706_histpdf()
 
    // Sample 100000 events from p
    x.setBins(10);
-   RooDataSet *data2 = p.generate(x, 100000);
+   std::unique_ptr<RooDataSet> data2{p.generate(x, 100000)};
 
    // Create a binned dataset with 10 bins and 100K events
-   RooDataHist *hist2 = data2->binnedClone();
+   std::unique_ptr<RooDataHist> hist2{data2->binnedClone()};
 
    // Represent data in dh as pdf in x, apply 2nd order interpolation
    RooHistPdf histpdf2("histpdf2", "histpdf2", x, *hist2, 2);

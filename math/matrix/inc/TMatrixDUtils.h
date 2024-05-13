@@ -16,7 +16,7 @@
 //                                                                      //
 // Matrix utility classes.                                              //
 //                                                                      //
-//  Instantation of                                                     //
+//  Instantiation of                                                     //
 //   TMatrixTRow_const       <Double_t>  TMatrixTRow       <Double_t>   //
 //   TMatrixTColumn_const    <Double_t>  TMatrixTColumn    <Double_t>   //
 //   TMatrixTDiag_const      <Double_t>  TMatrixTDiag      <Double_t>   //

@@ -60,7 +60,7 @@ public:
       ENDATE   = NULL;
    }
 
-   ~NdbMTDir();
+   ~NdbMTDir() override;
 
    // --- Input/Output routines ---
    Bool_t      LoadENDF(const char *filename);
@@ -81,7 +81,7 @@ public:
    inline   char*   MasterEntryDate()   { return ENDATE; }
    inline   TString   GetInfo()      { return INFO; }
 
-   ClassDef(NdbMTDir,1)
+   ClassDefOverride(NdbMTDir,1)
 }; // NdbMTDir
 
 #endif

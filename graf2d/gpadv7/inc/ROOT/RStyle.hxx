@@ -13,6 +13,7 @@
 
 #include <string>
 #include <list>
+#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -53,6 +54,8 @@ public:
    }
 
    void Clear();
+
+   static std::shared_ptr<RStyle> Parse(const std::string &css_code);
 
    bool ParseString(const std::string &css_code);
 

@@ -24,7 +24,7 @@ namespace
 class TGLClipPlaneLogical : public TGLLogicalShape
 {
 protected:
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override
    {
       glBegin(rnrCtx.IsDrawPassFilled() ? GL_QUADS : GL_LINE_LOOP);
       glNormal3d (0.0, 0.0, 1.0);
@@ -37,7 +37,7 @@ protected:
 
 public:
    TGLClipPlaneLogical() : TGLLogicalShape() { fDLCache = kFALSE; }
-   virtual ~TGLClipPlaneLogical() {}
+   ~TGLClipPlaneLogical() override {}
 
    void Resize(Double_t ext)
    {
@@ -52,7 +52,7 @@ public:
 class TGLClipBoxLogical : public TGLLogicalShape
 {
 protected:
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override
    {
       glEnable(GL_NORMALIZE);
       fBoundingBox.Draw(rnrCtx.IsDrawPassFilled());
@@ -61,7 +61,7 @@ protected:
 
 public:
    TGLClipBoxLogical() : TGLLogicalShape() { fDLCache = kFALSE; }
-   virtual ~TGLClipBoxLogical() {}
+   ~TGLClipBoxLogical() override {}
 
    void Resize(const TGLVertex3 & lowVertex, const TGLVertex3 & highVertex)
    {
@@ -337,7 +337,7 @@ TGLClipSet::TGLClipSet() :
    TGLOverlayElement(kViewer),
    fClipPlane   (new TGLClipPlane),
    fClipBox     (new TGLClipBox),
-   fCurrentClip (0),
+   fCurrentClip (nullptr),
    fAutoUpdate  (kTRUE),
    fShowClip    (kFALSE),
    fShowManip   (kFALSE),
@@ -560,7 +560,7 @@ void TGLClipSet::SetClipState(TGLClip::EType type, const Double_t data[6])
 TGLClip::EType TGLClipSet::GetClipType() const
 {
   TGLClip::EType type;
-   if (fCurrentClip == 0) {
+   if (fCurrentClip == nullptr) {
       type = TGLClip::kClipNone;
    } else if (fCurrentClip == fClipPlane) {
       type = TGLClip::kClipPlane;
@@ -581,7 +581,7 @@ void TGLClipSet::SetClipType(TGLClip::EType type)
 {
    switch (type) {
       case TGLClip::kClipNone: {
-         fCurrentClip = 0;
+         fCurrentClip = nullptr;
          break;
       }
       case TGLClip::kClipPlane: {

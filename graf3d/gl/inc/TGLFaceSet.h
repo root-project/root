@@ -32,7 +32,7 @@ private:
 public:
    TGLFaceSet(const TBuffer3D & buffer);
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    void SetFromMesh(const RootCsg::TBaseMesh *m);
    void CalculateNormals();
@@ -52,7 +52,7 @@ private:
 
    static Bool_t Eq(const Double_t *p1, const Double_t *p2);
 
-   ClassDef(TGLFaceSet,0) // a faceset logical shape
+   ClassDefOverride(TGLFaceSet,0) // a faceset logical shape
 };
 
 #endif

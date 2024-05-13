@@ -20,6 +20,8 @@ A Tree Index with majorname and minorname.
 #include "TBuffer.h"
 #include "TMath.h"
 
+#include <cstring> // std::strlen
+
 ClassImp(TTreeIndex);
 
 
@@ -37,7 +39,7 @@ struct IndexSortComparator {
          return *(fValMajor + i1) < *(fValMajor + i2);
    }
 
-  // pointers to the start of index values tables keeping uppder 64bit and lower 64bit
+  // pointers to the start of index values tables keeping upper 64bit and lower 64bit
   // of combined indexed 128bit value
   Long64_t *fValMajor, *fValMinor;
 };
@@ -48,15 +50,15 @@ struct IndexSortComparator {
 
 TTreeIndex::TTreeIndex(): TVirtualIndex()
 {
-   fTree               = 0;
+   fTree               = nullptr;
    fN                  = 0;
-   fIndexValues        = 0;
-   fIndexValuesMinor   = 0;
-   fIndex              = 0;
-   fMajorFormula       = 0;
-   fMinorFormula       = 0;
-   fMajorFormulaParent = 0;
-   fMinorFormulaParent = 0;
+   fIndexValues        = nullptr;
+   fIndexValuesMinor   = nullptr;
+   fIndex              = nullptr;
+   fMajorFormula       = nullptr;
+   fMinorFormula       = nullptr;
+   fMajorFormulaParent = nullptr;
+   fMinorFormulaParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,13 +130,13 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 {
    fTree               = (TTree*)T;
    fN                  = 0;
-   fIndexValues        = 0;
-   fIndexValuesMinor   = 0;
-   fIndex              = 0;
-   fMajorFormula       = 0;
-   fMinorFormula       = 0;
-   fMajorFormulaParent = 0;
-   fMinorFormulaParent = 0;
+   fIndexValues        = nullptr;
+   fIndexValuesMinor   = nullptr;
+   fIndex              = nullptr;
+   fMajorFormula       = nullptr;
+   fMinorFormula       = nullptr;
+   fMajorFormulaParent = nullptr;
+   fMinorFormulaParent = nullptr;
    fMajorName          = majorname;
    fMinorName          = minorname;
    if (!T) return;
@@ -177,8 +179,27 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
          fMajorFormula->UpdateFormulaLeaves();
          fMinorFormula->UpdateFormulaLeaves();
       }
-      tmp_major[i] = (Long64_t) fMajorFormula->EvalInstance<LongDouble_t>();
-      tmp_minor[i] = (Long64_t) fMinorFormula->EvalInstance<LongDouble_t>();
+      auto GetAndRangeCheck = [this](bool isMajor, Long64_t entry) {
+         LongDouble_t ret = (isMajor ? fMajorFormula : fMinorFormula)->EvalInstance<LongDouble_t>();
+         // Check whether the value (vs significant bits) of ldRet can represent
+         // the full precision of the returned value. If we return 10^60, the
+         // value fits into a long double, but if sizeof(long double) ==
+         // sizeof(double) it cannot store the ones: the value returned by
+         // EvalInstance() only stores the higher bits.
+         LongDouble_t retCloserToZero = ret;
+         if (ret > 0)
+            retCloserToZero -= 1;
+         else
+            retCloserToZero += 1;
+         if (retCloserToZero == ret) {
+            Warning("TTreeIndex",
+                    "In tree entry %lld, %s value %s=%Lf possibly out of range for internal `long double`", entry,
+                    isMajor ? "major" : "minor", isMajor ? fMajorName.Data() : fMinorName.Data(), ret);
+         }
+         return ret;
+      };
+      tmp_major[i] = GetAndRangeCheck(true, i);
+      tmp_minor[i] = GetAndRangeCheck(false, i);
    }
    fIndex = new Long64_t[fN];
    for(i = 0; i < fN; i++) { fIndex[i] = i; }
@@ -201,29 +222,29 @@ TTreeIndex::TTreeIndex(const TTree *T, const char *majorname, const char *minorn
 
 TTreeIndex::~TTreeIndex()
 {
-   if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(0);
-   delete [] fIndexValues;      fIndexValues = 0;
-   delete [] fIndexValuesMinor;      fIndexValuesMinor = 0;
-   delete [] fIndex;            fIndex = 0;
-   delete fMajorFormula;        fMajorFormula  = 0;
-   delete fMinorFormula;        fMinorFormula  = 0;
-   delete fMajorFormulaParent;  fMajorFormulaParent = 0;
-   delete fMinorFormulaParent;  fMinorFormulaParent = 0;
+   if (fTree && fTree->GetTreeIndex() == this) fTree->SetTreeIndex(nullptr);
+   delete [] fIndexValues;      fIndexValues = nullptr;
+   delete [] fIndexValuesMinor;      fIndexValuesMinor = nullptr;
+   delete [] fIndex;            fIndex = nullptr;
+   delete fMajorFormula;        fMajorFormula  = nullptr;
+   delete fMinorFormula;        fMinorFormula  = nullptr;
+   delete fMajorFormulaParent;  fMajorFormulaParent = nullptr;
+   delete fMinorFormulaParent;  fMinorFormulaParent = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Append 'add' to this index.  Entry 0 in add will become entry n+1 in this.
 /// If delaySort is true, do not sort the value, then you must call
-/// Append(0,kFALSE);
+/// Append(0,false);
 
-void TTreeIndex::Append(const TVirtualIndex *add, Bool_t delaySort )
+void TTreeIndex::Append(const TVirtualIndex *add, bool delaySort )
 {
 
    if (add && add->GetN()) {
       // Create new buffer (if needed)
 
       const TTreeIndex *ti_add = dynamic_cast<const TTreeIndex*>(add);
-      if (ti_add == 0) {
+      if (ti_add == nullptr) {
          Error("Append","Can only Append a TTreeIndex to a TTreeIndex but got a %s",
                add->IsA()->GetName());
       }
@@ -322,6 +343,10 @@ bool TTreeIndex::ConvertOldToNew()
 Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
 {
    if (!parent) return -3;
+   // We reached the end of the parent tree
+   Long64_t pentry = parent->GetReadEntry();
+   if (pentry >= parent->GetEntries())
+      return -2;
    GetMajorFormulaParent(parent);
    GetMinorFormulaParent(parent);
    if (!fMajorFormulaParent || !fMinorFormulaParent) return -1;
@@ -329,7 +354,6 @@ Long64_t TTreeIndex::GetEntryNumberFriend(const TTree *parent)
       // The Tree Index in the friend has a pair majorname,minorname
       // not available in the parent Tree T.
       // if the friend Tree has less entries than the parent, this is an error
-      Long64_t pentry = parent->GetReadEntry();
       if (pentry >= fTree->GetEntries()) return -2;
       // otherwise we ignore the Tree Index and return the entry number
       // in the parent Tree.
@@ -383,7 +407,7 @@ Long64_t TTreeIndex::FindValues(Long64_t major, Long64_t minor) const
 /// If it finds a pair that maches val, it returns directly the
 /// index in the table.
 /// If an entry corresponding to major and minor is not found, the function
-/// returns the index of the major,minor pair immediatly lower than the
+/// returns the index of the major,minor pair immediately lower than the
 /// requested value, ie it will return -1 if the pair is lower than
 /// the first entry in the index.
 ///
@@ -441,7 +465,7 @@ TTreeFormula *TTreeIndex::GetMajorFormula()
 {
    if (!fMajorFormula) {
       fMajorFormula = new TTreeFormula("Major",fMajorName.Data(),fTree);
-      fMajorFormula->SetQuickLoad(kTRUE);
+      fMajorFormula->SetQuickLoad(true);
    }
    return fMajorFormula;
 }
@@ -453,7 +477,7 @@ TTreeFormula *TTreeIndex::GetMinorFormula()
 {
    if (!fMinorFormula) {
       fMinorFormula = new TTreeFormula("Minor",fMinorName.Data(),fTree);
-      fMinorFormula->SetQuickLoad(kTRUE);
+      fMinorFormula->SetQuickLoad(true);
    }
    return fMinorFormula;
 }
@@ -468,7 +492,7 @@ TTreeFormula *TTreeIndex::GetMajorFormulaParent(const TTree *parent)
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMajorFormulaParent = new TTreeFormula("MajorP",fMajorName.Data(),const_cast<TTree*>(parent));
-      fMajorFormulaParent->SetQuickLoad(kTRUE);
+      fMajorFormulaParent->SetQuickLoad(true);
    }
    if (fMajorFormulaParent->GetTree() != parent) {
       fMajorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -487,7 +511,7 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
       // is a friend of the parent TTree.
       TTree::TFriendLock friendlock(fTree, TTree::kFindLeaf | TTree::kFindBranch | TTree::kGetBranch | TTree::kGetLeaf);
       fMinorFormulaParent = new TTreeFormula("MinorP",fMinorName.Data(),const_cast<TTree*>(parent));
-      fMinorFormulaParent->SetQuickLoad(kTRUE);
+      fMinorFormulaParent->SetQuickLoad(true);
    }
    if (fMinorFormulaParent->GetTree() != parent) {
       fMinorFormulaParent->SetTree(const_cast<TTree*>(parent));
@@ -497,16 +521,16 @@ TTreeFormula *TTreeIndex::GetMinorFormulaParent(const TTree *parent)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if index can be applied to the TTree
+/// Return true if index can be applied to the TTree
 
-Bool_t TTreeIndex::IsValidFor(const TTree *parent)
+bool TTreeIndex::IsValidFor(const TTree *parent)
 {
    auto *majorFormula = GetMajorFormulaParent(parent);
    auto *minorFormula = GetMinorFormulaParent(parent);
    if ((majorFormula == nullptr || majorFormula->GetNdim() == 0) ||
        (minorFormula == nullptr || minorFormula->GetNdim() == 0))
-         return kFALSE;
-   return kTRUE;
+         return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -518,13 +542,13 @@ Bool_t TTreeIndex::IsValidFor(const TTree *parent)
 void TTreeIndex::Print(Option_t * option) const
 {
    TString opt = option;
-   Bool_t printEntry = kFALSE;
+   bool printEntry = false;
    Long64_t n = fN;
    if (opt.Contains("10"))   n = 10;
    if (opt.Contains("100"))  n = 100;
    if (opt.Contains("1000")) n = 1000;
    if (opt.Contains("all")) {
-      printEntry = kTRUE;
+      printEntry = true;
    }
 
    if (printEntry) {
@@ -577,7 +601,7 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       R__b.ReadFastArray(fIndex,fN);
       R__b.CheckByteCount(R__s, R__c, TTreeIndex::IsA());
    } else {
-      R__c = R__b.WriteVersion(TTreeIndex::IsA(), kTRUE);
+      R__c = R__b.WriteVersion(TTreeIndex::IsA(), true);
       TVirtualIndex::Streamer(R__b);
       fMajorName.Streamer(R__b);
       fMinorName.Streamer(R__b);
@@ -585,7 +609,7 @@ void TTreeIndex::Streamer(TBuffer &R__b)
       R__b.WriteFastArray(fIndexValues, fN);
       R__b.WriteFastArray(fIndexValuesMinor, fN);
       R__b.WriteFastArray(fIndex, fN);
-      R__b.SetByteCount(R__c, kTRUE);
+      R__b.SetByteCount(R__c, true);
    }
 }
 
@@ -611,8 +635,42 @@ void TTreeIndex::UpdateFormulaLeaves(const TTree *parent)
 /// Because Trees in a TChain may have a different list of leaves, one
 /// must update the leaves numbers in the TTreeFormula used by the TreeIndex.
 
-void TTreeIndex::SetTree(const TTree *T)
+void TTreeIndex::SetTree(TTree *T)
 {
-   fTree = (TTree*)T;
+   fTree = T;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Create a deep copy of the TTreeIndex
+/// \param[in] newname A new name for the index
+///
+/// The new index is allocated on the heap without being managed. Also, it is
+/// not attached to any tree. It is the responsibility of the caller to manage
+/// its lifetime and attach it to a tree if necessary.
+TObject *TTreeIndex::Clone(const char *newname) const
+{
+   auto index = new TTreeIndex();
+   index->SetName(newname && std::strlen(newname) ? newname : GetName());
+   index->SetTitle(GetTitle());
+
+   // Note that the TTreeFormula * data members are not cloned since they would
+   // need the attached tree data member to function properly.
+   index->fMajorName = fMajorName;
+   index->fMinorName = fMinorName;
+
+   if (fN == 0)
+      return index;
+
+   index->fN = fN;
+
+   index->fIndexValues = new Long64_t[index->fN];
+   std::copy(fIndexValues, fIndexValues + fN, index->fIndexValues);
+
+   index->fIndexValuesMinor = new Long64_t[index->fN];
+   std::copy(fIndexValuesMinor, fIndexValuesMinor + fN, index->fIndexValuesMinor);
+
+   index->fIndex = new Long64_t[index->fN];
+   std::copy(fIndex, fIndex + fN, index->fIndex);
+
+   return index;
+}

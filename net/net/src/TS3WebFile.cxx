@@ -10,53 +10,55 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TS3WebFile                                                           //
-//                                                                      //
-// A TS3WebFile is a TWebFile which retrieves the file contents from a  //
-// web server implementing the REST API of the Amazon S3 protocol. This //
-// class is meant to be as generic as possible to be used with files    //
-// hosted not only by Amazon S3 servers but also by other providers     //
-// implementing the core of the S3 protocol.                            //
-//                                                                      //
-// The S3 protocol works on top of HTTPS (and HTTP) and imposes that    //
-// each HTTP request be signed using a specific convention: the request //
-// must include an 'Authorization' header which contains the signature  //
-// of a concatenation of selected request fields. For signing the       //
-// request, an 'Access Key Id' and a 'Secret Access Key' need to be     //
-// known. These keys are used by the S3 servers to identify the client  //
-// and to authenticate the request as genuine.                          //
-//                                                                      //
-// As an end user, you must know the Access Key and Secret Access Key   //
-// in order to access each S3 file. They are provided to you by your S3 //
-// service provider. Those two keys can be provided to ROOT when        //
-// initializing an object of this class by two means:                   //
-// a) by using the environmental variables S3_ACCESS_KEY and            //
-//    S3_SECRET_KEY, or                                                 //
-// b) by specifying them when opening each file.                        //
-//                                                                      //
-// You can use AWS temporary security credentials (temporary access key //
-// and secret access key), but you must also give the associated        //
-// session token. The token may be set in the S3_SESSION_TOKEN          //
-// environmental variable, or on open in the TOKEN option.              //
-//                                                                      //
-// The first method is convenient if all the S3 files you want to       //
-// access are hosted by a single provider. The second one is more       //
-// flexible as it allows you to specify which credentials to use        //
-// on a per-file basis. See the documentation of the constructor of     //
-// this class for details on the syntax.                                //
-//                                                                      //
-// For generating and signing the HTTP request, this class uses         //
-// TS3HTTPRequest.                                                      //
-//                                                                      //
-// For more information on the details of S3 protocol please refer to:  //
-// "Amazon Simple Storage Service Developer Guide":                     //
-// http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html   //
-//                                                                      //
-// "Amazon Simple Storage Service REST API Reference"                   //
-//  http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html  //
-//////////////////////////////////////////////////////////////////////////
+/**
+\file TS3WebFile.cxx
+\class TS3WebFile
+\ingroup IO
+
+A TS3WebFile is a TWebFile which retrieves the file contents from a
+web server implementing the REST API of the Amazon S3 protocol. This
+class is meant to be as generic as possible to be used with files
+hosted not only by Amazon S3 servers but also by other providers
+implementing the core of the S3 protocol.
+
+The S3 protocol works on top of HTTPS (and HTTP) and imposes that
+each HTTP request be signed using a specific convention: the request
+must include an 'Authorization' header which contains the signature
+of a concatenation of selected request fields. For signing the
+request, an 'Access Key Id' and a 'Secret Access Key' need to be
+known. These keys are used by the S3 servers to identify the client
+and to authenticate the request as genuine.
+
+As an end user, you must know the Access Key and Secret Access Key
+in order to access each S3 file. They are provided to you by your S3
+service provider. Those two keys can be provided to ROOT when
+initializing an object of this class by two means:
+a. by using the environmental variables S3_ACCESS_KEY and 
+   S3_SECRET_KEY, or
+b. by specifying them when opening each file.
+
+You can use AWS temporary security credentials (temporary access key
+and secret access key), but you must also give the associated
+session token. The token may be set in the S3_SESSION_TOKEN
+environmental variable, or on open in the TOKEN option.
+
+The first method is convenient if all the S3 files you want to
+access are hosted by a single provider. The second one is more
+flexible as it allows you to specify which credentials to use
+on a per-file basis. See the documentation of the constructor of
+this class for details on the syntax.
+
+For generating and signing the HTTP request, this class uses
+TS3HTTPRequest.
+
+For more information on the details of S3 protocol please refer to:
+"Amazon Simple Storage Service Developer Guide":
+http://docs.amazonwebservices.com/AmazonS3/latest/dev/Welcome.html
+
+"Amazon Simple Storage Service REST API Reference"
+ http://docs.amazonwebservices.com/AmazonS3/latest/API/APIRest.html
+
+**/
 
 #include "TS3WebFile.h"
 #include "TROOT.h"
@@ -72,16 +74,20 @@ ClassImp(TS3WebFile);
 /// Construct a TS3WebFile object. The path argument is a URL of one of the
 /// following forms:
 ///
-///         s3://host.example.com/bucket/path/to/my/file
-///     s3http://host.example.com/bucket/path/to/my/file
-///    s3https://host.example.com/bucket/path/to/my/file
-///        as3://host.example.com/bucket/path/to/my/file
+/// ```
+/// s3://host.example.com/bucket/path/to/my/file
+/// s3http://host.example.com/bucket/path/to/my/file
+/// s3https://host.example.com/bucket/path/to/my/file
+/// as3://host.example.com/bucket/path/to/my/file
+/// ```
 ///
 /// For files hosted by Google Storage, use the following forms:
 ///
-///        gs://storage.googleapis.com/bucket/path/to/my/file
-///    gshttp://storage.googleapis.com/bucket/path/to/my/file
+///  ```
+///  gs://storage.googleapis.com/bucket/path/to/my/file
+///  gshttp://storage.googleapis.com/bucket/path/to/my/file
 ///  gsthttps://storage.googleapis.com/bucket/path/to/my/file
+///  ```
 ///
 /// The 'as3' scheme is accepted for backwards compatibility but its usage is
 /// deprecated.
@@ -89,8 +95,10 @@ ClassImp(TS3WebFile);
 /// The recommended way to create an instance of this class is through
 /// TFile::Open, for instance:
 ///
+/// ```c++
 /// TFile* f1 = TFile::Open("s3://host.example.com/bucket/path/to/my/file")
 /// TFile* f2 = TFile::Open("gs://storage.googleapis.com/bucket/path/to/my/file")
+/// ```
 ///
 /// The specified scheme (i.e. s3, s3http, s3https, ...) determines the underlying
 /// transport protocol to use for downloading the file contents, namely HTTP or HTTPS.
@@ -120,12 +128,14 @@ ClassImp(TS3WebFile);
 /// "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+"
 ///
 /// Examples:
+/// ```
 ///    TFile* f1 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "NOPROXY AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
 ///    TFile* f2 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "AUTH=F38XYZABCDeFgH4D0E1F:V+frt4re7J1euSNFnmaf8wwmI4AAAE7kzxZ/TTM+");
 ///    TFile* f3 = TFile::Open("s3://host.example.com/bucket/path/to/my/file",
 ///                            "TOKEN=AQoDYXdzEM///////////wEa8AHEYmCinjD+TsGEjtgKSMAT6wnY");
+/// ```
 ///
 /// If there is no authentication information in the 'options' argument
 /// (i.e. not AUTH="....") the values of the environmental variables

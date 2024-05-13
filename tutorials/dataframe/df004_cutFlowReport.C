@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Display cut/Filter efficiencies with RDataFrame.
+/// Display cut/Filter efficiencies with RDataFrame.
 ///
 /// This tutorial shows how to get information about the efficiency of the filters
 /// applied
@@ -10,7 +10,7 @@
 /// \macro_output
 ///
 /// \date December 2016
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 using FourVector = ROOT::Math::XYZTVector;
 using FourVectors = std::vector<FourVector>;
@@ -63,8 +63,8 @@ void df004_cutFlowReport()
    // When called on a stored chain state (i.e. a chain/graph node), it
    // retrieves stats for all named filters in the section of the chain between
    // the main RDataFrame and that node (included).
-   // Stats are printed in the same order as named filters have been added to
-   // the graph, and refer to the latest event-loop that has been run using the
+   // Stats are printed in the same order as named filters that have been added to
+   // the graph, and refer to the latest event-loop that has been running using the
    // relevant RDataFrame.
    std::cout << "Cut3 stats:" << std::endl;
    filtered3.Report()->Print();

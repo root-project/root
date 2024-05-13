@@ -10,26 +10,18 @@
 #ifndef ROOT_Minuit2_MnMatrix
 #define ROOT_Minuit2_MnMatrix
 
-//add MnConfig file to define before everything compiler
+// add MnConfig file to define before everything compiler
 // dependent macros
 
 #include "Minuit2/MnConfig.h"
+
+// define typedf's in MnMatrixfwd
+#include "Minuit2/MnMatrixfwd.h"
 
 #include "Minuit2/LASymMatrix.h"
 #include "Minuit2/LAVector.h"
 #include "Minuit2/LaInverse.h"
 #include "Minuit2/LaOuterProduct.h"
 
-namespace ROOT {
 
-   namespace Minuit2 {
-
-
-typedef LASymMatrix MnAlgebraicSymMatrix;
-typedef LAVector MnAlgebraicVector;
-
-  }  // namespace Minuit2
-
-}  // namespace ROOT
-
-#endif  // ROOT_Minuit2_MnMatrix
+#endif // ROOT_Minuit2_MnMatrix

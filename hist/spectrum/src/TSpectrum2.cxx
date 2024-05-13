@@ -6,6 +6,8 @@
     \brief Advanced 2-dimensional spectra processing
     \author Miroslav Morhac
 
+    \legacy{TSpectrum2, For modeling a spectrum fitting and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
+
  This class contains advanced spectra processing functions.
 
   - One-dimensional background estimation functions
@@ -25,13 +27,13 @@
 
  These NIM papers are also available as doc or ps files from:
 
- - [SpectrumDec.ps.gz](ftp://root.cern.ch/root/SpectrumDec.ps.gz)
- - [SpectrumSrc.ps.gz](ftp://root.cern.ch/root/SpectrumSrc.ps.gz)
- - [SpectrumBck.ps.gz](ftp://root.cern.ch/root/SpectrumBck.ps.gz)
+ - [SpectrumDec.ps.gz](ftp://root.cern/root/SpectrumDec.ps.gz)
+ - [SpectrumSrc.ps.gz](ftp://root.cern/root/SpectrumSrc.ps.gz)
+ - [SpectrumBck.ps.gz](ftp://root.cern/root/SpectrumBck.ps.gz)
 
  See also the
- [online documentation](https://root.cern.ch/guides/tspectrum-manual) and
- [tutorials](https://root.cern.ch/doc/master/group__tutorial__spectrum.html).
+ [online documentation](https://root.cern/guides/tspectrum-manual) and
+ [tutorials](https://root.cern/doc/master/group__tutorial__spectrum.html).
 
  All the figures in this page were prepared using the DaqProVis
  system, Data Acquisition, Processing and Visualization system,
@@ -62,7 +64,7 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
    fResolution = 1;
-   fHistogram  = 0;
+   fHistogram  = nullptr;
    fNPeaks     = 0;
 }
 
@@ -81,7 +83,7 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    fPosition  = new Double_t[n];
    fPositionX = new Double_t[n];
    fPositionY = new Double_t[n];
-   fHistogram = 0;
+   fHistogram = nullptr;
    fNPeaks    = 0;
    SetResolution(resolution);
 }
@@ -157,7 +159,7 @@ TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
 {
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), number_of_iterations, option);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +208,7 @@ void TSpectrum2::Print(Option_t *) const
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
 {
-   if (hin == 0)
+   if (hin == nullptr)
       return 0;
    Int_t dimension = hin->GetDimension();
    if (dimension != 2) {
@@ -537,7 +539,7 @@ const char *TSpectrum2::Background(Double_t **spectrum,
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -605,7 +607,7 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
       for (i = 0; i < ssizex; i++)
          delete[]working_space[i];
       delete [] working_space;
-      return 0;
+      return nullptr;
    }
 
    nom = 0;
@@ -760,7 +762,7 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -993,7 +995,7 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

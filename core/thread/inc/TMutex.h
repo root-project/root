@@ -35,25 +35,25 @@ friend class TThread;
 private:
    TMutexImp  *fMutexImp;   // pointer to mutex implementation
 
-   TMutex(const TMutex&);              // not implemented
-   TMutex& operator=(const TMutex&);   // not implemented
+   TMutex(const TMutex&) = delete;
+   TMutex& operator=(const TMutex&) = delete;
 
 public:
    TMutex(Bool_t recursive = kFALSE);
    virtual ~TMutex() { delete fMutexImp; }
 
-   Int_t  Lock();
-   Int_t  TryLock();
-   Int_t  UnLock();
-   Int_t  CleanUp();
+   Int_t  Lock() override;
+   Int_t  TryLock() override;
+   Int_t  UnLock() override;
+   Int_t  CleanUp() override;
 
    // Compatibility with standard library
    void lock() { TMutex::Lock(); }
    void unlock() { TMutex::UnLock(); }
 
-   TVirtualMutex *Factory(Bool_t recursive = kFALSE);
+   TVirtualMutex *Factory(Bool_t recursive = kFALSE) override;
 
-   ClassDef(TMutex,0)  // Mutex lock class
+   ClassDefOverride(TMutex,0)  // Mutex lock class
 };
 
 #endif

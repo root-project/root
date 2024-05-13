@@ -55,7 +55,7 @@ public:
    /// name of 1D integrator
    virtual std::string  Integrator() const = 0;
 
-   /** non-static methods for  retrivieng options */
+   /** non-static methods for  retrieving options */
 
    /// absolute tolerance
    double AbsTolerance() const { return  fAbsTolerance; }
@@ -90,12 +90,12 @@ protected:
 
    void ClearExtra();
 
-   int       fIntegType;   // Integrator type (value converted from enum)
+   int       fIntegType;        ///< Integrator type (value converted from enum)
 
-   unsigned int fWKSize;        // workspace size
-   unsigned int fNCalls;        // (max) funxtion calls
-   double fAbsTolerance;        // absolute tolerance
-   double fRelTolerance;        // relative tolerance
+   unsigned int fWKSize;        ///< workspace size
+   unsigned int fNCalls;        ///< (max) function calls
+   double fAbsTolerance;        ///< absolute tolerance
+   double fRelTolerance;        ///< relative tolerance
 
 
    // extra options
@@ -115,18 +115,18 @@ class IntegratorOneDimOptions : public BaseIntegratorOptions {
 public:
 
 
-   // constructor using the default options
-   // can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorOneDimOptions(IOptions * extraOpts = 0);
+   /// constructor using the default options
+   /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
+   IntegratorOneDimOptions(IOptions * extraOpts = nullptr);
 
-   virtual ~IntegratorOneDimOptions() {}
+   ~IntegratorOneDimOptions() override {}
 
-   // copy constructor
+   /// copy constructor
    IntegratorOneDimOptions(const IntegratorOneDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
-   // assignment operator
+   /// assignment operator
    IntegratorOneDimOptions & operator=(const IntegratorOneDimOptions & rhs) {
       if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
@@ -134,16 +134,16 @@ public:
    }
 
    // specific method for one-dim
-   /// set number of points rule
-   /// values of 1,2,3,4,5,6 corresponds to 15,21,31,41,51,61 and they are used in GSL adaptive
-   /// values > 6 corresponds to the actual points and they are used by teh GaussLegendre integrator
+   /// Set number of points for active integration rule.
+   /// - For the GSL adaptive integrator, `n = 1,2,3,4,5,6` correspond to the 15,21,31,41,51,61-point integration rules.
+   /// - For the GaussLegendre integrator, use values > 6, which correspond to the actual number of points being evaluated.
    void SetNPoints(unsigned int n) { fNCalls = n; }
 
-   /// maximum number of function calls
+   /// Number of points used by current integration rule. \see SetNPoints().
    unsigned int NPoints() const { return fNCalls; }
 
    /// name of 1D integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationOneDim::Type IntegratorType() const { return (IntegrationOneDim::Type) fIntegType; }
@@ -172,11 +172,11 @@ public:
    /// retrieve specific options - if not existing create a IOptions
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing
+   /// find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char * name = nullptr, std::ostream & os = std::cout);
 
 
 private:
@@ -196,18 +196,18 @@ class IntegratorMultiDimOptions : public BaseIntegratorOptions {
 public:
 
 
-   // constructor using the default options
-   // can pass a pointer to extra options (N.B. pointer will be managed by the class)
-   IntegratorMultiDimOptions(IOptions * extraOpts = 0);
+   /// constructor using the default options
+   /// can pass a pointer to extra options (N.B. pointer will be managed by the class)
+   IntegratorMultiDimOptions(IOptions * extraOpts = nullptr);
 
-   virtual ~IntegratorMultiDimOptions() {}
+   ~IntegratorMultiDimOptions() override {}
 
-   // copy constructor
+   /// copy constructor
    IntegratorMultiDimOptions(const IntegratorMultiDimOptions & rhs) :
       BaseIntegratorOptions(rhs)
    {}
 
-   // assignment operator
+   /// assignment operator
    IntegratorMultiDimOptions & operator=(const IntegratorMultiDimOptions & rhs) {
       if (this == &rhs) return *this;
       static_cast<BaseIntegratorOptions &>(*this) = rhs;
@@ -222,7 +222,7 @@ public:
    unsigned int NCalls() const { return fNCalls; }
 
    /// name of multi-dim integrator
-   std::string  Integrator() const;
+   std::string  Integrator() const override;
 
    /// type of the integrator (return the enumeration type)
    IntegrationMultiDim::Type IntegratorType() const { return (IntegrationMultiDim::Type) fIntegType; }
@@ -248,14 +248,14 @@ public:
    static unsigned int DefaultWKSize();
    static unsigned int DefaultNCalls();
 
-   // retrieve specific options
+   /// retrieve specific options
    static ROOT::Math::IOptions & Default(const char * name);
 
-   // find specific options - return 0 if not existing
+   /// find specific options - return 0 if not existing
    static ROOT::Math::IOptions * FindDefault(const char * name);
 
    /// print only the specified default options
-   static void PrintDefault(const char * name = 0, std::ostream & os = std::cout);
+   static void PrintDefault(const char *name = nullptr, std::ostream & os = std::cout);
 
 
 private:

@@ -8,7 +8,7 @@
 ///
 /// Try it (in compiled mode!) with:   `root mandelbrot.C+`
 ///
-/// \macro_image (js)
+/// \macro_image (tcanvas_js)
 ///
 /// ### Details
 ///
@@ -30,7 +30,7 @@
 #include <TVirtualPad.h>
 #include <TCanvas.h>
 
-TH2F *last_histo=NULL;
+TH2F *last_histo = nullptr;
 
 void mygenerate(double factor, double cen_x, double cen_y)
 {
@@ -52,12 +52,12 @@ void mygenerate(double factor, double cen_x, double cen_y)
     }
   else
     {
-      if(last_histo!=NULL) delete last_histo;
+      if(last_histo) delete last_histo;
       // allocate first view...
-      last_histo= new TH2F("h2",
+      last_histo = new TH2F("h2",
          "Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
                            200,-2,2,200,-2,2);
-      last_histo->SetStats(0);
+      last_histo->SetStats(false);
     }
   const int max_iter=50;
   for(int bx=1;bx<=last_histo->GetNbinsX();bx++)

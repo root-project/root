@@ -985,7 +985,7 @@ TTree* TEventIterTree::Load(TDSetElement *e, Bool_t &localfile, const char *objn
 
    PDB(kLoop,2) Info("Load", "Reading: %s", tn);
 
-   TTree *tree = dynamic_cast<TTree*> (key->ReadObj());
+   auto tree = key->ReadObject<TTree>();
    dd->cd();
 
    if (tree == 0) {

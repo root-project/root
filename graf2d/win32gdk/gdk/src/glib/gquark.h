@@ -31,7 +31,8 @@
 
 G_BEGIN_DECLS
 
-typedef guint32 GQuark;
+//typedef guint32 GQuark;
+typedef gulong GQuark;
 
 /* Quarks (string<->id association)
  */

@@ -9,19 +9,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/**
 
-   \defgroup MinuitOld TMinuit
-   \ingroup Math
-
-   The Minuit Minimization package.
-   Direct C++ implementation of the Minuit minimization package.
-   This package was originally written in Fortran by Fred James
-   and part of PACKLIB (patch D506)
-   It has been converted to a C++ class, TMinuit, by R.Brun.
-*/
-
-/** \class TMinuit
+/*! \class TMinuit
+\see Minuit2 for a newer version of this package
+\ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.
 This is a straightforward conversion of the original Fortran version.
@@ -59,7 +50,7 @@ The main changes are:
 
 ## Basic concepts of MINUIT
 
-The [MINUIT](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+The [MINUIT](https://root.cern/download/minuit.pdf)
 package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
@@ -328,11 +319,10 @@ necessary, and you are sensitive to the difference between the two ways of
 calculating the errors, it is suggested to use Minos errors which take
 into account the non-linearities much more precisely.
 
-@ingroup MinuitOld
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include "TROOT.h"
 #include "TList.h"
@@ -358,69 +348,69 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 {
    if (TMinuit::Class()->IsCallingNew() != TClass::kRealNew) {
       //preset all pointers to null
-      fCpnam     = 0;
-      fU         = 0;
-      fAlim      = 0;
-      fBlim      = 0;
-      fPstar     = 0;
-      fGin       = 0;
-      fNvarl     = 0;
-      fNiofex    = 0;
+      fCpnam     = nullptr;
+      fU         = nullptr;
+      fAlim      = nullptr;
+      fBlim      = nullptr;
+      fPstar     = nullptr;
+      fGin       = nullptr;
+      fNvarl     = nullptr;
+      fNiofex    = nullptr;
 
-      fNexofi    = 0;
-      fIpfix     = 0;
-      fErp       = 0;
-      fErn       = 0;
-      fWerr      = 0;
-      fGlobcc    = 0;
-      fX         = 0;
-      fXt        = 0;
-      fDirin     = 0;
-      fXs        = 0;
-      fXts       = 0;
-      fDirins    = 0;
-      fGrd       = 0;
-      fG2        = 0;
-      fGstep     = 0;
-      fDgrd      = 0;
-      fGrds      = 0;
-      fG2s       = 0;
-      fGsteps    = 0;
-      fPstst     = 0;
-      fPbar      = 0;
-      fPrho      = 0;
-      fWord7     = 0;
-      fVhmat     = 0;
-      fVthmat    = 0;
-      fP         = 0;
-      fXpt       = 0;
-      fYpt       = 0;
-      fChpt      = 0;
-      fCONTgcc   = 0;
-      fCONTw     = 0;
-      fFIXPyy    = 0;
-      fGRADgf    = 0;
-      fHESSyy    = 0;
-      fIMPRdsav  = 0;
-      fIMPRy     = 0;
-      fMATUvline = 0;
-      fMIGRflnu  = 0;
-      fMIGRstep  = 0;
-      fMIGRgs    = 0;
-      fMIGRvg    = 0;
-      fMIGRxxs   = 0;
-      fMNOTxdev  = 0;
-      fMNOTw     = 0;
-      fMNOTgcc   = 0;
-      fPSDFs     = 0;
-      fSEEKxmid  = 0;
-      fSEEKxbest = 0;
-      fSIMPy     = 0;
-      fVERTq     = 0;
-      fVERTs     = 0;
-      fVERTpp    = 0;
-      fCOMDplist = 0;
-      fPARSplist = 0;
+      fNexofi    = nullptr;
+      fIpfix     = nullptr;
+      fErp       = nullptr;
+      fErn       = nullptr;
+      fWerr      = nullptr;
+      fGlobcc    = nullptr;
+      fX         = nullptr;
+      fXt        = nullptr;
+      fDirin     = nullptr;
+      fXs        = nullptr;
+      fXts       = nullptr;
+      fDirins    = nullptr;
+      fGrd       = nullptr;
+      fG2        = nullptr;
+      fGstep     = nullptr;
+      fDgrd      = nullptr;
+      fGrds      = nullptr;
+      fG2s       = nullptr;
+      fGsteps    = nullptr;
+      fPstst     = nullptr;
+      fPbar      = nullptr;
+      fPrho      = nullptr;
+      fWord7     = nullptr;
+      fVhmat     = nullptr;
+      fVthmat    = nullptr;
+      fP         = nullptr;
+      fXpt       = nullptr;
+      fYpt       = nullptr;
+      fChpt      = nullptr;
+      fCONTgcc   = nullptr;
+      fCONTw     = nullptr;
+      fFIXPyy    = nullptr;
+      fGRADgf    = nullptr;
+      fHESSyy    = nullptr;
+      fIMPRdsav  = nullptr;
+      fIMPRy     = nullptr;
+      fMATUvline = nullptr;
+      fMIGRflnu  = nullptr;
+      fMIGRstep  = nullptr;
+      fMIGRgs    = nullptr;
+      fMIGRvg    = nullptr;
+      fMIGRxxs   = nullptr;
+      fMNOTxdev  = nullptr;
+      fMNOTw     = nullptr;
+      fMNOTgcc   = nullptr;
+      fPSDFs     = nullptr;
+      fSEEKxmid  = nullptr;
+      fSEEKxbest = nullptr;
+      fSIMPy     = nullptr;
+      fVERTq     = nullptr;
+      fVERTs     = nullptr;
+      fVERTpp    = nullptr;
+      fCOMDplist = nullptr;
+      fPARSplist = nullptr;
 
       fUp        = 0;
       fEpsi      = 0;
@@ -432,9 +422,9 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
       fStatus       = 0;
       fEmpty        = 0;
-      fObjectFit    = 0;
-      fMethodCall   = 0;
-      fPlot         = 0;
+      fObjectFit    = nullptr;
+      fMethodCall   = nullptr;
+      fPlot         = nullptr;
       fGraphicsMode = kTRUE;
 
    } else {
@@ -450,15 +440,15 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
       fStatus       = 0;
       fEmpty        = 0;
-      fObjectFit    = 0;
-      fMethodCall   = 0;
-      fPlot         = 0;
+      fObjectFit    = nullptr;
+      fMethodCall   = nullptr;
+      fPlot         = nullptr;
       fGraphicsMode = kTRUE;
       SetMaxIterations();
       mninit(5,6,7);
    }
 
-   fFCN = 0;
+   fFCN = nullptr;
    {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Add(this);
@@ -473,15 +463,15 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
 TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 {
-   fFCN = 0;
+   fFCN = nullptr;
 
    BuildArrays(maxpar);
 
    fStatus       = 0;
    fEmpty        = 0;
-   fObjectFit    = 0;
-   fMethodCall   = 0;
-   fPlot         = 0;
+   fObjectFit    = nullptr;
+   fMethodCall   = nullptr;
+   fPlot         = nullptr;
    fGraphicsMode = kTRUE;
    SetMaxIterations();
 
@@ -511,7 +501,7 @@ TMinuit::~TMinuit()
    delete fMethodCall;
    {
       R__LOCKGUARD(gROOTMutex);
-      if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
+      if (gROOT != nullptr && gROOT->GetListOfSpecials() != nullptr) gROOT->GetListOfSpecials()->Remove(this);
    }
    if (gMinuit == this) gMinuit = nullptr;
 }
@@ -616,7 +606,7 @@ TObject *TMinuit::Clone(const char *newname) const
 /// Equivalent to MNEXCM except that the command is given as a character string.
 /// See TMinuit::mnhelp for the full list of available commands
 /// See also the
-/// [complete documentation of all the available commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+/// [complete documentation of all the available commands](https://root.cern/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
 ///
 /// Returns the status of the execution:
 ///   -  0: command executed normally
@@ -665,7 +655,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    if (npoints<4) {
       // we need at least 4 points
       fStatus= 2;
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
    Int_t    npfound;
    Double_t *xcoor = new Double_t[npoints+1];
@@ -677,7 +667,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
       fStatus= (npfound==0 ? 1 : npfound);
       delete [] xcoor;
       delete [] ycoor;
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
    if (npfound!=npoints) {
       // mncont did go wrong
@@ -688,7 +678,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    // create graph via the  PluginManager
    xcoor[npoints] = xcoor[0];  // add first point at end to get closed polyline
    ycoor[npoints] = ycoor[0];
-   TObject *gr = 0;
+   TObject *gr = nullptr;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
       if (h->LoadPlugin() != -1)
@@ -940,12 +930,12 @@ void InteractiveFCNm(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t
    TMethodCall *m  = gMinuit->GetMethodCall();
    if (!m) return;
 
-   Long_t args[5];
-   args[0] = (Long_t)&npar;
-   args[1] = (Long_t)gin;
-   args[2] = (Long_t)&f;
-   args[3] = (Long_t)u;
-   args[4] = (Long_t)flag;
+   Longptr_t args[5];
+   args[0] = (Longptr_t)&npar;
+   args[1] = (Longptr_t)gin;
+   args[2] = (Longptr_t)&f;
+   args[3] = (Longptr_t)u;
+   args[4] = (Longptr_t)flag;
    m->SetParamPtrs(args);
    Double_t result;
    m->Execute(result);
@@ -1504,7 +1494,7 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
          fXpt[i-1] = xptu[i-2];
          fYpt[i-1] = yptu[i-2];
       }
-      sprintf(fChpt,"%s"," ABCD");
+      snprintf(fChpt, fMaxcpt+1, "%s", " ABCD");
       mnplot(fXpt, fYpt, fChpt, nall, fNpagwd, fNpagln);
    }
 
@@ -1689,7 +1679,7 @@ void TMinuit::mncrck(TString cardbuf, Int_t maxcwd, TString &comand, Int_t &lnc,
 {
    /* Initialized data */
 
-   char *cnull  = 0;
+   char *cnull  = nullptr;
    const char *cnumer = "123456789-.0+";
 
    /* Local variables */
@@ -2669,7 +2659,7 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 ///           -  12: RETURN command
 ///
 /// see also
-/// [the possible list of all Minuit commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf).
+/// [the possible list of all Minuit commands](https://root.cern/sites/d35c7d8c.web.cern.ch/files/minuit.pdf).
 
 void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &ierflg)
 {
@@ -3848,7 +3838,7 @@ void TMinuit::mnhelp(TString comd)
 
       Printf(" ");
       Printf("   SET NOWarnings");
-      Printf("    Supresses Minuit warning messages.");
+      Printf("    Suppresses Minuit warning messages.");
 
       Printf(" ");
       Printf("   SET OUTputfile  <unitno>");
@@ -4940,18 +4930,16 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 
 //                                               end of iteration
 //           stop because too many iterations
-   if (!l70 && !l80) {
+   if (!l70 && !l80 && ldebug) {
       cmess = " LINE SEARCH HAS EXHAUSTED THE LIMIT OF FUNCTION CALLS ";
-      if (ldebug) {
-         Printf(" MNLINE DEBUG: steps=");
-         for (kk = 1; kk <= fNpar; ++kk) {
-            Printf("  %12.4g",step[kk-1]);
-         }
+      Printf(" MNLINE DEBUG: steps=");
+      for (kk = 1; kk <= fNpar; ++kk) {
+        Printf("  %12.4g",step[kk-1]);
       }
    }
 //           stop because within tolerance
-   if (l70) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
-   if (l80) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
+   if (l70 && ldebug) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
+   if (l80 && ldebug) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
 
    fAmin = fvmin;
    for (i = 1; i <= fNpar; ++i) {
@@ -5272,7 +5260,7 @@ L81:
       mnwarn("D", "MIGRAD", "FIRST DERIVATIVES INCREASING ALONG SEARCH LINE");
    }
 //                                          update covariance matrix
-   fCstatu = "IMPROVEMNT";
+   fCstatu = "IMPROVEMENT";
    if (ldebug) {
       Printf(" VHMAT 1 =");
       for (kk = 1; kk <= 10; ++kk) {
@@ -6506,7 +6494,7 @@ L55:
 void TMinuit::mnpsdf()
 {
    /* Local variables */
-   Double_t dgmin, padd, pmin, pmax, dg, epspdf, epsmin;
+   Double_t dgmin, pAdd, pmin, pmax, dg, epspdf, epsmin;
    Int_t ndex, i, j, ndexd, ip, ifault;
    TString chbuff, ctemp;
 
@@ -6561,13 +6549,13 @@ void TMinuit::mnpsdf()
    }
    if (pmin > epspdf*pmax) return;
    if (fISW[1] == 3) fISW[1] = 2;
-   padd = pmax*.001 - pmin;
+   pAdd = pmax*.001 - pmin;
    for (ip = 1; ip <= fNpar; ++ip) {
       ndex = ip*(ip + 1) / 2;
-      fVhmat[ndex-1] *= padd + 1;
+      fVhmat[ndex-1] *= pAdd + 1;
    }
    fCstatu = "NOT POSDEF";
-   mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",padd));
+   mnwarn("W", fCfrom, Form("MATRIX FORCED POS-DEF BY ADDING %f TO DIAGONAL.",pAdd));
 
 }
 
@@ -6880,7 +6868,7 @@ void TMinuit::mnseek()
       Eval(nparx, fGin, ftry, fU, 4);        ++fNfcn;
       if (ftry < flast) {
          if (ftry < fAmin) {
-            fCstatu = "IMPROVEMNT";
+            fCstatu = "IMPROVEMENT";
             fAmin = ftry;
             for (ib = 1; ib <= fNpar; ++ib) { fSEEKxbest[ib-1] = fX[ib-1]; }
             ifail = 0;
@@ -7668,7 +7656,7 @@ void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &np
 /// the value .TRUE. if they are equal.  To find EPSMAC
 /// safely by foiling the Fortran optimiser
 
-void TMinuit::mntiny(volatile Double_t epsp1, Double_t &epsbak)
+void TMinuit::mntiny(Double_t epsp1, Double_t &epsbak)
 {
    epsbak = epsp1 - 1;
 }

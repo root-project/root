@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -8,16 +8,10 @@
 # CMakeLists.txt file for building ROOT math/vecops package
 ############################################################################
 
-if(builtin_vdt)
-  link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
   HEADERS
-    ROOT/RAdoptAllocator.hxx
     ROOT/RVec.hxx
   SOURCES
-    src/RAdoptAllocator.cxx
     src/RVec.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
@@ -26,19 +20,10 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTVecOps
 )
 
 if(builtin_vdt OR vdt)
-   target_include_directories(ROOTVecOps PRIVATE ${VDT_INCLUDE_DIRS} INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIRS}>)
+  target_link_libraries(ROOTVecOps PUBLIC VDT::VDT)
 endif()
-
 if(builtin_vdt)
-  target_link_libraries(ROOTVecOps PRIVATE ${VDT_LIBRARIES})
-elseif(vdt)
-  target_link_libraries(ROOTVecOps PUBLIC ${VDT_LIBRARIES})
-endif()
-
-if(MSVC)
-  target_compile_options(ROOTVecOps PRIVATE -O2 /fp:fast)
-else()
-  target_compile_options(ROOTVecOps PRIVATE -O3 -ffast-math)
+  add_dependencies(ROOTVecOps VDT)
 endif()
 
 include(CheckCXXSymbolExists)

@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodLD                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Linear Discriminant - Simple Linear Regression and Classification         *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  *                                                                                *
  **********************************************************************************/
 
@@ -173,9 +173,9 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
    for (Int_t iout = 0; iout<fNRegOut; iout++) {
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
-      int icoeff=0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
-         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
+      int icoeff = 0;
+      for (auto const& val : ev->GetValues()) {
+         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * val;
       }
    }
 
@@ -199,8 +199,8 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
       int icoeff = 0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
-         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
+      for (auto const& val : ev->GetValues()) {
+         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * val;
       }
    }
 

@@ -1,3 +1,14 @@
+// @(#)root/eve7:$Id$
+// Authors: Matevz Tadel & Alja Mrak-Tadel: 2020
+
+/*************************************************************************
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
 #ifndef ROOT_REveScalableStraightLineSet
 #define ROOT_REveScalableStraightLineSet
 
@@ -18,7 +29,7 @@ protected:
 
 public:
    REveScalableStraightLineSet(const std::string &n = "ScalableStraightLineSet", const std::string &t = "");
-   virtual ~REveScalableStraightLineSet() {}
+   ~REveScalableStraightLineSet() override {}
 
    void SetScaleCenter(Float_t x, Float_t y, Float_t z);
    void SetScale(Double_t scale);
@@ -28,4 +39,5 @@ public:
 
 } // namespace Experimental
 } // namespace ROOT
+
 #endif

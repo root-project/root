@@ -15,9 +15,6 @@
 #include "ROOT/REveManager.hxx"
 #include "ROOT/REveSelection.hxx"
 
-
-// #include "TGLSelectRecord.h"
-
 #include "TAxis.h"
 #include "THStack.h"
 #include "TH2.h"
@@ -26,9 +23,10 @@
 
 #include <cassert>
 #include <algorithm>
+#include <memory>
 #include <set>
 
-#include "json.hpp"
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 
@@ -120,9 +118,6 @@ cells within requested phi and eta range.
 REveCaloData::REveCaloData(const char* n, const char* t):
    REveElement(),
 
-   fEtaAxis(0),
-   fPhiAxis(0),
-
    fWrapTwoPi(kTRUE),
 
    fMaxValEt(0),
@@ -135,188 +130,40 @@ REveCaloData::REveCaloData(const char* n, const char* t):
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Virtual method REveElement::UnSelect.
-/// Clear selected towers when deselected.
+/// Process newly selected cells with given select-record.
 
-void REveCaloData::UnSelected()
+void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bool_t multiple)
 {
-   fCellsSelected.clear();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Virtual method REveElement::UnHighlighted.
-
-void REveCaloData::UnHighlighted()
-{
-   fCellsHighlighted.clear();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-std::string REveCaloData::GetHighlightTooltip() const
-{
-   if (fCellsHighlighted.empty()) return "";
-
-   CellData_t cellData;
-
-   Bool_t single = fCellsHighlighted.size() == 1;
-   Float_t sum = 0;
-   std::string s;
-   for (std::vector<CellId_t>::const_iterator i = fCellsHighlighted.begin(); i!=fCellsHighlighted.end(); ++i)
+   if (fSelector)
    {
-      GetCellData(*i, cellData);
-
-      s += TString::Format("%s %.2f (%.3f, %.3f)",
-                           fSliceInfos[i->fSlice].fName.Data(), cellData.fValue,
-                           cellData.Eta(), cellData.Phi());
-
-      if (single) return s;
-      s += "\n";
-      sum += cellData.fValue;
+      fSelector->ProcessSelection(sel_cells, selectionId, multiple);
    }
-   s += TString::Format("Sum = %.2f", sum);
-   return s;
+   else
+   {
+      REveSelection* selection = dynamic_cast<REveSelection*> (ROOT::Experimental::gEve->FindElementById(selectionId));
+
+      std::set<int> secondary_idcs;
+      for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
+      {
+         int id = (i->fSlice << 24) + i->fTower;
+         secondary_idcs.insert(id);
+      }
+      selection->NewElementPicked(GetElementId(), multiple, true, secondary_idcs);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Populate set impSelSet with derived / dependant elements.
 ///
 
-void REveCaloData::FillImpliedSelectedSet(Set_t& impSelSet)
+void REveCaloData::FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>&)
 {
    // printf("REveCaloData::FillImpliedSelectedSet\n");
-   for (auto &c : fNieces)
+   for (auto &n : fNieces)
    {
-      // printf("REveCaloData::FillImpliedSelectedSet %s\n", c->GetCName());
-      impSelSet.insert(c);
+      impSelSet.insert(n);
    }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Print selected cells info.
-
-void REveCaloData::PrintCellsSelected()
-{
-   printf("%d Selected selected cells:\n", (Int_t)fCellsSelected.size());
-   CellData_t cellData;
-
-   for (vCellId_i i = fCellsSelected.begin(); i != fCellsSelected.end(); ++i)
-   {
-      GetCellData(*i, cellData);
-      printf("Tower [%d] Slice [%d] Value [%.2f] ", i->fTower, i->fSlice, cellData.fValue);
-      printf("Eta:(%f, %f) Phi(%f, %f)\n",  cellData.fEtaMin, cellData.fEtaMax, cellData.fPhiMin, cellData.fPhiMax);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Process newly selected cells with given select-record.
-/// Secondary-select status is set.
-/// CellSelectionChanged() is called if needed.
-
-void REveCaloData::ProcessSelection(vCellId_t& sel_cells, UInt_t selectionId, Bool_t multiple)
-{
-   std::string recResult = "None";
-
-   typedef std::set<CellId_t>           sCellId_t;
-   typedef std::set<CellId_t>::iterator sCellId_i;
-
-   struct helper
-   {
-      static void fill_cell_set(sCellId_t& cset, vCellId_t& cvec)
-      {
-         for (vCellId_i i = cvec.begin(); i != cvec.end(); ++i)
-            cset.insert(*i);
-      }
-      static void fill_cell_vec(vCellId_t& cvec, sCellId_t& cset)
-      {
-         for (sCellId_i i = cset.begin(); i != cset.end(); ++i)
-            cvec.push_back(*i);
-      }
-   };
-
-   bool isHighlight = selectionId == ROOT::Experimental::gEve->GetHighlight()->GetElementId();
-   vCellId_t& cells = isHighlight ? fCellsHighlighted : fCellsSelected;
-   Int_t secSelectIdx  = isHighlight ? fHighlightSecondarySelectIdx : fSelectionSecondarySelectIdx;
-
-   if (cells.empty())
-   {
-      if (!sel_cells.empty())
-      {
-         cells.swap(sel_cells);
-         recResult = "Entering";
-      }
-   }
-   else
-   {
-      if (!sel_cells.empty())
-      {
-         if (multiple)
-         {
-            sCellId_t cs;
-            helper::fill_cell_set(cs, cells);
-            for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
-            {
-               std::set<CellId_t>::iterator csi = cs.find(*i);
-               if (csi == cs.end())
-                  cs.insert(*i);
-               else
-                  cs.erase(csi);
-            }
-            cells.clear();
-            if (cs.empty())
-            {
-               recResult = "Leaving";
-            }
-            else
-            {
-               helper::fill_cell_vec(cells, cs);
-               recResult = "Modifying";
-               secSelectIdx = secSelectIdx ? 0 : 1;
-            }
-         }
-         else
-         {
-            Bool_t differ = kFALSE;
-            if (cells.size() == sel_cells.size())
-            {
-               sCellId_t cs;
-               helper::fill_cell_set(cs, cells);
-               for (vCellId_i i = sel_cells.begin(); i != sel_cells.end(); ++i)
-               {
-                  if (cs.find(*i) == cs.end())
-                  {
-                     differ = kTRUE;
-                     break;
-                  }
-               }
-            }
-            else
-            {
-               differ = kTRUE;
-            }
-            if (differ)
-            {
-               cells.swap(sel_cells);
-               recResult = "Leaving";
-            }
-         }
-      }
-      else
-      {
-         if (!multiple)
-         {
-            cells.clear();
-            recResult = "Leaving";
-         }
-      }
-   }
-
-   if (recResult != "None")
-   {
-      CellSelectionChanged(selectionId, secSelectIdx);
-   }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set threshold for given slice.
 
@@ -407,31 +254,6 @@ void REveCaloData::DataChanged()
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Tell users (REveCaloViz instances using this data) that cell selection
-/// has changed and they should update selection cache if necessary.
-/// This is done by calling REveCaloViz::CellSelectionChanged().
-
-void REveCaloData::CellSelectionChanged(UInt_t selectionId, Int_t secSelectIdx)
-{
-   StampObjProps();
-
-   REveCaloViz* calo;
-   for (auto &c : fNieces)
-   {
-      calo = dynamic_cast<REveCaloViz*>(c);
-      calo->CellSelectionChanged();
-   }
-
-   // multi not yet supported
-   bool multi = false;
-
-   REveSelection* selection = (REveSelection*) ROOT::Experimental::gEve->FindElementById(selectionId);
-
-   std::set<int> secondary_idcs;
-   secondary_idcs.insert(secSelectIdx);
-   selection->NewElementPicked(GetElementId(), multi, true, secondary_idcs);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -449,26 +271,30 @@ Int_t REveCaloData::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       sarr.push_back(slice);
    }
    j["sliceInfos"] = sarr;
-
-
-   if (!GetCellsSelected().empty())
-   {
-      auto vizSel = nlohmann::json::array();
-      for (auto &c : fNieces)
-         ((REveCaloViz*)c)->WriteCoreJsonSelection(vizSel, true);
-      j["select"] = vizSel;
-   }
-
-
-   if (!GetCellsHighlighted().empty())
-   {
-      auto vizSel = nlohmann::json::array();
-      for (auto &c : fNieces)
-         ((REveCaloViz*)c)->WriteCoreJsonSelection(vizSel, false);
-      j["highlight"] = vizSel;
-   }
-
    return ret;
+}
+////////////////////////////////////////////////////////////////////////////////
+
+void  REveCaloData::FillExtraSelectionData(nlohmann::json& j, const std::set<int>& secondary_idcs) const
+{
+   vCellId_t cells;
+
+   if (fSelector)
+   {
+      fSelector->GetCellsFromSecondaryIndices(secondary_idcs, cells);
+   }
+   else
+   {
+      for (auto &id : secondary_idcs ) {
+
+         int s = (id >> 24);
+         int t = id & 0xffffff;
+         REveCaloData::CellId_t cell(t, s, 1.0f);
+         cells.push_back(cell);
+      }
+   }
+   for (auto &c : fNieces)
+      ((REveCaloViz*)c)->WriteCoreJsonSelection(j, cells);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,6 +309,34 @@ Float_t REveCaloData::EtaToTheta(Float_t eta)
       return 2*ATan(Exp(- Abs(eta)));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+std::string REveCaloData::GetHighlightTooltip(const std::set<int>& secondary_idcs) const
+{
+   std::string s;
+   CellData_t cellData;
+
+   Bool_t single = secondary_idcs.size() == 1;
+   Float_t sum = 0;
+
+
+   for (auto &id : secondary_idcs ) {
+
+      int slice = (id >> 24);
+      int tower = id & 0xffffff;
+      REveCaloData::CellId_t cell(tower, slice, 1.0f);
+      GetCellData(cell, cellData);
+
+      s += TString::Format("%s %.2f (%.3f, %.3f)",
+                           fSliceInfos[slice].fName.Data(), cellData.fValue,
+                           cellData.Eta(), cellData.Phi());
+
+      if (single) return s;
+      s += "\n";
+      sum += cellData.fValue;
+   }
+   s += TString::Format("Sum = %.2f", sum);
+   return s;
+}
 
 /** \class  REveCaloDataVec
 \ingroup REve
@@ -512,8 +366,6 @@ REveCaloDataVec::REveCaloDataVec(Int_t nslices):
 
 REveCaloDataVec::~REveCaloDataVec()
 {
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -778,12 +630,8 @@ void  REveCaloDataVec::SetAxisFromBins(Double_t epsX, Double_t epsY)
 
    }
    newY.push_back(binY.back()); // overflow
-
-   if (fEtaAxis) delete fEtaAxis;
-   if (fPhiAxis) delete fPhiAxis;
-
-   fEtaAxis = new TAxis(newX.size()-1, &newX[0]);
-   fPhiAxis = new TAxis(newY.size()-1, &newY[0]);
+   fEtaAxis = std::make_unique<TAxis>(newX.size()-1, &newX[0]);
+   fEtaAxis = std::make_unique<TAxis>(newY.size()-1, &newY[0]);
    fEtaAxis->SetNdivisions(510);
    fPhiAxis->SetNdivisions(510);
 }
@@ -801,7 +649,7 @@ X axis is used for eta and Y axis for phi.
 REveCaloDataHist::REveCaloDataHist():
    REveCaloData(),
 
-   fHStack(0)
+   fHStack(nullptr)
 {
    fHStack = new THStack();
    fEps    = 1e-5;
@@ -829,8 +677,6 @@ void REveCaloDataHist::DataChanged()
    if (GetNSlices() < 1) return;
 
    TH2* hist = GetHist(0);
-   fEtaAxis  = hist->GetXaxis();
-   fPhiAxis  = hist->GetYaxis();
    for (Int_t ieta = 1; ieta <= fEtaAxis->GetNbins(); ++ieta)
    {
       Double_t eta = fEtaAxis->GetBinCenter(ieta); // conversion E/Et
@@ -961,6 +807,10 @@ void REveCaloDataHist::GetCellData(const REveCaloData::CellId_t &id,
 
 Int_t REveCaloDataHist::AddHistogram(TH2F* hist)
 {
+   if (!fEtaAxis) {
+      fEtaAxis = std::make_unique<TAxis>(*hist->GetXaxis());
+      fPhiAxis = std::make_unique<TAxis>(*hist->GetYaxis());
+   }
    fHStack->Add(hist);
    fSliceInfos.push_back(SliceInfo_t());
    fSliceInfos.back().fName  = hist->GetName();
@@ -996,4 +846,34 @@ void REveCaloDataHist::GetPhiLimits(Double_t &min, Double_t &max) const
 {
    min = fPhiAxis->GetXmin();
    max = fPhiAxis->GetXmax();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process selection. Called from REveCaloViz object
+
+void REveCaloDataSelector::ProcessSelection(REveCaloData::vCellId_t& sel_cells, UInt_t selectionId, Bool_t multi)
+{
+   // only one slice can be user selected at once
+   fActiveSlice  = sel_cells.front().fSlice;
+   for (auto &si : fSliceSelectors)
+   {
+      if (si->GetSliceIndex() == fActiveSlice) {
+         si->ProcessSelection(sel_cells, selectionId, multi);
+         break;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// GetCellsFromSecondaryIndices used in implied selection
+
+void REveCaloDataSelector::GetCellsFromSecondaryIndices(const std::set<int>& idcs, REveCaloData::vCellId_t& out)
+{
+   for (auto &si : fSliceSelectors)
+   {
+      if (si->GetSliceIndex() == fActiveSlice) {
+         si->GetCellsFromSecondaryIndices(idcs, out);
+         break;
+      }
+   }
 }

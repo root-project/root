@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Multidimensional models: projecting p.d.f and data slices in discrete observables
+/// Multidimensional models: projecting pdf and data slices in discrete observables
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -57,7 +55,7 @@ void rf310_sliceplot()
    RooBMixDecay bmix_gm1("bmix", "decay", dt, mixState, tagFlav, tau, dm, w, dw, gm1, RooBMixDecay::DoubleSided);
 
    // Generate BMixing data with above set of event errors
-   RooDataSet *data = bmix_gm1.generate(RooArgSet(dt, tagFlav, mixState), 20000);
+   std::unique_ptr<RooDataSet> data{bmix_gm1.generate({dt, tagFlav, mixState}, 20000)};
 
    // P l o t   f u l l   d e c a y   d i s t r i b u t i o n
    // ----------------------------------------------------------

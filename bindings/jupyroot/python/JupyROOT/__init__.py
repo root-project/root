@@ -11,8 +11,20 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
 
-from JupyROOT.helpers import cppcompleter, utils
+import sys
+from JupyROOT.helpers import utils
+if not 'win32' in sys.platform:
+    from JupyROOT.helpers import cppcompleter
 
-if '__IPYTHON__' in __builtins__ and __IPYTHON__:
-    cppcompleter.load_ipython_extension(get_ipython())
+# Check if we are in the IPython shell
+try:
+    import builtins
+except ImportError:
+    import __builtin__ as builtins # Py2
+_is_ipython = hasattr(builtins, '__IPYTHON__')
+
+if _is_ipython:
+    if not 'win32' in sys.platform:
+        from IPython import get_ipython
+        cppcompleter.load_ipython_extension(get_ipython())
     utils.iPythonize()

@@ -42,16 +42,16 @@ public:
    TSlaveLite(const char *ord, Int_t perf,
               const char *image, TProof *proof, Int_t stype,
               const char *workdir, const char *msd, Int_t = 1);
-   virtual ~TSlaveLite();
+   ~TSlaveLite() override;
 
-   void   Close(Option_t *opt = "");
+   void   Close(Option_t *opt = "") override;
    void   DoError(int level, const char *location, const char *fmt,
-                  va_list va) const;
+                  va_list va) const override;
 
-   void   Print(Option_t *option="") const;
-   Int_t  SetupServ(Int_t stype, const char *conffile);
+   void   Print(Option_t *option="") const override;
+   Int_t  SetupServ(Int_t stype, const char *conffile) override;
 
-   ClassDef(TSlaveLite, 0)  //PROOF lite worker server
+   ClassDefOverride(TSlaveLite, 0)  //PROOF lite worker server
 };
 
 #endif

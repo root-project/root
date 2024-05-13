@@ -52,7 +52,7 @@ namespace TMVA {
 
       virtual void TestClassification();
 
-      Double_t GetMvaValue(Double_t *errLower = 0, Double_t *errUpper = 0);
+      Double_t GetMvaValue(Double_t *errLower = nullptr, Double_t *errUpper = nullptr);
       std::vector<Double_t> GetMvaValues(Long64_t firstEvt = 0, Long64_t lastEvt = -1, Bool_t logProgress = false);
       std::vector<Float_t>& GetMulticlassValues();
 

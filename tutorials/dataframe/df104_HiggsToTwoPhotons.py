@@ -1,7 +1,7 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame.
+## The Higgs to two photons analysis from the ATLAS Open Data 2020 release, with RDataFrame.
 ##
 ## This tutorial is the Higgs to two photons analysis from the ATLAS Open Data release in 2020
 ## (http://opendata.atlas.cern/release/2020/documentation/). The data was taken with the ATLAS detector
@@ -54,8 +54,8 @@ for p in processes:
 # Compile a function to compute the invariant mass of the diphoton system
 ROOT.gInterpreter.Declare(
 """
-using Vec_t = const ROOT::VecOps::RVec<float>;
-float ComputeInvariantMass(Vec_t& pt, Vec_t& eta, Vec_t& phi, Vec_t& e) {
+using namespace ROOT;
+float ComputeInvariantMass(RVecF pt, RVecF eta, RVecF phi, RVecF e) {
     ROOT::Math::PtEtaPhiEVector p1(pt[0], eta[0], phi[0], e[0]);
     ROOT::Math::PtEtaPhiEVector p2(pt[1], eta[1], phi[1], e[1]);
     return (p1 + p2).mass() / 1000.0;
@@ -79,6 +79,13 @@ for p in processes:
             "m_yy", "weight")
 
 # Run the event loop
+
+# RunGraphs allows to run the event loops of the separate RDataFrame graphs
+# concurrently. This results in an improved usage of the available resources
+# if each separate RDataFrame can not utilize all available resources, e.g.,
+# because not enough data is available.
+ROOT.RDF.RunGraphs([hists[s] for s in ["ggH", "VBF", "data"]])
+
 ggh = hists["ggH"].GetValue()
 vbf = hists["VBF"].GetValue()
 data = hists["data"].GetValue()
@@ -106,7 +113,6 @@ upper_pad.Draw()
 lower_pad.Draw()
 
 # Fit signal + background model to data
-upper_pad.cd()
 fit = ROOT.TF1("fit", "([0]+[1]*x+[2]*x^2+[3]*x^3)+[4]*exp(-0.5*((x-[5])/[6])^2)", 105, 160)
 fit.FixParameter(5, 125.0)
 fit.FixParameter(4, 119.1)
@@ -114,7 +120,23 @@ fit.FixParameter(6, 2.39)
 fit.SetLineColor(2)
 fit.SetLineStyle(1)
 fit.SetLineWidth(2)
-data.Fit("fit", "", "E SAME", 105, 160)
+data.Fit("fit", "0", "", 105, 160)
+
+# Draw data
+upper_pad.cd()
+data.SetMarkerStyle(20)
+data.SetMarkerSize(1.2)
+data.SetLineWidth(2)
+data.SetLineColor(ROOT.kBlack)
+data.SetMinimum(1e-3)
+data.SetMaximum(8e3)
+data.GetYaxis().SetLabelSize(0.045)
+data.GetYaxis().SetTitleSize(0.05)
+data.SetStats(0)
+data.SetTitle("")
+data.Draw("E")
+
+# Draw fit
 fit.Draw("SAME")
 
 # Draw background
@@ -125,19 +147,6 @@ bkg.SetLineColor(4)
 bkg.SetLineStyle(2)
 bkg.SetLineWidth(2)
 bkg.Draw("SAME")
-
-# Draw data
-data.SetMarkerStyle(20)
-data.SetMarkerSize(1.2)
-data.SetLineWidth(2)
-data.SetLineColor(ROOT.kBlack)
-data.Draw("E SAME")
-data.SetMinimum(1e-3)
-data.SetMaximum(8e3)
-data.GetYaxis().SetLabelSize(0.045)
-data.GetYaxis().SetTitleSize(0.05)
-data.SetStats(0)
-data.SetTitle("")
 
 # Scale simulated events with luminosity * cross-section / sum of weights
 # and merge to single Higgs signal
@@ -151,7 +160,7 @@ higgs.Draw("HIST SAME")
 # Draw ratio
 lower_pad.cd()
 
-ratiobkg = ROOT.TF1("zero", "0", 105, 160)
+ratiobkg = ROOT.TH1I("zero", "", 100, 105, 160)
 ratiobkg.SetLineColor(4)
 ratiobkg.SetLineStyle(2)
 ratiobkg.SetLineWidth(2)
@@ -168,7 +177,7 @@ ratiobkg.GetYaxis().SetTitleOffset(0.7)
 ratiobkg.GetYaxis().SetNdivisions(503, False)
 ratiobkg.GetYaxis().ChangeLabel(-1, -1, 0)
 ratiobkg.GetXaxis().SetTitle("m_{#gamma#gamma} [GeV]")
-ratiobkg.Draw()
+ratiobkg.Draw("AXIS")
 
 ratiosig = ROOT.TH1F("ratiosig", "ratiosig", 5500, 105, 160)
 ratiosig.Eval(fit)
@@ -180,9 +189,9 @@ ratiosig.Draw("SAME")
 
 ratiodata = data.Clone()
 ratiodata.Add(bkg, -1)
-ratiodata.Draw("E SAME")
 for i in range(1, data.GetNbinsX()):
     ratiodata.SetBinError(i, data.GetBinError(i))
+ratiodata.Draw("E SAME")
 
 # Add legend
 upper_pad.cd()
@@ -196,7 +205,7 @@ legend.AddEntry(data, "Data" ,"lep")
 legend.AddEntry(bkg, "Background", "l")
 legend.AddEntry(fit, "Signal + Bkg.", "l")
 legend.AddEntry(higgs, "Signal", "l")
-legend.Draw("SAME")
+legend.Draw()
 
 # Add ATLAS label
 text = ROOT.TLatex()
@@ -207,7 +216,8 @@ text.DrawLatex(0.18, 0.84, "ATLAS")
 text.SetTextFont(42)
 text.DrawLatex(0.18 + 0.13, 0.84, "Open Data")
 text.SetTextSize(0.04)
-text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}");
+text.DrawLatex(0.18, 0.78, "#sqrt{s} = 13 TeV, 10 fb^{-1}")
 
 # Save the plot
-c.SaveAs("HiggsToTwoPhotons.pdf");
+c.SaveAs("df104_HiggsToTwoPhotons.png")
+print("Saved figure to df104_HiggsToTwoPhotons.png")

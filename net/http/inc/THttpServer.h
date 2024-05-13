@@ -32,13 +32,14 @@ class THttpServer : public TNamed {
 
 protected:
    TList fEngines;                      ///<! engines which runs http server
-   THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
-   TRootSniffer *fSniffer{nullptr};     ///<! sniffer provides access to ROOT objects hierarchy
+   std::unique_ptr<THttpTimer> fTimer;   ///<! timer used to access main thread
+   std::unique_ptr<TRootSniffer> fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
    Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
    Long_t fMainThrdId{0};               ///<! id of the thread for processing requests
+   Long_t fProcessingThrdId{0};         ///<! id of the thread where events are recently processing
    Bool_t fOwnThread{kFALSE};           ///<! true when specialized thread allocated for processing requests
    std::thread fThrd;                   ///<! own thread
-   Bool_t fOldProcessSignature{kFALSE}; ///<! flag used to detect usage of old signature of Process() method
+   Bool_t fWSOnly{kFALSE};              ///<! when true, handle only websockets / longpoll engine
 
    TString fJSROOTSYS;       ///<! location of local JSROOT files
    TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
@@ -51,6 +52,7 @@ protected:
    std::string fDrawPage;        ///<! file name for drawing of single element
    std::string fDrawPageCont;    ///<! content of draw html page
    std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
+   std::string fCorsCredentials; ///<! CORS: add Access-Control-Allow-Credentials: true response header
 
    std::mutex fMutex;                                        ///<! mutex to protect list with arguments
    std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
@@ -64,14 +66,19 @@ protected:
 
    virtual void ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
-   virtual void ProcessRequest(THttpCallArg *arg);
-
    void StopServerThread();
+
+   std::string BuildWSEntryPage();
+
+   void ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg);
 
    static Bool_t VerifyFilePath(const char *fname);
 
+   THttpServer(const THttpServer &) = delete;
+   THttpServer &operator=(const THttpServer &) = delete;
+
 public:
-   THttpServer(const char *engine = "civetweb:8080");
+   THttpServer(const char *engine = "http:8080");
    virtual ~THttpServer();
 
    Bool_t CreateEngine(const char *engine);
@@ -79,13 +86,17 @@ public:
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 
    /** returns pointer on objects sniffer */
-   TRootSniffer *GetSniffer() const { return fSniffer; }
+   TRootSniffer *GetSniffer() const { return fSniffer.get(); }
 
    void SetSniffer(TRootSniffer *sniff);
 
    Bool_t IsReadOnly() const;
 
-   void SetReadOnly(Bool_t readonly);
+   void SetReadOnly(Bool_t readonly = kTRUE);
+
+   Bool_t IsWSOnly() const;
+
+   void SetWSOnly(Bool_t on = kTRUE);
 
    /** set termination flag, no any further requests will be processed */
    void SetTerminate();
@@ -102,6 +113,15 @@ public:
 
    /** Returns specified CORS domain */
    const char *GetCors() const { return fCors.c_str(); }
+
+   /** Enable/disable usage Access-Control-Allow-Credentials response header */
+   void SetCorsCredentials(const std::string &value = "true") { fCorsCredentials = value; }
+
+   /** Returns kTRUE if Access-Control-Allow-Credentials header should be used */
+   Bool_t IsCorsCredentials() const { return !fCorsCredentials.empty(); }
+
+   /** Returns specified CORS credentials value - if any */
+   const char *GetCorsCredentials() const { return fCorsCredentials.c_str(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
@@ -154,7 +174,7 @@ public:
    /** Restrict access to specified object */
    void Restrict(const char *path, const char *options);
 
-   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = 0);
+   Bool_t RegisterCommand(const char *cmdname, const char *method, const char *icon = nullptr);
 
    Bool_t Hide(const char *fullname, Bool_t hide = kTRUE);
 
@@ -175,7 +195,7 @@ public:
    /** Reads content of file from the disk, use std::string in return value */
    static std::string ReadFileContent(const std::string &filename);
 
-   ClassDef(THttpServer, 0) // HTTP server for ROOT analysis
+   ClassDefOverride(THttpServer, 0) // HTTP server for ROOT analysis
 };
 
 #endif

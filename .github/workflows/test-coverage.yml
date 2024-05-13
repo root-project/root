@@ -1,0 +1,145 @@
+
+name: 'Test Coverage'
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  # DISABLED: takes 4 hours! Might clang-coverage be a solution?
+  #pull_request:
+  #  branches:
+  #    - 'master'
+  #  paths-ignore:
+  #    - 'doc/**'
+  #    - 'documentation/**'
+
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        required: true
+        default: master
+      base_ref:
+        type: string
+        required: true
+        default: master
+
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+
+env:
+  PYTHONUNBUFFERED: true
+
+jobs:
+
+  build-linux:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+
+    runs-on: 
+      - self-hosted
+      - linux
+      - x64
+
+    name: Build and test to determine coverage
+
+    container:
+      image: registry.cern.ch/root-ci/fedora38:buildready
+      options: '--security-opt label=disable --rm'
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        PYTHONUNBUFFERED: true
+
+    steps:
+      - name: Install cov packages
+        run: |
+          sudo dnf -y update
+          sudo dnf -y install lcov
+          pip3 install gcovr
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Print debug info
+        run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+               ls -la
+              '
+
+      - name: Apply option override from matrix for this job
+        env:
+          OVERRIDE: "coverage=On"
+          FILE: .github/workflows/root-ci-config/buildconfig/fedora38.txt
+        shell: bash
+        run: |
+          set -x
+
+          echo '' >> "$FILE"
+          echo $OVERRIDE >> "$FILE"
+          cat "$FILE" || true
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Debug
+                    --platform       fedora38
+                    --incremental    false
+                    --coverage       true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Debug
+                    --platform       fedora38
+                    --incremental    false
+                    --coverage       true
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      Debug
+                    --platform       fedora38
+                    --incremental    false
+                    --coverage       true
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+      - name: Upload coverage to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v3
+        with:
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          files: /github/home/ROOT-CI/build/cobertura-cov.xml
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true

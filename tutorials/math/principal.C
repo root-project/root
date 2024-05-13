@@ -39,7 +39,7 @@ void principal(Int_t n=10, Int_t m=10000)
    TPrincipal* principal = new TPrincipal(n,"ND");
 
    // Use a pseudo-random number generator
-   TRandom* randumNum = new TRandom;
+   TRandom* randomNum = new TRandom;
 
    // Make the m data-points
    // Make a variable to hold our data
@@ -50,9 +50,9 @@ void principal(Int_t n=10, Int_t m=10000)
       // First we create the un-correlated, random variables, according
       // to one of three distributions
       for (Int_t j = 0; j < n - c; j++) {
-         if (j % 3 == 0)      data[j] = randumNum->Gaus(5,1);
-         else if (j % 3 == 1) data[j] = randumNum->Poisson(8);
-         else                 data[j] = randumNum->Exp(2);
+         if (j % 3 == 0)      data[j] = randomNum->Gaus(5,1);
+         else if (j % 3 == 1) data[j] = randomNum->Poisson(8);
+         else                 data[j] = randomNum->Exp(2);
       }
 
       // Then we create the correlated variables
@@ -77,7 +77,7 @@ void principal(Int_t n=10, Int_t m=10000)
    // Test the PCA
    principal->Test();
 
-   // Make some histograms of the orginal, principal, residue, etc data
+   // Make some histograms of the original, principal, residue, etc data
    principal->MakeHistograms();
 
    // Make two functions to map between feature and pattern space

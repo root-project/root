@@ -58,6 +58,7 @@
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<256,4>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,0>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::MixMaxEngine<17,1>>+;
+#pragma link C++ class TRandomGen<ROOT::Math::RanluxppEngine2048>+;
 #pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::mt19937_64>>+;
 #pragma link C++ class TRandomGen<ROOT::Math::StdEngine<std::ranlux48>>+;
 
@@ -103,7 +104,6 @@
 #pragma link C++ typedef ROOT::Math::IMultiGradFunction;
 
 #pragma link C++ class ROOT::Math::IBaseFunctionOneDim+;
-#pragma link C++ class ROOT::Math::IGradientOneDim+;
 #pragma link C++ class ROOT::Math::IGradientFunctionOneDim+;
 #pragma link C++ class ROOT::Math::IBaseParam+;
 
@@ -111,7 +111,6 @@
 #pragma link C++ class ROOT::Math::IParametricGradFunctionOneDim+;
 
 #pragma link C++ class ROOT::Math::IBaseFunctionMultiDim+;
-#pragma link C++ class ROOT::Math::IGradientMultiDim+;
 #pragma link C++ class ROOT::Math::IGradientFunctionMultiDim+;
 #pragma link C++ class ROOT::Math::IParametricFunctionMultiDim+;
 #pragma link C++ class ROOT::Math::IParametricGradFunctionMultiDim+;

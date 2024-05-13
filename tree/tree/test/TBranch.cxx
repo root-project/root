@@ -7,7 +7,7 @@
 
 class TBranchTest : public ::testing::Test {
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       TRandom *random = new TRandom(837);
       TFile *file = new TFile("TBranchTestTree.root", "RECREATE");
@@ -177,4 +177,56 @@ TEST_F(TBranchTest, twoPreviousTest)
    ASSERT_TRUE(branch->GetListOfBaskets()->At(6));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(7));
    delete file;
+}
+
+bool nocomp(int mode = 0)
+{
+   TString filename("f_compression_");
+   filename += mode;
+   filename += ".root";
+
+   // create a new file
+   TFile *f_write = TFile::Open(filename, "recreate", "", 101);
+
+   if (mode == 1)
+      f_write->cd();                 // Create regular TTree.
+   TTree *t = new TTree("t", "t"); // Create a new DISK RESIDENT tree (when mode == 0)
+   if (mode == 2)
+      t->SetDirectory(f_write);      // Attach after creation of TTree.
+
+   // fill the tree
+   Float_t v;
+   t->Branch("v", &v, "v/F");
+   if (mode == 3)
+      t->SetDirectory(f_write);      // Attach after creation of TBranch.
+   for (Int_t i = 0; i < 999999; i++)
+   {
+      v = gRandom->Gaus(0., 1.);
+      t->Fill();
+   }
+
+   if (mode == 4)
+      t->SetDirectory(f_write);      // Attach after filling of TBranch.
+
+   std::cout << "Branch compression: " << t->GetBranch("v")->GetCompressionLevel() << '\n';
+
+   // save the tree to a file
+   f_write->cd();
+   t->Write();
+   delete f_write; // automatically deletes "t", too
+
+   TFile *f_read = TFile::Open(filename, "READ");
+   if (!f_read || f_read->IsZombie())
+      return false;
+   t = f_read->Get<TTree>("t");
+   if (!t)
+      return false;
+
+   return (t->GetZipBytes() != t->GetTotBytes());
+}
+
+TEST_F(TBranchTest, branchInheritsCompression)
+{
+   for(int mode = 4; mode >= 0; --mode)
+      ASSERT_TRUE(nocomp(mode)) << "Failed for mode: " << mode;
 }

@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <iostream>
 #include "TROOT.h"
@@ -26,7 +26,20 @@ ClassImp(TLine);
 /** \class TLine
 \ingroup BasicGraphics
 
-A simple line.
+Use the TLine constructor to create a simple line.
+
+~~~ {.cpp}
+   TLine(Double_t x1,Double_t y1,Double_t x2,Double_t y2)
+~~~
+
+`x1`, `y1`, `x2`, `y2` are the coordinates of the first and the second point.
+
+_**Example**_:
+
+~~~ {.cpp}
+   root[] l = new TLine(0.2,0.2,0.8,0.3)
+   root[] l->Draw()
+~~~
 */
 
 
@@ -75,6 +88,7 @@ void TLine::Copy(TObject &obj) const
 
 Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    if (!TestBit(kLineNDC)) return DistancetoLine(px,py,gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
    Double_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
    Double_t y1 = gPad->GetY1() + fY1*(gPad->GetY2()-gPad->GetY1());
@@ -346,7 +360,7 @@ void TLine::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Locate:
 
       ExecuteEvent(kButton1Down, px, py);
-      while (1) {
+      while (true) {
          px = py = 0;
          event = gVirtualX->RequestLocator(1,1,px,py);
 
@@ -374,6 +388,7 @@ void TLine::ls(Option_t *) const
 
 void TLine::Paint(Option_t *)
 {
+   if (!gPad) return;
    if (TestBit(kLineNDC)) PaintLineNDC(fX1,fY1,fX2,fY2);
    else                   PaintLine(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
 }
@@ -383,6 +398,7 @@ void TLine::Paint(Option_t *)
 
 void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
+   if (!gPad) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    gPad->PaintLine(x1,y1,x2,y2);
 }
@@ -392,6 +408,7 @@ void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
+   if (!gPad) return;
    TAttLine::Modify();  //Change line attributes only if necessary
    gPad->PaintLineNDC(u1,v1,u2,v2);
 }
@@ -461,7 +478,7 @@ void TLine::SetNDC(Bool_t isNDC)
 void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 {
    SetBit(kHorizontal, set);
-   if (set) {
+   if (set && gPad) {
       SetVertical(kFALSE);
       Int_t px1 = gPad->XtoAbsPixel(fX1);
       Int_t px2 = gPad->XtoAbsPixel(fX2);
@@ -482,7 +499,7 @@ void TLine::SetHorizontal(Bool_t set /*= kTRUE*/)
 void TLine::SetVertical(Bool_t set /*= kTRUE*/)
 {
    SetBit(kVertical, set);
-   if (set) {
+   if (set && gPad) {
       SetHorizontal(kFALSE);
       Int_t px1 = gPad->XtoAbsPixel(fX1);
       Int_t px2 = gPad->XtoAbsPixel(fX2);
@@ -526,7 +543,8 @@ void TLine::Streamer(TBuffer &R__b)
 
 Rectangle_t TLine::GetBBox()
 {
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
    px2 = gPad->XtoPixel(fX2);
@@ -550,7 +568,8 @@ Rectangle_t TLine::GetBBox()
 
 TPoint TLine::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));
    return(p);
@@ -561,6 +580,7 @@ TPoint TLine::GetBBoxCenter()
 
 void TLine::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fX2>fX1) {
@@ -586,6 +606,7 @@ void TLine::SetBBoxCenter(const TPoint &p)
 
 void TLine::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    Double_t w = TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2);
    if (fX2>fX1) {
       this->SetX1(gPad->PixeltoX(x)-0.5*w);
@@ -602,6 +623,7 @@ void TLine::SetBBoxCenterX(const Int_t x)
 
 void TLine::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    Double_t h = TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2);
    if (fY2>fY1) {
       this->SetY1(gPad->PixeltoY(y-gPad->VtoPixel(0))-0.5*h);
@@ -619,6 +641,7 @@ void TLine::SetBBoxCenterY(const Int_t y)
 
 void TLine::SetBBoxX1(const Int_t x)
 {
+   if (!gPad) return;
    if (fX2>fX1)
       this->SetX1(gPad->PixeltoX(x));
    else
@@ -631,6 +654,7 @@ void TLine::SetBBoxX1(const Int_t x)
 
 void TLine::SetBBoxX2(const Int_t x)
 {
+   if (!gPad) return;
    if (fX2>fX1)
       this->SetX2(gPad->PixeltoX(x));
    else
@@ -642,6 +666,7 @@ void TLine::SetBBoxX2(const Int_t x)
 
 void TLine::SetBBoxY1(const Int_t y)
 {
+   if (!gPad) return;
    if (fY2>fY1)
       this->SetY2(gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else
@@ -654,6 +679,7 @@ void TLine::SetBBoxY1(const Int_t y)
 
 void TLine::SetBBoxY2(const Int_t y)
 {
+   if (!gPad) return;
    if (fY2>fY1)
       this->SetY1(gPad->PixeltoY(y - gPad->VtoPixel(0)));
    else

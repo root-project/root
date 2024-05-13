@@ -1,5 +1,6 @@
-# roottest is its own repo
+# roottest & rootbench are their own repos
 roottest
+rootbench
 
 # MacOS Xcode
 xcuserdata
@@ -8,14 +9,14 @@ project.xcworkspace
 # MacOS metadata
 .DS_Store
 
-# Visual Code
+# VS Code
 .vs/
 .vscode
 .build
 
 # CLion
 .idea/*
-cmake-build-*/
+cmake-build*/
 
 # QtCreator
 CMakeLists.txt.user
@@ -26,6 +27,7 @@ CMakeLists.txt.user
 .cproject
 .project
 .externalToolBuilders
+.pydevproject
 
 # Vim
 *.swp
@@ -33,3 +35,14 @@ CMakeLists.txt.user
 # Other Stuff
 tags
 *.d
+.cache
+.gdb_history
+compile_commands.json
+
+# Doxygen
+documentation/doxygen/*.eps
+documentation/doxygen/*.pcm
+documentation/doxygen/*.jpg
+
+# Pycache
+__pycache__

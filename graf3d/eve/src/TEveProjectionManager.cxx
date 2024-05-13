@@ -39,12 +39,12 @@ ClassImp(TEveProjectionManager);
 TEveProjectionManager::TEveProjectionManager(TEveProjection::EPType_e type):
    TEveElementList("TEveProjectionManager",""),
    TAttBBox(),
-   fProjection  (0),
+   fProjection  (nullptr),
    fCurrentDepth(0),
    fImportEmpty (kFALSE)
 {
    for (Int_t i = 0; i < TEveProjection::kPT_End; ++i)
-      fProjections[i] = 0;
+      fProjections[i] = nullptr;
 
    if (type != TEveProjection::kPT_Unknown)
       SetProjection(type);
@@ -100,18 +100,38 @@ void TEveProjectionManager::SetProjection(TEveProjection::EPType_e type)
 {
    static const TEveException eH("TEveProjectionManager::SetProjection ");
 
-   if (fProjections[type] == 0)
+   if (fProjections[type] == nullptr)
    {
       switch (type)
       {
+         case TEveProjection::kPT_RhoZ:
+         {
+            fProjections[type] = new TEveRhoZProjection();
+            break;
+         }
          case TEveProjection::kPT_RPhi:
          {
             fProjections[type] = new TEveRPhiProjection();
             break;
          }
-         case TEveProjection::kPT_RhoZ:
+         case TEveProjection::kPT_XZ:
          {
-            fProjections[type] = new TEveRhoZProjection();
+            fProjections[type] = new TEveXZProjection();
+            break;
+         }
+         case TEveProjection::kPT_YZ:
+         {
+            fProjections[type] = new TEveYZProjection();
+            break;
+         }
+         case TEveProjection::kPT_ZX:
+         {
+            fProjections[type] = new TEveZXProjection();
+            break;
+         }
+         case TEveProjection::kPT_ZY:
+         {
+            fProjections[type] = new TEveZYProjection();
             break;
          }
          case TEveProjection::kPT_3D:
@@ -190,7 +210,7 @@ void TEveProjectionManager::UpdateDependentElsAndScenes(TEveElement* root)
    }
 
    List_t scenes;
-   root->CollectSceneParentsFromChildren(scenes, 0);
+   root->CollectSceneParentsFromChildren(scenes, nullptr);
    gEve->ScenesChanged(scenes);
 }
 
@@ -207,11 +227,11 @@ TEveElement* TEveProjectionManager::ImportElementsRecurse(TEveElement* el,
 {
    static const TEveException eh("TEveProjectionManager::ImportElementsRecurse ");
 
-   TEveElement *new_el = 0;
+   TEveElement *new_el = nullptr;
 
    if (ShouldImport(el))
    {
-      TEveProjected   *new_pr = 0;
+      TEveProjected   *new_pr = nullptr;
       TEveProjectable *pble   = dynamic_cast<TEveProjectable*>(el);
       if (pble)
       {

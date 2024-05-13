@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis  *
  * Package: TMVA                                                             *
  * Class  : MethodCompositeBase                                              *
- * Web    : http://tmva.sourceforge.net                                      *
+ *                                        *
  *                                                                           *
  * Description:                                                              *
  *      Virtual base class for all MVA method                                *
@@ -25,7 +25,7 @@
  *                                                                           *
  * Redistribution and use in source and binary forms, with or without        *
  * modification, are permitted according to the terms listed in LICENSE      *
- * (http://tmva.sourceforge.net/LICENSE)                                     *
+ * (see tmva/doc/LICENSE)                                     *
  *****************************************************************************/
 
 /*! \class TMVA::MethodCompositeBase
@@ -228,8 +228,8 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
 {
    TString var, dummy;
-   TString methodName, methodTitle=GetMethodName(),
-      jobName=GetJobName(),optionString=GetOptions();
+   TString methodName, methodTitle = GetMethodName(),
+      jobName=GetJobName(),optionString = GetOptions();
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)
    // coverity[tainted_data_argument]
@@ -254,8 +254,9 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
          istr >> dummy >> optionString;
          if (GetMethodType() == Types::kBoost)
             ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodName), methodTitle,  optionString );
+      } else {
+         methodTitle = TString::Format("%s (%04i)",GetMethodName().Data(),fCurrentMethodIdx);
       }
-      else methodTitle=Form("%s (%04i)",GetMethodName().Data(),fCurrentMethodIdx);
       fMethods.push_back(
          ClassifierFactory::Instance().Create(methodName.Data(), jobName, methodTitle, DataInfo(), optionString));
       fMethodWeight.push_back( methodWeight );

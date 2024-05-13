@@ -66,7 +66,7 @@ void float16()
 
    auto h = new TH1F("h", "Float16_t compression and precision", nb, 0, nb);
    h->SetMaximum(18);
-   h->SetStats(0);
+   h->SetStats(false);
 
    auto gcx = new TGraph();
    gcx->SetName("gcx");

@@ -2,7 +2,7 @@
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -12,7 +12,6 @@
 #include <iostream>
 #include "TROOT.h"
 #include "TExec.h"
-#include "snprintf.h"
 
 ClassImp(TExec);
 
@@ -143,16 +142,15 @@ TExec::TExec(const TExec &e) : TNamed(e)
 
 void TExec::Exec(const char *command)
 {
-   if (command && (strlen(command) > 1))  gROOT->ProcessLine(command);
-   else  {
-      if (strlen(GetTitle()) > 0)         gROOT->ProcessLine(GetTitle());
-      else  {
-         if (strchr(GetName(),'('))      {gROOT->ProcessLine(GetName()); return;}
-         if (strchr(GetName(),'.'))      {gROOT->ProcessLine(GetName()); return;}
-         char action[512];
-         snprintf(action, sizeof(action), ".x %s.C", GetName());
-         gROOT->ProcessLine(action);
-      }
+   if (command && (strlen(command) > 1))
+      gROOT->ProcessLine(command);
+   else if (strlen(GetTitle()) > 0)
+      gROOT->ProcessLine(GetTitle());
+   else if (strchr(GetName(),'(') || strchr(GetName(),'.'))
+      gROOT->ProcessLine(GetName());
+   else {
+      auto action = TString::Format(".x %s.C", GetName());
+      gROOT->ProcessLine(action.Data());
    }
 }
 
@@ -170,12 +168,13 @@ void TExec::Paint(Option_t *)
 void TExec::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
-   if (gROOT->ClassSaved(TExec::Class())) {
+   if (gROOT->ClassSaved(TExec::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TExec *";
-   }
-   out<<"exec = new TExec("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<");"<<std::endl;
+
+   out<<"exec = new TExec("<<quote<<GetName()<<quote<<", "
+      <<quote<<TString(GetTitle()).ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
 
    out<<"   exec->Draw();"<<std::endl;
 }

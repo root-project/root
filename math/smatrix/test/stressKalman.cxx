@@ -343,12 +343,12 @@ public:
    //     fWatch.Start();
    //   }
    TestTimer(TimeReport & r ) :
-   fTime(0), fRep(&r)
+   fTime(nullptr), fRep(&r)
    {
       fName = fRep->name();
       fWatch.Start();
    }
-   TestTimer(double & t, const std::string & s = "") : fName(s), fTime(&t), fRep(0)
+   TestTimer(double & t, const std::string & s = "") : fName(s), fTime(&t), fRep(nullptr)
    {
       fWatch.Start();
    }

@@ -23,7 +23,7 @@ void Classification()
    TMVA::Tools::Instance();
    ROOT::R::TRInterface &r = ROOT::R::TRInterface::Instance();
 
-   TString outfileName("TMVA.root");
+   TString outfileName("RMVA.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    TMVA::Factory *factory = new TMVA::Factory("RMVAClassification", outputFile,
@@ -45,7 +45,7 @@ void Classification()
    }
    else {
       TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;

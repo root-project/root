@@ -6,14 +6,23 @@
 #include "ProxyWrappers.h"
 #include "PyStrings.h"
 
+// As of Python 3.12, we can't use the PyMethod_GET_FUNCTION and
+// PyMethod_GET_SELF macros anymore, as the contain asserts that check if the
+// Python type is actually PyMethod_Type. If the Python type is
+// CustomInstanceMethod_Type, we need our own macros. Technically they do they
+// same, because the actual C++ type of the PyObject is PyMethodObject anyway.
+#define CustomInstanceMethod_GET_SELF(meth) reinterpret_cast<PyMethodObject *>(meth)->im_self
+#define CustomInstanceMethod_GET_FUNCTION(meth) reinterpret_cast<PyMethodObject *>(meth)->im_func
 #if PY_VERSION_HEX >= 0x03000000
 // TODO: this will break functionality
-#define PyMethod_GET_CLASS(meth) Py_None
+#define CustomInstanceMethod_GET_CLASS(meth) Py_None
+#else
+#define CustomInstanceMethod_GET_CLASS(meth) PyMethod_GET_CLASS(meth)
 #endif
-
 
 namespace CPyCppyy {
 
+#if PY_VERSION_HEX < 0x03000000
 //= float type allowed for reference passing =================================
 PyTypeObject RefFloat_Type = {     // python float is a C/C++ double
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
@@ -61,26 +70,91 @@ PyTypeObject RefInt_Type = {       // python int is a C/C++ long
     , 0                            // tp_finalize
 #endif
 };
+#endif
 
 //- custom type representing typedef to pointer of class ---------------------
-static PyObject* tpc_call(typedefpointertoclassobject* self, PyObject* args, PyObject* /* kwds */)
+static PyObject* tptc_call(typedefpointertoclassobject* self, PyObject* args, PyObject* /* kwds */)
 {
     long long addr = 0;
     if (!PyArg_ParseTuple(args, const_cast<char*>("|L"), &addr))
         return nullptr;
-    return BindCppObjectNoCast((Cppyy::TCppObject_t)(intptr_t)addr, self->fType);
+    return BindCppObjectNoCast((Cppyy::TCppObject_t)(intptr_t)addr, self->fCppType);
 }
+
+//-----------------------------------------------------------------------------
+static PyObject* tptc_getcppname(typedefpointertoclassobject* self, void*)
+{
+    return CPyCppyy_PyText_FromString(
+        (Cppyy::GetScopedFinalName(self->fCppType)+"*").c_str());
+}
+
+//-----------------------------------------------------------------------------
+static PyObject* tptc_name(typedefpointertoclassobject* self, void*)
+{
+    PyObject* pyclass = CPyCppyy::GetScopeProxy(self->fCppType);
+    if (pyclass) {
+        PyObject* pyname = PyObject_GetAttr(pyclass, PyStrings::gName);
+        Py_DECREF(pyclass);
+        return pyname;
+    }
+
+    return CPyCppyy_PyText_FromString("<unknown>*");
+}
+
+//-----------------------------------------------------------------------------
+static PyGetSetDef tptc_getset[] = {
+    {(char*)"__name__",     (getter)tptc_name, nullptr, nullptr, nullptr},
+    {(char*)"__cpp_name__", (getter)tptc_getcppname, nullptr, nullptr, nullptr},
+    {(char*)nullptr, nullptr, nullptr, nullptr, nullptr}
+};
+
 
 PyTypeObject TypedefPointerToClass_Type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
     (char*)"cppyy.TypedefPointerToClass",// tp_name
     sizeof(typedefpointertoclassobject), // tp_basicsize
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    (ternaryfunc)tpc_call,        // tp_call
-    0, 0, 0, 0,
-    Py_TPFLAGS_DEFAULT |
-        Py_TPFLAGS_HAVE_GC,       // tp_flags
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0,                              // tp_itemsize
+    0,                              // tp_dealloc
+    0,                              // tp_vectorcall_offset
+    0,                              // tp_getattr
+    0,                              // tp_setattr
+    0,                              // tp_as_async
+    0,                              // tp_repr
+    0,                              // tp_as_number
+    0,                              // tp_as_sequence
+    0,                              // tp_as_mapping
+    0,                              // tp_hash
+    (ternaryfunc)tptc_call,         // tp_call
+    0,                              // tp_str
+    PyObject_GenericGetAttr,        // tp_getattro
+    PyObject_GenericSetAttr,        // tp_setattro
+    0,                              // tp_as_buffer
+    Py_TPFLAGS_DEFAULT,             // tp_flags
+    0,                              // tp_doc
+    0,                              // tp_traverse
+    0,                              // tp_clear
+    0,                              // tp_richcompare
+    0,                              // tp_weaklistoffset
+    0,                              // tp_iter
+    0,                              // tp_iternext
+    0,                              // tp_methods
+    0,                              // tp_members
+    tptc_getset,                    // tp_getset
+    0,                              // tp_base
+    0,                              // tp_dict
+    0,                              // tp_descr_get
+    0,                              // tp_descr_set
+    offsetof(typedefpointertoclassobject, fDict), // tp_dictoffset
+    0,                              // tp_init
+    0,                              // tp_alloc
+    0,                              // tp_new
+    0,                              // tp_free
+    0,                              // tp_is_gc
+    0,                              // tp_bases
+    0,                              // tp_mro
+    0,                              // tp_cache
+    0,                              // tp_subclasses
+    0                               // tp_weaklist
 #if PY_VERSION_HEX >= 0x02030000
     , 0                           // tp_del
 #endif
@@ -89,6 +163,12 @@ PyTypeObject TypedefPointerToClass_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
 #endif
 };
 
@@ -171,13 +251,13 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
 // into the list of arguments. However, the pythonized methods will then have
 // to undo that shuffling, which is inefficient. This method is the same as
 // the one for the instancemethod object, except for the shuffling.
-    PyObject* self = PyMethod_GET_SELF(meth);
+    PyObject* self = CustomInstanceMethod_GET_SELF(meth);
 
     if (!self) {
     // unbound methods must be called with an instance of the class (or a
     // derived class) as first argument
         Py_ssize_t argc = PyTuple_GET_SIZE(args);
-        PyObject* pyclass = PyMethod_GET_CLASS(meth);
+        PyObject* pyclass = CustomInstanceMethod_GET_CLASS(meth);
         if (1 <= argc && PyObject_IsInstance(PyTuple_GET_ITEM(args, 0), pyclass) == 1) {
             self = PyTuple_GET_ITEM(args, 0);
 
@@ -196,12 +276,12 @@ static PyObject* im_call(PyObject* meth, PyObject* args, PyObject* kw)
     } else
         Py_INCREF(args);
 
-    PyCFunctionObject* func = (PyCFunctionObject*)PyMethod_GET_FUNCTION(meth);
+    PyCFunctionObject* func = (PyCFunctionObject*)CustomInstanceMethod_GET_FUNCTION(meth);
 
 // the function is globally shared, so set and reset its "self" (ok, b/c of GIL)
     Py_INCREF(self);
     func->m_self = self;
-    PyObject* result = PyCFunction_Call((PyObject*)func, args, kw);
+    PyObject* result = CPyCppyy_PyCFunction_Call((PyObject*)func, args, kw);
     func->m_self = nullptr;
     Py_DECREF(self);
     Py_DECREF(args);
@@ -213,10 +293,10 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
 {
 // from instancemethod: don't rebind an already bound method, or an unbound method
 // of a class that's not a base class of pyclass
-    if (PyMethod_GET_SELF(meth)
+    if (CustomInstanceMethod_GET_SELF(meth)
 #if PY_VERSION_HEX < 0x03000000
-         || (PyMethod_GET_CLASS(meth) &&
-             !PyObject_IsSubclass(pyclass, PyMethod_GET_CLASS(meth)))
+         || (CustomInstanceMethod_GET_CLASS(meth) &&
+             !PyObject_IsSubclass(pyclass, CustomInstanceMethod_GET_CLASS(meth)))
 #endif
             ) {
         Py_INCREF(meth);
@@ -226,7 +306,7 @@ static PyObject* im_descr_get(PyObject* meth, PyObject* obj, PyObject* pyclass)
     if (obj == Py_None)
         obj = nullptr;
 
-    return CustomInstanceMethod_New(PyMethod_GET_FUNCTION(meth), obj, pyclass);
+    return CustomInstanceMethod_New(CustomInstanceMethod_GET_FUNCTION(meth), obj, pyclass);
 }
 
 //= CPyCppyy custom instance method type =====================================
@@ -255,11 +335,18 @@ PyTypeObject CustomInstanceMethod_Type = {
 #if PY_VERSION_HEX >= 0x03040000
     , 0                            // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
+#endif
 };
 
 
 //= CPyCppyy custom iterator for performance =================================
 static void indexiter_dealloc(indexiterobject* ii) {
+    PyObject_GC_UnTrack(ii);
     Py_XDECREF(ii->ii_container);
     PyObject_GC_Del(ii);
 }
@@ -274,7 +361,7 @@ static PyObject* indexiter_iternext(indexiterobject* ii) {
         return nullptr;
 
     PyObject* pyindex = PyLong_FromSsize_t(ii->ii_pos);
-    PyObject* result = PyObject_CallMethodObjArgs((PyObject*)ii->ii_container, PyStrings::gGetItem, pyindex, nullptr);
+    PyObject* result = PyObject_CallMethodOneArg((PyObject*)ii->ii_container, PyStrings::gGetItem, pyindex);
     Py_DECREF(pyindex);
 
     ii->ii_pos += 1;
@@ -305,6 +392,12 @@ PyTypeObject IndexIter_Type = {
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
 #endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
+#endif
 };
 
 
@@ -328,11 +421,11 @@ static PyObject* vectoriter_iternext(vectoriterobject* vi) {
     // (or at least not during the loop anyway). This gains 2x in performance.
         Cppyy::TCppObject_t cppobj = (Cppyy::TCppObject_t)((ptrdiff_t)vi->vi_data + vi->vi_stride * vi->ii_pos);
         result = CPyCppyy::BindCppObjectNoCast(cppobj, vi->vi_klass, CPyCppyy::CPPInstance::kNoMemReg);
-        if (vi->vi_flags && CPPInstance_Check(result))
+        if ((vi->vi_flags & vectoriterobject::kNeedLifeLine) && result)
             PyObject_SetAttr(result, PyStrings::gLifeLine, vi->ii_container);
     } else {
         PyObject* pyindex = PyLong_FromSsize_t(vi->ii_pos);
-        result = PyObject_CallMethodObjArgs((PyObject*)vi->ii_container, PyStrings::gGetNoCheck, pyindex, nullptr);
+        result = PyObject_CallMethodOneArg((PyObject*)vi->ii_container, PyStrings::gGetNoCheck, pyindex);
         Py_DECREF(pyindex);
     }
 
@@ -363,6 +456,12 @@ PyTypeObject VectorIter_Type = {
 #endif
 #if PY_VERSION_HEX >= 0x03040000
     , 0                           // tp_finalize
+#endif
+#if PY_VERSION_HEX >= 0x03080000
+    , 0                           // tp_vectorcall
+#endif
+#if PY_VERSION_HEX >= 0x030c0000
+    , 0                           // tp_watched
 #endif
 };
 

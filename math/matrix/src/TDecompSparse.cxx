@@ -281,7 +281,7 @@ Bool_t TDecompSparse::Decompose()
                fFact.Set(nFact); fFact.Reset(0.0);
                CopyUpperTriang(fA,fFact.GetArray()+1);
                if (fVerbose)
-                  Info("Decompose()","reseting to: %d",nFact);
+                  Info("Decompose()","resetting to: %d",nFact);
                fRPessimism *= 1.1;
                break;
             }

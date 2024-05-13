@@ -4,9 +4,19 @@
    fun:PyObject_Free
 }
 {
+   a
+   Memcheck:Addr4
+   fun:PyMem_Free
+}
+{
    b
    Memcheck:Cond
    fun:PyObject_Free
+}
+{
+   b
+   Memcheck:Cond
+   fun:PyMem_Free
 }
 {
    c
@@ -14,9 +24,19 @@
    fun:PyObject_Free
 }
 {
+   c
+   Memcheck:Value8
+   fun:PyMem_Free
+}
+{
    d
    Memcheck:Addr4
    fun:PyObject_Realloc
+}
+{
+   d
+   Memcheck:Addr4
+   fun:PyMem_Realloc
 }
 {
    e
@@ -24,9 +44,44 @@
    fun:PyObject_Realloc
 }
 {
+   e
+   Memcheck:Cond
+   fun:PyMem_Realloc
+}
+{
    f
    Memcheck:Value8
    fun:PyObject_Realloc
+}
+{
+   f
+   Memcheck:Value8
+   fun:PyMem_Realloc
+}
+{
+   g
+   Memcheck:Addr4
+   fun:PyMarshal_ReadObjectFromString
+}
+{
+   h
+   Memcheck:Addr4
+   fun:PyGrammar_RemoveAccelerators
+}
+{
+   i
+   Memcheck:Addr4
+   obj:*python*
+}
+{
+   j
+   Memcheck:Value8
+   obj:*python*
+}
+{
+   j
+   Memcheck:Cond
+   obj:*python*
 }
 
 ######### PyROOT intentionally not freed memory
@@ -97,4 +152,3 @@
    fun:_PyObject_GC_Malloc
    fun:_PyObject_GC_NewVar
 }
-

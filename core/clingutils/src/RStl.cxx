@@ -72,6 +72,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
    if (!templateCl) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
+      return;
    }
 
    if ( TClassEdit::STLKind( stlclass->getName().str() )  == ROOT::kSTLvector ) {
@@ -88,17 +89,21 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
       }
    }
 
-   fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,
-                                                       thisType.getTypePtr(),
-                                                       stlclass,
-                                                       "",
-                                                       false /* for backward compatibility rather than 'true' .. neither really make a difference */,
-                                                       false,
-                                                       false,
-                                                       false,
-                                                       -1,
-                                                       interp,
-                                                       normCtxt) );
+   // clang-format off
+   fList.insert(ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,
+                                                      thisType.getTypePtr(),
+                                                      stlclass,
+                                                      "",
+                                                      false, /* for backward compatibility rather than 'true' ..
+                                                                neither really make a difference */
+                                                      false,
+                                                      false,
+                                                      false,
+                                                      -1,
+                                                      0,
+                                                      interp,
+                                                      normCtxt));
+   // clang-format on
 
    // fprintf(stderr,"Registered the STL class %s as needing a dictionary\n",R__GetQualifiedName(*stlclass).c_str());
 
@@ -127,9 +132,10 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
    // Force the generation of the TClass for the given class.
    const clang::ClassTemplateSpecializationDecl *templateCl = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl>(stlclass);
 
-   if (templateCl == 0) {
+   if (!templateCl) {
       ROOT::TMetaUtils::Error("RStl::GenerateTClassFor","%s not in a template",
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
+      return;
    }
 
 
@@ -147,7 +153,19 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
       }
    }
 
-   fList.insert( ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,stlclass,requestedName,true,false,false,false,-1, interp,normCtxt) );
+   // clang-format off
+   fList.insert(ROOT::TMetaUtils::AnnotatedRecordDecl(++fgCount,
+                                                      stlclass,
+                                                      requestedName,
+                                                      true,
+                                                      false,
+                                                      false,
+                                                      false,
+                                                      -1,
+                                                      0,
+                                                      interp,
+                                                      normCtxt));
+   // clang-format on
 
    TClassEdit::TSplitType splitType( requestedName, (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
    for(unsigned int i=0; i <  templateCl->getTemplateArgs().size(); ++i) {
@@ -207,7 +225,7 @@ void ROOT::Internal::RStl::WriteClassInit(std::ostream &ostr,
          const cling::LookupHelper& lh = interp.getLookupHelper();
          result = llvm::dyn_cast_or_null<clang::CXXRecordDecl>(lh.findScope(iter->GetNormalizedName(),
                                                                             cling::LookupHelper::NoDiagnostics,
-                                                                            0)
+                                                                            nullptr)
                                                                );
 
          if (!result || !iter->GetRecordDecl()->getDefinition()) {

@@ -1,5 +1,5 @@
 /// \file RAxis.cxx
-/// \ingroup Hist ROOT7
+/// \ingroup HistV7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-08-06
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -15,8 +15,18 @@
 
 #include "ROOT/RAxis.hxx"
 
+#include "ROOT/RHistUtils.hxx"
+#include <ROOT/RLogger.hxx>
+
 #include <cmath>
 #include <limits>
+
+// From RHistUtils.hxx:
+ROOT::Experimental::RLogChannel &ROOT::Experimental::HistLog() {
+   static RLogChannel sLog("ROOT.Hist");
+   return sLog;
+}
+
 
 ROOT::Experimental::RAxisBase::~RAxisBase() {}
 

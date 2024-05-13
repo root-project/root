@@ -1,11 +1,11 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::TActivationChooser                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Class for easily choosing activation functions.                           *
@@ -18,9 +18,9 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
- 
+
 
 #ifndef ROOT_TMVA_TActivationChooser
 #define ROOT_TMVA_TActivationChooser
@@ -40,7 +40,7 @@ namespace TMVA {
 
    class TActivation;
    class MsgLogger;
-   
+
    class TActivationChooser {
    public:
 
@@ -60,14 +60,14 @@ namespace TMVA {
 
    private:
 
-      TString fLINEAR;  // activation function name
-      TString fSIGMOID; // activation function name
-      TString fTANH;    // activation function name
-      TString fRELU;    // activation function name
-      TString fRADIAL;  // activation function name
+      TString fLINEAR;  ///< activation function name
+      TString fSIGMOID; ///< activation function name
+      TString fTANH;    ///< activation function name
+      TString fRELU;    ///< activation function name
+      TString fRADIAL;  ///< activation function name
 
-      mutable MsgLogger* fLogger;                     //! message logger
-      MsgLogger& Log() const { return *fLogger; }                       
+      mutable MsgLogger* fLogger;                     ///<! message logger
+      MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(TActivationChooser,0); // Class for choosing activation functions
    };

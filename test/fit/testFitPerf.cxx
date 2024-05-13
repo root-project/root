@@ -44,8 +44,7 @@
 #include "RooDataSet.h"
 #include "RooRealVar.h"
 #include "RooGaussian.h"
-#include "RooMinuit.h"
-#include "RooChi2Var.h"
+#include "RooMinimizer.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 #include "RooProdPdf.h"
@@ -517,10 +516,7 @@ int  FitUsingRooFit(TH1 * hist, TF1 * func) {
       assert(pdf != 0);
 #define USE_CHI2_FIT
 #ifdef USE_CHI2_FIT
-      RooChi2Var chi2("chi2","chi2",*pdf,data) ;
-      RooMinuit m(chi2) ;
-      m.setPrintLevel(-1);
-      m.fit("mh") ;
+      pdf->chi2FitTo(data, RooFit::PrintLevel(-1));
 #else
       pdf->fitTo(data);
 #endif
@@ -552,17 +548,16 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       RooRealVar x("x","x",-100,100) ;
       RooRealVar y("y","y",-100,100);
 
-      RooDataSet data("unbindata","unbin dataset with x",tree,RooArgSet(x,y)) ;
-
+      RooDataSet data("unbindata","unbin dataset with x", {x,y}, RooFit::Import(*tree)) ;
 
       RooRealVar mean("mean","Mean of Gaussian",iniPar[0], -100,100) ;
-      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], -100, 100) ;
+      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], 0.01, 100) ;
 
       RooGaussian pdfx("gaussx","gauss(x,mean,sigma)",x,mean,sigma);
 
       // for 2d data
       RooRealVar meany("meanx","Mean of Gaussian",iniPar[2], -100,100) ;
-      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], -100, 100) ;
+      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], 0.01, 100) ;
       RooGaussian pdfy("gaussy","gauss(y,meanx,sigmay)",y,meany,sigmay);
 
       RooProdPdf pdf("gausxy","gausxy",RooArgSet(pdfx,pdfy) );
@@ -578,11 +573,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       bool save = false;
 #endif
 
-//#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-// #else
-//       RooFitResult * result = pdf.fitTo(data );
-// #endif
+      std::unique_ptr<RooFitResult> result{pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       mean.Print();
@@ -633,8 +624,7 @@ int  FitUsingRooFit2(TTree * tree) {
          xvars.add( *x[j] );
       }
 
-
-      RooDataSet data("unbindata","unbin dataset with x",tree,xvars) ;
+      RooDataSet data("unbindata","unbin dataset with x",xvars, RooFit::Import(*tree));
 
       // create the gaussians
       for (int j = 0; j < N; ++j) {
@@ -643,7 +633,7 @@ int  FitUsingRooFit2(TTree * tree) {
 
 
          m[j] = new RooRealVar(mname.c_str(),mname.c_str(),iniPar[2*j],-100,100) ;
-         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],-100,100) ;
+         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],0.01,100) ;
 
          std::string gname = "g_" + ROOT::Math::Util::ToString(j);
          g[j] = new RooGaussian(gname.c_str(),"gauss(x,mean,sigma)",*x[j],*m[j],*s[j]);
@@ -660,9 +650,6 @@ int  FitUsingRooFit2(TTree * tree) {
 
       }
 
-
-
-
 #ifdef DEBUG
       int level = 3;
       std::cout << "num entries = " << data.numEntries() << std::endl;
@@ -675,11 +662,7 @@ int  FitUsingRooFit2(TTree * tree) {
 #endif
 
 
-#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf[N-1]->fitTo(data);
-#endif
+      std::unique_ptr<RooFitResult> result{pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       assert(result != 0);

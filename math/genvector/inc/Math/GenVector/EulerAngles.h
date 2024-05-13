@@ -39,6 +39,8 @@ namespace Math {
       a slightly different convention.
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 class EulerAngles {
 
@@ -49,7 +51,7 @@ public:
   /**
      Default constructor
   */
-   EulerAngles() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
+   constexpr EulerAngles() : fPhi(0.0), fTheta(0.0), fPsi(0.0) { }
 
    /**
       Constructor from phi, theta and psi
@@ -64,7 +66,7 @@ public:
       the angles phi, theta and psi.
    */
    template<class IT>
-   EulerAngles(IT begin, IT end) { SetComponents(begin,end); }
+   constexpr EulerAngles(IT begin, IT end) { SetComponents(begin,end); }
 
    // The compiler-generated copy ctor, copy assignment, and dtor are OK.
 
@@ -74,13 +76,13 @@ public:
    void Rectify();
 
 
-   // ======== Construction and assignement from any other rotation ==================
+   // ======== Construction and assignment from any other rotation ==================
 
    /**
       Create from any other supported rotation (see gv_detail::convert )
     */
    template <class OtherRotation>
-   explicit EulerAngles(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr EulerAngles(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
    /**
       Assign from any other rotation (see gv_detail::convert )

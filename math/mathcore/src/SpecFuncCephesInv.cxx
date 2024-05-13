@@ -175,7 +175,7 @@ double ndtri( double y0 )
 
 /*
  *
- *      Inverse of complemented imcomplete gamma integral
+ *      Inverse of complemented incomplete gamma integral
  *
  *
  *
@@ -364,7 +364,7 @@ done:
 
 /*
  *
- *      Inverse of imcomplete beta integral
+ *      Inverse of incomplete beta integral
  *
  *
  *

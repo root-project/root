@@ -130,7 +130,7 @@
 #pragma link C++ class MemInfo_t+;
 #pragma link C++ class ProcInfo_t+;
 #pragma link C++ class TTask+;
-#pragma link C++ class TTime;
+#pragma link C++ class TTime+;
 #pragma link C++ class TTimer;
 #pragma link C++ class TQObject-;
 #pragma link C++ class TQObjSender;

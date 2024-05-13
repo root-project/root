@@ -36,13 +36,13 @@ class TMessageHandler : public TNamed, public TQObject {
 protected:
    const TClass   *fClass;      // class for which message has to be handled
    const TObject  *fMessObj;    // object generating message
-   Int_t           fMessId;     // message id (often matching specific enum in fClass)
+   Long_t          fMessId;     // message id (often matching specific enum in fClass)
    Int_t           fSize;       // number of different messages handled
    Int_t          *fCnts;       // count per message
-   Int_t          *fMessIds;    // message ids
+   Long_t         *fMessIds;    // message ids
    Bool_t          fDerived;    // if true handle messages also for derived classes
 
-   void  *GetSender() { return this; }  //used to set gTQSender
+   void  *GetSender() override { return this; }  //used to set gTQSender
 
 public:
    TMessageHandler(const TClass *cl, Bool_t derived = kTRUE);
@@ -50,22 +50,22 @@ public:
    virtual ~TMessageHandler();
 
    Int_t           GetSize() const { return fSize; }
-   virtual Int_t   GetMessageCount(Int_t messId) const;
+   virtual Int_t   GetMessageCount(Long_t messId) const;
    virtual Int_t   GetTotalMessageCount() const;
    Bool_t          HandleDerived() const { return fDerived; }
-   virtual void    HandleMessage(Int_t id, const TObject *obj);
+   virtual void    HandleMessage(Long_t id, const TObject *obj);
 
-   virtual void    Print(Option_t *option= "") const;
+   void            Print(Option_t *option= "") const override;
 
    virtual void    Add();
    virtual void    Remove();
-   virtual Bool_t  Notify();
+   Bool_t          Notify() override;
 
    virtual void    Added()    { Emit("Added()"); }       //*SIGNAL*
    virtual void    Removed()  { Emit("Removed()"); }     //*SIGNAL*
    virtual void    Notified() { Emit("Notified()"); }    //*SIGNAL*
 
-   ClassDef(TMessageHandler,0)  // Generic message handler
+   ClassDefOverride(TMessageHandler,0)  // Generic message handler
 };
 
 #endif

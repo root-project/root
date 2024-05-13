@@ -12,15 +12,6 @@
 #ifndef ROOT_TGDimension
 #define ROOT_TGDimension
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGDimension, TGPosition, TGLongPosition, TGInsets and TGRectangle    //
-//                                                                      //
-// Several small geometry classes that implement dimensions             //
-// (width and height), positions (x and y), insets and rectangles.      //
-// They are trivial and their members are public.                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "RtypesCore.h"
 
@@ -44,8 +35,8 @@ public:
 
 class TGPosition {
 public:
-   Int_t  fX;         // x position
-   Int_t  fY;         // y position
+   Int_t  fX;         ///< x position
+   Int_t  fY;         ///< y position
 
    TGPosition(): fX(0), fY(0) { }
    TGPosition(Int_t xc, Int_t yc): fX(xc), fY(yc) { }
@@ -62,8 +53,8 @@ public:
 
 class TGLongPosition {
 public:
-   Long_t  fX;         // x position
-   Long_t  fY;         // y position
+   Long_t  fX;         ///< x position
+   Long_t  fY;         ///< y position
 
    TGLongPosition(): fX(0), fY(0) { }
    TGLongPosition(Long_t xc, Long_t yc): fX(xc), fY(yc) { }
@@ -80,10 +71,10 @@ public:
 
 class TGInsets {
 public:
-   Int_t  fL;    // left
-   Int_t  fR;    // right
-   Int_t  fT;    // top
-   Int_t  fB;    // bottom
+   Int_t  fL;    ///< left
+   Int_t  fR;    ///< right
+   Int_t  fT;    ///< top
+   Int_t  fB;    ///< bottom
 
    TGInsets(): fL(0), fR(0), fT(0), fB(0) { }
    TGInsets(Int_t lf, Int_t rg, Int_t tp, Int_t bt):
@@ -97,10 +88,10 @@ public:
 
 class TGRectangle {
 public:
-   Int_t         fX;    // x position
-   Int_t         fY;    // y position
-   UInt_t        fW;    // width
-   UInt_t        fH;    // height
+   Int_t         fX;    ///< x position
+   Int_t         fY;    ///< y position
+   UInt_t        fW;    ///< width
+   UInt_t        fH;    ///< height
 
    // constructors
    TGRectangle(): fX(0), fY(0), fW(0), fH(0) { Empty(); }

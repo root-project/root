@@ -1,6 +1,5 @@
-#include "ROOT/RMakeUnique.hxx"
-
 #include "gtest/gtest.h"
+#include <memory>
 
 class A {
 public:

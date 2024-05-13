@@ -14,10 +14,8 @@
 
 #include "DllImport.h"
 
-#ifndef __CINT__
 #ifdef __cplusplus
 extern "C" {
-#endif
 #endif
 
 typedef enum { kInit = -1, kLine1, kOneChar, kCleanUp, kClear } EGetLineMode;
@@ -37,10 +35,8 @@ void Gl_setColors(const char* colorTab, const char* colorTabComp, const char* co
 R__EXTERN int (*Gl_beep_hook)();
 R__EXTERN int (*Gl_in_key)(int key);
 
-#ifndef __CINT__
 #ifdef __cplusplus
 }
-#endif
 #endif
 
 #endif

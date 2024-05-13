@@ -21,7 +21,7 @@ void geom_alice_its()
 {
    TEveManager::Create();
 
-   gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/alice.root");
+   gGeoManager = gEve->GetGeometry("http://root.cern/files/alice.root");
 
    TGeoNode* node = gGeoManager->GetTopVolume()->FindNode("ITSV_1");
    TEveGeoTopNode* its = new TEveGeoTopNode(gGeoManager, node);
@@ -56,7 +56,7 @@ TEveGeoNode* descend_extract(TGeoNode* node)
 
    const TString material("ITS_SI$");
 
-   TEveGeoNode *res = 0;
+   TEveGeoNode *res = nullptr;
 
    auto medium = node->GetVolume()->GetMedium();
    if (medium && material == medium->GetName()) {
@@ -70,7 +70,7 @@ TEveGeoNode* descend_extract(TGeoNode* node)
       auto ed = descend_extract(node->GetDaughter(i));
 
       if (ed) {
-         if (res == 0) res = new TEveGeoNode(node);
+         if (res == nullptr) res = new TEveGeoNode(node);
          res->AddElement(ed);
       }
    }
@@ -84,7 +84,7 @@ void extract_ssd_modules()
 
    TEveManager::Create();
 
-   gGeoManager = gEve->GetGeometry("http://root.cern.ch/files/alice.root");
+   gGeoManager = gEve->GetGeometry("http://root.cern/files/alice.root");
 
    Bool_t s = gGeoManager->cd("/ITSV_1/ITSD_1/IT56_1");
    if (!s) {
@@ -96,7 +96,7 @@ void extract_ssd_modules()
 
    TEveGeoNode *egn = descend_extract(node);
 
-   if (egn == 0) {
+   if (egn == nullptr) {
       Warning(kEH, "No matching nodes found.");
       return;
    }

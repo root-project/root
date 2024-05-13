@@ -20,6 +20,7 @@
 #include <iostream>
 
 #include "TString.h"
+#include "TError.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -28,15 +29,20 @@
 std::istream& TString::ReadFile(std::istream& strm)
 {
    // get file size
-   Ssiz_t end, cur = strm.tellg();
+   auto cur = strm.tellg();
    strm.seekg(0, std::ios::end);
-   end = strm.tellg();
+   auto end = strm.tellg();
    strm.seekg(cur);
 
    // any positive number of reasonable size for a file
    const Ssiz_t incr = 256;
 
-   Clobber(end-cur);
+   Long64_t fileSize = end - cur;
+   if(fileSize > MaxSize()) {
+      Error("TString::ReadFile", "file size too large (%lld, max = %d), clamping", fileSize, MaxSize());
+      fileSize = MaxSize();
+   }
+   Clobber(fileSize);
 
    while(1) {
       Ssiz_t len = Length();
@@ -136,8 +142,8 @@ std::istream& TString::ReadToken(std::istream& strm)
    UInt_t wid = strm.width(0);
    char c='\0';
    Int_t hitSpace = 0;
-   while ((wid == 0 || Length() < (Int_t)wid) &&
-          strm.get(c).good() && (hitSpace = isspace((Int_t)c)) == 0) {
+   while ((wid == 0 || Length() < (Int_t)wid) && strm.get(c).good() &&
+          (hitSpace = isspace(static_cast<unsigned char>(c))) == 0) {
       // Check for overflow:
       Ssiz_t len = Length();
       Ssiz_t cap = Capacity();
@@ -192,8 +198,8 @@ std::ostream& operator<<(std::ostream& os, const TString& s)
 // ------------------- C I/O ------------------------------------
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read one line from the stream, including the \n, or until EOF.
-/// Remove the trailing [\r]\n if chop is true. Returns kTRUE if data was read.
+/// Read one line from the stream, including the `\n`, or until EOF.
+/// Remove the trailing `[\r]\n` if chop is true. Returns kTRUE if data was read.
 
 Bool_t TString::Gets(FILE *fp, Bool_t chop)
 {
@@ -203,10 +209,10 @@ Bool_t TString::Gets(FILE *fp, Bool_t chop)
    Clobber(256);
 
    do {
-      if (fgets(buf, sizeof(buf), fp) == 0) break;
+      if (fgets(buf, sizeof(buf), fp) == nullptr) break;
       *this += buf;
       r = kTRUE;
-   } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == 0);
+   } while (!ferror(fp) && !feof(fp) && strchr(buf,'\n') == nullptr);
 
    if (chop && EndsWith("\n")) {
       Chop();

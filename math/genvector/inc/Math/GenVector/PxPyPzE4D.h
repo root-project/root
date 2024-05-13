@@ -36,6 +36,8 @@ namespace Math {
     The metric used is (-,-,-,+)
 
     @ingroup GenVector
+
+    @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <class ScalarType = double>
@@ -44,6 +46,7 @@ class PxPyPzE4D {
 public :
 
    typedef ScalarType Scalar;
+   static constexpr unsigned int Dimension = 4U;
 
    // --------- Constructors ---------------
 
@@ -65,7 +68,7 @@ public :
       implementing x(), y() and z() and t()
    */
    template <class CoordSystem>
-   explicit PxPyPzE4D(const CoordSystem & v) :
+   explicit constexpr PxPyPzE4D(const CoordSystem & v) :
       fX( v.x() ), fY( v.y() ), fZ( v.z() ), fT( v.t() )  { }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -135,7 +138,7 @@ public :
    /**
       magnitude of spatial components (magnitude of 3-momentum)
    */
-   Scalar P() const { return sqrt(P2()); }
+   Scalar P() const { using std::sqrt; return sqrt(P2()); }
    Scalar R() const { return P(); }
 
    /**
@@ -151,10 +154,12 @@ public :
    {
       const Scalar mm = M2();
       if (mm >= 0) {
+         using std::sqrt;
          return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::M() - Tachyonic:\n"
                    "    P^2 > E^2 so the mass would be imaginary");
+         using std::sqrt;
          return -sqrt(-mm);
       }
    }
@@ -169,7 +174,7 @@ public :
    /**
       Transverse spatial component (P_perp or rho)
    */
-   Scalar Pt() const { return sqrt(Perp2()); }
+   Scalar Pt() const { using std::sqrt; return sqrt(Perp2()); }
    Scalar Perp() const { return Pt();}
    Scalar Rho()  const { return Pt();}
 
@@ -184,10 +189,12 @@ public :
    Scalar Mt() const {
       const Scalar mm = Mt2();
       if (mm >= 0) {
+         using std::sqrt;
          return sqrt(mm);
       } else {
          GenVector::Throw ("PxPyPzE4D::Mt() - Tachyonic:\n"
                            "    Pz^2 > E^2 so the transverse mass would be imaginary");
+         using std::sqrt;
          return -sqrt(-mm);
       }
    }
@@ -206,18 +213,19 @@ public :
    */
    Scalar Et() const {
       const Scalar etet = Et2();
+      using std::sqrt;
       return fT < 0.0 ? -sqrt(etet) : sqrt(etet);
    }
 
    /**
       azimuthal angle
    */
-   Scalar Phi() const { return (fX == 0.0 && fY == 0.0) ? 0 : atan2(fY, fX); }
+   Scalar Phi() const { using std::atan2; return (fX == 0.0 && fY == 0.0) ? 0 : atan2(fY, fX); }
 
    /**
       polar angle
    */
-   Scalar Theta() const { return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ); }
+   Scalar Theta() const { using std::atan2; return (fX == 0.0 && fY == 0.0 && fZ == 0.0) ? 0 : atan2(Pt(), fZ); }
 
    /**
        pseudorapidity
@@ -333,7 +341,7 @@ public :
 private:
 
    /**
-      (contigous) data containing the coordinate values x,y,z,t
+      (contiguous) data containing the coordinate values x,y,z,t
    */
 
    ScalarType fX;

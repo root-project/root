@@ -57,7 +57,7 @@ extern "C" {
 static const char *gFileTypes[] = {
    "ROOT palette file",  "*.pal.root",
    "ASCII palette file", "*.pal.txt",
-   0,                    0
+   nullptr,              nullptr
 };
 
 static UShort_t gRedRainbow[12] = {
@@ -81,12 +81,12 @@ ClassImp(TASPaletteEditor);
 /// The palette editor allows the editing of the color palette of the image.
 
 TASPaletteEditor::TASPaletteEditor(TAttImage *attImage, UInt_t w, UInt_t h)
-   : TPaletteEditor(attImage, w, h), TGMainFrame(0, w, h)
+   : TPaletteEditor(attImage, w, h), TGMainFrame(nullptr, w, h)
 {
    SetLayoutManager(new TGXYLayout(this));
-   fHisto        = 0;
-   fLimitLine[0] = 0;
-   fLimitLine[1] = 0;
+   fHisto        = nullptr;
+   fLimitLine[0] = nullptr;
+   fLimitLine[1] = nullptr;
    fRampFactor   = 0;
    fImagePad     = gPad;
 
@@ -291,7 +291,7 @@ void TASPaletteEditor::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process all editor mouse events
 
-Bool_t TASPaletteEditor::ProcessMessage(Long_t msg, Long_t param1, Long_t param2)
+Bool_t TASPaletteEditor::ProcessMessage(Longptr_t msg, Longptr_t param1, Longptr_t param2)
 {
    switch (GET_MSG(msg)) {
 
@@ -398,8 +398,7 @@ void TASPaletteEditor::InsertNewPalette(TImagePalette *newPalette)
 {
    // first remove all palettes in the list which are behind the
    // current palette
-   TObject *obj;
-   while ((obj = fPaletteList->After(fPalette)) != 0)
+   while (auto obj = fPaletteList->After(fPalette))
       delete fPaletteList->Remove(obj);
 
    // add new palette and make it to the current palette
@@ -427,31 +426,27 @@ void TASPaletteEditor::Save()
 
    new TGFileDialog(gClient->GetRoot(), this, kFDSave, &fi);
    overwr = fi.fOverwrite;
-   if (fi.fFilename == 0)
+   if (!fi.fFilename)
       return;
 
-   if (strcmp(".pal.txt", fi.fFilename + strlen(fi.fFilename) - 8) == 0) {
+   TString fn = fi.fFilename;
+
+   if (fn.EndsWith(".pal.txt")) {
       // write into an ASCII file
-      FILE *fl = fopen(fi.fFilename, "w");
-      if (!fl) return;
+      FILE *fl = fopen(fn.Data(), "w");
+      if (!fl)
+         return;
       fprintf(fl, "%u\n", fPalette->fNumPoints);
       for (Int_t pt = 0; pt < Int_t(fPalette->fNumPoints); pt++)
-         fprintf(fl, "%10.9f %04hx %04hx %04hx %04hx\n",
-                 fPalette->fPoints[pt],
-                 fPalette->fColorRed[pt],
-                 fPalette->fColorGreen[pt],
-                 fPalette->fColorBlue[pt],
-                 fPalette->fColorAlpha[pt] );
+         fprintf(fl, "%10.9f %04hx %04hx %04hx %04hx\n", fPalette->fPoints[pt], fPalette->fColorRed[pt],
+                 fPalette->fColorGreen[pt], fPalette->fColorBlue[pt], fPalette->fColorAlpha[pt]);
       fclose(fl);
    } else {
       // write into a ROOT file
-      char fn[512];
-      if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
-         snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
-      else
-         strlcpy(fn, fi.fFilename,512);
+      if (!fn.EndsWith(".pal.root"))
+         fn.Append(".pal.root");
 
-      gROOT->ProcessLine(Form("gROOT->SaveObjectAs((TASPaletteEditor*)0x%lx,\"%s\",\"%s\");",(ULong_t)this,fn,"q"));
+      gROOT->SaveObjectAs(fPalette, fn.Data(), "q");
    }
 }
 
@@ -465,45 +460,44 @@ void TASPaletteEditor::Open()
    fi.fFileTypes = gFileTypes;
 
    new TGFileDialog(gClient->GetRoot(), this, kFDOpen, &fi);
-   if (fi.fFilename == 0)
+   if (!fi.fFilename)
       return;
 
-   TImagePalette *newPalette;
+   TString fn = fi.fFilename;
 
-   if (strcmp(".pal.txt", fi.fFilename + strlen(fi.fFilename) - 8) == 0) {
-      FILE *fl = fopen(fi.fFilename, "r");
-      if (!fl) return;
-      UInt_t numPoints;
-      // coverity [Calling risky function : FALSE]
-      if (fscanf(fl, "%u\n", &numPoints)) {;}
+   TImagePalette *newPalette = nullptr;
+
+   if (fn.EndsWith(".pal.txt")) {
+      FILE *fl = fopen(fn.Data(), "r");
+      if (!fl)
+         return;
+      UInt_t numPoints = 0;
+      if (fscanf(fl, "%u\n", &numPoints) != 1)
+         Error("Open", "Failure reading num points from %s", fn.Data());
       newPalette = new TImagePalette(numPoints);
-      for (Int_t pt = 0; pt < Int_t(numPoints); pt++)
-         // coverity [Calling risky function : FALSE]
-         if (fscanf(fl, "%lf %hx %hx %hx %hx\n",
-                newPalette->fPoints + pt,
-                newPalette->fColorRed + pt,
-                newPalette->fColorGreen + pt,
-                newPalette->fColorBlue + pt,
-                    newPalette->fColorAlpha + pt )) {;}
-             fclose(fl);
+      for (UInt_t pt = 0; pt < numPoints; pt++) {
+         if (fscanf(fl, "%lf %hx %hx %hx %hx\n", newPalette->fPoints + pt, newPalette->fColorRed + pt,
+                    newPalette->fColorGreen + pt, newPalette->fColorBlue + pt, newPalette->fColorAlpha + pt) != 5)
+            Error("Open", "Failure reading point %u from %s", pt, fn.Data());
+      }
+      fclose(fl);
    } else {
       // read from a ROOT file
-      char fn[512];
-      if (strcmp(".pal.root", fi.fFilename + strlen(fi.fFilename) - 9) != 0)
-         snprintf(fn,512, "%s%s", fi.fFilename, ".pal.root");
-      else
-         strlcpy(fn, fi.fFilename,512);
+      if (!fn.EndsWith(".pal.root"))
+         fn.Append(".pal.root");
+
       TDirectory *dirsav = gDirectory;
 
-      TFile *fsave = new TFile(fn, "READ");
-      if (!fsave->IsOpen()) {
+      auto fsave = TFile::Open(fn.Data(), "READ");
+      if (!fsave || !fsave->IsOpen()) {
          delete fsave;
          return;
       }
 
-      newPalette = (TImagePalette*)fsave->Get("TImagePalette");
+      newPalette = (TImagePalette *)fsave->Get("TImagePalette");
       delete fsave;
-      if (dirsav) dirsav->cd();
+      if (dirsav)
+         dirsav->cd();
       if (!newPalette)
          return;
    }

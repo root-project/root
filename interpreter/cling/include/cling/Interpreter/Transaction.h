@@ -74,11 +74,11 @@ namespace cling {
       ConsumerCallInfo m_Call;
       DelayCallInfo(clang::DeclGroupRef DGR, ConsumerCallInfo CCI)
         : m_DGR(DGR), m_Call(CCI) {}
-      inline bool operator==(const DelayCallInfo& rhs) {
+      inline bool operator==(const DelayCallInfo& rhs) const {
         return m_DGR.getAsOpaquePtr() == rhs.m_DGR.getAsOpaquePtr()
           && m_Call == rhs.m_Call;
       }
-      inline bool operator!=(const DelayCallInfo& rhs) {
+      inline bool operator!=(const DelayCallInfo& rhs) const {
         return !operator==(rhs);
       }
       void dump() const;
@@ -100,10 +100,10 @@ namespace cling {
       MacroDirectiveInfo(clang::IdentifierInfo* II,
                          const clang::MacroDirective* MD)
                 : m_II(II), m_MD(MD) {}
-      inline bool operator==(const MacroDirectiveInfo& rhs) {
+      inline bool operator==(const MacroDirectiveInfo& rhs) const {
         return m_II == rhs.m_II && m_MD == rhs.m_MD;
       }
-      inline bool operator!=(const MacroDirectiveInfo& rhs) {
+      inline bool operator!=(const MacroDirectiveInfo& rhs) const {
         return !operator==(rhs);
       }
       void dump(const clang::Preprocessor& PP) const;
@@ -139,6 +139,11 @@ namespace cling {
 
     unsigned m_IssuedDiags : 2;
 
+    ///\brief the Transaction is currently being unloaded. Currently,
+    /// used for ensuring system consistency when unloading transactions.
+    ///
+    bool m_Unloading : 1;
+
     ///\brief Options controlling the transformers and code generator.
     ///
     CompilationOptions m_Opts;
@@ -150,7 +155,17 @@ namespace cling {
 
     ///\brief The llvm Module containing the information that we will revert
     ///
-    std::shared_ptr<llvm::Module> m_Module;
+    std::unique_ptr<llvm::Module> m_Module;
+
+    ///\brief This is a hack to get code unloading to work with ORCv2
+    ///
+    /// ORCv2 introduces resource trackers that allow code unloading from any
+    /// materialization state. ORCv2 IncrementalJIT reports modules as non-
+    /// pending immediately, which sets this raw pointer. TransactionUnloader
+    /// now checks this one instead of the unique pointer above. This is not
+    /// nice, but it works and keeps the current infrastrucutre intact.
+    /// See TransactionUnloader::unloadModule
+    const llvm::Module *m_CompiledModule{nullptr};
 
     ///\brief The Executor to use m_ExeUnload on.
     ///
@@ -184,8 +199,9 @@ namespace cling {
 
     /// TransactionPool needs direct access to m_State as setState asserts
     friend class TransactionPool;
+    friend class IncrementalJIT;
 
-    void Initialize(clang::Sema& S);
+    void Initialize();
 
   public:
     enum State {
@@ -256,22 +272,22 @@ namespace cling {
     const_nested_iterator nested_begin() const {
       if (hasNestedTransactions())
         return m_NestedTransactions->begin();
-      return 0;
+      return nullptr;
     }
     const_nested_iterator nested_end() const {
       if (hasNestedTransactions())
         return m_NestedTransactions->end();
-      return 0;
+      return nullptr;
     }
     const_reverse_nested_iterator rnested_begin() const {
       if (hasNestedTransactions())
         return m_NestedTransactions->rbegin();
-      return const_reverse_nested_iterator(0);
+      return const_reverse_nested_iterator(nullptr);
     }
     const_reverse_nested_iterator rnested_end() const {
       if (hasNestedTransactions())
         return m_NestedTransactions->rend();
-      return const_reverse_nested_iterator(0);
+      return const_reverse_nested_iterator(nullptr);
     }
 
     /// Macro iteration
@@ -307,6 +323,8 @@ namespace cling {
              && "Transaction already returned in the pool");
       m_State = val;
     }
+
+    void setUnloading() { m_Unloading = true; }
 
     IssuedDiags getIssuedDiags() const {
       return static_cast<IssuedDiags>(getTopmostParent()->m_IssuedDiags);
@@ -414,7 +432,7 @@ namespace cling {
 
     Transaction* getLastNestedTransaction() const {
       if (!hasNestedTransactions())
-        return 0;
+        return nullptr;
       return m_NestedTransactions->back();
     }
 
@@ -466,8 +484,14 @@ namespace cling {
         m_NestedTransactions->clear();
     }
 
-    std::shared_ptr<llvm::Module> getModule() const { return m_Module; }
+    llvm::Module* getModule() const { return m_Module.get(); }
+    std::unique_ptr<llvm::Module> takeModule () {
+      assert(getModule());
+      return std::move(m_Module);
+    }
     void setModule(std::unique_ptr<llvm::Module> M) { m_Module = std::move(M); }
+
+    const llvm::Module* getCompiledModule() const { return m_CompiledModule; }
 
     IncrementalExecutor* getExecutor() const { return m_Exe; }
 

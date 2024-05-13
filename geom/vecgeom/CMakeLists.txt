@@ -12,10 +12,6 @@
 include_directories(AFTER SYSTEM ${VECGEOM_INCLUDE_DIRS})
 if ( Vc_FOUND )
    include_directories( AFTER SYSTEM ${Vc_INCLUDE_DIRS})
-   if (NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang"
-       AND NOT "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fabi-version=6")
-   endif()
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG

@@ -1,12 +1,9 @@
-/// \file ROOT/RCefWebDisplayHandle.hxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2020-08-21
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <S.Linev@gsi.de>
+// Date: 2020-08-21
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
- * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -20,16 +17,20 @@
 
 #include "simple_app.h"
 
-class RCefWebDisplayHandle : public ROOT::Experimental::RWebDisplayHandle {
+/** \class RCefWebDisplayHandle
+\ingroup cefwebdisplay
+*/
+
+class RCefWebDisplayHandle : public ROOT::RWebDisplayHandle {
 protected:
    class CefCreator : public Creator {
 
       CefRefPtr<SimpleApp> fCefApp;
    public:
       CefCreator() = default;
-      virtual ~CefCreator() = default;
+      ~CefCreator() override = default;
 
-      std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> Display(const ROOT::Experimental::RWebDisplayArgs &args) override;
+      std::unique_ptr<ROOT::RWebDisplayHandle> Display(const ROOT::RWebDisplayArgs &args) override;
    };
 
    enum EValidValues { kValid = 0x3C3C3C3C, kInvalid = 0x92929292 };
@@ -39,9 +40,9 @@ protected:
    CefRefPtr<CefBrowser> fBrowser; ///< associated browser
 
 public:
-   RCefWebDisplayHandle(const std::string &url) : ROOT::Experimental::RWebDisplayHandle(url) {}
+   RCefWebDisplayHandle(const std::string &url) : ROOT::RWebDisplayHandle(url) {}
 
-   virtual ~RCefWebDisplayHandle();
+   ~RCefWebDisplayHandle() override;
 
    bool IsValid() const { return fValid == kValid; }
 
@@ -50,6 +51,8 @@ public:
    void CloseBrowser();
 
    bool WaitForContent(int tmout_sec, const std::string &extra_args);
+
+   bool Resize(int, int) override;
 
    static void AddCreator();
 

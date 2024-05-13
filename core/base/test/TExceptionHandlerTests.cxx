@@ -10,7 +10,7 @@ class TestExceptionHandler : public TExceptionHandler {
 private:
    Int_t currentSignal;
 public:
-   void HandleException(Int_t sig)
+   void HandleException(Int_t sig) override
    {
       EXPECT_EQ(sig, currentSignal);
       Throw(sig);

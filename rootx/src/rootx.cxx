@@ -37,21 +37,19 @@
 #include <mach-o/dyld.h>
 #endif
 
-#ifdef __sun
-#   ifndef _REENTRANT
-#      if __SUNPRO_CC > 0x420
-#         define GLOBAL_ERRNO
-#      endif
-#   endif
-#endif
+#ifdef R__FBSD
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <libutil.h>
+#include <libprocstat.h>
+#endif // R__FBSD
 
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #define ROOTBINARY "root_exe.exe"
 #else
 #define ROOTBINARY "root.exe"
 #endif
-
-#define ROOTNBBINARY "rootnb.exe"
 
 extern void PopupLogo(bool);
 extern void WaitLogo();
@@ -84,20 +82,12 @@ using ROOT::ROOTX::gChildpid;
 static int gChildpid;
 static int GetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   return ::errno;
-#else
    return errno;
-#endif
 }
 
 static void ResetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   ::errno = 0;
-#else
    errno = 0;
-#endif
 }
 
 #endif
@@ -123,6 +113,19 @@ static const char *GetExePath()
          exepath = buf;
       }
 #endif
+#if defined(R__FBSD)
+  procstat* ps = procstat_open_sysctl();  //
+  kinfo_proc* kp = kinfo_getproc(getpid());
+
+  if (kp!=NULL) {
+     char path_str[PATH_MAX] = "";
+     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
+     exepath = path_str;
+  }
+
+  free(kp);
+  procstat_close(ps);
+#endif
    }
    return exepath.c_str();
 }
@@ -142,7 +145,7 @@ static void SetRootSys()
             int l2 = strlen(ep) + 10;
             char *env = new char[l2];
             snprintf(env, l2, "ROOTSYS=%s", ep);
-            putenv(env);
+            putenv(env); // NOLINT: allocated memory now used by environment variable
          }
       }
       delete [] ep;
@@ -157,50 +160,54 @@ static void SetLibraryPath()
 # endif
    // Set library path for the different platforms.
 
-   char *msg;
+      char *msg;
 
-# if defined(__hpux)  || defined(_HIUX_SOURCE)
-   if (getenv("SHLIB_PATH")) {
-      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("SHLIB_PATH"))+100];
-      sprintf(msg, "SHLIB_PATH=%s/lib:%s", getenv("ROOTSYS"),
-                                           getenv("SHLIB_PATH"));
-   } else {
-      msg = new char [strlen(getenv("ROOTSYS"))+100];
-      sprintf(msg, "SHLIB_PATH=%s/lib", getenv("ROOTSYS"));
-   }
-# elif defined(_AIX)
+#if defined(__hpux) || defined(_HIUX_SOURCE)
+      if (getenv("SHLIB_PATH")) {
+         const auto msgLen = strlen(getenv("ROOTSYS")) + strlen(getenv("SHLIB_PATH")) + 100;
+         msg = new char[msgLen];
+         snprintf(msg, msgLen, "SHLIB_PATH=%s/lib:%s", getenv("ROOTSYS"), getenv("SHLIB_PATH"));
+      } else {
+         const auto msgLen = strlen(getenv("ROOTSYS")) + 100;
+         msg = new char[msgLen];
+         snprintf(msg, msgLen, "SHLIB_PATH=%s/lib", getenv("ROOTSYS"));
+      }
+#elif defined(_AIX)
    if (getenv("LIBPATH")) {
-      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LIBPATH"))+100];
-      sprintf(msg, "LIBPATH=%s/lib:%s", getenv("ROOTSYS"),
-                                        getenv("LIBPATH"));
+      const auto msgLen = strlen(getenv("ROOTSYS")) + strlen(getenv("LIBPATH")) + 100;
+      msg = new char[msgLen];
+      snprintf(msg, msgLen, "LIBPATH=%s/lib:%s", getenv("ROOTSYS"), getenv("LIBPATH"));
    } else {
-      msg = new char [strlen(getenv("ROOTSYS"))+100];
-      sprintf(msg, "LIBPATH=%s/lib:/lib:/usr/lib", getenv("ROOTSYS"));
+      const auto msgLen = strlen(getenv("ROOTSYS")) + 100;
+      msg = new char[msgLen];
+      snprintf(msg, msgLen, "LIBPATH=%s/lib:/lib:/usr/lib", getenv("ROOTSYS"));
    }
-# elif defined(__APPLE__)
+#elif defined(__APPLE__)
    if (getenv("DYLD_LIBRARY_PATH")) {
-      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("DYLD_LIBRARY_PATH"))+100];
-      sprintf(msg, "DYLD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
-                                                  getenv("DYLD_LIBRARY_PATH"));
+      const auto msgLen = strlen(getenv("ROOTSYS")) + strlen(getenv("DYLD_LIBRARY_PATH")) + 100;
+      msg = new char[msgLen];
+      snprintf(msg, msgLen, "DYLD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"), getenv("DYLD_LIBRARY_PATH"));
    } else {
-      msg = new char [strlen(getenv("ROOTSYS"))+100];
-      sprintf(msg, "DYLD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
+      const auto msgLen = strlen(getenv("ROOTSYS")) + 100;
+      msg = new char[msgLen];
+      snprintf(msg, msgLen, "DYLD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
    }
-# else
+#else
    if (getenv("LD_LIBRARY_PATH")) {
-      msg = new char [strlen(getenv("ROOTSYS"))+strlen(getenv("LD_LIBRARY_PATH"))+100];
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"),
-                                                getenv("LD_LIBRARY_PATH"));
+      const auto msgLen = strlen(getenv("ROOTSYS")) + strlen(getenv("LD_LIBRARY_PATH")) + 100;
+      msg = new char[msgLen];
+      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib:%s", getenv("ROOTSYS"), getenv("LD_LIBRARY_PATH"));
    } else {
-      msg = new char [strlen(getenv("ROOTSYS"))+100];
-#  if defined(__sun)
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", getenv("ROOTSYS"));
-#  else
-      sprintf(msg, "LD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
-#  endif
+      const auto msgLen = strlen(getenv("ROOTSYS")) + 100;
+      msg = new char[msgLen];
+#if defined(__sun)
+      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib:/usr/dt/lib", getenv("ROOTSYS"));
+#else
+      snprintf(msg, msgLen, "LD_LIBRARY_PATH=%s/lib", getenv("ROOTSYS"));
+#endif
    }
-# endif
-   putenv(msg);
+#endif
+      putenv(msg);
 # ifdef ROOTPREFIX
    } else /* if (getenv("ROOTIGNOREPREFIX")) */ {
       std::string ldLibPath = "LD_LIBRARY_PATH=" ROOTLIBDIR;
@@ -308,13 +315,12 @@ int main(int argc, char **argv)
    // In batch mode don't show splash screen, idem for no logo mode,
    // in about mode show always splash screen
    bool batch = false, about = false;
-   int notebook = 0; // index of --notebook args, all other args will be re-directed to nbmain
    int i;
    for (i = 1; i < argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
          PrintUsage();
-         return 1;
+         return 0;
       }
       if (!strcmp(argv[i], "-b"))         batch    = true;
       if (!strcmp(argv[i], "-l"))         gNoLogo  = true;
@@ -322,36 +328,6 @@ int main(int argc, char **argv)
       if (!strcmp(argv[i], "-a"))         about    = true;
       if (!strcmp(argv[i], "-config"))    gNoLogo  = true;
       if (!strcmp(argv[i], "--version"))  gNoLogo  = true;
-      if (!strcmp(argv[i], "--notebook")) { notebook = i; break; }
-   }
-
-   if (notebook > 0) {
-      // Build command
-#ifdef ROOTBINDIR
-      if (getenv("ROOTIGNOREPREFIX"))
-#endif
-         snprintf(arg0, sizeof(arg0), "%s/bin/%s", getenv("ROOTSYS"), ROOTNBBINARY);
-#ifdef ROOTBINDIR
-      else
-         snprintf(arg0, sizeof(arg0), "%s/%s", ROOTBINDIR, ROOTNBBINARY);
-#endif
-
-      int numnbargs = 1 + (argc - notebook);
-
-      argvv = new char* [numnbargs+1];
-      argvv[0] = arg0;
-      for (i = 1; i < numnbargs; i++)
-         argvv[i] = argv[notebook + i];
-      argvv[numnbargs] = nullptr;
-
-      // Execute ROOT notebook binary
-      execv(arg0, argvv);
-
-      // Exec failed
-      fprintf(stderr, "%s: can't start ROOT notebook -- this option is only available when building with CMake, please check that %s exists\n",
-              argv[0], arg0);
-
-      return 1;
    }
 
 #ifndef R__HAS_COCOA
@@ -467,6 +443,8 @@ int main(int argc, char **argv)
    // Exec failed
    fprintf(stderr, "%s: can't start ROOT -- check that %s exists!\n",
            argv[0], arg0);
+
+   delete [] argvv;
 
    return 1;
 }

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Example of the BernsteinCorrection utility in RooStats.
+/// Example of the BernsteinCorrection utility in RooStats.
 ///
 /// The idea is that one has a distribution coming either from data or Monte Carlo
 /// (called "reality" in the macro) and a nominal model that is not sufficiently
@@ -31,7 +31,6 @@
 #include "RooBernstein.h"
 #include "TCanvas.h"
 #include "RooAbsPdf.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include <string>
@@ -43,8 +42,6 @@
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooGaussian.h"
-#include "RooNLLVar.h"
-#include "RooMinuit.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
 
@@ -69,7 +66,7 @@ void rs_bernsteinCorrection()
    RooGaussian wide("wide", "", x, RooConst(0.), RooConst(2.));
    RooAddPdf reality("reality", "", RooArgList(narrow, wide), RooConst(0.8));
 
-   RooDataSet *data = reality.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{reality.generate(x, 1000)};
 
    // nominal model
    RooRealVar sigma("sigma", "", 1., 0, 10);
@@ -102,8 +99,7 @@ void rs_bernsteinCorrection()
    RooPlot *frame = x.frame();
    data->plotOn(frame);
    // plot the best fit nominal model in blue
-   TString minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-   nominal.fitTo(*data, PrintLevel(0), Minimizer(minimType));
+    nominal.fitTo(*data, PrintLevel(0));
    nominal.plotOn(frame);
 
    // plot the best fit corrected model in red
@@ -112,7 +108,7 @@ void rs_bernsteinCorrection()
       return;
 
    // fit corrected model
-   corrected->fitTo(*data, PrintLevel(0), Minimizer(minimType));
+   corrected->fitTo(*data, PrintLevel(0));
    corrected->plotOn(frame, LineColor(kRed));
 
    // plot the correction term (* norm constant) in dashed green

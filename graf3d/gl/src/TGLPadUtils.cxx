@@ -104,9 +104,6 @@ PolygonStippleSet::PolygonStippleSet()
 
 UInt_t PolygonStippleSet::SwapBits(UInt_t b)
 {
-#ifdef WIN32
-   b = ~b & 0xff;
-#endif
    b &= k16Bits;
 
    const UInt_t low = fgBitSwap[b & kLow4] << 4;
@@ -1166,12 +1163,12 @@ void End()
 {
 }
 
-Tesselation_t *Tesselator::fVs = 0;
+Tesselation_t *Tesselator::fVs = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Tesselator::Tesselator(Bool_t dump)
-               : fTess(0)
+               : fTess(nullptr)
 {
    GLUtesselator *tess = gluNewTess();
    if (!tess)

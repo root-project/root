@@ -42,7 +42,7 @@ class TSQLClassInfo final : public TObject {
 public:
    TSQLClassInfo() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TSQLClassInfo(Long64_t classid, const char *classname, Int_t version);
-   virtual ~TSQLClassInfo();
+   ~TSQLClassInfo() override;
 
    Long64_t GetClassId() const { return fClassId; }
 
@@ -55,11 +55,11 @@ public:
    const char *GetClassTableName() const { return fClassTable.Data(); }
    const char *GetRawTableName() const { return fRawTable.Data(); }
 
-   void SetTableStatus(TObjArray *columns = 0, Bool_t israwtable = kFALSE);
+   void SetTableStatus(TObjArray *columns = nullptr, Bool_t israwtable = kFALSE);
    void SetColumns(TObjArray *columns);
    void SetRawExist(Bool_t on) { fRawtableExist = on; }
 
-   Bool_t IsClassTableExist() const { return GetColumns() != 0; }
+   Bool_t IsClassTableExist() const { return GetColumns() != nullptr; }
    Bool_t IsRawTableExist() const { return fRawtableExist; }
 
    TObjArray *GetColumns() const { return fColumns; }

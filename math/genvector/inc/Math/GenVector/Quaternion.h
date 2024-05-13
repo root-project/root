@@ -42,6 +42,8 @@ namespace Math {
       See also ROOT::Math::AxisAngle, ROOT::Math::EulerAngles, and ROOT::Math::Rotation3D.
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 
 class Quaternion {
@@ -75,7 +77,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr Quaternion(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**

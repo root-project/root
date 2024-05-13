@@ -9,6 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <memory>
 #include <stdexcept>
 #include <algorithm>
 #include <memory>
@@ -53,14 +54,14 @@ TGLContext::TGLContext(TGLWidget *wid, Bool_t shareDefault,
    : fDevice(wid),
      fFromCtor(kTRUE),
      fValid(kFALSE),
-     fIdentity(0)
+     fIdentity(nullptr)
 {
    if (shareDefault)
       shareList = TGLContextIdentity::GetDefaultContextAny();
 
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SetContext((TGLWidget *)0x%lx, (TGLContext *)0x%lx)",
-                                  (ULong_t)this, (ULong_t)wid, (ULong_t)shareList));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->SetContext((TGLWidget *)0x%zx, (TGLContext *)0x%zx)",
+                                  (size_t)this, (size_t)wid, (size_t)shareList));
    } else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -173,7 +174,7 @@ Bool_t TGLContext::MakeCurrent()
    }
 
    if (!gVirtualX->IsCmdThread())
-      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->MakeCurrent()", this)));
+      return Bool_t(gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->MakeCurrent()", (size_t)this)));
    else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -208,7 +209,7 @@ void TGLContext::SwapBuffers()
    }
 
    if (!gVirtualX->IsCmdThread())
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->SwapBuffers()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->SwapBuffers()", (size_t)this));
    else {
 
       R__LOCKGUARD(gROOTMutex);
@@ -227,7 +228,7 @@ void TGLContext::SwapBuffers()
 void TGLContext::Release()
 {
    if (!gVirtualX->IsCmdThread()) {
-      gROOT->ProcessLineFast(Form("((TGLContext *)0x%lx)->Release()", this));
+      gROOT->ProcessLineFast(Form("((TGLContext *)0x%zx)->Release()", (size_t)this));
       return;
    }
 
@@ -333,7 +334,7 @@ void TGLContext::SetContext(TGLWidget *widget, const TGLContext *shareList)
       return;
    }
 
-   fPimpl.reset(new TGLContextPrivate);
+   fPimpl = std::make_unique<TGLContextPrivate>();
    Display *dpy = static_cast<Display *>(widget->GetInnerData().first);
    XVisualInfo *visInfo = static_cast<XVisualInfo *>(widget->GetInnerData().second);
 
@@ -385,7 +386,7 @@ Bool_t TGLContext::MakeCurrent()
 
 Bool_t TGLContext::ClearCurrent()
 {
-   return glXMakeCurrent(fPimpl->fDpy, None, 0);
+   return glXMakeCurrent(fPimpl->fDpy, None, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -469,7 +470,7 @@ TGLContextIdentity* TGLContextIdentity::fgDefaultIdentity = new TGLContextIdenti
 /// Constructor.
 
 TGLContextIdentity::TGLContextIdentity():
-fFontManager(0), fCnt(0), fClientCnt(0)
+fFontManager(nullptr), fCnt(0), fClientCnt(0)
 {
 }
 
@@ -538,7 +539,7 @@ void TGLContextIdentity::DeleteGLResources()
 TGLContextIdentity* TGLContextIdentity::GetCurrent()
 {
    TGLContext* ctx = TGLContext::GetCurrent();
-   return ctx ? ctx->GetIdentity() : 0;
+   return ctx ? ctx->GetIdentity() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -546,7 +547,7 @@ TGLContextIdentity* TGLContextIdentity::GetCurrent()
 
 TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
 {
-   if (fgDefaultIdentity == 0)
+   if (fgDefaultIdentity == nullptr)
       fgDefaultIdentity = new TGLContextIdentity;
    return fgDefaultIdentity;
 }
@@ -557,8 +558,8 @@ TGLContextIdentity* TGLContextIdentity::GetDefaultIdentity()
 
 TGLContext* TGLContextIdentity::GetDefaultContextAny()
 {
-   if (fgDefaultIdentity == 0 || fgDefaultIdentity->fCtxs.empty())
-      return 0;
+   if (fgDefaultIdentity == nullptr || fgDefaultIdentity->fCtxs.empty())
+      return nullptr;
    return fgDefaultIdentity->fCtxs.front();
 }
 
@@ -579,7 +580,7 @@ void TGLContextIdentity::CheckDestroy()
    if (fCnt <= 0 && fClientCnt <= 0)
    {
       if (this == fgDefaultIdentity)
-         fgDefaultIdentity = 0;
+         fgDefaultIdentity = nullptr;
       delete this;
    }
 }

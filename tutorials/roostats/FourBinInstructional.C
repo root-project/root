@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook
-/// \brief This example is a generalization of the on/off problem.
+/// This example is a generalization of the on/off problem.
 ///
 ///  This example is a generalization of the on/off problem.
 /// It's a common setup for SUSY searches.  Imagine that one has two
@@ -212,7 +212,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // generate toy data assuming current value of the parameters
    // import into workspace.
    // add Verbose() to see how it's being generated
-   RooDataSet *data = wspace->pdf("model")->generate(*wspace->set("obs"), 1);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("model")->generate(*wspace->set("obs"), 1)};
    //  data->Print("v");
    wspace->import(*data);
 
@@ -226,7 +226,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    modelConfig->SetParametersOfInterest(*wspace->set("poi"));
    modelConfig->SetNuisanceParameters(*wspace->set("nuis"));
    wspace->import(*modelConfig);
-   wspace->writeToFile("FourBin.root");
+   // wspace->writeToFile("FourBin.root");
 
    // -------------------------------------------------
    // If you want to see the covariance matrix uncomment
@@ -266,7 +266,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // use MCMCCalculator  (takes about 1 min)
    // Want an efficient proposal function, so derive it from covariance
    // matrix of fit
-   RooFitResult *fit = wspace->pdf("model")->fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> fit{wspace->pdf("model")->fitTo(*data, Save())};
    ProposalHelper ph;
    ph.SetVariables((RooArgSet &)fit->floatParsFinal());
    ph.SetCovMatrix(fit->covarianceMatrix());
@@ -320,7 +320,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    }
 
    // ----------------------------------
-   // querry intervals
+   // query intervals
    cout << "Profile Likelihood interval on s = [" << plInt->LowerLimit(*wspace->var("s")) << ", "
         << plInt->UpperLimit(*wspace->var("s")) << "]" << endl;
    // Profile Likelihood interval on s = [12.1902, 88.6871]

@@ -9,6 +9,12 @@
 /** \class TVector3
     \ingroup Physics
 
+\attention \parblock
+TVector3 is a legacy class. It is slower and worse for serialization than the recommended superior alternative ROOT::Math::XYZVector.
+
+More details can be found in the documentation of the @ref GenVector package.
+\endparblock
+
 TVector3 is a general three vector class, which can be used for
 the description of different vectors in 3D.
 

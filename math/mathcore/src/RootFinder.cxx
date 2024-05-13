@@ -1,12 +1,15 @@
 // @(#)root/mathcore:$Id$
 // Authors: David Gonzalez Maline    01/2008
 
-/**********************************************************************
- *                                                                    *
- * Copyright (c) 2006 , LCG ROOT MathLib Team                         *
- *                                                                    *
- *                                                                    *
- **********************************************************************/
+ /**********************************************************************
+  *                                                                    *
+  * Copyright (c) 2006  CERN                                           *
+  * All rights reserved.                                               *
+  *                                                                    *
+  * For the licensing terms see $ROOTSYS/LICENSE.                      *
+  * For the list of contributors see $ROOTSYS/README/CREDITS.          *
+  *                                                                    *
+  **********************************************************************/
 
 #include "Math/RootFinder.h"
 #include "Math/IRootFinderMethod.h"
@@ -35,7 +38,7 @@ namespace Math {
 
 
 RootFinder::RootFinder(RootFinder::EType type) :
-   fSolver(0)
+   fSolver(nullptr)
 {
    // constructor passing type (default is kBRENT)
    SetMethod(type);
@@ -111,7 +114,7 @@ bool RootFinder::SetMethod(RootFinder::EType type)
       break;
    default:
       MATH_ERROR_MSG("RootFinder::SetMethod","RootFinderMethod type is not available in MathCore");
-      fSolver = 0;
+      fSolver = nullptr;
       return false;
       break;
    };
@@ -123,7 +126,7 @@ bool RootFinder::SetMethod(RootFinder::EType type)
       }
 
       fSolver = reinterpret_cast<ROOT::Math::IRootFinderMethod *>( h->ExecPlugin(0) );
-      assert(fSolver != 0);
+      assert(fSolver != nullptr);
    }
    else {
       MATH_ERROR_MSG("RootFinder::SetMethod","Error loading RootFinderMethod");

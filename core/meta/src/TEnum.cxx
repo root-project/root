@@ -36,7 +36,7 @@ ClassImp(TEnum);
 /// in TROOT::GetListOfGlobals).
 
 TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
-   : fInfo(nullptr), fClass(cls)
+   : fClass(cls)
 {
    SetName(name);
    if (cls) {
@@ -55,6 +55,49 @@ TEnum::TEnum(const char *name, DeclId_t declid, TClass *cls)
    }
 
    Update(declid);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+
+TEnum::TEnum(const TEnum &src) : TDictionary(src)
+{
+   fClass = src.fClass;
+   fInfo = src.fInfo ? gInterpreter->ClassInfo_Factory(src.fInfo) : nullptr;
+   fQualName = src.fQualName;
+   fUnderlyingType = src.fUnderlyingType;
+
+   Bool_t isowner = src.fConstantList.IsOwner();
+   fConstantList.SetOwner(isowner);
+   TIter next(&src.fConstantList);
+   while (auto c = (TEnumConstant *) next())
+      fConstantList.Add(isowner ? new TEnumConstant(*c) : c);
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Assign operator
+
+TEnum& TEnum::operator=(const TEnum &src)
+{
+   if (this != &src) {
+      if (fInfo)
+         gInterpreter->ClassInfo_Delete(fInfo);
+      fConstantList.Clear();
+
+      TDictionary::operator=(src);
+
+      fInfo = src.fInfo ? gInterpreter->ClassInfo_Factory(src.fInfo) : nullptr;
+      fQualName = src.fQualName;
+      fUnderlyingType = src.fUnderlyingType;
+
+      Bool_t isowner = src.fConstantList.IsOwner();
+      fConstantList.SetOwner(isowner);
+      TIter next(&src.fConstantList);
+      while (auto c = (TEnumConstant *) next())
+         fConstantList.Add(isowner ? new TEnumConstant(*c) : c);
+   }
+   return *this;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,9 +128,9 @@ Bool_t TEnum::IsValid()
       DeclId_t newId = gInterpreter->GetEnum(fClass, fName);
       if (newId)
          Update(newId);
-      return newId != 0;
+      return newId != nullptr;
    }
-   return fInfo != 0;
+   return fInfo != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,19 +139,6 @@ Bool_t TEnum::IsValid()
 Long_t TEnum::Property() const
 {
    return kIsEnum | (TestBit(kBitIsScopedEnum) ? kIsScopedEnum : 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get the unterlying integer type of the enum:
-///     enum E { kOne }; //  ==> int
-///     enum F: long; //  ==> long
-/// Returns kNumDataTypes if the enum is unknown / invalid.
-
-EDataType TEnum::GetUnderlyingType() const
-{
-   if (fInfo)
-      return gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
-   return kNumDataTypes;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,8 +164,10 @@ void TEnum::Update(DeclId_t id)
 
    fInfo = gInterpreter->ClassInfo_Factory(id);
 
-   if (fInfo)
+   if (fInfo) {
       SetBit(kBitIsScopedEnum, gInterpreter->ClassInfo_IsScopedEnum(fInfo));
+      fUnderlyingType = gInterpreter->ClassInfo_GetUnderlyingType(fInfo);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,9 +238,7 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
          return en;
       }
 
-      // Lock need for gROOT->GetListOfClasses() and the later update/modification to
-      // the autoparsing state.
-      R__LOCKGUARD(gInterpreterMutex);
+
       if (auto tClassScope = static_cast<TClass *>(gROOT->GetListOfClasses()->FindObject(scopeName))) {
          // If this is a class, load only if the user allowed interpreter lookup
          // If this is a namespace and the user did not allow for interpreter lookup, load but before disable
@@ -246,6 +276,23 @@ TEnum *TEnum::GetEnum(const char *enumName, ESearchAction sa)
       // enum.
       return nullptr;
    }
+
+   std::string normalizedName;
+   {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+      TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+      TClassEdit::GetNormalizedName(normalizedName, enumName);
+   }
+
+   if (normalizedName != enumName) {
+      enumName = normalizedName.c_str();
+      lastPos = TClassEdit::GetUnqualifiedName(enumName);
+   }
+
+   // Keep the state consistent.  In particular prevent change in the state of
+   // AutoLoading and AutoParsing allowance and gROOT->GetListOfClasses()
+   // and the later update/modification to the autoparsing state.
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (lastPos != enumName) {
       // We have a scope

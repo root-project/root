@@ -20,7 +20,7 @@
 ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
-    \ingroup Hist
+    \ingroup Graphs
 Graph 2D class with errors.
 
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
@@ -31,7 +31,7 @@ following example shows how to use it:
 
 Begin_Macro(source)
 {
-   TCanvas *c = new TCanvas("c","Graph2DErrors example",0,0,600,600);
+   auto c = new TCanvas("c","TGraph2DErrors example",0,0,600,600);
    Double_t P = 6.;
    Int_t np   = 200;
 
@@ -45,7 +45,7 @@ Begin_Macro(source)
    ey = new Double_t[np];
    ez = new Double_t[np];
 
-   TRandom *r = new TRandom();
+   auto r = new TRandom();
 
    for (Int_t N=0; N<np;N++) {
       rx[N] = 2*P*(r->Rndm(N))-P;
@@ -59,17 +59,16 @@ Begin_Macro(source)
       ez[N] = 10*r->Rndm(N);
    }
 
-   TGraph2DErrors *dte = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
-   dte->SetTitle("TGraph2D with error bars: option \"ERR\"");
-   dte->SetFillColor(29);
-   dte->SetMarkerSize(0.8);
-   dte->SetMarkerStyle(20);
-   dte->SetMarkerColor(kRed);
-   dte->SetLineColor(kBlue-3);
-   dte->SetLineWidth(2);
-   dte->Draw("err p0");
+   auto g = new TGraph2DErrors(np, rx, ry, rz, ex, ey, ez);
+   g->SetTitle("TGraph2D with error bars: option \"ERR\"");
+   g->SetFillColor(29);
+   g->SetMarkerSize(0.8);
+   g->SetMarkerStyle(20);
+   g->SetMarkerColor(kRed);
+   g->SetLineColor(kBlue-3);
+   g->SetLineWidth(2);
    gPad->SetLogy(1);
-   return c;
+   g->Draw("err p0");
 }
 End_Macro
 */
@@ -80,9 +79,6 @@ End_Macro
 
 TGraph2DErrors::TGraph2DErrors(): TGraph2D()
 {
-   fEX = 0;
-   fEY = 0;
-   fEZ = 0;
 }
 
 
@@ -118,7 +114,7 @@ TGraph2DErrors::TGraph2DErrors(Int_t n, Double_t *x, Double_t *y, Double_t *z,
                :TGraph2D(n, x, y, z)
 {
    if (n <= 0) {
-      Error("TGraphErrors", "Invalid number of points (%d)", n);
+      Error("TGraph2DErrors", "Invalid number of points (%d)", n);
       return;
    }
 
@@ -152,7 +148,7 @@ TGraph2DErrors::~TGraph2DErrors()
 /// Copy everything except list of functions
 
 TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
-: TGraph2D(g), fEX(0), fEY(0), fEZ(0)
+: TGraph2D(g), fEX(nullptr), fEY(nullptr), fEZ(nullptr)
 {
    if (fSize > 0) {
       fEX = new Double_t[fSize];
@@ -170,7 +166,7 @@ TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
 /// Assignment operator
 /// Copy everything except list of functions
 
-TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
+TGraph2DErrors &TGraph2DErrors::operator=(const TGraph2DErrors &g)
 {
    if (this == &g) return *this;
 
@@ -182,9 +178,9 @@ TGraph2DErrors & TGraph2DErrors::operator=(const TGraph2DErrors &g)
    if (fEY) delete [] fEY;
    if (fEZ) delete [] fEZ;
 
-   fEX   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEY   = (fSize > 0) ? new Double_t[fSize] : 0;
-   fEZ   = (fSize > 0) ? new Double_t[fSize] : 0;
+   fEX = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEY = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fEZ = (fSize > 0) ? new Double_t[fSize] : nullptr;
 
 
    // copy error arrays
@@ -209,7 +205,7 @@ Double_t TGraph2DErrors::GetErrorX(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by Graph2DFitChisquare.
-/// It returns the error along X at point i.
+/// It returns the error along Y at point i.
 
 Double_t TGraph2DErrors::GetErrorY(Int_t i) const
 {
@@ -221,7 +217,7 @@ Double_t TGraph2DErrors::GetErrorY(Int_t i) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is called by Graph2DFitChisquare.
-/// It returns the error along X at point i.
+/// It returns the error along Z at point i.
 
 Double_t TGraph2DErrors::GetErrorZ(Int_t i) const
 {
@@ -269,7 +265,7 @@ Double_t TGraph2DErrors::GetYmaxE() const
 
 Double_t TGraph2DErrors::GetYminE() const
 {
-   Double_t v = fY[0]+fEY[0];
+   Double_t v = fY[0]-fEY[0];
    for (Int_t i=1; i<fNpoints; i++) if (fY[i]-fEY[i]<v) v=fY[i]-fEY[i];
    return v;
 }
@@ -291,7 +287,7 @@ Double_t TGraph2DErrors::GetZmaxE() const
 
 Double_t TGraph2DErrors::GetZminE() const
 {
-   Double_t v = fZ[0]+fEZ[0];
+   Double_t v = fZ[0]-fEZ[0];
    for (Int_t i=1; i<fNpoints; i++) if (fZ[i]-fEZ[i]<v) v=fZ[i]-fEZ[i];
    return v;
 }
@@ -304,6 +300,32 @@ void TGraph2DErrors::Print(Option_t *) const
 {
    for (Int_t i = 0; i < fNpoints; i++) {
       printf("x[%d]=%g, y[%d]=%g, z[%d]=%g, ex[%d]=%g, ey[%d]=%g, ez[%d]=%g\n", i, fX[i], i, fY[i], i, fZ[i], i, fEX[i], i, fEY[i], i, fEZ[i]);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Multiply the values and errors of a TGraph2DErrors by a constant c1.
+///
+/// If option contains "x" the x values and errors are scaled
+/// If option contains "y" the y values and errors are scaled
+/// If option contains "z" the z values and errors are scaled
+/// If option contains "xyz" all three x, y and z values and errors are scaled
+
+void TGraph2DErrors::Scale(Double_t c1, Option_t *option)
+{
+   TGraph2D::Scale(c1, option);
+   TString opt = option; opt.ToLower();
+   if (opt.Contains("x") && GetEX()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEX()[i] *= c1;
+   }
+   if (opt.Contains("y") && GetEY()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEY()[i] *= c1;
+   }
+   if (opt.Contains("z") && GetEZ()) {
+      for (Int_t i=0; i<GetN(); i++)
+         GetEZ()[i] *= c1;
    }
 }
 
@@ -427,7 +449,7 @@ void TGraph2DErrors::SetPointError(Int_t i, Double_t ex, Double_t ey, Double_t e
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TGraphErrors.
+/// Stream an object of class TGraph2DErrors.
 
 void TGraph2DErrors::Streamer(TBuffer &b)
 {

@@ -11,7 +11,7 @@ the file LICENSE in the ROOT distribution.
 
 
 To install ROOT you will need to go to the ROOT website at:
-<http://root.cern.ch/drupal/content/downloading-root>
+<https://root.cern/install/>
 
 You have a choice to download the binaries or the source. The source is
 quicker to transfer since it is only 31 MB, but you will need to compile
@@ -46,7 +46,7 @@ for download - new, old and pro:
 
 
 The binaries are available for downloading from
-<http://root.cern.ch/drupal/content/downloading-root>. Once downloaded
+<https://root.cern/install/>. Once downloaded
 you need to unzip and de-tar the file. For example, if you have
 downloaded ROOT v5.30 for Linux-SLC5:
 
@@ -162,22 +162,10 @@ Show where item is found in the specified path:
 Root.ShowPath:              false
 ```
 
-Activate memory statistics (`size` and `cnt` are used to trap allocation
-of blocks of a certain `size` after `cnt` attempts).
+Activate memory statistics.
 
 ``` {.cpp}
-Root.MemStat:               0
-Root.MemStat.size:         -1
-Root.MemStat.cnt:          -1
 Root.ObjectStat:            0
-```
-
-Activate memory leak checker (use in conjunction with
-`$ROOTSYS/bin/memprobe`). Currently only works on Linux with gcc.
-
-``` {.cpp}
-Root.MemCheck:              0
-Root.MemCheckFile:          memcheck.out
 ```
 
 Global debug mode. When `>0` turns on progressively more details
@@ -647,7 +635,7 @@ Check of host equivalence via `/etc/hosts`.`equiv` or `$HOME/.rhosts`.
 SrvAuth.CheckHostsEquivalence: 1
 ```
 
-Force file opening via **`TNetFile`** (**`TXNetFile`**) if a hostname is
+Force file opening via **`TNetFile`** (**`TNetXNGFile`**) if a hostname is
 specified in the Url. By default, for local files `TFile::Open()`
 invokes directly **`TFile.`**
 
@@ -662,7 +650,7 @@ namespace descriptor ends with - the namespace is not a part of the
 filename. Extend in private .rootrc with a +Url.Special line.
 
 ``` {.cpp}
-Url.Special:             file: rfio: hpss: castor: gfal: dcache:
+Url.Special:             file: rfio: hpss: castor: dcache:
 +Url.Special:            /alien/- /castor/
 ```
 
@@ -679,62 +667,6 @@ Socket read timeout [in secs: default 10 secs]
 ``` {.cpp}
 XProof.ReadTimeout: 10
 ```
-
-The following env vars are handled by **`TXNetFile`** and related
-classes (module `netx`, `libNetx.so`).
-
-`XNet.ConnectTimeout` - maximum time to wait before server's response on
-a connect [10 s]
-
-`XNet.RequestTimeout` - maximum time to wait before considering a
-read/write failure [60 s]
-
-`XNet.ConnectDomainAllowRE` - sequence of **`TRegexp`** regular
-expressions separated by a `|`. A domain is granted access to for the
-first connection if it matches one of these regexps. Example:
-
-``` {.cpp}
-slac.stanford.edu|pd.infn.it|fe.infn.it
-```
-
-`XNet.ConnectDomainDenyRE` - sequence of TRegexp regular expressions
-separated by a `|`. A domain is denied access to for the first
-connection if it matches one of these regexps.
-
-`XNet.RedirDomainAllowRE` - sequence of TRegexp regular expressions
-separated by a `|`. A domain is granted access to for a redirection if
-it matches one of these regexps. Example:
-
-`XNet.RedirDomainDenyRE` - sequence of TRegexp regular expressions
-separated by a `|`. A domain is granted access to for a redirection if
-it matches one of these regexps.
-
-`XNet.MaxRedirectCount` - maximum number of redirections from server
-[default - 255]
-
-`XNet.Debug` - log verbosity level (0=nothing,1=messages of interest to
-the user, 2=messages of interest to the developers (includes also user
-messages), 3=dump of all sent/received data buffers (includes also user
-and developers messages). [default - 0]
-
-`XNet.ReconnectTimeout` - sleep-time before going back to the load
-balancer (or rebouncing to the same failing host) after a read/write
-error [default - 10s]
-
-`XNet.StartGarbageCollectorThread` - for test/development purposes.
-Normally nonzero (true), but as workaround for external causes someone
-could be interested in not having the garbage collector thread around.
-[experimental!]
-
-`XNet.GoAsynchronous` - default is 0. When activated, **`XTNetFile`**
-works in async mode, allowing input buffering and unsolicited responses
-[experimental!]
-
-`XNet.TryConnect` - Number of tries connect to a single server before
-giving up.
-
-`XNet.TryConnectServersList` - number of connect retries to the whole
-server list given [default - 240]
 
 `XNet.PrintTAG` - Print a particular string the developers can choose to
 quickly recognize the version at run time [default - 0]

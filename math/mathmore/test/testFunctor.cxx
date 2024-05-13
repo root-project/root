@@ -108,16 +108,16 @@ class DerivFunction : public ROOT::Math::IMultiGenFunction {
 public:
 
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   DerivFunction *  Clone() const {
+   DerivFunction *  Clone() const override {
       return new DerivFunction();
    }
 
 private:
 
 
-   double DoEval(const double *x) const {
+   double DoEval(const double *x) const override {
       return FUNC;
    }
 
@@ -128,14 +128,14 @@ class DerivFunction1D : public ROOT::Math::IGenFunction {
 
 public:
 
-   DerivFunction1D *  Clone() const {
+   DerivFunction1D *  Clone() const override {
       return new DerivFunction1D();
    }
 
 private:
 
 
-   double DoEval(double x) const {
+   double DoEval(double x) const override {
       return FUNC1D;
    }
 
@@ -182,7 +182,7 @@ void TestTimePF( PFunc & f) {
    r.RndmArray(Ntimes,&x[0]);
    w. Start();
    double s=0;
-   double * p = 0;
+   double * p = nullptr;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {
       for (int i = 0; i < Ntimes-1; ++i) {
          double y = f(&x[i],p);
@@ -210,7 +210,7 @@ void TestTimeTF1(TF1 & f) {
    double s=0;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {
       for (int i = 0; i < Ntimes-1; ++i) {
-         double y = f.EvalPar(&x[i],0);
+         double y = f.EvalPar(&x[i],nullptr);
          s+= y;
       }
    }

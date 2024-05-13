@@ -15,6 +15,8 @@
 
 #include "Math/DistSampler.h"
 
+// needed by the ClassDef
+#include "Rtypes.h"
 
 namespace ROOT {
 
@@ -55,46 +57,51 @@ public:
 
 
    /// virtual destructor
-   virtual ~TUnuranSampler();
+   ~TUnuranSampler() override;
 
 
    using DistSampler::SetFunction;
 
-   /// set the parent function distribution to use for random sampling (one dim case)
-   void SetFunction(const ROOT::Math::IGenFunction & func)  {
+   /// Set the parent function distribution to use for random sampling (one dim case).
+   void SetFunction(const ROOT::Math::IGenFunction & func) override  {
       fFunc1D = &func;
       SetFunction<const ROOT::Math::IGenFunction>(func, 1);
    }
 
-   /// set the Function using a TF1 pointer
+   /// Set the Function using a TF1 pointer.
    void SetFunction(TF1 * pdf);
 
+   /// set the cumulative distribution function of the PDF used for random sampling (one dim case)
+   void SetCdf(const ROOT::Math::IGenFunction &cdf) override;
+
+   /// set the Derivative of the PDF used for random sampling (one dim continuous case)
+   void SetDPdf(const ROOT::Math::IGenFunction &dpdf) override;
 
    /**
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
-   bool Init(const char * algo ="");
+   bool Init(const char * algo ="") override;
 
 
    /**
       initialize the generators with the given algorithm
       If no algorithm is passed used the default one for the type of distribution
    */
-   bool Init(const ROOT::Math::DistSamplerOptions & opt );
+   bool Init(const ROOT::Math::DistSamplerOptions & opt ) override;
 
    /**
        Set the random engine to be used
        Needs to be called before Init to have effect
    */
-   void SetRandom(TRandom * r);
+   void SetRandom(TRandom * r) override;
 
    /**
        Set the random seed for the TRandom instances used by the sampler
        classes
        Needs to be called before Init to have effect
    */
-   void SetSeed(unsigned int seed);
+   void SetSeed(unsigned int seed) override;
 
    /**
       Set the print level
@@ -103,31 +110,40 @@ public:
    void SetPrintLevel(int level) {fLevel = level;}
 
    /*
-      set the mode
+      set the mode (1D distribution)
     */
-   void SetMode(double mode) {
+   void SetMode(double mode) override {
       fMode = mode;
       fHasMode = true;
    }
 
    /*
+      set the mode (Multidim distribution)
+   */
+   void SetMode(const std::vector<double> &modes) override;
+
+
+   /*
      set the area
     */
-   void SetArea(double area) {
+   void SetArea(double area) override {
       fArea = area;
       fHasArea = true;
    }
 
+   /// Set using of logarithm of PDF (only for 1D continuous case)
+   void SetUseLogPdf(bool on = true) override { fUseLogPdf = on; }
+
    /**
       Get the random engine used by the sampler
     */
-   TRandom * GetRandom();
+   TRandom * GetRandom() override;
 
    /**
       sample one event in one dimension
       better implementation could be provided by the derived classes
    */
-   double Sample1D();//  {
+   double Sample1D() override;//  {
 //       return fUnuran->Sample();
 //    }
 
@@ -135,7 +151,7 @@ public:
       sample one event in multi-dimension by filling the given array
       return false if sampling failed
    */
-   bool Sample(double * x);
+   bool Sample(double * x) override;
 //  {
 //       if (!fOneDim) return fUnuran->SampleMulti(x);
 //       x[0] = Sample1D();
@@ -148,35 +164,38 @@ public:
       divided by the bin width)
       By default do not do random sample, just return the function values
     */
-   bool SampleBin(double prob, double & value, double *error = 0);
+   bool SampleBin(double prob, double & value, double *error = nullptr) override;
 
 
 
 protected:
 
-   //initialization for 1D distributions
+   /// Initialization for 1D distributions.
    bool DoInit1D(const char * algo);
-   //initialization for 1D discrete distributions
+   /// Initialization for 1D discrete distributions.
    bool DoInitDiscrete1D(const char * algo);
-   //initialization for multi-dim distributions
+   /// Initialization for multi-dim distributions.
    bool DoInitND(const char * algo);
 
 
 private:
 
    // private member
-   bool                              fOneDim;      // flag to indicate if the function is 1 dimension
-   bool                              fDiscrete;    // flag to indicate if the function is discrete
-   bool                              fHasMode;     // flag to indicate if a mode is set
-   bool                              fHasArea;     // flag to indicate if a area is set
-   int                               fLevel;       // debug level
-   double                            fMode;        // mode of dist
-   double                            fArea;        // area of dist
-   const ROOT::Math::IGenFunction *  fFunc1D;      // 1D function pointer
-   TUnuran *                         fUnuran;      // unuran engine class
+   bool                              fOneDim = false;      ///< flag to indicate if the function is 1 dimension
+   bool                              fDiscrete = false;    ///< flag to indicate if the function is discrete
+   bool                              fHasMode = false;     ///< flag to indicate if a mode is set
+   bool                              fHasArea = false;     ///< flag to indicate if a area is set
+   bool                              fUseLogPdf = false;   ///< flag to indicate if we use the log of the PDF
+   int fLevel;                                     ///< debug level
+   double                            fMode;        ///< mode of dist (1D)
+   double                            fArea;        ///< area of dist
+   std::vector<double>               fNDMode;      ///< mode of the multi-dim distribution
+   const ROOT::Math::IGenFunction *  fFunc1D = nullptr;      ///< 1D function pointer (pdf)
+   const ROOT::Math::IGenFunction *  fCDF    = nullptr;      ///< CDF function pointer
+   const ROOT::Math::IGenFunction *  fDPDF   = nullptr;      ///< 1D Derivative function pointer
+   TUnuran *                         fUnuran = nullptr;      ///< unuran engine class
 
-   //ClassDef(TUnuranSampler,1)  //Distribution sampler class based on UNU.RAN
-
+   ClassDef(TUnuranSampler, 2);                    // Distribution sampler class based on UNU.RAN
 };
 
 

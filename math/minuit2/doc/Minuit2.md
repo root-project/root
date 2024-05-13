@@ -24,18 +24,14 @@ An example of using this interface is the %ROOT tutorial _tutorials/fit/Numerica
 or the Minuit2 test program
 [<tt>testMinimize.cxx</tt>](https://github.com/cxx-hep/root-cern/blob/master/math/minuit2/test/testMinimize.cxx).
 
-A standalone version of Minuit2 (independent of %ROOT) can be downloaded from
-[here](http://www.cern.ch/mathlibs/sw/5_34_14/Minuit2/Minuit2-5.34.14.tar.gz).
-It does not contain the %ROOT interface and it is therefore
-totally independent of external packages and can be simply build using the _configure_ script
-and then _make_. Example tests are provided in the directory _test/MnSim_ and _test/MnTutorial_
-and they can be built with the _make check_ command.
-The [Minuit2 User Guide](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html)
+A standalone version of Minuit2 (independent of %ROOT) can be easily built and installed using `CMake`. See this [`README`](https://github.com/root-project/root/blob/master/math/minuit2/README.md) for the instructions on how to get the sources, building and installing a stand-alone Minuit2.
+
+The [Minuit2 User Guide](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.html)
 provides all the information needed for using directly (without add-on packages like %ROOT) Minuit2.
 
 ## References
 
 1.  F. James, _Fortran MINUIT Reference Manual_ ([html](https://cern-tex.web.cern.ch/cern-tex/minuit/minmain.html));
-2.  F. James and M. Winkler, _C++ MINUIT User's Guide_ ([html](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.html) and [pdf](https://root.cern.ch/root/htmldoc/guides/minuit2/Minuit2.pdf));
+2.  F. James and M. Winkler, _C++ MINUIT User's Guide_ ([html](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.html) and [pdf](https://root.cern/root/htmldoc/guides/minuit2/Minuit2.pdf));
 3.  F. James, _Minuit Tutorial on Function Minimization_ ([pdf](http://seal.cern.ch/documents/minuit/mntutorial.pdf));
 4.  F. James, _The Interpretation of Errors in Minuit_ ([pdf](http://seal.cern.ch/documents/minuit/mnerror.pdf));

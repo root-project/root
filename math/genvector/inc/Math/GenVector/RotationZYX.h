@@ -56,6 +56,8 @@ namespace Math {
 
 
      @ingroup GenVector
+
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class RotationZYX {
@@ -101,7 +103,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit RotationZYX(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr RotationZYX(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**

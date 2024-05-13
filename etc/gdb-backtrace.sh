@@ -222,10 +222,15 @@ $line"
             cat $messfile | tr '%' '\n'
          else
             echo 'The crash is most likely caused by a problem in your script.'
-            echo 'Try to compile it (.L myscript.C+g) and fix any errors.'
-            echo 'You may get help by asking at the ROOT forum http://root.cern.ch/forum'
+            echo 'Try to compile it (.L myscript.C+g) and fix any errors. If your code'
+            echo 'links against ROOT, try to recompile with debugging information enabled.'
+            echo 'If you see question marks in one or more lines of the stack trace, try'
+            echo 'exporting the environment variable CLING_DEBUG=1 and running again.'
+            echo 'You may get help by asking at the ROOT forum https://root.cern/forum'
+            echo 'preferably using the command (.forum bug) in the ROOT prompt.'
             echo 'If you are really convinced it is a bug in ROOT then please submit a report'
-            echo 'at http://root.cern.ch/bugs Please post the ENTIRE stack trace'
+            echo 'at https://root.cern/bugs or (preferably) using the command (.gh bug) in'
+            echo 'the ROOT prompt. Please post the ENTIRE stack trace'
             echo 'from above as an attachment in addition to anything else'
             echo 'that might help us fixing this issue.'
          fi
@@ -235,10 +240,14 @@ $line"
          if test -f "$messfile"; then
             cat $messfile | tr '%' '\n'
          else
-            echo 'The lines below might hint at the cause of the crash.'
-            echo 'You may get help by asking at the ROOT forum http://root.cern.ch/forum'
+            echo 'The lines below might hint at the cause of the crash. If you see question'
+            echo 'marks as part of the stack trace, try to recompile with debugging information'
+            echo 'enabled and export CLING_DEBUG=1 environment variable before running.'
+            echo 'You may get help by asking at the ROOT forum https://root.cern/forum'
+            echo 'preferably using the command (.forum bug) in the ROOT prompt.'
             echo 'Only if you are really convinced it is a bug in ROOT then please submit a'
-            echo 'report at http://root.cern.ch/bugs Please post the ENTIRE stack trace'
+            echo 'report at https://root.cern/bugs or (preferably) using the command (.gh bug) in'
+            echo 'the ROOT prompt. Please post the ENTIRE stack trace'
             echo 'from above as an attachment in addition to anything else'
             echo 'that might help us fixing this issue.'
          fi

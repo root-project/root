@@ -38,6 +38,8 @@ namespace Math {
       (x, y, z coordinates)
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
   */
 
 template <class T = double>
@@ -46,6 +48,8 @@ class Cartesian3D {
 public :
 
    typedef T Scalar;
+
+   static constexpr unsigned int Dimension = 3U;
 
    /**
       Default constructor  with x=y=z=0
@@ -62,7 +66,7 @@ public :
       X(), Y() and Z()
    */
    template <class CoordSystem>
-   explicit Cartesian3D(const CoordSystem & v)
+   explicit constexpr Cartesian3D(const CoordSystem & v)
       : fX(v.X()), fY(v.Y()), fZ(v.Z()) {  }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -109,10 +113,10 @@ public :
    Scalar Z()     const { return fZ;}
    Scalar Mag2()  const { return fX*fX + fY*fY + fZ*fZ;}
    Scalar Perp2() const { return fX*fX + fY*fY ;}
-   Scalar Rho() const { return sqrt(Perp2()); }
-   Scalar R() const { return sqrt(Mag2()); }
-   Scalar Theta() const { return atan2(Rho(), Z()); }
-   Scalar Phi() const { return atan2(fY, fX); }
+   Scalar Rho() const { using std::sqrt; return sqrt(Perp2()); }
+   Scalar R() const { using std::sqrt; return sqrt(Mag2()); }
+   Scalar Theta() const { using std::atan2; return atan2(Rho(), Z()); }
+   Scalar Phi() const { using std::atan2; return atan2(fY, fX); }
 
    // pseudorapidity
    Scalar Eta() const {
@@ -190,7 +194,7 @@ public :
    // ============= Overloads for improved speed ==================
 
    template <class T2>
-   explicit Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
+   explicit constexpr Cartesian3D( const Polar3D<T2> & v ) : fZ (v.Z())
    {
       const T rho = v.Rho();
       // re-using this instead of calling v.X() and v.Y()
@@ -207,7 +211,9 @@ public :
    Cartesian3D & operator = (const Polar3D<T2> & v)
    {
       const T rho = v.Rho();
+      using std::cos;
       fX          = rho * cos(v.Phi());
+      using std::sin;
       fY          = rho * sin(v.Phi());
       fZ = v.Z();
       return *this;

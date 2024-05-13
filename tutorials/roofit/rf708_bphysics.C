@@ -1,15 +1,13 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Special p.d.f.'s: special decay pdf for B physics with mixing and/or CP violation
+/// Special pdf's: special decay pdf for B physics with mixing and/or CP violation
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -64,7 +62,7 @@ void rf708_bphysics()
    // ---------------------------------------------------
 
    // Generate some data
-   RooDataSet *data = bmix.generate(RooArgSet(dt, mixState, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data{bmix.generate({dt, mixState, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    // For all plots below B0 and B0 tagged data will look somewhat differently
@@ -81,19 +79,19 @@ void rf708_bphysics()
    RooPlot *frame2 = dt.frame(Title("B decay distribution of mixed events (B0/B0bar)"));
 
    data->plotOn(frame2, Cut("mixState==mixState::mixed&&tagFlav==tagFlav::B0"));
-   bmix.plotOn(frame2, Slice(tagFlav, "B0"), Slice(mixState, "mixed"));
+   bmix.plotOn(frame2, Slice({{&tagFlav, "B0"}, {&mixState, "mixed"}}));
 
    data->plotOn(frame2, Cut("mixState==mixState::mixed&&tagFlav==tagFlav::B0bar"), MarkerColor(kCyan));
-   bmix.plotOn(frame2, Slice(tagFlav, "B0bar"), Slice(mixState, "mixed"), LineColor(kCyan));
+   bmix.plotOn(frame2, Slice({{&tagFlav, "B0bar"}, {&mixState, "mixed"}}), LineColor(kCyan));
 
    // Plot unmixed slice for B0 and B0bar tagged data separately
    RooPlot *frame3 = dt.frame(Title("B decay distribution of unmixed events (B0/B0bar)"));
 
    data->plotOn(frame3, Cut("mixState==mixState::unmixed&&tagFlav==tagFlav::B0"));
-   bmix.plotOn(frame3, Slice(tagFlav, "B0"), Slice(mixState, "unmixed"));
+   bmix.plotOn(frame3, Slice({{&tagFlav, "B0"}, {&mixState, "unmixed"}}));
 
    data->plotOn(frame3, Cut("mixState==mixState::unmixed&&tagFlav==tagFlav::B0bar"), MarkerColor(kCyan));
-   bmix.plotOn(frame3, Slice(tagFlav, "B0bar"), Slice(mixState, "unmixed"), LineColor(kCyan));
+   bmix.plotOn(frame3, Slice({{&tagFlav, "B0bar"}, {&mixState, "unmixed"}}), LineColor(kCyan));
 
    // -------------------------------------------------
    // B - D e c a y   w i t h   C P   v i o l a t i o n
@@ -116,7 +114,7 @@ void rf708_bphysics()
    // ---------------------------------------------------------------------------
 
    // Generate some data
-   RooDataSet *data2 = bcp.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data2{bcp.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    RooPlot *frame4 = dt.frame(Title("B decay distribution with CPV(|l|=1,Im(l)=0.7) (B0/B0bar)"));
@@ -133,7 +131,7 @@ void rf708_bphysics()
    absLambda = 0.7;
 
    // Generate some data
-   RooDataSet *data3 = bcp.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data3{bcp.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately (sin2b = 0.7 plus direct CPV |l|=0.5)
    RooPlot *frame5 = dt.frame(Title("B decay distribution with CPV(|l|=0.7,Im(l)=0.7) (B0/B0bar)"));
@@ -172,7 +170,7 @@ void rf708_bphysics()
    // -------------------------------------------------------------------------------------
 
    // Generate some data
-   RooDataSet *data4 = bcpg.generate(RooArgSet(dt, tagFlav), 10000);
+   std::unique_ptr<RooDataSet> data4{bcpg.generate({dt, tagFlav}, 10000)};
 
    // Plot B0 and B0bar tagged data separately
    RooPlot *frame6 = dt.frame(Title("B decay distribution with CPV(Im(l)=0.7,Re(l)=0.7,|l|=1,dG/G=0.5) (B0/B0bar)"));

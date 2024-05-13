@@ -29,7 +29,7 @@
 //
 //    VARIABLES THAT CAN BE ALTERED
 //    -----------------------------
-// => depending on your desired precision: The intial values of fMuMin,
+// => depending on your desired precision: The initial values of fMuMin,
 // fMuMax, fMuStep and fNMax are those used in the PRD:
 //   fMuMin = 0.0
 //   fMuMax = 50.0
@@ -75,7 +75,7 @@ protected:
 
 public:
    TFeldmanCousins(Double_t newCL=0.9, TString options = "");
-   virtual ~TFeldmanCousins();
+   ~TFeldmanCousins() override;
 
    ////////////////////////////////////////////////
    // calculate the upper limit given Nobserved  //
@@ -105,7 +105,7 @@ public:
    void            SetMuMax(Double_t  newMax    = 50.0);
    void            SetMuStep(Double_t newMuStep = 0.005);
 
-   ClassDef(TFeldmanCousins,1) //calculate the CL upper limit using the Feldman-Cousins method
+   ClassDefOverride(TFeldmanCousins,1) //calculate the CL upper limit using the Feldman-Cousins method
 };
 
 #endif

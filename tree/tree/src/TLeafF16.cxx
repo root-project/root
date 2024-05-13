@@ -59,7 +59,7 @@ TLeafF16::TLeafF16(TBranch *parent, const char *name, const char *type) : TLeaf(
 
 TLeafF16::~TLeafF16()
 {
-   if (ResetAddress(nullptr, kTRUE))
+   if (ResetAddress(nullptr, true))
       delete[] fValue;
 
    if (fElement)

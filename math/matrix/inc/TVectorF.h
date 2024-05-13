@@ -13,7 +13,7 @@
 //                                                                      //
 // TVectorF                                                             //
 //                                                                      //
-//  Instantation of TVectorT<Float_t>                                   //
+//  Instantiation of TVectorT<Float_t>                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

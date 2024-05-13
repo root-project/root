@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 // The Test checks if runtime shared memory works.
-// RUN: cat %s | %cling -x cuda -Xclang -verify 2>&1 | FileCheck %s
+// RUN: cat %s | %cling -x cuda --cuda-path=%cudapath %cudasmlevel -Xclang -verify 2>&1 | FileCheck %s
 // REQUIRES: cuda-runtime
 
 const unsigned int numberOfThreads = 4;
@@ -32,19 +32,19 @@ for(unsigned int i = 0; i < numberOfThreads; ++i){
 int * deviceInput;
 int * deviceOutput;
 cudaMalloc( (void **) &deviceInput, sizeof(int)*numberOfThreads)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 cudaMalloc( (void **) &deviceOutput, sizeof(int)*numberOfThreads)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 cudaMemcpy(deviceInput, hostInput, sizeof(int)*numberOfThreads, cudaMemcpyHostToDevice)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 gKernel1<<<1,numberOfThreads, sizeof(int)*numberOfThreads>>>(deviceInput, deviceOutput);
 cudaGetLastError()
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 cudaDeviceSynchronize()
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 cudaMemcpy(hostOutput, deviceOutput, sizeof(int)*numberOfThreads, cudaMemcpyDeviceToHost)
-// CHECK: (cudaError_t) (cudaError::cudaSuccess) : (unsigned int) 0
+// CHECK: (cudaError_t) (cudaSuccess) : (unsigned int) 0
 
 int expectedSum = (numberOfThreads*(numberOfThreads+1))/2;
 int cudaSum = 0;

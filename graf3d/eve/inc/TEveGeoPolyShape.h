@@ -33,7 +33,7 @@ protected:
    std::vector<Int_t>    fPolyDesc;
    UInt_t                fNbPols;
 
-   virtual void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const;
+   void FillBuffer3D(TBuffer3D& buffer, Int_t reqSections, Bool_t localFrame) const override;
 
    struct Edge_t
    {
@@ -55,16 +55,16 @@ protected:
 
 public:
    TEveGeoPolyShape();
-   virtual ~TEveGeoPolyShape() {}
+   ~TEveGeoPolyShape() override {}
 
    static TEveGeoPolyShape* Construct(TGeoCompositeShape *cshp, Int_t n_seg);
 
    void SetFromFaceSet(TGLFaceSet* fs);
 
-   virtual const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
-   virtual       TBuffer3D* MakeBuffer3D() const;
+   const TBuffer3D& GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
+         TBuffer3D* MakeBuffer3D() const override;
 
-   ClassDef(TEveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
+   ClassDefOverride(TEveGeoPolyShape, 1); // A shape with arbitrary tesselation for visualization of CSG shapes.
 };
 
 #endif

@@ -4,7 +4,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodBDT (BDT = Boosted Decision Trees)                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Analysis of Boosted Decision Trees                                        *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodBDT
@@ -270,7 +270,7 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    fRegressionLossFunctionBDTG = nullptr;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
-   // weight file. Make sure the the variables correspond to the ones used in
+   // weight file. Make sure the variables correspond to the ones used in
    // creating the "weight"-file
 }
 
@@ -522,7 +522,7 @@ void TMVA::MethodBDT::ProcessOptions()
             << Endl;
       Log() << kWARNING << "Note also that explicitly setting *nEventsMin* so far OVERWRITES the option recommended \n"
             << " *MinNodeSize* = " << fMinNodeSizeS << " option !!" << Endl ;
-      fMinNodeSizeS = Form("%F3.2",fMinNodeSize);
+      fMinNodeSizeS = TString::Format("%F3.2",fMinNodeSize);
 
    }else{
       SetMinNodeSize(fMinNodeSizeS);
@@ -1199,10 +1199,9 @@ void TMVA::MethodBDT::Train()
 
    // book monitoring histograms (for AdaBost only)
 
-   TH1* h = new TH1F(Form("%s_BoostWeight",DataInfo().GetName()),hname,nBins,xMin,xMax);
-   TH1* nodesBeforePruningVsTree = new TH1I(Form("%s_NodesBeforePruning",DataInfo().GetName()),"nodes before pruning",fNTrees,0,fNTrees);
-   TH1* nodesAfterPruningVsTree = new TH1I(Form("%s_NodesAfterPruning",DataInfo().GetName()),"nodes after pruning",fNTrees,0,fNTrees);
-
+   TH1* h = new TH1F(TString::Format("%s_BoostWeight",DataInfo().GetName()).Data(),hname,nBins,xMin,xMax);
+   TH1* nodesBeforePruningVsTree = new TH1I(TString::Format("%s_NodesBeforePruning",DataInfo().GetName()).Data(),"nodes before pruning",fNTrees,0,fNTrees);
+   TH1* nodesAfterPruningVsTree = new TH1I(TString::Format("%s_NodesAfterPruning",DataInfo().GetName()).Data(),"nodes after pruning",fNTrees,0,fNTrees);
 
 
    if(!DoMulticlass()){
@@ -1273,10 +1272,10 @@ void TMVA::MethodBDT::Train()
      fIPyCurrentIter = itree;
       timer.DrawProgressBar( itree );
       // Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
-      // TH1 *hxx = new TH1F(Form("swdist%d",itree),Form("swdist%d",itree),10000,0,15);
-      // results->Store(hxx,Form("swdist%d",itree));
-      // TH1 *hxy = new TH1F(Form("bwdist%d",itree),Form("bwdist%d",itree),10000,0,15);
-      // results->Store(hxy,Form("bwdist%d",itree));
+      // TH1 *hxx = new TH1F(TString::Format("swdist%d",itree),TString::Format("swdist%d",itree),10000,0,15);
+      // results->Store(hxx,TString::Format("swdist%d",itree));
+      // TH1 *hxy = new TH1F(TString::Format("bwdist%d",itree),TString::Format("bwdist%d",itree),10000,0,15);
+      // results->Store(hxy,TString::Format("bwdist%d",itree));
       // for (Int_t iev=0; iev<fEventSample.size(); iev++) {
       //    if (fEventSample[iev]->GetClass()!=0) hxy->Fill((fEventSample[iev])->GetWeight());
       //    else          hxx->Fill((fEventSample[iev])->GetWeight());
@@ -1712,7 +1711,7 @@ Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Apply the boosting algorithm (the algorithm is selecte via the the "option" given
+/// Apply the boosting algorithm (the algorithm is selecte via the "option" given
 /// in the constructor. The return value is the boosting weight.
 
 Double_t TMVA::MethodBDT::Boost( std::vector<const TMVA::Event*>& eventSample, DecisionTree *dt, UInt_t cls )
@@ -1781,8 +1780,8 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
    std::vector<TH1F*> hS;
    std::vector<TH1F*> hB;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-      hS.push_back(new TH1F(Form("SigVar%dAtTree%d",ivar,iTree),Form("SigVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
-      hB.push_back(new TH1F(Form("BkgVar%dAtTree%d",ivar,iTree),Form("BkgVar%dAtTree%d",ivar,iTree),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
+      hS.push_back(new TH1F(TString::Format("SigVar%dAtTree%d",ivar,iTree).Data(),TString::Format("SigVar%dAtTree%d",ivar,iTree).Data(),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
+      hB.push_back(new TH1F(TString::Format("BkgVar%dAtTree%d",ivar,iTree).Data(),TString::Format("BkgVar%dAtTree%d",ivar,iTree).Data(),100,DataInfo().GetVariableInfo(ivar).GetMin(),DataInfo().GetVariableInfo(ivar).GetMax()));
       results->Store(hS.back(),hS.back()->GetTitle());
       results->Store(hB.back(),hB.back()->GetTitle());
    }
@@ -1791,8 +1790,8 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
    for (UInt_t iev=0; iev < fEventSample.size(); iev++){
       if (fEventSample[iev]->GetBoostWeight() > max) max = 1.01*fEventSample[iev]->GetBoostWeight();
    }
-   TH1F *tmpBoostWeightsS = new TH1F(Form("BoostWeightsInTreeS%d",iTree),Form("BoostWeightsInTreeS%d",iTree),100,0.,max);
-   TH1F *tmpBoostWeightsB = new TH1F(Form("BoostWeightsInTreeB%d",iTree),Form("BoostWeightsInTreeB%d",iTree),100,0.,max);
+   TH1F *tmpBoostWeightsS = new TH1F(TString::Format("BoostWeightsInTreeS%d",iTree).Data(),TString::Format("BoostWeightsInTreeS%d",iTree).Data(),100,0.,max);
+   TH1F *tmpBoostWeightsB = new TH1F(TString::Format("BoostWeightsInTreeB%d",iTree).Data(),TString::Format("BoostWeightsInTreeB%d",iTree).Data(),100,0.,max);
    results->Store(tmpBoostWeightsS,tmpBoostWeightsS->GetTitle());
    results->Store(tmpBoostWeightsB,tmpBoostWeightsB->GetTitle());
 
@@ -2313,14 +2312,14 @@ void TMVA::MethodBDT::AddWeightsXMLTo( void* parent ) const
 
    if (fDoPreselection){
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-         gTools().AddAttr( wght, Form("PreselectionLowBkgVar%d",ivar),      fIsLowBkgCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionLowBkgVar%dValue",ivar), fLowBkgCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionLowSigVar%d",ivar),      fIsLowSigCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionLowSigVar%dValue",ivar), fLowSigCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionHighBkgVar%d",ivar),     fIsHighBkgCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionHighBkgVar%dValue",ivar),fHighBkgCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionHighSigVar%d",ivar),     fIsHighSigCut[ivar]);
-         gTools().AddAttr( wght, Form("PreselectionHighSigVar%dValue",ivar),fHighSigCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionLowBkgVar%d",ivar).Data(),      fIsLowBkgCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionLowBkgVar%dValue",ivar).Data(), fLowBkgCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionLowSigVar%d",ivar).Data(),      fIsLowSigCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionLowSigVar%dValue",ivar).Data(), fLowSigCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionHighBkgVar%d",ivar).Data(),     fIsHighBkgCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionHighBkgVar%dValue",ivar).Data(),fHighBkgCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionHighSigVar%d",ivar).Data(),     fIsHighSigCut[ivar]);
+         gTools().AddAttr( wght, TString::Format("PreselectionHighSigVar%dValue",ivar).Data(),fHighSigCut[ivar]);
       }
    }
 
@@ -2349,7 +2348,7 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
    Float_t boostWeight;
 
 
-   if (gTools().HasAttr( parent, Form("PreselectionLowBkgVar%d",0))) {
+   if (gTools().HasAttr( parent, TString::Format("PreselectionLowBkgVar%d",0).Data())) {
       fIsLowBkgCut.resize(GetNvar());
       fLowBkgCut.resize(GetNvar());
       fIsLowSigCut.resize(GetNvar());
@@ -2362,21 +2361,21 @@ void TMVA::MethodBDT::ReadWeightsFromXML(void* parent) {
       Bool_t tmpBool;
       Double_t tmpDouble;
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-         gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%d",ivar), tmpBool);
+         gTools().ReadAttr( parent, TString::Format("PreselectionLowBkgVar%d",ivar).Data(), tmpBool);
          fIsLowBkgCut[ivar]=tmpBool;
-         gTools().ReadAttr( parent, Form("PreselectionLowBkgVar%dValue",ivar), tmpDouble);
+         gTools().ReadAttr( parent, TString::Format("PreselectionLowBkgVar%dValue",ivar).Data(), tmpDouble);
          fLowBkgCut[ivar]=tmpDouble;
-         gTools().ReadAttr( parent, Form("PreselectionLowSigVar%d",ivar), tmpBool);
+         gTools().ReadAttr( parent, TString::Format("PreselectionLowSigVar%d",ivar).Data(), tmpBool);
          fIsLowSigCut[ivar]=tmpBool;
-         gTools().ReadAttr( parent, Form("PreselectionLowSigVar%dValue",ivar), tmpDouble);
+         gTools().ReadAttr( parent, TString::Format("PreselectionLowSigVar%dValue",ivar).Data(), tmpDouble);
          fLowSigCut[ivar]=tmpDouble;
-         gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%d",ivar), tmpBool);
+         gTools().ReadAttr( parent, TString::Format("PreselectionHighBkgVar%d",ivar).Data(), tmpBool);
          fIsHighBkgCut[ivar]=tmpBool;
-         gTools().ReadAttr( parent, Form("PreselectionHighBkgVar%dValue",ivar), tmpDouble);
+         gTools().ReadAttr( parent, TString::Format("PreselectionHighBkgVar%dValue",ivar).Data(), tmpDouble);
          fHighBkgCut[ivar]=tmpDouble;
-         gTools().ReadAttr( parent, Form("PreselectionHighSigVar%d",ivar),tmpBool);
+         gTools().ReadAttr( parent, TString::Format("PreselectionHighSigVar%d",ivar).Data(),tmpBool);
          fIsHighSigCut[ivar]=tmpBool;
-         gTools().ReadAttr( parent, Form("PreselectionHighSigVar%dValue",ivar), tmpDouble);
+         gTools().ReadAttr( parent, TString::Format("PreselectionHighSigVar%dValue",ivar).Data(), tmpDouble);
          fHighSigCut[ivar]=tmpDouble;
       }
    }
@@ -3036,7 +3035,6 @@ void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostrea
 void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Event*>& eventSample)
 {
    Double_t nTotS = 0.0, nTotB = 0.0;
-   Int_t nTotS_unWeighted = 0, nTotB_unWeighted = 0;
 
    std::vector<TMVA::BDTEventWrapper> bdtEventSample;
 
@@ -3056,11 +3054,9 @@ void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Ev
    for( std::vector<const TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
       if (DataInfo().IsSignal(*it)){
          nTotS += (*it)->GetWeight();
-         ++nTotS_unWeighted;
       }
       else {
          nTotB += (*it)->GetWeight();
-         ++nTotB_unWeighted;
       }
       bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
    }

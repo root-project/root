@@ -1,45 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <title>ROOT Browser</title>
-      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+      <meta charset="utf-8">
+      <title>ROOT RBrowser</title>
       <link rel="stylesheet" type="text/css" href="rootui5sys/browser/style.css">
-
    </head>
 
    <body>
       <div id="BrowserDiv">
-         loading scripts...
       </div>
 
-      <script type='text/javascript'>
+      <script type='module'>
 
-        function InitUI(handle) {
+         import { parse, browser, decodeUrl, toJSON, source_dir } from './jsrootsys/modules/core.mjs';
 
-           sap.ui.require(["sap/ui/core/mvc/XMLView"], function(XMLView) {
-              XMLView.create({
-                 id: "TopBrowserId",
-                 viewName: "rootui5.browser.view.Browser",
-                 viewData: { conn_handle: handle }
-              }).then(function(oView) {
-                 oView.placeAt("BrowserDiv");
-              });
-           });
+         import { connectWebWindow, WebWindowHandle } from './jsrootsys/modules/webwindow.mjs';
 
-        }
-
-        if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
-
-        JSROOT.ConnectWebWindow({
-           prereq: "openui5;v6;v7",  // load v6,v7 because of canvas painter
-//           openui5src: "jsroot",    // use JSROOT provided package, default
-//           openui5src: "https://openui5.hana.ondemand.com/1.70.0/",
-           openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.tnt", // customize openui5 libs later
-           prereq_logdiv: "BrowserDiv",
-           callback: InitUI
-        });
+         connectWebWindow({
+            ui5: true,
+            // openui5src: "jsroot",    // use JSROOT provided package, default
+            // openui5src: "https://openui5.hana.ondemand.com/1.98.0/",
+            openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table, sap.ui.codeeditor, sap.ui.commons, sap.tnt" // customize openui5 libs later
+         }).then(handle => {
+            sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
+                XMLView.create({
+                   id: "TopBrowserId",
+                   viewName: "rootui5.browser.view.Browser",
+                   viewData: { conn_handle: handle, jsroot: { parse, browser, decodeUrl, connectWebWindow, WebWindowHandle, toJSON, source_dir } }
+                }).then(oView => oView.placeAt("BrowserDiv"));
+            });
+         });
 
       </script>
 

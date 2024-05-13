@@ -1,20 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Multidimensional models: making 2/3 dimensional plots of p.d.f.s and datasets
+/// Multidimensional models: making 2/3 dimensional plots of pdfs and datasets
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
-#include "RooConstVar.h"
 #include "RooGaussian.h"
 #include "RooProdPdf.h"
 #include "TCanvas.h"
@@ -45,14 +42,13 @@ void rf309_ndimplot()
    RooGaussian model("model", "Gaussian with shifting mean", x, fy, sigma);
 
    // Sample dataset from gauss(x,y)
-   RooDataSet *data = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
    // M a k e   2 D   p l o t s   o f   d a t a   a n d   m o d e l
    // -------------------------------------------------------------
 
    // Create and fill ROOT 2D histogram (20x20 bins) with contents of dataset
-   // TH2D* hh_data = data->createHistogram("hh_data",x,Binning(20),YVar(y,Binning(20))) ;
-   TH1 *hh_data = data->createHistogram("x,y", 20, 20);
+   TH1 *hh_data = data->createHistogram("x,y", Binning(20), Binning(20));
 
    // Create and fill ROOT 2D histogram (50x50 bins) with sampling of pdf
    // TH2D* hh_pdf = model.createHistogram("hh_model",x,Binning(50),YVar(y,Binning(50))) ;
@@ -65,10 +61,10 @@ void rf309_ndimplot()
    // Create observables
    RooRealVar z("z", "z", -5, 5);
 
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(2));
+   RooGaussian gz("gz", "gz", z, 0.0, 2.0);
    RooProdPdf model3("model3", "model3", RooArgSet(model, gz));
 
-   RooDataSet *data3 = model3.generate(RooArgSet(x, y, z), 10000);
+   std::unique_ptr<RooDataSet> data3{model3.generate({x, y, z}, 10000)};
 
    // M a k e   3 D   p l o t s   o f   d a t a   a n d   m o d e l
    // -------------------------------------------------------------

@@ -1,21 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Fitting and plotting in sub ranges.
+/// Fitting and plotting in sub ranges.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooFitResult.h"
@@ -35,7 +32,7 @@ void rf203_ranges()
 
    // Construct gaussx(x,mx,1)
    RooRealVar mx("mx", "mx", 0, -10, 10);
-   RooGaussian gx("gx", "gx", x, mx, RooConst(1));
+   RooGaussian gx("gx", "gx", x, mx, 1.0);
 
    // Construct px = 1 (flat in x)
    RooPolynomial px("px", "px", x);
@@ -44,14 +41,14 @@ void rf203_ranges()
    RooRealVar f("f", "f", 0., 1.);
    RooAddPdf model("model", "model", RooArgList(gx, px), f);
 
-   // Generated 10000 events in (x,y) from p.d.f. model
-   RooDataSet *modelData = model.generate(x, 10000);
+   // Generated 10000 events in (x,y) from pdf model
+   std::unique_ptr<RooDataSet> modelData{model.generate(x, 10000)};
 
    // F i t   f u l l   r a n g e
    // ---------------------------
 
-   // Fit p.d.f to all data
-   RooFitResult *r_full = model.fitTo(*modelData, Save(kTRUE));
+   // Fit pdf to all data
+   std::unique_ptr<RooFitResult> r_full{model.fitTo(*modelData, Save(true), PrintLevel(-1))};
 
    // F i t   p a r t i a l   r a n g e
    // ----------------------------------
@@ -59,8 +56,8 @@ void rf203_ranges()
    // Define "signal" range in x as [-3,3]
    x.setRange("signal", -3, 3);
 
-   // Fit p.d.f only to data in "signal" range
-   RooFitResult *r_sig = model.fitTo(*modelData, Save(kTRUE), Range("signal"));
+   // Fit pdf only to data in "signal" range
+   std::unique_ptr<RooFitResult> r_sig{model.fitTo(*modelData, Save(true), Range("signal"), PrintLevel(-1))};
 
    // P l o t   /   p r i n t   r e s u l t s
    // ---------------------------------------
@@ -68,7 +65,7 @@ void rf203_ranges()
    // Make plot frame in x and add data and fitted model
    RooPlot *frame = x.frame(Title("Fitting a sub range"));
    modelData->plotOn(frame);
-   model.plotOn(frame, Range("Full"), LineStyle(kDashed), LineColor(kRed)); // Add shape in full ranged dashed
+   model.plotOn(frame, Range(""), LineStyle(kDashed), LineColor(kRed)); // Add shape in full ranged dashed
    model.plotOn(frame);                                                     // By default only fitted range is shown
 
    // Print fit results

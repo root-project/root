@@ -40,13 +40,18 @@ G_BEGIN_DECLS
 
 typedef char   gchar;
 typedef short  gshort;
-typedef long   glong;
+#ifdef _WIN64
+typedef __int64 glong;
+typedef unsigned __int64 gulong;
+#else
+typedef long glong;
+typedef unsigned long gulong;
+#endif
 typedef int    gint;
 typedef gint   gboolean;
 
 typedef unsigned char   guchar;
 typedef unsigned short  gushort;
-typedef unsigned long   gulong;
 typedef unsigned int    guint;
 
 typedef float   gfloat;

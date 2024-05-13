@@ -131,7 +131,7 @@ TGString *TGHtml::TableText(TGHtmlTable *pTable, int flag)
    TGString *str = new TGString("");  // The result
 
    if (pTable->fType != Html_TABLE) return str;
-   if (!(pEnd = pTable->fPEnd)) {
+   if (!pTable->fPEnd) {
       delete str;
       return 0;
    }
@@ -350,11 +350,11 @@ TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// pStart points to a <table>.  Compute the number of columns, the
+/// pStart points to a `<table>`.  Compute the number of columns, the
 /// minimum and maximum size for each column and the overall minimum
 /// and maximum size for this table and store these value in the
-/// pStart structure.  Return a pointer to the </table> element,
-/// or to NULL if there is no </table>.
+/// pStart structure.  Return a pointer to the `</table>` element,
+/// or to NULL if there is no `</table>`.
 ///
 /// The min and max size for column N (where the leftmost column has
 /// N==1) is pStart->fMinW[1] and pStart->fMaxW[1].  The pStart->fMinW[0]
@@ -364,11 +364,11 @@ TGHtmlElement *TGHtml::FindEndNest(TGHtmlElement *sp, int en,
 /// do not contain any cell padding, cell spacing or border width.
 /// Only pStart->fMinW[0] contains these extra spaces.
 ///
-/// The back references from </table>, </tr>, </td> and </th> back to
-/// the <table> markup are also filled in.  And for each <td> and <th>
+/// The back references from `</table>`, `</tr>`, `</td>` and `</th>` back to
+/// the `<table>` markup are also filled in.  And for each `<td>` and `<th>`
 /// markup, the pTable and pEnd fields are set to their proper values.
 ///
-/// pStart    - The <table> markup
+/// pStart    - The `<table>` markup
 /// lineWidth - Total width available to the table
 
 TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
@@ -449,7 +449,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
    separation = cellSpacing + 2 * (cellPadding + cbw);
    margin = tbw + cellSpacing + cbw + cellPadding;
 
-   z = pStart->MarkupArg("hspace", 0);
+   pStart->MarkupArg("hspace", 0);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
    // Figure out the maximum space available
@@ -572,7 +572,7 @@ TGHtmlElement *TGHtml::TableDimensions(TGHtmlTable *pStart, int lineWidth)
 
             if (noWrap) {
                // coverity[returned_pointer]
-               if ((z = p->MarkupArg("rowspan", 0)) == 0) { // Hack ???
+               if (p->MarkupArg("rowspan", 0) == 0) { // Hack ???
                //minW = (requestedW > 0 ? requestedW : maxW);
                } else {
                   minW = maxW;
@@ -1223,7 +1223,7 @@ TGHtmlElement *TGHtmlLayoutContext::TableLayout(TGHtmlTable *pTable)
    z = pTable->MarkupArg("vspace", 0);
    vspace = z ? atoi(z) : DFLT_VSPACE;
 
-   z = pTable->MarkupArg("hspace", 0);
+   pTable->MarkupArg("hspace", 0);
    // hspace = z ? atoi(z) : DFLT_HSPACE;
 
 #ifdef DEBUG

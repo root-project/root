@@ -37,6 +37,7 @@ namespace Math {
 
       @ingroup GenVector
 
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 class AxisAngle {
 
@@ -90,7 +91,7 @@ public:
       Construct from another supported rotation type (see gv_detail::convert )
    */
    template <class OtherRotation>
-   explicit AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
+   explicit constexpr AxisAngle(const OtherRotation & r) {gv_detail::convert(r,*this);}
 
 
    /**
@@ -162,7 +163,7 @@ public:
 
    /**
       Set components into a non-zero vector (x,y,z) and an angle.
-      The vector is intended to be a cartesian dispalcement vector
+      The vector is intended to be a cartesian displacement vector
       but any vector class assignable from one will work.
    */
    template<class AnyVector>
@@ -172,7 +173,7 @@ public:
    }
 
    /**
-      accesss to rotation axis
+      access to rotation axis
    */
    AxisVector Axis() const { return fAxis; }
 

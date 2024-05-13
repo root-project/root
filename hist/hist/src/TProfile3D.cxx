@@ -25,7 +25,7 @@ Bool_t TProfile3D::fgApproximate = kFALSE;
 ClassImp(TProfile3D);
 
 /** \class TProfile3D
-    \ingroup Hist
+    \ingroup Histograms
  Profile3D histograms are used to display the mean
  value of T and its RMS for each cell in X,Y,Z.
  Profile3D histograms are in many cases an
@@ -154,14 +154,15 @@ void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TProfile3D::TProfile3D(const TProfile3D &profile) : TH3D()
+TProfile3D::TProfile3D(const TProfile3D &profile3d) : TH3D()
 {
-   ((TProfile3D&)profile).Copy(*this);
+   profile3d.TProfile3D::Copy(*this);
 }
 
-TProfile3D &TProfile3D::operator=(const TProfile3D &profile)
+TProfile3D &TProfile3D::operator=(const TProfile3D &profile3d)
 {
-   ((TProfile3D &)profile).Copy(*this);
+   if (this != &profile3d)
+      profile3d.TProfile3D::Copy(*this);
    return *this;
 }
 
@@ -252,7 +253,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
    if (nbentries < 0) {
       if (action == 0) return 0;
       nbentries  = -nbentries;
-      fBuffer=0;
+      fBuffer=nullptr;
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
@@ -278,7 +279,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
       } else {
-         fBuffer = 0;
+         fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
@@ -291,13 +292,13 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       }
    }
 
-   fBuffer = 0;
+   fBuffer = nullptr;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[5*i+2],buffer[5*i+3],buffer[5*i+4],buffer[5*i+5],buffer[5*i+1]);
    }
    fBuffer = buffer;
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   if (action > 0) { delete [] fBuffer; fBuffer = nullptr; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
       else                              fBuffer[0] = 0;
@@ -325,7 +326,7 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
       nbentries  = -nbentries;
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer; fBuffer=nullptr;
          Reset("ICES"); // reset without deleting the functions
          fBuffer = buffer;
       }
@@ -349,7 +350,7 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
 void TProfile3D::Copy(TObject &obj) const
 {
    try {
-      TProfile3D & pobj = dynamic_cast<TProfile3D&>(obj);
+      TProfile3D &pobj = dynamic_cast<TProfile3D &>(obj);
 
       TH3D::Copy(pobj);
       fBinEntries.Copy(pobj.fBinEntries);
@@ -760,7 +761,7 @@ Option_t *TProfile3D::GetErrorOption() const
 ////////////////////////////////////////////////////////////////////////////////
 /// fill the array stats from the contents of this profile.
 ///
-/// The array stats must be correctly dimensionned in the calling program.
+/// The array stats must be correctly dimensioned in the calling program.
 ///
 ///  - stats[0] = sumw
 ///  - stats[1] = sumw2
@@ -786,21 +787,27 @@ void TProfile3D::GetStats(Double_t *stats) const
    if (fBuffer) ((TProfile3D*)this)->BufferEmpty();
 
    // Loop on bins
-   if (fTsumw == 0 || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+   if ( (fTsumw == 0 /* && fEntries > 0 */) || fXaxis.TestBit(TAxis::kAxisRange) || fYaxis.TestBit(TAxis::kAxisRange)) {
+
+      // check for labels axis . In that case corresponding statistics do not make sense and it is set to zero
+      Bool_t labelXaxis = ((const_cast<TAxis &>(fXaxis)).GetLabels() && fXaxis.CanExtend());
+      Bool_t labelYaxis = ((const_cast<TAxis &>(fYaxis)).GetLabels() && fYaxis.CanExtend());
+      Bool_t labelZaxis = ((const_cast<TAxis &>(fZaxis)).GetLabels() && fZaxis.CanExtend());
+
       Int_t bin, binx, biny,binz;
       Double_t w, w2;
       Double_t x,y,z;
       for (bin=0;bin<kNstat;bin++) stats[bin] = 0;
       if (!fBinEntries.fArray) return;
       for (binz=fZaxis.GetFirst();binz<=fZaxis.GetLast();binz++) {
-         z = fZaxis.GetBinCenter(binz);
+         z = (!labelZaxis) ? fZaxis.GetBinCenter(binz) : 0;
          for (biny=fYaxis.GetFirst();biny<=fYaxis.GetLast();biny++) {
-            y = fYaxis.GetBinCenter(biny);
+            y = (!labelYaxis) ? fYaxis.GetBinCenter(biny) : 0;
             for (binx=fXaxis.GetFirst();binx<=fXaxis.GetLast();binx++) {
                bin = GetBin(binx,biny,binz);
                w         = fBinEntries.fArray[bin];
                w2        = (fBinSumw2.fN ? fBinSumw2.fArray[bin] : w );
-               x         = fXaxis.GetBinCenter(binx);
+               x         = (!labelXaxis) ? fXaxis.GetBinCenter(binx) : 0;
                stats[0]  += w;
                stats[1]  += w2;
                stats[2]  += w*x;
@@ -834,6 +841,41 @@ void TProfile3D::GetStats(Double_t *stats) const
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reduce the number of bins for this axis to the number of bins having a label.
+
+void TProfile3D::LabelsDeflate(Option_t *ax)
+{
+   TProfileHelper::LabelsDeflate(this, ax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Double the number of bins for axis.
+/// Refill histogram
+/// This function is called by TAxis::FindBin(const char *label)
+
+void TProfile3D::LabelsInflate(Option_t *ax)
+{
+   TProfileHelper::LabelsInflate(this, ax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set option(s) to draw axis with labels.
+///
+/// option might have the following values:
+///
+///  - "a" sort by alphabetic order
+///  - ">" sort by decreasing values
+///  - "<" sort by increasing values
+///  - "h" draw labels horizontal
+///  - "v" draw labels vertical
+///  - "u" draw labels up (end of label right adjusted)
+///  - "d" draw labels down (start of label left adjusted)
+
+void TProfile3D::LabelsOption(Option_t * /* option */, Option_t * /* ax */)
+{
+   Error("LabelsOption","Labels option function is not implemented for a TProfile3D");
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Merge all histograms in the collection in this histogram.
 ///
@@ -933,14 +975,14 @@ TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
    if (pname == "_px") {
       pname = GetName();  pname.Append("_pxyz");
    }
-   TH3D *h1 = 0 ;
+   TH3D *h1 = nullptr ;
    if (xbins->fN == 0 && ybins->fN == 0 && zbins->fN == 0)
       h1 = new TH3D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
    else if ( xbins->fN != 0 && ybins->fN != 0 && zbins->fN != 0)
       h1 = new TH3D(pname,GetTitle(),nx,xbins->GetArray(),ny,ybins->GetArray(), nz,zbins->GetArray() );
    else {
       Error("ProjectionXYZ","Histogram has an axis with variable bins and an axis with fixed bins. This case is not supported - return a null pointer");
-      return 0;
+      return nullptr;
    }
 
 
@@ -1038,7 +1080,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    Int_t ny = iymax-iymin+1;
 
    // Create the projected profiles
-   TProfile2D *p2 = 0;
+   TProfile2D *p2 = nullptr;
    // Create always a new TProfile2D (not as in the case of TH3 projection)
 
    const TArrayD *xbins = projX->GetXbins();
@@ -1068,12 +1110,12 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    TH3D * h3dW = ProjectionXYZ("h3temp-W","W");
    TH3D * h3dN = ProjectionXYZ("h3temp-N","B");
 
-   h3dW->SetDirectory(0); h3dN->SetDirectory(0);
+   h3dW->SetDirectory(nullptr); h3dN->SetDirectory(nullptr);
 
    // Since no axis range is considered when doing the projection TProfile3D->TH3D
    // the resulting histogram will have the same axis as the parent one
    // we need afterwards to set the range in the 3D histogram to considered it later
-   // when doing the projection in a Profile2D 
+   // when doing the projection in a Profile2D
    if (fXaxis.TestBit(TAxis::kAxisRange) ) {
       h3dW->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
       h3dN->GetXaxis()->SetRange(fXaxis.GetFirst(),fXaxis.GetLast());
@@ -1099,7 +1141,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
 
    TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF);
    TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF);
-   h2W->SetDirectory(0); h2N->SetDirectory(0);
+   h2W->SetDirectory(nullptr); h2N->SetDirectory(nullptr);
 
 
    // fill the bin content
@@ -1287,7 +1329,7 @@ void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
    }
    if (buffersize <= 0) {
       fBufferSize = 0;

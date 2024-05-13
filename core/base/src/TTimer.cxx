@@ -57,14 +57,16 @@ private:
 public:
    TSingleShotCleaner() : TTimer(10, kTRUE) { fGarbage = new TList(); }
    virtual ~TSingleShotCleaner() { fGarbage->Delete(); delete fGarbage; }
-   void TurnOn() {
-      TObject *obj = (TObject*) gTQSender;
+   void TurnOn() override
+   {
+      TObject *obj = (TObject *)gTQSender;
       fGarbage->Add(obj);
       Reset();
       if (gSystem)
          gSystem->AddTimer(this);
    }
-   Bool_t Notify() {
+   Bool_t Notify() override
+   {
       fGarbage->Delete();
       Reset();
       if (gSystem)
@@ -85,7 +87,7 @@ public:
 
 TTimer::TTimer(Long_t ms, Bool_t mode) : fTime(ms)
 {
-   fObject      = 0;
+   fObject      = nullptr;
    fCommand     = "";
    fSync        = mode;
    fIntSyscalls = kFALSE;
@@ -115,7 +117,7 @@ TTimer::TTimer(TObject *obj, Long_t ms, Bool_t mode) : fTime(ms)
 
 TTimer::TTimer(const char *command, Long_t ms, Bool_t mode) : fTime(ms)
 {
-   fObject      = 0;
+   fObject      = nullptr;
    fCommand     = command;
    fSync        = mode;
    fIntSyscalls = kFALSE;
@@ -173,7 +175,7 @@ void TTimer::Reset()
 
 void TTimer::SetCommand(const char *command)
 {
-   fObject  = 0;
+   fObject  = nullptr;
    fCommand = command;
 }
 
@@ -268,4 +270,15 @@ void TTimer::SingleShot(Int_t milliSec, const char *receiver_class,
                      "TTimer", &singleShotCleaner, "TurnOn()");
 
    singleShotTimer->Start(milliSec, kTRUE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function checks if the timer is running within gSystem
+/// (Has been started and did not finish yet).
+
+bool TTimer::IsRunning()
+{
+   if (gSystem && gSystem->GetListOfTimers())
+      return gSystem->GetListOfTimers()->IndexOf(this) != -1;
+   return false;
 }

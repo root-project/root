@@ -1,22 +1,19 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Data and categories: tools for manipulation of (un)binned datasets
+/// Data and categories: tools for manipulation of (un)binned datasets
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooCategory.h"
 #include "TCanvas.h"
 #include "TAxis.h"
@@ -81,29 +78,29 @@ void rf402_datahandling()
 
    // The reduce() function returns a new dataset which is a subset of the original
    cout << endl << ">> d1 has only columns x,c" << endl;
-   RooDataSet *d1 = (RooDataSet *)d.reduce(RooArgSet(x, c));
+   std::unique_ptr<RooAbsData> d1{d.reduce({x, c})};
    d1->Print("v");
 
    cout << endl << ">> d2 has only column y" << endl;
-   RooDataSet *d2 = (RooDataSet *)d.reduce(RooArgSet(y));
+   std::unique_ptr<RooAbsData> d2{d.reduce({y})};
    d2->Print("v");
 
    cout << endl << ">> d3 has only the points with y>5.17" << endl;
-   RooDataSet *d3 = (RooDataSet *)d.reduce("y>5.17");
+   std::unique_ptr<RooAbsData> d3{d.reduce("y>5.17")};
    d3->Print("v");
 
    cout << endl << ">> d4 has only columns x,c for data points with y>5.17" << endl;
-   RooDataSet *d4 = (RooDataSet *)d.reduce(RooArgSet(x, c), "y>5.17");
+   std::unique_ptr<RooAbsData> d4{d.reduce({x, c}, "y>5.17")};
    d4->Print("v");
 
    // The merge() function adds two data set column-wise
    cout << endl << ">> merge d2(y) with d1(x,c) to form d1(x,c,y)" << endl;
-   d1->merge(d2);
+   static_cast<RooDataSet&>(*d1).merge(&static_cast<RooDataSet&>(*d2));
    d1->Print("v");
 
-   // The append() function addes two datasets row-wise
+   // The append() function adds two datasets row-wise
    cout << endl << ">> append data points of d3 to d1" << endl;
-   d1->append(*d3);
+   static_cast<RooDataSet&>(*d1).append(static_cast<RooDataSet&>(*d3));
    d1->Print("v");
 
    // O p e r a t i o n s   o n   b i n n e d   d a t a s e t s
@@ -128,8 +125,8 @@ void rf402_datahandling()
 
    // Examine the statistics of a binned dataset
    cout << ">> number of bins in dh   : " << dh.numEntries() << endl;
-   cout << ">> sum of weights in dh   : " << dh.sum(kFALSE) << endl;
-   cout << ">> integral over histogram: " << dh.sum(kTRUE) << endl; // accounts for bin volume
+   cout << ">> sum of weights in dh   : " << dh.sum(false) << endl;
+   cout << ">> integral over histogram: " << dh.sum(true) << endl; // accounts for bin volume
 
    // Locate a bin from a set of coordinates and retrieve its properties
    x = 0.3;
@@ -144,7 +141,7 @@ void rf402_datahandling()
    // All reduce() methods are interfaced in RooAbsData. All reduction techniques
    // demonstrated on unbinned datasets can be applied to binned datasets as well.
    cout << ">> Creating 1-dimensional projection on y of dh for bins with x>0" << endl;
-   RooDataHist *dh2 = (RooDataHist *)dh.reduce(y, "x>0");
+   std::unique_ptr<RooAbsData> dh2{dh.reduce(y, "x>0")};
    dh2->Print("v");
 
    // Add dh2 to yframe and redraw

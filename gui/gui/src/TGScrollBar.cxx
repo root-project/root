@@ -20,24 +20,32 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGScrollBar and TGScrollBarElement                                   //
-//                                                                      //
-// The classes in this file implement scrollbars. Scrollbars can be     //
-// either placed horizontal or vertical. A scrollbar contains three     //
-// TGScrollBarElements: The "head", "tail" and "slider". The head and   //
-// tail are fixed at either end and have the typical arrows in them.    //
-//                                                                      //
-// The TGHScrollBar will generate the following event messages:         //
-// kC_HSCROLL, kSB_SLIDERPOS, position, 0                               //
-// kC_HSCROLL, kSB_SLIDERTRACK, position, 0                             //
-//                                                                      //
-// The TGVScrollBar will generate the following event messages:         //
-// kC_VSCROLL, kSB_SLIDERPOS, position, 0                               //
-// kC_VSCROLL, kSB_SLIDERTRACK, position, 0                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class  TGScrollBar
+    \ingroup guiwidgets
+
+The classes in this file implement scrollbars. Scrollbars can be
+either placed horizontal or vertical. A scrollbar contains three
+
+\class TGScrollBarElements
+\ingroup guiwidgets
+The "head", "tail" and "slider". The head and
+tail are fixed at either end and have the typical arrows in them.
+
+\class TGHScrollBar
+\ingroup guiwidgets
+The TGHScrollBar will generate the following event messages:
+kC_HSCROLL, kSB_SLIDERPOS, position, 0
+kC_HSCROLL, kSB_SLIDERTRACK, position, 0
+
+\class TGVScrollBar
+\ingroup guiwidgets
+The TGVScrollBar will generate the following event messages:
+kC_VSCROLL, kSB_SLIDERPOS, position, 0
+kC_VSCROLL, kSB_SLIDERTRACK, position, 0
+
+*/
+
 
 #include "TGScrollBar.h"
 #include "TGResourcePool.h"
@@ -70,7 +78,7 @@ public:
    TSBRepeatTimer(TGScrollBar *s, Long_t ms, Int_t inc) : TTimer(ms, kTRUE)
       { fScrollBar = s;  fSmallInc = inc; }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
    Int_t  GetSmallInc() const { return fSmallInc; }
 };
 

@@ -71,6 +71,7 @@ enum EProperty {
    kIsAbstract      = 0x00000040,
    kIsVirtual       = 0x00000080,
    kIsPureVirtual   = 0x00000100,
+   kIsUnionMember   = 0x00000100,
    kIsPublic        = 0x00000200,
    kIsProtected     = 0x00000400,
    kIsPrivate       = 0x00000800,
@@ -83,16 +84,19 @@ enum EProperty {
    kIsCCompiled     = 0x00040000,
    kIsCPPCompiled   = kIsCCompiled,
    kIsCompiled      = kIsCCompiled,
+   // 0x00080000 is available
    kIsConstant      = 0x00100000,
    kIsVirtualBase   = 0x00200000,
    kIsConstPointer  = 0x00400000,
    kIsScopedEnum    = 0x00800000,
+   // 0x01000000 is available
    kIsConstexpr     = 0x02000000,
    kIsExplicit      = 0x04000000,
    kIsNamespace     = 0x08000000,
    kIsConstMethod   = 0x10000000,
-   kIsUsingVariable = 0x20000000,
+   kIsUsing         = 0x20000000,
    kIsDefinedInStd  = 0x40000000
+   // 0x80000000 is available
 };
 
 enum EFunctionProperty {
@@ -124,7 +128,8 @@ enum EFunctionProperty {
    kIsConversion  = 0x00000002,
    kIsDestructor  = 0x00000004,
    kIsOperator    = 0x00000008,
-   kIsInlined     = 0x00000010
+   kIsInlined     = 0x00000010,
+   kIsTemplateSpec= 0x00000020
 };
 
 enum EClassProperty {
@@ -138,7 +143,8 @@ enum EClassProperty {
    kClassHasImplicitDtor = 0x00000200,
    kClassHasDtor         = 0x00000300,
    kClassHasVirtual      = 0x00001000,
-   kClassIsAbstract      = 0x00002000
+   kClassIsAbstract      = 0x00002000,
+   kClassIsAggregate     = 0x00004000
 };
 
 enum ERefTypeValues {
@@ -162,15 +168,15 @@ namespace ROOT {
 class TDictionary : public TNamed {
 
 private:
-   TDictAttributeMap *fAttributeMap;    //pointer to a class attribute map
-   ULong64_t fUpdatingTransactionCount; //!the Cling ID of the transaction that last updated the object
+   TDictAttributeMap *fAttributeMap{nullptr};    //pointer to a class attribute map
+   ULong64_t fUpdatingTransactionCount{0}; //!the Cling ID of the transaction that last updated the object
 
 protected:
    Bool_t              UpdateInterpreterStateMarker();
 
 public:
-   TDictionary(): fAttributeMap(0), fUpdatingTransactionCount(0) { }
-   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0), fUpdatingTransactionCount(0) { }
+   TDictionary(): fAttributeMap(nullptr), fUpdatingTransactionCount(0) { }
+   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(nullptr), fUpdatingTransactionCount(0) { }
    TDictionary(const TDictionary& dict);
    virtual ~TDictionary();
 
@@ -206,8 +212,17 @@ public:
       kBitset            = ROOT::kSTLbitset
    };
 
+   /// Kinds of members to include in lists.
+   enum class EMemberSelection {
+      kNoUsingDecls,
+      kOnlyUsingDecls,
+      kAlsoUsingDecls
+   };
+   static bool WantsRegularMembers(EMemberSelection sel) { return sel != EMemberSelection::kOnlyUsingDecls; }
+   static bool WantsUsingDecls(EMemberSelection sel) { return sel != EMemberSelection::kNoUsingDecls; }
+
    typedef const void *DeclId_t;
-   ClassDef(TDictionary,2)  //Interface to dictionary
+   ClassDefOverride(TDictionary,2)  //Interface to dictionary
 };
 
 #endif

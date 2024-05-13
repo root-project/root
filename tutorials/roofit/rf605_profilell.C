@@ -1,21 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Likelihood and minimization: working with the profile likelihood estimator
+/// Likelihood and minimization: working with the profile likelihood estimator
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooAddPdf.h"
 #include "RooMinimizer.h"
 #include "TCanvas.h"
@@ -43,13 +40,13 @@ void rf605_profilell()
    RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // C o n s t r u c t   p l a i n   l i k e l i h o o d
    // ---------------------------------------------------
 
    // Construct unbinned likelihood
-   RooAbsReal *nll = model.createNLL(*data, NumCPU(2));
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data, NumCPU(2))};
 
    // Minimize likelihood w.r.t all parameters before making plots
    RooMinimizer(*nll).migrad();
@@ -68,7 +65,7 @@ void rf605_profilell()
    // The profile likelihood estimator on nll for frac will minimize nll w.r.t
    // all floating parameters except frac for each evaluation
 
-   RooAbsReal *pll_frac = nll->createProfile(frac);
+   std::unique_ptr<RooAbsReal> pll_frac{nll->createProfile(frac)};
 
    // Plot the profile likelihood in frac
    pll_frac->plotOn(frame1, LineColor(kRed));
@@ -82,7 +79,7 @@ void rf605_profilell()
 
    // The profile likelihood estimator on nll for sigma_g2 will minimize nll
    // w.r.t all floating parameters except sigma_g2 for each evaluation
-   RooAbsReal *pll_sigmag2 = nll->createProfile(sigma_g2);
+   std::unique_ptr<RooAbsReal> pll_sigmag2{nll->createProfile(sigma_g2)};
 
    // Plot the profile likelihood in sigma_g2
    pll_sigmag2->plotOn(frame2, LineColor(kRed));
@@ -102,8 +99,4 @@ void rf605_profilell()
    gPad->SetLeftMargin(0.15);
    frame2->GetYaxis()->SetTitleOffset(1.4);
    frame2->Draw();
-
-   delete pll_frac;
-   delete pll_sigmag2;
-   delete nll;
 }

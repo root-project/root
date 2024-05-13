@@ -1,9 +1,6 @@
-/// \file RWebDisplayHandle.cxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2018-10-17
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <s.linev@gsi.de>
+// Date: 2018-10-17
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -15,7 +12,6 @@
 
 #include <ROOT/RWebDisplayHandle.hxx>
 
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RLogger.hxx>
 
 #include "RConfigure.h"
@@ -25,11 +21,16 @@
 #include "TObjArray.h"
 #include "THttpServer.h"
 #include "TEnv.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TBase64.h"
+#include "TBufferJSON.h"
 
-#include <regex>
 #include <fstream>
+#include <iostream>
+#include <filesystem>
+#include <memory>
+#include <regex>
 
 #ifdef _MSC_VER
 #include <process.h>
@@ -40,14 +41,24 @@
 #include <spawn.h>
 #endif
 
+using namespace ROOT;
 using namespace std::string_literals;
+
+/** \class ROOT::RWebDisplayHandle
+\ingroup webdisplay
+
+Handle of created web-based display
+Depending from type of web display, holds handle of started browser process or other display-specific information
+to correctly stop and cleanup display.
+*/
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Static holder of registered creators of web displays
 
-std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> &ROOT::Experimental::RWebDisplayHandle::GetMap()
+std::map<std::string, std::unique_ptr<RWebDisplayHandle::Creator>> &RWebDisplayHandle::GetMap()
 {
-   static std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator>> sMap;
+   static std::map<std::string, std::unique_ptr<RWebDisplayHandle::Creator>> sMap;
    return sMap;
 }
 
@@ -57,14 +68,14 @@ std::map<std::string, std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Cre
 /// \param name - creator name like ChromeCreator
 /// \param libname - shared library name where creator could be provided
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimental::RWebDisplayHandle::FindCreator(const std::string &name, const std::string &libname)
+std::unique_ptr<RWebDisplayHandle::Creator> &RWebDisplayHandle::FindCreator(const std::string &name, const std::string &libname)
 {
    auto &m = GetMap();
    auto search = m.find(name);
    if (search == m.end()) {
 
       if (libname == "ChromeCreator") {
-         m.emplace(name, std::make_unique<ChromeCreator>());
+         m.emplace(name, std::make_unique<ChromeCreator>(name == "edge"));
       } else if (libname == "FirefoxCreator") {
          m.emplace(name, std::make_unique<FirefoxCreator>());
       } else if (libname == "BrowserCreator") {
@@ -79,12 +90,11 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> &ROOT::Experimen
    if (search != m.end())
       return search->second;
 
-   static std::unique_ptr<ROOT::Experimental::RWebDisplayHandle::Creator> dummy;
+   static std::unique_ptr<RWebDisplayHandle::Creator> dummy;
    return dummy;
 }
 
 namespace ROOT {
-namespace Experimental {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Specialized handle to hold information about running browser process
@@ -98,44 +108,47 @@ class RWebBrowserHandle : public RWebDisplayHandle {
    typedef pid_t browser_process_id;
 #endif
    std::string fTmpDir;         ///< temporary directory to delete at the end
+   std::string fTmpFile;        ///< temporary file to remove
    bool fHasPid{false};
    browser_process_id fPid;
 
 public:
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &dump) : RWebDisplayHandle(url), fTmpDir(tmpdir)
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile, const std::string &dump) :
+      RWebDisplayHandle(url), fTmpDir(tmpdir), fTmpFile(tmpfile)
    {
       SetContent(dump);
    }
 
-   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, browser_process_id pid)
-      : RWebDisplayHandle(url), fTmpDir(tmpdir), fHasPid(true), fPid(pid)
+   RWebBrowserHandle(const std::string &url, const std::string &tmpdir, const std::string &tmpfile, browser_process_id pid)
+      : RWebDisplayHandle(url), fTmpDir(tmpdir), fTmpFile(tmpfile), fHasPid(true), fPid(pid)
    {
    }
 
-   virtual ~RWebBrowserHandle()
+   ~RWebBrowserHandle() override
    {
 #ifdef _MSC_VER
       if (fHasPid)
          gSystem->Exec(("taskkill /F /PID "s + std::to_string(fPid) + " >NUL 2>NUL").c_str());
-      std::string rmdir = "rmdir /S /Q ";
+      std::string rmdir = "rmdir /S /Q ", rmfile = "del /F ";
 #else
       if (fHasPid)
          kill(fPid, SIGKILL);
-      std::string rmdir = "rm -rf ";
+      std::string rmdir = "rm -rf ", rmfile = "rm -f ";
 #endif
       if (!fTmpDir.empty())
          gSystem->Exec((rmdir + fTmpDir).c_str());
+      if (!fTmpFile.empty())
+         gSystem->Exec((rmfile + fTmpFile).c_str());
    }
 
 };
 
-} // namespace Experimental
 } // namespace ROOT
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Class to handle starting of web-browsers like Chrome or Firefox
 
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custom, const std::string &exec)
+RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custom, const std::string &exec)
 {
    if (custom) return;
 
@@ -165,7 +178,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::BrowserCreator(bool custo
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Check if browser executable exists and can be used
 
-void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::string &nexttry, bool check_std_paths)
+void RWebDisplayHandle::BrowserCreator::TestProg(const std::string &nexttry, bool check_std_paths)
 {
    if (nexttry.empty() || !fProg.empty())
       return;
@@ -199,16 +212,23 @@ void ROOT::Experimental::RWebDisplayHandle::BrowserCreator::TestProg(const std::
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Display given URL in web browser
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle>
-ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
+std::unique_ptr<RWebDisplayHandle>
+RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 {
    std::string url = args.GetFullUrl();
    if (url.empty())
       return nullptr;
 
+   if(args.GetBrowserKind() == RWebDisplayArgs::kServer) {
+      std::cout << "New web window: " << url << std::endl;
+      return std::make_unique<RWebBrowserHandle>(url, "", "", "");
+   }
+
    std::string exec;
-   if (args.IsHeadless())
+   if (args.IsBatchMode())
       exec = fBatchExec;
+   else if (args.IsHeadless())
+      exec = fHeadlessExec;
    else if (args.IsStandalone())
       exec = fExec;
    else
@@ -224,8 +244,57 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
    ProcessGeometry(exec, args);
 
-   std::string rmdir = MakeProfile(exec, args.IsHeadless());
+   std::string rmdir = MakeProfile(exec, args.IsBatchMode() || args.IsHeadless());
 
+   std::string tmpfile;
+
+   // these are secret parameters, hide them in temp file
+   if ((url.find("token=") || url.find("key=")) && !args.IsBatchMode() && !args.IsHeadless()) {
+      TString filebase = "root_start_";
+
+      auto f = gSystem->TempFileName(filebase, nullptr, ".html");
+
+      bool ferr = false;
+
+      if (!f) {
+         ferr = true;
+      } else {
+         std::string content = std::regex_replace(
+            "<!DOCTYPE html>\n"
+            "<html lang=\"en\">\n"
+            "<head>\n"
+            "   <meta charset=\"utf-8\">\n"
+            "   <meta http-equiv=\"refresh\" content=\"0;url=$url\"/>\n"
+            "   <title>Opening ROOT widget</title>\n"
+            "</head>\n"
+            "<body>\n"
+            "<p>\n"
+            "  This page should redirect you to a ROOT widget. If it doesn't,\n"
+            "  <a href=\"$url\">click here to go to ROOT</a>.\n"
+            "</p>\n"
+            "</body>\n"
+            "</html>\n", std::regex("\\$url"), url);
+
+         if (fwrite(content.c_str(), 1, content.length(), f) != content.length())
+            ferr = true;
+
+         if (fclose(f) != 0)
+            ferr = true;
+
+         tmpfile = filebase.Data();
+
+         url = "file://"s + tmpfile;
+      }
+
+      if (ferr) {
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "Fail to create temporary HTML file to startup widget";
+         return nullptr;
+      }
+   }
+
+   exec = std::regex_replace(exec, std::regex("\\$rootetcdir"), TROOT::GetEtcDir().Data());
    exec = std::regex_replace(exec, std::regex("\\$url"), url);
    exec = std::regex_replace(exec, std::regex("\\$width"), swidth);
    exec = std::regex_replace(exec, std::regex("\\$height"), sheight);
@@ -234,7 +303,9 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
    if (exec.compare(0,5,"fork:") == 0) {
       if (fProg.empty()) {
-         R__ERROR_HERE("WebDisplay") << "Fork instruction without executable";
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "Fork instruction without executable";
          return nullptr;
       }
 
@@ -244,7 +315,9 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
 
       std::unique_ptr<TObjArray> fargs(TString(exec.c_str()).Tokenize(" "));
       if (!fargs || (fargs->GetLast()<=0)) {
-         R__ERROR_HERE("WebDisplay") << "Fork instruction is empty";
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "Fork instruction is empty";
          return nullptr;
       }
 
@@ -254,29 +327,33 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          argv.push_back((char *)fargs->At(n)->GetName());
       argv.push_back(nullptr);
 
-      R__DEBUG_HERE("WebDisplay") << "Show web window in browser with posix_spawn:\n" << fProg << " " << exec;
+      R__LOG_DEBUG(0, WebGUILog()) << "Show web window in browser with posix_spawn:\n" << fProg << " " << exec;
 
       pid_t pid;
       int status = posix_spawn(&pid, argv[0], nullptr, nullptr, argv.data(), nullptr);
       if (status != 0) {
-         R__ERROR_HERE("WebDisplay") << "Fail to launch " << argv[0];
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "Fail to launch " << argv[0];
          return nullptr;
       }
 
       // add processid and rm dir
 
-      return std::make_unique<RWebBrowserHandle>(url, rmdir, pid);
+      return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, pid);
 
 #else
 
       if (fProg.empty()) {
-         R__ERROR_HERE("WebDisplay") << "No Web browser found";
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "No Web browser found";
          return nullptr;
       }
 
       // use UnixPathName to simplify handling of backslashes
       exec = "wmic process call create '"s + gSystem->UnixPathName(fProg.c_str()) + exec + "' | find \"ProcessId\" "s;
-      std::string process_id = gSystem->GetFromPipe(exec.c_str());
+      std::string process_id = gSystem->GetFromPipe(exec.c_str()).Data();
       std::stringstream ss(process_id);
       std::string tmp;
       char c;
@@ -284,12 +361,14 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       ss >> tmp >> c >> pid;
 
       if (pid <= 0) {
-         R__ERROR_HERE("WebDisplay") << "Fail to launch " << fProg;
+         if (!tmpfile.empty())
+            gSystem->Unlink(tmpfile.c_str());
+         R__LOG_ERROR(WebGUILog()) << "Fail to launch " << fProg;
          return nullptr;
       }
 
       // add processid and rm dir
-      return std::make_unique<RWebBrowserHandle>(url, rmdir, pid);
+      return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, pid);
 #endif
    }
 
@@ -312,11 +391,11 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
          argv.push_back((char *)fargs->At(n)->GetName());
       argv.push_back(nullptr);
 
-      R__DEBUG_HERE("WebDisplay") << "Showing web window in " << fProg << " with:\n" << exec;
+      R__LOG_DEBUG(0, WebGUILog()) << "Showing web window in " << fProg << " with:\n" << exec;
 
-      _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
+      _spawnv(_P_NOWAIT, gSystem->UnixPathName(fProg.c_str()), argv.data());
 
-      return std::make_unique<RWebBrowserHandle>(url, rmdir, ""s);
+      return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, ""s);
    }
 
    std::string prog = "\""s + gSystem->UnixPathName(fProg.c_str()) + "\""s;
@@ -341,7 +420,7 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       exec.insert(p, " >"s + redirect + " "s);
    }
 
-   R__DEBUG_HERE("WebDisplay") << "Showing web window in browser with:\n" << exec;
+   R__LOG_DEBUG(0, WebGUILog()) << "Showing web window in browser with:\n" << exec;
 
    gSystem->Exec(exec.c_str());
 
@@ -352,19 +431,28 @@ ROOT::Experimental::RWebDisplayHandle::BrowserCreator::Display(const RWebDisplay
       gSystem->Unlink(redirect.c_str());
    }
 
-   // add rmdir if required
-   return std::make_unique<RWebBrowserHandle>(url, rmdir, dump_content);
+   return std::make_unique<RWebBrowserHandle>(url, rmdir, tmpfile, dump_content);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserCreator(true)
+RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(true)
 {
-   TestProg(gEnv->GetValue("WebGui.Chrome", ""));
+   fEdge = _edge;
+
+   fEnvPrefix = fEdge ? "WebGui.Edge" : "WebGui.Chrome";
+
+   TestProg(gEnv->GetValue(fEnvPrefix.c_str(), ""));
+
+   if (!fProg.empty() && !fEdge)
+      fChromeVersion = gEnv->GetValue("WebGui.ChromeVersion", -1);
 
 #ifdef _MSC_VER
-   TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
+   if (fEdge)
+      TestProg("\\Microsoft\\Edge\\Application\\msedge.exe", true);
+   else
+      TestProg("\\Google\\Chrome\\Application\\chrome.exe", true);
 #endif
 #ifdef R__MACOSX
    TestProg("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome");
@@ -373,16 +461,30 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
    TestProg("/usr/bin/chromium");
    TestProg("/usr/bin/chromium-browser");
    TestProg("/usr/bin/chrome-browser");
+   TestProg("/usr/bin/google-chrome-stable");
+   TestProg("/usr/bin/google-chrome");
 #endif
 
 #ifdef _MSC_VER
-   // fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "fork: --headless --disable-gpu $geometry $url");
-
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --app=$url &"); // & in windows mean usage of spawn
+   fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry \"$url\" --dump-dom &");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
-   fBatchExec = gEnv->GetValue("WebGui.ChromeBatch", "$prog --headless --incognito $geometry $url");
-   fExec = gEnv->GetValue("WebGui.ChromeInteractive", "$prog $geometry --no-first-run --incognito --app=\'$url\' &");
+#ifdef R__MACOSX
+   bool use_normal = true; // mac does not like new flag
+#else
+   bool use_normal = fChromeVersion < 119;
+#endif
+   if (use_normal) {
+      // old browser with standard headless mode
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' --dump-dom >/dev/null &");
+   } else {
+      // newer version with headless=new mode
+      fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+      fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' &");
+   }
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
 #endif
 }
 
@@ -391,7 +493,7 @@ ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ChromeCreator() : BrowserC
 /// Replace $geometry placeholder with geometry settings
 /// Also RWebDisplayArgs::GetExtraArgs() are appended
 
-void ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
+void RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
 {
    std::string geometry;
    if ((args.GetWidth() > 0) && (args.GetHeight() > 0))
@@ -417,19 +519,29 @@ void ROOT::Experimental::RWebDisplayHandle::ChromeCreator::ProcessGeometry(std::
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Handle profile argument
 
-std::string ROOT::Experimental::RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, bool)
+std::string RWebDisplayHandle::ChromeCreator::MakeProfile(std::string &exec, bool)
 {
    std::string rmdir, profile_arg;
 
    if (exec.find("$profile") == std::string::npos)
       return rmdir;
 
-   const char *chrome_profile = gEnv->GetValue("WebGui.ChromeProfile", "");
+   const char *chrome_profile = gEnv->GetValue((fEnvPrefix + "Profile").c_str(), "");
    if (chrome_profile && *chrome_profile) {
       profile_arg = chrome_profile;
    } else {
       gRandom->SetSeed(0);
-      rmdir = profile_arg = std::string(gSystem->TempDirectory()) + "/root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+      profile_arg = gSystem->TempDirectory();
+#ifdef _MSC_VER
+      char slash = '\\';
+#else
+      char slash = '/';
+#endif
+      if (!profile_arg.empty() && (profile_arg[profile_arg.length()-1] != slash))
+         profile_arg += slash;
+      profile_arg += "root_chrome_profile_"s + std::to_string(gRandom->Integer(0x100000));
+
+      rmdir = profile_arg;
    }
 
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
@@ -441,7 +553,7 @@ std::string ROOT::Experimental::RWebDisplayHandle::ChromeCreator::MakeProfile(st
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
+RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : BrowserCreator(true)
 {
    TestProg(gEnv->GetValue("WebGui.Firefox", ""));
 
@@ -453,23 +565,38 @@ ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::FirefoxCreator() : Browse
 #endif
 #ifdef R__LINUX
    TestProg("/usr/bin/firefox");
+   TestProg("/usr/bin/firefox-bin");
 #endif
 
 #ifdef _MSC_VER
    // there is a problem when specifying the window size with wmic on windows:
    // It gives: Invalid format. Hint: <paramlist> = <param> [, <paramlist>].
-   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork: -headless -no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $url &");
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog -headless -no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "$prog -headless -no-remote $profile $url &");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog -no-remote $profile $geometry $url &");
 #else
-   // fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "fork:--headless --private-window --no-remote $profile $url");
-   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$prog --private-window \'$url\' &");
+   fBatchExec = gEnv->GetValue("WebGui.FirefoxBatch", "$prog --headless --private-window -no-remote $profile $url");
+   fHeadlessExec = gEnv->GetValue("WebGui.FirefoxHeadless", "fork:--headless --private-window -no-remote $profile $url");
+   fExec = gEnv->GetValue("WebGui.FirefoxInteractive", "$rootetcdir/runfirefox.sh $cleanup_profile $prog -no-remote $profile $geometry -url \'$url\' &");
 #endif
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process window geometry for Firefox
+
+void RWebDisplayHandle::FirefoxCreator::ProcessGeometry(std::string &exec, const RWebDisplayArgs &args)
+{
+   std::string geometry;
+   if ((args.GetWidth() > 0) && (args.GetHeight() > 0) && !args.IsHeadless())
+      geometry = "-width="s + std::to_string(args.GetWidth()) + " -height=" + std::to_string(args.GetHeight());
+
+   exec = std::regex_replace(exec, std::regex("\\$geometry"), geometry);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create Firefox profile to run independent browser window
 
-std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bool batch_mode)
+std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bool batch_mode)
 {
    std::string rmdir, profile_arg;
 
@@ -478,30 +605,115 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
 
    const char *ff_profile = gEnv->GetValue("WebGui.FirefoxProfile", "");
    const char *ff_profilepath = gEnv->GetValue("WebGui.FirefoxProfilePath", "");
-   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 0);
+   Int_t ff_randomprofile = gEnv->GetValue("WebGui.FirefoxRandomProfile", (Int_t) 1);
    if (ff_profile && *ff_profile) {
       profile_arg = "-P "s + ff_profile;
    } else if (ff_profilepath && *ff_profilepath) {
       profile_arg = "-profile "s + ff_profilepath;
-   } else if ((ff_randomprofile > 0) || (batch_mode && (ff_randomprofile >= 0))) {
+   } else if (ff_randomprofile > 0) {
 
       gRandom->SetSeed(0);
-      std::string rnd_profile = "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
-      std::string profile_dir = std::string(gSystem->TempDirectory()) + "/"s + rnd_profile;
+      std::string profile_dir = gSystem->TempDirectory();
+
+#ifdef _MSC_VER
+      char slash = '\\';
+#else
+      char slash = '/';
+#endif
+      if (!profile_dir.empty() && (profile_dir[profile_dir.length()-1] != slash))
+         profile_dir += slash;
+      profile_dir += "root_ff_profile_"s + std::to_string(gRandom->Integer(0x100000));
 
       profile_arg = "-profile "s + profile_dir;
 
       if (gSystem->mkdir(profile_dir.c_str()) == 0) {
          rmdir = profile_dir;
+
+         std::ofstream user_js(profile_dir + "/user.js", std::ios::trunc);
+         // workaround for current Firefox, without such settings it fail to close window and terminate it from batch
+         // also disable question about upload of data
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyAcceptedVersion\", 2);" << std::endl;
+         user_js << "user_pref(\"datareporting.policy.dataSubmissionPolicyNotifiedTime\", \"1635760572813\");" << std::endl;
+
+         // try to ensure that window closes with last tab
+         user_js << "user_pref(\"browser.tabs.closeWindowWithLastTab\", true);" << std::endl;
+         user_js << "user_pref(\"dom.allow_scripts_to_close_windows\", true);" << std::endl;
+         user_js << "user_pref(\"browser.sessionstore.resume_from_crash\", false);" << std::endl;
+
+         if (batch_mode) {
+            // allow to dump messages to std output
+            user_js << "user_pref(\"browser.dom.window.dump.enabled\", true);" << std::endl;
+         } else {
+            // to suppress annoying privacy tab
+            user_js << "user_pref(\"datareporting.policy.firstRunURL\", \"\");" << std::endl;
+            // to use custom userChrome.css files
+            user_js << "user_pref(\"toolkit.legacyUserProfileCustomizations.stylesheets\", true);" << std::endl;
+            // do not put tabs in title
+            user_js << "user_pref(\"browser.tabs.inTitlebar\", 0);" << std::endl;
+
+            std::ofstream times_json(profile_dir + "/times.json", std::ios::trunc);
+            times_json << "{" << std::endl;
+            times_json << "   \"created\": 1699968480952," << std::endl;
+            times_json << "   \"firstUse\": null" << std::endl;
+            times_json << "}" << std::endl;
+            if (gSystem->mkdir((profile_dir + "/chrome").c_str()) == 0) {
+               std::ofstream style(profile_dir + "/chrome/userChrome.css", std::ios::trunc);
+               // do not show tabs
+               style << "#TabsToolbar { visibility: collapse; }" << std::endl;
+               // do not show URL
+               style << "#nav-bar, #urlbar-container, #searchbar { visibility: collapse !important; }" << std::endl;
+            }
+         }
+
       } else {
-         R__ERROR_HERE("WebDisplay") << "Cannot create Firefox profile directory " << profile_dir;
+         R__LOG_ERROR(WebGUILog()) << "Cannot create Firefox profile directory " << profile_dir;
       }
    }
 
    exec = std::regex_replace(exec, std::regex("\\$profile"), profile_arg);
 
+   if (exec.find("$cleanup_profile") != std::string::npos) {
+      if (rmdir.empty()) rmdir = "<dummy>";
+      exec = std::regex_replace(exec, std::regex("\\$cleanup_profile"), rmdir);
+      rmdir.clear(); // no need to delete directory - it will be removed by script
+   }
+
    return rmdir;
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Check if http server required for display
+/// \param args - defines where and how to display web window
+
+bool RWebDisplayHandle::NeedHttpServer(const RWebDisplayArgs &args)
+{
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kOff) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kLocal))
+      return false;
+
+   if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)) {
+
+#ifdef WITH_QT6WEB
+      auto &qt6 = FindCreator("qt6", "libROOTQt6WebDisplay");
+      if (qt6 && qt6->IsActive())
+         return false;
+#endif
+#ifdef WITH_QT5WEB
+      auto &qt5 = FindCreator("qt5", "libROOTQt5WebDisplay");
+      if (qt5 && qt5->IsActive())
+         return false;
+#endif
+#ifdef WITH_CEFWEB
+      auto &cef = FindCreator("cef", "libROOTCefDisplay");
+      if (cef && cef->IsActive())
+         return false;
+#endif
+   }
+
+   return true;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create web display
@@ -509,9 +721,12 @@ std::string ROOT::Experimental::RWebDisplayHandle::FirefoxCreator::MakeProfile(s
 /// Returns RWebDisplayHandle, which holds information of running browser application
 /// Can be used fully independent from RWebWindow classes just to show any web page
 
-std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebDisplayHandle::Display(const RWebDisplayArgs &args)
+std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayArgs &args)
 {
    std::unique_ptr<RWebDisplayHandle> handle;
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kOff)
+      return handle;
 
    auto try_creator = [&](std::unique_ptr<Creator> &creator) {
       if (!creator || !creator->IsActive())
@@ -520,33 +735,65 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
       return handle ? true : false;
    };
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
-      if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
+   bool handleAsLocal = (args.GetBrowserKind() == RWebDisplayArgs::kLocal) ||
+                        (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)),
+        has_qt5web = false, has_qt6web = false, has_cefweb = false;
+
+#ifdef WITH_QT5WEB
+   has_qt5web = true;
+#endif
+
+#ifdef WITH_QT6WEB
+   has_qt6web = true;
+#endif
+
+#ifdef WITH_CEFWEB
+   has_cefweb = true;
+#endif
+
+   if ((handleAsLocal && has_qt6web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
+      if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   if ((handleAsLocal && has_qt5web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
       if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
 
+   if ((handleAsLocal && has_cefweb) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
+      if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
+         return handle;
+   }
+
    if (args.IsLocalDisplay()) {
-      R__ERROR_HERE("WebDisplay") << "Neither Qt5 nor CEF libraries were found to provide local display";
+      R__LOG_ERROR(WebGUILog()) << "Neither Qt5/6 nor CEF libraries were found to provide local display";
       return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+   bool handleAsNative =
+      (args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kOn);
+
+#ifdef _MSC_VER
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+      if (try_creator(FindCreator("edge", "ChromeCreator")))
+         return handle;
+   }
+#endif
+
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
       if (try_creator(FindCreator("chrome", "ChromeCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
       if (try_creator(FindCreator("firefox", "FirefoxCreator")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
-      // R__ERROR_HERE("WebDisplay") << "Neither Chrome nor Firefox browser cannot be started to provide display";
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+      // R__LOG_ERROR(WebGUILog()) << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }
 
@@ -566,14 +813,14 @@ std::unique_ptr<ROOT::Experimental::RWebDisplayHandle> ROOT::Experimental::RWebD
 /// Browser can specified when starting `root --web=firefox`
 /// Returns true when browser started
 /// It is convenience method, equivalent to:
-///  ~~~
+/// ~~~
 ///     RWebDisplayArgs args;
 ///     args.SetUrl(url);
 ///     args.SetStandalone(false);
 ///     auto handle = RWebDisplayHandle::Display(args);
 /// ~~~
 
-bool ROOT::Experimental::RWebDisplayHandle::DisplayUrl(const std::string &url)
+bool RWebDisplayHandle::DisplayUrl(const std::string &url)
 {
    RWebDisplayArgs args;
    args.SetUrl(url);
@@ -584,26 +831,120 @@ bool ROOT::Experimental::RWebDisplayHandle::DisplayUrl(const std::string &url)
    return !!handle;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Checks if configured browser can be used for image production
+
+bool RWebDisplayHandle::CheckIfCanProduceImages(RWebDisplayArgs &args)
+{
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox) && (args.GetBrowserKind() != RWebDisplayArgs::kEdge) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kChrome) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
+      bool detected = false;
+
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      if (h1 && h1->IsActive()) {
+         args.SetBrowserKind(RWebDisplayArgs::kChrome);
+         detected = true;
+      }
+
+      if (!detected) {
+         auto &h2 = FindCreator("firefox", "FirefoxCreator");
+         if (h2 && h2->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kFirefox);
+            detected = true;
+         }
+      }
+
+#ifdef _MSC_VER
+      if (!detected) {
+         auto &h3 = FindCreator("edge", "ChromeCreator");
+         if (h3 && h3->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kEdge);
+            detected = true;
+         }
+      }
+#endif
+      return detected;
+   }
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      return h1 && h1->IsActive();
+   }
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) {
+      auto &h2 = FindCreator("firefox", "FirefoxCreator");
+      return h2 && h2->IsActive();
+   }
+
+#ifdef _MSC_VER
+   if (args.GetBrowserKind() == RWebDisplayArgs::kEdge) {
+      auto &h3 = FindCreator("edge", "ChromeCreator");
+      return h3 && h3->IsActive();
+   }
+#endif
+
+   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if image production for specified browser kind is supported
+/// If browser not specified - use currently configured browser or try to test existing web browsers
+
+bool RWebDisplayHandle::CanProduceImages(const std::string &browser)
+{
+   RWebDisplayArgs args(browser);
+
+   return CheckIfCanProduceImages(args);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file using JSON data as source
-/// Invokes JSROOT drawing functionality in headless browser - Google Chrome
-
-bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height)
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height, const char *batch_file)
 {
-   if (json.empty())
+   return ProduceImages(fname, {json}, {width}, {height}, batch_file);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce image file(s) using JSON data as source
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+{
+   if (jsons.empty())
       return false;
 
    std::string _fname = fname;
    std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
-
-   auto EndsWith = [_fname](const std::string &suffix) {
-      return (_fname.length() > suffix.length()) ? (0 == _fname.compare (_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
+   auto EndsWith = [&_fname](const std::string &suffix) {
+      return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
+   std::vector<std::string> fnames;
+
+   if (!EndsWith(".pdf")) {
+      bool has_quialifier = _fname.find("%") != std::string::npos;
+
+      if (!has_quialifier && (jsons.size() > 1)) {
+         _fname.insert(_fname.rfind("."), "%d");
+         has_quialifier = true;
+      }
+
+      for (unsigned n = 0; n < jsons.size(); n++) {
+         if (has_quialifier) {
+            auto expand_name = TString::Format(_fname.c_str(), (int) n);
+            fnames.emplace_back(expand_name.Data());
+         } else {
+            fnames.emplace_back(_fname);
+         }
+      }
+   }
+
    if (EndsWith(".json")) {
-      std::ofstream ofs(fname);
-      ofs << json;
+      for (unsigned n = 0; n < jsons.size(); ++n) {
+         std::ofstream ofs(fnames[n]);
+         ofs << jsons[n];
+      }
       return true;
    }
 
@@ -612,22 +953,27 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    if (!jsrootsys) {
       jsrootsysdflt = TROOT::GetDataDir() + "/js";
       if (gSystem->ExpandPathName(jsrootsysdflt)) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to locate JSROOT " << jsrootsysdflt;
+         R__LOG_ERROR(WebGUILog()) << "Fail to locate JSROOT " << jsrootsysdflt;
          return false;
       }
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   RWebDisplayArgs args; // set default browser kind, only Chrome or CEF or Qt5 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kCEF) && (args.GetBrowserKind() != RWebDisplayArgs::kQt5))
-      args.SetBrowserKind(RWebDisplayArgs::kChrome);
+   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt5/Qt6 can be used here
+   if (!CheckIfCanProduceImages(args)) {
+      R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
+      return false;
+   }
+
+   auto isChromeBased = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
+        isFirefox = args.GetBrowserKind() == RWebDisplayArgs::kFirefox;
 
    std::string draw_kind;
 
    if (EndsWith(".pdf"))
       draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
-   else if (EndsWith("shot.png"))
-      draw_kind = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ? "draw" : "png";
+   else if (EndsWith("shot.png") && (jsons.size() == 1))
+      draw_kind = isChromeBased ? "draw" : "png"; // using screenshot
    else if (EndsWith(".svg"))
       draw_kind = "svg";
    else if (EndsWith(".png"))
@@ -639,36 +985,64 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
    else
       return false;
 
-   TString origin = TROOT::GetDataDir() + "/js/files/canv_batch.htm";
+   if (!batch_file || !*batch_file)
+      batch_file = "/js/files/canv_batch.htm";
+
+   TString origin = TROOT::GetDataDir() + batch_file;
    if (gSystem->ExpandPathName(origin)) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to find " << origin;
+      R__LOG_ERROR(WebGUILog()) << "Fail to find " << origin;
       return false;
    }
 
    auto filecont = THttpServer::ReadFileContent(origin.Data());
    if (filecont.empty()) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to read content of " << origin;
+      R__LOG_ERROR(WebGUILog()) << "Fail to read content of " << origin;
       return false;
    }
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_width"), std::to_string(width));
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_height"), std::to_string(height));
+   int max_width = 0, max_height = 0, page_margin = 10;
+   for (auto &w : widths)
+      if (w > max_width)
+         max_width = w;
+   for (auto &h : heights)
+      if (h > max_height)
+         max_height = h;
+
+   auto jsonw = TBufferJSON::ToJSON(&widths, TBufferJSON::kNoSpaces);
+   auto jsonh = TBufferJSON::ToJSON(&heights, TBufferJSON::kNoSpaces);
+
+   std::string mains;
+   for (auto &json : jsons) {
+      mains.append(mains.empty() ? "[" : ", ");
+      mains.append(json);
+   }
+   mains.append("]");
 
    if (strstr(jsrootsys,"http://") || strstr(jsrootsys,"https://") || strstr(jsrootsys,"file://"))
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
    else
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
+   filecont = std::regex_replace(filecont, std::regex("\\$page_margin"), std::to_string(page_margin) + "px");
+   filecont = std::regex_replace(filecont, std::regex("\\$page_width"), std::to_string(max_width + 2*page_margin) + "px");
+   filecont = std::regex_replace(filecont, std::regex("\\$page_height"), std::to_string(max_height + 2*page_margin) + "px");
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_widths"), jsonw.Data());
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_heights"), jsonh.Data());
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_objects"), mains);
 
    TString dump_name;
-   if ((draw_kind != "draw") && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+   if (draw_kind == "draw") {
+      if (!isChromeBased) {
+         R__LOG_ERROR(WebGUILog()) << "Creation of PDF files supported only by Chrome-based browser";
+         return false;
+      }
+   } else if (isChromeBased || isFirefox) {
       dump_name = "canvasdump";
       FILE *df = gSystem->TempFileName(dump_name);
       if (!df) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for dump-dom";
+         R__LOG_ERROR(WebGUILog()) << "Fail to create temporary file for dump-dom";
          return false;
       }
       fputs("placeholder", df);
@@ -683,20 +1057,20 @@ bool ROOT::Experimental::RWebDisplayHandle::ProduceImage(const std::string &fnam
 
 try_again:
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kCEF) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
       args.SetUrl(""s);
       args.SetPageContent(filecont);
 
       tmp_name.Clear();
       html_name.Clear();
 
-      R__DEBUG_HERE("CanvasPainter") << "Using file content_len " << filecont.length() << " to produce batch image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch images " << fname;
 
    } else {
       tmp_name = "canvasbody";
       FILE *hf = gSystem->TempFileName(tmp_name);
       if (!hf) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to create temporary file for batch job";
+         R__LOG_ERROR(WebGUILog()) << "Fail to create temporary file for batch job";
          return false;
       }
       fputs(filecont.c_str(), hf);
@@ -719,7 +1093,7 @@ try_again:
          ofs << filecont;
       } else {
          if (gSystem->Rename(tmp_name.Data(), html_name.Data()) != 0) {
-            R__ERROR_HERE("CanvasPainter") << "Fail to rename temp file " << tmp_name << " into " << html_name;
+            R__LOG_ERROR(WebGUILog()) << "Fail to rename temp file " << tmp_name << " into " << html_name;
             gSystem->Unlink(tmp_name.Data());
             return false;
          }
@@ -728,29 +1102,37 @@ try_again:
       args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       args.SetPageContent(""s);
 
-      R__DEBUG_HERE("CanvasPainter") << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch images " << fname;
    }
-
-   TString tgtfilename = fname.c_str();
-   if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
-      gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
    TString wait_file_name;
 
    args.SetStandalone(true);
    args.SetHeadless(true);
-   args.SetSize(width, height);
+   args.SetBatchMode(true);
+   args.SetSize(widths[0], heights[0]);
 
    if (draw_kind == "draw") {
+
+      TString tgtfilename = fname.c_str();
+      if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
+         gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
       wait_file_name = tgtfilename;
 
       if (EndsWith(".pdf"))
-         args.SetExtraArgs("--print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
+         args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
-   } else if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
+      // remove target image file - we use it as detection when chrome is ready
+      gSystem->Unlink(tgtfilename.Data());
+
+   } else if (isFirefox) {
+      // firefox will use window.dump to output produced result
+      args.SetRedirectOutput(dump_name.Data());
+      gSystem->Unlink(dump_name.Data());
+   } else if (isChromeBased) {
       // require temporary output file
       args.SetExtraArgs("--dump-dom");
       args.SetRedirectOutput(dump_name.Data());
@@ -760,13 +1142,10 @@ try_again:
       gSystem->Unlink(dump_name.Data());
    }
 
-   // remove target image file - we use it as detection when chrome is ready
-   gSystem->Unlink(tgtfilename.Data());
-
-   auto handle = ROOT::Experimental::RWebDisplayHandle::Display(args);
+   auto handle = RWebDisplayHandle::Display(args);
 
    if (!handle) {
-      R__DEBUG_HERE("CanvasPainter") << "Cannot start " << args.GetBrowserName() << " to produce image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Cannot start " << args.GetBrowserName() << " to produce image " << fname;
       return false;
    }
 
@@ -775,7 +1154,7 @@ try_again:
       gSystem->Unlink(html_name.Data());
 
    if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
-      R__ERROR_HERE("CanvasPainter") << "Fail to produce image " << fname;
+      R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fname;
       return false;
    }
 
@@ -783,7 +1162,7 @@ try_again:
 
       auto dumpcont = handle->GetContent();
 
-      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && isChromeBased) {
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
          chrome_tmp_workaround = true;
@@ -791,43 +1170,62 @@ try_again:
       }
 
       if (dumpcont.length() < 100) {
-         R__ERROR_HERE("CanvasPainter") << "Fail to dump HTML code into " << (dump_name.IsNull() ? "CEF" : dump_name.Data());
+         R__LOG_ERROR(WebGUILog()) << "Fail to dump HTML code into " << (dump_name.IsNull() ? "CEF" : dump_name.Data());
          return false;
       }
 
       if (draw_kind == "svg") {
-         auto p1 = dumpcont.find("<svg");
-         auto p2 = dumpcont.rfind("</svg>");
 
-         std::ofstream ofs(tgtfilename);
-         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
-            ofs << dumpcont.substr(p1,p2-p1+6);
-         } else {
-            R__ERROR_HERE("CanvasPainter") << "Fail to extract SVG from HTML dump " << dump_name;
-            ofs << "Failure!!!\n" << dumpcont;
-            return false;
+         std::string::size_type p = 0;
+
+         for (auto & fn : fnames) {
+            auto p1 = dumpcont.find("<svg", p);
+            auto p2 = dumpcont.find("</svg></div>", p1 + 4);
+            p = p2 + 6;
+            std::ofstream ofs(fn);
+            if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+               ofs << dumpcont.substr(p1, p2-p1+6);
+               ::Info("ProduceImage", "SVG file %s size %d bytes has been created", fn.c_str(), (int) (p2-p1+6));
+            } else {
+               R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
+               ofs << "Failure!!!\n" << dumpcont;
+               return false;
+            }
          }
       } else {
 
-         auto p1 = dumpcont.find(";base64,");
-         auto p2 = dumpcont.rfind("></div>");
+         std::string::size_type p = 0;
 
-         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+         for (auto &fn : fnames) {
 
-            auto base64 = dumpcont.substr(p1+8, p2-p1-9);
-            auto binary = TBase64::Decode(base64.c_str());
+            auto p1 = dumpcont.find(";base64,", p);
+            auto p2 = dumpcont.find("></div>", p1 + 4);
+            p = p2 + 5;
 
-            std::ofstream ofs(tgtfilename, std::ios::binary);
-            ofs.write(binary.Data(), binary.Length());
-         } else {
-            R__ERROR_HERE("CanvasPainter") << "Fail to extract image from dump HTML code " << dump_name;
+            if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
 
-            return false;
+               auto base64 = dumpcont.substr(p1+8, p2-p1-9);
+               auto binary = TBase64::Decode(base64.c_str());
+
+               std::ofstream ofs(fn, std::ios::binary);
+               ofs.write(binary.Data(), binary.Length());
+
+               ::Info("ProduceImage", "Image file %s size %d bytes has been created", fn.c_str(), (int) binary.Length());
+            } else {
+               R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
+
+               return false;
+            }
          }
       }
+   } else if (EndsWith(".pdf")) {
+      ::Info("ProduceImage", "PDF file %s with %d pages has been created", fname.c_str(), (int) jsons.size());
    }
 
-   R__DEBUG_HERE("CanvasPainter") << "Create file " << fname;
+   if (fnames.size() == 1)
+      R__LOG_DEBUG(0, WebGUILog()) << "Create file " << fnames[0];
+   else
+      R__LOG_DEBUG(0, WebGUILog()) << "Create files " << TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
 
    return true;
 }

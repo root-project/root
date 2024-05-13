@@ -39,10 +39,8 @@ inline void *operator new(size_t /*size*/, ROOT::Internal::TOperatorNewHelper *p
    return((void*)p);
 }
 
-#ifdef R__PLACEMENTDELETE
 // this should never be used but help quiet down some compiler!
 inline void operator delete(void*, ROOT::Internal::TOperatorNewHelper*) { }
-#endif
 
 // The STL GenerateInitInstance are not unique and hence are declared static
 // (not accessible outside the dictionary and not linker error for duplicate)
@@ -77,7 +75,7 @@ class TFunc2void {
    funcptr_and_voidptr _tmp;
 public:
    template <typename T>
-   TFunc2void( T vfp ) : _tmp(0) {
+   TFunc2void( T vfp ) : _tmp(nullptr) {
       _tmp._write = ( funcptr_t )vfp;
    }
 

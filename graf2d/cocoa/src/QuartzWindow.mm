@@ -1122,12 +1122,19 @@ void print_mask_info(ULong_t mask)
 }
 #endif
 
-@implementation CrosshairView
+@implementation XorDrawingView
+{
+    std::vector<ROOT::MacOSX::X11::Command *> xorOps;
+}
+
+- (void) setXorOperations : (const std::vector<ROOT::MacOSX::X11::Command *> &) primitives
+{
+    xorOps = primitives;
+}
 
 - (void) drawRect : (NSRect) dirtyRect
 {
     [super drawRect:dirtyRect];
-
     NSGraphicsContext *nsContext = [NSGraphicsContext currentContext];
     if (!nsContext)
         return;
@@ -1140,21 +1147,18 @@ void print_mask_info(ULong_t mask)
 
     CGContextSetRGBStrokeColor(cgContext, 0., 0., 0., 1.);
     CGContextSetLineWidth(cgContext, 1.);
-    // Horizontal line:
-    CGContextBeginPath(cgContext);
-    CGContextMoveToPoint(cgContext, self.start1.x, self.start1.y);
-    CGContextAddLineToPoint(cgContext, self.end1.x, self.end1.y);
-    CGContextStrokePath(cgContext);
-    // Vertical line:
-    CGContextBeginPath(cgContext);
-    CGContextMoveToPoint(cgContext, self.start2.x, self.start2.y);
-    CGContextAddLineToPoint(cgContext, self.end2.x, self.end2.y);
-    CGContextStrokePath(cgContext);
+
+    for (auto *command : xorOps) {
+        command->Execute(cgContext);
+        delete command;
+    }
+
+    xorOps.clear();
 }
 
 @end
 
-@implementation CrosshairWindow
+@implementation XorDrawingWindow
 
 - (instancetype) init
 {
@@ -1165,7 +1169,7 @@ void print_mask_info(ULong_t mask)
         self.hasShadow = NO;
         self.backgroundColor = NSColor.clearColor; // No background.
         self.ignoresMouseEvents = YES; // Lets mouse events pass through.
-        self.contentView = [[CrosshairView alloc] init];
+        self.contentView = [[XorDrawingView alloc] init];
     }
     return self;
 }
@@ -1439,6 +1443,12 @@ void print_mask_info(ULong_t mask)
    assert(!(newSize.height < 0) && "-setDrawableSize:, height is negative");
 
    NSRect frame = self.frame;
+   // Some sanity check (rather random and inconsistent, based on the recent M1 crash/assert):
+   if (frame.origin.x < -100000. || frame.origin.x > 100000.) {
+      // Hope nobody has screens like this!
+      NSLog(@"Attempting to set a frame with X: %g", frame.origin.x);
+      frame.origin.x = 0.; // Otherwise, AppKit seems to use uint(-1) to initialise frames ... sometimes?
+   }
    //dY is potentially a titlebar height.
    const CGFloat dY = fContentView ? frame.size.height - fContentView.frame.size.height : 0.;
    //Adjust the frame.
@@ -1493,29 +1503,29 @@ void print_mask_info(ULong_t mask)
    return [fContentView readColorBits : area];
 }
 
-#pragma mark - CrosshairWindow/View
+#pragma mark - XorDrawinWindow/View
 
 //______________________________________________________________________________
-- (void) addCrosshairWindow
+- (void) addXorWindow
 {
-    if ([self findCrosshairWindow])
+    if ([self findXorWindow])
         return;
 
-    CrosshairWindow *special = [[CrosshairWindow alloc] init];
-    [self adjustCrosshairWindowGeometry:special];
+    XorDrawingWindow *special = [[XorDrawingWindow alloc] init];
+    [self adjustXorWindowGeometry:special];
     [self addChildWindow : special ordered : NSWindowAbove];
     [special release];
 }
 
 //______________________________________________________________________________
-- (void) adjustCrosshairWindowGeometry
+- (void) adjustXorWindowGeometry
 {
-    if (auto win = [self findCrosshairWindow])
-        [self adjustCrosshairWindowGeometry:win];
+    if (auto win = [self findXorWindow])
+        [self adjustXorWindowGeometry:win];
 }
 
 //______________________________________________________________________________
-- (void) adjustCrosshairWindowGeometry : (CrosshairWindow *) win
+- (void) adjustXorWindowGeometry : (XorDrawingWindow *) win
 {
     assert(win && "invalid (nil) parameter 'win'");
     auto frame = self.contentView.frame;
@@ -1524,9 +1534,9 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (void) removeCrosshairWindow
+- (void) removeXorWindow
 {
-    if (auto win = [self findCrosshairWindow]) {
+    if (auto win = [self findXorWindow]) {
         // For some reason, without ordeing out, the crosshair window's content stays
         // in the parent's window. Thus we first have to order out the crosshair window.
         [win orderOut:nil];
@@ -1535,12 +1545,12 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (CrosshairWindow *) findCrosshairWindow
+- (XorDrawingWindow *) findXorWindow
 {
     auto children = [self childWindows];
     for (NSWindow *child in children) {
-        if ([child isKindOfClass : CrosshairWindow.class])
-            return (CrosshairWindow *)child;
+        if ([child isKindOfClass : XorDrawingWindow.class])
+            return (XorDrawingWindow *)child;
     }
     return nil;
 }
@@ -2387,7 +2397,20 @@ void print_mask_info(ULong_t mask)
    assert(area.fWidth && area.fHeight && "-readColorBits:, area to copy is empty");
 
    //int, not unsigned or something - to keep it simple.
-   const NSRect visRect = [self visibleRect];
+   NSRect visRect = [self visibleRect];
+   // 'Sanitize' visible rect, which is different starting from macOS 14 -
+   // in that it's considered to be visible even in a hidden part which has
+   // no 'color bits' at all an result in reading arbitrary colored 'pixels',
+   // probably black ones:
+   if (visRect.origin.y < 0) {
+      visRect.size.height += visRect.origin.y;
+      visRect.origin.y = 0.;
+   }
+   if (visRect.origin.x < 0) {
+      visRect.size.width += visRect.origin.x;
+      visRect.origin.x = 0.;
+   }
+
    const X11::Rectangle srcRect(int(visRect.origin.x), int(visRect.origin.y),
                                 unsigned(visRect.size.width), unsigned(visRect.size.height));
 
@@ -2843,7 +2866,9 @@ void print_mask_info(ULong_t mask)
             if (ViewIsTextView(self)) {
                //Send Expose event, using child view (this is how it's done in GUI :( ).
                [NSColor.whiteColor setFill];
-               NSRectFill(dirtyRect);
+               NSRect frame = self.frame;
+               frame.origin = {};
+               NSRectFill(frame);
                NSView<X11Window> * const viewFrame = FrameForTextView(self);
                if (viewFrame)//Now we set fExposedRegion for TGView.
                   vx->GetEventTranslator()->GenerateExposeEvent(viewFrame, viewFrame.visibleRect);

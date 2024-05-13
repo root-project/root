@@ -20,25 +20,22 @@ Abstract class for geometry painters
 #include "TPluginManager.h"
 #include "TGeoManager.h"
 
-TVirtualGeoPainter  *TVirtualGeoPainter::fgGeoPainter = 0;
+TVirtualGeoPainter *TVirtualGeoPainter::fgGeoPainter = nullptr;
 
 ClassImp(TVirtualGeoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry painter default constructor
 
-TVirtualGeoPainter::TVirtualGeoPainter(TGeoManager *)
-{
-}
+TVirtualGeoPainter::TVirtualGeoPainter(TGeoManager *) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Geometry painter default destructor
 
 TVirtualGeoPainter::~TVirtualGeoPainter()
 {
-   fgGeoPainter = 0;
+   fgGeoPainter = nullptr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function returning a pointer to the geometry painter.
@@ -52,8 +49,8 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
          if (h->LoadPlugin() == -1)
-            return 0;
-         fgGeoPainter = (TVirtualGeoPainter*)h->ExecPlugin(1,gGeoManager);
+            return nullptr;
+         fgGeoPainter = (TVirtualGeoPainter *)h->ExecPlugin(1, gGeoManager);
       }
    }
    return fgGeoPainter;
@@ -64,5 +61,5 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
 
 void TVirtualGeoPainter::SetPainter(const TVirtualGeoPainter *painter)
 {
-   fgGeoPainter = (TVirtualGeoPainter*)painter;
+   fgGeoPainter = (TVirtualGeoPainter *)painter;
 }

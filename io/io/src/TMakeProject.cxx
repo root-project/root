@@ -158,7 +158,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write the start of the class (forward) declaration.
-/// If 'implementEmptyClass' is 3 then never add a #pragma
+/// If 'implementEmptyClass' is 3 then never add a `#pragma`
 
 UInt_t TMakeProject::GenerateClassPrefix(FILE *fp, const char *clname, Bool_t top, TString &protoname,
       UInt_t *numberOfClasses, Int_t implementEmptyClass, Bool_t needGenericTemplate)
@@ -511,6 +511,9 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                      case ROOT::kSTLbitset:
                         what = "bitset";
                         break;
+                     case ROOT::kROOTRVec:
+                        what = "ROOT/RVec.hxx";
+                        break;
                      default:
                         what = "undetermined_stl_container";
                         break;
@@ -518,7 +521,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
                   AddInclude(fp, what, kTRUE, inclist);
                   fprintf(fp, "namespace std {} using namespace std;\n");
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward, extrainfos);
-               } else if (strncmp(incName.Data(), "pair<", strlen("pair<")) == 0) {
+               } else if (TClassEdit::IsStdPair(incName)) {
                   AddInclude(fp, "utility", kTRUE, inclist);
                   ninc += GenerateIncludeForTemplate(fp, incName, inclist, forward, extrainfos);
                } else if (strncmp(incName.Data(), "auto_ptr<", strlen("auto_ptr<")) == 0) {
@@ -615,7 +618,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          Int_t stlkind =  TClassEdit::STLKind(inside[0]);
          TClass *key = TClass::GetClass(inside[1].c_str());
          TString what;
-         if (strncmp(inside[1].c_str(),"pair<",strlen("pair<"))==0) {
+         if (TClassEdit::IsStdPair(inside[1])) {
             what = inside[1].c_str();
          } else if (key) {
             switch (stlkind)  {

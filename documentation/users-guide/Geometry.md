@@ -625,7 +625,7 @@ expressed in [**g/cm3**].
 
 #### Boxes - TGeoBBox Class
 
-Normally a box has to be build only with 3 parameters: `DX,DY,DZ`
+Normally a box has to be built only with 3 parameters: `DX,DY,DZ`
 representing the half-lengths on X, Y and Z-axes. In this case, the
 origin of the box will match the one of its reference frame and the box
 will range from: `-DX` to `DX` on X-axis, from `-DY` to `DY` on Y and
@@ -3305,7 +3305,7 @@ suppose you already did that with your simple geometry and immediately
 noticed a new ROOT canvas popping-up and having some more or less
 strange picture inside. Here are few questions that might come:
 
--   ***`Q: "The picture is strangely rotated; where are the coordinate axes?"`***
+***`Q:`*** "The picture is strangely rotated; where are the coordinate axes?"
 
 ***`A:`*** If drawn in a new canvas, any view has some default
 viewpoint, center of view and size. One can then perform mouse/keyboard
@@ -3319,21 +3319,21 @@ display as well as changing top or side viewpoints can be activated from
 the **`TView`** context menu: right-click on the picture when no object
 is selected;
 
--   ***`Q: "Every line is black! I cannot figure out what is what..."`***
+***`Q:`*** "Every line is black! I cannot figure out what is what..."
 
 ***`A:`*** Volumes can have different colors (those known by ROOT of
 course). Think at using them after each volume creation:
 `myvolume->SetLineColor(Int_t color);` otherwise everything is by
 default black.
 
--   ***`Q: "The top volume of my geometry is a box but I see only its content."`***
+***`Q:`*** "The top volume of my geometry is a box but I see only its content."
 
 ***`A:`*** By default the drawn volume is not displayed just because we
 do not want to hide its content when changing the view to HLR or solid
 mode. In order to see it in the default wire frame picture one has to
 call **`TGeoManager::SetTopVisible()`.**
 
--   ***`Q: "I do not see all volumes in my tree but just something inside."`***
+***`Q:`*** "I do not see all volumes in my tree but just something inside."
 
 ***`A:`*** By default, **`TGeoVolume`**`::Draw()` paints the content of
 a given volume three levels down. You can change this by using:
@@ -3347,7 +3347,7 @@ default one and corresponds to ‘leaves' global visualization mode
 intermediate containers, one can change this mode:
 `gGeoManager->SetVisOption(0)`.**
 
--   ***`Q: "Volumes are highlighted when moving the mouse over their vertices. What does it mean?"`***
+***`Q:`*** "Volumes are highlighted when moving the mouse over their vertices. What does it mean?"
 
 ***`A:`*** Indeed, moving the mouse close to some volume vertices
 selects it. By checking the `Event Status` entry in the root canvas
@@ -3355,7 +3355,7 @@ selects it. By checking the `Event Status` entry in the root canvas
 bottom right. Right-clicking when a volume is selected will open its
 context menu where several actions can be performed (e.g. drawing it).
 
--   ***`Q: "OK, but now I do not want to see all the geometry, but just a particular volume and its content. How can I do this?"`***
+***`Q:`*** "OK, but now I do not want to see all the geometry, but just a particular volume and its content. How can I do this?"
 
 ***`A:`*** Once you have set a convenient global visualization option
 and level, what you need is just call the `Draw()` method of your

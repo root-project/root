@@ -14,7 +14,6 @@
 #include "ROOT/REveProjections.hxx"
 #include "ROOT/REveProjectionManager.hxx"
 #include "ROOT/REveRGBAPalette.hxx"
-//#include "ROOT/REveText.hxx"
 #include "ROOT/REveRenderData.hxx"
 #include "ROOT/REveTrans.hxx"
 
@@ -23,11 +22,10 @@
 #include "TMath.h"
 #include "TAxis.h"
 
-// #include "TGLUtil.h"
-
 #include <cassert>
 #include <iostream>
-#include "json.hpp"
+
+#include <nlohmann/json.hpp>
 
 using namespace ROOT::Experimental;
 
@@ -44,7 +42,7 @@ REveCaloViz::REveCaloViz(REveCaloData* data, const char* n, const char* t) :
    REveElement(),
    REveProjectable(),
 
-   fData(0),
+   fData(nullptr),
    fCellIdCacheOK(kFALSE),
 
    fEtaMin(-10),
@@ -66,7 +64,7 @@ REveCaloViz::REveCaloViz(REveCaloData* data, const char* n, const char* t) :
    fMaxValAbs(100),
 
    fValueIsColor(kFALSE),
-   fPalette(0)
+   fPalette(nullptr)
 {
    // Constructor.
 
@@ -381,7 +379,7 @@ Float_t REveCaloViz::GetValToHeight() const
 
 REveRGBAPalette* REveCaloViz::AssertPalette()
 {
-   if (fPalette == 0) {
+   if (fPalette == nullptr) {
       fPalette = new REveRGBAPalette;
       fPalette->SetDefaultColor((Color_t)4);
 
@@ -432,14 +430,13 @@ Int_t REveCaloViz::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    // is not available. Maybe this is not necessary if EveElements have EveManager globaly available
 
    Int_t ret = REveElement::WriteCoreJson(j, rnr_offset);
-
    j["dataId"] = fData->GetElementId();
    j["sliceColors"] =  nlohmann::json::array();
    for (int i = 0; i < fData->GetNSlices(); ++i)
    {
       j["sliceColors"].push_back(fData->GetSliceColor(i));
-   }
-
+      }
+   j["fSecondarySelect"] = true;
    return ret;
 }
 
@@ -475,7 +472,7 @@ void REveCalo3D::MakeEndCapCell(const REveCaloData::CellGeom_t &cellData, float 
    using namespace TMath;
    Float_t z1, r1In, r1Out, z2, r2In, r2Out;
 
-   z1    = (cellData.EtaMin()<0) ? fEndCapPosB : fEndCapPosF;
+   z1    = (cellData.EtaMin()<0) ? fEndCapPosB - offset : fEndCapPosF + offset;
    z2    = z1 + TMath::Sign(towerH, cellData.EtaMin());
 
    r1In  = z1*Tan(cellData.ThetaMin());
@@ -529,11 +526,7 @@ void REveCalo3D::MakeEndCapCell(const REveCaloData::CellGeom_t &cellData, float 
    pnts[1] = r2Out*sin1;
    pnts[2] = z2;
 
-
-   if (z1 > 0)
-      offset += towerH * Cos(cellData.ThetaMin());
-   else
-      offset -= towerH * Cos(cellData.ThetaMin());
+   offset += towerH;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -609,6 +602,10 @@ void REveCalo3D::MakeBarrelCell(const REveCaloData::CellGeom_t &cellData, float 
 void REveCalo3D::BuildRenderData()
 {
    AssertCellIdCache();
+   fRenderData = std::make_unique<REveRenderData>("makeCalo3D");
+   
+   if (fCellList.empty())
+   return;
 
    REveCaloData::CellData_t cellData;
    Float_t towerH = 0;
@@ -616,7 +613,6 @@ void REveCalo3D::BuildRenderData()
    Int_t   prevTower = -1;
    Float_t offset = 0;
 
-   fRenderData = std::make_unique<REveRenderData>("makeCalo3D");
    float pnts[24];
    for (REveCaloData::vCellId_i i = fCellList.begin(); i != fCellList.end(); ++i)
    {
@@ -644,7 +640,7 @@ void REveCalo3D::BuildRenderData()
       printf(" REveCalo3D::BuildRenderData push box vertces -------------------------\n");
       for (int t = 0; t < 8; ++t)
       {
-         printf("(%f %f %f \n)", pnts[t*3],  pnts[t*3+1], pnts[t*3+2] );
+         printf("(%f %f %f)\n", pnts[t*3],  pnts[t*3+1], pnts[t*3+2] );
       }
       */
       fRenderData->PushV(pnts, 24);
@@ -668,11 +664,10 @@ Int_t REveCalo3D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
+void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
 {
    // selection
    auto sarr = nlohmann::json::array();
-   auto cells = isSel ? fData->GetCellsSelected() : fData->GetCellsHighlighted();
    REveCaloData::CellData_t cellData;
    for (REveCaloData::vCellId_i i = cells.begin(); i != cells.end(); i++)
    {
@@ -682,6 +677,7 @@ void REveCalo3D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
          nlohmann::json jsc;
          jsc["t"] = i->fTower;
          jsc["s"] = i->fSlice;
+         jsc["f"] = i->fFraction;
          sarr.push_back(jsc);
       }
    }
@@ -745,7 +741,7 @@ void REveCalo3D::NewTowerPicked(Int_t tower, Int_t slice, Int_t selectionId, boo
 /// Constructor.
 
 REveCalo2D::REveCalo2D(const char* n, const char* t):
-   REveCaloViz(0, n, t),
+   REveCaloViz(nullptr, n, t),
    REveProjected(),
    fOldProjectionType(REveProjection::kPT_Unknown),
    fMaxESumBin( 0),
@@ -828,7 +824,7 @@ void REveCalo2D::BuildCellIdCache()
       }
    }
    fCellLists.clear();
-   fCellLists.push_back(0);
+   fCellLists.push_back(nullptr);
 
    REveProjection::EPType_e pt = fManager->GetProjection()->GetType();
    REveCaloData::vCellId_t* clv; // ids per phi bin in r-phi projection else ids per eta bins in rho-z projection
@@ -844,14 +840,14 @@ void REveCalo2D::BuildCellIdCache()
       min = GetPhiMin() - fData->GetEps();
       max = GetPhiMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
-         clv = 0;
+         clv = nullptr;
          if ( REveUtil::IsU1IntervalOverlappingByMinMax
               (min, max, axis->GetBinLowEdge(ibin), axis->GetBinUpEdge(ibin)))
          {
             clv = new REveCaloData::vCellId_t();
             fData->GetCellList(GetEta(), GetEtaRng(), axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), *clv);
-            if (!clv->size()) {
-               delete clv; clv = 0;
+            if (clv->empty()) {
+               delete clv; clv = nullptr;
             }
          }
          fCellLists.push_back(clv);
@@ -862,15 +858,15 @@ void REveCalo2D::BuildCellIdCache()
       min = GetEtaMin() - fData->GetEps();
       max = GetEtaMax() + fData->GetEps();
       for (Int_t ibin = 1; ibin <= nBins; ++ibin) {
-         clv = 0;
+         clv = nullptr;
          Float_t low = axis->GetBinLowEdge(ibin);
          Float_t up = axis->GetBinUpEdge(ibin) ;
          if (low >= min && up <= max)
          {
             clv = new REveCaloData::vCellId_t();
             fData->GetCellList(axis->GetBinCenter(ibin), axis->GetBinWidth(ibin), fPhi, GetPhiRng(), *clv);
-            if (!clv->size()) {
-               delete clv; clv = 0;
+            if (clv->empty()) {
+               delete clv; clv = nullptr;
             }
          }
          fCellLists.push_back(clv);
@@ -906,15 +902,6 @@ void REveCalo2D::BuildCellIdCache()
    fCellIdCacheOK= kTRUE;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Sort selected cells in eta or phi bins for selection and highlight.
-
-void REveCalo2D::CellSelectionChanged()
-{
-   CellSelectionChangedInternal(fData->GetCellsSelected(), fCellListsSelected);
-   CellSelectionChangedInternal(fData->GetCellsHighlighted(), fCellListsHighlighted);
-}
-
 //////////////////////////////////////////////s//////////////////////////////////
 /// Sort selected cells in eta or phi bins.
 
@@ -936,7 +923,7 @@ void REveCalo2D::CellSelectionChangedInternal(REveCaloData::vCellId_t& inputCell
    UInt_t nBins = axis->GetNbins();
    outputCellLists.resize(nBins+1);
    for (UInt_t b = 0; b <= nBins; ++b)
-      outputCellLists[b] = 0;
+      outputCellLists[b] = nullptr;
 
    for(UInt_t bin = 1; bin <= nBins; ++bin)
    {
@@ -953,7 +940,7 @@ void REveCalo2D::CellSelectionChangedInternal(REveCaloData::vCellId_t& inputCell
                if (!outputCellLists[bin])
                   outputCellLists[bin] = new REveCaloData::vCellId_t();
 
-               outputCellLists[bin]->push_back(REveCaloData::CellId_t((*i).fTower, (*i).fSlice, (*i).fFraction));
+               outputCellLists[bin]->emplace_back((*i).fTower, (*i).fSlice, (*j).fFraction);
             }
          }
       }
@@ -1040,13 +1027,15 @@ Int_t REveCalo2D::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill core part of JSON representation for selection.
 
-void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
+void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, REveCaloData::vCellId_t cells)
 {
    static const REveException eh("REveCalo2D::WriteCoreJsonSelection ");
    auto sarr = nlohmann::json::array();
 
    // selection
-   auto cellLists = isSel ? fCellListsSelected : fCellListsHighlighted;
+   // auto cellLists = isSel ? fCellListsSelected : fCellListsHighlighted;
+   std::vector<REveCaloData::vCellId_t*> cellLists;
+   CellSelectionChangedInternal(cells, cellLists);
 
    if (IsRPhi()) {
       REveCaloData::CellData_t cellData;
@@ -1098,12 +1087,12 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
       UInt_t nEtaBins    = axis->GetNbins();
       Int_t  nSlices     = fData->GetNSlices();
 
-      Float_t *sliceValsUp     = new Float_t[nSlices];
-      Float_t *sliceValsLow    = new Float_t[nSlices];
-      Float_t *sliceValsUpRef  = new Float_t[nSlices];
-      Float_t *sliceValsLowRef = new Float_t[nSlices];
+      std::vector<Float_t> sliceValsUp(nSlices, 0.);
+      std::vector<Float_t> sliceValsLow(nSlices, 0.);
+      std::vector<Float_t> sliceValsUpRef(nSlices, 0.);
+      std::vector<Float_t> sliceValsLowRef(nSlices, 0.);
 
-      Float_t  towerH, towerHRef, offUp, offLow;
+      Float_t  towerH, towerHRef;
       REveCaloData::CellData_t cellData;
 
       for (UInt_t etaBin = 1; etaBin <= nEtaBins; ++etaBin)
@@ -1111,16 +1100,11 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
          if (cellLists[etaBin])
          {
             if (!fCellLists[etaBin]) {
-               delete[] sliceValsUp;
-               delete[] sliceValsLow;
-               delete[] sliceValsUpRef;
-               delete[] sliceValsLowRef;
                throw(eh + "selected cell not in cell list cache.");
             }
-            offUp = 0; offLow =0;
             // selected phi sum
             for (Int_t s = 0; s < nSlices; ++s) {
-               sliceValsUp[s] = 0; sliceValsLow[s] = 0;
+               sliceValsUp[s] = sliceValsLow[s] = 0.;
             }
             REveCaloData::vCellId_t& cids = *(cellLists[etaBin]);
             for (REveCaloData::vCellId_i i=cids.begin(); i!=cids.end(); i++) {
@@ -1134,7 +1118,7 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
             // reference phi sum
             for (Int_t s = 0; s < nSlices; ++s)
             {
-               sliceValsUpRef[s] = 0; sliceValsLowRef[s] = 0;
+               sliceValsUpRef[s] = sliceValsLowRef[s] = 0;
             }
             REveCaloData::vCellId_t& cidsRef = *(fCellLists[etaBin]);
             for (REveCaloData::vCellId_i i=cidsRef.begin(); i!=cidsRef.end(); i++)
@@ -1158,7 +1142,6 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
                   jsc["f"] = sliceValsUp[s]/sliceValsUpRef[s];
                   sarr.push_back(jsc);
                }
-               offUp += towerHRef;
 
                // phi -
                SetupHeight(sliceValsLowRef[s], s, towerHRef);
@@ -1170,7 +1153,6 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
                   jsc["f"] = sliceValsLow[s]/sliceValsLowRef[s];
                   sarr.push_back(jsc);
                }
-               offLow += towerHRef;
             } // slices
          } // if eta bin
       } //eta bins
@@ -1187,8 +1169,21 @@ void REveCalo2D::WriteCoreJsonSelection(nlohmann::json &j, bool isSel)
 
 void REveCalo2D::BuildRenderData()
 {
-   fRenderData = std::make_unique<REveRenderData>("makeCalo2D");
    AssertCellIdCache();
+   fRenderData = std::make_unique<REveRenderData>("makeCalo2D");
+   
+   bool isEmpty = fData->Empty();
+
+   for (vBinCells_i it = fCellLists.begin(); it != fCellLists.end(); ++it)
+   {
+      if ((*it) && (*it)->empty())
+      {
+         isEmpty = false;
+         break;
+      }
+   }
+   if (isEmpty) return;
+
    if (IsRPhi())
       BuildRenderDataRPhi();
    else
@@ -1398,13 +1393,12 @@ void REveCalo2D::MakeRPhiCell(Float_t phiMin, Float_t phiMax,
    pnts[4] = r2*Cos(phiMax); pnts[5] = r2*Sin(phiMax);
    pnts[6] = r1*Cos(phiMax); pnts[7] = r1*Sin(phiMax);
 
-   Float_t x, y, z;
    for (Int_t i = 0; i < 4; ++i)
    {
       pntsOut[i*3]   = pnts[2*i];
       pntsOut[i*3+1] = pnts[2*i+1];
       pntsOut[i*3+2] = 0.f;
-      fManager->GetProjection()->ProjectPoint(x, y, z, fDepth);
+      fManager->GetProjection()->ProjectPoint(pntsOut[3*i], pntsOut[3*i+1], pntsOut[3*i + 2], fDepth);
    }
 }
 

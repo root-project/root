@@ -58,12 +58,11 @@ private:
    Int_t              fArgc;            //Number of com   mand line arguments
    char             **fArgv;            //Command line arguments
    TApplicationImp   *fAppImp;          //!Window system specific application implementation
-   Bool_t             fIsRunning;       //True when in event loop (Run() has been called)
+   std::atomic<bool>  fIsRunning;       //True when in event loop (Run() has been called)
    Bool_t             fReturnFromRun;   //When true return from Run()
    Bool_t             fNoLog;           //Do not process logon and logoff macros
    Bool_t             fNoLogo;          //Do not show splash screen and welcome message
    Bool_t             fQuit;            //Exit after having processed input files
-   Bool_t             fUseMemstat;      //Run with TMemStat enabled
    TObjArray         *fFiles;           //Array of input files or C++ expression (TObjString's) specified via argv
    TString            fWorkDir;         //Working directory specified via argv
    TString            fIdleCommand;     //Command to execute while application is idle
@@ -74,8 +73,8 @@ private:
    static Bool_t      fgGraphNeeded;    // True if graphics libs need to be initialized
    static Bool_t      fgGraphInit;      // True if graphics libs initialized
 
-   TApplication(const TApplication&);             // not implemented
-   TApplication& operator=(const TApplication&);  // not implemented
+   TApplication(const TApplication&) = delete;
+   TApplication& operator=(const TApplication&) = delete;
 
 protected:
    TApplication      *fAppRemote;      //Current remote application, if defined
@@ -84,7 +83,9 @@ protected:
 
    TApplication();
 
-   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   virtual Longptr_t  ProcessRemote(const char *line, Int_t *error = nullptr);
+   virtual void       Forum(const char *line);
+   virtual void       GitHub(const char *line);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();
@@ -98,21 +99,24 @@ protected:
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,
-                void *options = 0, Int_t numOptions = 0);
+                void *options = nullptr, Int_t numOptions = 0);
    virtual ~TApplication();
 
-   void            InitializeGraphics();
+   void            InitializeGraphics(Bool_t only_web = kFALSE);
    virtual void    GetOptions(Int_t *argc, char **argv);
    TSignalHandler *GetSignalHandler() const { return fSigHandler; }
    virtual void    SetEchoMode(Bool_t mode);
+   TString GetSetup();
+   void OpenForumTopic(const TString & type);
+   void OpenGitHubIssue(const TString & type);
    void OpenInBrowser(const TString & url);
    void OpenReferenceGuideFor(const TString & strippedClass);
    virtual void    HandleException(Int_t sig);
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Long_t  ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   virtual Longptr_t ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = nullptr);
+   virtual Longptr_t ProcessFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -131,7 +135,7 @@ public:
    virtual Bool_t  IsCmdThread() { return fAppImp ? fAppImp->IsCmdThread() : kTRUE; }
    virtual TApplicationImp *GetApplicationImp() { return fAppImp;}
 
-   virtual void    ls(Option_t *option="") const;
+   void            ls(Option_t *option="") const override;
 
    Int_t           Argc() const  { return fArgc; }
    char          **Argv() const  { return fArgv; }
@@ -155,12 +159,12 @@ public:
    virtual void    ReturnPressed(char *text );        //*SIGNAL*
    virtual Int_t   TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
-   static Long_t   ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   static Longptr_t ExecuteFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();
 
-   ClassDef(TApplication,0)  //GUI application singleton
+   ClassDefOverride(TApplication,0)  //GUI application singleton
 };
 
 R__EXTERN TApplication *gApplication;

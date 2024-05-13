@@ -10,7 +10,7 @@ platorm and bundle it into an installer. If you want to manually compile Cling
 from source, go through the [README] of Cling or the build instructions [here].
 
 [README]:https://github.com/root-project/cling/blob/master/README.md
-[here]:http://root.cern.ch/drupal/content/cling-build-instructions
+[here]:https://root.cern/cling/cling_build_instructions/
 
 Below is a list of platforms currently supported by CPT:
   * Ubuntu and distros based on Debian - *DEB packages*
@@ -34,8 +34,8 @@ or
 cd tools/packaging/
 ./cpt.py -c
 ```
-Regardless of the platform and operating system, make sure your system has the
-latest and greatest version of Python 2 installed, v2.7 being the absolute minimum.
+Regardless of the platform and operating system, make sure to call the cpt script
+with Python 3.
 CPT uses some features and modules which are not a part of older versions of Python.
 The same holds true for the versions of GCC/Clang you have on your machine. Older
 compilers do not support c++11 features and thus you can expect a build error if you

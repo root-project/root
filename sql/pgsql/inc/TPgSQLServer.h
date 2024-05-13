@@ -17,7 +17,8 @@
 #include <map>
 #include <string>
 
-#include <libpq-fe.h>
+struct pg_conn;
+typedef struct pg_conn PGconn;
 
 class TPgSQLServer : public TSQLServer {
 

@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Standard demo of the numerical Bayesian calculator
+/// Standard demo of the numerical Bayesian calculator
 ///
 /// This is a standard demo that can be used with any ROOT file
 /// prepared in the standard way.  You specify:
@@ -90,10 +90,6 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
       bool fileExist = !gSystem->AccessPathName(filename); // note opposite return code
       // if file does not exists generate with histfactory
       if (!fileExist) {
-#ifdef _WIN32
-         cout << "HistFactory file cannot be generated on Windows - exit" << endl;
-         return;
-#endif
          // Normally this would be run on the command line
          cout << "will run standard hist2workspace example" << endl;
          gROOT->ProcessLine(".! prepareHistFactory .");
@@ -157,9 +153,9 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
    if (nSigmaNuisance > 0) {
       RooAbsPdf *pdf = mc->GetPdf();
       assert(pdf);
-      RooFitResult *res =
+      std::unique_ptr<RooFitResult> res{
          pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()),
-                    Hesse(true), PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel() - 1));
+                    Hesse(true), PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel() - 1))};
 
       res->Print();
       RooArgList nuisPar(*mc->GetNuisanceParameters());
@@ -227,7 +223,7 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
 
    cout << "\nDrawing plot of posterior function....." << endl;
 
-   // always plot using numer of scan points
+   // always plot using number of scan points
    bayesianCalc.SetScanOfPosterior(nScanPoints);
 
    RooPlot *plot = bayesianCalc.GetPosteriorPlot();

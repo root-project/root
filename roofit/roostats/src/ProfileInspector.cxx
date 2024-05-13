@@ -34,7 +34,7 @@ Utility class to plot conditional MLE of nuisance parameters vs. Parameters of I
 ClassImp(RooStats::ProfileInspector);
 
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl, std::string, std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,59 +73,56 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   if(!poi_set){
     cout << "no parameters of interest" << endl;
-    return 0;
+    return nullptr;
   }
 
-  if(poi_set->getSize()!=1){
+  if(poi_set->size()!=1){
     cout << "only one parameter of interest is supported currently" << endl;
-    return 0;
+    return nullptr;
   }
-  RooRealVar* poi = (RooRealVar*) poi_set->first();
+  RooRealVar* poi = static_cast<RooRealVar*>(poi_set->first());
 
 
   if(!nuis_params){
     cout << "no nuisance parameters" << endl;
-    return 0;
+    return nullptr;
   }
 
   if(!pdf){
     cout << "pdf not set" << endl;
-    return 0;
+    return nullptr;
   }
 
-  RooAbsReal* nll = pdf->createNLL(data);
-  RooAbsReal* profile = nll->createProfile(*poi);
+  std::unique_ptr<RooAbsReal> nll{pdf->createNLL(data)};
+  std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
 
   TList * list = new TList;
   Int_t curve_N=100;
-  Double_t* curve_x=0;
+  double* curve_x=nullptr;
 //   if(curve){
 //     curve_N=curve->GetN();
 //     curve_x=curve->GetX();
 //     } else {
-  Double_t max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
-  Double_t min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
-  Double_t step = (max-min)/(curve_N-1);
-  curve_x=new Double_t[curve_N];
+  double max = dynamic_cast<RooAbsRealLValue*>(poi)->getMax();
+  double min = dynamic_cast<RooAbsRealLValue*>(poi)->getMin();
+  double step = (max-min)/(curve_N-1);
+  curve_x=new double[curve_N];
   for(int i=0; i<curve_N; ++i){
      curve_x[i]=min+step*i;
   }
 //   }
 
-  map<string, std::vector<Double_t> > name_val;
+  map<string, std::vector<double> > name_val;
   for(int i=0; i<curve_N; i++){
     poi->setVal(curve_x[i]);
     profile->getVal();
 
-    TIterator* nuis_params_itr=nuis_params->createIterator();
-    TObject* nuis_params_obj;
-    while((nuis_params_obj=nuis_params_itr->Next())){
-       RooRealVar* nuis_param = dynamic_cast<RooRealVar*>(nuis_params_obj);
+    for (auto const *nuis_param : dynamic_range_cast<RooRealVar *> (*nuis_params)){
        if(nuis_param) {
           string name = nuis_param->GetName();
-          if(nuis_params->getSize()==0) continue;
+          if(nuis_params->empty()) continue;
           if(nuis_param && (! nuis_param->isConstant())){
-             if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<Double_t>(curve_N);
+             if(name_val.find(name)==name_val.end()) name_val[name]=std::vector<double>(curve_N);
              name_val[name][i]=nuis_param->getVal();
 
              if(i==curve_N-1){
@@ -143,8 +140,5 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   delete [] curve_x;
 
-
-  delete nll;
-  delete profile;
   return list;
 }

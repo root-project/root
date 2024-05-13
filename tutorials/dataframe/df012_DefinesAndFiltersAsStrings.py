@@ -1,17 +1,16 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -nodraw
-##
-## \brief Use just-in-time-compiled Filters and Defines for quick prototyping.
+## Use just-in-time-compiled Filters and Defines for quick prototyping.
 ##
 ## This tutorial illustrates how to use jit-compiling features of RDataFrame
-## to define data using C++ code in a Python script
+## to define data using C++ code in a Python script.
 ##
 ## \macro_code
 ## \macro_output
 ##
 ## \date October 2017
-## \author Guilherme Amadio
+## \author Guilherme Amadio (CERN)
 
 import ROOT
 
@@ -26,7 +25,7 @@ npoints = 10000000
 df = ROOT.RDataFrame(npoints)
 
 ## Define what data we want inside the dataframe. We do not need to define p
-## as an array, but we do it here to demonstrate how to use jitting with RDataFrame
+## as an array, but we do it here to demonstrate how to use jitting with RDataFrame.
 
 pidf = df.Define("x", "gRandom->Uniform(-1.0, 1.0)") \
          .Define("y", "gRandom->Uniform(-1.0, 1.0)") \
@@ -40,7 +39,7 @@ pidf = df.Define("x", "gRandom->Uniform(-1.0, 1.0)") \
 ##
 ##     A_circle / A_square = pi r*r / l * l, where r = 1.0, and l = 2.0
 ##
-## Therefore, we can approximate pi with 4 times the number of points inside
+## Therefore, we can approximate pi with four times the number of points inside
 ## the unit circle over the total number of points:
 
 incircle = pidf.Filter("r <= 1.0").Count().GetValue()

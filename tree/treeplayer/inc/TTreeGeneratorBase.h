@@ -35,15 +35,15 @@ namespace ROOT {
 namespace Internal {
    class TTreeGeneratorBase {
       public:
-         TList    fListOfHeaders;     // List of included headers
-         TTree   *fTree;              // Pointer to the tree
-         TString  fOptionStr;         // User options as a string
+         TList    fListOfHeaders;     ///< List of included headers
+         TTree   *fTree;              ///< Pointer to the tree
+         TString  fOptionStr;         ///< User options as a string
 
          TTreeGeneratorBase(TTree *tree, const char *option);
 
          void    AddHeader(TClass *cl);
          void    AddHeader(const char *classname);
-         TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, Bool_t ispointer);
+         TString GetContainedClassName(TBranchElement *branch, TStreamerElement *element, bool ispointer);
          TVirtualStreamerInfo *GetBaseClass(TStreamerElement *element);
          TVirtualStreamerInfo *GetStreamerInfo(TBranch *branch, TIter current, TClass *cl);
    };

@@ -44,66 +44,66 @@ public:
       kHISTOGRAM3D
    };
 
-   static Int_t   fgMaxDimension;      // = 4
-   static Int_t   fgMaxParameters;     // = 9
+   static Int_t   fgMaxDimension;     ///< = 4
+   static Int_t   fgMaxParameters;    ///< = 9
 
 protected:
-   TString        fExp;        // complete variable expression
-   TString        fSelection;  // selection expression
-   TString        fOption;     // draw options
+   TString        fExp;               ///< Complete variable expression
+   TString        fSelection;         ///< Selection expression
+   TString        fOption;            ///< Draw options
 
-   Int_t          fDimension;  // dimension of the histogram/plot
-   TString        fVarExp[4];  // variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
-                              // if dimension < fgMaxDimension then some
-                              // expressions are empty
+   Int_t          fDimension;         ///< Dimension of the histogram/plot
+   TString        fVarExp[4];         ///< Variable expression 0 - X, 1 - Y, 2 - Z, 3 - W
+                                      ///< If dimension < fgMaxDimension then some
+                                      ///< Expressions are empty
 
-   Bool_t         fAdd;        // values should be added to an existing object
-   TString        fName;       // histogram's/plot's name
+   bool           fAdd;               ///< Values should be added to an existing object
+   TString        fName;              ///< Histogram's/plot's name
 
-   Int_t          fNoParameters;      // if dimensions of the plot was specified
-   Bool_t         fParameterGiven[9]; // true if the parameter was given, otherwise false
-   Double_t       fParameters[9];     // parameters in brackets
+   Int_t          fNoParameters;      ///< If dimensions of the plot was specified
+   bool           fParameterGiven[9]; ///< True if the parameter was given, otherwise false
+   Double_t       fParameters[9];     ///< Parameters in brackets
 
-   Bool_t         fShouldDraw;        // if to draw the plot
-   Bool_t         fOptionSame;        // if option contained "same"
-   Bool_t         fEntryList;         // if fill a TEntryList
-   TObject       *fOriginal;          // original plot (if it is to be reused)
-   Bool_t         fDrawProfile;       // true if the options contain :"prof"
-   EOutputType    fOutputType;        // type of the output
+   bool           fShouldDraw;        ///< If to draw the plot
+   bool           fOptionSame;        ///< If option contained "same"
+   bool           fEntryList;         ///< If fill a TEntryList
+   TObject       *fOriginal;          ///< Original plot (if it is to be reused)
+   bool           fDrawProfile;       ///< True if the options contain :"prof"
+   EOutputType    fOutputType;        ///< Type of the output
 
    void           ClearPrevious();
    TTreeDrawArgsParser::EOutputType DefineType();
-   Bool_t         SplitVariables(TString variables);
-   Bool_t         ParseName(TString name);
-   Bool_t         ParseOption();
-   Bool_t         ParseVarExp();
+   bool           SplitVariables(TString variables);
+   bool           ParseName(TString name);
+   bool           ParseOption();
+   bool           ParseVarExp();
 
 public:
    TTreeDrawArgsParser();
-   ~TTreeDrawArgsParser();
+   ~TTreeDrawArgsParser() override;
 
-   Bool_t         Parse(const char *varexp, const char *selection, Option_t *option);
-   Bool_t         GetAdd() const { return fAdd; }
+   bool           Parse(const char *varexp, const char *selection, Option_t *option);
+   bool           GetAdd() const { return fAdd; }
    Int_t          GetDimension() const { return fDimension; }
-   Bool_t         GetShouldDraw() const { return fShouldDraw; }
-   TString        GetExp() const { return fExp; }
+   bool           GetShouldDraw() const { return fShouldDraw; }
+   TString const& GetExp() const { return fExp; }
    Double_t       GetIfSpecified(Int_t num, Double_t def) const;
    Int_t          GetNoParameters() const { return fNoParameters; }
    Double_t       GetParameter(int num) const;
    TString        GetProofSelectorName() const;
-   TString        GetObjectName() const { return fName; }
+   TString const& GetObjectName() const { return fName; }
    TString        GetObjectTitle() const;
-   Bool_t         GetOptionSame() const { return fOptionSame; }
+   bool           GetOptionSame() const { return fOptionSame; }
    TObject       *GetOriginal() const { return fOriginal; }
-   TString        GetSelection() const { return fSelection; }
+   TString const& GetSelection() const { return fSelection; }
    TString        GetVarExp(Int_t num) const;
    TString        GetVarExp() const;
-   Bool_t         IsSpecified(int num) const;
+   bool           IsSpecified(int num) const;
    void           SetObjectName(const char *s) { fName = s; }
    void           SetOriginal(TObject *o) { fOriginal = o; }
    static Int_t   GetMaxDimension();
 
-   ClassDef(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
+   ClassDefOverride(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
 };
 
 #endif

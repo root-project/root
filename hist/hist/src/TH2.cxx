@@ -30,34 +30,45 @@
 
 ClassImp(TH2);
 
-/** \addtogroup Hist
+/** \addtogroup Histograms
 @{
 \class TH2C
 \brief 2-D histogram with a byte per channel (see TH1 documentation)
 \class TH2S
 \brief 2-D histogram with a short per channel (see TH1 documentation)
 \class TH2I
-\brief 2-D histogram with an int per channel (see TH1 documentation)}
+\brief 2-D histogram with an int per channel (see TH1 documentation)
+\class TH2L
+\brief 2-D histogram with a long64 per channel (see TH1 documentation)
 \class TH2F
-\brief 2-D histogram with a float per channel (see TH1 documentation)}
+\brief 2-D histogram with a float per channel (see TH1 documentation)
 \class TH2D
-\brief 2-D histogram with a double per channel (see TH1 documentation)}
+\brief 2-D histogram with a double per channel (see TH1 documentation)
 @}
 */
 
 /** \class TH2
- Service class for 2-Dim histogram classes
+ Service class for 2-D histogram classes
 
-- TH2C a 2-D histogram with one byte per cell (char)
-- TH2S a 2-D histogram with two bytes per cell (short integer)
-- TH2I a 2-D histogram with four bytes per cell (32 bits integer)
-- TH2F a 2-D histogram with four bytes per cell (float)
-- TH2D a 2-D histogram with eight bytes per cell (double)
+- TH2C a 2-D histogram with one byte per cell (char). Maximum bin content = 127
+- TH2S a 2-D histogram with two bytes per cell (short integer). Maximum bin content = 32767
+- TH2I a 2-D histogram with four bytes per cell (32 bit integer). Maximum bin content = INT_MAX (\ref intmax2 "*")
+- TH2L a 2-D histogram with eight bytes per cell (64 bit integer). Maximum bin content = LLONG_MAX (\ref llongmax2 "**")
+- TH2F a 2-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax2 "***")
+- TH2D a 2-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax2 "****")
+
+<sup>
+\anchor intmax2 (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor llongmax2 (**) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor floatmax2 (***) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
+\anchor doublemax2 (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
+</sup>
+
 */
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// 2-D histogram default constructor.
 
 TH2::TH2()
 {
@@ -68,7 +79,20 @@ TH2::TH2()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Constructor for fix bin size 2-D histograms.
+/// Creates the main histogram structure.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///            If title is of the form `stringt;stringx;stringy;stringz`,
+///            the histogram title is set to `stringt`,
+///            the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins along the X axis
+/// \param[in] xlow low edge of the X axis first bin
+/// \param[in] xup upper edge of the X axis last bin (not included in last bin)
+/// \param[in] nbinsy number of bins along the Y axis
+/// \param[in] ylow low edge of the Y axis first bin
+/// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -84,7 +108,20 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Constructor for variable bin size (along X axis) 2-D histograms using an input array
+/// of type double.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsx+1
+/// \param[in] nbinsy number of bins along the Y axis
+/// \param[in] ylow low edge of the Y axis first bin
+/// \param[in] yup upper edge of the Y axis last bin (not included in last bin)
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                      ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -100,7 +137,19 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Constructor for Double_t variable bin size (along Y axis) 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins along the X axis
+/// \param[in] xlow low edge of the X axis first bin
+/// \param[in] xup upper edge of the X axis last bin (not included in last bin)
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type double and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
                                      ,Int_t nbinsy,const Double_t *ybins)
@@ -117,7 +166,19 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Constructor for Double_t variable bin size 2-D histograms.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type double and size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type double and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
                                            ,Int_t nbinsy,const Double_t *ybins)
@@ -134,7 +195,20 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// See comments in the TH1 base class constructors.
+/// Constructor for variable bin size (along X and Y axis) 2-D histograms using input
+/// arrays of type float.
+///
+/// \param[in] name name of histogram (avoid blanks)
+/// \param[in] title histogram title.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringx`, the y axis title to `stringy`, etc.
+/// \param[in] nbinsx number of bins
+/// \param[in] xbins array of low-edges for each bin.
+///            This is an array of type float and size nbinsx+1
+/// \param[in] nbinsy number of bins
+/// \param[in] ybins array of low-edges for each bin.
+///            This is an array of type float and size nbinsy+1
 
 TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
                                            ,Int_t nbinsy,const Float_t *ybins)
@@ -151,22 +225,47 @@ TH2::TH2(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-/// The list of functions is not copied. (Use Clone if needed)
-
-TH2::TH2(const TH2 &h) : TH1()
-{
-   ((TH2&)h).Copy(*this);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
 TH2::~TH2()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 2D bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 2D bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
@@ -192,7 +291,7 @@ Int_t TH2::BufferEmpty(Int_t action)
       nbentries  = -nbentries;
       //  a reset might call BufferEmpty() giving an infinite loop
       // Protect it by setting fBuffer = 0
-      fBuffer=0;
+      fBuffer=nullptr;
        //do not reset the list of functions
       Reset("ICES");
       fBuffer = buffer;
@@ -215,7 +314,7 @@ Int_t TH2::BufferEmpty(Int_t action)
       if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax);
       } else {
-         fBuffer = 0;
+         fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
@@ -226,13 +325,13 @@ Int_t TH2::BufferEmpty(Int_t action)
       }
    }
 
-   fBuffer = 0;
+   fBuffer = nullptr;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[3*i+2],buffer[3*i+3],buffer[3*i+1]);
    }
    fBuffer = buffer;
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   if (action > 0) { delete [] fBuffer; fBuffer = nullptr; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
       else                              fBuffer[0] = 0;
@@ -258,7 +357,7 @@ Int_t TH2::BufferFill(Double_t x, Double_t y, Double_t w)
       nbentries  = -nbentries;
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer; fBuffer=nullptr;
          Reset("ICES");
          fBuffer = buffer;
       }
@@ -306,7 +405,7 @@ Int_t TH2::Fill(Double_t )
 ///  - if x or/and y is equal to or greater than the upper edge of corresponding axis last bin,
 ///    the Overflow cell is incremented.
 ///
-/// -  If the storage of the sum of squares of weights has been triggered,
+///  - If the storage of the sum of squares of weights has been triggered,
 ///    via the function Sumw2, then the sum of the squares of weights is incremented
 ///    by 1 in the cell corresponding to x,y.
 ///
@@ -416,16 +515,21 @@ Int_t TH2::Fill(const char *namex, const char *namey, Double_t w)
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t x = fXaxis.GetBinCenter(binx);
-   Double_t y = fYaxis.GetBinCenter(biny);
+
    Double_t z= w;
    fTsumw   += z;
    fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   // skip computation of the statistics along axis that have labels (can be extended and are alphanumeric)
+   UInt_t labelBitMask = GetAxisLabelStatus();
+   if (labelBitMask != (TH1::kXaxis | TH1::kYaxis)) {
+      Double_t x = (labelBitMask & TH1::kXaxis) ? 0 : fXaxis.GetBinCenter(binx);
+      Double_t y = (labelBitMask & TH1::kYaxis) ? 0 : fYaxis.GetBinCenter(biny);
+      fTsumwx += z * x;
+      fTsumwx2 += z * x * x;
+      fTsumwy += z * y;
+      fTsumwy2 += z * y * y;
+      fTsumwxy += z * x * y;
+   }
    return bin;
 }
 
@@ -460,15 +564,18 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    if (biny == 0 || biny > fYaxis.GetNbins()) {
       if (!GetStatOverflowsBehaviour()) return -1;
    }
-   Double_t x = fXaxis.GetBinCenter(binx);
    Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
-   fTsumwx  += z*x;
-   fTsumwx2 += z*x*x;
    fTsumwy  += z*y;
    fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   // skip statistics along x axis, for only one axis no need to use bit mask from GetAxisLabelStatus
+   if (!fXaxis.CanExtend() || !fXaxis.IsAlphanumeric()) {
+      Double_t x = fXaxis.GetBinCenter(binx);
+      fTsumwx += z * x;
+      fTsumwx2 += z * x * x;
+      fTsumwxy += z * x * y;
+   }
    return bin;
 }
 
@@ -503,15 +610,19 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
       if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
-   Double_t y = fYaxis.GetBinCenter(biny);
+
    Double_t z= w; //(w > 0 ? w : -w);
    fTsumw   += z;
    fTsumw2  += z*z;
    fTsumwx  += z*x;
    fTsumwx2 += z*x*x;
-   fTsumwy  += z*y;
-   fTsumwy2 += z*y*y;
-   fTsumwxy += z*x*y;
+   // skip statistics along y axis
+   if (!fYaxis.CanExtend() || !fYaxis.IsAlphanumeric()) {
+      Double_t y = fYaxis.GetBinCenter(biny);
+      fTsumwy += z * y;
+      fTsumwy2 += z * y * y;
+      fTsumwxy += z * x * y;
+   }
    return bin;
 }
 
@@ -547,7 +658,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
          else BufferFill(x[i], y[i], 1.);
       }
       // fill the remaining entries if the buffer has been deleted
-      if (i < ntimes && fBuffer==0)
+      if (i < ntimes && fBuffer==nullptr)
          ifirst = i;
       else
          return;
@@ -585,7 +696,7 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in function fname.
 ///
-///  @param fname  : Function name used for filling the historam
+///  @param fname  : Function name used for filling the histogram
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used to sample
 ///
@@ -666,7 +777,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes, TRandom * rng)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram following distribution in histogram h.
 ///
-///  @param h      : Histogram  pointer used for smpling random number
+///  @param h      : Histogram  pointer used for sampling random number
 ///  @param ntimes : number of times the histogram is filled
 ///  @param rng    : (optional) Random number generator used for sampling
 ///
@@ -746,9 +857,9 @@ void TH2::DoFitSlices(bool onX,
    if (opt.Contains("s"))  nstep = 1;
 
    //default is to fit with a gaussian
-   if (f1 == 0) {
+   if (f1 == nullptr) {
       f1 = (TF1*)gROOT->GetFunction("gaus");
-      if (f1 == 0) f1 = new TF1("gaus","gaus",innerAxis.GetXmin(),innerAxis.GetXmax());
+      if (f1 == nullptr) f1 = new TF1("gaus","gaus",innerAxis.GetXmin(),innerAxis.GetXmax());
       else         f1->SetRange(innerAxis.GetXmin(),innerAxis.GetXmax());
    }
    Int_t npar = f1->GetNpar();
@@ -767,7 +878,7 @@ void TH2::DoFitSlices(bool onX,
    char *name   = new char[2000];
    char *title  = new char[2000];
    const TArrayD *bins = outerAxis.GetXbins();
-   // outer axis boudaries used for creating reported histograms are different
+   // outer axis boundaries used for creating reported histograms are different
    // than the limits used in the projection loop (firstbin,lastbin)
    Int_t firstOutBin = outerAxis.TestBit(TAxis::kAxisRange) ? std::max(firstbin,1) : 1;
    Int_t lastOutBin = outerAxis.TestBit(TAxis::kAxisRange) ?  std::min(lastbin,outerAxis.GetNbins() ) : outerAxis.GetNbins();
@@ -789,7 +900,7 @@ void TH2::DoFitSlices(bool onX,
    }
    snprintf(name,2000,"%s_chi2",GetName());
    delete gDirectory->FindObject(name);
-   TH1D *hchi2 = 0;
+   TH1D *hchi2 = nullptr;
    if (bins->fN == 0) {
       hchi2 = new TH1D(name,"chisquare", nOutBins, outerAxis.GetBinLowEdge(firstOutBin), outerAxis.GetBinUpEdge(lastOutBin));
    } else {
@@ -812,17 +923,17 @@ void TH2::DoFitSlices(bool onX,
          hp= ProjectionX("_temp",bin,bin+ngroup-1,proj_opt);
       else
          hp= ProjectionY("_temp",bin,bin+ngroup-1,proj_opt);
-      if (hp == 0) continue;
+      if (hp == nullptr) continue;
       // nentries can be the effective entries and it could be a very small number but not zero!
       Double_t nentries = hp->GetEntries();
       if ( nentries <= 0 || nentries < cut) {
-         if (!opt.Contains("Q"))
+         if (!opt.Contains("q"))
                Info("DoFitSlices","Slice %d skipped, the number of entries is zero or smaller than the given cut value, n=%f",bin,nentries);
          continue;
       }
       f1->SetParameters(parsave);
       Int_t binOn = hlist[0]->FindBin(outerAxis.GetBinCenter(bin+ngroup/2));
-      if (!opt.Contains("Q"))
+      if (!opt.Contains("q"))
          Info("DoFitSlices","Slice fit %d (%f,%f)",binOn,hlist[0]->GetXaxis()->GetBinLowEdge(binOn),hlist[0]->GetXaxis()->GetBinUpEdge(binOn));
       hp->Fit(f1,opt.Data());
       Int_t npfits = f1->GetNumberFitPoints();
@@ -834,7 +945,7 @@ void TH2::DoFitSlices(bool onX,
          hchi2->SetBinContent(binOn,f1->GetChisquare()/(npfits-npar));
       }
       else {
-         if (!opt.Contains("Q"))
+         if (!opt.Contains("q"))
             Info("DoFitSlices","Fitted slice %d skipped, the number of fitted points is too small, n=%d",bin,npfits);
       }
       // don't need to delete hp. If histogram has the same name it is re-used in TH2::Projection
@@ -1078,11 +1189,12 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 2 random numbers along axis x and y distributed according
-/// to the cell-contents of this 2-dim histogram
-/// return a NaN if the histogram has a bin with negative content
+/// to the cell-contents of this 2-D histogram.
+///
+/// Return a NaN if the histogram has a bin with negative content
 ///
 /// @param[out] x  reference to random generated x value
-/// @param[out] y  reference to random generated x value
+/// @param[out] y  reference to random generated y value
 /// @param[in] rng (optional) Random number generator pointer used (default is gRandom)
 
 void TH2::GetRandom2(Double_t &x, Double_t &y, TRandom * rng)
@@ -1161,7 +1273,7 @@ void TH2::GetStats(Double_t *stats) const
             if (lastBinY ==  fYaxis.GetNbins() ) lastBinY += 1;
          }
       }
-      // check for labels axis . In that case corresponsing statistics do not make sense and it is set to zero
+      // check for labels axis. In that case corresponding statistics do not make sense and it is set to zero
       Bool_t labelXaxis =  ((const_cast<TAxis&>(fXaxis)).GetLabels() && fXaxis.CanExtend() );
       Bool_t labelYaxis =  ((const_cast<TAxis&>(fYaxis)).GetLabels() && fYaxis.CanExtend() );
 
@@ -1362,7 +1474,7 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    Double_t prb = 0;
    TH1 *h1 = (TH1*)this;
-   if (h2 == 0) return 0;
+   if (h2 == nullptr) return 0;
    const TAxis *xaxis1 = h1->GetXaxis();
    const TAxis *xaxis2 = h2->GetXaxis();
    const TAxis *yaxis1 = h1->GetYaxis();
@@ -1596,15 +1708,15 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
 
    if (GetDimension() != 2) {
       Error("Rebin2D", "Histogram must be TH2. This histogram has %d dimensions.", GetDimension());
-      return 0;
+      return nullptr;
    }
    if ((nxgroup <= 0) || (nxgroup > nxbins)) {
       Error("Rebin2D", "Illegal value of nxgroup=%d",nxgroup);
-      return 0;
+      return nullptr;
    }
    if ((nygroup <= 0) || (nygroup > nybins)) {
       Error("Rebin2D", "Illegal value of nygroup=%d",nygroup);
-      return 0;
+      return nullptr;
    }
 
    Int_t newxbins = nxbins / nxgroup;
@@ -1616,7 +1728,7 @@ TH2 *TH2::Rebin2D(Int_t nxgroup, Int_t nygroup, const char *newname)
    Double_t *oldBins = new Double_t[fNcells];
    for (Int_t i = 0; i < fNcells; ++i) oldBins[i] = RetrieveBinContent(i);
 
-   Double_t* oldErrors = NULL;
+   Double_t* oldErrors = nullptr;
    if (fSumw2.fN) {
       oldErrors = new Double_t[fNcells];
       for (Int_t i = 0; i < fNcells; ++i) oldErrors[i] = GetBinErrorSqUnchecked(i);
@@ -1811,14 +1923,14 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
       pname = new char[nch];
       snprintf(pname,nch,"%s%s",GetName(),name);
    }
-   TProfile *h1=0;
+   TProfile *h1=nullptr;
    //check if a profile with identical name exist
    // if compatible reset and re-use previous histogram
    TObject *h1obj = gROOT->FindObject(pname);
    if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TProfile::Class() ) {
          Error("DoProfile","Histogram with name %s must be a TProfile and is a %s",name,h1obj->ClassName());
-         return 0;
+         return nullptr;
       }
       h1 = (TProfile*)h1obj;
       // reset the existing histogram and set always the new binning for the axis
@@ -1867,6 +1979,17 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // Copy attributes
    h1->GetXaxis()->ImportAttributes( &outAxis);
+   THashList* labels=outAxis.GetLabels();
+   if (labels) {
+      TIter iL(labels);
+      TObjString* lb;
+      Int_t i = 1;
+      while ((lb=(TObjString*)iL())) {
+         h1->GetXaxis()->SetBinLabel(i,lb->String().Data());
+         i++;
+      }
+   }
+
    h1->SetLineColor(this->GetLineColor());
    h1->SetFillColor(this->GetFillColor());
    h1->SetMarkerColor(this->GetMarkerColor());
@@ -1883,7 +2006,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
-   Double_t totcont = 0;
 
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
@@ -1914,7 +2036,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
             if ( useWeights ) tmp = binSumw2.fArray[binOut];
             h1->Fill( xOut, inAxis.GetBinCenter(inbin), cxy );
             if ( useWeights ) binSumw2.fArray[binOut] = tmp + fSumw2.fArray[bin];
-            totcont += cxy;
          }
 
       }
@@ -1930,16 +2051,13 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
 
    if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       opt.Remove(opt.First("d"),1);
       if (!gPad || !gPad->FindObject(h1)) {
          h1->Draw(opt);
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
    return h1;
 }
@@ -2050,7 +2168,7 @@ TProfile *TH2::ProfileY(const char *name, Int_t firstxbin, Int_t lastxbin, Optio
 
 TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbin, Option_t *option) const
 {
-   const char *expectedName = 0;
+   const char *expectedName = nullptr;
    Int_t inNbin;
    const TAxis* outAxis;
    const TAxis* inAxis;
@@ -2108,7 +2226,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       pname = new char[nch];
       snprintf(pname,nch,"%s%s",GetName(),name);
    }
-   TH1D *h1=0;
+   TH1D *h1=nullptr;
    //check if histogram with identical name exist
    // if compatible reset and re-use previous histogram
    // (see https://savannah.cern.ch/bugs/?54340)
@@ -2116,7 +2234,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    if (h1obj && h1obj->InheritsFrom(TH1::Class())) {
       if (h1obj->IsA() != TH1D::Class() ) {
          Error("DoProjection","Histogram with name %s must be a TH1D and is a %s",name,h1obj->ClassName());
-         return 0;
+         return nullptr;
       }
       h1 = (TH1D*)h1obj;
       // reset the existing histogram and set always the new binning for the axis
@@ -2189,6 +2307,9 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
    // inbin is the axis being integrated. Loop is done only on the selected bins
+   // if the out axis has labels and is extendable, temporary make it non-extendable to avoid adding extra bins
+   Bool_t extendable = outAxis->CanExtend();
+   if ( labels && extendable ) h1->GetXaxis()->SetCanExtend(kFALSE);
    for ( Int_t outbin = 0; outbin <= outAxis->GetNbins() + 1;  ++outbin) {
       err2 = 0;
       cont = 0;
@@ -2216,6 +2337,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       // sum  all content
       totcont += cont;
    }
+   if ( labels ) h1->GetXaxis()->SetCanExtend(extendable);
 
    // check if we can re-use the original statistics from  the previous histogram
    bool reuseStats = false;
@@ -2263,9 +2385,7 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
    }
 
    if (opt.Contains("d")) {
-      TVirtualPad *padsav = gPad;
-      TVirtualPad *pad = gROOT->GetSelectedPad();
-      if (pad) pad->cd();
+      TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
       opt.Remove(opt.First("d"),1);
       // remove also other options
       if (opt.Contains("e")) opt.Remove(opt.First("e"),1);
@@ -2274,7 +2394,6 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
       } else {
          h1->Paint(opt);
       }
-      if (padsav) padsav->cd();
    }
 
    return h1;
@@ -2407,7 +2526,7 @@ TH1D* TH2::QuantilesY( Double_t prob, const char * name) const
 
 TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
 {
-   const TAxis *outAxis = 0;
+   const TAxis *outAxis = nullptr;
    if ( onX )   {
       outAxis = GetXaxis();
    }  else {
@@ -2421,14 +2540,14 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
       qname = TString::Format("%s_%s_%3.2f",GetName(),qtype, prob);
    }
    // check if the histogram is already existing
-   TH1D *h1=0;
+   TH1D *h1=nullptr;
    //check if histogram with identical name exist
    TObject *h1obj = gROOT->FindObject(qname);
    if (h1obj) {
       h1 = dynamic_cast<TH1D*>(h1obj);
       if (!h1) {
          Error("DoQuantiles","Histogram with name %s must be a TH1D and is a %s",qname.Data(),h1obj->ClassName());
-         return 0;
+         return nullptr;
       }
    }
    if (h1) {
@@ -2450,7 +2569,7 @@ TH1D* TH2::DoQuantiles(bool onX, const char * name, Double_t prob) const
   Double_t pp[1];
   pp[0] = prob;
 
-  TH1D * slice = 0;
+  TH1D * slice = nullptr;
   for (int ibin = outAxis->GetFirst() ; ibin <= outAxis->GetLast() ; ++ibin) {
     Double_t qq[1];
     // do a projection on the opposite axis
@@ -2510,6 +2629,7 @@ void TH2::SetBinContent(Int_t bin, Double_t content)
 /// mouse position along Y.
 /// To stop the generation of the projections, delete the canvas
 /// containing the projection.
+/// \param nbins number of bins in Y to sum across for the projection
 
 void TH2::SetShowProjectionX(Int_t nbins)
 {
@@ -2525,12 +2645,29 @@ void TH2::SetShowProjectionX(Int_t nbins)
 /// mouse position along X.
 /// To stop the generation of the projections, delete the canvas
 /// containing the projection.
+/// \param nbins number of bins in X to sum across for the projection
 
 void TH2::SetShowProjectionY(Int_t nbins)
 {
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("y",nbins);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// When the mouse is moved in a pad containing a 2-d view of this histogram
+/// two canvases show the projection along X and Y corresponding to the
+/// mouse position along Y and X, respectively.
+/// To stop the generation of the projections, delete the canvas
+/// containing the projection.
+/// \param nbinsY number of bins in Y to sum across for the x projection
+/// \param nbinsX number of bins in X to sum across for the y projection
+
+void TH2::SetShowProjectionXY(Int_t nbinsY, Int_t nbinsX)
+{
+   GetPainter();
+   if (fPainter) fPainter->SetShowProjectionXY("x",nbinsY,nbinsX);
 }
 
 
@@ -2542,8 +2679,8 @@ void TH2::SetShowProjectionY(Int_t nbins)
 TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 {
 
-   return (TH1*)gROOT->ProcessLineFast(Form("TSpectrum2::StaticBackground((TH1*)0x%lx,%d,\"%s\")",
-                                            (ULong_t)this, niter, option));
+   return (TH1 *)gROOT->ProcessLineFast(TString::Format("TSpectrum2::StaticBackground((TH1*)0x%zx,%d,\"%s\")",
+                                            (size_t)this, niter, option).Data());
 }
 
 
@@ -2558,8 +2695,8 @@ TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 {
 
-   return (Int_t)gROOT->ProcessLineFast(Form("TSpectrum2::StaticSearch((TH1*)0x%lx,%g,\"%s\",%g)",
-                                             (ULong_t)this, sigma, option, threshold));
+   return (Int_t)gROOT->ProcessLineFast(TString::Format("TSpectrum2::StaticSearch((TH1*)0x%zx,%g,\"%s\",%g)",
+                                             (size_t)this, sigma, option, threshold).Data());
 }
 
 
@@ -2567,6 +2704,9 @@ Int_t TH2::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 /// Smooth bin contents of this 2-d histogram using kernel algorithms
 /// similar to the ones used in the raster graphics community.
 /// Bin contents in the active range are replaced by their smooth values.
+/// The algorithm retains the input dimension by using Kernel Crop at the input boundaries.
+/// Kernel Crop sets any pixel in the kernel that extends past the input to zero and adjusts the
+/// normalization accordingly.
 /// If Errors are defined via Sumw2, they are also scaled and computed.
 /// However, note the resulting errors will be correlated between different-bins, so
 /// the errors should not be used blindly to perform any calculation involving several bins,
@@ -2627,7 +2767,7 @@ void TH2::Smooth(Int_t ntimes, Option_t *option)
    Int_t ny = GetNbinsY();
    Int_t bufSize  = (nx+2)*(ny+2);
    Double_t *buf  = new Double_t[bufSize];
-   Double_t *ebuf = 0;
+   Double_t *ebuf = nullptr;
    if (fSumw2.fN) ebuf = new Double_t[bufSize];
 
    // Copy all the data to the temporary buffers
@@ -2737,7 +2877,8 @@ TH2C::~TH2C()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -2751,7 +2892,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -2763,7 +2905,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -2775,7 +2918,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -2787,7 +2931,8 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -2800,15 +2945,17 @@ TH2C::TH2C(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2C::TH2C(const TH2C &h2c) : TH2(), TArrayC()
 {
-   ((TH2C&)h2c).Copy(*this);
+   h2c.TH2C::Copy(*this);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2C::AddBinContent(Int_t bin)
 {
@@ -2818,6 +2965,8 @@ void TH2C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2C::AddBinContent(Int_t bin, Double_t w)
 {
@@ -2833,7 +2982,7 @@ void TH2C::AddBinContent(Int_t bin, Double_t w)
 
 void TH2C::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2C&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -2897,9 +3046,10 @@ void TH2C::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2C& TH2C::operator=(const TH2C &h1)
+TH2C& TH2C::operator=(const TH2C &h2c)
 {
-   if (this != &h1)  ((TH2C&)h1).Copy(*this);
+   if (this != &h2c)
+      h2c.TH2C::Copy(*this);
    return *this;
 }
 
@@ -2911,7 +3061,7 @@ TH2C operator*(Float_t c1, TH2C &h1)
 {
    TH2C hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -2923,7 +3073,7 @@ TH2C operator+(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -2935,7 +3085,7 @@ TH2C operator-(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -2947,7 +3097,7 @@ TH2C operator*(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -2959,7 +3109,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 {
    TH2C hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -2991,7 +3141,8 @@ TH2S::~TH2S()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3005,7 +3156,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3017,7 +3169,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3029,7 +3182,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3041,7 +3195,8 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3053,16 +3208,18 @@ TH2S::TH2S(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
+/// Copy constructor
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2S::TH2S(const TH2S &h2s) : TH2(), TArrayS()
 {
-   ((TH2S&)h2s).Copy(*this);
+   h2s.TH2S::Copy(*this);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2S::AddBinContent(Int_t bin)
 {
@@ -3072,6 +3229,8 @@ void TH2S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2S::AddBinContent(Int_t bin, Double_t w)
 {
@@ -3087,7 +3246,7 @@ void TH2S::AddBinContent(Int_t bin, Double_t w)
 
 void TH2S::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2S&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3151,9 +3310,10 @@ void TH2S::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2S& TH2S::operator=(const TH2S &h1)
+TH2S& TH2S::operator=(const TH2S &h2s)
 {
-   if (this != &h1)  ((TH2S&)h1).Copy(*this);
+   if (this != &h2s)
+      h2s.TH2S::Copy(*this);
    return *this;
 }
 
@@ -3161,11 +3321,11 @@ TH2S& TH2S::operator=(const TH2S &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2S operator*(Float_t c1, TH2S &h1)
+TH2S operator*(Float_t c1, TH2S &h2s)
 {
-   TH2S hnew = h1;
+   TH2S hnew = h2s;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3177,7 +3337,7 @@ TH2S operator+(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3189,7 +3349,7 @@ TH2S operator-(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3201,7 +3361,7 @@ TH2S operator*(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3213,14 +3373,14 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 {
    TH2S hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
 
 //______________________________________________________________________________
 //                     TH2I methods
-//  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
+//  TH2I a 2-D histogram with four bytes per cell (32 bit integer)
 //______________________________________________________________________________
 
 ClassImp(TH2I);
@@ -3245,7 +3405,8 @@ TH2I::~TH2I()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3259,7 +3420,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3271,7 +3433,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3283,7 +3446,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3295,7 +3459,8 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3308,31 +3473,35 @@ TH2I::TH2I(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2I::TH2I(const TH2I &h2i) : TH2(), TArrayI()
 {
-   ((TH2I&)h2i).Copy(*this);
+   h2i.TH2I::Copy(*this);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2I::AddBinContent(Int_t bin)
 {
-   if (fArray[bin] < 2147483647) fArray[bin]++;
+   if (fArray[bin] < INT_MAX) fArray[bin]++;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2I::AddBinContent(Int_t bin, Double_t w)
 {
    Long64_t newval = fArray[bin] + Long64_t(w);
-   if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
-   if (newval < -2147483647) fArray[bin] = -2147483647;
-   if (newval >  2147483647) fArray[bin] =  2147483647;
+   if (newval > -INT_MAX && newval < INT_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -INT_MAX) fArray[bin] = -INT_MAX;
+   if (newval >  INT_MAX) fArray[bin] =  INT_MAX;
 }
 
 
@@ -3341,7 +3510,7 @@ void TH2I::AddBinContent(Int_t bin, Double_t w)
 
 void TH2I::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2I&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3370,9 +3539,10 @@ void TH2I::SetBinsLength(Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2I& TH2I::operator=(const TH2I &h1)
+TH2I& TH2I::operator=(const TH2I &h2i)
 {
-   if (this != &h1)  ((TH2I&)h1).Copy(*this);
+   if (this != &h2i)
+      h2i.TH2I::Copy(*this);
    return *this;
 }
 
@@ -3380,11 +3550,11 @@ TH2I& TH2I::operator=(const TH2I &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2I operator*(Float_t c1, TH2I &h1)
+TH2I operator*(Float_t c1, TH2I &h2i)
 {
-   TH2I hnew = h1;
+   TH2I hnew = h2i;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3396,7 +3566,7 @@ TH2I operator+(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3408,7 +3578,7 @@ TH2I operator-(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3420,7 +3590,7 @@ TH2I operator*(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3432,14 +3602,243 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 {
    TH2I hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+//______________________________________________________________________________
+//                     TH2L methods
+//  TH2L a 2-D histogram with eight bytes per cell (64 bit integer)
+//______________________________________________________________________________
+
+ClassImp(TH2L);
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor.
+
+TH2L::TH2L(): TH2(), TArrayL64()
+{
+   SetBinsLength(9);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+TH2L::~TH2L()
+{
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
+
+TH2L::TH2L(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+           ,Int_t nbinsy,Double_t ylow,Double_t yup)
+   :TH2(name,title,nbinsx,xlow,xup,nbinsy,ylow,yup)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+
+   if (xlow >= xup || ylow >= yup) SetBuffer(fgBufferSize);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
+
+TH2L::TH2L(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+           ,Int_t nbinsy,Double_t ylow,Double_t yup)
+   :TH2(name,title,nbinsx,xbins,nbinsy,ylow,yup)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
+
+TH2L::TH2L(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
+           ,Int_t nbinsy,const Double_t *ybins)
+   :TH2(name,title,nbinsx,xlow,xup,nbinsy,ybins)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
+
+TH2L::TH2L(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
+           ,Int_t nbinsy,const Double_t *ybins)
+   :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
+
+TH2L::TH2L(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
+           ,Int_t nbinsy,const Float_t *ybins)
+   :TH2(name,title,nbinsx,xbins,nbinsy,ybins)
+{
+   TArrayL64::Set(fNcells);
+   if (fgDefaultSumw2) Sumw2();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
+
+TH2L::TH2L(const TH2L &h2l) : TH2(), TArrayL64()
+{
+   h2l.TH2L::Copy(*this);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2L::AddBinContent(Int_t bin)
+{
+   if (fArray[bin] < LLONG_MAX) fArray[bin]++;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2L::AddBinContent(Int_t bin, Double_t w)
+{
+   Long64_t newval = fArray[bin] + Long64_t(w);
+   if (newval > -LLONG_MAX && newval < LLONG_MAX) {fArray[bin] = Int_t(newval); return;}
+   if (newval < -LLONG_MAX) fArray[bin] = -LLONG_MAX;
+   if (newval >  LLONG_MAX) fArray[bin] =  LLONG_MAX;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy.
+
+void TH2L::Copy(TObject &newth2) const
+{
+   TH2::Copy(newth2);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset this histogram: contents, errors, etc.
+
+void TH2L::Reset(Option_t *option)
+{
+   TH2::Reset(option);
+   TArrayL64::Reset();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set total number of bins including under/overflow
+/// Reallocate bin contents array
+
+void TH2L::SetBinsLength(Int_t n)
+{
+   if (n < 0) n = (fXaxis.GetNbins()+2)*(fYaxis.GetNbins()+2);
+   fNcells = n;
+   TArrayL64::Set(n);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator =
+
+TH2L& TH2L::operator=(const TH2L &h2l)
+{
+   if (this != &h2l)
+      h2l.TH2L::Copy(*this);
+   return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH2L operator*(Float_t c1, TH2L &h1)
+{
+   TH2L hnew = h1;
+   hnew.Scale(c1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator +
+
+TH2L operator+(TH2L &h1, TH2L &h2)
+{
+   TH2L hnew = h1;
+   hnew.Add(&h2,1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator -
+
+TH2L operator-(TH2L &h1, TH2L &h2)
+{
+   TH2L hnew = h1;
+   hnew.Add(&h2,-1);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator *
+
+TH2L operator*(TH2L &h1, TH2L &h2)
+{
+   TH2L hnew = h1;
+   hnew.Multiply(&h2);
+   hnew.SetDirectory(nullptr);
+   return hnew;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Operator /
+
+TH2L operator/(TH2L &h1, TH2L &h2)
+{
+   TH2L hnew = h1;
+   hnew.Divide(&h2);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
 
 //______________________________________________________________________________
 //                     TH2F methods
-//  TH2F a 2-D histogram with four bytes per cell (float)
+//  TH2F a 2-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
 ClassImp(TH2F);
@@ -3464,7 +3863,8 @@ TH2F::~TH2F()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3478,7 +3878,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3490,7 +3891,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3502,7 +3904,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3514,7 +3917,8 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3527,6 +3931,7 @@ TH2F::TH2F(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
+/// Construct a TH2F from a TMatrixFBase
 
 TH2F::TH2F(const TMatrixFBase &m)
 :TH2("TMatrixFBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
@@ -3546,10 +3951,11 @@ TH2F::TH2F(const TMatrixFBase &m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 {
-   ((TH2F&)h2f).Copy(*this);
+   h2f.TH2F::Copy(*this);
 }
 
 
@@ -3558,7 +3964,7 @@ TH2F::TH2F(const TH2F &h2f) : TH2(), TArrayF()
 
 void TH2F::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2F&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3622,9 +4028,10 @@ void TH2F::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2F& TH2F::operator=(const TH2F &h1)
+TH2F& TH2F::operator=(const TH2F &h2f)
 {
-   if (this != &h1)  ((TH2F&)h1).Copy(*this);
+   if (this != &h2f)
+      h2f.TH2F::Copy(*this);
    return *this;
 }
 
@@ -3636,7 +4043,7 @@ TH2F operator*(Float_t c1, TH2F &h1)
 {
    TH2F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3648,7 +4055,7 @@ TH2F operator*(TH2F &h1, Float_t c1)
 {
    TH2F hnew = h1;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3660,7 +4067,7 @@ TH2F operator+(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3672,7 +4079,7 @@ TH2F operator-(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3684,7 +4091,7 @@ TH2F operator*(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3696,14 +4103,14 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 {
    TH2F hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
 
 //______________________________________________________________________________
 //                     TH2D methods
-//  TH2D a 2-D histogram with eight bytes per cell (double)
+//  TH2D a 2-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
 ClassImp(TH2D);
@@ -3728,7 +4135,8 @@ TH2D::~TH2D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3742,7 +4150,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,Double_t ylow,Double_t yup)
@@ -3754,7 +4163,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3766,7 +4176,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
            ,Int_t nbinsy,const Double_t *ybins)
@@ -3778,7 +4189,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// (see TH2::TH2 for explanation of parameters)
 
 TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
            ,Int_t nbinsy,const Float_t *ybins)
@@ -3790,7 +4202,8 @@ TH2D::TH2D(const char *name,const char *title,Int_t nbinsx,const Float_t *xbins
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor.
+/// Constructor
+/// Construct a 2-D histogram from a TMatrixDBase
 
 TH2D::TH2D(const TMatrixDBase &m)
 :TH2("TMatrixDBase","",m.GetNcols(),m.GetColLwb(),1+m.GetColUpb(),m.GetNrows(),m.GetRowLwb(),1+m.GetRowUpb())
@@ -3811,10 +4224,12 @@ TH2D::TH2D(const TMatrixDBase &m)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
+/// The list of functions is not copied. (Use Clone() if needed)
 
 TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 {
-   ((TH2D&)h2d).Copy(*this);
+   // intentionally call virtual Copy method to warn if TProfile2D is copied
+   h2d.Copy(*this);
 }
 
 
@@ -3823,7 +4238,7 @@ TH2D::TH2D(const TH2D &h2d) : TH2(), TArrayD()
 
 void TH2D::Copy(TObject &newth2) const
 {
-   TH2::Copy((TH2D&)newth2);
+   TH2::Copy(newth2);
 }
 
 
@@ -3887,9 +4302,11 @@ void TH2D::Streamer(TBuffer &R__b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator =
 
-TH2D& TH2D::operator=(const TH2D &h1)
+TH2D& TH2D::operator=(const TH2D &h2d)
 {
-   if (this != &h1)  ((TH2D&)h1).Copy(*this);
+   // intentionally call virtual Copy method to warn if TProfile2D is copied
+   if (this != &h2d)
+      h2d.Copy(*this);
    return *this;
 }
 
@@ -3898,11 +4315,11 @@ TH2D& TH2D::operator=(const TH2D &h1)
 ////////////////////////////////////////////////////////////////////////////////
 /// Operator *
 
-TH2D operator*(Float_t c1, TH2D &h1)
+TH2D operator*(Float_t c1, TH2D &h2d)
 {
-   TH2D hnew = h1;
+   TH2D hnew = h2d;
    hnew.Scale(c1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3914,7 +4331,7 @@ TH2D operator+(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Add(&h2,1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3926,7 +4343,7 @@ TH2D operator-(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Add(&h2,-1);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3938,7 +4355,7 @@ TH2D operator*(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Multiply(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }
 
@@ -3950,6 +4367,6 @@ TH2D operator/(TH2D &h1, TH2D &h2)
 {
    TH2D hnew = h1;
    hnew.Divide(&h2);
-   hnew.SetDirectory(0);
+   hnew.SetDirectory(nullptr);
    return hnew;
 }

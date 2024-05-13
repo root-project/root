@@ -21,7 +21,7 @@
 ClassImp(TH2Poly);
 
 /** \class TH2Poly
-    \ingroup Hist
+    \ingroup Histograms
 2D Histogram with Polygonal Bins
 
 ## Overview
@@ -75,7 +75,7 @@ many times.
 The following very simple macro shows how to build and fill a `TH2Poly`:
 ~~~ {.cpp}
 {
-    TH2Poly *h2p = new TH2Poly();
+    auto h2p = new TH2Poly();
 
     Double_t x1[] = {0, 5, 6};
     Double_t y1[] = {0, 0, 5};
@@ -178,6 +178,12 @@ TH2Poly::TH2Poly(const char *name,const char *title,
    SetFloat(kFALSE);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Copy constructor
+TH2Poly::TH2Poly(const TH2Poly & rhs) : TH2() {
+    rhs.Copy(*this);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
@@ -190,6 +196,63 @@ TH2Poly::~TH2Poly()
    delete fBins;
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator
+TH2Poly & TH2Poly::operator=(const TH2Poly & rhs) {
+   if (this != &rhs)
+       rhs.Copy(*this);
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Copy function for TH2Poly
+
+void TH2Poly::Copy(TObject &newobj) const
+{
+   // copy first TH2 information
+   TH2::Copy(newobj);
+   auto & newth2p = dynamic_cast<TH2Poly &>(newobj);
+   newth2p.SetName(GetName());
+   newth2p.SetTitle(GetTitle());
+
+   newth2p.fCellX = fCellX;
+   newth2p.fCellY = fCellY;
+   newth2p.fNCells = fNCells;
+   newth2p.fStepX = fStepX;
+   newth2p.fStepY = fStepY;
+
+   // allocate arrays
+   newth2p.fCells  = new TList [fNCells];
+   newth2p.fIsEmpty = new Bool_t [fNCells]; // Empty partition
+   newth2p.fCompletelyInside = new Bool_t [fNCells]; // Cell is completely inside bin
+   // Initializes the flags
+   for (int i = 0; i<fNCells; i++) {
+      newth2p.fIsEmpty[i] = fIsEmpty[i];
+      newth2p.fCompletelyInside[i] = fCompletelyInside[i];
+   }
+   // need to use Clone to copy the contained bin list
+   newth2p.fBins = dynamic_cast<TList *>(fBins->Clone());
+   if (!newth2p.fBins)
+      Error("Copy","Error cloning the TH2Poly bin list");
+   else {
+      // add bins in the fCells partition. We need to add the TH2PolyBin objects
+      // of the new copied histograms. For this we call AddBinToPartition
+      // we could probably optimize this by implementing a copy of the partition
+      for (auto bin : *(newth2p.fBins)) {
+         newth2p.AddBinToPartition(dynamic_cast<TH2PolyBin*>(bin));
+      }
+   }
+   // copy overflow contents
+   for(int i = 0; i < kNOverflow; i++ ) {
+      newth2p.fOverflow[i] = fOverflow[i];
+   }
+   // copy other data members
+   newth2p.fFloat = fFloat;
+   newth2p.fNewBinAdded = fNewBinAdded;
+   newth2p.fBinContentChanged = fBinContentChanged;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create appropriate histogram bin.
 ///  e.g. TH2Poly        creates TH2PolyBin,
@@ -199,9 +262,9 @@ TH2Poly::~TH2Poly()
 
 TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 {
-   if (!poly) return 0;
+   if (!poly) return nullptr;
 
-   if (fBins == 0) {
+   if (fBins == nullptr) {
       fBins = new TList();
       fBins->SetOwner();
    }
@@ -727,28 +790,33 @@ Double_t TH2Poly::Integral(Option_t* option) const
    TString opt = option;
    opt.ToLower();
 
+   Double_t w;
+   Double_t integral = 0.;
+
+   TIter next(fBins);
+   TObject *obj;
+   TH2PolyBin *bin;
    if ((opt.Contains("width")) || (opt.Contains("area"))) {
-      Double_t w;
-      Double_t integral = 0.;
-
-      TIter    next(fBins);
-      TObject *obj;
-      TH2PolyBin *bin;
-      while ((obj=next())) {
-         bin       = (TH2PolyBin*) obj;
-         w         = bin->GetArea();
-         integral += w*(bin->GetContent());
+      while ((obj = next())) {
+         bin = (TH2PolyBin *)obj;
+         w = bin->GetArea();
+         integral += w * (bin->GetContent());
       }
-
-      return integral;
    } else {
-      return fTsumw;
+      // need to recompute integral in case SetBinContent was called.
+      // fTsumw cannot be used since it is not updated in that case
+      while ((obj = next())) {
+         bin = (TH2PolyBin *)obj;
+         integral += (bin->GetContent());
+      }
    }
+   return integral;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the content of the input bin
-/// For the overflow/underflow/sea bins:
+/// Bin numbers are from [1,nbins] and
+/// for the overflow/underflow/sea bins the range is [-9,-1]:
 ///~~~ {.cpp}
 /// -1 | -2 | -3
 /// ---+----+----
@@ -789,6 +857,16 @@ Double_t TH2Poly::GetBinError(Int_t bin) const
    }
    Double_t error2 = TMath::Abs(GetBinContent(bin));
    return TMath::Sqrt(error2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the number of bins :
+/// it should be the size of the bin list
+Int_t  TH2Poly::GetNumberOfBins() const {
+   Int_t nbins =  fNcells-kNOverflow;
+   if (nbins != fBins->GetSize())
+      Fatal("GetNumberOfBins","Object has an invalid number of bins");
+   return nbins;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -930,50 +1008,91 @@ Double_t TH2Poly::GetMinimum(Double_t minval) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Bins the histogram using a honeycomb structure
+/// If the option "v" is specified, the hexagons are drawn "vertically" (default).
+/// If the option "h" is selected they are drawn "horizontally".
 
-void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a,
-                     Int_t k, Int_t s)
+void TH2Poly::Honeycomb(Double_t xstart, Double_t ystart, Double_t a, Int_t k, Int_t s, Option_t* option)
 {
-   // Add the bins
+   TString opt = option;
+   opt.ToLower();
    Double_t numberOfHexagonsInTheRow;
    Double_t x[6], y[6];
-   Double_t xloop, yloop, xtemp;
-   xloop = xstart; yloop = ystart + a/2.0;
-   for (int sCounter = 0; sCounter < s; sCounter++) {
+   Double_t xloop = xstart, yloop, xtemp, ytemp;
 
-      xtemp = xloop; // Resets the temp variable
+   // Add the bins
+   if (opt.Contains("v")) {
+      yloop = ystart + a / 2.0;
+      for (int sCounter = 0; sCounter < s; sCounter++) {
+         xtemp = xloop;
+         // Determine the number of hexagons in that row
+         if (sCounter%2 == 0)
+            numberOfHexagonsInTheRow = k;
+         else
+            numberOfHexagonsInTheRow = k - 1;
 
-      // Determine the number of hexagons in that row
-      if(sCounter%2 == 0){numberOfHexagonsInTheRow = k;}
-      else{numberOfHexagonsInTheRow = k - 1;}
-
-      for (int kCounter = 0; kCounter <  numberOfHexagonsInTheRow; kCounter++) {
-
-         // Go around the hexagon
-         x[0] = xtemp;
-         y[0] = yloop;
-         x[1] = x[0];
-         y[1] = y[0] + a;
-         x[2] = x[1] + a*TMath::Sqrt(3)/2.0;
-         y[2] = y[1] + a/2.0;
-         x[3] = x[2] + a*TMath::Sqrt(3)/2.0;
-         y[3] = y[1];
-         x[4] = x[3];
-         y[4] = y[0];
-         x[5] = x[2];
-         y[5] = y[4] - a/2.0;
-
-         this->AddBin(6, x, y);
-
-         // Go right
-         xtemp += a*TMath::Sqrt(3);
+         for (int kCounter = 0; kCounter < numberOfHexagonsInTheRow; kCounter++) {
+            // Go around the hexagon
+            x[0] = xtemp;
+            y[0] = yloop;
+            x[1] = x[0];
+            y[1] = y[0] + a;
+            x[2] = x[1] + a * TMath::Sqrt(3) / 2.0;
+            y[2] = y[1] + a / 2.0;
+            x[3] = x[2] + a * TMath::Sqrt(3) / 2.0;
+            y[3] = y[1];
+            x[4] = x[3];
+            y[4] = y[0];
+            x[5] = x[2];
+            y[5] = y[4] - a/2.0;
+            this->AddBin(6, x, y);
+            // Go right
+            xtemp += a * TMath::Sqrt(3);
+         }
+         // Increment the starting position
+         if (sCounter%2 == 0)
+            xloop += a * TMath::Sqrt(3) / 2.0;
+         else
+            xloop -= a * TMath::Sqrt(3) / 2.0;
+         yloop += 1.5 * a;
       }
-
-      // Increment the starting position
-      if (sCounter%2 == 0) xloop += a*TMath::Sqrt(3)/2.0;
-      else                 xloop -= a*TMath::Sqrt(3)/2.0;
-      yloop += 1.5*a;
+   } else if (opt.Contains("h")) {
+      yloop = ystart + a*TMath::Sqrt(3)/2.0;
+      for (int sCounter = 0; sCounter < s; sCounter++) {
+         ytemp = yloop;
+         // Determine the number of hexagons in that row
+         if (sCounter%2 == 0)
+            numberOfHexagonsInTheRow = k;
+         else
+            numberOfHexagonsInTheRow = k - 1;
+         for (int kCounter = 0; kCounter < numberOfHexagonsInTheRow; kCounter++) {
+            // Go around the hexagon
+            x[0] = xloop;
+            y[0] = ytemp;
+            x[1] = x[0] + a/2.0;
+            y[1] = y[0] + a * TMath::Sqrt(3) / 2.0;
+            x[2] = x[1] + a;
+            y[2] = y[1];
+            x[3] = x[2] + a/2.0;
+            y[3] = y[0];
+            x[4] = x[2];
+            y[4] = y[3] - a * TMath::Sqrt(3) / 2.0;
+            x[5] = x[1];
+            y[5] = y[4];
+            this->AddBin(6, x, y);
+            // Go up
+            ytemp += a * TMath::Sqrt(3);
+         }
+         // Increment the starting position
+         if (sCounter%2 == 0)
+            yloop += a * TMath::Sqrt(3) / 2.0;
+         else
+            yloop -= a * TMath::Sqrt(3) / 2.0;
+         xloop += 1.5 * a;
+      }
+   } else {
+      Error("Honeycomb", "Unknown option");
    }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -985,7 +1104,7 @@ void TH2Poly::Initialize(Double_t xlow, Double_t xup,
    Int_t i;
    fDimension = 2;  //The dimension of the histogram
 
-   fBins   = 0;
+   fBins   = nullptr;
    fNcells = kNOverflow;
 
    // Sets the boundaries of the histogram
@@ -1318,7 +1437,7 @@ void TH2Poly::GetStats(Double_t *stats) const
 }
 
 /** \class TH2PolyBin
-    \ingroup Hist
+    \ingroup Histograms
 Helper class to represent a bin in the TH2Poly histogram
 */
 
@@ -1327,7 +1446,7 @@ Helper class to represent a bin in the TH2Poly histogram
 
 TH2PolyBin::TH2PolyBin()
 {
-   fPoly    = 0;
+   fPoly    = nullptr;
    fContent = 0.;
    fNumber  = 0;
    fXmax    = -1111;
@@ -1556,32 +1675,32 @@ Bool_t TH2PolyBin::IsInside(Double_t x, Double_t y) const
    return in;
 }
 
-////////////////////////////////////////////////////////////////////////
-/// RE-implement dummy functions to avoid users calling the
-/// corresponding implemntations in TH1 or TH2
-//////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+// RE-implement dummy functions to avoid users calling the
+// corresponding implementations in TH1 or TH2
+////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this + c1*f1. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(TF1 *, Double_t, Option_t *)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replace contents of this histogram by the addition of h1 and h2. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Add(const TH1 *, const TH1 *, Double_t, Double_t)
 {
-   Error("Add","Not implement for TH2Poly");
+   Error("Add", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this / c1*f1. NOT IMPLEMENTED for TH2Poly
+/// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Divide(TF1 *, Double_t)
 {
-   Error("Divide","Not implement for TH2Poly");
+   Error("Divide", "Not implemented for TH2Poly");
    return kFALSE;
 }
 
@@ -1589,34 +1708,34 @@ Bool_t TH2Poly::Divide(TF1 *, Double_t)
 /// NOT IMPLEMENTED for TH2Poly
 Bool_t TH2Poly::Multiply(TF1 *, Double_t)
 {
-   Error("Multiply","Not implement for TH2Poly");
+   Error("Multiply", "Not implemented for TH2Poly");
    return kFALSE;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::ComputeIntegral(Bool_t )
 {
-   Error("ComputeIntegral","Not implement for TH2Poly");
+   Error("ComputeIntegral", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::FFT(TH1*, Option_t * )
 {
-   Error("FFT","Not implement for TH2Poly");
+   Error("FFT", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 TH1 * TH2Poly::GetAsymmetry(TH1* , Double_t,  Double_t)
 {
-   Error("GetAsymmetry","Not implement for TH2Poly");
+   Error("GetAsymmetry", "Not implemented for TH2Poly");
    return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// NOT IMPLEMENTED for TH2Poly
 Double_t TH2Poly::Interpolate(Double_t, Double_t)
 {
-   Error("Interpolate","Not implement for TH2Poly");
+   Error("Interpolate", "Not implemented for TH2Poly");
    return TMath::QuietNaN();
 }

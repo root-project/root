@@ -46,7 +46,7 @@ private:
 
 public :
    MyParticle();
-   ~MyParticle();
+   ~MyParticle() override;
    MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &, Double_t, Double_t, Double_t);
    MyParticle(Int_t, Int_t, Int_t, Int_t, const TVector3 &, const TVector3 &);
    TPolyLine3D  *AddTrack(const TVector3 &, Int_t);
@@ -64,9 +64,9 @@ public :
    Double_t      GetTimeOfDecay() { return fTimeOfDecay; }
    Int_t         GetNChildren() { return fNChildren; }
    Int_t         GetNTracks() { return fNtrack+1; }
-   Char_t       *GetObjectInfo(Int_t px, Int_t py) const;
+   Char_t       *GetObjectInfo(Int_t px, Int_t py) const override;
    TPolyLine3D  *GetTrack(Int_t at) const {return (TPolyLine3D*)fTracks->At(at);}
-   const Char_t *GetName() const;
+   const Char_t *GetName() const override;
 
    void          SetId(Int_t id) { fId = id; }
    void          SetNChildren(Int_t nb) { fNChildren = nb; }
@@ -89,11 +89,11 @@ public :
 
    void          HighLight(); // *MENU*
 
-   virtual void  Delete(Option_t *) { }
-   virtual void  SetLineAttributes() { }
-   virtual void  SetDrawOption(Option_t *) { }
+   void  Delete(Option_t *) override { }
+   void  SetLineAttributes() override { }
+   void  SetDrawOption(Option_t *) override { }
 
-   ClassDef(MyParticle,1)  //Event structure
+   ClassDefOverride(MyParticle,1)  //Event structure
 };
 
 #endif // MYPARTICLE_H

@@ -63,9 +63,7 @@
 
 #include "TUnfoldDensity.h"
 
-using namespace std;
-
-TRandom *rnd=0;
+TRandom *rnd=nullptr;
 
 Double_t GenerateEvent(const Double_t *parm,
                        const Double_t *triggerParm,

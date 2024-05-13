@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TransformationHandler                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Contains all the data information                                         *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TransformationHandler
@@ -88,7 +88,7 @@ namespace TMVA {
       Double_t     GetMax   ( Int_t ivar, Int_t cls = -1 ) const;
 
       void         WriteToStream ( std::ostream& o ) const;
-      void         AddXMLTo      ( void* parent=0 ) const;
+      void         AddXMLTo      ( void* parent=nullptr ) const;
       void         ReadFromStream( std::istream& istr );
       void         ReadFromXML   ( void* trfsnode );
 
@@ -110,7 +110,7 @@ namespace TMVA {
       TDirectory*    GetRootDir() const { return fRootBaseDir; }
       void           SetRootDir( TDirectory *d ) { fRootBaseDir = d; }
 
-      void           PlotVariables( const std::vector<Event*>& events, TDirectory* theDirectory = 0 );
+      void           PlotVariables( const std::vector<Event*>& events, TDirectory* theDirectory = nullptr );
 
    private:
 
@@ -129,12 +129,12 @@ namespace TMVA {
       std::vector< Int_t >  fTransformationsReferenceClasses; //! reference classes for the transformations
       std::vector<std::vector<TMVA::TransformationHandler::VariableStat> >  fVariableStats; // first the variables, then the targets
 
-      Int_t                 fNumC;               // number of categories (#classes +1)
+      Int_t                 fNumC;               ///< number of categories (#classes +1)
 
-      std::vector<Ranking*> fRanking;            //! ranking object
-      TDirectory*           fRootBaseDir;        //! if set put input var hists
-      TString               fCallerName;         //! name of the caller for output
-      mutable MsgLogger*    fLogger;             //! message logger
+      std::vector<Ranking*> fRanking;            ///<! ranking object
+      TDirectory*           fRootBaseDir;        ///<! if set put input var hists
+      TString               fCallerName;         ///<! name of the caller for output
+      mutable MsgLogger*    fLogger;             ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    };
 }

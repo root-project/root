@@ -36,7 +36,7 @@ namespace Math {
       static int  gDefaultMaxIter  = 0;
       static int  gDefaultStrategy  = 1;
       static int  gDefaultPrintLevel  = 0;
-      static IOptions * gDefaultExtraOptions = 0; // pointer to default extra options
+      static IOptions * gDefaultExtraOptions = nullptr; // pointer to default extra options
    }
 
 
@@ -44,6 +44,9 @@ void MinimizerOptions::SetDefaultMinimizer(const char * type, const char * algo)
    // set the default minimizer type and algorithm
    if (type) Minim::gDefaultMinimizer = std::string(type);
    if (algo) Minim::gDefaultMinimAlgo = std::string(algo);
+   if (Minim::gDefaultMinimAlgo.empty() && ( Minim::gDefaultMinimizer == "Minuit" ||
+       Minim::gDefaultMinimizer == "Minuit2") )
+      Minim::gDefaultMinimAlgo = "Migrad";
 }
 void MinimizerOptions::SetDefaultErrorDef(double up) {
    // set the default error definition
@@ -76,10 +79,15 @@ void MinimizerOptions::SetDefaultPrintLevel(int level) {
 void MinimizerOptions::SetDefaultExtraOptions(const IOptions * extraoptions) {
    // set the pointer to default extra options
    delete Minim::gDefaultExtraOptions;
-   Minim::gDefaultExtraOptions = (extraoptions) ? extraoptions->Clone() : 0;
+   Minim::gDefaultExtraOptions = (extraoptions) ? extraoptions->Clone() : nullptr;
 }
 
-const std::string & MinimizerOptions::DefaultMinimizerAlgo() { return Minim::gDefaultMinimAlgo; }
+const std::string & MinimizerOptions::DefaultMinimizerAlgo() { 
+   if (Minim::gDefaultMinimAlgo == "Migrad" && Minim::gDefaultMinimizer != "Minuit" && 
+      Minim::gDefaultMinimizer != "Minuit2" )
+      Minim::gDefaultMinimAlgo = "";
+   return Minim::gDefaultMinimAlgo;
+}
 double MinimizerOptions::DefaultErrorDef()         { return Minim::gDefaultErrorDef; }
 double MinimizerOptions::DefaultTolerance()        { return Minim::gDefaultTolerance; }
 double MinimizerOptions::DefaultPrecision()        { return Minim::gDefaultPrecision; }
@@ -94,28 +102,32 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
    // return default minimizer
    // if is "" (no default is set) read from etc/system.rootrc
 
+
+   // The "default default" minimizer in case there is nothing set in .rootrc
+   static constexpr auto defaultDefaultMinimizer = "Minuit2";
+
 #ifdef MATH_NO_PLUGIN_MANAGER
    if (Minim::gDefaultMinimizer.size() != 0)
       return Minim::gDefaultMinimizer;
 
-   Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+   Minim::gDefaultMinimizer = defaultDefaultMinimizer;  // in case no PM exists
 
 #else
    R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // Another thread also waiting for the write lock might have
    // done the assignment
-   if (Minim::gDefaultMinimizer.size() != 0)
+   if (!Minim::gDefaultMinimizer.empty())
       return Minim::gDefaultMinimizer;
 
    // use value defined in etc/system.rootrc  (if not found Minuit is used)
    if (gEnv)
-      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
+      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter",defaultDefaultMinimizer);
 #endif
 
    return Minim::gDefaultMinimizer;
@@ -123,7 +135,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
 MinimizerOptions::MinimizerOptions():
-   fExtraOptions(0)
+   fExtraOptions(nullptr)
 {
    // constructor using  the default options
 
@@ -131,7 +143,7 @@ MinimizerOptions::MinimizerOptions():
 }
 
 
-MinimizerOptions::MinimizerOptions(const MinimizerOptions & opt) : fExtraOptions(0) {
+MinimizerOptions::MinimizerOptions(const MinimizerOptions & opt) : fExtraOptions(nullptr) {
    // copy constructor
    (*this) = opt;
 }
@@ -150,7 +162,7 @@ MinimizerOptions & MinimizerOptions::operator=(const MinimizerOptions & opt) {
    fAlgoType = opt.fAlgoType;
 
    delete fExtraOptions;
-   fExtraOptions = (opt.fExtraOptions) ? (opt.fExtraOptions)->Clone() : 0;
+   fExtraOptions = (opt.fExtraOptions) ? (opt.fExtraOptions)->Clone() : nullptr;
 
    return *this;
 }
@@ -173,16 +185,19 @@ void MinimizerOptions::ResetToDefaultOptions() {
    fAlgoType =  Minim::gDefaultMinimAlgo;
 
    // case of Fumili2 and TMinuit
-   if (fMinimType == "TMinuit") fMinimType = "Minuit";
+   if (fMinimType == "TMinuit") 
+      fMinimType = "Minuit";
    else if (fMinimType == "Fumili2") {
       fMinimType = "Minuit2";
       fAlgoType = "Fumili";
    }
    else if (fMinimType == "GSLMultiMin" && fAlgoType == "Migrad")
       fAlgoType = "BFGS2";
+   else if (fMinimType != "Minuit" && fMinimType != "Minuit2" && fAlgoType == "Migrad")
+      fAlgoType = "";
 
    delete fExtraOptions;
-   fExtraOptions = 0;
+   fExtraOptions = nullptr;
    // check if extra options exists (copy them if needed)
    if (Minim::gDefaultExtraOptions)
       fExtraOptions = Minim::gDefaultExtraOptions->Clone();
@@ -231,9 +246,13 @@ void MinimizerOptions::PrintDefault(const char * name, std::ostream & os) {
    MinimizerOptions tmp;
    tmp.Print(os);
    if (!tmp.ExtraOptions() ) {
-      IOptions * opt = FindDefault(name);
-      os << "Specific options for "  << name << std::endl;
-      if (opt) opt->Print(os);
+      if (name) {
+         IOptions * opt = FindDefault(name);
+         os << "Specific options for "  << name << std::endl;
+         if (opt) opt->Print(os);
+      } else { 
+         GenAlgoOptions::PrintAllDefault(os);
+      }
    }
 }
 
@@ -243,4 +262,3 @@ void MinimizerOptions::PrintDefault(const char * name, std::ostream & os) {
 } // end namespace Math
 
 } // end namespace ROOT
-

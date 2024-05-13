@@ -13,16 +13,6 @@
 #ifndef ROOT_TRootApplication
 #define ROOT_TRootApplication
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TRootApplication                                                     //
-//                                                                      //
-// This class create the ROOT native GUI version of the ROOT            //
-// application environment. This in contrast the Win32 version.         //
-// Once the native widgets work on Win32 this class can be folded into  //
-// the TApplication class (since all graphic will go via TVirtualX).    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TApplicationImp.h"
 
@@ -36,25 +26,25 @@ private:
    TGClient    *fClient;        // pointer to the client environment
    char        *fDisplay;       // display server to connect to
 
-   TRootApplication() { fClient = 0; fDisplay = 0; }
+   TRootApplication() { fClient = nullptr; fDisplay = nullptr; }
    void GetOptions(Int_t *argc, char **argv);
 
 public:
    TRootApplication(const char *appClassName, Int_t *argc, char **argv);
-   virtual ~TRootApplication();
+   ~TRootApplication() override;
 
-   TGClient     *Client() const { return fClient; }
+   TGClient *Client() const { return fClient; }
 
-   void    Show() { }
-   void    Hide() { }
-   void    Iconify() { }
-   Bool_t  IsCmdThread();
-   void    Init() { }
-   void    Open() { }
-   void    Raise() { }
-   void    Lower() { }
+   void    Show() override {}
+   void    Hide() override {}
+   void    Iconify() override {}
+   Bool_t  IsCmdThread() override;
+   void    Init() override {}
+   void    Open() override {}
+   void    Raise() override {}
+   void    Lower() override {}
 
-   ClassDef(TRootApplication,0)  // ROOT native GUI application environment
+   ClassDefOverride(TRootApplication,0)  // ROOT native GUI application environment
 };
 
 #endif

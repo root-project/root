@@ -37,7 +37,7 @@ public:
 
    /// Main interface to evaluate the test statistic on a dataset given the
    /// values for the Null Parameters Of Interest.
-   virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI) = 0;
+   virtual double Evaluate(RooAbsData& data, RooArgSet& nullPOI) = 0;
 
    virtual const TString GetVarName() const = 0;
 
@@ -45,7 +45,7 @@ public:
    virtual  bool PValueIsRightTail(void) const { return true; }
 
    /// return detailed output: for fits this can be pulls, processing time, ... The returned pointer will not loose validity until another call to Evaluate.
-   virtual const RooArgSet* GetDetailedOutput() const { return NULL; }
+   virtual const RooArgSet* GetDetailedOutput() const { return nullptr; }
 
    /// interface to set conditional observables. If a test statistics needs them it will re-implement this function
    virtual void SetConditionalObservables(const RooArgSet& ) {}
@@ -53,9 +53,9 @@ public:
    /// interface to set global observables. If a test statistics needs them it will re-implement this function
    virtual void SetGlobalObservables(const RooArgSet& ) {}
 
-   
+
 protected:
-   ClassDef(TestStatistic,1) /// Interface for a TestStatistic
+   ClassDef(TestStatistic,1) // Interface for a TestStatistic
 };
 
 } // end namespace RooStats

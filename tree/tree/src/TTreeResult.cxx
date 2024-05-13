@@ -33,8 +33,8 @@ TTreeResult::TTreeResult()
 {
    fColumnCount = 0;
    fRowCount    = 0;
-   fFields      = 0;
-   fResult      = 0;
+   fFields      = nullptr;
+   fResult      = nullptr;
    fNextRow     = 0;
 }
 
@@ -71,24 +71,24 @@ void TTreeResult::Close(Option_t *)
 
    fResult->Delete();
    delete fResult;
-   fResult   = 0;
+   fResult   = nullptr;
    fRowCount = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if result set is open and field index within range.
 
-Bool_t TTreeResult::IsValid(Int_t field)
+bool TTreeResult::IsValid(Int_t field)
 {
    if (!fResult) {
       Error("IsValid", "result set closed");
-      return kFALSE;
+      return false;
    }
    if (field < 0 || field >= GetFieldCount()) {
       Error("IsValid", "field index out of bounds");
-      return kFALSE;
+      return false;
    }
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ Int_t TTreeResult::GetFieldCount()
 const char *TTreeResult::GetFieldName(Int_t field)
 {
    if (!IsValid(field))
-      return 0;
+      return nullptr;
 
    return fFields[field].Data();
 }
@@ -123,11 +123,11 @@ TSQLRow *TTreeResult::Next()
 {
    if (!fResult) {
       Error("Next", "result set closed");
-      return 0;
+      return nullptr;
    }
 
    if (fNextRow >= fRowCount)
-      return 0;
+      return nullptr;
    else {
       TTreeRow *row = new TTreeRow((TTreeRow*)fResult->At(fNextRow));
       fNextRow++;

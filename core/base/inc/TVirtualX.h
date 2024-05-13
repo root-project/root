@@ -55,11 +55,11 @@ protected:
    EDrawMode fDrawMode;           //Drawing mode
 
 public:
-   TVirtualX(): fDrawMode() { }
+   TVirtualX(): fDrawMode() {}
    TVirtualX(const char *name, const char *title);
-   virtual ~TVirtualX() { }
+   virtual ~TVirtualX() {}
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display = nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
@@ -91,7 +91,7 @@ public:
    EDrawMode         GetDrawMode() { return fDrawMode; }
    virtual Int_t     GetDoubleBuffer(Int_t wid);
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
-   virtual const char *DisplayName(const char * = 0);
+   virtual const char *DisplayName(const char * = nullptr);
    virtual Handle_t  GetNativeEvent() const;
    virtual ULong_t   GetPixel(Color_t cindex);
    virtual void      GetPlanes(Int_t &nplanes);
@@ -105,10 +105,10 @@ public:
    virtual Float_t   GetTextMagnitude();
    virtual Window_t  GetWindowID(Int_t wid);
    virtual Bool_t    HasTTFonts() const;
-   virtual Int_t     InitWindow(ULong_t window);
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h);
-   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
-   virtual void      RemoveWindow(ULong_t qwid);
+   virtual Int_t     InitWindow(ULongptr_t window);
+   virtual Int_t     AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h);
+   virtual Int_t     AddPixmap(ULongptr_t pixid, UInt_t w, UInt_t h);
+   virtual void      RemoveWindow(ULongptr_t qwid);
    virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
    virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
    virtual void      QueryPointer(Int_t &ix, Int_t &iy);
@@ -128,23 +128,23 @@ public:
    virtual void      SetDoubleBufferOFF();
    virtual void      SetDoubleBufferON();
    virtual void      SetDrawMode(EDrawMode mode);
-   virtual void      SetFillColor(Color_t cindex);
-   virtual void      SetFillStyle(Style_t style);
-   virtual void      SetLineColor(Color_t cindex);
+           void      SetFillColor(Color_t cindex) override;
+           void      SetFillStyle(Style_t style) override;
+           void      SetLineColor(Color_t cindex) override;
    virtual void      SetLineType(Int_t n, Int_t *dash);
-   virtual void      SetLineStyle(Style_t linestyle);
-   virtual void      SetLineWidth(Width_t width);
-   virtual void      SetMarkerColor(Color_t cindex);
-   virtual void      SetMarkerSize(Float_t markersize);
-   virtual void      SetMarkerStyle(Style_t markerstyle);
+           void      SetLineStyle(Style_t linestyle) override;
+           void      SetLineWidth(Width_t width) override;
+           void      SetMarkerColor(Color_t cindex) override;
+           void      SetMarkerSize(Float_t markersize) override;
+           void      SetMarkerStyle(Style_t markerstyle) override;
    virtual void      SetOpacity(Int_t percent);
    virtual void      SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
-   virtual void      SetTextAlign(Short_t talign=11);
-   virtual void      SetTextColor(Color_t cindex);
+           void      SetTextAlign(Short_t talign=11) override;
+           void      SetTextColor(Color_t cindex) override;
    virtual Int_t     SetTextFont(char *fontname, ETextSetMode mode);
-   virtual void      SetTextFont(Font_t fontnumber);
+           void      SetTextFont(Font_t fontnumber) override;
    virtual void      SetTextMagnitude(Float_t mgn);
-   virtual void      SetTextSize(Float_t textsize);
+           void      SetTextSize(Float_t textsize) override;
    virtual void      Sync(Int_t mode);
    virtual void      UpdateWindow(Int_t mode);
    virtual void      Warp(Int_t ix, Int_t iy, Window_t id = 0);
@@ -167,7 +167,7 @@ public:
    virtual void         MoveResizeWindow(Window_t id, Int_t x, Int_t y, UInt_t w, UInt_t h);
    virtual void         ResizeWindow(Window_t id, UInt_t w, UInt_t h);
    virtual void         IconifyWindow(Window_t id);
-   virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
+   virtual Bool_t       NeedRedraw(ULongptr_t tgwindow, Bool_t force);
    virtual void         ReparentWindow(Window_t id, Window_t pid, Int_t x, Int_t y);
    virtual void         SetWindowBackground(Window_t id, ULong_t color);
    virtual void         SetWindowBackgroundPixmap(Window_t id, Pixmap_t pxm);
@@ -278,7 +278,7 @@ public:
                                        Bool_t del);
    virtual void         TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,Int_t src_y,
                                              Int_t &dest_x, Int_t &dest_y, Window_t &child);
-   virtual void         GetWindowSize(Drawable_t id, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   virtual void         GetWindowSize(Drawable_t id, Int_t &x, Int_t & overridey, UInt_t &w, UInt_t &h);
    virtual void         FillPolygon(Window_t id, GContext_t gc, Point_t *points, Int_t npnt);
    virtual void         QueryPointer(Window_t id, Window_t &rootw, Window_t &childw,
                                      Int_t &root_x, Int_t &root_y, Int_t &win_x,
@@ -331,13 +331,11 @@ public:
 
    static TVirtualX    *&Instance();
 
-   ClassDef(TVirtualX,0)  //ABC defining a generic interface to graphics system
+   ClassDefOverride(TVirtualX,0)  //ABC defining a generic interface to graphics system
 };
 
-#ifndef __CINT__
 #define gVirtualX (TVirtualX::Instance())
 R__EXTERN TVirtualX *(*gPtr2VirtualX)();
-#endif
 R__EXTERN TVirtualX  *gGXBatch;
 
 #endif

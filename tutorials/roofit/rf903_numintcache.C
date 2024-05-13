@@ -1,22 +1,19 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
+/// Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -63,10 +60,10 @@ void rf903_numintcache(Int_t mode = 0)
    // -----------------------------------------------------------------------------------
 
    // This is always slow (need to find maximum function value empirically in 3D space)
-   RooDataSet *d = w1->pdf("model")->generate(RooArgSet(*w1->var("x"), *w1->var("y"), *w1->var("z")), 1000);
+   std::unique_ptr<RooDataSet> d{w1->pdf("model")->generate({*w1->var("x"), *w1->var("y"), *w1->var("z")}, 1000)};
 
    // This is slow in mode 0, but fast in mode 1
-   w1->pdf("model")->fitTo(*d, Verbose(kTRUE), Timer(kTRUE));
+   w1->pdf("model")->fitTo(*d, Verbose(true), Timer(true), PrintLevel(-1));
 
    // Projection on x (always slow as 2D integral over Y,Z at fitted value of a is not cached)
    RooPlot *framex = w1->var("x")->frame(Title("Projection of 3D model on X"));
@@ -98,7 +95,7 @@ RooWorkspace *getWorkspace(Int_t mode)
       // Create empty workspace workspace
       w = new RooWorkspace("w", 1);
 
-      // Make a difficult to normalize  p.d.f. in 3 dimensions that is integrated numerically.
+      // Make a difficult to normalize  pdf in 3 dimensions that is integrated numerically.
       w->factory("EXPR::model('1/((x-a)*(x-a)+0.01)+1/((y-a)*(y-a)+0.01)+1/"
                  "((z-a)*(z-a)+0.01)',x[-1,1],y[-1,1],z[-1,1],a[-5,5])");
    }
@@ -113,7 +110,7 @@ RooWorkspace *getWorkspace(Int_t mode)
       // w->pdf("model")->setNormValueCaching(3) ;
       w->pdf("model")->setStringAttribute("CACHEPARMINT", "x:y:z");
 
-      // Evaluate p.d.f. once to trigger filling of cache
+      // Evaluate pdf once to trigger filling of cache
       RooArgSet normSet(*w->var("x"), *w->var("y"), *w->var("z"));
       w->pdf("model")->getVal(&normSet);
       w->writeToFile("rf903_numintcache.root");

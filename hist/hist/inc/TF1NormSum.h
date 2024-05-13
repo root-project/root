@@ -21,8 +21,8 @@ class TF1NormSum : public TF1AbsComposition {
 protected:
    unsigned int fNOfFunctions;                         ///< Number of functions to add
    Double_t     fScale;                                ///< Fixed Scale parameter to normalize function (e.g. bin width)
-   Double_t fXmin;                                     /// Minimal bound of range of NormSum
-   Double_t fXmax;                                     /// Maximal bound of range of NormSum
+   Double_t fXmin;                                     ///< Minimal bound of range of NormSum
+   Double_t fXmax;                                     ///< Maximal bound of range of NormSum
    std::vector<std::unique_ptr<TF1>> fFunctions;       ///< Vector of size fNOfFunctions containing TF1 functions
    std::vector < Double_t  > fCoeffs;                  ///< Vector of size afNOfFunctions containing coefficients in front of each function
    std::vector < Int_t     > fCstIndexes;              ///< Vector with size of fNOfFunctions containing the index of the constant parameter/ function (the removed ones)
@@ -44,20 +44,20 @@ public:
 
    TF1NormSum &operator=(const TF1NormSum &rhs);
 
-   virtual ~TF1NormSum() {}
+   ~TF1NormSum() override {}
 
-   double operator()(const Double_t *x, const Double_t *p);
+   double operator()(const Double_t *x, const Double_t *p) override;
 
    std::vector<double> GetParameters() const;
 
    void        SetScale(Double_t scale) { fScale = scale; };
 
-   void SetParameters(const Double_t *params);
+   void SetParameters(const Double_t *params) override;
 
    void        SetParameters(Double_t p0, Double_t p1, Double_t p2=0., Double_t p3=0., Double_t p4=0.,
                                    Double_t p5=0., Double_t p6=0., Double_t p7=0., Double_t p8=0., Double_t p9=0., Double_t p10=0.);
 
-   void SetRange(Double_t a, Double_t b);
+   void SetRange(Double_t a, Double_t b) override;
 
    Int_t       GetNpar() const;
 
@@ -71,10 +71,10 @@ public:
 
    void GetRange(Double_t &a, Double_t &b) const;
 
-   void Update();
+   void Update() override;
 
-   void Copy(TObject &obj) const;
+   void Copy(TObject &obj) const override;
 
-   ClassDef(TF1NormSum, 1);
+   ClassDefOverride(TF1NormSum, 1);
 };
 #endif /* defined(ROOT_TF1NormSum__) */

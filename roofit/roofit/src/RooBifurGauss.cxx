@@ -13,174 +13,99 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#include "RooFit.h"
 
 /** \class RooBifurGauss
     \ingroup Roofit
 
 Bifurcated Gaussian p.d.f with different widths on left and right
-side of maximum value
+side of maximum value.
 **/
 
-#include "RooBifurGauss.h"
+#include <RooBifurGauss.h>
 
-#include "RooAbsReal.h"
-#include "RooMath.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
+#include "RooBatchCompute.h"
 
-#include "TMath.h"
-
-#include <cmath>
-
-using namespace std;
+#include <RooFit/Detail/AnalyticalIntegrals.h>
+#include <RooFit/Detail/EvaluateFuncs.h>
 
 ClassImp(RooBifurGauss);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBifurGauss::RooBifurGauss(const char *name, const char *title,
-              RooAbsReal& _x, RooAbsReal& _mean,
-              RooAbsReal& _sigmaL, RooAbsReal& _sigmaR) :
-  RooAbsPdf(name, title),
-  x     ("x"     , "Dependent"  , this, _x),
-  mean  ("mean"  , "Mean"       , this, _mean),
-  sigmaL("sigmaL", "Left Sigma" , this, _sigmaL),
-  sigmaR("sigmaR", "Right Sigma", this, _sigmaR)
+RooBifurGauss::RooBifurGauss(const char *name, const char *title, RooAbsReal &_x, RooAbsReal &_mean,
+                             RooAbsReal &_sigmaL, RooAbsReal &_sigmaR)
+   : RooAbsPdf(name, title),
+     x("x", "Dependent", this, _x),
+     mean("mean", "Mean", this, _mean),
+     sigmaL("sigmaL", "Left Sigma", this, _sigmaL),
+     sigmaR("sigmaR", "Right Sigma", this, _sigmaR)
 
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBifurGauss::RooBifurGauss(const RooBifurGauss& other, const char* name) :
-  RooAbsPdf(other,name), x("x",this,other.x), mean("mean",this,other.mean),
-  sigmaL("sigmaL",this,other.sigmaL), sigmaR("sigmaR", this, other.sigmaR)
+RooBifurGauss::RooBifurGauss(const RooBifurGauss &other, const char *name)
+   : RooAbsPdf(other, name),
+     x("x", this, other.x),
+     mean("mean", this, other.mean),
+     sigmaL("sigmaL", this, other.sigmaL),
+     sigmaR("sigmaR", this, other.sigmaR)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBifurGauss::evaluate() const {
-  Double_t arg = x - mean;
-
-  Double_t coef(0.0);
-
-  if (arg < 0.0){
-    if (TMath::Abs(sigmaL) > 1e-30) {
-      coef = -0.5/(sigmaL*sigmaL);
-    }
-  } else {
-    if (TMath::Abs(sigmaR) > 1e-30) {
-      coef = -0.5/(sigmaR*sigmaR);
-    }
-  }
-
-  return exp(coef*arg*arg);
+double RooBifurGauss::evaluate() const
+{
+   return RooFit::Detail::EvaluateFuncs::bifurGaussEvaluate(x, mean, sigmaL, sigmaR);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-namespace {
-//Author: Emmanouil Michalainas, CERN 20 AUGUST 2019  
-
-template<class Tx, class Tm, class Tsl, class Tsr>
-void compute(  size_t batchSize,
-               double * __restrict output,
-               Tx X, Tm M, Tsl SL, Tsr SR)
+void RooBifurGauss::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-  for (size_t i=0; i<batchSize; i++) {
-    const double arg = X[i]-M[i];
-    output[i] = arg / ((arg < 0.0)*SL[i] + (arg >= 0.0)*SR[i]);
-  }
-  
-  for (size_t i=0; i<batchSize; i++) {
-    if (X[i]-M[i]>1e-30 || X[i]-M[i]<-1e-30) {
-      output[i] = _rf_fast_exp(-0.5*output[i]*output[i]);
-    }
-    else {
-      output[i] = 1.0;
-    }
-  }
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::bifurGaussEvaluate", x, mean, sigmaL, sigmaR));
 }
-};
-
-RooSpan<double> RooBifurGauss::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-
-  EvaluateInfo info = getInfo( {&x, &mean, &sigmaL, &sigmaR}, begin, batchSize );
-  if (info.nBatches == 0) {
-    return {};
-  }
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
-  auto xData = x.getValBatch(begin, info.size);
-
-  if (info.nBatches==1 && !xData.empty()) {
-    compute(info.size, output.data(), xData.data(),
-    BracketAdapter<double> (mean),
-    BracketAdapter<double> (sigmaL),
-    BracketAdapter<double> (sigmaR));
-  }
-  else {
-    compute(info.size, output.data(),
-    BracketAdapterWithMask (x,x.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (mean,mean.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (sigmaL,sigmaL.getValBatch(begin,info.size)),
-    BracketAdapterWithMask (sigmaR,sigmaR.getValBatch(begin,info.size)));
-  }
-  return output;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
-
-Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+/// Compute multiple values of BifurGauss distribution.
+void RooBifurGauss::doEval(RooFit::EvalContext & ctx) const
 {
-  if (matchArgs(allVars,analVars,x)) return 1 ;
-  return 0 ;
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::BifurGauss, ctx.output(),
+          {ctx.at(x),ctx.at(mean),ctx.at(sigmaL),ctx.at(sigmaR)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBifurGauss::analyticalIntegral(Int_t code, const char* rangeName) const
+Int_t RooBifurGauss::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-  switch(code) {
-  case 1:
-    {
-      static Double_t root2 = sqrt(2.) ;
-      static Double_t rootPiBy2 = sqrt(atan2(0.0,-1.0)/2.0);
+   if (matchArgs(allVars, analVars, x))
+      return 1;
+   if (matchArgs(allVars, analVars, mean))
+      return 2;
+   return 0;
+}
 
-//       Double_t coefL(0.0), coefR(0.0);
-//       if (TMath::Abs(sigmaL) > 1e-30) {
-//    coefL = -0.5/(sigmaL*sigmaL);
-//       }
+////////////////////////////////////////////////////////////////////////////////
 
-//       if (TMath::Abs(sigmaR) > 1e-30) {
-//    coefR = -0.5/(sigmaR*sigmaR);
-//       }
+double RooBifurGauss::analyticalIntegral(Int_t code, const char *rangeName) const
+{
+   auto &constant = code == 1 ? mean : x;
+   auto &integrand = code == 1 ? x : mean;
 
-      Double_t xscaleL = root2*sigmaL;
-      Double_t xscaleR = root2*sigmaR;
+   return RooFit::Detail::AnalyticalIntegrals::bifurGaussIntegral(integrand.min(rangeName), integrand.max(rangeName),
+                                                                  constant, sigmaL, sigmaR);
+}
 
-      Double_t integral = 0.0;
-      if(x.max(rangeName) < mean)
-      {
-   integral = sigmaL * ( RooMath::erf((x.max(rangeName) - mean)/xscaleL) - RooMath::erf((x.min(rangeName) - mean)/xscaleL) );
-      }
-      else if (x.min(rangeName) > mean)
-      {
-   integral = sigmaR * ( RooMath::erf((x.max(rangeName) - mean)/xscaleR) - RooMath::erf((x.min(rangeName) - mean)/xscaleR) );
-      }
-      else
-      {
-   integral = sigmaR*RooMath::erf((x.max(rangeName) - mean)/xscaleR) - sigmaL*RooMath::erf((x.min(rangeName) - mean)/xscaleL);
-      }
-      //      return rootPiBy2*(sigmaR*RooMath::erf((x.max(rangeName) - mean)/xscaleR) -
-      //         sigmaL*RooMath::erf((x.min(rangeName) - mean)/xscaleL));
-      return integral*rootPiBy2;
-    }
-  }
+////////////////////////////////////////////////////////////////////////////////
 
-  assert(0) ;
-  return 0 ; // to prevent compiler warnings
+std::string RooBifurGauss::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                       RooFit::Detail::CodeSquashContext &ctx) const
+{
+   auto &constant = code == 1 ? mean : x;
+   auto &integrand = code == 1 ? x : mean;
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::bifurGaussIntegral", integrand.min(rangeName),
+                        integrand.max(rangeName), constant, sigmaL, sigmaR);
 }

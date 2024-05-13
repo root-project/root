@@ -18,7 +18,7 @@
 \class RooWorkspace
 \ingroup Roofitcore
 
-The RooWorkspace is a persistable container for RooFit projects. A workspace
+Persistable container for RooFit projects. A workspace
 can contain and own variables, p.d.f.s, functions and datasets. All objects
 that live in the workspace are owned by the workspace. The `import()` method
 enforces consistency of objects upon insertion into the workspace (e.g. no
@@ -45,35 +45,41 @@ ulimit -s
 and try reading again.
 **/
 
-#include "RooWorkspace.h"
-#include "RooHelpers.h"
-#include "RooFit.h"
-#include "RooWorkspaceHandle.h"
-#include "RooAbsPdf.h"
-#include "RooRealVar.h"
-#include "RooCategory.h"
-#include "RooAbsData.h"
-#include "RooCmdConfig.h"
-#include "RooMsgService.h"
-#include "RooConstVar.h"
-#include "RooResolutionModel.h"
-#include "RooPlot.h"
-#include "RooRandom.h"
+#include <RooWorkspace.h>
+
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsStudy.h>
+#include <RooCategory.h>
+#include <RooCmdConfig.h>
+#include <RooConstVar.h>
+#include <RooFactoryWSTool.h>
+#include <RooLinkedListIter.h>
+#include <RooMsgService.h>
+#include <RooPlot.h>
+#include <RooRandom.h>
+#include <RooRealVar.h>
+#include <RooResolutionModel.h>
+#include <RooTObjWrap.h>
+#include <RooWorkspaceHandle.h>
+
 #include "TBuffer.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
 #include "TSystem.h"
 #include "TRegexp.h"
-#include "RooFactoryWSTool.h"
-#include "RooAbsStudy.h"
-#include "RooTObjWrap.h"
-#include "RooAbsOptTestStatistic.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
 #include "TClass.h"
 #include "strlcpy.h"
+
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+#include "RooAbsOptTestStatistic.h"
+#endif
+
+#include "ROOT/StringUtils.hxx"
 
 #include <map>
 #include <sstream>
@@ -82,7 +88,18 @@ and try reading again.
 #include <fstream>
 #include <cstring>
 
-using namespace std;
+namespace {
+
+// Infer from a RooArgSet name whether this set is used internally by
+// RooWorkspace to cache things.
+bool isCacheSet(std::string const& setName) {
+   // Check if the setName starts with CACHE_.
+   return setName.rfind("CACHE_", 0) == 0;
+}
+
+} // namespace
+
+using std::string, std::list, std::cout, std::endl, std::map, std::vector, std::ifstream, std::ofstream, std::fstream, std::make_unique;
 
 ClassImp(RooWorkspace);
 
@@ -97,7 +114,7 @@ ClassImp(RooWorkspace::WSDir);
 list<string> RooWorkspace::_classDeclDirList ;
 list<string> RooWorkspace::_classImplDirList ;
 string RooWorkspace::_classFileExportDir = ".wscode.%s.%s" ;
-Bool_t RooWorkspace::_autoClass = kFALSE ;
+bool RooWorkspace::_autoClass = false ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,11 +151,11 @@ void RooWorkspace::setClassFileExportDir(const char* dir)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If flag is true, source code of classes not the the ROOT distribution
+/// If flag is true, source code of classes not the ROOT distribution
 /// is automatically imported if on object of such a class is imported
 /// in the workspace
 
-void RooWorkspace::autoImportClassCode(Bool_t flag)
+void RooWorkspace::autoImportClassCode(bool flag)
 {
   _autoClass = flag ;
 }
@@ -148,7 +165,7 @@ void RooWorkspace::autoImportClassCode(Bool_t flag)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace() : _classes(this)
 {
 }
 
@@ -158,18 +175,17 @@ RooWorkspace::RooWorkspace() : _classes(this), _dir(nullptr), _factory(nullptr),
 /// Construct empty workspace with given name and title
 
 RooWorkspace::RooWorkspace(const char* name, const char* title) :
-  TNamed(name,title?title:name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(name,title?title:name), _classes(this)
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Construct empty workspace with given name and option to export reference to
+/// all workspace contents to a CINT namespace with the same name.
 
-RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
-  TNamed(name,name), _classes(this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
+RooWorkspace::RooWorkspace(const char* name, bool /*doCINTExport*/)  :
+  TNamed(name,name), _classes(this)
 {
-  // Construct empty workspace with given name and option to export reference to all workspace contents to a CINT namespace with the same name
-  if (doCINTExport) {
-    exportToCint(name) ;
-  }
 }
 
 
@@ -177,41 +193,31 @@ RooWorkspace::RooWorkspace(const char* name, Bool_t doCINTExport)  :
 /// Workspace copy constructor
 
 RooWorkspace::RooWorkspace(const RooWorkspace& other) :
-  TNamed(other), _uuid(other._uuid), _classes(other._classes,this), _dir(nullptr), _factory(nullptr), _doExport(kFALSE), _openTrans(kFALSE)
+  TNamed(other), _uuid(other._uuid), _classes(other._classes,this)
 {
   // Copy owned nodes
-  other._allOwnedNodes.snapshot(_allOwnedNodes,kTRUE) ;
+  other._allOwnedNodes.snapshot(_allOwnedNodes,true) ;
 
   // Copy datasets
-  TIterator* iter = other._dataList.MakeIterator() ;
-  TObject* data2 ;
-  while((data2=iter->Next())) {
-    _dataList.Add(data2->Clone()) ;
-  }
-  delete iter ;
+  for(TObject *data2 : other._dataList) _dataList.Add(data2->Clone());
 
   // Copy snapshots
-  TIterator* iter2 = other._snapshots.MakeIterator() ;
-  RooArgSet* snap ;
-  while((snap=(RooArgSet*)iter2->Next())) {
-    RooArgSet* snapClone = (RooArgSet*) snap->snapshot() ;
+  for(auto * snap : static_range_cast<RooArgSet*>(other._snapshots)) {
+    auto snapClone = new RooArgSet;
+    snap->snapshot(*snapClone);
     snapClone->setName(snap->GetName()) ;
     _snapshots.Add(snapClone) ;
   }
-  delete iter2 ;
 
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
     // Make RooArgSet with equivalent content of this workspace
-    RooArgSet* tmp = (RooArgSet*) _allOwnedNodes.selectCommon(iter3->second) ;
+    std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(_allOwnedNodes.selectCommon(iter3->second))};
     _namedSets[iter3->first].add(*tmp) ;
-    delete tmp ;
   }
 
   // Copy generic objects
-  TIterator* iter4 = other._genObjects.MakeIterator() ;
-  TObject* gobj ;
-  while((gobj=iter4->Next())) {
+  for(TObject * gobj : other._genObjects) {
     TObject *theClone = gobj->Clone();
 
     auto handle = dynamic_cast<RooWorkspaceHandle*>(theClone);
@@ -221,10 +227,18 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
     _genObjects.Add(theClone);
   }
-  delete iter4 ;
-
 }
 
+
+/// TObject::Clone() needs to be overridden.
+TObject *RooWorkspace::Clone(const char *newname) const
+{
+   auto out = new RooWorkspace{*this};
+   if(newname && std::string(newname) != GetName()) {
+      out->SetName(newname);
+   }
+   return out;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -232,11 +246,6 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 
 RooWorkspace::~RooWorkspace()
 {
-  // Delete references to variables that were declared in CINT
-  if (_doExport) {
-    unExport() ;
-  }
-
   // Delete contents
   _dataList.Delete() ;
   if (_dir) {
@@ -247,6 +256,11 @@ RooWorkspace::~RooWorkspace()
   // WVE named sets too?
 
   _genObjects.Delete() ;
+
+   _embeddedDataList.Delete();
+   _views.Delete();
+   _studyMods.Delete();
+
 }
 
 
@@ -254,13 +268,13 @@ RooWorkspace::~RooWorkspace()
 /// Import a RooAbsArg or RooAbsData set from a workspace in a file. Filespec should be constructed as "filename:wspacename:objectname"
 /// The arguments will be passed to the relevant import() or import(RooAbsData&, ...) import calls
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
-Bool_t RooWorkspace::import(const char* fileSpec,
-			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
-			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
-			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
+bool RooWorkspace::import(const char* fileSpec,
+             const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+             const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
+             const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 {
   // Parse file/workspace/objectname specification
-  std::vector<std::string> tokens = RooHelpers::tokenise(fileSpec, ":");
+  std::vector<std::string> tokens = ROOT::Split(fileSpec, ":");
 
   // Check that parsing was successful
   if (tokens.size() != 3) {
@@ -270,7 +284,7 @@ Bool_t RooWorkspace::import(const char* fileSpec,
     }
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR in file specification, expecting 'filename:wsname:objname', but '" << fileSpec << "' given."
         << "\nTokens read are:" << stream.str() << endl;
-    return kTRUE ;
+    return true ;
   }
 
   const std::string& filename = tokens[0];
@@ -278,37 +292,35 @@ Bool_t RooWorkspace::import(const char* fileSpec,
   const std::string& objname = tokens[2];
 
   // Check that file can be opened
-  TFile* f = TFile::Open(filename.c_str()) ;
-  if (f==0) {
+  std::unique_ptr<TFile> f{TFile::Open(filename.c_str())};
+  if (f==nullptr) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR opening file " << filename << endl ;
-    return 0 ;
+    return false;
   }
 
   // That that file contains workspace
   RooWorkspace* w = dynamic_cast<RooWorkspace*>(f->Get(wsname.c_str())) ;
-  if (w==0) {
+  if (w==nullptr) {
     coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No object named " << wsname << " in file " << filename
-			  << " or object is not a RooWorkspace" << endl ;
-    return 0 ;
+           << " or object is not a RooWorkspace" << endl ;
+    return false;
   }
 
   // Check that workspace contains object and forward to appropriate import method
   RooAbsArg* warg = w->arg(objname.c_str()) ;
   if (warg) {
-    Bool_t ret = import(*warg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
-    delete f ;
+    bool ret = import(*warg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     return ret ;
   }
   RooAbsData* wdata = w->data(objname.c_str()) ;
   if (wdata) {
-    Bool_t ret = import(*wdata,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
-    delete f ;
+    bool ret = import(*wdata,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
     return ret ;
   }
 
   coutE(InputArguments) << "RooWorkspace(" << GetName() << ") ERROR: No RooAbsArg or RooAbsData object named " << objname
-			<< " in workspace " << wsname << " in file " << filename << endl ;
-  return kTRUE ;
+         << " in workspace " << wsname << " in file " << filename << endl ;
+  return true ;
 }
 
 
@@ -316,15 +328,13 @@ Bool_t RooWorkspace::import(const char* fileSpec,
 /// Import multiple RooAbsArg objects into workspace. For details on arguments see documentation
 /// of import() method for single RooAbsArg
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
-Bool_t RooWorkspace::import(const RooArgSet& args,
-			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
-			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
-			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
+bool RooWorkspace::import(const RooArgSet& args,
+             const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+             const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
+             const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 {
-  unique_ptr<TIterator> iter(args.createIterator()) ;
-  RooAbsArg* oneArg ;
-  Bool_t ret(kFALSE) ;
-  while((oneArg=(RooAbsArg*)iter->Next())) {
+  bool ret(false) ;
+  for(RooAbsArg * oneArg : args) {
     ret |= import(*oneArg,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9) ;
   }
   return ret ;
@@ -358,7 +368,7 @@ Bool_t RooWorkspace::import(const RooArgSet& args,
 ///  as often as necessary to rename multiple variables. Alternatively, a single RenameVariable argument can be given with
 ///  two comma separated lists.
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
-Bool_t RooWorkspace::import(const RooAbsArg& inArg,
+bool RooWorkspace::import(const RooAbsArg& inArg,
     const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
     const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
     const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
@@ -375,15 +385,15 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   args.Add((TObject*)&arg9) ;
 
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
+  RooCmdConfig pc("RooWorkspace::import(" + std::string(GetName()) + ")");
 
   pc.defineString("conflictSuffix","RenameConflictNodes",0) ;
   pc.defineInt("renameConflictOrig","RenameConflictNodes",0,0) ;
   pc.defineString("allSuffix","RenameAllNodes",0) ;
   pc.defineString("allVarsSuffix","RenameAllVariables",0) ;
   pc.defineString("allVarsExcept","RenameAllVariables",1) ;
-  pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
-  pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
+  pc.defineString("varChangeIn","RenameVar",0,"",true) ;
+  pc.defineString("varChangeOut","RenameVar",1,"",true) ;
   pc.defineString("factoryTag","FactoryTag",0) ;
   pc.defineInt("useExistingNodes","RecycleConflictNodes",0,0) ;
   pc.defineInt("silence","Silence",0,0) ;
@@ -395,8 +405,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
   // Process and check varargs
   pc.process(args) ;
-  if (!pc.ok(kTRUE)) {
-    return kTRUE ;
+  if (!pc.ok(true)) {
+    return true ;
   }
 
   // Decode renaming logic into suffix string and boolean for conflictOnly mode
@@ -406,26 +416,26 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   const char* exceptVars = pc.getString("allVarsExcept") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
-  Bool_t renameConflictOrig = pc.getInt("renameConflictOrig") ;
+  bool renameConflictOrig = pc.getInt("renameConflictOrig") ;
   Int_t useExistingNodes = pc.getInt("useExistingNodes") ;
   Int_t silence = pc.getInt("silence") ;
   Int_t noRecursion = pc.getInt("noRecursion") ;
 
 
   // Turn zero length strings into null pointers
-  if (suffixC && strlen(suffixC)==0) suffixC = 0 ;
-  if (suffixA && strlen(suffixA)==0) suffixA = 0 ;
+  if (suffixC && strlen(suffixC)==0) suffixC = nullptr ;
+  if (suffixA && strlen(suffixA)==0) suffixA = nullptr ;
 
-  Bool_t conflictOnly = suffixA ? kFALSE : kTRUE ;
+  bool conflictOnly = suffixA ? false : true ;
   const char* suffix = suffixA ? suffixA : suffixC ;
 
   // Process any change in variable names
-  map<string,string> varMap ;
+  std::map<string,string> varMap ;
   if (strlen(varChangeIn)>0) {
 
     // Parse comma separated lists into map<string,string>
-    const std::vector<std::string> tokIn = RooHelpers::tokenise(varChangeIn, ", ");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ", ");
+    const std::vector<std::string> tokIn = ROOT::Split(varChangeIn, ", ", /*skipEmpty= */ true);
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ", ", /*skipEmpty= */ true);
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       varMap.insert(std::make_pair(tokIn[i], tokOut[i]));
     }
@@ -437,18 +447,17 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   // First convert exception list if provided
   std::set<string> exceptVarNames ;
   if (exceptVars && strlen(exceptVars)) {
-    const std::vector<std::string> toks = RooHelpers::tokenise(exceptVars, ", ");
+    const std::vector<std::string> toks = ROOT::Split(exceptVars, ", ", /*skipEmpty= */ true);
     exceptVarNames.insert(toks.begin(), toks.end());
   }
 
-  if (suffixV != 0 && strlen(suffixV)>0) {
-    RooArgSet* vars = inArg.getVariables() ;
+  if (suffixV != nullptr && strlen(suffixV)>0) {
+    std::unique_ptr<RooArgSet> vars{inArg.getVariables()};
     for (const auto v : *vars) {
       if (exceptVarNames.find(v->GetName())==exceptVarNames.end()) {
         varMap[v->GetName()] = Form("%s_%s",v->GetName(),suffixV) ;
       }
     }
-    delete vars ;
   }
 
   // Scan for overlaps with current contents
@@ -456,26 +465,28 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
   // Check for factory specification match
   const char* tagIn = inArg.getStringAttribute("factory_tag") ;
-  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : 0 ;
-  Bool_t factoryMatch = (tagIn && tagWs && !strcmp(tagIn,tagWs)) ;
+  const char* tagWs = wsarg ? wsarg->getStringAttribute("factory_tag") : nullptr ;
+  bool factoryMatch = (tagIn && tagWs && !strcmp(tagIn,tagWs)) ;
   if (factoryMatch) {
     ((RooAbsArg&)inArg).setAttribute("RooWorkspace::Recycle") ;
   }
 
-  if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && varMap[inArg.GetName()]!="")) {
+  if (!suffix && wsarg && !useExistingNodes && !(inArg.isFundamental() && !varMap[inArg.GetName()].empty())) {
     if (!factoryMatch) {
       if (wsarg!=&inArg) {
         coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR importing object named " << inArg.GetName()
-			          << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
-        return kTRUE ;
+                   << ": another instance with same name already in the workspace and no conflict resolution protocol specified" << endl ;
+        return true ;
       } else {
         if (!silence) {
           coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Object " << inArg.GetName() << " is already in workspace!" << endl ;
         }
-        return kTRUE ;
+        return true ;
       }
     } else {
-      coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      if(!silence) {
+        coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") Recycling existing object " << inArg.GetName() << " created with identical factory specification" << endl ;
+      }
     }
   }
 
@@ -496,17 +507,17 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Terminate here if there are conflicts and no resolution protocol
-  if (conflictNodes.getSize()>0 && !suffix && !useExistingNodes) {
+  if (!conflictNodes.empty() && !suffix && !useExistingNodes) {
     coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) "
         << conflictNodes << " already in the workspace and no conflict resolution protocol specified" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Now create a working copy of the incoming object tree
-  RooArgSet* cloneSet = new RooArgSet();
-  cloneSet->useHashMapForFind(true); // Accelerate finding
-  RooArgSet(inArg).snapshot(*cloneSet, !noRecursion);
-  RooAbsArg* cloneTop = cloneSet->find(inArg.GetName()) ;
+  RooArgSet cloneSet;
+  cloneSet.useHashMapForFind(true); // Accelerate finding
+  RooArgSet(inArg).snapshot(cloneSet, !noRecursion);
+  RooAbsArg* cloneTop = cloneSet.find(inArg.GetName()) ;
 
   // Mark all nodes for renaming if we are not in conflictOnly mode
   if (!conflictOnly) {
@@ -519,15 +530,14 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (!renameConflictOrig) {
     // Mark all nodes to be imported for renaming following conflict resolution protocol
     for (const auto cnode : conflictNodes) {
-      RooAbsArg* cnode2 = cloneSet->find(cnode->GetName()) ;
+      RooAbsArg* cnode2 = cloneSet.find(cnode->GetName()) ;
       string origName = cnode2->GetName() ;
       cnode2->SetName(Form("%s_%s",cnode2->GetName(),suffix)) ;
       cnode2->SetTitle(Form("%s (%s)",cnode2->GetTitle(),suffix)) ;
       string tag = Form("ORIGNAME:%s",origName.c_str()) ;
       cnode2->setAttribute(tag.c_str()) ;
       if (!cnode2->getStringAttribute("origName")) {
-        string tag2 = Form("%s",origName.c_str()) ;
-        cnode2->setStringAttribute("origName",tag2.c_str()) ;
+        cnode2->setStringAttribute("origName",origName.c_str());
       }
 
       // Save name of new top level node for later use
@@ -537,8 +547,8 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 
       if (!silence) {
         coutI(ObjectHandling) << "RooWorkspace::import(" << GetName()
-			          << ") Resolving name conflict in workspace by changing name of imported node  "
-			          << origName << " to " << cnode2->GetName() << endl ;
+                   << ") Resolving name conflict in workspace by changing name of imported node  "
+                   << origName << " to " << cnode2->GetName() << endl ;
       }
     }
   } else {
@@ -570,11 +580,11 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
         }
         if (!silence) {
           coutI(ObjectHandling) << "RooWorkspace::import(" << GetName()
-				    << ") Resolving name conflict in workspace by changing name of original node "
-				    << origName << " to " << wsnode->GetName() << endl ;
+                << ") Resolving name conflict in workspace by changing name of original node "
+                << origName << " to " << wsnode->GetName() << endl ;
         }
       } else {
-        coutW(ObjectHandling) << "RooWorkspce::import(" << GetName() << ") Internal error: expected to find existing node "
+        coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") Internal error: expected to find existing node "
             << origName << " to be renamed, but didn't find it..." << endl ;
       }
 
@@ -585,7 +595,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   if (strlen(varChangeIn)>0 || (suffixV && strlen(suffixV)>0)) {
 
     // Process all changes in variable names
-    for (const auto cnode : *cloneSet) {
+    for (const auto cnode : cloneSet) {
 
       if (varMap.find(cnode->GetName())!=varMap.end()) {
         string origName = cnode->GetName() ;
@@ -593,8 +603,7 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
         string tag = Form("ORIGNAME:%s",origName.c_str()) ;
         cnode->setAttribute(tag.c_str()) ;
         if (!cnode->getStringAttribute("origName")) {
-          string tag2 = Form("%s",origName.c_str()) ;
-          cnode->setStringAttribute("origName",tag2.c_str()) ;
+          cnode->setStringAttribute("origName",origName.c_str()) ;
         }
 
         if (!silence) {
@@ -611,10 +620,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Now clone again with renaming effective
-  RooArgSet* cloneSet2 = new RooArgSet();
-  cloneSet2->useHashMapForFind(true); // Faster finding
-  RooArgSet(*cloneTop).snapshot(*cloneSet2, !noRecursion);
-  RooAbsArg* cloneTop2 = cloneSet2->find(topName2.c_str()) ;
+  RooArgSet cloneSet2;
+  cloneSet2.useHashMapForFind(true); // Faster finding
+  RooArgSet(*cloneTop).snapshot(cloneSet2, !noRecursion);
+  RooAbsArg* cloneTop2 = cloneSet2.find(topName2.c_str()) ;
 
   // Make final check list of conflicting nodes
   RooArgSet conflictNodes2 ;
@@ -626,35 +635,35 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
   }
 
   // Terminate here if there are conflicts and no resolution protocol
-  if (conflictNodes2.getSize()) {
+  if (!conflictNodes2.empty()) {
     coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << inArg.GetName() << ": component(s) "
         << conflictNodes2 << " cause naming conflict after conflict resolution protocol was executed" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Perform any auxiliary imports at this point
-  for (const auto node : *cloneSet2) {
+  for (const auto node : cloneSet2) {
     if (node->importWorkspaceHook(*this)) {
       coutE(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") ERROR object named " << node->GetName()
-			        << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
-      return kTRUE ;
+                 << " has an error in importing in one or more of its auxiliary objects, aborting" << endl ;
+      return true ;
     }
   }
 
   RooArgSet recycledNodes ;
   RooArgSet nodesToBeDeleted ;
-  for (const auto node : *cloneSet2) {
+  for (const auto node : cloneSet2) {
     if (_autoClass) {
       if (!_classes.autoImportClass(node->IsA())) {
         coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
-            << node->IsA()->GetName() << "::" << node->GetName() << ", reading of workspace will require external definition of class" << endl ;
+            << node->ClassName() << "::" << node->GetName() << ", reading of workspace will require external definition of class" << endl ;
       }
     }
 
     // Point expensiveObjectCache to copy in this workspace
     RooExpensiveObjectCache& oldCache = node->expensiveObjectCache() ;
     node->setExpensiveObjectCache(_eocache) ;
-    _eocache.importCacheObjects(oldCache,node->GetName(),kTRUE) ;
+    _eocache.importCacheObjects(oldCache,node->GetName(),true) ;
 
     // Check if node is already in workspace (can only happen for variables or identical instances, unless RecycleConflictNodes is specified)
     RooAbsArg* wsnode = _allOwnedNodes.find(node->GetName()) ;
@@ -662,63 +671,51 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
     if (wsnode) {
       // Do not import node, add not to list of nodes that require reconnection
       if (!silence && useExistingNodes) {
-        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->IsA()->GetName()
-			          << "::" << node->GetName() << " for import of " << cloneTop2->IsA()->GetName() << "::"
-			          << cloneTop2->GetName() << endl ;
+        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") using existing copy of " << node->ClassName()
+                   << "::" << node->GetName() << " for import of " << cloneTop2->ClassName() << "::"
+                   << cloneTop2->GetName() << endl ;
       }
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
 
       // Delete clone of incoming node
-      nodesToBeDeleted.addOwned(*node) ;
+      nodesToBeDeleted.addOwned(std::unique_ptr<RooAbsArg>{node});
 
       //cout << "WV: recycling existing node " << existingNode << " = " << existingNode->GetName() << " for imported node " << node << endl ;
 
     } else {
       // Import node
       if (!silence) {
-        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->IsA()->GetName() << "::"
+        coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->ClassName() << "::"
             << node->GetName() << endl ;
       }
-      _allOwnedNodes.addOwned(*node) ;
+      _allOwnedNodes.addOwned(std::unique_ptr<RooAbsArg>{node});
+      node->setWorkspace(*this);
       if (_openTrans) {
         _sandboxNodes.add(*node) ;
       } else {
         if (_dir && node->IsA() != RooConstVar::Class()) {
           _dir->InternalAppend(node) ;
         }
-        if (_doExport && node->IsA() != RooConstVar::Class()) {
-          exportObj(node) ;
-        }
       }
     }
   }
 
-  // Release working copy
-  // no need to do a safe list erase since it was generated from a snapshot
-  // just take ownership and delte elements by hand
-  cloneSet->releaseOwnership();
-  for (auto cloneNode : *cloneSet){
-    delete cloneNode;
-  }
-  delete cloneSet ;
-
   // Reconnect any nodes that need to be
-  if (recycledNodes.getSize()>0) {
-    for (const auto node : *cloneSet2) {
+  if (!recycledNodes.empty()) {
+    for (const auto node : cloneSet2) {
       node->redirectServers(recycledNodes) ;
     }
   }
 
-  cloneSet2->releaseOwnership() ;
-  delete cloneSet2 ;
+  cloneSet2.releaseOwnership() ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data.
+///  Import a dataset (RooDataSet or RooDataHist) into the workspace. The workspace will contain a copy of the data.
 ///  The dataset and its variables can be renamed upon insertion with the options below
 ///
 ///  <table>
@@ -727,10 +724,10 @@ Bool_t RooWorkspace::import(const RooAbsArg& inArg,
 /// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
 /// <tr><td> `Silence` <td> Be quiet, except in case of errors
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
-Bool_t RooWorkspace::import(RooAbsData& inData,
-			    const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
-			    const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
-			    const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
+bool RooWorkspace::import(RooAbsData const& inData,
+             const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
+             const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
+             const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
 
 {
 
@@ -749,34 +746,34 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   RooCmdConfig pc(Form("RooWorkspace::import(%s)",GetName())) ;
 
   pc.defineString("dsetName","Rename",0,"") ;
-  pc.defineString("varChangeIn","RenameVar",0,"",kTRUE) ;
-  pc.defineString("varChangeOut","RenameVar",1,"",kTRUE) ;
+  pc.defineString("varChangeIn","RenameVar",0,"",true) ;
+  pc.defineString("varChangeOut","RenameVar",1,"",true) ;
   pc.defineInt("embedded","Embedded",0,0) ;
   pc.defineInt("silence","Silence",0,0) ;
 
   // Process and check varargs
   pc.process(args) ;
-  if (!pc.ok(kTRUE)) {
-    return kTRUE ;
+  if (!pc.ok(true)) {
+    return true ;
   }
 
   // Decode renaming logic into suffix string and boolean for conflictOnly mode
   const char* dsetName = pc.getString("dsetName") ;
   const char* varChangeIn = pc.getString("varChangeIn") ;
   const char* varChangeOut = pc.getString("varChangeOut") ;
-  Bool_t embedded = pc.getInt("embedded") ;
+  bool embedded = pc.getInt("embedded") ;
   Int_t silence = pc.getInt("silence") ;
 
   if (!silence)
     coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing dataset " << inData.GetName() << endl ;
 
-  // Transform emtpy string into null pointer
+  // Transform empty string into null pointer
   if (dsetName && strlen(dsetName)==0) {
-    dsetName=0 ;
+    dsetName=nullptr ;
   }
 
   RooLinkedList& dataList = embedded ? _embeddedDataList : _dataList ;
-  if (dataList.GetSize() > 50 && dataList.getHashTableSize() == 0) {
+  if (dataList.size() > 50 && dataList.getHashTableSize() == 0) {
     // When the workspaces get larger, traversing the linked list becomes a bottleneck:
     dataList.setHashTableSize(200);
   }
@@ -784,11 +781,11 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   // Check that no dataset with target name already exists
   if (dsetName && dataList.FindObject(dsetName)) {
     coutE(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") ERROR dataset with name " << dsetName << " already exists in workspace, import aborted" << endl ;
-    return kTRUE ;
+    return true ;
   }
   if (!dsetName && dataList.FindObject(inData.GetName())) {
     coutE(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") ERROR dataset with name " << inData.GetName() << " already exists in workspace, import aborted" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Rename dataset if required
@@ -796,17 +793,17 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   if (dsetName) {
     if (!silence)
       coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << inData.GetName() << " to " << dsetName << endl ;
-    clone = (RooAbsData*) inData.Clone(dsetName) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(dsetName)) ;
   } else {
-    clone = (RooAbsData*) inData.Clone(inData.GetName()) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(inData.GetName())) ;
   }
 
 
   // Process any change in variable names
   if (strlen(varChangeIn)>0) {
     // Parse comma separated lists of variable name changes
-    const std::vector<std::string> tokIn  = RooHelpers::tokenise(varChangeIn, ",");
-    const std::vector<std::string> tokOut = RooHelpers::tokenise(varChangeOut, ",");
+    const std::vector<std::string> tokIn  = ROOT::Split(varChangeIn, ",");
+    const std::vector<std::string> tokOut = ROOT::Split(varChangeOut, ",");
     for (unsigned int i=0; i < tokIn.size(); ++i) {
       if (!silence)
         coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset observable " << tokIn[i] << " to " << tokOut[i] << endl ;
@@ -815,33 +812,26 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
   }
 
   // Now import the dataset observables, unless dataset is embedded
-  RooAbsArg* carg ;
   if (!embedded) {
-    TIterator* iter = clone->get()->createIterator() ;
-    while((carg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* carg : *clone->get()) {
       if (!arg(carg->GetName())) {
-	import(*carg) ;
+   import(*carg) ;
       }
     }
-    delete iter ;
   }
 
   dataList.Add(clone) ;
   if (_dir) {
     _dir->InternalAppend(clone) ;
   }
-  if (_doExport) {
-    exportObj(clone) ;
-  }
 
   // Set expensive object cache of dataset internal buffers to that of workspace
-  RooFIter iter2 = clone->get()->fwdIterator() ;
-  while ((carg=iter2.next())) {
+  for(RooAbsArg* carg : *clone->get()) {
     carg->setExpensiveObjectCache(expensiveObjectCache()) ;
   }
 
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -852,7 +842,7 @@ Bool_t RooWorkspace::import(RooAbsData& inData,
 /// of aset that are not in the workspace will be imported, otherwise an error is returned
 /// for missing components
 
-Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t importMissing)
+bool RooWorkspace::defineSet(const char* name, const RooArgSet& aset, bool importMissing)
 {
   // Check if set was previously defined, if so print warning
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
@@ -863,32 +853,30 @@ Bool_t RooWorkspace::defineSet(const char* name, const RooArgSet& aset, Bool_t i
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  TIterator* iter = aset.createIterator() ;
-  RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg* sarg : aset) {
     // If missing, either import or report error
     if (!arg(sarg->GetName())) {
       if (importMissing) {
-	import(*sarg) ;
+   import(*sarg) ;
       } else {
-	coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent \"" << sarg->GetName()
-			      << "\" is not in workspace and importMissing option is disabled" << endl ;
-	return kTRUE ;
+   coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR set constituent \"" << sarg->GetName()
+               << "\" is not in workspace and importMissing option is disabled" << endl ;
+   return true ;
       }
     }
     wsargs.add(*arg(sarg->GetName())) ;
   }
-  delete iter ;
+
 
   // Install named set
   _namedSets[name].removeAll() ;
   _namedSets[name].add(wsargs) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 //_____________________________________________________________________________
-Bool_t RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
+bool RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 {
    // Define a named RooArgSet with given constituents. If importMissing is true, any constituents
    // of aset that are not in the workspace will be imported, otherwise an error is returned
@@ -905,14 +893,14 @@ Bool_t RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
    _namedSets[name].removeAll();
    _namedSets[name].add(aset);
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
-Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
+bool RooWorkspace::defineSet(const char* name, const char* contentList)
 {
   // Check if set was previously defined, if so print warning
   map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
@@ -923,12 +911,12 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(contentList, ",")) {
+  for (const std::string& token : ROOT::Split(contentList, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
-			    << "\" is not in workspace" << endl ;
-      return kTRUE ;
+             << "\" is not in workspace" << endl ;
+      return true ;
     }
     wsargs.add(*arg(token.c_str())) ;
   }
@@ -937,35 +925,35 @@ Bool_t RooWorkspace::defineSet(const char* name, const char* contentList)
   _namedSets[name].removeAll() ;
   _namedSets[name].add(wsargs) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
-Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
+bool RooWorkspace::extendSet(const char* name, const char* newContents)
 {
   RooArgSet wsargs ;
 
   // Check all constituents of provided set
-  for (const std::string& token : RooHelpers::tokenise(newContents, ",")) {
+  for (const std::string& token : ROOT::Split(newContents, ",")) {
     // If missing, either import or report error
     if (!arg(token.c_str())) {
       coutE(InputArguments) << "RooWorkspace::defineSet(" << GetName() << ") ERROR proposed set constituent \"" << token
-			    << "\" is not in workspace" << endl ;
-      return kTRUE ;
+             << "\" is not in workspace" << endl ;
+      return true ;
     }
     wsargs.add(*arg(token.c_str())) ;
   }
 
   // Extend named set
-  _namedSets[name].add(wsargs,kTRUE) ;
+  _namedSets[name].add(wsargs,true) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -974,10 +962,10 @@ Bool_t RooWorkspace::extendSet(const char* name, const char* newContents)
 /// Return pointer to previously defined named set with given nmame
 /// If no such set is found a null pointer is returned
 
-const RooArgSet* RooWorkspace::set(const char* name)
+const RooArgSet* RooWorkspace::set(RooStringView name)
 {
-  map<string,RooArgSet>::iterator i = _namedSets.find(name) ;
-  return (i!=_namedSets.end()) ? &(i->second) : 0 ;
+  std::map<string,RooArgSet>::iterator i = _namedSets.find(name.c_str());
+  return (i!=_namedSets.end()) ? &(i->second) : nullptr;
 }
 
 
@@ -986,20 +974,20 @@ const RooArgSet* RooWorkspace::set(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Rename set to a new name
 
-Bool_t RooWorkspace::renameSet(const char* name, const char* newName)
+bool RooWorkspace::renameSet(const char* name, const char* newName)
 {
   // First check if set exists
   if (!set(name)) {
     coutE(InputArguments) << "RooWorkspace::renameSet(" << GetName() << ") ERROR a set with name " << name
-			  << " does not exist" << endl ;
-    return kTRUE ;
+           << " does not exist" << endl ;
+    return true ;
   }
 
   // Check if no set exists with new name
   if (set(newName)) {
     coutE(InputArguments) << "RooWorkspace::renameSet(" << GetName() << ") ERROR a set with name " << newName
-			  << " already exists" << endl ;
-    return kTRUE ;
+           << " already exists" << endl ;
+    return true ;
   }
 
   // Copy entry under 'name' to 'newName'
@@ -1008,7 +996,7 @@ Bool_t RooWorkspace::renameSet(const char* name, const char* newName)
   // Remove entry under old name
   _namedSets.erase(name) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -1017,38 +1005,38 @@ Bool_t RooWorkspace::renameSet(const char* name, const char* newName)
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove a named set from the workspace
 
-Bool_t RooWorkspace::removeSet(const char* name)
+bool RooWorkspace::removeSet(const char* name)
 {
   // First check if set exists
   if (!set(name)) {
     coutE(InputArguments) << "RooWorkspace::removeSet(" << GetName() << ") ERROR a set with name " << name
-			  << " does not exist" << endl ;
-    return kTRUE ;
+           << " does not exist" << endl ;
+    return true ;
   }
 
   // Remove set with given name
   _namedSets.erase(name) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Open an import transaction operations. Returns kTRUE if successful, kFALSE
+/// Open an import transaction operations. Returns true if successful, false
 /// if there is already an ongoing transaction
 
-Bool_t RooWorkspace::startTransaction()
+bool RooWorkspace::startTransaction()
 {
   // Check that there was no ongoing transaction
   if (_openTrans) {
-    return kFALSE ;
+    return false ;
   }
 
   // Open transaction
-  _openTrans = kTRUE ;
-  return kTRUE ;
+  _openTrans = true ;
+  return true ;
 }
 
 
@@ -1056,61 +1044,52 @@ Bool_t RooWorkspace::startTransaction()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Cancel an ongoing import transaction. All objects imported since startTransaction()
-/// will be removed and the transaction will be terminated. Return kTRUE if cancel operation
-/// succeeds, return kFALSE if there was no open transaction
+/// will be removed and the transaction will be terminated. Return true if cancel operation
+/// succeeds, return false if there was no open transaction
 
-Bool_t RooWorkspace::cancelTransaction()
+bool RooWorkspace::cancelTransaction()
 {
   // Check that there is an ongoing transaction
   if (!_openTrans) {
-    return kFALSE ;
+    return false ;
   }
 
   // Delete all objects in the sandbox
-  TIterator* iter = _sandboxNodes.createIterator() ;
-  RooAbsArg* tmpArg ;
-  while((tmpArg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg * tmpArg : _sandboxNodes) {
     _allOwnedNodes.remove(*tmpArg) ;
   }
-  delete iter ;
   _sandboxNodes.removeAll() ;
 
   // Mark transaction as finished
-  _openTrans = kFALSE ;
+  _openTrans = false ;
 
-  return kTRUE ;
+  return true ;
 }
 
-Bool_t RooWorkspace::commitTransaction()
+bool RooWorkspace::commitTransaction()
 {
-  // Commit an ongoing import transaction. Returns kTRUE if commit succeeded,
-  // return kFALSE if there was no ongoing transaction
+  // Commit an ongoing import transaction. Returns true if commit succeeded,
+  // return false if there was no ongoing transaction
 
   // Check that there is an ongoing transaction
   if (!_openTrans) {
-    return kFALSE ;
+    return false ;
   }
 
   // Publish sandbox nodes in directory and/or CINT if requested
-  TIterator* iter = _sandboxNodes.createIterator() ;
-  RooAbsArg* sarg ;
-  while((sarg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* sarg : _sandboxNodes) {
     if (_dir && sarg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(sarg) ;
     }
-    if (_doExport && sarg->IsA() != RooConstVar::Class()) {
-      exportObj(sarg) ;
-    }
   }
-  delete iter ;
 
   // Remove all committed objects from the sandbox
   _sandboxNodes.removeAll() ;
 
   // Mark transaction as finished
-  _openTrans = kFALSE ;
+  _openTrans = false ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -1118,7 +1097,7 @@ Bool_t RooWorkspace::commitTransaction()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooWorkspace::importClassCode(TClass* theClass, Bool_t doReplace)
+bool RooWorkspace::importClassCode(TClass* theClass, bool doReplace)
 {
   return _classes.autoImportClass(theClass,doReplace) ;
 }
@@ -1126,27 +1105,24 @@ Bool_t RooWorkspace::importClassCode(TClass* theClass, Bool_t doReplace)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Inport code of all classes in the workspace that have a class name
+/// Import code of all classes in the workspace that have a class name
 /// that matches pattern 'pat' and which are not found to be part of
 /// the standard ROOT distribution. If doReplace is true any existing
 /// class code saved in the workspace is replaced
 
-Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
+bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
 {
-  Bool_t ret(kTRUE) ;
+  bool ret(true) ;
 
-  TRegexp re(pat,kTRUE) ;
-  TIterator* iter = componentIterator() ;
-  RooAbsArg* carg ;
-  while((carg=(RooAbsArg*)iter->Next())) {
-    TString className = carg->IsA()->GetName() ;
+  TRegexp re(pat,true) ;
+  for (RooAbsArg * carg : _allOwnedNodes) {
+    TString className = carg->ClassName() ;
     if (className.Index(re)>=0 && !_classes.autoImportClass(carg->IsA(),doReplace)) {
       coutW(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") WARNING: problems import class code of object "
-			    << carg->IsA()->GetName() << "::" << carg->GetName() << ", reading of workspace will require external definition of class" << endl ;
-      ret = kFALSE ;
+             << carg->ClassName() << "::" << carg->GetName() << ", reading of workspace will require external definition of class" << endl ;
+      ret = false ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1159,9 +1135,9 @@ Bool_t RooWorkspace::importClassCode(const char* pat, Bool_t doReplace)
 /// Save snapshot of values and attributes (including "Constant") of given parameters.
 /// \param[in] name Name of the snapshot.
 /// \param[in] paramNames Comma-separated list of parameter names to be snapshot.
-Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
+bool RooWorkspace::saveSnapshot(RooStringView name, const char* paramNames)
 {
-  return saveSnapshot(name,argSet(paramNames),kFALSE) ;
+  return saveSnapshot(name,argSet(paramNames),false) ;
 }
 
 
@@ -1174,28 +1150,27 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
 /// saved. If importValues is TRUE, the values of the objects passed in the 'params'
 /// argument are saved
 
-Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Bool_t importValues)
+bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, bool importValues)
 {
-  RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(params) ;
-  RooArgSet* snapshot = (RooArgSet*) actualParams->snapshot() ;
-  delete actualParams ;
+  RooArgSet actualParams;
+  _allOwnedNodes.selectCommon(params, actualParams);
+  auto snapshot = new RooArgSet;
+  actualParams.snapshot(*snapshot);
 
-  snapshot->setName(name) ;
+  snapshot->setName(name.c_str()) ;
 
   if (importValues) {
-    *snapshot = params ;
+    snapshot->assign(params) ;
   }
 
-  RooArgSet* oldSnap = (RooArgSet*) _snapshots.FindObject(name) ;
-  if (oldSnap) {
-    coutI(ObjectHandling) << "RooWorkspace::saveSnaphot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
-    _snapshots.Remove(oldSnap) ;
-    delete oldSnap ;
+  if (std::unique_ptr<RooArgSet> oldSnap{static_cast<RooArgSet*>(_snapshots.FindObject(name.c_str()))}) {
+    coutI(ObjectHandling) << "RooWorkspace::saveSnapshot(" << GetName() << ") replacing previous snapshot with name " << name << endl ;
+    _snapshots.Remove(oldSnap.get()) ;
   }
 
   _snapshots.Add(snapshot) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -1205,19 +1180,19 @@ Bool_t RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, Boo
 /// Load the values and attributes of the parameters in the snapshot saved with
 /// the given name
 
-Bool_t RooWorkspace::loadSnapshot(const char* name)
+bool RooWorkspace::loadSnapshot(const char* name)
 {
-  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
+  RooArgSet* snap = static_cast<RooArgSet*>(_snapshots.find(name)) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
-    return kFALSE ;
+    return false ;
   }
 
-  RooArgSet* actualParams = (RooArgSet*) _allOwnedNodes.selectCommon(*snap) ;
-  *actualParams = *snap ;
-  delete actualParams ;
+  RooArgSet actualParams;
+  _allOwnedNodes.selectCommon(*snap, actualParams);
+  actualParams.assign(*snap) ;
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -1230,89 +1205,52 @@ Bool_t RooWorkspace::loadSnapshot(const char* name)
 
 const RooArgSet* RooWorkspace::getSnapshot(const char* name) const
 {
-  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
-  if (!snap) {
-    coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
-    return 0 ;
-  }
-
-  return snap ;
+  return static_cast<RooArgSet*>(_snapshots.find(name));
 }
-
-
-
-// //_____________________________________________________________________________
-// RooAbsPdf* RooWorkspace::joinPdf(const char* jointPdfName, const char* indexName, const char* inputMapping)
-// {
-//   // Join given list of p.d.f.s into a simultaneous p.d.f with given name. If the named index category
-//   // does not exist, it is created.
-//   //
-//   //  Example : joinPdf("simPdf","expIndex","A=pdfA,B=pdfB") ;
-//   //
-//   //            will return a RooSimultaneous named 'simPdf' with index category 'expIndex' with
-//   //            state names A and B. Pdf 'pdfA' will be associated with state A and pdf 'pdfB'
-//   //            will be associated with state B
-//   //
-//   return 0 ;
-// }
-
-// //_____________________________________________________________________________
-// RooAbsData* RooWorkspace::joinData(const char* jointDataName, const char* indexName, const char* inputMapping)
-// {
-//   // Join given list of dataset into a joint dataset for use with a simultaneous pdf
-//   // (as e.g. created by joingPdf"
-//   //
-//   //  Example : joinData("simData","expIndex","A=dataA,B=dataB") ;
-//   //
-//   //            will return a RooDataSet named 'simData' that consist of the entries of both
-//   //            dataA and dataB. An extra category column 'expIndex' is added that labels
-//   //            each entry with state 'A' and 'B' to indicate the originating dataset
-//   return 0 ;
-// }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve p.d.f (RooAbsPdf) with given name. A null pointer is returned if not found
 
-RooAbsPdf* RooWorkspace::pdf(const char* name) const
+RooAbsPdf* RooWorkspace::pdf(RooStringView name) const
 {
-  return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsPdf*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve function (RooAbsReal) with given name. Note that all RooAbsPdfs are also RooAbsReals. A null pointer is returned if not found.
 
-RooAbsReal* RooWorkspace::function(const char* name) const
+RooAbsReal* RooWorkspace::function(RooStringView name) const
 {
-  return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsReal*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve real-valued variable (RooRealVar) with given name. A null pointer is returned if not found
 
-RooRealVar* RooWorkspace::var(const char* name) const
+RooRealVar* RooWorkspace::var(RooStringView name) const
 {
-  return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooRealVar*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve discrete variable (RooCategory) with given name. A null pointer is returned if not found
 
-RooCategory* RooWorkspace::cat(const char* name) const
+RooCategory* RooWorkspace::cat(RooStringView name) const
 {
-  return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooCategory*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve discrete function (RooAbsCategory) with given name. A null pointer is returned if not found
 
-RooAbsCategory* RooWorkspace::catfunc(const char* name) const
+RooAbsCategory* RooWorkspace::catfunc(RooStringView name) const
 {
-  return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name)) ;
+  return dynamic_cast<RooAbsCategory*>(_allOwnedNodes.find(name.c_str())) ;
 }
 
 
@@ -1320,9 +1258,9 @@ RooAbsCategory* RooWorkspace::catfunc(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return RooAbsArg with given name. A null pointer is returned if none is found.
 
-RooAbsArg* RooWorkspace::arg(const char* name) const
+RooAbsArg* RooWorkspace::arg(RooStringView name) const
 {
-  return _allOwnedNodes.find(name) ;
+  return _allOwnedNodes.find(name.c_str()) ;
 }
 
 
@@ -1330,16 +1268,20 @@ RooAbsArg* RooWorkspace::arg(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return set of RooAbsArgs matching to given list of names
 
-RooArgSet RooWorkspace::argSet(const char* nameList) const
+RooArgSet RooWorkspace::argSet(RooStringView nameList) const
 {
   RooArgSet ret ;
 
-  for (const std::string& token : RooHelpers::tokenise(nameList, ",")) {
+  for (const std::string& token : ROOT::Split(nameList, ",")) {
     RooAbsArg* oneArg = arg(token.c_str()) ;
     if (oneArg) {
       ret.add(*oneArg) ;
     } else {
-      coutE(InputArguments) << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" << endl ;
+      std::stringstream ss;
+      ss << " RooWorkspace::argSet(" << GetName() << ") no RooAbsArg named \"" << token << "\" in workspace" ;
+      const std::string errorMsg = ss.str();
+      coutE(InputArguments) << errorMsg << std::endl;
+      throw std::runtime_error(errorMsg);
     }
   }
   return ret ;
@@ -1351,13 +1293,13 @@ RooArgSet RooWorkspace::argSet(const char* nameList) const
 /// Return fundamental (i.e. non-derived) RooAbsArg with given name. Fundamental types
 /// are e.g. RooRealVar, RooCategory. A null pointer is returned if none is found.
 
-RooAbsArg* RooWorkspace::fundArg(const char* name) const
+RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 {
   RooAbsArg* tmp = arg(name) ;
   if (!tmp) {
-    return 0 ;
+    return nullptr;
   }
-  return tmp->isFundamental() ? tmp : 0 ;
+  return tmp->isFundamental() ? tmp : nullptr;
 }
 
 
@@ -1365,18 +1307,18 @@ RooAbsArg* RooWorkspace::fundArg(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
 
-RooAbsData* RooWorkspace::data(const char* name) const
+RooAbsData* RooWorkspace::data(RooStringView name) const
 {
-  return (RooAbsData*)_dataList.FindObject(name) ;
+  return static_cast<RooAbsData*>(_dataList.FindObject(name.c_str())) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Retrieve dataset (binned or unbinned) with given name. A null pointer is returned if not found
 
-RooAbsData* RooWorkspace::embeddedData(const char* name) const
+RooAbsData* RooWorkspace::embeddedData(RooStringView name) const
 {
-  return (RooAbsData*)_embeddedDataList.FindObject(name) ;
+  return static_cast<RooAbsData*>(_embeddedDataList.FindObject(name.c_str())) ;
 }
 
 
@@ -1390,14 +1332,11 @@ RooArgSet RooWorkspace::allVars() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooRealVar::Class())) {
       ret.add(*parg) ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1411,14 +1350,11 @@ RooArgSet RooWorkspace::allCats() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
     }
   }
-  delete iter ;
 
   return ret ;
 }
@@ -1433,13 +1369,11 @@ RooArgSet RooWorkspace::allFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
-	!parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	!parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
-	!parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+   !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
+   !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
+   !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
       ret.add(*parg) ;
     }
   }
@@ -1456,11 +1390,9 @@ RooArgSet RooWorkspace::allCatFunctions() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
-	!parg->IsA()->InheritsFrom(RooCategory::Class())) {
+   !parg->IsA()->InheritsFrom(RooCategory::Class())) {
       ret.add(*parg) ;
     }
   }
@@ -1477,12 +1409,10 @@ RooArgSet RooWorkspace::allResolutionModels() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-      if (!((RooResolutionModel*)parg)->isConvolved()) {
-	ret.add(*parg) ;
+      if (!(static_cast<RooResolutionModel*>(parg))->isConvolved()) {
+   ret.add(*parg) ;
       }
     }
   }
@@ -1498,11 +1428,9 @@ RooArgSet RooWorkspace::allPdfs() const
   RooArgSet ret ;
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  RooAbsArg* parg ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	!parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+   !parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
       ret.add(*parg) ;
     }
   }
@@ -1514,15 +1442,12 @@ RooArgSet RooWorkspace::allPdfs() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all dataset in the workspace
 
-list<RooAbsData*> RooWorkspace::allData() const
+std::list<RooAbsData*> RooWorkspace::allData() const
 {
-  list<RooAbsData*> ret ;
-  TIterator* iter = _dataList.MakeIterator() ;
-  RooAbsData* dat ;
-  while((dat=(RooAbsData*)iter->Next())) {
+  std::list<RooAbsData*> ret ;
+  for(auto * dat : static_range_cast<RooAbsData*>(_dataList)) {
     ret.push_back(dat) ;
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1530,15 +1455,12 @@ list<RooAbsData*> RooWorkspace::allData() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all dataset in the workspace
 
-list<RooAbsData*> RooWorkspace::allEmbeddedData() const
+std::list<RooAbsData*> RooWorkspace::allEmbeddedData() const
 {
-  list<RooAbsData*> ret ;
-  TIterator* iter = _embeddedDataList.MakeIterator() ;
-  RooAbsData* dat ;
-  while((dat=(RooAbsData*)iter->Next())) {
+  std::list<RooAbsData*> ret ;
+  for(auto * dat : static_range_cast<RooAbsData*>(_embeddedDataList)) {
     ret.push_back(dat) ;
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1547,21 +1469,18 @@ list<RooAbsData*> RooWorkspace::allEmbeddedData() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return list of all generic objects in the workspace
 
-list<TObject*> RooWorkspace::allGenericObjects() const
+std::list<TObject*> RooWorkspace::allGenericObjects() const
 {
-  list<TObject*> ret ;
-  TIterator* iter = _genObjects.MakeIterator() ;
-  TObject* gobj ;
-  while((gobj=(RooAbsData*)iter->Next())) {
+  std::list<TObject*> ret ;
+  for(TObject * gobj : _genObjects) {
 
     // If found object is wrapper, return payload
     if (gobj->IsA()==RooTObjWrap::Class()) {
-      ret.push_back(((RooTObjWrap*)gobj)->obj()) ;
+      ret.push_back((static_cast<RooTObjWrap*>(gobj))->obj()) ;
     } else {
       ret.push_back(gobj) ;
     }
   }
-  delete iter ;
   return ret ;
 }
 
@@ -1576,7 +1495,7 @@ list<TObject*> RooWorkspace::allGenericObjects() const
 /// files respectively. If files cannot be found, abort with error status, otherwise update the internal
 /// class-to-file map and import the contents of the files, if they are not imported yet.
 
-Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
+bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
 {
 
   oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") request to import code of class " << tc->GetName() << endl ;
@@ -1586,14 +1505,14 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Check if we already have the class (i.e. it is in the classToFile map)
   if (!doReplace && _c2fmap.find(tc->GetName())!=_c2fmap.end()) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " already imported, skipping" << endl ;
-    return kTRUE ;
+    return true ;
   }
 
-  // Check if class is listed in a ROOTMAP file - if so we can skip it because it is in the root distribtion
+  // Check if class is listed in a ROOTMAP file - if so we can skip it because it is in the root distribution
   const char* mapEntry = gInterpreter->GetClassSharedLibs(tc->GetName()) ;
   if (mapEntry && strlen(mapEntry)>0) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Retrieve file names through ROOT TClass interface
@@ -1603,30 +1522,31 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Check that file names are not empty
   if (implfile.empty() || declfile.empty()) {
     oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") ERROR: cannot retrieve code file names for class "
-				   << tc->GetName() << " through ROOT TClass interface, unable to import code" << endl ;
-    return kFALSE ;
+               << tc->GetName() << " through ROOT TClass interface, unable to import code" << endl ;
+    return false ;
   }
 
   // Check if header filename is found in ROOT distribution, if so, do not import class
   TString rootsys = gSystem->Getenv("ROOTSYS") ;
   if (TString(implfile.c_str()).Index(rootsys)>=0) {
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo(" << _wspace->GetName() << ") code of class " << tc->GetName() << " is in ROOT distribution, skipping " << endl ;
-    return kTRUE ;
+    return true ;
   }
 
-  // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
-  // (We also need a default ctor of abstract classes, but cannot check that through is interface
-  //  as TClass::HasDefaultCtor only returns true for callable default ctors)
+  // Require that class meets technical criteria to be persistable (i.e it has a default constructor)
+  // (We also need a default constructor of abstract classes, but cannot check that through is interface
+  //  as TClass::HasDefaultCtor only returns true for callable default constructors)
   if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class "
-				    << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
-    return kFALSE ;
+                << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
+    return false ;
   }
 
 
   // *** PHASE 2 *** Check if declaration and implementation files can be located
 
-  char *declpath = nullptr, *implpath = nullptr;
+  std::string declpath;
+  std::string implpath;
 
   // Check if header file can be found in specified location
   // If not, scan through list of 'class declaration' paths in RooWorkspace
@@ -1638,38 +1558,37 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     while(diter!= RooWorkspace::_classDeclDirList.end()) {
 
       declpath = gSystem->ConcatFileName(diter->c_str(),declfile.c_str()) ;
-      if (!gSystem->AccessPathName(declpath)) {
-	// found declaration file
-	break ;
+      if (!gSystem->AccessPathName(declpath.c_str())) {
+   // found declaration file
+   break ;
       }
       // cleanup and continue ;
-      delete [] declpath;
-      declpath = nullptr;
+      declpath.clear();
 
       ++diter ;
     }
 
     // Header file cannot be found anywhere, warn user and abort operation
-    if (!declpath) {
+    if (declpath.empty()) {
       oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING Cannot access code of class "
-				      << tc->GetName() << " because header file " << declfile << " is not found in current directory nor in $ROOTSYS" ;
-      if (_classDeclDirList.size()>0) {
-	ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
-	diter = RooWorkspace::_classDeclDirList.begin() ;
+                  << tc->GetName() << " because header file " << declfile << " is not found in current directory nor in $ROOTSYS" ;
+      if (!_classDeclDirList.empty()) {
+   ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
+   diter = RooWorkspace::_classDeclDirList.begin() ;
 
-	while(diter!= RooWorkspace::_classDeclDirList.end()) {
+   while(diter!= RooWorkspace::_classDeclDirList.end()) {
 
-	  if (diter!=RooWorkspace::_classDeclDirList.begin()) {
-	    ooccoutW(_wspace,ObjectHandling) << "," ;
-	  }
-	  ooccoutW(_wspace,ObjectHandling) << diter->c_str() ;
-	  ++diter ;
-	}
+     if (diter!=RooWorkspace::_classDeclDirList.begin()) {
+       ooccoutW(_wspace,ObjectHandling) << "," ;
+     }
+     ooccoutW(_wspace,ObjectHandling) << diter->c_str() ;
+     ++diter ;
+   }
       }
       ooccoutW(_wspace,ObjectHandling) << ". To fix this problem, add the required directory to the search "
-				       << "path using RooWorkspace::addClassDeclImportDir(const char* dir)" << endl ;
+                   << "path using RooWorkspace::addClassDeclImportDir(const char* dir)" << endl ;
 
-      return kFALSE ;
+      return false ;
     }
   }
 
@@ -1684,38 +1603,36 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     while(iiter!= RooWorkspace::_classImplDirList.end()) {
 
       implpath = gSystem->ConcatFileName(iiter->c_str(),implfile.c_str()) ;
-      if (!gSystem->AccessPathName(implpath)) {
-	// found implementation file
-	break ;
+      if (!gSystem->AccessPathName(implpath.c_str())) {
+   // found implementation file
+   break ;
       }
       // cleanup and continue ;
-      delete [] implpath;
-      implpath = nullptr;
+      implpath.clear();
 
       ++iiter ;
     }
 
     // Implementation file cannot be found anywhere, warn user and abort operation
-    if (!implpath) {
+    if (implpath.empty()) {
       oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING Cannot access code of class "
-				      << tc->GetName() << " because implementation file " << implfile << " is not found in current directory nor in $ROOTSYS" ;
-      if (_classDeclDirList.size()>0) {
-	ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
-	iiter = RooWorkspace::_classImplDirList.begin() ;
+                  << tc->GetName() << " because implementation file " << implfile << " is not found in current directory nor in $ROOTSYS" ;
+      if (!_classDeclDirList.empty()) {
+   ooccoutW(_wspace,ObjectHandling) << ", nor in the search path " ;
+   iiter = RooWorkspace::_classImplDirList.begin() ;
 
-	while(iiter!= RooWorkspace::_classImplDirList.end()) {
+   while(iiter!= RooWorkspace::_classImplDirList.end()) {
 
-	  if (iiter!=RooWorkspace::_classImplDirList.begin()) {
-	    ooccoutW(_wspace,ObjectHandling) << "," ;
-	  }
-	  ooccoutW(_wspace,ObjectHandling) << iiter->c_str() ;
-	  ++iiter ;
-	}
+     if (iiter!=RooWorkspace::_classImplDirList.begin()) {
+       ooccoutW(_wspace,ObjectHandling) << "," ;
+     }
+     ooccoutW(_wspace,ObjectHandling) << iiter->c_str() ;
+     ++iiter ;
+   }
       }
       ooccoutW(_wspace,ObjectHandling) << ". To fix this problem add the required directory to the search "
-				       << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl;
-      delete [] declpath;
-      return kFALSE;
+                   << "path using RooWorkspace::addClassImplImportDir(const char* dir)" << endl;
+      return false;
     }
   }
 
@@ -1732,7 +1649,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   //
   // Phase 3 is skipped if fmap already contains an entry with given filebasename
 
-  string declfilename = declpath?gSystem->BaseName(declpath):gSystem->BaseName(declfile.c_str()) ;
+  const std::string declfilename = !declpath.empty() ? gSystem->BaseName(declpath.c_str())
+                                                     : gSystem->BaseName(declfile.c_str());
 
   // Split in base and extension
   int dotpos2 = strrchr(declfilename.c_str(),'.') - declfilename.c_str() ;
@@ -1741,25 +1659,23 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 
   list<string> extraHeaders ;
 
-  // If file has not beed stored yet, enter stl strings with implementation and declaration in file map
+  // If file has not been stored yet, enter stl strings with implementation and declaration in file map
   if (_fmap.find(declfilebase) == _fmap.end()) {
 
     // Open declaration file
-    fstream fdecl(declpath?declpath:declfile.c_str()) ;
+    std::fstream fdecl(!declpath.empty() ? declpath.c_str() : declfile.c_str());
 
     // Abort import if declaration file cannot be opened
     if (!fdecl) {
       oocoutE(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
-				      << ") ERROR opening declaration file " <<  declfile << endl ;
-      delete[] implpath;
-      delete[] declpath;
-      return kFALSE ;
+                  << ") ERROR opening declaration file " <<  declfile << endl ;
+      return false ;
     }
 
     oocoutI(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
-				    << ") importing code of class " << tc->GetName()
-				    << " from " << (implpath?implpath:implfile.c_str())
-				    << " and " << (declpath?declpath:declfile.c_str()) << endl ;
+                << ") importing code of class " << tc->GetName()
+                << " from " << (!implpath.empty() ? implpath.c_str() : implfile.c_str())
+                << " and " << (!declpath.empty() ? declpath.c_str() : declfile.c_str()) << endl ;
 
 
     // Read entire file into an stl string
@@ -1767,17 +1683,17 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     while(fdecl.getline(buf,1023)) {
 
       // Look for include state of self
-      Bool_t processedInclude = kFALSE ;
-      char* extincfile = 0 ;
+      bool processedInclude = false ;
+      char* extincfile = nullptr ;
 
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
-	// Process #include statements here
+   // Process #include statements here
    char tmp[64000];
    strlcpy(tmp, buf, 64000);
-   Bool_t stdinclude = strchr(buf, '<');
+   bool stdinclude = strchr(buf, '<');
    strtok(tmp, " <\"");
-   char *incfile = strtok(0, " <>\"");
+   char *incfile = strtok(nullptr, " <>\"");
 
    if (!stdinclude) {
       // check if it lives in $ROOTSYS/include
@@ -1789,54 +1705,52 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
                                           << ") scheduling include file " << incfile << " for import" << endl;
          extraHeaders.push_back(incfile);
          extincfile = incfile;
-         processedInclude = kTRUE;
+         processedInclude = true;
       }
    }
       }
 
       if (processedInclude) {
-	decl += "// external include file below retrieved from workspace code storage\n" ;
-	decl += Form("#include \"%s\"\n",extincfile) ;
+   decl += "// external include file below retrieved from workspace code storage\n" ;
+   decl += Form("#include \"%s\"\n",extincfile) ;
       } else {
-	decl += buf ;
-	decl += '\n' ;
+   decl += buf ;
+   decl += '\n' ;
       }
     }
 
     // Open implementation file
-    fstream fimpl(implpath?implpath:implfile.c_str()) ;
+    fstream fimpl(!implpath.empty() ? implpath.c_str() : implfile.c_str()) ;
 
     // Abort import if implementation file cannot be opened
     if (!fimpl) {
       oocoutE(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
-				      << ") ERROR opening implementation file " <<  implfile << endl ;
-      delete[] implpath;
-      delete[] declpath;
-      return kFALSE ;
+                  << ") ERROR opening implementation file " <<  implfile << endl ;
+      return false ;
     }
 
 
-    // Import entire implentation file into stl string
+    // Import entire implementation file into stl string
     string impl ;
     while(fimpl.getline(buf,1023)) {
       // Process #include statements here
 
       // Look for include state of self
-      Bool_t foundSelfInclude=kFALSE ;
-      Bool_t processedInclude = kFALSE ;
-      char* extincfile = 0 ;
+      bool foundSelfInclude=false ;
+      bool processedInclude = false ;
+      char* extincfile = nullptr ;
 
       // Look for include of declaration file corresponding to this implementation file
       if (strstr(buf,"#include")) {
-	// Process #include statements here
+   // Process #include statements here
    char tmp[64000];
    strlcpy(tmp, buf, 64000);
-   Bool_t stdinclude = strchr(buf, '<');
+   bool stdinclude = strchr(buf, '<');
    strtok(tmp, " <\"");
-   char *incfile = strtok(0, " <>\"");
+   char *incfile = strtok(nullptr, " <>\"");
 
    if (strstr(incfile, declfilename.c_str())) {
-      foundSelfInclude = kTRUE;
+      foundSelfInclude = true;
    }
 
    if (!stdinclude && !foundSelfInclude) {
@@ -1850,7 +1764,7 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
                                           << ") scheduling include file " << incfile << " for import" << endl;
          extraHeaders.push_back(incfile);
          extincfile = incfile;
-         processedInclude = kTRUE;
+         processedInclude = true;
       }
    }
       }
@@ -1858,16 +1772,16 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
       // Explicitly rewrite include of own declaration file to string
       // any directory prefixes, copy all other lines verbatim in stl string
       if (foundSelfInclude) {
-	// If include of self is found, substitute original include
-	// which may have directory structure with a plain include
-	impl += "// class declaration include file below retrieved from workspace code storage\n" ;
-	impl += Form("#include \"%s.%s\"\n",declfilebase.c_str(),declfileext.c_str()) ;
+   // If include of self is found, substitute original include
+   // which may have directory structure with a plain include
+   impl += "// class declaration include file below retrieved from workspace code storage\n" ;
+   impl += Form("#include \"%s.%s\"\n",declfilebase.c_str(),declfileext.c_str()) ;
       } else if (processedInclude) {
-	impl += "// external include file below retrieved from workspace code storage\n" ;
-	impl += Form("#include \"%s\"\n",extincfile) ;
+   impl += "// external include file below retrieved from workspace code storage\n" ;
+   impl += Form("#include \"%s\"\n",extincfile) ;
       } else {
-	impl += buf ;
-	impl += '\n' ;
+   impl += buf ;
+   impl += '\n' ;
       }
     }
 
@@ -1880,21 +1794,21 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
     for (list<string>::iterator ehiter = extraHeaders.begin() ; ehiter != extraHeaders.end() ; ++ehiter ) {
       if (_ehmap.find(*ehiter) == _ehmap.end()) {
 
-	ExtraHeader eh ;
-	eh._hname = ehiter->c_str() ;
-	fstream fehdr(ehiter->c_str()) ;
-	string ehimpl ;
-	char buf2[1024] ;
-	while(fehdr.getline(buf2,1023)) {
+   ExtraHeader eh ;
+   eh._hname = ehiter->c_str() ;
+   fstream fehdr(ehiter->c_str()) ;
+   string ehimpl ;
+   char buf2[1024] ;
+   while(fehdr.getline(buf2,1023)) {
 
-	  // Look for include of declaration file corresponding to this implementation file
-	  if (strstr(buf2,"#include")) {
-	    // Process #include statements here
+     // Look for include of declaration file corresponding to this implementation file
+     if (strstr(buf2,"#include")) {
+       // Process #include statements here
        char tmp[64000];
        strlcpy(tmp, buf2, 64000);
-       Bool_t stdinclude = strchr(buf, '<');
+       bool stdinclude = strchr(buf, '<');
        strtok(tmp, " <\"");
-       char *incfile = strtok(0, " <>\"");
+       char *incfile = strtok(nullptr, " <>\"");
 
        if (!stdinclude) {
           // check if it lives in $ROOTSYS/include
@@ -1923,9 +1837,9 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 
     // Inform that existing file entry is being recycled because it already contained class code
     oocoutI(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName()
-				    << ") code of class " << tc->GetName()
-				    << " was already imported from " << (implpath?implpath:implfile.c_str())
-				    << " and " << (declpath?declpath:declfile.c_str()) << endl ;
+                << ") code of class " << tc->GetName()
+                << " was already imported from " << (!implpath.empty() ? implpath : implfile)
+                << " and " << (!declpath.empty() ? declpath.c_str() : declfile.c_str()) << std::endl;
 
   }
 
@@ -1938,10 +1852,8 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   // Make list of all immediate base classes of this class
   TString baseNameList ;
   TList* bl = tc->GetListOfBases() ;
-  TIterator* iter = bl->MakeIterator() ;
-  TBaseClass* base ;
-  list<TClass*> bases ;
-  while((base=(TBaseClass*)iter->Next())) {
+  std::list<TClass*> bases ;
+  for(auto * base : static_range_cast<TBaseClass*>(*bl)) {
     if (baseNameList.Length()>0) {
       baseNameList += "," ;
     }
@@ -1955,17 +1867,11 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
   _c2fmap[tc->GetName()]._fileBase = declfilebase ;
 
   // Recursive store all base classes.
-  list<TClass*>::iterator biter = bases.begin() ;
-  while(biter!=bases.end()) {
-    autoImportClass(*biter,doReplace) ;
-    ++biter ;
+  for(TClass* bclass : bases) {
+    autoImportClass(bclass,doReplace) ;
   }
 
-  // Cleanup
-  delete[] implpath;
-  delete[] declpath;
-
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -1979,22 +1885,20 @@ Bool_t RooWorkspace::CodeRepo::autoImportClass(TClass* tc, Bool_t doReplace)
 /// when constructed. This will give error messages when done in a workspace
 /// directory.
 
-Bool_t RooWorkspace::makeDir()
+bool RooWorkspace::makeDir()
 {
-  if (_dir) return kTRUE ;
+  if (_dir) return true ;
 
-  TString title= Form("TDirectory representation of RooWorkspace %s",GetName()) ;
-  _dir = new WSDir(GetName(),title.Data(),this) ;
+  std::string title= "TDirectory representation of RooWorkspace " + std::string(GetName());
+  _dir = new WSDir(GetName(),title.c_str(),this) ;
 
-  TIterator* iter = componentIterator() ;
-  RooAbsArg* darg ;
-  while((darg=(RooAbsArg*)iter->Next())) {
+  for (RooAbsArg * darg : _allOwnedNodes) {
     if (darg->IsA() != RooConstVar::Class()) {
       _dir->InternalAppend(darg) ;
     }
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -2004,26 +1908,25 @@ Bool_t RooWorkspace::makeDir()
 /// object can be retrieved by name through the obj() method. The object is cloned upon
 /// importation and the input argument does not need to live beyond the import call
 ///
-/// Returns kTRUE if an error has occurred.
+/// Returns true if an error has occurred.
 
-Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
+bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 {
   // First check if object with given name already exists
-  TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
+  std::unique_ptr<TObject> oldObj{_genObjects.FindObject(object.GetName())};
   if (oldObj && !replaceExisting) {
     coutE(InputArguments) << "RooWorkspace::import(" << GetName() << ") generic object with name "
-			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
-    return kTRUE ;
+           << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
+    return true ;
   }
 
   // Grab the current state of the directory Auto-Add
   ROOT::DirAutoAdd_t func = object.IsA()->GetDirectoryAutoAdd();
-  object.IsA()->SetDirectoryAutoAdd(0);
-  Bool_t tmp = RooPlot::setAddDirectoryStatus(kFALSE) ;
+  object.IsA()->SetDirectoryAutoAdd(nullptr);
+  bool tmp = RooPlot::setAddDirectoryStatus(false) ;
 
   if (oldObj) {
-    _genObjects.Replace(oldObj,object.Clone()) ;
-    delete oldObj ;
+    _genObjects.Replace(oldObj.get(),object.Clone()) ;
   } else {
     _genObjects.Add(object.Clone()) ;
   }
@@ -2032,7 +1935,7 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
   object.IsA()->SetDirectoryAutoAdd(func);
   RooPlot::setAddDirectoryStatus(tmp) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -2045,32 +1948,31 @@ Bool_t RooWorkspace::import(TObject& object, Bool_t replaceExisting)
 /// The object is cloned upon importation and the input argument does not need to live beyond the import call
 /// This method is mostly useful for importing objects that do not have a settable name such as TMatrix
 ///
-/// Returns kTRUE if an error has occurred.
+/// Returns true if an error has occurred.
 
-Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t replaceExisting)
+bool RooWorkspace::import(TObject const& object, const char* aliasName, bool replaceExisting)
 {
   // First check if object with given name already exists
-  TObject* oldObj = _genObjects.FindObject(object.GetName()) ;
+  std::unique_ptr<TObject> oldObj{_genObjects.FindObject(aliasName)};
   if (oldObj && !replaceExisting) {
     coutE(InputArguments) << "RooWorkspace::import(" << GetName() << ") generic object with name "
-			  << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
-    return kTRUE ;
+           << aliasName << " is already in workspace and replaceExisting flag is set to false" << endl ;
+    return true ;
   }
 
-  TH1::AddDirectory(kFALSE) ;
-  RooTObjWrap* wrapper = new RooTObjWrap(object.Clone()) ;
-  TH1::AddDirectory(kTRUE) ;
-  wrapper->setOwning(kTRUE) ;
+  TH1::AddDirectory(false) ;
+  auto wrapper = new RooTObjWrap(object.Clone()) ;
+  TH1::AddDirectory(true) ;
+  wrapper->setOwning(true) ;
   wrapper->SetName(aliasName) ;
   wrapper->SetTitle(aliasName) ;
 
   if (oldObj) {
-    _genObjects.Replace(oldObj,wrapper) ;
-    delete oldObj ;
+    _genObjects.Replace(oldObj.get(),wrapper) ;
   } else {
     _genObjects.Add(wrapper) ;
   }
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -2079,11 +1981,11 @@ Bool_t RooWorkspace::import(TObject& object, const char* aliasName, Bool_t repla
 ////////////////////////////////////////////////////////////////////////////////
 /// Insert RooStudyManager module
 
-Bool_t RooWorkspace::addStudy(RooAbsStudy& study)
+bool RooWorkspace::addStudy(RooAbsStudy& study)
 {
-  RooAbsStudy* clone = (RooAbsStudy*) study.Clone() ;
+  RooAbsStudy* clone = static_cast<RooAbsStudy*>(study.Clone()) ;
   _studyMods.Add(clone) ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -2103,7 +2005,7 @@ void RooWorkspace::clearStudies()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return any type of object (RooAbsArg, RooAbsData or generic object) with given name)
 
-TObject* RooWorkspace::obj(const char* name) const
+TObject* RooWorkspace::obj(RooStringView name) const
 {
   // Try RooAbsArg first
   TObject* ret = arg(name) ;
@@ -2122,16 +2024,16 @@ TObject* RooWorkspace::obj(const char* name) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return generic object with given name
 
-TObject* RooWorkspace::genobj(const char* name)  const
+TObject* RooWorkspace::genobj(RooStringView name)  const
 {
   // Find object by name
-  TObject* gobj = _genObjects.FindObject(name) ;
+  TObject* gobj = _genObjects.FindObject(name.c_str()) ;
 
   // Exit here if not found
-  if (!gobj) return 0 ;
+  if (!gobj) return nullptr;
 
   // If found object is wrapper, return payload
-  if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;
+  if (gobj->IsA()==RooTObjWrap::Class()) return (static_cast<RooTObjWrap*>(gobj))->obj() ;
 
   return gobj ;
 }
@@ -2140,7 +2042,7 @@ TObject* RooWorkspace::genobj(const char* name)  const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooWorkspace::cd(const char* path)
+bool RooWorkspace::cd(const char* path)
 {
   makeDir() ;
   return _dir->cd(path) ;
@@ -2151,11 +2053,11 @@ Bool_t RooWorkspace::cd(const char* path)
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this current workspace into given file
 
-Bool_t RooWorkspace::writeToFile(const char* fileName, Bool_t recreate)
+bool RooWorkspace::writeToFile(const char* fileName, bool recreate)
 {
   TFile f(fileName,recreate?"RECREATE":"UPDATE") ;
   Write() ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -2180,9 +2082,9 @@ RooFactoryWSTool& RooWorkspace::factory()
 /// Short-hand function for `factory()->process(expr);`
 ///
 /// \copydoc RooFactoryWSTool::process(const char*)
-RooAbsArg* RooWorkspace::factory(const char* expr)
+RooAbsArg* RooWorkspace::factory(RooStringView expr)
 {
-  return factory().process(expr) ;
+  return factory().process(expr.c_str()) ;
 }
 
 
@@ -2193,18 +2095,16 @@ RooAbsArg* RooWorkspace::factory(const char* expr)
 
 void RooWorkspace::Print(Option_t* opts) const
 {
-  Bool_t treeMode(kFALSE) ;
-  Bool_t verbose(kFALSE);
+  bool treeMode(false) ;
+  bool verbose(false);
   if (TString(opts).Contains("t")) {
-    treeMode=kTRUE ;
+    treeMode=true ;
   }
   if (TString(opts).Contains("v")) {
-     verbose = kTRUE;
+     verbose = true;
   }
 
   cout << endl << "RooWorkspace(" << GetName() << ") " << GetTitle() << " contents" << endl << endl  ;
-
-  RooAbsArg* parg ;
 
   RooArgSet pdfSet ;
   RooArgSet funcSet ;
@@ -2215,8 +2115,7 @@ void RooWorkspace::Print(Option_t* opts) const
 
 
   // Split list of components in pdfs, functions and variables
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  while((parg=(RooAbsArg*)iter->Next())) {
+  for(RooAbsArg* parg : _allOwnedNodes) {
 
     //---------------
 
@@ -2225,53 +2124,53 @@ void RooWorkspace::Print(Option_t* opts) const
       // In tree mode, only add nodes with no clients to the print lists
 
       if (parg->IsA()->InheritsFrom(RooAbsPdf::Class())) {
-	if (!parg->hasClients()) {
-	  pdfSet.add(*parg) ;
-	}
+   if (!parg->hasClients()) {
+     pdfSet.add(*parg) ;
+   }
       }
 
       if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
-	if (!parg->hasClients()) {
-	  funcSet.add(*parg) ;
-	}
+     !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
+     !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
+     !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+   if (!parg->hasClients()) {
+     funcSet.add(*parg) ;
+   }
       }
 
 
       if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooCategory::Class())) {
-	if (!parg->hasClients()) {
-	  catfuncSet.add(*parg) ;
-	}
+     !parg->IsA()->InheritsFrom(RooCategory::Class())) {
+   if (!parg->hasClients()) {
+     catfuncSet.add(*parg) ;
+   }
       }
 
     } else {
 
       if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-	if (((RooResolutionModel*)parg)->isConvolved()) {
-	  convResoSet.add(*parg) ;
-	} else {
-	  resoSet.add(*parg) ;
-	}
+   if ((static_cast<RooResolutionModel*>(parg))->isConvolved()) {
+     convResoSet.add(*parg) ;
+   } else {
+     resoSet.add(*parg) ;
+   }
       }
 
       if (parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-	pdfSet.add(*parg) ;
+     !parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
+   pdfSet.add(*parg) ;
       }
 
       if (parg->IsA()->InheritsFrom(RooAbsReal::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
-	funcSet.add(*parg) ;
+     !parg->IsA()->InheritsFrom(RooAbsPdf::Class()) &&
+     !parg->IsA()->InheritsFrom(RooConstVar::Class()) &&
+     !parg->IsA()->InheritsFrom(RooRealVar::Class())) {
+   funcSet.add(*parg) ;
       }
 
       if (parg->IsA()->InheritsFrom(RooAbsCategory::Class()) &&
-	  !parg->IsA()->InheritsFrom(RooCategory::Class())) {
-	catfuncSet.add(*parg) ;
+     !parg->IsA()->InheritsFrom(RooCategory::Class())) {
+   catfuncSet.add(*parg) ;
       }
     }
 
@@ -2284,13 +2183,12 @@ void RooWorkspace::Print(Option_t* opts) const
     }
 
   }
-  delete iter ;
 
 
   RooFit::MsgLevel oldLevel = RooMsgService::instance().globalKillBelow() ;
   RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING) ;
 
-  if (varSet.getSize()>0) {
+  if (!varSet.empty()) {
     varSet.sort() ;
     cout << "variables" << endl ;
     cout << "---------" << endl ;
@@ -2298,128 +2196,103 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << endl ;
   }
 
-  if (pdfSet.getSize()>0) {
+  if (!pdfSet.empty()) {
     cout << "p.d.f.s" << endl ;
     cout << "-------" << endl ;
     pdfSet.sort() ;
-    iter = pdfSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* parg : pdfSet) {
       if (treeMode) {
-	parg->printComponentTree() ;
+   parg->printComponentTree() ;
       } else {
-	parg->Print() ;
+   parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
   if (!treeMode) {
-    if (resoSet.getSize()>0) {
+    if (!resoSet.empty()) {
       cout << "analytical resolution models" << endl ;
       cout << "----------------------------" << endl ;
       resoSet.sort() ;
-      iter = resoSet.createIterator() ;
-      while((parg=(RooAbsArg*)iter->Next())) {
-	parg->Print() ;
+      for(RooAbsArg* parg : resoSet) {
+   parg->Print() ;
       }
-      delete iter ;
-      //     iter = convResoSet.createIterator() ;
-      //     while((parg=(RooAbsArg*)iter->Next())) {
-      //       parg->Print() ;
-      //     }
-      //     delete iter ;
       cout << endl ;
     }
   }
 
-  if (funcSet.getSize()>0) {
+  if (!funcSet.empty()) {
     cout << "functions" << endl ;
     cout << "--------" << endl ;
     funcSet.sort() ;
-    iter = funcSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg * parg : funcSet) {
       if (treeMode) {
-	parg->printComponentTree() ;
+   parg->printComponentTree() ;
       } else {
-	parg->Print() ;
+   parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
-  if (catfuncSet.getSize()>0) {
+  if (!catfuncSet.empty()) {
     cout << "category functions" << endl ;
     cout << "------------------" << endl ;
     catfuncSet.sort() ;
-    iter = catfuncSet.createIterator() ;
-    while((parg=(RooAbsArg*)iter->Next())) {
+    for(RooAbsArg* parg : catfuncSet) {
       if (treeMode) {
-	parg->printComponentTree() ;
+   parg->printComponentTree() ;
       } else {
-	parg->Print() ;
+   parg->Print() ;
       }
     }
-    delete iter ;
     cout << endl ;
   }
 
-  if (_dataList.GetSize()>0) {
+  if (!_dataList.empty()) {
     cout << "datasets" << endl ;
     cout << "--------" << endl ;
-    iter = _dataList.MakeIterator() ;
-    RooAbsData* data2 ;
-    while((data2=(RooAbsData*)iter->Next())) {
-      cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;
+    for(auto * data2 : static_range_cast<RooAbsData*>(_dataList)) {
+      std::cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << std::endl;
     }
-    delete iter ;
-    cout << endl ;
+    std::cout << std::endl ;
   }
 
-  if (_embeddedDataList.GetSize()>0) {
+  if (!_embeddedDataList.empty()) {
     cout << "embedded datasets (in pdfs and functions)" << endl ;
     cout << "-----------------------------------------" << endl ;
-    iter = _embeddedDataList.MakeIterator() ;
-    RooAbsData* data2 ;
-    while((data2=(RooAbsData*)iter->Next())) {
-      cout << data2->IsA()->GetName() << "::" << data2->GetName() << *data2->get() << endl ;
+    for(auto * data2 : static_range_cast<RooAbsData*>(_embeddedDataList)) {
+      cout << data2->ClassName() << "::" << data2->GetName() << *data2->get() << endl ;
     }
-    delete iter ;
     cout << endl ;
   }
 
-  if (_snapshots.GetSize()>0) {
+  if (!_snapshots.empty()) {
     cout << "parameter snapshots" << endl ;
     cout << "-------------------" << endl ;
-    iter = _snapshots.MakeIterator() ;
-    RooArgSet* snap ;
-    while((snap=(RooArgSet*)iter->Next())) {
+    for(auto * snap : static_range_cast<RooArgSet*>(_snapshots)) {
       cout << snap->GetName() << " = (" ;
-      TIterator* aiter = snap->createIterator() ;
-      RooAbsArg* a ;
-      Bool_t first(kTRUE) ;
-      while((a=(RooAbsArg*)aiter->Next())) {
-	if (first) { first=kFALSE ; } else { cout << "," ; }
-	cout << a->GetName() << "=" ;
-	a->printValue(cout) ;
-	if (a->isConstant()) {
-	  cout << "[C]" ;
-	}
+      bool first(true) ;
+      for(RooAbsArg* a : *snap) {
+   if (first) { first=false ; } else { cout << "," ; }
+   cout << a->GetName() << "=" ;
+   a->printValue(cout) ;
+   if (a->isConstant()) {
+     cout << "[C]" ;
+   }
       }
       cout << ")" << endl ;
-      delete aiter ;
     }
-    delete iter ;
     cout << endl ;
   }
 
 
-  if (_namedSets.size()>0) {
+  if (!_namedSets.empty()) {
     cout << "named sets" << endl ;
     cout << "----------" << endl ;
     for (map<string,RooArgSet>::const_iterator it = _namedSets.begin() ; it != _namedSets.end() ; ++it) {
-       if (verbose || !TString(it->first.c_str()).BeginsWith("CACHE_")) {
+       if (verbose || !isCacheSet(it->first)) {
           cout << it->first << ":" << it->second << endl;
        }
     }
@@ -2428,44 +2301,38 @@ void RooWorkspace::Print(Option_t* opts) const
   }
 
 
-  if (_genObjects.GetSize()>0) {
+  if (!_genObjects.empty()) {
     cout << "generic objects" << endl ;
     cout << "---------------" << endl ;
-    iter = _genObjects.MakeIterator() ;
-    TObject* gobj ;
-    while((gobj=(TObject*)iter->Next())) {
+    for(TObject* gobj : _genObjects) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
-	cout << ((RooTObjWrap*)gobj)->obj()->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+   cout << (static_cast<RooTObjWrap*>(gobj))->obj()->ClassName() << "::" << gobj->GetName() << endl ;
       } else {
-	cout << gobj->IsA()->GetName() << "::" << gobj->GetName() << endl ;
+   cout << gobj->ClassName() << "::" << gobj->GetName() << endl ;
       }
     }
-    delete iter ;
     cout << endl ;
 
   }
 
-  if (_studyMods.GetSize()>0) {
+  if (!_studyMods.empty()) {
     cout << "study modules" << endl ;
     cout << "-------------" << endl ;
-    iter = _studyMods.MakeIterator() ;
-    TObject* smobj ;
-    while((smobj=(TObject*)iter->Next())) {
-      cout << smobj->IsA()->GetName() << "::" << smobj->GetName() << endl ;
+    for(TObject* smobj : _studyMods) {
+      cout << smobj->ClassName() << "::" << smobj->GetName() << endl ;
     }
-    delete iter ;
     cout << endl ;
 
   }
 
-  if (_classes.listOfClassNames().size()>0) {
+  if (!_classes.listOfClassNames().empty()) {
     cout << "embedded class code" << endl ;
     cout << "-------------------" << endl ;
     cout << _classes.listOfClassNames() << endl ;
     cout << endl ;
   }
 
-  if (_eocache.size()>0) {
+  if (!_eocache.empty()) {
     cout << "embedded precalculated expensive components" << endl ;
     cout << "-------------------------------------------" << endl ;
     _eocache.print() ;
@@ -2485,97 +2352,97 @@ void RooWorkspace::Print(Option_t* opts) const
 
 void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 {
-  typedef ::RooWorkspace::CodeRepo thisClass;
+   typedef ::RooWorkspace::CodeRepo thisClass;
 
    // Stream an object of class RooWorkspace::CodeRepo.
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v =  R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s;
+      UInt_t R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
-     // Stream contents of ClassFiles map
-     Int_t count(0) ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _fmap[name]._hext.Streamer(R__b) ;
-       _fmap[name]._hfile.Streamer(R__b) ;
-       _fmap[name]._cxxfile.Streamer(R__b) ;
-     }
+      // Stream contents of ClassFiles map
+      Int_t count(0);
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _fmap[name]._hext.Streamer(R__b);
+         _fmap[name]._hfile.Streamer(R__b);
+         _fmap[name]._cxxfile.Streamer(R__b);
+      }
 
-     // Stream contents of ClassRelInfo map
-     count=0 ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _c2fmap[name]._baseName.Streamer(R__b) ;
-       _c2fmap[name]._fileBase.Streamer(R__b) ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = 0;
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _c2fmap[name]._baseName.Streamer(R__b);
+         _c2fmap[name]._fileBase.Streamer(R__b);
+      }
 
-     if (R__v==2) {
+      if (R__v == 2) {
 
-       count=0 ;
-       R__b >> count ;
-       while(count--) {
-	 TString name ;
-	 name.Streamer(R__b) ;
-	 _ehmap[name]._hname.Streamer(R__b) ;
-	 _ehmap[name]._hfile.Streamer(R__b) ;
-       }
-     }
+         count = 0;
+         R__b >> count;
+         while (count--) {
+            TString name;
+            name.Streamer(R__b);
+            _ehmap[name]._hname.Streamer(R__b);
+            _ehmap[name]._hfile.Streamer(R__b);
+         }
+      }
 
-     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
-     // Instantiate any classes that are not defined in current session
-     _compiledOK = !compileClasses() ;
+      // Instantiate any classes that are not defined in current session
+      _compiledOK = !compileClasses();
 
    } else {
 
-     UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), kTRUE);
+      UInt_t R__c;
+      R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
-     // Stream contents of ClassFiles map
-     UInt_t count = _fmap.size() ;
-     R__b << count ;
-     map<TString,ClassFiles>::iterator iter = _fmap.begin() ;
-     while(iter!=_fmap.end()) {
-       TString key_copy(iter->first) ;
-       key_copy.Streamer(R__b) ;
-       iter->second._hext.Streamer(R__b) ;
-       iter->second._hfile.Streamer(R__b);
-       iter->second._cxxfile.Streamer(R__b);
+      // Stream contents of ClassFiles map
+      UInt_t count = _fmap.size();
+      R__b << count;
+      map<TString, ClassFiles>::iterator iter = _fmap.begin();
+      while (iter != _fmap.end()) {
+         TString key_copy(iter->first);
+         key_copy.Streamer(R__b);
+         iter->second._hext.Streamer(R__b);
+         iter->second._hfile.Streamer(R__b);
+         iter->second._cxxfile.Streamer(R__b);
 
-       ++iter ;
-     }
+         ++iter;
+      }
 
-     // Stream contents of ClassRelInfo map
-     count = _c2fmap.size() ;
-     R__b << count ;
-     map<TString,ClassRelInfo>::iterator iter2 = _c2fmap.begin() ;
-     while(iter2!=_c2fmap.end()) {
-       TString key_copy(iter2->first) ;
-       key_copy.Streamer(R__b) ;
-       iter2->second._baseName.Streamer(R__b) ;
-       iter2->second._fileBase.Streamer(R__b);
-       ++iter2 ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = _c2fmap.size();
+      R__b << count;
+      map<TString, ClassRelInfo>::iterator iter2 = _c2fmap.begin();
+      while (iter2 != _c2fmap.end()) {
+         TString key_copy(iter2->first);
+         key_copy.Streamer(R__b);
+         iter2->second._baseName.Streamer(R__b);
+         iter2->second._fileBase.Streamer(R__b);
+         ++iter2;
+      }
 
-     // Stream contents of ExtraHeader map
-     count = _ehmap.size() ;
-     R__b << count ;
-     map<TString,ExtraHeader>::iterator iter3 = _ehmap.begin() ;
-     while(iter3!=_ehmap.end()) {
-       TString key_copy(iter3->first) ;
-       key_copy.Streamer(R__b) ;
-       iter3->second._hname.Streamer(R__b) ;
-       iter3->second._hfile.Streamer(R__b);
-       ++iter3 ;
-     }
+      // Stream contents of ExtraHeader map
+      count = _ehmap.size();
+      R__b << count;
+      map<TString, ExtraHeader>::iterator iter3 = _ehmap.begin();
+      while (iter3 != _ehmap.end()) {
+         TString key_copy(iter3->first);
+         key_copy.Streamer(R__b);
+         iter3->second._hname.Streamer(R__b);
+         iter3->second._hfile.Streamer(R__b);
+         ++iter3;
+      }
 
-     R__b.SetByteCount(R__c, kTRUE);
-
+      R__b.SetByteCount(R__c, true);
    }
 }
 
@@ -2592,112 +2459,107 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-      R__b.ReadClassBuffer(RooWorkspace::Class(),this);
+      R__b.ReadClassBuffer(RooWorkspace::Class(), this);
 
       // Perform any pass-2 schema evolution here
-      RooFIter fiter = _allOwnedNodes.fwdIterator() ;
-      RooAbsArg* node ;
-      while((node=fiter.next())) {
-	node->ioStreamerPass2() ;
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->ioStreamerPass2();
       }
-      RooAbsArg::ioStreamerPass2Finalize() ;
+      RooAbsArg::ioStreamerPass2Finalize();
 
       // Make expensive object cache of all objects point to intermal copy.
       // Somehow this doesn't work OK automatically
-      TIterator* iter = _allOwnedNodes.createIterator() ;
-      while((node=(RooAbsArg*)iter->Next())) {
-	node->setExpensiveObjectCache(_eocache) ;
-   node->setWorkspace(*this);
-   if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
-      RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
-      if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
-         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->IsA()->GetName() << "::" << node->GetName()
-              << " : " << tmp->sealNotice() << endl;
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->setExpensiveObjectCache(_eocache);
+         node->setWorkspace(*this);
+#ifdef ROOFIT_LEGACY_EVAL_BACKEND
+         if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+            RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
+            if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
+               cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
+                    << " : " << tmp->sealNotice() << endl;
+            }
+         }
+#endif
       }
-   }
-      }
-      delete iter ;
-
 
    } else {
 
-     // Make lists of external clients of WS objects, and remove those links temporarily
+      // Make lists of external clients of WS objects, and remove those links temporarily
 
-     map<RooAbsArg*,vector<RooAbsArg *> > extClients, extValueClients, extShapeClients ;
+      map<RooAbsArg *, vector<RooAbsArg *>> extClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extValueClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extShapeClients;
 
-     TIterator* iter = _allOwnedNodes.createIterator() ;
-     RooAbsArg* tmparg ;
-     while((tmparg=(RooAbsArg*)iter->Next())) {
+      for (RooAbsArg *tmparg : _allOwnedNodes) {
 
-       // Loop over client list of this arg
-       std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
-       for (auto client : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*client)) {
+         // Loop over client list of this arg
+         std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
+         for (auto client : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*client)) {
 
-           const auto refCount = tmparg->_clientList.refCount(client);
-           auto& bufferVec = extClients[tmparg];
+               const auto refCount = tmparg->_clientList.refCount(client);
+               auto &bufferVec = extClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, client);
-           tmparg->_clientList.Remove(client, true);
+               bufferVec.insert(bufferVec.end(), refCount, client);
+               tmparg->_clientList.Remove(client, true);
+            }
          }
-       }
 
-       // Loop over value client list of this arg
-       clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
-       for (auto vclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*vclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-				       << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
+         // Loop over value client list of this arg
+         clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
+         for (auto vclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*vclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external value client link to " << vclient << " (" << vclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl;
 
-           const auto refCount = tmparg->_clientListValue.refCount(vclient);
-           auto& bufferVec = extValueClients[tmparg];
+               const auto refCount = tmparg->_clientListValue.refCount(vclient);
+               auto &bufferVec = extValueClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, vclient);
-           tmparg->_clientListValue.Remove(vclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, vclient);
+               tmparg->_clientListValue.Remove(vclient, true);
+            }
          }
-       }
 
-       // Loop over shape client list of this arg
-       clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
-       for (auto sclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*sclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-				         << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
+         // Loop over shape client list of this arg
+         clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
+         for (auto sclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*sclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external shape client link to " << sclient << " (" << sclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl;
 
-           const auto refCount = tmparg->_clientListShape.refCount(sclient);
-           auto& bufferVec = extShapeClients[tmparg];
+               const auto refCount = tmparg->_clientListShape.refCount(sclient);
+               auto &bufferVec = extShapeClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, sclient);
-           tmparg->_clientListShape.Remove(sclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, sclient);
+               tmparg->_clientListShape.Remove(sclient, true);
+            }
          }
-       }
+      }
 
-     }
-     delete iter ;
+      R__b.WriteClassBuffer(RooWorkspace::Class(), this);
 
-     R__b.WriteClassBuffer(RooWorkspace::Class(),this);
+      // Reinstate clients here
 
-     // Reinstate clients here
+      for (auto &iterx : extClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientList.Add(client);
+         }
+      }
 
+      for (auto &iterx : extValueClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListValue.Add(client);
+         }
+      }
 
-     for (auto iterx : extClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientList.Add(client);
-       }
-     }
-
-     for (auto iterx : extValueClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListValue.Add(client);
-       }
-     }
-
-     for (auto iterx : extShapeClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListShape.Add(client);
-       }
-     }
-
+      for (auto &iterx : extShapeClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListShape.Add(client);
+         }
+      }
    }
 }
 
@@ -2712,7 +2574,7 @@ std::string RooWorkspace::CodeRepo::listOfClassNames() const
   string ret ;
   map<TString,ClassRelInfo>::const_iterator iter = _c2fmap.begin() ;
   while(iter!=_c2fmap.end()) {
-    if (ret.size()>0) {
+    if (!ret.empty()) {
       ret += ", " ;
     }
     ret += iter->first ;
@@ -2820,14 +2682,14 @@ UInt_t crc32(const char* data)
 /// instructions for user how to fix errors and recover workspace and
 /// abort import procedure.
 
-Bool_t RooWorkspace::CodeRepo::compileClasses()
+bool RooWorkspace::CodeRepo::compileClasses()
 {
-  Bool_t haveDir=kFALSE ;
+  bool haveDir=false ;
 
   // Retrieve name of directory in which to export code files
   string dirName = Form(_classFileExportDir.c_str(),_wspace->uuid().AsString(),_wspace->GetName()) ;
 
-  Bool_t writeExtraHeaders(kFALSE) ;
+  bool writeExtraHeaders(false) ;
 
   // Process all class entries in repository
   map<TString,ClassRelInfo>::iterator iter = _c2fmap.begin() ;
@@ -2838,7 +2700,7 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
     // If class is already known, don't load
     if (gClassTable->GetDict(iter->first.Data())) {
       oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Embedded class "
-				      << iter->first << " already in ROOT class table, skipping" << endl ;
+                  << iter->first << " already in ROOT class table, skipping" << endl ;
       ++iter ;
       continue ;
     }
@@ -2848,42 +2710,42 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
       // If not, make local directory to extract files
       if (!gSystem->AccessPathName(dirName.c_str())) {
-	oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() reusing code export directory " << dirName.c_str()
-					<< " to extract coded embedded in workspace" << endl ;
+   oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() reusing code export directory " << dirName.c_str()
+               << " to extract coded embedded in workspace" << endl ;
       } else {
-	if (gSystem->MakeDirectory(dirName.c_str())==0) {
-	  oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() creating code export directory " << dirName.c_str()
-					  << " to extract coded embedded in workspace" << endl ;
-	} else {
-	  oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR creating code export directory " << dirName.c_str()
-					  << " to extract coded embedded in workspace" << endl ;
-	  return kFALSE ;
-	}
+   if (gSystem->MakeDirectory(dirName.c_str())==0) {
+     oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() creating code export directory " << dirName.c_str()
+                 << " to extract coded embedded in workspace" << endl ;
+   } else {
+     oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR creating code export directory " << dirName.c_str()
+                 << " to extract coded embedded in workspace" << endl ;
+     return false ;
+   }
       }
-      haveDir=kTRUE ;
+      haveDir=true ;
 
     }
 
     // First write any extra header files
     if (!writeExtraHeaders) {
-      writeExtraHeaders = kTRUE ;
+      writeExtraHeaders = true ;
 
-      map<TString,ExtraHeader>::iterator eiter = _ehmap.begin() ;
-      while(eiter!=_ehmap.end()) {
+      map<TString,ExtraHeader>::iterator extraIter = _ehmap.begin() ;
+      while(extraIter!=_ehmap.end()) {
 
-	// Check if identical declaration file (header) is already written
-	Bool_t needEHWrite=kTRUE ;
-	string fdname = Form("%s/%s",dirName.c_str(),eiter->second._hname.Data()) ;
-	ifstream ifdecl(fdname.c_str()) ;
-	if (ifdecl) {
-	  TString contents ;
+   // Check if identical declaration file (header) is already written
+   bool needEHWrite=true ;
+   string fdname = Form("%s/%s",dirName.c_str(),extraIter->second._hname.Data()) ;
+   ifstream ifdecl(fdname.c_str()) ;
+   if (ifdecl) {
+     TString contents ;
      char buf[64000];
      while (ifdecl.getline(buf, 64000)) {
         contents += buf;
         contents += "\n";
      }
      UInt_t crcFile = crc32(contents.Data());
-     UInt_t crcWS = crc32(eiter->second._hfile.Data());
+     UInt_t crcWS = crc32(extraIter->second._hfile.Data());
      needEHWrite = (crcFile != crcWS);
    }
 
@@ -2899,12 +2761,12 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
       if (!fdecl) {
          oocoutE(_wspace, ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file " << fdname
                                           << " for writing" << endl;
-         return kFALSE;
+         return false;
       }
-      fdecl << eiter->second._hfile.Data();
+      fdecl << extraIter->second._hfile.Data();
       fdecl.close();
    }
-   ++eiter;
+   ++extraIter;
       }
     }
 
@@ -2917,12 +2779,12 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
     // If file is already processed, skip to next class
     if (cfinfo._extracted) {
       oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() file with base name " << iter->second._fileBase
-					 << " has already been extracted, skipping to next class" << endl ;
+                << " has already been extracted, skipping to next class" << endl ;
       continue ;
     }
 
     // Check if identical declaration file (header) is already written
-    Bool_t needDeclWrite=kTRUE ;
+    bool needDeclWrite=true ;
     string fdname = Form("%s/%s.%s",dirName.c_str(),iter->second._fileBase.Data(),cfinfo._hext.Data()) ;
     ifstream ifdecl(fdname.c_str()) ;
     if (ifdecl) {
@@ -2942,16 +2804,16 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
       oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting declaration code of class " << iter->first << ", file " << fdname << endl ;
       ofstream fdecl(fdname.c_str()) ;
       if (!fdecl) {
-	oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file "
-					<< fdname << " for writing" << endl ;
-	return kFALSE ;
+   oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file "
+               << fdname << " for writing" << endl ;
+   return false ;
       }
       fdecl << cfinfo._hfile ;
       fdecl.close() ;
     }
 
     // Check if identical implementation file is already written
-    Bool_t needImplWrite=kTRUE ;
+    bool needImplWrite=true ;
     string finame = Form("%s/%s.cxx",dirName.c_str(),iter->second._fileBase.Data()) ;
     ifstream ifimpl(finame.c_str()) ;
     if (ifimpl) {
@@ -2971,37 +2833,37 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
       oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Extracting implementation code of class " << iter->first << ", file " << finame << endl ;
       ofstream fimpl(finame.c_str()) ;
       if (!fimpl) {
-	oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file"
-					<< finame << " for writing" << endl ;
-	return kFALSE ;
+   oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR opening file"
+               << finame << " for writing" << endl ;
+   return false ;
       }
       fimpl << cfinfo._cxxfile ;
       fimpl.close() ;
     }
 
     // Mark this file as extracted
-    cfinfo._extracted = kTRUE ;
+    cfinfo._extracted = true ;
     oocxcoutD(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() marking code unit  " << iter->second._fileBase << " as extracted" << endl ;
 
     // Compile class
     oocoutI(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() Compiling code unit " << iter->second._fileBase.Data() << " to define class " << iter->first << endl ;
-    Bool_t ok = gSystem->CompileMacro(finame.c_str(),"k") ;
+    bool ok = gSystem->CompileMacro(finame.c_str(),"k") ;
 
     if (!ok) {
       oocoutE(_wspace,ObjectHandling) << "RooWorkspace::CodeRepo::compileClasses() ERROR compiling class " << iter->first.Data() << ", to fix this you can do the following: " << endl
-				      << "  1) Fix extracted source code files in directory " << dirName.c_str() << "/" << endl
-				      << "  2) In clean ROOT session compiled fixed classes by hand using '.x " << dirName.c_str() << "/ClassName.cxx+'" << endl
-				      << "  3) Reopen file with RooWorkspace with broken source code in UPDATE mode. Access RooWorkspace to force loading of class" << endl
-				      << "     Broken instances in workspace will _not_ be compiled, instead precompiled fixed instances will be used." << endl
-				      << "  4) Reimport fixed code in workspace using 'RooWorkspace::importClassCode(\"*\",kTRUE)' method, Write() updated workspace to file and close file" << endl
-				      << "  5) Reopen file in clean ROOT session to confirm that problems are fixed" << endl ;
-	return kFALSE ;
+                  << "  1) Fix extracted source code files in directory " << dirName.c_str() << "/" << endl
+                  << "  2) In clean ROOT session compiled fixed classes by hand using '.x " << dirName.c_str() << "/ClassName.cxx+'" << endl
+                  << "  3) Reopen file with RooWorkspace with broken source code in UPDATE mode. Access RooWorkspace to force loading of class" << endl
+                  << "     Broken instances in workspace will _not_ be compiled, instead precompiled fixed instances will be used." << endl
+                  << "  4) Reimport fixed code in workspace using 'RooWorkspace::importClassCode(\"*\",true)' method, Write() updated workspace to file and close file" << endl
+                  << "  5) Reopen file in clean ROOT session to confirm that problems are fixed" << endl ;
+   return false ;
     }
 
     ++iter ;
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -3011,14 +2873,14 @@ Bool_t RooWorkspace::CodeRepo::compileClasses()
 
 void RooWorkspace::WSDir::InternalAppend(TObject* obj)
 {
-  TDirectory::Append(obj,kFALSE) ;
+  TDirectory::Append(obj,false) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-void RooWorkspace::WSDir::Add(TObject* obj,Bool_t)
+void RooWorkspace::WSDir::Add(TObject* obj,bool)
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
@@ -3031,7 +2893,7 @@ void RooWorkspace::WSDir::Add(TObject* obj,Bool_t)
 ////////////////////////////////////////////////////////////////////////////////
 /// Overload TDirectory interface method to prohibit insertion of objects in read-only directory workspace representation
 
-void RooWorkspace::WSDir::Append(TObject* obj,Bool_t)
+void RooWorkspace::WSDir::Append(TObject* obj,bool)
 {
   if (dynamic_cast<RooAbsArg*>(obj) || dynamic_cast<RooAbsData*>(obj)) {
     coutE(ObjectHandling) << "RooWorkspace::WSDir::Add(" << GetName() << ") ERROR: Directory is read-only representation of a RooWorkspace, use RooWorkspace::import() to add objects" << endl ;
@@ -3040,109 +2902,6 @@ void RooWorkspace::WSDir::Append(TObject* obj,Bool_t)
   }
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Activate export of workspace symbols to CINT in a namespace with given name. If no name
-/// is given the namespace will have the same name as the workspace
-
-void RooWorkspace::exportToCint(const char* nsname)
-{
-  // If export is already active, do nothing
-  if (_doExport) {
-    coutE(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName() << ") WARNING: repeated calls to exportToCint() have no effect" << endl ;
-    return ;
-  }
-
-  // Set flag so that future import to workspace are automatically exported to CINT
-  _doExport = kTRUE ;
-
-  // If no name is provided choose name of workspace
-  if (!nsname) nsname = GetName() ;
-  _exportNSName = nsname ;
-
-  coutI(ObjectHandling) << "RooWorkspace::exportToCint(" << GetName()
-			<< ") INFO: references to all objects in this workspace will be created in CINT in 'namespace " << _exportNSName << "'" << endl ;
-
-  // Export present contents of workspace to CINT
-  TIterator* iter = _allOwnedNodes.createIterator() ;
-  TObject* wobj ;
-  while((wobj=iter->Next())) {
-    exportObj(wobj) ;
-  }
-  delete iter ;
-  iter = _dataList.MakeIterator() ;
-  while((wobj=iter->Next())) {
-    exportObj(wobj) ;
-  }
-  delete iter ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Export reference to given workspace object to CINT
-
-void RooWorkspace::exportObj(TObject* wobj)
-{
-  // Do nothing if export flag is not set
-  if (!_doExport) return ;
-
-  // Do not export RooConstVars
-  if (wobj->IsA() == RooConstVar::Class()) {
-    return ;
-  }
-
-
-  // Determine if object name is a valid C++ identifier name
-
-  // Do not export objects that have names that are not valid C++ identifiers
-  if (!isValidCPPID(wobj->GetName())) {
-    cxcoutD(ObjectHandling) << "RooWorkspace::exportObj(" << GetName() << ") INFO: Workspace object name " << wobj->GetName() << " is not a valid C++ identifier and is not exported to CINT" << endl ;
-    return ;
-  }
-
-  // Declare correctly typed reference to object in CINT in the namespace associated with this workspace
-  string cintExpr = Form("namespace %s { %s& %s = *(%s *)0x%lx ; }",_exportNSName.c_str(),wobj->IsA()->GetName(),wobj->GetName(),wobj->IsA()->GetName(),(ULong_t)wobj) ;
-  gROOT->ProcessLine(cintExpr.c_str()) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return true if given name is a valid C++ identifier name
-
-Bool_t RooWorkspace::isValidCPPID(const char* name)
-{
-  string oname(name) ;
-  if (isdigit(oname[0])) {
-    return kFALSE ;
-  } else {
-    for (UInt_t i=0 ; i<oname.size() ; i++) {
-      char c = oname[i] ;
-      if (!isalnum(c) && (c!='_')) {
-	return kFALSE ;
-      }
-    }
-  }
-  return kTRUE ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delete exported reference in CINT namespace
-
-void RooWorkspace::unExport()
-{
-   char buf[64000];
-   TIterator *iter = _allOwnedNodes.createIterator();
-   TObject *wobj;
-   while ((wobj = iter->Next())) {
-      if (isValidCPPID(wobj->GetName())) {
-         strlcpy(buf, Form("%s::%s", _exportNSName.c_str(), wobj->GetName()), 64000);
-         gInterpreter->DeleteVariable(buf);
-      }
-  }
-  delete iter ;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If one of the TObject we have a referenced to is deleted, remove the
@@ -3162,9 +2921,30 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    _genObjects.RecursiveRemove(removedObj);
    _studyMods.RecursiveRemove(removedObj);
 
-   for(auto c : _namedSets) {
-      c.second.RecursiveRemove(removedObj);
+   std::vector<std::string> invalidSets;
+
+   for(auto &c : _namedSets) {
+      auto const& setName = c.first;
+      auto& set = c.second;
+      std::size_t oldSize = set.size();
+      set.RecursiveRemove(removedObj);
+      // If the set is used internally by RooFit to cache parameters or
+      // constraints, it is invalidated by object removal. We will keep track
+      // of its name to remove the cache set later.
+      if(set.size() < oldSize && isCacheSet(setName)) {
+         invalidSets.emplace_back(setName);
+      }
+   }
+
+   // Remove the sets that got invalidated by the object removal
+   for(std::string const& setName : invalidSets) {
+      removeSet(setName.c_str());
    }
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
+}
+
+TIterator *RooWorkspace::componentIterator() const
+{
+   return new RooLinkedListIter(_allOwnedNodes.makeLegacyIterator());
 }

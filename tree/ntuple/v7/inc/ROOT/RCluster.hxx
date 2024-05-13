@@ -27,8 +27,7 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
-
+namespace Internal {
 
 // clang-format off
 /**
@@ -45,56 +44,56 @@ private:
    /// The memory location of the bytes
    const void *fAddress = nullptr;
    /// The compressed and packed size of the page
-   std::size_t fSize = 0;
+   std::uint32_t fSize = 0;
 
 public:
    /// On-disk pages within a page source are identified by the column and page number. The key is used for
    /// associative collections of on-disk pages.
    struct Key {
-      DescriptorId_t fColumnId;
+      DescriptorId_t fPhysicalColumnId;
       std::uint64_t fPageNo;
-      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fColumnId(columnId), fPageNo(pageNo) {}
+      Key(DescriptorId_t columnId, std::uint64_t pageNo) : fPhysicalColumnId(columnId), fPageNo(pageNo) {}
       friend bool operator ==(const Key &lhs, const Key &rhs) {
-         return lhs.fColumnId == rhs.fColumnId && lhs.fPageNo == rhs.fPageNo;
+         return lhs.fPhysicalColumnId == rhs.fPhysicalColumnId && lhs.fPageNo == rhs.fPageNo;
       }
    };
 
    ROnDiskPage() = default;
-   ROnDiskPage(void *address, std::size_t size) : fAddress(address), fSize(size) {}
+   ROnDiskPage(void *address, std::uint32_t size) : fAddress(address), fSize(size) {}
 
    const void *GetAddress() const { return fAddress; }
-   std::size_t GetSize() const { return fSize; }
+   std::uint32_t GetSize() const { return fSize; }
 
    bool IsNull() const { return fAddress == nullptr; }
-};
+}; // class ROnDiskPage
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 
 // For hash maps ROnDiskPage::Key --> ROnDiskPage
 namespace std
 {
-   template <>
-   struct hash<ROOT::Experimental::Detail::ROnDiskPage::Key>
+template <>
+struct hash<ROOT::Experimental::Internal::ROnDiskPage::Key> {
+   // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
+   size_t operator()(const ROOT::Experimental::Internal::ROnDiskPage::Key &key) const
    {
-      // TODO(jblomer): quick and dirty hash, likely very sub-optimal, to be revised later.
-      size_t operator()(const ROOT::Experimental::Detail::ROnDiskPage::Key &key) const
-      {
-         return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fColumnId) ^
-                 (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >> 1);
-      }
-   };
+      return ((std::hash<ROOT::Experimental::DescriptorId_t>()(key.fPhysicalColumnId) ^
+               (hash<ROOT::Experimental::NTupleSize_t>()(key.fPageNo) << 1)) >>
+              1);
+   }
+};
 }
 
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::ROnDiskPageMap
+\class ROOT::Experimental::Internal::ROnDiskPageMap
 \ingroup NTuple
 \brief A memory region that contains packed and compressed pages
 
@@ -119,12 +118,11 @@ public:
    /// needs to be owned by the page map (see derived classes).  If a page map contains a page of a given column,
    /// it is expected that _all_ the pages of that column in that cluster are part of the page map.
    void Register(const ROnDiskPage::Key &key, const ROnDiskPage &onDiskPage) { fOnDiskPages.emplace(key, onDiskPage); }
-};
-
+}; // class ROnDiskPageMap
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::ROnDiskPageMapHeap
+\class ROOT::Experimental::Internal::ROnDiskPageMapHeap
 \ingroup NTuple
 \brief An ROnDiskPageMap that is used for an fMemory allocated as an array of unsigned char.
 */
@@ -139,12 +137,12 @@ public:
    ROnDiskPageMapHeap(ROnDiskPageMapHeap &&other) = default;
    ROnDiskPageMapHeap &operator =(const ROnDiskPageMapHeap &other) = delete;
    ROnDiskPageMapHeap &operator =(ROnDiskPageMapHeap &&other) = default;
-   ~ROnDiskPageMapHeap();
-};
+   ~ROnDiskPageMapHeap() override;
+}; // class ROnDiskPageMapHeap
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RCluster
+\class ROOT::Experimental::Internal::RCluster
 \ingroup NTuple
 \brief An in-memory subset of the packed and compressed pages of a cluster
 
@@ -152,13 +150,21 @@ Binds together several page maps that represent all the pages of certain columns
 */
 // clang-format on
 class RCluster {
+public:
+   using ColumnSet_t = std::unordered_set<DescriptorId_t>;
+   /// The identifiers that specifies the content of a (partial) cluster
+   struct RKey {
+      DescriptorId_t fClusterId = kInvalidDescriptorId;
+      ColumnSet_t fPhysicalColumnSet;
+   };
+
 protected:
    /// References the cluster identifier in the page source that created the cluster
    DescriptorId_t fClusterId;
    /// Multiple page maps can be combined in a single RCluster
    std::vector<std::unique_ptr<ROnDiskPageMap>> fPageMaps;
    /// Set of the (complete) columns represented by the RCluster
-   std::unordered_set<DescriptorId_t> fAvailColumns;
+   ColumnSet_t fAvailPhysicalColumns;
    /// Lookup table for the on-disk pages
    std::unordered_map<ROnDiskPage::Key, ROnDiskPage> fOnDiskPages;
 
@@ -183,16 +189,16 @@ public:
    /// Marks the column as complete; must be done for all columns, even empty ones without associated pages,
    /// before the cluster is given from the page storage to the cluster pool.  Marking the available columns is
    /// typically the last step of RPageSouce::LoadCluster().
-   void SetColumnAvailable(DescriptorId_t columnId);
+   void SetColumnAvailable(DescriptorId_t physicalColumnId);
    const ROnDiskPage *GetOnDiskPage(const ROnDiskPage::Key &key) const;
 
    DescriptorId_t GetId() const { return fClusterId; }
-   const std::unordered_set<DescriptorId_t> &GetAvailColumns() const { return fAvailColumns; }
-   bool ContainsColumn(DescriptorId_t columnId) const { return fAvailColumns.count(columnId) > 0; }
+   const ColumnSet_t &GetAvailPhysicalColumns() const { return fAvailPhysicalColumns; }
+   bool ContainsColumn(DescriptorId_t colId) const { return fAvailPhysicalColumns.count(colId) > 0; }
    size_t GetNOnDiskPages() const { return fOnDiskPages.size(); }
-};
+}; // class RCluster
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

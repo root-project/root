@@ -41,8 +41,6 @@ hypotheses.
 
 #include <cmath>
 
-using namespace std;
-
 ClassImp(RooStats::HypoTestInverterPlot);
 
 using namespace RooStats;
@@ -96,12 +94,13 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
    TMath::SortItr(fResults->fXValues.begin(), fResults->fXValues.end(), index.begin(), false);
 
    // copy result in sorted arrays
-   std::vector<Double_t> xArray;
-   std::vector<Double_t> yArray;
-   std::vector<Double_t> yErrArray;
+   std::vector<double> xArray;
+   std::vector<double> yArray;
+   std::vector<double> yErrArray;
 
    for (int i=0; i<nEntries; i++) {
-      double CLVal = 0., CLErr = 0.;
+      double CLVal = 0.;
+      double CLErr = 0.;
       if (type == Default) {
          CLVal = fResults->GetYValue(index[i]);
          CLErr = fResults->GetYError(index[i]);
@@ -126,7 +125,7 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
       xArray.push_back(fResults->GetXValue(index[i]));
    }
 
-   TGraphErrors* graph = new TGraphErrors(static_cast<Int_t>(xArray.size()),&xArray.front(),&yArray.front(),0,&yErrArray.front());
+   TGraphErrors* graph = new TGraphErrors(static_cast<Int_t>(xArray.size()),&xArray.front(),&yArray.front(),nullptr,&yErrArray.front());
    TString pValueName = "CLs";
    if (type == CLb ) pValueName = "CLb";
    if (type == CLsPlusb || (type == Default && !fResults->fUseCLs) ) pValueName = "CLs+b";
@@ -165,21 +164,23 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    TString pValueName = "CLs";
    if (!fResults->fUseCLs) pValueName = "CLs+b";
    g0->SetTitle(TString::Format("Expected %s - Median",pValueName.Data()) );
-   TGraphAsymmErrors * g1 = 0;
-   TGraphAsymmErrors * g2 = 0;
+   TGraphAsymmErrors * g1 = nullptr;
+   TGraphAsymmErrors * g2 = nullptr;
    if (doFirstBand) {
       g1 = new TGraphAsymmErrors;
-      if (nsig1 - int(nsig1) < 0.01)
+      if (nsig1 - int(nsig1) < 0.01) {
          g1->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig1)) );
-      else
-         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig1) );
+      } else {
+         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig1));
+      }
    }
    if (doSecondBand) {
       g2 = new TGraphAsymmErrors;
-      if (nsig2 - int(nsig2) < 0.01)
+      if (nsig2 - int(nsig2) < 0.01) {
          g2->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig2)) );
-      else
-         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig2) );
+      } else {
+         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig2));
+      }
    }
    double p[7];
    double q[7];
@@ -219,7 +220,7 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
       g0->SetPoint(np, fResults->GetXValue(i),  q[2]);
       if (g1) {
          g1->SetPoint(np, fResults->GetXValue(i),  q[2]);
-         g1->SetPointEYlow(np, q[2] - q[1]); // -1 sigma errorr
+         g1->SetPointEYlow(np, q[2] - q[1]); // -1 sigma error
          g1->SetPointEYhigh(np, q[3] - q[2]);//+1 sigma error
       }
       if (g2) {
@@ -282,8 +283,8 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    bool drawCLb = option.Contains("CLB");
    bool draw2CL = option.Contains("2CL");
 
-   TGraphErrors * gobs = 0;
-   TGraph * gplot = 0;
+   TGraphErrors * gobs = nullptr;
+   TGraph * gplot = nullptr;
    if (drawObs) {
       gobs = MakePlot();
       // add object to top-level directory to avoid mem leak
@@ -296,7 +297,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       else gobs->Draw("PL");
 
    }
-   TMultiGraph * gexp = 0;
+   TMultiGraph * gexp = nullptr;
    if (drawExp) {
       gexp = MakeExpectedPlot();
       // add object to current directory to avoid mem leak
@@ -304,7 +305,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       if (drawAxis && !drawObs) {
          gexp->Draw("A");
          if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
-         gplot = (TGraph*) gexp->GetListOfGraphs()->First();
+         gplot = static_cast<TGraph*>(gexp->GetListOfGraphs()->First());
       }
       else
          gexp->Draw();
@@ -326,7 +327,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
    }
 
 
-   TGraph *gclb = 0;
+   TGraph *gclb = nullptr;
    if (drawCLb) {
       gclb = MakePlot("CLb");
       if (gROOT) gROOT->Add(gclb);
@@ -335,8 +336,8 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       // draw in red observed cls or clsb
       if (gobs) gobs->SetMarkerColor(kRed);
    }
-   TGraph * gclsb = 0;
-   TGraph * gcls = 0;
+   TGraph * gclsb = nullptr;
+   TGraph * gcls = nullptr;
    if (draw2CL) {
       if (fResults->fUseCLs) {
          gclsb = MakePlot("CLs+b");
@@ -392,9 +393,9 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
 ///  - type = 2 only alt  (B)
 
 SamplingDistPlot * HypoTestInverterPlot::MakeTestStatPlot(int index, int type, int nbins) {
-   SamplingDistPlot * pl = 0;
+   SamplingDistPlot * pl = nullptr;
    if (type == 0) {
-      HypoTestResult * result = (HypoTestResult*) fResults->fYObjects.At(index);
+      HypoTestResult * result = static_cast<HypoTestResult*>(fResults->fYObjects.At(index));
       if (result)
          pl = new HypoTestPlot(*result, nbins );
       return pl;
@@ -415,5 +416,5 @@ SamplingDistPlot * HypoTestInverterPlot::MakeTestStatPlot(int index, int type, i
          return pl;
       }
    }
-   return 0;
+   return nullptr;
 }

@@ -37,8 +37,6 @@
 #include <vector>
 #include <cassert>
 
-using namespace std;
-
 auto tupleSort = [](std::tuple<Float_t, Float_t, Bool_t> _a, std::tuple<Float_t, Float_t, Bool_t> _b) {
    return std::get<0>(_a) < std::get<0>(_b);
 };
@@ -154,7 +152,7 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       auto weight = std::get<1>(ev);
       auto isSignal = std::get<2>(ev);
 
-      true_negatives_sum += weight * (!isSignal);
+      true_negatives_sum += weight * (!isSignal ? 1. : 0.);
       true_negatives.push_back(true_negatives_sum);
    }
 
@@ -265,8 +263,8 @@ Double_t TMVA::ROCCurve::GetROCIntegral(const UInt_t num_points)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns a new TGraph containing the ROC curve. Specificity is on the x-axis,
-/// sensitivity on the y-axis.
+/// Returns a new TGraph containing the ROC curve. Sensitivity is on the x-axis,
+/// specificity on the y-axis.
 ///
 /// @param num_points Granularity of the resulting curve. The curve will be subdivided
 ///                     into num_points - 1 regions where the performance of the

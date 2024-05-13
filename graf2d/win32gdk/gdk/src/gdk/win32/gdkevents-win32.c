@@ -4853,7 +4853,7 @@ gdk_event_translate(GdkEvent * event,
          event->selection.target = 0x0200; // CF_PRIVATEFIRST
       }
       event->selection.property = gdk_selection_property;
-      event->selection.requestor = (guint32) xevent->hwnd;
+      event->selection.requestor = (uintptr_t) xevent->hwnd;
       event->selection.time = xevent->time;
 
       return_val = !GDK_DRAWABLE_DESTROYED(window);
@@ -5009,13 +5009,13 @@ gdk_event_translate(GdkEvent * event,
       //k_grab_window = 0;   //vo terminate active grab
 
       GDK_NOTE(EVENTS,
-               printf("WM_KEY%s: %#x  %s %#x %s\n",
+               printf("WM_KEY%s: %#zx  %s %#zx %s\n",
                        (xevent->message == WM_KEYUP ? "UP" : "DOWN"),
-                       (unsigned) xevent->hwnd,
+                       (size_t) xevent->hwnd,
                        (GetKeyNameText(xevent->lParam, buf,
                                        sizeof(buf)) > 0 ?
                         buf : ""),
-                       xevent->wParam, decode_key_lparam(xevent->lParam)));
+                       (size_t)xevent->wParam, decode_key_lparam(xevent->lParam)));
 
       ignore_WM_CHAR = TRUE;
 
@@ -6267,7 +6267,7 @@ gdk_event_translate(GdkEvent * event,
          event->selection.target = gdk_atom_intern(buf, FALSE);
       }
       event->selection.property = gdk_selection_property;
-      event->selection.requestor = (guint32) xevent->hwnd;
+      event->selection.requestor = (uintptr_t) xevent->hwnd;
       event->selection.time = xevent->time;
       return_val = !GDK_DRAWABLE_DESTROYED(window);
 #else
@@ -6312,9 +6312,9 @@ gdk_event_translate(GdkEvent * event,
          event0->client.window = window;
          event0->client.message_type = gdk_atom_intern("XdndEnter", TRUE);
          event0->client.data_format = 0;
-         event0->client.data.l[0] = (long)window;
+         event0->client.data.l[0] = (glong)window;
          event0->client.data.l[1] = 0;
-         event0->client.data.l[2] = (long)*types;
+         event0->client.data.l[2] = (glong)*types;
          event0->client.data.l[3] = 0;
          event0->client.data.l[4] = 0;
          gdk_window_ref(window);
@@ -6329,9 +6329,9 @@ gdk_event_translate(GdkEvent * event,
          event1->client.window = window;
          event1->client.message_type = gdk_atom_intern("XdndPosition", TRUE);
          event1->client.data_format = 0;
-         event1->client.data.l[0] = (long)window;
+         event1->client.data.l[0] = (glong)window;
          event1->client.data.l[1] = 0;
-         event1->client.data.l[2] = (long)(pt.y | (pt.x << 16));
+         event1->client.data.l[2] = (glong)(pt.y | (pt.x << 16));
          event1->client.data.l[3] = 0; // time
          event1->client.data.l[4] = 0; // action
          gdk_window_ref(window);

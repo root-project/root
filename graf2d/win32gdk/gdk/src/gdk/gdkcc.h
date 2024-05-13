@@ -49,7 +49,7 @@ extern "C" {
       gint need_to_free_colormap;
       GdkAtom std_cmap_atom;
 
-      gulong *clut;             /* color look-up table */
+      unsigned long *clut;      /* color look-up table */
       GdkColor *cmap;           /* colormap */
 
       GHashTable *color_hash;   /* hash table of allocated colors */
@@ -65,9 +65,9 @@ extern "C" {
       } shifts;
 
       struct {
-         gulong red;
-         gulong green;
-         gulong blue;
+         unsigned long red;
+         unsigned long green;
+         unsigned long blue;
       } masks;
 
       struct {
@@ -76,10 +76,10 @@ extern "C" {
          gint blue;
       } bits;
 
-      gulong max_entry;
+      unsigned long max_entry;
 
-      gulong black_pixel;
-      gulong white_pixel;
+      unsigned long black_pixel;
+      unsigned long white_pixel;
    };
 
    GdkColorContext *gdk_color_context_new(GdkVisual * visual,
@@ -90,7 +90,7 @@ extern "C" {
 
    void gdk_color_context_free(GdkColorContext * cc);
 
-   gulong gdk_color_context_get_pixel(GdkColorContext * cc,
+   unsigned long gdk_color_context_get_pixel(GdkColorContext * cc,
                                       gushort red,
                                       gushort green,
                                       gushort blue, gint * failed);
@@ -99,14 +99,14 @@ extern "C" {
                                      gushort * greens,
                                      gushort * blues,
                                      gint ncolors,
-                                     gulong * colors, gint * nallocated);
+                                     unsigned long * colors, gint * nallocated);
    void gdk_color_context_get_pixels_incremental(GdkColorContext * cc,
                                                  gushort * reds,
                                                  gushort * greens,
                                                  gushort * blues,
                                                  gint ncolors,
                                                  gint * used,
-                                                 gulong * colors,
+                                                 unsigned long * colors,
                                                  gint * nallocated);
 
    gint gdk_color_context_query_color(GdkColorContext * cc,
@@ -121,7 +121,7 @@ extern "C" {
    void gdk_color_context_init_dither(GdkColorContext * cc);
    void gdk_color_context_free_dither(GdkColorContext * cc);
 
-   gulong gdk_color_context_get_pixel_from_palette(GdkColorContext * cc,
+   unsigned long gdk_color_context_get_pixel_from_palette(GdkColorContext * cc,
                                                    gushort * red,
                                                    gushort * green,
                                                    gushort * blue,

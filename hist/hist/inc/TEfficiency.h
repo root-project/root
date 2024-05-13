@@ -20,6 +20,7 @@
 class TCollection;
 class TF1;
 class TGraphAsymmErrors;
+class TGraph2DAsymmErrors;
 class TH1;
 class TH2;
 class TList;
@@ -27,47 +28,49 @@ class TList;
 class TEfficiency: public TNamed, public TAttLine, public TAttFill, public TAttMarker
 {
 public:
-      //enumaration type for different statistic options for calculating confidence intervals
-      //kF* ... frequentist methods; kB* ... bayesian methods
+   /// Enumeration type for different statistic options for calculating confidence intervals
+   /// kF* ... frequentist methods; kB* ... bayesian methods
    enum EStatOption {
-      kFCP = 0,                         //Clopper-Pearson interval (recommended by PDG)
-      kFNormal,                         //normal approximation
-      kFWilson,                         //Wilson interval
-      kFAC,                             //Agresti-Coull interval
-      kFFC,                             //Feldman-Cousins interval
-      kBJeffrey,                        //Jeffrey interval (Prior ~ Beta(0.5,0.5)
-      kBUniform,                        //Prior ~ Uniform = Beta(1,1)
-      kBBayesian,                       //user specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
-      kMidP                             //Mid-P Lancaster interval
+      kFCP = 0,                         ///< Clopper-Pearson interval (recommended by PDG)
+      kFNormal,                         ///< Normal approximation
+      kFWilson,                         ///< Wilson interval
+      kFAC,                             ///< Agresti-Coull interval
+      kFFC,                             ///< Feldman-Cousins interval
+      kBJeffrey,                        ///< Jeffrey interval (Prior ~ Beta(0.5,0.5)
+      kBUniform,                        ///< Prior ~ Uniform = Beta(1,1)
+      kBBayesian,                       ///< User specified Prior ~ Beta(fBeta_alpha,fBeta_beta)
+      kMidP                             ///< Mid-P Lancaster interval
    };
 
 protected:
 
-      Double_t      fBeta_alpha;             //global parameter for prior beta distribution (default = 1)
-      Double_t      fBeta_beta;              //global parameter for prior beta distribution (default = 1)
-      std::vector<std::pair<Double_t, Double_t> > fBeta_bin_params;  // parameter for prior beta distribution different bin by bin
-                                                                 // (default vector is empty)
-      Double_t      (*fBoundary)(Double_t,Double_t,Double_t,Bool_t);               //!pointer to a method calculating the boundaries of confidence intervals
-      Double_t      fConfLevel;              //confidence level (default = 0.683, 1 sigma)
-      TDirectory*   fDirectory;              //!pointer to directory holding this TEfficiency object
-      TList*        fFunctions;              //->pointer to list of functions
-      TGraphAsymmErrors* fPaintGraph;        //!temporary graph for painting
-      TH2*          fPaintHisto;             //!temporary histogram for painting
-      TH1*          fPassedHistogram;        //histogram for events which passed certain criteria
-      EStatOption   fStatisticOption;        //defines how the confidence intervals are determined
-      TH1*          fTotalHistogram;         //histogram for total number of events
-      Double_t      fWeight;                 //weight for all events (default = 1)
+      Double_t      fBeta_alpha;             ///< Global parameter for prior beta distribution (default = 1)
+      Double_t      fBeta_beta;              ///< Global parameter for prior beta distribution (default = 1)
+      std::vector<std::pair<Double_t, Double_t> > fBeta_bin_params;  ///< Parameter for prior beta distribution different bin by bin
+                                                                     ///< (default vector is empty)
+      Double_t      (*fBoundary)(Double_t,Double_t,Double_t,Bool_t); ///<! Pointer to a method calculating the boundaries of confidence intervals
+      Double_t      fConfLevel;              ///<  Confidence level (default = 0.683, 1 sigma)
+      TDirectory*   fDirectory;              ///<! Pointer to directory holding this TEfficiency object
+      TList*        fFunctions;              ///<->Pointer to list of functions
+      TGraphAsymmErrors* fPaintGraph=nullptr;        ///<! Temporary graph for painting
+      TGraph2DAsymmErrors* fPaintGraph2D=nullptr;    ///<! Temporary graph for painting
+      TH2*          fPaintHisto=nullptr;             ///<! Temporary histogram for painting
+      TH1*          fPassedHistogram;        ///<  Histogram for events which passed certain criteria
+      EStatOption   fStatisticOption;        ///<  Defines how the confidence intervals are determined
+      TH1*          fTotalHistogram;         ///<  Histogram for total number of events
+      Double_t      fWeight;                 ///<  Weight for all events (default = 1)
 
       enum EStatusBits {
-         kIsBayesian       = BIT(14),  //bayesian statistics are used
-         kPosteriorMode    = BIT(15),  //use posterior mean for best estimate (Bayesian statistics)
-         kShortestInterval = BIT(16),  // use shortest interval
-         kUseBinPrior      = BIT(17),  // use a different prior for each bin
-         kUseWeights       = BIT(18)   // use weights
+         kIsBayesian       = BIT(14),  ///< Bayesian statistics are used
+         kPosteriorMode    = BIT(15),  ///< Use posterior mean for best estimate (Bayesian statistics)
+         kShortestInterval = BIT(16),  ///< Use shortest interval
+         kUseBinPrior      = BIT(17),  ///< Use a different prior for each bin
+         kUseWeights       = BIT(18)   ///< Use weights
       };
 
       void          Build(const char* name,const char* title);
       void          FillGraph(TGraphAsymmErrors * graph, Option_t * opt) const;
+      void          FillGraph2D(TGraph2DAsymmErrors * graph, Option_t * opt) const;
       void          FillHistogram(TH2 * h2) const;
 
 public:
@@ -89,15 +92,16 @@ public:
                   const Double_t* xbins,Int_t nbinsy,const Double_t* ybins,
                   Int_t nbinsz,const Double_t* zbins);
       TEfficiency(const TEfficiency& heff);
-      ~TEfficiency();
+      ~TEfficiency() override;
 
       void          Add(const TEfficiency& rEff) {*this += rEff;}
-      void          Browse(TBrowser*){Draw();}
+      void          Browse(TBrowser*) override{Draw();}
       TGraphAsymmErrors*   CreateGraph(Option_t * opt = "") const;
+      TGraph2DAsymmErrors*   CreateGraph2D(Option_t * opt = "") const;
       TH2*          CreateHistogram(Option_t * opt = "") const;
-      virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-      void          Draw(Option_t* opt = "");
-      virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
+      Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+      void          Draw(Option_t* opt = "") override;
+      void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
       void          Fill(Bool_t bPassed,Double_t x,Double_t y=0,Double_t z=0);
       void          FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_t y=0,Double_t z=0);
       Int_t         FindFixBin(Double_t x,Double_t y=0,Double_t z=0) const;
@@ -115,6 +119,7 @@ public:
       Double_t      GetEfficiencyErrorUp(Int_t bin) const;
       Int_t         GetGlobalBin(Int_t binx,Int_t biny=0,Int_t binz=0) const;
       TGraphAsymmErrors*   GetPaintedGraph() const { return fPaintGraph; }
+      TGraph2DAsymmErrors*   GetPaintedGraph2D() const { return fPaintGraph2D; }
       TH2*          GetPaintedHistogram() const { return fPaintHisto; }
       TList*        GetListOfFunctions();
       const TH1*    GetPassedHistogram() const {return fPassedHistogram;}
@@ -124,14 +129,14 @@ public:
       Long64_t      Merge(TCollection* list);
       TEfficiency&  operator+=(const TEfficiency& rhs);
       TEfficiency&  operator=(const TEfficiency& rhs);
-      void          Paint(Option_t* opt);
-      void          SavePrimitive(std::ostream& out,Option_t* opt="");
+      void          Paint(Option_t* opt) override;
+      void          SavePrimitive(std::ostream& out,Option_t* opt="") override;
       void          SetBetaAlpha(Double_t alpha);
       void          SetBetaBeta(Double_t beta);
       void          SetBetaBinParameters(Int_t bin, Double_t alpha, Double_t beta);
       void          SetConfidenceLevel(Double_t level);
       void          SetDirectory(TDirectory* dir);
-      void          SetName(const char* name);
+      void          SetName(const char* name) override;
       Bool_t        SetPassedEvents(Int_t bin,Int_t events);
       Bool_t        SetPassedHistogram(const TH1& rPassed,Option_t* opt);
       void          SetPosteriorMode(Bool_t on = true) { SetBit(kPosteriorMode,on); SetShortestInterval(on); }
@@ -148,8 +153,8 @@ public:
       Bool_t        SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t * yBins, Int_t nz,
                             const Double_t *zBins);
 
-      void          SetTitle(const char* title);
-      Bool_t        SetTotalEvents(Int_t bin,Int_t events);
+      void          SetTitle(const char* title) override;
+      Bool_t        SetTotalEvents(Int_t bin, Double_t events);
       Bool_t        SetTotalHistogram(const TH1& rTotal,Option_t* opt);
       void          SetUseWeightedEvents(Bool_t on = kTRUE);
       void          SetWeight(Double_t weight);
@@ -166,8 +171,8 @@ public:
       static Bool_t CheckWeights(const TH1& pass,const TH1& total);
       static Double_t Combine(Double_t& up,Double_t& low,Int_t n,const Int_t* pass,const Int_t* total,
                               Double_t alpha,Double_t beta,Double_t level=0.683,
-                              const Double_t* w=0,Option_t* opt="");
-      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=0);
+                              const Double_t* w=nullptr,Option_t* opt="");
+      static TGraphAsymmErrors* Combine(TCollection* pList,Option_t* opt="",Int_t n=0,const Double_t* w=nullptr);
 
       //calculating boundaries of confidence intervals
       static Double_t AgrestiCoull(Double_t total,Double_t passed,Double_t level,Bool_t bUpper);
@@ -185,7 +190,7 @@ public:
       static Double_t BetaMean(Double_t alpha,Double_t beta);
       static Double_t BetaMode(Double_t alpha,Double_t beta);
 
-      ClassDef(TEfficiency,2)     //calculating efficiencies
+      ClassDefOverride(TEfficiency,2)     //calculating efficiencies
 };
 
 const TEfficiency operator+(const TEfficiency& lhs,const TEfficiency& rhs);

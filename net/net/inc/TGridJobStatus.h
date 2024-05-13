@@ -37,7 +37,7 @@ public:
   // implementation
   virtual EGridJobStatus GetStatus() const = 0;
 
-  ClassDef(TGridJobStatus,1)  // ABC defining status of a Grid job
+  ClassDefOverride(TGridJobStatus,1)  // ABC defining status of a Grid job
 };
 
 #endif

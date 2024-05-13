@@ -32,13 +32,19 @@ namespace Internal {
 
 template <class REFERENCE,
           class POINTER = typename std::add_pointer<typename std::remove_reference<REFERENCE>::type>::type>
-class RIndexIter: public std::iterator<std::random_access_iterator_tag, REFERENCE, POINTER> {
+class RIndexIter {
    size_t fIndex;
 
 protected:
    static constexpr size_t fgEndIndex = (size_t)-1;
 
 public:
+   using iterator_category = std::random_access_iterator_tag;
+   using value_type = typename std::remove_reference<REFERENCE>::type;
+   using difference_type = std::ptrdiff_t;
+   using pointer = POINTER;
+   using reference = REFERENCE;
+
    RIndexIter(size_t idx): fIndex(idx) {}
 
    /// Get the current index value.

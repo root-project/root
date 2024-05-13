@@ -9,7 +9,7 @@
 
 #include "cling/Utils/Platform.h"
 
-#if defined(LLVM_ON_WIN32)
+#if defined(_WIN32)
 
 #include "cling/Utils/Output.h"
 
@@ -227,7 +227,7 @@ static bool getWindows10SDKVersion(std::string& SDKPath,
     // There could be subfolders like "wdf" in the "Include" directory, so only
     // test names that start with "10." or match input.
     const bool Match = Candidate == UcrtCompiledVers;
-    if (Match || (Candidate.startswith("10.") && Candidate > SDKVersion)) {
+    if (Match || (Candidate.starts_with("10.") && Candidate > SDKVersion)) {
       SDKPath = DirIt->path();
       Candidate.str().swap(SDKVersion);
       if (Match)
@@ -384,6 +384,8 @@ static int GetVisualStudioVersionCompiledWith() {
   return 15;
 #elif (_MSC_VER < 1930)
   return 16;
+#elif (_MSC_VER < 1950)
+  return 17;
 #else
   #error "Unsupported/Untested _MSC_VER"
   // As of now this is what is should be...have fun!
@@ -982,4 +984,4 @@ __stdcall ClingRaiseSEHException(void* CxxExcept, void* Info) {
 } // namespace utils
 } // namespace cling
 
-#endif // LLVM_ON_WIN32
+#endif // _WIN32

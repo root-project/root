@@ -61,10 +61,7 @@ typedef PTR (*mmrealloc_fun_t) PARAMS ((PTR, PTR, size_t));
 /* Check the magicword and magicbyte, and if either is corrupted then
    call the emergency abort function specified for the heap in use. */
 
-static void
-checkhdr (mdp, hdr)
-  struct mdesc *mdp;
-  const struct hdr *hdr;
+static void checkhdr(struct mdesc *mdp, const struct hdr *hdr)
 {
   if (hdr -> magic != MAGICWORD ||
       ((char *) &hdr[1])[hdr -> size] != MAGICBYTE)
@@ -73,10 +70,7 @@ checkhdr (mdp, hdr)
     }
 }
 
-static void
-mfree_check (md, ptr)
-  PTR md;
-  PTR ptr;
+static void mfree_check(PTR md, PTR ptr)
 {
   struct hdr *hdr = ((struct hdr *) ptr) - 1;
   struct mdesc *mdp;
@@ -89,10 +83,7 @@ mfree_check (md, ptr)
   mdp -> mfree_hook = (mmfree_fun_t) mfree_check;
 }
 
-static PTR
-mmalloc_check (md, size)
-  PTR md;
-  size_t size;
+static PTR mmalloc_check(PTR md, size_t size)
 {
   struct hdr *hdr;
   struct mdesc *mdp;
@@ -113,11 +104,7 @@ mmalloc_check (md, size)
   return ((PTR) hdr);
 }
 
-static PTR
-mrealloc_check (md, ptr, size)
-  PTR md;
-  PTR ptr;
-  size_t size;
+static PTR mrealloc_check(PTR md, PTR ptr, size_t size)
 {
   struct hdr *hdr = ((struct hdr *) ptr) - 1;
   struct mdesc *mdp;
@@ -165,10 +152,7 @@ mrealloc_check (md, ptr, size)
 
    Returns non-zero if checking is successfully enabled, zero otherwise. */
 
-int
-mmcheck (md, func)
-  PTR md;
-  void (*func) PARAMS ((void));
+int mmcheck(PTR md, void(*func) PARAMS((void)))
 {
   struct mdesc *mdp;
   int rtnval;

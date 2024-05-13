@@ -16,7 +16,7 @@ public:
    TFoamVect();                          // Constructor
    TFoamVect(Int_t);                     // USER Constructor
    TFoamVect(const TFoamVect &);         // Copy constructor
-   virtual ~TFoamVect();                 // Destructor
+   ~TFoamVect() override;                 // Destructor
 
    TFoamVect& operator =(const TFoamVect&);  // = operator; Substitution
    Double_t &operator[](Int_t);              // [] provides POINTER to coordinate
@@ -28,11 +28,11 @@ public:
    TFoamVect& operator*=(const Double_t&);   // *=; mult. by scalar v*=x (FAST)
    TFoamVect  operator+( const  TFoamVect&); // +;  u=v+s, NEVER USE IT, SLOW!!!
    TFoamVect  operator-( const  TFoamVect&); // -;  u=v-s, NEVER USE IT, SLOW!!!
-   void Print(Option_t *option) const;   // Prints vector
+   void Print(Option_t *option) const override;   // Prints vector
    Int_t    GetDim() const { return fDim; }  // Returns dimension
    Double_t GetCoord(Int_t i) const {return fCoords[i];};   // Returns coordinate
 
-   ClassDef(TFoamVect,1) //n-dimensional vector with dynamical allocation
+   ClassDefOverride(TFoamVect,1) //n-dimensional vector with dynamical allocation
 };
 
 #endif

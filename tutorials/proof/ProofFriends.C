@@ -24,10 +24,10 @@ ProofFriends::ProofFriends()
 {
    // Constructor
 
-   fXY = 0;
-   fZ = 0;
-   fR = 0;
-   fRZ = 0;
+   fXY = nullptr;
+   fZ = nullptr;
+   fR = nullptr;
+   fRZ = nullptr;
    fPlot = kTRUE;
    fDoFriends = kTRUE;
 }
@@ -148,7 +148,7 @@ void ProofFriends::Terminate()
    c1->Divide(2, 2);
 
    Int_t cf = TColor::GetColor("#99cccc");
-   TPad *p1 = 0;
+   TPad *p1 = nullptr;
    if ((fXY = dynamic_cast<TH2F *>(fOutput->FindObject("histo1")))) {
       p1 = (TPad *) c1->cd(1);
       p1->SetBorderMode(0);
@@ -183,10 +183,10 @@ void ProofFriends::Terminate()
          p1->SetBorderMode(0);
          p1->SetFrameFillColor(cf);
          fRZ->GetXaxis()->SetTitle("z");
-         fRZ->GetXaxis()->CenterTitle(1);
+         fRZ->GetXaxis()->CenterTitle(true);
          fRZ->GetXaxis()->SetTitleOffset(1.5);
          fRZ->GetYaxis()->SetTitle("Tfrnd.r");
-         fRZ->GetYaxis()->CenterTitle(1);
+         fRZ->GetYaxis()->CenterTitle(true);
          fRZ->GetYaxis()->SetTitleOffset(1.75);
          fRZ->GetZaxis()->SetTitle("N / 0.1 / 0.2");
          fRZ->GetZaxis()->SetTitleOffset(1.25);

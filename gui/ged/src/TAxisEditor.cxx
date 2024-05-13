@@ -9,30 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TAxisEditor                                                         //
-//                                                                      //
-//  Implements GUI for axis attributes.                                 //
-//     axis color                                                       //
-//     ticks parameters: length, setting on both axis sides,            //
-//     logarithmic or linear scale along the selected axis,             //
-//     primary, secondary and tertiary axis divisions,                  //
-//     setting more logarithmic labels,                                 //
-//     optimizing labels' position if available                         //
-//     axis title - a title can be added via the text entry field       //
-//     and can be set to be centered or rotated via the corresponding   //
-//     check buttons, the title color, offset, font can be set easily   //
-//     axis labels - their color, size, offset can be set similarly,    //
-//     in addition there is a check box for no exponent choice,         //
-//     and another one for setting the same decimal part for all labels //                                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/TAxisEditor.gif">
+
+/** \class TAxisEditor
+    \ingroup ged
+
+Implements GUI for axis attributes.
+ axis color
+ ticks parameters: length, setting on both axis sides,
+ logarithmic or linear scale along the selected axis,
+ primary, secondary and tertiary axis divisions,
+ setting more logarithmic labels,
+ optimizing labels' position if available
+ axis title - a title can be added via the text entry field
+ and can be set to be centered or rotated via the corresponding
+ check buttons, the title color, offset, font can be set easily
+ axis labels - their color, size, offset can be set similarly,
+ in addition there is a check box for no exponent choice,
+ and another one for setting the same decimal part for all labels
+
+
 */
-//End_Html
 
 
 #include "TAxisEditor.h"

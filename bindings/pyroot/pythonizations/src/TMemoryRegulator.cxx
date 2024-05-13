@@ -11,9 +11,8 @@
 
 #include "TMemoryRegulator.h"
 
-#include "ProxyWrappers.h"
-#include "CPPInstance.h"
-#include "CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/ProxyWrappers.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
 
 using namespace CPyCppyy;
 
@@ -109,7 +108,10 @@ void PyROOT::TMemoryRegulator::ClearProxiedObjects()
       else {
          // Non-owning proxy, just unregister to clean tables.
          // The proxy deletion by Python will have no effect on C++, so all good
-         MemoryRegulator::UnregisterPyObject(pyobj, pyclass);
+         bool ret = MemoryRegulator::UnregisterPyObject(pyobj, pyclass);
+         if (!ret) {
+            fObjectMap.erase(elem);
+         }
       }
    }
 }

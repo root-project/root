@@ -36,6 +36,8 @@ namespace Math {
        Phi is restricted to be in the range [-PI,PI)
 
        @ingroup GenVector
+
+       @sa Overview of the @ref GenVector "physics vector library"
    */
 
 
@@ -45,6 +47,7 @@ class Polar2D {
 public :
 
    typedef T Scalar;
+   static constexpr unsigned int Dimension = 2U;
 
    /**
       Default constructor with r=1,phi=0
@@ -61,7 +64,7 @@ public :
       R() and Phi()
    */
    template <class CoordSystem >
-   explicit Polar2D( const CoordSystem & v ) :
+   explicit constexpr Polar2D( const CoordSystem & v ) :
       fR(v.R() ),  fPhi(v.Phi() )  { Restrict(); }
 
    // for g++  3.2 and 3.4 on 32 bits found that the compiler generated copy ctor and assignment are much slower
@@ -97,8 +100,8 @@ public :
 
    Scalar R()     const { return fR;}
    Scalar Phi()   const { return fPhi; }
-   Scalar X() const { return fR * cos(fPhi); }
-   Scalar Y() const { return fR * sin(fPhi); }
+   Scalar X() const { using std::cos; return fR * cos(fPhi); }
+   Scalar Y() const { using std::sin; return fR * sin(fPhi); }
    Scalar Mag2()  const { return fR*fR;}
 
 
@@ -134,6 +137,7 @@ private:
       restrict abgle hi to be between -PI and PI
     */
    inline void Restrict() {
+      using std::floor;
       if (fPhi <= -pi() || fPhi > pi()) fPhi = fPhi - floor(fPhi / (2 * pi()) + .5) * 2 * pi();
    }
 

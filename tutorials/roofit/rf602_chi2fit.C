@@ -1,23 +1,19 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+/// Likelihood and minimization: setting up a chi^2 fit to a binned dataset
 ///
-///
-/// \brief Likelihood and minimization: setting up a chi^2 fit to a binned dataset
-///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooChebychev.h"
 #include "RooAddPdf.h"
-#include "RooChi2Var.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -40,12 +36,12 @@ void rf602_chi2fit()
    RooGaussian sig1("sig1", "Signal component 1", x, mean, sigma1);
    RooGaussian sig2("sig2", "Signal component 2", x, mean, sigma2);
 
-   // Build Chebychev polynomial p.d.f.
+   // Build Chebychev polynomial pdf
    RooRealVar a0("a0", "a0", 0.5, 0., 1.);
    RooRealVar a1("a1", "a1", 0.2, 0., 1.);
    RooChebychev bkg("bkg", "Background", x, RooArgSet(a0, a1));
 
-   // Sum the signal components into a composite signal p.d.f.
+   // Sum the signal components into a composite signal pdf
    RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
    RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
 
@@ -56,15 +52,15 @@ void rf602_chi2fit()
    // C r e a t e   b i n n e d   d a t a s e t
    // -----------------------------------------
 
-   RooDataSet *d = model.generate(x, 10000);
-   RooDataHist *dh = d->binnedClone();
+   std::unique_ptr<RooDataSet> d{model.generate(x, 10000)};
+   std::unique_ptr<RooDataHist> dh{d->binnedClone()};
 
    // Construct a chi^2 of the data and the model.
-   // When a p.d.f. is used in a chi^2 fit, the probability density scaled
+   // When a pdf is used in a chi^2 fit, the probability density scaled
    // by the number of events in the dataset to obtain the fit function
-   // If model is an extended p.d.f, the expected number events is used
+   // If model is an extended pdf, the expected number events is used
    // instead of the observed number of events.
-   model.chi2FitTo(*dh);
+   model.chi2FitTo(*dh, {PrintLevel(-1)});
 
    // NB: It is also possible to fit a RooAbsReal function to a RooDataHist
    // using chi2FitTo().
@@ -72,8 +68,8 @@ void rf602_chi2fit()
    // Note that entries with zero bins are _not_ allowed
    // for a proper chi^2 calculation and will give error
    // messages
-   RooDataSet *dsmall = (RooDataSet *)d->reduce(EventRange(1, 100));
-   RooDataHist *dhsmall = dsmall->binnedClone();
-   RooChi2Var chi2_lowstat("chi2_lowstat", "chi2", model, *dhsmall);
-   cout << chi2_lowstat.getVal() << endl;
+   std::unique_ptr<RooAbsData> dsmall{d->reduce(EventRange(1, 100))};
+   std::unique_ptr<RooDataHist> dhsmall{static_cast<RooDataSet&>(*dsmall).binnedClone()};
+   std::unique_ptr<RooAbsReal> chi2_lowstat{model.createChi2(*dhsmall)};
+   cout << chi2_lowstat->getVal() << endl;
 }

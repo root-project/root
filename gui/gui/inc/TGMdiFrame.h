@@ -33,20 +33,11 @@
 #ifndef ROOT_TGMdiFrame
 #define ROOT_TGMdiFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGMdiFrame.                                                          //
-//                                                                      //
-// This file contains the TGMdiFrame class.                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 class TGPicture;
 class TGMdiMainFrame;
 class TGMdiDecorFrame;
-
 
 class TGMdiFrame : public TGCompositeFrame {
 
@@ -56,8 +47,8 @@ friend class TGMdiDecorFrame;
 protected:
    enum { kDontCallClose = BIT(14) };
 
-   TGMdiMainFrame  *fMain;       // pointer to the MDI main frame
-   ULong_t          fMdiHints;   // MDI hints, also used to identify titlebar buttons
+   TGMdiMainFrame  *fMain;       ///< pointer to the MDI main frame
+   ULong_t          fMdiHints;   ///< MDI hints, also used to identify titlebar buttons
 
    TString GetMdiHintsString() const;
 
@@ -65,9 +56,9 @@ public:
    TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h,
               UInt_t options = 0,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiFrame();
+   ~TGMdiFrame() override;
 
-   virtual void      Move(Int_t x, Int_t y);
+   void              Move(Int_t x, Int_t y) override;
    virtual Bool_t    CloseWindow();     //*SIGNAL*
    virtual Bool_t    Help() { return kFALSE; }
 
@@ -75,14 +66,14 @@ public:
    ULong_t           GetMdiHints() const { return fMdiHints; }
 
    void              DontCallClose();
-   void              SetWindowName(const char *name);
+   void              SetWindowName(const char *name) override;
    void              SetWindowIcon(const TGPicture *pic);
    const char       *GetWindowName();
    const TGPicture  *GetWindowIcon();
 
-   virtual void      SavePrimitive(std::ostream &out, Option_t *option = "");
+   void              SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGMdiFrame, 0) // MDI Frame
+   ClassDefOverride(TGMdiFrame, 0) // MDI Frame
 };
 
 #endif

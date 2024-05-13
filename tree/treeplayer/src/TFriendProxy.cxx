@@ -25,7 +25,7 @@ namespace Internal {
 
 /////////////////////////////////////////////////////////////////////////////
 
-TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
+TFriendProxy::TFriendProxy() : fDirector(nullptr,-1), fIndex(-1)
 {
 }
 
@@ -33,10 +33,14 @@ TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
    /// Constructor.
 
    TFriendProxy::TFriendProxy(TBranchProxyDirector *director, TTree *main, Int_t index) :
-      fDirector(0,-1), fIndex(index)
+      fDirector(nullptr,-1), fIndex(index)
    {
-      if (main && main->GetListOfFriends()) {
-         TObject *obj = main->GetListOfFriends()->At(fIndex);
+      // The list of friends needs to be accessed via GetTree()->GetListOfFriends()
+      // (and not directly GetListOfFriends()), otherwise when `main` is a TChain we
+      // might not recover the list correctly (see #6993 for the TTreeReader issue
+      // and #6741 for a more complete discussion/explanation).
+      if (main && main->GetTree()->GetListOfFriends()) {
+         TObject *obj = main->GetTree()->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
          if (element) fDirector.SetTree(element->GetTree());
       }
@@ -66,13 +70,13 @@ TFriendProxy::TFriendProxy() : fDirector(0,-1), fIndex(-1)
 
    void TFriendProxy::Update(TTree *newmain)
    {
-      if (newmain && newmain->GetListOfFriends()) {
-         TObject *obj = newmain->GetListOfFriends()->At(fIndex);
+      if (newmain && newmain->GetTree()->GetListOfFriends()) {
+         TObject *obj = newmain->GetTree()->GetListOfFriends()->At(fIndex);
          TFriendElement *element = dynamic_cast<TFriendElement*>( obj );
          if (element) fDirector.SetTree(element->GetTree());
-         else fDirector.SetTree(0);
+         else fDirector.SetTree(nullptr);
       } else {
-         fDirector.SetTree(0);
+         fDirector.SetTree(nullptr);
       }
    }
 

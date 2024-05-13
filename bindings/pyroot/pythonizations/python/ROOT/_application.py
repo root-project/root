@@ -11,7 +11,7 @@
 import sys
 import time
 
-from cppyy.gbl import gSystem, gInterpreter
+from cppyy.gbl import gSystem, gInterpreter, gEnv
 
 from libROOTPythonizations import InitApplication, InstallGUIEventInputHook
 
@@ -86,6 +86,10 @@ class PyROOTApplication(object):
             self._inputhook_config()
         else:
             # Python in script mode, start a separate thread for the event processing
+
+            # indicate that ProcessEvents called in different thread, let ignore thread id checks in RWebWindow
+            gEnv.SetValue("WebGui.ExternalProcessEvents", "yes")
+
             def _process_root_events(self):
                 while self.keep_polling:
                     gSystem.ProcessEvents()
@@ -98,3 +102,4 @@ class PyROOTApplication(object):
             update_thread.start()
 
         self._set_display_hook()
+

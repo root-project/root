@@ -54,10 +54,10 @@ ClassImp(TFFTRealComplex);
 
 TFFTRealComplex::TFFTRealComplex()
 {
-   fIn   = 0;
-   fOut  = 0;
-   fPlan = 0;
-   fN    = 0;
+   fIn   = nullptr;
+   fOut  = nullptr;
+   fPlan = nullptr;
+   fN    = nullptr;
    fNdim = 0;
    fTotalSize = 0;
 }
@@ -74,13 +74,13 @@ TFFTRealComplex::TFFTRealComplex(Int_t n, Bool_t inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex)*(n/2+1));
    } else {
       fIn = fftw_malloc(sizeof(Double_t)*(2*(n/2+1)));
-      fOut = 0;
+      fOut = nullptr;
    }
    fN = new Int_t[1];
    fN[0] = n;
    fTotalSize = n;
    fNdim = 1;
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex)*sizeout);
    } else {
       fIn = fftw_malloc(sizeof(Double_t)*(2*sizeout));
-      fOut = 0;
+      fOut = nullptr;
    }
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,15 +119,15 @@ TFFTRealComplex::TFFTRealComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
 TFFTRealComplex::~TFFTRealComplex()
 {
    fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
    fftw_free(fIn);
-   fIn = 0;
+   fIn = nullptr;
    if (fOut)
       fftw_free((fftw_complex*)fOut);
-   fOut = 0;
+   fOut = nullptr;
    if (fN)
       delete [] fN;
-   fN = 0;
+   fN = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +155,7 @@ void TFFTRealComplex::Init(Option_t *flags,Int_t /*sign*/, const Int_t* /*kind*/
 
    if (fPlan)
       fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
 
    if (fOut)
       fPlan = (void*)fftw_plan_dft_r2c(fNdim, fN, (Double_t*)fIn, (fftw_complex*)fOut,MapFlag(flags));
@@ -204,7 +204,7 @@ void TFFTRealComplex::GetPoints(Double_t *data, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the real part of the point #ipoint from the output or the point #ipoint
+///Returns the real part of the point `#ipoint` from the output or the point `#ipoint`
 ///from the input
 
 Double_t TFFTRealComplex::GetPointReal(Int_t ipoint, Bool_t fromInput) const
@@ -218,8 +218,8 @@ Double_t TFFTRealComplex::GetPointReal(Int_t ipoint, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the real part of the point #ipoint from the output or the point #ipoint
-///from the input
+/// Returns the real part of the point `#ipoint` from the output or the point
+/// `#ipoint` from the input
 
 Double_t TFFTRealComplex::GetPointReal(const Int_t *ipoint, Bool_t fromInput) const
 {
@@ -237,7 +237,7 @@ Double_t TFFTRealComplex::GetPointReal(const Int_t *ipoint, Bool_t fromInput) co
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///Returns the point #ipoint.
+///Returns the point `#ipoint`.
 ///For 1d, if ipoint > fN/2+1 (the point is in the Hermitian symmetric part), it is still
 ///returned. For >1d, only the first (roughly)half of points can be returned
 ///For 2d, see function GetPointComplex(Int_t *ipoint,...)
@@ -283,7 +283,7 @@ void TFFTRealComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, 
    }
 }
 ////////////////////////////////////////////////////////////////////////////////
-///For multidimensional transforms. Returns the point #ipoint.
+///For multidimensional transforms. Returns the point `#ipoint`.
 ///In case of transforms of more than 2 dimensions,
 ///only points from the first (roughly)half are returned, the rest being Hermitian symmetric
 
@@ -369,7 +369,7 @@ Double_t* TFFTRealComplex::GetPointsReal(Bool_t fromInput) const
 {
    if (!fromInput){
       Error("GetPointsReal", "Output array is complex");
-      return 0;
+      return nullptr;
    }
    return (Double_t*)fIn;
 }
@@ -434,7 +434,7 @@ void TFFTRealComplex::GetPointsComplex(Double_t *data, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Set the point #ipoint
+///Set the point `#ipoint`
 
 void TFFTRealComplex::SetPoint(Int_t ipoint, Double_t re, Double_t /*im*/)
 {
@@ -442,7 +442,7 @@ void TFFTRealComplex::SetPoint(Int_t ipoint, Double_t re, Double_t /*im*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///For multidimensional transforms. Set the point #ipoint
+///For multidimensional transforms. Set the point `#ipoint`
 
 void TFFTRealComplex::SetPoint(const Int_t *ipoint, Double_t re, Double_t /*im*/)
 {
@@ -463,7 +463,7 @@ void TFFTRealComplex::SetPoints(const Double_t *data)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Sets the point #ipoint (only the real part of the argument is taken)
+///Sets the point `#ipoint` (only the real part of the argument is taken)
 
 void TFFTRealComplex::SetPointComplex(Int_t ipoint, TComplex &c)
 {

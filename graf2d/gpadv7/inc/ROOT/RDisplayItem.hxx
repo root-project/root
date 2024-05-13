@@ -11,8 +11,6 @@
 
 #include <string>
 
-class TObject;
-
 namespace ROOT {
 namespace Experimental {
 
@@ -79,7 +77,7 @@ public:
 
    const RDrawable *GetDrawable() const { return fDrawable; }
 
-   virtual ~RDrawableDisplayItem();
+   ~RDrawableDisplayItem() override;
 
 };
 
@@ -104,31 +102,6 @@ public:
    RIndirectDisplayItem() = default;
 
    RIndirectDisplayItem(const RDrawable &dr);
-};
-
-
-/** \class RObjectDisplayItem
-\ingroup GpadROOT7
-\brief Display item for TObject with drawing options
-\author Sergey Linev <s.linev@gsi.de>
-\date 2017-05-31
-\warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-*/
-
-class RObjectDisplayItem : public RDisplayItem {
-protected:
-
-   const TObject *fObject{nullptr};        ///< ROOT6 object
-   std::string fOption;                    ///< drawing options
-
-public:
-
-   RObjectDisplayItem(const TObject *obj, const std::string &opt)
-   {
-      fObject = obj;
-      fOption = opt;
-   }
-
 };
 
 } // namespace Experimental

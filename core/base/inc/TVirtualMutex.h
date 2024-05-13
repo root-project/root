@@ -58,19 +58,22 @@ public:
 //    TLockGuard guard(mutex);                                          //
 //    ... // do something                                               //
 // }                                                                    //
-// when guard goes out of scope the mutex is unlocked in the TLockGuard //
+// where mutex is a pointer to a TMutex object.                         //
+// When guard goes out of scope the mutex is unlocked in the TLockGuard //
 // destructor. The exception mechanism takes care of calling the dtors  //
 // of local objects so it is exception safe.                            //
+// In contrast to std::lock_guard, TLockGuard constructor expects a     //
+// pointer, not the mutex object itself.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 class TLockGuard {
 
 private:
-   TVirtualMutex *fMutex;
+   TVirtualMutex *fMutex{nullptr};
 
-   TLockGuard(const TLockGuard&);             // not implemented
-   TLockGuard& operator=(const TLockGuard&);  // not implemented
+   TLockGuard(const TLockGuard&) = delete;
+   TLockGuard& operator=(const TLockGuard&) = delete;
 
 public:
    TLockGuard(TVirtualMutex *mutex)
@@ -78,7 +81,7 @@ public:
    Int_t UnLock() {
       if (!fMutex) return 0;
       auto tmp = fMutex;
-      fMutex = 0;
+      fMutex = nullptr;
       return tmp->UnLock();
    }
    ~TLockGuard() { if (fMutex) fMutex->UnLock(); }
@@ -86,8 +89,8 @@ public:
    ClassDefNV(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
-// Zero overhead macros in case not compiled with thread support
-#if defined (_REENTRANT) || defined (WIN32)
+// Use with a trailing semicolon and pass a pointer as argument, e.g.:
+// TMutex m; R__LOCKGUARD(&m);
 
 #define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
 #define R__LOCKGUARD2(mutex)                             \
@@ -100,12 +103,6 @@ public:
    R__LOCKGUARD(mutex)
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
-#else
-#define R__LOCKGUARD(mutex)  (void)(mutex); { }
-#define R__LOCKGUARD_NAMED(name,mutex) (void)(mutex); { }
-#define R__LOCKGUARD2(mutex) (void)(mutex); { }
-#define R__LOCKGUARD_UNLOCK(name) { }
-#endif
 
 #ifdef R__USE_IMT
 #define R__LOCKGUARD_IMT(mutex)  R__LOCKGUARD(ROOT::Internal::IsParBranchProcessingEnabled() ? mutex : nullptr)

@@ -41,7 +41,7 @@ Bool_t comments = kTRUE;
 Bool_t raytracing = kFALSE;
 Bool_t grotate = kFALSE;
 Bool_t axis = kTRUE;
-void autorotate();
+
 //______________________________________________________________________________
 void MakePicture()
 {
@@ -50,67 +50,75 @@ void MakePicture()
 //      view->RotateView(248,66);
       if (axis) view->ShowAxis();
    }
-   Bool_t is_raytracing = gGeoManager->GetGeomPainter()->IsRaytracing();
+   Bool_t is_raytracing = gGeoManager->GetTopVolume()->IsRaytracing();
    if (is_raytracing != raytracing) {
-      gGeoManager->GetGeomPainter()->SetRaytracing(raytracing);
+      gGeoManager->GetTopVolume()->SetVisRaytrace(raytracing);
       gPad->Modified();
       gPad->Update();
    }
 }
 
 //______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Double_t value, const char *comment)
+void AddMemberInfo(TPaveText *pave, const char *datamember, Double_t value, const char *comment)
 {
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5.2f", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
+   TString line = datamember;
+   while (line.Length() < 10) line.Append(" ");
+   line.Append(TString::Format("= %5.2f  => %s", value, comment));
+   TText *text = pave->AddText(line.Data());
 //   text->SetTextColor(4);
    text->SetTextAlign(12);//12
 }
 
 //______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Int_t value, const char *comment)
+void AddMemberInfo(TPaveText *pave, const char *datamember, Int_t value, const char *comment)
 {
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5i", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
+   TString line = datamember;
+   while (line.Length() < 10) line.Append(" ");
+   line.Append(TString::Format("= %5d  => %s", value, comment));
+   TText *text = pave->AddText(line.Data());
 //   text->SetTextColor(4);
    text->SetTextAlign(12);
 }
 
 //______________________________________________________________________________
-void AddText(TPaveText *pave, TObject *pf, Int_t iaxis)
+void AddFinderInfo(TPaveText *pave, TObject *pf, Int_t iaxis)
 {
-   char line[128];
-   TGeoPatternFinder *finder = (TGeoPatternFinder*)pf;
-   if (!pave || !pf) return;
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
+   TGeoPatternFinder *finder = dynamic_cast<TGeoPatternFinder *>(pf);
+   if (!pave || !pf || !iaxis) return;
    TGeoVolume *volume = finder->GetVolume();
    TGeoShape *sh = volume->GetShape();
-   sprintf(line, "Division of %s on axis %d (%s)", volume->GetName(), iaxis,sh->GetAxisName(iaxis));
-   TText *text = pave->AddText(line);
+   TText *text = pave->AddText(TString::Format("Division of %s on axis %d (%s)", volume->GetName(), iaxis, sh->GetAxisName(iaxis)));
    text->SetTextColor(3);
    text->SetTextAlign(12);
-   AddText(pave, "fNdiv",finder->GetNdiv(),"number of divisions");
-   AddText(pave, "fStart",finder->GetStart(),"start divisioning position");
-   AddText(pave, "fStep",finder->GetStep(),"division step");
+   AddMemberInfo(pave, "fNdiv", finder->GetNdiv(), "number of divisions");
+   AddMemberInfo(pave, "fStart", finder->GetStart(), "start divisioning position");
+   AddMemberInfo(pave, "fStep", finder->GetStep(), "division step");
 }
+
+//______________________________________________________________________________
+void AddExecInfo(TPaveText *pave, const char *name = nullptr, const char *axisinfo = nullptr)
+{
+   if (name && axisinfo) {
+      auto text = pave->AddText(TString::Format("Execute: %s(iaxis, ndiv, start, step) to divide this.", name));
+      text->SetTextColor(4);
+      pave->AddText(TString::Format("----- IAXIS can be %s", axisinfo));
+      pave->AddText("----- NDIV must be a positive integer");
+      pave->AddText("----- START must be a valid axis offset within shape range on divided axis");
+      pave->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
+      pave->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
+      pave->SetAllWith("-----","color",2);
+      pave->SetAllWith("-----","font",72);
+      pave->SetAllWith("-----","size",0.04);
+   } else if (name) {
+      auto text = pave->AddText(TString::Format("Execute: %s()", name));
+      text->SetTextColor(4);
+   }
+
+   pave->AddText(" ");
+   pave->SetTextSize(0.044);
+   pave->SetTextAlign(12);
+}
+
 
 //______________________________________________________________________________
 void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t iaxis, Double_t step)
@@ -119,16 +127,15 @@ void SavePicture(const char *name, TObject *objcanvas, TObject *objvol, Int_t ia
    TGeoVolume *vol = (TGeoVolume*)objvol;
    if (!c || !vol) return;
    c->cd();
-   char fname[32];
-   switch (iaxis) {
-      case 0:
-         sprintf(fname,"t_%s.gif",name);
-      break;
-      default:
-         if (step==0) sprintf(fname,"t_%sdiv%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-         else sprintf(fname,"t_%sdivstep%s.gif", name,vol->GetShape()->GetAxisName(iaxis));
-   }
-   c->Print(fname);
+   TString fname;
+   if (iaxis == 0)
+      fname.Form("t_%s.gif",name);
+   else if (step == 0)
+      fname.Form("t_%sdiv%s.gif", name, vol->GetShape()->GetAxisName(iaxis));
+   else
+      fname.Form("t_%sdivstep%s.gif", name, vol->GetShape()->GetAxisName(iaxis));
+
+   c->Print(fname.Data());
 }
 
 //______________________________________________________________________________
@@ -141,20 +148,26 @@ Int_t randomColor()
 //______________________________________________________________________________
 void raytrace() {
    raytracing = !raytracing;
-   if (!gGeoManager) return;
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-   if (!painter) return;
-   painter->SetRaytracing(raytracing);
-   if (!gPad) return;
-   gPad->Modified();
-   gPad->Update();
+   if (gGeoManager && gPad) {
+      auto top = gGeoManager->GetTopVolume();
+      bool drawn = gPad->GetListOfPrimitives()->FindObject(top);
+      if (drawn) top->SetVisRaytrace(raytracing);
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
 //______________________________________________________________________________
 void help() {
-   //
 
-   new TCanvas("chelp","Help to run demos",200,10,700,600);
+   auto c =(TCanvas *) gROOT->GetListOfCanvases()->FindObject("geom_help");
+   if (c) {
+      c->Clear();
+      c->Update();
+      c->cd();
+   } else {
+      c = new TCanvas("geom_help","Help to run demos",200,10,700,600);
+   }
 
    TPaveText *welcome = new TPaveText(.1,.8,.9,.97);
    welcome->AddText("Welcome to the new geometry package");
@@ -191,59 +204,8 @@ void help() {
    hdemo->SetAllWith("....","size",0.03);
 
    hdemo->Draw();
-}
 
-//______________________________________________________________________________
-void geodemo ()
-{
-// root[0] .x geodemo.C
-// root[1] box();   //draw a TGeoBBox with description
-//
-// The box can be divided on one axis.
-//
-// root[2] box(iaxis, ndiv, start, step);
-//
-// where: iaxis = 1,2 or 3, meaning (X,Y,Z) or (Rxy, phi, Z) depending on shape type
-//        ndiv  = number of slices
-//        start = starting position (must be in shape range)
-//        step  = division step
-// If step=0, all range of a given axis will be divided
-//
-// The same can procedure can be performed for visualizing other shapes.
-// When drawing one shape after another, the old geometry/canvas will be deleted.
-   TControlBar *bar = new TControlBar("vertical", "TGeo shapes",10,10);
-   bar->AddButton("How to run  ","help()","Instructions for running this macro");
-   bar->AddButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
-   bar->AddButton("Box         ","box()","A box shape.");
-   bar->AddButton("Composite   ","composite()","A composite shape");
-   bar->AddButton("Cone        ","cone()","A conical tube");
-   bar->AddButton("Cone segment","coneseg()","A conical segment");
-   bar->AddButton("Cut tube    ","ctub()","A cut tube segment");
-   bar->AddButton("Elliptical tube","eltu()","An elliptical tube");
-   bar->AddButton("Extruded poly","xtru()","A general polygone extrusion");
-   bar->AddButton("Hyperboloid  ","hype()","A hyperboloid");
-   bar->AddButton("Paraboloid  ","parab()","A paraboloid");
-   bar->AddButton("Polycone    ","pcon()","A polycone shape");
-   bar->AddButton("Polygone    ","pgon()","A polygone");
-   bar->AddButton("Parallelepiped","para()","A parallelepiped shape");
-   bar->AddButton("Sphere      ","sphere()","A spherical sector");
-   bar->AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
-   bar->AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
-   bar->AddButton("Trapezoid   ","trap()","A general trapezoid");
-   bar->AddButton("Torus       ","torus()","A toroidal segment");
-   bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
-   bar->AddButton("Tube segment","tubeseg()","A tube segment");
-   bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
-   bar->AddButton("Tessellated ","tessellated()","A tessellated shape");
-   bar->AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
-   bar->AddButton("Un-aligned","align()","Some alignment operation");
-   bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
-   bar->AddButton("COMMENTS  ON/OFF","comments = !comments;","Toggle explanations pad ON/OFF");
-   bar->AddButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
-   bar->AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
-   bar->Show();
-   gROOT->SaveContext();
-   gRandom = new TRandom3();
+   c->Update();
 }
 
 //______________________________________________________________________________
@@ -292,29 +254,39 @@ void autorotate()
 void axes()
 {
    axis = !axis;
-   if (!gPad) return;
-   TView *view = gPad->GetView();
-   view->ShowAxis();
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if(view)
+      view->ShowAxis();
+}
+
+//______________________________________________________________________________
+TCanvas *create_canvas(const char *title)
+{
+   auto c = (TCanvas *) gROOT->GetListOfCanvases()->FindObject("geom_draw");
+   if (c) {
+      c->Clear();
+      c->Update();
+      c->SetTitle(title);
+   } else {
+      c = new TCanvas("geom_draw", title, 700,1000);
+   }
+   if (comments) {
+      c->Divide(1,2,0,0);
+      c->GetPad(2)->SetPad(0,0,1,0.4);
+      c->GetPad(1)->SetPad(0,0.4,1,1);
+      c->cd(1);
+   }
+
+   return c;
 }
 
 //______________________________________________________________________________
 void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("box shape", "A simple box", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A simple box");
+
    if (gGeoManager) delete gGeoManager;
-   new TGeoManager("box", "poza1");
+   new TGeoManager("box", "A simple box");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
@@ -323,62 +295,44 @@ void box(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if ((iaxis > 0) && (iaxis < 4)) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
    TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
    pt->SetLineColor(1);
-   TGeoBBox *box = (TGeoBBox*)(vol->GetShape());
+   TGeoBBox *box = (TGeoBBox *) vol->GetShape();
    TText *text = pt->AddText("TGeoBBox - box class");
    text->SetTextColor(2);
-   AddText(pt,"fDX",box->GetDX(),"half length in X");
-   AddText(pt,"fDY",box->GetDY(),"half length in Y");
-   AddText(pt,"fDZ",box->GetDZ(),"half length in Z");
-   AddText(pt,"fOrigin[0]",(box->GetOrigin())[0],"box origin on X");
-   AddText(pt,"fOrigin[1]",(box->GetOrigin())[1],"box origin on Y");
-   AddText(pt,"fOrigin[2]",(box->GetOrigin())[2],"box origin on Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: box(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 1, 2 or 3 (X, Y, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetTextSize(0.044);
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
+   AddMemberInfo(pt, "fDX", box->GetDX(), "half length in X");
+   AddMemberInfo(pt, "fDY", box->GetDY(), "half length in Y");
+   AddMemberInfo(pt, "fDZ", box->GetDZ(), "half length in Z");
+   AddMemberInfo(pt, "fOrigin[0]", (box->GetOrigin())[0], "box origin on X");
+   AddMemberInfo(pt, "fOrigin[1]", (box->GetOrigin())[1], "box origin on Y");
+   AddMemberInfo(pt, "fOrigin[2]", (box->GetOrigin())[2], "box origin on Z");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "box", "1, 2 or 3 (X, Y, Z)");
    pt->Draw();
 //   SavePicture("box",c,vol,iaxis,step);
    c->cd(1);
-   gROOT->SetInterrupt(kTRUE);
 }
 
 //______________________________________________________________________________
 void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("para shape", "A parallelepiped", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A parallelepiped");
+
    if (gGeoManager) delete gGeoManager;
-   new TGeoManager("para", "poza1");
+   new TGeoManager("para", "A parallelepiped");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
@@ -387,42 +341,35 @@ void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if ((iaxis > 0) && (iaxis < 4)) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 1-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
    TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
    pt->SetLineColor(1);
-   TGeoPara *para = (TGeoPara*)(vol->GetShape());
+   TGeoPara *para = (TGeoPara *) vol->GetShape();
    TText *text = pt->AddText("TGeoPara - parallelepiped class");
    text->SetTextColor(2);
-   AddText(pt,"fX",para->GetX(),"half length in X");
-   AddText(pt,"fY",para->GetY(),"half length in Y");
-   AddText(pt,"fZ",para->GetZ(),"half length in Z");
-   AddText(pt,"fAlpha",para->GetAlpha(),"angle about Y of the Z bases");
-   AddText(pt,"fTheta",para->GetTheta(),"inclination of para axis about Z");
-   AddText(pt,"fPhi",para->GetPhi(),"phi angle of para axis");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: para(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 1, 2 or 3 (X, Y, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetTextSize(0.044);
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
+   AddMemberInfo(pt, "fX", para->GetX(), "half length in X");
+   AddMemberInfo(pt, "fY", para->GetY(), "half length in Y");
+   AddMemberInfo(pt, "fZ", para->GetZ(), "half length in Z");
+   AddMemberInfo(pt, "fAlpha", para->GetAlpha(), "angle about Y of the Z bases");
+   AddMemberInfo(pt, "fTheta", para->GetTheta(), "inclination of para axis about Z");
+   AddMemberInfo(pt, "fPhi", para->GetPhi(), "phi angle of para axis");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "para", "1, 2 or 3 (X, Y, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("para",c,vol,iaxis,step);
@@ -431,19 +378,8 @@ void para(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("tube shape", "A tube", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A tube");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tube", "poza2");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -454,15 +390,19 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if ((iaxis > 0) && (iaxis < 4)) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 1-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
-//   gGeoManager->SetNsegments(40);
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -471,23 +411,11 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTube *tube = (TGeoTube*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTube - tube class");
    text->SetTextColor(2);
-   AddText(pt,"fRmin",tube->GetRmin(),"minimum radius");
-   AddText(pt,"fRmax",tube->GetRmax(),"maximum radius");
-   AddText(pt,"fDZ",  tube->GetDZ(),  "half length in Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: tube(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 1, 2 or 3 (Rxy, Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fRmin",tube->GetRmin(),"minimum radius");
+   AddMemberInfo(pt,"fRmax",tube->GetRmax(),"maximum radius");
+   AddMemberInfo(pt,"fDZ",  tube->GetDZ(),  "half length in Z");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "tube", "1, 2 or 3 (Rxy, Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("tube",c,vol,iaxis,step);
@@ -496,19 +424,8 @@ void tube(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("tubeseg shape", "A tube segment ", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A tube segment");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tubeseg", "poza3");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -517,17 +434,22 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    gGeoManager->SetTopVolume(top);
    TGeoVolume *vol = gGeoManager->MakeTubs("TUBESEG",med, 20,30,40,-30,270);
    vol->SetLineColor(randomColor());
-   if (iaxis) {
+   if ((iaxis > 0) && (iaxis < 4)) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 1-3.\n", iaxis);
+      return;
    }
+
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-//   gGeoManager->SetNsegments(40);
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -536,25 +458,13 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTubeSeg *tubeseg = (TGeoTubeSeg*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTubeSeg - tube segment class");
    text->SetTextColor(2);
-   AddText(pt,"fRmin",tubeseg->GetRmin(),"minimum radius");
-   AddText(pt,"fRmax",tubeseg->GetRmax(),"maximum radius");
-   AddText(pt,"fDZ",  tubeseg->GetDZ(),  "half length in Z");
-   AddText(pt,"fPhi1",tubeseg->GetPhi1(),"first phi limit");
-   AddText(pt,"fPhi2",tubeseg->GetPhi2(),"second phi limit");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: tubeseg(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 1, 2 or 3 (Rxy, Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fRmin",tubeseg->GetRmin(),"minimum radius");
+   AddMemberInfo(pt,"fRmax",tubeseg->GetRmax(),"maximum radius");
+   AddMemberInfo(pt,"fDZ",  tubeseg->GetDZ(),  "half length in Z");
+   AddMemberInfo(pt,"fPhi1",tubeseg->GetPhi1(),"first phi limit");
+   AddMemberInfo(pt,"fPhi2",tubeseg->GetPhi2(),"second phi limit");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "tubeseg", "1, 2 or 3 (Rxy, Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("tubeseg",c,vol,iaxis,step);
@@ -563,19 +473,8 @@ void tubeseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>2) {
-      printf("Wrong division axis. Range is 1-2.\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("ctub shape", "A cut tube segment ", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A cut tube segment");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("ctub", "poza3");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -596,17 +495,22 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    nhi[2] = TMath::Cos(theta);
    TGeoVolume *vol = gGeoManager->MakeCtub("CTUB",med, 20,30,40,-30,250, nlow[0], nlow[1], nlow[2], nhi[0],nhi[1],nhi[2]);
    vol->SetLineColor(randomColor());
-   if (iaxis) {
+   if (iaxis == 1 || iaxis == 2) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 1-2.\n", iaxis);
+      return;
    }
+
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
-//   gGeoManager->SetNsegments(40);
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -615,15 +519,13 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTubeSeg *tubeseg = (TGeoTubeSeg*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTubeSeg - tube segment class");
    text->SetTextColor(2);
-   AddText(pt,"fRmin",tubeseg->GetRmin(),"minimum radius");
-   AddText(pt,"fRmax",tubeseg->GetRmax(),"maximum radius");
-   AddText(pt,"fDZ",  tubeseg->GetDZ(),  "half length in Z");
-   AddText(pt,"fPhi1",tubeseg->GetPhi1(),"first phi limit");
-   AddText(pt,"fPhi2",tubeseg->GetPhi2(),"second phi limit");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText(" ");
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fRmin",tubeseg->GetRmin(),"minimum radius");
+   AddMemberInfo(pt,"fRmax",tubeseg->GetRmax(),"maximum radius");
+   AddMemberInfo(pt,"fDZ",  tubeseg->GetDZ(),  "half length in Z");
+   AddMemberInfo(pt,"fPhi1",tubeseg->GetPhi1(),"first phi limit");
+   AddMemberInfo(pt,"fPhi2",tubeseg->GetPhi2(),"second phi limit");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "ctub", "1 or 2");
    pt->Draw();
    c->cd(1);
 //   SavePicture("tubeseg",c,vol,iaxis,step);
@@ -632,23 +534,8 @@ void ctub(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   if (iaxis==1) {
-      printf("cannot divide cone on Rxy\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("cone shape", "A cone", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A cone");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("cone", "poza4");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -658,15 +545,20 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoVolume *vol = gGeoManager->MakeCone("CONE",med, 40,10,20,35,45);
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
-   if (iaxis) {
+   if (iaxis == 2 || iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -675,25 +567,13 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoCone *cone = (TGeoCone*)(vol->GetShape());
    TText *text = pt->AddText("TGeoCone - cone class");
    text->SetTextColor(2);
-   AddText(pt,"fDZ",  cone->GetDZ(),    "half length in Z");
-   AddText(pt,"fRmin1",cone->GetRmin1(),"inner radius at -dz");
-   AddText(pt,"fRmax1",cone->GetRmax1(),"outer radius at -dz");
-   AddText(pt,"fRmin2",cone->GetRmin2(),"inner radius at +dz");
-   AddText(pt,"fRmax2",cone->GetRmax2(),"outer radius at +dz");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: cone(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fDZ",  cone->GetDZ(),    "half length in Z");
+   AddMemberInfo(pt,"fRmin1",cone->GetRmin1(),"inner radius at -dz");
+   AddMemberInfo(pt,"fRmax1",cone->GetRmax1(),"outer radius at -dz");
+   AddMemberInfo(pt,"fRmin2",cone->GetRmin2(),"inner radius at +dz");
+   AddMemberInfo(pt,"fRmax2",cone->GetRmax2(),"outer radius at +dz");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "cone", "2 or 3 (Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("cone",c,vol,iaxis,step);
@@ -702,19 +582,8 @@ void cone(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("coneseg shape", "A cone segment", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A cone segment");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("coneseg", "poza5");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -725,14 +594,19 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
 //   vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis >= 2 && iaxis <= 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -741,27 +615,15 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoConeSeg *coneseg = (TGeoConeSeg*)(vol->GetShape());
    TText *text = pt->AddText("TGeoConeSeg - coneseg class");
    text->SetTextColor(2);
-   AddText(pt,"fDZ",  coneseg->GetDZ(),    "half length in Z");
-   AddText(pt,"fRmin1",coneseg->GetRmin1(),"inner radius at -dz");
-   AddText(pt,"fRmax1",coneseg->GetRmax1(),"outer radius at -dz");
-   AddText(pt,"fRmin2",coneseg->GetRmin1(),"inner radius at +dz");
-   AddText(pt,"fRmax2",coneseg->GetRmax1(),"outer radius at +dz");
-   AddText(pt,"fPhi1",coneseg->GetPhi1(),"first phi limit");
-   AddText(pt,"fPhi2",coneseg->GetPhi2(),"second phi limit");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: coneseg(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt, "fDZ", coneseg->GetDZ(), "half length in Z");
+   AddMemberInfo(pt, "fRmin1", coneseg->GetRmin1(), "inner radius at -dz");
+   AddMemberInfo(pt, "fRmax1", coneseg->GetRmax1(), "outer radius at -dz");
+   AddMemberInfo(pt, "fRmin2", coneseg->GetRmin1(), "inner radius at +dz");
+   AddMemberInfo(pt, "fRmax2", coneseg->GetRmax1(), "outer radius at +dz");
+   AddMemberInfo(pt, "fPhi1", coneseg->GetPhi1(), "first phi limit");
+   AddMemberInfo(pt, "fPhi2", coneseg->GetPhi2(), "second phi limit");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "coneseg", "2 or 3 (Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("coneseg",c,vol,iaxis,step);
@@ -770,15 +632,8 @@ void coneseg(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("eltu shape", "An Elliptical tube", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("An Elliptical tube");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("eltu", "poza6");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -789,14 +644,19 @@ void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
 //   vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis >= 2 && iaxis <= 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -805,44 +665,21 @@ void eltu(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoEltu *eltu = (TGeoEltu*)(vol->GetShape());
    TText *text = pt->AddText("TGeoEltu - eltu class");
    text->SetTextColor(2);
-   AddText(pt,"fA",eltu->GetA(), "semi-axis along x");
-   AddText(pt,"fB",eltu->GetB(), "semi-axis along y");
-   AddText(pt,"fDZ", eltu->GetDZ(),  "half length in Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: eltu(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fA",eltu->GetA(), "semi-axis along x");
+   AddMemberInfo(pt,"fB",eltu->GetB(), "semi-axis along y");
+   AddMemberInfo(pt,"fDZ", eltu->GetDZ(),  "half length in Z");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "eltu", "2 or 3 (Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("eltu",c,vol,iaxis,step);
 }
 
 //______________________________________________________________________________
-void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
+void sphere()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis!=0) {
-      printf("Cannot divide spheres\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("Sphere shap", "A spherical sector", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A spherical sector");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("sphere", "poza7");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -853,14 +690,11 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
-      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
-      if (!slice) return;
-      slice->SetLineColor(randomColor());
-   }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -869,36 +703,23 @@ void sphere(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoSphere *sphere = (TGeoSphere*)(vol->GetShape());
    TText *text = pt->AddText("TGeoSphere- sphere class");
    text->SetTextColor(2);
-   AddText(pt,"fRmin",sphere->GetRmin(),"inner radius");
-   AddText(pt,"fRmax",sphere->GetRmax(),"outer radius");
-   AddText(pt,"fTheta1",sphere->GetTheta1(),"lower theta limit");
-   AddText(pt,"fTheta2",sphere->GetTheta2(),"higher theta limit");
-   AddText(pt,"fPhi1",sphere->GetPhi1(),"lower phi limit");
-   AddText(pt,"fPhi2",sphere->GetPhi2(),"higher phi limit");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText(" ");
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt, "fRmin", sphere->GetRmin(), "inner radius");
+   AddMemberInfo(pt, "fRmax", sphere->GetRmax(), "outer radius");
+   AddMemberInfo(pt, "fTheta1", sphere->GetTheta1(), "lower theta limit");
+   AddMemberInfo(pt, "fTheta2", sphere->GetTheta2(), "higher theta limit");
+   AddMemberInfo(pt, "fPhi1", sphere->GetPhi1(), "lower phi limit");
+   AddMemberInfo(pt, "fPhi2", sphere->GetPhi2(), "higher phi limit");
+   AddExecInfo(pt, "sphere");
    pt->Draw();
    c->cd(1);
 //   SavePicture("sphere",c,vol,iaxis,step);
 }
 
 //______________________________________________________________________________
-void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
+void torus()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis!=0) {
-      printf("Cannot divide a torus\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("torus shape", "A toroidal segment", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A toroidal segment");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("torus", "poza2");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -908,14 +729,11 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoVolume *vol = gGeoManager->MakeTorus("TORUS",med, 40,20,25,0,270);
    vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
-   if (iaxis) {
-      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
-      if (!slice) return;
-      slice->SetLineColor(2);
-   }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -924,14 +742,12 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTorus *tor = (TGeoTorus*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTorus - torus class");
    text->SetTextColor(2);
-   AddText(pt,"fR",tor->GetR(),"radius of the ring");
-   AddText(pt,"fRmin",tor->GetRmin(),"minimum radius");
-   AddText(pt,"fRmax",tor->GetRmax(),"maximum radius");
-   AddText(pt,"fPhi1",  tor->GetPhi1(),  "starting phi angle");
-   AddText(pt,"fDphi",  tor->GetDphi(),  "phi range");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText(" ");
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt, "fR", tor->GetR(), "radius of the ring");
+   AddMemberInfo(pt, "fRmin", tor->GetRmin(), "minimum radius");
+   AddMemberInfo(pt, "fRmax", tor->GetRmax(), "maximum radius");
+   AddMemberInfo(pt, "fPhi1", tor->GetPhi1(), "starting phi angle");
+   AddMemberInfo(pt, "fDphi", tor->GetDphi(), "phi range");
+   AddExecInfo(pt, "torus");
    pt->Draw();
    c->cd(1);
 }
@@ -939,24 +755,8 @@ void torus(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   if (iaxis==1) {
-      printf("Cannot divide trd1 on X axis\n");
-      return;
-   }
+   auto c = create_canvas("A trapezoid with dX varying");
 
-   TCanvas *c = new TCanvas("trd1 shape", "A trapezoid with dX varying", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd1", "poza8");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -967,40 +767,33 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 2 || iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
    TPaveText *pt = new TPaveText(0.01,0.01,0.99,0.99);
    pt->SetLineColor(1);
-   TGeoTrd1 *trd1 = (TGeoTrd1*)(vol->GetShape());
+   TGeoTrd1 *trd1 = (TGeoTrd1 *) vol->GetShape();
    TText *text = pt->AddText("TGeoTrd1 - Trd1 class");
    text->SetTextColor(2);
-   AddText(pt,"fDx1",trd1->GetDx1(),"half length in X at lower Z surface(-dz)");
-   AddText(pt,"fDx2",trd1->GetDx2(),"half length in X at higher Z surface(+dz)");
-   AddText(pt,"fDy",trd1->GetDy(),"half length in Y");
-   AddText(pt,"fDz",trd1->GetDz(),"half length in Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: trd1(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Y, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fDx1",trd1->GetDx1(),"half length in X at lower Z surface(-dz)");
+   AddMemberInfo(pt,"fDx2",trd1->GetDx2(),"half length in X at higher Z surface(+dz)");
+   AddMemberInfo(pt,"fDy",trd1->GetDy(),"half length in Y");
+   AddMemberInfo(pt,"fDz",trd1->GetDz(),"half length in Z");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "trd1", "2 or 3 (Y, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("trd1",c,vol,iaxis,step);
@@ -1009,15 +802,8 @@ void trd1(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void parab()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("parab shape", "A paraboloid segment", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A paraboloid segment");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("parab", "paraboloid");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1031,7 +817,9 @@ void parab()
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1039,9 +827,9 @@ void parab()
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoParaboloid - Paraboloid class");
    text->SetTextColor(2);
-   AddText(pt,"fRlo",par->GetRlo(),"radius at Z=-dz");
-   AddText(pt,"fRhi",par->GetRhi(),"radius at Z=+dz");
-   AddText(pt,"fDz",par->GetDz(),"half-length on Z axis");
+   AddMemberInfo(pt,"fRlo",par->GetRlo(),"radius at Z=-dz");
+   AddMemberInfo(pt,"fRhi",par->GetRhi(),"radius at Z=+dz");
+   AddMemberInfo(pt,"fDz",par->GetDz(),"half-length on Z axis");
    pt->AddText("----- A paraboloid is described by the equation:");
    pt->AddText("-----    z = a*r*r + b;   where: r = x*x + y*y");
    pt->AddText("----- Create with:    TGeoParaboloid *parab = new TGeoParaboloid(rlo, rhi, dz);");
@@ -1049,12 +837,7 @@ void parab()
    pt->AddText("-----    rlo: radius at z=-dz given by: -dz = a*rlo*rlo + b");
    pt->AddText("-----    rhi: radius at z=+dz given by:  dz = a*rhi*rhi + b");
    pt->AddText("-----      rlo != rhi; both >= 0");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddExecInfo(pt, "parab");
    pt->Draw();
    c->cd(1);
 }
@@ -1062,15 +845,8 @@ void parab()
 //______________________________________________________________________________
 void hype()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("hype shape", "A hyperboloid", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A hyperboloid");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("hype", "hyperboloid");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1084,7 +860,9 @@ void hype()
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1092,46 +870,27 @@ void hype()
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoHype - Hyperboloid class");
    text->SetTextColor(2);
-   AddText(pt,"fRmin",hype->GetRmin(),"minimum inner radius");
-   AddText(pt,"fStIn",hype->GetStIn(),"inner surface stereo angle [deg]");
-   AddText(pt,"fRmax",hype->GetRmax(),"minimum outer radius");
-   AddText(pt,"fStOut",hype->GetStOut(),"outer surface stereo angle [deg]");
-   AddText(pt,"fDz",hype->GetDz(),"half-length on Z axis");
+   AddMemberInfo(pt, "fRmin", hype->GetRmin(), "minimum inner radius");
+   AddMemberInfo(pt, "fStIn", hype->GetStIn(), "inner surface stereo angle [deg]");
+   AddMemberInfo(pt, "fRmax", hype->GetRmax(), "minimum outer radius");
+   AddMemberInfo(pt, "fStOut",hype->GetStOut(),"outer surface stereo angle [deg]");
+   AddMemberInfo(pt, "fDz",   hype->GetDz(),   "half-length on Z axis");
    pt->AddText("----- A hyperboloid is described by the equation:");
    pt->AddText("-----    r^2 - (tan(stereo)*z)^2 = rmin^2;   where: r = x*x + y*y");
    pt->AddText("----- Create with:    TGeoHype *hype = new TGeoHype(rin, stin, rout, stout, dz);");
    pt->AddText("-----      rin < rout; rout > 0");
    pt->AddText("-----      rin = 0; stin > 0 => inner surface conical");
    pt->AddText("-----      stin/stout = 0 => corresponding surface cylindrical");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddExecInfo(pt, "hype");
    pt->Draw();
    c->cd(1);
 }
+
 //______________________________________________________________________________
 void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   if (iaxis==1) {
-      printf("Cannot divide pcon on Rxy\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("pcon shape", "A polycone", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A polycone");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pcon", "poza10");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1147,14 +906,19 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 2 || iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1162,31 +926,19 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoPcon - pcon class");
    text->SetTextColor(2);
-   AddText(pt,"fPhi1",pcon->GetPhi1(),"lower phi limit");
-   AddText(pt,"fDphi",pcon->GetDphi(),"phi range");
-   AddText(pt,"fNz",pcon->GetNz(),"number of z planes");
+   AddMemberInfo(pt,"fPhi1",pcon->GetPhi1(),"lower phi limit");
+   AddMemberInfo(pt,"fDphi",pcon->GetDphi(),"phi range");
+   AddMemberInfo(pt,"fNz",pcon->GetNz(),"number of z planes");
    for (Int_t j=0; j<pcon->GetNz(); j++) {
-      char line[128];
-      sprintf(line, "fZ[%i]=%5.2f  fRmin[%i]=%5.2f  fRmax[%i]=%5.2f",
-              j,pcon->GetZ()[j],j,pcon->GetRmin()[j],j,pcon->GetRmax()[j]);
-      text = pt->AddText(line);
+      auto line = TString::Format(
+            "fZ[%i]=%5.2f  fRmin[%i]=%5.2f  fRmax[%i]=%5.2f",
+            j,pcon->GetZ()[j],j,pcon->GetRmin()[j],j,pcon->GetRmax()[j]);
+      text = pt->AddText(line.Data());
       text->SetTextColor(4);
       text->SetTextAlign(12);
    }
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: pcon(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "pcon", "2 or 3 (Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("pcon",c,vol,iaxis,step);
@@ -1195,23 +947,8 @@ void pcon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis<0 || iaxis>3) {
-      printf("Wrong division axis. Range is 1-3.\n");
-      return;
-   }
-   if (iaxis==1) {
-      printf("Cannot divide pgon on Rxy\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("pgon shape", "A polygone", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A polygone");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("pgon", "poza11");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1227,14 +964,19 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 2 || iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } if (iaxis) {
+      printf("Wrong division axis %d. Allowed range is 2-3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1242,54 +984,30 @@ void pgon(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoPgon - pgon class");
    text->SetTextColor(2);
-   AddText(pt,"fPhi1",pgon->GetPhi1(),"lower phi limit");
-   AddText(pt,"fDphi",pgon->GetDphi(),"phi range");
-   AddText(pt,"fNedges",pgon->GetNedges(),"number of edges");
-    AddText(pt,"fNz",pgon->GetNz(),"number of z planes");
+   AddMemberInfo(pt, "fPhi1",  pgon->GetPhi1(),  "lower phi limit");
+   AddMemberInfo(pt, "fDphi",  pgon->GetDphi(),  "phi range");
+   AddMemberInfo(pt, "fNedges",pgon->GetNedges(),"number of edges");
+   AddMemberInfo(pt, "fNz",    pgon->GetNz(),    "number of z planes");
    for (Int_t j=0; j<pgon->GetNz(); j++) {
-      char line[128];
-      sprintf(line, "fZ[%i]=%5.2f  fRmin[%i]=%5.2f  fRmax[%i]=%5.2f",
-              j,pgon->GetZ()[j],j,pgon->GetRmin()[j],j,pgon->GetRmax()[j]);
-      text = pt->AddText(line);
+      auto line = TString::Format(
+          "fZ[%i]=%5.2f  fRmin[%i]=%5.2f  fRmax[%i]=%5.2f",
+          j,pgon->GetZ()[j],j,pgon->GetRmin()[j],j,pgon->GetRmax()[j]);
+      text = pt->AddText(line.Data());
       text->SetTextColor(4);
       text->SetTextAlign(12);
    }
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: pgon(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be 2 or 3 (Phi, Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
-   pt->SetTextSize(0.044);
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "pgon", "2 or 3 (Phi, Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("pgon",c,vol,iaxis,step);
 }
 
 //______________________________________________________________________________
-void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
+void arb8()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis!=0) {
-      printf("Cannot divide arb8\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("arb8 shape", "An arbitrary polyhedron", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("An arbitrary polyhedron");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("arb8", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1309,14 +1027,11 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
-      TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
-      if (!slice) return;
-      slice->SetLineColor(randomColor());
-   }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1324,30 +1039,24 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoArb8 - arb8 class");
    text->SetTextColor(2);
-   AddText(pt,"fDz",arb->GetDz(),"Z half length");
-   char line[128];
+   AddMemberInfo(pt,"fDz",arb->GetDz(),"Z half length");
    Double_t *vert = arb->GetVertices();
    text = pt->AddText("Vertices on lower Z plane:");
    text->SetTextColor(3);
-   Int_t i;
-   for (i=0; i<4; i++) {
-      sprintf(line,"   fXY[%d] = (%5.2f, %5.2f)", i, vert[2*i], vert[2*i+1]);
-      text = pt->AddText(line);
+   for (Int_t i=0; i<4; i++) {
+      text = pt->AddText(TString::Format("   fXY[%d] = (%5.2f, %5.2f)", i, vert[2*i], vert[2*i+1]));
       text->SetTextSize(0.043);
       text->SetTextColor(4);
    }
    text = pt->AddText("Vertices on higher Z plane:");
    text->SetTextColor(3);
-   for (i=4; i<8; i++) {
-      sprintf(line,"   fXY[%d] = (%5.2f, %5.2f)", i, vert[2*i], vert[2*i+1]);
-      text = pt->AddText(line);
+   for (Int_t i=4; i<8; i++) {
+      text = pt->AddText(TString::Format("   fXY[%d] = (%5.2f, %5.2f)", i, vert[2*i], vert[2*i+1]));
       text->SetTextSize(0.043);
       text->SetTextColor(4);
    }
 
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText(" ");
-   pt->SetTextSize(0.043);
+   AddExecInfo(pt, "arb8");
    pt->Draw();
    c->cd(1);
 //   SavePicture("arb8",c,vol,iaxis,step);
@@ -1356,19 +1065,8 @@ void arb8(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis && iaxis!=3) {
-      printf("Wrong division axis. Can divide only in Z (3)\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("trd2 shape", "A trapezoid with dX and dY varying with Z", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A trapezoid with dX and dY varying with Z");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trd2", "poza9");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1379,14 +1077,19 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed is only 3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1395,25 +1098,13 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTrd2 *trd2 = (TGeoTrd2*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTrd2 - Trd2 class");
    text->SetTextColor(2);
-   AddText(pt,"fDx1",trd2->GetDx1(),"half length in X at lower Z surface(-dz)");
-   AddText(pt,"fDx2",trd2->GetDx2(),"half length in X at higher Z surface(+dz)");
-   AddText(pt,"fDy1",trd2->GetDy1(),"half length in Y at lower Z surface(-dz)");
-   AddText(pt,"fDy2",trd2->GetDy2(),"half length in Y at higher Z surface(-dz)");
-   AddText(pt,"fDz",trd2->GetDz(),"half length in Z");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: trd2(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be only 3 (Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fDx1",trd2->GetDx1(),"half length in X at lower Z surface(-dz)");
+   AddMemberInfo(pt,"fDx2",trd2->GetDx2(),"half length in X at higher Z surface(+dz)");
+   AddMemberInfo(pt,"fDy1",trd2->GetDy1(),"half length in Y at lower Z surface(-dz)");
+   AddMemberInfo(pt,"fDy2",trd2->GetDy2(),"half length in Y at higher Z surface(-dz)");
+   AddMemberInfo(pt,"fDz",trd2->GetDz(),"half length in Z");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "trd2", "only 3 (Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("trd2",c,vol,iaxis,step);
@@ -1422,19 +1113,8 @@ void trd2(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis && iaxis!=3) {
-      printf("Wrong division axis. Can divide only in Z (3)\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("trap shape", "A more general trapezoid", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A more general trapezoid");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("trap", "poza10");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1445,14 +1125,19 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed is only 3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1461,31 +1146,19 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoTrap *trap = (TGeoTrap*)(vol->GetShape());
    TText *text = pt->AddText("TGeoTrap - Trapezoid class");
    text->SetTextColor(2);
-   AddText(pt,"fDz",trap->GetDz(),"half length in Z");
-   AddText(pt,"fTheta",trap->GetTheta(),"theta angle of trapezoid axis");
-   AddText(pt,"fPhi",trap->GetPhi(),"phi angle of trapezoid axis");
-   AddText(pt,"fH1",trap->GetH1(),"half length in y at -fDz");
-   AddText(pt,"fAlpha1",trap->GetAlpha1(),"angle between centers of x edges and y axis at -fDz");
-   AddText(pt,"fBl1",trap->GetBl1(),"half length in x at -dZ and y=-fH1");
-   AddText(pt,"fTl1",trap->GetTl1(),"half length in x at -dZ and y=+fH1");
-   AddText(pt,"fH2",trap->GetH2(),"half length in y at +fDz");
-   AddText(pt,"fBl2",trap->GetBl2(),"half length in x at +dZ and y=-fH1");
-   AddText(pt,"fTl2",trap->GetTl2(),"half length in x at +dZ and y=+fH1");
-   AddText(pt,"fAlpha2",trap->GetAlpha2(),"angle between centers of x edges and y axis at +fDz");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: trap(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be only 3 (Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fDz",trap->GetDz(),"half length in Z");
+   AddMemberInfo(pt,"fTheta",trap->GetTheta(),"theta angle of trapezoid axis");
+   AddMemberInfo(pt,"fPhi",trap->GetPhi(),"phi angle of trapezoid axis");
+   AddMemberInfo(pt,"fH1",trap->GetH1(),"half length in y at -fDz");
+   AddMemberInfo(pt,"fAlpha1",trap->GetAlpha1(),"angle between centers of x edges and y axis at -fDz");
+   AddMemberInfo(pt,"fBl1",trap->GetBl1(),"half length in x at -dZ and y=-fH1");
+   AddMemberInfo(pt,"fTl1",trap->GetTl1(),"half length in x at -dZ and y=+fH1");
+   AddMemberInfo(pt,"fH2",trap->GetH2(),"half length in y at +fDz");
+   AddMemberInfo(pt,"fBl2",trap->GetBl2(),"half length in x at +dZ and y=-fH1");
+   AddMemberInfo(pt,"fTl2",trap->GetTl2(),"half length in x at +dZ and y=+fH1");
+   AddMemberInfo(pt,"fAlpha2",trap->GetAlpha2(),"angle between centers of x edges and y axis at +fDz");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "trap", "only 3 (Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("trap",c,vol,iaxis,step);
@@ -1494,19 +1167,8 @@ void trap(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 {
-   gROOT->GetListOfCanvases()->Delete();
-   if (iaxis && iaxis!=3) {
-      printf("Wrong division axis. Can divide only in Z (3)\n");
-      return;
-   }
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A twisted trapezoid");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("gtra", "poza11");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1517,14 +1179,19 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    vol->SetLineColor(randomColor());
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
-   if (iaxis) {
+   if (iaxis == 3) {
       TGeoVolume *slice = vol->Divide("SLICE",iaxis,ndiv,start,step);
       if (!slice) return;
       slice->SetLineColor(randomColor());
+   } else if (iaxis) {
+      printf("Wrong division axis %d. Allowed is only 3.\n", iaxis);
+      return;
    }
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1533,32 +1200,20 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
    TGeoGtra *trap = (TGeoGtra*)(vol->GetShape());
    TText *text = pt->AddText("TGeoGtra - Twisted trapezoid class");
    text->SetTextColor(2);
-   AddText(pt,"fDz",trap->GetDz(),"half length in Z");
-   AddText(pt,"fTheta",trap->GetTheta(),"theta angle of trapezoid axis");
-   AddText(pt,"fPhi",trap->GetPhi(),"phi angle of trapezoid axis");
-   AddText(pt,"fTwist",trap->GetTwistAngle(), "twist angle");
-   AddText(pt,"fH1",trap->GetH1(),"half length in y at -fDz");
-   AddText(pt,"fAlpha1",trap->GetAlpha1(),"angle between centers of x edges and y axis at -fDz");
-   AddText(pt,"fBl1",trap->GetBl1(),"half length in x at -dZ and y=-fH1");
-   AddText(pt,"fTl1",trap->GetTl1(),"half length in x at -dZ and y=+fH1");
-   AddText(pt,"fH2",trap->GetH2(),"half length in y at +fDz");
-   AddText(pt,"fBl2",trap->GetBl2(),"half length in x at +dZ and y=-fH1");
-   AddText(pt,"fTl2",trap->GetTl2(),"half length in x at +dZ and y=+fH1");
-   AddText(pt,"fAlpha2",trap->GetAlpha2(),"angle between centers of x edges and y axis at +fDz");
-   if (iaxis) AddText(pt, vol->GetFinder(), iaxis);
-   pt->AddText("Execute: gtra(iaxis, ndiv, start, step) to divide this.");
-   pt->AddText("----- IAXIS can be only 3 (Z)");
-   pt->AddText("----- NDIV must be a positive integer");
-   pt->AddText("----- START must be a valid axis offset within shape range on divided axis");
-   pt->AddText("----- STEP is the division step. START+NDIV*STEP must be in range also");
-   pt->AddText("----- If START and STEP are omitted, all range of the axis will be divided");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetAllWith("Execute","color",4);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddMemberInfo(pt,"fDz",trap->GetDz(),"half length in Z");
+   AddMemberInfo(pt,"fTheta",trap->GetTheta(),"theta angle of trapezoid axis");
+   AddMemberInfo(pt,"fPhi",trap->GetPhi(),"phi angle of trapezoid axis");
+   AddMemberInfo(pt,"fTwist",trap->GetTwistAngle(), "twist angle");
+   AddMemberInfo(pt,"fH1",trap->GetH1(),"half length in y at -fDz");
+   AddMemberInfo(pt,"fAlpha1",trap->GetAlpha1(),"angle between centers of x edges and y axis at -fDz");
+   AddMemberInfo(pt,"fBl1",trap->GetBl1(),"half length in x at -dZ and y=-fH1");
+   AddMemberInfo(pt,"fTl1",trap->GetTl1(),"half length in x at -dZ and y=+fH1");
+   AddMemberInfo(pt,"fH2",trap->GetH2(),"half length in y at +fDz");
+   AddMemberInfo(pt,"fBl2",trap->GetBl2(),"half length in x at +dZ and y=-fH1");
+   AddMemberInfo(pt,"fTl2",trap->GetTl2(),"half length in x at +dZ and y=+fH1");
+   AddMemberInfo(pt,"fAlpha2",trap->GetAlpha2(),"angle between centers of x edges and y axis at +fDz");
+   AddFinderInfo(pt, vol->GetFinder(), iaxis);
+   AddExecInfo(pt, "gtra", "only 3 (Z)");
    pt->Draw();
    c->cd(1);
 //   SavePicture("gtra",c,vol,iaxis,step);
@@ -1567,15 +1222,8 @@ void gtra(Int_t iaxis=0, Int_t ndiv=8, Double_t start=0, Double_t step=0)
 //______________________________________________________________________________
 void xtru()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("gtra shape", "A twisted trapezoid", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A twisted trapezoid");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1596,7 +1244,9 @@ void xtru()
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1604,8 +1254,8 @@ void xtru()
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoXtru - Polygonal extrusion class");
    text->SetTextColor(2);
-   AddText(pt,"fNvert",xtru->GetNvert(),"number of polygone vertices");
-   AddText(pt,"fNz",xtru->GetNz(),"number of Z sections");
+   AddMemberInfo(pt,"fNvert",xtru->GetNvert(),"number of polygone vertices");
+   AddMemberInfo(pt,"fNz",xtru->GetNz(),"number of Z sections");
    pt->AddText("----- Any Z section is an arbitrary polygone");
    pt->AddText("----- The shape can have an arbitrary number of Z sections, as for pcon/pgon");
    pt->AddText("----- Create with:    TGeoXtru *xtru = new TGeoXtru(nz);");
@@ -1617,28 +1267,18 @@ void xtru()
    pt->AddText("-----                 xtru->DefineSection(i, Zsection, x0, y0, scale);");
    pt->AddText("----- Sections have to be defined in increasing Z order");
    pt->AddText("----- 2 sections can be defined at same Z (not for first/last sections)");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddExecInfo(pt, "xtru");
    pt->Draw();
    c->cd(1);
 }
+
 //______________________________________________________________________________
 void tessellated()
 {
    // Create a [triacontahedron solid](https://en.wikipedia.org/wiki/Rhombic_triacontahedron)
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("tessellated shape", "A tessellated shape", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+
+   auto c = create_canvas("A tessellated shape");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("tessellated", "tessellated");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1716,7 +1356,9 @@ void tessellated()
    vol->SetLineWidth(2);
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1724,44 +1366,31 @@ void tessellated()
    pt->SetLineColor(1);
    TText *text = pt->AddText("TGeoTessellated - Tessellated shape class");
    text->SetTextColor(2);
-   AddText(pt,"fNfacets",tsl->GetNfacets(),"number of facets");
-   AddText(pt,"fNvertices",tsl->GetNvertices(),"number of vertices");
+   AddMemberInfo(pt,"fNfacets",tsl->GetNfacets(),"number of facets");
+   AddMemberInfo(pt,"fNvertices",tsl->GetNvertices(),"number of vertices");
    pt->AddText("----- A tessellated shape is defined by the number of facets");
    pt->AddText("-----    facets can be added using AddFacet");
    pt->AddText("----- Create with:    TGeoTessellated *tsl = new TGeoTessellated(nfacets);");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",2);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddExecInfo(pt, "tessellated");
    pt->Draw();
    c->cd(1);
 }
+
 //______________________________________________________________________________
 void composite()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+   auto c = create_canvas("A Boolean shape composition");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("xtru", "poza12");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
    TGeoMedium *med = new TGeoMedium("MED",1,mat);
    TGeoVolume *top = gGeoManager->MakeBox("TOP",med,100,100,100);
    gGeoManager->SetTopVolume(top);
-
    // define shape components with names
    TGeoPgon *pgon = new TGeoPgon("pg",0.,360.,6,2);
    pgon->DefineSection(0,0,0,20);
    pgon->DefineSection(1, 30,0,20);
-
    new TGeoSphere("sph", 40., 45.);
    // define named geometrical transformations with names
    TGeoTranslation *tr = new TGeoTranslation(0., 0., 45.);
@@ -1770,13 +1399,14 @@ void composite()
    tr->RegisterYourself();
    // create the composite shape based on a Boolean expression
    TGeoCompositeShape *cs = new TGeoCompositeShape("mir", "sph:tr*pg");
-
    TGeoVolume *vol = new TGeoVolume("COMP",cs);
    vol->SetLineColor(randomColor());
    top->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(100);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1792,12 +1422,7 @@ void composite()
    pt->AddText("----- Expression is made of <shapeName:transfName> components related by Boolean operators");
    pt->AddText("----- Boolean operators can be: (+) union, (-) subtraction and (*) intersection");
    pt->AddText("----- Use parenthesis in the expression to force precedence");
-   pt->AddText(" ");
-   pt->SetAllWith("-----","color",4);
-   pt->SetAllWith("-----","font",72);
-   pt->SetAllWith("-----","size",0.04);
-   pt->SetTextAlign(12);
-   pt->SetTextSize(0.044);
+   AddExecInfo(pt, "composite");
    pt->Draw();
    c->cd(1);
 }
@@ -1837,15 +1462,9 @@ void ideal()
 //   newshape = new shape to replace final node shape
 //   check = optional check if the new aligned node is overlapping
 // gGeoManager->SetDrawExtraPaths(Bool_t flag)
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A Boolean shape composition", 700,1000);
-   if (comments) {
-      c->Divide(1,2,0,0);
-      c->cd(2);
-      gPad->SetPad(0,0,1,0.4);
-      c->cd(1);
-      gPad->SetPad(0,0.4,1,1);
-   }
+
+   auto c = create_canvas("Ideal geometry");
+
    if (gGeoManager) delete gGeoManager;
    new TGeoManager("alignment", "Ideal geometry");
    TGeoMaterial *mat = new TGeoMaterial("Al", 26.98,13,2.7);
@@ -1862,7 +1481,9 @@ void ideal()
    slicey->AddNode(vol,1);
    gGeoManager->CloseGeometry();
    gGeoManager->SetNsegments(80);
+
    top->Draw();
+
    MakePicture();
    if (!comments) return;
    c->cd(2);
@@ -1899,16 +1520,14 @@ void align()
       printf("Click: <Ideal geometry> first\n");
       return;
    }
-   char name[30];
    TObjArray *list = gGeoManager->GetListOfPhysicalNodes();
-   TGeoPhysicalNode *node;
-   TGeoTranslation *tr;
    for (Int_t i=1; i<=10; i++) {
       for (Int_t j=1; j<=10; j++) {
-         node = 0;
-         sprintf(name, "TOP_1/SX_%d/SY_%d/CELL_1",i,j);
+         TGeoPhysicalNode *node = nullptr;
+         auto name = TString::Format("TOP_1/SX_%d/SY_%d/CELL_1",i,j);
          if (list) node = (TGeoPhysicalNode*)list->At(10*(i-1)+j-1);
-         if (!node) node = gGeoManager->MakePhysicalNode(name);
+         if (!node) node = gGeoManager->MakePhysicalNode(name.Data());
+         TGeoTranslation *tr;
          if (node->IsAligned()) {
             tr = (TGeoTranslation*)node->GetNode()->GetMatrix();
             tr->SetTranslation(2.*gRandom->Rndm(), 2.*gRandom->Rndm(),0.);
@@ -1922,4 +1541,57 @@ void align()
       gPad->Modified();
       gPad->Update();
    }
+}
+
+//______________________________________________________________________________
+void geodemo ()
+{
+// root[0] .x geodemo.C
+// root[1] box();   //draw a TGeoBBox with description
+//
+// The box can be divided on one axis.
+//
+// root[2] box(iaxis, ndiv, start, step);
+//
+// where: iaxis = 1,2 or 3, meaning (X,Y,Z) or (Rxy, phi, Z) depending on shape type
+//        ndiv  = number of slices
+//        start = starting position (must be in shape range)
+//        step  = division step
+// If step=0, all range of a given axis will be divided
+//
+// The same can procedure can be performed for visualizing other shapes.
+// When drawing one shape after another, the old geometry/canvas will be deleted.
+   TControlBar *bar = new TControlBar("vertical", "TGeo shapes",10,10);
+   bar->AddButton("How to run  ","help()","Instructions for running this macro");
+   bar->AddButton("Arb8        ","arb8()","An arbitrary polyhedron defined by vertices (max 8) sitting on 2 parallel planes");
+   bar->AddButton("Box         ","box()","A box shape.");
+   bar->AddButton("Composite   ","composite()","A composite shape");
+   bar->AddButton("Cone        ","cone()","A conical tube");
+   bar->AddButton("Cone segment","coneseg()","A conical segment");
+   bar->AddButton("Cut tube    ","ctub()","A cut tube segment");
+   bar->AddButton("Elliptical tube","eltu()","An elliptical tube");
+   bar->AddButton("Extruded poly","xtru()","A general polygone extrusion");
+   bar->AddButton("Hyperboloid  ","hype()","A hyperboloid");
+   bar->AddButton("Paraboloid  ","parab()","A paraboloid");
+   bar->AddButton("Polycone    ","pcon()","A polycone shape");
+   bar->AddButton("Polygone    ","pgon()","A polygone");
+   bar->AddButton("Parallelepiped","para()","A parallelepiped shape");
+   bar->AddButton("Sphere      ","sphere()","A spherical sector");
+   bar->AddButton("Trd1        ","trd1()","A trapezoid with dX varying with Z");
+   bar->AddButton("Trd2        ","trd2()","A trapezoid with both dX and dY varying with Z");
+   bar->AddButton("Trapezoid   ","trap()","A general trapezoid");
+   bar->AddButton("Torus       ","torus()","A toroidal segment");
+   bar->AddButton("Tube        ","tube()","A tube with inner and outer radius");
+   bar->AddButton("Tube segment","tubeseg()","A tube segment");
+   bar->AddButton("Twisted trap","gtra()","A twisted trapezoid");
+   bar->AddButton("Tessellated ","tessellated()","A tessellated shape");
+   bar->AddButton("Aligned (ideal)","ideal()","An ideal (un-aligned) geometry");
+   bar->AddButton("Un-aligned","align()","Some alignment operation");
+   bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+   bar->AddButton("COMMENTS  ON/OFF","comments = !comments;","Toggle explanations pad ON/OFF");
+   bar->AddButton("AXES ON/OFF","axes()","Toggle axes ON/OFF");
+   bar->AddButton("AUTOROTATE ON/OFF","autorotate()","Toggle autorotation ON/OFF");
+   bar->Show();
+   gROOT->SaveContext();
+   gRandom = new TRandom3();
 }

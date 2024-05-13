@@ -3,7 +3,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : BDTEventWrapper                                                       *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
@@ -16,7 +16,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_BDTEventWrapper
@@ -74,8 +74,8 @@ namespace TMVA {
 
       const Event* fEvent;     // pointer to the event
 
-      Double_t     fBkgWeight; // cumulative background weight for splitting
-      Double_t     fSigWeight; // same for the signal weights
+      Double_t     fBkgWeight; ///< cumulative background weight for splitting
+      Double_t     fSigWeight; ///< same for the signal weights
    };
 }
 

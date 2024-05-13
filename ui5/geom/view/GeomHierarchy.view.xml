@@ -1,0 +1,34 @@
+<mvc:View height="100%" width="100%" class="sapUiSizeCompact"
+   controllerName="rootui5.geom.controller.GeomHierarchy"
+   xmlns="sap.m"
+   xmlns:mvc="sap.ui.core.mvc"
+   xmlns:t="sap.ui.table">
+   <FlexBox height="100%" direction="Column">
+      <Toolbar>
+         <layoutData>
+            <FlexItemData baseSize="35px"/>
+         </layoutData>
+
+         <Button icon="sap-icon://synchronize" type="Transparent"
+                 tooltip="Reload geometry hierarchy" press="onRealoadPress"/>
+         <ToolbarSpacer />
+         <SearchField id="searchNode" liveChange="onSearch"
+                      tooltip="Type regexp for name or material with prefix m:"/>
+      </Toolbar>
+      <t:TreeTable
+         id="treeTable"
+         columnHeaderVisible="false"
+         editable="false"
+         enableSelectAll="false"
+         selectionBehavior="RowOnly"
+         selectionMode="Single"
+         visibleRowCountMode="Auto"
+         cellClick="onCellClick"
+         cellContextmenu="onCellContextMenu"
+         rows="{/nodes}">
+         <t:layoutData>
+            <FlexItemData growFactor="1"/>
+         </t:layoutData>
+      </t:TreeTable>
+   </FlexBox>
+</mvc:View>

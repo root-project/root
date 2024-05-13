@@ -230,7 +230,7 @@ void SettingsDialog::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process messages coming from widgets associated with the dialog.
 
-Bool_t SettingsDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t SettingsDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    Int_t Selection;
    Int_t retval;

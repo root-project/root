@@ -1,7 +1,7 @@
 // Author: Enric Tejedor CERN  10/2017
 
 /*************************************************************************
- * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,38 +14,48 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
 
+#include <cstdint>
 #include <deque>
 #include <list>
-#include <map>
+#include <unordered_map>
+#include <set>
+#include <memory>
 #include <vector>
-#include <fstream>
 
 #include <TRegexp.h>
 
 namespace ROOT {
+
+namespace Internal {
+class RRawFile;
+}
 
 namespace RDF {
 
 class RCsvDS final : public ROOT::RDF::RDataSource {
 
 private:
-   // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
+   // Possible values are D, O, L, T. This is possible only because we treat double, bool, Long64_t and string
    using ColType_t = char;
-   static const std::map<ColType_t, std::string> fgColTypeMap;
+   static const std::unordered_map<ColType_t, std::string> fgColTypeMap;
 
-   std::streampos fDataPos = 0;
+   // Regular expressions for type inference
+   static const TRegexp fgIntRegex, fgDoubleRegex1, fgDoubleRegex2, fgDoubleRegex3, fgTrueRegex, fgFalseRegex;
+
+   std::uint64_t fDataPos = 0;
    bool fReadHeaders = false;
    unsigned int fNSlots = 0U;
-   std::ifstream fStream;
+   std::unique_ptr<ROOT::Internal::RRawFile> fCsvFile;
    const char fDelimiter;
    const Long64_t fLinesChunkSize;
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
-   std::vector<std::string> fHeaders;
-   std::map<std::string, ColType_t> fColTypes;
-   std::list<ColType_t> fColTypesList;
-   std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
-   std::vector<Record_t> fRecords;                         // fRecords[entry][column]
+   std::vector<std::string> fHeaders; // the column names
+   std::unordered_map<std::string, ColType_t> fColTypes;
+   std::set<std::string> fColContainingEmpty; // store columns which had empty entry
+   std::list<ColType_t> fColTypesList; // column types, order is the same as fHeaders, values the same as fColTypes
+   std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot] (same ordering as fHeaders)
+   std::vector<Record_t> fRecords;                         // fRecords[entry][column] (same ordering as fHeaders)
    std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
    std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
    std::vector<std::vector<std::string>> fStringEvtValues; // one per column per slot
@@ -53,33 +63,33 @@ private:
    // work given that the pointer to the boolean in that case cannot be taken
    std::vector<std::deque<bool>> fBoolEvtValues; // one per column per slot
 
-   static TRegexp intRegex, doubleRegex1, doubleRegex2, doubleRegex3, trueRegex, falseRegex;
-
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
-   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
+   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &) final;
+   void ValidateColTypes(std::vector<std::string> &) const;
    void InferColTypes(std::vector<std::string> &);
    void InferType(const std::string &, unsigned int);
    std::vector<std::string> ParseColumns(const std::string &);
    size_t ParseValue(const std::string &, std::vector<std::string> &, size_t);
    ColType_t GetType(std::string_view colName) const;
+   void FreeRecords();
 
 protected:
-   std::string AsString();
+   std::string AsString() final;
 
 public:
-   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL);
-   void Finalise();
-   void FreeRecords();
+   RCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',', Long64_t linesChunkSize = -1LL,
+          std::unordered_map<std::string, char> &&colTypes = {});
+   void Finalize() final;
    ~RCsvDS();
-   const std::vector<std::string> &GetColumnNames() const;
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
-   std::string GetTypeName(std::string_view colName) const;
-   bool HasColumn(std::string_view colName) const;
-   bool SetEntry(unsigned int slot, ULong64_t entry);
-   void SetNSlots(unsigned int nSlots);
-   std::string GetLabel();
+   const std::vector<std::string> &GetColumnNames() const final;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   std::string GetTypeName(std::string_view colName) const final;
+   bool HasColumn(std::string_view colName) const final;
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+   void SetNSlots(unsigned int nSlots) final;
+   std::string GetLabel() final;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,8 +98,12 @@ public:
 /// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
 ///                        (default `true`).
 /// \param[in] delimiter Delimiter character (default ',').
-RDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
-                            Long64_t linesChunkSize = -1LL);
+/// \param[in] linesChunkSize bunch of lines to read, use -1 to read all
+/// \param[in] colTypes Allow user to specify custom column types, accepts an unordered map with keys being
+///                      column type, values being type alias ('O' for boolean, 'D' for double, 'L' for
+///                      Long64_t, 'T' for std::string)
+RDataFrame FromCSV(std::string_view fileName, bool readHeaders = true, char delimiter = ',',
+                   Long64_t linesChunkSize = -1LL, std::unordered_map<std::string, char> &&colTypes = {});
 
 } // ns RDF
 

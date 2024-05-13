@@ -18,17 +18,17 @@
 
 void fitLinear2()
 {
-   Int_t n=100;
-   Int_t i;
+   int n=100;
+   int i;
    TRandom randNum;
    TLinearFitter *lf=new TLinearFitter(5);
 
    //The predefined "hypN" functions are the fastest to fit
    lf->SetFormula("hyp5");
 
-   Double_t *x=new Double_t[n*10*5];
-   Double_t *y=new Double_t[n*10];
-   Double_t *e=new Double_t[n*10];
+   double *x=new double[n*10*5];
+   double *y=new double[n*10];
+   double *e=new double[n*10];
 
    //Create the points and put them into the fitter
    for (i=0; i<n; i++){
@@ -53,9 +53,9 @@ void fitLinear2()
    TVectorD errors;
    lf->GetParameters(params);
    lf->GetErrors(errors);
-   for (Int_t i=0; i<6; i++)
+   for (int i=0; i<6; i++)
       printf("par[%d]=%f+-%f\n", i, params(i), errors(i));
-   Double_t chisquare=lf->GetChisquare();
+   double chisquare=lf->GetChisquare();
    printf("chisquare=%f\n", chisquare);
 
 
@@ -76,7 +76,7 @@ void fitLinear2()
    lf->GetParameters(params);
    lf->GetErrors(errors);
    printf("\nMore Points:\n");
-   for (Int_t i=0; i<6; i++)
+   for (int i=0; i<6; i++)
       printf("par[%d]=%f+-%f\n", i, params(i), errors(i));
    chisquare=lf->GetChisquare();
    printf("chisquare=%.15f\n", chisquare);
@@ -91,7 +91,7 @@ void fitLinear2()
    lf->GetParameters(params);
    lf->GetErrors(errors);
    printf("\nWithout Constant\n");
-   for (Int_t i=0; i<5; i++)
+   for (int i=0; i<5; i++)
      printf("par[%d]=%f+-%f\n", i, params(i), errors(i));
    chisquare=lf->GetChisquare();
    printf("chisquare=%f\n", chisquare);

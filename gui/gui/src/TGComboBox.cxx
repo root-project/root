@@ -20,25 +20,30 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGComboBox, TGComboBoxPopup                                          //
-//                                                                      //
-// A combobox (also known as a drop down listbox) allows the selection  //
-// of one item out of a list of items. The selected item is visible in  //
-// a little window. To view the list of possible items one has to click //
-// on a button on the right of the little window. This will drop down   //
-// a listbox. After selecting an item from the listbox the box will     //
-// disappear and the newly selected item will be shown in the little    //
-// window.                                                              //
-//                                                                      //
-// The TGComboBox is user callable. The TGComboBoxPopup is a service    //
-// class of the combobox.                                               //
-//                                                                      //
-// Selecting an item in the combobox will generate the event:           //
-// kC_COMMAND, kCM_COMBOBOX, combobox id, item id.                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGComboBox
+    \ingroup guiwidgets
+
+A combobox (also known as a drop down listbox) allows the selection
+of one item out of a list of items. The selected item is visible in
+a little window. To view the list of possible items one has to click
+on a button on the right of the little window. This will drop down
+a listbox. After selecting an item from the listbox the box will
+disappear and the newly selected item will be shown in the little
+window.
+
+The TGComboBox is user callable.
+
+\class TGComboBoxPopup
+\ingroup guiwidgets
+
+A service class of the combobox.
+
+Selecting an item in the combobox will generate the event:
+  - kC_COMMAND, kCM_COMBOBOX, combobox id, item id.
+
+*/
+
 
 #include "TGComboBox.h"
 #include "TGScrollBar.h"
@@ -62,7 +67,7 @@ ClassImp(TGFontTypeComboBox);
 /// Create a combo box popup frame.
 
 TGComboBoxPopup::TGComboBoxPopup(const TGWindow *p, UInt_t w, UInt_t h,
-                                 UInt_t options, ULong_t back) :
+                                 UInt_t options, Pixel_t back) :
    TGCompositeFrame (p, w, h, options, back), fListBox(0), fSelected(0)
 {
    SetWindowAttributes_t wattr;
@@ -222,7 +227,7 @@ void TGComboBoxPopup::KeyPressed(TGFrame *f, UInt_t keysym, UInt_t)
 /// Create a combo box widget.
 
 TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
-                       ULong_t back) :
+                       Pixel_t back) :
    TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
    fWidgetId  = id;
@@ -241,12 +246,12 @@ TGComboBox::TGComboBox(const TGWindow *p, Int_t id, UInt_t options,
 /// Create an editable combo box widget.
 
 TGComboBox::TGComboBox(const TGWindow *p, const char *text, Int_t id,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
             TGCompositeFrame (p, 10, 10, options | kOwnBackground, back)
 {
    fWidgetId  = id;
    fMsgWindow = p;
-   fSelEntry = 0;
+   fSelEntry = nullptr;
 
    fTextEntry = new TGTextEntry(this, text, id);
    fTextEntry->SetFrameDrawn(kFALSE);
@@ -464,6 +469,7 @@ void TGComboBox::Select(Int_t id, Bool_t emit)
          if (emit) {
             Selected(fWidgetId, id);
             Selected(id);
+            Changed();
          }
       }
    }
@@ -579,7 +585,7 @@ Bool_t TGComboBox::HandleSelectionRequest(Event_t *event)
 /// messages to the combobox message handling window. Parm2 contains
 /// the id of the selected listbox entry.
 
-Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
+Bool_t TGComboBox::ProcessMessage(Longptr_t msg, Longptr_t, Longptr_t parm2)
 {
    TGLBEntry *e;
 
@@ -609,6 +615,7 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
                }
                Selected(fWidgetId, (Int_t)parm2);
                Selected((Int_t)parm2);
+               Changed();
                fClient->NeedRedraw(this);
                break;
          }
@@ -621,11 +628,11 @@ Bool_t TGComboBox::ProcessMessage(Long_t msg, Long_t, Long_t parm2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Emit signal.
+/// Emit signal, done only when selected entry changed.
 
 void TGComboBox::Selected(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;
@@ -641,10 +648,10 @@ void TGComboBox::SetEnabled(Bool_t on)
    fDDButton->SetEnabled(on);
    if (on) {
       SetFlags(kWidgetIsEnabled);
-      fSelEntry->SetBackgroundColor(GetBackground());
+      if (fSelEntry) fSelEntry->SetBackgroundColor(GetBackground());
    } else {
       ClearFlags(kWidgetIsEnabled);
-      fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
+      if (fSelEntry) fSelEntry->SetBackgroundColor(GetDefaultFrameBackground());
    }
    fClient->NeedRedraw(fSelEntry);
 }

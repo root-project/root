@@ -17,8 +17,8 @@
 #define ROOT7_RMiniFile
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTupleOptions.hxx>
-#include <ROOT/RStringView.hxx>
+#include <ROOT/RNTuple.hxx>
+#include <string_view>
 
 #include <cstdint>
 #include <cstdio>
@@ -37,61 +37,7 @@ class RRawFile;
 
 namespace Experimental {
 
-// clang-format off
-/**
-\class ROOT::Experimental::RNTuple
-\ingroup NTuple
-\brief Entry point for an RNTuple in a ROOT file
-
-The class points to the header and footer keys, which in turn have the references to the pages.
-Only the RNTuple key will be listed in the list of keys. Like TBaskets, the pages are "invisible" keys.
-Byte offset references in the RNTuple header and footer reference directly the data part of page records,
-skipping the TFile key part.
-
-While the class is central to anchoring an RNTuple in a TFile, it is an internal detail not exposed to users.
-Note that there is no user-facing RNTuple class but RNTupleReader and RNTupleWriter.
-*/
-// clang-format on
-struct RNTuple {
-   /// Allows for evolving the struct in future versions
-   std::uint32_t fVersion = 0;
-   /// Allows for skipping the struct
-   std::uint32_t fSize = sizeof(RNTuple);
-   /// The file offset of the header excluding the TKey part
-   std::uint64_t fSeekHeader = 0;
-   /// The size of the compressed ntuple header
-   std::uint32_t fNBytesHeader = 0;
-   /// The size of the uncompressed ntuple header
-   std::uint32_t fLenHeader = 0;
-   /// The file offset of the footer excluding the TKey part
-   std::uint64_t fSeekFooter = 0;
-   /// The size of the compressed ntuple footer
-   std::uint32_t fNBytesFooter = 0;
-   /// The size of the uncompressed ntuple footer
-   std::uint32_t fLenFooter = 0;
-   /// Currently unused, reserved for later use
-   std::uint64_t fReserved = 0;
-
-   /// The canonical, member-wise equality test
-   bool operator ==(const RNTuple &other) const {
-      return fVersion == other.fVersion &&
-         fSize == other.fSize &&
-         fSeekHeader == other.fSeekHeader &&
-         fNBytesHeader == other.fNBytesHeader &&
-         fLenHeader == other.fLenHeader &&
-         fSeekFooter == other.fSeekFooter &&
-         fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter &&
-         fReserved == other.fReserved;
-   }
-
-   // RNTuple implements the hadd MergeFile interface
-   /// Merge this NTuple with the input list entries
-   Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
-};
-
 namespace Internal {
-
 /// Holds status information of an open ROOT file during writing
 struct RTFileControlBlock;
 
@@ -115,6 +61,11 @@ private:
    RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
    RResult<RNTuple> GetNTupleProper(std::string_view ntupleName);
+
+   RNTuple CreateAnchor(std::uint16_t versionEpoch, std::uint16_t versionMajor, std::uint16_t versionMinor,
+                        std::uint16_t versionPatch, std::uint64_t seekHeader, std::uint64_t nbytesHeader,
+                        std::uint64_t lenHeader, std::uint64_t seekFooter, std::uint64_t nbytesFooter,
+                        std::uint64_t lenFooter, std::uint64_t checksum);
 
 public:
    RMiniFileReader() = default;
@@ -155,6 +106,8 @@ private:
       FILE *fFile = nullptr;
       /// Keeps track of the seek offset
       std::uint64_t fFilePos = 0;
+      /// Keeps track of the next key offset
+      std::uint64_t fKeyOffset = 0;
       /// Keeps track of TFile control structures, which need to be updated on committing the data set
       std::unique_ptr<ROOT::Experimental::Internal::RTFileControlBlock> fControlBlock;
 
@@ -194,20 +147,30 @@ private:
 
    explicit RNTupleFileWriter(std::string_view name);
 
-   /// For a TFile container written by a C file stream, write the records that constitute an empty file
+   /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
+   /// The only key that will be visible in file->ls()
+   void WriteTFileNTupleKey();
+   /// Write the TList with the RNTuple key
+   void WriteTFileKeysList();
+   /// Write the compressed streamer info record with the description of the RNTuple class
+   void WriteTFileStreamerInfo();
+   /// Last record in the file
+   void WriteTFileFreeList();
    /// For a bare file, which is necessarily written by a C file stream, write file header
    void WriteBareFileSkeleton(int defaultCompression);
 
 public:
+   /// For testing purposes, RNTuple data can be written into a bare file container instead of a ROOT file
+   enum class EContainerFormat {
+      kTFile, // ROOT TFile
+      kBare,  // A thin envelope supporting a single RNTuple only
+   };
+
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
    static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
-                                      ENTupleContainerFormat containerFormat);
-   /// Create or truncate the local or remote file given by path with the new empty RNTuple identified by ntupleName.
-   /// Creates a new TFile object for writing and hands over ownership of the object to the user.
-   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path,
-                                      std::unique_ptr<TFile> &file);
+                                      EContainerFormat containerFormat);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
    static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
 
@@ -223,6 +186,11 @@ public:
    std::uint64_t WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    /// Writes a new record as an RBlob key into the file
    std::uint64_t WriteBlob(const void *data, size_t nbytes, size_t len);
+   /// Reserves a new record as an RBlob key in the file.
+   std::uint64_t ReserveBlob(size_t nbytes, size_t len);
+   /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
+   /// previously reserved key.
+   void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
 };

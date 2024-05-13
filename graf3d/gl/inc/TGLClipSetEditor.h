@@ -26,8 +26,8 @@ class TGButtonGroup;
 class TGLClipSetSubEditor : public TGVerticalFrame
 {
 private:
-   TGLClipSetSubEditor(const TGLClipSetSubEditor&);            // Not implemented
-   TGLClipSetSubEditor& operator=(const TGLClipSetSubEditor&); // Not implemented
+   TGLClipSetSubEditor(const TGLClipSetSubEditor&) = delete;
+   TGLClipSetSubEditor& operator=(const TGLClipSetSubEditor&) = delete;
 
 protected:
    TGLClipSet       *fM;
@@ -49,7 +49,7 @@ protected:
 
 public:
    TGLClipSetSubEditor(const TGWindow* p);
-   virtual ~TGLClipSetSubEditor() {}
+   ~TGLClipSetSubEditor() override {}
 
    void SetModel(TGLClipSet* m);
 
@@ -61,27 +61,27 @@ public:
    void UpdateViewerClip();
    void ResetViewerClip();
 
-   ClassDef(TGLClipSetSubEditor, 0); // Sub-editor for TGLClipSet.
+   ClassDefOverride(TGLClipSetSubEditor, 0); // Sub-editor for TGLClipSet.
 };
 
 
 class TGLClipSetEditor : public TGedFrame {
 
 private:
-   TGLClipSetEditor(const TGLClipSetEditor&);            // Not implemented
-   TGLClipSetEditor& operator=(const TGLClipSetEditor&); // Not implemented
+   TGLClipSetEditor(const TGLClipSetEditor&) = delete;
+   TGLClipSetEditor& operator=(const TGLClipSetEditor&) = delete;
 
 protected:
    TGLClipSet           *fM;  // fModel dynamic-casted to TGLClipSet
    TGLClipSetSubEditor  *fSE;
 
 public:
-   TGLClipSetEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TGLClipSetEditor() {}
+   TGLClipSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
+   ~TGLClipSetEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
+   ClassDefOverride(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
 };
 
 #endif

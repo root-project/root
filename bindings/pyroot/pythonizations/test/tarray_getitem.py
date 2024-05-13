@@ -34,7 +34,7 @@ class TArrayGetItem(unittest.TestCase):
         for i in range(self.num_elems):
             a[i] = val
 
-        self.assertEquals(list(a), [ val for _ in range(self.num_elems) ])
+        self.assertEqual(list(a), [ val for _ in range(self.num_elems) ])
 
 
 if __name__ == '__main__':

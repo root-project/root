@@ -49,19 +49,19 @@ private:
 public:
    TableTest(const TGWindow *p, UInt_t ndrows, UInt_t ndcols,
              UInt_t ntrows, UInt_t ntcols, UInt_t w = 100, UInt_t h = 100) ;
-   virtual ~TableTest() ;
+   ~TableTest() override ;
 
    void DoExit() ;
 
    TGSimpleTable *GetTable() { return fSimpleTable; }
 
-   ClassDef(TableTest, 0)
+   ClassDefOverride(TableTest, 0)
 };
 
 TableTest::TableTest(const TGWindow *p,  UInt_t ndrows, UInt_t ndcols,
                      UInt_t ntrows, UInt_t ntcols, UInt_t w, UInt_t h)
-   : TGMainFrame(p, w, h), fData(0), fNDataRows(ndrows), fNDataColumns(ndcols),
-     fNTableRows(ntrows), fNTableColumns(ntcols), fSimpleTable(0)
+   : TGMainFrame(p, w, h), fData(nullptr), fNDataRows(ndrows), fNDataColumns(ndcols),
+     fNTableRows(ntrows), fNTableColumns(ntcols), fSimpleTable(nullptr)
 {
    SetCleanup(kDeepCleanup) ;
    Connect("CloseWindow()", "TableTest", this, "DoExit()") ;
@@ -115,6 +115,6 @@ TableTest::~TableTest()
 
 TGSimpleTable *simpleTableTest(UInt_t ndrows = 500, UInt_t ndcols = 20,
                    UInt_t ntrows = 50, UInt_t ntcols = 10) {
-   TableTest *test = new TableTest(0, ndrows, ndcols, ntrows, ntcols, 500, 200);
+   TableTest *test = new TableTest(nullptr, ndrows, ndcols, ntrows, ntcols, 500, 200);
    return test->GetTable();
 }

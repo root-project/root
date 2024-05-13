@@ -15,22 +15,29 @@ if(NOT WIN32)
     SET_TARGET_PROPERTIES(rootn.exe PROPERTIES LINK_FLAGS "-Wl,--no-as-needed")
   endif()
   ROOT_EXECUTABLE(roots.exe roots.cxx LIBRARIES Core MathCore)
-  ROOT_EXECUTABLE(xpdtest xpdtest.cxx LIBRARIES Proof Tree Hist RIO Net Thread Matrix MathCore)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 if(MSVC)
   set(root_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
-      /STACK:4000000")
+      /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
+  add_custom_command(TARGET root.exe POST_BUILD
+                     COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
-ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
+if(proof)
+  ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
+endif()
 if(MSVC)
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
+  set_property(TARGET hadd APPEND_STRING PROPERTY LINK_FLAGS "setargv.obj")
 else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
+
+#---ReadSpeed-------------------------------------------------------------------------------------
+ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed)
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
@@ -50,8 +57,10 @@ foreach(rawUtilName ${utils})
   if(NOT WIN32)
     # We need the .py only on Windows
     string(REPLACE ".py" "" utilName ${utilName})
+    set(python python3)
+  else()
+    set(python python)
   endif()
-  set(python ${PYTHON_EXECUTABLE_Development_Main})
   configure_file(${rawUtilName} ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName} @ONLY)
 
   install(FILES ${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}/${utilName}
@@ -69,18 +78,17 @@ if(IS_ABSOLUTE ${runtimedir})
 else()
   set(absruntimedir \${CMAKE_INSTALL_PREFIX}/${runtimedir})
 endif()
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
-install(CODE "execute_process(COMMAND ${PYTHON_EXECUTABLE_Development_Main} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
+install(CODE "execute_process(COMMAND ${Python3_EXECUTABLE} -O -m py_compile \$ENV{DESTDIR}${absruntimedir}/cmdLineUtils.py)")
 configure_file(python/cmdLineUtils.py ${localruntimedir}/cmdLineUtils.py @ONLY)
 
 
-if(NOT MSVC)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS} -Wno-unused-parameter")
-else()
-  set_source_files_properties(src/rootcling.cxx PROPERTIES COMPILE_FLAGS "-DNOMINMAX -D_XKEYCHECK_H")
-endif()
+set_source_files_properties(src/rootcling.cxx PROPERTIES
+  COMPILE_FLAGS "${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
 
-ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core)
+ROOT_EXECUTABLE(rootcling src/rootcling.cxx LIBRARIES RIO Cling Core Rint)
 
 # rootcling includes the ROOT complex header which would build the complex
 # dictionary with modules. To make sure that rootcling_stage1 builds this
@@ -91,6 +99,7 @@ target_include_directories(rootcling PRIVATE
         ${CMAKE_SOURCE_DIR}/core/metacling/res
         ${CMAKE_SOURCE_DIR}/core/dictgen/res
         ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 endif()

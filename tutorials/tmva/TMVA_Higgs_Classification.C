@@ -39,12 +39,21 @@ void TMVA_Higgs_Classification() {
    bool useLikelihoodKDE = false;    // likelihood based discriminant
    bool useFischer = true;       // Fischer discriminant
    bool useMLP = false;          // Multi Layer Perceptron (old TMVA NN implementation)
-   bool useBDT = true;           // BOosted Decision Tree
+   bool useBDT = true;           // Boosted Decision Tree
    bool useDL = true;            // TMVA Deep learning ( CPU or GPU)
-
-
+   bool useKeras = true;        // Keras Deep learning
+   bool usePyTorch = true;      // PyTorch Deep learning
 
    TMVA::Tools::Instance();
+
+#ifdef R__HAS_PYMVA
+   gSystem->Setenv("KERAS_BACKEND", "tensorflow");
+   // for using Keras
+   TMVA::PyMethodBase::PyInitialize();
+#else
+   useKeras = false;
+   usePyTorch = false;
+#endif
 
    auto outputFile = TFile::Open("Higgs_ClassificationOutput.root", "RECREATE");
 
@@ -60,7 +69,7 @@ Define now input data file and signal and background trees
  **/
 
    TString inputFileName = "Higgs_data.root";
-   TString inputFileLink = "http://root.cern.ch/files/" + inputFileName;
+   TString inputFileLink = "http://root.cern/files/" + inputFileName;
 
    TFile *inputFile = nullptr;
 
@@ -194,7 +203,7 @@ We define first the DNN layout:
 - **input layout** :   this defines the input data format for the DNN as  ``input depth | height | width``.
    In case of a dense layer as first layer the input layout should be  ``1 | 1 | number of input variables`` (features)
 - **batch layout**  : this defines how are the input batch. It is related to input layout but not the same.
-   If the first layer is dense it should be ``1 | batch size ! number of variables`` (fetures)
+   If the first layer is dense it should be ``1 | batch size ! number of variables`` (features)
 
    *(note the use of the character `|` as  separator of  input parameters for DNN layout)*
 
@@ -208,7 +217,7 @@ complex architectures
 
      *the different layers are separated by the ``","`` *
 
-#### 2. Define Trainining Strategy
+#### 2. Define Training Strategy
 
 We define here the training strategy parameters for the DNN. The parameters are separated by the ``","`` separator.
 One can then concatenate different training strategy with different parameters. The training strategy are separated by
@@ -227,7 +236,7 @@ the ``"|"`` separator.
 
 #### 3. Define general DNN options
 
-We define the general DNN options concateneting in the final string the previously defined layout and training strategy.
+We define the general DNN options concatenating in the final string the previously defined layout and training strategy.
 Note we use the ``":"`` separator to separate the different higher level options, as in the other TMVA methods.
 In addition to input layout, batch layout and training strategy we add now:
 
@@ -256,7 +265,8 @@ We can then book the DL method using the built option string
       TString training1("LearningRate=1e-3,Momentum=0.9,"
                         "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
                         "MaxEpochs=30,WeightDecay=1e-4,Regularization=None,"
-                        "Optimizer=ADAM,DropConfig=0.0+0.0+0.0+0.");
+                        "Optimizer=ADAM,ADAM_beta1=0.9,ADAM_beta2=0.999,ADAM_eps=1.E-7," // ADAM default parameters
+                        "DropConfig=0.0+0.0+0.0+0.");
       //     TString training2("LearningRate=1e-3,Momentum=0.9"
       //                       "ConvergenceSteps=10,BatchSize=128,TestRepetitions=1,"
       //                       "MaxEpochs=20,WeightDecay=1e-4,Regularization=None,"
@@ -283,7 +293,47 @@ We can then book the DL method using the built option string
       }
 
       factory.BookMethod(loader, TMVA::Types::kDL, dnnMethodName, dnnOptions);
+   }
 
+   // Keras deep learning
+   if (useKeras) {
+
+      Info("TMVA_Higgs_Classification", "Building deep neural network with keras ");
+      // create python script which can be executed
+      // create 2 conv2d layer + maxpool + dense
+      TMacro m;
+      m.AddLine("import tensorflow");
+      m.AddLine("from tensorflow.keras.models import Sequential");
+      m.AddLine("from tensorflow.keras.optimizers import Adam");
+      m.AddLine("from tensorflow.keras.layers import Input, Dense");
+      m.AddLine("");
+      m.AddLine("model = Sequential() ");
+      m.AddLine("model.add(Dense(64, activation='relu',input_dim=7))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(64, activation='relu'))");
+      m.AddLine("model.add(Dense(2, activation='sigmoid'))");
+      m.AddLine("model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
+      m.AddLine("model.save('Higgs_model.h5')");
+      m.AddLine("model.summary()");
+
+      m.SaveSource("make_higgs_model.py");
+      // execute
+      auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
+      TString python_exe = (ret) ? *(ret) : "python";
+      gSystem->Exec(python_exe + " make_higgs_model.py");
+
+      if (gSystem->AccessPathName("Higgs_model.h5")) {
+         Warning("TMVA_Higgs_Classification", "Error creating Keras model file - skip using Keras");
+      } else {
+         // book PyKeras method only if Keras model could be created
+         Info("TMVA_Higgs_Classification", "Booking tf.Keras Dense model");
+         factory.BookMethod(
+            loader, TMVA::Types::kPyKeras, "PyKeras",
+            "H:!V:VarTransform=None:FilenameModel=Higgs_model.h5:tf.keras:"
+            "FilenameTrainedModel=Higgs_trained_model.h5:NumEpochs=20:BatchSize=100:"
+            "GpuOptions=allow_growth=True"); // needed for RTX NVidia card and to avoid TF allocates all GPU memory
+      }
    }
 
    /**

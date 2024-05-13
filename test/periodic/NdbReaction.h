@@ -17,9 +17,9 @@ public:
    NdbReaction()
       : NdbMF(3, "Reaction cross sections"),
         reac() { }
-   ~NdbReaction() {}
+   ~NdbReaction() override {}
 
-   ClassDef(NdbReaction,1)
+   ClassDefOverride(NdbReaction,1)
 }; // NdbReaction
 
 #endif

@@ -56,7 +56,7 @@ VavilovAccurate::VavilovAccurate(double kappa, double beta2, double epsilonPM, d
 
 VavilovAccurate::~VavilovAccurate()
 {
-   // desctructor (clean up resources)
+   // destructor (clean up resources)
 }
 
 void VavilovAccurate::SetKappaBeta2 (double kappa, double beta2) {

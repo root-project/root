@@ -36,7 +36,7 @@ protected:
 public:
 
    TProofBenchDataSet(TProof *proof = 0);
-   virtual ~TProofBenchDataSet() { }
+   ~TProofBenchDataSet() override { }
 
    Bool_t IsProof(TProof *p) { return (p == fProof) ? kTRUE : kFALSE; }
 
@@ -44,7 +44,7 @@ public:
    Int_t ReleaseCache(const char *dset);
    Int_t RemoveFiles(const char *dset);
 
-   ClassDef(TProofBenchDataSet,0)   //Handle operations on datasets
+   ClassDefOverride(TProofBenchDataSet,0)   //Handle operations on datasets
 };
 
 #endif

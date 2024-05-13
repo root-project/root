@@ -352,7 +352,7 @@ static const unsigned long None = 0;
 
    struct _GdkWin32SingleFont {
       HFONT xfont;
-      UINT charset;
+      uintptr_t charset;
       UINT codepage;
       FONTSIGNATURE fs;
    };

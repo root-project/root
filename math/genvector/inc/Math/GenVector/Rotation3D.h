@@ -60,6 +60,8 @@ namespace Math {
      Note that the operator is NOT commutative, the order how the rotations are applied is relevant.
 
      @ingroup GenVector
+
+     @sa Overview of the @ref GenVector "physics vector library"
   */
 
 class Rotation3D {
@@ -129,7 +131,7 @@ public:
       or re-adjusting is performed.
    */
    template<class ForeignMatrix>
-   explicit Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
+   explicit constexpr Rotation3D(const ForeignMatrix & m) { SetComponents(m); }
 
    /**
       Construct from three orthonormal vectors (which must have methods
@@ -438,7 +440,7 @@ public:
    /**
       Multiplication with arbitrary rotations
     */
-    // note: cannot have a  template method since it is ambigous with the operator * on vectors
+    // note: cannot have a  template method since it is ambiguous with the operator * on vectors
 
    Rotation3D operator * (const AxisAngle   & a) const;
    Rotation3D operator * (const EulerAngles & e) const;

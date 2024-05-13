@@ -1445,7 +1445,8 @@ GSL library, wich is provided in the *MathMore* library of ROOT.
 
 The interface to use is the same as above. We have now the possibility to specify a different integration algorithm in the constructor of the `ROOT::Math::GSLIntegrator` class.
 ```{.cpp}
-ROOT::Math::GSLIntegrator ig(ROOT::Math::Integration::kADAPTIVE, ROOT::Math::Integration::kGAUSS51);   // create the adaptive integrator with the 51 point rule
+// create the adaptive integrator with the 51 point rule
+ROOT::Math::GSLIntegrator ig(ROOT::Math::Integration::kADAPTIVE, ROOT::Math::Integration::kGAUSS51);
 ig.SetRelTolerance(1.E-6);  // set relative tolerance
 ig.SetAbsTolerance(1.E-6);   // set absoulte tolerance
 ```
@@ -3168,4 +3169,4 @@ details the chapter "Neural Networks").
 determinant estimator (MCD).
 
 **`TMVA`** is a package for multivariate data analysis (see
-<http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf> the User's Guide).
+<https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf> the User's Guide).

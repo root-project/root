@@ -16,13 +16,11 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/Sample.h"
 
-#include "TFile.h"
-#include "TXMLAttr.h"
-#include <TXMLNode.h>
-
 #include <cstdlib>
 #include <string>
 #include <vector>
+
+class TXMLNode;
 
 namespace RooStats{
    namespace HistFactory {
@@ -32,7 +30,7 @@ namespace RooStats{
      public:
 
        /// The "main" method
-       std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input); 
+       std::vector< RooStats::HistFactory::Measurement > GetMeasurementsFromXML(std::string input);
        RooStats::HistFactory::Measurement CreateMeasurementFromDriverNode( TXMLNode* node );
        RooStats::HistFactory::Channel ParseChannelXMLFile( std::string filen );
 

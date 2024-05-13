@@ -26,7 +26,7 @@ namespace Math {
 } // namespace Math
 
 namespace MathMore  {
-   // re-impelment some function already existing in MathCore (defined in ROOT::Math namespace)
+   // re-implement some function already existing in MathCore (defined in ROOT::Math namespace)
 
   double chisquared_quantile(double z, double r) {
 

@@ -1,14 +1,12 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
+/// Data and categories: working with RooCategory objects to describe discrete variables
 ///
-///
-/// \brief Data and categories: working with RooCategory objects to describe discrete variables
-///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -17,7 +15,6 @@
 #include "RooCategory.h"
 #include "Roo1DTable.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -91,7 +88,7 @@ void rf404_categories()
 
    // Generate a dummy dataset
    RooRealVar x("x", "x", 0, 10);
-   RooDataSet *data = RooPolynomial("p", "p", x).generate(RooArgSet(x, b0flav, tagCat), 10000);
+   std::unique_ptr<RooDataSet> data{RooPolynomial("p", "p", x).generate({x, b0flav, tagCat}, 10000)};
 
 
    // P r i n t   t a b l e s   o f   c a t e g o r y   c o n t e n t s   o f   d a t a s e t s
@@ -113,11 +110,11 @@ void rf404_categories()
 
    // Retrieve number of events from table
    // Number can be non-integer if source dataset has weighed events
-   Double_t nb0 = btable->get("B0");
+   double nb0 = btable->get("B0");
    std::cout << "Number of events with B0 flavor is " << nb0 << std::endl;
 
    // Retrieve fraction of events with "Lepton" tag
-   Double_t fracLep = ttable->getFrac("Lepton");
+   double fracLep = ttable->getFrac("Lepton");
    std::cout << "Fraction of events tagged with Lepton tag is " << fracLep << std::endl;
 
    // D e f i n i n g   r a n g e s   f o r   p l o t t i n g ,   f i t t i n g   o n   c a t e g o r i e s
@@ -131,6 +128,6 @@ void rf404_categories()
    tagCat.addToRange("soso", "NetTagger-2");
 
    // Use category range in dataset reduction specification
-   RooDataSet *goodData = (RooDataSet *)data->reduce(CutRange("good"));
-   goodData->table(tagCat)->Print("v");
+   std::unique_ptr<RooAbsData> goodData{data->reduce(CutRange("good"))};
+   static_cast<RooDataSet&>(*goodData).table(tagCat)->Print("v");
 }

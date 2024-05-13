@@ -24,7 +24,11 @@
 #include "Math/SpecFuncMathCore.h"
 #include "Math/DistFuncMathCore.h"
 
-static RooMathCoreReg dummy ;
+namespace {
+
+RooMathCoreReg dummy ;
+
+}
 
 RooMathCoreReg::RooMathCoreReg()
 {

@@ -12,9 +12,9 @@ public:
    NdbEnergyAngleDist()
       : NdbMF(6, "Energy-angle distributions for emitted particles") {}
 
-   ~NdbEnergyAngleDist() {}
+   ~NdbEnergyAngleDist() override {}
 
-   ClassDef(NdbEnergyAngleDist,1)
+   ClassDefOverride(NdbEnergyAngleDist,1)
 
 }; // NdbEnergyAngleDist
 

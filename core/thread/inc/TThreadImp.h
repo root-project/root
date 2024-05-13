@@ -35,7 +35,7 @@ public:
 
    virtual Int_t  Join(TThread *th, void **ret) = 0;
    virtual Long_t SelfId() = 0;
-   virtual Int_t  Run(TThread *th) = 0;
+   virtual Int_t  Run(TThread *th, const int affinity = -1) = 0;
 
    virtual Int_t  Kill(TThread *th) = 0;
    virtual Int_t  SetCancelOff() = 0;
@@ -49,7 +49,7 @@ public:
 
    virtual Int_t  Exit(void *ret) = 0;
 
-   ClassDef(TThreadImp,0)  // ThreadImp class
+   ClassDefOverride(TThreadImp,0)  // ThreadImp class
 };
 
 #endif

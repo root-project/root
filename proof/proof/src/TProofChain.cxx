@@ -214,8 +214,8 @@ Long64_t TProofChain::Draw(const char *varexp, const char *selection,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Aliases are added to the input list. The names are comma-separated in the 
-/// TNamed 'PROOF_ListOfAliases'. For each name, there is an trey named 'alias:<name>'.
+/// Aliases are added to the input list. The names are comma-separated in the
+/// TNamed 'PROOF_ListOfAliases'. For each name, there is an trey named `alias:<name>`.
 
 void TProofChain::AddAliases()
 {

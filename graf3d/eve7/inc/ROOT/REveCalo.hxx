@@ -68,16 +68,17 @@ protected:
    virtual void BuildCellIdCache() = 0;
 
 public:
-   REveCaloViz(REveCaloData* data=0, const char* n="REveCaloViz", const char* t="");
+   REveCaloViz(REveCaloData* data=nullptr, const char* n="REveCaloViz", const char* t="");
 
-   virtual ~REveCaloViz();
+   ~REveCaloViz() override;
 
+   bool RequiresExtraSelectionData() const override { return true; };
    virtual REveElement* ForwardSelection();
    virtual REveElement* ForwardEdit();
 
    TClass* ProjectedClass(const REveProjection* p) const override;
    virtual Float_t GetValToHeight() const;
-   virtual void    CellSelectionChanged() {}
+   // virtual void    CellSelectionChanged() {}
 
    virtual void    SetScaleAbs(Bool_t x) { fScaleAbs = x; }
 
@@ -146,7 +147,7 @@ public:
    Bool_t  CellInEtaPhiRng (REveCaloData::CellData_t&) const;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   virtual void WriteCoreJsonSelection(nlohmann::json &j, bool) = 0;
+   virtual void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) = 0;
 };
 
 /**************************************************************************/
@@ -173,12 +174,12 @@ protected:
    void BuildCellIdCache() override;
 
 public:
-   REveCalo3D(REveCaloData* d=0, const char* n="REveCalo3D", const char* t="");
-   virtual ~REveCalo3D() {}
+   REveCalo3D(REveCaloData* d=nullptr, const char* n="REveCalo3D", const char* t="");
+   ~REveCalo3D() override {}
    void ComputeBBox() override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j, bool) override;
+   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void    SetFrameWidth(Float_t w) { fFrameWidth = w; }
@@ -239,20 +240,18 @@ protected:
 
 public:
    REveCalo2D(const char* n="REveCalo2D", const char* t="");
-   virtual ~REveCalo2D();
+   ~REveCalo2D() override;
 
    void SetProjection(REveProjectionManager* proj, REveProjectable* model) override;
    void UpdateProjection() override;
    void ComputeBBox() override;
-
-   void CellSelectionChanged() override;
 
    void    SetScaleAbs(Bool_t) override;
 
    Float_t GetValToHeight() const override;
 
    Int_t WriteCoreJson(nlohmann::json &j, Int_t rnr_offset) override;
-   void WriteCoreJsonSelection(nlohmann::json &j, bool) override;
+   void WriteCoreJsonSelection(nlohmann::json &j,  REveCaloData::vCellId_t) override;
    void BuildRenderData() override;
 
    void NewBinPicked(Int_t bin, Int_t slice, Int_t selectionId, Bool_t multi);
@@ -304,8 +303,8 @@ protected:
    void BuildCellIdCache() override;
 
 public:
-   REveCaloLego(REveCaloData* data=0, const char* n="REveCaloLego", const char* t="");
-   virtual ~REveCaloLego(){}
+   REveCaloLego(REveCaloData* data=nullptr, const char* n="REveCaloLego", const char* t="");
+   ~REveCaloLego() override{}
 
    void ComputeBBox() override;
    virtual void  SetData(REveCaloData* d);

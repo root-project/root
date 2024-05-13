@@ -7,8 +7,22 @@
 ///
 /// \authors Rene Brun, Eddy Offermann, Jan Musinsky
 
-TList *lq = 0;
-TGraph *gr = 0;
+TList *lq = nullptr;
+TGraph *gr = nullptr;
+
+void HighlightQuantile(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y)
+{
+   // show the evolution of all quantiles in the bottom pad
+   if (obj != gr) return;
+   if (ihp == -1) return;
+
+   TVirtualPad *savepad = gPad;
+   pad->GetCanvas()->cd(3);
+   lq->At(ihp)->Draw("alp");
+   gPad->Update();
+   if (savepad) savepad->cd();
+}
+
 
 void hlquantiles() {
    const Int_t nq = 100;
@@ -21,7 +35,8 @@ void hlquantiles() {
    TGraph *gr90 = new TGraph(nshots);
    TGraph *gr98 = new TGraph(nshots);
    TGraph *grq[nq];
-   for (Int_t ig = 0; ig < nq; ig++) grq[ig] = new TGraph(nshots);
+   for (Int_t ig = 0; ig < nq; ig++)
+      grq[ig] = new TGraph(nshots);
    TH1F *h = new TH1F("h","demo quantiles",50,-3,3);
 
    for (Int_t shot=0;shot<nshots;shot++) {
@@ -36,6 +51,7 @@ void hlquantiles() {
 
    //show the original histogram in the top pad
    TCanvas *c1 = new TCanvas("c1","demo quantiles",10,10,600,900);
+   c1->HighlightConnect("HighlightQuantile(TVirtualPad*,TObject*,Int_t,Int_t)");
    c1->SetFillColor(41);
    c1->Divide(1,3);
    c1->cd(1);
@@ -71,7 +87,6 @@ void hlquantiles() {
    info->Draw();
 
    gr->SetHighlight();
-   c1->HighlightConnect("HighlightQuantile(TVirtualPad*,TObject*,Int_t,Int_t)");
 
    // show the evolution of some  quantiles in the bottom pad
    c1->cd(3);
@@ -97,15 +112,3 @@ void hlquantiles() {
    legend->Draw();
 }
 
-void HighlightQuantile(TVirtualPad *pad, TObject *obj, Int_t ihp, Int_t y)
-{
-   // show the evolution of all quantiles in the bottom pad
-   if (obj != gr) return;
-   if (ihp == -1) return;
-
-   TVirtualPad *savepad = gPad;
-   pad->GetCanvas()->cd(3);
-   lq->At(ihp)->Draw("alp");
-   gPad->Update();
-   savepad->cd();
-}

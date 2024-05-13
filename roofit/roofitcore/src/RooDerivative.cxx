@@ -19,16 +19,13 @@
 \class RooDerivative
 \ingroup Roofitcore
 
-RooDerivative represents the first, second, or third order derivative
+Represents the first, second, or third order derivative
 of any RooAbsReal as calculated (numerically) by the MathCore Richardson
 derivator class.
 **/
 
-
-#include "RooFit.h"
-
 #include "Riostream.h"
-#include <math.h>
+#include <cmath>
 
 #include "RooDerivative.h"
 #include "RooAbsReal.h"
@@ -42,8 +39,6 @@ derivator class.
 #include "Math/WrappedFunction.h"
 #include "Math/RichardsonDerivator.h"
 
-using namespace std;
-
 ClassImp(RooDerivative);
 
 
@@ -51,23 +46,17 @@ ClassImp(RooDerivative);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooDerivative::RooDerivative() : _order(1), _eps(1e-7), _ftor(0), _rd(0)
-{
-}
-
-
+RooDerivative::RooDerivative() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Double_t epsIn) :
+RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, double epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
+  _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+  _x("x","x",this,x)
 {
   if (_order<0 || _order>3 ) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
@@ -76,17 +65,15 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, Double_t epsIn) :
+RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, Int_t orderIn, double epsIn) :
   RooAbsReal(name, title),
   _order(orderIn),
   _eps(epsIn),
-  _nset("nset","nset",this,kFALSE,kFALSE),
+  _nset("nset","nset",this,false,false),
   _func("function","function",this,func),
-  _x("x","x",this,x),
-  _ftor(0),
-  _rd(0)
+  _x("x","x",this,x)
 {
-  if (_order<0 || _order>3) { 
+  if (_order<0 || _order>3) {
     throw std::string(Form("RooDerivative::ctor(%s) ERROR, derivation order must be 1,2 or 3",name)) ;
   }
   _nset.add(nset) ;
@@ -97,42 +84,29 @@ RooDerivative::RooDerivative(const char* name, const char* title, RooAbsReal& fu
 ////////////////////////////////////////////////////////////////////////////////
 
 RooDerivative::RooDerivative(const RooDerivative& other, const char* name) :
-  RooAbsReal(other, name), 
-  _order(other._order),  
+  RooAbsReal(other, name),
+  _order(other._order),
   _eps(other._eps),
   _nset("nset",this,other._nset),
   _func("function",this,other._func),
-  _x("x",this,other._x),
-  _ftor(0),
-  _rd(0)
+  _x("x",this,other._x)
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooDerivative::~RooDerivative() 
-{
-  if (_rd) delete _rd ;
-  if (_ftor) delete _ftor ;
-}
-
-
+RooDerivative::~RooDerivative() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
-Double_t RooDerivative::evaluate() const 
+double RooDerivative::evaluate() const
 {
   if (!_ftor) {
-    _ftor = _func.arg().functor(_x.arg(),RooArgSet(),_nset)  ;    
+    _ftor = std::unique_ptr<RooFunctor>{_func.arg().functor(_x.arg(),RooArgSet(),_nset)};
     ROOT::Math::WrappedFunction<RooFunctor&> wf(*_ftor);
-    _rd = new ROOT::Math::RichardsonDerivator(wf,_eps*(_x.max()-_x.min()),kTRUE) ;
+    _rd = std::make_unique<ROOT::Math::RichardsonDerivator>(wf,_eps*(_x.max()-_x.min()),true);
   }
-  
-  switch (_order) {    
+
+  switch (_order) {
   case 1: return _rd->Derivative1(_x);
   case 2: return _rd->Derivative2(_x);
   case 3: return _rd->Derivative3(_x);
@@ -145,11 +119,9 @@ Double_t RooDerivative::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Zap functor and derivator ;
 
-Bool_t RooDerivative::redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/) 
+bool RooDerivative::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
 {
-  delete _ftor ;
-  delete _rd ; 
-  _ftor = 0 ;
-  _rd = 0 ;
-  return kFALSE ;
+  _ftor = nullptr ;
+  _rd = nullptr ;
+  return RooAbsReal::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursive);
 }

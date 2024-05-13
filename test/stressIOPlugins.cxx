@@ -30,7 +30,7 @@
 // ****************************************************************************
 // *  Starting stressIOPlugins test for protocol http
 // *  Test files will be read from:
-// *  http://root.cern.ch/files/StressIOPluginsTestFiles/
+// *  http://root.cern/files/StressIOPluginsTestFiles/
 // ****************************************************************************
 // Test  1 : Check size & compression factor of a Root file........ using stress_2.root
 //         : opened file with plugin class......................... TDavixFile
@@ -157,27 +157,14 @@ int setPath(const char *proto)
    TString p(proto);
    gCurProtoName = p;
    if (p == "root" || p == "xroot") {
-      gPfx = p + "://eospublic.cern.ch//eos/opstest/dhsmith/StressIOPluginsTestFiles/";
+      gPfx = p + "://eospublic.cern.ch//eos/root-eos/StressIOPluginsTestFiles/";
       return 0;
    }
    if (p == "http" || p == "https") {
-      gPfx = p + "://root.cern.ch/files/StressIOPluginsTestFiles/";
+      gPfx = p + "://root.cern/files/StressIOPluginsTestFiles/";
       return 0;
    }
    return -1;
-}
-
-Bool_t running_as_sftnight_with_kerberos() {
-   UserGroup_t *ug = gSystem->GetUserInfo((const char*)0);
-   if (!ug) {
-     return kFALSE;
-   }
-   if (ug->fUser != "sftnight") {
-     delete ug;
-     return kFALSE;
-   }
-   delete ug;
-   return (gSystem->Exec("(klist | grep sftnight@CERN.CH) > /dev/null 2>&1") == 0);
 }
 
 void stressIOPluginsForProto(const char *protoName /*=0*/, int multithread /*=0*/)

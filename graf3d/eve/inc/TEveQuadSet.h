@@ -81,7 +81,7 @@ public:
    TEveQuadSet(const char* n="TEveQuadSet", const char* t="");
    TEveQuadSet(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize,
                const char* n="TEveQuadSet", const char* t="");
-   virtual ~TEveQuadSet() {}
+   ~TEveQuadSet() override {}
 
    void Reset(EQuadType_e quadType, Bool_t valIsCol, Int_t chunkSize);
 
@@ -95,7 +95,7 @@ public:
 
    // --------------------------------
 
-   void AddQuad(Float_t* verts);
+   void AddQuad(Float_t verts[12]);
 
    void AddQuad(Float_t a, Float_t b);
    void AddQuad(Float_t a, Float_t b, Float_t c);
@@ -116,11 +116,11 @@ public:
 
    // void Test(Int_t nquads);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // virtual void Paint(Option_t* option="");
 
-   ClassDef(TEveQuadSet, 0); // Collection of 2D primitives (rectangles, hexagons, or lines); each primitive can be assigned a signal value and a TRef.
+   ClassDefOverride(TEveQuadSet, 0); // Collection of 2D primitives (rectangles, hexagons, or lines); each primitive can be assigned a signal value and a TRef.
 };
 
 #endif

@@ -3,7 +3,7 @@
 // Modified: G Ganis Jan 2017
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2020, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,23 +16,27 @@
 #include "MPCode.h"
 #include "MPSendRecv.h"
 #include "PoolUtils.h"
+#include "ROOT/TExecutorCRTP.hxx"
+#include "ROOT/TSeq.hxx"
+#include "ROOT/TypeTraits.hxx"
 #include "TError.h"
 #include "TFileCollection.h"
 #include "TFileInfo.h"
 #include "THashList.h"
 #include "TMPClient.h"
-#include "ROOT/TExecutor.hxx"
 #include "TMPWorkerExecutor.h"
+
 #include <algorithm> //std::generate
 #include <numeric> //std::iota
 #include <string>
-#include <type_traits> //std::result_of, std::enable_if
 #include <functional> //std::reference_wrapper
 #include <vector>
 
 namespace ROOT {
 
-class TProcessExecutor : public TExecutor<TProcessExecutor>, private TMPClient {
+class TProcessExecutor : public TExecutorCRTP<TProcessExecutor>, private TMPClient {
+   friend TExecutorCRTP;
+
 public:
    explicit TProcessExecutor(unsigned nWorkers = 0); //default number of workers is the number of processors
    ~TProcessExecutor() = default;
@@ -41,27 +45,44 @@ public:
    TProcessExecutor &operator=(const TProcessExecutor &) = delete;
 
    // Map
-   using TExecutor<TProcessExecutor>::Map;
-   template<class F, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class T, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+   //
+   using TExecutorCRTP<TProcessExecutor>::Map;
+
+   // MapReduce
+   // Redefinition of the MapReduce classes of the base class, to adapt them to
+   // TProcessExecutor's logic
+   using TExecutorCRTP<TProcessExecutor>::MapReduce;
+   template<class F, class R, class Cond = validMapReturnCond<F>>
+   auto MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>;
+   template<class F, class T, class R, class Cond = validMapReturnCond<F, T>>
+   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
+   template<class F, class T, class R, class Cond = validMapReturnCond<F, T>>
+   auto MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>;
+
+   // Reduce
+   //
+   using TExecutorCRTP<TProcessExecutor>::Reduce;
 
    void SetNWorkers(unsigned n) { TMPClient::SetNWorkers(n); }
-   unsigned GetNWorkers() const { return TMPClient::GetNWorkers(); }
 
-   using TExecutor<TProcessExecutor>::MapReduce;
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type;
-
-   using TExecutor<TProcessExecutor>::Reduce;
-   template<class T, class R> T Reduce(const std::vector<T> &objs, R redfunc);
+   //////////////////////////////////////////////////////////////////////////
+   /// \brief Return the number of pooled parallel workers.
+   ///
+   /// \return The number of workers in the pool.
+   unsigned GetPoolSize() const { return TMPClient::GetNWorkers(); }
 
 private:
+   // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
+   //
+   template<class F, class Cond = validMapReturnCond<F>>
+   auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
+   template<class F, class INTEGER, class Cond = validMapReturnCond<F, INTEGER>>
+   auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
+   template<class F, class T, class Cond = validMapReturnCond<F, T>>
+   auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
+   template<class F, class T, class Cond = validMapReturnCond<F, T>>
+   auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
+
    template<class T> void Collect(std::vector<T> &reslist);
    template<class T> void HandlePoolCode(MPCodeBufPair &msg, TSocket *sender, std::vector<T> &reslist);
 
@@ -90,12 +111,12 @@ private:
 /************ TEMPLATE METHODS IMPLEMENTATION ******************/
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func (with no arguments) nTimes in parallel.
-/// A vector containg executions' results is returned.
-/// Functions that take more than zero arguments can be executed (with
-/// fixed arguments) by wrapping them in a lambda or with std::bind.
+/// \brief Execute a function without arguments several times in parallel.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
 template<class F, class Cond>
-auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>
+auto TProcessExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>
 {
    using retType = decltype(func());
    //prepare environment
@@ -103,7 +124,7 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
    fTaskType = ETask::kMap;
 
    //fork max(nTimes, fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TMPWorkerExecutor<F> worker(func);
@@ -131,13 +152,12 @@ auto TProcessExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std:
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of an
-/// std::vector as argument.
-/// A vector containg executions' results is returned.
-// actual implementation of the Map method. all other calls with arguments eventually
-// call this one
+/// \brief Execute a function over the elements of a vector in parallel
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
 template<class F, class T, class Cond>
-auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>
+auto TProcessExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
 {
    //check whether func is callable
    using retType = decltype(func(args.front()));
@@ -147,7 +167,7 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
 
    //fork max(args.size(), fNWorkers) times
    //N.B. from this point onwards, args is filled with undefined (but valid) values, since TMPWorkerExecutor moved its content away
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TMPWorkerExecutor<F, T> worker(func, args);
@@ -177,11 +197,57 @@ auto TProcessExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Execute func in parallel, taking an element of a
-/// sequence as argument.
-/// A vector containg executions' results is returned.
+/// \brief Execute a function over the elements of an immutable vector in parallel
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
+template<class F, class T, class Cond>
+auto TProcessExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>
+{
+   //check whether func is callable
+   using retType = decltype(func(args.front()));
+   //prepare environment
+   Reset();
+   fTaskType = ETask::kMapWithArg;
+
+   //fork max(args.size(), fNWorkers) times
+   //N.B. from this point onwards, args is filled with undefined (but valid) values, since TMPWorkerExecutor moved its content away
+   unsigned oldNWorkers = GetPoolSize();
+   if (args.size() < oldNWorkers)
+      SetNWorkers(args.size());
+   TMPWorkerExecutor<F, T> worker(func, args);
+   bool ok = Fork(worker);
+   SetNWorkers(oldNWorkers);
+   if (!ok)
+   {
+      Error("TProcessExecutor::Map", "[E][C] Could not fork. Aborting operation.");
+      return std::vector<retType>();
+   }
+
+   //give out tasks
+   fNToProcess = args.size();
+   std::vector<retType> reslist;
+   reslist.reserve(fNToProcess);
+   std::vector<unsigned> range(fNToProcess);
+   std::iota(range.begin(), range.end(), 0);
+   fNProcessed = Broadcast(MPCode::kExecFuncWithArg, range);
+
+   //collect results, give out other tasks if needed
+   Collect(reslist);
+
+   //clean-up and return
+   ReapWorkers();
+   fTaskType = ETask::kNoTask;
+   return reslist;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// \brief Execute a function over a sequence of indexes in parallel.
+/// Implementation of the Map method.
+///
+/// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
 template<class F, class INTEGER, class Cond>
-auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>
+auto TProcessExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>
 {
    std::vector<INTEGER> vargs(args.size());
    std::copy(args.begin(), args.end(), vargs.begin());
@@ -190,13 +256,10 @@ auto TProcessExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<type
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
+/// \brief Execute a function `nTimes` in parallel (Map) and accumulate the results into a single value (Reduce).
+/// \copydetails  ROOT::Internal::TExecutor::MapReduce(F func,unsigned nTimes,R redfunc)
 template<class F, class R, class Cond>
-auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type
+auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> InvokeResult_t<F>
 {
    using retType = decltype(func());
    //prepare environment
@@ -204,7 +267,7 @@ auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename
    fTaskType= ETask::kMapRed;
 
    //fork max(nTimes, fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (nTimes < oldNWorkers)
       SetNWorkers(nTimes);
    TMPWorkerExecutor<F, void, R> worker(func, redfunc);
@@ -231,13 +294,12 @@ auto TProcessExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// This method behaves just like Map, but an additional redfunc function
-/// must be provided. redfunc is applied to the vector Map would return and
-/// must return the same type as func. In practice, redfunc can be used to
-/// "squash" the vector returned by Map into a single object by merging,
-/// adding, mixing the elements of the vector.
+/// \brief Execute a function in parallel over the elements of a vector (Map) and accumulate the results into a single value (Reduce).
+/// Benefits from partial reduction into `nChunks` intermediate results.
+///
+/// \copydetails ROOT::Internal::TExecutor::MapReduce(F func,std::vector<T> &args,R redfunc,unsigned nChunks).
 template<class F, class T, class R, class Cond>
-auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type
+auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>
 {
 
    using retType = decltype(func(args.front()));
@@ -246,7 +308,7 @@ auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typ
    fTaskType= ETask::kMapRedWithArg;
 
    //fork max(args.size(), fNWorkers) times
-   unsigned oldNWorkers = GetNWorkers();
+   unsigned oldNWorkers = GetPoolSize();
    if (args.size() < oldNWorkers)
       SetNWorkers(args.size());
    TMPWorkerExecutor<F, T, R> worker(func, args, redfunc);
@@ -274,14 +336,45 @@ auto TProcessExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typ
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// "Reduce" an std::vector into a single object by passing a
-/// function as the second argument defining the reduction operation.
-template<class T, class R>
-T TProcessExecutor::Reduce(const std::vector<T> &objs, R redfunc)
+/// \brief Execute a function in parallel over the elements of an immutable vector (Map) and accumulate the results into a single value (Reduce).
+/// Benefits from partial reduction into `nChunks` intermediate results.
+///
+/// \copydetails ROOT::Internal::TExecutor::MapReduce(F func,const std::vector<T> &args,R redfunc,unsigned nChunks).
+template<class F, class T, class R, class Cond>
+auto TProcessExecutor::MapReduce(F func, const std::vector<T> &args, R redfunc) -> InvokeResult_t<F, T>
 {
-   // check we can apply reduce to objs
-   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-   return redfunc(objs);
+
+   using retType = decltype(func(args.front()));
+   //prepare environment
+   Reset();
+   fTaskType= ETask::kMapRedWithArg;
+
+   //fork max(args.size(), fNWorkers) times
+   unsigned oldNWorkers = GetPoolSize();
+   if (args.size() < oldNWorkers)
+      SetNWorkers(args.size());
+   TMPWorkerExecutor<F, T, R> worker(func, args, redfunc);
+   bool ok = Fork(worker);
+   SetNWorkers(oldNWorkers);
+   if (!ok) {
+      std::cerr << "[E][C] Could not fork. Aborting operation\n";
+      return decltype(func(args.front()))();
+   }
+
+   //give workers their first task
+   fNToProcess = args.size();
+   std::vector<retType> reslist;
+   reslist.reserve(fNToProcess);
+   std::vector<unsigned> range(fNToProcess);
+   std::iota(range.begin(), range.end(), 0);
+   fNProcessed = Broadcast(MPCode::kExecFuncWithArg, range);
+
+   //collect results/give workers their next task
+   Collect(reslist);
+
+   ReapWorkers();
+   fTaskType= ETask::kNoTask;
+   return Reduce(reslist, redfunc);
 }
 
 //////////////////////////////////////////////////////////////////////////

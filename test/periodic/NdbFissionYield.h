@@ -11,9 +11,9 @@ protected:
 public:
    NdbFissionYield()
       : NdbMF(8, "Radioactivity and fission-product yield data") {}
-   ~NdbFissionYield() {}
+   ~NdbFissionYield() override {}
 
-   ClassDef(NdbFissionYield,1)
+   ClassDefOverride(NdbFissionYield,1)
 
 }; // NdbFissionYield
 

@@ -126,7 +126,7 @@ struct and_types<T0, Ts...> : std::integral_constant<bool, T0() && and_types<Ts.
 /// Copy the content of a slice of a tensor from source to target. This is done
 /// by recursively iterating over the ranges of the slice for each dimension.
 template <typename T>
-void RecursiveCopy(T &here, T &there,
+void RecursiveCopy(const T &here, T &there,
                    const std::vector<std::size_t> &mins, const std::vector<std::size_t> &maxs,
                    std::vector<std::size_t> idx, std::size_t active)
 {
@@ -187,7 +187,7 @@ public:
    /// \param[in] shape Shape vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
       fStrides = Internal::ComputeStridesFromShape(shape, layout);
@@ -199,7 +199,7 @@ public:
    /// \param[in] strides Strides vector
    /// \param[in] layout Memory layout
    RTensor(Value_t *data, Shape_t shape, Shape_t strides, MemoryLayout layout = MemoryLayout::RowMajor)
-      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(NULL)
+      : fShape(shape), fStrides(strides), fLayout(layout), fData(data), fContainer(nullptr)
    {
       fSize = Internal::GetSizeFromShape(shape);
    }
@@ -246,26 +246,31 @@ public:
    std::shared_ptr<Container_t> GetContainer() { return fContainer; }
    const std::shared_ptr<Container_t> GetContainer() const { return fContainer; }
    MemoryLayout GetMemoryLayout() const { return fLayout; }
-   bool IsView() const { return fContainer == NULL; }
+   bool IsView() const { return fContainer == nullptr; }
    bool IsOwner() const { return !IsView(); }
 
    // Copy
-   RTensor<Value_t, Container_t> Copy(MemoryLayout layout = MemoryLayout::RowMajor);
+   RTensor<Value_t, Container_t> Copy(MemoryLayout layout = MemoryLayout::RowMajor) const;
 
    // Transformations
-   RTensor<Value_t, Container_t> Transpose();
-   RTensor<Value_t, Container_t> Squeeze();
-   RTensor<Value_t, Container_t> ExpandDims(int idx);
-   RTensor<Value_t, Container_t> Reshape(const Shape_t &shape);
+   RTensor<Value_t, Container_t> Transpose() const;
+   RTensor<Value_t, Container_t> Squeeze() const;
+   RTensor<Value_t, Container_t> ExpandDims(int idx) const;
+   RTensor<Value_t, Container_t> Reshape(const Shape_t &shape) const;
+   RTensor<Value_t, Container_t> Resize(const Shape_t &shape);
    RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
 
    // Iterator class
-   class Iterator : public std::iterator<std::random_access_iterator_tag, Value_t> {
+   class Iterator {
    private:
       RTensor<Value_t, Container_t>& fTensor;
       Index_t::value_type fGlobalIndex;
    public:
-      using difference_type = typename std::iterator<std::random_access_iterator_tag, Value_t>::difference_type;
+      using iterator_category = std::random_access_iterator_tag;
+      using value_type = Value_t;
+      using difference_type = std::ptrdiff_t;
+      using pointer = Value_t *;
+      using reference = Value_t &;
 
       Iterator(RTensor<Value_t, Container_t>& x, typename Index_t::value_type idx) : fTensor(x), fGlobalIndex(idx) {}
       Iterator& operator++() { fGlobalIndex++; return *this; }
@@ -382,19 +387,20 @@ const Value_t &RTensor<Value_t, Container_t>::operator() (Idx... idx) const
 /// major to column-major and vice versa. Therefore, the underlying data is not
 /// touched.
 template <typename Value_t, typename Container_t>
-inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Transpose()
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Transpose() const
 {
+   MemoryLayout layout;
    // Transpose by inverting memory layout
    if (fLayout == MemoryLayout::RowMajor) {
-      fLayout = MemoryLayout::ColumnMajor;
+      layout = MemoryLayout::ColumnMajor;
    } else if (fLayout == MemoryLayout::ColumnMajor) {
-      fLayout = MemoryLayout::RowMajor;
+      layout = MemoryLayout::RowMajor;
    } else {
       throw std::runtime_error("Memory layout is not known.");
    }
 
    // Create copy of container
-   RTensor<Value_t, Container_t> x(*this);
+   RTensor<Value_t, Container_t> x(fData, fShape, fStrides, layout);
 
    // Reverse shape
    std::reverse(x.fShape.begin(), x.fShape.end());
@@ -409,7 +415,7 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Transpose()
 /// \returns New RTensor
 /// Squeeze removes the dimensions of size one from the shape.
 template <typename Value_t, typename Container_t>
-inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Squeeze()
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Squeeze() const
 {
    // Remove dimensions of one and associated strides
    Shape_t shape;
@@ -441,27 +447,25 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Squeeze()
 /// \returns New RTensor
 /// Inserts a dimension of one into the shape.
 template <typename Value_t, typename Container_t>
-inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::ExpandDims(int idx)
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::ExpandDims(int idx) const
 {
    // Compose shape vector with additional dimensions and adjust strides
    const int len = fShape.size();
    auto shape = fShape;
    auto strides = fStrides;
    if (idx < 0) {
-      if (len + idx + 1 < 0) {
-         throw std::runtime_error("Given negative index is invalid.");
-      }
-      shape.insert(shape.end() + 1 + idx, 1);
-      strides.insert(strides.begin() + 1 + idx, 1);
-   } else {
-      if (idx > len) {
-         throw std::runtime_error("Given index is invalid.");
-      }
-      shape.insert(shape.begin() + idx, 1);
-      strides.insert(strides.begin() + idx, 1);
+      idx = len + 1 + idx;
    }
+   if (idx < 0) {
+      throw std::runtime_error("Given negative index is invalid.");
+   }
+   else if (idx > len) {
+      throw std::runtime_error("Given index is invalid.");
+   }
+   shape.insert(shape.begin() + idx, 1);
+   strides = Internal::ComputeStridesFromShape(shape, fLayout);
 
-   // Create copy, attach new shape and strides and return
+   // Create view copy, attach new shape and strides and return
    RTensor<Value_t, Container_t> x(*this);
    x.fShape = shape;
    x.fStrides = strides;
@@ -473,11 +477,28 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::ExpandDims(i
 /// \returns New RTensor
 /// Reshape tensor without changing the overall size
 template <typename Value_t, typename Container_t>
-inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Reshape(const Shape_t &shape)
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Reshape(const Shape_t &shape) const
 {
    // Create copy, replace and return
    RTensor<Value_t, Container_t> x(*this);
    x.ReshapeInplace(shape);
+   return x;
+}
+
+/// \brief Resize tensor
+/// \param[in] shape Shape vector
+/// \returns New RTensor
+/// Resize tensor into new shape
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Resize(const Shape_t &shape)
+{
+   // Create new tensor with the specified shape
+   RTensor <Value_t, Container_t> x(shape, fLayout);
+
+   // Copying contents from previous tensor
+   size_t n = (x.GetSize()>fSize) ? fSize : x.GetSize();
+   std::copy(this->GetData(), this->GetData() + n, x.GetData() );
+
    return x;
 }
 
@@ -539,7 +560,7 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Slice(const 
 /// with the given layout contiguous in memory. Note that this copies by default
 /// to a row major memory layout.
 template <typename Value_t, typename Container_t>
-inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Copy(MemoryLayout layout)
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Copy(MemoryLayout layout) const
 {
    // Create new tensor with zeros owning the memory
    RTensor<Value_t, Container_t> r(fShape, layout);

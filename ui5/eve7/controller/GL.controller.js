@@ -2,11 +2,10 @@ sap.ui.define([
    'sap/ui/core/Component',
    'sap/ui/core/UIComponent',
    'sap/ui/core/mvc/Controller',
-   'sap/ui/model/json/JSONModel',
    "sap/ui/core/ResizeHandler",
    'rootui5/eve7/lib/EveManager',
    'rootui5/eve7/lib/EveScene'
-], function (Component, UIComponent, Controller, JSONModel, ResizeHandler, EveManager, EveScene) {
+], function (Component, UIComponent, Controller, ResizeHandler, EveManager, EveScene) {
 
    "use strict";
 
@@ -18,7 +17,7 @@ sap.ui.define([
 
       onInit : function()
       {
-         // var id = this.getView().getId();
+         // let id = this.getView().getId();
 
          let viewData = this.getView().getViewData();
          if (viewData)
@@ -30,36 +29,24 @@ sap.ui.define([
             UIComponent.getRouterFor(this).getRoute("View").attachPatternMatched(this.onViewObjectMatched, this);
          }
 
-         this._load_scripts = false;
          this._render_html  = false;
          this.htimeout = 250;
 
          ResizeHandler.register(this.getView(), this.onResize.bind(this));
-
-         JSROOT.AssertPrerequisites("geom", this.onLoadScripts.bind(this));
-      },
-
-      onLoadScripts: function()
-      {
-         this._load_scripts = true;
-
-         this.checkViewReady();
       },
 
       onViewObjectMatched: function(oEvent)
       {
          let args = oEvent.getParameter("arguments");
 
-         console.log('ON MATCHED', args.viewName);
-         
-         console.log('MORE DATA', JSROOT.$eve7tmp);
-
-         console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
+         // console.log('ON MATCHED', args.viewName);
+         // console.log('MORE DATA', EVE.$eve7tmp);
+         // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
          this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
-                                      args.viewName, JSROOT.$eve7tmp);
-
-         delete JSROOT.$eve7tmp;
+            args.viewName, EVE.$eve7tmp);
+         this.mgr.controllers[0].setToolbarExpandedAction(this);
+         delete EVE.$eve7tmp;
 
          this.checkViewReady();
       },
@@ -67,10 +54,16 @@ sap.ui.define([
       // Initialization that can be done immediately onInit or later through UI5 bootstrap callbacks.
       setupManagerAndViewType: function(data, viewName, moredata)
       {
+         delete this.standalone;
+         delete this.viewer_class;
+         if (this.viewer) {
+            this.viewer.cleanup();
+            delete this.viewer;
+         }
+
          if (viewName)
          {
             data.standalone = viewName;
-            data.kind       = viewName;
          }
 
          // console.log("VIEW DATA", data);
@@ -79,9 +72,7 @@ sap.ui.define([
          {
             this.mgr        = moredata.mgr;
             this.eveViewerId  = moredata.eveViewerId;
-            this.kind       = moredata.kind;
             this.standalone = viewName;
-
             this.checkViewReady();
          }
          else if (data.standalone && data.conn_handle)
@@ -94,7 +85,6 @@ sap.ui.define([
          {
             this.mgr       = data.mgr;
             this.eveViewerId = data.eveViewerId;
-            this.kind      = data.kind;
          }
 
          this.mgr.RegisterController(this);
@@ -112,7 +102,7 @@ sap.ui.define([
          this.checkViewReady();
       },
 
-      OnEveManagerInit: function()
+      onEveManagerInit: function()
       {
          // called when manager was updated, need only in standalone modes to detect own element id
          if (!this.standalone) return;
@@ -132,39 +122,45 @@ sap.ui.define([
          if (!found) return;
 
          this.eveViewerId = found.fElementId;
-         this.kind      = (found.fName == "Default Viewer") ? "3D" : "2D";
 
          this.checkViewReady();
       },
 
+      /*
       // Function called from GuiPanelController.
       onExit: function()
       {
          // QQQQ EveManager does not have Unregister ... nor UnregisterController
          if (this.mgr) this.mgr.Unregister(this);
          // QQQQ plus, we should unregister this as gl-controller, too
-      },
+      },*/
 
       // Checks if all initialization is performed and startup renderer.
       checkViewReady: function()
       {
-         if (!this.mgr || !this._load_scripts || !this._render_html || !this.eveViewerId || this.viewer_class) return;
+         if (!this.mgr || !this._render_html || !this.eveViewerId || this.viewer_class) return;
 
-         this.viewer_class = this.mgr.handle.GetUserArgs("GLViewer");
+         this.viewer_class = this.mgr.handle.getUserArgs("GLViewer");
          if ((this.viewer_class != "JSRoot") && (this.viewer_class != "Three") && (this.viewer_class != "RCore"))
             this.viewer_class = "Three";
 
-         this.htimeout = this.mgr.handle.GetUserArgs("HTimeout");
+         this.htimeout = this.mgr.handle.getUserArgs("HTimeout");
          if (this.htimeout === undefined) this.htimeout = 250;
 
          // when "Reset" - reset camera position
-         this.dblclick_action = this.mgr.handle.GetUserArgs("DblClick");
+         this.dblclick_action = this.mgr.handle.getUserArgs("DblClick");
 
          sap.ui.require(['rootui5/eve7/lib/GlViewer' + this.viewer_class],
                function(GlViewer) {
                   this.viewer = new GlViewer(this.viewer_class);
                   this.viewer.init(this);
                }.bind(this));
+      },
+
+      // Callback from GlViewer class after initialization is complete
+      glViewerInitDone: function()
+      {
+         ResizeHandler.register(this.getView(), this.onResize.bind(this));
       },
 
       //==============================================================================
@@ -198,6 +194,8 @@ sap.ui.define([
          // only when rendering completed - register for modify events
          let element = this.mgr.GetElement(this.eveViewerId);
 
+         let tlabel = this.getView().byId("titleLabel");
+         tlabel.setText(element.fName);
          // loop over scene and add dependency
          for (let scene of element.childs)
          {
@@ -207,35 +205,78 @@ sap.ui.define([
 
       redrawScenes: function()
       {
+         if (!this.created_scenes) return;
+
          for (let s of this.created_scenes)
-         {
             s.redrawScene();
-         }
+      },
+
+      removeScenes: function() {
+         if (!this.created_scenes) return;
+
+         for (let s of this.created_scenes)
+            s.removeScene();
+         delete this.created_scenes;
       },
 
       /// invoked from ResizeHandler
       onResize: function(event)
       {
+         // TODO: should be specified somehow in XML file
+         if (this.viewer_class != "RCore") {
+            this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
+         }
+
          if (this.resize_tmout) clearTimeout(this.resize_tmout);
-         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250); // small latency
+
+         // MT 2020/09/09: On Chrome, delay up to 200ms gets executed immediately.
+         this.resize_tmout = setTimeout(this.onResizeTimeout.bind(this), 250);
       },
 
       onResizeTimeout: function()
       {
          delete this.resize_tmout;
-
-         // console.log("onResizeTimeout", this.camera);
-
-         // TODO: should be specified somehow in XML file
-         this.getView().$().css("overflow", "hidden").css("width", "100%").css("height", "100%");
-
-         if (this.viewer)
-            this.viewer.onResizeTimeout();
+         if (this.viewer) this.viewer.onResizeTimeout();
       },
 
       /** Called from JSROOT context menu when object selected for browsing */
       invokeBrowseOf: function(obj_id) {
          this.mgr.SendMIR("BrowseElement(" + obj_id + ")", 0, "ROOT::Experimental::REveManager");
+      },
+
+      getEveCameraType : function(){
+          let vo = this.mgr.GetElement(this.eveViewerId);
+          return vo.CameraType;
+      },
+
+      isEveCameraPerspective: function() {
+         let vo = this.mgr.GetElement(this.eveViewerId);
+         return vo.CameraType.startsWith("PerspXOZ");
+      },
+
+      switchSingle: function()
+      {
+         let oRouter = UIComponent.getRouterFor(this);
+         EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: this.eveViewerId};
+         oRouter.navTo("View", { viewName: this.mgr.GetElement(this.eveViewerId).fName });
+      },
+
+      swap: function ()
+      {
+         this.mgr.controllers[0].switchViewSides(this.mgr.GetElement(this.eveViewerId));
+      },
+
+      detachViewer: function()
+      {
+         this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
+         this.destroy();
+      },
+
+      updateViewerAttributes : function()
+      {
+         if (this.viewer) {
+            this.viewer.updateViewerAttributes();
+         }
       }
 
    });

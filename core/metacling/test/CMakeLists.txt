@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -11,4 +11,23 @@ include_directories(
   ${CLING_INCLUDE_DIRS}
   )
 
-ROOT_ADD_GTEST(TClingTest TClingTests.cxx TClingCallFuncTests.cxx TClingMethodInfoTests.cxx LIBRARIES Core)
+if(root7)
+  set(ROOT7SRC TClingDataMemberInfoTestsROOT7.cxx)
+endif()
+
+ROOT_ADD_GTEST(
+  TClingTest
+
+  TClingTests.cxx
+  TClingCallFuncTests.cxx
+  TClingDataMemberInfoTests.cxx
+  ${ROOT7SRC}
+  TClingMethodInfoTests.cxx
+
+  LIBRARIES
+  Core
+)
+
+add_dependencies(TClingTest Cling RIO)
+
+ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Cling RIO)

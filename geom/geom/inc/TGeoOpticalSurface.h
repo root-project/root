@@ -102,7 +102,8 @@ private:
    Double_t fSigmaAlpha = 0.0; // The sigma of micro-facet polar angle
    Double_t fPolish = 0.0;     // Polish parameter in glisur model
 
-   TList fProperties; // List of surface properties
+   TList fProperties;          // List of surface properties
+   TList fConstProperties;     // user-defined constant properties
 
    // No copy
    TGeoOpticalSurface(const TGeoOpticalSurface &) = delete;
@@ -115,15 +116,29 @@ public:
    TGeoOpticalSurface(const char *name, ESurfaceModel model = kMglisur, ESurfaceFinish finish = kFpolished,
                       ESurfaceType type = kTdielectric_dielectric, Double_t value = 1.0);
 
-   virtual ~TGeoOpticalSurface() {}
+   ~TGeoOpticalSurface() override {}
 
    // Accessors
    bool AddProperty(const char *property, const char *ref);
+   bool AddConstProperty(const char *property, const char *ref);
    const char *GetPropertyRef(const char *property);
+   const char *GetPropertyRef(Int_t i) const
+   {
+      return (fProperties.At(i) ? fProperties.At(i)->GetTitle() : nullptr);
+   }
+   const char *GetConstPropertyRef(const char *property) const;
+   const char *GetConstPropertyRef(Int_t i) const
+   {
+      return (fConstProperties.At(i) ? fConstProperties.At(i)->GetTitle() : nullptr);
+   }
    TList const &GetProperties() const { return fProperties; }
+   TList const &GetConstProperties() const { return fConstProperties; }
    Int_t GetNproperties() const { return fProperties.GetSize(); }
-   TGDMLMatrix* GetProperty(const char* name)  const;
-   TGDMLMatrix* GetProperty(Int_t i)  const;
+   Int_t GetNconstProperties() const { return fConstProperties.GetSize(); }
+   TGDMLMatrix *GetProperty(const char *name) const;
+   TGDMLMatrix *GetProperty(Int_t i) const;
+   Double_t GetConstProperty(const char *property, Bool_t *error = nullptr) const;
+   Double_t GetConstProperty(Int_t i, Bool_t *error = nullptr) const;
    ESurfaceType GetType() const { return fType; }
    ESurfaceModel GetModel() const { return fModel; }
    ESurfaceFinish GetFinish() const { return fFinish; }
@@ -138,7 +153,7 @@ public:
    void SetValue(Double_t value) { fValue = value; }
    void SetSigmaAlpha(Double_t sigmaalpha) { fSigmaAlpha = sigmaalpha; }
 
-   void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
 
    static ESurfaceType StringToType(const char *type);
    static const char *TypeToString(ESurfaceType type);
@@ -147,7 +162,7 @@ public:
    static ESurfaceFinish StringToFinish(const char *finish);
    static const char *FinishToString(ESurfaceFinish finish);
 
-   ClassDef(TGeoOpticalSurface, 1) // Class representing an optical surface
+   ClassDefOverride(TGeoOpticalSurface, 2) // Class representing an optical surface
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -169,14 +184,14 @@ public:
       : TNamed(name, ref), fSurface(surf), fVolume(vol)
    {
    }
-   virtual ~TGeoSkinSurface() {}
+   ~TGeoSkinSurface() override {}
 
    TGeoOpticalSurface const *GetSurface() const { return fSurface; }
    TGeoVolume const *GetVolume() const { return fVolume; }
 
-   void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
 
-   ClassDef(TGeoSkinSurface, 1) // A surface with optical properties surrounding a volume
+   ClassDefOverride(TGeoSkinSurface, 1) // A surface with optical properties surrounding a volume
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -200,15 +215,15 @@ public:
       : TNamed(name, ref), fSurface(surf), fNode1(node1), fNode2(node2)
    {
    }
-   virtual ~TGeoBorderSurface() {}
+   ~TGeoBorderSurface() override {}
 
    TGeoOpticalSurface const *GetSurface() const { return fSurface; }
    TGeoNode const *GetNode1() const { return fNode1; }
    TGeoNode const *GetNode2() const { return fNode2; }
 
-   void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
 
-   ClassDef(TGeoBorderSurface, 1) // A surface with optical properties betwqeen 2 touching volumes
+   ClassDefOverride(TGeoBorderSurface, 1) // A surface with optical properties betwqeen 2 touching volumes
 };
 
 #endif // ROOT_TGeoOpticalSurface

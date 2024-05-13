@@ -12,15 +12,6 @@
 #ifndef ROOT_TProofProgressLog
 #define ROOT_TProofProgressLog
 
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// TProofProgressLog                                                     //
-//                                                                       //
-// Dialog used to display Proof session logs from the Proof progress     //
-// dialog.                                                               //
-// It uses TProofMgr::GetSessionLogs() mechanism internally              //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
 
 #include "TGFrame.h"
 #include "TString.h"
@@ -75,8 +66,8 @@ private:
 
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 600);
-   TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
-   virtual ~TProofProgressLog();
+   TProofProgressLog(const char *url = nullptr, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
+   ~TProofProgressLog() override;
 
    void   BuildLogList(Bool_t create = kFALSE);
    void   DoLog(Bool_t grep=kFALSE);
@@ -88,7 +79,7 @@ public:
 
    void   LoadFile(const char *file);
 
-   void   Clear(Option_t * = 0);
+   void   Clear(Option_t * = nullptr) override;
    void   Popup();
    void   SaveToFile();
    void   NoLineEntry();
@@ -97,9 +88,9 @@ public:
 
    void   SetUrl(const char *url) { fSessionUrl = url; }
    // slots
-   void   CloseWindow();
+   void   CloseWindow() override;
 
-   ClassDef(TProofProgressLog,0) //Class implementing a log graphic box
+   ClassDefOverride(TProofProgressLog,0) //Class implementing a log graphic box
 };
 
 #endif

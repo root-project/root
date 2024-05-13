@@ -238,4 +238,4 @@ namespace BrentMethods {
 
 } // end namespace BrentMethods
 } // end namespace Math
-} // ned namespace ROOT
+} // end namespace ROOT

@@ -71,9 +71,14 @@ Global Interpreter Lock (GIL) release.
   whether C++ signals (such as SIGABRT) should be converted into Python
   exceptions.
 
-* ``__cppname__``: a string that every C++ bound class carries and contains
+* ``__cpp_name__``: a string that every C++ bound class carries and contains
   the actual C++ name (as opposed to ``__name__`` which has the Python name).
   This can be useful for template instantiations, documentation, etc.
+
+* ``__cpp_template__``: a back-reference to the template used to instantiate
+  a templated class.
+  This variable only exists if the class was dynamically instantiated from
+  Python at least once.
 
 
 `STL algorithms`
@@ -106,6 +111,10 @@ below can not be instantiated using a Python string, but the
 
 `Reduced typing`
 ----------------
+
+Note: ``from cppyy.interactive import *`` is no longer supported for CPython
+3.11 and later because the ``dict`` object features it relies on have been
+removed.
 
 Typing ``cppyy.gbl`` all the time gets old rather quickly, but the dynamic
 nature of ``cppyy`` makes something like ``from cppyy.gbl import *``
@@ -171,3 +180,7 @@ available, but still saves some typing in may cases.
   For clarity of intent, it is recommended to use this instead of ``None``
   (or the integer ``0``, which can serve in some cases), as ``None`` is better
   understood as ``void`` in C++.
+
+* **default value**: Represented with The untyped ``cppyy.default``.
+  The generic value ``cppyy.default`` will convert to the type specific default
+  value (per C++ rules)  when used as a function argument or in assignment.

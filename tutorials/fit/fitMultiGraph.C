@@ -19,20 +19,20 @@
 
 void fitMultiGraph()
 {
-   Int_t n = 30;
-   Double_t *xvalues1 = new Double_t[n];
-   Double_t *xvalues2 = new Double_t[n];
-   Double_t *xvalues3 = new Double_t[n];
-   Double_t *yvalues1 = new Double_t[n];
-   Double_t *yvalues2 = new Double_t[n];
-   Double_t *yvalues3 = new Double_t[n];
-   Double_t *evalues1 = new Double_t[n];
-   Double_t *evalues2 = new Double_t[n];
-   Double_t *evalues3 = new Double_t[n];
+   int n = 30;
+   double *xvalues1 = new double[n];
+   double *xvalues2 = new double[n];
+   double *xvalues3 = new double[n];
+   double *yvalues1 = new double[n];
+   double *yvalues2 = new double[n];
+   double *yvalues3 = new double[n];
+   double *evalues1 = new double[n];
+   double *evalues2 = new double[n];
+   double *evalues3 = new double[n];
 
    //generate the data for the graphs
    TRandom r;
-   Int_t i;
+   int i;
    for (i=0; i<n; i++) {
       xvalues1[i] = r.Uniform(0.1, 5);
       xvalues2[i] = r.Uniform(3, 8);
@@ -46,9 +46,9 @@ void fitMultiGraph()
    }
 
    //create the graphs and set their drawing options
-   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, 0, evalues1);
-   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, 0, evalues2);
-   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, 0, evalues3);
+   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, nullptr, evalues1);
+   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, nullptr, evalues2);
+   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, nullptr, evalues3);
    gr1->SetLineColor(kRed);
    gr2->SetLineColor(kBlue);
    gr2->SetMarkerStyle(24);
@@ -81,22 +81,22 @@ void fitMultiGraph()
 
 void fitminuit()
 {
-   Int_t n = 30;
-   Double_t *xvalues1 = new Double_t[n];
-   Double_t *xvalues2 = new Double_t[n];
-   Double_t *xvalues3 = new Double_t[n];
-   Double_t *yvalues1 = new Double_t[n];
-   Double_t *yvalues2 = new Double_t[n];
-   Double_t *yvalues3 = new Double_t[n];
-   Double_t *evalues1 = new Double_t[n];
-   Double_t *evalues2 = new Double_t[n];
-   Double_t *evalues3 = new Double_t[n];
-   Double_t *xtotal = new Double_t[n*3];
-   Double_t *ytotal = new Double_t[n*3];
-   Double_t *etotal = new Double_t[n*3];
+   int n = 30;
+   double *xvalues1 = new double[n];
+   double *xvalues2 = new double[n];
+   double *xvalues3 = new double[n];
+   double *yvalues1 = new double[n];
+   double *yvalues2 = new double[n];
+   double *yvalues3 = new double[n];
+   double *evalues1 = new double[n];
+   double *evalues2 = new double[n];
+   double *evalues3 = new double[n];
+   double *xtotal = new double[n*3];
+   double *ytotal = new double[n*3];
+   double *etotal = new double[n*3];
 
    TRandom r;
-   Int_t i;
+   int i;
    for (i=0; i<n; i++) {
       xvalues1[i] = r.Uniform(-3, -1);
       xvalues2[i] = r.Uniform(-1, 1);
@@ -116,10 +116,10 @@ void fitminuit()
       {xtotal[i] = xvalues3[i-2*n]; ytotal[i]=yvalues3[i-2*n]; etotal[i]=0.00001;}
 
    //create the graphs and set their drawing options
-   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, 0, evalues1);
-   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, 0, evalues2);
-   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, 0, evalues3);
-   TGraphErrors *grtotal = new TGraphErrors(n*3, xtotal, ytotal, 0, etotal);
+   TGraphErrors *gr1 = new TGraphErrors(n, xvalues1, yvalues1, nullptr, evalues1);
+   TGraphErrors *gr2 = new TGraphErrors(n, xvalues2, yvalues2, nullptr, evalues2);
+   TGraphErrors *gr3 = new TGraphErrors(n, xvalues3, yvalues3, nullptr, evalues3);
+   TGraphErrors *grtotal = new TGraphErrors(n*3, xtotal, ytotal, nullptr, etotal);
    TMultiGraph *mg=new TMultiGraph("mg", "TMultiGraph of 3 TGraphErrors");
    mg->Add(gr1);
    mg->Add(gr2);

@@ -79,7 +79,7 @@ private:
 public:
    TFileCacheRead();
    TFileCacheRead(TFile *file, Int_t buffersize, TObject *tree = nullptr);
-   virtual ~TFileCacheRead();
+   ~TFileCacheRead() override;
    virtual Int_t       AddBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual Int_t       AddBranch(const char * /*branch*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual void        AddNoCacheBytesRead(Long64_t len) { fNoCacheBytesRead += len; }
@@ -102,12 +102,12 @@ public:
    virtual Bool_t      IsLearning() const {return kFALSE;}
    virtual Int_t       LearnBranch(TBranch * /*b*/, Bool_t /*subbranches*/ = kFALSE) { return 0; }
    virtual void        Prefetch(Long64_t pos, Int_t len);
-   virtual void        Print(Option_t *option="") const;
+           void        Print(Option_t *option="") const override;
    virtual Int_t       ReadBufferExt(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtNormal(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBufferExtPrefetch(char *buf, Long64_t pos, Int_t len, Int_t &loc);
    virtual Int_t       ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Int_t       SetBufferSize(Int_t buffersize);
+   virtual Int_t       SetBufferSize(Long64_t buffersize);
    virtual void        SetFile(TFile *file, TFile::ECacheAction action = TFile::kDisconnect);
    virtual void        SetSkipZip(Bool_t /*skip*/ = kTRUE) {} // This function is only used by TTreeCacheUnzip (ignore it)
    virtual void        Sort();
@@ -116,7 +116,7 @@ public:
    virtual TFilePrefetch* GetPrefetchObj();
    virtual void        WaitFinishPrefetch();                  //Gracefully join the prefetching thread
 
-   ClassDef(TFileCacheRead,2)  //TFile cache when reading
+   ClassDefOverride(TFileCacheRead,2)  //TFile cache when reading
 };
 
 #endif

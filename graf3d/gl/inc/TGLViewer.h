@@ -160,13 +160,13 @@ protected:
 
    static TGLColorSet fgDefaultColorSet;                 //! a shared, default color-set
    static Bool_t      fgUseDefaultColorSetForNewViewers; //! name says it all
-
+   static Float_t     fgAxisLabelScale; //! allow simple guide axes labels to be scaled relative to scene units
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
    ///////////////////////////////////////////////////////////////////////
 
-   virtual void SetupClipObject();
+   void SetupClipObject() override;
 
    // Drawing - can tidy up/remove lots when TGLManager added
    void InitGL();
@@ -194,31 +194,31 @@ protected:
 public:
    TGLViewer(TVirtualPad* pad, Int_t x, Int_t y, Int_t width, Int_t height);
    TGLViewer(TVirtualPad* pad);
-   virtual ~TGLViewer();
+   ~TGLViewer() override;
 
    // TVirtualViewer3D interface ... mostly a facade
 
    // Forward to TGLScenePad
-   virtual Bool_t CanLoopOnPrimitives() const { return kTRUE; }
-   virtual void   PadPaint(TVirtualPad* pad);
+   Bool_t CanLoopOnPrimitives() const override { return kTRUE; }
+   void   PadPaint(TVirtualPad* pad) override;
    // Actually used by GL-in-pad
-   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
+   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    // Only implemented because they're abstract ... should throw an
    // exception or assert they are not called.
-   virtual Bool_t PreferLocalFrame() const { return kTRUE; }
-   virtual void   BeginScene() {}
-   virtual Bool_t BuildingScene() const { return kFALSE; }
-   virtual void   EndScene() {}
-   virtual Int_t  AddObject(const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
-   virtual Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
-   virtual Bool_t OpenComposite(const TBuffer3D&, Bool_t* = 0) { return kFALSE; }
-   virtual void   CloseComposite() {}
-   virtual void   AddCompositeOp(UInt_t) {}
+   Bool_t PreferLocalFrame() const override { return kTRUE; }
+   void   BeginScene() override {}
+   Bool_t BuildingScene() const override { return kFALSE; }
+   void   EndScene() override {}
+   Int_t  AddObject(const TBuffer3D&, Bool_t* = nullptr) override { return TBuffer3D::kNone; }
+   Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = nullptr) override { return TBuffer3D::kNone; }
+   Bool_t OpenComposite(const TBuffer3D&, Bool_t* = nullptr) override { return kFALSE; }
+   void   CloseComposite() override {}
+   void   AddCompositeOp(UInt_t) override {}
 
-   virtual void   PrintObjects();
-   virtual void   ResetCameras()                { SetupCameras(kTRUE); }
-   virtual void   ResetCamerasAfterNextUpdate() { fResetCamerasOnNextUpdate = kTRUE; }
+   void   PrintObjects() override;
+   void   ResetCameras() override                { SetupCameras(kTRUE); }
+   void   ResetCamerasAfterNextUpdate() override { fResetCamerasOnNextUpdate = kTRUE; }
 
    TGLWidget* GetGLWidget() { return fGLWidget; }
 
@@ -245,6 +245,7 @@ public:
    static TGLColorSet& GetDefaultColorSet();
    static void         UseDefaultColorSetForNewViewers(Bool_t x);
    static Bool_t       IsUsingDefaultColorSetForNewViewers();
+   static void         SetAxisLabelScale(Float_t als);
 
    const TGLRect& RefViewport()      const { return fViewport; }
    Int_t          ViewportDiagonal() const { return fViewport.Diagonal(); }
@@ -311,9 +312,9 @@ public:
 
    // Request methods post cross thread request via TROOT::ProcessLineFast().
    void RequestDraw(Short_t LOD = TGLRnrCtx::kLODMed); // Cross thread draw request
-   virtual void PreRender();
-   virtual void Render();
-   virtual void PostRender();
+   void PreRender() override;
+   void Render() override;
+   void PostRender() override;
    void DoDraw(Bool_t swap_buffers=kTRUE);
    void DoDrawMono(Bool_t swap_buffers);
    void DoDrawStereo(Bool_t swap_buffers);
@@ -382,16 +383,16 @@ public:
 
    virtual void SelectionChanged();
    virtual void OverlayDragFinished();
-   virtual void RefreshPadEditor(TObject* obj=0);
+   virtual void RefreshPadEditor(TObject* obj=nullptr);
 
-   virtual void RemoveOverlayElement(TGLOverlayElement* el);
+   void RemoveOverlayElement(TGLOverlayElement* el) override;
 
    TGLSelectRecord&    GetSelRec()    { return fSelRec; }
    TGLOvlSelectRecord& GetOvlSelRec() { return fOvlSelRec; }
    TGLOverlayElement*  GetCurrentOvlElm() const { return fCurrentOvlElm; }
    void                ClearCurrentOvlElm();
 
-   ClassDef(TGLViewer,0) // Standard ROOT GL viewer.
+   ClassDefOverride(TGLViewer,0) // Standard ROOT GL viewer.
 };
 
 
@@ -406,7 +407,7 @@ private:
 public:
    TGLRedrawTimer(TGLViewer & viewer) :
       fViewer(viewer), fRedrawLOD(TGLRnrCtx::kLODHigh), fPending(kFALSE) {}
-   ~TGLRedrawTimer() {}
+   ~TGLRedrawTimer() override {}
    void RequestDraw(Int_t milliSec, Short_t redrawLOD)
    {
       if (fPending) TurnOff(); else fPending = kTRUE;
@@ -414,11 +415,11 @@ public:
       TTimer::Start(milliSec, kTRUE);
    }
    Bool_t IsPending() const { return fPending; }
-   virtual void Stop()
+   void Stop() override
    {
       if (fPending) { TurnOff(); fPending = kFALSE; }
    }
-   Bool_t Notify()
+   Bool_t Notify() override
    {
       TurnOff();
       fPending = kFALSE;
@@ -430,8 +431,8 @@ public:
 
 class TGLFaderHelper {
 private:
-   TGLFaderHelper(const TGLFaderHelper&); // Not implemented
-   TGLFaderHelper& operator=(const TGLFaderHelper&); // Not implemented
+   TGLFaderHelper(const TGLFaderHelper&) = delete;
+   TGLFaderHelper& operator=(const TGLFaderHelper&) = delete;
 
 public:
    TGLViewer *fViewer;
@@ -440,9 +441,9 @@ public:
    Int_t      fNSteps;
 
    TGLFaderHelper() :
-      fViewer(0), fFadeTarget(0), fTime(0), fNSteps(0) {}
+      fViewer(nullptr), fFadeTarget(0), fTime(0), fNSteps(0) {}
    TGLFaderHelper(TGLViewer* v, Float_t fade, Float_t time, Int_t steps) :
-      fViewer(v),fFadeTarget(fade), fTime(time), fNSteps(steps) {}
+      fViewer(v), fFadeTarget(fade), fTime(time), fNSteps(steps) {}
    virtual ~TGLFaderHelper() {}
 
    void MakeFadeStep();

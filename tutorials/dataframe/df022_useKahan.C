@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook
-/// \brief Implement a custom action that evaluates a Kahan sum.
+/// Implement a custom action that evaluates a Kahan sum.
 ///
 /// This tutorial shows how to implement a Kahan summation custom action.
 ///
@@ -9,7 +9,7 @@
 /// \macro_output
 ///
 /// \date July 2018
-/// \author Enrico Guiraud, Danilo Piparo, Massimo Tumolo
+/// \authors Enrico Guiraud, Danilo Piparo (CERN), Massimo Tumolo (Politecnico di Torino)
 
 template <typename T>
 class KahanSum final : public ROOT::Detail::RDF::RActionImpl<class KahanSum<T>>  {
@@ -54,7 +54,7 @@ public:
       KahanAlgorithm(x, fPartialSums[slot], fCompensations[slot]);
    }
 
-   template <typename V=T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<V>::value, int>::type = 0>
+   template <typename V=T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<V>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
@@ -72,10 +72,7 @@ public:
       *fResultSum = sum;
    }
 
-   std::string GetActionName(){
-      return "THnHelper";
-   }
-
+   std::string GetActionName() { return "KahanSum"; }
 };
 
 void df022_useKahan()

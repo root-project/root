@@ -14,6 +14,28 @@
 
 A TLeaf describes individual elements of a TBranch
 See TBranch structure in TTree.
+
+A TTree object is a list of TBranch.
+A TBranch object is a list of TLeaf.  In most cases, the TBranch
+will have one TLeaf.
+A TLeaf describes the branch data types and holds the data.
+
+A few notes about the data held by the leaf.  It can contain:
+  1. a single object or primitive (e.g., one float),
+  2. a fixed-number of objects (e.g., each entry has two floats).
+     The number of elements per entry is saved in `fLen`.
+  3. a dynamic number of primitives.  The number of objects in each
+     entry is saved in the `fLeafCount` branch.
+
+Note options (2) and (3) can combined - if fLeafCount says an entry
+has 3 elements and fLen is 2, then there will be 6 objects in that
+entry.
+
+Additionally, `fNdata` is transient and generated on read to
+determine the necessary size of a buffer to hold event data;
+depending on the call-site, it may be sized larger than the number
+of elements
+
 */
 
 #include "TLeaf.h"
@@ -22,6 +44,7 @@ See TBranch structure in TTree.
 #include "TTree.h"
 #include "TVirtualPad.h"
 #include "TBrowser.h"
+#include "strlcpy.h"
 
 #include <cctype>
 
@@ -35,11 +58,11 @@ TLeaf::TLeaf()
    , fLen(0)
    , fLenType(0)
    , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
-   , fLeafCount(0)
-   , fBranch(0)
-   , fLeafCountValues(0)
+   , fIsRange(false)
+   , fIsUnsigned(false)
+   , fLeafCount(nullptr)
+   , fBranch(nullptr)
+   , fLeafCountValues(nullptr)
 {
 }
 
@@ -54,11 +77,11 @@ TLeaf::TLeaf(TBranch *parent, const char* name, const char *)
    , fLen(0)
    , fLenType(4)
    , fOffset(0)
-   , fIsRange(kFALSE)
-   , fIsUnsigned(kFALSE)
-   , fLeafCount(0)
+   , fIsRange(false)
+   , fIsUnsigned(false)
+   , fLeafCount(nullptr)
    , fBranch(parent)
-   , fLeafCountValues(0)
+   , fLeafCountValues(nullptr)
 {
    fLeafCount = GetLeafCounter(fLen);
 
@@ -118,13 +141,13 @@ TLeaf::~TLeaf()
 {
    if (fBranch) {
       TTree* tree = fBranch->GetTree();
-      fBranch = 0;
+      fBranch = nullptr;
       if (tree) {
          TObjArray *lst = tree->GetListOfLeaves();
          if (lst->GetLast()!=-1) lst->Remove(this);
       }
    }
-   fLeafCount = 0;
+   fLeafCount = nullptr;
    delete fLeafCountValues;
 }
 
@@ -229,38 +252,38 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    const char* name = GetTitle();
    char* bleft = (char*) strchr(name, '[');
    if (!bleft) {
-      return 0;
+      return nullptr;
    }
    bleft++;
    Int_t nch = strlen(bleft);
    char* countname = new char[nch+1];
-   strcpy(countname, bleft);
+   strlcpy(countname, bleft, nch+1);
    char* bright = (char*) strchr(countname, ']');
    if (!bright) {
       delete[] countname;
-      countname = 0;
+      countname = nullptr;
       countval = -1;
-      return 0;
+      return nullptr;
    }
    char *bleft2 = (char*) strchr(countname, '[');
    *bright = 0;
    nch = strlen(countname);
 
    // Now search a branch name with a leaf name = countname
-   if (fBranch == 0) {
+   if (fBranch == nullptr) {
       Error("GetLeafCounter","TLeaf %s is not setup properly, fBranch is null.",GetName());
       delete[] countname;
-      return 0;
+      return nullptr;
    }
-   if (fBranch->GetTree() == 0) {
+   if (fBranch->GetTree() == nullptr) {
       Error("GetLeafCounter","For Leaf %s, the TBranch %s is not setup properly, fTree is null.",GetName(),fBranch->GetName());
       delete[] countname;
-      return 0;
+      return nullptr;
    }
    TTree* pTree = fBranch->GetTree();
 
    TLeaf* leaf = (TLeaf*) GetBranch()->GetListOfLeaves()->FindObject(countname);
-   if (leaf == 0) {
+   if (leaf == nullptr) {
       // Try outside the branch:
       leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
    }
@@ -270,9 +293,9 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
       strcpy(withdot, GetName());
       char* lastdot = strrchr(withdot, '.');
       strcpy(lastdot, countname);
-      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(countname);
+      leaf = (TLeaf*) pTree->GetListOfLeaves()->FindObject(withdot);
       delete[] withdot;
-      withdot = 0;
+      withdot = nullptr;
    }
    if (!leaf && strchr(countname,'.')) {
       // Not yet found and the countname has a dot in it, let's try
@@ -299,16 +322,16 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
          bleft2 = bleft;
       }
       delete[] countname;
-      countname = 0;
+      countname = nullptr;
       return leaf;
    }
    // not found in a branch/leaf. Is it a numerical value?
    for (i = 0; i < nch; i++) {
       if (!isdigit(countname[i])) {
          delete[] countname;
-         countname = 0;
+         countname = nullptr;
          countval = -1;
-         return 0;
+         return nullptr;
       }
    }
    sscanf(countname, "%d", &countval);
@@ -329,8 +352,8 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    }
 
    delete[] countname;
-   countname = 0;
-   return 0;
+   countname = nullptr;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -403,14 +426,14 @@ Int_t TLeaf::GetLen() const
 /// and a decision is made whether or not we own the
 /// new value buffer.
 
-Int_t TLeaf::ResetAddress(void* addr, Bool_t calledFromDestructor)
+Int_t TLeaf::ResetAddress(void* addr, bool calledFromDestructor)
 {
    // The kNewValue bit records whether or not we own
    // the current value buffer or not.  If we own it,
    // then we are responsible for deleting it.
-   Bool_t deleteValue = kFALSE;
+   bool deleteValue = false;
    if (TestBit(kNewValue)) {
-      deleteValue = kTRUE;
+      deleteValue = true;
    }
    // If we are not being called from a destructor,
    // recalculate the value buffer size and decide

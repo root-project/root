@@ -32,15 +32,15 @@ class TBranch;
 class TFileDrawMap : public TNamed {
 
 protected:
-   TFile         *fFile;           //pointer to the file
-   TH1           *fFrame;          //histogram used to draw the map frame
-   TString        fKeys;           //list of keys
-   TString        fOption;         //drawing options
-   Int_t          fXsize;          //size in bytes of X axis
-   Int_t          fYsize;          //size in K/Mbytes of Y axis
+   TFile         *fFile;           ///< Pointer to the file
+   TH1           *fFrame;          ///< Histogram used to draw the map frame
+   TString        fKeys;           ///< List of keys
+   TString        fOption;         ///< Drawing options
+   Int_t          fXsize;          ///< Size in bytes of X axis
+   Int_t          fYsize;          ///< Size in K/Mbytes of Y axis
 
    virtual void     DrawMarker(Int_t marker, Long64_t eseek);
-   virtual Bool_t   GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
+   virtual bool     GetObjectInfoDir(TDirectory *dir, Int_t px, Int_t py, TString &info) const;
    virtual void     PaintBox(TBox &box, Long64_t bseek, Int_t nbytes);
    virtual void     PaintDir(TDirectory *dir, const char *keys);
    virtual TObject *GetObject();
@@ -48,18 +48,18 @@ protected:
 public:
    TFileDrawMap();
    TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
-   virtual ~TFileDrawMap();
+   ~TFileDrawMap() override;
 
    virtual void  AnimateTree(const char *branches=""); // *MENU*
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual void  DrawObject(); // *MENU*
    virtual void  DumpObject(); // *MENU*
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual char *GetObjectInfo(Int_t px, Int_t py) const;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual void  InspectObject(); // *MENU*
-   virtual void  Paint(Option_t *option);
+   void  Paint(Option_t *option) override;
 
-   ClassDef(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
+   ClassDefOverride(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
 };
 
 #endif

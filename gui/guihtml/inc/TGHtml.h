@@ -2,7 +2,7 @@
 // Author:  Valeriy Onuchin   03/05/2007
 
 /*************************************************************************
- * Copyright (C) 1995-2001, Rene Brun, Fons Rademakers and Reiner Rohlfs *
+ * Copyright (C) 1995-2021, Rene Brun, Fons Rademakers and Reiner Rohlfs *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -44,6 +44,7 @@ class TGFont;
 class TGIdleHandler;
 class THashTable;
 class TTimer;
+class TGPopupMenu;
 
 //----------------------------------------------------------------------
 
@@ -251,7 +252,7 @@ public:
    TGHtmlElement(int etype = 0);
 
    virtual int  IsMarkup() const { return (fType > Html_Block); }
-   virtual const char *MarkupArg(const char * /*tag*/, const char * /*zDefault*/) { return 0; }
+   virtual const char *MarkupArg(const char * /*tag*/, const char * /*zDefault*/) { return nullptr; }
    virtual int  GetAlignment(int dflt) { return dflt; }
    virtual int  GetOrderedListType(int dflt) { return dflt; }
    virtual int  GetUnorderedListType(int dflt) { return dflt; }
@@ -284,12 +285,12 @@ public:
 
 class TGHtmlTextElement : public TGHtmlElement {
 private:
-   TGHtmlTextElement(const TGHtmlTextElement&);            // Not implemented.
-   TGHtmlTextElement &operator=(const TGHtmlTextElement&); // Not implemented.
+   TGHtmlTextElement(const TGHtmlTextElement&) = delete;
+   TGHtmlTextElement &operator=(const TGHtmlTextElement&) = delete;
 
 public:
    TGHtmlTextElement(int size);
-   virtual ~TGHtmlTextElement();
+   ~TGHtmlTextElement() override;
 
    Html_32_t    fY;                // y coordinate where text should be rendered
    Html_16_t    fX;                // x coordinate where text should be rendered
@@ -323,13 +324,13 @@ public:
 class TGHtmlMarkupElement : public TGHtmlElement {
 public:
    TGHtmlMarkupElement(int type, int argc, int arglen[], char *argv[]);
-   virtual ~TGHtmlMarkupElement();
+   ~TGHtmlMarkupElement() override;
 
-   virtual const char *MarkupArg(const char *tag, const char *zDefault);
-   virtual int  GetAlignment(int dflt);
-   virtual int  GetOrderedListType(int dflt);
-   virtual int  GetUnorderedListType(int dflt);
-   virtual int  GetVerticalAlignment(int dflt);
+   const char *MarkupArg(const char *tag, const char *zDefault) override;
+   int  GetAlignment(int dflt) override;
+   int  GetOrderedListType(int dflt) override;
+   int  GetUnorderedListType(int dflt) override;
+   int  GetVerticalAlignment(int dflt) override;
 
 public://protected:
    char **fArgv;
@@ -353,7 +354,7 @@ public://protected:
 class TGHtmlTable : public TGHtmlMarkupElement {
 public:
    TGHtmlTable(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlTable();
+   ~TGHtmlTable() override;
 
 public:
    Html_u8_t      fBorderWidth;              // Width of the border
@@ -380,7 +381,7 @@ public:
 class TGHtmlCell : public TGHtmlMarkupElement {
 public:
    TGHtmlCell(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlCell();
+   ~TGHtmlCell() override;
 
 public:
    Html_16_t      fRowspan;      // Number of rows spanned by this cell
@@ -404,7 +405,7 @@ public:
 class TGHtmlRef : public TGHtmlMarkupElement {
 public:
    TGHtmlRef(int type, int argc, int arglen[], char *argv[]);
-   ~TGHtmlRef();
+   ~TGHtmlRef() override;
 
 public:
    TGHtmlElement *fPOther;      // Pointer to some other Html element
@@ -505,13 +506,13 @@ class TGHtmlImageMarkup;
 
 class TGHtmlImage : public TObject {
 private:
-   TGHtmlImage(const TGHtmlImage&);            // Not implemented.
-   TGHtmlImage &operator=(const TGHtmlImage&); // Not implemented.
+   TGHtmlImage(const TGHtmlImage&) = delete;
+   TGHtmlImage &operator=(const TGHtmlImage&) = delete;
 
 public:
    TGHtmlImage(TGHtml *htm, const char *url, const char *width,
                const char *height);
-   virtual ~TGHtmlImage();
+   ~TGHtmlImage() override;
 
 public:
    TGHtml            *fHtml;              // The owner of this image
@@ -710,7 +711,7 @@ public:
 class TGHtmlBlock : public TGHtmlElement {
 public:
    TGHtmlBlock();
-   virtual ~TGHtmlBlock();
+   ~TGHtmlBlock() override;
 
 public:
    char        *fZ;                 // Space to hold text when n > 0
@@ -872,26 +873,26 @@ class THashTable;
 class TGHtml : public TGView {
 public:
    TGHtml(const TGWindow *p, int w, int h, int id = -1);
-   virtual ~TGHtml();
+   ~TGHtml() override;
 
-   virtual Bool_t HandleFocusChange(Event_t *event);
-   virtual Bool_t HandleButton(Event_t *event);
-   virtual Bool_t HandleMotion(Event_t *event);
+   Bool_t HandleFocusChange(Event_t *event) override;
+   Bool_t HandleButton(Event_t *event) override;
+   Bool_t HandleMotion(Event_t *event) override;
 
-   virtual Bool_t HandleIdleEvent(TGIdleHandler *i);
-   virtual Bool_t HandleTimer(TTimer *timer);
+   Bool_t HandleIdleEvent(TGIdleHandler *i) override;
+   Bool_t HandleTimer(TTimer *timer) override;
 
-   virtual Bool_t ProcessMessage(Long_t, Long_t, Long_t);
+   Bool_t ProcessMessage(Longptr_t, Longptr_t, Longptr_t) override;
 
-   virtual void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual Bool_t ItemLayout();
+   void   DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   Bool_t ItemLayout() override;
 
    Bool_t         HandleHtmlInput(TGHtmlInput *pr, Event_t *event);
    Bool_t         HandleRadioButton(TGHtmlInput *p);
 
 public:   // user commands
 
-   int  ParseText(char *text, const char *index = 0);
+   int  ParseText(char *text, const char *index = nullptr);
 
    void SetTableRelief(int relief);
    int  GetTableRelief() const { return fTableRelief; }
@@ -910,7 +911,7 @@ public:   // user commands
 public:   // reloadable methods
 
    // called when the widget is cleared
-   virtual void Clear(Option_t * = "");
+   void Clear(Option_t * = "") override;
 
    // User function to resolve URIs
    virtual char *ResolveUri(const char *uri);
@@ -939,7 +940,7 @@ public:   // reloadable methods
 
    // Method to process applets
    virtual TGFrame *ProcessApplet(TGHtmlInput * /*input*/)
-      { return 0; }
+      { return nullptr; }
 
    // Called when parsing forms
    virtual int FormCreate(TGHtmlForm * /*form*/, const char * /*zUrl*/, const char * /*args*/)
@@ -951,27 +952,30 @@ public:   // reloadable methods
 
    // Invoked to find font names
    virtual char *GetFontName()
-      { return 0; }
+      { return nullptr; }
 
    // Invoked for each <SCRIPT> markup
    virtual char *ProcessScript(TGHtmlScript * /*script*/)
-      { return 0; }
+      { return nullptr; }
 
 public:
    const char *GetText() const { return fZText; }
+
+   void HandleMenu(Int_t);
+   void SaveFileAs();
 
    int GetMarginWidth() { return fMargins.fL + fMargins.fR; }
    int GetMarginHeight() { return fMargins.fT + fMargins.fB; }
 
    TGHtmlInput *GetInputElement(int x, int y);
-   const char *GetHref(int x, int y, const char **target = 0);
+   const char *GetHref(int x, int y, const char **target = nullptr);
 
    TGHtmlImage *GetImage(TGHtmlImageMarkup *p);
 
    int  InArea(TGHtmlMapArea *p, int left, int top, int x, int y);
    TGHtmlElement *GetMap(const char *name);
 
-   void ResetBlocks() { fFirstBlock = fLastBlock = 0; }
+   void ResetBlocks() { fFirstBlock = fLastBlock = nullptr; }
    int  ElementCoords(TGHtmlElement *p, int i, int pct, int *coords);
 
    TGHtmlElement *TableDimensions(TGHtmlTable *pStart, int lineWidth);
@@ -1119,12 +1123,16 @@ public:
    virtual void CheckToggled(const char *name, Bool_t on, const char *val); // *SIGNAL*
    virtual void RadioChanged(const char *name, const char *val); // *SIGNAL*
    virtual void InputSelected(const char *name, const char *val);   //*SIGNAL*
-   virtual void SavePrimitive(std::ostream &out, Option_t * = "");
+   void SavePrimitive(std::ostream &out, Option_t * = "") override;
 
 protected:
-   virtual void UpdateBackgroundStart();
+   void UpdateBackgroundStart() override;
 
 protected:
+   enum {
+      kM_FILE_SAVEAS, kM_FILE_PRINT
+   };
+
    TGHtmlElement *fPFirst;          // First HTML token on a list of them all
    TGHtmlElement *fPLast;           // Last HTML token on the list
    int            fNToken;          // Number of HTML tokens on the list.
@@ -1179,6 +1187,7 @@ protected:
    TGHtmlScript  *fPScript;         // <SCRIPT> currently being parsed
 
    TGIdleHandler *fIdle;
+   TGPopupMenu   *fMenu;            // popup menu with user actions
 
    // These fields hold state information used by the HtmlAddStyle routine.
    // We have to store this state information here since HtmlAddStyle
@@ -1278,7 +1287,7 @@ protected:
    const char       *fLastUri;               // Used in HandleMotion
    int               fExiting;               // True if the widget is being destroyed
 
-   ClassDef(TGHtml, 0); // HTML widget
+   ClassDefOverride(TGHtml, 0); // HTML widget
 };
 
 

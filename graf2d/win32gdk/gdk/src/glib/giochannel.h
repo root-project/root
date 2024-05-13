@@ -320,7 +320,7 @@ void        g_main_poll_win32_msg_add (gint        priority,
 				       guint       hwnd);
 
 /* Create an IO channel for Windows messages for window handle hwnd. */
-GIOChannel *g_io_channel_win32_new_messages (guint hwnd);
+GIOChannel *g_io_channel_win32_new_messages (gulong hwnd);
 
 /* Create an IO channel for C runtime (emulated Unix-like) file
  * descriptors. After calling g_io_add_watch() on a IO channel

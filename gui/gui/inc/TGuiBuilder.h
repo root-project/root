@@ -13,13 +13,6 @@
 #define ROOT_TGuiBuilder
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGuiBuilder                                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-
 #include "TNamed.h"
 
 enum EGuiBldAction { kGuiBldNone, kGuiBldCtor,  kGuiBldProj,
@@ -38,11 +31,11 @@ public:
    const TGPicture *fPicture; // picture
    TGLayoutHints *fHints;  // layout hints for frame created by action
 
-   TGuiBldAction(const char *name = 0, const char *title = 0,
-                 Int_t type = kGuiBldCtor, TGLayoutHints *hints = 0);
-   virtual ~TGuiBldAction();
+   TGuiBldAction(const char *name = nullptr, const char *title = nullptr,
+                 Int_t type = kGuiBldCtor, TGLayoutHints *hints = nullptr);
+   ~TGuiBldAction() override;
 
-   ClassDef(TGuiBldAction,0)  // gui builder action
+   ClassDefOverride(TGuiBldAction,0)  // gui builder action
 };
 
 
@@ -58,7 +51,7 @@ public:
 
    virtual void      AddAction(TGuiBldAction *, const char * /*section*/) {}
    virtual void      AddSection(const char * /*section*/) {}
-   virtual TGFrame  *ExecuteAction() { return 0; }
+   virtual TGFrame  *ExecuteAction() { return nullptr; }
    virtual void      SetAction(TGuiBldAction *act) { fAction = act; }
    TGuiBldAction    *GetAction() const { return fAction; }
    virtual Bool_t    IsExecutable() const  { return fAction && !fAction->fAct.IsNull(); }

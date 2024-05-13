@@ -219,11 +219,4 @@ bool GLViewIsValidDrawable(ROOTOpenGLView *glView)
     return NO;
 }
 
-//______________________________________________________________________________
-
-- (void) setLayer:(CALayer *) layer
-{
-#pragma unused(layer)
-}
-
 @end

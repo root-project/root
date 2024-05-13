@@ -43,14 +43,14 @@ for quick non-persistent lookup.
 #include "TProcessID.h"
 #include <algorithm>
 
-TRefTable *TRefTable::fgRefTable = 0;
+TRefTable *TRefTable::fgRefTable = nullptr;
 
 ClassImp(TRefTable);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for I/O.
 
-TRefTable::TRefTable() : fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
-                         fDefaultSize(10), fUID(0), fUIDContext(0), fSize(0), fParents(0), fOwner(0)
+TRefTable::TRefTable() : fNumPIDs(0), fAllocSize(nullptr), fN(nullptr), fParentIDs(nullptr), fParentID(-1),
+                         fDefaultSize(10), fUID(0), fUIDContext(nullptr), fSize(0), fParents(nullptr), fOwner(nullptr)
 {
    fgRefTable   = this;
 }
@@ -59,8 +59,8 @@ TRefTable::TRefTable() : fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fPare
 /// Create a TRefTable with initial size.
 
 TRefTable::TRefTable(TObject *owner, Int_t size) :
-     fNumPIDs(0), fAllocSize(0), fN(0), fParentIDs(0), fParentID(-1),
-     fDefaultSize(size<10 ? 10 : size), fUID(0), fUIDContext(0), fSize(0), fParents(new TObjArray(1)), fOwner(owner)
+     fNumPIDs(0), fAllocSize(nullptr), fN(nullptr), fParentIDs(nullptr), fParentID(-1),
+     fDefaultSize(size<10 ? 10 : size), fUID(0), fUIDContext(nullptr), fSize(0), fParents(new TObjArray(1)), fOwner(owner)
 {
    fgRefTable   = this;
 }
@@ -77,7 +77,7 @@ TRefTable::~TRefTable()
    }
    delete [] fParentIDs;
    delete fParents;
-   if (fgRefTable == this) fgRefTable = 0;
+   if (fgRefTable == this) fgRefTable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -179,7 +179,7 @@ Int_t TRefTable::ExpandForIID(Int_t iid, Int_t newsize)
                    (newsize - fAllocSize[iid]) * sizeof(Int_t));
          }
       } else {
-         fParentIDs[iid] = 0;
+         fParentIDs[iid] = nullptr;
       }
       if (fAllocSize[iid]) delete [] temp;
       fAllocSize[iid] = newsize;
@@ -248,17 +248,17 @@ Int_t TRefTable::FindPIDGUID(const char *guid) const
 
 TObject *TRefTable::GetParent(Int_t uid, TProcessID *context /* =0 */ ) const
 {
-   if (!fParents) return 0;
+   if (!fParents) return nullptr;
 
    Int_t iid = -1;
    if (!context) context = TProcessID::GetSessionProcessID();
    iid = GetInternalIdxForPID(context);
 
    uid = uid & 0xFFFFFF;
-   if (uid < 0 || uid >= fN[iid]) return 0;
+   if (uid < 0 || uid >= fN[iid]) return nullptr;
    Int_t pnumber = fParentIDs[iid][uid] - 1;
    Int_t nparents = fParents->GetEntriesFast();
-   if (pnumber < 0 || pnumber >= nparents) return 0;
+   if (pnumber < 0 || pnumber >= nparents) return nullptr;
    return fParents->UncheckedAt(pnumber);
 }
 

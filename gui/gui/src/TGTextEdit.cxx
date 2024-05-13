@@ -20,15 +20,16 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEdit                                                           //
-//                                                                      //
-// A TGTextEdit is a specialization of TGTextView. It provides the      //
-// text edit functionality to the static text viewing widget.           //
-// For the messages supported by this widget see the TGView class.      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextEdit
+    \ingroup guiwidgets
+
+A TGTextEdit is a specialization of TGTextView. It provides the
+text edit functionality to the static text viewing widget.
+For the messages supported by this widget see the TGView class.
+
+*/
+
 
 #include "TGTextEdit.h"
 #include "TGTextEditDialogs.h"
@@ -62,9 +63,10 @@ class TGTextEditHist : public TList {
 
 public:
    TGTextEditHist() {}
-   virtual ~TGTextEditHist() { Delete(); }
+   ~TGTextEditHist() override { Delete(); }
 
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       TObject *obj = Last();
       if (!obj) return kFALSE;
 
@@ -96,7 +98,8 @@ public:
    TInsCharCom(TGTextEdit *te, char ch) : TGTextEditCommand(te) {
       fEdit->InsChar(ch);
    }
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       fEdit->SetCurrent(fPos);
       fEdit->NextChar();
       fEdit->DelChar();
@@ -116,7 +119,8 @@ public:
       fChar = fEdit->GetText()->GetChar(fPos);
       fEdit->DelChar();
    }
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       if (fChar > 0) {
          fEdit->SetCurrent(fPos);
          fEdit->InsChar(fChar);
@@ -138,7 +142,8 @@ public:
       fPos.fY++;
    }
 
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       fEdit->SetCurrent(fPos);
       fEdit->DelChar();
       return kTRUE;
@@ -160,7 +165,8 @@ public:
       fEndPos = end;
    }
 
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       fEdit->GetText()->DelText(fPos, fEndPos);
 
       if (fChar > 0) {
@@ -191,7 +197,7 @@ public:
       fText = new TGText(dtc.fText);
       fBreakLine = dtc.fBreakLine;
    }
-   virtual ~TDelTextCom() { delete fText; }
+   ~TDelTextCom() override { delete fText; }
 
    TDelTextCom &operator=(const TDelTextCom &dtc) {
       if (this != &dtc) {
@@ -208,7 +214,8 @@ public:
 
    void SetBreakLine(Bool_t on) { fBreakLine = on; }
 
-   Bool_t Notify() { //
+   Bool_t Notify() override
+   { //
       TGLongPosition start_src, end_src;
       start_src.fX = start_src.fY = 0;
       end_src.fY   = fText->RowCount() - 1;
@@ -238,7 +245,7 @@ ClassImp(TGTextEdit);
 /// Create a text edit widget.
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
-                       UInt_t sboptions, ULong_t back) :
+                       UInt_t sboptions, Pixel_t back) :
      TGTextView(parent, w, h, id, sboptions, back)
 {
    Init();
@@ -248,7 +255,7 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, Int_t id,
 /// Create a text edit widget. Initialize it with the specified text buffer.
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
-                       Int_t id, UInt_t sboptions, ULong_t back) :
+                       Int_t id, UInt_t sboptions, Pixel_t back) :
      TGTextView(parent, w, h, text, id, sboptions, back)
 {
    Init();
@@ -259,7 +266,7 @@ TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, TGText *text,
 
 TGTextEdit::TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h,
                        const char *string, Int_t id, UInt_t sboptions,
-                       ULong_t back) :
+                       Pixel_t back) :
      TGTextView(parent, w, h, string, id, sboptions, back)
 {
    Init();
@@ -279,7 +286,7 @@ TGTextEdit::~TGTextEdit()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Initiliaze a text edit widget.
+/// Initialize a text edit widget.
 
 void TGTextEdit::Init()
 {
@@ -1582,7 +1589,7 @@ void TGTextEdit::Search(Bool_t close)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process context menu messages.
 
-Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
+Bool_t TGTextEdit::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2)
 {
    TString msg2;
    TGTextView::ProcessMessage(msg, parm1, parm2);
@@ -1697,7 +1704,7 @@ Bool_t TGTextEdit::ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2)
                      }
                      break;
                   default:
-                     printf("No action implemented for menu id %ld\n", parm1);
+                     printf("No action implemented for menu id %zd\n", (size_t)parm1);
                      break;
                }
             default:
@@ -1869,7 +1876,6 @@ void TGTextEdit::DelChar()
          pos2.fY = ToScrYCoord(fCurrent.fY+1);
          pos.fY = fCurrent.fY - 1;
          fText->DelLine(fCurrent.fY);
-         len = fText->GetLineLength(fCurrent.fY-1);
 
          if (ToScrXCoord(pos.fX, fCurrent.fY-1) >= (Int_t)fCanvas->GetWidth()) {
             SetHsbPosition((ToScrXCoord(pos.fX, pos.fY)+fVisible.fX-fCanvas->GetWidth()/2)/fScrollVal.fX);

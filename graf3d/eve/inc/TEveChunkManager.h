@@ -78,11 +78,11 @@ public:
       std::set<Int_t>::const_iterator  fSelectionIterator;
 
       iterator(TEveChunkManager* p) :
-         fPlex(p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(TEveChunkManager& p) :
-         fPlex(&p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(&p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(const iterator& i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
@@ -96,7 +96,7 @@ public:
       }
 
       Bool_t  next();
-      void    reset() { fCurrent = 0; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
+      void    reset() { fCurrent = nullptr; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
 
       Char_t* operator()() { return fCurrent; }
       Char_t* operator*()  { return fCurrent; }
@@ -130,14 +130,14 @@ private:
 public:
    TEveChunkVector()                 : TEveChunkManager() {}
    TEveChunkVector(Int_t chunk_size) : TEveChunkManager(sizeof(T), chunk_size) {}
-   virtual ~TEveChunkVector() {}
+   ~TEveChunkVector() override {}
 
    void Reset(Int_t chunk_size) { Reset(sizeof(T), chunk_size); }
 
    T* At(Int_t idx)  { return reinterpret_cast<T*>(Atom(idx)); }
    T& Ref(Int_t idx) { return *At(idx); }
 
-   ClassDef(TEveChunkVector, 1); // Templated class for specific atom classes (given as template argument).
+   ClassDefOverride(TEveChunkVector, 1); // Templated class for specific atom classes (given as template argument).
 };
 
 #endif

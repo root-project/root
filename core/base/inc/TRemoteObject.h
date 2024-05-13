@@ -47,8 +47,8 @@ public:
 
    virtual ~TRemoteObject();
 
-   virtual void            Browse(TBrowser *b);
-   Bool_t                  IsFolder() const { return fIsFolder; }
+   void                    Browse(TBrowser *b) override;
+   Bool_t                  IsFolder() const override { return fIsFolder; }
    TList                  *Browse();
    Bool_t                  GetFileStat(FileStat_t *sbuf);
    const char             *GetClassName() const { return fClassName.Data(); }
@@ -57,9 +57,9 @@ public:
    void                    SetFolder(Bool_t isFolder) { fIsFolder = isFolder; }
    void                    SetKeyObjectName(const char *name) { fKeyObjectName = name; }
    void                    SetKeyClassName(const char *name) { fKeyClassName = name; }
-   void                    SetRemoteAddress(Long_t addr) { fRemoteAddress = addr; }
+   void                    SetRemoteAddress(Longptr_t addr) { fRemoteAddress = addr; }
 
-   ClassDef(TRemoteObject,0)  //A remote object
+   ClassDefOverride(TRemoteObject,0)  //A remote object
 };
 
 #endif

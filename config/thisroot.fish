@@ -29,12 +29,12 @@ end
 
 set SOURCE (status -f)
 # normalize path
-set thisroot (dirname $SOURCE)
+set thisroot (path dirname $SOURCE)
 set -xg ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
 
 if not set -q MANPATH
    # Grab the default man path before setting the path to avoid duplicates
-   if which manpath > /dev/null ^ /dev/null
+   if which manpath > /dev/null 2> /dev/null
       set -xg MANPATH (manpath)
    else
       set -xg MANPATH (man -w 2> /dev/null)
@@ -47,8 +47,8 @@ update_path DYLD_LIBRARY_PATH "$old_rootsys" "/lib" @libdir@
 update_path PYTHONPATH "$old_rootsys" "/lib" @libdir@
 update_path MANPATH "$old_rootsys" "/man" @mandir@
 update_path CMAKE_PREFIX_PATH "$old_rootsys" "" $ROOTSYS
-update_path JUPYTER_PATH "$old_rootsys" "/etc/notebook" ROOTSYS/etc/notebook
-update_path JUPYTER_CONFIG_DIR "$old_rootsys" "/etc/notebook" ROOTSYS/etc/notebook
+update_path JUPYTER_PATH "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
+update_path JUPYTER_CONFIG_DIR "$old_rootsys" "/etc/notebook" $ROOTSYS/etc/notebook
 
 # Prevent Cppyy from checking the PCH (and avoid warning)
 set -xg CLING_STANDARD_PCH none

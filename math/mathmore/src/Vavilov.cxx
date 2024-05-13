@@ -49,7 +49,7 @@ Vavilov::Vavilov()
 
 Vavilov::~Vavilov()
 {
-   // desctructor (clean up resources)
+   // destructor (clean up resources)
 }
 
 

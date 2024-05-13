@@ -52,7 +52,7 @@ in your code instead of hardcoded color numbers, e.g.:
 Begin_Macro
 {
    TColorWheel *w = new TColorWheel();
-   cw = new TCanvas("cw","cw",0,0,400,400);
+   auto cw = new TCanvas("cw","cw",0,0,400,400);
    w->SetCanvas(cw);
    w->Draw();
 }
@@ -64,11 +64,6 @@ End_Macro
 
 TColorWheel::TColorWheel() :TNamed("wheel","ROOT Color Wheel")
 {
-   fCanvas = 0;
-   fArc    = 0;
-   fLine   = 0;
-   fText   = 0;
-   fGraph  = 0;
    fRmin   = 2.1;
    fRmax   = 9.5;
    fR0     = 4;

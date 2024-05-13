@@ -20,14 +20,15 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGFSComboBox, TGTreeLBEntry                                          //
-//                                                                      //
-// This is a combo box that is used in the File Selection dialog box.   //
-// It will allow the file path selection.                               //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGFSComboBox
+    \ingroup guiwidgets
+
+This is a combo box that is used in the File Selection dialog box.
+It will allow the file path selection.
+
+*/
+
 
 #include "RConfigure.h"
 
@@ -45,17 +46,6 @@ const TGFont *TGTreeLBEntry::fgDefaultFont = nullptr;
 TGGC         *TGTreeLBEntry::fgDefaultGC = nullptr;
 
 //--- this is temp here...
-
-struct Lbc_t {
-   const char *fName;   // root prefix name
-   const char *fPath;   // path
-   const char *fPixmap; // picture file
-   Int_t       fId;     // widget id
-   Int_t       fIndent; // identification level
-   Int_t       fFlags;  // flag
-};
-
-static struct Lbc_t gLbc[32];
 
 ClassImp(TGTreeLBEntry);
 ClassImp(TGFSComboBox);
@@ -212,10 +202,6 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
                            ULong_t back) :
    TGComboBox(parent, id, options | kOwnBackground, back)
 {
-   int   i, indent;
-   const TGPicture *pic;
-   char  *p;
-
    SetTopEntry(new TGTreeLBEntry(this, new TGString("Current dir"),
                fClient->GetPicture("folder_t.xpm"), 0),
                new TGLayoutHints(kLHintsExpandX | kLHintsExpandY, 4, 0, 0, 0));
@@ -232,85 +218,38 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
    // const char *rootSys = ROOTPREFIX;
 #endif
 
-   Int_t idx = 0;
    TList *volumes = gSystem->GetVolumes("all");
    TList *curvol  = gSystem->GetVolumes("cur");
-   TString infos;
    const char *curdrive = "";
    if (volumes && curvol) {
       TNamed *named = (TNamed *)curvol->At(0);
       if (named) {
          curdrive = named->GetName();
-         infos = named->GetTitle();
-         gLbc[idx].fName = StrDup(infos.Data());
-         gLbc[idx].fPath = StrDup(Form("%s\\", curdrive));
+         TString infos = named->GetTitle();
+
+         fLbc.emplace_back(infos.Data(), Form("%s\\", curdrive), "hdisk_t.xpm", 0);
          if (infos.Contains("Removable"))
-            gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
+            fLbc.back().fPixmap = "fdisk_t.xpm";
          else if (infos.Contains("Local"))
-            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+            fLbc.back().fPixmap = "hdisk_t.xpm";
          else if (infos.Contains("CD"))
-            gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
+            fLbc.back().fPixmap = "cdrom_t.xpm";
          else if (infos.Contains("Network"))
-            gLbc[idx].fPixmap = StrDup("netdisk_t.xpm");
-         else
-            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
-         gLbc[idx].fId     = 1000;
-         gLbc[idx].fIndent = 0;
-         gLbc[idx].fFlags  = 0;
-         ++idx;
+            fLbc.back().fPixmap = "netdisk_t.xpm";
+      } else {
+         fLbc.emplace_back("Root", "/", "hdisk_t.xpm", 1);
       }
-      else {
-         gLbc[idx].fName = StrDup("Root");
-         gLbc[idx].fPath = StrDup("/");
-         gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
-         gLbc[idx].fId     = 1000;
-         gLbc[idx].fIndent = 1;
-         gLbc[idx].fFlags  = 0;
-         ++idx;
-      }
+   } else {
+      fLbc.emplace_back("Root", "/", "hdisk_t.xpm", 1);
+      fLbc.emplace_back("Floppy", "/floppy", "fdisk_t.xpm", 1);
+      fLbc.emplace_back("CD-ROM", "/cdrom", "cdrom_t.xpm", 1);
    }
-   else {
-      gLbc[idx].fName = StrDup("Root");
-      gLbc[idx].fPath = StrDup("/");
-      gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
-      gLbc[idx].fId     = 1000;
-      gLbc[idx].fIndent = 1;
-      gLbc[idx].fFlags  = 0;
-      ++idx;
-      gLbc[idx].fName = StrDup("Floppy");
-      gLbc[idx].fPath = StrDup("/floppy");
-      gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
-      gLbc[idx].fId     = 2000;
-      gLbc[idx].fIndent = 1;
-      gLbc[idx].fFlags  = 0;
-      ++idx;
-      gLbc[idx].fName = StrDup("CD-ROM");
-      gLbc[idx].fPath = StrDup("/cdrom");
-      gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
-      gLbc[idx].fId     = 3000;
-      gLbc[idx].fIndent = 1;
-      gLbc[idx].fFlags  = 0;
-      ++idx;
-   }
-   gLbc[idx].fName   = StrDup("Home");
-   gLbc[idx].fPath   = StrDup("$HOME");
-   gLbc[idx].fPixmap = StrDup("home_t.xpm");
-   gLbc[idx].fId     = (idx+1) * 1000;
-   gLbc[idx].fIndent = 1;
-   gLbc[idx].fFlags  = 0;
-   ++idx;
+   fLbc.emplace_back("Home", "$HOME", "home_t.xpm", 1);
 #ifndef ROOTPREFIX
-   gLbc[idx].fName   = StrDup("RootSys");
-   gLbc[idx].fPath   = StrDup("$ROOTSYS");
+   fLbc.emplace_back("RootSys", "$ROOTSYS", "root_t.xpm", 1);
 #else
-   gLbc[idx].fName   = StrDup(ROOTPREFIX);
-   gLbc[idx].fPath   = StrDup(ROOTPREFIX);
+   fLbc.emplace_back(ROOTPREFIX, ROOTPREFIX, "root_t.xpm", 1);
 #endif
-   gLbc[idx].fPixmap = StrDup("root_t.xpm");
-   gLbc[idx].fId     = (idx+1) * 1000;
-   gLbc[idx].fIndent = 1;
-   gLbc[idx].fFlags  = 0;
-   ++idx;
 
    if (volumes && curvol) {
       TIter next(volumes);
@@ -318,46 +257,34 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       while ((drive = (TNamed *)next())) {
          if (!strcmp(drive->GetName(), curdrive))
             continue;
-         infos = drive->GetTitle();
-         gLbc[idx].fName   = StrDup(drive->GetTitle());
-         gLbc[idx].fPath   = StrDup(Form("%s\\", drive->GetName()));
+         TString infos = drive->GetTitle();
+
+         fLbc.emplace_back(drive->GetTitle(), Form("%s\\", drive->GetName()), "hdisk_t.xpm", 0);
+
          if (infos.Contains("Removable"))
-            gLbc[idx].fPixmap = StrDup("fdisk_t.xpm");
+            fLbc.back().fPixmap = "fdisk_t.xpm";
          else if (infos.Contains("Local"))
-            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
+            fLbc.back().fPixmap = "hdisk_t.xpm";
          else if (infos.Contains("CD"))
-            gLbc[idx].fPixmap = StrDup("cdrom_t.xpm");
+            fLbc.back().fPixmap = "cdrom_t.xpm";
          else if (infos.Contains("Network"))
-            gLbc[idx].fPixmap = StrDup("netdisk_t.xpm");
-         else
-            gLbc[idx].fPixmap = StrDup("hdisk_t.xpm");
-         gLbc[idx].fId     = (idx+1) * 1000;
-         gLbc[idx].fIndent = 0;
-         gLbc[idx].fFlags  = 0;
-         ++idx;
+            fLbc.back().fPixmap = "netdisk_t.xpm";
       }
       delete volumes;
       delete curvol;
    }
-   gLbc[idx].fName   = 0;
-   gLbc[idx].fPath   = 0;
-   gLbc[idx].fPixmap = 0;
-   gLbc[idx].fId     = (idx+1) * 1000;
-   gLbc[idx].fIndent = 0;
-   gLbc[idx].fFlags  = 0;
 
-   for (i = 0; gLbc[i].fPath != 0; ++i) {
-      if (strstr(gLbc[i].fPath, "$HOME") != 0) {
+   Int_t cnt = 0;
+
+   for (auto &entry : fLbc) {
+      entry.fId = ++cnt * 1000; // assign ids after vector is created
+      if (entry.fPath.find("$HOME") == 0) {
          if (homeDir) {
-            int hlen = strlen(homeDir);
-            int blen = hlen + strlen(gLbc[i].fPath) - 3;
-            p = new char[blen];
-            strlcpy(p, homeDir, blen);
-            strlcat(p, &gLbc[i].fPath[5], blen-strlen(&gLbc[i].fPath[5]));
-            delete [] gLbc[i].fPath;
-            gLbc[i].fPath = p;
+            std::string newpath = homeDir;
+            newpath.append(entry.fPath.substr(5));
+            entry.fPath = newpath;
          } else {
-            gLbc[i].fFlags = 0;
+            entry.fFlags = 0;
          }
       }
 #ifndef ROOTPREFIX
@@ -367,43 +294,32 @@ TGFSComboBox::TGFSComboBox(const TGWindow *parent, Int_t id, UInt_t options,
       // build time, we do not need to expand the prefix, as it is
       // already known, so the entries in the table above are actually
       // fully expanded.
-      if (strstr(gLbc[i].fPath, "$ROOTSYS") != 0) {
+      if (entry.fPath.find("$ROOTSYS") == 0) {
          // Get the size of the prefix template
          const int plen = 8;
          if (rootSys) {
-            int hlen = strlen(rootSys);
-            // Allocate enough memory to hold prefix (hlen), and
-            // what's in the path (strlen(gLbc[i].fPath)) minus the
-            // prefix template size, and one character for terminating
-            // null.
-            int blen = hlen + strlen(gLbc[i].fPath) - plen + 1;
-            p = new char[blen];
-            strlcpy(p, rootSys, blen);
-            strlcat(p, &(gLbc[i].fPath[plen]), blen-strlen(&gLbc[i].fPath[plen]));
-            // Figure out where to put the terminating NULL
-            int npos = hlen + strlen(&(gLbc[i].fPath[plen]));
-            p[npos] = '\0';
-            delete [] gLbc[i].fPath;
-            gLbc[i].fPath = p;
+            std::string newpath = rootSys;
+            newpath.append(entry.fPath.substr(plen));
+            entry.fPath = newpath;
          } else {
-            gLbc[i].fFlags = 0;
+            entry.fFlags = 0;
          }
       }
 #endif
-      if (gSystem->AccessPathName(gLbc[i].fPath, kFileExists) == 0)
-         gLbc[i].fFlags = 1;
+      if (gSystem->AccessPathName(entry.fPath.c_str(), kFileExists) == 0)
+         entry.fFlags = 1;
    }
 
    //--- then init the contents...
 
-   for (i = 0; gLbc[i].fName != 0; ++i) {
-      if (gLbc[i].fFlags) {
-         indent = 4 + (gLbc[i].fIndent * 10);
-         pic = fClient->GetPicture(gLbc[i].fPixmap);
-         if (!pic) Error("TGFSComboBox", "pixmap not found: %s", gLbc[i].fPixmap);
+   for (auto &entry : fLbc) {
+      if (entry.fFlags) {
+         int indent = 4 + (entry.fIndent * 10);
+         auto pic = fClient->GetPicture(entry.fPixmap.c_str());
+         if (!pic) Error("TGFSComboBox", "pixmap not found: %s", entry.fPixmap.c_str());
          AddEntry(new TGTreeLBEntry(fListBox->GetContainer(),
-                  new TGString(gLbc[i].fName), pic, gLbc[i].fId,
-                  new TGString(gLbc[i].fPath)),
+                  new TGString(entry.fName.c_str()), pic, entry.fId,
+                  new TGString(entry.fPath.c_str())),
                   new TGLayoutHints(kLHintsExpandX | kLHintsTop, indent, 0, 0, 0));
       }
    }
@@ -417,25 +333,26 @@ void TGFSComboBox::Update(const char *path)
 {
    char dirname[1024], mpath[1024];
    const char *tailpath = 0;
-   int  i, indent_lvl = 0, afterID = -1, sel = -1;
+   int  indent_lvl = 0, afterID = -1, sel = -1;
 
    if (!path) return;
 
-   for (i = 0; gLbc[i].fPath != 0; ++i)
-      RemoveEntries(gLbc[i].fId+1, gLbc[i+1].fId-1);
+   for (int i = 0; i < (int) fLbc.size() - 1; ++i)
+      RemoveEntries(fLbc[i].fId+1, fLbc[i+1].fId-1);
+   RemoveEntries(fLbc.back().fId+1, (fLbc.size() + 1) * 1000 - 1);
 
    int len = 0;
-   for (i = 0; gLbc[i].fName != 0; ++i) {
-      if (gLbc[i].fFlags) {
-         int slen = strlen(gLbc[i].fPath);
-         if (strncmp(path, gLbc[i].fPath, slen) == 0) {
+   for (auto &entry : fLbc) {
+      if (entry.fFlags) {
+         int slen = entry.fPath.length();
+         if (strncmp(path, entry.fPath.c_str(), slen) == 0) {
             if (slen > len) {
-               sel = afterID = gLbc[i].fId;
-               indent_lvl = gLbc[i].fIndent + 1;
+               sel = afterID = entry.fId;
+               indent_lvl = entry.fIndent + 1;
                if ((len > 0) && ((path[slen] == '\\') || (path[slen] == '/') ||
                    (path[slen] == 0)))
                   tailpath = path + slen;
-               strlcpy(mpath, gLbc[i].fPath, 1024);
+               strlcpy(mpath, entry.fPath.c_str(), 1024);
                len = slen;
             }
          }

@@ -11,14 +11,15 @@
 #ifndef ROOT_RDFDISPLAYER
 #define ROOT_RDFDISPLAYER
 
-#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RDF/Utils.hxx"  // IsDataContainer, InterpreterCalc
+#include "ROOT/RVec.hxx"
 #include "ROOT/TypeTraits.hxx"
 #include "TClassEdit.h"
 
 #include <vector>
 #include <string>
-#include <iostream>
 #include <sstream>
+#include <type_traits>
 
 namespace ROOT {
 namespace Internal {
@@ -68,7 +69,7 @@ private:
    using VecStr_t = std::vector<std::string>;
    using DElement_t = ROOT::Internal::RDF::RDisplayElement;
    static constexpr char fgSeparator = ' '; ///< Spacing used to align the table entries
-   static constexpr unsigned fgMaxWidth = 80;
+   static constexpr unsigned fgMaxWidth = 100; ///< Maximum width of the table that Print() displays
 
    VecStr_t fTypes; ///< This attribute stores the type of each column. It is needed by the interpreter to print it.
    std::vector<bool> fIsCollection; ///< True if the column contains a collection. Collections are treated differently
@@ -87,20 +88,54 @@ private:
    size_t fNextRow = 1;       ///< Next row to be filled.
    size_t fCurrentColumn = 0; ///< Column that is being filled.
 
-   size_t fEntries; ///< Number of events to process for each column (i.e. number of rows).
+   size_t fNMaxCollectionElements = 10; // threshold on number of elements in collections to be Print()
 
    ////////////////////////////////////////////////////////////////////////////
-   /// Appends a cling::printValue call to the stringstream.
+   /// Appends a cling::printValue call to the stringstream
+   /// This overload works for non-collection data types which are also not
+   /// trivially representable as strings.
    /// \tparam T the type of the event to convert
    /// \param[in] stream Where the conversion function call will be chained.
    /// \param[in] element The event to convert to its string representation
    /// \param[in] index To which column the event belongs to
    /// \return false, the event is not a collection
-   template <typename T, typename std::enable_if<!ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T,
+             std::enable_if_t<!std::is_arithmetic_v<T> && !ROOT::Internal::RDF::IsDataContainer<T>::value, int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &element, const int &index)
    {
       stream << "*((std::string*)" << ROOT::Internal::RDF::PrettyPrintAddr(&(fRepresentations[index]))
-             << ") = cling::printValue((" << fTypes[index] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&element) << ");";
+             << ") = cling::printValue((" << fTypes[index] << "*)" << ROOT::Internal::RDF::PrettyPrintAddr(&element)
+             << ");";
+      return false;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Appends a string if the T type is an arithmetic type.
+   /// This overload works for arithmetic data types that are trivially
+   /// convertible to string.
+   /// \tparam T the type of the event to convert
+   /// \param[in] element The event to convert to its string representation
+   /// \param[in] index To which column the event belongs to
+   /// \return false, the event is not a collection
+   template <typename T, std::enable_if_t<std::is_arithmetic_v<T>, int> = 0>
+   bool AddInterpreterString(std::stringstream &, T &element, const int &index)
+   {
+      // Short-circuit the logic and just insert the string representation of
+      // the symple type at the right index.
+      fRepresentations[index] = std::to_string(element);
+      return false;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Appends a string if the T type is boolean.
+   /// \param[in] element The event to convert to its string representation
+   /// \param[in] index To which column the event belongs to
+   /// \return false, the event is not a collection
+   bool AddInterpreterString(std::stringstream &, bool &element, const int &index)
+   {
+      // Short-circuit the logic and just insert the string representation of
+      // the boolean value at the right index.
+      fRepresentations[index] = (element ? "true" : "false");
       return false;
    }
 
@@ -112,7 +147,9 @@ private:
    /// \param[in] index To which column the event belongs to
    /// \return true, the event is a collection
    /// This function chains a sequence of call to cling::printValue, one for each element of the collection.
-   template <typename T, typename std::enable_if<ROOT::Internal::RDF::IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value &&
+                                             !std::is_arithmetic_v<typename T::value_type>,
+                                          int> = 0>
    bool AddInterpreterString(std::stringstream &stream, T &collection, const int &index)
    {
       size_t collectionSize = std::distance(std::begin(collection), std::end(collection));
@@ -131,6 +168,53 @@ private:
                 << ") = cling::printValue((" << output[1] << "*)"
                 << ROOT::Internal::RDF::PrettyPrintAddr(&(collection[i])) << ");";
       }
+      return true;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Represent a collection of values as a collection of strings.
+   /// \tparam T the type of the event to convert. This must be a collection of
+   ///           values of arithmetic type, but not boolean.
+   /// \param[in] collection The event to convert to its string representation
+   /// \param[in] index To which column the event belongs to
+   /// \return true, the event is a collection
+   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value &&
+                                             std::is_arithmetic_v<typename T::value_type> &&
+                                             !std::is_same_v<typename T::value_type, bool>,
+                                          int> = 0>
+   bool AddInterpreterString(std::stringstream &, T &collection, const int &index)
+   {
+      auto collectionSize = std::distance(std::begin(collection), std::end(collection));
+      VecStr_t collectionRepr(collectionSize);
+      std::generate(collectionRepr.begin(), collectionRepr.end(), [i = 0, &collection]() mutable {
+         auto valRepr = std::to_string(collection[i]);
+         i++;
+         return valRepr;
+      });
+      fCollectionsRepresentations[index] = std::move(collectionRepr);
+      return true;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Represent a collection of booleans as a collection of strings.
+   /// \tparam T the type of the event to convert. This must be a collection of
+   ///           boolean values.
+   /// \param[in] collection The event to convert to its string representation
+   /// \param[in] index To which column the event belongs to
+   /// \return true, the event is a collection
+   template <typename T, std::enable_if_t<ROOT::Internal::RDF::IsDataContainer<T>::value &&
+                                             std::is_same_v<typename T::value_type, bool>,
+                                          int> = 0>
+   bool AddInterpreterString(std::stringstream &, T &collection, const int &index)
+   {
+      auto collectionSize = std::distance(std::begin(collection), std::end(collection));
+      VecStr_t collectionRepr(collectionSize);
+      std::generate(collectionRepr.begin(), collectionRepr.end(), [i = 0, &collection]() mutable {
+         auto valRepr = (collection[i] ? "true" : "false");
+         i++;
+         return valRepr;
+      });
+      fCollectionsRepresentations[index] = std::move(collectionRepr);
       return true;
    }
 
@@ -154,26 +238,6 @@ private:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// AddInterpreterString overload for arrays of booleans.
-   ///
-   /// \param[in] boolArr The bool array to convert to string representation
-   /// \param[in] index To which column the event belongs
-   /// \return true, the event is a collection
-   ///
-   /// This specialization for arrays of booleans skips the cling::printValue
-   /// (i.e. appends nothing to the stream) and directly writes to fCollectionsRepresentations the
-   /// string representation of the array of chars.
-   bool AddInterpreterString(std::stringstream &, ROOT::RVec<bool> &boolArr, const int &index)
-   {
-      fCollectionsRepresentations[index].reserve(boolArr.size());
-      for (bool b : boolArr)
-         fCollectionsRepresentations[index].push_back(b ? "true" : "false");
-
-      return true; // treat this as a collection
-   }
-
-
-   ////////////////////////////////////////////////////////////////////////////
    /// Adds a single element to the next slot in the table
    void AddToRow(const std::string &stringEle);
 
@@ -193,6 +257,10 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// Get the number of columns that do NOT fit in the characters limit
    size_t GetNColumnsToShorten() const;
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// Generate dashes between entries in Print() and AsString() Methods
+   std::string DashesBetweenLines(size_t lastColToPrint, bool allColumnsFit) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// Adds a row of events to the table
@@ -217,13 +285,7 @@ private:
             AddToRow(fRepresentations[i]);
          }
       }
-      // This row has been parsed
-      fEntries--;
    }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// If the number of required rows has been parsed, returns false.
-   bool HasNext() { return fEntries > 0; }
 
    void EnsureCurrentColumnWidth(size_t w);
 
@@ -232,8 +294,8 @@ public:
    /// Creates an RDisplay to print the event values
    /// \param[in] columnNames Columns to print
    /// \param[in] types The type of each column
-   /// \param[in] entries How many events per column (row) must be processed.
-   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, int entries);
+   /// \param[in] nMaxCollectionElements Number of maximum elements in collection.
+   RDisplay(const VecStr_t &columnNames, const VecStr_t &types, size_t nMaxCollectionElements);
 
    ////////////////////////////////////////////////////////////////////////////
    /// Prints the representation to the standard output

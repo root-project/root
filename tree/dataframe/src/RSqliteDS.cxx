@@ -8,18 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-// clang-format off
-/** \class ROOT::RDF::RSqliteDS
-    \ingroup dataframe
-    \brief RDataFrame data source class for reading SQlite files.
-*/
-
-// clang-format on
-
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RConfig.hxx>
-#include <ROOT/RDF/Utils.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"
@@ -164,7 +153,7 @@ int VfsRdOnlyDeviceCharacteristics(sqlite3_file * /*pFile*/)
 ////////////////////////////////////////////////////////////////////////////
 /// Set the function pointers of the custom VFS I/O operations in a
 /// forward-compatible way
-static sqlite3_io_methods GetSqlite3IoMethods()
+sqlite3_io_methods GetSqlite3IoMethods()
 {
    // The C style initialization is compatible with version 1 and later versions of the struct.
    // Version 1 was introduced with sqlite 3.6, version 2 with sqlite 3.7.8, version 3 with sqlite 3.7.17
@@ -204,11 +193,6 @@ int VfsRdOnlyOpen(sqlite3_vfs * /*vfs*/, const char *zName, sqlite3_file *pFile,
    p->fRawFile = ROOT::Internal::RRawFile::Create(zName);
    if (!p->fRawFile) {
       ::Error("VfsRdOnlyOpen", "Cannot open %s\n", zName);
-      return SQLITE_IOERR;
-   }
-
-   if (!(p->fRawFile->GetFeatures() & ROOT::Internal::RRawFile::kFeatureHasSize)) {
-      ::Error("VfsRdOnlyOpen", "cannot determine file size of %s\n", zName);
       return SQLITE_IOERR;
    }
 
@@ -297,7 +281,7 @@ int VfsRdOnlyCurrentTime(sqlite3_vfs *vfs, double *prNow)
 ////////////////////////////////////////////////////////////////////////////
 /// Set the function pointers of the VFS implementation in a
 /// forward-compatible way
-static sqlite3_vfs GetSqlite3Vfs()
+sqlite3_vfs GetSqlite3Vfs()
 {
    // The C style initialization is compatible with version 1 and later versions of the struct.
    // Version 1 was introduced with sqlite 3.5, version 2 with sqlite 3.7, version 3 with sqlite 3.7.6
@@ -320,9 +304,9 @@ static sqlite3_vfs GetSqlite3Vfs()
 
 ////////////////////////////////////////////////////////////////////////////
 /// A global struct of function pointers and details on the VfsRootFile class that together constitue a VFS module
-static struct sqlite3_vfs kSqlite3Vfs = GetSqlite3Vfs();
+struct sqlite3_vfs kSqlite3Vfs = GetSqlite3Vfs();
 
-static bool RegisterSqliteVfs()
+bool RegisterSqliteVfs()
 {
    int retval;
    retval = sqlite3_vfs_register(&kSqlite3Vfs, false);
@@ -376,6 +360,15 @@ RSqliteDS::RSqliteDS(const std::string &fileName, const std::string &query)
 
    retval = sqlite3_open_v2(fileName.c_str(), &fDataSet->fDb, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX,
                             gSQliteVfsName);
+   if (retval != SQLITE_OK)
+      SqliteError(retval);
+
+   // Certain complex queries trigger creation of temporary tables. Depending on the build options of sqlite,
+   // sqlite may try to store such temporary tables on disk, using our custom VFS module to do so.
+   // Creation of new database files, however, is not supported by the custom VFS module.  Thus we set the behavior
+   // of the database connection to "temp_store=2", meaning that temporary tables should always be maintained
+   // in memory.
+   retval = sqlite3_exec(fDataSet->fDb, "PRAGMA temp_store=2;", nullptr, nullptr, nullptr);
    if (retval != SQLITE_OK)
       SqliteError(retval);
 
@@ -525,7 +518,7 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
 
 ////////////////////////////////////////////////////////////////////////////
 /// Resets the SQlite query engine at the beginning of the event loop.
-void RSqliteDS::Initialise()
+void RSqliteDS::Initialize()
 {
    fNRow = 0;
    int retval = sqlite3_reset(fDataSet->fQuery);
@@ -542,7 +535,7 @@ std::string RSqliteDS::GetLabel()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(std::string(fileName), std::string(query)));
    return rdf;
@@ -552,7 +545,8 @@ RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query
 /// Stores the result of the current active sqlite query row as a C++ value.
 bool RSqliteDS::SetEntry(unsigned int /* slot */, ULong64_t entry)
 {
-   R__ASSERT(entry + 1 == fNRow);
+   assert(entry + 1 == fNRow);
+   (void)entry;
    unsigned N = fValues.size();
    for (unsigned i = 0; i < N; ++i) {
       if (!fValues[i].fIsActive)

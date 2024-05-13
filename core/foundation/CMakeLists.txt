@@ -8,48 +8,65 @@
 # CMakeLists.txt file for building ROOT core/foundation package
 ############################################################################
 
-set(Foundation_dict_headers
+set_property(TARGET Core APPEND PROPERTY DICT_HEADERS
   ESTLType.h
   RStringView.h
   TClassEdit.h
   TError.h
-  ROOT/RIntegerSequence.hxx
-  ROOT/RMakeUnique.hxx
+  ThreadLocalStorage.h
+  ROOT/RLogger.hxx
   ROOT/RNotFn.hxx
+  ROOT/RRangeCast.hxx
   ROOT/RSpan.hxx
   ROOT/RStringView.hxx
+  ROOT/StringUtils.hxx
   ROOT/span.hxx
   ROOT/TypeTraits.hxx
-  PARENT_SCOPE
 )
 
-set(sources
+set(FOUNDATION_SOURCES
   src/FoundationUtils.cxx
   src/RConversionRuleParser.cxx
+  src/RLogger.cxx
+  src/StringUtils.cxx
   src/TClassEdit.cxx
   src/TError.cxx
 )
 
-ROOT_OBJECT_LIBRARY(Foundation ${sources})
-target_include_directories(Foundation PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
+set(FOUNDATION_HEADER_DIRS inc/)
 
-ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${sources}) # used by rootcling_stage1
-target_include_directories(Foundation_Stage1 PRIVATE
-   ${CMAKE_SOURCE_DIR}/core/foundation/res
-   ${CMAKE_SOURCE_DIR}/core/base/inc
-   ${CMAKE_BINARY_DIR}/ginclude
-)
-
-if(MSVC)
-   target_include_directories(Foundation PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
-   target_include_directories(Foundation_Stage1 PRIVATE ${CMAKE_SOURCE_DIR}/core/winnt/inc)
+if(root7)
+  set_property(TARGET Core APPEND PROPERTY DICT_HEADERS ROOT/RError.hxx)
+  list(APPEND FOUNDATION_SOURCES
+    v7/src/RError.cxx)
+  list(APPEND FOUNDATION_HEADER_DIRS v7/inc/)
+  ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
 
-set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}")
+target_sources(Core PRIVATE ${FOUNDATION_SOURCES})
 
-ROOT_INSTALL_HEADERS()
+target_include_directories(Core
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
+  PRIVATE
+    res
+)
+
+ROOT_OBJECT_LIBRARY(Foundation_Stage1 ${FOUNDATION_SOURCES}) # used by rootcling_stage1
+
+target_include_directories(Foundation_Stage1
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
+  PRIVATE
+    $<$<BOOL:${MSVC}>:${CMAKE_SOURCE_DIR}/core/winnt/inc>
+    ${CMAKE_BINARY_DIR}/ginclude res
+)
+
+set_target_properties(Foundation_Stage1 PROPERTIES
+  COMPILE_FLAGS "${COMPILE_FLAGS} ${CLING_CXXFLAGS}"
+  VISIBILITY_INLINES_HIDDEN "ON"
+)
+
+ROOT_INSTALL_HEADERS(${FOUNDATION_HEADER_DIRS})
 ROOT_ADD_TEST_SUBDIRECTORY(test)

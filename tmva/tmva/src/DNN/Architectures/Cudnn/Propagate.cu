@@ -385,9 +385,9 @@ void TCudnn<AFloat>::InitializeConvWorkspace(TWorkspace * & workspace,
       LocalPerf();
       // these three type are absolutely equivalent
       // and one can access them as they wish to get info
-      cudnnConvolutionFwdAlgoPerf_t * m_fwd;
-      cudnnConvolutionBwdFilterAlgoPerf_t * m_bwdFilter;
-      cudnnConvolutionBwdDataAlgoPerf_t * m_bwdData;
+      cudnnConvolutionFwdAlgoPerf_t *m_fwd = nullptr;
+      cudnnConvolutionBwdFilterAlgoPerf_t *m_bwdFilter = nullptr;
+      cudnnConvolutionBwdDataAlgoPerf_t * m_bwdData = nullptr;
    };
 #else
    // More detailed alternative: cudnnFindConvolutionForwardAlgorithm (only option in newer cuDNN versions)

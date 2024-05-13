@@ -28,7 +28,25 @@ ClassImp(TMarker);
 /** \class TMarker
 \ingroup BasicGraphics
 
-Manages Markers. Marker attributes are managed by TAttMarker.
+Manages Markers.
+
+Use the TMarker constructor to create a marker.
+
+~~~ {.cpp}
+   TMarker(Double_t x,Double_t y,Int_t marker)
+~~~
+
+The parameters `x` and `y` are the marker coordinates and `marker` is the marker type.
+
+Use the TPolyMarker to create an array on N points in a 2D space.
+At each point `x[i]`, `y[i]` a marker is drawn.
+
+Use the TAttMarker class to change the attributes color, style and size of a marker.
+
+_**Example**_
+
+- Use the `TAttMarker::SetMarkerSize(size)` method to set the `size` of a marker.
+
 */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +83,7 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), T
 {
    fX = 0;
    fY = 0;
-   ((TMarker&)marker).Copy(*this);
+   marker.TMarker::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,9 +92,9 @@ TMarker::TMarker(const TMarker &marker) : TObject(marker), TAttMarker(marker), T
 void TMarker::Copy(TObject &obj) const
 {
    TObject::Copy(obj);
-   TAttMarker::Copy(((TMarker&)obj));
-   ((TMarker&)obj).fX = fX;
-   ((TMarker&)obj).fY = fY;
+   TAttMarker::Copy(((TMarker &)obj));
+   ((TMarker &)obj).fX = fX;
+   ((TMarker &)obj).fY = fY;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -84,32 +102,30 @@ void TMarker::Copy(TObject &obj) const
 
 void TMarker::DisplayMarkerTypes()
 {
-   TMarker *marker = new TMarker();
-   marker->SetMarkerSize(3);
-   TText *text = new TText();
-   text->SetTextFont(62);
-   text->SetTextAlign(22);
-   text->SetTextSize(0.1);
-   char atext[] = "       ";
+   TMarker marker;
+   TText text;
+   marker.SetMarkerSize(3);
+   text.SetTextFont(62);
+   text.SetTextAlign(22);
+   text.SetTextSize(0.1);
+   TString atext;
    Double_t x = 0;
    Double_t dx = 1/16.0;
    for (Int_t i=1;i<16;i++) {
       x += dx;
-      snprintf(atext,7,"%d",i);
-      marker->SetMarkerStyle(i);
-      marker->DrawMarker(x,.25);
-      text->DrawText(x,.12,atext);
-      snprintf(atext,7,"%d",i+19);
-      marker->SetMarkerStyle(i+19);
-      marker->DrawMarker(x,.55);
-      text->DrawText(x,.42,atext);
-      snprintf(atext,7,"%d",i+34);
-      marker->SetMarkerStyle(i+34);
-      marker->DrawMarker(x,.85);
-      text->DrawText(x,.72,atext);
+      atext.Form("%d",i);
+      marker.SetMarkerStyle(i);
+      marker.DrawMarker(x,.25);
+      text.DrawText(x,.12,atext.Data());
+      atext.Form("%d",i+19);
+      marker.SetMarkerStyle(i+19);
+      marker.DrawMarker(x,.55);
+      text.DrawText(x,.42,atext.Data());
+      atext.Form("%d",i+34);
+      marker.SetMarkerStyle(i+34);
+      marker.DrawMarker(x,.85);
+      text.DrawText(x,.72,atext.Data());
    }
-   delete marker;
-   delete text;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,36 +133,34 @@ void TMarker::DisplayMarkerTypes()
 
 void TMarker::DisplayMarkerLineWidths()
 {
-   TMarker *marker = new TMarker();
-   marker->SetMarkerSize(3);
-   TText *text = new TText();
-   text->SetTextFont(62);
-   text->SetTextAlign(22);
-   text->SetTextSize(0.075);
-   char atext[] = "       ";
+   TMarker marker;
+   TText text;
+   marker.SetMarkerSize(3);
+   text.SetTextFont(62);
+   text.SetTextAlign(22);
+   text.SetTextSize(0.075);
+   TString atext;
    Double_t x = 0;
    Double_t dx = 1/19.0;
    for (Int_t i=1;i<19;i++) {
       x += dx;
-      snprintf(atext,7,"%d",i+49);
-      marker->SetMarkerStyle(i+49);
-      marker->DrawMarker(x,0.19);
-      text->DrawText(x,0.08,atext);
-      snprintf(atext,7,"%d",i+67);
-      marker->SetMarkerStyle(i+67);
-      marker->DrawMarker(x,0.42);
-      text->DrawText(x,0.31,atext);
-      snprintf(atext,7,"%d",i+85);
-      marker->SetMarkerStyle(i+85);
-      marker->DrawMarker(x,0.65);
-      text->DrawText(x,0.54,atext);
-      snprintf(atext,7,"%d",i+103);
-      marker->SetMarkerStyle(i+103);
-      marker->DrawMarker(x,0.88);
-      text->DrawText(x,0.77,atext);
+      atext.Form("%d",i+49);
+      marker.SetMarkerStyle(i+49);
+      marker.DrawMarker(x,0.19);
+      text.DrawText(x,0.08,atext.Data());
+      atext.Form("%d",i+67);
+      marker.SetMarkerStyle(i+67);
+      marker.DrawMarker(x,0.42);
+      text.DrawText(x,0.31,atext.Data());
+      atext.Form("%d",i+85);
+      marker.SetMarkerStyle(i+85);
+      marker.DrawMarker(x,0.65);
+      text.DrawText(x,0.54,atext.Data());
+      atext.Form("%d",i+103);
+      marker.SetMarkerStyle(i+103);
+      marker.DrawMarker(x,0.88);
+      text.DrawText(x,0.77,atext.Data());
    }
-   delete marker;
-   delete text;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +171,7 @@ void TMarker::DisplayMarkerLineWidths()
 
 Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t pxm, pym;
    if (TestBit(kMarkerNDC)) {
       pxm = gPad->UtoPixel(fX);
@@ -186,12 +201,13 @@ void TMarker::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this marker with new coordinates.
 
-void TMarker::DrawMarker(Double_t x, Double_t y)
+TMarker *TMarker::DrawMarker(Double_t x, Double_t y)
 {
    TMarker *newmarker = new TMarker(x, y, 1);
    TAttMarker::Copy(*newmarker);
    newmarker->SetBit(kCanDelete);
    newmarker->AppendPad();
+   return newmarker;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -287,6 +303,7 @@ void TMarker::ls(Option_t *) const
 
 void TMarker::Paint(Option_t *)
 {
+   if (!gPad) return;
    if (TestBit(kMarkerNDC)) {
       Double_t u = gPad->GetX1() + fX*(gPad->GetX2()-gPad->GetX1());
       Double_t v = gPad->GetY1() + fY*(gPad->GetY2()-gPad->GetY1());
@@ -302,7 +319,7 @@ void TMarker::Paint(Option_t *)
 void TMarker::PaintMarker(Double_t x, Double_t y)
 {
    TAttMarker::Modify();  //Change line attributes only if necessary
-   gPad->PaintPolyMarker(-1,&x,&y,"");
+   if (gPad) gPad->PaintPolyMarker(-1,&x,&y,"");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -382,7 +399,8 @@ Rectangle_t TMarker::GetBBox()
 {
    Double_t size = this->GetMarkerSize();
 
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    BBox.fX = gPad->XtoPixel(fX)+(Int_t)(2*size);
    BBox.fY = gPad->YtoPixel(fY)-(Int_t)(2*size);
    BBox.fWidth = 2*size;
@@ -395,7 +413,8 @@ Rectangle_t TMarker::GetBBox()
 
 TPoint TMarker::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));
    return(p);
@@ -406,6 +425,7 @@ TPoint TMarker::GetBBoxCenter()
 
 void TMarker::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    fX = gPad->PixeltoX(p.GetX());
    fY = gPad->PixeltoY(p.GetY() - gPad->VtoPixel(0));
 }
@@ -415,6 +435,7 @@ void TMarker::SetBBoxCenter(const TPoint &p)
 
 void TMarker::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    fX = gPad->PixeltoX(x);
 }
 
@@ -423,6 +444,7 @@ void TMarker::SetBBoxCenterX(const Int_t x)
 
 void TMarker::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    fY = gPad->PixeltoY(y - gPad->VtoPixel(0));
 }
 
@@ -432,6 +454,7 @@ void TMarker::SetBBoxCenterY(const Int_t y)
 
 void TMarker::SetBBoxX1(const Int_t x)
 {
+   if (!gPad) return;
    Double_t size = this->GetMarkerSize();
    fX = gPad->PixeltoX(x + (Int_t)size);
 }
@@ -442,6 +465,7 @@ void TMarker::SetBBoxX1(const Int_t x)
 
 void TMarker::SetBBoxX2(const Int_t x)
 {
+   if (!gPad) return;
    Double_t size = this->GetMarkerSize();
    fX = gPad->PixeltoX(x - (Int_t)size);
 }
@@ -451,6 +475,7 @@ void TMarker::SetBBoxX2(const Int_t x)
 
 void TMarker::SetBBoxY1(const Int_t y)
 {
+   if (!gPad) return;
    Double_t size = this->GetMarkerSize();
    fY = gPad->PixeltoY(y - (Int_t)size - gPad->VtoPixel(0));
 }
@@ -461,6 +486,7 @@ void TMarker::SetBBoxY1(const Int_t y)
 
 void TMarker::SetBBoxY2(const Int_t y)
 {
+   if (!gPad) return;
    Double_t size = this->GetMarkerSize();
    fY = gPad->PixeltoY(y + (Int_t)size - gPad->VtoPixel(0));
 }

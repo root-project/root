@@ -19,24 +19,16 @@
 \class RooDataHistSliceIter
 \ingroup Roofitcore
 
-RooDataHistSliceIter iterates over all bins in a RooDataHist that
-occur in a slice defined by the bin coordinates of the input
-sliceSet.
+Iterates over all bins in a RooDataHist that occur in a slice defined by the
+bin coordinates of the input sliceSet.
 **/
-
-#include "RooFit.h"
 
 #include "RooDataHist.h"
 #include "RooArgSet.h"
 #include "RooAbsLValue.h"
 #include "RooDataHistSliceIter.h"
 
-using namespace std;
-
 ClassImp(RooDataHistSliceIter);
-;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct an iterator over all bins of RooDataHist 'hist' in the slice defined
@@ -44,12 +36,12 @@ ClassImp(RooDataHistSliceIter);
 
 RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceArg) : _hist(&hist), _sliceArg(&sliceArg)
 {
-  // Calculate base index (for 0th bin) for slice    
+  // Calculate base index (for 0th bin) for slice
   RooAbsArg* sliceArgInt = hist.get()->find(sliceArg.GetName()) ;
   dynamic_cast<RooAbsLValue&>(*sliceArgInt).setBin(0) ;
 
-  if (hist._vars.getSize()>1) {
-    _baseIndex = hist.calcTreeIndex() ;  
+  if (hist._vars.size()>1) {
+    _baseIndex = hist.calcTreeIndex(hist._vars, true);
   } else {
     _baseIndex = 0 ;
   }
@@ -65,8 +57,8 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
     if (arg==sliceArgInt) break ;
     i++ ;
   }
-  _stepSize = hist._idxMult[i] ;  
-  _curStep = 0 ;  
+  _stepSize = hist._idxMult[i] ;
+  _curStep = 0 ;
 
 }
 
@@ -75,13 +67,13 @@ RooDataHistSliceIter::RooDataHistSliceIter(RooDataHist& hist, RooAbsArg& sliceAr
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) : 
-  TIterator(other), 
-  _hist(other._hist), 
-  _sliceArg(other._sliceArg),   
+RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) :
+  TIterator(other),
+  _hist(other._hist),
+  _sliceArg(other._sliceArg),
   _baseIndex(other._baseIndex),
   _stepSize(other._stepSize),
-  _nStep(other._nStep), 
+  _nStep(other._nStep),
   _curStep(other._curStep)
 {
 }
@@ -91,7 +83,7 @@ RooDataHistSliceIter::RooDataHistSliceIter(const RooDataHistSliceIter& other) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooDataHistSliceIter::~RooDataHistSliceIter() 
+RooDataHistSliceIter::~RooDataHistSliceIter()
 {
 }
 
@@ -100,9 +92,9 @@ RooDataHistSliceIter::~RooDataHistSliceIter()
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy
 
-const TCollection* RooDataHistSliceIter::GetCollection() const 
+const TCollection* RooDataHistSliceIter::GetCollection() const
 {
-  return 0 ;
+  return nullptr ;
 }
 
 
@@ -111,16 +103,16 @@ const TCollection* RooDataHistSliceIter::GetCollection() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Iterator increment operator
 
-TObject* RooDataHistSliceIter::Next() 
-{  
+TObject* RooDataHistSliceIter::Next()
+{
   if (_curStep==_nStep) {
-    return 0 ;
+    return nullptr ;
   }
-  
-  // Select appropriate entry in RooDataHist 
+
+  // Select appropriate entry in RooDataHist
   _hist->get(_baseIndex + _curStep*_stepSize) ;
 
-  // Increment iterator position 
+  // Increment iterator position
   _curStep++ ;
 
   return _sliceArg ;
@@ -131,7 +123,7 @@ TObject* RooDataHistSliceIter::Next()
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset iterator position to beginning
 
-void RooDataHistSliceIter::Reset() 
+void RooDataHistSliceIter::Reset()
 {
   _curStep=0 ;
 }
@@ -144,7 +136,7 @@ void RooDataHistSliceIter::Reset()
 TObject *RooDataHistSliceIter::operator*() const
 {
    Int_t step = _curStep == 0 ? _curStep : _curStep - 1;
-   // Select appropriate entry in RooDataHist 
+   // Select appropriate entry in RooDataHist
    _hist->get(_baseIndex + step*_stepSize) ;
 
    return _sliceArg ;
@@ -161,6 +153,6 @@ bool RooDataHistSliceIter::operator!=(const TIterator &aIter) const
       const RooDataHistSliceIter &iter(dynamic_cast<const RooDataHistSliceIter &>(aIter));
       return (_curStep != iter._curStep);
    }
-   
+
    return false;
 }

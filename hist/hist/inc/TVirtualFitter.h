@@ -29,20 +29,20 @@
 class TVirtualFitter : public TNamed {
 
 protected:
-   Foption_t              fOption;     //struct with the fit options
-   Int_t                  fXfirst;     //first bin on X axis
-   Int_t                  fXlast;      //last  bin on X axis
-   Int_t                  fYfirst;     //first bin on Y axis
-   Int_t                  fYlast;      //last  bin on Y axis
-   Int_t                  fZfirst;     //first bin on Z axis
-   Int_t                  fZlast;      //last  bin on Z axis
-   Int_t                  fNpoints;    //Number of points to fit
-   Int_t                  fPointSize;  //Number of words per point in the cache
-   Int_t                  fCacheSize;  //Size of the fCache array
-   Double_t              *fCache;      //[fCacheSize] array of points data (fNpoints*fPointSize < fCacheSize words)
-   TObject               *fObjectFit;  //pointer to object being fitted
-   TObject               *fUserFunc;   //pointer to user theoretical function (a TF1*)
-   TMethodCall           *fMethodCall; //Pointer to MethodCall in case of interpreted function
+   Foption_t              fOption;     ///< Struct with the fit options
+   Int_t                  fXfirst;     ///< First bin on X axis
+   Int_t                  fXlast;      ///< Last  bin on X axis
+   Int_t                  fYfirst;     ///< First bin on Y axis
+   Int_t                  fYlast;      ///< Last  bin on Y axis
+   Int_t                  fZfirst;     ///< First bin on Z axis
+   Int_t                  fZlast;      ///< Last  bin on Z axis
+   Int_t                  fNpoints;    ///< Number of points to fit
+   Int_t                  fPointSize;  ///< Number of words per point in the cache
+   Int_t                  fCacheSize;  ///< Size of the fCache array
+   Double_t              *fCache;      ///<[fCacheSize] Array of points data (fNpoints*fPointSize < fCacheSize words)
+   TObject               *fObjectFit;  ///< Pointer to object being fitted
+   TObject               *fUserFunc;   ///< Pointer to user theoretical function (a TF1*)
+   TMethodCall           *fMethodCall; ///< Pointer to MethodCall in case of interpreted function
    void                 (*fFCN)(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t flag);
 
 //   static TVirtualFitter *fgFitter;    //Current fitter (default TFitter)
@@ -57,10 +57,10 @@ protected:
 
 public:
    TVirtualFitter();
-   virtual ~TVirtualFitter();
+   ~TVirtualFitter() override;
    virtual Double_t  Chisquare(Int_t npar, Double_t *params) const  = 0;
 
-   virtual void      Clear(Option_t *option="") = 0;
+   void      Clear(Option_t *option="") override = 0;
    virtual Int_t     ExecuteCommand(const char *command, Double_t *args, Int_t nargs) = 0;
    virtual void      FixParameter(Int_t ipar) = 0;
    virtual void      GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Double_t *ci, Double_t cl=0.95);
@@ -117,7 +117,7 @@ public:
    static void      SetErrorDef(Double_t errdef=1);
    static void      SetPrecision(Double_t prec=1e-6);
 
-   ClassDef(TVirtualFitter,0)  //Abstract interface for fitting
+   ClassDefOverride(TVirtualFitter,0)  //Abstract interface for fitting
 };
 
 #endif

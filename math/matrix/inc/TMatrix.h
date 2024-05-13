@@ -16,7 +16,7 @@
 //                                                                      //
 // TMatrix                                                              //
 //                                                                      //
-//  Instantation of TMatrixT<Float_t>                                   //
+//  Instantiation of TMatrixT<Float_t>                                   //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 

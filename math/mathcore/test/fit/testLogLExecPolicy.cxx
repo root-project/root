@@ -34,7 +34,7 @@ public:
 
    }
 
-   virtual T DoEvalPar(const T *data, const Double_t *p) const
+   T DoEvalPar(const T *data, const Double_t *p) const override
    {
 
       if (data == nullptr) {
@@ -77,17 +77,17 @@ public:
       return f1 + f2;
    }
 
-      virtual ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const {
+      ROOT::Math::IBaseFunctionMultiDimTempl<T> *Clone() const override {
          return new Func<T>(*this); 
       }
-      virtual unsigned int NDim() const { return 1; }
-      virtual unsigned int NPar() const {
+      unsigned int NDim() const override { return 1; }
+      unsigned int NPar() const override {
          return paramSize;
       }
-      virtual const double * Parameters() const {
+      const double * Parameters() const override {
          return params.data(); 
       }
-      virtual void SetParameters(const double * p) {
+      void SetParameters(const double * p) override {
          std::copy(p, p+paramSize, params.begin() );
          ComputeIntegrals(p);
       }
@@ -177,7 +177,7 @@ public:
       fitter.SetFunction(*wfSeq, false);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
-      bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultithread);
+      bool ret = fitter.Fit(*dataSB, false, ROOT::EExecutionPolicy::kMultiThread);
       end =  std::chrono::system_clock::now();
       duration = end - start;
       std::cout << "Time for the parallel test: " << duration.count() << std::endl;
@@ -191,7 +191,7 @@ public:
       fitter.SetFunction(*wfSeq, false);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
-      bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultiprocess);
+      bool ret = fitter.Fit(*dataSB, false, ROOT::EExecutionPolicy::kMultiProcess);
       end =  std::chrono::system_clock::now();
       duration = end - start;
       std::cout << "Time for the multiprocess test:" << duration.count() << std::endl;
@@ -220,7 +220,7 @@ public:
       fitter.SetFunction(*wfVec);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
-      bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultithread);
+      bool ret = fitter.Fit(*dataSB, 0, ROOT::EExecutionPolicy::kMultiThread);
       end =  std::chrono::system_clock::now();
       duration = end - start;
       std::cout << "Time for the parallel+vectorized test: " << duration.count() << std::endl;
@@ -234,7 +234,7 @@ public:
       fitter.SetFunction(*wfVec);
       fitter.Config().ParamsSettings() = paramSettings; 
       start = std::chrono::system_clock::now();
-      bool ret = fitter.Fit(*dataSB, 0, ROOT::Fit::ExecutionPolicy::kMultiprocess);
+      bool ret = fitter.Fit(*dataSB, 0, ROOT::EExecutionPolicy::kMultiProcess);
       end =  std::chrono::system_clock::now();
       duration = end - start;
       std::cout << "Time for the multiprocess+vectorized test:" << duration.count() << std::endl;

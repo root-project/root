@@ -13,7 +13,8 @@
 #define ROOT7_REveTableInfo
 
 #include <ROOT/REveElement.hxx>
-#include <ROOT/REveDataClasses.hxx>
+#include <ROOT/REveDataCollection.hxx>
+#include <ROOT/REveDataTable.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -69,6 +70,10 @@ public:
       return column(label, precision, label);
    }
 
+   void clearColumnDefinitions(){
+      fSpecs[fClassName].clear();
+   }
+
    REveTableHandle(std::string className, Specs_t &specs)
       :fClassName(className), fSpecs(specs)
    {
@@ -93,7 +98,7 @@ public:
    void SetDisplayedCollection(ElementId_t);
    ElementId_t GetDisplayedCollection() const  { return fDisplayedCollection; }
 
-   void AddNewColumnToCurrentCollection(const std::string& expr, const std::string& title, int prec = 2);
+   void AddNewColumnToCurrentCollection(const char* expr, const char* title, int prec = 2);
 
    void AddDelegate(Delegate_t d) { fDelegates.push_back(d); }
 
@@ -111,7 +116,7 @@ public:
 
    bool GetConfigChanged() const { return fConfigChanged; }
 
-
+   REveTableHandle::Specs_t& RefSpecs() { return fSpecs; }
 private:
    int fDisplayedCollection{0};
    std::vector<Delegate_t> fDelegates;

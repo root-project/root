@@ -37,53 +37,110 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#if (defined(__linux) || defined(__APPLE__)) && \
+#include <cstdint>
+
+#ifndef R__USEASMSWAP
+#if (defined(__linux) || defined(__APPLE__)) &&   \
     (defined(__i386__) || defined(__x86_64__)) && \
     (defined(__GNUC__))
-#ifndef R__USEASMSWAP
-#define R__USEASMSWAP
+# define R__USEASMSWAP
 #endif
+
+#if defined(_WIN32) && (_MSC_VER >= 1300)
+# include <stdlib.h>
+# pragma intrinsic(_byteswap_ushort,_byteswap_ulong,_byteswap_uint64)
+# define R__USEASMSWAP
 #endif
+#endif /* R__USEASMSWAP */
 
 /* Swap bytes in 16 bit value.  */
 #define R__bswap_constant_16(x) \
      ((((x) >> 8) & 0xff) | (((x) & 0xff) << 8))
 
-#if defined R__USEASMSWAP
-# define R__bswap_16(x) __builtin_bswap16(x)
+#if defined(R__USEASMSWAP)
+# if defined(__GNUC__)
+#  define R__bswap_16(x) __builtin_bswap16(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_16(x) _byteswap_ushort(x)
+# endif
 #else
-# define R__bswap_16(x) R__bswap_constant_16 (x)
+# define R__bswap_16(x) R__bswap_constant_16(x)
 #endif
-
 
 /* Swap bytes in 32 bit value.  */
 #define R__bswap_constant_32(x) \
      ((((x) & 0xff000000) >> 24) | (((x) & 0x00ff0000) >>  8) |               \
       (((x) & 0x0000ff00) <<  8) | (((x) & 0x000000ff) << 24))
 
-#if defined R__USEASMSWAP
-# define R__bswap_32(x) __builtin_bswap32(x)
+#if defined(R__USEASMSWAP)
+# if defined(__GNUC__)
+#  define R__bswap_32(x) __builtin_bswap32(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_32(x) _byteswap_ulong(x)
+# endif
 #else
-# define R__bswap_32(x) R__bswap_constant_32 (x)
+# define R__bswap_32(x) R__bswap_constant_32(x)
+#endif
+
+/* Swap bytes in 64 bit value.  */
+static inline uint64_t R__bswap_constant_64(uint64_t x) {
+   x = ((x & 0x00000000ffffffff) << 32) | ((x & 0xffffffff00000000) >> 32);
+   x = ((x & 0x0000ffff0000ffff) << 16) | ((x & 0xffff0000ffff0000) >> 16);
+   x = ((x & 0x00ff00ff00ff00ff) <<  8) | ((x & 0xff00ff00ff00ff00) >>  8);
+   return x;
+}
+
+#if defined(R__USEASMSWAP)
+# if defined(__GNUC__)
+#  define R__bswap_64(x) __builtin_bswap64(x)
+# elif defined(_MSC_VER)
+#  define R__bswap_64(x) _byteswap_uint64(x)
+# endif
+#else
+# define R__bswap_64(x) R__bswap_constant_64(x)
 #endif
 
 
 /* Return a value with all bytes in the 16 bit argument swapped.  */
-#define Rbswap_16(x) R__bswap_16 (x)
+#define Rbswap_16(x) R__bswap_16(x)
 
 /* Return a value with all bytes in the 32 bit argument swapped.  */
-#define Rbswap_32(x) R__bswap_32 (x)
+#define Rbswap_32(x) R__bswap_32(x)
 
 /* Return a value with all bytes in the 64 bit argument swapped.  */
+#define Rbswap_64(x) R__bswap_64(x)
 
-/* For reasons that were lost to history, Rbswap_64 used to only
- * be defined wherever GNUC was available.  To simplify the macro
- * definitions, we extend this to wherever we can use the gcc-like
- * builtins.
- *    -- Brian Bockelman, August 2018
- */
-#ifdef R__USEASMSWAP
-# define Rbswap_64(x) __builtin_bswap64(x)
-#endif
+/// \brief Helper templated class for swapping bytes; specializations for `N={2,4,8}`
+/// are provided below.  This class can be used to byteswap any other type, e.g. in a
+/// templated function (see example below).
+/// ```
+/// template <typename T>
+/// void byteswap_arg(T &x) {
+///    using value_type = typename RByteSwap<sizeof(T)>::value_type;
+///    x = RByteSwap<sizeof(T)>::bswap(reinterpret_cast<value_type>(x));
+/// }
+/// ```
+template <unsigned N>
+struct RByteSwap {
+};
+
+template <>
+struct RByteSwap<2> {
+   // Signed integers can be safely byteswapped if they are reinterpret_cast'ed to unsigned
+   using value_type = std::uint16_t;
+   static value_type bswap(value_type x) { return Rbswap_16(x); }
+};
+
+template <>
+struct RByteSwap<4> {
+   using value_type = std::uint32_t;
+   static value_type bswap(value_type x) { return Rbswap_32(x); }
+};
+
+template <>
+struct RByteSwap<8> {
+   using value_type = std::uint64_t;
+   static value_type bswap(value_type x) { return Rbswap_64(x); }
+};
 
 #endif /* Byteswap.h */

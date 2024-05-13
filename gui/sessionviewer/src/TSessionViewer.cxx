@@ -9,14 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TSessionViewer                                                       //
-//                                                                      //
-// Widget used to manage PROOF or local sessions, PROOF connections,    //
-// queries construction and results handling.                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TSessionViewer
+    \ingroup sessionviewer
+
+Widget used to manage PROOF or local sessions, PROOF connections,
+queries construction and results handling.
+
+*/
+
 
 #include "TApplication.h"
 #include "TROOT.h"
@@ -801,7 +802,7 @@ void TSessionServerFrame::Update(TSessionDescription* desc)
 /// Process messages for session server frame.
 /// Used to navigate between text entry fields.
 
-Bool_t TSessionServerFrame::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TSessionServerFrame::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    switch (GET_MSG(msg)) {
       case kC_TEXTENTRY:
@@ -3544,7 +3545,7 @@ void TSessionOutputFrame::OnElementDblClicked(TGLVEntry* entry, Int_t , Int_t, I
    gPad->SetEditable(kFALSE);
    // check default action from root.mimes
    if (fClient->GetMimeTypeList()->GetAction(obj->IsA()->GetName(), action)) {
-      act = TString::Format("((%s*)0x%lx)%s", obj->IsA()->GetName(), (Long_t)obj, action);
+      act = TString::Format("((%s*)0x%zx)%s", obj->IsA()->GetName(), (size_t)obj, action);
       if (act[0] == '!') {
          act.Remove(0, 1);
          gSystem->Exec(act.Data());
@@ -5623,7 +5624,7 @@ void TSessionViewer::OnCascadeMenu()
 /// Handle messages send to the TSessionViewer object. E.g. all menu entries
 /// messages.
 
-Bool_t TSessionViewer::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TSessionViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    TNewQueryDlg *dlg;
 

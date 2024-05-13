@@ -11,11 +11,11 @@
 ## \author Stefan Wunsch
 
 import ROOT
-from ROOT.VecOps import RVec, Argsort, Take, Sort, Reverse
+from ROOT.VecOps import Argsort, Take, Sort, Reverse
 
 # RVec can be sorted in Python with the inbuilt sorting function because
 # PyROOT implements a Python iterator
-v1 = RVec("double")(3)
+v1 = ROOT.RVecD(3)
 v1[0], v1[1], v1[2] = 6, 4, 5
 v2 = sorted(v1)
 print("Sort vector {}: {}".format(v1, v2))
@@ -34,7 +34,7 @@ print("Reverse vector {}: {}".format(v1, v2))
 v2 = Argsort(v1)
 print("Indices that sort the vector {}: {}".format(v1, v2))
 
-v3 = RVec("double")(3)
+v3 = ROOT.RVecD(3)
 v3[0], v3[1], v3[2] = 9, 7, 8
 v4 = Take(v3, v2)
 print("Sort vector {} respective to the previously determined indices: {}".format(v3, v4))

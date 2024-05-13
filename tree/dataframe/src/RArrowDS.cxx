@@ -17,7 +17,7 @@ The RArrowDS implements a proxy RDataSource to be able to use Apache Arrow
 tables with RDataFrame.
 
 A RDataFrame that adapts an arrow::Table class can be constructed using the factory method
-ROOT::RDF::MakeArrowDataFrame, which accepts one parameter:
+ROOT::RDF::FromArrow, which accepts one parameter:
 1. An arrow::Table smart pointer.
 
 The types of the columns are derived from the types in the associated
@@ -29,10 +29,10 @@ arrow::Schema.
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RArrowDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
 #include <snprintf.h>
 
 #include <algorithm>
+#include <memory>
 #include <sstream>
 #include <string>
 
@@ -51,7 +51,7 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-// This is needed by Arrow 0.12.0 which dropped 
+// This is needed by Arrow 0.12.0 which dropped
 //
 //      using ArrowType = ArrowType_;
 //
@@ -115,58 +115,58 @@ public:
    void SetEntry(ULong64_t entry) { fCurrentEntry = entry; }
 
    /// Check if we are asking the same entry as before.
-   virtual arrow::Status Visit(arrow::Int32Array const &array) final
+   arrow::Status Visit(arrow::Int32Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::Int64Array const &array) final
+   arrow::Status Visit(arrow::Int64Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
    /// Check if we are asking the same entry as before.
-   virtual arrow::Status Visit(arrow::UInt32Array const &array) final
+   arrow::Status Visit(arrow::UInt32Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::UInt64Array const &array) final
+   arrow::Status Visit(arrow::UInt64Array const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::FloatArray const &array) final
+   arrow::Status Visit(arrow::FloatArray const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::DoubleArray const &array) final
+   arrow::Status Visit(arrow::DoubleArray const &array) final
    {
       *fResult = (void *)(array.raw_values() + fCurrentEntry);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::BooleanArray const &array) final
+   arrow::Status Visit(arrow::BooleanArray const &array) final
    {
       fCachedBool = array.Value(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedBool);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::StringArray const &array) final
+   arrow::Status Visit(arrow::StringArray const &array) final
    {
       fCachedString = array.GetString(fCurrentEntry);
       *fResult = reinterpret_cast<void *>(&fCachedString);
       return arrow::Status::OK();
    }
 
-   virtual arrow::Status Visit(arrow::ListArray const &array) final
+   arrow::Status Visit(arrow::ListArray const &array) final
    {
       switch (array.value_type()->id()) {
       case arrow::Type::FLOAT: {
@@ -367,15 +367,15 @@ public:
 class VerifyValidColumnType : public ::arrow::TypeVisitor {
 private:
 public:
-   virtual arrow::Status Visit(const arrow::Int64Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::UInt64Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::Int32Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::UInt32Type &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::FloatType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
-   virtual arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::Int64Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::UInt64Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::Int32Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::UInt32Type &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::FloatType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::DoubleType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::StringType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::BooleanType &) override { return arrow::Status::OK(); }
+   arrow::Status Visit(const arrow::ListType &) override { return arrow::Status::OK(); }
 
    using ::arrow::TypeVisitor::Visit;
 };
@@ -586,7 +586,7 @@ std::vector<void *> RArrowDS::GetColumnReadersImpl(std::string_view colName, con
    return fValueGetters[getterIdx]->SlotPtrs();
 }
 
-void RArrowDS::Initialise()
+void RArrowDS::Initialize()
 {
    auto nRecords = getNRecords(fTable, fColumnNames);
    splitInEqualRanges(fEntryRanges, nRecords, fNSlots);
@@ -597,11 +597,13 @@ std::string RArrowDS::GetLabel()
    return "ArrowDS";
 }
 
+/// \brief Factory method to create a Apache Arrow RDataFrame.
+///
 /// Creates a RDataFrame using an arrow::Table as input.
-/// \param[in] table the arrow Table to observe.
+/// \param[in] table an apache::arrow table to use as a source / to observe.
 /// \param[in] columnNames the name of the columns to use
 /// In case columnNames is empty, we use all the columns found in the table
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
+RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
 {
    ROOT::RDataFrame tdf(std::make_unique<RArrowDS>(table, columnNames));
    return tdf;

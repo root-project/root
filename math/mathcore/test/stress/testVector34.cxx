@@ -22,7 +22,7 @@ protected:
    typedef SVector<double, T::GetDim()> SV_t;
    std::vector<SV_t> fV1;
 
-   virtual void SetUp()
+   void SetUp() override
    {
       fVectorTest.GenData();
       fV1.reserve(fNGen);

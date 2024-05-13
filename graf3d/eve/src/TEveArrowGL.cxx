@@ -28,7 +28,7 @@ ClassImp(TEveArrowGL);
 /// Constructor.
 
 TEveArrowGL::TEveArrowGL() :
-   TGLObject(), fM(0)
+   TGLObject(), fM(nullptr)
 {
 }
 

@@ -1,19 +1,23 @@
 // Test for RooBernstein
 // Authors: Rahul Balasubramanian, CERN  05/2020
 
-#include "RooRealVar.h"
-#include "RooNumIntConfig.h"
-#include "RooBernstein.h"
-#include "TMath.h"
-#include "RooPlot.h"
-#include "TAxis.h"
+#include <RooBernstein.h>
+#include <RooHelpers.h>
+#include <RooNumIntConfig.h>
+#include <RooPlot.h>
+#include <RooRealVar.h>
 
-#include "gtest/gtest.h"
+#include <TAxis.h>
+#include <TMath.h>
+
+#include <gtest/gtest.h>
 
 using namespace RooFit;
 
 void IntegrationChecker(double a0, double a1, double a2, double a3)
 {
+  RooHelpers::LocalChangeMsgLevel changeMsgLevel{RooFit::WARNING};
+
   RooRealVar x("x", "x", 0., 100.);
 
   // Set ranges for the variable
@@ -32,8 +36,8 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
   RooBernstein bern("bern", "bernstein PDF", x, RooArgList(c0, c1, c2, c3));
   RooBernstein bernNumInt(bern);
   // Set normalization range
-  bern.selectNormalizationRange("FULL",kTRUE);
-  bernNumInt.selectNormalizationRange("FULL",kTRUE);
+  bern.selectNormalizationRange("FULL",true);
+  bernNumInt.selectNormalizationRange("FULL",true);
 
   RooNumIntConfig intConfig(*RooAbsReal::defaultIntegratorConfig());
   intConfig.setEpsAbs(1.E-15);
@@ -44,27 +48,27 @@ void IntegrationChecker(double a0, double a1, double a2, double a3)
   bernNumInt.forceNumInt(true);
 
   // Test ranged integration
-  auto int_range1 = bern.createIntegral(x, "range1");
-  auto int_range2 = bern.createIntegral(x, "range2");
-  auto int_range3 = bern.createIntegral(x, "range3");
-  auto int_full = bern.createIntegral(x, "FULL");
+  std::unique_ptr<RooAbsReal> int_range1{bern.createIntegral(x, "range1")};
+  std::unique_ptr<RooAbsReal> int_range2{bern.createIntegral(x, "range2")};
+  std::unique_ptr<RooAbsReal> int_range3{bern.createIntegral(x, "range3")};
+  std::unique_ptr<RooAbsReal> int_full{bern.createIntegral(x, "FULL")};
 
-  auto numInt_range1 = bern.createIntegral(x, "range1");
-  auto numInt_range2 = bern.createIntegral(x, "range2");
-  auto numInt_range3 = bern.createIntegral(x, "range3");
-  auto numInt_full = bern.createIntegral(x, "FULL");
+  std::unique_ptr<RooAbsReal> numInt_range1{bern.createIntegral(x, "range1")};
+  std::unique_ptr<RooAbsReal> numInt_range2{bern.createIntegral(x, "range2")};
+  std::unique_ptr<RooAbsReal> numInt_range3{bern.createIntegral(x, "range3")};
+  std::unique_ptr<RooAbsReal> numInt_full{bern.createIntegral(x, "FULL")};
 
   // closure
-  EXPECT_LT(fabs(int_full->getVal() - int_range1->getVal() - int_range2->getVal() - int_range3->getVal()), 1e-10);
-  EXPECT_LT(fabs(numInt_full->getVal() - numInt_range1->getVal() - numInt_range2->getVal() - numInt_range3->getVal()), 1e-10);
+  EXPECT_LT(std::abs(int_full->getVal() - int_range1->getVal() - int_range2->getVal() - int_range3->getVal()), 1e-10);
+  EXPECT_LT(std::abs(numInt_full->getVal() - numInt_range1->getVal() - numInt_range2->getVal() - numInt_range3->getVal()), 1e-10);
 
-  // comparision with polynomial
+  // Comparison with polynomial
   double accAnaVsNum = 1.;
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range1->getVal())
   << "Analytical vs numerical integral"
   << " within " << accAnaVsNum << "%. ";
-  
+
   EXPECT_NEAR(int_range1->getVal(), numInt_range1->getVal(),
       accAnaVsNum/100.*numInt_range2->getVal())
   << "Analytical vs numerical integral"

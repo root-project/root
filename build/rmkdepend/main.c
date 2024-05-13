@@ -149,9 +149,7 @@ extern int find_includes(struct filepointer *filep, struct inclist *file,
 extern void recursive_pr_include(struct inclist *head, char *file, char *base, char *dep);
 extern void inc_clean();
 
-int main_orig(argc, argv)
-int argc;
-char **argv;
+int main_orig(int argc, char **argv)
 {
    register char **fp = filelist;
    register char  **tp = targetlist;
@@ -521,8 +519,7 @@ static int elim_cr(char *buf, int sz)
 }
 #endif
 
-struct filepointer *getfile(file)
-         char *file;
+struct filepointer *getfile(char *file)
 {
    register int fd;
    struct filepointer *content;
@@ -553,16 +550,13 @@ struct filepointer *getfile(file)
    return(content);
 }
 
-void
-freefile(fp)
-struct filepointer *fp;
+void freefile(struct filepointer *fp)
 {
    free(fp->f_base);
    free(fp);
 }
 
-char *copy(str)
-register char *str;
+char *copy(register char *str)
 {
    register char *p = (char *)malloc(strlen(str) + 1);
 
@@ -570,8 +564,7 @@ register char *str;
    return(p);
 }
 
-int match(str, list)
-register char *str, **list;
+int match(register char *str, register char **list)
 {
    register int i;
 
@@ -585,8 +578,7 @@ register char *str, **list;
  * Get the next line.  We only return lines beginning with '#' since that
  * is all this program is ever interested in.
  */
-char *rgetline(filep)
-register struct filepointer *filep;
+char *rgetline(register struct filepointer *filep)
 {
    register char *p, /* walking pointer */
    *eof, /* end of file pointer */
@@ -651,8 +643,7 @@ done:
  * Strip the file name down to what we want to see in the Makefile.
  * It will have objprefix and objsuffix around it.
  */
-char *base_name(file)
-register char *file;
+char *base_name(register char *file)
 {
    register char *p;
 
@@ -678,10 +669,7 @@ char *from, *to;
 }
 #endif /* USGISH */
 
-void
-redirect(line, makefile)
-char *line,
-*makefile;
+void redirect(char *line, char *makefile)
 {
    struct stat st;
    FILE *fdin = 0, *fdout = 0;

@@ -36,17 +36,17 @@ protected:
 
 public:
    TEveDigitSetGL();
-   virtual ~TEveDigitSetGL() {}
+   ~TEveDigitSetGL() override {}
 
-   virtual void   SetBBox();
+   void   SetBBox() override;
 
-   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const;
+   void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const override;
 
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual Bool_t AlwaysSecondarySelect()   const { return ((TEveDigitSet*)fExternalObj)->GetAlwaysSecSelect(); }
-   virtual void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec);
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   Bool_t AlwaysSecondarySelect()   const override { return ((TEveDigitSet*)fExternalObj)->GetAlwaysSecSelect(); }
+   void   ProcessSelection(TGLRnrCtx& rnrCtx, TGLSelectRecord& rec) override;
 
-   ClassDef(TEveDigitSetGL, 0); // GL renderer class for TEveDigitSet.
+   ClassDefOverride(TEveDigitSetGL, 0); // GL renderer class for TEveDigitSet.
 };
 
 #endif

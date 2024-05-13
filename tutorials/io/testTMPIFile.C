@@ -15,14 +15,10 @@
 
 #include "TMPIFile.h"
 
-R__LOAD_LIBRARY(RMPI)  // Work around autoloading issue when ROOT modules are enabled 
-
 #ifdef TMPI_SECOND_RUN
 
 #include <chrono>
 #include <sstream>
-
-R__LOAD_LIBRARY(JetEvent_cxx)
 
 /* ---------------------------------------------------------------------------
 
@@ -217,11 +213,11 @@ void testTMPIFile()
    }
    // Wait until it's done
    MPI_Barrier(MPI_COMM_WORLD);
-   
+
    gROOT->ProcessLine("#define TMPI_SECOND_RUN yes");
    gROOT->ProcessLine("#include \"" __FILE__ "\"");
    gROOT->ProcessLine("testTMPIFile(true)");
-   
+
    // TMPIFile will do MPI_Finalize() when closing the file
    Int_t finalized = 0;
    MPI_Finalized(&finalized);

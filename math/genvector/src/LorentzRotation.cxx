@@ -218,7 +218,7 @@ LorentzRotation LorentzRotation::operator * (const LorentzRotation & r) const {
 
 std::ostream & operator<< (std::ostream & os, const LorentzRotation & r) {
    // TODO - this will need changing for machine-readable issues
-   //        and even the human readable form needs formatiing improvements
+   //        and even the human readable form needs formatting improvements
    double m[16];
    r.GetComponents(m, m+16);
    os << "\n" << m[0]  << "  " << m[1]  << "  " << m[2]  << "  " << m[3];

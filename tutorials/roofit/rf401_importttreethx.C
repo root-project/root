@@ -1,16 +1,14 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -nodraw
-///
-///
-/// \brief Data and categories: advanced options for importing data from ROOT TTree and THx histograms
+/// Data and categories: advanced options for importing data from ROOT TTree and THx histograms
 ///
 /// Basic import options are demonstrated in rf102_dataimport.C
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
@@ -18,7 +16,6 @@
 #include "RooDataHist.h"
 #include "RooCategory.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -29,7 +26,7 @@
 
 using namespace RooFit;
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma);
+TH1 *makeTH1(const char *name, double mean, double sigma);
 TTree *makeTTree();
 
 void rf401_importttreethx()
@@ -100,18 +97,18 @@ void rf401_importttreethx()
    // ----------------------------------------------------------------------------------------
 
    // Create three RooDataSets in (y,z)
-   RooDataSet *dsA = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z<-5");
-   RooDataSet *dsB = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "abs(z)<5");
-   RooDataSet *dsC = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z>5");
+   std::unique_ptr<RooAbsData> dsA{ds2.reduce({x, y}, "z<-5")};
+   std::unique_ptr<RooAbsData> dsB{ds2.reduce({x, y}, "abs(z)<5")};
+   std::unique_ptr<RooAbsData> dsC{ds2.reduce({x, y}, "z>5")};
 
    // Create a dataset that imports contents of all the above datasets mapped by index category c
-   RooDataSet *dsABC = new RooDataSet("dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
-                                      Import("SampleB", *dsB), Import("SampleC", *dsC));
+   RooDataSet dsABC{"dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
+                    Import("SampleB", *dsB), Import("SampleC", *dsC)};
 
-   dsABC->Print();
+   dsABC.Print();
 }
 
-TH1 *makeTH1(const char *name, Double_t mean, Double_t sigma)
+TH1 *makeTH1(const char *name, double mean, double sigma)
 {
    // Create ROOT TH1 filled with a Gaussian distribution
 
@@ -127,9 +124,9 @@ TTree *makeTTree()
    // Create ROOT TTree filled with a Gaussian distribution in x and a uniform distribution in y
 
    TTree *tree = new TTree("tree", "tree");
-   Double_t *px = new Double_t;
-   Double_t *py = new Double_t;
-   Double_t *pz = new Double_t;
+   double *px = new double;
+   double *py = new double;
+   double *pz = new double;
    Int_t *pi = new Int_t;
    tree->Branch("x", px, "x/D");
    tree->Branch("y", py, "y/D");

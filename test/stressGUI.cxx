@@ -307,10 +307,6 @@ void stressGUI()
          TString sp = gSystem->GetFromPipe("uname -a");
          sp.Resize(60);
          printf("*  SYS: %s\n",sp.Data());
-         if (strstr(gSystem->GetBuildNode(),"Linux")) {
-            sp = gSystem->GetFromPipe("lsb_release -d -s");
-            printf("*  SYS: %s\n",sp.Data());
-         }
          if (strstr(gSystem->GetBuildNode(),"Darwin")) {
             sp  = gSystem->GetFromPipe("sw_vers -productVersion");
             sp += " Mac OS X ";
@@ -2185,7 +2181,7 @@ void testSplitFrame()
    first->GetFirst()->VSplit();
    first->GetSecond()->VSplit();
    first->GetSecond()->GetSecond()->SetEditable();
-   new TGTextEditor("stressGUI.cxx", gClient->GetRoot());
+   new TGTextEditor(Form("%s/test/stressGUI.cxx", gRootSys.Data()), gClient->GetRoot());
    first->GetSecond()->GetSecond()->SetEditable(kFALSE);
    mf->MapSubwindows();
    mf->Resize(600, 400);
@@ -2262,7 +2258,7 @@ void testPaletteEditor()
    if (!gSystem->AccessPathName(fname)) {
       gal = TFile::Open(fname);
    } else {
-      gal = TFile::Open(Form("http://root.cern.ch/files/%s",fname));
+      gal = TFile::Open(Form("http://root.cern/files/%s",fname));
    }
    if (!gal) return;
    TImage *img = (TImage*)gal->Get("n4254");
@@ -2282,9 +2278,9 @@ void testPaletteEditor()
 
 void testHtmlBrowser()
 {
-   TGHtmlBrowser *b = new TGHtmlBrowser("http://bellenot.web.cern.ch/bellenot/Public/html_test/html_test.html");
+   TGHtmlBrowser *b = new TGHtmlBrowser("https://bellenot.web.cern.ch/public/html_test/html_test.html");
    ProcessFrame((TGMainFrame*)b, "HTML Browser 1");
-   b->Selected("http://bellenot.web.cern.ch/bellenot/Public/html_test/gallery/");
+   b->Selected("https://bellenot.web.cern.ch/public/html_test/gallery/");
    ProcessFrame((TGMainFrame*)b, "HTML Browser 2");
    b->CloseWindow();
 }
@@ -2416,7 +2412,7 @@ void guitest_playback()
       gSystem->Unlink(TString::Format("%s/guitest%03d.C", dir.Data(), i+1));
    }
    TStopwatch sw;
-   ret = r.Replay("http://root.cern.ch/files/guitest_playback.root");
+   ret = r.Replay("http://root.cern/files/guitest_playback.root");
 
    // wait for the recorder to finish the replay
    while (ret && r.GetState() == TRecorder::kReplaying) {
@@ -2557,7 +2553,7 @@ void graph_edit_playback()
    gSystem->ChangeDirectory(dir.Data());
 
    TStopwatch sw;
-   ret = r.Replay("http://root.cern.ch/files/graphedit_playback.root");
+   ret = r.Replay("http://root.cern/files/graphedit_playback.root");
 
    // wait for the recorder to finish the replay
    while (ret && r.GetState() == TRecorder::kReplaying) {
@@ -2592,7 +2588,7 @@ void fitpanel_playback()
    gSystem->ChangeDirectory(dir.Data());
 
    TStopwatch sw;
-   ret = r.Replay("http://root.cern.ch/files/fitpanel_playback.root");
+   ret = r.Replay("http://root.cern/files/fitpanel_playback.root");
 
    // wait for the recorder to finish the replay
    while (ret && r.GetState() == TRecorder::kReplaying) {

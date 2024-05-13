@@ -55,7 +55,7 @@ TGLPolyMarker::TGLPolyMarker(const TBuffer3D & buffer) :
 void TGLPolyMarker::DirectDraw(TGLRnrCtx & rnrCtx) const
 {
    if (gDebug > 4) {
-      Info("TGLPolyMarker::DirectDraw", "this %ld (class %s) LOD %d", (Long_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
+      Info("TGLPolyMarker::DirectDraw", "this %zd (class %s) LOD %d", (size_t)this, IsA()->GetName(), rnrCtx.ShapeLOD());
    }
 
    if (rnrCtx.DrawPass() == TGLRnrCtx::kPassOutlineLine)

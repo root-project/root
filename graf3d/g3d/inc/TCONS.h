@@ -30,19 +30,19 @@ protected:
    Float_t fRmin2;        // inside radius at the high z limit
    Float_t fRmax2;        // outside radius at the high z limit
 
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
 public:
    TCONS();
    TCONS(const char *name, const char *title, const char *material, Float_t dz, Float_t rmin1, Float_t rmax1,
          Float_t rmin2, Float_t rmax2, Float_t phi1, Float_t phi2);
    TCONS(const char *name, const char *title, const char *material, Float_t rmax1, Float_t dz
                           , Float_t phi1, Float_t phi2, Float_t rmax2 = 0);
-   virtual ~TCONS();
+   ~TCONS() override;
 
    virtual Float_t GetRmin2() const {return fRmin2;}
    virtual Float_t GetRmax2() const {return fRmax2;}
 
-   ClassDef(TCONS,1)  //CONS shape
+   ClassDefOverride(TCONS,1)  //CONS shape
 };
 
 #endif

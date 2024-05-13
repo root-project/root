@@ -1,13 +1,13 @@
 /// \file
 /// \ingroup tutorial_roostats
 /// \notebook -js
-/// \brief Demonstrate Z_Bi = Z_Gamma
+/// Demonstrate Z_Bi = Z_Gamma
 ///
 /// \macro_image
 /// \macro_output
 /// \macro_code
 ///
-/// \author Kyle Cranmer & Wouter Verkerke
+/// \authors Kyle Cranmer, Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
@@ -25,7 +25,7 @@ void Zbi_Zgamma()
    // Make model for prototype on/off problem
    // Pois(x | s+b) * Pois(y | tau b )
    // for Z_Gamma, use uniform prior on b.
-   RooWorkspace *w1 = new RooWorkspace("w", true);
+   RooWorkspace *w1 = new RooWorkspace("w");
    w1->factory("Poisson::px(x[150,0,500],sum::splusb(s[0,0,100],b[100,0,300]))");
    w1->factory("Poisson::py(y[100,0,500],prod::taub(tau[1.],b))");
    w1->factory("Uniform::prior_b(b)");
@@ -47,7 +47,7 @@ void Zbi_Zgamma()
    // numeric RooFit Z_Gamma
    w1->var("y")->setVal(100);
    w1->var("x")->setVal(150);
-   RooAbsReal *cdf = w1->pdf("averagedModel")->createCdf(*w1->var("x"));
+   std::unique_ptr<RooAbsReal> cdf{w1->pdf("averagedModel")->createCdf(*w1->var("x"))};
    cdf->getVal(); // get ugly print messages out of the way
 
    cout << "Hybrid p-value = " << cdf->getVal() << endl;

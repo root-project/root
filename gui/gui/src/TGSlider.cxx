@@ -20,31 +20,46 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGSlider, TGVSlider and TGHSlider                                    //
-//                                                                      //
-// Slider widgets allow easy selection of a range.                      //
-// Sliders can be either horizontal or vertical oriented and there is   //
-// a choice of two different slider types and three different types     //
-// of tick marks.                                                       //
-//                                                                      //
-// TGSlider is an abstract base class. Use the concrete TGVSlider and   //
-// TGHSlider.                                                           //
-//                                                                      //
-// Dragging the slider will generate the event:                         //
-// kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)      //
-// kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)    //
-//                                                                      //
-// Pressing the mouse will generate the event:                          //
-// kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)           //
-// kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)         //
-//                                                                      //
-// Releasing the mouse will generate the event:                         //
-// kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)         //
-// kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGSlider
+    \ingroup guiwidgets
+
+Slider widgets allow easy selection of a range.
+Sliders can be either horizontal or vertical oriented and there is
+a choice of two different slider types and three different types
+of tick marks.
+
+TGSlider is an abstract base class. Use the concrete TGVSlider and
+TGHSlider.
+
+\class TGVSlider
+\ingroup guiwidgets
+Concrete class for vertical slider.
+
+Dragging the slider will generate the event:
+  - kC_VSLIDER, kSL_POS, slider id, position  (for vertical slider)
+
+Pressing the mouse will generate the event:
+  - kC_VSLIDER, kSL_PRESS, slider id, 0  (for vertical slider)
+
+Releasing the mouse will generate the event:
+  - kC_VSLIDER, kSL_RELEASE, slider id, 0  (for vertical slider)
+
+\class TGHSlider
+\ingroup guiwidgets
+Concrete class for horizontal slider.
+
+Dragging the slider will generate the event:
+  - kC_HSLIDER, kSL_POS, slider id, position  (for horizontal slider)
+
+Pressing the mouse will generate the event:
+  - kC_HSLIDER, kSL_PRESS, slider id, 0  (for horizontal slider)
+
+Releasing the mouse will generate the event:
+  - kC_HSLIDER, kSL_RELEASE, slider id, 0  (for horizontal slider)
+
+*/
+
 
 #include "TGSlider.h"
 #include "TGPicture.h"
@@ -63,7 +78,7 @@ ClassImp(TGHSlider);
 /// Slider constructor.
 
 TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
-                   UInt_t options, ULong_t back)
+                   UInt_t options, Pixel_t back)
    : TGFrame(p, w, h, options, back)
 {
    fDisabledPic = 0;
@@ -76,7 +91,38 @@ TGSlider::TGSlider(const TGWindow *p, UInt_t w, UInt_t h, UInt_t type, Int_t id,
    fDragging = kFALSE;
    fPos = fRelPos = 0;
    fVmax = fVmin = 0;
-   fSliderPic = 0;
+   fSliderPic = nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider range
+void  TGSlider::SetRange(Int_t min, Int_t max)
+{
+   if (max > min) {
+      fVmin = min;
+      fVmax = max;
+   } else
+      Warning("SetRange", "Incorrect range boundaries [%d,%d]", min, max);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set slider position
+void  TGSlider::SetPosition(Int_t pos)
+{
+   if ((pos >= fVmin) && (pos <= fVmax)) {
+      fPos = pos;
+      fClient->NeedRedraw(this);
+   } else
+      Warning("SetPosition", "The position (%d) is out of range [%d,%d]", pos, fVmin, fVmax);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Change slider picture
+void TGSlider::ChangeSliderPic(const char *name)
+{
+   if (fSliderPic)
+      fClient->FreePicture(fSliderPic);
+   fSliderPic = fClient->GetPicture(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

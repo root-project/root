@@ -32,7 +32,7 @@ class TFitResult;
 class TFitResultPtr {
 public:
 
-   TFitResultPtr(int status = -1): fStatus(status), fPointer(0) {};
+   TFitResultPtr(int status = -1): fStatus(status), fPointer(nullptr) {}
 
    TFitResultPtr(const std::shared_ptr<TFitResult> & p);
 
@@ -54,8 +54,8 @@ public:
 
 private:
 
-   int fStatus;                            // fit status code
-   std::shared_ptr<TFitResult>  fPointer;  //! Smart Pointer to TFitResult class
+   int fStatus;                            ///< fit status code
+   std::shared_ptr<TFitResult>  fPointer;  ///<! Smart Pointer to TFitResult class
 
    ClassDef(TFitResultPtr,2)  //indirection to TFitResult
 };

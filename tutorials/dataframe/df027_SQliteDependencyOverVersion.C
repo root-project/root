@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -jss
-/// \brief Plot the ROOT downloads based on the version reading a remote sqlite3 file.
+/// Plot the ROOT downloads based on the version reading a remote sqlite3 file.
 ///
 /// This tutorial uses the Reduce method which allows to extract the minimum time
 /// stored in the SQlite3 database.
@@ -17,7 +17,7 @@
 
 void df027_SQliteDependencyOverVersion () {
 
-   auto rdfb = ROOT::RDF::MakeSqliteDataFrame("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;" );
+   auto rdfb = ROOT::RDF::FromSqlite("http://root.cern/files/root_download_stats.sqlite", "SELECT * FROM accesslog;");
 
    auto minTimeStr = *rdfb.Reduce([](std::string a, std::string b) {return std::min(a, b);}, "Time", std::string("Z"));
 

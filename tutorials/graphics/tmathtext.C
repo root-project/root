@@ -23,11 +23,8 @@
    l.DrawMathText(0.27, 0.110, "\\mathbb{N} \\subset \\mathbb{R}");
    l.DrawMathText(0.63, 0.100, "\\hbox{RHIC スピン物理 Нью-Йорк}");
 
-   c1->Print("c1.gif");
-   c1->Print("c1.jpg");
    c1->Print("c1.png");
    c1->Print("c1.ps");
-   c1->Print("c1.eps");
 
    return c1;
 }

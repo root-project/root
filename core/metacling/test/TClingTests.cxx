@@ -1,9 +1,11 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TClass.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
 #include "TSystem.h"
+
+#include "gmock/gmock.h"
 
 #include <sstream>
 #include <string>
@@ -86,6 +88,24 @@ TEST_F(TClingTests, GetEnumWithSameVariableName)
    EXPECT_TRUE(en != nullptr);
 }
 
+TEST_F(TClingTests, SuccessfulAutoInjection)
+{
+   gInterpreter->ProcessLine("int SuccessfulAutoInjectionTest(int j) { return 0; }");
+   gInterpreter->ProcessLine("success = SuccessfulAutoInjectionTest(3)");
+
+   auto success = gInterpreter->GetDataMember(nullptr, "success");
+   EXPECT_TRUE(success != nullptr);
+}
+
+TEST_F(TClingTests, FailedAutoInjection)
+{
+   gInterpreter->ProcessLine("int FailedAutoInjectionTest(int j) { return 0; }");
+   gInterpreter->ProcessLine("failed = FailedAutoInjectionTest(3, 6)");
+
+   auto failed = gInterpreter->GetDataMember(nullptr, "failed");
+   EXPECT_TRUE(failed == nullptr);
+}
+
 // Check if we can get the source code of function definitions.
 TEST_F(TClingTests, MakeInterpreterValue)
 {
@@ -97,13 +117,13 @@ TEST_F(TClingTests, MakeInterpreterValue)
 
 static std::string MakeLibNamePlatformIndependent(const std::string &libName)
 {
-   if (libName.empty())
+   // Return an empty string if input is not a library name.
+   // Sometimes, libName can be the binary name (i.e. TClingTest, for this test)
+   if (libName.empty() || libName.compare(0, 3, "lib") != 0)
       return {};
-   EXPECT_EQ(libName.compare(0, 3, "lib"), 0);
-   EXPECT_NE(libName.find('.'), std::string::npos);
-   // Remove the extension.
-   std::string ret = libName.substr(3, libName.find('.') - 3);
-   return ret;
+
+   // Return library name without lib prefix and extension.
+   return libName.substr(3, libName.find('.') - 3);
 }
 
 // Check if the heavily used interface in TCling::AutoLoad returns consistent
@@ -112,7 +132,7 @@ TEST_F(TClingTests, GetClassSharedLibs)
 {
    // Shortens the invocation.
    auto GetLibs = [](const char *cls) -> std::string {
-      if (const char *val = gInterpreter->GetClassSharedLibs(cls))
+      if (const char *val = gInterpreter->GetClassSharedLibs(cls,false))
          return val;
       return "";
    };
@@ -172,12 +192,14 @@ static std::string MakeDepLibsPlatformIndependent(const std::string &libs) {
 
    std::vector<std::string> splitLibs = split(trim(libs));
    assert(!splitLibs.empty());
-   std::string result = MakeLibNamePlatformIndependent(splitLibs[0]) + ' ';
-   splitLibs.erase(splitLibs.begin());
 
-   std::sort(splitLibs.begin(), splitLibs.end());
+   std::sort(splitLibs.begin() + 1, splitLibs.end());
+   std::transform(splitLibs.begin(), splitLibs.end(), splitLibs.begin(), MakeLibNamePlatformIndependent);
+
+   std::string result;
    for (std::string lib : splitLibs)
-      result += MakeLibNamePlatformIndependent(trim(lib)) + ' ';
+      if (!lib.empty())
+         result += lib + ' ';
 
    return trim(result);
 }
@@ -216,6 +238,19 @@ TEST_F(TClingTests, GetSharedLibDeps)
                      "Cannot find library '   '");
 }
 #endif
+
+// Check that a warning message is generated when using auto-injection.
+TEST_F(TClingTests, WarningAutoInjection)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "cling", "declaration without the 'auto' keyword is deprecated",
+                      /*matchFullMessage=*/false);
+
+   gInterpreter->ProcessLine("/* no auto */ t = new int;");
+
+   auto t = gInterpreter->GetDataMember(nullptr, "t");
+   EXPECT_TRUE(t != nullptr);
+}
 
 // Check the interface which interacts with the cling::LookupHelper.
 TEST_F(TClingTests, ClingLookupHelper) {

@@ -1,16 +1,16 @@
 ## \file
 ## \ingroup tutorial_dataframe
 ## \notebook -draw
-## \brief Show how to work with non-flat data models, e.g. vectors of tracks.
+## Show how to work with non-flat data models, e.g. vectors of tracks.
 ##
 ## This tutorial shows the possibility to use data models which are more
-## complex than flat ntuples with RDataFrame
+## complex than flat ntuples with RDataFrame.
 ##
 ## \macro_code
 ## \macro_image
 ##
 ## \date May 2017
-## \author Danilo Piparo
+## \author Danilo Piparo (CERN)
 
 import ROOT
 
@@ -61,9 +61,9 @@ ROOT.fill_tree(fileName, treeName)
 # allows us to interact with the data contained in the tree.
 d = ROOT.RDataFrame(treeName, fileName)
 
-# Operating on branches which are collection of objects
+# Operating on branches which are collections of objects
 # Here we deal with the simplest of the cuts: we decide to accept the event
-# only if the number of tracks is greater than 5.
+# only if the number of tracks is greater than 8.
 n_cut = 'tracks.size() > 8'
 nentries = d.Filter(n_cut).Count();
 
@@ -76,7 +76,7 @@ print("%s events passed all filters" % nentries.GetValue())
 
 getPt_code ='''
 using namespace ROOT::VecOps;
-RVec<double> getPt(const RVec<FourVector> &tracks)
+ROOT::RVecD getPt(const RVec<FourVector> &tracks)
 {
    auto pt = [](const FourVector &v) { return v.pt(); };
    return Map(tracks, pt);
@@ -86,7 +86,7 @@ ROOT.gInterpreter.Declare(getPt_code)
 
 getPtWeights_code ='''
 using namespace ROOT::VecOps;
-RVec<double> getPtWeights(const RVec<FourVector> &tracks)
+ROOT::RVecD getPtWeights(const RVec<FourVector> &tracks)
 {
    auto ptWeight = [](const FourVector &v) { return 1. / v.Pt(); };
    return Map(tracks, ptWeight);

@@ -45,7 +45,6 @@
 //   Unix.Rint.Root.DynamicPath: .:$ROOTSYS/lib:~/lib                   //
 //   myapp.Root.Debug:  FALSE                                           //
 //   TH.Root.Debug: YES                                                 //
-//   *.Root.MemStat: 1                                                  //
 //                                                                      //
 // <SystemName> and <ProgName> or <RootName> may be the wildcard "*".   //
 // A # in the first column starts comment line.                         //
@@ -99,7 +98,7 @@ private:
    Bool_t      fModified;   // if env rec has been modified
 
    TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l);
-   Int_t    Compare(const TObject *obj) const;
+   Int_t    Compare(const TObject *obj) const override;
    void     ChangeValue(const char *v, const char *t, EEnvLevel l,
                         Bool_t append = kFALSE, Bool_t ignoredup = kFALSE);
    TString  ExpandValue(const char *v);
@@ -107,13 +106,13 @@ private:
 public:
    TEnvRec(): fName(), fType(), fValue(), fLevel(kEnvAll), fModified(kTRUE) { }
    ~TEnvRec();
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
    EEnvLevel   GetLevel() const { return fLevel; }
-   ULong_t     Hash() const { return fName.Hash(); }
+   ULong_t     Hash() const override { return fName.Hash(); }
 
-   ClassDef(TEnvRec,2)  // Individual TEnv records
+   ClassDefOverride(TEnvRec,2)  // Individual TEnv records
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -129,8 +128,8 @@ private:
    TString           fRcName;    // resource file base name
    Bool_t            fIgnoreDup; // ignore duplicates, don't issue warning
 
-   TEnv(const TEnv&);            // not implemented
-   TEnv& operator=(const TEnv&); // not implemented
+   TEnv(const TEnv&) = delete;
+   TEnv& operator=(const TEnv&) = delete;
 
    const char       *Getvalue(const char *name) const;
 
@@ -140,7 +139,7 @@ public:
 
    THashList          *GetTable() const { return fTable; }
    Bool_t              Defined(const char *name) const
-                                    { return Getvalue(name) != 0; }
+                                    { return Getvalue(name) != nullptr; }
 
    virtual const char *GetRcName() const { return fRcName; }
    virtual void        SetRcName(const char *name) { fRcName = name; }
@@ -151,7 +150,7 @@ public:
 
    virtual void        SetValue(const char *name, const char *value,
                                 EEnvLevel level = kEnvChange,
-                                const char *type = 0);
+                                const char *type = nullptr);
    virtual void        SetValue(const char *name, EEnvLevel level = kEnvChange);
    virtual void        SetValue(const char *name, Int_t value);
    virtual void        SetValue(const char *name, Double_t value);
@@ -161,11 +160,11 @@ public:
    virtual Int_t       WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();
    virtual void        SaveLevel(EEnvLevel level);
-   virtual void        Print(Option_t *option="") const;
+   void                Print(Option_t *option="") const override;
    virtual void        PrintEnv(EEnvLevel level = kEnvAll) const;
    Bool_t              IgnoreDuplicates(Bool_t ignore);
 
-   ClassDef(TEnv,2)  // Handle ROOT configuration resources
+   ClassDefOverride(TEnv,2)  // Handle ROOT configuration resources
 };
 
 R__EXTERN TEnv *gEnv;

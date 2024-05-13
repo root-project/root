@@ -2,7 +2,7 @@
 /// \ingroup proof
 ///
 /// Macro to run examples of analysis on PROOF, corresponding to the TSelector
-/// implementations found under <ROOTSYS>/tutorials/proof .
+/// implementations found under `<ROOTSYS>/tutorials/proof`.
 /// This macro uses an existing PROOF session or starts one at the indicated URL.
 /// In the case non existing PROOF session is found and no URL is given, the
 /// macro tries to start a local PROOF session.
@@ -39,7 +39,7 @@
 ///      root[] runProof("h1")
 ///
 ///      This runs the 'famous' H1 analysis from $ROOTSYS/tree/h1analysis.C.h.
-///      By default the data are read from the HTTP server at root.cern.ch,
+///      By default the data are read from the HTTP server at root.cern,
 ///      the data source can be changed via the argument 'h1src', e.g.
 ///
 ///      root[] runProof("h1,h1src=/data/h1")
@@ -78,7 +78,7 @@
 ///      - 'readall'  to read the whole event, by default only the branches
 ///                   needed by the analysis are read (read 25% more bytes)
 ///      - 'datasrc=<dir-with-files>' to read the files from another server,
-///                   the files must be named 'event_<num>.root' where <num>=1,2,...
+///                   the files must be named 'event_<num>.root' where '<num>'=1,2,...
 ///        or
 ///      - 'datasrc=<file-with-files>' to take the file content from a text file,
 ///                   specified one file per line; usefull when testing differences
@@ -254,7 +254,7 @@
 ///      Use parallel unzipping in reading files where relevant
 ///      e.g. root[] runProof("eventproc(punzip)")
 ///
-///   7. cache=<bytes> (or <kbytes>K or <mbytes>M)
+///   7. cache=`<bytes>` (or `<kbytes`>K or `<mbytes>`M)
 ///
 ///      Change the size of the tree cache; 0 or <0 disables the cache,
 ///      value cane be in bytes (no suffix), kilobytes (suffix 'K') or
@@ -506,7 +506,7 @@ void runProof(const char *what = "simple",
 
    // Parse out number of events and  'asyn' option, used almost by every test
    TString aNevt, aFirst, aNwrk, opt, sel, punzip("off"), aCache, aOutFile,
-           aH1Src("http://root.cern.ch/files/h1"),
+           aH1Src("http://root.cern/files/h1"),
            aDebug, aDebugEnum, aRateEst, aPerfTree("perftree.root"),
            aFeedback("fb=stats");
    Long64_t suf = 1;
@@ -915,7 +915,7 @@ void runProof(const char *what = "simple",
       // Extract the number of files to process, data source and
       // other parameters controlling the run ...
       Bool_t uneven = kFALSE;
-      TString aFiles, aDataSrc("http://root.cern.ch/files/data"), aPartitions;
+      TString aFiles, aDataSrc("http://root.cern/files/data"), aPartitions;
       proof->SetParameter("ProofEventProc_Read", "optimized");
       while (args.Tokenize(tok, from, " ")) {
          // Number of events
@@ -1112,7 +1112,7 @@ void runProof(const char *what = "simple",
       nevt = (nevt < 0) ? 1000000 : nevt;
       Printf("\nrunProof: running \"dataset\" with nevt= %lld\n", nevt);
 
-      // Ask for registration of the dataset (the default is the the TFileCollection is return
+      // Ask for registration of the dataset (the default is the TFileCollection is return
       // without registration; the name of the TFileCollection is the name of the dataset
       proof->SetParameter("SimpleNtuple.root","testNtuple");
 

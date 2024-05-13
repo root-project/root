@@ -66,13 +66,15 @@ const char *filters[] = {
    "*.txt"
 };
 
-//_____________________________________________________________________________
-//
-// TCursorSwitcher
-//
-// Helper class used to change the cursor in a method and restore the
-// original one when going out of the method scope.
-//_____________________________________________________________________________
+
+/** \class TCursorSwitcher
+    \ingroup guiwidgets
+
+Helper class used to change the cursor in a method and restore the
+original one when going out of the method scope.
+
+*/
+
 
 ///////////////////////////////////////////////////////////////////////////////
 class TCursorSwitcher {
@@ -90,13 +92,15 @@ public:
    }
 };
 
-//_____________________________________________________________________________
-//
-// TGFileBrowser
-//
-// System file browser, used as TRootBrowser plug-in.
-// This class is the real core of the ROOT browser.
-//_____________________________________________________________________________
+
+/** \class TGFileBrowser
+    \ingroup guiwidgets
+
+System file browser, used as TRootBrowser plug-in.
+This class is the real core of the ROOT browser.
+
+*/
+
 
 ClassImp(TGFileBrowser);
 
@@ -275,7 +279,7 @@ static Bool_t IsObjectEditable(TClass *cl)
       cl = base->GetClassPointer();
       if (cl && TClass::GetClass(Form("%sEditor", cl->GetName())))
          return kTRUE;
-      if (IsObjectEditable(cl))
+      if (cl && IsObjectEditable(cl))
          return kTRUE;
    }
    return kFALSE;
@@ -437,9 +441,6 @@ void TGFileBrowser::AddRemoteFile(TObject *obj)
    TGPicture *pic;
 
    FileStat_t sbuf;
-
-   type    = 0;
-   is_link = kFALSE;
 
    TRemoteObject *robj = (TRemoteObject *)obj;
 
@@ -655,7 +656,7 @@ void TGFileBrowser::Update()
    TGListTreeItem *curr = fListTree->GetSelected(); // GetCurrent() ??
    if (curr) {
       TObject *obj = (TObject *) curr->GetUserData();
-      if (obj && !obj->TestBit(kNotDeleted)) {
+      if (obj && ROOT::Detail::HasBeenDeleted(obj)) {
          // if the item to be deleted has a filter,
          // delete its entry in the map
          if (CheckFiltered(curr))
@@ -664,7 +665,7 @@ void TGFileBrowser::Update()
          curr = 0;
          obj = 0;
       }
-      else if (obj && obj->TestBit(kNotDeleted) &&
+      else if (obj && !ROOT::Detail::HasBeenDeleted(obj) &&
                obj->InheritsFrom("TObjString") && curr->GetParent()) {
          fListTree->GetPathnameFromItem(curr->GetParent(), path);
          if (strlen(path) > 1) {
@@ -734,7 +735,7 @@ void TGFileBrowser::AddFSDirectory(const char *entry, const char *path,
    TGListTreeItem *item = 0;
    if ((opt == 0) || (!opt[0])) {
       if (fRootDir == 0 && !fListTree->FindChildByName(0, rootdir))
-         item = fRootDir = fListTree->AddItem(0, rootdir);
+         fRootDir = fListTree->AddItem(0, rootdir);
       return;
    }
    if (strstr(opt, "SetRootDir")) {
@@ -1059,15 +1060,15 @@ void TGFileBrowser::Clicked(TGListTreeItem *item, Int_t btn, Int_t x, Int_t y)
    fListTree->ClearViewPort();
    if (selected && (selected->IsA() != TClass::Class())) {
       if (selected->InheritsFrom("TLeaf"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%lx)->GetBranch()->GetTree();", (ULong_t)selected));
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TLeaf *)0x%zx)->GetBranch()->GetTree();", (size_t)selected));
       if (selected->InheritsFrom("TBranch"))
-         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%lx)->GetTree();", (ULong_t)selected));
+         selected = (TObject *)gROOT->ProcessLine(TString::Format("((TBranch *)0x%zx)->GetTree();", (size_t)selected));
       if (selected->InheritsFrom("TTree")) {
          // if a tree not attached to any directory (e.g. in a TFolder)
          // then attach it to the current directory (gDirectory)
-         TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->GetDirectory();", (ULong_t)selected));
+         TDirectory *tdir = (TDirectory *)gROOT->ProcessLine(TString::Format("((TTree *)0x%zx)->GetDirectory();", (size_t)selected));
          if (!tdir) {
-            gROOT->ProcessLine(TString::Format("((TTree *)0x%lx)->SetDirectory(gDirectory);", (ULong_t)selected));
+            gROOT->ProcessLine(TString::Format("((TTree *)0x%zx)->SetDirectory(gDirectory);", (size_t)selected));
          }
       }
    }
@@ -1319,9 +1320,7 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
             // avoid potential crash when drawing a canvas with the same name
             // than a canvas already embedded in one of the browser's tab
             obj->DrawClone();
-         }
-         else if (fBrowser && !obj->InheritsFrom("TFormula") &&
-                  !obj->InheritsFrom("TMethodBrowsable"))
+         } else if (fBrowser && !obj->InheritsFrom("TFormula"))
             obj->Browse(fBrowser);
          fDblClick = kFALSE;
          fNKeys = 0;
@@ -1478,12 +1477,12 @@ void TGFileBrowser::DoubleClicked(TGListTreeItem *item, Int_t /*btn*/)
                TString fullname = f.GetTitle();
                fullname.ReplaceAll("\\", "\\\\");
                if (embed->InheritsFrom("TGTextEditor")) {
-                  gROOT->ProcessLine(TString::Format("((TGTextEditor *)0x%lx)->LoadFile(\"%s\");",
-                                     (ULong_t)embed, fullname.Data()));
+                  gROOT->ProcessLine(TString::Format("((TGTextEditor *)0x%zx)->LoadFile(\"%s\");",
+                                     (size_t)embed, fullname.Data()));
                }
                else if (embed->InheritsFrom("TGTextEdit")) {
-                  gROOT->ProcessLine(TString::Format("((TGTextEdit *)0x%lx)->LoadFile(\"%s\");",
-                                     (ULong_t)embed, fullname.Data()));
+                  gROOT->ProcessLine(TString::Format("((TGTextEdit *)0x%zx)->LoadFile(\"%s\");",
+                                     (size_t)embed, fullname.Data()));
                }
                else {
                   XXExecuteDefaultAction(&f);
@@ -1751,10 +1750,10 @@ void TGFileBrowser::PadModified()
          if (fe)
             embed = (TGCompositeFrame *)fe->fFrame;
          if (embed && embed->InheritsFrom("TRootCanvas")) {
-            ULong_t canvas = gROOT->ProcessLine(TString::Format("((TRootCanvas *)0x%lx)->Canvas();",
-                                                (ULong_t)embed));
-            if ((canvas) && (canvas == (ULong_t)gPad ||
-                canvas == (ULong_t)gPad->GetCanvas())) {
+            ULongptr_t canvas = gROOT->ProcessLine(TString::Format("((TRootCanvas *)0x%zx)->Canvas();",
+                                                (size_t)embed));
+            if ((canvas) && (canvas == (ULongptr_t)gPad ||
+                canvas == (ULongptr_t)gPad->GetCanvas())) {
                tabRight->SetTab(i, kTRUE);
                break;
             }

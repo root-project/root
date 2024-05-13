@@ -1,28 +1,25 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Multidimensional models: conditional p.d.f. with per-event errors
+/// Multidimensional models: conditional pdf with per-event errors
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooGaussModel.h"
 #include "RooDecay.h"
 #include "RooLandau.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
 #include "TAxis.h"
-#include "TH2D.h"
+#include "TH1.h"
 using namespace RooFit;
 
 void rf306_condpereventerrors()
@@ -46,26 +43,26 @@ void rf306_condpereventerrors()
    // C o n s t r u c t   f a k e   ' e x t e r n a l '   d a t a    w i t h   p e r - e v e n t   e r r o r
    // ------------------------------------------------------------------------------------------------------
 
-   // Use landau p.d.f to get somewhat realistic distribution with long tail
-   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, RooConst(1), RooConst(0.25));
-   RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
+   // Use landau pdf to get somewhat realistic distribution with long tail
+   RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
+   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // S a m p l e   d a t a   f r o m   c o n d i t i o n a l   d e c a y _ g m ( d t | d t e r r )
    // ---------------------------------------------------------------------------------------------
 
-   // Specify external dataset with dterr values to use decay_dm as conditional p.d.f.
-   RooDataSet *data = decay_gm.generate(dt, ProtoData(*expDataDterr));
+   // Specify external dataset with dterr values to use decay_dm as conditional pdf
+   std::unique_ptr<RooDataSet> data{decay_gm.generate(dt, ProtoData(*expDataDterr))};
 
    // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------
 
    // Specify dterr as conditional observable
-   decay_gm.fitTo(*data, ConditionalObservables(dterr));
+   decay_gm.fitTo(*data, ConditionalObservables(dterr), PrintLevel(-1));
 
    // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------
 
-   // Make two-dimensional plot of conditional p.d.f in (dt,dterr)
+   // Make two-dimensional plot of conditional pdf in (dt,dterr)
    TH1 *hh_decay = decay_gm.createHistogram("hh_decay", dt, Binning(50), YVar(dterr, Binning(50)));
    hh_decay->SetLineColor(kBlue);
 
@@ -84,8 +81,8 @@ void rf306_condpereventerrors()
    //
    // Instead of integrating out dterr, make a weighted average of curves
    // at values dterr_i as given in the external dataset.
-   // (The kTRUE argument bins the data before projection to speed up the process)
-   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, kTRUE));
+   // (The true argument bins the data before projection to speed up the process)
+   decay_gm.plotOn(frame2, ProjWData(*expDataDterr, true));
 
    // Draw all frames on canvas
    TCanvas *c = new TCanvas("rf306_condpereventerrors", "rf306_condperventerrors", 1200, 400);

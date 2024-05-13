@@ -1,8 +1,3 @@
-[![Travis status](https://travis-ci.org/root-project/cling.svg?branch=master)](https://travis-ci.org/root-project/cling)
-<!-- a target="_blank" href="https://ci.appveyor.com/project/root-project/cling-j0wdg">
-  ![Appveyor status](https://ci.appveyor.com/api/projects/status/github/root-project/cling?svg=true&branch=master)
-</a -->
-
 Cling - The Interactive C++ Interpreter
 =========================================
 
@@ -18,7 +13,7 @@ concept, in order to leverage rapid application development. Implemented as a
 small extension to LLVM and Clang, the interpreter reuses their strengths such
 as the praised concise and expressive compiler diagnostics.
 
-See also [cling's web page.](https://cdn.rawgit.com/root-project/cling/master/www/index.html)
+See also [cling's web page.](https://rawcdn.githack.com/root-project/cling/d59d27ad61f2f3a78cd46e652cd9fb8adb893565/www/index.html)
 
 Please note that some of the resources are rather old and most of the stated
 limitations are outdated.
@@ -42,23 +37,17 @@ Our nightly binary snapshots can be found
 [here](https://root.cern.ch/download/cling/).
 
 
-### Building from Source with Cling Packaging Tool
-Cling's tree has a user-friendly, command-line utility written in Python called
-Cling Packaging Tool (CPT) which can build Cling from source and generate
-installer bundles for a wide range of platforms. CPT requires Python 2.7 or
-later.
-
-If you have Cling's source cloned locally, you can find the tool in
-`tools/packaging` directory. Alternatively, you can download the script
-manually, or by using `wget`:
+### Building from Source
 
 ```sh
-wget https://raw.githubusercontent.com/root-project/cling/master/tools/packaging/cpt.py
-chmod +x cpt.py
-./cpt.py --check-requirements && ./cpt.py --create-dev-env Debug --with-workdir=./cling-build/
+git clone https://github.com/root-project/llvm-project.git
+cd llvm-project
+git checkout cling-latest
+cd ../
+git clone <cling>
+mkdir cling-build && cd cling-build
+cmake -DLLVM_EXTERNAL_PROJECTS=cling -DLLVM_EXTERNAL_CLING_SOURCE_DIR=../cling/ -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="host;nvptx" ../llvm-project/llvm
 ```
-Full documentation of CPT can be found in [tools/packaging](tools/packaging).
-
 
 Usage
 -----
@@ -140,8 +129,10 @@ Our release steps to follow when cutting a new release:
   3. Add a new entry in the news section of our [website](www/news.html)
   4. Commit the changes.
   5. `git tag -a v0.x -m "Tagging release v0.x"`
-  6. Create a draft release in github and copy the contents of the release notes.
-  7. Wait for green builds.
-  8. Upload binaries to github (Travis should do this automatically).
-  9. Publish the tag and announce it on the mailing list.
-  10. Increment the current version and append `~dev`.
+  6. Tag `cling-patches` of `clang.git`:
+     `git tag -a cling-v0.x -m "Tagging clang for cling v0.x"`
+  7. Create a draft release in github and copy the contents of the release notes.
+  8. Wait for green builds.
+  9. Upload binaries to github (Travis should do this automatically).
+  10. Publish the tag and announce it on the mailing list.
+  11. Increment the current version and append `~dev`.

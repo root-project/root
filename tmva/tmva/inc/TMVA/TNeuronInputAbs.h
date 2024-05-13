@@ -1,11 +1,11 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TMVA::TNeuronInputAbs                                                 *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      TNeuron input calculator -- calculates the sum of the absolute values     *
@@ -19,9 +19,9 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
- 
+
 
 #ifndef ROOT_TMVA_TNeuronInputAbs
 #define ROOT_TMVA_TNeuronInputAbs
@@ -42,9 +42,9 @@
 #include "TMVA/TNeuron.h"
 
 namespace TMVA {
-  
+
    class TNeuronInputAbs : public TNeuronInput {
-    
+
    public:
 
       TNeuronInputAbs() {}

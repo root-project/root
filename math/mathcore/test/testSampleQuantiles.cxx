@@ -14,7 +14,7 @@ using std::endl;
 
 bool debug = false;
 
-// restults obtained runnnig r for all types from 1 to 9
+// restults obtained running r for all types from 1 to 9
 // there are 13 values for each ( size is 13*9 = 121
 double result[121] =  {
       0.1 , 0.1 , 0.1 , 0.3 , 0.7 , 1 , 1.2 , 1.5 , 1.8 , 2 , 10 , 10 , 10,         // type = 1
@@ -51,7 +51,7 @@ bool testQuantiles(int type = 0, bool sorted = true) {
 
 
    if (type >0 && type < 10)
-      TMath::Quantiles(n,np,x,quant,p,sorted,0,type);
+      TMath::Quantiles(n,np,x,quant,p,sorted,nullptr,type);
    else
       TMath::Quantiles(n,np, x,quant,p,sorted);
 

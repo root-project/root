@@ -102,14 +102,12 @@ robust Streamer mechanism I opted for 3).
 
 #include <cmath>
 
-#if defined(R__UNIX) && !defined(R__MACOSX) && !defined(R__WINGCC)
+#if defined(R__UNIX) && !defined(R__WINGCC)
 #define HAVE_SEMOP
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
-#if defined(R__HPUX) || \
-    defined (R__SOLARIS) || defined(R__AIX) || defined(R__HIUX) || \
-    __GLIBC_MINOR__ > 0
+#if !defined(WIN32) && !defined(R__MACOSX)
 union semun {
    int val;                      // value for SETVAL
    struct semid_ds *buf;         // buffer for IPC_STAT & IPC_SET
@@ -123,7 +121,7 @@ union semun {
 #endif
 
 
-Long_t TMapFile::fgMapAddress = 0;
+Longptr_t TMapFile::fgMapAddress = 0;
 void  *TMapFile::fgMmallocDesc = 0;
 
 //void *ROOT::Internal::gMmallocDesc = 0; //is initialized in TStorage.cxx
@@ -140,6 +138,17 @@ namespace {
       }
       return false;
    }
+
+/// Return the memory mapped start location corresponding to the user pointer
+/// if any. Return `nullptr` otherwise.
+   static void *GetMapFileMallocDesc(void *userptr)
+   {
+      if (TMapFile *mf = TMapFile::WhichMapFile(userptr))
+      {
+         return mf->GetMmallocDesc();
+      }
+      return nullptr;
+   }
 }
 
 
@@ -149,9 +158,11 @@ namespace {
 struct SetFreeIfTMapFile_t {
    SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = FreeIfTMapFile;
+      ROOT::Internal::gGetMapFileMallocDesc = GetMapFileMallocDesc;
    }
    ~SetFreeIfTMapFile_t() {
       ROOT::Internal::gFreeIfTMapFile = nullptr;
+      ROOT::Internal::gGetMapFileMallocDesc = nullptr;
    }
 } gSetFreeIfTMapFile;
 
@@ -239,8 +250,8 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
    fSemaphore   = -1;
    fhSemaphore  = 0;
 #else
-   fFd          = (Int_t) INVALID_HANDLE_VALUE;
-   fSemaphore   = (Int_t) INVALID_HANDLE_VALUE;
+   fFd          = (Longptr_t) INVALID_HANDLE_VALUE;
+   fSemaphore   = (Longptr_t) INVALID_HANDLE_VALUE;
 #endif
    fMmallocDesc = nullptr;
    fSize        = size;
@@ -325,7 +336,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
       fFd = open(fname, O_RDWR | O_CREAT, 0644);
 #else
-      fFd = (Int_t) CreateFile(fname,                    // pointer to name of the file
+      fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_WRITE | GENERIC_READ,       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
                      NULL,                               // pointer to security attributes
@@ -333,7 +344,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
                      (HANDLE) NULL);                     // handle to file with attributes to copy
 #endif
-      if (fFd == (Int_t)INVALID_HANDLE_VALUE) {
+      if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened", fname);
          goto zombie;
       }
@@ -342,7 +353,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
 #ifndef WIN32
       fFd = open(fname, O_RDONLY);
 #else
-      fFd = (Int_t) CreateFile(fname,                    // pointer to name of the file
+      fFd = (Longptr_t) CreateFile(fname,                    // pointer to name of the file
                      GENERIC_READ,                       // access (read-write) mode
                      FILE_SHARE_WRITE | FILE_SHARE_READ, // share mode
                      NULL,                               // pointer to security attributes
@@ -350,7 +361,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
                      FILE_ATTRIBUTE_TEMPORARY,           // file attributes
                      (HANDLE) NULL);                     // handle to file with attributes to copy
 #endif
-      if (fFd == (Int_t)INVALID_HANDLE_VALUE) {
+      if (fFd == (Longptr_t)INVALID_HANDLE_VALUE) {
          SysError("TMapFile", "file %s can not be opened for reading", fname);
          goto zombie;
       }
@@ -468,7 +479,7 @@ TMapFile::TMapFile(const char *name, const char *title, Option_t *option,
          goto zombie;
       }
 
-      fBaseAddr = (ULong_t)((struct mdesc *) fMmallocDesc)->base;
+      fBaseAddr = (ULongptr_t)((struct mdesc *) fMmallocDesc)->base;
 
       CreateSemaphore();
 
@@ -508,17 +519,17 @@ zombie:
 ////////////////////////////////////////////////////////////////////////////////
 /// Private copy ctor.
 ///
-/// Used by the the ctor to create a new version
+/// Used by the ctor to create a new version
 /// of TMapFile in the memory mapped heap. It's main purpose is to
 /// correctly create the string data members.
 
-TMapFile::TMapFile(const TMapFile &f, Long_t offset) : TObject(f)
+TMapFile::TMapFile(const TMapFile &f, Longptr_t offset) : TVirtualMapFile(f)
 {
    fFd          = f.fFd;
    fVersion     = f.fVersion;
-   fName        = StrDup((char *)((Long_t)f.fName + offset));
-   fTitle       = StrDup((char *)((Long_t)f.fTitle + offset));
-   fOption      = StrDup((char *)((Long_t)f.fOption + offset));
+   fName        = StrDup((char *)((Longptr_t)f.fName + offset));
+   fTitle       = StrDup((char *)((Longptr_t)f.fTitle + offset));
+   fOption      = StrDup((char *)((Longptr_t)f.fOption + offset));
    fMmallocDesc = f.fMmallocDesc;
    fBaseAddr    = f.fBaseAddr;
    fSize        = f.fSize;
@@ -569,6 +580,9 @@ TMapFile::~TMapFile()
 
    Close("dtor");
 
+   // Tell TMapFile::operator delete which memory address to detach
+   // The detaching must be done after the whole object has been tear down
+   // (including base classes).
    fgMmallocDesc = fMmallocDesc;
 
    delete [] fName; fName = nullptr;
@@ -603,8 +617,6 @@ void TMapFile::Add(const TObject *obj, const char *name)
    if (lock)
       AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    const char *n;
    if (name && *name)
       n = name;
@@ -615,7 +627,10 @@ void TMapFile::Add(const TObject *obj, const char *name)
       //Warning("Add", "replaced object with same name %s", n);
    }
 
+   ROOT::Internal::gMmallocDesc = fMmallocDesc;
    TMapRec *mr = new TMapRec(n, obj, 0, 0);
+   ROOT::Internal::gMmallocDesc = nullptr;
+
    if (!fFirst) {
       fFirst = mr;
       fLast  = mr;
@@ -624,10 +639,17 @@ void TMapFile::Add(const TObject *obj, const char *name)
       fLast        = mr;
    }
 
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    if (lock)
       ReleaseSemaphore();
+}
+
+namespace {
+   // Wrapper around TStorage::ReAlloc to update the signature.
+   char *MemMapAllocFunc(char *oldptr, size_t newsize, size_t oldsize)
+   {
+      return reinterpret_cast<char*>(TStorage::ReAlloc(oldptr, newsize, oldsize));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -639,8 +661,6 @@ void TMapFile::Update(TObject *obj)
 
    AcquireSemaphore();
 
-   ROOT::Internal::gMmallocDesc = fMmallocDesc;
-
    Bool_t all = (obj == 0) ? kTRUE : kFALSE;
 
    TMapRec *mr = fFirst;
@@ -648,13 +668,18 @@ void TMapFile::Update(TObject *obj)
       if (all || mr->fObject == obj) {
          TBufferFile *b;
          if (!mr->fBufSize) {
-            b = new TBufferFile(TBuffer::kWrite, GetBestBuffer());
-            mr->fClassName = StrDup(mr->fObject->ClassName());
-         } else
-            b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer);
+            const char *cname = mr->fObject->ClassName();
+            mr->fBufSize = GetBestBuffer();
+
+            ROOT::Internal::gMmallocDesc = fMmallocDesc;
+            mr->fBuffer = new char[mr->fBufSize];
+            mr->fClassName = StrDup(cname);
+            ROOT::Internal::gMmallocDesc = nullptr;
+         }
+         b = new TBufferFile(TBuffer::kWrite, mr->fBufSize, mr->fBuffer, kFALSE, MemMapAllocFunc);
          b->MapObject(mr->fObject);  //register obj in map to handle self reference
          mr->fObject->Streamer(*b);
-         mr->fBufSize = b->BufferSize();
+         mr->fBufSize = b->BufferSize() + 8; // extra space at end of buffer (used for free block count) there on
          mr->fBuffer  = b->Buffer();
          SumBuffer(b->Length());
          b->DetachBuffer();
@@ -662,8 +687,6 @@ void TMapFile::Update(TObject *obj)
       }
       mr = mr->fNext;
    }
-
-   ROOT::Internal::gMmallocDesc = nullptr;
 
    ReleaseSemaphore();
 }
@@ -842,8 +865,8 @@ void TMapFile::CreateSemaphore(int pid)
    char buffer[] ="ROOT_Semaphore_xxxxxxxx";
    int lbuf = strlen(buffer);
    if (!pid) fSemaphore = getpid();
-   fhSemaphore = (ULong_t)CreateMutex(NULL,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
-   if (fhSemaphore == 0) fSemaphore = (Int_t)INVALID_HANDLE_VALUE;
+   fhSemaphore = (ULongptr_t)CreateMutex(NULL,FALSE,itoa(fSemaphore,&buffer[lbuf-8],16));
+   if (fhSemaphore == 0) fSemaphore = (Longptr_t)INVALID_HANDLE_VALUE;
 #endif
 #endif
 }
@@ -864,10 +887,10 @@ void TMapFile::DeleteSemaphore()
       semctl(semid, 0, IPC_RMID, set);
    }
 #else
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE) {
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE) {
       CloseHandle((HANDLE)fhSemaphore);
       fhSemaphore = 0;
-      fSemaphore  = (Int_t)INVALID_HANDLE_VALUE;
+      fSemaphore  = (Longptr_t)INVALID_HANDLE_VALUE;
    }
 #endif
 #endif
@@ -904,7 +927,7 @@ again:
    }
 #else
    // Enter Critical section to "write" lock
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE)
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE)
       WaitForSingleObject((HANDLE)fhSemaphore,INFINITE);
 #endif
 #endif
@@ -937,7 +960,7 @@ Int_t TMapFile::ReleaseSemaphore()
       }
    }
 #else
-   if (fSemaphore != (Int_t)INVALID_HANDLE_VALUE)
+   if (fSemaphore != (Longptr_t)INVALID_HANDLE_VALUE)
       ReleaseMutex((HANDLE)fhSemaphore);
 #endif
 #endif
@@ -1020,10 +1043,10 @@ void TMapFile::Print(Option_t *) const
    Printf("Title:                %s", fTitle);
    if (fMmallocDesc) {
       Printf("Option:               %s", fOption);
-      ULong_t size = (ULong_t)((struct mdesc *)fMmallocDesc)->top - fBaseAddr;
-      Printf("Mapped Memory region: 0x%lx - 0x%lx (%.2f MB)", fBaseAddr, fBaseAddr + size,
+      size_t size = (size_t)((struct mdesc *)fMmallocDesc)->top - fBaseAddr;
+      Printf("Mapped Memory region: 0x%zx - 0x%zx (%.2f MB)", (size_t)fBaseAddr, (size_t)fBaseAddr + size,
              (float)size/1048576);
-      Printf("Current breakval:     0x%lx", (ULong_t)GetBreakval());
+      Printf("Current breakval:     0x%zx", (size_t)GetBreakval());
    } else
       Printf("Option:               file closed");
 }
@@ -1183,7 +1206,7 @@ TMapFile *TMapFile::Create(const char *name, Option_t *option, Int_t size,
 /// program is larger (i.e. has more shared memory occupied) than the
 /// producer. If this is not true inverse the procedure.
 
-void TMapFile::SetMapAddress(Long_t addr)
+void TMapFile::SetMapAddress(Longptr_t addr)
 {
    fgMapAddress = addr;
 }
@@ -1245,8 +1268,8 @@ TMapFile *TMapFile::WhichMapFile(void *addr)
    while (lnk) {
       TMapFile *mf = (TMapFile*)lnk->GetObject();
       if (!mf) return 0;
-      if ((ULong_t)addr >= mf->fBaseAddr + mf->fOffset &&
-          (ULong_t)addr <  (ULong_t)mf->GetBreakval() + mf->fOffset)
+      if ((ULongptr_t)addr >= mf->fBaseAddr + mf->fOffset &&
+          (ULongptr_t)addr <  (ULongptr_t)mf->GetBreakval() + mf->fOffset)
          return mf;
       lnk = lnk->Prev();
    }

@@ -15,13 +15,13 @@ int testPyTorchClassification(){
    std::cout << "Get test data..." << std::endl;
    TString fname = "./tmva_class_example.root";
    if (gSystem->AccessPathName(fname))  // file does not exist in local directory
-      gSystem->Exec("curl -O http://root.cern.ch/files/tmva_class_example.root");
+      gSystem->Exec("curl -L -O http://root.cern.ch/files/tmva_class_example.root");
    TFile *input = TFile::Open(fname);
 
    // Build model from python file
    std::cout << "Generate PyTorch model..." << std::endl;
    UInt_t ret;
-   ret = gSystem->Exec("python generatePyTorchModelClassification.py");
+   ret = gSystem->Exec(TMVA::Python_Executable() + " generatePyTorchModelClassification.py");
    if(ret!=0){
        std::cout << "[ERROR] Failed to generate model using python" << std::endl;
        return 1;

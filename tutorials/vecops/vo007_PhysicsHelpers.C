@@ -11,8 +11,6 @@
 /// \date March 2019
 /// \author Stefan Wunsch
 
-using namespace ROOT::VecOps;
-
 void vo007_PhysicsHelpers()
 {
    // The DeltaPhi helper computes the closest angle between angles.
@@ -22,7 +20,7 @@ void vo007_PhysicsHelpers()
    // RVec and a scalar and two scalars. In addition, the computation of the
    // difference and the behaviour at the boundary can be adjusted to radian and
    // degrees.
-   RVec<float> phis = {0.0, 1.0, -0.5, M_PI + 1.0};
+   ROOT::RVecF phis = {0.0, 1.0, -0.5, M_PI + 1.0};
    auto idx = Combinations(phis, 2);
 
    auto phi1 = Take(phis, idx[0]);
@@ -35,7 +33,7 @@ void vo007_PhysicsHelpers()
 
    // The DeltaR helper is similar to the DeltaPhi helper and computes the distance
    // in the \f$\eta\f$-\f$\phi\f$ plane.
-   RVec<float> etas = {2.4, -1.5, 1.0, 0.0};
+   ROOT::RVecF etas = {2.4, -1.5, 1.0, 0.0};
 
    auto eta1 = Take(etas, idx[0]);
    auto eta2 = Take(etas, idx[1]);
@@ -50,15 +48,15 @@ void vo007_PhysicsHelpers()
    // The InvariantMasses helper computes the invariant mass of a two particle system
    // given the properties transverse momentum (pt), rapidity (eta), azimuth (phi)
    // and mass.
-   RVec<float> pt3 = {40, 20, 30};
-   RVec<float> eta3 = {2.5, 0.5, -1.0};
-   RVec<float> phi3 = {-0.5, 0.0, 1.0};
-   RVec<float> mass3 = {10, 10, 10};
+   ROOT::RVecF pt3 = {40, 20, 30};
+   ROOT::RVecF eta3 = {2.5, 0.5, -1.0};
+   ROOT::RVecF phi3 = {-0.5, 0.0, 1.0};
+   ROOT::RVecF mass3 = {10, 10, 10};
 
-   RVec<float> pt4 = {20, 10, 40};
-   RVec<float> eta4 = {0.5, -0.5, 1.0};
-   RVec<float> phi4 = {0.0, 1.0, -1.0};
-   RVec<float> mass4 = {2, 2, 2};
+   ROOT::RVecF pt4 = {20, 10, 40};
+   ROOT::RVecF eta4 = {0.5, -0.5, 1.0};
+   ROOT::RVecF phi4 = {0.0, 1.0, -1.0};
+   ROOT::RVecF mass4 = {2, 2, 2};
 
    auto invMass = InvariantMasses(pt3, eta3, phi3, mass3, pt4, eta4, phi4, mass4);
 

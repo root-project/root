@@ -25,29 +25,26 @@ namespace HistFactory{
   class LinInterpVar : public RooAbsReal {
   public:
 
-    LinInterpVar() ;
+    LinInterpVar() = default;
     LinInterpVar(const char *name, const char *title,
                  const RooArgList& _paramList, double nominal, std::vector<double> low, std::vector<double> high);
 
     LinInterpVar(const char *name, const char *title);
     LinInterpVar(const LinInterpVar&, const char*);
 
-    virtual TObject* clone(const char* newname) const { return new LinInterpVar(*this, newname); }
-    virtual ~LinInterpVar() ;
+    TObject* clone(const char* newname) const override { return new LinInterpVar(*this, newname); }
 
 
   protected:
 
     RooListProxy _paramList ;
-    double _nominal;
+    double _nominal = 0;
     std::vector<double> _low;
     std::vector<double> _high;
-    
-    TIterator* _paramIter ;  //! do not persist
 
-    Double_t evaluate() const;
+    double evaluate() const override;
 
-    ClassDef(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation
+    ClassDefOverride(RooStats::HistFactory::LinInterpVar,1) // Piecewise linear interpolation
   };
 }
 }

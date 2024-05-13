@@ -24,12 +24,14 @@
 #pragma link C++ class TTreeFormulaManager;
 #pragma link C++ class TTreeDrawArgsParser+;
 #pragma link C++ class TTreePerfStats+;
+#pragma link C++ class TTreePerfStats::BasketInfo+;
 #pragma link C++ class TTreeReader+;
 #pragma link C++ class ROOT::Experimental::TTreeReaderFast+;
 #pragma link C++ class TTreeTableInterface;
 #pragma link C++ class TSimpleAnalysis+;
 #ifndef _MSC_VER
 #pragma link C++ class TMPWorkerTree+;
+#pragma link C++ class ROOT::TTreeProcessorMP-;
 #endif
 #ifdef R__USE_IMT
 #pragma link C++ class ROOT::TTreeProcessorMT-;

@@ -13,7 +13,7 @@ public:
    TKDTree();
    TKDTree(Index npoints, Index ndim, UInt_t bsize);
    TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **data);
-   ~TKDTree();
+   ~TKDTree() override;
 
    void            Build();  // build the tree
 
@@ -58,7 +58,7 @@ public:
    Value   KOrdStat(Index ntotal, Value *a, Index k, Index *index) const;
 
 
-   void    MakeBoundaries(Value *range = 0x0);
+   void    MakeBoundaries(Value *range = nullptr);
    void    MakeBoundariesExact();
    void    SetData(Index npoints, Index ndim, UInt_t bsize, Value **data);
    Int_t   SetData(Index idim, Value *data);
@@ -74,30 +74,30 @@ public:
    void UpdateRange(Index inode, Value *point, Value range, std::vector<Index> &res);
 
  protected:
-   Int_t   fDataOwner;  //! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
-   Int_t   fNNodes;     // size of node array
-   Int_t   fTotalNodes; // total number of nodes (fNNodes + terminal nodes)
-   Index   fNDim;       // number of dimensions
-   Index   fNDimm;      // dummy 2*fNDim
-   Index   fNPoints;    // number of multidimensional points
-   Index   fBucketSize; // size of the terminal nodes
-   UChar_t *fAxis;      //[fNNodes] nodes cutting axis
-   Value   *fValue;     //[fNNodes] nodes cutting value
+   Int_t   fDataOwner;  ///<! 0 - not owner, 2 - owner of the pointer array, 1 - owner of the whole 2-d array
+   Int_t   fNNodes;     ///< size of node array
+   Int_t   fTotalNodes; ///< total number of nodes (fNNodes + terminal nodes)
+   Index   fNDim;       ///< number of dimensions
+   Index   fNDimm;      ///< dummy 2*fNDim
+   Index   fNPoints;    ///< number of multidimensional points
+   Index   fBucketSize; ///< size of the terminal nodes
+   UChar_t *fAxis;      ///<[fNNodes] nodes cutting axis
+   Value   *fValue;     ///<[fNNodes] nodes cutting value
    //
-   Value   *fRange;     //[fNDimm] range of data for each dimension
-   Value   **fData;     //! data points
-   Value   *fBoundaries;//! nodes boundaries
+   Value   *fRange;     ///<[fNDimm] range of data for each dimension
+   Value   **fData;     ///<! data points
+   Value   *fBoundaries;///<! nodes boundaries
 
 
-   Index   *fIndPoints; //! array of points indexes
-   Int_t   fRowT0;      //! smallest terminal row - first row that contains terminal nodes
-   Int_t   fCrossNode;  //! cross node - node that begins the last row (with terminal nodes only)
-   Int_t   fOffset;     //! offset in fIndPoints - if there are 2 rows, that contain terminal nodes
-                        //  fOffset returns the index in the fIndPoints array of the first point
-                        //  that belongs to the first node on the second row.
+   Index   *fIndPoints; ///<! array of points indexes
+   Int_t   fRowT0;      ///<! smallest terminal row - first row that contains terminal nodes
+   Int_t   fCrossNode;  ///<! cross node - node that begins the last row (with terminal nodes only)
+   Int_t   fOffset;     ///<! offset in fIndPoints - if there are 2 rows, that contain terminal nodes
+                        ///<  fOffset returns the index in the fIndPoints array of the first point
+                        ///<  that belongs to the first node on the second row.
 
 
-   ClassDef(TKDTree, 1)  // KD tree
+   ClassDefOverride(TKDTree, 1)  // KD tree
 };
 
 

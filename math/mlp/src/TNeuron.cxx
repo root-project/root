@@ -60,12 +60,12 @@ TNeuron::TNeuron(TNeuron::ENeuronType type /*= kSigmoid*/,
    fNewValue = true;
    fNewDeriv = true;
    fNewDeDw = true;
-   fFormula = 0;
+   fFormula = nullptr;
    fDeDw  = 0;
    fDEDw  = 0;
    fValue = 0;
-   fExtF  = 0;
-   fExtD  = 0;
+   fExtF  = nullptr;
+   fExtD  = nullptr;
    fIndex = 0;
    fDerivative = 0;
    fInput = 0;
@@ -883,11 +883,11 @@ TTreeFormula* TNeuron::UseBranch(TTree* input, const char* formula)
    Ssiz_t len = f.Length();
    Ssiz_t pos = re.Index(f,&len);
    if(pos==-1 || len<3)
-      fFormula = new TTreeFormula(Form("NF%lu",(ULong_t)this),formula,input);
+      fFormula = new TTreeFormula(Form("NF%zu",(size_t)this),formula,input);
    else {
       TString newformula(formula,pos);
       TString val = f(pos+1,len-2);
-      fFormula = new TTreeFormula(Form("NF%lu",(ULong_t)this),
+      fFormula = new TTreeFormula(Form("NF%zu",(size_t)this),
                                   (const char*) newformula,input);
       fIndex = val.Atoi();
       f = newformula;

@@ -1,9 +1,7 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
+/// Likelihood and minimization: Parameter uncertainties for weighted unbinned ML fits
 ///
 /// ## Parameter uncertainties for weighted unbinned ML fits
 ///
@@ -50,10 +48,10 @@
 /// If the fit is unbiased and the parameter uncertainties are estimated correctly, the pull distribution should be a Gaussian centered around zero with a width of one.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 11/2019
+/// \date November 2019
 /// \author Christoph Langenbruch
 
 #include "TH1D.h"
@@ -168,17 +166,17 @@ int rf611_weightedfits(int acceptancemodel=2) {
     //F i t   t o y   u s i n g   t h e   t h r e e   d i f f e r e n t   a p p r o a c h e s   t o   u n c e r t a i n t y   d e t e r m i n a t i o n
     //-------------------------------------------------------------------------------------------------------------------------------------------------
     //this uses the inverse weighted Hessian matrix
-    RooFitResult* result = pol.fitTo(data, Save(true), SumW2Error(false), PrintLevel(-1), BatchMode(true));
+    std::unique_ptr<RooFitResult> result{pol.fitTo(data, Save(true), SumW2Error(false), PrintLevel(-1), EvalBackend("cpu"))};
     hc0pull1->Fill((c0.getVal()-c0gen)/c0.getError());
     hc1pull1->Fill((c1.getVal()-c1gen)/c1.getError());
 
     //this uses the correction with the Hesse matrix with squared weights
-    result = pol.fitTo(data, Save(true), SumW2Error(true), PrintLevel(-1), BatchMode(true));
+    result = std::unique_ptr<RooFitResult>{pol.fitTo(data, Save(true), SumW2Error(true), PrintLevel(-1), EvalBackend("cpu"))};
     hc0pull2->Fill((c0.getVal()-c0gen)/c0.getError());
     hc1pull2->Fill((c1.getVal()-c1gen)/c1.getError());
 
     //this uses the asymptotically correct approach
-    result = pol.fitTo(data, Save(true), AsymptoticError(true), PrintLevel(-1), BatchMode(true));
+    result = std::unique_ptr<RooFitResult>{pol.fitTo(data, Save(true), AsymptoticError(true), PrintLevel(-1), EvalBackend("cpu"))};
     hc0pull3->Fill((c0.getVal()-c0gen)/c0.getError());
     hc1pull3->Fill((c1.getVal()-c1gen)/c1.getError());
   }

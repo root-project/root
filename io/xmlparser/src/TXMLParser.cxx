@@ -57,7 +57,7 @@ ClassImp(TXMLParser);
 /// Initializes parser variables.
 
 TXMLParser::TXMLParser()
-   : fContext(0), fValidate(kTRUE), fReplaceEntities(kFALSE), fStopError(kFALSE), fParseCode(0)
+   : fContext(nullptr), fValidate(kTRUE), fReplaceEntities(kFALSE), fStopError(kFALSE), fParseCode(0)
 {
 }
 
@@ -92,14 +92,14 @@ void TXMLParser::SetReplaceEntities(Bool_t val)
 void TXMLParser::ReleaseUnderlying()
 {
    if (fContext) {
-      fContext->_private = 0;
+      fContext->_private = nullptr;
       xmlFreeParserCtxt(fContext);
-      fContext = 0;
+      fContext = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called when an error from the parser has occured.
+/// This function is called when an error from the parser has occurred.
 /// Message is the parse error.
 
 void TXMLParser::OnValidateError(const TString& message)
@@ -108,7 +108,7 @@ void TXMLParser::OnValidateError(const TString& message)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This function is called when a warning from the parser has occured.
+/// This function is called when a warning from the parser has occurred.
 /// Message is the parse error.
 
 void TXMLParser::OnValidateWarning(const TString& message)
@@ -129,10 +129,10 @@ const char *TXMLParser::GetParseCodeMessage(Int_t parseCode) const
          return "Parse context is not created";
          break;
       case -3:
-         return "An error occured while parsing file";
+         return "An error occurred while parsing file";
          break;
       case -4:
-         return "A fatal error occured while parsing file";
+         return "A fatal error occurred while parsing file";
          break;
       case -5:
          return "Document is not well-formed";
@@ -174,8 +174,8 @@ void TXMLParser::StopParser()
 ///   - \b 0: Parse successful
 ///   - \b -1: Attempt to parse a second file while a parse is in progress
 ///   - \b -2: Parse context is not created
-///   - \b -3: An error occured while parsing file
-///   - \b -4: A fatal error occured while parsing file
+///   - \b -3: An error occurred while parsing file
+///   - \b -4: A fatal error occurred while parsing file
 ///   - \b -5: Document is not well-formed
 
 void TXMLParser::SetParseCode(Int_t errorcode)

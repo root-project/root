@@ -16,7 +16,6 @@
 #include "TMath.h"
 
 using namespace ROOT::Experimental;
-namespace REX = ROOT::Experimental;
 
 /** \class REveMagField
 \ingroup REve
@@ -1409,7 +1408,7 @@ void REveTrackPropagator::StepRungeKutta(Double_t step,
        return;
     }
 
-  } while(1);
+  } while(true);
 
   // angle too big, use helix
 

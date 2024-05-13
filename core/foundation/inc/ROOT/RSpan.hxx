@@ -4,7 +4,7 @@
 /// \date 2015-09-06
 
 /*************************************************************************
- * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -14,23 +14,6 @@
 #ifndef ROOT_RSpan
 #define ROOT_RSpan
 
-#include "RConfigure.h"
-
-#ifdef R__HAS_STD_SPAN
-
-#include <span>
-
-#elif defined(R__HAS_STD_EXPERIMENTAL_SPAN)
-
-#include <experimental/span>
-namespace std {
-  using template<class T> span = experimental::span<T>;
-
-  // TODO: using make_view() overloads
-}
-
-#else
-# include "ROOT/span.hxx"
-#endif
+#include "ROOT/span.hxx"
 
 #endif

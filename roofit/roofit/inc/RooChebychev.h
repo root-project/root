@@ -29,26 +29,30 @@ public:
   RooChebychev(const char *name, const char *title,
                RooAbsReal& _x, const RooArgList& _coefList) ;
 
-  RooChebychev(const RooChebychev& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooChebychev(*this, newname); }
-  inline virtual ~RooChebychev() { }
+  RooChebychev(const RooChebychev& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooChebychev(*this, newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  RooSpan<double> evaluateBatch(std::size_t begin, std::size_t batchSize) const;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  virtual void selectNormalizationRange(const char* rangeName=0, Bool_t force=kFALSE) ;
-  
-private:
+  void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  private:
   RooRealProxy _x;
   RooListProxy _coefList ;
-  mutable TNamed* _refRangeName ; 
+  mutable TNamed* _refRangeName = nullptr;
 
-  Double_t evaluate() const;
-  Double_t evalAnaInt(const Double_t a, const Double_t b) const;
+  double evaluate() const override;
+  void doEval(RooFit::EvalContext &) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
-  ClassDef(RooChebychev,2) // Chebychev polynomial PDF
+  double evalAnaInt(const double a, const double b) const;
+
+  ClassDefOverride(RooChebychev,2) // Chebychev polynomial PDF
 };
 
 #endif

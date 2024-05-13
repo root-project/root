@@ -52,7 +52,7 @@ enum ROOT_Graphics_Msg {
 
 enum    L_ROOT_OpenGL
      {
-       GL_MAKECURRENT   // Make the the OpenGL  rendering context the current one
+       GL_MAKECURRENT   // Make the OpenGL rendering context the current one
      };
 
 /*     Emulation of X11 control ROOT routines

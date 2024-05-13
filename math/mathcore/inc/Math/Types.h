@@ -11,9 +11,13 @@
 #pragma GCC diagnostic ignored "-Wall"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#if (__cplusplus >= 202002L) // only for C++20
+#pragma GCC diagnostic ignored "-Wdeprecated-enum-enum-conversion"
+#endif
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wconditional-uninitialized"
+#pragma clang diagnostic ignored "-Wdeprecated-copy"
 #endif
 
 #include <Vc/Vc>

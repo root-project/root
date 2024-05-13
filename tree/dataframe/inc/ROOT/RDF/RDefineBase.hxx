@@ -8,11 +8,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RCUSTOMCOLUMNBASE
-#define ROOT_RCUSTOMCOLUMNBASE
+#ifndef ROOT_RDEFINEBASE
+#define ROOT_RDEFINEBASE
 
 #include "ROOT/RDF/GraphNode.hxx"
-#include "ROOT/RDF/RBookedDefines.hxx"
+#include "ROOT/RDF/RColumnRegister.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RVec.hxx"
 
 #include <deque>
 #include <map>
@@ -23,8 +26,13 @@
 class TTreeReader;
 
 namespace ROOT {
+namespace RDF {
+class RDataSource;
+}
 namespace Detail {
 namespace RDF {
+
+class RLoopManager;
 
 namespace RDFInternal = ROOT::Internal::RDF;
 
@@ -32,23 +40,18 @@ class RDefineBase {
 protected:
    const std::string fName; ///< The name of the custom column
    const std::string fType; ///< The type of the custom column as a text string
-   unsigned int fNChildren{0};      ///< number of nodes of the functional graph hanging from this object
-   unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
-   const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    std::vector<Long64_t> fLastCheckedEntry;
-   /// A unique ID that identifies this custom column.
-   /// Used e.g. to distinguish custom columns with the same name in different branches of the computation graph.
-   const unsigned int fID = GetNextID();
-   RDFInternal::RBookedDefines fDefines;
-   std::deque<bool> fIsInitialized; // because vector<bool> is not thread-safe
-   const std::map<std::string, std::vector<void *>> &fDSValuePtrs; // reference to RLoopManager's data member
-
-   static unsigned int GetNextID();
+   RDFInternal::RColumnRegister fColRegister;
+   RLoopManager *fLoopManager; // non-owning pointer to the RLoopManager
+   const ROOT::RDF::ColumnNames_t fColumnNames;
+   /// The nth flag signals whether the nth input column is a custom column or not.
+   ROOT::RVecB fIsDefine;
+   std::vector<std::string> fVariationDeps; ///< List of systematic variations that affect the value of this define.
+   std::string fVariation;                  ///< This indicates for what variation this define evaluates values.
 
 public:
-   RDefineBase(std::string_view name, std::string_view type, unsigned int nSlots,
-                     const RDFInternal::RBookedDefines &defines,
-                     const std::map<std::string, std::vector<void *>> &DSValuePtrs);
+   RDefineBase(std::string_view name, std::string_view type, const RDFInternal::RColumnRegister &colRegister,
+               RLoopManager &lm, const ColumnNames_t &columnNames, const std::string &variationName = "nominal");
 
    RDefineBase &operator=(const RDefineBase &) = delete;
    RDefineBase &operator=(RDefineBase &&) = delete;
@@ -61,14 +64,22 @@ public:
    std::string GetTypeName() const;
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
    virtual void Update(unsigned int slot, Long64_t entry) = 0;
+   /// Update function to be called once per sample, used if the derived type is a RDefinePerSample
+   virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) = 0;
-   /// Return the unique identifier of this RDefineBase.
-   unsigned int GetID() const { return fID; }
+   virtual void FinalizeSlot(unsigned int slot) = 0;
+
+   const std::vector<std::string> &GetVariations() const { return fVariationDeps; }
+
+   /// Create clones of this Define that work with values in varied "universes".
+   virtual void MakeVariations(const std::vector<std::string> &variations) = 0;
+
+   /// Return a clone of this Define that works with values in the variationName "universe".
+   virtual RDefineBase &GetVariedDefine(const std::string &variationName) = 0;
 };
 
 } // ns RDF
 } // ns Detail
 } // ns ROOT
 
-#endif // ROOT_RCUSTOMCOLUMNBASE
+#endif // ROOT_RDEFINEBASE

@@ -28,105 +28,125 @@ range and values of the arguments.
 #include "RooExponential.h"
 
 #include "RooRealVar.h"
-#include "BatchHelpers.h"
-#include "RooVDTHeaders.h"
+#include "RooBatchCompute.h"
 
+#include <RooFit/Detail/AnalyticalIntegrals.h>
+
+#include <algorithm>
 #include <cmath>
-
-using namespace std;
 
 ClassImp(RooExponential);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooExponential::RooExponential(const char *name, const char *title,
-                RooAbsReal& _x, RooAbsReal& _c) :
-  RooAbsPdf(name, title),
-  x("x","Dependent",this,_x),
-  c("c","Exponent",this,_c)
+RooExponential::RooExponential(const char *name, const char *title, RooAbsReal &variable, RooAbsReal &coefficient,
+                               bool negateCoefficient)
+   : RooAbsPdf{name, title},
+     x{"x", "Dependent", this, variable},
+     c{"c", "Exponent", this, coefficient},
+     _negateCoefficient{negateCoefficient}
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooExponential::RooExponential(const RooExponential& other, const char* name) :
-  RooAbsPdf(other, name), x("x",this,other.x), c("c",this,other.c)
+RooExponential::RooExponential(const RooExponential &other, const char *name)
+   : RooAbsPdf{other, name}, x{"x", this, other.x}, c{"c", this, other.c}, _negateCoefficient{other._negateCoefficient}
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///cout << "exp(x=" << x << ",c=" << c << ")=" << exp(c*x) << endl ;
 
-Double_t RooExponential::evaluate() const{
-  return exp(c*x);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Int_t RooExponential::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
+double RooExponential::evaluate() const
 {
-  if (matchArgs(allVars,analVars,x)) return 1;
-  if (matchArgs(allVars,analVars,c)) return 2;
-  return 0 ;
+   double coef = c;
+   if (_negateCoefficient) {
+      coef = -coef;
+   }
+   return std::exp(coef * x);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-Double_t RooExponential::analyticalIntegral(Int_t code, const char* rangeName) const
+/// Compute multiple values of Exponential distribution.
+void RooExponential::doEval(RooFit::EvalContext &ctx) const
 {
-  assert(code == 1 || code ==2);
-
-  auto& constant  = code == 1 ? c : x;
-  auto& integrand = code == 1 ? x : c;
-
-  if (constant == 0.0) {
-    return integrand.max(rangeName) - integrand.min(rangeName);
-  }
-
-  return (exp(constant*integrand.max(rangeName)) - exp(constant*integrand.min(rangeName)))
-      / constant;
+   auto computer = _negateCoefficient ? RooBatchCompute::ExponentialNeg : RooBatchCompute::Exponential;
+   RooBatchCompute::compute(ctx.config(this), computer, ctx.output(), {ctx.at(x), ctx.at(c)});
 }
 
-
-namespace {
-
-template<class Tx, class Tc>
-void compute(size_t n, double* __restrict output, Tx x, Tc c) {
-
-  for (size_t i = 0; i < n; ++i) { //CHECK_VECTORISE
-    output[i] = _rf_fast_exp(x[i]*c[i]);
-  }
-}
-
+Int_t RooExponential::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
+{
+   if (matchArgs(allVars, analVars, x))
+      return 1;
+   if (matchArgs(allVars, analVars, c))
+      return 2;
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Evaluate the exponential without normalising it on the given batch.
-/// \param[in] begin Index of the batch to be computed.
-/// \param[in] batchSize Size of each batch. The last batch may be smaller.
-/// \return A span with the computed values.
 
-RooSpan<double> RooExponential::evaluateBatch(std::size_t begin, std::size_t batchSize) const {
-  using namespace BatchHelpers;
-  auto xData = x.getValBatch(begin, batchSize);
-  auto cData = c.getValBatch(begin, batchSize);
-  const bool batchX = !xData.empty();
-  const bool batchC = !cData.empty();
+double RooExponential::analyticalIntegral(Int_t code, const char *rangeName) const
+{
+   assert(code == 1 || code == 2);
 
-  if (!batchX && !batchC) {
-    return {};
-  }
-  batchSize = findSize({ xData, cData });
-  auto output = _batchData.makeWritableBatchUnInit(begin, batchSize);
+   bool isOverX = code == 1;
 
-  if (batchX && !batchC ) {
-    compute(batchSize, output.data(), xData, BracketAdapter<double>(c));
-  }
-  else if (!batchX && batchC ) {
-    compute(batchSize, output.data(), BracketAdapter<double>(x), cData);
-  }
-  else if (batchX && batchC ) {
-    compute(batchSize, output.data(), xData, cData);
-  }
-  return output;
+   double coef = c;
+   if (_negateCoefficient) {
+      coef = -coef;
+   }
+
+   double constant = isOverX ? coef : x;
+   auto &integrand = isOverX ? x : c;
+
+   double min = integrand.min(rangeName);
+   double max = integrand.max(rangeName);
+
+   if (!isOverX && _negateCoefficient) {
+      std::swap(min, max);
+      min = -min;
+      max = -max;
+   }
+
+   return RooFit::Detail::AnalyticalIntegrals::exponentialIntegral(min, max, constant);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooExponential::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Build a call to the stateless exponential defined later.
+   std::string coef;
+   if (_negateCoefficient) {
+      coef += "-";
+   }
+   coef += ctx.getResult(c);
+   ctx.addResult(this, "std::exp(" + coef + " * " + ctx.getResult(x) + ")");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+std::string RooExponential::buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                                        RooFit::Detail::CodeSquashContext &ctx) const
+{
+   bool isOverX = code == 1;
+
+   std::string constant;
+   if (_negateCoefficient && isOverX) {
+      constant += "-";
+   }
+   constant += ctx.getResult(isOverX ? c : x);
+
+   auto &integrand = isOverX ? x : c;
+
+   double min = integrand.min(rangeName);
+   double max = integrand.max(rangeName);
+
+   if (!isOverX && _negateCoefficient) {
+      std::swap(min, max);
+      min = -min;
+      max = -max;
+   }
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::exponentialIntegral", min, max, constant);
 }

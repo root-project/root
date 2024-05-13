@@ -32,7 +32,7 @@ public:
    TKeyXML(TDirectory *mother, Long64_t keyid, const void *obj, const TClass *cl, const char *name,
            const char *title = nullptr);
    TKeyXML(TDirectory *mother, Long64_t keyid, XMLNodePointer_t keynode);
-   virtual ~TKeyXML();
+   ~TKeyXML() override;
 
    // redefined TKey Methods
    void Delete(Option_t *option = "") final;

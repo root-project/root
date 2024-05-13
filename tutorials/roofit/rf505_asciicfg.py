@@ -1,10 +1,10 @@
 ## \file rf505_asciicfg.py
 ## \ingroup tutorial_roofit
 ## \notebook -nodraw
-##
-## \brief Organization and simultaneous fits: reading and writing ASCII configuration files
+## Organization and simultaneous fits: reading and writing ASCII configuration files
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -23,25 +23,24 @@ s = ROOT.RooRealVar("s", "s", 1, -10, 10)
 gauss = ROOT.RooGaussian("g", "g", x, m, s)
 
 # Construct poly(x,p0)
-p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0., 1.)
-poly = ROOT.RooPolynomial("p", "p", x, ROOT.RooArgList(p0))
+p0 = ROOT.RooRealVar("p0", "p0", 0.01, 0.0, 1.0)
+poly = ROOT.RooPolynomial("p", "p", x, [p0])
 
 # model = f*gauss(x) + (1-f)*poly(x)
-f = ROOT.RooRealVar("f", "f", 0.5, 0., 1.)
-model = ROOT.RooAddPdf("model", "model", ROOT.RooArgList(
-    gauss, poly), ROOT.RooArgList(f))
+f = ROOT.RooRealVar("f", "f", 0.5, 0.0, 1.0)
+model = ROOT.RooAddPdf("model", "model", [gauss, poly], [f])
 
 # Fit model to toy data
 # -----------------------------------------
 
-d = model.generate(ROOT.RooArgSet(x), 1000)
-model.fitTo(d)
+d = model.generate({x}, 1000)
+model.fitTo(d, PrintLevel=-1)
 
 # Write parameters to ASCII file
 # -----------------------------------------------------------
 
 # Obtain set of parameters
-params = model.getParameters(ROOT.RooArgSet(x))
+params = model.getParameters({x})
 
 # Write parameters to file
 params.writeToFile("rf505_asciicfg_example.txt")
@@ -64,8 +63,7 @@ params.Print("v")
 params.readFromFile(configFile, "READ", "Section3")
 
 # Print the list of parameters that were not read from Section3
-print("The following parameters of the were _not_ read from Section3: ",
-      params.selectByAttrib("READ", ROOT.kFALSE))
+print("The following parameters of the were _not_ read from Section3: ", params.selectByAttrib("READ", False))
 
 # Read parameters from section 'Section4' of file, contains
 # 'include file' statement of rf505_asciicfg_example.txt

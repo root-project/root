@@ -6,18 +6,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_Browsable_TDirectory
-#define ROOT7_Browsable_TDirectory
+#ifndef ROOT7_Browsable_TKeyItem
+#define ROOT7_Browsable_TKeyItem
 
 #include <ROOT/Browsable/RItem.hxx>
 
 class TDirectory;
 
 namespace ROOT {
-namespace Experimental {
 namespace Browsable {
 
-/** Representation of single item in the file browser for object from TKey */
+/** \class TKeyItem
+\ingroup rbrowser
+Representation of single item in the file browser for object from TKey
+*/
+
 class TKeyItem : public RItem {
    std::string className; ///< class name
 
@@ -34,7 +37,6 @@ public:
 };
 
 } // namespace Browsable
-} // namespace Experimental
 } // namespace ROOT
 
 

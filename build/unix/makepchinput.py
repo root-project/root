@@ -252,9 +252,6 @@ def isDirForPCH(dirName, legacyPyROOT):
                            "math/vdt",
                            "tmva/rmva"]
 
-   if (sys.platform != 'win32' and sys.maxsize <= 2**32): # https://docs.python.org/3/library/platform.html#cross-platform
-      PCHPatternsBlacklist.append("tree/dataframe")
-
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
 
@@ -264,7 +261,7 @@ def isDirForPCH(dirName, legacyPyROOT):
 def getLinesFromDict(marker, dictFileName):
    """
    Search for the line marker
-   in the dictionary and save all lines until the line '0'
+   in the dictionary and save all lines until the line 'nullptr'
    Return them as List
    """
    selectedLines = []
@@ -277,7 +274,7 @@ def getLinesFromDict(marker, dictFileName):
          recording = True
          continue
 
-      if recording and "0" == line[0]: break
+      if recording and "nullptr" == line[0:7]: break
 
       if recording:
          selectedLines.append(line[:-1])
@@ -459,6 +456,11 @@ def makePCHInput():
 
    allHeadersContent = getSTLIncludes()
    allHeadersContent += getExtraIncludes(clingetpchList)
+
+   # Make sure we don't get warnings from the old RooFit test statistics
+   # headers that are deprecated. This line can be removed once the deprecaded
+   # headers are gone (ROOT 6.32.00):
+   allHeadersContent += "#define ROOFIT_BUILDS_ITSELF\n"
 
    allLinkdefsContent = ""
 

@@ -24,18 +24,18 @@ class TGWindow;
 class TGTableHeader : public TGTableCell {
 
 protected:
-   EHeaderType fType;        // Type of header
-   UInt_t      fWidth;       // Width for the column
-   UInt_t      fHeight;      // Height of the row
-   Bool_t      fReadOnly;    // Cell readonly state
-   Bool_t      fEnabled;     // Cell enabled state
-   Bool_t      fHasOwnLabel; // Flag on default or specific label usage
+   EHeaderType fType;        ///< Type of header
+   UInt_t      fWidth;       ///< Width for the column
+   UInt_t      fHeight;      ///< Height of the row
+   Bool_t      fReadOnly;    ///< Cell readonly state
+   Bool_t      fEnabled;     ///< Cell enabled state
+   Bool_t      fHasOwnLabel; ///< Flag on default or specific label usage
 
    void        Init();
 
 public:
-   TGTableHeader(const TGWindow *p = 0, TGTable *table = 0,
-                 TGString *label = 0, UInt_t position = 0,
+   TGTableHeader(const TGWindow *p = nullptr, TGTable *table = nullptr,
+                 TGString *label = nullptr, UInt_t position = 0,
                  EHeaderType type = kColumnHeader, UInt_t width = 80,
                  UInt_t height = 25, GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
@@ -46,23 +46,23 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   virtual ~TGTableHeader();
+   ~TGTableHeader() override;
 
-   virtual void SetWidth(UInt_t width);
-   virtual void SetHeight(UInt_t height);
+   void SetWidth(UInt_t width) override;
+   void SetHeight(UInt_t height) override;
 
-   virtual void SetLabel(const char *label);
+   void SetLabel(const char *label) override;
 
    virtual void SetDefaultLabel();
    virtual void SetPosition(UInt_t pos);
-   virtual void Resize(UInt_t width, UInt_t height);  // Resize width or height
-   virtual void Resize(TGDimension newsize);          // depending on type
+   void Resize(UInt_t width, UInt_t height) override;  // Resize width or height
+   void Resize(TGDimension newsize) override;          // depending on type
    virtual void Sort(Bool_t order = kSortAscending);
    virtual void UpdatePosition();
 
    virtual EHeaderType GetType() { return fType; }
 
-   ClassDef(TGTableHeader, 0) // Header for use in TGTable.
+   ClassDefOverride(TGTableHeader, 0) // Header for use in TGTable.
 };
 
 #endif

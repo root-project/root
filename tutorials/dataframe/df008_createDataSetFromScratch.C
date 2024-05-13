@@ -1,14 +1,14 @@
 /// \file
 /// \ingroup tutorial_dataframe
 /// \notebook -nodraw
-/// \brief Create data from scratch with RDataFrame.
+/// Create data from scratch with RDataFrame.
 ///
 /// This tutorial shows how to create a dataset from scratch with RDataFrame
 ///
 /// \macro_code
 ///
 /// \date June 2017
-/// \author Danilo Piparo
+/// \author Danilo Piparo (CERN)
 
 void df008_createDataSetFromScratch()
 {

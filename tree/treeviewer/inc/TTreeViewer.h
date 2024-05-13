@@ -57,7 +57,7 @@ friend class TGClient;
 friend class TGButton;
 
 public:
-   //---- item types used as user data
+   /// Item types used as user data
    enum EListItemType {
       kLTNoType            = 0,
       kLTPackType          = BIT(0),
@@ -71,31 +71,39 @@ public:
    };
 
 private:
-   TTree                *fTree;                 // selected tree
-   TTVSession           *fSession;              // current tree-viewer session
-   const char           *fFilename;             // name of the file containing the tree
-   const char           *fSourceFile;           // name of the C++ source file - default treeviewer.C
-   TString              fLastOption;            // last graphic option
-   TTree                *fMappedTree;           // listed tree
-   TBranch              *fMappedBranch;         // listed branch
-   Int_t                fDimension;             // histogram dimension
-   Bool_t               fVarDraw;               // true if an item is double-clicked
-   Bool_t               fScanMode;              // flag activated when Scan Box is double-clicked
-   TContextMenu         *fContextMenu;          // context menu for tree viewer
-   TGSelectBox          *fDialogBox;            // expression editor
-   TList                *fTreeList;             // list of mapped trees
-   Int_t                fTreeIndex;             // index of current tree in list
-   const TGPicture      *fPicX, *fPicY, *fPicZ; // pictures for X, Y and Z expressions
-   const TGPicture      *fPicDraw, *fPicStop;   // pictures for Draw/Stop buttons
-   const TGPicture      *fPicRefr;              // pictures for Refresh buttons //ia
-   Cursor_t             fDefaultCursor;         // default cursor
-   Cursor_t             fWatchCursor;           // watch cursor
-   TTimer               *fTimer;                // tree viewer timer
-   Bool_t               fCounting;              // true if timer is counting
-   Bool_t               fStopMapping;           // true if branch don't need remapping
-   Bool_t               fEnableCut;             // true if cuts are enabled
-   Int_t                fNexpressions;          // number of expression widgets
-// menu bar, menu bar entries and layouts
+
+///@{
+   TTree                *fTree;                 ///< Selected tree
+   TTVSession           *fSession;              ///< Current tree-viewer session
+   const char           *fFilename;             ///< Name of the file containing the tree
+   const char           *fSourceFile;           ///< Name of the C++ source file - default treeviewer.C
+   TString              fLastOption;            ///< Last graphic option
+   TTree                *fMappedTree;           ///< Listed tree
+   TBranch              *fMappedBranch;         ///< Listed branch
+   Int_t                fDimension;             ///< Histogram dimension
+   bool                 fVarDraw;               ///< True if an item is double-clicked
+   bool                 fScanMode;              ///< Flag activated when Scan Box is double-clicked
+   TContextMenu         *fContextMenu;          ///< Context menu for tree viewer
+   TGSelectBox          *fDialogBox;            ///< Expression editor
+   TList                *fTreeList;             ///< List of mapped trees
+   Int_t                fTreeIndex;             ///< Index of current tree in list
+   const TGPicture      *fPicX;                 ///< Pictures for X expressions
+   const TGPicture      *fPicY;                 ///< Pictures for Y expressions
+   const TGPicture      *fPicZ;                 ///< Pictures for Z expressions
+   const TGPicture      *fPicDraw;              ///< Pictures for Draw buttons
+   const TGPicture      *fPicStop;              ///< Pictures for Stop buttons
+   const TGPicture      *fPicRefr;              ///< Pictures for Refresh buttons ///<ia
+   Cursor_t             fDefaultCursor;         ///< Default cursor
+   Cursor_t             fWatchCursor;           ///< Watch cursor
+   TTimer               *fTimer;                ///< Tree viewer timer
+   bool                 fCounting;              ///< True if timer is counting
+   bool                 fStopMapping;           ///< True if branch don't need remapping
+   bool                 fEnableCut;             ///< True if cuts are enabled
+   Int_t                fNexpressions;          ///< Number of expression widgets
+///@}
+
+///@{
+/// @name Menu bar, menu bar entries and layouts
    TGLayoutHints        *fMenuBarLayout;
    TGLayoutHints        *fMenuBarItemLayout;
    TGLayoutHints        *fMenuBarHelpLayout;
@@ -108,58 +116,75 @@ private:
    TGPopupMenu          *fOptions1D;
    TGPopupMenu          *fOptions2D;
    TGPopupMenu          *fHelpMenu;
-// toolbar and hints
+///@}
+
+///@{
+/// @name Toolbar and hints
    TGToolBar            *fToolBar;
    TGLayoutHints        *fBarLayout;
-// widgets on the toolbar
-   TGLabel              *fBarLbl1;      // label of command text entry
-   TGLabel              *fBarLbl2;      // label of option text entry
-   TGLabel              *fBarLbl3;      // label of histogram name text entry
-   TGCheckButton        *fBarH;         // checked for drawing current histogram with different graphic option
-   TGCheckButton        *fBarScan;      // checked for tree scan
-   TGCheckButton        *fBarRec;       // command recording toggle
-   TGTextEntry          *fBarCommand;   // user command entry
-   TGTextEntry          *fBarOption;    // histogram drawing option entry
-   TGTextEntry          *fBarHist;      // histogram name entry
-// frames
-   TGHorizontalFrame    *fHf;           // main horizontal frame
-   TGDoubleVSlider      *fSlider;       // vertical slider to select processed tree entries;
-   TGVerticalFrame      *fV1;           // list tree mother
-   TGVerticalFrame      *fV2;           // list view mother
-   TGCompositeFrame     *fTreeHdr;      // header for list tree
-   TGCompositeFrame     *fListHdr;      // header for list view
-   TGLabel              *fLbl1;         // label for list tree
-   TGLabel              *fLbl2;         // label for list view
-   TGHorizontalFrame    *fBFrame;       // button frame
-   TGHorizontalFrame    *fHpb;          // progress bar frame
-   TGHProgressBar       *fProgressBar;  // progress bar
-   TGLabel              *fBLbl4;        // label for input list entry
-   TGLabel              *fBLbl5;        // label for output list entry
-   TGTextEntry          *fBarListIn;    // tree input event list name entry
-   TGTextEntry          *fBarListOut;   // tree output event list name entry
-   TGPictureButton      *fDRAW;         // DRAW button
-   TGTextButton         *fSPIDER;       // SPIDER button
-   TGPictureButton      *fSTOP;         // interrupt current command (not yet)
-   TGPictureButton      *fREFR;         // REFRESH button  //ia
-   TGStatusBar          *fStatusBar;    // status bar
-   TGComboBox           *fCombo;        // combo box with session records
+///@}
+
+///@{
+/// @name Widgets on the toolbar
+   TGLabel              *fBarLbl1;      ///< Label of command text entry
+   TGLabel              *fBarLbl2;      ///< Label of option text entry
+   TGLabel              *fBarLbl3;      ///< Label of histogram name text entry
+   TGCheckButton        *fBarH;         ///< Checked for drawing current histogram with different graphic option
+   TGCheckButton        *fBarScan;      ///< Checked for tree scan
+   TGCheckButton        *fBarRec;       ///< Command recording toggle
+   TGTextEntry          *fBarCommand;   ///< User command entry
+   TGTextEntry          *fBarOption;    ///< Histogram drawing option entry
+   TGTextEntry          *fBarHist;      ///< Histogram name entry
+///@}
+
+///@{
+/// @name Frames
+   TGHorizontalFrame    *fHf;           ///< Main horizontal frame
+   TGDoubleVSlider      *fSlider;       ///< Vertical slider to select processed tree entries;
+   TGVerticalFrame      *fV1;           ///< List tree mother
+   TGVerticalFrame      *fV2;           ///< List view mother
+   TGCompositeFrame     *fTreeHdr;      ///< Header for list tree
+   TGCompositeFrame     *fListHdr;      ///< Header for list view
+   TGLabel              *fLbl1;         ///< Label for list tree
+   TGLabel              *fLbl2;         ///< Label for list view
+   TGHorizontalFrame    *fBFrame;       ///< Button frame
+   TGHorizontalFrame    *fHpb;          ///< Progress bar frame
+   TGHProgressBar       *fProgressBar;  ///< Progress bar
+   TGLabel              *fBLbl4;        ///< Label for input list entry
+   TGLabel              *fBLbl5;        ///< Label for output list entry
+   TGTextEntry          *fBarListIn;    ///< Tree input event list name entry
+   TGTextEntry          *fBarListOut;   ///< Pree output event list name entry
+   TGPictureButton      *fDRAW;         ///< DRAW button
+   TGTextButton         *fSPIDER;       ///< SPIDER button
+   TGPictureButton      *fSTOP;         ///< Interrupt current command (not yet)
+   TGPictureButton      *fREFR;         ///< REFRESH button  ///<ia
+   TGStatusBar          *fStatusBar;    ///< Status bar
+   TGComboBox           *fCombo;        ///< Combo box with session records
    TGPictureButton      *fBGFirst;
    TGPictureButton      *fBGPrevious;
    TGPictureButton      *fBGRecord;
    TGPictureButton      *fBGNext;
    TGPictureButton      *fBGLast;
-   TGTextButton         *fReset;        // clear expression's entries
-// ListTree
-   TGCanvas             *fTreeView;     // ListTree canvas container
-   TGListTree           *fLt;           // ListTree with file and tree items
-// ListView
-   TGListView           *fListView;     // ListView with branches and leaves
-   TTVLVContainer       *fLVContainer;  // container for listview
+   TGTextButton         *fReset;        ///< clear expression's entries
+///@}
 
-   TList                *fWidgets;      // list of widgets to be deleted
+///@{
+/// @name  ListTree
+   TGCanvas             *fTreeView;     ///< ListTree canvas container
+   TGListTree           *fLt;           ///< ListTree with file and tree items
+///@}
+
+///@{
+/// @name ListView
+   TGListView           *fListView;     ///< ListView with branches and leaves
+   TTVLVContainer       *fLVContainer;  ///< Container for listview
+
+   TList                *fWidgets;      ///< List of widgets to be deleted
+///@}
+
 
 private:
-// private methods
+
    void          BuildInterface();
    const char   *Cut();
    Int_t         Dimension();
@@ -168,65 +193,65 @@ private:
    const char   *Ey();
    const char   *Ez();
    const char   *En(Int_t n);
-   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = nullptr, bool listIt = true);
    void          MapOptions(Long_t parm1);
-   void          MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapTree(TTree *tree, TGListTreeItem *parent = nullptr, bool listIt = true);
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
-   void          DoError(int level, const char *location, const char *fmt, va_list va) const;
+   void          DoError(int level, const char *location, const char *fmt, va_list va) const override;
 
 public:
-   TTreeViewer(const char* treeName = 0);
+   TTreeViewer(const char* treeName = nullptr);
    TTreeViewer(const TTree *tree);
-   virtual       ~TTreeViewer();
-// public methods
+         ~TTreeViewer() override;
+
    void          AppendTree(TTree *tree);
-   void          ActivateButtons(Bool_t first, Bool_t previous,
-                                 Bool_t next , Bool_t last);
-   virtual void  CloseWindow();
-   virtual void  Delete(Option_t *) { }                          // *MENU*
+   void          ActivateButtons(bool first, bool previous,
+                                 bool next , bool last);
+   void  CloseWindow() override;
+   void  Delete(Option_t *) override { }                          // *MENU*
    void          DoRefresh();
    void          EditExpression();
    void          Empty();
    void          EmptyAll();                                     // *MENU*
-   void          ExecuteCommand(const char* command, Bool_t fast = kFALSE); // *MENU*
+   void          ExecuteCommand(const char* command, bool fast = false); // *MENU*
    void          ExecuteDraw();
    void          ExecuteSpider();
    TTVLVEntry   *ExpressionItem(Int_t index);
    TList        *ExpressionList();
    const char   *GetGrOpt();
    TTree        *GetTree() {return fTree;}
-   Bool_t        HandleTimer(TTimer *timer);
-   Bool_t        IsCutEnabled() {return fEnableCut;}
-   Bool_t        IsScanRedirected();
-   Int_t         MakeSelector(const char* selector = 0);         // *MENU*
-   void          Message(const char* msg);
+   bool          HandleTimer(TTimer *timer) override;
+   bool          IsCutEnabled() {return fEnableCut;}
+   bool          IsScanRedirected();
+   Int_t         MakeSelector(const char* selector = nullptr);         // *MENU*
+   void          Message(const char* msg) override;
    void          NewExpression();                                // *MENU*
    void          PrintEntries();
    Long64_t      Process(const char* filename, Option_t *option="", Long64_t nentries=TTree::kMaxEntries, Long64_t firstentry=0); // *MENU*
-   Bool_t        ProcessMessage(Long_t msg, Long_t parm1, Long_t parm2);
+   bool          ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void          RemoveItem();
    void          RemoveLastRecord();                             // *MENU*
-   void          SaveSource(const char* filename="", Option_t *option="");            // *MENU*
+   void          SaveSource(const char* filename="", Option_t *option="") override;            // *MENU*
    void          SetHistogramTitle(const char *title);
-   void          SetCutMode(Bool_t enabled = kTRUE) {fEnableCut = enabled;}
+   void          SetCutMode(bool enabled = true) {fEnableCut = enabled;}
    void          SetCurrentRecord(Long64_t entry);
    void          SetGrOpt(const char *option);
    void          SetNexpressions(Int_t expr);
    void          SetRecordName(const char *name);                // *MENU*
    void          SetScanFileName(const char *name="");           // *MENU*
-   void          SetScanMode(Bool_t mode=kTRUE) {fScanMode = mode;}
-   void          SetScanRedirect(Bool_t mode);
+   void          SetScanMode(bool mode=true) {fScanMode = mode;}
+   void          SetScanRedirect(bool mode);
    void          SetSession(TTVSession *session);
-   void          SetUserCode(const char *code, Bool_t autoexec=kTRUE); // *MENU*
+   void          SetUserCode(const char *code, bool autoexec=true); // *MENU*
    void          SetTree(TTree* tree);
    void          SetTreeName(const char* treeName);              // *MENU*
-   Bool_t        SwitchTree(Int_t index);
+   bool          SwitchTree(Int_t index);
    void          UpdateCombo();
    void          UpdateRecord(const char *name="new name");      // *MENU*
 
-   ClassDef(TTreeViewer,0)  // A GUI oriented tree viewer
+   ClassDefOverride(TTreeViewer,0)  // A GUI oriented tree viewer
 };
 
 #endif

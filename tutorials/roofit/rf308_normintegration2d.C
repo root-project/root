@@ -1,21 +1,18 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook
-///
-///
-/// \brief Multidimensional models: normalization and integration of p.d.fs, construction of
-/// cumulative distribution functions from p.d.f.s in two dimensions
+/// Multidimensional models: normalization and integration of pdfs, construction of
+/// cumulative distribution functions from pdfs in two dimensions
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooProdPdf.h"
 #include "RooAbsReal.h"
 #include "RooPlot.h"
@@ -33,9 +30,9 @@ void rf308_normintegration2d()
    RooRealVar x("x", "x", -10, 10);
    RooRealVar y("y", "y", -10, 10);
 
-   // Create p.d.f. gaussx(x,-2,3), gaussy(y,2,2)
-   RooGaussian gx("gx", "gx", x, RooConst(-2), RooConst(3));
-   RooGaussian gy("gy", "gy", y, RooConst(+2), RooConst(2));
+   // Create pdf gaussx(x,-2,3), gaussy(y,2,2)
+   RooGaussian gx("gx", "gx", x, -2.0, 3.0);
+   RooGaussian gy("gy", "gy", y, +2.0, 2.0);
 
    // Create gxy = gx(x)*gy(y)
    RooProdPdf gxy("gxy", "gxy", RooArgSet(gx, gy));
@@ -52,7 +49,7 @@ void rf308_normintegration2d()
 
    // Create object representing integral over gx
    // which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-   RooAbsReal *igxy = gxy.createIntegral(RooArgSet(x, y));
+   std::unique_ptr<RooAbsReal> igxy{gxy.createIntegral(RooArgSet(x, y))};
    cout << "gx_Int[x,y] = " << igxy->getVal() << endl;
 
    // NB: it is also possible to do the following
@@ -73,9 +70,9 @@ void rf308_normintegration2d()
    y.setRange("signal", -3, 3);
 
    // Create an integral of gxy_Norm[x,y] over x and y in range "signal"
-   // This is the fraction of of p.d.f. gxy_Norm[x,y] which is in the
+   // This is the fraction of of pdf gxy_Norm[x,y] which is in the
    // range named "signal"
-   RooAbsReal *igxy_sig = gxy.createIntegral(RooArgSet(x, y), NormSet(RooArgSet(x, y)), Range("signal"));
+   std::unique_ptr<RooAbsReal> igxy_sig{gxy.createIntegral({x, y}, NormSet(RooArgSet(x, y)), Range("signal"))};
    cout << "gx_Int[x,y|signal]_Norm[x,y] = " << igxy_sig->getVal() << endl;
 
    // C o n s t r u c t   c u m u l a t i v e   d i s t r i b u t i o n   f u n c t i o n   f r o m   p d f
@@ -83,7 +80,7 @@ void rf308_normintegration2d()
 
    // Create the cumulative distribution function of gx
    // i.e. calculate Int[-10,x] gx(x') dx'
-   RooAbsReal *gxy_cdf = gxy.createCdf(RooArgSet(x, y));
+   std::unique_ptr<RooAbsReal> gxy_cdf{gxy.createCdf(RooArgSet(x, y))};
 
    // Plot cdf of gx versus x
    TH1 *hh_cdf = gxy_cdf->createHistogram("hh_cdf", x, Binning(40), YVar(y, Binning(40)));

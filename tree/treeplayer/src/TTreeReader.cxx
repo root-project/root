@@ -31,13 +31,13 @@
  Example code can be found in
   - tutorials/tree/hsimpleReader.C
   - tutorials/tree/h1analysisTreeReader.C
-  - <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">This example</a>
+  - <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">This example</a>
 
  You can generate a skeleton of `TTreeReaderValue<T>` and `TTreeReaderArray<T>` declarations
  for all of a tree's branches using `TTree::MakeSelector()`.
 
  Roottest contains an
- <a href="http://root.cern.ch/gitweb?p=roottest.git;a=tree;f=root/tree/reader;hb=HEAD">example</a>
+ <a href="https://github.com/root-project/roottest/tree/master/root/tree/reader">example</a>
  showing the full power.
 
 A simpler analysis example can be found below: it histograms a function of the px and py branches.
@@ -182,7 +182,7 @@ ClassImp(TTreeReader);
 using namespace ROOT::Internal;
 
 // Provide some storage for the poor little symbol.
-constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryBeyondEnd + 1];
+constexpr const char * const TTreeReader::fgEntryStatusText[TTreeReader::kEntryUnknownError + 1];
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.  Call SetTree to connect to a TTree.
@@ -293,17 +293,18 @@ void TTreeReader::Initialize()
 
       if (fTree->GetTree()) {
          // The current TTree is already available.
-         fSetEntryBaseCallingLoadTree = kTRUE;
+         fSetEntryBaseCallingLoadTree = true;
          Notify();
-         fSetEntryBaseCallingLoadTree = kFALSE;
+         fSetEntryBaseCallingLoadTree = false;
       }
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Callback from TChain and TTree's LoadTree.
-
-Bool_t TTreeReader::Notify()
+/// Notify director and values of a change in tree. Called from TChain and TTree's LoadTree.
+/// TTreeReader registers its fNotify data member with the TChain/TTree which
+/// in turn leads to this method being called upon the execution of LoadTree.
+bool TTreeReader::Notify()
 {
 
    if (fSetEntryBaseCallingLoadTree) {
@@ -341,21 +342,21 @@ Bool_t TTreeReader::Notify()
       }
    }
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Tell readers we now have a tree.
-/// fValues gets insertions during this loop (when parameterized arrays are read),
+/// fValues gets insertions during this loop (when parametrized arrays are read),
 /// invalidating iterators. Use old-school counting instead.
 
-Bool_t TTreeReader::SetProxies() {
+bool TTreeReader::SetProxies() {
 
    for (size_t i = 0; i < fValues.size(); ++i) {
       ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
       reader->CreateProxy();
       if (!reader->GetProxy()){
-         return kFALSE;
+         return false;
       }
 
    }
@@ -383,7 +384,7 @@ Bool_t TTreeReader::SetProxies() {
       }
    }
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +407,7 @@ Bool_t TTreeReader::SetProxies() {
 /// considered.
 ///
 /// \param beginEntry The first entry to be loaded by `Next()`.
-/// \param endEntry   The entry where `Next()` will return kFALSE, not loading it.
+/// \param endEntry   The entry where `Next()` will return false, not loading it.
 
 TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long64_t endEntry)
 {
@@ -416,7 +417,8 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
    // list's number of entries, unless it's a TChain and "max entries" is
    // uninitialized (i.e. TTree::kMaxEntries).
    if (beginEntry >= GetEntries(false) && !(IsChain() && GetEntries(false) == TTree::kMaxEntries)) {
-      Error("SetEntriesRange()", "first entry out of range 0..%lld", GetEntries(false));
+      Error("SetEntriesRange()", "Start entry (%lld) must be lower than the available entries (%lld).", beginEntry,
+            GetEntries(false));
       return kEntryNotFound;
    }
 
@@ -428,7 +430,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntriesRange(Long64_t beginEntry, Long
 
    fBeginEntry = beginEntry;
 
-   if (beginEntry - 1 < 0) 
+   if (beginEntry - 1 < 0)
       // Reset the cache if reading from the first entry of the tree
       Restart();
    else {
@@ -460,7 +462,7 @@ void TTreeReader::Restart() {
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the number of entries of the TEntryList if one is provided, else
 /// of the TTree / TChain, independent of a range set by SetEntriesRange()
-/// by calling TTree/TChain::GetEntriesFast.
+/// by calling TTree/TChain::%GetEntriesFast.
 
 
 Long64_t TTreeReader::GetEntries() const {
@@ -480,17 +482,17 @@ Long64_t TTreeReader::GetEntries() const {
 ///   this TChain should be opened to determine the exact number of entries
 /// of the TChain. If `!IsChain()`, `force` is ignored.
 
-Long64_t TTreeReader::GetEntries(Bool_t force)  {
+Long64_t TTreeReader::GetEntries(bool force)  {
    if (fEntryList)
       return fEntryList->GetN();
    if (!fTree)
       return -1;
    if (force) {
-      fSetEntryBaseCallingLoadTree = kTRUE;
+      fSetEntryBaseCallingLoadTree = true;
       auto res = fTree->GetEntries();
       // Go back to where we were:
       fTree->LoadTree(GetCurrentEntry());
-      fSetEntryBaseCallingLoadTree = kFALSE;
+      fSetEntryBaseCallingLoadTree = false;
       return res;
    }
    return fTree->GetEntriesFast();
@@ -504,7 +506,7 @@ Long64_t TTreeReader::GetEntries(Bool_t force)  {
 /// `local` is `true`, in which case `entry` specifies the entry number within
 /// the current tree. This is needed for instance for TSelector::Process().
 
-TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local)
+TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, bool local)
 {
    if (IsInvalid()) {
       fEntryStatus = kEntryNoTree;
@@ -521,7 +523,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
          // don't try to load entries anymore. Can happen in these cases:
          // while (tr.Next()) {something()};
          // while (tr.Next()) {somethingelse()}; // should not be calling somethingelse().
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
       if (entry >= 0) {
@@ -542,9 +544,9 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
 
    TTree* treeToCallLoadOn = local ? fTree->GetTree() : fTree;
 
-   fSetEntryBaseCallingLoadTree = kTRUE;
+   fSetEntryBaseCallingLoadTree = true;
    const Long64_t loadResult = treeToCallLoadOn->LoadTree(entryAfterList);
-   fSetEntryBaseCallingLoadTree = kFALSE;
+   fSetEntryBaseCallingLoadTree = false;
 
    if (loadResult < 0) {
       // ROOT-9628 We cover here the case when:
@@ -574,7 +576,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
                value->NotifyNewTree(fTree->GetTree());
             }
          }
-         fEntryStatus = kEntryNotFound;
+         fEntryStatus = kEntryBeyondEnd;
          return fEntryStatus;
       }
 
@@ -612,7 +614,7 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
       }
    }
 
-   if (fEndEntry >= 0 && entry >= fEndEntry) {
+   if ((fEndEntry >= 0 && entry >= fEndEntry) || (fEntry >= fTree->GetEntriesFast())) {
       fEntryStatus = kEntryBeyondEnd;
       return fEntryStatus;
    }
@@ -667,7 +669,7 @@ void TTreeReader::SetTree(const char* keyname, TDirectory* dir, TEntryList* entr
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a value reader for this tree.
 
-Bool_t TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
+bool TTreeReader::RegisterValueReader(ROOT::Internal::TTreeReaderValueBase* reader)
 {
    if (fProxiesSet) {
       Error("RegisterValueReader",

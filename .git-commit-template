@@ -1,0 +1,17 @@
+# Commit summary: Written in the present imperative mood.
+# Prefixed by a [scope] tag, not exceeding 50 characters (excl. scope tag).
+#                                                # <- 50 chars is here.
+[scope] Add/fix/improve/... X
+
+# Commit message: Describe the 'why' behind the change. Wrap at 72 characters.
+#                                                                      # <- 72 chars is here.
+
+
+# In case the commit fixes a specific issue, uncomment and add the issue ID:
+# Fixes https://github.com/root-project/root/issues/ISSUE_ID
+
+# Tell git to use this commit template by adding it to the repository configuration:
+#   git config commit.template .git-commit-template
+
+# See https://github.com/root-project/root/blob/master/CONTRIBUTING.md for more
+# information on how to contribute to ROOT.

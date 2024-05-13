@@ -12,6 +12,7 @@
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassEdit.h"
+#include "TDictAttributeMap.h"
 #include "TVirtualStreamerInfo.h"
 #include "TStreamer.h"
 #include "TVirtualIsAProxy.h"
@@ -87,15 +88,15 @@ namespace Internal {
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
-      : fAction(action), fClass(0), fClassName(fullClassname),
+      : fAction(action), fClass(nullptr), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
-        fImplFileName(0), fImplFileLine(0),
+        fImplFileName(nullptr), fImplFileLine(0),
         fIsA(isa),
         fVersion(1),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
+        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
    {
       // Constructor.
 
@@ -107,15 +108,15 @@ namespace Internal {
                                         const std::type_info &info, const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary,
                                         TVirtualIsAProxy *isa, Int_t pragmabits, Int_t sizof)
-      : fAction(action), fClass(0), fClassName(fullClassname),
+      : fAction(action), fClass(nullptr), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(info),
-        fImplFileName(0), fImplFileLine(0),
+        fImplFileName(nullptr), fImplFileLine(0),
         fIsA(isa),
         fVersion(version),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(sizof), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(sizof), fPragmaBits(pragmabits),
+        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
       // Constructor with version number and no showmembers.
@@ -129,15 +130,15 @@ namespace Internal {
                                         const char *declFileName, Int_t declFileLine,
                                         const Internal::TInitBehavior  *action,
                                         DictFuncPtr_t dictionary, Int_t pragmabits)
-      : fAction(action), fClass(0), fClassName(fullClassname),
+      : fAction(action), fClass(nullptr), fClassName(fullClassname),
         fDeclFileName(declFileName), fDeclFileLine(declFileLine),
         fDictionary(dictionary), fInfo(typeid(TForNamespace)),
-        fImplFileName(0), fImplFileLine(0),
-        fIsA(0),
+        fImplFileName(nullptr), fImplFileLine(0),
+        fIsA(nullptr),
         fVersion(version),
-        fMerge(0),fResetAfterMerge(0),fNew(0),fNewArray(0),fDelete(0),fDeleteArray(0),fDestructor(0), fDirAutoAdd(0), fStreamer(0),
-        fStreamerFunc(0), fConvStreamerFunc(0), fCollectionProxy(0), fSizeof(0), fPragmaBits(pragmabits),
-        fCollectionProxyInfo(0), fCollectionStreamerInfo(0)
+        fMerge(nullptr),fResetAfterMerge(nullptr),fNew(nullptr),fNewArray(nullptr),fDelete(nullptr),fDeleteArray(nullptr),fDestructor(nullptr), fDirAutoAdd(nullptr), fStreamer(nullptr),
+        fStreamerFunc(nullptr), fConvStreamerFunc(nullptr), fCollectionProxy(nullptr), fSizeof(0), fPragmaBits(pragmabits),
+        fCollectionProxyInfo(nullptr), fCollectionStreamerInfo(nullptr)
 
    {
       // Constructor for namespace
@@ -214,11 +215,16 @@ namespace Internal {
       delete fCollectionProxyInfo;
       delete fCollectionStreamerInfo;
       delete fStreamer;
-      if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
-      fIsA = 0;
+      if (!fClass)
+         delete fIsA; // fIsA is adopted by the class if any.
+      fIsA = nullptr;
       using ROOT::Internal::gROOTLocal;
-      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
-      if (fAction) GetAction().Unregister(GetClassName());
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses())
+         return;
+      for(auto alt : fAlternate)
+         ROOT::RemoveClassAlternate(alt);
+      if (fAction)
+         GetAction().Unregister(GetClassName(), fClass);
    }
 
    const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
@@ -256,7 +262,7 @@ namespace Internal {
                                           GetDeclFileLine(),
                                           GetImplFileLine());
          if (fPragmaBits & TClassTable::kHasCustomStreamerMember) {
-            fClass->SetBit(TClass::kHasCustomStreamerMember);
+            fClass->fHasCustomStreamerMember = true;
          }
          fClass->SetNew(fNew);
          fClass->SetNewArray(fNewArray);
@@ -268,7 +274,7 @@ namespace Internal {
          fClass->SetConvStreamerFunc(fConvStreamerFunc);
          fClass->SetMerge(fMerge);
          fClass->SetResetAfterMerge(fResetAfterMerge);
-         fClass->AdoptStreamer(fStreamer); fStreamer = 0;
+         fClass->AdoptStreamer(fStreamer); fStreamer = nullptr;
          // If IsZombie is true, something went wrong and we will not be
          // able to properly copy the collection proxy
          if (!fClass->IsZombie()) {
@@ -285,6 +291,17 @@ namespace Internal {
 
          CreateRuleSet( fReadRules, true );
          CreateRuleSet( fReadRawRules, false );
+
+         if (fPragmaBits & (TClassTable::kNtplForceSplit | TClassTable::kNtplForceUnsplit)) {
+            fClass->CreateAttributeMap();
+            // The force-split and force-unsplit flags are mutually exclusive
+            assert(!((fPragmaBits & TClassTable::kNtplForceSplit) && (fPragmaBits & TClassTable::kNtplForceUnsplit)));
+            if (fPragmaBits & TClassTable::kNtplForceSplit) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.split", "true");
+            } else if (fPragmaBits & TClassTable::kNtplForceUnsplit) {
+               fClass->GetAttributeMap()->AddProperty("rntuple.split", "false");
+            }
+         }
       }
       return fClass;
    }
@@ -388,7 +405,7 @@ namespace Internal {
    {
       // Import the information from the class template.
 
-      TNamed *info = ROOT::RegisterClassTemplate(GetClassName(), 0, 0);
+      TNamed *info = ROOT::RegisterClassTemplate(GetClassName(), nullptr, 0);
       if (info) SetImplFile(info->GetTitle(), info->GetUniqueID());
    }
 
@@ -421,6 +438,11 @@ namespace Internal {
       return version;
    }
 
+   void TGenericClassInfo::AdoptAlternate(ROOT::TClassAlt *alt)
+   {
+      fAlternate.push_back(alt);
+   }
+
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)
    {
       // Set the info for the CollectionProxy and take ownership of the object
@@ -444,7 +466,7 @@ namespace Internal {
       // Set a Streamer object.  The streamer object is now 'owned'
       // by the TGenericClassInfo.
 
-      delete fStreamer; fStreamer = 0;
+      delete fStreamer; fStreamer = nullptr;
       if (fClass) {
          fClass->AdoptStreamer(streamer);
       } else {
@@ -458,7 +480,7 @@ namespace Internal {
       // Set the CollectProxy object.  The CollectionProxy object is now 'owned'
       // by the TGenericClassInfo.
 
-      delete fCollectionProxy; fCollectionProxy = 0;
+      delete fCollectionProxy; fCollectionProxy = nullptr;
       fCollectionProxy = collProxy;
       if (fClass && fCollectionProxy && !fClass->IsZombie()) {
          fClass->CopyCollectionProxy(*fCollectionProxy);
@@ -483,7 +505,7 @@ namespace Internal {
    {
       // Set a External Streamer function.
 
-      delete fStreamer; fStreamer = 0;
+      delete fStreamer; fStreamer = nullptr;
       if (fClass) {
          fClass->AdoptStreamer(new TClassStreamer(streamer));
       } else {

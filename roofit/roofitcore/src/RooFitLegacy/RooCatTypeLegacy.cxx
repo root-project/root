@@ -18,33 +18,26 @@
 \class RooCatType
 \ingroup Roofitlegacy
 
-RooCatType is an auxilary class for RooAbsCategory and defines a 
-a single category state. The class holds a string label and an integer 
+RooCatType is an auxiliary class for RooAbsCategory and defines a
+a single category state. The class holds a string label and an integer
 index value which define the state
 **/
 
 #include "RooFitLegacy/RooCatTypeLegacy.h"
 
-#include "RooFit.h"
-
-#include "TClass.h"
-
 #include <iostream>
 
 
-
-using namespace std;
+using std::ostream;
 
 ClassImp(RooCatType);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name argument
 
-void RooCatType::SetName(const Text_t* name) 
-{ 
+void RooCatType::SetName(const Text_t* name)
+{
   if (strlen(name)>255) {
     std::cerr << "RooCatType::SetName warning: label '" << name << "' truncated at 255 chars" << std::endl ;
     _label[255]=0 ;
@@ -57,7 +50,7 @@ void RooCatType::SetName(const Text_t* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the name of the state
 
-void RooCatType::printName(ostream& os) const 
+void RooCatType::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -67,7 +60,7 @@ void RooCatType::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the title of the state
 
-void RooCatType::printTitle(ostream& os) const 
+void RooCatType::printTitle(ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -77,9 +70,9 @@ void RooCatType::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the class name of the state
 
-void RooCatType::printClassName(ostream& os) const 
+void RooCatType::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 

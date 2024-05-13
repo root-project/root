@@ -10,14 +10,14 @@
 #ifndef ROOT_Minuit2_GradientCalculator
 #define ROOT_Minuit2_GradientCalculator
 
+#include "Minuit2/MnMatrixfwd.h"
+
 namespace ROOT {
 
-   namespace Minuit2 {
-
+namespace Minuit2 {
 
 class MinimumParameters;
 class FunctionGradient;
-
 
 /**
    interface class for gradient calculators
@@ -25,17 +25,20 @@ class FunctionGradient;
 class GradientCalculator {
 
 public:
+   virtual ~GradientCalculator() {}
 
-  virtual ~GradientCalculator() {}
+   virtual FunctionGradient operator()(const MinimumParameters &) const = 0;
 
-  virtual FunctionGradient operator()(const MinimumParameters&) const = 0;
+   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const = 0;
 
-  virtual FunctionGradient operator()(const MinimumParameters&,
-                                      const FunctionGradient&) const = 0;
+   virtual bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const { return false;}
+
+   virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const { return false;}
+
 };
 
-  }  // namespace Minuit2
+} // namespace Minuit2
 
-}  // namespace ROOT
+} // namespace ROOT
 
-#endif  // ROOT_Minuit2_GradientCalculator
+#endif // ROOT_Minuit2_GradientCalculator

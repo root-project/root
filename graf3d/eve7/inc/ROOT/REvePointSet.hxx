@@ -15,6 +15,7 @@
 #include <ROOT/REveElement.hxx>
 #include <ROOT/REveProjectionBases.hxx>
 #include <ROOT/REveVector.hxx>
+#include <ROOT/REveSecondarySelectable.hxx>
 
 #include <TAttMarker.h>
 #include <TAttBBox.h>
@@ -34,7 +35,8 @@ namespace Experimental {
 class REvePointSet : public REveElement,
                      public REveProjectable,
                      public TAttMarker,
-                     public TAttBBox
+                     public TAttBBox,
+                     public REveSecondarySelectable
 {
    friend class REvePointSetArray;
 
@@ -45,11 +47,12 @@ protected:
    std::vector<REveVector> fPoints;
    int                     fCapacity{0};
    int                     fSize{0};
+   int                     fTexX{0}, fTexY{0};
 
 public:
    REvePointSet(const std::string& name="", const std::string& title="", Int_t n_points = 0);
    REvePointSet(const REvePointSet &e);
-   virtual ~REvePointSet();
+   ~REvePointSet() override;
 
    REvePointSet *CloneElement() const override { return new REvePointSet(*this); }
 
@@ -109,7 +112,7 @@ protected:
 
 public:
    REvePointSetArray(const std::string &name = "REvePointSetArray", const std::string &title = "");
-   virtual ~REvePointSetArray();
+   ~REvePointSetArray() override;
 
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
@@ -155,7 +158,7 @@ protected:
 
 public:
    REvePointSetProjected();
-   virtual ~REvePointSetProjected() {}
+   ~REvePointSetProjected() override {}
 
    void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
    void UpdateProjection() override;

@@ -1,9 +1,6 @@
-/// \file ROOT/RWebDisplayArgs.hxx
-/// \ingroup WebGui ROOT7
-/// \author Sergey Linev <s.linev@gsi.de>
-/// \date 2018-10-24
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
-/// is welcome!
+// Author: Sergey Linev <s.linev@gsi.de>
+// Date: 2018-10-24
+// Warning: This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -22,7 +19,14 @@
 class THttpServer;
 
 namespace ROOT {
+
 namespace Experimental {
+class RLogChannel;
+} // namespace Experimental
+
+/// Log channel for WebGUI diagnostics.
+ROOT::Experimental::RLogChannel &WebGUILog();
+
 
 class RWebWindow;
 
@@ -33,13 +37,18 @@ friend class RWebWindow;
 public:
    enum EBrowserKind {
       kChrome,   ///< Google Chrome browser
+      kEdge,     ///< Microsoft Edge browser (Windows only)
       kFirefox,  ///< Mozilla Firefox browser
       kNative,   ///< either Chrome or Firefox - both support major functionality
       kCEF,      ///< Chromium Embedded Framework - local display with CEF libs
-      kQt5,      ///< QWebEngine libraries - Chrome code packed in qt5
+      kQt5,      ///< Qt5 QWebEngine libraries - Chromium code packed in qt5
+      kQt6,      ///< Qt6 QWebEngine libraries - Chromium code packed in qt6
       kLocal,    ///< either CEF or Qt5 - both runs on local display without real http server
-      kStandard, ///< standard system web browser, not recognized by ROOT, without batch mode
+      kDefault,  ///< default system web browser, can not be used in batch mode
+      kServer,   ///< indicates that ROOT runs as server and just printouts window URL, browser should be started by the user
       kEmbedded, ///< window will be embedded into other, no extra browser need to be started
+      kOff,      ///< disable web display, do not start any browser
+      kOn,       ///< web display enable, first try use embed displays like Qt or CEF, then native browsers and at the end default system browser
       kCustom    ///< custom web browser, execution string should be provided
    };
 
@@ -49,6 +58,8 @@ protected:
    std::string fExtraArgs;        ///<! extra arguments which will be append to exec string
    std::string fPageContent;      ///<! HTML page content
    std::string fRedirectOutput;   ///<! filename where browser output should be redirected
+   std::string fWidgetKind;       ///<! widget kind, used to identify that will be displayed in the web window
+   bool fBatchMode{false};        ///<! is browser runs in batch mode
    bool fHeadless{false};         ///<! is browser runs in headless mode
    bool fStandalone{true};        ///<! indicates if browser should run isolated from other browser instances
    THttpServer *fServer{nullptr}; ///<! http server which handle all requests
@@ -61,6 +72,7 @@ protected:
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
 
    std::shared_ptr<RWebWindow> fMaster; ///<!  master window
+   unsigned fMasterConnection{0};       ///<!  used master connection
    int fMasterChannel{-1};              ///<!  used master channel
 
    bool SetSizeAsStr(const std::string &str);
@@ -75,7 +87,7 @@ public:
 
    RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
 
-   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel = -1);
+   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, unsigned conndid = 0, int channel = -1);
 
    virtual ~RWebDisplayArgs();
 
@@ -86,24 +98,40 @@ public:
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
 
-   void SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel = -1);
+   void SetMasterWindow(std::shared_ptr<RWebWindow> master, unsigned connid = 0, int channel = -1);
+
+   /// returns true if interactive browser window supposed to be started
+   bool IsInteractiveBrowser() const
+   {
+      return !IsHeadless() &&
+             ((GetBrowserKind() == kOn) || (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) ||
+              (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) || (GetBrowserKind() == kDefault) ||
+              (GetBrowserKind() == kCustom));
+   }
 
    /// returns true if local display like CEF or Qt5 QWebEngine should be used
    bool IsLocalDisplay() const
    {
-      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kLocal) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
-   /// returns true if browser supports headless (batch) mode, used for image production
+   /// returns true if browser supports headless mode
    bool IsSupportHeadless() const
    {
-      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kChrome) || (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5);
+      return (GetBrowserKind() == kNative) || (GetBrowserKind() == kDefault) || (GetBrowserKind() == kOn) ||
+             (GetBrowserKind() == kChrome) || (GetBrowserKind() == kEdge) || (GetBrowserKind() == kFirefox) ||
+             (GetBrowserKind() == kCEF) || (GetBrowserKind() == kQt5) || (GetBrowserKind() == kQt6);
    }
 
    /// set window url
    RWebDisplayArgs &SetUrl(const std::string &url) { fUrl = url; return *this; }
    /// returns window url
    const std::string &GetUrl() const { return fUrl; }
+
+   /// set widget kind
+   RWebDisplayArgs &SetWidgetKind(const std::string &kind) { fWidgetKind = kind; return *this; }
+   /// returns widget kind
+   const std::string &GetWidgetKind() const { return fWidgetKind; }
 
    /// set window url
    RWebDisplayArgs &SetPageContent(const std::string &cont) { fPageContent = cont; return *this; }
@@ -127,6 +155,11 @@ public:
    /// returns window url with append options
    std::string GetFullUrl() const;
 
+   /// set batch mode
+   void SetBatchMode(bool on = true) { fBatchMode = on; }
+   /// returns batch mode
+   bool IsBatchMode() const { return fBatchMode; }
+
    /// set headless mode
    void SetHeadless(bool on = true) { fHeadless = on; }
    /// returns headless mode
@@ -136,12 +169,14 @@ public:
    RWebDisplayArgs &SetWidth(int w = 0) { fWidth = w; return *this; }
    /// set preferable web window height
    RWebDisplayArgs &SetHeight(int h = 0) { fHeight = h; return *this; }
+   /// set preferable web window width and height
    RWebDisplayArgs &SetSize(int w, int h) { fWidth = w; fHeight = h; return *this; }
 
    /// set preferable web window x position, negative is default
    RWebDisplayArgs &SetX(int x = -1) { fX = x; return *this; }
    /// set preferable web window y position, negative is default
    RWebDisplayArgs &SetY(int y = -1) { fY = y; return *this; }
+   /// set preferable web window x and y position, negative is default
    RWebDisplayArgs &SetPos(int x = -1, int y = -1) { fX = x; fY = y; return *this; }
 
    /// returns preferable web window width
@@ -153,10 +188,14 @@ public:
    /// set preferable web window y position
    int GetY() const { return fY; }
 
+   /// set extra command line arguments for starting web browser command
    void SetExtraArgs(const std::string &args) { fExtraArgs = args; }
+   /// get extra command line arguments for starting web browser command
    const std::string &GetExtraArgs() const { return fExtraArgs; }
 
+   /// specify file name to which web browser output should be redirected
    void SetRedirectOutput(const std::string &fname = "") { fRedirectOutput = fname; }
+   /// get file name to which web browser output should be redirected
    const std::string &GetRedirectOutput() const { return fRedirectOutput; }
 
    /// set custom executable to start web browser
@@ -173,9 +212,10 @@ public:
    void SetDriverData(void *data) { fDriverData = data; }
    /// [internal] returns web-driver data, used to start window
    void *GetDriverData() const { return fDriverData; }
+
+   static std::string GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt = "", unsigned qtversion = 0x50000);
 };
 
-}
-}
+} // namespace ROOT
 
 #endif

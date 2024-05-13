@@ -17,8 +17,8 @@
 // 02110-1301 USA
 
 #include "../inc/fontembed.h"
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #include <algorithm>
 #ifdef WIN32
 #define snprintf _snprintf
@@ -410,7 +410,7 @@ namespace mathtext {
          unsigned int glyph_index = cid_map[code_point];
 
          if (char_strings[glyph_index] != ".notdef" &&
-             char_strings[glyph_index] != "") {
+             !char_strings[glyph_index].empty()) {
             snprintf(linebuf, BUFSIZ, "dup %u /%s put\n",
                      code_point,
                      char_strings[glyph_index].c_str());

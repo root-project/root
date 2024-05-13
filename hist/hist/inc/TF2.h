@@ -29,26 +29,21 @@
 class TF2 : public TF1 {
 
 protected:
-   Double_t  fYmin;        //Lower bound for the range in y
-   Double_t  fYmax;        //Upper bound for the range in y
-   Int_t     fNpy;         //Number of points along y used for the graphical representation
-   TArrayD   fContour;     //Array to display contour levels
+   Double_t  fYmin;        ///< Lower bound for the range in y
+   Double_t  fYmax;        ///< Upper bound for the range in y
+   Int_t     fNpy;         ///< Number of points along y used for the graphical representation
+   TArrayD   fContour;     ///< Array to display contour levels
 
 public:
    TF2();
    TF2(const char *name, const char *formula, Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Option_t * opt = nullptr);
-#ifndef __CINT__
    TF2(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0,Int_t ndim = 2);
    TF2(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin=0, Double_t xmax=1, Double_t ymin=0, Double_t ymax=1, Int_t npar=0, Int_t ndim = 2);
-#endif
 
-   // constructor using a functor
-
+   // Constructor using a functor
    TF2(const char *name, ROOT::Math::ParamFunctor f, Double_t xmin = 0, Double_t xmax = 1, Double_t ymin = 0, Double_t ymax = 1, Int_t npar = 0, Int_t ndim = 2);
 
-
-   // Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type
-   // MemFn.
+   /// Template constructors from a pointer to any C++ class of type PtrObj with a specific member function of type MemFn.
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, Int_t ndim = 2) :
       TF1(name,p,memFn,xmin,xmax,npar,ndim),
@@ -56,7 +51,8 @@ public:
    {
       fNpx = 30;
    }
-   /// backward compatible ctor
+
+   /// Backward compatible ctor
    template <class PtrObj, typename MemFn>
    TF2(const char *name, const  PtrObj& p, MemFn memFn, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar, const char * , const char *) :
       TF1(name,p,memFn,xmin,xmax,npar,2),
@@ -65,8 +61,7 @@ public:
       fNpx = 30;
    }
 
-   // Template constructors from any  C++ callable object,  defining  the operator() (double * , double *)
-   // and returning a double.
+   /// Template constructors from any  C++ callable object,  defining  the operator() (double * , double *) and returning a double.
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,Int_t ndim = 2) :
       TF1(name,f,xmin,xmax,npar,ndim),
@@ -74,7 +69,8 @@ public:
    {
       fNpx = 30;
    }
-   /// backward compatible ctor
+
+   /// Backward compatible ctor
    template <typename Func>
    TF2(const char *name, Func f, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Int_t npar,const char *) :
       TF1(name,f,xmin,xmax,npar,2),
@@ -86,26 +82,26 @@ public:
 
    TF2(const TF2 &f2);
    TF2 &operator=(const TF2& rhs);
-   virtual   ~TF2();
-   virtual void     Copy(TObject &f2) const;
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
-   virtual TF1     *DrawCopy(Option_t *option="") const;
-   virtual TObject *DrawDerivative(Option_t * ="al") {return 0;}
-   virtual TObject *DrawIntegral(Option_t * ="al")   {return 0;}
+     ~TF2() override;
+   void     Copy(TObject &f2) const override;
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option="") override;
+   TF1     *DrawCopy(Option_t *option="") const override;
+   TObject *DrawDerivative(Option_t * ="al") override {return nullptr;}
+   TObject *DrawIntegral(Option_t * ="al") override   {return nullptr;}
    //virtual void     DrawF2(const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Option_t *option="");
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual Int_t    GetContour(Double_t *levels=0);
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   virtual Int_t    GetContour(Double_t *levels=nullptr);
    virtual Double_t GetContourLevel(Int_t level) const;
           Int_t     GetNpy() const {return fNpy;}
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
-   Double_t GetRandom(TRandom * rng = nullptr, Option_t * opt = nullptr);
-   Double_t GetRandom(Double_t xmin, Double_t xmax, TRandom * rng = nullptr, Option_t * opt = nullptr);
+   char    *GetObjectInfo(Int_t px, Int_t py) const override;
+   Double_t GetRandom(TRandom * rng = nullptr, Option_t * opt = nullptr) override;
+   Double_t GetRandom(Double_t xmin, Double_t xmax, TRandom * rng = nullptr, Option_t * opt = nullptr) override;
    virtual void     GetRandom2(Double_t &xrandom, Double_t &yrandom, TRandom * rng = nullptr);
    using TF1::GetRange;
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
-   virtual void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const;
-   virtual Double_t GetSave(const Double_t *x);
+   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const override;
+   void     GetRange(Double_t &xmin, Double_t &ymin, Double_t &zmin, Double_t &xmax, Double_t &ymax, Double_t &zmax) const override;
+   Double_t GetSave(const Double_t *x) override;
    virtual Double_t GetMinimumXY(Double_t &x, Double_t &y) const;
    virtual Double_t GetMaximumXY(Double_t &x, Double_t &y) const;
    using TF1::GetMinimum;
@@ -116,17 +112,17 @@ public:
    virtual Double_t GetYmax() const {return fYmax;}
    using TF1::Integral;
    virtual Double_t Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel=1.e-6);
-   virtual Bool_t   IsInside(const Double_t *x) const;
-   virtual TH1     *CreateHistogram();
-   virtual void     Paint(Option_t *option="");
-   virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   Bool_t   IsInside(const Double_t *x) const override;
+   TH1     *CreateHistogram() override;
+   void     Paint(Option_t *option="") override;
+   void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax) override;
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetNpy(Int_t npy=100); // *MENU*
-   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels=20, const Double_t *levels=nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
-   virtual void     SetRange(Double_t xmin, Double_t xmax);
-   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax); // *MENU*
-   virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax);
+   void     SetRange(Double_t xmin, Double_t xmax) override;
+   void     SetRange(Double_t xmin, Double_t ymin, Double_t xmax, Double_t ymax) override; // *MENU*
+   void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin, Double_t xmax, Double_t ymax, Double_t zmax) override;
 
    //Moments
    virtual Double_t Moment2(Double_t nx, Double_t ax, Double_t bx, Double_t ny, Double_t ay, Double_t by, Double_t epsilon=0.000001);
@@ -144,7 +140,7 @@ protected:
 
    virtual Double_t FindMinMax(Double_t* x, bool findmax) const;
 
-   ClassDef(TF2,4)  //The Parametric 2-D function
+   ClassDefOverride(TF2,4)  //The Parametric 2-D function
 };
 
 inline void TF2::SetRange(Double_t xmin, Double_t xmax)

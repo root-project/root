@@ -227,9 +227,12 @@ Int_t TBufferText::WriteClassBuffer(const TClass *cl, void *pointer)
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
+/// \param[in] cl pointer to the local TClass
+/// \param[out] pointer void pointer to object
 /// \param[in] version The version number of the class
 /// \param[in] start   The starting position in the buffer b
 /// \param[in] count   The number of bytes for this object in the buffer
+/// \param[in] onFileClass pointer to TClass object on file
 ///
 
 Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count,
@@ -656,7 +659,7 @@ void TBufferText::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Float16_t to buffer
 
-void TBufferText::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+void TBufferText::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement * /*ele*/)
 {
    WriteFastArray(f, n);
 }
@@ -664,7 +667,7 @@ void TBufferText::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElem
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Double32_t to buffer
 
-void TBufferText::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
+void TBufferText::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement * /*ele*/)
 {
    WriteFastArray(d, n);
 }

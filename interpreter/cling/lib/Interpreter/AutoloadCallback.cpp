@@ -51,7 +51,7 @@ namespace cling {
       = sema.getDiagnostics().getCustomDiagID(DiagnosticsEngine::Level::Note,
                                                 "Type : %0 , Full Path: %1")*/;
 
-    if (header.startswith(llvm::StringRef(annoTag, lenAnnoTag)))
+    if (header.starts_with(llvm::StringRef(annoTag, lenAnnoTag)))
       sema.Diags.Report(l, id) << name << header.drop_front(lenAnnoTag);
 
   }
@@ -89,7 +89,7 @@ namespace cling {
         if (!attr->isInherited()) {
           llvm::StringRef annotation = attr->getAnnotation();
           assert(!annotation.empty() && "Empty annotation!");
-          if (annotation.startswith(llvm::StringRef(annoTag, lenAnnoTag))) {
+          if (annotation.starts_with(llvm::StringRef(annoTag, lenAnnoTag))) {
             // autoload annotation.
             return true;
           }
@@ -111,29 +111,34 @@ namespace cling {
         SourceLocation fileNameLoc;
         // Remember this file wth full path, not "./File.h" (ROOT-8863).
         bool isAngled = true;
-        const DirectoryLookup* FromDir = 0;
+        ConstSearchDirIterator FromDir = nullptr;
         const FileEntry* FromFile = 0;
-        const DirectoryLookup* CurDir = 0;
+        ConstSearchDirIterator* CurDir = nullptr;
         bool needCacheUpdate = false;
 
         if (FileName.equals(m_PrevFileName.first))
           FE = m_PrevFE.first;
         else if (FileName.equals(m_PrevFileName.second))
           FE = m_PrevFE.second;
-        else {
-          FE = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
-                                FromDir, FromFile, CurDir, /*SearchPath*/0,
-                                /*RelativePath*/ 0, /*suggestedModule*/0,
-                                /*IsMapped*/0, /*SkipCache*/ false,
-                                /*OpenFile*/ false, /*CacheFail*/ true);
+        else if (auto FERef = m_PP->LookupFile(fileNameLoc, FileName, isAngled,
+                                               FromDir, FromFile, CurDir,
+                                               /*SearchPath*/0, /*RelativePath*/ 0,
+                                               /*suggestedModule*/0, /*IsMapped*/0,
+                                               /*IsFrameworkFound*/ nullptr,
+                                               /*SkipCache*/ false,
+                                               /*OpenFile*/ false,
+                                               /*CacheFail*/ true)) {
           needCacheUpdate = true;
+          FE = &FERef->getFileEntry();
         }
 
         if (FE) {
           auto& Vec = (*m_Map)[FE];
           Vec.push_back(decl);
-          if (needCacheUpdate) return FE;
-          else return (const FileEntry*)nullptr;
+          if (needCacheUpdate)
+             return FE;
+          else
+             return (const FileEntry*)nullptr;
         } else if (warn) {
           // If the top level header is expected to be findable at run-time,
           // the direct header might not because the include path might be
@@ -151,22 +156,21 @@ namespace cling {
             cling::errs() << "\n";
           }
           return (const FileEntry*)nullptr;
-        } else {
-          // Case of the direct header that is not a top level header, no
-          // warning in this case (to likely to be a false positive).
-          return (const FileEntry*)nullptr;
         }
+        // Case of the direct header that is not a top level header, no
+        // warning in this case (to likely to be a false positive).
+        return (const FileEntry*)nullptr;
       };
 
       const FileEntry* cacheUpdate;
 
       if ( (cacheUpdate = addFile(FileNames.first,true)) ) {
         m_PrevFE.first = cacheUpdate;
-        m_PrevFileName.first = FileNames.first;
+        m_PrevFileName.first = FileNames.first.str();
       }
       if ( (cacheUpdate = addFile(FileNames.second,false)) ) {
         m_PrevFE.second = cacheUpdate;
-        m_PrevFileName.second = FileNames.second;
+        m_PrevFileName.second = FileNames.second.str();
       }
 
 
@@ -219,7 +223,7 @@ namespace cling {
       {
         if (!attr->isInherited()) {
           auto annot = attr->getAnnotation();
-          if (annot.startswith(llvm::StringRef(annoTag, lenAnnoTag))) {
+          if (annot.starts_with(llvm::StringRef(annoTag, lenAnnoTag))) {
             if (annotations.first.empty()) {
               annotations.first = annot.drop_front(lenAnnoTag);
             } else {
@@ -324,20 +328,21 @@ namespace cling {
     }
   };
 
-  void AutoloadCallback::InclusionDirective(clang::SourceLocation HashLoc,
-                          const clang::Token &IncludeTok,
-                          llvm::StringRef FileName,
-                          bool IsAngled,
-                          clang::CharSourceRange FilenameRange,
-                          const clang::FileEntry *File,
-                          llvm::StringRef SearchPath,
-                          llvm::StringRef RelativePath,
-                          const clang::Module *Imported) {
+  void AutoloadCallback::InclusionDirective(clang::SourceLocation /*HashLoc*/,
+                                            const clang::Token &/*IncludeTok*/,
+                                            llvm::StringRef /*FileName*/,
+                                            bool /*IsAngled*/,
+                                       clang::CharSourceRange /*FilenameRange*/,
+                                            clang::OptionalFileEntryRef File,
+                                            llvm::StringRef /*SearchPath*/,
+                                            llvm::StringRef /*RelativePath*/,
+                                            const clang::Module */*Imported*/,
+                               clang::SrcMgr::CharacteristicKind /*FileType*/) {
     // If File is 0 this means that the #included file doesn't exist.
     if (!File)
       return;
 
-    auto found = m_Map.find(File);
+    auto found = m_Map.find(*File);
     if (found == m_Map.end())
      return; // nothing to do, file not referred in any annotation
 

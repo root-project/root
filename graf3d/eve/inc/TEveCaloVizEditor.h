@@ -52,11 +52,11 @@ protected:
    TGVerticalFrame           *fSliceFrame;
 
 public:
-   TEveCaloVizEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveCaloVizEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveCaloVizEditor() {}
+   ~TEveCaloVizEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoMaxTowerH();
    void DoScaleAbs();
@@ -71,7 +71,7 @@ public:
    void DoSliceColor(Pixel_t color);
    void DoSliceTransparency(Long_t transp);
 
-   ClassDef(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
+   ClassDefOverride(TEveCaloVizEditor, 0); // GUI editor for TEveCaloVizEditor.
 };
 
 /**************************************************************************/
@@ -87,14 +87,14 @@ protected:
    TGNumberEntry       *fFrameTransparency;
 
 public:
-   TEveCalo3DEditor(const TGWindow* p=0, Int_t width=170, Int_t height=30,
+   TEveCalo3DEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                      UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveCalo3DEditor() {}
+   ~TEveCalo3DEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
    void    DoFrameTransparency();
 
-   ClassDef(TEveCalo3DEditor, 0); // GUI editor for TEveCalo3DEditor.
+   ClassDefOverride(TEveCalo3DEditor, 0); // GUI editor for TEveCalo3DEditor.
 };
 
 #endif

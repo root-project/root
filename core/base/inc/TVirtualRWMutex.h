@@ -52,6 +52,18 @@ public:
       virtual ~State(); // implemented in TVirtualMutex.cxx
    };
 
+   struct StateAndRecurseCount {
+      /// State of gCoreMutex when the first interpreter-related function was invoked.
+      std::unique_ptr<ROOT::TVirtualRWMutex::State> fState;
+
+      /// Interpreter-related functions will push the "entry" lock state to *this.
+      /// Recursive calls will do that, too - but we must only forget about the lock
+      /// state once this recursion count went to 0.
+      Int_t fRecurseCount = 0;
+
+      operator bool() const { return (bool)fState; }
+   };
+
    /// \class StateDelta
    /// State as returned by `GetStateDelta()` that can be passed to
    /// `Restore()`
@@ -88,9 +100,12 @@ public:
 //    TReadLockGuard guard(mutex);                                      //
 //    ... // read something                                             //
 // }                                                                    //
-// when guard goes out of scope the mutex is unlocked in the TLockGuard //
+// where mutex is a pointer to a TMutex object.                         //
+// When guard goes out of scope the mutex is unlocked in the TLockGuard //
 // destructor. The exception mechanism takes care of calling the dtors  //
 // of local objects so it is exception safe.                            //
+// In contrast to std::lock_guard, TLockGuard constructor expects a     //
+// pointer, not the mutex object itself.                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -134,24 +149,12 @@ public:
 
 } // namespace ROOT.
 
-// Zero overhead macros in case not compiled with thread support
-#if defined (_REENTRANT) || defined (WIN32)
-
+// Use with a trailing semicolon and pass a pointer as argument, e.g.:
+// TMutex m; R__READ_LOCKGUARD(&m);
 #define R__READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(mutex)
 #define R__READ_LOCKGUARD_NAMED(name,mutex) ::ROOT::TReadLockGuard _NAME2_(R__readguard,name)(mutex)
 
 #define R__WRITE_LOCKGUARD(mutex) ::ROOT::TWriteLockGuard _R__UNIQUE_(R__readguard)(mutex)
 #define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
-
-#else
-
-#define R__READ_LOCKGUARD(mutex) (void)mutex
-#define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#define R__WRITE_LOCKGUARD(mutex) (void)mutex
-#define R__WRITE_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#endif
-
 
 #endif

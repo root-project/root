@@ -24,7 +24,7 @@ class TVirtualMCDecayer : public TObject {
 public:
 //
    TVirtualMCDecayer() {;}
-   virtual ~TVirtualMCDecayer(){;}
+   ~TVirtualMCDecayer() override{;}
 
    /// Initialize the decayer
    virtual void    Init()                                     =0;
@@ -54,7 +54,7 @@ public:
    /// SetDecayTableFile.
    virtual void    ReadDecayTable()                           =0;
  
-   ClassDef(TVirtualMCDecayer,1) // Particle Decayer Base Class
+   ClassDefOverride(TVirtualMCDecayer,1) // Particle Decayer Base Class
 };
 
 #endif

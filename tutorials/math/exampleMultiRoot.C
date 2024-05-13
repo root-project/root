@@ -53,7 +53,7 @@
 //like hybrids (default), hybrid, dnewton, broyden
 
 using namespace ROOT::Math;
-void exampleMultiRoot(const char * algo = 0, int printlevel = 1) {
+void exampleMultiRoot(const char * algo = nullptr, int printlevel = 1) {
    ROOT::Math::MultiRootFinder r(algo);
    //defining the function
    // use Rosenbrock functions

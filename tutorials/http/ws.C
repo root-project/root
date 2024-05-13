@@ -1,3 +1,12 @@
+/// \file
+/// \ingroup tutorial_http
+///  This program demonstrate WebSocket usage with THttpServer
+///  Custom ws.htm page is loaded and regularly sends messages to server
+///
+/// \macro_code
+///
+/// \author Sergey Linev
+
 #include "THttpServer.h"
 #include "THttpWSHandler.h"
 #include "THttpCallArg.h"
@@ -10,17 +19,17 @@
 
 class TUserHandler : public THttpWSHandler {
    public:
-      UInt_t fWSId;
-      Int_t fServCnt;
+      UInt_t fWSId{0};
+      Int_t fServCnt{0};
 
-      TUserHandler(const char *name = nullptr, const char *title = nullptr) : THttpWSHandler(name, title), fWSId(0), fServCnt(0) {}
+      TUserHandler(const char *name = nullptr, const char *title = nullptr) : THttpWSHandler(name, title) {}
 
       // load custom HTML page when open correspondent address
-      TString GetDefaultPageContent() { return "file:ws.htm"; }
+      TString GetDefaultPageContent() override { return "file:ws.htm"; }
 
-      virtual Bool_t ProcessWS(THttpCallArg *arg)
+      Bool_t ProcessWS(THttpCallArg *arg) override
       {
-         if (!arg || (arg->GetWSId()==0)) return kTRUE;
+         if (!arg || (arg->GetWSId() == 0)) return kTRUE;
 
          // printf("Method %s\n", arg->GetMethod());
 
@@ -46,7 +55,7 @@ class TUserHandler : public THttpWSHandler {
            str.Append((const char *)arg->GetPostData(), arg->GetPostDataLength());
            printf("Client msg: %s\n", str.Data());
            TDatime now;
-           SendCharStarWS(arg->GetWSId(), Form("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
+           SendCharStarWS(arg->GetWSId(), TString::Format("Server replies:%s server counter:%d", now.AsString(), fServCnt++));
            return kTRUE;
         }
 
@@ -54,10 +63,10 @@ class TUserHandler : public THttpWSHandler {
       }
 
       /// per timeout sends data portion to the client
-      virtual Bool_t HandleTimer(TTimer *)
+      Bool_t HandleTimer(TTimer *) override
       {
          TDatime now;
-         if (fWSId) SendCharStarWS(fWSId, Form("Server sends data:%s server counter:%d", now.AsString(), fServCnt++));
+         if (fWSId) SendCharStarWS(fWSId, TString::Format("Server sends data:%s server counter:%d", now.AsString(), fServCnt++));
          return kTRUE;
       }
 
@@ -78,11 +87,11 @@ void ws()
    printf("Please be sure that ws.htm is provided in current directory\n");
 
    if (gSystem->InheritsFrom("TMacOSXSystem"))
-      gSystem->Exec(Form("open %s", addr));
+      gSystem->Exec(TString::Format("open %s", addr));
    else if (gSystem->InheritsFrom("TWinNTSystem"))
-      gSystem->Exec(Form("start %s", addr));
+      gSystem->Exec(TString::Format("start %s", addr));
    else
-      gSystem->Exec(Form("xdg-open %s &", addr));
+      gSystem->Exec(TString::Format("xdg-open %s &", addr));
 
    // when connection will be established, data will be send to the client
    TTimer *tm = new TTimer(handler, 3700);

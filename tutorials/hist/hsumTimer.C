@@ -13,14 +13,14 @@
 ///
 /// \author Rene Brun
 
-Float_t progressRatio;
-TSlider *slider;
-TCanvas *c1;
+Float_t progressRatio = 0.;
+TSlider *slider = nullptr;
+TCanvas *c1 = nullptr;
 
 void hsumUpdate()
 {
 // called when Timer times out
-   if (slider) slider->SetRange(0, ::progressRatio);
+   if (slider) slider->SetRange(0., progressRatio);
    c1->Modified();
    c1->Update();
 }
@@ -29,7 +29,6 @@ void hsumTimer(Int_t nfill=100000)
 {
    c1 = new TCanvas("c1","The HSUM example",200,10,600,400);
    c1->SetGrid();
-
 
    // Create some histograms.
    auto total  = new TH1F("total","This is the total distribution",100,-4,4);
@@ -47,8 +46,9 @@ void hsumTimer(Int_t nfill=100000)
    main->Draw("same");
    s1->Draw("same");
    s2->Draw("same");
-   c1->Update();slider = new TSlider("slider",
-      "test",4.2,0,4.6,0.8*total->GetMaximum(),38);
+   c1->Update();
+
+   slider = new TSlider("slider","test",4.2,0,4.6,0.8*total->GetMaximum(),38);
    slider->SetFillColor(46);
 
    // Create a TTimer (hsumUpdate called every 300 msec)
@@ -59,7 +59,7 @@ void hsumTimer(Int_t nfill=100000)
    Float_t xs1, xs2, xmain;
    gRandom->SetSeed();
    for (Int_t i=0; i<nfill; i++) {
-      ::progressRatio = Float_t(i)/Float_t(nfill);
+      progressRatio = i * 1. / nfill;
       if (gSystem->ProcessEvents()) break;
       xmain = gRandom->Gaus(-1,1.5);
       xs1   = gRandom->Gaus(-0.5,0.5);
@@ -74,4 +74,3 @@ void hsumTimer(Int_t nfill=100000)
    timer.TurnOff();
    hsumUpdate();
 }
-

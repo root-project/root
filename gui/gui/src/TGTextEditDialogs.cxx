@@ -20,16 +20,17 @@
 
 **************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TGTextEditDialogs                                                    //
-//                                                                      //
-// This file defines several dialogs that are used by the TGTextEdit    //
-// widget via its associated context popup menu.                        //
-// The following dialogs are available: TGSearchDialog, TGGotoDialog    //
-// and TGPrintDialog.                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+
+/** \class TGTextEditDialogs
+    \ingroup guiwidgets
+
+This file defines several dialogs that are used by the TGTextEdit
+widget via its associated context popup menu.
+The following dialogs are available: TGSearchDialog, TGGotoDialog
+and TGPrintDialog.
+
+*/
+
 
 #include "TGTextEditDialogs.h"
 #include "TGButton.h"
@@ -215,7 +216,7 @@ void TGSearchDialog::TextEntered(const char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Process search dialog widget messages.
 
-Bool_t TGSearchDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGSearchDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    const char *string;
 
@@ -489,7 +490,7 @@ void TGPrintDialog::GetPrinters()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process print dialog widget messages.
 
-Bool_t TGPrintDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGPrintDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    const char *string, *txt;
 
@@ -642,7 +643,7 @@ void TGGotoDialog::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Process goto dialog widget messages.
 
-Bool_t TGGotoDialog::ProcessMessage(Long_t msg, Long_t parm1, Long_t)
+Bool_t TGGotoDialog::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 {
    const char *string;
 

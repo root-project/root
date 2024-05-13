@@ -1,22 +1,19 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
-///
-///
-/// \brief Multidimensional models: using the likelihood ratio technique to construct a signal
-/// enhanced one-dimensional projection of a multi-dimensional p.d.f.
+/// Multidimensional models: using the likelihood ratio technique to construct a signal
+/// enhanced one-dimensional projection of a multi-dimensional pdf
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 07/2008
+/// \date July 2008
 /// \author Wouter Verkerke
 
 #include "RooRealVar.h"
 #include "RooDataSet.h"
 #include "RooGaussian.h"
-#include "RooConstVar.h"
 #include "RooPolynomial.h"
 #include "RooAddPdf.h"
 #include "RooProdPdf.h"
@@ -37,14 +34,14 @@ void rf316_llratioplot()
    RooRealVar z("z", "z", -5, 5);
 
    // Create signal pdf gauss(x)*gauss(y)*gauss(z)
-   RooGaussian gx("gx", "gx", x, RooConst(0), RooConst(1));
-   RooGaussian gy("gy", "gy", y, RooConst(0), RooConst(1));
-   RooGaussian gz("gz", "gz", z, RooConst(0), RooConst(1));
+   RooGaussian gx("gx", "gx", x, 0.0, 1.0);
+   RooGaussian gy("gy", "gy", y, 0.0, 1.0);
+   RooGaussian gz("gz", "gz", z, 0.0, 1.0);
    RooProdPdf sig("sig", "sig", RooArgSet(gx, gy, gz));
 
    // Create background pdf poly(x)*poly(y)*poly(z)
-   RooPolynomial px("px", "px", x, RooArgSet(RooConst(-0.1), RooConst(0.004)));
-   RooPolynomial py("py", "py", y, RooArgSet(RooConst(0.1), RooConst(-0.004)));
+   RooPolynomial px("px", "px", x, RooArgSet(-0.1, 0.004));
+   RooPolynomial py("py", "py", y, RooArgSet(0.1, -0.004));
    RooPolynomial pz("pz", "pz", z);
    RooProdPdf bkg("bkg", "bkg", RooArgSet(px, py, pz));
 
@@ -52,7 +49,7 @@ void rf316_llratioplot()
    RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 20000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
    // P r o j e c t   p d f   a n d   d a t a   o n   x
    // -------------------------------------------------
@@ -80,7 +77,7 @@ void rf316_llratioplot()
    data->addColumn(llratio_func);
 
    // Extract the subset of data with large signal likelihood
-   RooDataSet *dataSel = (RooDataSet *)data->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> dataSel{data->reduce(Cut("llratio>0.7"))};
 
    // Make plot frame
    RooPlot *frame2 = x.frame(Title("Same projection on X with LLratio(y,z)>0.7"), Bins(40));
@@ -92,11 +89,11 @@ void rf316_llratioplot()
    // ---------------------------------------------------------------------------------------------
 
    // Generate large number of events for MC integration of pdf projection
-   RooDataSet *mcprojData = model.generate(RooArgSet(x, y, z), 10000);
+   std::unique_ptr<RooDataSet> mcprojData{model.generate({x, y, z}, 10000)};
 
    // Calculate LL ratio for each generated event and select MC events with llratio)0.7
    mcprojData->addColumn(llratio_func);
-   RooDataSet *mcprojDataSel = (RooDataSet *)mcprojData->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> mcprojDataSel{mcprojData->reduce(Cut("llratio>0.7"))};
 
    // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
    // on set of events with the same llratio cut as was applied to data

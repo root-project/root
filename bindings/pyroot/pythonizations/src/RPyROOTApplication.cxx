@@ -11,7 +11,6 @@
 
 // Bindings
 #include "Python.h"
-#include "CPyCppyy.h"
 #include "RPyROOTApplication.h"
 
 // ROOT
@@ -22,6 +21,8 @@
 #include "TError.h"
 #include "Getline.h"
 #include "TVirtualMutex.h"
+#include "TVirtualPad.h"
+#include "TROOT.h"
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Create an RPyROOTApplication.
@@ -48,14 +49,14 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          argv = new char *[argc];
       } else {
          // Retrieve sys.argv list from Python
-         PyObject *argl = PySys_GetObject(const_cast<char *>("argv"));
+         PyObject *argl = PySys_GetObject("argv");
 
          if (argl && 0 < PyList_Size(argl))
             argc = (int)PyList_GET_SIZE(argl);
 
          argv = new char *[argc];
          for (int i = 1; i < argc; ++i) {
-            char *argi = const_cast<char *>(CPyCppyy_PyText_AsString(PyList_GET_ITEM(argl, i)));
+            char *argi = const_cast<char *>(PyUnicode_AsUTF8(PyList_GET_ITEM(argl, i)));
             if (strcmp(argi, "-") == 0 || strcmp(argi, "--") == 0) {
                // Stop collecting options, the remaining are for the Python script
                argc = i; // includes program name
@@ -65,14 +66,7 @@ bool PyROOT::RPyROOTApplication::CreateApplication(int ignoreCmdLineOpts)
          }
       }
 
-#if PY_VERSION_HEX < 0x03000000
-      if (Py_GetProgramName() && strlen(Py_GetProgramName()) != 0)
-         argv[0] = Py_GetProgramName();
-      else
-         argv[0] = (char *)"python";
-#else
       argv[0] = (char *)"python";
-#endif
 
       gApplication = new RPyROOTApplication("PyROOT", &argc, argv);
       delete[] argv; // TApplication ctor has copied argv, so done with it
@@ -94,11 +88,7 @@ void PyROOT::RPyROOTApplication::InitROOTGlobals()
       gStyle = new TStyle();
 
    if (!gProgName) // should have been set by TApplication
-#if PY_VERSION_HEX < 0x03000000
-      gSystem->SetProgname(Py_GetProgramName());
-#else
       gSystem->SetProgname("python");
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -146,14 +136,13 @@ void PyROOT::RPyROOTApplication::InitROOTMessageCallback()
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Initialize an RPyROOTApplication.
 /// \param[in] self Always null, since this is a module function.
-/// \param[in] ignoreCmdLineOpts True if Python command line options should
-///            be ignored.
+/// \param[in] args [0] Boolean that tells whether to ignore the command line options.
 PyObject *PyROOT::RPyROOTApplication::InitApplication(PyObject * /*self*/, PyObject *args)
 {
    int argc = PyTuple_GET_SIZE(args);
-   if (argc == 1) { 
-      PyObject *ignoreCmdLineOpts = PyTuple_GetItem(args, 0); 
-      
+   if (argc == 1) {
+      PyObject *ignoreCmdLineOpts = PyTuple_GetItem(args, 0);
+
       if (!PyBool_Check(ignoreCmdLineOpts)) {
          PyErr_SetString(PyExc_TypeError, "Expected boolean type as argument.");
          return nullptr;
@@ -198,6 +187,8 @@ static int EventInputHook()
    // This method is supposed to be called from CPython's command line and
    // drives the GUI
    PyEval_RestoreThread(sInputHookEventThreadState);
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
    gSystem->ProcessEvents();
    PyEval_SaveThread();
 

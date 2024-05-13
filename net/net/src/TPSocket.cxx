@@ -99,15 +99,6 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
                    Int_t tcpwindowsize)
                   : TSocket(host, port, (Int_t)(size > 1 ? -1 : tcpwindowsize))
 {
-   // To avoid uninitialization problems when Init is not called ...
-   fSockets        = 0;
-   fWriteMonitor   = 0;
-   fReadMonitor    = 0;
-   fWriteBytesLeft = 0;
-   fReadBytesLeft  = 0;
-   fWritePtr       = 0;
-   fReadPtr        = 0;
-
    // set to the real value only at end (except for old servers)
    fSize           = 1;
 
@@ -171,7 +162,7 @@ TPSocket::TPSocket(const char *host, Int_t port, Int_t size,
 /// Create a parallel socket on a connection already opened via
 /// TSocket sock.
 /// This constructor is provided to optimize TNetFile opening when
-/// instatiated via a call to TXNetFile.
+/// instatiated via a call to TNetXNGFile.
 /// Returns when connection has been accepted by remote side. Use IsValid()
 /// to check the validity of the socket. Every socket is added to the TROOT
 /// sockets list which will make sure that any open sockets are properly

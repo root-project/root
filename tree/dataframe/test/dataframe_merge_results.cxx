@@ -1,6 +1,11 @@
-#include <ROOT/RDataFrame.hxx>
-#include <ROOT/RResultPtr.hxx> // GetMergeableValue
 #include <stdexcept>
+
+#include <ROOT/RDataFrame.hxx>
+#include <ROOT/RDFHelpers.hxx>          // VariationsFor
+#include <ROOT/RResultPtr.hxx>          // GetMergeableValue
+#include <ROOT/RDF/RMergeableValue.hxx> // MergeValues
+#include <ROOT/RDF/RResultMap.hxx>      // GetMergeableValue
+
 #include <gtest/gtest.h>
 
 using ROOT::Detail::RDF::GetMergeableValue;
@@ -127,6 +132,33 @@ TEST(RDataFrameMergeResults, MergeHisto2D)
 
    EXPECT_EQ(mh.GetEntries(), 200);
    EXPECT_DOUBLE_EQ(mh.GetMean(), 49.5);
+}
+
+TEST(RDataFrameMergeResults, MergeHistoND)
+{
+   ROOT::RDataFrame df{100};
+
+   auto col1 = df.Define("x0", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col2 = col1.Define("x1", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col3 = col2.Define("x2", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+   auto col4 = col3.Define("x3", [](ULong64_t e) { return double(e); }, {"rdfentry_"});
+
+   int nbins[4] = {10, 10, 10, 10};
+   double xmin[4] = {0., 0., 0., 0.};
+   double xmax[4] = {100., 100., 100., 100.};
+   auto hist1 =
+      col4.HistoND<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax}, {"x0", "x1", "x2", "x3"});
+   auto hist2 =
+      col4.HistoND<double, double, double, double>({"name", "title", 4, nbins, xmin, xmax}, {"x0", "x1", "x2", "x3"});
+
+   auto mh1 = GetMergeableValue(hist1);
+   auto mh2 = GetMergeableValue(hist2);
+
+   auto mergedptr = MergeValues(std::move(mh1), std::move(mh2));
+
+   const auto &mh = mergedptr->GetValue();
+
+   EXPECT_EQ(mh.GetEntries(), 200);
 }
 
 TEST(RDataFrameMergeResults, MergeProfile1D)
@@ -308,7 +340,7 @@ TEST(RDataFrameMergeResults, Merge5Hists)
    EXPECT_FALSE(mh3);
    EXPECT_FALSE(mh4);
    EXPECT_FALSE(mh5);
-   EXPECT_TRUE(mergedptr);
+   EXPECT_TRUE(!!mergedptr);
 
    const auto &mh = mergedptr->GetValue();
 
@@ -334,5 +366,38 @@ TEST(RDataFrameMergeResults, WrongMergeMinMax)
       EXPECT_STREQ(e.what(), "Results from different actions cannot be merged together.");
    } catch (...) {
       FAIL() << "Expected std::invalid_argument error.";
+   }
+}
+
+TEST(RDataFrameMergeResults, MergeVariedHisto)
+{
+   auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
+   auto h = df.Vary(
+                 "x",
+                 []() {
+                    return ROOT::RVecI{-1, 2};
+                 },
+                 {}, 2)
+               .Histo1D<int>("x");
+   auto hs1 = ROOT::RDF::Experimental::VariationsFor(h);
+   auto hs2 = ROOT::RDF::Experimental::VariationsFor(h);
+
+   auto m1 = GetMergeableValue(hs1);
+   auto m2 = GetMergeableValue(hs2);
+
+   MergeValues(*m1, *m2);
+
+   const auto &keys = m1->GetKeys();
+
+   std::vector<std::string> expectedkeys{"nominal", "x:0", "x:1"};
+   ASSERT_EQ(keys.size(), expectedkeys.size()) << "Vectors 'keys' and 'expectedkeys' are of unequal length";
+   for (std::size_t i = 0; i < keys.size(); ++i) {
+      EXPECT_EQ(keys[i], expectedkeys[i]) << "Vectors 'keys' and 'expectedkeys' differ at index " << i;
+   }
+   std::vector<int> expectedmeans{1, -1, 2};
+   for (auto i = 0; i < 3; i++) {
+      const auto &histo = m1->GetVariation(keys[i]);
+      EXPECT_EQ(histo.GetMean(), expectedmeans[i]);
+      EXPECT_EQ(histo.GetEntries(), 20);
    }
 }

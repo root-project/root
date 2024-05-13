@@ -1,18 +1,17 @@
 /// \file
 /// \ingroup tutorial_roofit
 /// \notebook -js
+/// Extended maximum likelihood fit in multiple ranges.
 ///
-///
-/// \brief Extended maximum likelihood fit in multiple ranges.
 ///  When an extended pdf and multiple ranges are used, the
 ///  RooExtendPdf cannot correctly interpret the coefficients
 ///  used for extension.
 ///  This can be solved by using a RooAddPdf for extending the model.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
-/// \date 12/2018
+/// \date December 2018
 /// \author Stephan Hageboeck
 
 
@@ -47,12 +46,12 @@ void rf204a_extendedLikelihood()
    RooGaussian sig1("sig1","Signal component 1",x,mean,sigma1) ;
    RooGaussian sig2("sig2","Signal component 2",x,mean,sigma2) ;
 
-   // Build Chebychev polynomial p.d.f.
+   // Build Chebychev polynomial pdf
    RooRealVar a0("a0","a0",0.5,0.,1.) ;
    RooRealVar a1("a1","a1",0.2,0.,1.) ;
    RooChebychev bkg("bkg","Background",x,RooArgSet(a0,a1)) ;
 
-   // Sum the signal components into a composite signal p.d.f.
+   // Sum the signal components into a composite signal pdf
    RooRealVar sig1frac("sig1frac","fraction of component 1 in signal",0.8,0.,1.) ;
    RooAddPdf sig("sig","Signal",RooArgList(sig1,sig2),sig1frac) ;
 
@@ -77,7 +76,7 @@ void rf204a_extendedLikelihood()
    // -------------------------------------------
 
    // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
-   RooDataSet *data = model.generate(x,1000) ;
+   std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
 
 
@@ -96,7 +95,7 @@ void rf204a_extendedLikelihood()
    // the interpretation of the coefficients is tied to the fit range
    // that's used in the first fit
    RooAddPdf model1(model);
-   RooFitResult* r = model1.fitTo(*data,Save()) ;
+   std::unique_ptr<RooFitResult> r{model1.fitTo(*data,Save(), PrintLevel(-1))};
    r->Print() ;
 
    RooPlot * frame = x.frame(Title("Full range fitted"));
@@ -115,9 +114,7 @@ void rf204a_extendedLikelihood()
    x.setRange("right", 6., 10.);
 
    RooAddPdf model2(model);
-   RooFitResult* r2 = model2.fitTo(*data,
-      Range("left,right"),
-      Save()) ;
+   std::unique_ptr<RooFitResult> r2{model2.fitTo(*data, Range("left,right"), Save(), PrintLevel(-1))};
    r2->Print();
 
 
@@ -138,9 +135,7 @@ void rf204a_extendedLikelihood()
    x.setRange("leftToMiddle",  0., 5.);
 
    RooAddPdf model3(model);
-   RooFitResult* r3 = model3.fitTo(*data,
-      Range("leftToMiddle"),
-      Save()) ;
+   std::unique_ptr<RooFitResult> r3{model3.fitTo(*data, Range("leftToMiddle"), Save(), PrintLevel(-1))};
    r3->Print();
 
 
