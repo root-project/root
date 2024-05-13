@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
