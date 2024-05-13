@@ -871,6 +871,7 @@ if(ROOT_pyroot_FOUND)
       analysis/dataframe/df032_RDFFromNumpy.py
       math/fit/combinedFit.py
       math/fit/multifit.py
+      math/fit/NumericalMinimization.py
       roofit/rf409_NumPyPandasToRooFit.py)
   file(GLOB requires_numba   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} analysis/dataframe/df038_NumbaDeclare.py)
   file(GLOB requires_pandas  RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
