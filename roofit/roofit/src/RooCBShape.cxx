@@ -90,7 +90,7 @@ Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooCBShape::analyticalIntegral(Int_t code, const char *rangeName) const
+double RooCBShape::analyticalIntegral(Int_t /*code*/, const char *rangeName) const
 {
    using namespace RooFit::Detail::AnalyticalIntegrals;
    return cbShapeIntegral(m.min(rangeName), m.max(rangeName), m0, sigma, alpha, n);
