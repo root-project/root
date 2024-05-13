@@ -81,7 +81,12 @@ void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::Init(RNTupleModel &model)
+const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDescriptor() const
+{
+   return fInnerSink->GetDescriptor();
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 

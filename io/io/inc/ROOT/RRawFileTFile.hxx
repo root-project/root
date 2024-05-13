@@ -47,8 +47,6 @@ public:
    RRawFileTFile(TFile *file) : RRawFile(file->GetEndpointUrl()->GetFile(), {}), fFile(file) {}
 
    std::unique_ptr<ROOT::Internal::RRawFile> Clone() const final { return std::make_unique<RRawFileTFile>(fFile); }
-
-   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // namespace Internal

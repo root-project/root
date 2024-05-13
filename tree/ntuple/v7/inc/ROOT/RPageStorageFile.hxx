@@ -67,6 +67,7 @@ private:
                                                 std::size_t bytesPacked);
 
 protected:
+   using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator

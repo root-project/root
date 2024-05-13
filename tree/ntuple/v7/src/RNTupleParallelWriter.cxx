@@ -26,6 +26,7 @@ namespace {
 using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RException;
+using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RColumn;
 using ROOT::Experimental::Internal::RNTupleModelChangeset;
@@ -67,8 +68,10 @@ public:
    RPageSynchronizingSink(const RPageSynchronizingSink &) = delete;
    RPageSynchronizingSink &operator=(const RPageSynchronizingSink &) = delete;
 
+   const RNTupleDescriptor &GetDescriptor() const final { return fInnerSink->GetDescriptor(); }
+
    ColumnHandle_t AddColumn(DescriptorId_t, const RColumn &) final { return {}; }
-   void Init(RNTupleModel &) final {}
+   void InitImpl(RNTupleModel &) final {}
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));

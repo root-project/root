@@ -21,7 +21,7 @@ def _test_XGBBinary(backend, label):
     x, y = create_dataset(1000, 10, 2)
     xgb = xgboost.XGBClassifier(n_estimators=100, max_depth=3)
     xgb.fit(x, y)
-    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBBinary{}.root".format(label))
+    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBBinary{}.root".format(label), num_inputs=10)
     bdt = ROOT.TMVA.Experimental.RBDT[backend]("myModel", "testXGBBinary{}.root".format(label))
 
     y_xgb = xgb.predict_proba(x)[:, 1].squeeze()
@@ -51,7 +51,7 @@ def _test_XGBMulticlass(backend, label):
     x, y = create_dataset(1000, 10, 3)
     xgb = xgboost.XGBClassifier(n_estimators=100, max_depth=3)
     xgb.fit(x, y)
-    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBMulticlass{}.root".format(label))
+    ROOT.TMVA.Experimental.SaveXGBoost(xgb, "myModel", "testXGBMulticlass{}.root".format(label), num_inputs=10)
     bdt = ROOT.TMVA.Experimental.RBDT[backend]("myModel", "testXGBMulticlass{}.root".format(label))
 
     y_xgb = xgb.predict_proba(x)

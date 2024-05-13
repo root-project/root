@@ -97,6 +97,7 @@ public:
    static std::shared_ptr<RooLinkedList> createNLLOptions();       // obtain instance of default nll options
    static std::shared_ptr<RooLinkedList> defaultNLLOptions();      // access default NLL options for modifications
    static std::shared_ptr<ROOT::Fit::FitConfig> defaultFitConfig();
+   static ROOT::Math::IOptions *defaultFitConfigOptions();
 
    static std::shared_ptr<const RooFitResult> minimize(RooAbsReal &nll,
                                                        const std::shared_ptr<ROOT::Fit::FitConfig> &fitConfig = nullptr,
@@ -127,7 +128,8 @@ public:
          qmutilde = -3,
          // discovery test statistics
          q0 = -4,
-         uncappedq0 = -5
+         uncappedq0 = -5,
+         u0 = -5
       };
    };
 

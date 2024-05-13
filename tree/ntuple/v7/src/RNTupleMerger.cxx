@@ -20,7 +20,11 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include "TFile.h"
+#include <TError.h>
+#include <TFile.h>
+#include <TKey.h>
+
+#include <deque>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 {
@@ -38,9 +42,31 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo 
    TFile *outFile = dynamic_cast<TFile *>(itr());
    if (!outFile)
       return -1;
+
+   // Check if the output file already has a key with that name
+   TKey *outKey = outFile->FindKey(ntupleName.c_str());
+   RNTuple *outNTuple = nullptr;
+   if (outKey) {
+      outNTuple = outKey->ReadObject<RNTuple>();
+      if (!outNTuple) {
+         Error("RNTuple::Merge", "Output file already has key, but not of type RNTuple!");
+         return -1;
+      }
+      // In principle, we should already be working on the RNTuple object from the output file, but just continue with
+      // pointer we just got.
+   }
+
    RNTupleWriteOptions writeOpts;
    writeOpts.SetUseBufferedWrite(false);
    auto destination = std::make_unique<Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
+
+   // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
+   if (outNTuple) {
+      auto source = Internal::RPageSourceFile::CreateFromAnchor(*outNTuple);
+      source->Attach();
+      auto desc = source->GetSharedDescriptorGuard();
+      destination->InitFromDescriptor(desc.GetRef());
+   }
 
    // The remaining entries are the input files
    std::vector<std::unique_ptr<Internal::RPageSourceFile>> sources;
@@ -101,15 +127,14 @@ void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
 
 ////////////////////////////////////////////////////////////////////////////////
 std::vector<ROOT::Experimental::Internal::RNTupleMerger::RColumnInfo>
-ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RPageSource &source, bool firstSource)
+ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTupleDescriptor &descriptor)
 {
-   auto desc = source.GetSharedDescriptorGuard();
    std::vector<RColumnInfo> columns;
    // Here we recursively find the columns and fill the RColumnInfo vector
-   AddColumnsFromField(columns, desc.GetRef(), desc->GetFieldZero());
+   AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero());
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
-   if (firstSource) {
+   if (fOutputIdMap.empty()) {
       BuildColumnIdMap(columns);
    } else {
       ValidateColumns(columns);
@@ -136,8 +161,11 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(
 ////////////////////////////////////////////////////////////////////////////////
 void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination)
 {
+   if (destination.IsInitialized()) {
+      CollectColumns(destination.GetDescriptor());
+   }
+
    // Append the sources to the destination one-by-one
-   bool isFirstSource = true;
    for (const auto &source : sources) {
       source->Attach();
 
@@ -146,18 +174,17 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          continue;
       }
 
-      // Collect all the columns
-      // The column name : output column id map is only built once
-      auto columns = CollectColumns(*source, isFirstSource);
-
       // Get a handle on the descriptor (metadata)
       auto descriptor = source->GetSharedDescriptorGuard();
 
-      // Create sink from the input model of the very first input file
-      if (isFirstSource) {
+      // Collect all the columns
+      // The column name : output column id map is only built once
+      auto columns = CollectColumns(descriptor.GetRef());
+
+      // Create sink from the input model if not initialized
+      if (!destination.IsInitialized()) {
          auto model = descriptor->CreateModel();
          destination.Init(*model.get());
-         isFirstSource = false;
       }
 
       // Now loop over all clusters in this file
@@ -167,6 +194,12 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
       while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
          auto &cluster = descriptor->GetClusterDescriptor(clusterId);
+
+         std::vector<std::unique_ptr<unsigned char[]>> buffers;
+         // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are never
+         // invalidated.
+         std::deque<RPageStorage::SealedPageSequence_t> sealedPagesV;
+         std::vector<RPageStorage::RSealedPageGroup> sealedPageGroups;
 
          for (const auto &column : columns) {
 
@@ -180,6 +213,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             // Now get the pages for this column in this cluster
             const auto &pages = cluster.GetPageRange(columnId);
             size_t idx{0};
+
+            RPageStorage::SealedPageSequence_t sealedPages;
 
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
@@ -197,16 +232,22 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                sealedPage.fBuffer = buffer.get();
                source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
-               // Now commit this page to the output
-               // Can we do this w/ a CommitSealedPageV
-               destination.CommitSealedPage(column.fColumnOutputId, sealedPage);
+               buffers.push_back(std::move(buffer));
+               sealedPages.push_back(std::move(sealedPage));
 
                // Move on to the next index
                idx += pageInfo.fNElements;
 
             } // end of loop over pages
 
+            sealedPagesV.push_back(std::move(sealedPages));
+            sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().cbegin(),
+                                          sealedPagesV.back().cend());
+
          } // end of loop over columns
+
+         // Now commit all pages to the output
+         destination.CommitSealedPageV(sealedPageGroups);
 
          // Commit the clusters
          destination.CommitCluster(cluster.GetNEntries());

@@ -8084,12 +8084,17 @@ void TTree::ResetBranchAddresses()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop over tree entries and print entries passing selection.
+/// Loop over tree entries and print entries passing selection. Interactive
+/// pagination break is on by default.
 ///
 /// - If varexp is 0 (or "") then print only first 8 columns.
 /// - If varexp = "*" print all columns.
 ///
 /// Otherwise a columns selection can be made using "var1:var2:var3".
+///
+/// \param firstentry first entry to scan
+/// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
+/// \see TTree::SetScanField to control how many lines are printed between pagination breaks (Use 0 to disable pagination)
 /// \see TTreePlayer::Scan for more information
 
 Long64_t TTree::Scan(const char* varexp, const char* selection, Option_t* option, Long64_t nentries, Long64_t firstentry)

@@ -88,7 +88,6 @@ if(PY_TORCH_FOUND)
          LIBRARIES
          ROOTTMVASofie
          TMVA
-         blas
          Python3::Python
          INCLUDE_DIRS
          SYSTEM
@@ -96,6 +95,7 @@ if(PY_TORCH_FOUND)
          ${NUMPY_INCLUDE_DIRS}
          ${CMAKE_CURRENT_BINARY_DIR}
       )
+   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
       target_link_options(TestRModelParserPyTorch PRIVATE ${PYTHON_LINK_OPTIONS})
    endif()
@@ -136,7 +136,6 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     LIBRARIES
     ROOTTMVASofie
     PyMVA
-    blas
     Python3::Python
     INCLUDE_DIRS
     SYSTEM
@@ -144,6 +143,7 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     ${NUMPY_INCLUDE_DIRS}
     ${CMAKE_CURRENT_BINARY_DIR}
    )
+   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
    if(APPLE)
       target_link_options(TestRModelParserKeras PRIVATE ${PYTHON_LINK_OPTIONS})
    endif()
