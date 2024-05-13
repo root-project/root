@@ -98,7 +98,7 @@ jobs:
         include:
           - platform: mac13   
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
