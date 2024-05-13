@@ -1173,8 +1173,8 @@ TEST(RNTuple, Optional)
    {
       auto model = RNTupleModel::Create();
       auto pOptChar = model->MakeField<std::optional<char>>("oc");
-      auto pOptCharArr3 = model->MakeField<std::optional<std::array<char, 3>>>("oac3");
-      auto pOptCharArr4 = model->MakeField<std::optional<std::array<char, 4>>>("oac4");
+      auto pOptCharArr3 = model->MakeField<std::optional<std::array<char, 3>>>("oca3");
+      auto pOptCharArr4 = model->MakeField<std::optional<std::array<char, 4>>>("oca4");
       auto pOptInt16 = model->MakeField<std::optional<std::int16_t>>("oi");
       auto pOptFloat = model->MakeField<std::optional<float>>("of");
       auto pOptDouble = model->MakeField<std::optional<double>>("od");
@@ -1209,8 +1209,8 @@ TEST(RNTuple, Optional)
 
    const auto &defaultEntry = reader->GetModel().GetDefaultEntry();
    auto pOptChar = defaultEntry.GetPtr<std::optional<char>>("oc");
-   auto pOptCharArr3 = defaultEntry.GetPtr<std::optional<std::array<char, 3>>>("oac3");
-   auto pOptCharArr4 = defaultEntry.GetPtr<std::optional<std::array<char, 4>>>("oac4");
+   auto pOptCharArr3 = defaultEntry.GetPtr<std::optional<std::array<char, 3>>>("oca3");
+   auto pOptCharArr4 = defaultEntry.GetPtr<std::optional<std::array<char, 4>>>("oca4");
    auto pOptInt16 = defaultEntry.GetPtr<std::optional<std::int16_t>>("oi");
    auto pOptFloat = defaultEntry.GetPtr<std::optional<float>>("of");
    auto pOptDouble = defaultEntry.GetPtr<std::optional<double>>("od");
