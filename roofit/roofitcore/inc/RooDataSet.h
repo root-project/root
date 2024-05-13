@@ -162,6 +162,24 @@ public:
 
   void convertToTreeStore() override;
 
+   /// Forwards to RooAbsData::reduce(), only with the return value casted to
+   /// the actual RooDataSet type.
+   template <typename... Args>
+   inline RooFit::OwningPtr<RooDataSet> reduce(Args && ...args)
+   {
+      return RooFit::OwningPtr<RooDataSet>{&dynamic_cast<RooDataSet &>(
+         *std::unique_ptr<RooAbsData>{RooAbsData::reduce(std::forward<Args>(args)...)}.release())};
+   }
+
+   /// Forwards to RooAbsData::reduce(), only with the return value casted to
+   /// the actual RooDataHist type.
+   template <typename... Args>
+   inline RooFit::OwningPtr<RooDataSet> reduce(RooArgSet const &varSubset, Args &&...args)
+   {
+      return RooFit::OwningPtr<RooDataSet>{&dynamic_cast<RooDataSet &>(
+         *std::unique_ptr<RooAbsData>{RooAbsData::reduce(varSubset, std::forward<Args>(args)...)}.release())};
+   }
+
 protected:
 
   friend class RooProdGenContext ;

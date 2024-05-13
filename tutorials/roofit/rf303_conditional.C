@@ -53,8 +53,7 @@ void rf303_conditional()
    // ---------------------------------------------------------------------------------------------
 
    // Make subset of experimental data with only y values
-   std::unique_ptr<RooAbsData> expAbsDataY{expDataXY->reduce(y)};
-   RooDataSet *expDataY = static_cast<RooDataSet*>(expAbsDataY.get());
+   std::unique_ptr<RooDataSet> expDataY{expDataXY->reduce(y)};
 
    // Generate 10000 events in x obtained from _conditional_ model(x|y) with y values taken from experimental data
    std::unique_ptr<RooDataSet> data{model.generate(x, ProtoData(*expDataY))};
