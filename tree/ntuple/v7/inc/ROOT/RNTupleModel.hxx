@@ -36,6 +36,7 @@ namespace Experimental {
 class RNTupleCollectionWriter;
 class RNTupleModel;
 class RNTupleWriter;
+class RNTupleWriteOptions;
 
 namespace Internal {
 class RPageSinkBuf;
@@ -336,6 +337,13 @@ public:
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
+
+   /// Estimate the memory usage for this model during writing
+   ///
+   /// This will return an estimate in bytes for the internal page and compression buffers. The value should be
+   /// understood per sequential RNTupleWriter or per RNTupleFillContext created for a RNTupleParallelWriter
+   /// constructed with this model.
+   std::size_t EstimateWriteMemoryUsage(const RNTupleWriteOptions &options = RNTupleWriteOptions()) const;
 };
 
 } // namespace Experimental

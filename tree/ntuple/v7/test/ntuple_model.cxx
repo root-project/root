@@ -47,3 +47,40 @@ TEST(RNTupleModel, MergeWithPrefix)
    EXPECT_EQ(mergedModel->GetField("x").GetQualifiedFieldName(), "x");
    EXPECT_EQ(mergedModel->GetField("n.x").GetQualifiedFieldName(), "n.x");
 }
+
+TEST(RNTupleModel, EstimateWriteMemoryUsage)
+{
+   auto model = RNTupleModel::CreateBare();
+   auto customStructVec = model->MakeField<std::vector<CustomStruct>>("CustomStructVec");
+
+   static constexpr std::size_t NumColumns = 10;
+   static constexpr std::size_t PageSize = 1234;
+   static constexpr std::size_t ClusterSize = 6789;
+   RNTupleWriteOptions options;
+   options.SetApproxUnzippedPageSize(PageSize);
+   options.SetApproxZippedClusterSize(ClusterSize);
+
+   // Tail page optimization and buffered writing on, IMT not disabled.
+   static constexpr std::size_t Expected1 = NumColumns * 3 * PageSize + 3 * ClusterSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected1);
+
+   // Disable IMT.
+   options.SetUseImplicitMT(RNTupleWriteOptions::EImplicitMT::kOff);
+   static constexpr std::size_t Expected2 = NumColumns * 3 * PageSize + ClusterSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected2);
+
+   // Disable buffered writing.
+   options.SetUseBufferedWrite(false);
+   static constexpr std::size_t Expected3 = NumColumns * 3 * PageSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected3);
+
+   // Disable tail page optimization.
+   options.SetUseTailPageOptimization(false);
+   static constexpr std::size_t Expected4 = NumColumns * PageSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected4);
+
+   // Enable buffered writing again.
+   options.SetUseBufferedWrite(true);
+   static constexpr std::size_t Expected5 = NumColumns * PageSize + ClusterSize;
+   EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected5);
+}
