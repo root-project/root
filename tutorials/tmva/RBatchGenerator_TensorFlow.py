@@ -63,5 +63,5 @@ loss_fn = tf.keras.losses.BinaryCrossentropy()
 model.compile(optimizer="adam", loss=loss_fn, metrics=["accuracy"])
 
 # Train model
-model.fit(ds_train, steps_per_epoch=train_batches_per_epoch, validation_data=ds_valid,\
+model.fit(ds_train_repeated, steps_per_epoch=train_batches_per_epoch, validation_data=ds_valid_repeated,\
           validation_steps=validation_batches_per_epoch, epochs=num_of_epochs)
