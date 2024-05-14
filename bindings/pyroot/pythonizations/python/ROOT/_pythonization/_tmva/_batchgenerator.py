@@ -683,11 +683,14 @@ def CreateNumPyGenerators(
             [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
-        Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            Two generators are returned. One used to load training batches,
-            and one to load validation batches. NOTE: the validation batches
-            are loaded during the training. Before training, the validation
-            generator will return no batches.
+        TrainRBatchGenerator or
+            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
+            If validation split is 0, return TrainBatchGenerator.
+            
+            Otherwise two generators are returned. One used to load training
+            batches, and one to load validation batches. NOTE: the validation
+            batches are loaded during the training. Before training, the
+            validation generator will return no batches.
     """
 
     import numpy as np
@@ -710,6 +713,10 @@ def CreateNumPyGenerators(
     train_generator = TrainRBatchGenerator(
         base_generator, base_generator.ConvertBatchToNumpy
     )
+
+    if validation_split == 0.0:
+        return train_generator
+    
     validation_generator = ValidationRBatchGenerator(
         base_generator, base_generator.ConvertBatchToNumpy
     )
@@ -772,11 +779,14 @@ def CreateTFDatasets(
             [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
-        Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            Two generators are returned. One used to load training batches,
-            and one to load validation batches. NOTE: the validation batches
-            are loaded during the training. Before training, the validation
-            generator will return no batches.
+        TrainRBatchGenerator or
+            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
+            If validation split is 0, return TrainBatchGenerator.
+            
+            Otherwise two generators are returned. One used to load training
+            batches, and one to load validation batches. NOTE: the validation
+            batches are loaded during the training. Before training, the
+            validation generator will return no batches.
     """
     import tensorflow as tf
 
@@ -836,6 +846,9 @@ def CreateTFDatasets(
     setattr(ds_train, "target_column", train_generator.target_columns)
     setattr(ds_train, "weights_column", train_generator.weights_column)
     setattr(ds_train, "number_of_batches", train_generator.number_of_batches)
+
+    if validation_split == 0.0:
+        return ds_train
 
     ds_validation = tf.data.Dataset.from_generator(
         validation_generator, output_signature=batch_signature
@@ -906,11 +919,14 @@ def CreatePyTorchGenerators(
             [4, 5, 6, 7] and [8, 9] will be returned.
 
     Returns:
-        Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
-            Two generators are returned. One used to load training batches,
-            and one to load validation batches. NOTE: the validation batches
-            are loaded during the training. Before training, the validation
-            generator will return no batches.
+        TrainRBatchGenerator or
+            Tuple[TrainRBatchGenerator, ValidationRBatchGenerator]:
+            If validation split is 0, return TrainBatchGenerator.
+            
+            Otherwise two generators are returned. One used to load training
+            batches, and one to load validation batches. NOTE: the validation
+            batches are loaded during the training. Before training, the
+            validation generator will return no batches.
     """
     base_generator = BaseGenerator(
         rdataframe,
@@ -930,6 +946,10 @@ def CreatePyTorchGenerators(
     train_generator = TrainRBatchGenerator(
         base_generator, base_generator.ConvertBatchToPyTorch
     )
+
+    if validation_split == 0.0:
+        return train_generator
+
     validation_generator = ValidationRBatchGenerator(
         base_generator, base_generator.ConvertBatchToPyTorch
     )
