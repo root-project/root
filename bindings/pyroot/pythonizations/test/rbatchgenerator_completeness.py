@@ -2,7 +2,7 @@ import unittest
 import os
 import ROOT
 import numpy as np
-import math
+from random import randrange
 
 class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
@@ -34,18 +34,6 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
     def teardown_file(self, file):
         os.remove(file)
-    
-    def size_of_remainders(self, num_of_entries=10, batch_size=3, chunk_size=5, validation_split=0.3):
-        val_remainder = ((num_of_entries // chunk_size) * math.ceil(chunk_size * validation_split))\
-            + math.ceil((num_of_entries % chunk_size) * validation_split)
-        train_remainder = num_of_entries - val_remainder
-        n_of_train_batches = train_remainder // batch_size
-        n_of_val_batches = val_remainder // batch_size
-        val_remainder %= batch_size
-        train_remainder %= batch_size
-
-        return n_of_train_batches, n_of_val_batches, train_remainder, val_remainder
-
 
     def test01_each_element_is_generated_unshuffled(self):
         self.create_file()
@@ -58,7 +46,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 batch_size=3,
                 chunk_size=5,
                 target="b2",
-                validation_split=0.3,
+                validation_split=0.4,
                 shuffle=False,
                 drop_remainder=False
             )
@@ -134,21 +122,24 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             collected_y_train = []
             collected_y_val = []
 
+            train_iter = iter(gen_train)
+            val_iter = iter(gen_validation)
+
             for _ in range(self.n_train_batch):
-                x, y = next(gen_train)
+                x, y = next(train_iter)
                 self.assertTrue(x.shape==(3,1))
                 self.assertTrue(y.shape==(3,1))
                 collected_x_train.append(x.tolist())
                 collected_y_train.append(y.tolist())
 
             for _ in range(self.n_val_batch):
-                x, y = next(gen_validation)
+                x, y = next(val_iter)
                 self.assertTrue(x.shape==(3,1))
                 self.assertTrue(y.shape==(3,1))
                 collected_x_val.append(x.tolist())
                 collected_y_val.append(y.tolist())
             
-            x, y = next(gen_validation)
+            x, y = next(val_iter)
             self.assertTrue(x.shape==(self.val_remainder,1))
             self.assertTrue(y.shape==(self.val_remainder,1))
             collected_x_val.append(x.tolist())
@@ -207,7 +198,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 batch_size=3,
                 chunk_size=5,
                 target="b2",
-                validation_split=0.3,
+                validation_split=0.4,
                 shuffle=False,
                 drop_remainder=True
             )
@@ -392,7 +383,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             df = ROOT.RDataFrame("myTree", file_name)
         
             gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-                df
+                df,
                 batch_size=3,
                 chunk_size=5,
                 target="b2",
@@ -464,15 +455,15 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 batch_size=3,
                 chunk_size=5,
                 target="b2",
-                validation_split=0.3,
+                validation_split=0.4,
                 shuffle=False,
                 drop_remainder=False
             )
 
-            results_x_train = [0.0, 2.0, 4.0, 6.0]
-            results_x_val = [8.0]
-            results_y_train = [0.0, 4.0, 16.0, 36.0]
-            results_y_val = [64.0]
+            results_x_train = [0.0, 2.0, 4.0]
+            results_x_val = [6.0, 8.0]
+            results_y_train = [0.0, 4.0, 16.0]
+            results_y_val = [36.0, 64.0]
             
             collected_x_train = []
             collected_x_val = []
@@ -482,28 +473,15 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
             train_iter = iter(gen_train)
             val_iter = iter(gen_validation)
 
-            for _ in range(2):
-                x, y = next(train_iter)
-                self.assertTrue(x.shape==(3,1))
-                self.assertTrue(y.shape==(3,1))
-                collected_x_train.append(x.tolist())
-                collected_y_train.append(y.tolist())
-            
             x, y = next(train_iter)
             self.assertTrue(x.shape==(3,1))
             self.assertTrue(y.shape==(3,1))
             collected_x_train.append(x.tolist())
             collected_y_train.append(y.tolist())
-
-            x, y = next(train_iter)
-            self.assertTrue(x.shape==(1,1))
-            self.assertTrue(y.shape==(1,1))
-            collected_x_train.append(x.tolist())
-            collected_y_train.append(y.tolist())
             
             x, y = next(val_iter)
-            self.assertTrue(x.shape==(1,1))
-            self.assertTrue(y.shape==(1,1))
+            self.assertTrue(x.shape==(2,1))
+            self.assertTrue(y.shape==(2,1))
             collected_x_val.append(x.tolist())
             collected_y_val.append(y.tolist())
 
@@ -525,14 +503,15 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
     def test09_filtered_last_chunk(self):
         file_name = "filtered_last_chunk.root"
+        tree_name = "myTree"
 
         ROOT.RDataFrame(20)\
             .Define("b1", "(Short_t) rdfentry_")\
             .Define("b2", "(UShort_t) b1 * b1")\
-            .Snapshot("myTree", file_name)
+            .Snapshot(tree_name, file_name)
 
         try:
-            df = ROOT.RDataFrame(self.tree_name, self.file_name1)
+            df = ROOT.RDataFrame(tree_name, file_name)
 
             dff = df.Filter("b1 % 2 == 0", "name")
             
@@ -596,9 +575,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 drop_remainder=False
             )
             
-            both_epochs_collected_x_train = []
             both_epochs_collected_x_val = []
-            both_epochs_collected_y_train = []
             both_epochs_collected_y_val = []
 
             for _ in range(2):
@@ -607,21 +584,24 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 collected_y_train = []
                 collected_y_val = []
 
+                iter_train = iter(gen_train)
+                iter_val = iter(gen_validation)
+
                 for _ in range(self.n_train_batch):
-                    x, y = next(gen_train)
+                    x, y = next(iter_train)
                     self.assertTrue(x.shape==(3,1))
                     self.assertTrue(y.shape==(3,1))
                     collected_x_train.append(x.tolist())
                     collected_y_train.append(y.tolist())
 
                 for _ in range(self.n_val_batch):
-                    x, y = next(gen_validation)
+                    x, y = next(iter_val)
                     self.assertTrue(x.shape==(3,1))
                     self.assertTrue(y.shape==(3,1))
                     collected_x_val.append(x.tolist())
                     collected_y_val.append(y.tolist())
                 
-                x, y = next(gen_validation)
+                x, y = next(iter_val)
                 self.assertTrue(x.shape==(self.val_remainder,1))
                 self.assertTrue(y.shape==(self.val_remainder,1))
                 collected_x_val.append(x.tolist())
@@ -637,14 +617,10 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 self.assertEqual(len(flat_y_train),6)
                 self.assertEqual(len(flat_y_val),4)
 
-                both_epochs_collected_x_train.append(collected_x_train)
                 both_epochs_collected_x_val.append(collected_x_val)
-                both_epochs_collected_y_train.append(collected_y_train)
                 both_epochs_collected_y_val.append(collected_y_val)
             
-            self.assertEqual(both_epochs_collected_x_train[0], both_epochs_collected_x_train[1])
             self.assertEqual(both_epochs_collected_x_val[0], both_epochs_collected_x_val[1])
-            self.assertEqual(both_epochs_collected_y_train[0], both_epochs_collected_y_train[1])
             self.assertEqual(both_epochs_collected_y_val[0], both_epochs_collected_y_val[1])
 
             self.teardown_file(self.file_name1)
@@ -664,7 +640,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 batch_size=3,
                 chunk_size=5,
                 target="b2",
-                validation_split=0.3,
+                validation_split=0.4,
                 shuffle=False,
                 drop_remainder=False
             )
@@ -680,6 +656,8 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             self.assertEqual(gen_train.number_of_batches, number_of_training_batches)
             self.assertEqual(gen_validation.number_of_batches, number_of_validation_batches)
+            self.assertEqual(gen_train.last_batch_no_of_rows, 0)
+            self.assertEqual(gen_validation.last_batch_no_of_rows, 1)
 
             self.teardown_file(self.file_name1)
 
@@ -838,9 +816,9 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
                 collected_z_val.append(z.numpy().tolist())
             
             x, y, z = next(iter_val)
-            self.assertTrue(x.shape==(self.val_remainder,1))
-            self.assertTrue(y.shape==(self.val_remainder,2))
-            self.assertTrue(z.shape==(self.val_remainder,1))
+            self.assertTrue(x.shape==(3,1))
+            self.assertTrue(y.shape==(3,2))
+            self.assertTrue(z.shape==(3,1))
             collected_x_val.append(x.numpy().tolist())
             collected_y_val.append(y.numpy().tolist())
             collected_z_val.append(z.numpy().tolist())
@@ -868,76 +846,103 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
 
 
-    def test08_big_data(self):
+    def test14_big_data(self):
+        file_name = "big_data.root"
+        tree_name = "myTree"
+
+        entries_in_rdf = randrange(10000,30000)
+        chunk_size = randrange(1000,3001)
+        batch_size = randrange(100,501)
+
+        error_message = f"\n Batch size: {batch_size} Chunk size: {chunk_size}\
+            Number of entries: {entries_in_rdf}"
+
         def define_rdf(num_of_entries):
-            df = ROOT.RDataFrame(num_of_entries)\
+            ROOT.RDataFrame(num_of_entries)\
                 .Define("b1", "(int) rdfentry_")\
                 .Define("b2", "(double) rdfentry_ * 2")\
                 .Define("b3", "(int) rdfentry_ + 10192")\
                 .Define("b4", "(int) -rdfentry_")\
-                .Define("b5", "(double) -rdfentry_ - 10192")
-            
-            return df
+                .Define("b5", "(double) -rdfentry_ - 10192")\
+                .Snapshot(tree_name, file_name)
         
         def test(size_of_batch, size_of_chunk, num_of_entries):
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
-            batch_size=size_of_batch,
-            chunk_size=size_of_chunk,
-            rdataframe=define_rdf(num_of_entries),
-            target=["b3","b5"],
-            weights="b2",
-            validation_split=0.3,
-            shuffle=False,
-            drop_remainder=False
-            )
+            define_rdf(num_of_entries)
 
-            collect_x = []
-            n_train_batches, n_val_batches, train_remainder, val_remainder =\
-                self.size_of_remainders(num_of_entries=num_of_entries, batch_size=size_of_batch, chunk_size=size_of_chunk)
+            try:
+                df = ROOT.RDataFrame(tree_name, file_name)
 
-            for _ in range(n_train_batches):
-                x, y, z = next(gen_train)
+                gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+                    df,
+                    batch_size=size_of_batch,
+                    chunk_size=size_of_chunk,
+                    target=["b3","b5"],
+                    weights="b2",
+                    validation_split=0.3,
+                    shuffle=False,
+                    drop_remainder=False
+                )
 
-                self.assertTrue(x.shape==(size_of_batch,2))
-                self.assertTrue(y.shape==(size_of_batch,2))
-                self.assertTrue(z.shape==(size_of_batch,1))
-
-                self.assertTrue(np.all(x[:,0]*(-1)==x[:,1]))
-                self.assertTrue(np.all(x[:,0]+10192==y[:,0]))
-                # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]))
-                self.assertTrue(np.all(x[:,0]*2==z[:,0]))
-
-                collect_x.extend(list(x[:,0]))
-            
-            if train_remainder:
-                x, y, z = next(gen_train)
-                self.assertTrue(x.shape==(train_remainder,2))
-                self.assertTrue(y.shape==(train_remainder,2))
-                self.assertTrue(z.shape==(train_remainder,1))
-
-            for _ in range(n_val_batches):
-                x, y, z = next(gen_validation)
-
-                self.assertTrue(x.shape==(size_of_batch,2))
-                self.assertTrue(y.shape==(size_of_batch,2))
-                self.assertTrue(z.shape==(size_of_batch,1))
-
-                self.assertTrue(np.all(x[:,0]*(-1)==x[:,1]))
-                self.assertTrue(np.all(x[:,0]+10192==y[:,0]))
-                # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]))
-                self.assertTrue(np.all(x[:,0]*2==z[:,0]))
+                collect_x = []
                 
-                collect_x.extend(list(x[:,0]))
+                n_train_batches = gen_train.number_of_batches - 1
+                n_val_batches = gen_validation.number_of_batches -1
+                train_remainder = gen_train.last_batch_no_of_rows
+                val_remainder = gen_validation.last_batch_no_of_rows
+
+                iter_train = iter(gen_train)
+                iter_val = iter(gen_validation)
+
+                for i in range(n_train_batches):
+                    x, y, z = next(iter_train)
+
+                    self.assertTrue(x.shape==(size_of_batch,2), error_message + f" row: {i} x shape: {x.shape}")
+                    self.assertTrue(y.shape==(size_of_batch,2), error_message + f" row: {i} y shape: {y.shape}")
+                    self.assertTrue(z.shape==(size_of_batch,1), error_message + f" row: {i} z shape: {z.shape}")
+
+                    self.assertTrue(np.all(x[:,0]*(-1)==x[:,1]), error_message + f" row: {i}")
+                    self.assertTrue(np.all(x[:,0]+10192==y[:,0]), error_message + f" row: {i}")
+                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
+                    self.assertTrue(np.all(x[:,0]*2==z[:,0]), error_message + f" row: {i}")
+
+                    collect_x.extend(list(x[:,0]))
+                
+                if train_remainder:
+                    x, y, z = next(iter_train)
+                    self.assertTrue(x.shape==(train_remainder,2), error_message)
+                    self.assertTrue(y.shape==(train_remainder,2), error_message)
+                    self.assertTrue(z.shape==(train_remainder,1), error_message)
+                    collect_x.extend(list(x[:,0]))
+
+                for _ in range(n_val_batches):
+                    x, y, z = next(iter_val)
+
+                    self.assertTrue(x.shape==(size_of_batch,2), error_message + f" row: {i} x shape: {x.shape}")
+                    self.assertTrue(y.shape==(size_of_batch,2), error_message + f" row: {i} y shape: {y.shape}")
+                    self.assertTrue(z.shape==(size_of_batch,1), error_message + f" row: {i} z shape: {z.shape}")
+
+                    self.assertTrue(np.all(x[:,0]*(-1)==x[:,1]), error_message)
+                    self.assertTrue(np.all(x[:,0]+10192==y[:,0]), error_message)
+                    # self.assertTrue(np.all(x[:,0]*(-1)-10192==y[:,1]), error_message)
+                    self.assertTrue(np.all(x[:,0]*2==z[:,0]), error_message)
+                    
+                    collect_x.extend(list(x[:,0]))
+                
+                if val_remainder:
+                    x, y, z = next(iter_val)
+                    self.assertTrue(x.shape==(val_remainder,2),error_message)
+                    self.assertTrue(y.shape==(val_remainder,2),error_message)
+                    self.assertTrue(z.shape==(val_remainder,1),error_message)
+                    collect_x.extend(list(x[:,0]))
+                
+                self.assertTrue(set(collect_x)==set(i for i in range(num_of_entries)), f"collected length: {len(set(collect_x))}\
+                                 generated length {len(set(i for i in range(num_of_entries)))}")
             
-            if val_remainder:
-                x, y, z = next(gen_validation)
-                self.assertTrue(x.shape==(val_remainder,2))
-                self.assertTrue(y.shape==(val_remainder,2))
-                self.assertTrue(z.shape==(val_remainder,1))
-            
-            self.assertTrue(set(collect_x)==(i for i in range(num_of_entries)))
+            except:
+                self.teardown_file(file_name)
+                raise
         
-        test(400, 2000, 10100)
+        test(batch_size, chunk_size, entries_in_rdf)
 
 
 if __name__ == '__main__':

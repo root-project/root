@@ -62,7 +62,8 @@ public:
    const TMVA::Experimental::RTensor<float> &GetTrainBatch()
    {
       std::unique_lock<std::mutex> lock(fBatchLock);
-      fBatchCondition.wait(lock, [this]() { return !fTrainingBatchQueue.empty() || !fIsActive; });
+      fBatchCondition.wait(lock, [this]() {
+         return !fTrainingBatchQueue.empty() || !fIsActive; });
 
       if (fTrainingBatchQueue.empty()) {
          fCurrentBatch = std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({0}));
@@ -125,7 +126,7 @@ public:
    /// \return
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx)
-   {
+   {  
       auto batch =
          std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({fBatchSize, fNumColumns}));
 
@@ -139,7 +140,7 @@ public:
 
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx, std::size_t batchSize)
-   {
+   {  
       auto batch =
          std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({batchSize, fNumColumns}));
 
@@ -230,14 +231,13 @@ public:
       }
       else{
          SaveRemainingData(*fTrainingRemainder, fTrainingRemainderRow, eventIndices);
-         fBatchCondition.notify_one();
          fTrainingRemainderRow += eventIndices.size();
          return;
       }
 
       // Create tasks of fBatchSize until all idx are used
       std::size_t start = fBatchSize - fTrainingRemainderRow;
-      for (; (start + fBatchSize) <= eventIndices.size(); start += fBatchSize) { //should be less than
+      for (; (start + fBatchSize) <= eventIndices.size(); start += fBatchSize) { 
 
          // Grab the first fBatchSize indices from the
          std::vector<std::size_t> idx;
@@ -256,7 +256,7 @@ public:
          }
       }
 
-      fBatchCondition.notify_one();
+      fBatchCondition.notify_all();
 
       fTrainingRemainderRow = eventIndices.size() - start;
       SaveRemainingData(*fTrainingRemainder, fTrainingRemainderRow, eventIndices, start);
@@ -273,7 +273,6 @@ public:
       }
       else{
          SaveRemainingData(*fValidationRemainder, fValidationRemainderRow, eventIndices);
-         fBatchCondition.notify_one();
          fValidationRemainderRow += eventIndices.size();
          return;
       }
@@ -297,19 +296,23 @@ public:
 
    void LastBatches(){
       {  
-         std::vector<std::size_t> idx = std::vector<std::size_t>(fTrainingRemainderRow);
-         std::iota(idx.begin(), idx.end(), 0);
-         
-         std::unique_ptr<TMVA::Experimental::RTensor<float>> batch = CreateBatch(*fTrainingRemainder, idx, fTrainingRemainderRow);
+         if (fTrainingRemainderRow){
+            std::vector<std::size_t> idx = std::vector<std::size_t>(fTrainingRemainderRow);
+            std::iota(idx.begin(), idx.end(), 0);
+            
+            std::unique_ptr<TMVA::Experimental::RTensor<float>> batch = CreateBatch(*fTrainingRemainder, idx, fTrainingRemainderRow);
 
-         std::unique_lock<std::mutex> lock(fBatchLock);
-         fTrainingBatchQueue.push(std::move(batch));
+            std::unique_lock<std::mutex> lock(fBatchLock);
+            fTrainingBatchQueue.push(std::move(batch));
+         }
       }
 
-      std::vector<std::size_t> idx = std::vector<std::size_t>(fValidationRemainderRow);
+      if (fValidationRemainderRow){
+         std::vector<std::size_t> idx = std::vector<std::size_t>(fValidationRemainderRow);
          std::iota(idx.begin(), idx.end(), 0);
 
-      fValidationBatchQueue.push(CreateBatch(*fValidationRemainder, idx, fValidationRemainderRow));
+         fValidationBatchQueue.push(CreateBatch(*fValidationRemainder, idx, fValidationRemainderRow));
+      }
    }
 };
 
