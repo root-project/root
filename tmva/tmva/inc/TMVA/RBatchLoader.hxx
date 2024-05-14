@@ -62,8 +62,7 @@ public:
    const TMVA::Experimental::RTensor<float> &GetTrainBatch()
    {
       std::unique_lock<std::mutex> lock(fBatchLock);
-      fBatchCondition.wait(lock, [this]() {
-         return !fTrainingBatchQueue.empty() || !fIsActive; });
+      fBatchCondition.wait(lock, [this]() {return !fTrainingBatchQueue.empty() || !fIsActive; });
 
       if (fTrainingBatchQueue.empty()) {
          fCurrentBatch = std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({0}));
