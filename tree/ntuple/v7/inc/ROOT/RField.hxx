@@ -414,12 +414,13 @@ protected:
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
    virtual const RColumnRepresentations &GetColumnRepresentations() const;
-   /// Creates the backing columns corresponsing to the field type for writing
-   virtual void GenerateColumnsImpl() = 0;
-   /// Creates the backing columns corresponsing to the field type for reading.
-   /// The method should to check, using the page source and fOnDiskId, if the column types match
-   /// and throw if they don't.
-   virtual void GenerateColumnsImpl(const RNTupleDescriptor &desc) = 0;
+   /// Implementations in derived classes should create the backing columns corresponsing to the field type for
+   /// writing. The default implementation does not attach any columns to the field.
+   virtual void GenerateColumnsImpl() {}
+   /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
+   /// The default implementation does not attach any columns to the field. The method should check, using the page
+   /// source and fOnDiskId, if the column types match and throw if they don't.
+   virtual void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) {}
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
    const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
@@ -718,8 +719,6 @@ public:
 class RFieldZero final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    void ConstructValue(void *) const final {}
 
 public:
@@ -741,8 +740,6 @@ protected:
    {
       return std::make_unique<RInvalidField>(newName, GetTypeName(), fError);
    }
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    void ConstructValue(void *) const final {}
 
 public:
@@ -794,8 +791,6 @@ private:
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
@@ -873,8 +868,6 @@ private:
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
 
    void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
 
@@ -1070,9 +1063,6 @@ protected:
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
 
@@ -1252,9 +1242,6 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
@@ -1293,7 +1280,6 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const final;
    /// Returns an RRVecField::RRVecDeleter
@@ -1563,8 +1549,6 @@ public:
 class RAtomicField : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return GetDeleterOf(*fSubFields[0]); }
@@ -2520,8 +2504,6 @@ class RField<TObject> final : public RFieldBase {
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
