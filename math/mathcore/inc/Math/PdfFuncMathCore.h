@@ -402,7 +402,7 @@ namespace Math {
   inline double gaussian_pdf(double x, double sigma = 1, double x0 = 0) {
 
     double tmp = (x-x0)/sigma;
-    return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
+    return (1.0/(std::sqrt(2 * M_PI) * std::abs(sigma))) * std::exp(-tmp*tmp/2);
   }
 
    /**
@@ -485,7 +485,7 @@ namespace Math {
     if ((x-x0) <= 0)
       return 0.0;
     double tmp = (std::log((x-x0)) - m)/s;
-    return 1.0 / ((x-x0) * std::fabs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
+    return 1.0 / ((x-x0) * std::abs(s) * std::sqrt(2 * M_PI)) * std::exp(-(tmp * tmp) /2);
   }
 
 
@@ -510,7 +510,7 @@ namespace Math {
     // Inlined to enable clad-auto-derivation for this function.
 
     double tmp = (x-x0)/sigma;
-    return (1.0/(std::sqrt(2 * M_PI) * std::fabs(sigma))) * std::exp(-tmp*tmp/2);
+    return (1.0/(std::sqrt(2 * M_PI) * std::abs(sigma))) * std::exp(-tmp*tmp/2);
 
   }
 
