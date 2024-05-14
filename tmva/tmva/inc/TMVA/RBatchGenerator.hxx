@@ -188,6 +188,22 @@ public:
       return entriesForTraining / fBatchSize + 1;
    }
 
+   /// @brief Return number of training remainder rows
+   /// @return 
+   std::size_t TrainRemainderRows(){
+      std::size_t entriesForTraining = (fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
+            fNumEntries % fChunkSize - floor(fValidationSplit * (fNumEntries % fChunkSize));
+
+      if (fDropRemainder || !(entriesForTraining % fBatchSize))
+      {
+         return 0;
+      }
+
+      return entriesForTraining % fBatchSize;
+   }
+
+   /// @brief Calculate number of validation batches and return it
+   /// @return 
    std::size_t NumberOfValidationBatches(){
       std::size_t entriesForValidation = (fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
             floor((fNumEntries % fChunkSize) * fValidationSplit);
@@ -200,6 +216,21 @@ public:
       return entriesForValidation / fBatchSize + 1; 
    }
 
+   /// @brief Return number of validation remainder rows
+   /// @return 
+   std::size_t ValidationRemainderRows(){
+      std::size_t entriesForValidation = (fNumEntries / fChunkSize) * floor(fChunkSize * fValidationSplit) +
+            floor((fNumEntries % fChunkSize) * fValidationSplit);
+
+      if (fDropRemainder || !(entriesForValidation%fBatchSize)){
+
+         return 0;
+      }
+      
+      return entriesForValidation % fBatchSize; 
+   }
+
+   /// @brief Load chunks when no filters are applied on rdataframe
    void LoadChunksNoFilters()
    {
       for (std::size_t currentChunk = 0, currentRow = 0; ((currentChunk < fMaxChunks) || fUseWholeFile) && currentRow < fNumEntries;
