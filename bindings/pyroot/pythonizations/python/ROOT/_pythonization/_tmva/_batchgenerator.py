@@ -519,6 +519,10 @@ class TrainRBatchGenerator:
     @property
     def number_of_batches(self) -> int:
         return self.base_generator.generator.NumberOfTrainingBatches()
+    
+    @property
+    def last_batch_no_of_rows(self) -> int:
+        return self.base_generator.generator.TrainRemainderRows()
 
     def __iter__(self):
         self._callable = self.__call__()
@@ -587,6 +591,10 @@ class ValidationRBatchGenerator:
     @property
     def number_of_batches(self) -> int:
         return self.base_generator.generator.NumberOfValidationBatches()
+    
+    @property
+    def last_batch_no_of_rows(self) -> int:
+        return self.base_generator.generator.ValidationRemainderRows()
 
     def __iter__(self):
         self._callable = self.__call__()
