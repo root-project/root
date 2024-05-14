@@ -858,7 +858,7 @@ def CreateTFDatasets(
     setattr(ds_validation, "train_columns", train_generator.train_columns)
     setattr(ds_validation, "target_column", train_generator.target_columns)
     setattr(ds_validation, "weights_column", train_generator.weights_column)
-    setattr(ds_validation, "number_of_batches", train_generator.number_of_batches)
+    setattr(ds_validation, "number_of_batches", validation_generator.number_of_batches)
 
     return ds_train, ds_validation
 
