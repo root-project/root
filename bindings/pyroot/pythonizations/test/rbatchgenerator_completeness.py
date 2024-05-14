@@ -515,7 +515,7 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
             dff = df.Filter("b1 % 2 == 0", "name")
             
-            gen_train, gen_validation = ROOT.TMVA.Experimental.CreateNumPyGenerators(
+            gen_train = ROOT.TMVA.Experimental.CreateNumPyGenerators(
                 dff,
                 batch_size=3,
                 chunk_size=9,
