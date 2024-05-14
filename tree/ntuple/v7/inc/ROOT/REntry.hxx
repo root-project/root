@@ -28,6 +28,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -65,30 +66,17 @@ private:
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
-   /// List of indexes of fValues sorted by field name; filled together with fValues
-   std::vector<std::size_t> fValueIdxSortedByName;
+   /// For fast lookup of token IDs given a top-level field name
+   std::unordered_map<std::string, std::size_t> fFieldName2Token;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   void UpdateValueIdxSortedByName(const std::string &fieldName)
-   {
-      auto itrSucc =
-         std::lower_bound(fValueIdxSortedByName.begin(), fValueIdxSortedByName.end(), fieldName,
-                          [this](size_t i, const std::string &f) { return CompValueIdxSortedByName(i, f); });
-      fValueIdxSortedByName.insert(itrSucc, fValues.size());
-   }
-
-   bool CompValueIdxSortedByName(size_t idx, const std::string &fieldName) const
-   {
-      return fValues[idx].GetField().GetFieldName() < fieldName;
-   }
-
    void AddValue(RFieldBase::RValue &&value)
    {
-      UpdateValueIdxSortedByName(value.GetField().GetFieldName());
+      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
       fValues.emplace_back(std::move(value));
    }
 
@@ -96,7 +84,7 @@ private:
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
    {
-      UpdateValueIdxSortedByName(field.GetFieldName());
+      fFieldName2Token[field.GetFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
@@ -150,13 +138,11 @@ public:
    /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
    RFieldToken GetToken(std::string_view fieldName) const
    {
-      auto it = std::lower_bound(fValueIdxSortedByName.begin(), fValueIdxSortedByName.end(), std::string(fieldName),
-                                 [this](size_t i, const std::string &f) { return CompValueIdxSortedByName(i, f); });
-
-      if (it == fValueIdxSortedByName.end() || fValues[*it].GetField().GetFieldName() != fieldName) {
+      auto it = fFieldName2Token.find(std::string(fieldName));
+      if (it == fFieldName2Token.end()) {
          throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      return RFieldToken(*it, fModelId);
+      return RFieldToken(it->second, fModelId);
    }
 
    void EmplaceNewValue(RFieldToken token)
