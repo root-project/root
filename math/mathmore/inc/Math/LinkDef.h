@@ -3,7 +3,7 @@
 
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma extra_include "Math/IFunctionfwd.h";
 #pragma extra_include "Math/IFunction.h";
@@ -107,4 +107,4 @@
 #pragma link C++ class ROOT::Math::GSLMultiRootFinder+;
 #pragma link C++ typedef ROOT::Math::MultiRootFinder;
 
-#endif //__CINT__
+#endif //__CLING__

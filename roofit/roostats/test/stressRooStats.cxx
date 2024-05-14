@@ -255,7 +255,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    gBenchmark->Print("stressRooStats");
-#ifdef __CINT__
+#ifdef __CLING__
    Double_t reftime = 186.34; // pcbrun4 interpreted
 #else
    Double_t reftime = 93.59; // pcbrun4 compiled
@@ -297,7 +297,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
 }
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 
 int main(int argc, const char *argv[])
 {

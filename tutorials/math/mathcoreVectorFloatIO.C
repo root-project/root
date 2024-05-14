@@ -35,7 +35,7 @@
 // No need to force dictionary generation
 // You need to run ACLIC with old ROOT version
 // and uncomment these lines below
-// #ifdef __MAKECINT__
+// #ifdef __MAKECLING__
 // #pragma link C++ class ROOT::Math::PxPyPzE4D<float>+;
 // #pragma link C++ class ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<float> >+;
 // #pragma link C++ typedef ROOT::Math::XYZTVectorF;
@@ -101,7 +101,7 @@ void read() {
 
 void runIt() {
 
-#if defined(__CINT__) && !defined(__MAKECINT__)
+#if defined(__CLING__) && !defined(__MAKECLING__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
    using namespace ROOT::Math ;
@@ -116,7 +116,7 @@ void runIt() {
 }
 
 void mathcoreVectorFloatIO() {
-#if defined(__CINT__) && !defined(__MAKECINT__)
+#if defined(__CLING__) && !defined(__MAKECLING__)
    gSystem->Load("libMathCore");
    gSystem->Load("libPhysics");
    using namespace ROOT::Math ;

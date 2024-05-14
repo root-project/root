@@ -1,5 +1,5 @@
 // For backward compatibility only
-#ifdef __CINT__
+#ifdef __CLING__
 #include <multimap>
 #else
 #include <map>

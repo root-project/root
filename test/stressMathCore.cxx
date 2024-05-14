@@ -52,7 +52,7 @@
 //
 
 
-#ifndef __CINT__
+#ifndef __CLING__
 
 
 #include "Math/DistFuncMathCore.h"
@@ -154,7 +154,7 @@ int compare( std::string name, double v1, double v2, double scale = 2.0) {
    return iret;
 }
 
-#ifndef __CINT__
+#ifndef __CLING__
 
 
 // trait class  for distinguishing the number of parameters for the various functions
@@ -1524,14 +1524,14 @@ int testCompositeObj(int ngen) {
 }
 
 
-#endif // endif ifndef __CINT__
+#endif // endif ifndef __CLING__
 
 
 int stressMathCore(double nscale = 1) {
 
    int iret = 0;
 
-#ifdef __CINT__
+#ifdef __CLING__
    std::cout << "Test must be run in compile mode - use ACLIC to compile!!" << std::endl;
 
 
