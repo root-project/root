@@ -885,10 +885,11 @@ class RBatchGeneratorMultipleFiles(unittest.TestCase):
 
                 collect_x = []
                 
-                n_train_batches = gen_train.number_of_batches - 1
-                n_val_batches = gen_validation.number_of_batches -1
                 train_remainder = gen_train.last_batch_no_of_rows
                 val_remainder = gen_validation.last_batch_no_of_rows
+
+                n_train_batches = gen_train.number_of_batches - 1 if train_remainder else gen_train.number_of_batches
+                n_val_batches = gen_validation.number_of_batches - 1 if val_remainder else gen_validation.number_of_batches
 
                 iter_train = iter(gen_train)
                 iter_val = iter(gen_validation)
