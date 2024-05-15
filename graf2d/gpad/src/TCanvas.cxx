@@ -64,8 +64,11 @@ const Size_t kDefaultCanvasSize   = 20;
 ClassImpQ(TCanvas)
 
 
-auto GetNewCanvasName()
+TString GetNewCanvasName(const char *arg = nullptr)
 {
+   if (arg && *arg)
+      return arg;
+
    const char *defcanvas = gROOT->GetDefCanvasName();
    TString cdef = defcanvas;
 
@@ -176,7 +179,7 @@ TCanvas::TCanvas(Bool_t build) : TPad(), fDoubleBuffer(0)
    if (!build || TClass::IsCallingNew() != TClass::kRealNew) {
       Constructor();
    } else {
-      TString cdef = GetNewCanvasName();
+      auto cdef = GetNewCanvasName();
 
       Constructor(cdef.Data(), cdef.Data(), 1);
    }
@@ -1513,9 +1516,9 @@ void TCanvas::ls(Option_t *option) const
 
 TCanvas *TCanvas::MakeDefCanvas()
 {
-   TString cdef = GetNewCanvasName();
+   auto cdef = GetNewCanvasName();
 
-   TCanvas *c = new TCanvas(cdef.Data(), cdef.Data(), 1);
+   auto c = new TCanvas(cdef.Data(), cdef.Data(), 1);
 
    ::Info("TCanvas::MakeDefCanvas"," created default TCanvas with name %s", cdef.Data());
    return c;
@@ -2046,10 +2049,7 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 void TCanvas::SetName(const char *name)
 {
-   if (name && *name)
-      fName = name;
-   else
-      fName = GetNewCanvasName();
+   fName = GetNewCanvasName(name);
 
    if (gPad && TestBit(kMustCleanup))
       gPad->Modified();
