@@ -1,0 +1,10 @@
+--- CMakeLists.txt	2024-05-15 13:44:06.014042661 +0200
++++ CMakeLists.txt	2024-05-15 13:43:46.730709304 +0200
+@@ -227,7 +227,6 @@
+     buffers.c cfileio.c checksum.c
+     drvrfile.c drvrmem.c drvrnet.c drvrsmem.c
+     editcol.c edithdu.c eval_f.c eval_l.c eval_y.c
+-    f77_wrap1.c f77_wrap2.c f77_wrap3.c f77_wrap4.c
+     fits_hcompress.c fits_hdecompress.c fitscore.c
+     getcol.c getcolb.c getcold.c getcole.c getcoli.c getcolj.c getcolk.c
+     getcoll.c getcols.c getcolsb.c getcolui.c getcoluj.c getcoluk.c
