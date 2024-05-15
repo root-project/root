@@ -1626,6 +1626,10 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
        GetRNTupleUnsplitSetting(fClass) != ERNTupleUnsplitSetting::kForceSplit) {
       throw RException(R__FAIL(std::string(className) + " cannot be split"));
    }
+   if (GetRNTupleUnsplitSetting(fClass) == ERNTupleUnsplitSetting::kForceUnsplit) {
+      throw RException(
+         R__FAIL(std::string(className) + " has unsplit mode enforced, not supported as native RNTuple class"));
+   }
 
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
