@@ -120,3 +120,39 @@ TEST(RField, UnsupportedUnsplit)
    auto model = RNTupleModel::Create();
    EXPECT_THROW(model->MakeField<CustomStreamerForceUnsplit>("f"), RException);
 }
+
+TEST(RField, UnsplitPoly)
+{
+   FileRaii fileGuard("test_ntuple_rfield_unsplit_poly.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("p", "PolyContainer").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      auto ptrPoly = writer->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+      ptrPoly->fPoly = std::make_unique<PolyBase>();
+      ptrPoly->fPoly->x = 0;
+      writer->Fill();
+      ptrPoly->fPoly = std::make_unique<PolyA>();
+      ptrPoly->fPoly->x = 1;
+      dynamic_cast<PolyA *>(ptrPoly->fPoly.get())->a = 100;
+      writer->Fill();
+      ptrPoly->fPoly = std::make_unique<PolyB>();
+      ptrPoly->fPoly->x = 2;
+      dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b = 200;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(3U, reader->GetNEntries());
+
+   auto ptrPoly = reader->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+
+   reader->LoadEntry(0);
+   EXPECT_EQ(0, ptrPoly->fPoly->x);
+   reader->LoadEntry(1);
+   EXPECT_EQ(1, ptrPoly->fPoly->x);
+   EXPECT_EQ(100, dynamic_cast<PolyA *>(ptrPoly->fPoly.get())->a);
+   reader->LoadEntry(2);
+   EXPECT_EQ(2, ptrPoly->fPoly->x);
+   EXPECT_EQ(200, dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b);
+}

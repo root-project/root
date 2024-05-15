@@ -7,4 +7,9 @@
 #pragma link C++ options = rntupleSplit(false) class CustomStreamerForceUnsplit + ;
 #pragma link C++ class IgnoreUnsplitComment + ;
 
+#pragma link C++ class PolyBase + ;
+#pragma link C++ class PolyA + ;
+#pragma link C++ class PolyB + ;
+#pragma link C++ options = rntupleSplit(false) class PolyContainer + ;
+
 #endif
