@@ -1883,7 +1883,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          std::stringstream exec;
          exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
               << ")->" << buf << ";";
-         if (gDebug > 1)
+         if (gDebug > 0)
             Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.str().c_str());
 
          auto res = gROOT->ProcessLine(exec.str().c_str());
@@ -2326,7 +2326,8 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
          std::stringstream exec;
          exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase
                       << (size_t)obj << ")->" << item.opt << ";";
-         Info("ProcessObjectOptions", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+         if (gDebug > 0)
+            Info("ProcessObjectOptions", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
          gROOT->ProcessLine(exec.str().c_str());
       } else {
          Error("ProcessObjectOptions", "Fail to execute %s for object %p %s", item.opt.c_str(), obj, obj ? obj->ClassName() : "---");
@@ -2341,7 +2342,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       auto pos = item.opt.find(";;use_"); // special coding of extra options
       if (pos != std::string::npos) item.opt.resize(pos);
 
-      if (gDebug > 1)
+      if (gDebug > 0)
          Info("ProcessObjectOptions", "Set draw option %s for object %s %s", item.opt.c_str(),
                obj->ClassName(), obj->GetName());
 
