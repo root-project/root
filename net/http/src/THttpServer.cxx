@@ -687,8 +687,6 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
       return kTRUE;
    }
 
-   printf("Calling SubmitHttp\n");
-
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);
    fArgs.push(arg);
