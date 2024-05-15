@@ -250,7 +250,7 @@ TCanvas::TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid) : TPad(), fD
    if (!fCanvasImp) return;
 
    CreatePainter();
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    Build();
 }
 
@@ -350,7 +350,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t form)
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -436,7 +436,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t ww, Int_t w
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
@@ -523,7 +523,7 @@ void TCanvas::Constructor(const char *name, const char *title, Int_t wtopx,
 
    CreatePainter();
 
-   SetName(name);
+   fName = GetNewCanvasName(name); // avoid Modified() signal from SetName
    SetTitle(title); // requires fCanvasImp set
    Build();
 
