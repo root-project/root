@@ -93,10 +93,6 @@ private:
    std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint64_t fLenFooter = 0;
-   /// The xxhash3 checksum of the serialized other members of the struct (excluding byte count and class version).
-   /// This member can only be interpreted during streaming.
-   /// When adding new members to the class, this member must remain the last one.
-   std::uint64_t fChecksum = 0;
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
@@ -117,13 +113,11 @@ public:
    std::uint64_t GetNBytesFooter() const { return fNBytesFooter; }
    std::uint64_t GetLenFooter() const { return fLenFooter; }
 
-   std::uint64_t GetChecksum() const { return fChecksum; }
-
    /// RNTuple implements the hadd MergeFile interface
    /// Merge this NTuple with the input list entries
    Long64_t Merge(TCollection *input, TFileMergeInfo *mergeInfo);
 
-   ClassDefNV(RNTuple, 4);
+   ClassDefNV(RNTuple, 5);
 }; // class RNTuple
 
 } // namespace Experimental
