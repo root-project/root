@@ -40,6 +40,7 @@
 #include <TSchemaRule.h>
 #include <TSchemaRuleSet.h>
 #include <TVirtualObject.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
 #include <cctype> // for isspace
@@ -48,6 +49,7 @@
 #include <cstdlib> // for malloc, free
 #include <cstring> // for memset
 #include <exception>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <new> // hardware_destructive_interference_size
@@ -389,6 +391,22 @@ template <std::size_t VariantSizeT>
 struct RVariantTag {
    using ValueType_t = typename std::conditional_t<VariantSizeT == 1, std::uint8_t,
                                                    typename std::conditional_t<VariantSizeT == 4, std::uint32_t, void>>;
+};
+
+/// Used in RUnsplitField::AppendImpl() in order to record the encountered streamer info records
+class TBufferRecStreamer : public TBufferFile {
+public:
+   using RCallbackStreamerInfo = std::function<void(TVirtualStreamerInfo *)>;
+
+private:
+   RCallbackStreamerInfo fCallbackStreamerInfo;
+
+public:
+   TBufferRecStreamer(TBuffer::EMode mode, Int_t bufsiz, RCallbackStreamerInfo callbackStreamerInfo)
+      : TBufferFile(mode, bufsiz), fCallbackStreamerInfo(callbackStreamerInfo)
+   {
+   }
+   void TagStreamerInfo(TVirtualStreamerInfo *info) final { fCallbackStreamerInfo(info); }
 };
 
 } // anonymous namespace
@@ -1960,7 +1978,8 @@ ROOT::Experimental::RUnsplitField::CloneImpl(std::string_view newName) const
 
 std::size_t ROOT::Experimental::RUnsplitField::AppendImpl(const void *from)
 {
-   TBufferFile buffer(TBuffer::kWrite, GetValueSize());
+   TBufferRecStreamer buffer(TBuffer::kWrite, GetValueSize(),
+                             [this](TVirtualStreamerInfo *info) { fStreamerInfos[info->GetNumber()] = info; });
    fClass->Streamer(const_cast<void *>(from), buffer);
 
    auto nbytes = buffer.Length();
