@@ -108,18 +108,23 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    // All terms of RooProdPdfs that do not contain observables and share a parameters with one or more
    // terms that do contain observables are added as constrainedParameters.
    RooArgSet cPars;
+   RooArgSet external_cPars;
    if (constrainedParameters) {
       cPars.add(*constrainedParameters);
    } else {
       pdf.getParameters(&observables, cPars, false);
       doStripDisconnected = true;
+      // identify any shared parameters between pdf and constraints
+      if(externalConstraints) {
+         for(auto constraint : *externalConstraints) {
+            external_cPars.add( *std::unique_ptr<RooArgSet>{constraint->getObservables(cPars)} );
+         }
+      }
    }
 
    // Collect internal and external constraint specifications
    RooArgSet allConstraints;
-
-   auto observableNames = RooHelpers::getColonSeparatedNameString(observables);
-   auto constraintSetCacheName = std::string("CACHE_CONSTR_OF_PDF_") + pdf.GetName() + "_FOR_OBS_" + observableNames;
+   
 
    if (!cPars.empty()) {
       std::unique_ptr<RooArgSet> internalConstraints{
@@ -128,6 +133,10 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
    }
    if (externalConstraints) {
       allConstraints.add(*externalConstraints);
+      // ensure any common parameters that may have been stripped above are now added back in
+      if(doStripDisconnected) {
+         cPars.add(external_cPars);
+      }
    }
 
    if (!allConstraints.empty()) {
