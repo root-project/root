@@ -22,7 +22,28 @@
 #include <TError.h>
 #include <TFile.h>
 
+#include <string>
 #include <xxhash.h>
+
+std::size_t ROOT::Experimental::RNTuple::ExpectedDeserializedBytes(Version_t ntupleVersion)
+{
+   R__ASSERT(ntupleVersion >= 4);
+
+   std::size_t nbytes = 0;
+   nbytes += sizeof(fVersionEpoch);
+   nbytes += sizeof(fVersionMajor);
+   nbytes += sizeof(fVersionMinor);
+   nbytes += sizeof(fVersionPatch);
+   nbytes += sizeof(fSeekHeader);
+   nbytes += sizeof(fNBytesHeader);
+   nbytes += sizeof(fLenHeader);
+   nbytes += sizeof(fSeekFooter);
+   nbytes += sizeof(fNBytesFooter);
+   nbytes += sizeof(fLenFooter);
+   nbytes += sizeof(fChecksum);
+
+   return nbytes;
+}
 
 void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
 {
@@ -40,7 +61,16 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       auto lenCkData = bcnt - lenStrip;
       // Skip byte count and class version
       auto offCkData = offClassBuf + sizeof(UInt_t) + sizeof(Version_t);
+      if (static_cast<std::size_t>(buf.BufferSize()) < offCkData + lenCkData)
+         throw RException(R__FAIL("buffer is too small to contain a valid RNTuple anchor"));
+
       auto checksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
+
+      // Ensure the declared byte count is consistent with what we are going to deserialize
+      std::size_t expectedBytes = ExpectedDeserializedBytes(classVersion);
+      if (bcnt < expectedBytes)
+         throw RException(R__FAIL("byte count mismatch in RNTuple anchor: expected=" + std::to_string(expectedBytes) +
+                                  ", got=" + std::to_string(bcnt)));
 
       buf >> fVersionEpoch;
       buf >> fVersionMajor;

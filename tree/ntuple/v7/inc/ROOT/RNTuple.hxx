@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTuple
 #define ROOT7_RNTuple
 
+#include "RtypesCore.h"
 #include <Rtypes.h>
 
 #include <cstdint>
@@ -99,6 +100,8 @@ private:
    std::uint64_t fChecksum = 0;
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
+
+   static std::size_t ExpectedDeserializedBytes(Version_t ntupleVersion);
 
 public:
    RNTuple() = default;
