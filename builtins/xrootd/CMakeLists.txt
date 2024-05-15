@@ -9,28 +9,19 @@ include(ExternalProject)
 find_package(OpenSSL REQUIRED)
 
 set(XROOTD_VERSION "5.5.2")
-set(XROOTD_VERSIONNUM 500050002)
-set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
-set(XROOTD_SRC_URI ${lcgpackages}/xrootd-${XROOTD_VERSION}.tar.gz)
-set(XROOTD_PREFIX ${CMAKE_CURRENT_BINARY_DIR}/XROOTD-prefix)
+
+set(XROOTD_PREFIX ${CMAKE_BINARY_DIR})
 message(STATUS "Downloading and building XROOTD version ${XROOTD_VERSION}")
 
-# Guess under which directory XRootD will install its libraires
-set(XROOTD_LIBDIR "lib")
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND ${CMAKE_SIZEOF_VOID_P} EQUAL 8
-AND NOT CMAKE_CROSSCOMPILING AND NOT EXISTS "/etc/debian_version")
-  set(XROOTD_LIBDIR "lib64")
-endif()
-
 set(libname ${CMAKE_SHARED_LIBRARY_PREFIX}XrdCl${CMAKE_SHARED_LIBRARY_SUFFIX})
-list(APPEND XROOTD_CLIENT_LIBRARIES ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/${libname})
+list(APPEND XROOTD_CLIENT_LIBRARIES ${XROOTD_PREFIX}/lib/${libname})
 
 set(libname ${CMAKE_SHARED_LIBRARY_PREFIX}XrdUtils${CMAKE_SHARED_LIBRARY_SUFFIX})
-list(APPEND XROOTD_UTILS_LIBRARIES ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/${libname})
+list(APPEND XROOTD_UTILS_LIBRARIES ${XROOTD_PREFIX}/lib/${libname})
 
 ExternalProject_Add(
     BUILTIN_XROOTD
-    URL ${XROOTD_SRC_URI}
+    URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/xrootd-${XROOTD_VERSION}.tar.gz
     URL_HASH SHA256=ec4e0490b8ee6a3254a4ea4449342aa364bc95b78dc9a8669151be30353863c6
     INSTALL_DIR ${XROOTD_PREFIX}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
@@ -42,13 +33,13 @@ ExternalProject_Add(
                -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+               -DCMAKE_INSTALL_LIBDIR=<INSTALL_DIR>/lib
                -DENABLE_PYTHON=OFF
                -DENABLE_CEPH=OFF
                -DXRDCL_LIB_ONLY=ON
-               ${XROOTD_WITH_OPENSSL3}
-               -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/${XROOTD_LIBDIR}
+               -DCMAKE_INSTALL_RPATH:STRING=${XROOTD_PREFIX}/lib
     INSTALL_COMMAND ${CMAKE_COMMAND} --build . --target install
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
     BUILD_BYPRODUCTS ${XROOTD_CLIENT_LIBRARIES} ${XROOTD_UTILS_LIBRARIES}
     TIMEOUT 600
 )
@@ -67,13 +58,13 @@ set(XROOTD_INCLUDE_DIRS ${XROOTD_PREFIX}/include/xrootd CACHE INTERNAL "" FORCE)
 set(XROOTD_CLIENT_LIBRARIES ${XROOTD_CLIENT_LIBRARIES} CACHE INTERNAL "" FORCE)
 set(XROOTD_UTILS_LIBRARIES ${XROOTD_UTILS_LIBRARIES} CACHE INTERNAL "" FORCE)
 
-list(APPEND CMAKE_BUILD_RPATH ${XROOTD_PREFIX}/${XROOTD_LIBDIR})
+list(APPEND CMAKE_BUILD_RPATH ${XROOTD_PREFIX}/lib)
 add_dependencies(XRootD BUILTIN_XROOTD)
 
 set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS BUILTIN_XROOTD)
 
-install(DIRECTORY ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
-install(DIRECTORY ${XROOTD_PREFIX}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
+install(DIRECTORY ${XROOTD_PREFIX}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libXrd*")
+install(DIRECTORY ${XROOTD_PREFIX}/include/xrootd/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xrootd COMPONENT headers)
 if(APPLE)
   # XRootD libraries on mac need the LC_RPATH variable set. The build process already takes care of setting
   #   * BUILD_RPATH = build/XROOTD-prefix/../src
@@ -81,6 +72,6 @@ if(APPLE)
   # Since the install directory for the builtin_xrootd target corresponds to the build directory of the main project.
   # Use a post install script to change the LC_RPATH variable of the libraries in the ROOT install folder.
   install(SCRIPT ${CMAKE_CURRENT_LIST_DIR}/XROOTDApplePostInstall.cmake
-          CODE "xrootd_libs_change_rpath(${XROOTD_PREFIX}/${XROOTD_LIBDIR} ${CMAKE_INSTALL_FULL_LIBDIR})"
+          CODE "xrootd_libs_change_rpath(${XROOTD_PREFIX}/lib ${CMAKE_INSTALL_FULL_LIBDIR})"
   )
 endif()
