@@ -1280,6 +1280,7 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
+   using RFieldBase::GenerateColumnsImpl;
 
    void ConstructValue(void *where) const final;
    /// Returns an RRVecField::RRVecDeleter
