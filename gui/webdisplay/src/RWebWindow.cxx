@@ -543,7 +543,7 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
       return (conn->fKey.empty() && hash.empty()) || (hash == conn->fKey) || (hash == expected);
 
    // for local connection simple key can be used
-   if (!remote && (hash == conn->fKey))
+   if (!remote && ((hash == conn->fKey) || (hash == expected)))
       return true;
 
    if (hash == expected) {
