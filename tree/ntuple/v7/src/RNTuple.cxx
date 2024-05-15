@@ -33,50 +33,58 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       if (classVersion < 4)
          throw RException(R__FAIL("unsupported RNTuple pre-release"));
 
-      // Strip class version and the fChecksum member from checksum calculation
-      const UInt_t lenStrip = sizeof(fChecksum) + sizeof(Version_t);
+      // Strip class version from checksum calculation
+      UInt_t lenStrip = sizeof(Version_t);
+      // TEMP(version4): In version 4 checksum is embedded in the on disk representation,
+      // so we need to strip that as well from the byte count.
+      // Support for version 4 will be dropped before version 1.0.
+      lenStrip += (classVersion == 4) * sizeof(std::uint64_t);
+
       if (bcnt < lenStrip)
          throw RException(R__FAIL("invalid anchor byte count: " + std::to_string(bcnt)));
+
       auto lenCkData = bcnt - lenStrip;
       // Skip byte count and class version
       auto offCkData = offClassBuf + sizeof(UInt_t) + sizeof(Version_t);
-      auto checksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
+      auto expectedChecksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
 
-      buf >> fVersionEpoch;
-      buf >> fVersionMajor;
-      buf >> fVersionMinor;
-      buf >> fVersionPatch;
-      buf >> fSeekHeader;
-      buf >> fNBytesHeader;
-      buf >> fLenHeader;
-      buf >> fSeekFooter;
-      buf >> fNBytesFooter;
-      buf >> fLenFooter;
-      // New versions may add members here ...
-      // ... so we skip all but the last 8 bytes for fwd compatibility
-      buf.SetBufferOffset(offClassBuf + sizeof(UInt_t) + bcnt - sizeof(fChecksum));
-      buf >> fChecksum;
+      std::uint64_t onDiskChecksum;
+      if (classVersion == 4) {
+         // TEMP(version4): Version 5 of the anchor breaks backward compat, but we still want to support version 4
+         // for a while. Support for version 4, as well as this code, will be removed before the RNTuple stabilization.
+         // For version 4 we need to manually read all the known members as we cannot rely on ReadClassBuffer.
+         constexpr std::size_t expectedBytes = 64;
+         if (bcnt != expectedBytes)
+            throw RException(R__FAIL("byte count mismatch in RNTuple anchor: expected=" +
+                                     std::to_string(expectedBytes) + ", got=" + std::to_string(bcnt)));
 
-      if (checksum != fChecksum)
+         buf >> fVersionEpoch;
+         buf >> fVersionMajor;
+         buf >> fVersionMinor;
+         buf >> fVersionPatch;
+         buf >> fSeekHeader;
+         buf >> fNBytesHeader;
+         buf >> fLenHeader;
+         buf >> fSeekFooter;
+         buf >> fNBytesFooter;
+         buf >> fLenFooter;
+         buf >> onDiskChecksum;
+      } else {
+         // Rewind the version bytes, as ReadClassBuffer needs to read the version again.
+         buf.SetBufferOffset(offClassBuf);
+         buf.ReadClassBuffer(RNTuple::Class(), this);
+         buf >> onDiskChecksum;
+      }
+
+      if (expectedChecksum != onDiskChecksum)
          throw RException(R__FAIL("checksum mismatch in RNTuple anchor"));
 
       R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
       fFile = static_cast<TFile *>(buf.GetParent());
    } else {
-      auto offBcnt = buf.WriteVersion(RNTuple::Class(), kTRUE /* useBcnt */);
-      auto offCkData = buf.GetCurrent() - buf.Buffer();
-      buf << fVersionEpoch;
-      buf << fVersionMajor;
-      buf << fVersionMinor;
-      buf << fVersionPatch;
-      buf << fSeekHeader;
-      buf << fNBytesHeader;
-      buf << fLenHeader;
-      buf << fSeekFooter;
-      buf << fNBytesFooter;
-      buf << fLenFooter;
-      fChecksum = XXH3_64bits(buf.Buffer() + offCkData, buf.Length() - offCkData);
-      buf << fChecksum;
-      buf.SetByteCount(offBcnt, kTRUE /* packInVersion */);
+      auto offCkData = buf.Length() + sizeof(UInt_t) + sizeof(Version_t);
+      buf.WriteClassBuffer(RNTuple::Class(), this);
+      std::uint64_t checksum = XXH3_64bits(buf.Buffer() + offCkData, buf.Length() - offCkData);
+      buf << checksum;
    }
 }
