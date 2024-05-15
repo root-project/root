@@ -1823,23 +1823,25 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    gROOT->ResetClassSaved();
 
    char quote = '"';
-   std::ofstream out;
-   TString fname;
-   const char *cname = GetName();
+   TString cname0 = GetName();
    Bool_t invalid = kFALSE;
-   //    if filename is given, open this file, otherwise create a file
-   //    with a name equal to the canvasname.C
-   if (filename && (strlen(filename) > 0)) {
+
+   TString cname = cname0.Strip(TString::kBoth);
+   if (cname.IsNull()) {
+      invalid = kTRUE;
+      cname = "c1";
+   }
+
+   //  if filename is given, open this file, otherwise create a file
+   //  with a name equal to the canvasname.C
+   TString fname;
+   if (filename && *filename) {
       fname = filename;
    } else {
-      fname = cname;
-      fname = fname.Strip(TString::kBoth);
-      if (fname.IsNull()) {
-         invalid = kTRUE;
-         fname = "c1";
-      }
-      fname.Append(".C");
+      fname = cname + ".C";
    }
+
+   std::ofstream out;
    out.open(fname.Data(), std::ios::out);
    if (!out.good()) {
       Error("SaveSource", "Cannot open file: %s", fname.Data());
@@ -1931,7 +1933,7 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 
    //   Now recursively scan all pads of this canvas
    cd();
-   if (invalid) SetName("c1");
+   if (invalid) fName = cname;
    TPad::SavePrimitive(out,"toplevel");
 
    //   Write canvas options related to pad editor
@@ -1939,7 +1941,7 @@ void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
    if (GetShowToolBar()) {
       out<<"   "<<GetName()<<"->ToggleToolBar();"<<std::endl;
    }
-   if (invalid) SetName(" ");
+   if (invalid) fName = cname0;
 
    out <<"}"<<std::endl;
    out.close();
