@@ -47,11 +47,13 @@
 #include <typeinfo>
 #include <variant>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 
 class TClass;
 class TEnum;
 class TObject;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 
@@ -826,6 +828,7 @@ private:
    };
 
    TClass *fClass = nullptr;
+   std::unordered_map<Int_t, TVirtualStreamerInfo *> fStreamerInfos; ///< streamer info records seen during writing
    ClusterSize_t fIndex; ///< number of bytes written in the current cluster
 
 private:
