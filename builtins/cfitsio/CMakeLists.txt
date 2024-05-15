@@ -13,6 +13,14 @@ if(NOT WIN32)
   set(CFITSIO_C_FLAGS -fPIC)
 endif()
 
+if(WIN32)
+  if(winrtdebug)
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
+  else()
+    set(CFITSIO_BUILD_COMMAND_FLAGS "--config Release")
+  endif()
+endif()
+
 ExternalProject_Add(
   BUILTIN_CFITSIO
   PREFIX ${CFITSIO_PREFIX}
@@ -29,6 +37,7 @@ ExternalProject_Add(
              -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
   # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
   PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace --whitespace=nowarn ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+  BUILD_COMMAND ${CMAKE_COMMAND} --build ${CFITSIO_BUILD_COMMAND_FLAGS} .
   LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
   BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
   TIMEOUT 600
