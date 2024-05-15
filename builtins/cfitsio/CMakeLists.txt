@@ -36,8 +36,10 @@ ExternalProject_Add(
              -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIRS}
              -DZLIB_LIBRARIES=$<TARGET_FILE:ZLIB::ZLIB>
   # Skip the find_package(ZLIB REQUIRED), because we feed CFITSIO our own ZLIB flags.
-  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace --whitespace=nowarn ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
-  BUILD_COMMAND ${CMAKE_COMMAND} --build ${CFITSIO_BUILD_COMMAND_FLAGS} .
+  PATCH_COMMAND git apply --ignore-space-change --ignore-whitespace
+                ${CMAKE_CURRENT_SOURCE_DIR}/cfitsio-no-find-zlib.diff
+                ${CMAKE_CURRENT_SOURCE_DIR}/no-fortran-wrapper.diff
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${CFITSIO_BUILD_COMMAND_FLAGS}
   LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
   BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
   TIMEOUT 600
