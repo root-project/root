@@ -1,5 +1,6 @@
 
 // Author: Enric Tejedor CERN  08/2019
+// Author: Vincenzo Eduardo Padulano CERN 05/2024
 
 /*************************************************************************
  * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
@@ -39,29 +40,55 @@
 
 // ROOT
 #include "TObject.h"
-#include "TClass.h"
 
 // Stl
 #include <unordered_map>
 
 namespace PyROOT {
 
-typedef std::unordered_map<Cppyy::TCppObject_t, Cppyy::TCppType_t> ObjectMap_t;
+class RegulatorCleanup;
 
-class TMemoryRegulator : public TObject {
-private:
-   static ObjectMap_t fObjectMap; // key: object address; value: object class id
+/// Manages TObject-derived objects created in a PyROOT application
+///
+/// This class is responsible to keep track of the creation of the objects
+/// that need further memory management within ROOT. The `ClearProxiedObjects`
+/// function is only called at PyROOT shutdown time. The `CallCppyyRecursiveRemove`
+/// is called as part of the global list of cleanups object destruction.
+///
+/// This class is intentionally not derived from TObject. See the
+/// `PyROOT::RegulatorCleanup` class for more info.
+///
+/// \note This class is not thread-safe on its own. We create one thread-local
+///       object in PyROOTWrapper.cxx.
+class TMemoryRegulator final {
+   using ObjectMap_t = std::unordered_map<Cppyy::TCppObject_t, Cppyy::TCppType_t>;
 
-   static std::pair<bool, bool> RegisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
+   ObjectMap_t fObjectMap{}; // key: object address; value: object class id
 
-   static std::pair<bool, bool> UnregisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
+   std::pair<bool, bool> RegisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
 
-public:
-   TMemoryRegulator();
+   std::pair<bool, bool> UnregisterHook(Cppyy::TCppObject_t, Cppyy::TCppType_t);
 
-   virtual void RecursiveRemove(TObject *);
+   void CallCppyyRecursiveRemove(TObject *object);
 
    void ClearProxiedObjects();
+
+   TMemoryRegulator();
+
+   friend class RegulatorCleanup;
+};
+
+/// A TObject-derived class to inject the memory regulation logic in the ROOT list of cleanups.
+///
+/// The purpose of this class is to keep the responsibilities separate between
+/// the TMemoryRegulator logic and the rest of ROOT.
+class RegulatorCleanup final : public TObject {
+   TMemoryRegulator fRegulator{};
+
+public:
+   void RecursiveRemove(TObject *object) final { fRegulator.CallCppyyRecursiveRemove(object); }
+   void CallClearProxiedObjects() { fRegulator.ClearProxiedObjects(); }
+   ClassDefInlineNV(RegulatorCleanup, 0);
 };
 
 } // namespace PyROOT
