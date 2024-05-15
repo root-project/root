@@ -2046,13 +2046,13 @@ void TCanvas::SetFolder(Bool_t isfolder)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set canvas name. In case `name` is an empty string, a default name is set.
+/// Canvas automatically marked as modified when SetName method called
 
 void TCanvas::SetName(const char *name)
 {
    fName = GetNewCanvasName(name);
 
-   if (gPad && TestBit(kMustCleanup))
-      gPad->Modified();
+   Modified();
 }
 
 
