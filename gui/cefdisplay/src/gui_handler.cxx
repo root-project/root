@@ -20,6 +20,7 @@
 #include "simple_app.h"
 
 #include <sstream>
+#include <fstream>
 #include <string>
 
 #include "include/base/cef_bind.h"
@@ -365,8 +366,9 @@ CefRefPtr<CefResourceHandler> GuiHandler::GetResourceHandler(
   if (serv->IsFileRequested(inp_path, fname)) {
      // process file - no need for special requests handling
 
-     // when file not exists - return nullptr
-     if (gSystem->AccessPathName(fname.Data()))
+     std::ifstream ifs(fname.Data());
+     // when file not exists - return default handler otherwise CEF terminates
+     if (!ifs)
         return new TGuiResourceHandler(serv, true);
 
      const char *mime = THttpServer::GetMimeType(fname.Data());
