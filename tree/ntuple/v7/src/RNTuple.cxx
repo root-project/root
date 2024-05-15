@@ -42,7 +42,22 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       auto offCkData = offClassBuf + sizeof(UInt_t) + sizeof(Version_t);
       auto checksum = XXH3_64bits(buf.Buffer() + offCkData, lenCkData);
 
-      buf.ReadClassBuffer(RNTuple::Class(), this, classVersion, offClassBuf, bcnt);
+      buf >> fVersionEpoch;
+      buf >> fVersionMajor;
+      buf >> fVersionMinor;
+      buf >> fVersionPatch;
+      buf >> fSeekHeader;
+      buf >> fNBytesHeader;
+      buf >> fLenHeader;
+      buf >> fSeekFooter;
+      buf >> fNBytesFooter;
+      buf >> fLenFooter;
+      // New versions may add members here ...
+      // ... so we skip all but the last 8 bytes for fwd compatibility.
+      // NOTE: bcnt doesn't include its own size, so we need to skip an additional
+      // sizeof(UInt_t) bytes to reach the end of the class.
+      buf.SetBufferOffset(offClassBuf + sizeof(UInt_t) + bcnt - sizeof(fChecksum));
+      buf >> fChecksum;
 
       if (checksum != fChecksum)
          throw RException(R__FAIL("checksum mismatch in RNTuple anchor"));
