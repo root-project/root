@@ -119,6 +119,7 @@ public:
       fBatchCondition.notify_all();
    }
 
+<<<<<<< HEAD
    /// \brief Create a batch filled with the events on the given idx
    /// \param chunkTensor
    /// \param idx
@@ -137,6 +138,13 @@ public:
       return batch;
    }
 
+=======
+   /// @brief Create a batch filled with the events on given indices with parametrized batch size
+   /// @param chunkTensor 
+   /// @param idx 
+   /// @param batchSize 
+   /// @return 
+>>>>>>> 8ba3d1f1fe ([tmva] Remove pure stupidness in RBatchGenerator)
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx, std::size_t batchSize)
    {  
@@ -155,16 +163,11 @@ public:
    CreateFirstBatch(const TMVA::Experimental::RTensor<float> &remainderTensor,
                   std::size_t remainderTensorRow, std::vector<std::size_t> eventIndices){
       auto batch = std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({fBatchSize, fNumColumns}));
-      
-      {
-         std::vector<std::size_t> idx = std::vector<std::size_t>(remainderTensorRow);
-         std::iota(idx.begin(), idx.end(), 0);
 
-         for(size_t i = 0; i < remainderTensorRow; i++){
-            std::copy(remainderTensor.GetData() + idx[i] * fNumColumns, remainderTensor.GetData() + (idx[i] + 1) * fNumColumns,
-                     batch->GetData() + i * fNumColumns);
+      for(size_t i = 0; i < remainderTensorRow; i++){
+         std::copy(remainderTensor.GetData() + i * fNumColumns, remainderTensor.GetData() + (i + 1) * fNumColumns,
+                  batch->GetData() + i * fNumColumns);
          }
-      }
 
       std::vector<std::size_t> idx;
       for (std::size_t i = 0; i < (fBatchSize - remainderTensorRow); i++) {
@@ -245,7 +248,7 @@ public:
          }
 
          // Fill a batch
-         batches.emplace_back(CreateBatch(fChunkTensor, idx));
+         batches.emplace_back(CreateBatch(fChunkTensor, idx, fBatchSize));
       }
 
       {
@@ -286,7 +289,7 @@ public:
             idx.push_back(eventIndices[i]);
          }
 
-         fValidationBatchQueue.push(CreateBatch(fChunkTensor, idx));
+         fValidationBatchQueue.push(CreateBatch(fChunkTensor, idx, fBatchSize));
       }
 
       fValidationRemainderRow = eventIndices.size() - start;
