@@ -232,12 +232,8 @@ void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::Co
       return;
    }
 
-   std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
-   std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
-   std::string res = weightName;
-   if (weightName[0] == '_')
-      res += "[" + idxName + "]";
-   ctx.addResult(klass, res);
+   std::string const &offset = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
+   ctx.addResult(klass, dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize, offset));
 }
 
 void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
