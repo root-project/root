@@ -10,7 +10,7 @@ from github3 import GitHub
 from argparse import ArgumentParser
 import sys, os, re
 
-token = os.environ["OS_APPLICATION_CREDENTIAL_SECRET"]
+token = os.environ["GITHUB_TOKEN"]
 
 def parse_args():
     p = ArgumentParser()
