@@ -2094,14 +2094,14 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
       }
       if (InheritsFrom(TGraphErrors::Class()) ) {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\tex\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << del << "ex" << del << GetYaxis()->GetTitle() << del << "ey" << std::endl;
          double *ex = this->GetEX();
          double *ey = this->GetEY();
          for(int i=0 ; i<fNpoints ; i++)
          out << fX[i] << del << (ex?ex[i]:0) << del << fY[i] << del << (ey?ey[i]:0) << std::endl;
       } else if (InheritsFrom(TGraphAsymmErrors::Class()) || InheritsFrom(TGraphBentErrors::Class())) {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\texl\t" << "\texh\t" << GetYaxis()->GetTitle() << "\teyl" << "\teyh" << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << del << "exl" << del << "exh" << del << GetYaxis()->GetTitle() << del << "eyl" << del << "eyh" << std::endl;
          double *exl = this->GetEXlow();
          double *exh = this->GetEXhigh();
          double *eyl = this->GetEYlow();
@@ -2110,7 +2110,7 @@ void TGraph::SaveAs(const char *filename, Option_t *option) const
          out << fX[i] << del << (exl?exl[i]:0) << del << (exh?exh[i]:0) << del << fY[i] << del << (eyl?eyl[i]:0) << del << (eyh?eyh[i]:0) << std::endl;
       } else {
          if(opt.Contains("title"))
-         out << "# " << GetXaxis()->GetTitle() << "\t" << GetYaxis()->GetTitle() << std::endl;
+         out << "# " << GetXaxis()->GetTitle() << del << GetYaxis()->GetTitle() << std::endl;
          for (int i=0 ; i<fNpoints ; i++)
          out << fX[i] << del << fY[i] << std::endl;
       }
