@@ -430,6 +430,8 @@ public:
    RExtraTypeInfoDescriptor(RExtraTypeInfoDescriptor &&other) = default;
    RExtraTypeInfoDescriptor &operator=(RExtraTypeInfoDescriptor &&other) = default;
 
+   bool operator==(const RExtraTypeInfoDescriptor &other) const;
+
    RExtraTypeInfoDescriptor Clone() const;
 
    EContentIds GetContentId() const { return fContentId; }
@@ -497,6 +499,7 @@ private:
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+   std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
    std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
 public:
@@ -736,6 +739,54 @@ public:
       RIterator end() { return RIterator(fNTuple, fNTuple.GetNActiveClusters()); }
    };
 
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
+   \ingroup NTuple
+   \brief Used to loop over all the extra type info record of an ntuple (in unspecified order)
+   */
+   // clang-format on
+   class RExtraTypeInfoDescriptorIterable {
+   private:
+      /// The associated NTuple for this range.
+      const RNTupleDescriptor &fNTuple;
+
+   public:
+      class RIterator {
+      private:
+         /// The enclosing range's NTuple.
+         const RNTupleDescriptor &fNTuple;
+         std::size_t fIndex = 0;
+
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = RExtraTypeInfoDescriptor;
+         using difference_type = std::ptrdiff_t;
+         using pointer = RExtraTypeInfoDescriptor *;
+         using reference = const RExtraTypeInfoDescriptor &;
+
+         RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+         iterator operator++()
+         {
+            ++fIndex;
+            return *this;
+         }
+         reference operator*()
+         {
+            auto it = fNTuple.fExtraTypeInfoDescriptors.begin();
+            std::advance(it, fIndex);
+            return *it;
+         }
+         bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      };
+
+      RExtraTypeInfoDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
+      RIterator begin() { return RIterator(fNTuple, 0); }
+      RIterator end() { return RIterator(fNTuple, fNTuple.GetNExtraTypeInfos()); }
+   };
+
    RNTupleDescriptor() = default;
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
@@ -809,6 +860,8 @@ public:
       return RClusterDescriptorIterable(*this);
    }
 
+   RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const { return RExtraTypeInfoDescriptorIterable(*this); }
+
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
 
@@ -818,6 +871,7 @@ public:
    std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
    std::size_t GetNClusters() const { return fNClusters; }
    std::size_t GetNActiveClusters() const { return fClusterDescriptors.size(); }
+   std::size_t GetNExtraTypeInfos() const { return fExtraTypeInfoDescriptors.size(); }
 
    /// We know the number of entries from adding the cluster summaries
    NTupleSize_t GetNEntries() const { return fNEntries; }
@@ -1202,6 +1256,8 @@ public:
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
+
+   RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
