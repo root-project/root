@@ -33,6 +33,8 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
+#include "RooDataHist.h"
+#include "RooHistFunc.h"
 
 #include <exception>
 #include <cmath>
@@ -185,7 +187,7 @@ double PiecewiseInterpolation::evaluate() const
 
 void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   unsigned int n = _interpCode.size();
+   std::size_t n = _interpCode.size();
 
    std::string resName = "total_" + ctx.getTmpVarName();
    for (std::size_t i = 0; i < n; ++i) {
@@ -199,10 +201,48 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
                                << endl;
       }
    }
-   std::string funcCall;
-   funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolationEvaluate", _interpCode[0], _lowSet,
-                            _highSet, _nominal, _paramSet, n);
-   std::string code = "double " + resName + " = " + funcCall + ";\n";
+
+   // The PiecewiseInterpolation class is used in the context of HistFactory
+   // models, where is is always used the same way: all RooAbsReals in _lowSet,
+   // _histSet, and also nominal are 1D RooHistFuncs with with same structure.
+   //
+   // Therefore, we can make a big optimization: we get the bin index ony once
+   // here in the generated code for PiecewiseInterpolation. Then, we also
+   // rearrange the histogram data in such a way that we can always pass the
+   // same arrays to the free function that implements the interpolation, just
+   // with a dynamic offset calculated from the bin index.
+   RooDataHist const &nomHist = dynamic_cast<RooHistFunc const &>(*_nominal).dataHist();
+   int nBins = nomHist.numEntries();
+   std::vector<double> valsNominal;
+   std::vector<double> valsLow;
+   std::vector<double> valsHigh;
+   for (int i = 0; i < nBins; ++i) {
+      valsNominal.push_back(nomHist.weight(i));
+   }
+   for (int i = 0; i < nBins; ++i) {
+      for (std::size_t iParam = 0; iParam < n; ++iParam) {
+         valsLow.push_back(dynamic_cast<RooHistFunc const &>(_lowSet[iParam]).dataHist().weight(i));
+         valsHigh.push_back(dynamic_cast<RooHistFunc const &>(_highSet[iParam]).dataHist().weight(i));
+      }
+   }
+   std::string idxName =
+      nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables());
+   std::string valsNominalStr = ctx.buildArg(valsNominal);
+   std::string valsLowStr = ctx.buildArg(valsLow);
+   std::string valsHighStr = ctx.buildArg(valsHigh);
+   std::string nStr = std::to_string(n);
+   std::string code;
+
+   std::string lowName = ctx.getTmpVarName();
+   std::string highName = ctx.getTmpVarName();
+   std::string nominalName = ctx.getTmpVarName();
+   code += "double * " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
+
+   std::string funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolationEvaluate", _interpCode[0],
+                                        lowName, highName, nominalName, _paramSet, n);
+   code += "double " + resName + " = " + funcCall + ";\n";
 
    if (_positiveDefinite)
       code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
