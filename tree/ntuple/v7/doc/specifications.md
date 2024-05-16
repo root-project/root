@@ -467,11 +467,11 @@ The type information record frame has the following contents
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++                       Content Identifier                      +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                        Type Version From                      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         Type Version To                       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                       Content Identifier                      +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -484,12 +484,7 @@ The following kinds of content are supported:
 
 | Content identifier  | Meaning of content                                  |
 |---------------------|-----------------------------------------------------|
-| 0x00                | Serialized ROOT streamer info; see notes            |
-
-The serialized ROOT streamer info is not bound to a specific type.
-It is the combined streamer information from all the unsplit fields.
-Writers set version from/to to zero and use an empty type name.
-Readers should ignore the type-specific information.
+| 0x01                | String: C++ definition of the type                  |
 
 
 ### Footer Envelope

@@ -684,7 +684,7 @@ ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder::MoveDescriptor()
 ROOT::Experimental::RResult<ROOT::Experimental::RExtraTypeInfoDescriptor>
 ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder::MoveDescriptor()
 {
-   if (fExtraTypeInfo.fContentId == RExtraTypeInfoDescriptor::EContentIds::kInvalid)
+   if (fExtraTypeInfo.fContentId == EExtraTypeInfoIds::kInvalid)
       throw RException(R__FAIL("invalid extra type info content id"));
    RExtraTypeInfoDescriptor result;
    std::swap(result, fExtraTypeInfo);
