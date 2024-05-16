@@ -55,7 +55,7 @@ protected:
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}
    std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
    void CommitClusterGroup() final {}
-   void CommitDataset() final {}
+   void CommitDatasetImpl() final {}
 
    RPage ReservePage(ColumnHandle_t, std::size_t) final { return {}; }
    void ReleasePage(RPage &) final {}

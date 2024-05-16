@@ -177,6 +177,9 @@ inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+public:
+   using Callback_t = std::function<void(RPageSink &)>;
+
 protected:
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
@@ -199,6 +202,7 @@ protected:
 private:
    /// Flag if sink was initialized
    bool fIsInitialized = false;
+   std::vector<Callback_t> fOnDatasetCommitCallbacks;
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -233,6 +237,7 @@ public:
 
 protected:
    virtual void InitImpl(RNTupleModel &model) = 0;
+   virtual void CommitDatasetImpl() = 0;
 
 public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
@@ -252,8 +257,11 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
-   /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset() = 0;
+
+   /// The registered callback is executed at the beginning of CommitDataset();
+   void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
+   /// Run the registered callbacks and finalize the current cluster and the entrire data set.
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -381,7 +389,7 @@ public:
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off

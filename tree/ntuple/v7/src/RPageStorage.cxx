@@ -360,6 +360,13 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
    return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
 }
 
+void ROOT::Experimental::Internal::RPageSink::CommitDataset()
+{
+   for (auto cb : fOnDatasetCommitCallbacks)
+      cb(*this);
+   CommitDatasetImpl();
+}
+
 //------------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSink>
@@ -632,7 +639,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::CommitDataset()
+void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
