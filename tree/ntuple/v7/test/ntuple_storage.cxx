@@ -46,7 +46,7 @@ protected:
    }
    std::uint64_t CommitCluster(NTupleSize_t) final { return 0; }
    void CommitClusterGroup() final {}
-   void CommitDataset() final {}
+   void CommitDatasetImpl() final {}
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {
