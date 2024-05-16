@@ -22,5 +22,5 @@ jobs:
           wget https://raw.githubusercontent.com/root-project/root/master/build/misc/get_solved_issues-github-actions.py
       - name: Generate list of closed issues for release notes
         env:
-          OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python ./get_solved_issues-github-actions.py --project-name ${{ inputs.tag }}
