@@ -1,4 +1,4 @@
-name: 'Release'
+name: 'GetFixedIssues'
 
 on:
   workflow_dispatch:
@@ -19,6 +19,6 @@ jobs:
           pip install github3.py
       - name: Download issue extraction script
         run: |
-          wget https://github.com/root-project/root/blob/master/build/misc/get_solved_issues-github-actions.py
+          wget https://raw.githubusercontent.com/root-project/root/master/build/misc/get_solved_issues-github-actions.py
       - name: Generate list of closed issues for release notes
         run: python ./get_solved_issues-github-actions.py --project-name ${{ inputs.tag }}
