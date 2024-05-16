@@ -102,6 +102,9 @@ public:
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
   std::string
   buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  RooArgSet const &variables() const { return _depList; }
+
 protected:
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
