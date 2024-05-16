@@ -1,0 +1,24 @@
+name: 'Release'
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Generate the release notes of fixed issues for this tag (e.g. "v6-32-12")
+        type: string
+        required: true
+
+jobs:
+  check-tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+      - name: Download issue extraction script
+        run: |
+          pip install github3.py
+      - name: Download issue extraction script
+        run: |
+          wget https://github.com/root-project/root/blob/master/build/misc/get_solved_issues-github-actions.py
+      - name: Generate list of closed issues for release notes
+        run: python ./get_solved_issues-github-actions.py --project-name ${{ inputs.tag }}
