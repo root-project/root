@@ -161,21 +161,17 @@ public:
 
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateFirstBatch(const TMVA::Experimental::RTensor<float> &remainderTensor,
-                  std::size_t remainderTensorRow, std::vector<std::size_t> eventIndices){
+                  std::size_t remainderTensorRow, std::vector<std::size_t> eventIndices)
+   {
       auto batch = std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({fBatchSize, fNumColumns}));
 
       for(size_t i = 0; i < remainderTensorRow; i++){
          std::copy(remainderTensor.GetData() + i * fNumColumns, remainderTensor.GetData() + (i + 1) * fNumColumns,
                   batch->GetData() + i * fNumColumns);
          }
-
-      std::vector<std::size_t> idx;
-      for (std::size_t i = 0; i < (fBatchSize - remainderTensorRow); i++) {
-            idx.push_back(eventIndices[i]);
-         }
       
       for(std::size_t i = 0; i < (fBatchSize - remainderTensorRow); i++){
-         std::copy(fChunkTensor.GetData() + idx[i] * fNumColumns, fChunkTensor.GetData() + (idx[i] + 1) * fNumColumns,
+         std::copy(fChunkTensor.GetData() + eventIndices[i] * fNumColumns, fChunkTensor.GetData() + (eventIndices[i] + 1) * fNumColumns,
                    batch->GetData() + (i + remainderTensorRow) * fNumColumns);
       }
 
