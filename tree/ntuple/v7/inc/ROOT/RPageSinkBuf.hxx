@@ -35,9 +35,6 @@ namespace Internal {
 \class ROOT::Experimental::Internal::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
-*
-* TODO(jblomer): The interplay of derived class and RPageSink is not yet optimally designed for page storage wrapper
-* classes like this one. Header and footer serialization, e.g., are done twice.  To be revised.
 */
 // clang-format on
 class RPageSinkBuf : public RPageSink {
@@ -154,7 +151,7 @@ public:
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
