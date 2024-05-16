@@ -1,4 +1,10 @@
-
+#! /usr/bin/env python
+#
+# Harvest the solved issues for a certain tag and print them out in a format
+# which is ready to be pasted in the release notes.
+#
+# Copyright (c) 2024 Rene Brun and Fons Rademakers
+# Author: Enrico Guiraud, Axel Naumann, Danilo Piparo
 
 from github3 import GitHub
 from argparse import ArgumentParser
