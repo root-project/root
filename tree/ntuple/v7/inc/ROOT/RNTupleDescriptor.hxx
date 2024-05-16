@@ -397,6 +397,9 @@ public:
    bool HasClusterDetails() const { return !fClusterIds.empty(); }
 };
 
+/// Used in RExtraTypeInfoDescriptor
+enum class EExtraTypeInfoIds { kStreamerInfo, kInvalid };
+
 // clang-format off
 /**
 \class ROOT::Experimental::RExtraTypeInfoDescriptor
@@ -409,12 +412,9 @@ Currently only used by unsplit fields to store RNTuple-wide list of streamer inf
 class RExtraTypeInfoDescriptor {
    friend class Internal::RExtraTypeInfoDescriptorBuilder;
 
-public:
-   enum class EContentIds { kStreamerInfo, kInvalid };
-
 private:
    /// Specifies the meaning of the extra information
-   EContentIds fContentId = EContentIds::kInvalid;
+   EExtraTypeInfoIds fContentId = EExtraTypeInfoIds::kInvalid;
    /// Extra type information restricted to a certain version range of the type
    std::uint32_t fTypeVersionFrom = 0;
    std::uint32_t fTypeVersionTo = 0;
@@ -434,7 +434,7 @@ public:
 
    RExtraTypeInfoDescriptor Clone() const;
 
-   EContentIds GetContentId() const { return fContentId; }
+   EExtraTypeInfoIds GetContentId() const { return fContentId; }
    std::uint32_t GetTypeVersionFrom() const { return fTypeVersionFrom; }
    std::uint32_t GetTypeVersionTo() const { return fTypeVersionTo; }
    std::string GetTypeName() const { return fTypeName; }
@@ -1184,7 +1184,7 @@ private:
 public:
    RExtraTypeInfoDescriptorBuilder() = default;
 
-   RExtraTypeInfoDescriptorBuilder &ContentId(RExtraTypeInfoDescriptor::EContentIds contentId)
+   RExtraTypeInfoDescriptorBuilder &ContentId(EExtraTypeInfoIds contentId)
    {
       fExtraTypeInfo.fContentId = contentId;
       return *this;
