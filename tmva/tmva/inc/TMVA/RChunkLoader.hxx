@@ -224,7 +224,6 @@ class RChunkLoader {
 
 private:
    std::size_t fChunkSize;
-   std::size_t fNumColumns;
 
    std::vector<std::string> fCols;
 
@@ -249,8 +248,7 @@ public:
         fChunkSize(chunkSize),
         fCols(cols),
         fVecSizes(vecSizes),
-        fVecPadding(vecPadding),
-        fNumColumns(cols.size())
+        fVecPadding(vecPadding)
    {
    }
 
