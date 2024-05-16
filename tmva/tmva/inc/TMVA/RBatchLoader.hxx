@@ -152,31 +152,16 @@ public:
       return batch;
    }
 
-   void SaveRemainingData(TMVA::Experimental::RTensor<float> &remainderTensor,
-                        const std::size_t remainderTensorRow,
-                        std::vector<std::size_t> eventIndices, const std::size_t start){
-      std::vector<std::size_t> idx;
-      for (std::size_t i = start; i < eventIndices.size(); i++) {
-         idx.push_back(eventIndices[i]);
-      }
-
-      for (std::size_t i = 0; i < remainderTensorRow; i++){
-         std::copy(fChunkTensor.GetData() + idx[i] * fNumColumns, fChunkTensor.GetData() + (idx[i] + 1) * fNumColumns,
-                   remainderTensor.GetData() + i * fNumColumns);
-      }
-   }
-
    /// @brief save to remaining data when the whole chunk has to be saved
    /// @param chunkTensor 
    /// @param remainderTensor 
    /// @param remainderTensorRow 
    /// @param eventIndices 
-   void SaveRemainingData(TMVA::Experimental::RTensor<float> &remainderTensor,
-                        const std::size_t remainderTensorRow,
-                        std::vector<std::size_t> eventIndices){
-      for (std::size_t i = 0; i < eventIndices.size(); i++){
+   void SaveRemainingData(TMVA::Experimental::RTensor<float> &remainderTensor, const std::size_t remainderTensorRow,
+                        const std::vector<std::size_t> eventIndices, const std::size_t start = 0){
+      for (std::size_t i = start; i < eventIndices.size(); i++){
          std::copy(fChunkTensor.GetData() + eventIndices[i] * fNumColumns, fChunkTensor.GetData() + (eventIndices[i] + 1) * fNumColumns,
-                   remainderTensor.GetData() + (i + remainderTensorRow) * fNumColumns);
+                   remainderTensor.GetData() + (i - start + remainderTensorRow) * fNumColumns);
       }
    }
 
@@ -231,7 +216,7 @@ public:
       fBatchCondition.notify_all();
 
       fTrainingRemainderRow = eventIndices.size() - start;
-      SaveRemainingData(*fTrainingRemainder, fTrainingRemainderRow, eventIndices, start);
+      SaveRemainingData(*fTrainingRemainder, 0, eventIndices, start);
    }
 
    /// \brief Create validation batches from the given chunk based on the given event indices
@@ -263,7 +248,7 @@ public:
       }
 
       fValidationRemainderRow = eventIndices.size() - start;
-      SaveRemainingData(*fValidationRemainder, fValidationRemainderRow, eventIndices, start);
+      SaveRemainingData(*fValidationRemainder, 0, eventIndices, start);
    }
 
    void LastBatches(){
