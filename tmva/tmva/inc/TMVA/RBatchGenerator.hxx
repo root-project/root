@@ -27,14 +27,10 @@ private:
    UInt_t fFixedSeed;
    TMVA::RandomGenerator<TRandom3> fFixedRng;
 
-   std::vector<std::string> fCols;
-
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
-   std::size_t fMaxBatches;
    std::size_t fNumEntries;
-   std::size_t fNumAllEntries = 0;
 
    float fValidationSplit;
 
@@ -58,9 +54,6 @@ private:
    bool fIsActive = false;
    bool fNotFiltered;
 
-   std::vector<std::size_t> fVecSizes;
-   float fVecPadding;
-
 public:
    RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
                    const std::size_t batchSize, const std::vector<std::string> &cols,
@@ -70,9 +63,6 @@ public:
       : f_rdf(rdf),
         fChunkSize(chunkSize),
         fBatchSize(batchSize),
-        fCols(cols),
-        fVecSizes(vecSizes),
-        fVecPadding(vecPadding),
         fValidationSplit(validationSplit),
         fMaxChunks(maxChunks),
         fShuffle(shuffle),
@@ -80,9 +70,6 @@ public:
         fUseWholeFile(maxChunks == 0),
         fNotFiltered(f_rdf.GetFilterNames().empty())
    {
-      // limits the number of batches that can be contained in the batchqueue based on the chunksize
-      fMaxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
-
       {
          std::function<UInt_t(UInt_t)> GetSeedNumber;
          GetSeedNumber = [&](UInt_t seed_number)->UInt_t{return seed_number != 0? seed_number: GetSeedNumber(fRng());};
@@ -100,19 +87,22 @@ public:
          fNumEntries = f_rdf.Count().GetValue();
 
          fChunkLoaderNoFilters = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-            f_rdf, fChunkTensor, fChunkSize, fCols, fVecSizes, fVecPadding);
+            f_rdf, fChunkTensor, fChunkSize, cols, vecSizes, vecPadding;
       }
       else{
          auto report = f_rdf.Report();
          fNumEntries = f_rdf.Count().GetValue();
-         fNumAllEntries = report.begin()->GetAll();
+         std::size_t numAllEntries = report.begin()->GetAll();
 
          fChunkLoaderFilters = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderFilters<Args...>>(
-            f_rdf, fChunkTensor, fChunkSize, fCols, fNumEntries, fNumAllEntries, fVecSizes, fVecPadding);
+            f_rdf, fChunkTensor, fChunkSize, cols, fNumEntries, numAllEntries, vecSizes, vecPadding);
       }
       
+      std::size_t maxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
+
+      // limits the number of batches that can be contained in the batchqueue based on the chunksize
       fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(*fChunkTensor,
-                  fBatchSize, numColumns, fMaxBatches);
+                  fBatchSize, numColumns, maxBatches);
    }
 
    ~RBatchGenerator() { DeActivate(); }
