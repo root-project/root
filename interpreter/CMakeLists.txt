@@ -177,6 +177,13 @@ if(LLVM_EXE_LINKER_FLAGS)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_EXE_LINKER_FLAGS}")
 endif()
 
+# Explicitly disable -Wmisleading-indentation for GCC: Some LLVM source files
+# are too large.
+set(cxx_flags_prev ${CMAKE_CXX_FLAGS})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation")
+endif()
+
 if(builtin_llvm)
   # Since debug builds of LLVM are quite large, we want to be able
   # to control the build types of ROOT and LLVM independently. The
@@ -461,6 +468,10 @@ if (builtin_clang)
 else()
   set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
+
+# Reset the compiler flags after compiling LLVM and Clang
+set(CMAKE_CXX_FLAGS ${cxx_flags_prev})
+unset(cxx_flags_prev)
 
 add_custom_target(CLING)
 set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")
