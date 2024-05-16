@@ -219,6 +219,12 @@ ROOT::Experimental::RClusterDescriptor ROOT::Experimental::RClusterDescriptor::C
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool ROOT::Experimental::RExtraTypeInfoDescriptor::operator==(const RExtraTypeInfoDescriptor &other) const
+{
+   return fContentId == other.fContentId && fTypeName == other.fTypeName &&
+          fTypeVersionFrom == other.fTypeVersionFrom && fTypeVersionTo == other.fTypeVersionTo;
+}
+
 ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RExtraTypeInfoDescriptor::Clone() const
 {
    RExtraTypeInfoDescriptor clone;
@@ -504,6 +510,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
       clone->fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fClusterDescriptors)
       clone->fClusterDescriptors.emplace(d.first, d.second.Clone());
+   for (const auto &d : fExtraTypeInfoDescriptors)
+      clone->fExtraTypeInfoDescriptors.emplace_back(d.Clone());
    if (fHeaderExtension)
       clone->fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
    return clone;
@@ -937,5 +945,17 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddCluster(RClusterDescr
    if (fDescriptor.fClusterDescriptors.count(clusterId) > 0)
       return R__FAIL("cluster id clash");
    fDescriptor.fClusterDescriptors.emplace(clusterId, std::move(clusterDesc));
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc)
+{
+   // Make sure we have no duplicates
+   if (std::find(fDescriptor.fExtraTypeInfoDescriptors.begin(), fDescriptor.fExtraTypeInfoDescriptors.end(),
+                 extraTypeInfoDesc) != fDescriptor.fExtraTypeInfoDescriptors.end()) {
+      return R__FAIL("extra type info duplicates");
+   }
+   fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
    return RResult<void>::Success();
 }
