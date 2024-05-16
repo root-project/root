@@ -7202,11 +7202,11 @@ void TH1::SaveAs(const char *filename, Option_t *option) const
    }
    if (opt.Contains("title")) {
       if (std::strcmp(GetYaxis()->GetTitle(), "") == 0) {
-         out << "#\tBinLowEdge\tBinUpEdge\t"
+         out << "# " << "BinLowEdge" << del << "BinUpEdge" << del
              << "BinContent"
-             << "\tey" << std::endl;
+             << del << "ey" << std::endl;
       } else {
-         out << "#\tBinLowEdge\tBinUpEdge\t" << GetYaxis()->GetTitle() << "\tey" << std::endl;
+         out << "# " << "BinLowEdge" << del << "BinUpEdge" << del << GetYaxis()->GetTitle() << del << "ey" << std::endl;
       }
    }
    if (fSumw2.fN) {
