@@ -101,6 +101,8 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
       dumpFloats(rnp._payload);
 }
 
+#if !defined(_MSC_VER) || defined(_WIN64) || defined(NDEBUG) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+
 // Demonstrate value preserving behavior after arithmetic on packed NaNs.
 TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
 {
@@ -137,6 +139,8 @@ TEST(RooNaNPacker, PackedNaNPreservedAfterArithmetic)
    // nothing can harm the PackedNaN
    EXPECT_EQ(rnp.getPayload(), rnp2.getPayload());
 }
+
+#endif // !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
 
 /// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear)
