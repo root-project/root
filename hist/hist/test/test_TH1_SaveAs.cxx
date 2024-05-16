@@ -43,7 +43,7 @@ struct TestSaveAs {
          return false;
       }
       Int_t idx = 0;
-      TString ref[N + 1] = {"#	BinLowEdge	BinUpEdge	BinContent	ey",
+      TString ref[N + 1] = {"# BinLowEdge,BinUpEdge,BinContent,ey",
                             "-1,0,5.2,2.1",
                             "0,1,0,0",
                             "1,2,10.8,2.5",
