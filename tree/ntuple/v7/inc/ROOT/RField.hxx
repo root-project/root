@@ -530,8 +530,7 @@ protected:
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by `ConnectPageSource()` only once connected; derived classes may override this
-   /// as appropriate
+   /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
    virtual void OnConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
