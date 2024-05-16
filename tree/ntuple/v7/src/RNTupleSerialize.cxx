@@ -124,10 +124,10 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldVersion);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersion);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, parentId);
-   auto res16 = RNTupleSerializer::DeserializeFieldStructure(bytes, structure);
-   if (!res16)
-      return R__FORWARD_ERROR(res16);
-   bytes += res16.Unwrap();
+   result = RNTupleSerializer::DeserializeFieldStructure(bytes, structure);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
    fieldDesc.FieldVersion(fieldVersion).TypeVersion(typeVersion).ParentId(parentId).Structure(structure);
 
@@ -233,10 +233,10 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    {
       return R__FAIL("column record frame too short");
    }
-   auto res16 = RNTupleSerializer::DeserializeColumnType(bytes, type);
-   if (!res16)
-      return R__FORWARD_ERROR(res16);
-   bytes += res16.Unwrap();
+   result = RNTupleSerializer::DeserializeColumnType(bytes, type);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, bitsOnStorage);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, flags);
@@ -251,6 +251,86 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
 
    const bool isSorted = (flags & (RNTupleSerializer::kFlagSortAscColumn | RNTupleSerializer::kFlagSortDesColumn));
    columnDesc.FieldId(fieldId).Model({type, isSorted}).FirstElementIndex(firstElementIdx);
+
+   return frameSize;
+}
+
+std::uint32_t SerializeExtraTypeInfo(const ROOT::Experimental::RExtraTypeInfoDescriptor &desc, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+
+   pos += RNTupleSerializer::SerializeExtraTypeInfoId(desc.GetContentId(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionFrom(), *where);
+   pos += RNTupleSerializer::SerializeUInt32(desc.GetTypeVersionTo(), *where);
+   pos += RNTupleSerializer::SerializeString(desc.GetTypeName(), *where);
+   pos += RNTupleSerializer::SerializeString(desc.GetContent(), *where);
+
+   auto size = pos - base;
+   RNTupleSerializer::SerializeFramePostscript(base, size);
+
+   return size;
+}
+
+std::uint32_t SerializeExtraTypeInfoList(const ROOT::Experimental::RNTupleDescriptor &ntplDesc, void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   for (const auto &extraTypeInfoDesc : ntplDesc.GetExtraTypeInfoIterable()) {
+      pos += SerializeExtraTypeInfo(extraTypeInfoDesc, *where);
+   }
+
+   return pos - base;
+}
+
+RResult<std::uint32_t> DeserializeExtraTypeInfo(const void *buffer, std::uint64_t bufSize,
+                                                ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder &desc)
+{
+   using ROOT::Experimental::EExtraTypeInfoIds;
+
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   std::uint64_t frameSize;
+   auto fnFrameSizeLeft = [&]() { return frameSize - (bytes - base); };
+   auto result = RNTupleSerializer::DeserializeFrameHeader(bytes, bufSize, frameSize);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   EExtraTypeInfoIds contentId{EExtraTypeInfoIds::kInvalid};
+   std::uint32_t typeVersionFrom;
+   std::uint32_t typeVersionTo;
+   if (fnFrameSizeLeft() < 3 * sizeof(std::uint32_t)) {
+      return R__FAIL("extra type info record frame too short");
+   }
+   result = RNTupleSerializer::DeserializeExtraTypeInfoId(bytes, contentId);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionFrom);
+   bytes += RNTupleSerializer::DeserializeUInt32(bytes, typeVersionTo);
+
+   std::string typeName;
+   std::string content;
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), typeName).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), content).Unwrap();
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+
+   desc.ContentId(contentId)
+      .TypeVersionFrom(typeVersionFrom)
+      .TypeVersionTo(typeVersionTo)
+      .TypeName(typeName)
+      .Content(content);
 
    return frameSize;
 }
@@ -495,9 +575,8 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return sizeof(std::uint32_t) + length;
 }
 
-
-std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(
-   ROOT::Experimental::EColumnType type, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    switch (type) {
@@ -532,9 +611,9 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    }
 }
 
-
-RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(
-   const void *buffer, ROOT::Experimental::EColumnType &type)
+RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeColumnType(const void *buffer,
+                                                                       ROOT::Experimental::EColumnType &type)
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    std::uint16_t onDiskType;
@@ -572,9 +651,9 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return result;
 }
 
-
-std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(
-   ROOT::Experimental::ENTupleStructure structure, void *buffer)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure,
+                                                                         void *buffer)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
    switch (structure) {
@@ -587,8 +666,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFieldStr
    }
 }
 
-
-RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(
+RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFieldStructure(
    const void *buffer, ROOT::Experimental::ENTupleStructure &structure)
 {
    using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
@@ -601,6 +679,33 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    case 0x03: structure = ENTupleStructure::kVariant; break;
    case 0x04: structure = ENTupleStructure::kUnsplit; break;
    default: return R__FAIL("unexpected on-disk field structure value");
+   }
+   return result;
+}
+
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id,
+                                                                          void *buffer)
+{
+   using ROOT::Experimental::EExtraTypeInfoIds;
+   switch (id) {
+   case EExtraTypeInfoIds::kStreamerInfo: return SerializeUInt32(0x00, buffer);
+   default: throw RException(R__FAIL("ROOT bug: unexpected extra type info id"));
+   }
+}
+
+RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeExtraTypeInfoId(const void *buffer,
+                                                                            ROOT::Experimental::EExtraTypeInfoIds &id)
+{
+   using ROOT::Experimental::EExtraTypeInfoIds;
+   std::uint32_t onDiskValue;
+   auto result = DeserializeUInt32(buffer, onDiskValue);
+   switch (onDiskValue) {
+   case 0x00: id = EExtraTypeInfoIds::kStreamerInfo; break;
+   default:
+      id = EExtraTypeInfoIds::kInvalid;
+      R__LOG_DEBUG(0, NTupleLog()) << "Unknown extra type info id: " << onDiskValue;
    }
    return result;
 }
@@ -1069,6 +1174,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
       nColumns = desc.GetNPhysicalColumns();
       nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
    }
+   const auto nExtraTypeInfos = desc.GetNExtraTypeInfos();
    const auto &onDiskFields = context.GetOnDiskFieldList();
    R__ASSERT(onDiskFields.size() >= fieldListOffset);
    std::span<const DescriptorId_t> fieldList{onDiskFields.data() + fieldListOffset,
@@ -1089,10 +1195,11 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    pos += SerializeAliasColumnList(desc, fieldList, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
-   // We don't use extra type information yet
    frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeListFramePreamble(nExtraTypeInfos, *where);
+   pos += SerializeExtraTypeInfoList(desc, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
    return static_cast<std::uint32_t>(pos - base);
 }
 
@@ -1202,13 +1309,24 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    }
    bytes = frame + frameSize;
 
-   std::uint32_t nTypeInfo;
+   std::uint32_t nExtraTypeInfos;
    frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nTypeInfo);
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nExtraTypeInfos);
    if (!result)
       return R__FORWARD_ERROR(result);
-   if (nTypeInfo > 0)
-      R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
+   bytes += result.Unwrap();
+   for (unsigned i = 0; i < nExtraTypeInfos; ++i) {
+      RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
+      result = DeserializeExtraTypeInfo(bytes, fnFrameSizeLeft(), extraTypeInfoBuilder);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+
+      auto extraTypeInfoDesc = extraTypeInfoBuilder.MoveDescriptor();
+      // We ignore unknown extra type information
+      if (extraTypeInfoDesc)
+         descBuilder.AddExtraTypeInfo(extraTypeInfoDesc.Unwrap());
+   }
    bytes = frame + frameSize;
 
    return bytes - base;

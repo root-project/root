@@ -101,6 +101,32 @@ TEST(RNTuple, SerializeFieldStructure)
    }
 }
 
+TEST(RNTuple, SerializeExtraTypeInfoId)
+{
+   EExtraTypeInfoIds id{EExtraTypeInfoIds::kInvalid};
+
+   unsigned char buffer[4];
+
+   try {
+      RNTupleSerializer::SerializeExtraTypeInfoId(id, buffer);
+      FAIL() << "unexpected field structure value should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected extra type info"));
+   }
+
+   RNTupleSerializer::SerializeUInt32(5000, buffer);
+   // unexpected on-disk ID should set the output value to "invalid"
+   id = EExtraTypeInfoIds::kStreamerInfo;
+   RNTupleSerializer::DeserializeExtraTypeInfoId(buffer, id).Unwrap();
+   EXPECT_EQ(EExtraTypeInfoIds::kInvalid, id);
+
+   for (int i = 0; i < static_cast<int>(EExtraTypeInfoIds::kInvalid); ++i) {
+      RNTupleSerializer::SerializeExtraTypeInfoId(static_cast<EExtraTypeInfoIds>(i), buffer);
+      RNTupleSerializer::DeserializeExtraTypeInfoId(buffer, id);
+      EXPECT_EQ(i, static_cast<int>(id));
+   }
+}
+
 TEST(RNTuple, SerializeEnvelope)
 {
    try {
@@ -567,6 +593,11 @@ TEST(RNTuple, SerializeHeader)
    builder.AddColumn(100, 23, 24, RColumnModel(EColumnType::kReal32, false), 0);
    builder.AddColumn(17, 17, 137, RColumnModel(EColumnType::kIndex32, true), 0);
    builder.AddColumn(40, 40, 137, RColumnModel(EColumnType::kByte, true), 1);
+   builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
+                               .ContentId(EExtraTypeInfoIds::kStreamerInfo)
+                               .Content("xyz")
+                               .MoveDescriptor()
+                               .Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
@@ -582,6 +613,13 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_TRUE(desc.GetColumnDescriptor(colId).IsAliasColumn());
    auto ptFieldId = desc.FindFieldId("pt");
    EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
+   EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
 
 
@@ -748,6 +786,11 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .Unwrap());
    builder.AddFieldLink(0, 46);
    builder.AddColumn(20, 18, 46, RColumnModel(EColumnType::kReal32, true), 0);
+   builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
+                               .ContentId(EExtraTypeInfoIds::kStreamerInfo)
+                               .Content("xyz")
+                               .MoveDescriptor()
+                               .Unwrap());
 
    // Make sure late-added fields and the corresponding columns get an on-disk ID
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
@@ -790,4 +833,12 @@ TEST(RNTuple, SerializeFooterXHeader)
       counter++;
    }
    EXPECT_EQ(2U, counter);
+
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
+   EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
