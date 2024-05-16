@@ -319,6 +319,9 @@ else()
   else()
     message(FATAL_ERROR "Not found: ${LLVMCONFIG_FILE}")
   endif()
+  # We already FORCE-d the CACHE value to OFF, but LLVMConfig.cmake might have
+  # set the variable to ON again...
+  set(LLVM_ENABLE_WARNINGS OFF)
 
   # They are used as destination of target generators.
   # We try to keep these locations consistent with the builtin_llvm. This is important
@@ -334,7 +337,6 @@ else()
     set(LLVM_SHLIB_OUTPUT_INTDIR ${LLVM_LIBRARY_OUTPUT_INTDIR})
   endif()
 
-  option(LLVM_ENABLE_WARNINGS "Enable compiler warnings." ON)
   option(LLVM_INSTALL_TOOLCHAIN_ONLY
     "Only include toolchain files in the 'install' target." OFF)
 
