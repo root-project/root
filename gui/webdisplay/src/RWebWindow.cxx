@@ -498,27 +498,6 @@ unsigned RWebWindow::AddDisplayHandle(bool headless_mode, const std::string &key
    return fConnCnt;
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////
-/// Find connection with specified key.
-/// Must be used under connection mutex lock
-
-std::shared_ptr<RWebWindow::WebConn> RWebWindow::_FindConnWithKey(const std::string &key) const
-{
-   if (key.empty())
-      return nullptr;
-
-   for (auto &entry : fPendingConn) {
-      if (entry->fKey == key)
-         return entry;
-   }
-
-   for (auto &conn : fConn) {
-      if (conn->fKey == key)
-         return conn;
-   }
-
-   return nullptr;
-}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Check if provided hash, ntry parameters from the connection request could be accepted
@@ -572,14 +551,28 @@ bool RWebWindow::_CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns true if provided key value already exists (in processes map or in existing connections)
+/// In special cases one also can check if key value exists as newkey
 
-bool RWebWindow::HasKey(const std::string &key) const
+bool RWebWindow::HasKey(const std::string &key, bool also_newkey) const
 {
+   if (key.empty())
+      return false;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
 
-   auto conn = _FindConnWithKey(key);
+   for (auto &entry : fPendingConn) {
+      if (entry->fKey == key)
+         return true;
+   }
 
-   return conn ? true : false;
+   for (auto &conn : fConn) {
+      if (conn->fKey == key)
+         return true;
+      if (also_newkey && (conn->fNewKey == key))
+         return true;
+   }
+
+   return false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -952,7 +945,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
    }
 
-   if (oper_seq <= conn->fRecvSeq) {
+   if (is_remote && (oper_seq <= conn->fRecvSeq)) {
       R__LOG_ERROR(WebGUILog()) << "supply same package again - MiM attacker?";
       return false;
    }

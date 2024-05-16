@@ -54,7 +54,7 @@ protected:
          TUrl url;
          url.SetOptions(arg->GetQuery());
          TString key = url.GetValueFromOptions("key");
-         if (key.IsNull() || !fWindow.HasKey(key.Data())) {
+         if (key.IsNull() || !fWindow.HasKey(key.Data(), true)) {
             // refuce loading of default web page without valid key
             arg->SetContent("refused");
             arg->Set404();

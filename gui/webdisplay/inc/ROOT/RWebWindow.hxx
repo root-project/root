@@ -187,8 +187,6 @@ private:
 
    std::shared_ptr<WebConn> RemoveConnection(unsigned wsid);
 
-   std::shared_ptr<WebConn> _FindConnWithKey(const std::string &key) const;
-
    bool _CanTrustIn(std::shared_ptr<WebConn> &conn, const std::string &key, const std::string &ntry, bool remote, bool test_first_time);
 
    std::string _MakeSendHeader(std::shared_ptr<WebConn> &conn, bool txt, const std::string &data, int chid);
@@ -203,7 +201,7 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
-   bool HasKey(const std::string &key) const;
+   bool HasKey(const std::string &key, bool also_newkey = false) const;
 
    void RemoveKey(const std::string &key);
 
