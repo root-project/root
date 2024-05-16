@@ -219,6 +219,18 @@ ROOT::Experimental::RClusterDescriptor ROOT::Experimental::RClusterDescriptor::C
 
 ////////////////////////////////////////////////////////////////////////////////
 
+ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RExtraTypeInfoDescriptor::Clone() const
+{
+   RExtraTypeInfoDescriptor clone;
+   clone.fContentId = fContentId;
+   clone.fTypeVersionFrom = fTypeVersionFrom;
+   clone.fTypeVersionTo = fTypeVersionTo;
+   clone.fTypeName = fTypeName;
+   clone.fContent = fContent;
+   return clone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
 {
@@ -656,6 +668,18 @@ ROOT::Experimental::Internal::RColumnGroupDescriptorBuilder::MoveDescriptor()
       return R__FAIL("unset column group ID");
    RColumnGroupDescriptor result;
    std::swap(result, fColumnGroup);
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+ROOT::Experimental::RResult<ROOT::Experimental::RExtraTypeInfoDescriptor>
+ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder::MoveDescriptor()
+{
+   if (fExtraTypeInfo.fContentId == RExtraTypeInfoDescriptor::EContentIds::kInvalid)
+      throw RException(R__FAIL("invalid extra type info content id"));
+   RExtraTypeInfoDescriptor result;
+   std::swap(result, fExtraTypeInfo);
    return result;
 }
 

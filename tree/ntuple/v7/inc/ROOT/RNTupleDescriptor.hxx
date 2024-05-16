@@ -53,6 +53,7 @@ class RColumnDescriptorBuilder;
 class RColumnGroupDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
+class RExtraTypeInfoDescriptorBuilder;
 class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 } // namespace Internal
@@ -394,6 +395,48 @@ public:
    /// A cluster group is loaded in two stages. Stage one loads only the summary information.
    /// Stage two loads the list of cluster IDs.
    bool HasClusterDetails() const { return !fClusterIds.empty(); }
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RExtraTypeInfoDescriptor
+\ingroup NTuple
+\brief Field specific extra type information from the header / extenstion header
+
+Currently only used by unsplit fields to store RNTuple-wide list of streamer info records.
+*/
+// clang-format on
+class RExtraTypeInfoDescriptor {
+   friend class Internal::RExtraTypeInfoDescriptorBuilder;
+
+public:
+   enum class EContentIds { kStreamerInfo, kInvalid };
+
+private:
+   /// Specifies the meaning of the extra information
+   EContentIds fContentId = EContentIds::kInvalid;
+   /// Extra type information restricted to a certain version range of the type
+   std::uint32_t fTypeVersionFrom = 0;
+   std::uint32_t fTypeVersionTo = 0;
+   /// The type name the extra information refers to; empty for RNTuple-wide extra information
+   std::string fTypeName;
+   /// The content format depends on the content ID and may be binary
+   std::string fContent;
+
+public:
+   RExtraTypeInfoDescriptor() = default;
+   RExtraTypeInfoDescriptor(const RExtraTypeInfoDescriptor &other) = delete;
+   RExtraTypeInfoDescriptor &operator=(const RExtraTypeInfoDescriptor &other) = delete;
+   RExtraTypeInfoDescriptor(RExtraTypeInfoDescriptor &&other) = default;
+   RExtraTypeInfoDescriptor &operator=(RExtraTypeInfoDescriptor &&other) = default;
+
+   RExtraTypeInfoDescriptor Clone() const;
+
+   EContentIds GetContentId() const { return fContentId; }
+   std::uint32_t GetTypeVersionFrom() const { return fTypeVersionFrom; }
+   std::uint32_t GetTypeVersionTo() const { return fTypeVersionTo; }
+   std::string GetTypeName() const { return fTypeName; }
+   std::string GetContent() const { return fContent; }
 };
 
 // clang-format off
@@ -1071,6 +1114,49 @@ public:
    void AddColumn(DescriptorId_t physicalId) { fColumnGroup.fPhysicalColumnIds.insert(physicalId); }
 
    RResult<RColumnGroupDescriptor> MoveDescriptor();
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RExtraTypeInfoDescriptor
+*/
+// clang-format on
+class RExtraTypeInfoDescriptorBuilder {
+private:
+   RExtraTypeInfoDescriptor fExtraTypeInfo;
+
+public:
+   RExtraTypeInfoDescriptorBuilder() = default;
+
+   RExtraTypeInfoDescriptorBuilder &ContentId(RExtraTypeInfoDescriptor::EContentIds contentId)
+   {
+      fExtraTypeInfo.fContentId = contentId;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeVersionFrom(std::uint32_t typeVersionFrom)
+   {
+      fExtraTypeInfo.fTypeVersionFrom = typeVersionFrom;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeVersionTo(std::uint32_t typeVersionTo)
+   {
+      fExtraTypeInfo.fTypeVersionTo = typeVersionTo;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeName(const std::string &typeName)
+   {
+      fExtraTypeInfo.fTypeName = typeName;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &Content(const std::string &content)
+   {
+      fExtraTypeInfo.fContent = content;
+      return *this;
+   }
+
+   RResult<RExtraTypeInfoDescriptor> MoveDescriptor();
 };
 
 // clang-format off
