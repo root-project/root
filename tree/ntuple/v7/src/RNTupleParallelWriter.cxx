@@ -94,7 +94,10 @@ public:
    {
       throw RException(R__FAIL("should never commit cluster group via RPageSynchronizingSink"));
    }
-   void CommitDataset() final { throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink")); }
+   void CommitDatasetImpl() final
+   {
+      throw RException(R__FAIL("should never commit dataset via RPageSynchronizingSink"));
+   }
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final
    {

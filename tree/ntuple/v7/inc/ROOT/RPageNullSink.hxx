@@ -90,7 +90,7 @@ public:
       return bytes;
    }
    void CommitClusterGroup() final {}
-   void CommitDataset() final {}
+   void CommitDatasetImpl() final {}
 };
 
 } // namespace Internal
