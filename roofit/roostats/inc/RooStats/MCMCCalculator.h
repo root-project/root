@@ -151,7 +151,7 @@ namespace RooStats {
       /// that the search will terminate when topCutoff (a) and bottomCutoff (b)
       /// satisfy this condition:
       ///
-      /// TMath::Abs(a - b) < TMath::Abs(delta * (a + b)/2)
+      /// std::abs(a - b) < std::abs(delta * (a + b)/2)
       virtual void SetKeysTerminationThreshold(double delta)
       {
          if (delta < 0.) {
@@ -185,7 +185,7 @@ namespace RooStats {
 
       double fDelta = -1; ///< acceptable error for Keys cutoffs being equal
                           ///< topCutoff (a) considered == bottomCutoff (b) iff
-                          ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
+                          ///< (std::abs(a - b) < std::abs(fDelta * (a + b)/2));
                           ///< Theoretically, the Abs is not needed here, but
                           ///< floating-point arithmetic does not always work
                           ///< perfectly, and the Abs doesn't hurt

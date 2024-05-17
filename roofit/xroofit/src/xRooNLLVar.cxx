@@ -842,7 +842,7 @@ double xRooNLLVar::saturatedNllTerm() const
 
    std::set<std::string> _binnedChannels = binnedChannels();
 
-   // for binned case each entry is: -(-N + Nlog(N) - TMath::LnGamma(N+1))
+   // for binned case each entry is: -(-N + Nlog(N) - std::lgamma(N+1))
    // for unbinned case each entry is: -(N*log(N/(sumN*binW))) = -N*logN + N*log(sumN) + N*log(binW)
    // but unbinned gets extendedTerm = sumN - sumN*log(sumN)
    // so resulting sum is just sumN - sum[ N*logN - N*log(binW) ]
@@ -858,13 +858,13 @@ double xRooNLLVar::saturatedNllTerm() const
       double w = _data->weight();
       out -= w * std::log(w);
       if (_binnedChannels.count("*")) {
-         out += TMath::LnGamma(w + 1);
+         out += std::lgamma(w + 1);
       } else if (_binnedChannels.empty()) {
          out += w * std::log(getEntryBinWidth(i));
       } else if (cat) {
          // need to determine which channel we are in for this entry to decide if binned or unbinned active
          if (_binnedChannels.count(_data->get()->getCatLabel(cat->GetName()))) {
-            out += TMath::LnGamma(w + 1);
+            out += std::lgamma(w + 1);
          } else {
             out += w * std::log(getEntryBinWidth(i));
          }
@@ -1227,7 +1227,7 @@ double xRooNLLVar::binnedDataTerm() const
    double out = 0;
    for (int i = 0; i < fData->numEntries(); i++) {
       fData->get(i);
-      out += TMath::LnGamma(fData->weight() + 1) - fData->weight() * std::log(getEntryBinWidth(i));
+      out += std::lgamma(fData->weight() + 1) - fData->weight() * std::log(getEntryBinWidth(i));
    }
 
    return out;

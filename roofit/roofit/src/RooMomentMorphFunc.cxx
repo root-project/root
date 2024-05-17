@@ -149,7 +149,7 @@ void RooMomentMorphFunc::initialize()
    }
    for (Int_t i = 1; i < _mref->GetNrows(); ++i) {
       for (Int_t j = 1; j < _mref->GetNrows(); ++j) {
-         M(i, j) = TMath::Power((*dm)[i], (double)j);
+         M(i, j) = std::pow((*dm)[i], (double)j);
       }
    }
    (*_M) = M.Invert();
@@ -378,7 +378,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
    for (Int_t i = 0; i < nPdf; ++i) {
       double ffrac = 0.;
       for (Int_t j = 0; j < nPdf; ++j) {
-         ffrac += (*self._M)(j, i) * (j == 0 ? 1. : TMath::Power(dm, (double)j));
+         ffrac += (*self._M)(j, i) * (j == 0 ? 1. : std::pow(dm, (double)j));
       }
       if (ffrac >= 0)
          sumposfrac += ffrac;
@@ -402,7 +402,7 @@ void RooMomentMorphFunc::CacheElem::calculateFractions(const RooMomentMorphFunc 
 
    case SineLinear:
       mfrac =
-         TMath::Sin(TMath::PiOver2() * mfrac); // this gives a continuous differentiable transition between grid points.
+         std::sin(TMath::PiOver2() * mfrac); // this gives a continuous differentiable transition between grid points.
 
    // now fall through to Linear case
 

@@ -833,7 +833,7 @@ double RooAbsData::standMoment(const RooRealVar &var, double order, const char* 
   if (order==1) return 0 ;
   if (order==2) return 1 ;
 
-  return moment(var,order,cutSpec,cutRange) / TMath::Power(sigma(var,cutSpec,cutRange),order) ;
+  return moment(var,order,cutSpec,cutRange) / std::pow(sigma(var,cutSpec,cutRange),order) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -895,7 +895,7 @@ double RooAbsData::moment(const RooRealVar& var, double order, double offset, co
     if (select && select->eval()==0) continue ;
     if (cutRange && vars->allInRange(cutRange)) continue ;
 
-    sum += weight() * TMath::Power(varPtr->getVal() - offset,order);
+    sum += weight() * std::pow(varPtr->getVal() - offset,order);
   }
 
   return sum.Sum()/sumEntries(cutSpec, cutRange);
@@ -1414,19 +1414,19 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
     }
 
 
-    double error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2)  ;
+    double error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2)  ;
     double we = weightError(RooAbsData::SumW2) ;
     if (we==0) we = weight() ;
-    error2 += TMath::Power(we,2) ;
+    error2 += std::pow(we,2) ;
 
 
 //     double we = weightError(RooAbsData::SumW2) ;
 //     double error2(0) ;
 //     if (we==0) {
 //       we = weight() ; //sqrt(weight()) ;
-//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//       error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2) + std::pow(we,2) ;
 //     } else {
-//       error2 = TMath::Power(hist->GetBinError(bin),2)-TMath::Power(weight(),2) + TMath::Power(we,2) ;
+//       error2 = std::pow(hist->GetBinError(bin),2)-std::pow(weight(),2) + std::pow(we,2) ;
 //     }
     //hist->AddBinContent(bin,weight());
     hist->SetBinError(bin,sqrt(error2)) ;

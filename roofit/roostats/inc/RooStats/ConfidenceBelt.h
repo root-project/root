@@ -55,8 +55,8 @@ namespace RooStats {
       Int_t index = -1;
       for(; it!= fLookupTable.end(); ++it) {
    index++;
-   if( TMath::Abs( (*it).second.first - cl ) < tolerance &&
-       TMath::Abs( (*it).second.second - leftside ) < tolerance )
+   if( std::abs( (*it).second.first - cl ) < tolerance &&
+       std::abs( (*it).second.second - leftside ) < tolerance )
      break; // exit loop, found
       }
 
