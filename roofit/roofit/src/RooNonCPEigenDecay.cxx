@@ -400,10 +400,10 @@ void RooNonCPEigenDecay::generateEvent( Int_t code )
     double a_cos_m = _avgC - _delC;
 
     // maximum probability density
-    double a1 = 1 + sqrt(TMath::Power(a_cos_m, 2) + TMath::Power(a_sin_m, 2));
-    double a2 = 1 + sqrt(TMath::Power(a_cos_p, 2) + TMath::Power(a_sin_p, 2));
+    double a1 = 1 + sqrt(std::pow(a_cos_m, 2) + std::pow(a_sin_m, 2));
+    double a2 = 1 + sqrt(std::pow(a_cos_p, 2) + std::pow(a_sin_p, 2));
 
-    double maxAcceptProb = (1.10 + TMath::Abs(_acp)) * (a1 > a2 ? a1 : a2);
+    double maxAcceptProb = (1.10 + std::abs(_acp)) * (a1 > a2 ? a1 : a2);
     // The 1.10 in the above line is a security feature to prevent crashes close to the limit at 1.00
 
     double rand = RooRandom::uniform();
