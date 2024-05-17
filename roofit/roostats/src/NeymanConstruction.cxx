@@ -172,7 +172,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     // thus, a good guess for the first iteration of events is N=3.73/alpha~4/alpha
     // should replace alpha here by smaller tail probability: eg. alpha*Min(leftsideFrac, 1.-leftsideFrac)
     // totalMC will be incremented by 2 before first call, so initiated it at half the value
-    Int_t totalMC = (Int_t) (2./fSize/TMath::Min(fLeftSideFraction,1.-fLeftSideFraction));
+    Int_t totalMC = (Int_t) (2./fSize/std::min(fLeftSideFraction,1.-fLeftSideFraction));
     if(fLeftSideFraction==0. || fLeftSideFraction ==1.){
       totalMC = (Int_t) (2./fSize);
     }

@@ -27,14 +27,14 @@ RooRealVar gamma("gamma", "gamma", -10., -100., 100.);\
 RooRealVar delta("delta", "delta", 3., 1.E-6, 100.);\
 RooJohnson johnson("johnson", "johnson", mass, mu, sigma, gamma, delta, -1.E300);
 
-const char* originalFormula = "delta/(sigma*TMath::Sqrt(TMath::Pi()))"
-    "*TMath::Exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
+const char* originalFormula = "delta/(sigma*std::sqrt(TMath::Pi()))"
+    "*std::exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
                     "*(gamma+delta*TMath::ASinH((mass-mu)/sigma)))"
-    "/TMath::Sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
-const char* fixedFormula = "delta/(sigma*TMath::Sqrt(TMath::TwoPi()))"
-    "*TMath::Exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
+    "/std::sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
+const char* fixedFormula = "delta/(sigma*std::sqrt(TMath::TwoPi()))"
+    "*std::exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
                     "*(gamma+delta*TMath::ASinH((mass-mu)/sigma)))"
-    "/TMath::Sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
+    "/std::sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
 
 
 

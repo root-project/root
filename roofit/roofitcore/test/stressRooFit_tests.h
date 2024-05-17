@@ -3774,7 +3774,7 @@ public:
       // ---------------------------------------------------
 
       // Use error function to simulate turn-on slope
-      RooFormulaVar eff("eff", "0.5*(TMath::Erf((t-1)/0.5)+1)", t);
+      RooFormulaVar eff("eff", "0.5*(std::erf((t-1)/0.5)+1)", t);
 
       // D e f i n e   d e c a y   p d f   w i t h   e f f i c i e n c y
       // ---------------------------------------------------------------
