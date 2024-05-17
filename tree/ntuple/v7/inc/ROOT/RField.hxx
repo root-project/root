@@ -19,6 +19,7 @@
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
@@ -526,6 +527,14 @@ protected:
 
    // Perform housekeeping tasks for global to cluster-local index translation
    virtual void CommitClusterImpl() {}
+   // The field can indicate that it needs to register extra type information in the on-disk schema.
+   // In this case, a callback from the page sink to the field will be registered on connect, so that the
+   // extra type information can be collected when the dataset gets committed.
+   virtual bool HasExtraTypeInfo() const { return false; }
+   // The page sink's callback when the data set gets committed will call this method to get the field's extra
+   // type information. This has to happen at the end of writing because the type information may change depending
+   // on the data that's written, e.g. for polymorphic types in the unsplit field.
+   virtual RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return RExtraTypeInfoDescriptor(); }
 
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
@@ -827,7 +836,7 @@ private:
    };
 
    TClass *fClass = nullptr;
-   std::unordered_map<Int_t, TVirtualStreamerInfo *> fStreamerInfos; ///< streamer info records seen during writing
+   Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
    ClusterSize_t fIndex; ///< number of bytes written in the current cluster
 
 private:
@@ -849,6 +858,10 @@ protected:
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    void CommitClusterImpl() final { fIndex = 0; }
+
+   bool HasExtraTypeInfo() const final { return true; }
+   // Returns the list of seen streamer infos
+   RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
 
 public:
    RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
