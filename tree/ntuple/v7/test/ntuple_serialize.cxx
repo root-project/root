@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 
 #include <Byteswap.h>
+#include <TVirtualStreamerInfo.h>
 
 TEST(RNTuple, SerializeInt)
 {
@@ -841,4 +842,18 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
    EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
    EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
+}
+
+TEST(RNTuple, SerializeStreamerInfos)
+{
+   RNTupleSerializer::StreamerInfoMap_t infos;
+   auto content = RNTupleSerializer::SerializeStreamerInfos(infos);
+   EXPECT_TRUE(RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap().empty());
+
+   auto streamerInfo = RNTuple::Class()->GetStreamerInfo();
+   infos[streamerInfo->GetNumber()] = streamerInfo;
+   content = RNTupleSerializer::SerializeStreamerInfos(infos);
+   auto result = RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap();
+   EXPECT_EQ(1u, result.size());
+   EXPECT_STREQ("ROOT::Experimental::RNTuple", std::string(result.begin()->second->GetName()).c_str());
 }
