@@ -458,6 +458,9 @@ if(asimage)
     if(CMAKE_OSX_SYSROOT)
       set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
+    if(builtin_zlib)
+      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIR}")
+    endif()
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
