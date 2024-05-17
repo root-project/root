@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.1.0
+# RNTuple Reference Specifications 0.2.2.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -484,8 +484,13 @@ The following kinds of content are supported:
 
 | Content identifier  | Meaning of content                                  |
 |---------------------|-----------------------------------------------------|
-| 0x01                | String: C++ definition of the type                  |
+| 0x00                | Serialized ROOT streamer info; see notes            |
 
+The serialized ROOT streamer info is not bound to a specific type.
+It is the combined streamer information from all the unsplit fields.
+Writers set version from/to to zero and use an empty type name.
+Readers should ignore the type-specific information.
+The format of the content is a ROOT streamed TList of TStreamerInfo objects.
 
 ### Footer Envelope
 
