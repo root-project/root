@@ -868,18 +868,18 @@ class TH1Painter extends THistPainter {
       if (name) tips.push(name);
 
       if (this.options.Error || this.options.Mark || this.isTF1()) {
-         tips.push('x = ' + xlbl, 'y = ' + funcs.axisAsText('y', cont));
+         tips.push(`x = ${xlbl}`, `y = ${funcs.axisAsText('y', cont)}`);
          if (this.options.Error) {
-            if (xlbl[0] === '[') tips.push('error x = ' + ((x2 - x1) / 2).toPrecision(4));
-            tips.push('error y = ' + histo.getBinError(bin + 1).toPrecision(4));
+            if (xlbl[0] === '[') tips.push(`error x = ${((x2 - x1) / 2).toPrecision(4)}`);
+            tips.push(`error y = ${histo.getBinError(bin + 1).toPrecision(4)}`);
          }
       } else {
          tips.push(`bin = ${bin+1}`, `x = ${xlbl}`);
          if (histo.$baseh) cont -= histo.$baseh.getBinContent(bin+1);
          if (cont === Math.round(cont))
-            tips.push('entries = ' + cont);
+            tips.push(`entries = ${cont}`);
          else
-            tips.push('entries = ' + floatToString(cont, gStyle.fStatFormat));
+            tips.push(`entries = ${floatToString(cont, gStyle.fStatFormat)}`);
       }
 
       return tips;
@@ -959,15 +959,15 @@ class TH1Painter extends THistPainter {
 
       if (this.options.Bar) {
          const w = grx2 - grx1;
-         grx1 += Math.round(histo.fBarOffset/1000*w);
-         grx2 = grx1 + Math.round(histo.fBarWidth/1000*w);
+         grx1 += Math.round(histo.fBarOffset / 1000 * w);
+         grx2 = grx1 + Math.round(histo.fBarWidth / 1000 * w);
       }
 
       if (grx1 > grx2)
          [grx1, grx2] = [grx2, grx1];
 
-      const midx = Math.round((grx1 + grx2)/2),
-            midy = gry1 = gry2 = GetBinGrY(findbin);
+      const midx = Math.round((grx1 + grx2) / 2),
+         midy = gry1 = gry2 = GetBinGrY(findbin);
 
       if (this.options.Bar) {
          show_rect = true;
@@ -1243,8 +1243,8 @@ class TH1Painter extends THistPainter {
 
       return pr.then(() => this.drawAxes())
                .then(() => this.draw1DBins())
-               .then(() => this.drawHistTitle())
                .then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
                .then(() => {
                    this.updateStatWebCanvas();
                    return this.addInteractivity();
