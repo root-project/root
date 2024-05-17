@@ -47,12 +47,12 @@ class TH1Painter extends TH1Painter2D {
          }
       }
 
-      if (is_main) {
-         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))))
-                .then(() => this.drawHistTitle());
-      }
+      if (is_main)
+         pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14))));
 
-      return pr.then(() => this.updateFunctions()).then(() => this);
+      return pr.then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
+               .then(() => this);
    }
 
    /** @summary draw TH1 object */

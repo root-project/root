@@ -44,6 +44,7 @@ class TAttTextHandler {
       this.align = args.align;
       this.angle = args.angle;
 
+      this.can_rotate = args.can_rotate ?? true;
       this.angle_used = false;
       this.align_used = false;
    }
@@ -81,7 +82,7 @@ class TAttTextHandler {
       this.align_used = !arg.noalign && !arg.align;
       if (this.align_used)
          arg.align = this.align;
-      this.angle_used = !arg.norotate;
+      this.angle_used = !arg.norotate && this.can_rotate;
       if (this.angle_used && this.angle)
          arg.rotate = -this.angle; // SVG rotation angle has different sign
       arg.color = this.color || 'black';
