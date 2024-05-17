@@ -244,6 +244,11 @@ public:
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
    virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
+   /// Adds an extra type information record to schema. The extra type information will be written to the
+   /// extension header. The information in the record will be merged with the existing information, e.g.
+   /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
+   /// registered by specific fields (e.g., unsplit field).
+   virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
@@ -380,6 +385,7 @@ public:
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
    void InitFromDescriptor(const RNTupleDescriptor &descriptor);

@@ -145,6 +145,7 @@ public:
 
    void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
