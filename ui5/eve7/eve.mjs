@@ -7,6 +7,7 @@ function initEVE(source_dir) {
    let mpath = source_dir + 'modules/';
 
    return Promise.all([import(mpath+'three.mjs'),
+                       import(mpath+'three_addons.mjs'),
                        import(mpath+'core.mjs'),
                        import(mpath+'draw.mjs'),
                        import(mpath+'base/TAttLineHandler.mjs'),
@@ -16,7 +17,7 @@ function initEVE(source_dir) {
                        import(mpath+'geom/geobase.mjs'),
                        import(mpath+'geom/TGeoPainter.mjs')])
     .then(arr => {
-       globalThis.THREE = Object.assign({}, arr.shift());
+       globalThis.THREE = Object.assign({}, arr.shift(), arr.shift());
        globalThis.EVE = {};
        globalThis.EVE.JSR = Object.assign({}, ...arr); // JSROOT functionality
        return globalThis.EVE;
