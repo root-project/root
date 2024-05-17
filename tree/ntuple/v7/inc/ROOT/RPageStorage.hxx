@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
@@ -322,6 +323,9 @@ private:
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+
+   /// Union of the streamer info records that are sent from unsplit fields to the sink before committing the dataset.
+   RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
 
 protected:
    Internal::RNTupleDescriptorBuilder fDescriptorBuilder;

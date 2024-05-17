@@ -469,9 +469,10 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
 void ROOT::Experimental::Internal::RPagePersistentSink::UpdateExtraTypeInfo(
    const RExtraTypeInfoDescriptor &extraTypeInfo)
 {
-   switch (extraTypeInfo.GetContentId()) {
-   default: throw RException(R__FAIL("Not yet implemented"));
-   }
+   if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
+      throw RException(R__FAIL("ROOT bug: unexpected type extra info in UpdateExtraTypeInfo()"));
+
+   fStreamerInfos.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &model)
@@ -649,6 +650,13 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
+   if (!fStreamerInfos.empty()) {
+      RExtraTypeInfoDescriptorBuilder extraInfoBuilder;
+      extraInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
+         .Content(RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
+      fDescriptorBuilder.AddExtraTypeInfo(extraInfoBuilder.MoveDescriptor().Unwrap());
+   }
+
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext);
