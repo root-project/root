@@ -26,6 +26,7 @@ namespace {
 using ROOT::Experimental::DescriptorId_t;
 using ROOT::Experimental::NTupleSize_t;
 using ROOT::Experimental::RException;
+using ROOT::Experimental::RExtraTypeInfoDescriptor;
 using ROOT::Experimental::RNTupleDescriptor;
 using ROOT::Experimental::RNTupleModel;
 using ROOT::Experimental::Internal::RColumn;
@@ -75,6 +76,10 @@ public:
    void UpdateSchema(const RNTupleModelChangeset &, NTupleSize_t) final
    {
       throw RException(R__FAIL("UpdateSchema not supported via RPageSynchronizingSink"));
+   }
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final
+   {
+      throw RException(R__FAIL("UpdateExtraTypeInfo not supported via RPageSynchronizingSink"));
    }
 
    void CommitPage(ColumnHandle_t, const RPage &) final

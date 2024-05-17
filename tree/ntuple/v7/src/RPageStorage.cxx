@@ -466,6 +466,14 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
 }
 
+void ROOT::Experimental::Internal::RPagePersistentSink::UpdateExtraTypeInfo(
+   const RExtraTypeInfoDescriptor &extraTypeInfo)
+{
+   switch (extraTypeInfo.GetContentId()) {
+   default: throw RException(R__FAIL("Not yet implemented"));
+   }
+}
+
 void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
