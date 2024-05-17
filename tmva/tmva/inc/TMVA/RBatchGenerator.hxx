@@ -34,7 +34,7 @@ private:
 
    float fValidationSplit;
 
-   std::variant<std::shared_ptr<RChunkLoader<Args...>>, std::shared_ptr<RChunkLoaderFilters<Args...>>> fChunkLoaderNoFilters, fChunkLoaderFilters;
+   std::variant<std::shared_ptr<RChunkLoader<Args...>>, std::shared_ptr<RChunkLoaderFilters<Args...>>> fChunkLoader;
 
    std::unique_ptr<RBatchLoader> fBatchLoader;
 
@@ -70,11 +70,10 @@ public:
         fUseWholeFile(maxChunks == 0),
         fNotFiltered(f_rdf.GetFilterNames().empty())
    {
-      {
-         std::function<UInt_t(UInt_t)> GetSeedNumber;
-         GetSeedNumber = [&](UInt_t seed_number)->UInt_t{return seed_number != 0? seed_number: GetSeedNumber(fRng());};
-         fFixedSeed = GetSeedNumber(fRng());
-      }
+
+      do {
+         fFixedSeed = fRng();
+      } while (fFixedSeed == 0);
       
       if (numColumns == 0) {numColumns = cols.size();}
 
@@ -86,15 +85,15 @@ public:
       if(fNotFiltered){
          fNumEntries = f_rdf.Count().GetValue();
 
-         fChunkLoaderNoFilters = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-            f_rdf, fChunkTensor, fChunkSize, cols, vecSizes, vecPadding;
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
+            f_rdf, fChunkTensor, fChunkSize, cols, vecSizes, vecPadding);
       }
       else{
          auto report = f_rdf.Report();
          fNumEntries = f_rdf.Count().GetValue();
          std::size_t numAllEntries = report.begin()->GetAll();
 
-         fChunkLoaderFilters = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderFilters<Args...>>(
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderFilters<Args...>>(
             f_rdf, fChunkTensor, fChunkSize, cols, fNumEntries, numAllEntries, vecSizes, vecPadding);
       }
       
@@ -236,7 +235,7 @@ public:
 
          // A pair that consists the proccessed, and passed events while loading the chunk
          std::pair<std::size_t, std::size_t> report =
-            std::get<std::shared_ptr<RChunkLoader<Args...>>>(fChunkLoaderNoFilters)->LoadChunk(currentRow);
+            std::get<std::shared_ptr<RChunkLoader<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
          currentRow += report.first;
 
          CreateBatches(report.second);
@@ -264,7 +263,7 @@ public:
          }
 
          // A pair that consists the proccessed, and passed events while loading the chunk
-         std::pair<std::size_t, std::size_t> report = std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoaderFilters)->LoadChunk(currentRow);
+         std::pair<std::size_t, std::size_t> report = std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
 
          currentRow += report.first;
          processedEvents += report.second;
@@ -273,7 +272,7 @@ public:
       }
 
       if (currentChunk < fMaxChunks || fUseWholeFile){
-         CreateBatches(std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoaderFilters)->LastChunk());
+         CreateBatches(std::get<std::shared_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LastChunk());
       }
 
       if (!fDropRemainder){
