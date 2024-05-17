@@ -545,11 +545,14 @@ class TGraphPainter extends ObjectPainter {
          }
 
          // build upper part (in reverse direction)
-         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true });
-
-         draw_g.append('svg:path')
+         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true }),
+            area = draw_g.append('svg:path')
                .attr('d', path1 + path2 + 'Z')
                .call(fillatt.func);
+
+         // Let behaves as ROOT - see JIRA ROOT-8131
+         if (fillatt.empty() && fillatt.colorindx)
+            area.style('stroke', this.getColor(fillatt.colorindx));
          if (main_block)
             this.draw_kind = 'lines';
       }
