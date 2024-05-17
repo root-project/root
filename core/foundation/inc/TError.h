@@ -119,7 +119,7 @@ R__EXTERN const char *kCheckMsg;
 /*! Checks condition `e` and reports a fatal error if it's false.
  * \warning
  *   - this check is NOT stripped in release mode, so it should not be used for hot paths.
- *     For those cases, prefer a regular assert();
+ *     For those cases, prefer a regular `assert()`;
  *   - depending on `gErrorIgnoreLevel`, this might not terminate the program, \see ::Fatal.
  */
 #define R__ASSERT(e)                                                     \
