@@ -548,11 +548,9 @@ function setSaveFile(func) {
    _saveFileFunc = func;
 }
 
-/** @summary Produce exec string for WebCanas to set color value
-  * @desc Color can be id or string, but should belong to list of known colors
-  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+/** @summary Returns color id for the color
   * @private */
-function getColorExec(col, method) {
+function getColorId(col) {
    const arr = getRootColors();
    let id = -1;
    if (isStr(col)) {
@@ -569,18 +567,46 @@ function getColorExec(col, method) {
       col = arr[id];
    }
 
-   if (id < 0) return '';
+   return { id, col };
+}
+
+/** @summary Produce exec string for WebCanas to set color value
+  * @desc Color can be id or string, but should belong to list of known colors
+  * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
+  * @private */
+function getColorExec(col, method) {
+   const d = getColorId(col);
+
+   if (d.id < 0)
+      return '';
 
    // for higher color numbers ensure that such color exists
-   if (id >= 50) {
-      const c = d3_color(col);
-      id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
+   if (d.id >= 50) {
+      const c = d3_color(d.col);
+      d.id = `TColor::GetColor(${c.r},${c.g},${c.b})`;
     }
 
-   return `exec:${method}(${id})`;
+   return `exec:${method}(${d.id})`;
+}
+
+/** @summary Change object member in the painter
+  * @desc Used when interactively change in the menu
+  * Special handling for color is provided
+  * @private */
+function changeObjectMember(painter, member, val, is_color) {
+   if (is_color) {
+      const d = getColorId(val);
+      if ((d.id < 0) || (d.id === 9999))
+         return;
+      val = d.id;
+   }
+
+   const obj = painter?.getObject();
+   if (obj && (obj[member] !== undefined))
+      obj[member] = val;
 }
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, setStoragePrefix, saveSettings, readSettings, saveStyle, readStyle,
-         saveFile, setSaveFile, getBinFileContent, getColorExec };
+         saveFile, setSaveFile, getBinFileContent, getColorExec, changeObjectMember };

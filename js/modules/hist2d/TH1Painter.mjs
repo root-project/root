@@ -1243,8 +1243,8 @@ class TH1Painter extends THistPainter {
 
       return pr.then(() => this.drawAxes())
                .then(() => this.draw1DBins())
-               .then(() => this.drawHistTitle())
                .then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
                .then(() => {
                    this.updateStatWebCanvas();
                    return this.addInteractivity();
