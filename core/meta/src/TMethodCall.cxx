@@ -17,6 +17,9 @@ especially useful when a method has to be called more times for
 different objects and/or with different arguments. If a function or
 method needs to be called only once one better uses
 TInterpreter::Execute().
+
+A limitation is known with the present implementation: failures can 
+occur if parameters involve temporary object construction.
 */
 
 #include "TInterpreter.h"
