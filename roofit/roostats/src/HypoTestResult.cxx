@@ -310,7 +310,7 @@ double HypoTestResult::CLsError() const {
    double cl_b_err2 = pow(CLbError(),2);
    double cl_sb_err2 = pow(CLsplusbError(),2);
 
-   return TMath::Sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
+   return std::sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

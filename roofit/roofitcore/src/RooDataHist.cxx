@@ -413,16 +413,16 @@ void RooDataHist::importTH1(const RooArgList& vars, const TH1& histo, double wgt
           for (iz=0 ; iz < zvar->getBins() ; iz++) {
             zvar->setBin(iz) ;
             double bv = doDensityCorrection ? binVolume(vset) : 1;
-            add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*TMath::Power(histo.GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
+            add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
           }
         } else {
           double bv = doDensityCorrection ? binVolume(vset) : 1;
-          add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*TMath::Power(histo.GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
+          add(vset,bv*histo.GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
         }
       }
     } else {
       double bv = doDensityCorrection ? binVolume(vset) : 1 ;
-      add(vset,bv*histo.GetBinContent(iX+1+xmin)*wgt,bv*TMath::Power(histo.GetBinError(iX+1+xmin)*wgt,2)) ;
+      add(vset,bv*histo.GetBinContent(iX+1+xmin)*wgt,bv*std::pow(histo.GetBinError(iX+1+xmin)*wgt,2)) ;
     }
   }
 
@@ -579,16 +579,16 @@ void RooDataHist::importTH1Set(const RooArgList& vars, RooCategory& indexCat, st
             for (iz=0 ; iz < zvar->getBins() ; iz++) {
               zvar->setBin(iz) ;
               double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-              add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*TMath::Power(histo->GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
+              add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin,iY+1+ymin,iz+1+zmin)*wgt,2)) ;
             }
           } else {
             double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-            add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*TMath::Power(histo->GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
+            add(vset,bv*histo->GetBinContent(iX+1+xmin,iY+1+ymin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin,iY+1+ymin)*wgt,2)) ;
           }
         }
       } else {
         double bv = doDensityCorrection ? binVolume(vset)/avgBV : 1;
-        add(vset,bv*histo->GetBinContent(iX+1+xmin)*wgt,bv*TMath::Power(histo->GetBinError(iX+1+xmin)*wgt,2)) ;
+        add(vset,bv*histo->GetBinContent(iX+1+xmin)*wgt,bv*std::pow(histo->GetBinError(iX+1+xmin)*wgt,2)) ;
       }
     }
   }

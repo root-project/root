@@ -8946,12 +8946,12 @@ void xRooNode::Draw(Option_t *opt)
          //                    int n = _size;
          //                    Int_t w = 1, h = 1;
          //                    if (pad->GetCanvas()->GetWindowWidth() > pad->GetCanvas()->GetWindowHeight()) {
-         //                        w = TMath::Ceil(TMath::Sqrt(n));
-         //                        h = TMath::Floor(TMath::Sqrt(n));
+         //                        w = std::ceil(std::sqrt(n));
+         //                        h = std::floor(std::sqrt(n));
          //                        if (w*h < n) w++;
          //                    } else {
-         //                        h = TMath::Ceil(TMath::Sqrt(n));
-         //                        w = TMath::Floor(TMath::Sqrt(n));
+         //                        h = std::ceil(std::sqrt(n));
+         //                        w = std::floor(std::sqrt(n));
          //                        if (w*h < n) h++;
          //                    }
          //                    // adjust the window size to display only 4 in the window, with scroll bars

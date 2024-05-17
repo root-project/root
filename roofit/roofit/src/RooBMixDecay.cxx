@@ -293,7 +293,7 @@ void RooBMixDecay::generateEvent(Int_t code)
 
     // Accept event if T is in generated range
     double dil = 1-2.*_mistag ;
-    double maxAcceptProb = 1 + TMath::Abs(_delMistag) + TMath::Abs(dil) ;
+    double maxAcceptProb = 1 + std::abs(_delMistag) + std::abs(dil) ;
     double acceptProb = (1-_tagFlav*_delMistag) + _mixState*dil*cos(_dm*tval);
     bool mixAccept = maxAcceptProb*RooRandom::uniform() < acceptProb ? true : false ;
 
