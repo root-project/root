@@ -53,9 +53,9 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
          // TEMP(version4): Version 5 of the anchor breaks backward compat, but we still want to support version 4
          // for a while. Support for version 4, as well as this code, will be removed before the RNTuple stabilization.
          // For version 4 we need to manually read all the known members as we cannot rely on ReadClassBuffer.
-         constexpr std::size_t expectedBytes = 64;
+         constexpr std::size_t expectedBytes = 66;
          if (bcnt != expectedBytes)
-            throw RException(R__FAIL("byte count mismatch in RNTuple anchor: expected=" +
+            throw RException(R__FAIL("byte count mismatch in RNTuple anchor v4: expected=" +
                                      std::to_string(expectedBytes) + ", got=" + std::to_string(bcnt)));
 
          buf >> fVersionEpoch;
