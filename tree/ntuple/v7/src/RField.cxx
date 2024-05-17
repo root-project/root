@@ -22,6 +22,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 
 #include <TBaseClass.h>
 #include <TBufferFile.h>
@@ -1095,6 +1096,11 @@ void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSi
       column->ConnectPageSink(fOnDiskId, pageSink, firstElementIndex);
    }
 
+   if (HasExtraTypeInfo()) {
+      pageSink.RegisterOnCommitDatasetCallback(
+         [this](Internal::RPageSink &sink) { sink.UpdateExtraTypeInfo(GetExtraTypeInfo()); });
+   }
+
    fState = EState::kConnectedToSink;
 }
 
@@ -2033,6 +2039,17 @@ void ROOT::Experimental::RUnsplitField::RUnsplitDeleter::operator()(void *objPtr
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
    RDeleter::operator()(objPtr, dtorOnly);
+}
+
+ROOT::Experimental::RExtraTypeInfoDescriptor ROOT::Experimental::RUnsplitField::GetExtraTypeInfo() const
+{
+   Internal::RExtraTypeInfoDescriptorBuilder extraTypeInfoBuilder;
+   extraTypeInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
+      .TypeVersionFrom(GetTypeVersion())
+      .TypeVersionTo(GetTypeVersion())
+      .TypeName(GetTypeName())
+      .Content(Internal::RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
+   return extraTypeInfoBuilder.MoveDescriptor().Unwrap();
 }
 
 std::size_t ROOT::Experimental::RUnsplitField::GetAlignment() const
