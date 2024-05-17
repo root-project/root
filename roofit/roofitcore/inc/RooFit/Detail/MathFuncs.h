@@ -181,52 +181,6 @@ inline double poisson(double x, double par)
    }
 }
 
-inline double interpolate6thDegree(double x, double low, double high, double nominal, double boundary)
-{
-   double t = x / boundary;
-   double eps_plus = high - nominal;
-   double eps_minus = nominal - low;
-   double S = 0.5 * (eps_plus + eps_minus);
-   double A = 0.0625 * (eps_plus - eps_minus);
-
-   return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
-}
-
-inline double interpolate6thDegreeExp(double x, double low, double high, double nominal, double boundary)
-{
-   double x0 = boundary;
-
-   // GHL: Swagato's suggestions
-   double powUp = std::pow(high / nominal, x0);
-   double powDown = std::pow(low / nominal, x0);
-   double logHi = std::log(high);
-   double logLo = std::log(low);
-   double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
-   double powDownLog = low <= 0.0 ? 0.0 : -powDown * logLo;
-   double powUpLog2 = high <= 0.0 ? 0.0 : powUpLog * logHi;
-   double powDownLog2 = low <= 0.0 ? 0.0 : -powDownLog * logLo;
-
-   double S0 = 0.5 * (powUp + powDown);
-   double A0 = 0.5 * (powUp - powDown);
-   double S1 = 0.5 * (powUpLog + powDownLog);
-   double A1 = 0.5 * (powUpLog - powDownLog);
-   double S2 = 0.5 * (powUpLog2 + powDownLog2);
-   double A2 = 0.5 * (powUpLog2 - powDownLog2);
-
-   // fcns+der+2nd_der are eq at bd
-
-   double a = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
-   double b = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
-   double c = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
-   double d = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
-   double e = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
-   double f = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
-
-   // evaluate the 6-th degree polynomial using Horner's method
-   double value = 1. + x * (a + x * (b + x * (c + x * (d + x * (e + x * f)))));
-   return value;
-}
-
 inline double flexibleInterpSingle(unsigned int code, double low, double high, double boundary, double nominal,
                                    double paramVal, double res)
 {
@@ -276,7 +230,14 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
          return x * (nominal - low);
       }
 
-      return interpolate6thDegree(x, low, high, nominal, boundary);
+      // interpolate 6th degree
+      double t = x / boundary;
+      double eps_plus = high - nominal;
+      double eps_minus = nominal - low;
+      double S = 0.5 * (eps_plus + eps_minus);
+      double A = 0.0625 * (eps_plus - eps_minus);
+
+      return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
    } else if (code == 5) {
       double x = paramVal;
       double mod = 1.0;
@@ -285,7 +246,38 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
       } else if (x <= -boundary) {
          mod = std::pow(low / nominal, -paramVal);
       } else {
-         mod = interpolate6thDegreeExp(x, low, high, nominal, boundary);
+         // interpolate 6th degree exp
+         double x0 = boundary;
+
+         // GHL: Swagato's suggestions
+         double powUp = std::pow(high / nominal, x0);
+         double powDown = std::pow(low / nominal, x0);
+         double logHi = std::log(high);
+         double logLo = std::log(low);
+         double powUpLog = high <= 0.0 ? 0.0 : powUp * logHi;
+         double powDownLog = low <= 0.0 ? 0.0 : -powDown * logLo;
+         double powUpLog2 = high <= 0.0 ? 0.0 : powUpLog * logHi;
+         double powDownLog2 = low <= 0.0 ? 0.0 : -powDownLog * logLo;
+
+         double S0 = 0.5 * (powUp + powDown);
+         double A0 = 0.5 * (powUp - powDown);
+         double S1 = 0.5 * (powUpLog + powDownLog);
+         double A1 = 0.5 * (powUpLog - powDownLog);
+         double S2 = 0.5 * (powUpLog2 + powDownLog2);
+         double A2 = 0.5 * (powUpLog2 - powDownLog2);
+
+         // fcns+der+2nd_der are eq at bd
+
+         double a = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
+         double b = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
+         double c = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
+         double d = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
+         double e = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
+         double f = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
+
+         // evaluate the 6-th degree polynomial using Horner's method
+         double value = 1. + x * (a + x * (b + x * (c + x * (d + x * (e + x * f)))));
+         mod = value;
       }
       return res * (mod - 1.0);
    }
@@ -293,6 +285,7 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
    return 0.0;
 }
 
+template <bool cutoff = true>
 inline double flexibleInterp(unsigned int code, double *params, unsigned int n, double *low, double *high,
                              double boundary, double nominal)
 {
@@ -301,18 +294,7 @@ inline double flexibleInterp(unsigned int code, double *params, unsigned int n, 
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
 
-   return total <= 0 ? TMath::Limits<double>::Min() : total;
-}
-
-inline double
-piecewiseInterpolation(unsigned int code, double *low, double *high, double nominal, double *params, unsigned int n)
-{
-   double total = nominal;
-   for (std::size_t i = 0; i < n; ++i) {
-      total += flexibleInterpSingle(code, low[i], high[i], 1.0, nominal, params[i], total);
-   }
-
-   return total;
+   return cutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
 }
 
 inline double landau(double x, double mu, double sigma)
