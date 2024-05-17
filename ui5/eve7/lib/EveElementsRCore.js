@@ -1415,7 +1415,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let material = this.RcFlatMaterial(fcol, mop);
          material.side = RC.FRONT_AND_BACK_SIDE;
 
-         let line_mat = this.RcLineMaterial(fcol, mop);
+         let line_mat = this.RcLineMaterial(fcol);
 
          let meshes = [];
          for (let ib_pos = 0; ib_pos < ib_len;)
