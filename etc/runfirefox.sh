@@ -8,7 +8,7 @@ firefox=$1
 shift
 
 if [ "$profile" != "<dummy>" ]; then
-   trap "rm -rf $profile; echo remove $profile at exit" 0 1 2 3 6
+   trap "rm -rf $profile" 0 1 2 3 6
 fi
 
 args=
