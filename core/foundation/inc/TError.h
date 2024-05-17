@@ -124,7 +124,7 @@ R__EXTERN const char *kCheckMsg;
  */
 #define R__ASSERT(e)                                                     \
    do {                                                                  \
-      if (!(R__likely(e))) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+      if (R__unlikely(!(e))) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 /*! Checks condition `e` and reports a warning message if it's false.
@@ -132,7 +132,7 @@ R__EXTERN const char *kCheckMsg;
  */
 #define R__CHECK(e)                                                       \
    do {                                                                   \
-      if (!(R__likely(e))) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+      if (R__unlikely(!(e))) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;
