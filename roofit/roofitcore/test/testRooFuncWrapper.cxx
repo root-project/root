@@ -621,58 +621,42 @@ FactoryTestParams param15{"RecursiveFraction",
                           5e-3,
                           /*randomizeParameters=*/true};
 
-FactoryTestParams param16{"RooCBShape",
-                          [](RooWorkspace &ws) {
-                             ws.factory("CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, "
-                                        "100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])");
+FactoryTestParams makeTestParams(const char *name, std::string const& expr, bool randomizeParameters)
+{
+   return FactoryTestParams{name,
+                            [=](RooWorkspace &ws) {
+                               ws.factory(expr.c_str());
+                               ws.defineSet("observables", "x");
+                            },
+                            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                               using namespace RooFit;
+                               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                            },
+                            5e-3, randomizeParameters};
+}
 
-                             ws.defineSet("observables", "x");
-                          },
-                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
-                             using namespace RooFit;
-                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
-                          },
-                          5e-3,
-                          /*randomizeParameters=*/true};
-
-FactoryTestParams param17{
-   "RooBernstein",
-   [](RooWorkspace &ws) {
-      ws.factory(
-         "Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.], c3[0.5, 0., 10.]})");
-
-      ws.defineSet("observables", "x");
-   },
-   [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
-      using namespace RooFit;
-      return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
-   },
-   5e-3,
-   /*randomizeParameters=*/true};
-
-FactoryTestParams param18{"RooLandau",
-                          [](RooWorkspace &ws) {
-                             ws.factory("Landau::model(x[0., 30.], ml[5., -20., 20.], sl[1., 0.1, 10.])");
-
-                             ws.defineSet("observables", "x");
-                          },
-                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
-                             using namespace RooFit;
-                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
-                          },
-                          5e-3,
-                          /*randomizeParameters=*/true};
-
-auto testValues = testing::Values(param1, param2,
+auto testValues = testing::Values(
+   param1, param2,
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
-                                  param3,
+   param3,
 #endif
-                                  param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12,
-                                  param13, param15,
-                                  // TODO: the RooCBShape test is disabled for now,
-                                  // because the gradient doesn't work with Clad v1.4.
-                                  // , param16
-                                  param17, param18);
+   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15,
+   // TODO: the RooCBShape test is disabled for now, because the gradient doesn't work with Clad v1.4.
+   // makeTestParams("RooCBShape",
+   //               "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])",
+   //               true),
+   makeTestParams(
+      "RooBernstein",
+      "Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.], c3[0.5, 0., 10.]})", true),
+   // We're testing several Landau configurations, because the underlying
+   // ROOT::Math::landau_cdf is defined piecewise. Like this, we're covering
+   // all possible code paths in the pullback.
+   makeTestParams("RooLandau1", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])", false),
+   makeTestParams("RooLandau2", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])", false),
+   makeTestParams("RooLandau3", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])", false),
+   makeTestParams("RooLandau4", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])", false),
+   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false)
+);
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
