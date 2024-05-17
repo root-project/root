@@ -134,7 +134,7 @@ inline double randomGamma(double gamma, double beta, double mu, double xmin, dou
    while (true) {
 
       double d = gamma - 1. / 3.;
-      double c = 1. / TMath::Sqrt(9. * d);
+      double c = 1. / std::sqrt(9. * d);
       double xgen = 0;
       double v = 0;
 
@@ -150,7 +150,7 @@ inline double randomGamma(double gamma, double beta, double mu, double xmin, dou
             return x;
          }
       }
-      if (TMath::Log(u) < 0.5 * xgen * xgen + d * (1. - v + TMath::Log(v))) {
+      if (std::log(u) < 0.5 * xgen * xgen + d * (1. - v + TMath::Log(v))) {
          double x = ((d * v) * beta + mu);
          if ((x < xmax) && (x > xmin)) {
             return x;
