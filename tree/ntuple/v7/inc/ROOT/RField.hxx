@@ -1318,7 +1318,7 @@ public:
 /**
 \class ROOT::Experimental::RArrayAsRVecField
 \brief A field for fixed-size arrays that are represented as RVecs in memory.
-\ingroup ntuple
+\ingroup NTuple
 This class is used only for reading. In particular, it helps exposing
 arbitrarily-nested std::array on-disk fields as RVecs for usage in RDataFrame.
 */
