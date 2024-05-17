@@ -91,7 +91,7 @@ CustomStreamers = {
       const pos = classv.lastIndexOf(';');
 
       if (pos > 0) {
-         clv = parseInt(classv.slice(pos + 1));
+         clv = Number.parseInt(classv.slice(pos + 1));
          classv = classv.slice(0, pos);
       }
 
@@ -2854,8 +2854,8 @@ class TFile {
             if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
                const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
                if (parts.length === 3) {
-                  segm_start = parseInt(parts[0]);
-                  segm_last = parseInt(parts[1]);
+                  segm_start = Number.parseInt(parts[0]);
+                  segm_last = Number.parseInt(parts[1]);
                   if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                      segm_start = 0; segm_last = -1;
                   }
@@ -2912,8 +2912,8 @@ class TFile {
                   if ((line.indexOf('content-range') >= 0) && (line.indexOf('bytes') > 0)) {
                      const parts = line.slice(line.indexOf('bytes') + 6).split(/[\s-/]+/);
                      if (parts.length === 3) {
-                        segm_start = parseInt(parts[0]);
-                        segm_last = parseInt(parts[1]);
+                        segm_start = Number.parseInt(parts[0]);
+                        segm_last = Number.parseInt(parts[1]);
                         if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                            segm_start = 0; segm_last = -1;
                         }
@@ -2965,7 +2965,10 @@ class TFile {
    getDir(dirname, cycle) {
       if ((cycle === undefined) && isStr(dirname)) {
          const pos = dirname.lastIndexOf(';');
-         if (pos > 0) { cycle = parseInt(dirname.slice(pos + 1)); dirname = dirname.slice(0, pos); }
+         if (pos > 0) {
+            cycle = Number.parseInt(dirname.slice(pos + 1));
+            dirname = dirname.slice(0, pos);
+         }
       }
 
       for (let j = 0; j < this.fDirectories.length; ++j) {
@@ -3044,8 +3047,8 @@ class TFile {
      * console.log(`Read object of type ${obj._typename}`); */
    async readObject(obj_name, cycle, only_dir) {
       const pos = obj_name.lastIndexOf(';');
-      if (pos > 0) {
-         cycle = parseInt(obj_name.slice(pos + 1));
+      if (pos >= 0) {
+         cycle = Number.parseInt(obj_name.slice(pos + 1));
          obj_name = obj_name.slice(0, pos);
       }
 

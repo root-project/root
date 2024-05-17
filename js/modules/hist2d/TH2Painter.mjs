@@ -750,7 +750,7 @@ class TH2Painter extends THistPainter {
          this.interactiveRedraw('pad', 'drawopt');
       });
 
-      if (this.options.Color || this.options.Contour || this.options.Surf || this.options.Lego === 12 || this.options.Lego === 14)
+      if (this.options.Color || this.options.Contour || this.options.Hist || this.options.Surf || this.options.Lego === 12 || this.options.Lego === 14)
          this.fillPaletteMenu(menu, true);
    }
 
@@ -3242,8 +3242,8 @@ class TH2Painter extends THistPainter {
             pr = this.drawAxes().then(() => this.draw2DBins());
 
          return pr.then(() => this.completePalette(pp));
-      }).then(() => this.drawHistTitle())
-        .then(() => this.updateFunctions())
+      }).then(() => this.updateFunctions())
+        .then(() => this.updateHistTitle())
         .then(() => {
             this.updateStatWebCanvas();
             return this.addInteractivity();

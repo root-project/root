@@ -962,15 +962,20 @@ class HierarchyPainter extends BasePainter {
       let top = this.h, itemname = '';
 
       if (isStr(arg)) {
-         itemname = arg; arg = {};
+         itemname = arg;
+         arg = {};
       } else if (isObject(arg)) {
-         itemname = arg.name; if ('top' in arg) top = arg.top;
+         itemname = arg.name;
+         if ('top' in arg)
+            top = arg.top;
       } else
          return null;
 
-      if (itemname === '__top_folder__') return top;
+      if (itemname === '__top_folder__')
+         return top;
 
-      if (isStr(itemname) && (itemname.indexOf('img:') === 0)) return null;
+      if (isStr(itemname) && (itemname.indexOf('img:') === 0))
+         return null;
 
       return find_in_hierarchy(top, itemname);
    }
@@ -982,7 +987,8 @@ class HierarchyPainter extends BasePainter {
      * @return {string} produced name
      * @private */
    itemFullName(node, uptoparent, compact) {
-      if (node && node._kind === kTopFolder) return '__top_folder__';
+      if (node?._kind === kTopFolder)
+         return '__top_folder__';
 
       let res = '';
 
