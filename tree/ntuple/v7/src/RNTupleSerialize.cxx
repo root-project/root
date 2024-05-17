@@ -21,8 +21,14 @@
 #include <ROOT/RNTupleSerialize.hxx>
 
 #include <RVersion.h>
+#include <TBufferFile.h>
+#include <TClass.h>
+#include <TList.h>
+#include <TStreamerInfo.h>
+#include <TVirtualStreamerInfo.h>
 #include <xxhash.h>
 
+#include <cassert>
 #include <cstring> // for memcpy
 #include <deque>
 #include <set>
@@ -1752,4 +1758,41 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
    desc.AddClusterGroupDetails(clusterGroupId, clusters);
 
    return RResult<void>::Success();
+}
+
+std::string ROOT::Experimental::Internal::RNTupleSerializer::SerializeStreamerInfos(const StreamerInfoMap_t &infos)
+{
+   TList streamerInfos;
+   for (auto si : infos) {
+      assert(si.first == si.second->GetNumber());
+      streamerInfos.Add(si.second);
+   }
+   TBufferFile buffer(TBuffer::kWrite);
+   buffer.WriteObject(&streamerInfos);
+   assert(buffer.Length() > 0);
+   return std::string{buffer.Buffer(), static_cast<UInt_t>(buffer.Length())};
+}
+
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeStreamerInfos(const std::string &extraTypeInfoContent)
+{
+   StreamerInfoMap_t infoMap;
+
+   TBufferFile buffer(TBuffer::kRead, extraTypeInfoContent.length(), const_cast<char *>(extraTypeInfoContent.data()),
+                      false /* adopt */);
+   auto infoList = reinterpret_cast<TList *>(buffer.ReadObject(TList::Class()));
+   infoList->SetOwner(); // delete the TStreamerInfo items of the list
+
+   TObjLink *lnk = infoList->FirstLink();
+   while (lnk) {
+      auto info = reinterpret_cast<TStreamerInfo *>(lnk->GetObject());
+      info->BuildCheck();
+      infoMap[info->GetNumber()] = info->GetClass()->GetStreamerInfo();
+      assert(info->GetNumber() == infoMap[info->GetNumber()]->GetNumber());
+      lnk = lnk->Next();
+   }
+
+   delete infoList;
+
+   return infoMap;
 }

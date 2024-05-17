@@ -21,10 +21,15 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 
+#include <Rtypes.h>
+
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 namespace Experimental {
@@ -67,6 +72,10 @@ public:
    static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
+
+   // In the page sink and the unsplit field, the seen streamer infos are stored in a map
+   // with the unique streamer info number being the key.
+   using StreamerInfoMap_t = std::unordered_map<Int_t, TVirtualStreamerInfo *>;
 
    struct REnvelopeLink {
       std::uint64_t fLength = 0;
@@ -261,6 +270,10 @@ public:
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
                                             RNTupleDescriptor &desc);
+
+   // Helper functions to (de-)serialize the streamer info type extra information
+   static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
+   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(const std::string &extraTypeInfoContent);
 }; // class RNTupleSerializer
 
 } // namespace Internal
