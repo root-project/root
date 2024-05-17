@@ -1,4 +1,4 @@
-import { gStyle, settings, constants, clTAxis, clTGaxis } from '../core.mjs';
+import { gStyle, settings, constants, clTAxis, clTGaxis, isFunc } from '../core.mjs';
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat, utcFormat as d3_utcFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
@@ -47,7 +47,7 @@ function getTimeOffset(axis) {
       if (sof.length > 3) {
          let p = 0, sign = 1000;
          if (sof[0] === '-') { p = 1; sign = -1000; }
-         offset -= sign * (parseInt(sof.slice(p, p+2)) * 3600 + parseInt(sof.slice(p+2, p+4)) * 60);
+         offset -= sign * (parseInt(sof.slice(p, p + 2)) * 3600 + parseInt(sof.slice(p + 2, p + 4)) * 60);
       }
    }
 
@@ -140,10 +140,10 @@ const AxisPainterMethods = {
       if (base !== 10) vlog = vlog / Math.log10(base);
       if (this.moreloglabels || (Math.abs(vlog - Math.round(vlog)) < 0.001)) {
          if (!this.noexp && (asticks !== 2))
-            return this.formatExp(base, Math.floor(vlog+0.01), val);
+            return this.formatExp(base, Math.floor(vlog + 0.01), val);
          if (Math.abs(base - Math.E) < 0.001)
             return floatToString(val, fmt || gStyle.fStatFormat);
-         return (vlog < 0) ? val.toFixed(Math.round(-vlog+0.5)) : val.toFixed(0);
+         return (vlog < 0) ? val.toFixed(Math.round(-vlog + 0.5)) : val.toFixed(0);
       }
       return null;
    },
@@ -255,14 +255,11 @@ const AxisPainterMethods = {
          if (this.log) return this.poduceLogTicks(this.func, total);
 
          const dom = this.func.domain(),
-
-          check = ticks => {
-            if (ticks.length <= total) return true;
-            if (ticks.length > total + 1) return false;
-            return (ticks[0] === dom[0]) || (ticks[total] === dom[1]); // special case of N+1 ticks, but match any range
-         },
-
-          res1 = this.func.ticks(total);
+            check = ticks => {
+               if (ticks.length <= total) return true;
+               if (ticks.length > total + 1) return false;
+               return (ticks[0] === dom[0]) || (ticks[total] === dom[1]); // special case of N+1 ticks, but match any range
+            }, res1 = this.func.ticks(total);
          if (ndiv2 || check(res1)) return res1;
 
          const res2 = this.func.ticks(Math.round(total * 0.7));
@@ -794,12 +791,12 @@ class TAxisPainter extends ObjectPainter {
          alt_pos[curr_indx] = vertical ? acc_y : acc_x;
 
          drag_rect = title_g.append('rect')
-              .attr('x', box.x)
-              .attr('y', box.y)
-              .attr('width', box.width)
-              .attr('height', box.height)
-              .style('cursor', 'move')
-              .call(addHighlightStyle, true);
+            .attr('x', box.x)
+            .attr('y', box.y)
+            .attr('width', box.width)
+            .attr('height', box.height)
+            .style('cursor', 'move')
+            .call(addHighlightStyle, true);
          //   .style('pointer-events','none'); // let forward double click to underlying elements
       }).on('drag', evnt => {
          if (!drag_rect) return;
@@ -998,7 +995,7 @@ class TAxisPainter extends ObjectPainter {
          if (lcnt > 0) side = -side;
 
          let lastpos = 0;
-         const fix_coord = this.vertical ? -labeloffset*side : labeloffset*side + ticksPlusMinus*tickSize;
+         const fix_coord = this.vertical ? -labeloffset * side : labeloffset * side + ticksPlusMinus * tickSize;
 
          this.startTextDrawing(labelsFont, 'font', label_g[lcnt]);
 
@@ -1017,13 +1014,13 @@ class TAxisPainter extends ObjectPainter {
 
             if (mod?.fTextColor > 0) arg.color = this.getColor(mod.fTextColor);
 
-            arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor-1]))) : 0;
+            arg.gap_before = (nmajor > 0) ? Math.abs(Math.round(pos - this.func(lbl_pos[nmajor - 1]))) : 0;
 
-            arg.gap_after = (nmajor < lbl_pos.length-1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor+1])-pos)) : 0;
+            arg.gap_after = (nmajor < lbl_pos.length - 1) ? Math.abs(Math.round(this.func(lbl_pos[nmajor + 1]) - pos)) : 0;
 
             if (center_lbls) {
                const gap = arg.gap_after || arg.gap_before;
-               pos = Math.round(pos - ((this.vertical !== this.reverse) ? 0.5*gap : -0.5*gap));
+               pos = Math.round(pos - ((this.vertical !== this.reverse) ? 0.5 * gap : -0.5 * gap));
                if ((pos < -5) || (pos > (this.vertical ? h : w) + 5)) continue;
             }
 
@@ -1114,8 +1111,11 @@ class TAxisPainter extends ObjectPainter {
       if (axis.$use_top_pad)
          pp = pp?.getPadPainter(); // workaround for ratio plot
       const pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
-            pad_h = pp?.getPadHeight() || scalingSize || h/0.8;
-      let tickSize = 0, tickScalingSize = 0, titleColor, titleFontId, offset;
+            pad_h = pp?.getPadHeight() || scalingSize || h/0.8,
+            // if no external scaling size use scaling as in TGaxis.cxx:1448 - NDC axis length is in the scaling factor
+            tickScalingSize = scalingSize || (this.vertical ? h/pad_h*pad_w : w/pad_w*pad_h);
+
+      let tickSize = 0, titleColor, titleFontId, offset;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
@@ -1128,7 +1128,6 @@ class TAxisPainter extends ObjectPainter {
          this.optionInt = (axis.fChopt.indexOf('I') >= 0);  // integer labels
          this.optionText = (axis.fChopt.indexOf('T') >= 0);  // text scaling?
          this.createAttLine({ attr: axis });
-         tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
          titleColor = this.getColor(axis.fTextColor);
          titleFontId = axis.fTextFont;
@@ -1143,7 +1142,6 @@ class TAxisPainter extends ObjectPainter {
          this.optionInt = false;  // integer labels
          this.optionText = false;
          this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
-         tickScalingSize = scalingSize || (this.vertical ? pad_w : pad_h);
          tickSize = axis.fTickLength;
          titleColor = this.getColor(axis.fTitleColor);
          titleFontId = axis.fTitleFont;
@@ -1285,10 +1283,9 @@ class TAxisPainter extends ObjectPainter {
 
          if (calculate_position) {
             const node1 = axis_g.node(), node2 = this.getPadSvg().node();
-            if (node1 && node2 && node1.getBoundingClientRect && node2.getBoundingClientRect) {
+            if (isFunc(node1?.getBoundingClientRect) && isFunc(node2?.getBoundingClientRect)) {
                const rect1 = node1.getBoundingClientRect(),
-                   rect2 = node2.getBoundingClientRect();
-
+                  rect2 = node2.getBoundingClientRect();
                this.position = rect1.left - rect2.left; // use to control left position of Y scale
             }
             if (node1 && !node2)

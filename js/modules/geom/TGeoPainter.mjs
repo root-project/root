@@ -6,10 +6,10 @@ import { REVISION, DoubleSide, FrontSide,
          Color, Vector2, Vector3, Matrix4, Object3D, Box3, Group, Plane, PlaneHelper,
          Euler, Quaternion, Mesh, InstancedMesh, MeshLambertMaterial, MeshBasicMaterial,
          LineSegments, LineBasicMaterial, LineDashedMaterial, BufferAttribute,
-         TextGeometry, BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry,
+         BufferGeometry, BoxGeometry, CircleGeometry, SphereGeometry,
          Scene, Fog, OrthographicCamera, PerspectiveCamera,
-         DirectionalLight, AmbientLight, HemisphereLight,
-         EffectComposer, RenderPass, UnrealBloomPass } from '../three.mjs';
+         DirectionalLight, AmbientLight, HemisphereLight } from '../three.mjs';
+import { EffectComposer, RenderPass, UnrealBloomPass, TextGeometry } from '../three_addons.mjs';
 import { showProgress, injectStyle, ToolbarIcons } from '../gui/utils.mjs';
 import { GUI } from '../gui/lil-gui.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
@@ -2112,7 +2112,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Add orbit control */
    addOrbitControls() {
-      if (this._controls || !this._webgl || this.isBatchMode() || this.superimpose) return;
+      if (this._controls || !this._webgl || this.isBatchMode() || this.superimpose || isNodeJs()) return;
 
       if (!this.getCanvPainter())
          this.setTooltipAllowed(settings.Tooltip);
@@ -5370,11 +5370,11 @@ class TGeoPainter extends ObjectPainter {
          shape = obj; obj = null;
       } else if ((obj._typename === clTGeoVolumeAssembly) || (obj._typename === clTGeoVolume))
          shape = obj.fShape;
-       else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
+      else if ((obj._typename === clTEveGeoShapeExtract) || (obj._typename === clREveGeoShapeExtract)) {
          shape = obj.fShape; is_eve = true;
       } else if (obj._typename === clTGeoManager)
          shape = obj.fMasterVolume.fShape;
-       else if (obj._typename === clTGeoOverlap) {
+      else if (obj._typename === clTGeoOverlap) {
          extras = obj.fMarker; extras_path = '<prnt>/Marker';
          obj = buildOverlapVolume(obj);
          if (!opt) opt = 'wire';
@@ -5504,7 +5504,7 @@ function provideMenu(menu, item, hpainter) {
 
    menu.add('separator');
 
-   const ScanEveVisible = (obj, arg, skip_this) => {
+   const scanEveVisible = (obj, arg, skip_this) => {
       if (!arg) arg = { visible: 0, hidden: 0 };
 
       if (!skip_this) {
@@ -5518,17 +5518,17 @@ function provideMenu(menu, item, hpainter) {
 
       if (obj.fElements) {
          for (let n = 0; n < obj.fElements.arr.length; ++n)
-            ScanEveVisible(obj.fElements.arr[n], arg, false);
+            scanEveVisible(obj.fElements.arr[n], arg, false);
       }
 
       return arg;
-   }, ToggleEveVisibility = arg => {
+   }, toggleEveVisibility = arg => {
       if (arg === 'self') {
          obj.fRnrSelf = !obj.fRnrSelf;
          item._icon = item._icon.split(' ')[0] + provideVisStyle(obj);
          hpainter.updateTreeNode(item);
       } else {
-         ScanEveVisible(obj, { assign: (arg === 'true') }, true);
+         scanEveVisible(obj, { assign: (arg === 'true') }, true);
          hpainter.forEachItem(m => {
             // update all child items
             if (m._geoobj && m._icon) {
@@ -5539,7 +5539,7 @@ function provideMenu(menu, item, hpainter) {
       }
 
       findItemWithPainter(item, 'testGeomChanges');
-   }, ToggleMenuBit = arg => {
+   }, toggleMenuBit = arg => {
       toggleGeoBit(vol, arg);
       const newname = item._icon.split(' ')[0] + provideVisStyle(vol);
       hpainter.forEachItem(m => {
@@ -5552,10 +5552,8 @@ function provideMenu(menu, item, hpainter) {
 
       hpainter.updateTreeNode(item);
       findItemWithPainter(item, 'testGeomChanges');
-   },
-
-    drawitem = findItemWithPainter(item),
-       fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
+   }, drawitem = findItemWithPainter(item),
+      fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
 
    if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && drawitem) {
       menu.add('Focus', () => {
@@ -5565,17 +5563,16 @@ function provideMenu(menu, item, hpainter) {
    }
 
    if (iseve) {
-      menu.addchk(obj.fRnrSelf, 'Visible', 'self', ToggleEveVisibility);
-      const res = ScanEveVisible(obj, undefined, true);
+      menu.addchk(obj.fRnrSelf, 'Visible', 'self', toggleEveVisibility);
+      const res = scanEveVisible(obj, undefined, true);
       if (res.hidden + res.visible > 0)
-         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
+         menu.addchk((res.hidden === 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', toggleEveVisibility);
    } else {
       const stack = drawitem?._painter?._clones?.findStackByName(fullname),
           phys_vis = stack ? drawitem._painter._clones.getPhysNodeVisibility(stack) : null,
           is_visible = testGeoBit(vol, geoBITS.kVisThis);
 
-      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
-            geoBITS.kVisNone, ToggleMenuBit);
+      menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible', geoBITS.kVisNone, toggleMenuBit);
       if (stack) {
          const changePhysVis = arg => {
             drawitem._painter._clones.setPhysNodeVisibility(stack, (arg === 'off') ? false : arg);
@@ -5591,9 +5588,9 @@ function provideMenu(menu, item, hpainter) {
       }
 
       menu.addchk(is_visible, 'Logical vis',
-            geoBITS.kVisThis, ToggleMenuBit, 'Logical node visibility - all instances');
+            geoBITS.kVisThis, toggleMenuBit, 'Logical node visibility - all instances');
       menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
-            geoBITS.kVisDaughters, ToggleMenuBit, 'Logical node daugthers visibility');
+            geoBITS.kVisDaughters, toggleMenuBit, 'Logical node daugthers visibility');
    }
 
    return true;
@@ -5788,6 +5785,8 @@ function drawAxis3D() {
   * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
   * @param {boolean} [opt.transparency=0] - make nodes transparent
   * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
+  * @param {boolean} [opt.set_names=true] - set names to all Object3D instances
+  * @param {boolean} [opt.set_origin=false] - set TGeoNode/TGeoVolume as Object3D.userData
   * @return {object} Object3D with created model
   * @example
   * import { build } from 'https://root.cern/js/latest/modules/geom/TGeoPainter.mjs';
@@ -5893,6 +5892,8 @@ function build(obj, opt) {
 
    if (!opt.material_kind)
       opt.material_kind = 'lambert';
+   if (opt.set_names === undefined)
+      opt.set_names = true;
 
    clones.setConfig(opt);
 
@@ -5915,14 +5916,11 @@ function build(obj, opt) {
 
       const shape = entry.server_shape || shapes[entry.shapeid];
       if (!shape.ready) {
-         console.warn('shape marked as not ready when should');
+         console.warn('shape marked as not ready when it should');
          break;
       }
 
-      const mesh = clones.createEntryMesh(opt, toplevel, entry, shape, colors);
-
-      if (mesh)
-         mesh.name = clones.getNodeName(entry.nodeid);
+      clones.createEntryMesh(opt, toplevel, entry, shape, colors);
    }
 
    return toplevel;

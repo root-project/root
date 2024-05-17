@@ -12,6 +12,19 @@
 9. Fully integrate svg2pdf.js into jsroot repo
 10. Synchronize X/Y range selection with native ROOT
 11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
+12. Correctly scale size of axis ticks - take into account NDC axis length
+13. Remove source_dir output in node.js #296
+14. Set name and userData in geometry `build()` function #303
+15. Draw histogram title afterwards - place in front of stats box
+16. Upgrade three.js r158 -> r162, last with WebGL1 support
+17. Split extras into three_addons.mjs, provide jsroot geometry build without three.js
+18. Fix - correctly draw only grids with AXIG draw option
+19. Fix - let read object from TFile with empty name
+20. Fix - graph drawing fix custom labels on X axis #297
+21. Fix - draw at least line for TGraphErrors ROOT-8131
+22. Fix - log scales on TH3 drawings #306
+23. Fix - preserve attributes and draw options when call drawingJSON() #307
+24. Fix - draw geometry top node volume if all childs not visible #308
 
 
 ## Changes in 7.6.0

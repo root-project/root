@@ -1,7 +1,7 @@
 import { gStyle, settings, constants, browser, internals, BIT,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr,
-         clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTHStack, clTMultiGraph, clTLegendEntry } from '../core.mjs';
+         clTObjArray, clTPaveText, clTColor, clTPad, clTFrame, clTStyle, clTLegend, clTHStack, clTMultiGraph, clTLegendEntry, kTitle } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors, getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, convertDate, svgToImage } from '../base/BasePainter.mjs';
@@ -1126,7 +1126,7 @@ class TPadPainter extends ObjectPainter {
 
       const obj = this.pad.fPrimitives.arr[indx];
 
-      if (!obj || ((indx > 0) && (obj._typename === 'TFrame') && this.getFramePainter()))
+      if (!obj || ((indx > 0) && (obj._typename === clTFrame) && this.getFramePainter()))
          return this.drawPrimitives(indx+1);
 
       // use of Promise should avoid large call-stack depth when many primitives are drawn
@@ -1232,8 +1232,8 @@ class TPadPainter extends ObjectPainter {
          menu.add('Save to gStyle', () => {
             if (!this.pad) return;
             this.fillatt?.saveToStyle(this.iscan ? 'fCanvasColor' : 'fPadColor');
-            gStyle.fPadGridX = this.pad.fGridX;
-            gStyle.fPadGridY = this.pad.fGridX;
+            gStyle.fPadGridX = this.pad.fGridx;
+            gStyle.fPadGridY = this.pad.fGridy;
             gStyle.fPadTickX = this.pad.fTickx;
             gStyle.fPadTickY = this.pad.fTicky;
             gStyle.fOptLogx = this.pad.fLogx;
@@ -1466,7 +1466,7 @@ class TPadPainter extends ObjectPainter {
       for (let k = 0; k < this.painters.length; ++k) {
          const painter = this.painters[k],
                obj = painter.getObject();
-         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.draw_content === false ||
+         if (!obj || obj.fName === kTitle || obj.fName === 'stats' || painter.draw_content === false ||
               obj._typename === clTLegend || obj._typename === clTHStack || obj._typename === clTMultiGraph)
             continue;
 
@@ -1654,8 +1654,9 @@ class TPadPainter extends ObjectPainter {
       // first appropriate painter for the object
       // if same object drawn twice, two painters will exists
       for (let k = 0; k < this.painters.length; ++k) {
-         if (this.painters[k].snapid === snapid)
-            if (--cnt === 0) { objpainter = this.painters[k]; break; }
+         const subp = this.painters[k];
+         if (subp.snapid === snapid)
+            if (--cnt === 0) { objpainter = subp; break; }
       }
 
       if (objpainter) {
@@ -1846,8 +1847,8 @@ class TPadPainter extends ObjectPainter {
       // check if frame or title was recreated, we could reassign handlers for them directly
       // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
       if (!snap.fWithoutPrimitives) {
-         matchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
-         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+         matchPrimitive(this.painters, snap.fPrimitives, clTFrame);
+         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, kTitle);
       }
 
       let isanyfound = false, isanyremove = false;

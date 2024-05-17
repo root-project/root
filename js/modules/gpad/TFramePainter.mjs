@@ -2116,20 +2116,20 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary Draw axes grids
      * @desc Called immediately after axes drawing */
-   drawGrids() {
+   drawGrids(draw_grids) {
       const layer = this.getFrameSvg().selectChild('.axis_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
 
       const pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true),
-          h = this.getFrameHeight(),
-          w = this.getFrameWidth(),
-          grid_style = gStyle.fGridStyle;
+         pad = pp?.getRootPad(true),
+         h = this.getFrameHeight(),
+         w = this.getFrameWidth(),
+         grid_style = gStyle.fGridStyle;
 
       // add a grid on x axis, if the option is set
-      if (pad?.fGridx && this.x_handle?.ticks) {
+      if (pad?.fGridx && draw_grids && this.x_handle?.ticks) {
          const colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('x')?.fAxisColor ?? 1);
          let gridx = '';
 
@@ -2146,7 +2146,7 @@ class TFramePainter extends ObjectPainter {
       }
 
       // add a grid on y axis, if the option is set
-      if (pad?.fGridy && this.y_handle?.ticks) {
+      if (pad?.fGridy && draw_grids && this.y_handle?.ticks) {
          const colid = (gStyle.fGridColor > 0) ? gStyle.fGridColor : (this.getAxis('y')?.fAxisColor ?? 1);
          let gridy = '';
 
@@ -2182,7 +2182,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary draw axes,
      * @return {Promise} which ready when drawing is completed  */
    async drawAxes(shrink_forbidden, disable_x_draw, disable_y_draw,
-                  AxisPos, has_x_obstacle, has_y_obstacle) {
+                  AxisPos, has_x_obstacle, has_y_obstacle, enable_grids) {
       this.cleanAxesDrawings();
 
       if ((this.xmin === this.xmax) || (this.ymin === this.ymax))
@@ -2194,7 +2194,8 @@ class TFramePainter extends ObjectPainter {
             w = this.getFrameWidth(),
             h = this.getFrameHeight(),
             pp = this.getPadPainter(),
-            pad = pp.getRootPad(true);
+            pad = pp.getRootPad(true),
+            draw_grids = enable_grids && (pad?.fGridx || pad?.fGridy);
 
       this.x_handle.invert_side = (AxisPos >= 10);
       this.x_handle.lbls_both_sides = !this.x_handle.invert_side && (pad?.fTickx > 1); // labels on both sides
@@ -2212,7 +2213,7 @@ class TFramePainter extends ObjectPainter {
 
       let pr = Promise.resolve(true);
 
-      if (!disable_x_draw || !disable_y_draw) {
+      if (!disable_x_draw || !disable_y_draw || draw_grids) {
          const can_adjust_frame = !shrink_forbidden && settings.CanAdjustFrame,
 
          pr1 = draw_horiz.drawAxis(layer, w, h,
@@ -2226,7 +2227,7 @@ class TFramePainter extends ObjectPainter {
                                       draw_vertical.invert_side ? 0 : this._frame_x, can_adjust_frame);
 
          pr = Promise.all([pr1, pr2]).then(() => {
-            this.drawGrids();
+            this.drawGrids(draw_grids);
 
             if (!can_adjust_frame) return;
 
