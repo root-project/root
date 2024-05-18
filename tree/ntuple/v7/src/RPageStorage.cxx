@@ -362,7 +362,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
 
 void ROOT::Experimental::Internal::RPageSink::CommitDataset()
 {
-   for (auto cb : fOnDatasetCommitCallbacks)
+   for (const auto &cb : fOnDatasetCommitCallbacks)
       cb(*this);
    CommitDatasetImpl();
 }
