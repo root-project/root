@@ -398,7 +398,7 @@ public:
 };
 
 /// Used in RExtraTypeInfoDescriptor
-enum class EExtraTypeInfoIds { kStreamerInfo, kInvalid };
+enum class EExtraTypeInfoIds { kInvalid, kStreamerInfo };
 
 // clang-format off
 /**
