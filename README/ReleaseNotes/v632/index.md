@@ -5,6 +5,8 @@
 ## Introduction
 
 ROOT version 6.32.00 is scheduled for release at the end of May 2024.
+This release is a long term support one, ideal for inclusion in production or 
+data taking software stacks of experiments.
 
 For more information, see:
 
@@ -79,6 +81,7 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+The Cling interpreter now relies on LLVM version 16.
 
 ## I/O Libraries
 
@@ -270,6 +273,7 @@ deprecation. Please adapt your code if necessary.
 
 ## PROOF Libraries
 
+By default, PROOF is not configured and built any more. It will be deprecated in the future given that its functionality is now provided by the superior RDataFrame and its distributed version, DistRDF.
 
 ## PyROOT
 
@@ -351,9 +355,6 @@ with ROOT.TFile.Open("my_file.root", "RECREATE") as my_file:
 
 The old pythonization with the `__getattr__` syntax still works, but emits a deprecation warning and will be removed from ROOT 6.34.
 
-## Language Bindings
-
-
 ## JavaScript ROOT
 
 
@@ -364,5 +365,7 @@ The old pythonization with the `__getattr__` syntax still works, but emits a dep
 
 
 ## Build, Configuration and Testing Infrastructure
+
+Release v6.32.00 is the first one integrated and tested entirely through the new GitHub based build system.
 
 
