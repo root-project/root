@@ -5,29 +5,18 @@ on:
   schedule:
     - cron: '0 2 * * *'
 
-  # Enables manual start of workflow
   workflow_dispatch:
     inputs:
-      head_ref:
-        description: rebase from ...
-        type: string
-        required: true
-        default: v6.26/16
-      base_ref:
-        description: ... to ... (can have same value)
-        type: string
-        required: true
-        default: v6.26/16
       incremental:
         description: 'Do incremental build'
         type: boolean
         required: true
-        default: false
+        default: true
       binaries:
         description: Create binary packages and upload them as artifacts
         type: boolean
         required: true
-        default: true
+        default: false
       buildtype:
         description: The CMAKE_BUILD_TYPE to use for non-Windows.
         type: choice
@@ -36,7 +25,8 @@ on:
         - RelWithDebInfo
         - Release
         - MinSizeRel
-        default: RelWithDebInfo
+        default: Debug
+        required: true
 
 jobs:
   run_nightlies:
