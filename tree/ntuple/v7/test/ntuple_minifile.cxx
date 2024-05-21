@@ -25,8 +25,8 @@ TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare));
+   auto writer =
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -50,13 +50,12 @@ TEST(MiniFile, Raw)
    EXPECT_EQ(footer, buf);
 }
 
-
 TEST(MiniFile, Stream)
 {
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   auto writer =
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -85,13 +84,12 @@ TEST(MiniFile, Stream)
    EXPECT_TRUE(IsEqual(ntuple, RNTupleTester(*k).GetAnchor()));
 }
 
-
 TEST(MiniFile, Proper)
 {
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file);
 
    char header = 'h';
    char footer = 'f';
@@ -120,8 +118,8 @@ TEST(MiniFile, SimpleKeys)
 {
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   auto writer =
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -226,7 +224,7 @@ TEST(MiniFile, ProperKeys)
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -335,7 +333,7 @@ TEST(MiniFile, LongString)
       "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
       "followed by an integer length.";
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("ntuple", *file));
+   auto writer = RNTupleFileWriter::Append("ntuple", *file);
 
    char header = 'h';
    char footer = 'f';
@@ -355,9 +353,8 @@ TEST(MiniFile, Multi)
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer1 =
-      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("FirstNTuple", *file));
-   auto writer2 = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("SecondNTuple", *file));
+   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file);
+   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file);
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -398,7 +395,6 @@ TEST(MiniFile, Multi)
    EXPECT_EQ(footer2, buf);
 }
 
-
 TEST(MiniFile, Failures)
 {
    // TODO(jblomer): failures should be exceptions
@@ -407,8 +403,8 @@ TEST(MiniFile, Failures)
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+   auto writer =
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -423,7 +419,7 @@ TEST(MiniFile, Failures)
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
-   } catch (const RException& err) {
+   } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no RNTuple named 'No such RNTuple' in file '" + fileGuard.GetPath()));
    }
 }
