@@ -89,11 +89,12 @@ if(PY_TORCH_FOUND)
          TMVA
          Python3::NumPy
          Python3::Python
+         ${BLAS_LIBRARIES}
          INCLUDE_DIRS
          SYSTEM
          ${CMAKE_CURRENT_BINARY_DIR}
       )
-   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+   target_link_libraries(TestRModelParserPyTorch ${BLAS_LINKER_FLAGS})
 
 endif(PY_TORCH_FOUND)
 
@@ -133,10 +134,11 @@ if((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOU
     PyMVA
     Python3::NumPy
     Python3::Python
+    ${BLAS_LIBRARIES}
     INCLUDE_DIRS
     SYSTEM
     ${CMAKE_CURRENT_BINARY_DIR}
    )
-   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS} ${BLAS_LIBRARIES})
+   target_link_libraries(TestRModelParserKeras ${BLAS_LINKER_FLAGS})
 
 endif((PY_KERAS_FOUND AND PY_THEANO_FOUND) OR (PY_KERAS_FOUND AND PY_TENSORFLOW_FOUND))
