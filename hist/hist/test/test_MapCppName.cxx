@@ -9,6 +9,7 @@
 #include "TH2F.h"
 #include "TH2Poly.h"
 #include "TProfile.h"
+#include "TSystem.h"
 
 TEST(TH1, MapCppNameTest)
 {
