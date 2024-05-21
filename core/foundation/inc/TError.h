@@ -122,17 +122,19 @@ R__EXTERN const char *kCheckMsg;
  *     For those cases, prefer a regular `assert()`;
  *   - depending on `gErrorIgnoreLevel`, this might not terminate the program, \see ::Fatal.
  */
-#define R__ASSERT(e)                                                     \
-   do {                                                                  \
-      if (R__unlikely(!(e))) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+#define R__ASSERT(e)                                              \
+   do {                                                           \
+      if (R__unlikely(!(e)))                                      \
+         ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 /*! Checks condition `e` and reports a warning message if it's false.
  * \warning this check is NOT stripped in release mode, so it should not be used for hot paths.
  */
-#define R__CHECK(e)                                                       \
-   do {                                                                   \
-      if (R__unlikely(!(e))) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+#define R__CHECK(e)                                                \
+   do {                                                            \
+      if (R__unlikely(!(e)))                                       \
+         ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;
