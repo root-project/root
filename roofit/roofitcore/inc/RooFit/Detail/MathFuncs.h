@@ -285,16 +285,15 @@ inline double flexibleInterpSingle(unsigned int code, double low, double high, d
    return 0.0;
 }
 
-template <bool cutoff = true>
 inline double flexibleInterp(unsigned int code, double *params, unsigned int n, double *low, double *high,
-                             double boundary, double nominal)
+                             double boundary, double nominal, int doCutoff)
 {
    double total = nominal;
    for (std::size_t i = 0; i < n; ++i) {
       total += flexibleInterpSingle(code, low[i], high[i], boundary, nominal, params[i], total);
    }
 
-   return cutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
+   return doCutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
 }
 
 inline double landau(double x, double mu, double sigma)
