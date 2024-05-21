@@ -15,6 +15,15 @@ static const auto NUM_THREADS = 8u;
 static const auto NUM_THREADS = 0u;
 #endif
 
+template <typename T>
+void expect_vec_eq(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size()) << "Vectors 'v1' and 'v2' are of unequal length";
+   for (decltype(v1.size()) i{}; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]) << "Vectors 'v1' and 'v2' differ at index " << i;
+   }
+}
+
 #ifdef R__USE_IMT
 TEST(RDFConcurrency, NestedParallelismBetweenDefineCalls)
 {
@@ -234,5 +243,32 @@ TEST(RDFConcurrency, ParallelRDFCachesEnableImplicitMT)
    ParallelRDFCaches();
    ROOT::DisableImplicitMT();
 }
-
 #endif
+
+// Check that multiple RDF can JIT at the same time without interfering
+// with each other
+TEST(RDFConcurrency, JITWithManyThreads)
+{
+   ROOT::EnableThreadSafety();
+
+   std::vector<int> expected(25);
+   for (int i = 0; i < 25; i++)
+      expected[i] = i;
+
+   std::vector<int> results(25);
+   auto do_work = [&results](int slot) {
+      for (int i = slot * 5; i < (slot * 5 + 5); i++) {
+         results[i] = ROOT::RDataFrame{1}.Define("x", std::to_string(i)).Sum<int>("x").GetValue();
+      }
+   };
+
+   std::vector<std::thread> threads;
+   threads.reserve(5);
+   for (int i = 0; i < 5; i++)
+      threads.emplace_back(do_work, i);
+
+   for (auto &&t : threads)
+      t.join();
+
+   expect_vec_eq(results, expected);
+}
