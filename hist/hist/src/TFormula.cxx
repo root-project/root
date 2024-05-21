@@ -3156,9 +3156,9 @@ GetFuncPtr(std::string FuncName, Int_t Npar, Int_t Ndim, Bool_t Vectorized) {
    return prepareFuncPtr(method.get());
 }
 
-static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr,
-                             const Double_t *vars, const Double_t *pars,
-                             Double_t *result, const Int_t result_size) {
+static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr, const Double_t *vars,
+                             const Double_t *pars, Double_t *result, const Int_t /*result_size*/)
+{
    void *args[3];
    args[0] = &vars;
    if (!pars) {
