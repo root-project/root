@@ -37,7 +37,7 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
       UInt_t lenStrip = sizeof(Version_t);
       // TEMP(version4): In version 4 checksum is embedded in the on disk representation,
       // so we need to strip that as well from the byte count.
-      // Support for version 4 will be dropped before version 1.0.
+      // Support for version 4 will be dropped before the class moves out of experimental.
       lenStrip += (classVersion == 4) * sizeof(std::uint64_t);
 
       if (bcnt < lenStrip)
@@ -73,6 +73,8 @@ void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
          // Rewind the version bytes, as ReadClassBuffer needs to read the version again.
          buf.SetBufferOffset(offClassBuf);
          buf.ReadClassBuffer(RNTuple::Class(), this);
+         if (static_cast<std::size_t>(buf.BufferSize()) < buf.Length() + sizeof(onDiskChecksum))
+            throw RException(R__FAIL("the buffer containing RNTuple is too small to contain the checksum!"));
          buf >> onDiskChecksum;
       }
 
