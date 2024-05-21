@@ -119,32 +119,11 @@ public:
       fBatchCondition.notify_all();
    }
 
-<<<<<<< HEAD
-   /// \brief Create a batch filled with the events on the given idx
-   /// \param chunkTensor
-   /// \param idx
-   /// \return
-   std::unique_ptr<TMVA::Experimental::RTensor<float>>
-   CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx)
-   {  
-      auto batch =
-         std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>({fBatchSize, fNumColumns}));
-
-      for (std::size_t i = 0; i < fBatchSize; i++) {
-         std::copy(chunkTensor.GetData() + (idx[i] * fNumColumns), chunkTensor.GetData() + ((idx[i] + 1) * fNumColumns),
-                   batch->GetData() + i * fNumColumns);
-      }
-
-      return batch;
-   }
-
-=======
    /// @brief Create a batch filled with the events on given indices with parametrized batch size
    /// @param chunkTensor 
    /// @param idx 
    /// @param batchSize 
    /// @return 
->>>>>>> 8ba3d1f1fe ([tmva] Remove pure stupidness in RBatchGenerator)
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx, std::size_t batchSize)
    {  
