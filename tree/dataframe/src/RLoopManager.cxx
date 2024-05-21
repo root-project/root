@@ -805,18 +805,25 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
 /// This method also clears the contents of GetCodeToJit().
 void RLoopManager::Jit()
 {
-   {
+   auto noCodeToJit = []() {
       R__READ_LOCKGUARD(ROOT::gCoreMutex);
-      if (GetCodeToJit().empty()) {
-         R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
-         return;
-      }
+      return GetCodeToJit().empty();
+   };
+
+   if (noCodeToJit()) {
+      R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
+      return;
    }
 
-   const std::string code = []() {
-      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
-      return std::move(GetCodeToJit());
-   }();
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   // Check again if another thread has already cleared the global string
+   // with the code to JIT. Without this check, we could end up calling
+   // InterpreterCalc with an empty string, which would raise an exception.
+   if (noCodeToJit()) {
+      R__LOG_INFO(RDFLogChannel()) << "Nothing to jit and execute.";
+      return;
+   }
+   const std::string code = std::move(GetCodeToJit());
 
    TStopwatch s;
    s.Start();
