@@ -68,6 +68,9 @@ namespace {
         // GV.setLinkage(llvm::GlobalValue::ExternalLinkage);
         GV.setLinkage(llvm::GlobalValue::WeakAnyLinkage);
         return true; // a change!
+      } else if (LT == llvm::GlobalValue::LinkOnceODRLinkage) {
+        GV.setLinkage(llvm::GlobalValue::WeakODRLinkage);
+        return true;
       }
       return false;
     }
