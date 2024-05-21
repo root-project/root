@@ -4285,8 +4285,9 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                   f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
-               // plug-in in the case file name contains information about a special backend (e.g.
-               f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+               // plug-in in the case file name contains information about a special backend (e.g.)
+               if (strcmp(name, urlname.GetFileAndOptions()) != 0)
+                  f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
             }
          }
       }
@@ -4294,7 +4295,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       if (f && f->IsZombie()) {
          TString newUrl = f->GetNewUrl();
          delete f;
-         if( newUrl.Length() && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
+         if( newUrl.Length() && (newUrl != name) && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
             f = TFile::Open( newUrl, option, ftitle, compress );
          else
             f = nullptr;
