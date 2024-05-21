@@ -710,7 +710,7 @@ unsigned RWebWindowsManager::ShowWindow(RWebWindow &win, const RWebDisplayArgs &
       return 0;
    }
 
-   bool normal_http = RWebDisplayHandle::NeedHttpServer(args);
+   bool normal_http = !args.IsLocalDisplay();
    if (!normal_http && (gEnv->GetValue("WebGui.ForceHttp", 0) == 1))
       normal_http = true;
 

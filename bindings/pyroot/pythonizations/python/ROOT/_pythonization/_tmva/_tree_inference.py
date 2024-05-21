@@ -12,18 +12,12 @@ from .. import pythonization
 import cppyy
 
 
-def SaveXGBoost(self, xgb_model, key_name, output_path, num_inputs, tmp_path="/tmp", threshold_dtype="float"):
-    import warnings
-    warnings.warn(
-        ("Usage of xgboost models through RBDT is known to be limited and may "
-         "lead to unexpected behaviour. See https://github.com/root-project/root/issues/15197 "
-         "for more details."), UserWarning, stacklevel=2)
+def SaveXGBoost(self, xgb_model, key_name, output_path, num_inputs=None, tmp_path="/tmp", threshold_dtype="float"):
     # Extract objective
     objective_map = {
         "multi:softprob": "softmax",  # Naming the objective softmax is more common today
         "binary:logistic": "logistic",
         "reg:linear": "identity",
-        "reg:squarederror": "identity",
     }
     model_objective = xgb_model.objective
     if not model_objective in objective_map:
@@ -54,8 +48,7 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, num_inputs, tmp_path="/t
 
     import json
 
-    with open(tmp_path, "r") as json_file:
-        forest = json.load(json_file)
+    forest = json.load(open(tmp_path, "r"))
 
     # Determine whether the model has a bias paramter and write bias trees
     if hasattr(xgb_model, "base_score") and "reg:" in model_objective:
@@ -102,6 +95,16 @@ def SaveXGBoost(self, xgb_model, key_name, output_path, num_inputs, tmp_path="/t
     if num_outputs != 1:
         for i in range(num_trees):
             outputs[i] = int(i % num_outputs)
+
+    # Determine number of input variables
+    if not num_inputs is None:
+        pass
+    elif hasattr(xgb_model, "_features_count"):
+        num_inputs = xgb_model._features_count
+    else:
+        raise Exception(
+            "Failed to get number of input variables from XGBoost model. Please provide the additional keyword argument 'num_inputs' to this function."
+        )
 
     # Store arrays in a ROOT file in a folder with the given key name
     # TODO: Write single values as simple integers and not vectors.

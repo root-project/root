@@ -26,10 +26,6 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
-namespace RooFit {
-
-namespace Experimental {
-
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data,
                                RooSimultaneous const *simPdf, bool useEvaluator)
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
@@ -246,7 +242,3 @@ void RooFuncWrapper::dumpGradient()
 {
    gInterpreter->ProcessLine((_funcName + "_grad_0").c_str());
 }
-
-} // namespace Experimental
-
-} // namespace RooFit

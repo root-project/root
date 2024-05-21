@@ -52,19 +52,12 @@ Drawing is currently restricted to one single option.
 A cloud of points is drawn. The number of points is proportional to
 cell content.
 
-- TH3C a 3-D histogram with one byte per cell (char). Maximum bin content = 127
-- TH3S a 3-D histogram with two bytes per cell (short integer). Maximum bin content = 32767
-- TH3I a 3-D histogram with four bytes per cell (32 bit integer). Maximum bin content = INT_MAX (\ref intmax "*")
-- TH3L a 3-D histogram with eight bytes per cell (64 bit integer). Maximum bin content = LLONG_MAX (\ref llongmax "*")
-- TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "**")
-- TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "***")
-
-<sup>
-\anchor intmax (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
-\anchor llongmax (*) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
-\anchor floatmax (**) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
-\anchor doublemax (***) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
-</sup>
+-   TH3C a 3-D histogram with one byte per cell (char)
+-   TH3S a 3-D histogram with two bytes per cell (short integer)
+-   TH3I a 3-D histogram with four bytes per cell (32 bit integer)
+-   TH3L a 3-D histogram with eight bytes per cell (64 bit integer)
+-   TH3F a 3-D histogram with four bytes per cell (float)
+-   TH3D a 3-D histogram with eight bytes per cell (double)
 */
 
 
@@ -220,41 +213,6 @@ void TH3::Copy(TObject &obj) const
    ((TH3&)obj).fTsumwyz     = fTsumwyz;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by 1.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH3::AddBinContent(Int_t)
-{
-   AbstractMethod("AddBinContent");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by a weight w.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH3::AddBinContent(Int_t, Double_t)
-{
-   AbstractMethod("AddBinContent");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increment 3D bin content by 1.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH3::AddBinContent(Int_t, Int_t, Int_t)
-{
-   AbstractMethod("AddBinContent");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Increment 3D bin content by a weight w.
-/// Passing an out-of-range bin leads to undefined behavior
-
-void TH3::AddBinContent(Int_t, Int_t, Int_t, Double_t)
-{
-   AbstractMethod("AddBinContent");
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
@@ -3611,7 +3569,6 @@ void TH3C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
-/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH3C::AddBinContent(Int_t bin, Double_t w)
@@ -3880,7 +3837,6 @@ void TH3S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
-/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH3S::AddBinContent(Int_t bin, Double_t w)
@@ -4120,7 +4076,6 @@ void TH3I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
-/// \warning The value of w is cast to `Long64_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH3I::AddBinContent(Int_t bin, Double_t w)
@@ -4327,7 +4282,6 @@ void TH3L::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
-/// \warning The value of w is cast to `Long64_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH3L::AddBinContent(Int_t bin, Double_t w)
@@ -4444,7 +4398,7 @@ TH3L operator/(TH3L &h1, TH3L &h2)
 
 //______________________________________________________________________________
 //                     TH3F methods
-//  TH3F a 3-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
+//  TH3F a 3-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
 ClassImp(TH3F);
@@ -4660,7 +4614,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 
 //______________________________________________________________________________
 //                     TH3D methods
-//  TH3D a 3-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
+//  TH3D a 3-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
 ClassImp(TH3D);

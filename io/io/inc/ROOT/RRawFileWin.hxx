@@ -31,7 +31,7 @@ namespace Internal {
  */
 class RRawFileWin : public RRawFile {
 private:
-   FILE *fFilePtr = nullptr;
+   FILE *fFilePtr;
    void Seek(long offset, int whence);
 
 protected:
@@ -43,6 +43,7 @@ public:
    RRawFileWin(std::string_view url, RRawFile::ROptions options);
    ~RRawFileWin() override;
    std::unique_ptr<RRawFile> Clone() const final;
+   int GetFeatures() const final { return kFeatureHasSize; }
 };
 
 } // namespace Internal

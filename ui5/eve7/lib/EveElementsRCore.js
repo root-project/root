@@ -414,8 +414,9 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let idxBuff = eve_el.render_data.idxBuff;
          // let bin =  idxBuff[idx*2 + 1];
          let val = eve_el.render_data.nrmBuff[idx];
+         let caloData =  this.top_obj.scene.mgr.GetElement(eve_el.dataId);
          let slice = idxBuff[idx*2];
-         let sname = "Slice " + slice;
+         let sname = caloData.sliceInfos[slice].name;
 
          let vbuff =  eve_el.render_data.vtxBuff;
          let p = idx*12;

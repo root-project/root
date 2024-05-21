@@ -172,13 +172,18 @@ int TMVAClassification( TString myMethodList = "" )
 
    // Read training and test data
    // (it is also possible to use ASCII format as input -> see TMVA Users Guide)
-   // Set the cache directory for the TFile to the current directory. The input
-   // data file will be downloaded here if not present yet, then it will be read
-   // from the cache path directly.
-   TFile::SetCacheFileDir(".");
-   std::unique_ptr<TFile> input{TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD")};
-   if (!input || input->IsZombie()) {
-      throw std::runtime_error("ERROR: could not open data file");
+   TFile *input(0);
+   TString fname = "./tmva_class_example.root";
+   if (!gSystem->AccessPathName( fname )) {
+      input = TFile::Open( fname ); // check if file in local directory exists
+   }
+   else {
+      TFile::SetCacheFileDir(".");
+      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
+   }
+   if (!input) {
+      std::cout << "ERROR: could not open data file" << std::endl;
+      exit(1);
    }
    std::cout << "--- TMVAClassification       : Using input file: " << input->GetName() << std::endl;
 
@@ -188,11 +193,8 @@ int TMVAClassification( TString myMethodList = "" )
    TTree *background     = (TTree*)input->Get("TreeB");
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName("TMVAC.root");
-   std::unique_ptr<TFile> outputFile{TFile::Open(outfileName, "RECREATE")};
-   if (!outputFile || outputFile->IsZombie()) {
-      throw std::runtime_error("ERROR: could not open output file");
-   }
+   TString outfileName( "TMVAC.root" );
+   TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    // Create the factory object. Later you can choose the methods
    // whose performance you'd like to investigate. The factory is
@@ -204,11 +206,10 @@ int TMVAClassification( TString myMethodList = "" )
    // The second argument is the output file for the training results
    // All TMVA output can be suppressed by removing the "!" (not) in
    // front of the "Silent" argument in the option string
-   auto factory = std::make_unique<TMVA::Factory>(
-      "TMVAClassification", outputFile.get(),
-      "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
-   auto dataloader_raii = std::make_unique<TMVA::DataLoader>("dataset");
-   auto *dataloader = dataloader_raii.get();
+   TMVA::Factory *factory = new TMVA::Factory( "TMVAClassification", outputFile,
+                                               "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
+
+   TMVA::DataLoader *dataloader=new TMVA::DataLoader("dataset");
    // If you wish to modify default settings
    // (please check "src/Config.h" to see all available global options)
    //
@@ -536,11 +537,13 @@ int TMVAClassification( TString myMethodList = "" )
    // --------------------------------------------------------------
 
    // Save the output
-   outputFile->Write();
+   outputFile->Close();
 
    std::cout << "==> Wrote root file: " << outputFile->GetName() << std::endl;
    std::cout << "==> TMVAClassification is done!" << std::endl;
 
+   delete factory;
+   delete dataloader;
    // Launch the GUI for the root macros
    if (!gROOT->IsBatch()) TMVA::TMVAGui( outfileName );
 

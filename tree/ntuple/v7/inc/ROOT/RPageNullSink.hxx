@@ -50,12 +50,6 @@ public:
    }
    void ReleasePage(RPage &page) final { fPageAllocator.DeletePage(page); }
 
-   const RNTupleDescriptor &GetDescriptor() const final
-   {
-      static RNTupleDescriptor descriptor;
-      return descriptor;
-   }
-
    void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry)
    {
       auto connectField = [&](RFieldBase &f) { CallConnectPageSinkOnField(f, *this, firstEntry); };
@@ -66,7 +60,7 @@ public:
          }
       }
    }
-   void InitImpl(RNTupleModel &model) final { ConnectFields(model.GetFieldZero().GetSubFields(), 0); }
+   void Init(RNTupleModel &model) final { ConnectFields(model.GetFieldZero().GetSubFields(), 0); }
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final
    {
       ConnectFields(changeset.fAddedFields, firstEntry);

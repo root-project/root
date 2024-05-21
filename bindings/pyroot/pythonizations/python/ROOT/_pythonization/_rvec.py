@@ -71,15 +71,14 @@ import sys
 
 
 _array_interface_dtype_map = {
-    "Long64_t": "i",
-    "ULong64_t": "u",
-    "double": "f",
     "float": "f",
+    "double": "f",
     "int": "i",
     "long": "i",
-    "unsigned char": "b",
+    "Long64_t": "i",
     "unsigned int": "u",
     "unsigned long": "u",
+    "ULong64_t": "u",
 }
 
 

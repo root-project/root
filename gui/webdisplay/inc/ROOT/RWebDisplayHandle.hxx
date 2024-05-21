@@ -104,8 +104,6 @@ public:
    /// resize web window - if possible
    virtual bool Resize(int, int) { return false; }
 
-   static bool NeedHttpServer(const RWebDisplayArgs &args);
-
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);

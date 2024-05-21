@@ -230,6 +230,7 @@ if(all)
  set(fcgi_defvalue ON)
  set(imt_defvalue ON)
  set(mathmore_defvalue ON)
+ set(monalisa_defvalue ON)
  set(mysql_defvalue ON)
  set(odbc_defvalue ON)
  set(opengl_defvalue ON)
@@ -391,14 +392,13 @@ if(NOT webgui)
 endif()
 
 #---Removed options------------------------------------------------------------
-# Please notify SPI when adding to this list
-foreach(opt afdsmgrd afs alien bonjour builtin_afterimage castor chirp cxx11 cxx14 cxx17
+foreach(opt afdsmgrd afs alien bonjour castor chirp cxx11 cxx14 cxx17
         exceptions geocad gfal glite globus gsl_shared hdfs ios jemalloc krb5
         ldap memstat minuit2 monalisa oracle pyroot-python2 pyroot_legacy
         pythia6 pythia6_nolink python qt qtgsi rfio ruby sapdb srp table
         tcmalloc vmc xproofd)
   if(${opt})
-    message(FATAL_ERROR ">>> '${opt}' is no longer part of ROOT ${ROOT_VERSION} build options.")
+    message(FATAL_ERROR ">>> Option '${opt}' is no longer supported in ROOT ${ROOT_VERSION}.")
   endif()
 endforeach()
 

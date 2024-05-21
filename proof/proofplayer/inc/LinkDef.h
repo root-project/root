@@ -38,6 +38,7 @@
 #pragma link C++ class TPerfStats;
 #pragma link C++ class TPerfEvent+;
 #pragma link C++ class TProofMonSender+;
+#pragma link C++ class TProofMonSenderML+;
 #pragma link C++ class TProofMonSenderSQL+;
 
 #pragma link C++ class TProofLimitsFinder;

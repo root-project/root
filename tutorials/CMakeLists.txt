@@ -271,23 +271,17 @@ set(gui_veto fit/fitpanel_playback.C
 if (NOT ROOT_tmva_FOUND)
   list(APPEND tmva_veto tmva/*.C tmva/*.py tmva/envelope/*.C tmva/keras/*.C tmva/keras/*.py tmva/pytorch/*.py )
 else()
-  # RBDT with xgboost is currently broken, disable all tutorials that use it
-  # See https://github.com/root-project/root/issues/15197
-  # TODO: Re-enable once fixed
-  list(APPEND tmva_veto tmva/tmva10[0-2]_*.py)
   #---These do not need to run for TMVA
   list(APPEND tmva_veto tmva/createData.C)
   if(MSVC AND NOT win_broken_tests)
     list(APPEND tmva_veto tmva/envelope/classification.C)
   endif()
   #these depends on external packages
-  if (tmva-pymva)
-    find_python_module(torch QUIET)
-    find_python_module(keras QUIET)
-    find_python_module(sonnet QUIET)
-    find_python_module(graph_nets QUIET)
-    find_python_module(sklearn QUIET)
-  endif()
+  find_python_module(torch QUIET)
+  find_python_module(keras QUIET)
+  find_python_module(sonnet QUIET)
+  find_python_module(graph_nets QUIET)
+  find_python_module(sklearn QUIET)
   if (NOT PY_KERAS_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras.C)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Keras_HiggsModel.C)
@@ -299,11 +293,6 @@ else()
     list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
     list(APPEND tmva_veto tmva/RBatchGenerator_TensorFlow.py)
   endif()
-  # The TMVA_SOFIE_RSofieReader test is disabled because it uses two differnt
-  # openblas versions via SOFIE and NumPy (indirectly from Keras) at the same
-  # time. This can cause crashes, for example on alma9.
-  # TODO: remove the next line once this problem is fixed.
-  list(APPEND tmva_veto tmva/TMVA_SOFIE_RSofieReader.C)
   if (NOT PY_SKLEARN_FOUND)
     list(APPEND tmva_veto tmva/TMVA_SOFIE_Models.py)
   endif()
@@ -768,6 +757,7 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto ${tmva_veto_py})
   endif()
 
+  find_python_module(keras QUIET)
   if(NOT PY_KERAS_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/keras/*.py)
     list(APPEND pyveto ${tmva_veto_py})
@@ -778,6 +768,7 @@ if(ROOT_pyroot_FOUND)
     list(APPEND pyveto tmva/keras/MultiClassKeras.py)
   endif()
 
+  find_python_module(torch QUIET)
   if(NOT PY_TORCH_FOUND)
     file(GLOB tmva_veto_py RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} tmva/pytorch/*.py)
     list(APPEND pyveto ${tmva_veto_py})

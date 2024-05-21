@@ -67,7 +67,7 @@ private:
                             const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   std::vector<RColumnInfo> CollectColumns(const RNTupleDescriptor &descriptor);
+   std::vector<RColumnInfo> CollectColumns(const RPageSource &source, bool firstSource);
 
    // Internal map that holds column name, type, and type id : output ID information
    std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;

@@ -157,25 +157,25 @@ ROOT::Internal::RRawFile::RIOVecLimits ROOT::Internal::RRawFileNetXNG::GetReadVL
    strmResponse.str(response->ToString());
    delete response;
 
-   std::string readvMaxSingleSize;
-   std::string readvMaxReqs;
-   if (!std::getline(strmResponse, readvMaxSingleSize) || !std::getline(strmResponse, readvMaxReqs)) {
+   std::string readvIorMax;
+   std::string readvIovMax;
+   if (!std::getline(strmResponse, readvIorMax) || !std::getline(strmResponse, readvIovMax)) {
       if (gDebug >= 1)
          Info("GetReadVLimits", "unexpected response from querying readv limits, using default values");
       return *fIOVecLimits;
    }
 
-   if (!readvMaxReqs.empty() && std::isdigit(readvMaxReqs[0])) {
-      std::size_t val = std::stoi(readvMaxReqs);
+   if (!readvIovMax.empty() && std::isdigit(readvIovMax[0])) {
+      std::size_t val = std::stoi(readvIovMax);
       // Workaround a dCache bug reported here: https://sft.its.cern.ch/jira/browse/ROOT-6639
       if (val == 0x7FFFFFFF)
          return *fIOVecLimits;
 
-      fIOVecLimits->fMaxReqs = val;
+      fIOVecLimits->fMaxSingleSize = val;
    }
 
-   if (!readvMaxSingleSize.empty() && std::isdigit(readvMaxSingleSize[0])) {
-      fIOVecLimits->fMaxSingleSize = std::stoi(readvMaxSingleSize);
+   if (!readvIorMax.empty() && std::isdigit(readvIorMax[0])) {
+      fIOVecLimits->fMaxReqs = std::stoi(readvIorMax);
    }
 
    return *fIOVecLimits;

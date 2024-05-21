@@ -42,13 +42,7 @@ protected:
       return {};
    }
 
-   const RNTupleDescriptor &GetDescriptor() const final
-   {
-      static RNTupleDescriptor descriptor;
-      return descriptor;
-   }
-
-   void InitImpl(RNTupleModel &) final {}
+   void Init(RNTupleModel &) final {}
    void UpdateSchema(const ROOT::Experimental::Internal::RNTupleModelChangeset &, NTupleSize_t) final {}
    void CommitSealedPage(ROOT::Experimental::DescriptorId_t, const RPageStorage::RSealedPage &) final {}
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup>) final {}

@@ -46,11 +46,3 @@ void ROOT::Internal::RDF::TriggerRun(ROOT::RDF::RNode node)
 {
    node.fLoopManager->Run();
 }
-
-/**
- * \brief Check if the origin of the node is TTree or TChain.
- * \param[in] node Any node of the computation graph.
- */
-bool ROOT::Internal::RDF::TTreeTChainOrigin(const ROOT::RDF::RNode &node){
-   return node.GetLoopManager()->GetTree();
-   }

@@ -549,17 +549,10 @@ void REveElement::CheckReferenceCount(const std::string& from)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return class for this element
-/// Return REveElement class in case dicitonary is not exisiting
-////////////////////////////////////////////////////////////////////////////////
 
 TClass *REveElement::IsA() const
 {
-   TClass* res = TClass::GetClass(typeid(*this), kTRUE, kTRUE);
-   if (!res) {
-      R__LOG_WARNING(REveLog()) << "REveElement::IsA() no dictionary found for " << typeid(*this).name();
-      res = TClass::GetClass("ROOT::Experimental::REveElement");
-   }
-   return res;
+   return TClass::GetClass(typeid(*this), kTRUE, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

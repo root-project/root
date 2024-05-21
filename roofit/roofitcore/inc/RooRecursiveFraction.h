@@ -31,8 +31,6 @@ public:
   RooRecursiveFraction(const RooRecursiveFraction& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooRecursiveFraction(*this, newname); }
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-
 protected:
 
   RooListProxy _list ;
