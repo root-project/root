@@ -1370,8 +1370,10 @@ private:
 
    static std::string GetTypeList(const std::vector<RFieldBase *> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
-   static std::uint32_t GetTag(const void *variantPtr, std::size_t tagOffset);
-   static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint32_t tag);
+   /// The implementation assumes an std::variant memory layout with a trailing unsigned byte, zero-indexed,
+   /// having the exception caused empty state encoded by the value 255
+   static std::uint8_t GetTag(const void *variantPtr, std::size_t tagOffset);
+   static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;

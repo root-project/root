@@ -7,6 +7,7 @@
 #include <TVirtualCollectionProxy.h>
 
 #include <chrono>
+#include <stdexcept>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -294,6 +295,12 @@ class DerivedFromLeftAndTObject : public Left, public TObject {
 public:
    virtual ~DerivedFromLeftAndTObject() = default;
    ClassDefOverride(DerivedFromLeftAndTObject, 1)
+};
+
+struct ThrowForVariant {
+   ThrowForVariant() = default;
+   ThrowForVariant(const ThrowForVariant &) { throw std::runtime_error("copy ctor"); }
+   ThrowForVariant &operator=(const ThrowForVariant &) = default;
 };
 
 #endif
