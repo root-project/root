@@ -294,7 +294,7 @@ private:
    std::size_t fRemainderChunkTensorRow = 0;
 
 public:
-   /// \brief Constructor for the RChunkLoaderFilters
+   /// \brief Constructor for the RChunkLoader
    /// \param rdf
    /// \param chunkSize
    /// \param cols
@@ -320,7 +320,7 @@ public:
    {
    }
 
-   /// \brief Load a chunk of data using the RChunkLoaderFiltersFunctor
+   /// \brief Load a chunk of data using the RChunkLoaderFunctor
    /// \param chunkTensor
    /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
@@ -356,8 +356,6 @@ public:
       return std::make_pair(processedEvents, passedEvents);
    }
 
-   /// @brief The last chunk that might be gained if all the data is read though the size of chunk is too small to fit
-   /// @return number of rows filled
    std::size_t LastChunk(){
       for (std::size_t i = 0; i < fRemainderChunkTensorRow; i++){
          std::copy(fRemainderChunkTensor->GetData() + (i*fNumColumns), fRemainderChunkTensor->GetData() + ((i+1)*fNumColumns),

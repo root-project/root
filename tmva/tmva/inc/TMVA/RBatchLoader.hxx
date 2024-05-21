@@ -119,11 +119,6 @@ public:
       fBatchCondition.notify_all();
    }
 
-   /// @brief Create a batch filled with the events on given indices with parametrized batch size
-   /// @param chunkTensor 
-   /// @param idx 
-   /// @param batchSize 
-   /// @return 
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateBatch(const TMVA::Experimental::RTensor<float> &chunkTensor, const std::vector<std::size_t> idx, std::size_t batchSize)
    {  
@@ -138,11 +133,6 @@ public:
       return batch;
    }
 
-   /// @brief Create the first batch of the chunk as some data is likely to be copied from the remainder tensor
-   /// @param remainderTensor 
-   /// @param remainderTensorRow 
-   /// @param eventIndices 
-   /// @return 
    std::unique_ptr<TMVA::Experimental::RTensor<float>>
    CreateFirstBatch(const TMVA::Experimental::RTensor<float> &remainderTensor,
                   std::size_t remainderTensorRow, std::vector<std::size_t> eventIndices)
@@ -162,7 +152,7 @@ public:
       return batch;
    }
 
-   /// @brief save the remaining data when the whole chunk has to be saved
+   /// @brief save to remaining data when the whole chunk has to be saved
    /// @param chunkTensor 
    /// @param remainderTensor 
    /// @param remainderTensorRow 
@@ -261,7 +251,6 @@ public:
       SaveRemainingData(*fValidationRemainder, 0, eventIndices, start);
    }
 
-   /// @brief Create the last batches that are not of the full size if user opted for it from remainder tensor
    void LastBatches(){
       {  
          if (fTrainingRemainderRow){

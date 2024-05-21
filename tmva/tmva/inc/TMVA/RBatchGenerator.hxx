@@ -164,8 +164,7 @@ public:
       // Get next batch if available
       return fBatchLoader->GetValidationBatch();
    }
-   /// @brief Calculate number of training batches and return it
-   /// @return 
+
    std::size_t NumberOfTrainingBatches(){
       std::size_t entriesForTraining = (fNumEntries / fChunkSize) * (fChunkSize - floor(fChunkSize * fValidationSplit)) +
             fNumEntries % fChunkSize - floor(fValidationSplit * (fNumEntries % fChunkSize));
@@ -248,7 +247,6 @@ public:
       fBatchLoader->DeActivate();
    }
 
-   /// @brief Load chunks when filters are applied on rdataframe
    void LoadChunksFilters()
    {     
       std::size_t currentChunk = 0;
