@@ -239,8 +239,8 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
    code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
 
-   std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp<false>", _interpCode[0], _paramSet,
-                                        n, lowName, highName, 1.0, nominalName);
+   std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", _interpCode[0], _paramSet, n,
+                                        lowName, highName, 1.0, nominalName, 0.0);
    code += "double " + resName + " = " + funcCall + ";\n";
 
    if (_positiveDefinite)
