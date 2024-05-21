@@ -158,9 +158,13 @@ class BaseGenerator:
                 Defaults to True.
         """
 
+        import ROOT
+        from ROOT import RDF
+
+        self.noded_rdf = RDF.AsRNode(rdataframe)
+
         try:
             import numpy as np
-
         except ImportError:
             raise ImportError(
                 "Failed to import NumPy during init. NumPy is required when \
@@ -179,10 +183,9 @@ class BaseGenerator:
                     given value is {validation_split}"
             )
         
-        if str(rdataframe.Describe())[15:21] != "TChain" and\
-            str(rdataframe.Describe())[15:20] != "TTree":
+        if ROOT.Internal.RDF.GetDataSourceLabel(self.noded_rdf) != "TTreeDS":
             raise ValueError(
-                "RNode object must be created out of TTrees or files of TTree"
+                "RNode object must be created out of TTrees or files of TTree type"
             )
         
         from ROOT import RDataFrame
@@ -237,15 +240,13 @@ class BaseGenerator:
         self.train_columns = [c for c in self.all_columns if c not in self.target_columns+[self.weights_column]]
 
 
-        from ROOT import TMVA, EnableThreadSafety, RDF
+        from ROOT import TMVA, EnableThreadSafety
 
         # The RBatchGenerator will create a separate C++ thread for I/O.
         # Enable thread safety in ROOT from here, to make sure there is no
         # interference between the main Python thread (which might call into
         # cling via cppyy) and the I/O thread.
         EnableThreadSafety()
-
-        self.noded_rdf = RDF.AsRNode(rdataframe)
 
         self.generator = TMVA.Experimental.Internal.RBatchGenerator(template)(
             self.noded_rdf,
