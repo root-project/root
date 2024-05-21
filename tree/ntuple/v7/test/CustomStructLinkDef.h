@@ -82,4 +82,6 @@
 #pragma link C++ class Left + ;
 #pragma link C++ class DerivedFromLeftAndTObject+;
 
+#pragma link C++ class ThrowForVariant + ;
+
 #endif

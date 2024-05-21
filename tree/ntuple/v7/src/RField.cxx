@@ -3208,7 +3208,9 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
 
    auto nFields = itemFields.size();
-   R__ASSERT(nFields > 0);
+   if (nFields == 0 || nFields > 255) {
+      throw RException(R__FAIL("invalid number of variant fields (outside [1..255])"));
+   }
    fNWritten.resize(nFields, 0);
    for (unsigned int i = 0; i < nFields; ++i) {
       fMaxItemSize = std::max(fMaxItemSize, itemFields[i]->GetValueSize());
@@ -3216,7 +3218,7 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
       fTraits &= itemFields[i]->GetTraits();
       Attach(std::unique_ptr<RFieldBase>(itemFields[i]));
    }
-   fTagOffset = (fMaxItemSize < fMaxAlignment) ? fMaxAlignment : fMaxItemSize;
+   fTagOffset = fMaxItemSize;
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
@@ -3232,16 +3234,16 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
    return std::make_unique<RVariantField>(newName, itemFields);
 }
 
-std::uint32_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
+std::uint8_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
 {
-   auto index = *(reinterpret_cast<const char *>(variantPtr) + tagOffset);
-   return (index < 0) ? 0 : index + 1;
+   auto tag = *(reinterpret_cast<const uint8_t *>(variantPtr) + tagOffset);
+   return (tag == 255) ? 0 : tag + 1;
 }
 
-void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::size_t tagOffset, std::uint32_t tag)
+void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag)
 {
-   auto index = reinterpret_cast<char *>(variantPtr) + tagOffset;
-   *index = static_cast<char>(tag - 1);
+   auto index = reinterpret_cast<uint8_t *>(variantPtr) + tagOffset;
+   *index = (tag == 0) ? 255 : static_cast<uint8_t>(tag - 1);
 }
 
 std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
@@ -3263,6 +3265,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    RClusterIndex variantIndex;
    std::uint32_t tag;
    fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
+   R__ASSERT(tag < 256);
 
    // If `tag` equals 0, the variant is in the invalid state, i.e, it does not hold any of the valid alternatives in
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
@@ -3320,7 +3323,15 @@ std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RV
 
 size_t ROOT::Experimental::RVariantField::GetValueSize() const
 {
-   return fMaxItemSize + fMaxAlignment;  // TODO: fix for more than 255 items
+   const auto alignment = GetAlignment();
+   const auto actualSize = fMaxItemSize + 1;
+   auto padding = 0;
+   if (alignment > 1) {
+      auto remainder = actualSize % alignment;
+      if (remainder != 0)
+         padding = alignment - remainder;
+   }
+   return actualSize + padding;
 }
 
 void ROOT::Experimental::RVariantField::CommitClusterImpl()
