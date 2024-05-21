@@ -31,11 +31,8 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <iostream>
 #include <memory>
-#include <new>
 #include <string>
-#include <utility>
 #include <chrono>
 
 namespace {
@@ -1282,7 +1279,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_v
 
 ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
 
-ROOT::Experimental::Internal::RNTupleFileWriter *
+std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
                                                           int defaultCompression, EContainerFormat containerFormat)
 {
@@ -1298,7 +1295,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
 #endif
    R__ASSERT(fileStream);
 
-   auto writer = new RNTupleFileWriter(ntupleName);
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName));
    writer->fFileSimple.fFile = fileStream;
    writer->fFileName = fileName;
 
@@ -1314,10 +1311,10 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
    return writer;
 }
 
-ROOT::Experimental::Internal::RNTupleFileWriter *
+std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TFile &file)
 {
-   auto writer = new RNTupleFileWriter(ntupleName);
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName));
    writer->fFileProper.fFile = &file;
    return writer;
 }

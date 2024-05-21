@@ -77,7 +77,6 @@ public:
    void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
 };
 
-
 // clang-format off
 /**
 \class ROOT::Experimental::Internal::RNTupleFileWriter
@@ -114,8 +113,8 @@ private:
       RFileSimple() = default;
       RFileSimple(const RFileSimple &other) = delete;
       RFileSimple(RFileSimple &&other) = delete;
-      RFileSimple &operator =(const RFileSimple &other) = delete;
-      RFileSimple &operator =(RFileSimple &&other) = delete;
+      RFileSimple &operator=(const RFileSimple &other) = delete;
+      RFileSimple &operator=(RFileSimple &&other) = delete;
       ~RFileSimple();
 
       /// Writes bytes in the open stream, either at fFilePos or at the given offset
@@ -123,10 +122,8 @@ private:
       /// Writes a TKey including the data record, given by buffer, into fFile; returns the file offset to the payload.
       /// The payload is already compressed
       std::uint64_t WriteKey(const void *buffer, std::size_t nbytes, std::size_t len, std::int64_t offset = -1,
-                             std::uint64_t directoryOffset = 100,
-                             const std::string &className = "",
-                             const std::string &objectName = "",
-                             const std::string &title = "");
+                             std::uint64_t directoryOffset = 100, const std::string &className = "",
+                             const std::string &objectName = "", const std::string &title = "");
       operator bool() const { return fFile; }
    };
 
@@ -169,15 +166,15 @@ public:
 
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
-   static RNTupleFileWriter *Recreate(std::string_view ntupleName, std::string_view path, int defaultCompression,
-                                      EContainerFormat containerFormat);
+   static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
+                                                      int defaultCompression, EContainerFormat containerFormat);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
-   static RNTupleFileWriter *Append(std::string_view ntupleName, TFile &file);
+   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;
-   RNTupleFileWriter &operator =(const RNTupleFileWriter &other) = delete;
-   RNTupleFileWriter &operator =(RNTupleFileWriter &&other) = delete;
+   RNTupleFileWriter &operator=(const RNTupleFileWriter &other) = delete;
+   RNTupleFileWriter &operator=(RNTupleFileWriter &&other) = delete;
    ~RNTupleFileWriter();
 
    /// Writes the compressed header and registeres its location; lenHeader is the size of the uncompressed header.

@@ -36,16 +36,11 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
 #include <limits>
 #include <utility>
 
-#include <atomic>
-#include <condition_variable>
 #include <functional>
 #include <mutex>
-#include <thread>
-#include <queue>
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName,
                                                            const RNTupleWriteOptions &options)
@@ -64,15 +59,15 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
                                                            const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate(
-      ntupleName, path, options.GetCompression(), RNTupleFileWriter::EContainerFormat::kTFile));
+   fWriter = RNTupleFileWriter::Recreate(ntupleName, path, options.GetCompression(),
+                                         RNTupleFileWriter::EContainerFormat::kTFile);
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile &file,
                                                            const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append(ntupleName, file));
+   fWriter = RNTupleFileWriter::Append(ntupleName, file);
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::~RPageSinkFile() {}
@@ -220,7 +215,6 @@ void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -375,7 +369,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PopulatePageFromCluster(ColumnHan
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
 
    const void *sealedPageBuffer = nullptr; // points either to directReadBuffer or to a read-only page in the cluster
-   std::unique_ptr<unsigned char []> directReadBuffer; // only used if cluster pool is turned off
+   std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
       auto pageZero = RPage::MakePageZero(columnId, elementSize);
@@ -514,7 +508,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
-      [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) {return a.fOffset < b.fOffset;});
+             [](const ROnDiskPageLocator &a, const ROnDiskPageLocator &b) { return a.fOffset < b.fOffset; });
 
    // In order to coalesce close-by pages, we collect the sizes of the gaps between pages on disk.  We then order
    // the gaps by size, sum them up and find a cutoff for the largest gap that we tolerate when coalescing pages.
@@ -526,7 +520,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    float maxOverhead = 0.25 * float(activeSize);
    std::vector<std::size_t> gaps;
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
-      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i-1].fSize + onDiskPages[i-1].fOffset));
+      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
    }
    std::sort(gaps.begin(), gaps.end());
    std::size_t gapCut = 0;
@@ -538,7 +532,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
          currentGap = g;
       }
       szExtra += g;
-      if (szExtra  > maxOverhead)
+      if (szExtra > maxOverhead)
          break;
    }
 
@@ -580,7 +574,7 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
 
    // Register the on disk pages in a page map
    auto buffer = new unsigned char[reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize];
-   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char []>(buffer));
+   auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(buffer));
    for (const auto &s : onDiskPages) {
       ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
       pageMap->Register(key, ROnDiskPage(buffer + s.fBufPos, s.fSize));
@@ -606,7 +600,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
    std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
-   for (auto key: clusterKeys) {
+   for (auto key : clusterKeys) {
       clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
 
@@ -691,7 +685,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::UnzipClusterImpl(RCluster *c
          firstInPage += pi.fNElements;
          pageNo++;
       } // for all pages in column
-   } // for all columns in cluster
+   }    // for all columns in cluster
 
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
 
