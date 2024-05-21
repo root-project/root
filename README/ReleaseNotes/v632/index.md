@@ -241,6 +241,15 @@ In the unlikeliy case where you should have used these new classes for analysis 
 
 ## 3D Graphics Libraries
 
+### REve
+* Introduce lightweight visualization of instanced shapes on the level of 100.000 instances. This is integrated in digit visualization of the type REveBoxSet. List of typed instances are boxes, hexagons, and cones. The digit sets support different types of transformation: positioning, rotation, and scaling in different combinations. With the digit set a palette GUI interface has also been added to enable setting digits threshold and value to color mapping.
+
+<figure>
+ <img src="reve-boxset-cones.png" >
+ <figcaption>REveBoxSet screenshot with cone shape type. The set is using value to color map with overflow and underflow mark. The single REveBoxet object has a secondary selection enabled, where one can set a custom tooltip on mouse hover of an individual instance.</figcaption>
+</figure>
+
+* Update version of RenderCore to fix tone mapping of transparent objects.
 
 ## Geometry Libraries
 
