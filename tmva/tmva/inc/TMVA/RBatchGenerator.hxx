@@ -57,8 +57,9 @@ private:
 public:
    RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
                    const std::size_t batchSize, const std::vector<std::string> &cols,
+                   const std::size_t numColumns,
                    const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
-                   const float validationSplit = 0.0, const std::size_t maxChunks = 0, std::size_t numColumns = 0,
+                   const float validationSplit = 0.0, const std::size_t maxChunks = 0,
                    bool shuffle = true, bool dropRemainder = true)
       : f_rdf(rdf),
         fChunkSize(chunkSize),
@@ -74,8 +75,6 @@ public:
       do {
          fFixedSeed = fRng();
       } while (fFixedSeed == 0);
-      
-      if (numColumns == 0) {numColumns = cols.size();}
 
       // Create tensor to load the chunk into
       fChunkTensor =
