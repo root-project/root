@@ -105,7 +105,7 @@ protected:
    UInt_t fStyleHash{0};           ///<! last hash of gStyle
    Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
    UInt_t fColorsHash{0};          ///<! last hash of colors/palette
-   Bool_t fTF1UseSave{kFALSE};     ///<! use save buffer for TF1/TF2, need when evaluation failed on client side
+   Int_t fTF1UseSave{1};           ///<! use save buffer for TF1/TF2, 0:off, 1:prefer, 2:force
    std::vector<int> fWindowGeometry; ///<! last received window geometry
    Bool_t fFixedSize{kFALSE};      ///<! is canvas size fixed
 
