@@ -75,14 +75,14 @@ static TLeaf *SearchForLeaf(TTree *tree, const char *name, TBranch *branch)
    return leaf;
 }
 
-static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branch)
+static std::pair<void *, std::string> ResolveBranch(TTree *tree, const char *name, TBranch *branch)
 {
    // for partial return of a split object
    if (branch->InheritsFrom(TBranchElement::Class())) {
       TBranchElement *be = (TBranchElement *)branch;
       if (be->GetCurrentClass() && (be->GetCurrentClass() != be->GetTargetClass()) && (0 <= be->GetID())) {
          Long_t offset = ((TStreamerElement *)be->GetInfo()->GetElements()->At(be->GetID()))->GetOffset();
-         return CPyCppyy::Instance_FromVoidPtr(be->GetObject() + offset, be->GetCurrentClass()->GetName());
+         return {be->GetObject() + offset, be->GetCurrentClass()->GetName()};
       }
    }
 
@@ -90,15 +90,15 @@ static PyObject *BindBranchToProxy(TTree *tree, const char *name, TBranch *branc
    if (branch->IsA() == TBranchElement::Class() || branch->IsA() == TBranchObject::Class()) {
       TClass *klass = TClass::GetClass(branch->GetClassName());
       if (klass && branch->GetAddress())
-         return CPyCppyy::Instance_FromVoidPtr(*(void **)branch->GetAddress(), branch->GetClassName());
+         return {*(void **)branch->GetAddress(), branch->GetClassName()};
 
       // try leaf, otherwise indicate failure by returning a typed null-object
       TObjArray *leaves = branch->GetListOfLeaves();
       if (klass && !tree->GetLeaf(name) && !(leaves->GetSize() && (leaves->First() == leaves->Last())))
-         return CPyCppyy::Instance_FromVoidPtr(nullptr, branch->GetClassName());
+         return {nullptr, branch->GetClassName()};
    }
 
-   return nullptr;
+   return {nullptr, ""};
 }
 
 static PyObject *WrapLeaf(TLeaf *leaf)
@@ -141,9 +141,18 @@ static PyObject *WrapLeaf(TLeaf *leaf)
    return nullptr;
 }
 
-// Allow access to branches/leaves as if they were data members
-PyObject *GetAttr(PyObject *self, PyObject *pyname)
+// Allow access to branches/leaves as if they were data members Returns a
+// Python tuple where the first element is either the desired CPyCppyy proxy,
+// or an address that still needs to be wrapped by the caller in a proxy using
+// cppyy.ll.cast. In the latter case, the second tuple element is the target
+// type name. Otherwise, the second element is an empty string.
+PyObject *PyROOT::GetBranchAttr(PyObject * /*self*/, PyObject *args)
 {
+   PyObject *self = nullptr;
+   PyObject *pyname = nullptr;
+
+   PyArg_ParseTuple(args, "OU:GetBranchAttr", &self, &pyname);
+
    const char *name_possibly_alias = PyUnicode_AsUTF8(pyname);
    if (!name_possibly_alias)
       return 0;
@@ -166,39 +175,30 @@ PyObject *GetAttr(PyObject *self, PyObject *pyname)
 
    if (branch) {
       // found a branched object, wrap its address for the object it represents
-      auto proxy = BindBranchToProxy(tree, name, branch);
-      if (proxy != nullptr)
-         return proxy;
+      const auto [finalAddressVoidPtr, finalTypeName] = ResolveBranch(tree, name, branch);
+      if (!finalTypeName.empty()) {
+         PyObject *outTuple = PyTuple_New(2);
+         PyTuple_SET_ITEM(outTuple, 0, PyLong_FromLongLong((intptr_t)finalAddressVoidPtr));
+         PyTuple_SET_ITEM(outTuple, 1, CPyCppyy_PyText_FromString((finalTypeName + "*").c_str()));
+         return outTuple;
+      }
    }
 
    // if not, try leaf
-   TLeaf *leaf = SearchForLeaf(tree, name, branch);
-
-   if (leaf) {
+   if (TLeaf *leaf = SearchForLeaf(tree, name, branch)) {
       // found a leaf, extract value and wrap with a Python object according to its type
       auto wrapper = WrapLeaf(leaf);
-      if (wrapper != nullptr)
-         return wrapper;
+      if (wrapper != nullptr) {
+         PyObject *outTuple = PyTuple_New(2);
+         PyTuple_SET_ITEM(outTuple, 0, wrapper);
+         PyTuple_SET_ITEM(outTuple, 1, CPyCppyy_PyText_FromString(""));
+         return outTuple;
+      }
    }
 
    // confused
    PyErr_Format(PyExc_AttributeError, "\'%s\' object has no attribute \'%s\'", tree->IsA()->GetName(), name);
    return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////
-/// \brief Allow branches to be accessed as attributes of a tree.
-/// \param[in] self Always null, since this is a module function.
-/// \param[in] args Pointer to a Python tuple object containing the arguments
-/// received from Python.
-///
-/// Allow access to branches/leaves as if they were Python data attributes of the tree
-/// (e.g. mytree.branch)
-PyObject *PyROOT::AddBranchAttrSyntax(PyObject * /* self */, PyObject *args)
-{
-   PyObject *pyclass = PyTuple_GetItem(args, 0);
-   Utility::AddToClass(pyclass, "__getattr__", (PyCFunction)GetAttr, METH_O);
-   Py_RETURN_NONE;
 }
 
 ////////////////////////////////////////////////////////////////////////////

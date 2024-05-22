@@ -42,7 +42,7 @@ PyObject *gRootModule = 0;
 static PyMethodDef gPyROOTMethods[] = {
    {(char *)"AddCPPInstancePickling", (PyCFunction)PyROOT::AddCPPInstancePickling, METH_VARARGS,
     (char *)"Add a custom pickling mechanism for Cppyy Python proxy objects"},
-   {(char *)"AddBranchAttrSyntax", (PyCFunction)PyROOT::AddBranchAttrSyntax, METH_VARARGS,
+   {(char *)"GetBranchAttr", (PyCFunction)PyROOT::GetBranchAttr, METH_VARARGS,
     (char *)"Allow to access branches as tree attributes"},
    {(char *)"AddTClassDynamicCastPyz", (PyCFunction)PyROOT::AddTClassDynamicCastPyz, METH_VARARGS,
     (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},

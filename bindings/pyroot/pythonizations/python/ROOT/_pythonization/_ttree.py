@@ -130,7 +130,7 @@ ds.SetBranchAddress('structb', ms)
 */
 '''
 
-from libROOTPythonizations import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
+from libROOTPythonizations import GetBranchAttr, SetBranchAddressPyz, BranchPyz
 from . import pythonization
 
 # TTree iterator
@@ -168,6 +168,30 @@ def _Branch(self, *args):
 
     return res
 
+def _TTree__getattr__(self, key):
+    """
+    Allow branches to be accessed as attributes of a tree.
+
+    Allow access to branches/leaves as if they were Python data attributes of
+    the tree (e.g. mytree.branch).
+
+    To avoid using the CPyCppyy API, any necessary cast is done here on the
+    Python side. The GetBranchAttr() function encodes a necessary cast in the
+    second element of the output tuple, which is a string with the required
+    type name.
+
+    Parameters:
+    self (TTree): The instance of the TTree object from which the attribute is being retrieved.
+    key (str): The name of the branch to retrieve from the TTree object.
+    """
+
+    import cppyy.ll
+
+    out, cast_type = GetBranchAttr(self, key)
+    if cast_type:
+        out = cppyy.ll.cast[cast_type](out)
+    return out
+
 @pythonization('TTree')
 def pythonize_ttree(klass, name):
     # Parameters:
@@ -183,7 +207,7 @@ def pythonize_ttree(klass, name):
     klass.__iter__ = _TTree__iter__
 
     # tree.branch syntax
-    AddBranchAttrSyntax(klass)
+    klass.__getattr__ = _TTree__getattr__
 
     # SetBranchAddress
     klass._OriginalSetBranchAddress = klass.SetBranchAddress
