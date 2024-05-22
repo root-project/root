@@ -415,7 +415,7 @@ int FitUsingTFit(T *hist, TF1 *func)
       iret |= hist->Fit(func, "BFV0");
    else
       iret |= hist->Fit(func, "V0");
-   // get precice value of minimum
+   // get precise value of minimum
    int pr = std::cout.precision(18);
    std::cout << "Chi2 value = " << func->GetChisquare() << std::endl;
    std::cout.precision(pr);

@@ -38,14 +38,14 @@ sample = ROOT.RooCategory("sample", "sample", {"Sample1": 1, "Sample2": 2, "Samp
 # ---------------------------------------------------------------------------
 
 # We need two sets for bookkeeping of PDF nodes:
-newLeafs = ROOT.RooArgSet()
+newLeaves = ROOT.RooArgSet()
 allCustomiserNodes = ROOT.RooArgSet()
 
 
 # 1. Each sample should have its own mean for the gaussian
 # The customiser will make copies of `meanG` for each category.
-# These will all appear in the set `newLeafs`, which will own the new nodes.
-cust = ROOT.RooCustomizer(model, sample, newLeafs, allCustomiserNodes)
+# These will all appear in the set `newLeaves`, which will own the new nodes.
+cust = ROOT.RooCustomizer(model, sample, newLeaves, allCustomiserNodes)
 cust.splitArg(meanG, sample)
 
 
@@ -78,8 +78,8 @@ pdf2.Print("T")
 print("\nPDF 3 with a free yield:\n")
 pdf3.Print("T")
 
-print("\nThe following leafs have been created automatically while customising:\n")
-newLeafs.Print("V")
+print("\nThe following leaves have been created automatically while customising:\n")
+newLeaves.Print("V")
 
 #  If we needed to set reasonable values for the means of the gaussians, this could be done as follows:
 meanG1 = allCustomiserNodes["meanG_Sample1"]
@@ -88,6 +88,6 @@ meanG2 = allCustomiserNodes["meanG_Sample2"]
 meanG2.setVal(300)
 
 print(
-    "\nThe following leafs have been used while customising\n\t(partial overlap with the set of automatically created leaves.\n\ta new customiser for a different PDF could reuse them if necessary.):"
+    "\nThe following leaves have been used while customising\n\t(partial overlap with the set of automatically created leaves.\n\ta new customiser for a different PDF could reuse them if necessary.):"
 )
 allCustomiserNodes.Print("V")
