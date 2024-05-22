@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 7.7.0
 1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
 2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
 3. Let define date and file name position with `&datex=0.03&datey=0.03` URL parameters
@@ -19,6 +19,7 @@
 17. Fix - correctly draw only grids with AXIG draw option
 18. Fix - log scales on TH3 drawings #306
 19. Fix - draw geometry top node volume if all childs not visible #308
+20. Fix - properly process 206 server response without Accept-Ranges header https://root-forum.cern.ch/t/59426/
 
 
 ## Changes in 7.6.1
