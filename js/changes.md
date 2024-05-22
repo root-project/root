@@ -1,6 +1,6 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changes in 7.7.0
 1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
 2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters
 3. Let define date and file name position with `&datex=0.03&datey=0.03` URL parameters
@@ -9,22 +9,28 @@
 6. Let configure custom storage prefix with `&storage_prefix=name` URL #290
 7. Let customize URL for "Show in new tab" menu command
 8. Support both new and old TRatioPlot drawings
-9. Fully integrate svg2pdf.js into jsroot repo
 10. Synchronize X/Y range selection with native ROOT
 11. Proper handle attributes from TH2Poly bins, support "p" for markers drawing
 12. Correctly scale size of axis ticks - take into account NDC axis length
-13. Remove source_dir output in node.js #296
-14. Set name and userData in geometry `build()` function #303
-15. Draw histogram title afterwards - place in front of stats box
-16. Upgrade three.js r158 -> r162, last with WebGL1 support
-17. Split extras into three_addons.mjs, provide jsroot geometry build without three.js
-18. Fix - correctly draw only grids with AXIG draw option
-19. Fix - let read object from TFile with empty name
-20. Fix - graph drawing fix custom labels on X axis #297
-21. Fix - draw at least line for TGraphErrors ROOT-8131
-22. Fix - log scales on TH3 drawings #306
-23. Fix - preserve attributes and draw options when call drawingJSON() #307
-24. Fix - draw geometry top node volume if all childs not visible #308
+13. Set name and userData in geometry `build()` function #303
+14. Draw histogram title afterwards - place in front of stats box
+15. Upgrade three.js r158 -> r162, last with WebGL1 support
+16. Split extras into three_addons.mjs, provide jsroot geometry build without three.js
+17. Fix - correctly draw only grids with AXIG draw option
+18. Fix - log scales on TH3 drawings #306
+19. Fix - draw geometry top node volume if all childs not visible #308
+20. Fix - properly process 206 server response without Accept-Ranges header https://root-forum.cern.ch/t/59426/
+
+
+## Changes in 7.6.1
+1. Remove source_dir output in node.js #296
+2. Fully integrate svg2pdf.js into jsroot repo
+3. Fix - support plain TRI option for TGraph2D
+4. Fix - let read object from ROOT file with empty name
+5. Fix - graph drawing fix custom labels on X axis #297
+6. Fix - draw at least line for TGraphErrors ROOT-8131
+7. Fix - preserve attributes and draw options when call drawingJSON() #307
+8. Fix - menu for text align selection typo
 
 
 ## Changes in 7.6.0

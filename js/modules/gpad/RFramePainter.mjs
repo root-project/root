@@ -1018,7 +1018,7 @@ class RFramePainter extends RObjectPainter {
 
       menu.add('Unzoom', () => this.unzoom(kind));
 
-      // if (this[kind+'_kind'] === 'normal')
+      // if (this[kind+'_kind'] === kAxisNormal)
       //   menu.addchk(this['log'+kind], 'SetLog'+kind, this.toggleAxisLog.bind(this, kind));
 
       // here should be all axes attributes in offline
