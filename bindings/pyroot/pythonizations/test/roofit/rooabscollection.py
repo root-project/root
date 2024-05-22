@@ -136,7 +136,7 @@ class TestRooAbsCollection(unittest.TestCase):
         self.assertEqual(ROOT.RooArgSet(var0)["var0"], var0)
 
     def test_clone_collection(self):
-        # Check explicitely that both overloads of addClone work.
+        # Check explicitly that both overloads of addClone work.
         x = ROOT.RooRealVar("x", "x", 1.0)
         s1 = ROOT.RooArgSet(x)
         s2 = ROOT.RooArgSet()

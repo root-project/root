@@ -391,7 +391,7 @@ def DrawCutEfficiencies(fac, datasetName, methodName):
     sSig = ROOT.TH1F(ssigname, ssigname, nbins, low, high)
     effpurS = ROOT.TH1F(epname, epname, nbins, low, high)
 
-    # formating the style of histograms
+    # formatting the style of histograms
     # chop off useless stuff
     sigE.SetTitle("Cut efficiencies for " + methodName + " classifier")
 
@@ -472,7 +472,7 @@ def DrawCutEfficiencies(fac, datasetName, methodName):
 
     effpurS.Draw("sameaxis")
 
-    # Adding labels and other informations to plots.
+    # Adding labels and other information to plots.
 
     legend1 = ROOT.TLegend(
         c.GetLeftMargin(), 1 - c.GetTopMargin(), c.GetLeftMargin() + 0.4, 1 - c.GetTopMargin() + 0.12
