@@ -35,7 +35,7 @@ class CrossValidation(object):
         "TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options)"
     )
     def __init__(self, *args, **kwargs):
-        # Redefinition of `CrossValidtion` constructor for keyword arguments.
+        # Redefinition of `CrossValidation` constructor for keyword arguments.
         # The keywords must correspond to the CmdArg of the constructor function.
 
         args, kwargs = _kwargs_to_tmva_cmdargs(*args, **kwargs)
