@@ -564,7 +564,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool  isTr
       Tensor_t &y = this->fY;
       Architecture_t::Rearrange(x, input);
 
-      const auto &weights = this->GetWeightsAt(0);
+      //const auto &weights = this->GetWeightsAt(0);
+      const auto &weights = this->GetWeightsTensor();
       // Tensor_t cx({1}); // not used for normal RNN
       // Tensor_t cy({1}); // not used for normal RNN
 
@@ -576,8 +577,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::Forward(Tensor_t &input, bool  isTr
       auto &hy = this->fState;
       auto &cy = this->fCell;
 
-      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
-      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+      auto & rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto & rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
 
       Architecture_t::RNNForward(x, hx, cx, weights, y, hy, cy, rnnDesc, rnnWork, isTraining);
 
@@ -731,8 +732,8 @@ auto inline TBasicLSTMLayer<Architecture_t>::Backward(Tensor_t &gradients_backwa
       auto &dhx = hx;
       auto &dcx = cx;
 
-      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
-      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+      auto & rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto & rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
 
       Architecture_t::RNNBackward(x, hx, cx, y, dy, dhy, dcy, weights, dx, dhx, dcx, weightGradients, rnnDesc, rnnWork);
 
