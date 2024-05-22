@@ -101,6 +101,7 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    // size_t                      stateSizeInBytes,
    // unsigned long long          seed)
 
+   int inputSize = layer->GetInputSize();
    int hiddenSize = layer->GetStateSize();
    int numLayers = 1;  // this is not time steps is for stacked layers // layer->GetTimeSteps();
    //cudnnRNNInputMode_t    inputMode = CUDNN_SKIP_INPUT; // the leasing dimension of x must be equal to hiddenSize
@@ -130,29 +131,56 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    assert(numLinearLayers == layer->GetWeights().size());
 
    cudnnDataType_t mathPrec = CUDNN_DATA_FLOAT;
-   if      (std::is_same<AFloat, double>::value) { mathPrec = CUDNN_DATA_DOUBLE;}
+   if   (std::is_same<AFloat, double>::value) { mathPrec = CUDNN_DATA_DOUBLE;}
 
-#if (CUDNN_VERSION >= 8000)
-   CUDNNCHECK(cudnnSetRNNDescriptor_v6(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor,
-#else
-   CUDNNCHECK(cudnnSetRNNDescriptor(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor,
-#endif
-      inputMode, direction, mode, algo, mathPrec) );
-
-
-   // set bias mode
+      // set bias mode
    cudnnRNNBiasMode_t biasMode = CUDNN_RNN_NO_BIAS;
    if (layer->GetBiases().size() > 0)
       biasMode = CUDNN_RNN_SINGLE_INP_BIAS;
       //biasMode = CUDNN_RNN_REC_BIAS;  // difference is only for GRU
 
+   // needed for cudnn 8
+   cudnnDataType_t dataType = mathPrec;  // use same (needed from cuDnn 8)
+   int projSize = hiddenSize;
+   // note droputDescriptor is HelperDescriptor
+
+   int seqLength = layer->GetTimeSteps();
+
+
+#if (CUDNN_VERSION >= 8000)
+   unsigned int auxFlags = CUDNN_RNN_PADDED_IO_ENABLED;  // not sure what to pass here
+   cudnnMathType_t mathType = CUDNN_DEFAULT_MATH;
+   //   CUDNNCHECK(cudnnSetRNNDescriptor_v6(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor, inputMode, direction, mode, algo, mathPrec) );
+   CUDNNCHECK(cudnnSetRNNDescriptor_v8(rnnDescriptors->LayerDescriptor, algo, mode, biasMode, direction,
+           inputMode, dataType, mathPrec, mathType, inputSize, hiddenSize, projSize, numLayers,
+            rnnDescriptors->HelperDescriptor, auxFlags));
+   // in cudnn 8 we need to create the data descriptors
+   CUDNNCHECK(cudnnCreateRNNDataDescriptor(&rnnDescriptors->xDataDesc));
+   CUDNNCHECK(cudnnCreateRNNDataDescriptor(&rnnDescriptors->yDataDesc));
+   // fill the data descriptors (do not support padding)
+   std::vector<int> seqLengthArray(layer->GetBatchSize(), seqLength);
+   int vectorSize = inputSize;   // for input
+   //cudnnRNNDataLayout_t layout = CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_PACKED;  // should be this one if not using padding
+   cudnnRNNDataLayout_t layout = CUDNN_RNN_DATA_LAYOUT_SEQ_MAJOR_UNPACKED;
+   AFloat paddingFill = 0;
+   CUDNNCHECK(cudnnSetRNNDataDescriptor(rnnDescriptors->xDataDesc, dataType, layout, seqLength,
+              layer->GetBatchSize(), vectorSize, seqLengthArray.data(), &paddingFill));
+   // for output RNN data
+   vectorSize = bidirectional ? hiddenSize * 2 : hiddenSize;
+   CUDNNCHECK(cudnnSetRNNDataDescriptor(rnnDescriptors->yDataDesc, dataType, layout, seqLength,
+              layer->GetBatchSize(), vectorSize, seqLengthArray.data(), &paddingFill));
+
+#else
+   CUDNNCHECK(cudnnSetRNNDescriptor(handle, rnnDescriptors->LayerDescriptor, hiddenSize, numLayers, rnnDescriptors->HelperDescriptor, inputMode, direction, mode, algo, mathPrec) );
+
    CUDNNCHECK(cudnnSetRNNBiasMode(rnnDescriptors->LayerDescriptor, biasMode));
+
 
    // define tensor descriptors for RNN
 
    int dimA[3];
    int strideA[3];
-   int seqLength = layer->GetTimeSteps();
+
 
    rnnDescriptors->xDesc.resize(seqLength);
    rnnDescriptors->yDesc.resize(seqLength);
@@ -191,29 +219,55 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
       CUDNNCHECK(cudnnSetTensorNdDescriptor(yDesc[i], mathPrec, 3, dimA, strideA));
       CUDNNCHECK(cudnnSetTensorNdDescriptor(dyDesc[i], mathPrec, 3, dimA, strideA));
    }
+#endif
 
-   // weight descriptor
+
+
+
+   // Set the  filter parameters
+
+   size_t weightsSize = 0;
+#if (CUDNN_VERSION >= 8000)
+   size_t weightSpaceSize = 0;
+   CUDNNCHECK(cudnnGetRNNWeightSpaceSize(handle, rnnDescriptors->LayerDescriptor, &weightSpaceSize));
+   // need to allocate weight buffer
+   AFloat *weightSpace = nullptr;
+   if (weightSpaceSize > 0) cudaMalloc((void **) weightSpace, weightSpaceSize*sizeof(AFloat));
+   weightsSize = weightSpaceSize;
+#else
+
+   // weight descriptors
    CUDNNCHECK(cudnnCreateFilterDescriptor(&rnnDescriptors->WeightsDescriptor));
    CUDNNCHECK(cudnnCreateFilterDescriptor(&rnnDescriptors->WeightsGradDescriptor));
 
-   // Set the  filter parameters
-   size_t weightsSize = 0;
    CUDNNCHECK(cudnnGetRNNParamsSize(handle, rnnDescriptors->LayerDescriptor, xDesc[0], &weightsSize, mathPrec));
+#endif
 
    int dimW[3];
    dimW[0] = (mathPrec == CUDNN_DATA_DOUBLE) ? weightsSize / sizeof(double) : weightsSize / sizeof(float);
    dimW[1] = 1;
    dimW[2] = 1;
+     // resize now weights tensor
+   auto &weightTensor = layer->GetWeightsTensor();
+   auto &weightGradTensor = layer->GetWeightGradientsTensor();
+
+#if (CUDNN_VERSION >= 8000)
+   // allocate weight space using a Tensor
+   // use tensor of dim=1 to avoid creating a tensor descriptor in TCudaTensor
+   weightTensor = Tensor_t( { (size_t) dimW[0]}, GetTensorLayout(), 0, 0);
+   weightGradTensor = Tensor_t({(size_t) dimW[0]}, GetTensorLayout(), 0, 0);
+
+   //std::cout << "allocate weight space tensor and grad weight space  of size" << dimW[0] << std::endl;
+
+#else
+   weightTensor = Tensor_t( { (size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
+   weightGradTensor = Tensor_t({(size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
 
    CUDNNCHECK(cudnnSetFilterNdDescriptor(rnnDescriptors->WeightsDescriptor, mathPrec, CUDNN_TENSOR_NCHW, 3, dimW));
    CUDNNCHECK(cudnnSetFilterNdDescriptor(rnnDescriptors->WeightsGradDescriptor, mathPrec, CUDNN_TENSOR_NCHW, 3, dimW));
 
-   // resize now weights tensor
-   auto &weightTensor = layer->GetWeightsTensor();
-   auto &weightGradTensor = layer->GetWeightGradientsTensor();
 
-   weightTensor = Tensor_t( { (size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
-   weightGradTensor = Tensor_t({(size_t) dimW[0], 1, 1}, GetTensorLayout(), 0, 0);
+#endif
 
    // initialize now RNN weights from RNNLayer:WeightInput, RNNLayer::WeightState and RNNLayer::BiasesState
 
@@ -221,20 +275,52 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    int nL = (!bidirectional) ? numLayers : 2 * numLayers; // for bidirectional nL = 2 * numLayers;
    for (int ilayer = 0; ilayer < nL; ilayer++) {
       for (int linLayerID = 0; linLayerID < numLinearLayers; linLayerID++) {
+
+
+         AFloat *linLayerMat = nullptr;
+
+
+         AFloat *linLayerBias = nullptr;
+
+         // from  version 8 we can use the same function
+#if (CUDNN_VERSION >= 8000)
+         // create descriptors for weight matrices
+         cudnnTensorDescriptor_t linLayerMatDesc;
+         CUDNNCHECK(cudnnCreateTensorDescriptor(&linLayerMatDesc));
+         cudnnTensorDescriptor_t linLayerBiasDesc;
+         CUDNNCHECK(cudnnCreateTensorDescriptor(&linLayerBiasDesc));
+         CUDNNCHECK(cudnnGetRNNWeightParams(handle, rnnDescriptors->LayerDescriptor, ilayer, weightSpaceSize, weightTensor.GetDataPointer(),
+                                            linLayerID, linLayerMatDesc, (void **)&linLayerMat, linLayerBiasDesc, (void **)&linLayerBias));
+#else
+         // create descriptors for weight matrices
          cudnnFilterDescriptor_t linLayerMatDesc;
          CUDNNCHECK(cudnnCreateFilterDescriptor(&linLayerMatDesc));
-         AFloat *linLayerMat;
+         cudnnFilterDescriptor_t linLayerBiasDesc;
+         CUDNNCHECK(cudnnCreateFilterDescriptor(&linLayerBiasDesc));
 
          CUDNNCHECK(cudnnGetRNNLinLayerMatrixParams(handle, rnnDescriptors->LayerDescriptor, ilayer, rnnDescriptors->xDesc.data()[0],
                                                     rnnDescriptors->WeightsDescriptor, weightTensor.GetDataPointer(),
                                                     linLayerID, linLayerMatDesc, (void **)&linLayerMat));
+         // for the bias
+         CUDNNCHECK(cudnnGetRNNLinLayerBiasParams(handle, rnnDescriptors->LayerDescriptor, ilayer,
+                                                  rnnDescriptors->xDesc.data()[0], rnnDescriptors->WeightsDescriptor,
+                                                  weightTensor.GetDataPointer(), linLayerID, linLayerBiasDesc,
+                                                  (void **)&linLayerBias));
+#endif
+
+         // copy now weights from GPU to GPU (from layer->GetWeights() -> pointers needed by Cudnn)
 
          cudnnDataType_t dataType;
-         cudnnTensorFormat_t format;
          int nbDims;
-         int filterDimA[3];
-         CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerMatDesc, 3, &dataType, &format, &nbDims, filterDimA));
-
+         int filterDimA[3] = {0,0,0};
+         if (linLayerMat) {
+#if (CUDNN_VERSION >= 8000)
+            int strideA[3];
+            CUDNNCHECK(cudnnGetTensorNdDescriptor(linLayerMatDesc, 3, &dataType, &nbDims, filterDimA, strideA));
+#else
+            cudnnTensorFormat_t format;
+            CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerMatDesc, 3, &dataType, &format, &nbDims, filterDimA));
+#endif
          /// RNN:   linLayerID = 0   :   input weight
          //                    = 1   :   input state
          //
@@ -249,71 +335,79 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
          // if (linLayerID == 0)
          // {
          // copy from GetStateWeights (tensor is state x state)
-         int wsize = layer->GetWeightsAt(linLayerID).GetSize();
-
-         // std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsInput().GetNrows() << "  "
-         //           << layer->GetWeightsInput().GetNcols() << "} should be " << filterDimA[1] << " x "
-         //           << filterDimA[2] << std::endl;
+            int wsize = layer->GetWeightsAt(linLayerID).GetSize();
 
 
-         assert(wsize == filterDimA[1] * filterDimA[2]);
-         cudaMemcpyAsync(linLayerMat, layer->GetWeightsAt(linLayerID).GetDataPointer(), wsize * sizeof(AFloat),
+            //std::cout << "lin layer ID " << linLayerID << "   " << linLayerMat << "   " << linLayerBias << std::endl;
+            //std::cout << "input weight size = " << wsize << "  { " << layer->GetWeightsAt(linLayerID).GetNrows() << "  "
+            //        << layer->GetWeightsAt(linLayerID).GetNcols() << "} should be " << filterDimA[1] << " x "
+            //        << filterDimA[2] << std::endl;
+
+
+            assert(wsize == filterDimA[1] * filterDimA[2]);
+            cudaMemcpyAsync(linLayerMat, layer->GetWeightsAt(linLayerID).GetDataPointer(), wsize * sizeof(AFloat),
                          cudaMemcpyDeviceToDevice, layer->GetWeightsAt(linLayerID).GetComputeStream());
 
-
-         CUDNNCHECK(cudnnDestroyFilterDescriptor(linLayerMatDesc));
-
-         cudnnFilterDescriptor_t linLayerBiasDesc;
-         CUDNNCHECK(cudnnCreateFilterDescriptor(&linLayerBiasDesc));
-         AFloat *linLayerBias;
-
-         CUDNNCHECK(cudnnGetRNNLinLayerBiasParams(handle, rnnDescriptors->LayerDescriptor, ilayer,
-                                                  rnnDescriptors->xDesc.data()[0], rnnDescriptors->WeightsDescriptor,
-                                                  weightTensor.GetDataPointer(), linLayerID, linLayerBiasDesc,
-                                                  (void **)&linLayerBias));
-
-         CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
+         }
 
          // Here for the bias : standard is input bias mode
+         if (linLayerBias) {
 
-         // linLayerID = 0 (RNN) 0,1,2,3 LSTM   0,1,2 GRU if CUDNN_RNN_SINGLE_INP_BIAS mode
-         int biasID = linLayerID;
-         if (biasMode == CUDNN_RNN_SINGLE_REC_BIAS) {
-            // case of state bias
-            //linLayerID = 1 (RNN), (4,5,6,7) LSTM , (3,4,5) GRU
-            biasID = linLayerID - 1;
-            if (mode == CUDNN_LSTM)  biasID = linLayerID - 4;
-            if (mode == CUDNN_GRU)  biasID = linLayerID - 3;
-         }
+#if (CUDNN_VERSION >= 8000)
+            int strideA[3];
+            CUDNNCHECK(cudnnGetTensorNdDescriptor(linLayerBiasDesc, 3, &dataType, &nbDims, filterDimA, strideA));
+#else
+            CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
+#endif
 
-         if (filterDimA[0] > 0) {
 
-            // check if above definitions are valid
-            assert(biasID >= 0);
 
-            // copy from GetStateWeights (tensor is state x state)
-            int wsize = layer->GetBiasesAt(biasID).GetSize();
 
-            // std::cout << "state bias " << wsize << " bias ID " << biasID << "  { " <<
-            // layer->GetBiasesAt(biasID).GetNrows() << "  "
-            //            << layer->GetBiasesAt(biasID).GetNcols() << "}  should be " << filterDimA[1] << " x " <<
-            //            filterDimA[2]
-            //            << std::endl;
+            // linLayerID = 0 (RNN) 0,1,2,3 LSTM   0,1,2 GRU if CUDNN_RNN_SINGLE_INP_BIAS mode
+            int biasID = linLayerID;
+            if (biasMode == CUDNN_RNN_SINGLE_REC_BIAS) {
+               // case of state bias
+               //linLayerID = 1 (RNN), (4,5,6,7) LSTM , (3,4,5) GRU
+               biasID = linLayerID - 1;
+               if (mode == CUDNN_LSTM)  biasID = linLayerID - 4;
+               if (mode == CUDNN_GRU)  biasID = linLayerID - 3;
+            }
 
-            // PrintTensor(layer->GetBiasesState(), "Bias state");
+            if (filterDimA[0] > 0) {
 
-            assert(wsize == filterDimA[1]);
-            cudaMemcpyAsync(linLayerBias, layer->GetBiasesAt(biasID).GetDataPointer(), wsize * sizeof(AFloat),
+               // check if above definitions are valid
+               assert(biasID >= 0);
+
+               // copy from GetStateWeights (tensor is state x state)
+               int wsize = layer->GetBiasesAt(biasID).GetSize();
+
+               //std::cout << "state bias " << wsize << " bias ID " << biasID << "  { " <<
+               //layer->GetBiasesAt(biasID).GetNrows() << "  "
+               //         << layer->GetBiasesAt(biasID).GetNcols() << "}  should be " << filterDimA[1] << " x " <<
+                //        filterDimA[2]
+               //         << std::endl;
+
+               //PrintTensor(layer->GetBiasesAt(biasID), "Bias state");
+
+               assert(wsize == filterDimA[1]);
+               cudaMemcpyAsync(linLayerBias, layer->GetBiasesAt(biasID).GetDataPointer(), wsize * sizeof(AFloat),
                             cudaMemcpyDeviceToDevice, layer->GetBiasesAt(biasID).GetComputeStream());
 
-            // PrintTensor(weightTensor, "After biasW WeightTensor");
+               //PrintTensor(weightTensor, "After biasW WeightTensor");
+            }
          }
 
-         CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
+         //CUDNNCHECK(cudnnGetFilterNdDescriptor(linLayerBiasDesc, 3, &dataType, &format, &nbDims, filterDimA));
 
          // initGPUData(linLayerBias, filterDimA[0] * filterDimA[1] * filterDimA[2], 1.f);
 
+         // is needed?
+#if (CUDNN_VERSION >= 8000)
+         //no op
+#else
+         CUDNNCHECK(cudnnDestroyFilterDescriptor(linLayerMatDesc));
          CUDNNCHECK(cudnnDestroyFilterDescriptor(linLayerBiasDesc));
+#endif
       }
 
    }
@@ -322,7 +416,10 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
 
    // the weight tensor in Cudnn is stored as
    // weights input + weights state + bias state
+   // This  here is quite confusing. It is enough to do for the first weight, where we store everything.
+   // can not we use just Layer::GetWeightTensor in RNNLayer when passing the weights to the forward function?
 
+#if (CUDNN_VERSION < 8000)
    size_t offset = 0;
    for (size_t i = 0; i < layer->GetWeights().size(); ++i) {
       auto &w = layer->GetWeightsAt(i);
@@ -349,6 +446,7 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
 
       offset += b.GetSize();
    }
+#endif
 
    // auto &weightsInput = layer->GetWeightsInput();
    // auto &weightsState = layer->GetWeightsState();
@@ -391,22 +489,26 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
 template<typename AFloat>
 void TCudnn<AFloat>::ReleaseRNNDescriptors(TDescriptors * descriptors)
 {
-   auto rnnDescriptors = static_cast<RNNDescriptors_t *>(descriptors);
-   CUDNNCHECK(cudnnDestroyRNNDescriptor(rnnDescriptors->LayerDescriptor));
+   auto & rnnDescriptors = static_cast<RNNDescriptors_t &>(*descriptors);
+   CUDNNCHECK(cudnnDestroyRNNDescriptor(rnnDescriptors.LayerDescriptor));
 
-   ReleaseDescriptor(rnnDescriptors->HelperDescriptor);
-   ReleaseDescriptor(rnnDescriptors->WeightsDescriptor);
-   ReleaseDescriptor(rnnDescriptors->WeightsGradDescriptor);
+   ReleaseDescriptor(rnnDescriptors.HelperDescriptor);
+#if (CUDNN_VERSION >= 8000)
+   CUDNNCHECK(cudnnDestroyRNNDataDescriptor(rnnDescriptors.xDataDesc));
+   CUDNNCHECK(cudnnDestroyRNNDataDescriptor(rnnDescriptors.yDataDesc));
+#else
+   ReleaseDescriptor(rnnDescriptors.WeightsDescriptor);
+   ReleaseDescriptor(rnnDescriptors.WeightsGradDescriptor);
 
    // need to delete the vectors of tensor descriptors
-   for (size_t i = 0; i < rnnDescriptors->xDesc.size(); i++) {
-      cudnnDestroyTensorDescriptor(rnnDescriptors->xDesc.data()[i]);
-      cudnnDestroyTensorDescriptor(rnnDescriptors->yDesc.data()[i]);
+   for (size_t i = 0; i < rnnDescriptors.xDesc.size(); i++) {
+      cudnnDestroyTensorDescriptor(rnnDescriptors.xDesc.data()[i]);
+      cudnnDestroyTensorDescriptor(rnnDescriptors.yDesc.data()[i]);
 
-      cudnnDestroyTensorDescriptor(rnnDescriptors->dxDesc.data()[i]);
-      cudnnDestroyTensorDescriptor(rnnDescriptors->dyDesc.data()[i]);
+      cudnnDestroyTensorDescriptor(rnnDescriptors.dxDesc.data()[i]);
+      cudnnDestroyTensorDescriptor(rnnDescriptors.dyDesc.data()[i]);
    }
-
+#endif
 }
 
 
@@ -421,6 +523,8 @@ void TCudnn<AFloat>::InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescr
    cudnnHandle_t handle = layer->GetOutput().GetCudnnHandle();
 
    bool bidirectional = false;
+
+   //std::cout << "initialize RNN workspaces..." << std::endl;
 
    size_t numLayers = 1; // support now only one single layer
    if (bidirectional)  numLayers *= 2;  // bidirectional RNN is like having two layers
@@ -437,12 +541,26 @@ void TCudnn<AFloat>::InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescr
 
 
    // get workspace size
+#if (CUDNN_VERSION >= 8000)
 
+   // input descriptus (xDesc) should specify maxSeqLength and batchSize
+   CUDNNCHECK(cudnnGetRNNTempSpaceSizes(handle, rnnDescriptors->LayerDescriptor, CUDNN_FWD_MODE_TRAINING,
+                                    rnnDescriptors->xDataDesc,  &rnnWorkspace->ForwardWorkspaceSize,
+                                    &rnnWorkspace->HelperWorkspaceSize));
+   size_t tmp = 0;      // not needed for inference
+   CUDNNCHECK(cudnnGetRNNTempSpaceSizes(handle, rnnDescriptors->LayerDescriptor, CUDNN_FWD_MODE_INFERENCE,
+                                       rnnDescriptors->xDataDesc,  &rnnWorkspace->InferenceWorkspaceSize,
+                                       &tmp));
+#else
    // need to fill xDesc with input tensor descriptors for each layer
    CUDNNCHECK(cudnnGetRNNWorkspaceSize(handle, rnnDescriptors->LayerDescriptor, layer->GetTimeSteps(),
                                        rnnDescriptors->xDesc.data(), &rnnWorkspace->ForwardWorkspaceSize));
 
-   if (rnnWorkspace->ForwardWorkspaceSize) cudaMalloc(&rnnWorkspace->ForwardWorkspace, rnnWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
+   CUDNNCHECK(cudnnGetRNNTrainingReserveSize(handle, rnnDescriptors->LayerDescriptor, layer->GetTimeSteps(),
+                                             rnnDescriptors->xDesc.data(), &rnnWorkspace->HelperWorkspaceSize));
+#endif
+
+   if (rnnWorkspace->ForwardWorkspaceSize > 0) cudaMalloc(&rnnWorkspace->ForwardWorkspace, rnnWorkspace->ForwardWorkspaceSize*sizeof(AFloat));
    if (rnnWorkspace->ForwardWorkspaceSize > 0 && rnnWorkspace->ForwardWorkspace == nullptr  ) {
       std::cerr << "Error allocating RNN workspace of size " << rnnWorkspace->ForwardWorkspaceSize << " - probably running out of memory on the GPU"
                << std::endl;
@@ -452,10 +570,10 @@ void TCudnn<AFloat>::InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescr
       R__ASSERT(false);
    }
 
-   CUDNNCHECK(cudnnGetRNNTrainingReserveSize(handle, rnnDescriptors->LayerDescriptor, layer->GetTimeSteps(),
-                                             rnnDescriptors->xDesc.data(), &rnnWorkspace->HelperWorkspaceSize));
+   if (rnnWorkspace->InferenceWorkspaceSize > 0) //needed only for cudnn >=8
+         cudaMalloc(&rnnWorkspace->InferenceWorkspace, rnnWorkspace->InferenceWorkspaceSize*sizeof(AFloat));
 
-   if (rnnWorkspace->HelperWorkspaceSize) cudaMalloc(&rnnWorkspace->HelperWorkspace, rnnWorkspace->HelperWorkspaceSize*sizeof(AFloat));
+   if (rnnWorkspace->HelperWorkspaceSize > 0) cudaMalloc(&rnnWorkspace->HelperWorkspace, rnnWorkspace->HelperWorkspaceSize*sizeof(AFloat));
    if (rnnWorkspace->HelperWorkspaceSize > 0 && rnnWorkspace->HelperWorkspace == nullptr  ) {
       std::cerr << "Error allocating RNN reserved workspace of size " << rnnWorkspace->HelperWorkspaceSize << " - probably running out of memory on the GPU"
                << std::endl;
@@ -464,7 +582,9 @@ void TCudnn<AFloat>::InitializeRecurrentWorkspace(TWorkspace *&workspace, TDescr
 
       R__ASSERT(false);
    }
+
    workspace = rnnWorkspace;
+   //std::cout << "Done initialization of RNN workspaces..." << std::endl;
 }
 
 //____________________________________________________________________________
@@ -474,6 +594,7 @@ void TCudnn<AFloat>::FreeRNNWorkspace(TWorkspace * workspace) {
    auto rnnWorkspace = static_cast<RNNWorkspace_t *>(workspace);
 
    if(rnnWorkspace->ForwardWorkspace)  cudaFree(rnnWorkspace->ForwardWorkspace);
+   if(rnnWorkspace->InferenceWorkspace)   cudaFree(rnnWorkspace->InferenceWorkspace);
    if(rnnWorkspace->HelperWorkspace)   cudaFree(rnnWorkspace->HelperWorkspace);
 
 
@@ -486,6 +607,9 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
 
 {
 
+   //std::cout << "doing forward...";
+   //std::string msg =  (isTraining) ? " in training" : " in inference";
+   //std::cout << msg << std::endl;
    bool rememberState = false;
    cudnnHandle_t cudnnHandle = x.GetCudnnHandle();
 
@@ -495,6 +619,29 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
    // initial state and cell state will be set to zero
    bool isLSTM = (cx.GetSize() > 0) && rememberState;
 
+#if (CUDNN_VERSION >= 8000)
+   // forward pass (use same function for training and inference in version > 8)
+   cudnnForwardMode_t fwdMode = (isTraining) ? CUDNN_FWD_MODE_TRAINING : CUDNN_FWD_MODE_INFERENCE;
+   const int * devSeqLength = nullptr;  // should be null fore versions > 8.9
+   size_t weightSpaceSize =  (std::is_same<AFloat, double>::value) ? weights.GetSize()* sizeof(double) :
+                                  weights.GetSize()* sizeof(float);
+   size_t workspaceSize = (isTraining) ?  workspace.ForwardWorkspaceSize : workspace.InferenceWorkspaceSize;
+   void * workspacePtr = (isTraining) ? workspace.ForwardWorkspace : workspace.InferenceWorkspace;
+   cudnnStatus_t status = cudnnRNNForward(
+      cudnnHandle, rnnDesc, fwdMode, devSeqLength,
+      // for x and y should be DataDescriptors
+      desc.xDataDesc, x.GetDataPointer(), desc.yDataDesc, y.GetDataPointer(),
+      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer(): nullptr,
+      hy.GetDataPointer(), // hdesc, hx, hy
+      (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(), (isLSTM) ? cx.GetDataPointer() : nullptr,
+      cy.GetDataPointer(),
+      weightSpaceSize, weights.GetDataPointer(), workspaceSize, workspacePtr,
+      workspace.HelperWorkspaceSize, workspace.HelperWorkspace);
+
+      assert(status == CUDNN_STATUS_SUCCESS);
+      CUDNNCHECK(status);
+
+#else
    // Perform forward training
    if (isTraining) {
       cudnnStatus_t status = cudnnRNNForwardTraining(
@@ -521,6 +668,8 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
       assert(status == CUDNN_STATUS_SUCCESS);
       CUDNNCHECK(status);
    }
+#endif
+   //std::cout << "forward is done" << std::endl;
 }
 
 //____________________________________________________________________________
@@ -531,10 +680,12 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
                                  RNNWorkspace_t &workspace)
 
 {
+   //std::cout << "doing backward..." << std::endl;
    bool rememberState = false;
    bool rememberStateGrad = false;
    bool isLSTM = (cx.GetSize() > 0) && rememberState;
    int seqLength = x.GetShape()[0];
+   int batchSize = x.GetShape()[1];
    cudnnRNNDescriptor_t rnnDesc = desc.LayerDescriptor;
    cudnnHandle_t cudnnHandle = x.GetCudnnHandle();
 
@@ -542,6 +693,44 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    //if (dx.GetSize() > 0) {
       // cudnn neeeds to call backwared data to make it work !!!
    //cudnnStatus_t status;
+#if (CUDNN_VERSION >= 8000)
+
+   const int * devSeqLength = nullptr;  // should be null fore versions > 8.9
+   std::vector<int> devSeqLengths(batchSize,seqLength);
+   // need to copy to GPU memory
+   int * gpu_seqLengths = nullptr;
+   cudaMalloc(&gpu_seqLengths, batchSize * sizeof(int));
+   cudaMemcpy(gpu_seqLengths, devSeqLengths.data(), batchSize * sizeof(int), cudaMemcpyHostToDevice);
+   size_t weightSpaceSize =  (std::is_same<AFloat, double>::value) ? weights.GetSize()* sizeof(double) :
+                                  weights.GetSize()* sizeof(float);
+   cudnnStatus_t status = cudnnRNNBackwardData_v8(
+      cudnnHandle, rnnDesc, gpu_seqLengths,
+      desc.yDataDesc, y.GetDataPointer(), dy.GetDataPointer(),  // for x and y must be data descriptors
+      desc.xDataDesc, dx.GetDataPointer(),
+      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer() : nullptr,
+      (rememberStateGrad) ? dhy.GetDataPointer() : nullptr, dhx.GetDataPointer(),
+      (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(),
+      (isLSTM) ? cx.GetDataPointer() : nullptr, (isLSTM) ? dcy.GetDataPointer() : nullptr, dcx.GetDataPointer(),
+      weightSpaceSize, weights.GetDataPointer(),
+      workspace.ForwardWorkspaceSize, workspace.ForwardWorkspace, workspace.HelperWorkspaceSize, workspace.HelperWorkspace);
+
+
+   assert(status == CUDNN_STATUS_SUCCESS);
+   CUDNNCHECK(status);
+
+   //std::cout << "backward data is done" << std::endl;
+   assert(weights.GetSize() == dw.GetSize());
+
+   // now backward gradient of weights
+   // dweight space buffr should be zerod before
+   status = cudnnRNNBackwardWeights_v8(cudnnHandle, rnnDesc,CUDNN_WGRAD_MODE_ADD, devSeqLength,
+                                    desc.xDataDesc, x.GetDataPointer(),  // should be data descriptors
+                                    hx.GetTensorDescriptor(), hx.GetDataPointer(),
+                                    desc.yDataDesc, y.GetDataPointer(),  // data descript
+                                    weightSpaceSize, dw.GetDataPointer(),
+                                    workspace.ForwardWorkspaceSize, workspace.ForwardWorkspace, workspace.HelperWorkspaceSize, workspace.HelperWorkspace);
+
+#else
    cudnnStatus_t status = cudnnRNNBackwardData(
       cudnnHandle, rnnDesc, seqLength, desc.yDesc.data(), y.GetDataPointer(), desc.dyDesc.data(), dy.GetDataPointer(),
       dhy.GetTensorDescriptor(), (rememberStateGrad) ? dhy.GetDataPointer() : nullptr,
@@ -559,6 +748,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    assert(status == CUDNN_STATUS_SUCCESS);
    CUDNNCHECK(status);
 
+   //std::cout << "backward weights is done" << std::endl;
    // now the weights
    //PrintTensor(dw, "weight grad before");
    // std::cout << "RNN Backward weights !!! -remmber state" << rememberState << std::endl;
@@ -576,7 +766,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
 
    assert(status == CUDNN_STATUS_SUCCESS);
    CUDNNCHECK(status);
-
+#endif
    // PrintTensor(dw, "weight grad after");
 }
 
