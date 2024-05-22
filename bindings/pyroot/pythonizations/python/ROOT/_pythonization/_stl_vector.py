@@ -13,7 +13,7 @@ from ._rvec import add_array_interface_property
 
 def _data_vec_char(self):
     # vector<char>::data() returns char*.
-    # Cppyy attemps to convert char* into Python string, but if the
+    # Cppyy attempts to convert char* into Python string, but if the
     # character sequence is not null-terminated the conversion fails.
     # This is likely to happen with the result of vector<char>::data().
     # For the conversion char* -> str to succeed when calling data(),

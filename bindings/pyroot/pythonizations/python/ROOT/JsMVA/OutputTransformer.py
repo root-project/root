@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
-## @package JsMVA.FormatedOutput
+## @package JsMVA.FormattedOutput
 #  @author Attila Bagoly <battila93@gmail.com>
-# This class will transform the TMVA original output to HTML formated output.
+# This class will transform the TMVA original output to HTML formatted output.
 
 from . import DataLoader
 import cgi
@@ -131,7 +131,7 @@ class transformTMVAOutputToHTML:
         rstr += "</table>"
         return (count, rstr)
 
-    ## Transform Variable related informations to table.
+    ## Transform Variable related information to table.
     # @param self object pointer
     # @param headerMatch re.match object for the first line
     # @param startIndex it defines where we are in self.lines array
