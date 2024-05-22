@@ -130,7 +130,7 @@ ds.SetBranchAddress('structb', ms)
 */
 '''
 
-from libROOTPythonizations import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
+from ROOT.libROOTPythonizations import AddBranchAttrSyntax, SetBranchAddressPyz, BranchPyz
 from . import pythonization
 
 # TTree iterator

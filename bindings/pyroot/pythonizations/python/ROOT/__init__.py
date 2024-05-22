@@ -24,7 +24,7 @@ from . import _asan
 
 import cppyy
 import sys, importlib
-import libROOTPythonizations
+import ROOT.libROOTPythonizations
 
 # Build cache of commonly used python strings (the cache is python intern, so
 # all strings are shared python-wide, not just in PyROOT).
@@ -184,8 +184,8 @@ def cleanup():
         facade.__dict__["app"].keep_polling = False
         facade.__dict__["app"].process_root_events.join()
 
-    if "libROOTPythonizations" in sys.modules:
-        backend = sys.modules["libROOTPythonizations"]
+    if "ROOT.libROOTPythonizations" in sys.modules:
+        backend = sys.modules["ROOT.libROOTPythonizations"]
 
         # Make sure all the objects regulated by PyROOT are deleted and their
         # Python proxies are properly nonified.
