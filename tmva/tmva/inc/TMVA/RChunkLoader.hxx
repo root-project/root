@@ -133,10 +133,6 @@ private:
    {  
       fChunkTensor->GetData()[fOffset++] = first;
       fEntries++;
-      if(fEntries == fChunkSize){
-         fChunkTensor = fRemainderTensor;
-         fOffset = 0;
-         }
    }
 
    /// \brief Load the final given value into fChunkTensor
@@ -146,6 +142,7 @@ private:
    void AssignToTensor(const ROOT::RVec<VecType> &first)
    {
       AssignVector(first);
+      fEntries++;
    }
 
    /// \brief Recursively loop through the given values, and load them onto the fChunkTensor
@@ -212,6 +209,12 @@ public:
    void operator()(First first, Rest... rest)
    {
       fVecSizeIdx = 0;
+      
+      if(fEntries == fChunkSize){
+         fChunkTensor = fRemainderTensor;
+         fOffset = 0;
+         }
+      
       AssignToTensor(std::forward<First>(first), std::forward<Rest>(rest)...);
    }
 
