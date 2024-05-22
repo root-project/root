@@ -259,8 +259,7 @@ public:
    /// \param chunkTensor
    /// \param currentRow
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
-   std::pair<std::size_t, std::size_t>
-   LoadChunk(const std::size_t currentRow)
+   std::size_t LoadChunk(const std::size_t currentRow)
    {  
       RChunkLoaderFunctor<Args...> func(fChunkTensor, fVecSizes, fVecPadding);
 
@@ -271,9 +270,7 @@ public:
       f_rdf.Foreach(func, fCols);
 
       // get loading info
-      std::size_t processed_events = myCount.GetValue();
-      std::size_t passed_events = myCount.GetValue();
-      return std::make_pair(processed_events, passed_events);
+      return myCount.GetValue();
    }
 };
 
