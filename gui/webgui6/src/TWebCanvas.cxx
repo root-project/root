@@ -104,7 +104,7 @@ Following settings parameters can be useful for TWebCanvas:
      WebGui.FullCanvas:       1     read-only mode (0), full-functional canvas (1) (default - 1)
      WebGui.StyleDelivery:    1     provide gStyle object to JSROOT client (default - 1)
      WebGui.PaletteDelivery:  1     provide color palette to JSROOT client (default - 1)
-     WebGui.TF1UseSave:       0     used saved values for function drawing (1) or calculate function on the client side (0) (default - 0)
+     WebGui.TF1UseSave:       1     used saved values for function drawing: 0 - off, 1 - if client fail to evaluate function, 2 - always (default - 1)
 
 TWebCanvas is used by default in interactive ROOT session. To use web-based canvas in batch mode for image
 generation, one should explicitly specify `--web` option when starting ROOT:
@@ -144,7 +144,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
-   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1) > 0;
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1);
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
 
    fWebConn.emplace_back(0); // add special connection which only used to perform updates
@@ -638,7 +638,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    };
 
    auto check_save_tf1 = [&](TObject *fobj, bool ignore_nodraw = false) {
-      if (!paddata.IsBatchMode() && !fTF1UseSave)
+      if (!paddata.IsBatchMode() && (fTF1UseSave <= 0))
          return;
       if (!ignore_nodraw && fobj->TestBit(TF1::kNotDraw))
          return;
@@ -880,8 +880,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString f1opt = iter.GetOption();
 
          check_save_tf1(obj, true);
-         // if (fTF1UseSave)
-         //   f1opt.Append(";force_saved");
+         if (fTF1UseSave > 1)
+            f1opt.Append(";force_saved");
+         else if (fTF1UseSave == 1)
+            f1opt.Append(";prefer_saved");
 
          if (first_obj) {
             auto hist = f1->GetHistogram();
@@ -2394,11 +2396,9 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
          }
       }
    } else if (item.fcust.compare(0,9,"func_fail") == 0) {
-      if (!fTF1UseSave) {
-         fTF1UseSave = kTRUE;
+      if (fTF1UseSave <= 0) {
+         fTF1UseSave = 1;
          modified = true;
-      } else {
-         Error("ProcessObjectOptions", "Client fails to calculate function %s cl %s but it should not try!", obj ? obj->GetName() : "---", obj ? obj->ClassName() : "---");
       }
    }
 
