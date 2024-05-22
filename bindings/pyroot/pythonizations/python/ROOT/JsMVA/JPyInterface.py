@@ -268,7 +268,7 @@ jsmva.$funcName('$divid', '$dat');
         )
 
     ## Inserts the draw area and drawing JavaScript to output
-    # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawed
+    # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawn
     # @param jsDrawMethod the JsMVA JavaScrip object method name to be used for drawing
     # @param objIsJSON obj is ROOT object or JSON
     @staticmethod

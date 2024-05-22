@@ -460,7 +460,7 @@ def _make_name_rvec_pair(key, value):
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
 
 
-# For refernces to keep alive the NumPy arrays that are read by
+# For references to keep alive the NumPy arrays that are read by
 # MakeNumpyDataFrame.
 _numpy_data = {}
 

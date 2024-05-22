@@ -136,7 +136,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         cat.defineType("plus", +1)
 
         # Use manual loop because we had some problems with numpys boolean
-        # comparisions in the past (see GitHub issue #12162).
+        # comparisons in the past (see GitHub issue #12162).
         n_in_range = 0
         for i in range(n_events):
             in_x_range = data["x"][i] <= x.getMax() and data["x"][i] >= x.getMin()
@@ -150,7 +150,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         self.assertEqual(dataset_numpy.numEntries(), n_in_range)
 
     def test_non_contiguous_arrays(self):
-        """Test whether the import also works with non-continguous arrays.
+        """Test whether the import also works with non-contiguous arrays.
         Covers GitHub issue #13605.
         """
 
