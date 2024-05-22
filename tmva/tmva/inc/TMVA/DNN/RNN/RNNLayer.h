@@ -322,7 +322,7 @@ template <typename Architecture_t>
 void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) // B x T x D
 {
 
-
+   //printf("doing RNNLayer forward\n");
    // for Cudnn
    if (Architecture_t::IsCudnn()) {
 
@@ -331,7 +331,11 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
 
       Architecture_t::Rearrange(x, input);
 
-      const auto &weights = this->GetWeightsAt(0);
+      // why passing the first weight, better to pass all weight tensor (including bias)
+      // LM 05/24
+      //const auto &weights = this->GetWeightsAt(0);
+      const auto & weights = this->GetWeightsTensor();
+
       // Tensor_t cx({1}); // not used for normal RNN
       // Tensor_t cy({1}); // not used for normal RNN
 
@@ -342,8 +346,10 @@ void TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTraining ) 
       auto &hy = this->GetState();
       auto &cy = this->GetCell();
 
-      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
-      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+      auto & rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto & rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+
+      //printf("doing RNNLayer forward  - calling cudnn forwsrd\n");
 
       Architecture_t::RNNForward(x, hx, cx, weights, y, hy, cy, rnnDesc, rnnWork, isTraining);
 
@@ -476,8 +482,8 @@ auto inline TBasicRNNLayer<Architecture_t>::Backward(Tensor_t &gradients_backwar
       auto &dcx = cx;
 
 
-      auto rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
-      auto rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
+      auto & rnnDesc = static_cast<RNNDescriptors_t &>(*fDescriptors);
+      auto & rnnWork = static_cast<RNNWorkspace_t &>(*fWorkspace);
 
       Architecture_t::RNNBackward(x, hx, cx, y, dy, dhy, dcy, weights, dx, dhx, dcx, weightGradients, rnnDesc, rnnWork);
 
