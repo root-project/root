@@ -1,7 +1,7 @@
 import { gStyle, settings, isFunc, isStr, postponePromise, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
-import { getActivePad, ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
+import { getActivePad, ObjectPainter, EAxisBits, kAxisLabels } from '../base/ObjectPainter.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
@@ -2552,7 +2552,7 @@ class TFramePainter extends ObjectPainter {
          else if (this.swap_xy && axis === 'y')
             axis = 'x';
          const handle = this[`${axis}_handle`];
-         if (handle?.kind === 'labels') return;
+         if (handle?.kind === kAxisLabels) return;
       }
 
       if ((value === 'toggle') || (value === undefined))
@@ -2623,7 +2623,7 @@ class TFramePainter extends ObjectPainter {
          if ((kind === 'z') && isFunc(main?.fillPaletteMenu))
             main.fillPaletteMenu(menu, !is_pal);
 
-         if ((handle?.kind === 'labels') && (faxis.fNbins > 20)) {
+         if ((handle?.kind === kAxisLabels) && (faxis.fNbins > 20)) {
             menu.add('Find label', () => menu.input('Label id').then(id => {
                if (!id) return;
                for (let bin = 0; bin < faxis.fNbins; ++bin) {

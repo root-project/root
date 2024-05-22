@@ -3,7 +3,7 @@ import { gStyle, BIT, settings, constants, create, isObject, isFunc, isStr, getP
          clTAxis, clTF1, clTF2, clTProfile, kNoZoom, clTCutG, kNoStats, kTitle } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
-import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, EAxisBits, kAxisTime, kAxisLabels } from '../base/ObjectPainter.mjs';
 import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
@@ -2369,12 +2369,12 @@ class THistPainter extends ObjectPainter {
             handle = funcs[`${name}_handle`],
             x1 = axis.GetBinLowEdge(bin+1);
 
-      if (handle.kind === 'labels')
+      if (handle.kind === kAxisLabels)
          return funcs.axisAsText(name, x1);
 
       const x2 = axis.GetBinLowEdge(bin+2);
 
-      if ((handle.kind === 'time') || this.isTF1())
+      if ((handle.kind === kAxisTime) || this.isTF1())
          return funcs.axisAsText(name, (x1+x2)/2);
 
       return `[${funcs.axisAsText(name, x1)}, ${funcs.axisAsText(name, x2)})`;

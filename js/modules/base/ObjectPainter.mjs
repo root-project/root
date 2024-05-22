@@ -1674,9 +1674,9 @@ const EAxisBits = {
    kIsInteger: BIT(22),
    kMoreLogLabels: BIT(23),
    kOppositeTitle: BIT(32) // atrificial bit, not possible to set in ROOT
-};
+}, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits };
+         ObjectPainter, drawRawText, EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };
