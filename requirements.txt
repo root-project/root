@@ -6,7 +6,7 @@ numpy>=1.4.1
 # TMVA: SOFIE
 graph_nets
 onnx
-sonnet # used for GNNs
+dm-sonnet # used for GNNs
 
 # TMVA: PyMVA interfaces
 scikit-learn
