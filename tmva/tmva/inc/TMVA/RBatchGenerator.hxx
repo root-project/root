@@ -232,11 +232,10 @@ public:
          }
 
          // A pair that consists the proccessed, and passed events while loading the chunk
-         std::pair<std::size_t, std::size_t> report =
-            std::get<std::shared_ptr<RChunkLoader<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
-         currentRow += report.first;
+         std::size_t report = std::get<std::shared_ptr<RChunkLoader<Args...>>>(fChunkLoader)->LoadChunk(currentRow);
+         currentRow += report;
 
-         CreateBatches(report.second);
+         CreateBatches(report);
       }
 
       if (!fDropRemainder){
