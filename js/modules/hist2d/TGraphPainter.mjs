@@ -2,7 +2,7 @@ import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFu
          clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, kAxisNormal } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { kBlack, kWhite } from '../base/colors.mjs';
@@ -432,13 +432,13 @@ class TGraphPainter extends ObjectPainter {
          lines.push('x = ' + funcs.axisAsText('x', d.x), 'y = ' + funcs.axisAsText('y', d.y));
          if (gme)
             lines.push('error x = -' + funcs.axisAsText('x', gme.fExL[d.indx]) + '/+' + funcs.axisAsText('x', gme.fExH[d.indx]));
-         else if (this.options.Errors && (funcs.x_handle.kind === 'normal') && (d.exlow || d.exhigh))
+         else if (this.options.Errors && (funcs.x_handle.kind === kAxisNormal) && (d.exlow || d.exhigh))
             lines.push('error x = -' + funcs.axisAsText('x', d.exlow) + '/+' + funcs.axisAsText('x', d.exhigh));
 
          if (gme) {
             for (let ny = 0; ny < gme.fNYErrors; ++ny)
                lines.push(`error y${ny} = -${funcs.axisAsText('y', gme.fEyL[ny][d.indx])}/+${funcs.axisAsText('y', gme.fEyH[ny][d.indx])}`);
-         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === 'normal') && (d.eylow || d.eyhigh))
+         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === kAxisNormal) && (d.eylow || d.eyhigh))
             lines.push('error y = -' + funcs.axisAsText('y', d.eylow) + '/+' + funcs.axisAsText('y', d.eyhigh));
       }
       return lines;

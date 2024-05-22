@@ -27,6 +27,27 @@ function produceTAxisLogScale(axis, num, min, max) {
    axis.fXmax = Math.exp(lmax);
 }
 
+function scanTF1Options(opt) {
+   if (!isStr(opt)) opt = '';
+   let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, use_saved = 0;
+   if (p >= 0) {
+      webcanv_hist = true;
+      opt = opt.slice(0, p);
+   }
+   p = opt.indexOf(';force_saved');
+   if (p >= 0) {
+      use_saved = 2;
+      opt = opt.slice(0, p);
+   }
+   p = opt.indexOf(';prefer_saved');
+   if (p >= 0) {
+      use_saved = 1;
+      opt = opt.slice(0, p);
+   }
+   return { opt, webcanv_hist, use_saved };
+}
+
+
 /**
   * @summary Painter for TF1 object
   *
@@ -89,7 +110,7 @@ class TF1Painter extends TH1Painter {
          xmax = Math.max(xmax, gr.zoom_xmax);
       }
 
-      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
+      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || (this.use_saved > 1));
 
       const ensureBins = num => {
          if (hist.fNcells !== num + 2) {
@@ -216,12 +237,13 @@ class TF1Painter extends TH1Painter {
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis, min, max) {
-      if ((this.$func?.fSave.length > 0) && this._use_saved_points && (axis === 'x')) {
+      const nsave = this.$func?.fSave.length ?? 0;
+      if ((nsave > 3) && this._use_saved_points && (axis === 'x')) {
          // in the case where the points have been saved, useful for example
          // if we don't have the user's function
-         const nb_points = this.$func.fNpx,
-             xmin = this.$func.fSave[nb_points + 1],
-             xmax = this.$func.fSave[nb_points + 2];
+         const nb_points = nsave - 2,
+             xmin = this.$func.fSave[nsave - 2],
+             xmax = this.$func.fSave[nsave - 1];
 
          return Math.abs(xmax - xmin) / nb_points < Math.abs(max - min);
       }
@@ -297,29 +319,20 @@ class TF1Painter extends TH1Painter {
    }
 
    /** @summary fill information for TWebCanvas
+    * @desc Used to inform webcanvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
-      // mark that saved points are used or evaluation failed
-      opt.fcust = this._fail_eval ? 'func_fail' : '';
+      opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';
    }
 
    /** @summary draw TF1 object */
    static async draw(dom, tf1, opt) {
-     if (!isStr(opt)) opt = '';
-      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
-      if (p >= 0) {
-         webcanv_hist = true;
-         opt = opt.slice(0, p);
-      }
-      p = opt.indexOf(';force_saved');
-      if (p >= 0) {
-         force_saved = true;
-         opt = opt.slice(0, p);
-      }
-
+      const web = scanTF1Options(opt);
+      opt = web.opt;
+      delete web.opt;
       let hist;
 
-      if (webcanv_hist) {
+      if (web.webcanv_hist) {
          const dummy = new ObjectPainter(dom);
          hist = dummy.getPadPainter()?.findInPrimitives('Func', clTH1D);
       }
@@ -335,8 +348,7 @@ class TF1Painter extends TH1Painter {
       const painter = new TF1Painter(dom, hist);
 
       painter.$func = tf1;
-      painter.webcanv_hist = webcanv_hist;
-      painter.force_saved = force_saved;
+      Object.assign(painter, web);
 
       painter.createTF1Histogram(tf1, hist);
 
@@ -345,4 +357,4 @@ class TF1Painter extends TH1Painter {
 
 } // class TF1Painter
 
-export { TF1Painter, produceTAxisLogScale };
+export { TF1Painter, produceTAxisLogScale, scanTF1Options };

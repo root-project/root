@@ -7,6 +7,7 @@ import { makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
 import { createMenu } from '../gui/menu.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
+import { kAxisLabels, kAxisNormal, kAxisTime } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -51,7 +52,7 @@ class RAxisPainter extends RObjectPainter {
    /** @summary Configure only base parameters, later same handle will be used for drawing  */
    configureZAxis(name, fp) {
       this.name = name;
-      this.kind = 'normal';
+      this.kind = kAxisNormal;
       this.log = false;
       const _log = this.v7EvalAttr('log', 0);
       if (_log) {
@@ -74,7 +75,7 @@ class RAxisPainter extends RObjectPainter {
       this.name = name;
       this.full_min = min;
       this.full_max = max;
-      this.kind = 'normal';
+      this.kind = kAxisNormal;
       this.vertical = vertical;
       this.log = false;
       const _log = this.v7EvalAttr('log', 0),
@@ -82,7 +83,7 @@ class RAxisPainter extends RObjectPainter {
       this.reverse = opts.reverse || false;
 
       if (this.v7EvalAttr('time')) {
-         this.kind = 'time';
+         this.kind = kAxisTime;
          this.timeoffset = 0;
          let toffset = this.v7EvalAttr('timeOffset');
          if (toffset !== undefined) {
@@ -90,15 +91,15 @@ class RAxisPainter extends RObjectPainter {
             if (Number.isFinite(toffset)) this.timeoffset = toffset*1000;
          }
       } else if (this.axis?.fLabelsIndex) {
-         this.kind = 'labels';
+         this.kind = kAxisLabels;
          delete this.own_labels;
       } else if (opts.labels)
-         this.kind = 'labels';
+         this.kind = kAxisLabels;
        else
-         this.kind = 'normal';
+         this.kind = kAxisNormal;
 
 
-      if (this.kind === 'time')
+      if (this.kind === kAxisTime)
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
        else if (_symlog && (_symlog > 0)) {
          this.symlog = _symlog;
@@ -131,7 +132,7 @@ class RAxisPainter extends RObjectPainter {
       else
          this.func.range(range);
 
-      if (this.kind === 'time')
+      if (this.kind === kAxisTime)
          this.gr = val => this.func(this.convertDate(val));
       else if (this.log)
          this.gr = val => (val < this.scale_min) ? (this.vertical ? this.func.range()[0]+5 : -5) : this.func(val);
@@ -150,7 +151,7 @@ class RAxisPainter extends RObjectPainter {
 
       const gr_range = Math.abs(this.gr_range) || 100;
 
-      if (this.kind === 'time') {
+      if (this.kind === kAxisTime) {
          if (this.nticks > 8) this.nticks = 8;
 
          const scale_range = this.scale_max - this.scale_min,
@@ -175,7 +176,7 @@ class RAxisPainter extends RObjectPainter {
          this.moreloglabels = this.v7EvalAttr('moreloglbls', false);
 
          this.format = this.formatLog;
-      } else if (this.kind === 'labels') {
+      } else if (this.kind === kAxisLabels) {
          this.nticks = 50; // for text output allow max 50 names
          const scale_range = this.scale_max - this.scale_min;
          if (this.nticks > scale_range)
@@ -219,11 +220,10 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Creates array with minor/middle/major ticks */
    createTicks(only_major_as_array, optionNoexp, optionNoopt, optionInt) {
-      if (optionNoopt && this.nticks && (this.kind === 'normal')) this.noticksopt = true;
+      if (optionNoopt && this.nticks && (this.kind === kAxisNormal)) this.noticksopt = true;
 
-      const handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func };
-
-      handle.minor = handle.middle = handle.major = this.produceTicks(this.nticks);
+      const ticks = this.produceTicks(this.nticks),
+            handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: ticks, middle: ticks, major: ticks };
 
       if (only_major_as_array) {
          const res = handle.major, delta = (this.scale_max - this.scale_min)*1e-5;
@@ -286,7 +286,7 @@ class RAxisPainter extends RObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind === 'normal') && !this.log && (handle.major.length > 0)) {
+      if ((this.kind === kAxisNormal) && !this.log && (handle.major.length > 0)) {
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
@@ -351,7 +351,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Is labels should be centered */
    isCenteredLabels() {
-      if (this.kind === 'labels') return true;
+      if (this.kind === kAxisLabels) return true;
       if (this.kind === 'log') return false;
       return this.v7EvalAttr('labels_center', false);
    }
@@ -583,7 +583,7 @@ class RAxisPainter extends RObjectPainter {
 
          if (this.handle.kind === 1) {
             // if not showing labels, not show large tick
-            if ((this.kind === 'labels') || (this.format(this.handle.tick, true) !== null)) h1 = this.ticksSize;
+            if ((this.kind === kAxisLabels) || (this.format(this.handle.tick, true) !== null)) h1 = this.ticksSize;
 
             if (main_draw) this.ticks.push(grpos); // keep graphical positions of major ticks
          }
@@ -1044,7 +1044,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Change axis log scale kind */
    changeAxisLog(arg) {
-      if ((this.kind === 'labels') || (this.kind === 'time')) return;
+      if ((this.kind === kAxisLabels) || (this.kind === kAxisTime)) return;
       if (arg === 'toggle') arg = this.log ? 0 : 10;
 
       arg = parseFloat(arg);
