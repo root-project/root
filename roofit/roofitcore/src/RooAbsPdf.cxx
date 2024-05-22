@@ -1024,6 +1024,8 @@ std::unique_ptr<RooAbsReal> RooAbsPdf::createNLLImpl(RooAbsData &data, const Roo
  *             matrix calculated with the squared weights.
  * <tr><td> `AsymptoticError()`               <td> Use the asymptotically correct approach to estimate errors in the presence of weights.
  *                                                 This is slower but more accurate than `SumW2Error`. See also https://arxiv.org/abs/1911.01303).
+                                                   This option even correctly implements the case of extended likelihood fits
+                                                   (see this [writeup on extended weighted fits](https://root.cern/files/extended_weighted_fits.pdf) that complements the paper linked before).
  * <tr><td> `PrefitDataFraction(double fraction)`
  *                                            <td>  Runs a prefit on a small dataset of size fraction*(actual data size). This can speed up fits
  *                                                  by finding good starting values for the parameters for the actual fit.

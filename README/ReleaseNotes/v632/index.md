@@ -26,6 +26,7 @@ The following people have contributed to this new version:
  Jonas Hahnfeld, CERN/EP-SFT,\
  Akeem Hart, Queen Mary University of London/DUNE and MINERvA,\
  Dennis Klein, GSI,\
+ Christoph Langenbruch, Heidelberg University/LHCb,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/EP-SFT,\
  Lorenzo Moneta, CERN/EP-SFT,\
@@ -37,7 +38,7 @@ The following people have contributed to this new version:
  Jonas Rembser, CERN/EP-SFT,\
  Matevz Tadel, UCSD/CMS,\
  Vassil Vassilev, Princeton/CMS,\
- Wouter Verkerke, NIKHEF/Atlas,
+ Wouter Verkerke, NIKHEF/ATLAS,
 
 ## Deprecation and Removal
 - The RooFit legacy iterators are deprecated and will be removed in ROOT 6.34 (see section "RooFit libraries")
@@ -93,6 +94,13 @@ In case you observe any slowdowns with the new likelihood evaluation, please
 open a GitHub issue about this, as such a performance regression is considered
 a bug.
 
+### Asymptotically correct uncertainties for extended unbinned likelihood fits
+
+Added correct treatment of extended term in asymptotically correct method for uncertainty determination in the presence of weights.
+This improvement will allow for extended unbinned maximum likelihood fits to use the asymptotically correct method when using the `RooFit::AsymptoticError()` command argument in [RooAbsPdf::fitTo()](https://root.cern.ch/doc/master/classRooAbsPdf.html#ab0721374836c343a710f5ff92a326ff5).
+See also this [writeup on extended weighted fits](https://root.cern/files/extended_weighted_fits.pdf) that is also linked from the reference guide.
+The [pull request](https://github.com/root-project/root/pull/14751) that introduced this feature might also be a good reference.
+
 ### Compile your code with memory safe interfaces
 
 If you define the `ROOFIT_MEMORY_SAFE_INTERFACES` preprocessor macro, the
@@ -103,7 +111,7 @@ return an owning pointer (e.g., a pointer to an object that you need to
 manually `delete`) are then returning a `std::unique_pt` for automatic memory
 management.
 
-For example this code would not compile anymore, because there is the rist that
+For example this code would not compile anymore, because there is the risk that
 the caller forgets to `delete params`:
 ```c++
 RooArgSet * params = pdf.getParameters(nullptr);
