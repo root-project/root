@@ -101,6 +101,19 @@ TChain::Add("/path/to/tree/subdir[0-9]/*.root")
 ```
 This grabs all the root files in subdirectories that have a name starting with `subdir` and ending with some digit.
 
+## RNTuple
+ROOT's experimental successor of TTree has seen a number of updates since the last release. Specifically, 6.32 includes the following changes:
+
+- A major refactoring of the interface, improving consistency across different parts and improving overall robustness. **Note that this is a breaking change with regard to 6.30!**
+- Support has been added for several new field types: `std::unordered_set<T>`, `std::map<K,V>`, `std::unordered_map<K,V>`
+- A new `RNTupleInspector` utility class has been added, to provide information about the on-disk metadata of an RNTuple.
+- A new `RNTupleParallelWriter` class has been added, providing (initial) support for parallel writing of RNTuples.
+- A new static method `RFieldBase::Check()` has been added, which produces a support status report of a type with regards to RNTuple I/O. 
+- A new internal `RNTupleMerger` class has been added, enabling the merging of different page sources into one page sink.
+- Many bug fixes and improvements.
+
+Please, report any issues regarding the above mentioned features should you encounter them. RNTuple is still experimental and is scheduled to become production grade by end of 2024. Thus, we appreciate feedback and suggestions for improvement.
+
 ## Histogram Libraries
 
 - Implement the FLT_MAX mechanism for `THStack::GetMaximum()` and `THStack::GetMiniumum()`.
