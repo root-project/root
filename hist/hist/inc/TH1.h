@@ -384,6 +384,7 @@ public:
    virtual void     SetContent(const Double_t *content);
    virtual void     SetContour(Int_t nlevels, const Double_t *levels = nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
+   virtual void     SetColors(Color_t linecolor = -1, Color_t markercolor = -1, Color_t fillcolor = -1);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);

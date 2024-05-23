@@ -4455,6 +4455,29 @@ Double_t TH1::GetEffectiveEntries() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Shortcut to set the three histogram colors with a single call.
+///
+/// By default: linecolor = markercolor = fillcolor = -1
+/// If a color is < 0 this method does not change the corresponding color if positive or null it set the color.
+///
+/// For instance:
+/// ~~~ {.cpp}
+/// h->SetColors(kRed, kRed);
+/// ~~~
+/// will set the line color and the marker color to red.
+
+void TH1::SetColors(Color_t linecolor, Color_t markercolor, Color_t fillcolor)
+{
+   if (linecolor >= 0)
+      SetLineColor(linecolor);
+   if (markercolor >= 0)
+      SetMarkerColor(markercolor);
+   if (fillcolor >= 0)
+      SetFillColor(fillcolor);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set highlight (enable/disable) mode for the histogram
 /// by default highlight mode is disable
 
