@@ -35,61 +35,11 @@ TEST(RNTuple, Variant)
    EXPECT_EQ(8.0, *std::get_if<double>(rdVariant));
 }
 
-TEST(RNTuple, VariantComplex)
-{
-   FileRaii fileGuard("test_ntuple_variant_complex.root");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto ptrVec = model->MakeField<std::vector<std::variant<std::optional<int>, float>>>("v");
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
-
-      for (int i = 0; i < 10; i++) {
-         ptrVec->clear();
-
-         for (int j = 0; j < 5; ++j) {
-            std::variant<std::optional<int>, float> var;
-            if (j % 2 == 0) {
-               if (j % 4 == 0) {
-                  var = std::optional<int>();
-               } else {
-                  var = 42;
-               }
-            } else {
-               var = float(1.0);
-            }
-            ptrVec->emplace_back(var);
-         }
-
-         writer->Fill();
-      }
-   }
-
-   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto ptrVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::variant<std::optional<int>, float>>>("v");
-   EXPECT_EQ(10u, reader->GetNEntries());
-   for (int i = 0; i < 10; i++) {
-      reader->LoadEntry(i);
-      EXPECT_EQ(5u, ptrVec->size());
-      for (int j = 0; j < 5; ++j) {
-         EXPECT_EQ(j % 2, ptrVec->at(j).index());
-         if (j % 2 == 0) {
-            if (j % 4 == 0) {
-               EXPECT_FALSE(std::get<0>(ptrVec->at(j)));
-            } else {
-               EXPECT_EQ(42, std::get<0>(ptrVec->at(j)));
-            }
-         } else {
-            EXPECT_FLOAT_EQ(1.0, std::get<1>(ptrVec->at(j)));
-         }
-      }
-   }
-}
-
 TEST(RNTuple, VariantSizeAlignment)
 {
    using CharArray3_t = std::array<char, 3>;
    using CharArray4_t = std::array<char, 4>;
+   using CharArray5_t = std::array<char, 5>;
 
    EXPECT_EQ(sizeof(std::variant<char>), RField<std::variant<char>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<char>), RField<std::variant<char>>("f").GetAlignment());
@@ -97,6 +47,8 @@ TEST(RNTuple, VariantSizeAlignment)
    EXPECT_EQ(alignof(std::variant<CharArray3_t>), RField<std::variant<CharArray3_t>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::variant<CharArray4_t>), RField<std::variant<CharArray4_t>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<CharArray4_t>), RField<std::variant<CharArray4_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::variant<CharArray5_t>), RField<std::variant<CharArray5_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::variant<CharArray5_t>), RField<std::variant<CharArray5_t>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::variant<float>), RField<std::variant<float>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<float>), RField<std::variant<float>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::variant<double>), RField<std::variant<double>>("f").GetValueSize());
@@ -190,4 +142,55 @@ TEST(RNTuple, VariantException)
    EXPECT_STREQ("str", std::get<0>(*ptrV).c_str());
    reader->LoadEntry(1);
    EXPECT_TRUE(ptrV->valueless_by_exception());
+}
+
+TEST(RNTuple, VariantComplex)
+{
+   FileRaii fileGuard("test_ntuple_variant_complex.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrVec = model->MakeField<std::vector<std::variant<std::optional<int>, float>>>("v");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+
+      for (int i = 0; i < 10; i++) {
+         ptrVec->clear();
+
+         for (int j = 0; j < 5; ++j) {
+            std::variant<std::optional<int>, float> var;
+            if (j % 2 == 0) {
+               if (j % 4 == 0) {
+                  var = std::optional<int>();
+               } else {
+                  var = 42;
+               }
+            } else {
+               var = float(1.0);
+            }
+            ptrVec->emplace_back(var);
+         }
+
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::variant<std::optional<int>, float>>>("v");
+   EXPECT_EQ(10u, reader->GetNEntries());
+   for (int i = 0; i < 10; i++) {
+      reader->LoadEntry(i);
+      EXPECT_EQ(5u, ptrVec->size());
+      for (int j = 0; j < 5; ++j) {
+         EXPECT_EQ(j % 2, ptrVec->at(j).index());
+         if (j % 2 == 0) {
+            if (j % 4 == 0) {
+               EXPECT_FALSE(std::get<0>(ptrVec->at(j)));
+            } else {
+               EXPECT_EQ(42, std::get<0>(ptrVec->at(j)));
+            }
+         } else {
+            EXPECT_FLOAT_EQ(1.0, std::get<1>(ptrVec->at(j)));
+         }
+      }
+   }
 }
