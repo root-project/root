@@ -105,7 +105,6 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    RooFit::Experimental::RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
    gaussFunc.createGradient();
-   gaussFunc.codeToFile("gaussian.cxx");
 
    RooArgSet paramsGauss;
    gauss.getParameters(nullptr, paramsGauss);

@@ -59,6 +59,11 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
    func = buildCode(obj);
 
    auto start = std::chrono::high_resolution_clock::now();
+
+   std::string optPragma = "#pragma cling optimize(2)";
+   gInterpreter->Declare(optPragma.c_str());
+   _allCode << optPragma << std::endl;
+
    // Declare the function and create its derivative.
    _funcName = declareFunction(func);
    _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
@@ -131,8 +136,6 @@ std::string RooFuncWrapper::declareFunction(std::string const &funcBody)
    static int iFuncWrapper = 0;
    auto funcName = "roo_func_wrapper_" + std::to_string(iFuncWrapper++);
 
-   gInterpreter->Declare("#pragma cling optimize(2)");
-
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs, double const* xlArr) {\n"
@@ -153,11 +156,13 @@ void RooFuncWrapper::createGradient()
 {
    std::string gradName = _funcName + "_grad_0";
    std::string requestName = _funcName + "_req";
-   std::string wrapperName = _funcName + "_derivativeWrapper";
 
    auto start = std::chrono::high_resolution_clock::now();
    // Calculate gradient
-   gInterpreter->ProcessLine("#include <Math/CladDerivator.h>");
+   std::string cladDerivatorInclude = "#include <Math/CladDerivator.h>";
+   gInterpreter->ProcessLine(cladDerivatorInclude.c_str());
+   _allCode << cladDerivatorInclude << std::endl;
+   _allCode << std::endl;
    // disable clang-format for making the following code unreadable.
    // clang-format off
    std::stringstream requestFuncStrm;
@@ -180,19 +185,9 @@ void RooFuncWrapper::createGradient()
                    .count()
              << " [ms]" << std::endl;
 
-   // Build a wrapper over the derivative to hide clad specific types such as 'array_ref'.
-   // disable clang-format for making the following code unreadable.
-   // clang-format off
    std::stringstream dWrapperStrm;
    start = std::chrono::high_resolution_clock::now();
-   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double const* xlArr, double* out) {\n"
-                   "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
-                   "  " << gradName << "(params, obs, xlArr, cladOut);\n"
-                   "}";
-   // clang-format on
-   _allCode << dWrapperStrm.str() << std::endl;
-   gInterpreter->Declare(dWrapperStrm.str().c_str());
-   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
+   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((gradName + ";").c_str()));
    std::cout << "IR to mach time: "
              << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)
                    .count()
@@ -257,22 +252,50 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
    return ctx.assembleCode(ctx.getResult(head));
 }
 
-/// @brief Prints the squashed code body to console.
-void RooFuncWrapper::dumpCode()
+void RooFuncWrapper::writeDebugMacro(std::string const &filename) const
 {
-   gInterpreter->ProcessLine(_funcName.c_str());
-}
+   std::ofstream outFile;
+   outFile.open(filename + ".C");
+   outFile << "#include <RooFit/Detail/MathFuncs.h>" << std::endl;
+   outFile << std::endl;
+   outFile << _allCode.str();
+   outFile << std::endl;
 
-/// @brief Prints the derivative code body to console.
-void RooFuncWrapper::dumpGradient()
+   updateGradientVarBuffer();
+
+   auto writeVector = [&](std::string const &name, std::span<const double> vec) {
+      outFile << "std::vector<double> " << name << " = {";
+      for (std::size_t i = 0; i < vec.size(); ++i) {
+         if (i % 10 == 0)
+            outFile << "\n    ";
+         outFile << vec[i];
+         if (i < vec.size() - 1)
+            outFile << ", ";
+      }
+      outFile << "\n};\n";
+   };
+
+   outFile << "// clang-format off\n" << std::endl;
+   writeVector("parametersVec", _gradientVarBuffer);
+   outFile << std::endl;
+   writeVector("observablesVec", _observables);
+   outFile << std::endl;
+   writeVector("auxConstantsVec", _xlArr);
+   outFile << std::endl;
+   outFile << "// clang-format on\n" << std::endl;
+
+   outFile << R"(
+// To run as a ROOT macro
+void )" << filename << R"(()
 {
-   gInterpreter->ProcessLine((_funcName + "_grad_0").c_str());
-}
+   std::vector<double> gradientVec(parametersVec.size());
 
-void RooFuncWrapper::codeToFile(std::string const& filename) const {
-    std::ofstream outFile;
-    outFile.open(filename);
-    outFile << _allCode.str();
+   )" << _funcName
+           << R"((parametersVec.data(), observablesVec.data(), auxConstantsVec.data());
+   )" << _funcName
+           << R"(_grad_0(parametersVec.data(), observablesVec.data(), auxConstantsVec.data(), gradientVec.data());
+}
+)";
 }
 
 } // namespace Experimental

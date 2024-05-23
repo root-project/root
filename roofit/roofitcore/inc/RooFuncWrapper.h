@@ -49,10 +49,6 @@ public:
 
    std::size_t getNumParams() const { return _params.size(); }
 
-   void dumpCode();
-
-   void dumpGradient();
-
    /// No constant term optimization is possible in code-generation mode.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
@@ -62,7 +58,7 @@ public:
 
    void disableEvaluator() { _useEvaluator = false; }
 
-   void codeToFile(std::string const&) const;
+   void writeDebugMacro(std::string const&) const;
 
    std::string declareFunction(std::string const &funcBody);
 
