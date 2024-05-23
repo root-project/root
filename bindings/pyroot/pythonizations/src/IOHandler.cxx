@@ -29,7 +29,6 @@
 #include <iostream>
 #include "TInterpreter.h"
 
-
 //////////////////////////
 // MODULE FUNCTIONALITY //
 //////////////////////////
@@ -39,10 +38,11 @@ private:
    bool fCapturing = false;
    std::string fStdoutpipe;
    std::string fStderrpipe;
-   int fStdout_pipe[2] = {0,0};
-   int fStderr_pipe[2] = {0,0};
+   int fStdout_pipe[2] = {0, 0};
+   int fStderr_pipe[2] = {0, 0};
    int fSaved_stderr = 0;
    int fSaved_stdout = 0;
+
 public:
    JupyROOTExecutorHandler();
    void Poll();
@@ -53,18 +53,16 @@ public:
    std::string &GetStderr();
 };
 
-
 #ifndef F_LINUX_SPECIFIC_BASE
-#define F_LINUX_SPECIFIC_BASE       1024
+#define F_LINUX_SPECIFIC_BASE 1024
 #endif
 #ifndef F_SETPIPE_SZ
-#define F_SETPIPE_SZ    (F_LINUX_SPECIFIC_BASE + 7)
+#define F_SETPIPE_SZ (F_LINUX_SPECIFIC_BASE + 7)
 #endif
 
 constexpr long MAX_PIPE_SIZE = 1048575;
 
 JupyROOTExecutorHandler::JupyROOTExecutorHandler() {}
-
 
 static void PollImpl(FILE *stdStream, int *pipeHandle, std::string &pipeContent)
 {
@@ -84,7 +82,8 @@ static void PollImpl(FILE *stdStream, int *pipeHandle, std::string &pipeContent)
       buf_read = read(pipeHandle[0], &ch, 1);
       if (buf_read == 1) {
          pipeContent += ch;
-      } else break;
+      } else
+         break;
    }
 #endif
 }
@@ -103,7 +102,8 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
    }
 #ifndef _MSC_VER
    long flags_stdout = fcntl(pipeHandle[0], F_GETFL);
-   if (flags_stdout == -1) return;
+   if (flags_stdout == -1)
+      return;
    flags_stdout |= O_NONBLOCK;
    fcntl(pipeHandle[0], F_SETFL, flags_stdout);
    fcntl(pipeHandle[0], F_SETPIPE_SZ, MAX_PIPE_SIZE);
@@ -113,7 +113,7 @@ static void InitCaptureImpl(int &savedStdStream, int *pipeHandle, int FILENO)
 
 void JupyROOTExecutorHandler::InitCapture()
 {
-   if (!fCapturing)  {
+   if (!fCapturing) {
       InitCaptureImpl(fSaved_stdout, fStdout_pipe, STDOUT_FILENO);
       InitCaptureImpl(fSaved_stderr, fStderr_pipe, STDERR_FILENO);
       fCapturing = true;
@@ -122,7 +122,7 @@ void JupyROOTExecutorHandler::InitCapture()
 
 void JupyROOTExecutorHandler::EndCapture()
 {
-   if (fCapturing)  {
+   if (fCapturing) {
       Poll();
       dup2(fSaved_stdout, STDOUT_FILENO);
       dup2(fSaved_stderr, STDERR_FILENO);
@@ -187,7 +187,7 @@ bool JupyROOTDeclarerImpl(const char *code)
    return status;
 }
 
-PyObject *JupyROOTExecutor(PyObject * /*self*/, PyObject * args)
+PyObject *JupyROOTExecutor(PyObject * /*self*/, PyObject *args)
 {
    const char *code;
    if (!PyArg_ParseTuple(args, "s", &code))
