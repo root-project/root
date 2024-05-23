@@ -54,7 +54,7 @@ PyObject *PyROOT::CPPInstanceExpand(PyObject * /*self*/, PyObject *args)
       TBufferFile buf(TBuffer::kRead, PyBytes_GET_SIZE(pybuf), PyBytes_AS_STRING(pybuf), kFALSE);
       newObj = buf.ReadObjectAny(0);
    }
-   PyObject *result = CPyCppyy::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/ true);
+   PyObject *result = CPyCppyy::Instance_FromVoidPtr(newObj, clname, /*python_owns=*/true);
    return result;
 }
 
@@ -67,22 +67,22 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
    // keep a borrowed reference around to the callable function for expanding;
    // because it is borrowed, it means that there can be no pickling during the
    // shutdown of the libPyROOT module
-   static PyObject *s_expand =
-      PyDict_GetItemString(PyModule_GetDict(PyROOT::gRootModule), "_CPPInstance__expand__");
+   static PyObject *s_expand = PyDict_GetItemString(PyModule_GetDict(PyROOT::gRootModule), "_CPPInstance__expand__");
 
    // TBuffer and its derived classes can't write themselves, but can be created
    // directly from the buffer, so handle them in a special case
    static Cppyy::TCppType_t s_bfClass = Cppyy::GetScope("TBufferFile");
    TBufferFile *buff = 0;
-   Cppyy::TCppType_t selfClass = ((CPPInstance*)self)->ObjectIsA();
+   Cppyy::TCppType_t selfClass = ((CPPInstance *)self)->ObjectIsA();
    if (selfClass == s_bfClass) {
       buff = (TBufferFile *)CPyCppyy::Instance_AsVoidPtr(self);
    } else {
       auto className = Cppyy::GetScopedFinalName(selfClass);
       if (className.find("__cppyy_internal::Dispatcher") == 0) {
-         PyErr_Format(PyExc_IOError, "generic streaming of Python objects whose class derives from a C++ class is not supported. "
-                                     "Please refer to the Python pickle documentation for instructions on how to define "
-                                     "a custom __reduce__ method for the derived Python class");
+         PyErr_Format(PyExc_IOError,
+                      "generic streaming of Python objects whose class derives from a C++ class is not supported. "
+                      "Please refer to the Python pickle documentation for instructions on how to define "
+                      "a custom __reduce__ method for the derived Python class");
          return 0;
       }
       // no cast is needed, but WriteObject taking a TClass argument is protected,
@@ -90,8 +90,7 @@ PyObject *op_reduce(PyObject *self, PyObject * /*args*/)
       static TBufferFile s_buff(TBuffer::kWrite);
       s_buff.Reset();
       // to delete
-      if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self),
-                                TClass::GetClass(className.c_str())) != 1) {
+      if (s_buff.WriteObjectAny(CPyCppyy::Instance_AsVoidPtr(self), TClass::GetClass(className.c_str())) != 1) {
          PyErr_Format(PyExc_IOError, "could not stream object of type %s",
                       Cppyy::GetScopedFinalName(selfClass).c_str());
          return 0;
