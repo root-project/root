@@ -31,7 +31,7 @@ using namespace PyROOT;
 
 namespace {
 
-static void AddToGlobalScope(const char *label, TObject *obj, const char * classname)
+static void AddToGlobalScope(const char *label, TObject *obj, const char *classname)
 {
    // Bind the given object with the given class in the global scope with the
    // given label for its reference.

@@ -42,7 +42,7 @@ namespace {
 // Get the TClass of the C++ object proxied by pyobj
 TClass *GetTClass(const PyObject *pyobj)
 {
-   return TClass::GetClass(Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance*)pyobj)->ObjectIsA()).c_str());
+   return TClass::GetClass(Cppyy::GetScopedFinalName(((CPyCppyy::CPPInstance *)pyobj)->ObjectIsA()).c_str());
 }
 
 } // namespace
@@ -108,10 +108,10 @@ static PyObject *WrapLeaf(TLeaf *leaf)
       // array types
       std::string typeName = leaf->GetTypeName();
 #ifdef CPYCPPYY_VERSION_HEX
-      dim_t dimsArr[]{ leaf->GetNdata() };
+      dim_t dimsArr[]{leaf->GetNdata()};
       CPyCppyy::Dimensions dims{1, dimsArr};
 #else
-      dim_t dims[]{ 1, leaf->GetNdata() }; // first entry is the number of dims
+      dim_t dims[]{1, leaf->GetNdata()}; // first entry is the number of dims
 #endif
       Converter *pcnv = CreateConverter(typeName + (isStatic ? "[]" : "*"), dims);
 
@@ -222,7 +222,7 @@ PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
 
    int argc = PyTuple_GET_SIZE(args);
 
-// Look for the (const char*, void*) overload
+   // Look for the (const char*, void*) overload
    auto argParseStr = "OUO:SetBranchAddress";
    if (argc == 3 && PyArg_ParseTuple(args, argParseStr, &treeObj, &name, &address)) {
 
@@ -274,12 +274,8 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
    PyObject *treeObj = nullptr;
    PyObject *name = nullptr, *address = nullptr, *leaflist = nullptr, *bufsize = nullptr;
 
-   if (PyArg_ParseTuple(args, "OO!OO!|O!:Branch",
-                        &treeObj,
-                        &PyUnicode_Type, &name,
-                        &address,
-                        &PyUnicode_Type, &leaflist,
-                        &PyInt_Type, &bufsize)) {
+   if (PyArg_ParseTuple(args, "OO!OO!|O!:Branch", &treeObj, &PyUnicode_Type, &name, &address, &PyUnicode_Type,
+                        &leaflist, &PyInt_Type, &bufsize)) {
 
       auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
       if (!tree) {
@@ -296,8 +292,7 @@ PyObject *TryBranchLeafListOverload(int argc, PyObject *args)
       if (buf) {
          TBranch *branch = nullptr;
          if (argc == 5) {
-            branch = tree->Branch(PyUnicode_AsUTF8(name), buf, PyUnicode_AsUTF8(leaflist),
-                                  PyInt_AS_LONG(bufsize));
+            branch = tree->Branch(PyUnicode_AsUTF8(name), buf, PyUnicode_AsUTF8(leaflist), PyInt_AS_LONG(bufsize));
          } else {
             branch = tree->Branch(PyUnicode_AsUTF8(name), buf, PyUnicode_AsUTF8(leaflist));
          }
@@ -323,21 +318,12 @@ PyObject *TryBranchPtrToPtrOverloads(int argc, PyObject *args)
    PyObject *name = nullptr, *clName = nullptr, *address = nullptr, *bufsize = nullptr, *splitlevel = nullptr;
 
    auto bIsMatch = false;
-   if (PyArg_ParseTuple(args, "OO!O!O|O!O!:Branch",
-                        &treeObj,
-                        &PyUnicode_Type, &name,
-                        &PyUnicode_Type, &clName,
-                        &address,
-                        &PyInt_Type, &bufsize,
-                        &PyInt_Type, &splitlevel)) {
+   if (PyArg_ParseTuple(args, "OO!O!O|O!O!:Branch", &treeObj, &PyUnicode_Type, &name, &PyUnicode_Type, &clName,
+                        &address, &PyInt_Type, &bufsize, &PyInt_Type, &splitlevel)) {
       bIsMatch = true;
    } else {
       PyErr_Clear();
-      if (PyArg_ParseTuple(args, "OO!O|O!O!",
-                           &treeObj,
-                           &PyUnicode_Type, &name,
-                           &address,
-                           &PyInt_Type, &bufsize,
+      if (PyArg_ParseTuple(args, "OO!O|O!O!", &treeObj, &PyUnicode_Type, &name, &address, &PyInt_Type, &bufsize,
                            &PyInt_Type, &splitlevel)) {
          bIsMatch = true;
       } else {

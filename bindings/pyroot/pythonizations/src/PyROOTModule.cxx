@@ -62,10 +62,8 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Deserialize a pickled object"},
    {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,
     (char *)"Clear proxied objects regulated by PyROOT"},
-   {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS,
-    (char *)"Create JupyROOTExecutor"},
-   {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS,
-    (char *)"Create JupyROOTDeclarer"},
+   {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, (char *)"Create JupyROOTExecutor"},
+   {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, (char *)"Create JupyROOTDeclarer"},
    {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
     (char *)"Clear JupyROOTExecutorHandler"},
    {(char *)"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
@@ -102,17 +100,17 @@ static int rootmodule_clear(PyObject *m)
    return 0;
 }
 
-static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPythonizations",  NULL,
-                                       sizeof(struct module_state), gPyROOTMethods,   NULL,
-                                       rootmodule_traverse,         rootmodule_clear, NULL};
+static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPythonizations", NULL,
+                                       sizeof(struct module_state), gPyROOTMethods,          NULL,
+                                       rootmodule_traverse,         rootmodule_clear,        NULL};
 
 /// Initialization of extension module libROOTPythonizations
 
-extern "C" PyObject* PyInit_libROOTPythonizations()
+extern "C" PyObject *PyInit_libROOTPythonizations()
 {
    using namespace PyROOT;
 
-// setup PyROOT
+   // setup PyROOT
    gRootModule = PyModule_Create(&moduledef);
    if (!gRootModule)
       return nullptr;
