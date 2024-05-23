@@ -252,11 +252,11 @@ class BaseGenerator:
             chunk_size,
             batch_size,
             self.given_columns,
+            self.num_columns,
             max_vec_sizes_list,
             vec_padding,
             validation_split,
             max_chunks,
-            self.num_columns,
             shuffle,
             drop_remainder,
         )
