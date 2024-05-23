@@ -450,7 +450,7 @@ Double_t** TGraphAsymmErrors::Allocate(Int_t size) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add a point with asymmetric errorbars to an existing plot
+/// Add a point with asymmetric errorbars to the graph.
 
 void TGraphAsymmErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh)
 {

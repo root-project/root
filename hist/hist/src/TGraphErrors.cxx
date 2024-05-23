@@ -371,6 +371,9 @@ TGraphErrors::~TGraphErrors()
    delete [] fEY;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with errorbars to the graph.
+
 void TGraphErrors::AddPointError(Double_t x, Double_t y, Double_t ex, Double_t ey)
 {
    AddPoint(x, y); // fNpoints will increase automatically

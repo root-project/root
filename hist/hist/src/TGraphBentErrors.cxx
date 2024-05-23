@@ -187,7 +187,7 @@ TGraphBentErrors::~TGraphBentErrors()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add one point with bent errors to the graph
+/// Add a point with bent errors to the graph.
 
 void TGraphBentErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
                                      Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
