@@ -4468,9 +4468,12 @@ Double_t TH1::GetEffectiveEntries() const
 
 void TH1::SetColors(Color_t linecolor, Color_t markercolor, Color_t fillcolor)
 {
-   if (linecolor >= 0) SetLineColor(linecolor);
-   if (markercolor >= 0) SetMarkerColor(markercolor);
-   if (fillcolor >= 0) SetFillColor(fillcolor);
+   if (linecolor >= 0)
+      SetLineColor(linecolor);
+   if (markercolor >= 0)
+      SetMarkerColor(markercolor);
+   if (fillcolor >= 0)
+      SetFillColor(fillcolor);
 }
 
 
