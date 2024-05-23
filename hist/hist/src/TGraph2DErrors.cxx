@@ -194,7 +194,6 @@ TGraph2DErrors &TGraph2DErrors::operator=(const TGraph2DErrors &g)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function adds to existing plot one point with errorbars
-/// It returns the error along X at point i.
 
 void TGraph2DErrors::AddPointError(Double_t x, Double_t y, Double_t z, Double_t ex, Double_t ey, Double_t ez)
 {
