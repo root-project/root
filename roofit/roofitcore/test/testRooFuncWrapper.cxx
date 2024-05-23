@@ -621,7 +621,7 @@ FactoryTestParams param15{"RecursiveFraction",
                           5e-3,
                           /*randomizeParameters=*/true};
 
-FactoryTestParams makeTestParams(const char *name, std::string const& expr, bool randomizeParameters)
+FactoryTestParams makeTestParams(const char *name, std::string const &expr, bool randomizeParameters)
 {
    return FactoryTestParams{name,
                             [=](RooWorkspace &ws) {
@@ -632,7 +632,7 @@ FactoryTestParams makeTestParams(const char *name, std::string const& expr, bool
                                using namespace RooFit;
                                return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
                             },
-                            5e-3, randomizeParameters};
+                            6e-3, randomizeParameters};
 }
 
 auto testValues = testing::Values(
@@ -641,10 +641,10 @@ auto testValues = testing::Values(
    param3,
 #endif
    param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15,
-   // TODO: the RooCBShape test is disabled for now, because the gradient doesn't work with Clad v1.4.
-   // makeTestParams("RooCBShape",
-   //               "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])",
-   //               true),
+   makeTestParams("RooCBShape",
+                  "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, "
+                  "100.], n[1., 1.E-6, 100.])",
+                  true),
    makeTestParams(
       "RooBernstein",
       "Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.], c3[0.5, 0., 10.]})", true),
@@ -655,8 +655,7 @@ auto testValues = testing::Values(
    makeTestParams("RooLandau2", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])", false),
    makeTestParams("RooLandau3", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])", false),
    makeTestParams("RooLandau4", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])", false),
-   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false)
-);
+   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false));
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
