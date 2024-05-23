@@ -1330,16 +1330,17 @@ void TKey::Reset()
 /// An explaination about the nbytes (Int_t nbytes) variable used in the
 /// function. The size of fSeekKey and fSeekPdir is 8 instead of 4 if version is
 /// greater than 1000.
-/// | Component         | Sizeof |
-/// |-------------------|--------|
-/// | fNbytes           | 4      |
-/// | sizeof(Version_t) | 2      |
-/// | fObjlen           | 4      |
-/// | fKeylen           | 2      |
-/// | fCycle            | 2      |
-/// | fSeekKey          | 4 or 8 |
-/// | fSeekPdir         | 4 or 8 |
-/// | **TOTAL**         |   22   |
+/// | Component         | Sizeof   |
+/// |-------------------|----------|
+/// | fNbytes           | 4        |
+/// | sizeof(Version_t) | 2        |
+/// | fObjlen           | 4        |
+/// | fDatime           | 4        |
+/// | fKeylen           | 2        |
+/// | fCycle            | 2        |
+/// | fSeekKey          | 4 or 8   |
+/// | fSeekPdir         | 4 or 8   |
+/// | **TOTAL**         | 26 or 34 |
 
 Int_t TKey::Sizeof() const
 {
