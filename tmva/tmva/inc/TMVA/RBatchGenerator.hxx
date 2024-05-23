@@ -8,7 +8,6 @@
 #include <mutex>
 #include <variant>
 #include <algorithm>
-#include <iostream>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -124,6 +123,7 @@ public:
 
       fFixedRng.seed(fFixedSeed);
       fBatchLoader->Activate();
+      fChunkLoader->Activate();
 
       fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksNoFilters, this);
    }
@@ -216,7 +216,6 @@ public:
          std::size_t valuesLeft = std::min(fChunkSize, fNumEntries - currentRow);
 
          // A pair that consists the proccessed, and passed events while loading the chunk
-         std::cout << "Entering LoadChunk\n"; 
          std::size_t report = fChunkLoader->LoadChunk(currentRow, valuesLeft);
          currentRow += report;
 

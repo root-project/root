@@ -2,7 +2,6 @@
 #define TMVA_CHUNKLOADER
 
 #include <vector>
-#include <iostream>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDataFrame.hxx"
@@ -45,7 +44,6 @@ private:
    template <typename First_T>
    void AssignToTensor(First_T first)
    {  
-      std::cout << "Second assign to tensor: " << first << "\n";
       fChunkTensor->GetData()[fOffset++] = first;
       fEntries++;
    }
@@ -68,7 +66,6 @@ private:
    template <typename First_T, typename... Rest_T>
    void AssignToTensor(First_T first, Rest_T... rest)
    {  
-      std::cout << "First assign to tensor " << first << "\n";
       fChunkTensor->GetData()[fOffset++] = first;
 
       AssignToTensor(std::forward<Rest_T>(rest)...);
@@ -134,25 +131,18 @@ public:
    /// \param ...rest
    void operator()(First first, Rest... rest)
    {  
-      std::cout << "Entering operator\n";
       fVecSizeIdx = 0;
 
       if (fIndices[fEntries] < fThreshold){
-         std::cout << "Index in if: " << fIndices[fEntries] << "\n";
-         std::cout << "Batch number: " << fIndices[fEntries] / fBatchSize << "\n";
          std::size_t index = fIndices[fEntries] + fTrainRemainderEntries;
          fChunkTensor = fTrainingBatches[index / fBatchSize];
          fOffset = (index % fBatchSize) * fNumColumns;
       }
       else{
          std::size_t index = fIndices[fEntries] + fValidationRemainderEntries - fThreshold;
-         std::cout << "Index in else: " << index << "\n";
          fChunkTensor = fValidationBatches[index / fBatchSize];
          fOffset = (index % fBatchSize) * fNumColumns;
       }
-
-      std::cout << "Offset " << fOffset << "\n";
-      std::cout << "Leaving operator\n";
 
       AssignToTensor(std::forward<First>(first), std::forward<Rest>(rest)...);
    }
@@ -216,31 +206,19 @@ public:
    /// \return A pair of size_t defining the number of events processed and how many passed all filters
    std::size_t LoadChunk(const std::size_t currentRow, std::size_t valuesLeft)
    {  
-      std::cout << "Values left: " << valuesLeft << "\n";
-
       std::size_t sizeValidation = floor(valuesLeft * fValidationSplit);
       std::size_t sizeTraining = valuesLeft - sizeValidation;
 
       fTrainingBatches = std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>>();
       fTrainingBatches.reserve(sizeTraining);
 
-      std::cout << "fBatchSize: " << fBatchSize << "\n fNumColumns: " << fNumColumns << "\n";
-
       if (fTrainRemainderEntries){
-         std::cout << "Train remainder works\n"; 
          fTrainingBatches.emplace_back(std::move(fTrainingRemainder));
       }
-
-      std::cout << "Number of training batches: " << sizeTraining / fBatchSize << "\n";
 
       for (std::size_t i = 0; i < sizeTraining / fBatchSize; i++){
          fTrainingBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
-
-      std::cout << "Size of fTrainingBatches: " << fTrainingBatches.size() << "\n";
-
-      if (fTrainingBatches[1])
-         std::cout << "Size of batch inside " << fTrainingBatches[1]->GetSize() << "\n";
 
       fValidationBatches = std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>>();
       fValidationBatches.reserve(sizeValidation);
@@ -253,53 +231,28 @@ public:
          fValidationBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
 
-      std::cout << "Size of fValidationBatches: " << fValidationBatches.size() << "\n";
-
       std::vector<std::size_t> indices(valuesLeft);
       std::iota(indices.begin(), indices.end(), 0);
-
-      std::cout << "Print out indices:\n";
-      for (std::size_t a: indices){
-         std::cout << a << ", ";
-      } 
-
-      std::cout << "\n";
       
       RChunkLoaderFunctor<Args...> func(fTrainingBatches, fValidationBatches, sizeTraining, indices, fBatchSize,
          fNumColumns, fTrainRemainderEntries, fValRemainderEntries, fVecSizes, fVecPadding);
 
-      std::cout << "Size fTrainremainderEntries" << fTrainRemainderEntries << "\n";
-      std::cout << "Size fValRemainderEntries" << fValRemainderEntries << "\n";
-      std::cout << "Size training: " << sizeTraining << "\n";
-      std::cout << "Size validation: " << sizeValidation << "\n";
-
-      std::cout << "mid of train remainder entries" << fTrainRemainderEntries + sizeTraining << "\n";
-
       fTrainRemainderEntries = (fTrainRemainderEntries + sizeTraining) % fBatchSize;
       fValRemainderEntries = (fValRemainderEntries + sizeValidation) % fBatchSize;
 
-      std::cout << "fTrainRemainderEntries: " << fTrainRemainderEntries << "\n";
-      std::cout << "fValRemainderEntries: " << fValRemainderEntries << "\n";
-
       if (fTrainRemainderEntries){
-         std::cout << "Emplacing train remainder\n";
          fTrainingBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
 
       if (fValRemainderEntries){
-         std::cout << "Emplacing validation remainder\n";
          fValidationBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
 
       ROOT::Internal::RDF::ChangeBeginAndEndEntries(f_rdf, currentRow, currentRow + fChunkSize);
       auto myCount = f_rdf.Count();
 
-      std::cout << "Before Foreach\n";
-
       // load data
       f_rdf.Foreach(func, fCols);
-
-      std::cout << "After Foreach\n";
 
       if (fTrainRemainderEntries){
          fTrainingRemainder = fTrainingBatches.back();
@@ -313,6 +266,11 @@ public:
 
       // get loading info
       return myCount.GetValue();
+   }
+
+   void Activate(){
+      fTrainRemainderEntries = 0;
+      fValRemainderEntries = 0;
    }
 };
 
