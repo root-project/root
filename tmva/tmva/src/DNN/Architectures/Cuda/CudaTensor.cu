@@ -249,7 +249,7 @@ void TCudaTensor<AFloat>::InitializeCuda()
          fCudnnHandle.resize(2 * fStreamIndx + 1, nullptr);
          }
       if (fInstances[fStreamIndx] == 0) {
-         std::cout << "TCudaTensor::create cudnn handle ! " << std::endl;
+         std::cout << "TCudaTensor::create cudnn handle - cuDNN version " << CUDNN_VERSION << std::endl;
          CUDNNCHECK(cudnnCreate(&fCudnnHandle[fStreamIndx]));
          // CUDNNCHECK(cudnnSetStream(fCudnnHandle[fStreamIndx], fElementBuffer.GetComputeStream()));
 
