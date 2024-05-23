@@ -18,6 +18,7 @@ ROOT.TMVA.PyMethodBase.PyInitialize()
 
 # check if the input file exists
 modelFile = "Higgs_trained_model.h5"
+modelName = "Higgs_trained_model";  
 
 if not exists(modelFile):
     raise FileNotFoundError("You need to run TMVA_Higgs_Classification.C to generate the Keras trained model")
@@ -27,14 +28,13 @@ model = ROOT.TMVA.Experimental.SOFIE.PyKeras.Parse(modelFile)
 
 # generating inference code
 model.Generate()
-model.OutputGenerated("Higgs_trained_model.hxx")
+model.OutputGenerated("Higgs_trained_model_generated.hxx")
 model.PrintGenerated()
 
 # compile using ROOT JIT trained model
 print("compiling SOFIE model and functor....")
-ROOT.gInterpreter.Declare('#include "Higgs_trained_model.hxx"')
-modelName = "Higgs_trained_model"
-ROOT.gInterpreter.Declare('auto sofie_functor = TMVA::Experimental::SofieFunctor<7,TMVA_SOFIE_'+modelName+'::Session>(0);')
+ROOT.gInterpreter.Declare('#include "Higgs_trained_model_generated.hxx"')
+ROOT.gInterpreter.Declare('auto sofie_functor = TMVA::Experimental::SofieFunctor<7,TMVA_SOFIE_'+modelName+'::Session>(0,"Higgs_trained_model_generated.dat");')
 
 # run inference over input data
 inputFile = "http://root.cern/files/Higgs_data.root"
