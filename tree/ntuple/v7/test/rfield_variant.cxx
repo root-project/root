@@ -40,6 +40,7 @@ TEST(RNTuple, VariantSizeAlignment)
    using CharArray3_t = std::array<char, 3>;
    using CharArray4_t = std::array<char, 4>;
    using CharArray5_t = std::array<char, 5>;
+   using VariantOfOptional_t = std::variant<std::optional<int>, float>;
 
    EXPECT_EQ(sizeof(std::variant<char>), RField<std::variant<char>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<char>), RField<std::variant<char>>("f").GetAlignment());
@@ -55,6 +56,8 @@ TEST(RNTuple, VariantSizeAlignment)
    EXPECT_EQ(alignof(std::variant<double>), RField<std::variant<double>>("f").GetAlignment());
    EXPECT_EQ(sizeof(std::variant<CustomStruct>), RField<std::variant<CustomStruct>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<CustomStruct>), RField<std::variant<CustomStruct>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(VariantOfOptional_t), RField<VariantOfOptional_t>("f").GetValueSize());
+   EXPECT_EQ(alignof(VariantOfOptional_t), RField<VariantOfOptional_t>("f").GetAlignment());
 }
 
 TEST(RNTuple, VariantLimits)
