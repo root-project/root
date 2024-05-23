@@ -73,6 +73,9 @@ This grabs all the root files in subdirectories that have a name starting with `
 
 ## Histogram Libraries
 
+- Implement the FLT_MAX mechanism for `THStack::GetMaximum()` and `THStack::GetMiniumum()`.
+- Print a warning when the range given to `TAxis::SetRange` is invalid.
+- Fix projection name in `TH3` as requested [here](https://root-forum.cern.ch/t/project3d-letter-d-in-name-option/57612).
 
 ## Math Libraries
 
@@ -238,6 +241,25 @@ In the unlikeliy case where you should have used these new classes for analysis 
 
 ## 2D Graphics Libraries
 
+- TMultiGraph: Add the objects from the list of functions in legend produce by TLegend.
+- Implement the IsInside method for TEllipse, TCrown and TDiamond. Also, a new graphics example `inside.C` has been added.
+- Two new methods in TColor: `ListColors()` and `GetColorByname()`.
+- Make sure the option `L` draws closed polygon for `TH2Poly`.
+- Use Tex Gyre fonts for sans serif (similar to Helvetica) .
+- The new method `TPad::ModifiedUpdate` is short cut to call `Modified()` and `Update()` in a single call. On Mac with Cocoa, it performs an additional ProcessEvents().
+- Improve `SetTextSize` error: show code and values.
+- Very long text string generated a wrong SVG file.
+- Fix the option `SAME` works for `TGraph2D`.
+- Implement the title for the palette of a `TH3`.
+- Fix typo in `TLegend::PaintPrimitives()` and improve the exclusion graphs legend.
+- `SetParameters(…)` or `SetParameter(…)` on a TF1 reset the properties of the axis that have been previously defined.
+  This was due to the `Update()` that was done after the parameters definition.
+- Update fonts' documentation (CMS request).
+- Delaunay triangles were computed by the package `triangle.c` included in the ROOT code.
+  This package had several problems:
+      - It was not maintained anymore.
+      - Its license was not compatible with LGPL.
+  It is now replaced  by the CDT package which is properly maintained and has a license (MLP) compatible with LGPL
 
 ## 3D Graphics Libraries
 
@@ -285,7 +307,7 @@ See: https://github.com/root-project/root/issues/15153#issuecomment-2040504962
 
 ### No more implicit conversion of static size `char` buffer to Python strings
 
-A static size character buffer of type `char[n]` is not converted to a Python string anymore. 
+A static size character buffer of type `char[n]` is not converted to a Python string anymore.
 The reason for this: since it was previously assumed the string was
 null-terminated, there was no way to get the bytes after a `null`, even if you
 wanted to.
@@ -360,6 +382,25 @@ The old pythonization with the `__getattr__` syntax still works, but emits a dep
 
 ## Class Reference Guide
 
+- Define missing doxygen groups.
+- Fix a few typos in the `THStack` documentation.
+- Small fixes in the `THistPainter` documentation.
+- Improve the `TColor` documentation: use modern C++ in the examples.
+- Make sure the python examples do not generate wrong namespaces in the documentation.
+- The dataframe tutorials json spec files were not displayed properly. Moreover there was
+  no direct correspondence between the code source and the json file. Those files do not
+  have any doc in them. With a direct link to the GitHub source file the dependency between source
+  code and json is now more obvious.
+- Document how to remove shadow of `TPave`, as it was not evident (only explanations were hidden here and there in the forum).
+- Improve the `SetFillColorAlpha` documentation.
+- Simplify some graphics examples: arrow.C, crown.C, diamond.C and ellipse.C.
+- Fix a typo in the documentation of `TGraph::SetHighlight` in `TGraph.cxx`.
+- Change the marker style in the tutorial `df014_CSVDataSource`.
+- Remove useless settings in the tutorial `scatter.C`.
+- Fix the tutorial `h1analysisTreeReader.C`.
+- Fix doxygen formatting in `TGNumberEntry.cxx`.
+- Avoid the CDT documentation to appear in the reference guide.
+- Remove last references to the old ROOT `drupal` website.
 
 ## Build, Configuration and Testing Infrastructure
 
