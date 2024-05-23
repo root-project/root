@@ -1130,7 +1130,7 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
    // We require that future class versions only append members and store the checksum in the last 8 bytes
    // Checksum calculation: strip byte count, class version, fChecksum member
    RUInt64BE *ckOnDisk = reinterpret_cast<RUInt64BE *>(bufAnchor.get() + key.fObjLen - sizeof(uint64_t));
-   auto lenCkData = ntuple->GetSizeCkData() + key.fObjLen - sizeof(RTFNTuple) - sizeof(uint64_t);
+   auto lenCkData = key.fObjLen - ntuple->GetOffsetCkData() - sizeof(uint64_t);
    auto ckCalc = XXH3_64bits(ntuple->GetPtrCkData(), lenCkData);
    if (ckCalc != (uint64_t)(*ckOnDisk)) {
       return R__FAIL("RNTuple anchor checksum mismatch");
