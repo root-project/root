@@ -4462,7 +4462,7 @@ Double_t TH1::GetEffectiveEntries() const
 ///
 /// For instance:
 /// ~~~ {.cpp}
-/// h->SetColor(kRed, kRed);
+/// h->SetColors(kRed, kRed);
 /// ~~~
 /// will set the line color and the marker color to red.
 
