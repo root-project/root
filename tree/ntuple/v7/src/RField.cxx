@@ -374,6 +374,23 @@ ERNTupleUnsplitSetting GetRNTupleUnsplitSetting(TClass *cl)
    }
 }
 
+// Depending on the compiler, the variant tag is stored either in a trailing char or in a trailing unsigned int
+constexpr std::size_t GetVariantTagSize()
+{
+   // Should be all zeros except for the tag, which is 1
+   std::variant<char> t;
+   constexpr auto sizeOfT = sizeof(t);
+
+   static_assert(sizeOfT == 2 || sizeOfT == 8, "unsupported std::variant layout");
+   return sizeOfT == 2 ? 1 : 4;
+}
+
+template <std::size_t VariantSizeT>
+struct RVariantTag {
+   using ValueType_t = typename std::conditional_t<VariantSizeT == 1, std::uint8_t,
+                                                   typename std::conditional_t<VariantSizeT == 4, std::uint32_t, void>>;
+};
+
 } // anonymous namespace
 
 void ROOT::Experimental::Internal::CallCommitClusterOnField(RFieldBase &field)
@@ -3218,7 +3235,18 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
       fTraits &= itemFields[i]->GetTraits();
       Attach(std::unique_ptr<RFieldBase>(itemFields[i]));
    }
-   fTagOffset = fMaxItemSize;
+
+   // With certain template parameters, the union of members of an std::variant starts at an offset > 0.
+   // For instance, std::variant<std::optional<int>> on macOS.
+   auto cl = TClass::GetClass(GetTypeName().c_str());
+   assert(cl);
+   auto dm = reinterpret_cast<TDataMember *>(cl->GetListOfDataMembers()->First());
+   if (dm)
+      fVariantOffset = dm->GetOffset();
+
+   const auto tagSize = GetVariantTagSize();
+   const auto padding = tagSize - (fMaxItemSize % tagSize);
+   fTagOffset = fVariantOffset + fMaxItemSize + ((padding == tagSize) ? 0 : padding);
 }
 
 std::unique_ptr<ROOT::Experimental::RFieldBase>
@@ -3236,14 +3264,16 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
 
 std::uint8_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr, std::size_t tagOffset)
 {
-   auto tag = *(reinterpret_cast<const uint8_t *>(variantPtr) + tagOffset);
-   return (tag == 255) ? 0 : tag + 1;
+   using TagType_t = RVariantTag<GetVariantTagSize()>::ValueType_t;
+   auto tag = *reinterpret_cast<const TagType_t *>(reinterpret_cast<const unsigned char *>(variantPtr) + tagOffset);
+   return (tag == TagType_t(-1)) ? 0 : tag + 1;
 }
 
 void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag)
 {
-   auto index = reinterpret_cast<uint8_t *>(variantPtr) + tagOffset;
-   *index = (tag == 0) ? 255 : static_cast<uint8_t>(tag - 1);
+   using TagType_t = RVariantTag<GetVariantTagSize()>::ValueType_t;
+   auto tagPtr = reinterpret_cast<TagType_t *>(reinterpret_cast<unsigned char *>(variantPtr) + tagOffset);
+   *tagPtr = (tag == 0) ? TagType_t(-1) : static_cast<TagType_t>(tag - 1);
 }
 
 std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
@@ -3252,7 +3282,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
    std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
-      nbytes += CallAppendOn(*fSubFields[tag - 1], from);
+      nbytes += CallAppendOn(*fSubFields[tag - 1], reinterpret_cast<const unsigned char *>(from) + fVariantOffset);
       index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
@@ -3271,8 +3301,9 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
-      CallConstructValueOn(*fSubFields[tag - 1], to);
-      CallReadOn(*fSubFields[tag - 1], variantIndex, to);
+      void *varPtr = reinterpret_cast<unsigned char *>(to) + fVariantOffset;
+      CallConstructValueOn(*fSubFields[tag - 1], varPtr);
+      CallReadOn(*fSubFields[tag - 1], variantIndex, varPtr);
    }
    SetTag(to, fTagOffset, tag);
 }
@@ -3298,7 +3329,7 @@ void ROOT::Experimental::RVariantField::GenerateColumnsImpl(const RNTupleDescrip
 void ROOT::Experimental::RVariantField::ConstructValue(void *where) const
 {
    memset(where, 0, GetValueSize());
-   CallConstructValueOn(*fSubFields[0], where);
+   CallConstructValueOn(*fSubFields[0], reinterpret_cast<unsigned char *>(where) + fVariantOffset);
    SetTag(where, fTagOffset, 1);
 }
 
@@ -3306,7 +3337,7 @@ void ROOT::Experimental::RVariantField::RVariantDeleter::operator()(void *objPtr
 {
    auto tag = GetTag(objPtr, fTagOffset);
    if (tag > 0) {
-      fItemDeleters[tag - 1]->operator()(objPtr, true /* dtorOnly */);
+      fItemDeleters[tag - 1]->operator()(reinterpret_cast<unsigned char *>(objPtr) + fVariantOffset, true /*dtorOnly*/);
    }
    RDeleter::operator()(objPtr, dtorOnly);
 }
@@ -3318,20 +3349,20 @@ std::unique_ptr<ROOT::Experimental::RFieldBase::RDeleter> ROOT::Experimental::RV
    for (const auto &f : fSubFields) {
       itemDeleters.emplace_back(GetDeleterOf(*f));
    }
-   return std::make_unique<RVariantDeleter>(fTagOffset, itemDeleters);
+   return std::make_unique<RVariantDeleter>(fTagOffset, fVariantOffset, itemDeleters);
+}
+
+size_t ROOT::Experimental::RVariantField::GetAlignment() const
+{
+   return std::max(fMaxAlignment, alignof(RVariantTag<GetVariantTagSize()>::ValueType_t));
 }
 
 size_t ROOT::Experimental::RVariantField::GetValueSize() const
 {
    const auto alignment = GetAlignment();
-   const auto actualSize = fMaxItemSize + 1;
-   auto padding = 0;
-   if (alignment > 1) {
-      auto remainder = actualSize % alignment;
-      if (remainder != 0)
-         padding = alignment - remainder;
-   }
-   return actualSize + padding;
+   const auto actualSize = fTagOffset + GetVariantTagSize();
+   const auto padding = alignment - (actualSize % alignment);
+   return actualSize + ((padding == alignment) ? 0 : padding);
 }
 
 void ROOT::Experimental::RVariantField::CommitClusterImpl()
