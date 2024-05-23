@@ -350,7 +350,7 @@ void TBranch::Init(const char* name, const char* leaflist, Int_t compress)
          }
          if (lenName == 0 || ctype == leafname) {
             Warning("TBranch","No name was given to the leaf number '%d' in the leaflist of the branch '%s'.",fNleaves,name);
-            snprintf(leafname,640,"__noname%d",fNleaves);
+            snprintf(leafname, len + 1, "__noname%d", fNleaves);
          }
          TLeaf* leaf = nullptr;
          if (leaftype[1] == '[' && !strchr(leaftype, ',')) {
