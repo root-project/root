@@ -778,7 +778,7 @@ Variants are stored in $n+1$ fields:
 
 The dispatch tag ranges from 1 to $n$.
 A value of 0 indicates that the variant is in the invalid state, i.e., it does not hold any of the valid alternatives.
-Variants must not have more than 255 sub fields.
+Variants must not have more than 254 subfields.
 This follows common compiler implementation limits.
 
 #### std::pair<T1, T2>
