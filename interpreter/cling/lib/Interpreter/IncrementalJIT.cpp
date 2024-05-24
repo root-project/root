@@ -70,7 +70,7 @@ namespace {
     }
   };
 
-  ClingMMapper MMapperInstance;
+  ClingMMapper* MMapperInstance = new ClingMMapper();
 
   // A memory manager for Cling that reserves memory for code and data sections
   // to keep them contiguous for the emission of one module. This is required
@@ -133,7 +133,7 @@ namespace {
     AllocInfo m_RWData;
 
   public:
-    ClingMemoryManager() : Super(&MMapperInstance) {}
+    ClingMemoryManager() : Super(MMapperInstance) {}
 
     uint8_t* allocateCodeSection(uintptr_t Size, unsigned Alignment,
                                  unsigned SectionID,
