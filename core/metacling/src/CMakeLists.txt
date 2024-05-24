@@ -166,8 +166,12 @@ if(MSVC)
       ??1LifetimeHandler@internal@runtime@cling@@QEAA@XZ
       ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
     )
-    if($<CONFIG:Debug>)
-       set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
+    if(CMAKE_GENERATOR MATCHES Ninja AND CMAKE_BUILD_TYPE MATCHES Debug)
+      set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
+    else()
+      if($<CONFIG:Debug>)
+         set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
+      endif()
     endif()
   else()
     set(cling_exports ${cling_exports}

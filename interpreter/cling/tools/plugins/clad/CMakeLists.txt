@@ -13,21 +13,29 @@ set(clad_install_dir ${CMAKE_BINARY_DIR}/etc/cling/)
 set(CLAD_INCLUDE_DIRS ${clad_install_dir})
 # Clad Libraries
 set(_clad_build_type ${CMAKE_CFG_INTDIR})
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if (winrtdebug)
     set(_clad_build_type Debug)
   else()
     set(_clad_build_type Release)
   endif()
+  set(EXTRA_BUILD_ARGS --config ${_clad_build_type})
 endif(MSVC)
 set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${_clad_build_type}/lib${LLVM_LIBDIR_SUFFIX})
 
 # build byproducts only needed by Ninja
-if("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-  set(CLAD_BYPRODUCTS
-     ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
-  )
+if(CMAKE_GENERATOR MATCHES Ninja)
+  if(MSVC)
+    set(CLAD_BYPRODUCTS
+      ${_CLAD_LIBRARY_PATH}/cladPlugin.lib
+      ${_CLAD_LIBRARY_PATH}/cladDifferentiator.lib
+    )
+  else()
+    set(CLAD_BYPRODUCTS
+      ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
+      ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
+    )
+  endif()
 endif()
 
 if(APPLE)
@@ -86,8 +94,8 @@ ExternalProject_Add(
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}
              ${_clad_extra_cmake_args}
-  BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type}
-  INSTALL_COMMAND ${CMAKE_COMMAND} --build . --config ${_clad_build_type} --target install
+  BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+  INSTALL_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS} --target install
   BUILD_BYPRODUCTS ${CLAD_BYPRODUCTS}
   ${_clad_cmake_logging_settings}
   # We need the target clangBasic to be built before building clad. However, we

@@ -127,20 +127,29 @@ if(builtin_freetype)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    set(freetypebuild "Release")
-    set(freetypelib freetype.lib)
-    if(winrtdebug)
-      set(freetypebuild "Debug")
-      set(freetypelib freetyped.lib)
+    if(CMAKE_GENERATOR MATCHES Ninja)
+      set(freetypelib freetype.lib)
+      if (CMAKE_BUILD_TYPE MATCHES "Debug")
+        set(freetypelib freetyped.lib)
+      endif()
+    else()
+      set(freetypebuild "Release")
+      set(freetypelib freetype.lib)
+      if(winrtdebug)
+        set(freetypebuild "Debug")
+        set(freetypelib freetyped.lib)
+      endif()
+      set(EXTRA_BUILD_ARGS --config ${freetypebuild})
+      set(LIB_DIR "${freetypebuild}/")
     endif()
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/${freetypelib} ${FREETYPE_LIBRARY}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${LIB_DIR}${freetypelib} ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
       TIMEOUT 600
@@ -240,6 +249,7 @@ if(builtin_lzma)
       BUILD_COMMAND ""
       INSTALL_COMMAND ""
       LOG_DOWNLOAD 1
+      BUILD_BYPRODUCTS ${LIBLZMA_LIBRARIES}
       TIMEOUT 600
     )
     set(LIBLZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
@@ -416,18 +426,22 @@ if(asimage)
   #---AfterImage---------------------------------------------------------------
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    if(winrtdebug)
-      set(astepbld "Debug")
-    else()
-      set(astepbld "Release")
+    if(NOT CMAKE_GENERATOR MATCHES Ninja)
+      if(winrtdebug)
+        set(astepbld "Debug")
+      else()
+        set(astepbld "Release")
+      endif()
+      set(EXTRA_BUILD_ARGS --config ${astepbld})
+      set(LIB_DIR "${astepbld}/")
     endif()
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_VERBOSE_MAKEFILE=ON -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${astepbld}
-      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${astepbld}/libAfterImage.lib <INSTALL_DIR>/lib/
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DFREETYPE_INCLUDE_DIR=${FREETYPE_INCLUDE_DIR} -DZLIB_INCLUDE_DIR=${ZLIB_INCLUDE_DIR}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_BUILD_ARGS}
+      INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different ${LIB_DIR}libAfterImage.lib <INSTALL_DIR>/lib/
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES}
       TIMEOUT 600
@@ -1223,10 +1237,17 @@ if(builtin_tbb)
   set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
 
   if(MSVC)
-    set(tbb_build Release)
-    if(winrtdebug)
-      set(tbb_build Debug)
-      set(tbbsuffix "_debug")
+    if(CMAKE_GENERATOR MATCHES Ninja)
+      if (CMAKE_BUILD_TYPE MATCHES "Debug")
+        set(tbbsuffix "_debug")
+      endif()
+    else()
+      set(tbb_build Release)
+      if(winrtdebug)
+        set(tbb_build Debug)
+        set(tbbsuffix "_debug")
+      endif()
+      set(EXTRA_TBB_BUILD_ARGS --config ${tbb_build})
     endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
     ExternalProject_Add(
@@ -1234,9 +1255,13 @@ if(builtin_tbb)
       URL ${tbb_url}
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
-      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${tbb_build}
-      INSTALL_COMMAND ${CMAKE_COMMAND}  --install . --config ${tbb_build}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DTBB_ENABLE_IPO=OFF
+                -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
+                -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off
+                -DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}
+                -DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib
+                -DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . ${EXTRA_TBB_BUILD_ARGS}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
       TIMEOUT 600
@@ -1815,9 +1840,20 @@ if (builtin_gtest)
     )
 
   if(MSVC)
-    set(gtestbuild "Release")
-    if(winrtdebug)
-      set(gtestbuild "Debug")
+    set(_gtest_byproducts
+      ${_gtest_byproduct_binary_dir}/lib/gtest.lib
+      ${_gtest_byproduct_binary_dir}/lib/gtest_main.lib
+      ${_gtest_byproduct_binary_dir}/lib/gmock.lib
+      ${_gtest_byproduct_binary_dir}/lib/gmock_main.lib
+    )
+    if(CMAKE_GENERATOR MATCHES Ninja)
+      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>")
+    else()
+      set(gtestbuild Release)
+      if (CMAKE_BUILD_TYPE MATCHES "Debug")
+        set(gtestbuild Debug)
+      endif()
+      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${gtestbuild}")
     endif()
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
@@ -1825,7 +1861,7 @@ if (builtin_gtest)
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
       -Dgtest_force_shared_crt=ON
-      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${gtestbuild})
+      ${GTEST_BUILD_COMMAND})
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
