@@ -56,6 +56,10 @@ The following people have contributed to this new version:
 
 ## I/O Libraries
 
+### hadd respects compression settings
+
+Fixed a bug that was previously changing the compression settings to a single digit number instead of the full value
+(by default 101).
 
 ## TTree Libraries
 ### Add files from subdirectories with `TChain::Add` globbing
@@ -70,6 +74,13 @@ Another example:
 TChain::Add("/path/to/tree/subdir[0-9]/*.root")
 ```
 This grabs all the root files in subdirectories that have a name starting with `subdir` and ending with some digit.
+
+### Improved efficiency of TTree friends with indices
+
+`TTreeIndex` and `TChainIndex` classes now implement the `Clone` method such that it does not use the ROOT I/O to clone the
+index but just does a copy in memory. Notably, this improves processing efficiency for RDataFrame in multithreaded
+execution since the same index must be copied over to all the threads and attached to the current tree for proper
+event matching.
 
 ## Histogram Libraries
 
@@ -237,7 +248,16 @@ In the unlikeliy case where you should have used these new classes for analysis 
 
 ## RDataFrame
 
-* The RDataFrame constructors that take in input one or more file names (or globs thereof) will now infer the format of the dataset, either TTree or RNTuple, that is stored in the first input file. When multiple files are specified, it is assumed that all other files contain a coherent dataset of the same format and with the same schema, exactly as it used to happen with TChain. This automatic inference further contributes towards a zero-code-change experience when moving from processing a TTree to processing an RNTuple dataset while using an RDataFrame. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
+* The `RDataFrame` constructors that take in input one or more file names (or globs thereof) will now infer the format of the dataset, either `TTree` or `RNTuple`, that is stored in the first input file. When multiple files are specified, it is assumed that all other files contain a coherent dataset of the same format and with the same schema, exactly as it used to happen with `TChain`. This automatic inference further contributes towards a zero-code-change experience when moving from processing a `TTree` to processing an `RNTuple` dataset while using an `RDataFrame`. It also introduces a backwards-incompatible behaviour, i.e. now the constructor needs to open one file in order to infer the dataset type. This means that if the file does not exist, the constructor will throw an exception. Previously, an exception would be thrown only at a JIT-ting time, before the start of the computations.
+* Distributed `RDataFrame` now supports processing an `RNTuple` dataset.
+* In distributed `RDataFrame`, the `initialize` function useful to run initialization code at the beginning of every task
+on a worker will now run only in the worker processes. Previously, it was also run eagerly at the point of calling, that
+is in the main user process. This is done to better separate the user driver environment and the worker environments. If
+necessary, the function passed to `initialize` can be called directly by the user in the main application to reproduce
+the same effect as before.
+* Some internal details of the `RDataFrame` implementation were reworked to decrease memory usage and runtime of programs
+with very deep computation graphs (more than O(10K) nodes in the same branch). Preliminary tests indicate between 30%
+and a factor 2.5 in memory decrease. This improvement is transparent for `RDataFrame` users.
 
 ## 2D Graphics Libraries
 
@@ -370,6 +390,23 @@ with ROOT.TFile.Open("my_file.root", "RECREATE") as my_file:
 ```
 
 The old pythonization with the `__getattr__` syntax still works, but emits a deprecation warning and will be removed from ROOT 6.34.
+
+### Removal of Python 2 support
+
+ROOT does no longer support Python 2. The minimum Python version necessary to use ROOT in a Python application is 3.8.
+As a consequence, any reference to Python 2 in ROOT code was removed and certain configuration options are no longer
+usable, e.g.
+
+* `root-config --python2-version`
+* cmake -Dpyroot-python2
+
+The cmake build system now looks for the standard `Python3` package and previously custom Python-related cmake variables
+are now just the ones automatically produced by cmake (see https://cmake.org/cmake/help/latest/module/FindPython.html).
+
+### More usage of the public cppyy API
+
+Many implementation details of the ROOT pythonizations were moved from C++ functions to pure Python bindings using the
+public cppyy API. This helps in the integration with the tool but also improves code efficiency and memory usage.
 
 ## Language Bindings
 
