@@ -273,7 +273,7 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
    int nL = (!bidirectional) ? numLayers : 2 * numLayers; // for bidirectional nL = 2 * numLayers;
    for (int ilayer = 0; ilayer < nL; ilayer++) {
       for (int linLayerID = 0; linLayerID < numLinearLayers; linLayerID++) {
-         
+
          AFloat *linLayerMat = nullptr;
          AFloat *linLayerBias = nullptr;
 
@@ -287,7 +287,7 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
          CUDNNCHECK(cudnnGetRNNWeightParams(handle, rnnDescriptors->LayerDescriptor, ilayer, weightSpaceSize, weightTensor.GetDataPointer(),
                                             linLayerID, linLayerMatDesc, (void **)&linLayerMat, linLayerBiasDesc, (void **)&linLayerBias));
 
-         std::cout << "RNN offsets" << linLayerID << " offset " << linLayerMat-weightTensor.GetDataPointer() <<  "   " << linLayerMat << std::endl;
+         //std::cout << "RNN offsets" << linLayerID << " offset " << linLayerMat-weightTensor.GetDataPointer() <<  "   " << linLayerMat << std::endl;
 #else
          // create descriptors for weight matrices
          cudnnFilterDescriptor_t linLayerMatDesc;
@@ -393,21 +393,21 @@ void TCudnn<AFloat>::InitializeRecurrentDescriptors(TDescriptors *&descriptors, 
 
                //std::cout << "copy bias size " << wsize << " at offset " << linLayerBias-weightTensor.GetDataPointer() << std::endl;
 
-            
+
             }
          }
 
-        
+
 #if (CUDNN_VERSION >= 8000)
          // After copying we need to syncronize back the matrices in GetWeightsAt (we do later for versions < 8)
          // obtain address for gradient of weights too
-         
+
          AFloat *bGradOffset = nullptr;
          AFloat *wGradOffset = nullptr;
          CUDNNCHECK(cudnnGetRNNWeightParams(handle, rnnDescriptors->LayerDescriptor, ilayer, weightSpaceSize, weightGradTensor.GetDataPointer(),
                                             linLayerID, linLayerMatDesc, (void **)&wGradOffset, linLayerBiasDesc, (void **)&bGradOffset));
-                                           
-            
+
+
          // std::cout << "RNN GRAD offsets" << linLayerID << " offset  " << wGradOffset-weightGradTensor.GetDataPointer() << " ptr " << wGradOffset << std::endl;
          // make tensor w using Cudnn buffer - so it is syncronized
          if (linLayerMat && wGradOffset) {
@@ -608,7 +608,7 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
    //std::cout << "doing forward...";
    //std::string msg =  (isTraining) ? " in training" : " in inference";
    //std::cout << msg << std::endl;
-   bool rememberState = false;  // pass initial input state and save output state 
+   bool rememberState = false;  // pass initial input state and save output state
    cudnnHandle_t cudnnHandle = x.GetCudnnHandle();
 
    int seqLength = x.GetShape()[0];  // time steps
@@ -629,7 +629,7 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
       cudnnHandle, rnnDesc, fwdMode, devSeqLength,
       // for x and y should be DataDescriptors
       desc.xDataDesc, x.GetDataPointer(), desc.yDataDesc, y.GetDataPointer(),
-      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer(): nullptr, 
+      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer(): nullptr,
       (rememberState) ? hy.GetDataPointer() : nullptr, // hdesc, hx, hy
       (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(), (isLSTM) ? cx.GetDataPointer() : nullptr,
       (isLSTM) ? cy.GetDataPointer() : nullptr,
@@ -671,7 +671,7 @@ void TCudnn<AFloat>::RNNForward(const Tensor_t &x, const Tensor_t &hx, const Ten
 //   PrintTensor(x, "\nx");
 //   PrintTensor(y, "\ny");
 //   PrintTensor(weights,"\nweights");
-   
+
 }
 
 //____________________________________________________________________________
@@ -696,7 +696,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    //cudnnStatus_t status;
 #if (CUDNN_VERSION >= 8000)
 
-   
+
 //#if (CUDNN_VERSION < 8900)
 //   std::vector<int> devSeqLengths(batchSize,seqLength);
 //   // need to copy to GPU memory
@@ -707,12 +707,12 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    size_t weightSpaceSize =  (std::is_same<AFloat, double>::value) ? weights.GetSize()* sizeof(double) :
                                   weights.GetSize()* sizeof(float);
    cudnnStatus_t status = cudnnRNNBackwardData_v8(
-      cudnnHandle, rnnDesc, NULL, 
+      cudnnHandle, rnnDesc, NULL,
       desc.yDataDesc, y.GetDataPointer(), dy.GetDataPointer(),  // for x and y must be data descriptors
-      desc.xDataDesc, dx.GetDataPointer(),  
-      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer() : nullptr, 
+      desc.xDataDesc, dx.GetDataPointer(),
+      hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer() : nullptr,
       (rememberStateGrad) ? dhy.GetDataPointer() : nullptr, (rememberStateGrad) ? dhx.GetDataPointer() : nullptr,
-      (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(), 
+      (isLSTM) ? cx.GetTensorDescriptor() : hx.GetTensorDescriptor(),
       (isLSTM) ? cx.GetDataPointer() : nullptr, (isLSTM) ? dcy.GetDataPointer() : nullptr, (isLSTM) ? dcx.GetDataPointer() : nullptr,
       weightSpaceSize, weights.GetDataPointer(),
       workspace.ForwardWorkspaceSize, workspace.ForwardWorkspace, workspace.HelperWorkspaceSize, workspace.HelperWorkspace);
@@ -729,7 +729,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    //assert(weights.GetSize() == dw.GetSize());
 
    // now backward gradient of weights
-   // dweight space buffr should be zerod before 
+   // dweight space buffr should be zerod before
    status = cudnnRNNBackwardWeights_v8(cudnnHandle, rnnDesc,CUDNN_WGRAD_MODE_ADD, NULL,
                                     desc.xDataDesc, x.GetDataPointer(),  // should be data descriptors
                                     hx.GetTensorDescriptor(), (rememberState) ? hx.GetDataPointer() : nullptr,
@@ -770,7 +770,7 @@ void TCudnn<AFloat>::RNNBackward(const Tensor_t &x, const Tensor_t &hx, const Te
    assert(status == CUDNN_STATUS_SUCCESS);
    CUDNNCHECK(status);
 #endif
-   
+
 }
 
 
