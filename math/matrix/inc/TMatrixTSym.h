@@ -27,6 +27,8 @@
 #include "TMatrixTBase.h"
 #include "TMatrixTUtils.h"
 
+#include <cassert>
+
 template<class Element>class TMatrixT;
 template<class Element>class TMatrixTSymLazy;
 template<class Element>class TVectorT;
@@ -78,6 +80,8 @@ public:
 
    void Plus (const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b);
    void Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b);
+
+   inline void SetElement(Int_t rown, Int_t coln, Element val);
 
    const Element *GetMatrixArray  () const override;
          Element *GetMatrixArray  () override;
@@ -233,6 +237,21 @@ template <class Element> inline Element &TMatrixTSym<Element>::operator()(Int_t 
       return TMatrixTBase<Element>::NaNValue();
    }
    return (fElements[arown*this->fNcols+acoln]);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Efficiently sets element (rown,coln) equal to val
+/// Index bound checks can be deactivated by defining NDEBUG
+
+template <class Element>
+inline void TMatrixTSym<Element>::SetElement(Int_t rown, Int_t coln, Element val)
+{
+   assert(this->IsValid());
+   rown = rown - this->fRowLwb;
+   coln = coln - this->fColLwb;
+   assert((rown < this->fNrows && rown >= 0) && "SetElement() error: row index outside matrix range");
+   assert((coln < this->fNcols && coln >= 0) && "SetElement() error: column index outside matrix range");
+   fElements[rown * this->fNcols + coln] = val;
 }
 
 template <class Element> Bool_t                operator== (const TMatrixTSym<Element> &source1,const TMatrixTSym<Element>  &source2);
