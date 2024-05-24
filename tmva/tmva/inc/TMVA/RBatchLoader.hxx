@@ -129,23 +129,12 @@ public:
 
       void UnloadValidationVectors(std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & batches)
    {
-      // Wait until less than a full chunk of batches are in the queue before loading splitting the next chunk into
-      // batches
-      {
-         std::unique_lock<std::mutex> lock(fBatchLock);
-         fBatchCondition.wait(lock, [this]() { return (fValidationBatchQueue.size() < fMaxBatches) || !fIsActive; });
-         if (!fIsActive)
-            return;
-      }
-
       {
          std::unique_lock<std::mutex> lock(fBatchLock);
          for (std::size_t i = 0; i < batches.size(); i++) {
             fValidationBatchQueue.push(std::move(batches[i]));
          }
       }
-
-      fBatchCondition.notify_all();
    }
 };
 
