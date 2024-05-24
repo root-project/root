@@ -99,9 +99,13 @@ void df106_HiggsToFourLeptons()
 #ifndef __CLING__
    // If this tutorial is compiled, rather than run as a ROOT macro, the interpreter needs to be fed the signatures
    // of all the functions we want to JIT in our analysis, as well as any type used in those signatures.
-   gInterpreter->Declare("using ROOT::RVecF;");
-   gInterpreter->Declare(STRINGIFY(GoodElectronsAndMuons_Signature) ";");
-   gInterpreter->Declare(STRINGIFY(ComputeInvariantMass_Signature) ";");
+   // clang-format off
+   gInterpreter->Declare(
+      "using ROOT::RVecF;"
+      STRINGIFY(GoodElectronsAndMuons_Signature) ";"
+      STRINGIFY(ComputeInvariantMass_Signature)  ";"
+   );
+   // clang-format on
 #endif
 
    // Perform the analysis
