@@ -2,10 +2,13 @@
 #define TMVA_CHUNKLOADER
 
 #include <vector>
+#include <utility>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDataFrame.hxx"
+#include "TRandom3.h"
 #include "ROOT/RVec.hxx"
+#include "TMVA/Tools.h"
 
 #include "ROOT/RLogger.hxx"
 
@@ -172,7 +175,15 @@ private:
    std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & fTrainingBatches;
    std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & fValidationBatches;
 
+   std::vector<std::size_t> fIndices;
+
    float fValidationSplit;
+
+   RandomGenerator<TRandom3> fRng;
+   UInt_t fFixedSeed;
+   RandomGenerator<TRandom3> fFixedRng;
+
+   bool fShuffle = true;
 
 public:
    /// \brief Constructor for the RChunkLoader
@@ -186,7 +197,8 @@ public:
                 std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & validationBatches,
                 const std::size_t chunkSize, const std::vector<std::string> &cols,
                 std::size_t batchSize, std::size_t numColumns, float validationSplit,
-                const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0)
+                bool shuffle, const std::vector<std::size_t> &vecSizes = {},
+                const float vecPadding = 0.0)
       : f_rdf(rdf),
         fTrainingBatches(trainingBatches),
         fValidationBatches(validationBatches),
@@ -195,9 +207,17 @@ public:
         fBatchSize(batchSize),
         fNumColumns(numColumns),
         fValidationSplit(validationSplit),
+        fShuffle(shuffle),
         fVecSizes(vecSizes),
         fVecPadding(vecPadding)
-   {
+   {  
+      if (fShuffle){
+         fRng = TMVA::RandomGenerator<TRandom3>(0);
+
+         do {
+            fFixedSeed = fRng();
+         } while (fFixedSeed == 0);
+      }
    }
 
    /// \brief Load a chunk of data using the RChunkLoaderFunctor
@@ -230,11 +250,10 @@ public:
       for (std::size_t i = 0; i < sizeValidation / fBatchSize; i++){
          fValidationBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
-
-      std::vector<std::size_t> indices(valuesLeft);
-      std::iota(indices.begin(), indices.end(), 0);
       
-      RChunkLoaderFunctor<Args...> func(fTrainingBatches, fValidationBatches, sizeTraining, indices, fBatchSize,
+      CreateIndices(valuesLeft, sizeTraining);
+
+      RChunkLoaderFunctor<Args...> func(fTrainingBatches, fValidationBatches, sizeTraining, fIndices, fBatchSize,
          fNumColumns, fTrainRemainderEntries, fValRemainderEntries, fVecSizes, fVecPadding);
 
       fTrainRemainderEntries = (fTrainRemainderEntries + sizeTraining) % fBatchSize;
@@ -271,6 +290,22 @@ public:
    void Activate(){
       fTrainRemainderEntries = 0;
       fValRemainderEntries = 0;
+      fFixedRng.seed(fFixedSeed);
+   }
+
+   void CreateIndices(std::size_t valuesLeft, std::size_t threshold){
+      fIndices = std::vector<std::size_t>(valuesLeft);
+      std::iota(fIndices.begin(), fIndices.end(), 0);
+
+      if (fShuffle) {
+         std::shuffle(fIndices.begin(), fIndices.begin() + threshold, fRng);
+         std::shuffle(fIndices.begin(), fIndices.end(), fFixedRng);
+      }
+   }
+
+   std::pair<std::shared_ptr<TMVA::Experimental::RTensor<float>>,std::shared_ptr<TMVA::Experimental::RTensor<float>>>
+   ReturnRemainderBatches(){
+      return std::make_pair(fTrainingRemainder, fValidationRemainder);
    }
 };
 
