@@ -127,7 +127,7 @@ public:
       fBatchCondition.notify_all();
    }
 
-      void UnloadValidationVectors(std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & batches)
+   void UnloadValidationVectors(std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> & batches)
    {
       {
          std::unique_lock<std::mutex> lock(fBatchLock);
@@ -135,6 +135,15 @@ public:
             fValidationBatchQueue.push(std::move(batches[i]));
          }
       }
+   }
+
+   void UnloadRemainder(std::pair<std::shared_ptr<TMVA::Experimental::RTensor<float>>,std::shared_ptr<TMVA::Experimental::RTensor<float>>> remainders){
+      {
+         std::unique_lock<std::mutex> lock(fBatchLock);
+         fTrainingBatchQueue.push(std::move(remainders.first));
+      }
+
+      fValidationBatchQueue.push(remainders.second);
    }
 };
 

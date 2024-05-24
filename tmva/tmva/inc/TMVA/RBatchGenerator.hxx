@@ -24,10 +24,6 @@ namespace Internal {
 template <typename... Args>
 class RBatchGenerator {
 private:
-   TMVA::RandomGenerator<TRandom3> fRng = TMVA::RandomGenerator<TRandom3>(0);
-   UInt_t fFixedSeed;
-   TMVA::RandomGenerator<TRandom3> fFixedRng;
-
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
@@ -53,7 +49,6 @@ private:
    std::mutex fIsActiveLock;
 
    bool fDropRemainder = true;
-   bool fShuffle = true;
    bool fIsActive = false;
 
 public:
@@ -68,19 +63,14 @@ public:
         fBatchSize(batchSize),
         fValidationSplit(validationSplit),
         fMaxChunks(maxChunks),
-        fShuffle(shuffle),
         fDropRemainder(dropRemainder),
         fUseWholeFile(maxChunks == 0)
    {
-
-      do {
-         fFixedSeed = fRng();
-      } while (fFixedSeed == 0);
-
       fNumEntries = f_rdf.Count().GetValue();
 
       fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-         f_rdf, fTrainingBatches, fValidationBatches, fChunkSize, cols, fBatchSize, numColumns, validationSplit, vecSizes, vecPadding);
+         f_rdf, fTrainingBatches, fValidationBatches, fChunkSize, cols, fBatchSize,
+            numColumns, validationSplit, shuffle, vecSizes, vecPadding);
       
       std::size_t maxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
 
@@ -121,7 +111,6 @@ public:
          fIsActive = true;
       }
 
-      fFixedRng.seed(fFixedSeed);
       fBatchLoader->Activate();
       fChunkLoader->Activate();
 
@@ -221,6 +210,10 @@ public:
 
          fBatchLoader->UnloadTrainingVectors(fTrainingBatches);
          fBatchLoader->UnloadValidationVectors(fValidationBatches);
+      }
+
+      if (!fDropRemainder){
+         fBatchLoader->UnloadRemainder(fChunkLoader->ReturnRemainderBatches());
       }
 
       fBatchLoader->DeActivate();
