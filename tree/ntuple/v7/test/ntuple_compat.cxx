@@ -65,6 +65,8 @@ namespace fwd_compat {
 
 class RHandcraftedKeyBlob : public TKey {
 public:
+   RHandcraftedKeyBlob() = default;
+   
    RHandcraftedKeyBlob(TFile *file, std::size_t keyLen) : TKey(file)
    {
       fClassName = RNTuple::Class_Name();
@@ -77,6 +79,8 @@ public:
       Create(nbytes);
       *seekKey = fSeekKey;
    }
+
+   ClassDefInline(RHandcraftedKeyBlob, 0)
 };
 
 // The header for the TKey that will contain the handcrafted RNTuple
