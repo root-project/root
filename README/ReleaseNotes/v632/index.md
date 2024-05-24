@@ -82,6 +82,29 @@ index but just does a copy in memory. Notably, this improves processing efficien
 execution since the same index must be copied over to all the threads and attached to the current tree for proper
 event matching.
 
+## RNTuple
+ROOT's experimental successor of TTree has seen a number of updates since the last release. Specifically, 6.32 includes the following changes:
+
+- A major refactoring of the interface, improving consistency across different parts and improving overall robustness. **Note that this is a breaking change with regard to 6.30!**
+- The on-disk format has been updated to release candidate 2. **It will not be possible to read RNTuples written in the previous format anymore.**
+- Support has been added for several new field types: `std::unordered_set<T>`, `std::map<K,V>`, `std::unordered_map<K,V>`
+- Support has been added for on-disk half-precision (IEEE 754-2008 16-bit) float fields. This can be enabled through `RField<float>::SetHalfPrecision()`. On reading, values of such fields are represented as regular, 32-bit floats.
+- A new `RNTupleInspector` utility class has been added, to provide information about the on-disk metadata of an RNTuple.
+- A new `RNTupleParallelWriter` class has been added, providing (initial) support for parallel writing of RNTuples.
+- A new static method `RFieldBase::Check()` has been added, which produces a support status report of a type with regards to RNTuple I/O.
+- A new internal `RNTupleMerger` class has been added, enabling the merging of different page sources into one page sink. This also means that RNTuples can be merged through `hadd`.
+- Zero-copy bulk reading has been added, with extra optimizations for `ROOT::RVec` fields.
+- It is now possible to use the `RNTupleView` with an external address with type erasure, e.g.:
+  ```cpp
+  std::shared_ptr<void> data{new float()};
+  auto view = reader->GetView("pt", data);
+  ```
+  This enables use cases such as reading one specific entry of one specific field into a previously allocated memory location.
+- Further integration with [RDataFrame](#rdataframe): it is now possible to create RDataFrame for chains of RNTuples. This addition also comes with improvements to the multi-threaded work scheduling.
+- Many additional bug fixes and improvements.
+
+Please, report any issues regarding the above mentioned features should you encounter them. RNTuple is still in pre-production. The on-disk format is scheduled to be finalized by the end of 2024. Thus, we appreciate feedback and suggestions for improvement.
+
 ## Histogram Libraries
 
 - Implement the FLT_MAX mechanism for `THStack::GetMaximum()` and `THStack::GetMiniumum()`.
