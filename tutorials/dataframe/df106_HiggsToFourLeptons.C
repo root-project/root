@@ -24,6 +24,7 @@
 /// \date March 2020, August 2022, August 2023
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
+#include "TInterpreter.h"
 #include <Math/Vector4D.h>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RDataFrame.hxx>
@@ -43,10 +44,16 @@ using ROOT::RVecF;
 using ROOT::RDF::RSampleInfo;
 using namespace ROOT::RDF::Experimental;
 
+#define STRINGIFY_(x) #x
+#define STRINGIFY(x) STRINGIFY_(x)
+
+#define GoodElectronsAndMuons_Signature \
+   bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e, \
+                              const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0)
+
 // Define functions needed in the analysis
 // Select events for the analysis
-bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e,
-                           const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0)
+GoodElectronsAndMuons_Signature
 {
    for (size_t i = 0; i < type.size(); i++) {
       PtEtaPhiEVectorF p(0.001 * pt[i], eta[i], phi[i], 0.001 * e[i]);
@@ -62,8 +69,11 @@ bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF
    return true;
 }
 
+#define ComputeInvariantMass_Signature \
+   float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e)
+
 // Compute the invariant mass of a four-lepton-system.
-float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e)
+ComputeInvariantMass_Signature
 {
    PtEtaPhiEVectorF p1(pt[0], eta[0], phi[0], e[0]);
    PtEtaPhiEVectorF p2(pt[1], eta[1], phi[1], e[1]);
@@ -85,6 +95,14 @@ void df106_HiggsToFourLeptons()
 
    // Add the ProgressBar feature
    ROOT::RDF::Experimental::AddProgressBar(df);
+
+#ifndef __CLING__
+   // If this tutorial is compiled, rather than run as a ROOT macro, the interpreter needs to be fed the signatures
+   // of all the functions we want to JIT in our analysis, as well as any type used in those signatures.
+   gInterpreter->Declare("using ROOT::RVecF;");
+   gInterpreter->Declare(STRINGIFY(GoodElectronsAndMuons_Signature) ";");
+   gInterpreter->Declare(STRINGIFY(ComputeInvariantMass_Signature) ";");
+#endif
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
