@@ -3225,8 +3225,9 @@ ROOT::Experimental::RVariantField::RVariantField(std::string_view fieldName,
    fTraits |= kTraitTriviallyDestructible & ~kTraitTriviallyConstructible;
 
    auto nFields = itemFields.size();
-   if (nFields == 0 || nFields > 255) {
-      throw RException(R__FAIL("invalid number of variant fields (outside [1..255])"));
+   // Most compilers support at least 255 variants (256 - 1 value for the empty variant). But some set the limit to 254.
+   if (nFields == 0 || nFields > 254) {
+      throw RException(R__FAIL("invalid number of variant fields (outside [1..254])"));
    }
    fNWritten.resize(nFields, 0);
    for (unsigned int i = 0; i < nFields; ++i) {
