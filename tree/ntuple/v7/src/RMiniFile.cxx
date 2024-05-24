@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Rtypes.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 
@@ -991,6 +992,8 @@ constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 /// like a TBasket.
 class RKeyBlob : public TKey {
 public:
+   RKeyBlob() = default;
+
    explicit RKeyBlob(TFile *file) : TKey(file)
    {
       fClassName = kBlobClassName;
@@ -1004,6 +1007,8 @@ public:
       Create(nbytes);
       *seekKey = fSeekKey;
    }
+
+   ClassDefInline(RKeyBlob, 3)
 };
 
 } // anonymous namespace
