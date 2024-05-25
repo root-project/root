@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <Byteswap.h>
+
 TEST(RNTuple, SerializeInt)
 {
    std::int32_t value;
@@ -113,6 +115,10 @@ TEST(RNTuple, SerializeEnvelope)
       std::uint64_t payload = 0;
       std::uint64_t xxhash3 = 0;
    } testEnvelope;
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(testEnvelope.typeAndSize);
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    testEnvelope.xxhash3 = 0;
@@ -122,7 +128,12 @@ TEST(RNTuple, SerializeEnvelope)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("XxHash-3"));
    }
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    try {
@@ -131,7 +142,12 @@ TEST(RNTuple, SerializeEnvelope)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope type mismatch"));
    }
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    try {
@@ -141,7 +157,12 @@ TEST(RNTuple, SerializeEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope buffer size too small"));
    }
 
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize -= uint64_t(9) << 40;
+#else
    testEnvelope.typeAndSize -= 9 << 16;
+#endif
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
       FAIL() << "too small envelope buffer should throw";
@@ -149,7 +170,12 @@ TEST(RNTuple, SerializeEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid envelope, too short"));
    }
 
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
    std::uint64_t xxhash3_write;
    RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16, xxhash3_write);
    std::uint64_t xxhash3_read;
@@ -352,7 +378,12 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
+#ifndef R__BYTESWAP
+   // on big endian system
+   *head = *head | 0x3;
+#else
    *head = (0x3 << 24) | *head;
+#endif
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap();
       FAIL() << "unsupported locator type should throw";
