@@ -1,11 +1,11 @@
 % ROOT Version 6.32 Release Notes
-% 2024-04-30
+% 2024-05-26
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.32.00 is scheduled for release at the end of May 2024.
-This release is a long term support one, ideal for inclusion in production or 
+ROOT version 6.32.00 was released on 28 May 2024.
+This release is a long term support one, ideal for inclusion in production or
 data taking software stacks of experiments.
 
 For more information, see:
@@ -140,8 +140,6 @@ Please, report any issues regarding the above mentioned features should you enco
 - Implement the FLT_MAX mechanism for `THStack::GetMaximum()` and `THStack::GetMiniumum()`.
 - Print a warning when the range given to `TAxis::SetRange` is invalid.
 - Fix projection name in `TH3` as requested [here](https://root-forum.cern.ch/t/project3d-letter-d-in-name-option/57612).
-
-## Math Libraries
 
 ## Parallelism
   - The ROOT::Experimental::TFuture template has been removed.
@@ -346,24 +344,9 @@ and a factor 2.5 in memory decrease. This improvement is transparent for `RDataF
 
 * Update version of RenderCore to fix tone mapping of transparent objects.
 
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
 ## PROOF Libraries
 
-By default, PROOF is not configured and built any more. It will be deprecated in the future given that its functionality is now provided by the superior RDataFrame and its distributed version, DistRDF.
+By default, PROOF is not configured and built any more. It will be deprecated in the future given that its functionality is now provided by the superior RDataFrame and its distributed version, [DistRDF](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#distrdf).
 
 ## PyROOT
 
@@ -462,14 +445,7 @@ are now just the ones automatically produced by cmake (see https://cmake.org/cma
 Many implementation details of the ROOT pythonizations were moved from C++ functions to pure Python bindings using the
 public cppyy API. This helps in the integration with the tool but also improves code efficiency and memory usage.
 
-## Language Bindings
-
-
 ## JavaScript ROOT
-
-
-## Tutorials
-
 
 ## Class Reference Guide
 
