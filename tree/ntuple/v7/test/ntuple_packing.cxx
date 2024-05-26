@@ -97,11 +97,13 @@ TEST(Packing, HalfPrecisionFloat)
    element.Unpack(nullptr, nullptr, 0);
 
    float in = 3.14;
-   std::uint16_t b = 0;
-   element.Pack(&b, &in, 1);
-   EXPECT_EQ(0x4248, b); // Expected bit representation: 0b01000010 01001000
+   unsigned char buf[2] = {0, 0};
+   element.Pack(buf, &in, 1);
+   // Expected bit representation: 0b01000010 01001000
+   EXPECT_EQ(0x48, buf[0]);
+   EXPECT_EQ(0x42, buf[1]);
    float out = 0.;
-   element.Unpack(&out, &b, 1);
+   element.Unpack(&out, buf, 1);
    EXPECT_FLOAT_EQ(3.140625, out);
 
    float in4[] = {0.1, 0.2, 0.3, 0.4};
@@ -124,10 +126,10 @@ TEST(Packing, RColumnSwitch)
    element.Unpack(nullptr, nullptr, 0);
 
    ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
-   std::pair<std::uint64_t, std::uint32_t> out;
-   element.Pack(&out, &s1, 1);
+   unsigned char out[12];
+   element.Pack(out, &s1, 1);
    ROOT::Experimental::RColumnSwitch s2;
-   element.Unpack(&s2, &out, 1);
+   element.Unpack(&s2, out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
    EXPECT_EQ(0x55, s2.GetTag());
 }
