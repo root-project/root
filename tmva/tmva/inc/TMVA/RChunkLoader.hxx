@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <utility>
+#include <iostream>
+#include <iterator>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDataFrame.hxx"
@@ -305,7 +307,28 @@ public:
 
    std::pair<std::shared_ptr<TMVA::Experimental::RTensor<float>>,std::shared_ptr<TMVA::Experimental::RTensor<float>>>
    ReturnRemainderBatches(){
-      return std::make_pair(fTrainingRemainder, fValidationRemainder);
+      std::shared_ptr<TMVA::Experimental::RTensor<float>> trainingBatch;
+      std::shared_ptr<TMVA::Experimental::RTensor<float>> validationBatch;
+
+      if (fTrainRemainderEntries){
+         trainingBatch = std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fTrainRemainderEntries, fNumColumns});
+
+         for (std::size_t i = 0; i < fTrainRemainderEntries; i++){
+            std::copy(fTrainingRemainder->GetData() + i * fNumColumns, fTrainingRemainder->GetData() + (i + 1) * fNumColumns,
+               trainingBatch->GetData() + i * fNumColumns);
+         }
+      }
+
+      if (fValRemainderEntries){
+         validationBatch = std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fValRemainderEntries, fNumColumns});
+
+         for (std::size_t i = 0; i < fValRemainderEntries; i++){
+            std::copy(fValidationRemainder->GetData() + i * fNumColumns, fValidationRemainder->GetData() + (i + 1) * fNumColumns,
+               validationBatch->GetData() + i * fNumColumns);
+         }
+      }
+
+      return std::make_pair(trainingBatch, validationBatch);
    }
 };
 
@@ -666,6 +689,8 @@ public:
          fValidationBatches.emplace_back(std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fBatchSize, fNumColumns}));
       }
 
+      std::cout << "fTrainRemainderEntries: " << fTrainRemainderEntries << "\n" << "sizeTraining: " << sizeTraining << "\n";
+
       std::size_t trainRemainderEntries = fTrainRemainderEntries + sizeTraining > fBatchSize ? (fTrainRemainderEntries + sizeTraining) % fBatchSize: 0;
       std::size_t valRemainderEntries = fValRemainderEntries + sizeValidation > fBatchSize ? (fValRemainderEntries + sizeValidation) % fBatchSize: 0;
 
@@ -694,18 +719,114 @@ public:
                batch->GetData() + entries * fNumColumns);
       }
 
-      if (dropRemainder && !trainRemainderEntries){
-         fTrainingBatches.pop_back();
+      if (dropRemainder){
+         if (!trainRemainderEntries){
+            fTrainingBatches.pop_back();
+         }
+         if (!valRemainderEntries){
+            fValidationBatches.pop_back();
+         }
       }
+      else {
+         std::cout << "DropRemainder else is called in LoadChunks\n";
+         std::cout << "trainRemainderEntries: " << trainRemainderEntries << "\n";
+         std::cout << "valRemainderEntries: " << valRemainderEntries << "\n";
+         if (trainRemainderEntries){
+            fTrainingRemainder = fTrainingBatches.back();
+            fTrainingBatches.pop_back();
 
-      if (dropRemainder && !valRemainderEntries){
-         fValidationBatches.pop_back();
+            std::shared_ptr<TMVA::Experimental::RTensor<float>> trainingBatch =
+               std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{trainRemainderEntries, fNumColumns});
+            
+            for (std::size_t i = 0; i < trainRemainderEntries; i++){
+               std::copy(fTrainingRemainder->GetData() + i * fNumColumns, fTrainingRemainder->GetData() + (i + 1) * fNumColumns,
+                  trainingBatch->GetData() + i * fNumColumns);
+            }
+
+            fTrainingBatches.emplace_back(trainingBatch);
+         }
+         else if (fTrainRemainderEntries){
+            std::cout << "fTrainRemainderEntries: " << fTrainRemainderEntries << "\n";
+            fTrainingRemainder = fTrainingBatches.back();
+            fTrainingBatches.pop_back();
+
+            std::shared_ptr<TMVA::Experimental::RTensor<float>> trainingBatch =
+               std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fTrainRemainderEntries, fNumColumns});
+            
+            for (std::size_t i = 0; i < fTrainRemainderEntries; i++){
+               std::cout << "COPYING\n";
+               std::copy(fTrainingRemainder->GetData() + i * fNumColumns, fTrainingRemainder->GetData() + (i + 1) * fNumColumns,
+                  trainingBatch->GetData() + i * fNumColumns);
+            }
+
+            std::cout << "Printing remainder number: ";
+            std::copy(fTrainingRemainder->GetData(), fTrainingRemainder->GetData() + 1,
+                  std::ostream_iterator<int>(std::cout, ", "));
+            std::cout << "\n";
+
+            std::cout << "Printing remainder number copied: ";
+            std::copy(trainingBatch->GetData(), trainingBatch->GetData() + 1,
+                  std::ostream_iterator<int>(std::cout, ", "));
+            std::cout << "\n";
+
+            fTrainingBatches.emplace_back(trainingBatch);
+         }
+
+         if (valRemainderEntries){
+            fValidationRemainder = fValidationBatches.back();
+            fValidationBatches.pop_back();
+
+            std::shared_ptr<TMVA::Experimental::RTensor<float>> validationBatch =
+               std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{valRemainderEntries, fNumColumns});
+            
+            for (std::size_t i = 0; i < fValRemainderEntries; i++){
+               std::copy(fValidationRemainder->GetData() + i * fNumColumns, fValidationRemainder->GetData() + (i + 1) * fNumColumns,
+                  validationBatch->GetData() + i * fNumColumns);
+            }
+
+            fValidationBatches.emplace_back(validationBatch);
+         }
+         else if (fValRemainderEntries){
+            fValidationRemainder = fValidationBatches.back();
+            fValidationBatches.pop_back();
+
+            std::shared_ptr<TMVA::Experimental::RTensor<float>> validationBatch =
+               std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fValRemainderEntries, fNumColumns});
+            
+            for (std::size_t i = 0; i < fValRemainderEntries; i++){
+               std::copy(fValidationRemainder->GetData() + i * fNumColumns, fValidationRemainder->GetData() + (i + 1) * fNumColumns,
+                  validationBatch->GetData() + i * fNumColumns);
+            }
+
+            fValidationBatches.emplace_back(validationBatch);
+         }
       }
    }
 
    std::pair<std::shared_ptr<TMVA::Experimental::RTensor<float>>,std::shared_ptr<TMVA::Experimental::RTensor<float>>>
    ReturnRemainderBatches(){
-      return std::make_pair(fTrainingRemainder, fValidationRemainder);
+      std::shared_ptr<TMVA::Experimental::RTensor<float>> trainingBatch;
+      std::shared_ptr<TMVA::Experimental::RTensor<float>> validationBatch;
+
+      if (fTrainRemainderEntries){
+         trainingBatch = std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fTrainRemainderEntries, fNumColumns});
+
+         for (std::size_t i = 0; i < fTrainRemainderEntries; i++){
+            std::copy(fTrainingRemainder->GetData() + i * fNumColumns, fTrainingRemainder->GetData() + (i + 1) * fNumColumns,
+               trainingBatch->GetData() + i * fNumColumns);
+         }
+      }
+
+      if (fValRemainderEntries){
+         validationBatch = std::make_shared<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fValRemainderEntries, fNumColumns});
+
+         for (std::size_t i = 0; i < fValRemainderEntries; i++){
+            std::copy(fValidationRemainder->GetData() + i * fNumColumns, fValidationRemainder->GetData() + (i + 1) * fNumColumns,
+               validationBatch->GetData() + i * fNumColumns);
+         }
+      }
+
+      return std::make_pair(trainingBatch, validationBatch);
    }
 
    void CreateIndices(std::size_t valuesLeft, std::size_t threshold){

@@ -135,12 +135,14 @@ public:
    }
 
    void UnloadRemainder(std::pair<std::shared_ptr<TMVA::Experimental::RTensor<float>>,std::shared_ptr<TMVA::Experimental::RTensor<float>>> remainders){
-      {
+      if (remainders.first){
          std::unique_lock<std::mutex> lock(fBatchLock);
          fTrainingBatchQueue.push(std::move(remainders.first));
       }
 
-      fValidationBatchQueue.push(remainders.second);
+      if (remainders.second){
+         fValidationBatchQueue.push(remainders.second);
+      }
    }
 };
 
