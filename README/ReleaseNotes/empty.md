@@ -22,7 +22,7 @@ The following people have contributed to this new version:
  Florine de Geus, CERN/ATLAS,\
  Andrei Gheata, CERN/EP-SFT,\
  Enrico Guiraud, CERN/EP-SFT and Princeton,\
- Jonas Hahnfeld, CERN/EP-SFT,\
+ Jonas Hahnfeld, CERN/Goethe University Frankfurt,\
  Sergey Linev, GSI,\
  Pere Mato, CERN/EP-SFT,\
  Lorenzo Moneta, CERN/EP-SFT,\
