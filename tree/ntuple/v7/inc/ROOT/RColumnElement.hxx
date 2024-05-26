@@ -641,8 +641,9 @@ public:
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
 
       for (std::size_t i = 0; i < count; ++i) {
-         ByteSwapIfNecessary(floatArray[i]);
-         floatArray[i] = HalfToFloat(uint16Array[i]);
+         std::uint16_t val = uint16Array[i];
+         ByteSwapIfNecessary(val);
+         floatArray[i] = HalfToFloat(val);
       }
    }
 };
