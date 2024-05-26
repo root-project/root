@@ -19,7 +19,6 @@ namespace Internal {
 
 class RBatchLoader {
 private:
-   const TMVA::Experimental::RTensor<float> & fChunkTensor;
    std::size_t fBatchSize;
    std::size_t fNumColumns;
    std::size_t fMaxBatches;
@@ -34,10 +33,8 @@ private:
    std::shared_ptr<TMVA::Experimental::RTensor<float>> fCurrentBatch;
 
 public:
-   RBatchLoader(const TMVA::Experimental::RTensor<float> & chunkTensor, const std::size_t batchSize,
-               const std::size_t numColumns, const std::size_t maxBatches)
-      : fChunkTensor(chunkTensor),
-        fBatchSize(batchSize),
+   RBatchLoader(const std::size_t batchSize, const std::size_t numColumns, const std::size_t maxBatches)
+      : fBatchSize(batchSize),
         fNumColumns(numColumns),
         fMaxBatches(maxBatches)
    {

@@ -8,6 +8,7 @@
 #include <mutex>
 #include <variant>
 #include <algorithm>
+#include <variant>
 
 #include "TMVA/RTensor.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -28,18 +29,18 @@ private:
    std::size_t fMaxChunks;
    std::size_t fBatchSize;
    std::size_t fNumEntries;
+   std::size_t fNumAllEntries;
 
    float fValidationSplit;
-
-   std::unique_ptr<RChunkLoader<Args...>> fChunkLoader;
 
    std::unique_ptr<RBatchLoader> fBatchLoader;
 
    std::unique_ptr<std::thread> fLoadingThread;
 
+   std::variant<std::unique_ptr<RChunkLoaderNoFilters<Args...>>, std::unique_ptr<RChunkLoaderFilters<Args...>>> fChunkLoader;
+
    bool fUseWholeFile = true;
 
-   std::shared_ptr<TMVA::Experimental::RTensor<float>> fChunkTensor;
    std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> fTrainingBatches;
    std::vector<std::shared_ptr<TMVA::Experimental::RTensor<float>>> fValidationBatches;
 
@@ -50,6 +51,7 @@ private:
 
    bool fDropRemainder = true;
    bool fIsActive = false;
+   bool fNotFiltered;
 
 public:
    RBatchGenerator(ROOT::RDF::RNode &rdf, const std::size_t chunkSize,
@@ -64,18 +66,30 @@ public:
         fValidationSplit(validationSplit),
         fMaxChunks(maxChunks),
         fDropRemainder(dropRemainder),
-        fUseWholeFile(maxChunks == 0)
-   {
-      fNumEntries = f_rdf.Count().GetValue();
-
-      fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoader<Args...>>(
-         f_rdf, fTrainingBatches, fValidationBatches, fChunkSize, cols, fBatchSize,
-            numColumns, validationSplit, shuffle, vecSizes, vecPadding);
-      
+        fUseWholeFile(maxChunks == 0),
+        fNotFiltered(f_rdf.GetFilterNames().empty())
+   {  
       std::size_t maxBatches = ceil((fChunkSize / fBatchSize) * (1 - fValidationSplit));
 
+      if (fNotFiltered){
+         fNumEntries = f_rdf.Count().GetValue();
+
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderNoFilters<Args...>>(
+            f_rdf, fTrainingBatches, fValidationBatches, fChunkSize, cols, fBatchSize,
+               numColumns, validationSplit, shuffle, vecSizes, vecPadding);
+      }
+      else{
+         auto report = f_rdf.Report();
+         fNumEntries = f_rdf.Count().GetValue();
+         fNumAllEntries = report.begin()->GetAll();
+
+         fChunkLoader = std::make_unique<TMVA::Experimental::Internal::RChunkLoaderFilters<Args...>>(
+            f_rdf, fTrainingBatches, fValidationBatches, fChunkSize, cols, fBatchSize,
+               numColumns, fNumEntries, validationSplit, shuffle, vecSizes, vecPadding);
+      }
+
       // limits the number of batches that can be contained in the batchqueue based on the chunksize
-      fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(*fChunkTensor,
+      fBatchLoader = std::make_unique<TMVA::Experimental::Internal::RBatchLoader>(
                   fBatchSize, numColumns, maxBatches);
    }
 
@@ -112,9 +126,15 @@ public:
       }
 
       fBatchLoader->Activate();
-      fChunkLoader->Activate();
 
-      fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksNoFilters, this);
+      if (fNotFiltered){
+            std::get<std::unique_ptr<RChunkLoaderNoFilters<Args...>>>(fChunkLoader)->Activate();
+            fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksNoFilters, this);
+      }
+      else{ 
+            std::get<std::unique_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->Activate();
+            fLoadingThread = std::make_unique<std::thread>(&RBatchGenerator::LoadChunksFilters, this);
+      }
    }
 
    /// \brief Returns the next batch of training data if available.
@@ -205,7 +225,7 @@ public:
          std::size_t valuesLeft = std::min(fChunkSize, fNumEntries - currentRow);
 
          // A pair that consists the proccessed, and passed events while loading the chunk
-         std::size_t report = fChunkLoader->LoadChunk(currentRow, valuesLeft);
+         std::size_t report = std::get<std::unique_ptr<RChunkLoaderNoFilters<Args...>>>(fChunkLoader)->LoadChunk(currentRow, valuesLeft);
          currentRow += report;
 
          fBatchLoader->UnloadTrainingVectors(fTrainingBatches);
@@ -213,7 +233,44 @@ public:
       }
 
       if (!fDropRemainder){
-         fBatchLoader->UnloadRemainder(fChunkLoader->ReturnRemainderBatches());
+         fBatchLoader->UnloadRemainder(std::get<std::unique_ptr<RChunkLoaderNoFilters<Args...>>>(fChunkLoader)->ReturnRemainderBatches());
+      }
+
+      fBatchLoader->DeActivate();
+   }
+
+   void LoadChunksFilters()
+   {  
+      std::size_t currentChunk = 0;
+      for (std::size_t processedEvents = 0, passedEvents = 0; ((currentChunk < fMaxChunks) || fUseWholeFile) && processedEvents < fNumAllEntries;
+           currentChunk++) {
+         // stop the loop when the loading is not active anymore
+         {
+            std::lock_guard<std::mutex> lock(fIsActiveLock);
+            if (!fIsActive)
+               return;
+         }
+
+         std::size_t valuesLeft = std::min(fChunkSize, fNumEntries - passedEvents);
+
+         // A pair that consists the proccessed, and passed events while loading the chunk
+         std::pair<std::size_t, std::size_t> report = std::get<std::unique_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LoadChunk(valuesLeft, processedEvents);
+
+         passedEvents += report.first;
+         processedEvents = report.second;
+
+         fBatchLoader->UnloadTrainingVectors(fTrainingBatches);
+         fBatchLoader->UnloadValidationVectors(fValidationBatches);
+      }
+
+      if (currentChunk < fMaxChunks || fUseWholeFile){
+         std::get<std::unique_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->LastChunk(fDropRemainder);
+
+         fBatchLoader->UnloadTrainingVectors(fTrainingBatches);
+         fBatchLoader->UnloadValidationVectors(fValidationBatches);
+      }
+      else if(!fDropRemainder){
+         fBatchLoader->UnloadRemainder(std::get<std::unique_ptr<RChunkLoaderFilters<Args...>>>(fChunkLoader)->ReturnRemainderBatches());
       }
 
       fBatchLoader->DeActivate();
