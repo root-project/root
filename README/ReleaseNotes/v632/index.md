@@ -1,10 +1,12 @@
 % ROOT Version 6.32 Release Notes
-% 2023-10-10
+% 2024-05-26
 <a name="TopOfPage"></a>
 
 ## Introduction
 
-ROOT version 6.32/00 is scheduled for release around May 2024.
+ROOT version 6.32.00 was released on 28 May 2024.
+This release is a long term support one, ideal for inclusion in production or
+data taking software stacks of experiments.
 
 For more information, see:
 
@@ -12,33 +14,60 @@ For more information, see:
 
 The following people have contributed to this new version:
 
+ Anton Alkin, Sungkyunkwan University\
  Guilherme Amadio, CERN/IT,\
+ Abhigyan Acherjee, University of Cincinnati,\
  Bertrand Bellenot, CERN/EP-SFT,\
  Jakob Blomer, CERN/EP-SFT,\
  Rene Brun,\
+ Carsten Burgard, DESY\
+ Will Buttinger, RAL,\
  Philippe Canal, FNAL,\
  Jolly Chen, CERN/EP-SFT,\
  Olivier Couet, CERN/EP-SFT,\
+ Marta Czurylo, CERN/EP-SFT,\
+ Monica Dessole, CERN/EP-SFT,\
+ Mattias Ellert, Uppsala University,\
  Gerri Ganis, CERN/EP-SFT,\
- Florine de Geus, CERN/ATLAS,\
+ Florine de Geus, CERN/University of Twente,\
  Andrei Gheata, CERN/EP-SFT,\
- Enrico Guiraud, CERN/EP-SFT and Princeton,\
+ Bernhard Manfred Gruber,\
+ Enrico Guiraud,
  Jonas Hahnfeld, CERN/EP-SFT,\
- Akeem Hart, Queen Mary University of London/DUNE and MINERvA,\
+ Fernando Hueso Gonzalez, University of Valencia\
+ Attila Krasznahorkay, CERN/EP-ADP-OS,\
+ Wim Lavrijsen, LBL,\
  Dennis Klein, GSI,\
  Christoph Langenbruch, Heidelberg University/LHCb,\
  Sergey Linev, GSI,\
+ Javier Lopez-Gomez,\
  Pere Mato, CERN/EP-SFT,\
+ Alaettin Serhan Mete, Argonne,\
+ Thomas Madlener, DESY,\
  Lorenzo Moneta, CERN/EP-SFT,\
  Alja Mrak Tadel, UCSD/CMS,\
  Axel Naumann, CERN/EP-SFT,\
+ Dante Niewenhuis, VU Amsterdam\
+ Luis Antonio Obis Aparicio, University of Zaragoza,
+ Ianna Osborne, Princeton University,\
  Vincenzo Eduardo Padulano, CERN/EP-SFT,\
  Danilo Piparo, CERN/EP-SFT,\
  Fons Rademakers, CERN/IT,\
  Jonas Rembser, CERN/EP-SFT,\
+ Andrea Rizzi, University of Pisa,\
+ Andre Sailer, CERN/EP-SFT,\
+ Garima Singh, ETH,\
+ Juraj Smiesko, CERN/RCS-PRJ-FC,
+ Pavlo Svirin, National Technical University of Ukraine,\
+ Maciej Szymanski, Argonne,\
+ Christian Tacke, Darmstadt University,\
  Matevz Tadel, UCSD/CMS,\
+ Alvaro Tolosa Delgado, CERN/RCS-PRJ-FC,\
+ Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
+ Peter Van Gemmeren, Argonne,\
  Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/ATLAS,
+ Stefan Wunsch
 
 ## Deprecation and Removal
 - The RooFit legacy iterators are deprecated and will be removed in ROOT 6.34 (see section "RooFit libraries")
@@ -53,6 +82,7 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 
+The Cling interpreter now relies on LLVM version 16.
 
 ## I/O Libraries
 
@@ -110,8 +140,6 @@ Please, report any issues regarding the above mentioned features should you enco
 - Implement the FLT_MAX mechanism for `THStack::GetMaximum()` and `THStack::GetMiniumum()`.
 - Print a warning when the range given to `TAxis::SetRange` is invalid.
 - Fix projection name in `TH3` as requested [here](https://root-forum.cern.ch/t/project3d-letter-d-in-name-option/57612).
-
-## Math Libraries
 
 ## Parallelism
   - The ROOT::Experimental::TFuture template has been removed.
@@ -316,23 +344,9 @@ and a factor 2.5 in memory decrease. This improvement is transparent for `RDataF
 
 * Update version of RenderCore to fix tone mapping of transparent objects.
 
-## Geometry Libraries
-
-
-## Database Libraries
-
-
-## Networking Libraries
-
-
-## GUI Libraries
-
-
-## Montecarlo Libraries
-
-
 ## PROOF Libraries
 
+By default, PROOF is not configured and built any more. It will be deprecated in the future given that its functionality is now provided by the superior RDataFrame and its distributed version, [DistRDF](https://root.cern/doc/master/classROOT_1_1RDataFrame.html#distrdf).
 
 ## PyROOT
 
@@ -431,14 +445,7 @@ are now just the ones automatically produced by cmake (see https://cmake.org/cma
 Many implementation details of the ROOT pythonizations were moved from C++ functions to pure Python bindings using the
 public cppyy API. This helps in the integration with the tool but also improves code efficiency and memory usage.
 
-## Language Bindings
-
-
 ## JavaScript ROOT
-
-
-## Tutorials
-
 
 ## Class Reference Guide
 
@@ -463,5 +470,7 @@ public cppyy API. This helps in the integration with the tool but also improves 
 - Remove last references to the old ROOT `drupal` website.
 
 ## Build, Configuration and Testing Infrastructure
+
+Release v6.32.00 is the first one integrated and tested entirely through the new GitHub based build system.
 
 
