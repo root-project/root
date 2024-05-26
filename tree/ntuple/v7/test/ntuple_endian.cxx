@@ -1,4 +1,5 @@
 // Override endianness detection in RColumnElement.hxx; assume big-endian machine
+// These tests are simulating a big endian machine; we will turn them off on an actual big endian node.
 #define R__LITTLE_ENDIAN 0
 
 #include "gtest/gtest.h"
@@ -104,6 +105,9 @@ public:
 
 TEST(RColumnElementEndian, ByteCopy)
 {
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
    ROOT::Experimental::Internal::RColumnElement<float, EColumnType::kReal32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
@@ -121,10 +125,14 @@ TEST(RColumnElementEndian, ByteCopy)
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+#endif
 }
 
 TEST(RColumnElementEndian, Cast)
 {
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
    ROOT::Experimental::Internal::RColumnElement<std::int64_t, EColumnType::kInt32> element;
    EXPECT_EQ(element.IsMappable(), false);
 
@@ -146,10 +154,14 @@ TEST(RColumnElementEndian, Cast)
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
+#endif
 }
 
 TEST(RColumnElementEndian, Split)
 {
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
    ROOT::Experimental::Internal::RColumnElement<double, EColumnType::kSplitReal64> splitElement;
 
    RPageSinkMock sink1(splitElement);
@@ -166,10 +178,14 @@ TEST(RColumnElementEndian, Split)
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+#endif
 }
 
 TEST(RColumnElementEndian, DeltaSplit)
 {
+#ifndef R__BYTESWAP
+   GTEST_SKIP() << "Skipping test on big endian node";
+#else
    using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 
    ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32> element;
@@ -193,4 +209,5 @@ TEST(RColumnElementEndian, DeltaSplit)
                        "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
                        "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
+#endif
 }
