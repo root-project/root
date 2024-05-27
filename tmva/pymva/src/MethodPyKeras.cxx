@@ -224,7 +224,7 @@ void MethodPyKeras::InitKeras() {
       }
    }
 
-   // import Tensoprflow (if requested or because is keras backend)
+   // import Tensorflow (if requested or because is keras backend)
    if (fUseTFKeras || useTFBackend) {
       auto ret = PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fLocalNS);
       if (ret != nullptr) ret = PyRun_String("import tensorflow as tf", Py_single_input, fGlobalNS, fGlobalNS);
@@ -233,11 +233,14 @@ void MethodPyKeras::InitKeras() {
       }
       // check tensorflow version
       PyRunString("tf_major_version = int(tf.__version__.split('.')[0])");
-      PyObject *pyTfVersion = PyDict_GetItemString(fLocalNS, "tf_major_version");
-      int tfVersion = PyLong_AsLong(pyTfVersion);
-      Log() << kINFO << "Using TensorFlow version " << tfVersion << Endl;
+      PyRunString("tf_minor_version = int(tf.__version__.split('.')[1])");
+      PyObject *pyTfMajorVersion = PyDict_GetItemString(fLocalNS, "tf_major_version");
+      PyObject *pyTfMinorVersion = PyDict_GetItemString(fLocalNS, "tf_minor_version");
+      int tfMajorVersion = PyLong_AsLong(pyTfMajorVersion);
+      int tfMinorVersion = PyLong_AsLong(pyTfMinorVersion);
+      Log() << kINFO << "Using TensorFlow version " << tfMajorVersion << "." << tfMinorVersion << Endl;
 
-      if (tfVersion < 2) {
+      if (tfMajorVersion < 2) {
          if (fUseTFKeras == 1) {
             Log() << kWARNING << "Using TensorFlow version 1.x which does not contain tf.keras - use then TensorFlow as Keras backend" << Endl;
             fUseTFKeras = kFALSE;
@@ -253,6 +256,12 @@ void MethodPyKeras::InitKeras() {
          if (!kerasIsCompatible) {
             Log() << kWARNING << "The Keras version is not compatible with TensorFlow 2. Use instead tf.keras" << Endl;
             fUseTFKeras = 1;
+         }
+         if (tfMinorVersion >= 16) { // for version >=2.16 use Keras 3 API
+            fUseKeras3 = true;
+            Log() << kINFO << "Using the new Keras3 API available with tensorflow version " << tfMajorVersion << "." << tfMinorVersion << Endl;
+            if (fFilenameModel.Contains(".h5") || fFilenameTrainedModel.Contains(".h5"))
+               Log() << kFATAL << "Cannot use .h5 files with new Keras 3 API. Use .keras" << Endl;
          }
       }
 
@@ -272,38 +281,58 @@ void MethodPyKeras::InitKeras() {
          PyRun_String("from keras.backend import tensorflow_backend as K", Py_single_input, fGlobalNS, fGlobalNS);
       }
 
-      // extra options for tensorflow
-      // use different naming in tf2 for ConfigProto and Session
-      TString configProto = (tfVersion >= 2) ? "tf.compat.v1.ConfigProto" : "tf.ConfigProto";
-      TString session = (tfVersion >= 2) ? "tf.compat.v1.Session" : "tf.Session";
+      // extra options for tensorflow (for version < 2.16)
+      if (tfMajorVersion <=2 && tfMinorVersion < 16) {
+         // use different naming in tf2 for ConfigProto and Session
+         TString configProto = (tfMajorVersion >= 2) ? "tf.compat.v1.ConfigProto" : "tf.ConfigProto";
+         TString session = (tfMajorVersion >= 2) ? "tf.compat.v1.Session" : "tf.Session";
 
-      // in case specify number of threads
-      int num_threads = fNumThreads;
-      if (num_threads > 0) {
-         Log() << kINFO << "Setting the CPU number of threads =  " << num_threads << Endl;
+         // in case specify number of threads
+         int num_threads = fNumThreads;
+         if (num_threads > 0) {
+            Log() << kINFO << "Setting the CPU number of threads =  " << num_threads << Endl;
 
-         PyRunString(
-            TString::Format("session_conf = %s(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",
+            PyRunString(
+               TString::Format("session_conf = %s(intra_op_parallelism_threads=%d,inter_op_parallelism_threads=%d)",
                             configProto.Data(), num_threads, num_threads));
-      } else
-         PyRunString(TString::Format("session_conf = %s()", configProto.Data()));
+         } else
+            PyRunString(TString::Format("session_conf = %s()", configProto.Data()));
 
-      // applying GPU options such as allow_growth=True to avoid allocating all memory on GPU
-      // that prevents running later TMVA-GPU
-      // Also new Nvidia RTX cards (e.g. RTX 2070)  require this option
-      if (!fGpuOptions.IsNull()) {
-         TObjArray *optlist = fGpuOptions.Tokenize(",");
-         for (int item = 0; item < optlist->GetEntries(); ++item) {
-            Log() << kINFO << "Applying GPU option:  gpu_options." << optlist->At(item)->GetName() << Endl;
-            PyRunString(TString::Format("session_conf.gpu_options.%s", optlist->At(item)->GetName()));
+         // applying GPU options such as allow_growth=True to avoid allocating all memory on GPU
+         // that prevents running later TMVA-GPU
+         // Also new Nvidia RTX cards (e.g. RTX 2070)  require this option
+         if (!fGpuOptions.IsNull()) {
+            TObjArray *optlist = fGpuOptions.Tokenize(",");
+            for (int item = 0; item < optlist->GetEntries(); ++item) {
+               Log() << kINFO << "Applying GPU option:  gpu_options." << optlist->At(item)->GetName() << Endl;
+               PyRunString(TString::Format("session_conf.gpu_options.%s", optlist->At(item)->GetName()));
+            }
          }
-      }
-      PyRunString(TString::Format("sess = %s(config=session_conf)", session.Data()));
+         PyRunString(TString::Format("sess = %s(config=session_conf)", session.Data()));
 
-      if (tfVersion < 2) {
-         PyRunString("K.set_session(sess)");
+         if (tfMajorVersion < 2) {
+            PyRunString("K.set_session(sess)");
+         } else {
+            PyRunString("tf.compat.v1.keras.backend.set_session(sess)");
+         }
       } else {
-         PyRunString("tf.compat.v1.keras.backend.set_session(sess)");
+         // case using tensorflow >= 2.16
+         if (fNumThreads > 0) {
+             Log() << kINFO << "Setting the CPU number of threads =  " << fNumThreads << Endl;
+             PyRunString(TString::Format("tf.config.threading.set_intra_op_parallelism_threads(%d)",fNumThreads));
+             PyRunString(TString::Format("tf.config.threading.set_inter_op_parallelism_threads(%d)",fNumThreads));
+         }
+         if (!fGpuOptions.IsNull()) {
+            TObjArray *optlist = fGpuOptions.Tokenize(",");
+            for (int item = 0; item < optlist->GetEntries(); ++item) {
+               if (TString(optlist->At(item)->GetName())=="allow_growth=True") {
+                  Log() << kINFO << "Applying GPU option:  allow_growth=True"  << Endl;
+                  // allow memory growth on t he first GPY
+                  PyRunString("physical_devices = tf.config.list_physical_devices('GPU')");
+                  PyRunString("tf.config.experimental.set_memory_growth(physical_devices[0], True)");
+               }
+            }
+         }
       }
    }
    // case not using a Tensorflow backend
@@ -381,8 +410,8 @@ void MethodPyKeras::SetupKerasModelForEval() {
 
    // disable eager execution (model will evaluate > 100 faster)
    // need to be done before loading the model
-#ifndef R__MACOSX  // problem siabling eager execution on Macos (conflict with multiprocessing)
-   if (fUseTFKeras){
+#ifndef R__MACOSX  // problem disabling eager execution on Macos (conflict with multiprocessing)
+   if (fUseTFKeras && !fUseKeras3){
       PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
       Log() << kINFO << "Disabled TF eager execution when evaluating model " << Endl;
    }
