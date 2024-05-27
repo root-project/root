@@ -205,6 +205,7 @@ public:
   };
 
   std::vector<std::unique_ptr<const RooAbsBinning>> const& getBinnings() const { return _lvbins; }
+  std::vector<RooAbsLValue*> const& getVariables() const { return _lvvars; }
 
   double const* weightArray()   const { return _wgt; }
   double const* wgtErrLoArray() const { return _errLo; }
