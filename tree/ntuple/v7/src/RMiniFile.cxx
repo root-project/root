@@ -56,7 +56,7 @@ private:
    static std::uint16_t Swap(std::uint16_t val)
    {
 #if R__LITTLE_ENDIAN == 1
-      return RByteSwap<sizeof(fValBE)>::bswap(val);
+      return RByteSwap<sizeof(val)>::bswap(val);
 #else
       return val;
 #endif
@@ -80,7 +80,7 @@ private:
    static std::uint32_t Swap(std::uint32_t val)
    {
 #if R__LITTLE_ENDIAN == 1
-      return RByteSwap<sizeof(fValBE)>::bswap(val);
+      return RByteSwap<sizeof(val)>::bswap(val);
 #else
       return val;
 #endif
@@ -104,7 +104,7 @@ private:
    static std::int32_t Swap(std::int32_t val)
    {
 #if R__LITTLE_ENDIAN == 1
-      return RByteSwap<sizeof(fValBE)>::bswap(val);
+      return RByteSwap<sizeof(val)>::bswap(val);
 #else
       return val;
 #endif
@@ -128,7 +128,7 @@ private:
    static std::uint64_t Swap(std::uint64_t val)
    {
 #if R__LITTLE_ENDIAN == 1
-      return RByteSwap<sizeof(fValBE)>::bswap(val);
+      return RByteSwap<sizeof(val)>::bswap(val);
 #else
       return val;
 #endif
