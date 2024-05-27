@@ -79,7 +79,7 @@ TEST(RNTuple, VariantLimits)
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,"
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,"
       "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,"
-      "             char,char,char,char,char,char,char,char,char,char,char,char,char,char,char>"),
+      "             char,char,char,char,char,char,char,char,char,char,char>"),
       RException);
 
    using HugeVariant_t =
@@ -98,7 +98,7 @@ TEST(RNTuple, VariantLimits)
                    char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,
                    char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,
                    char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,char,
-                   char,char,char,char,char,char,char,char,char,char,char,char,char,bool>;
+                   char,char,char,char,char,char,char,char,char,bool>;
    // clang-format on
 
    FileRaii fileGuard("test_ntuple_variant_limits.root");
@@ -114,8 +114,8 @@ TEST(RNTuple, VariantLimits)
    auto ptrV = reader->GetModel().GetDefaultEntry().GetPtr<HugeVariant_t>("v");
    EXPECT_EQ(1u, reader->GetNEntries());
    reader->LoadEntry(0);
-   EXPECT_EQ(253, ptrV->index());
-   EXPECT_TRUE(std::get<253>(*ptrV));
+   EXPECT_EQ(249, ptrV->index());
+   EXPECT_TRUE(std::get<249>(*ptrV));
 }
 
 TEST(RNTuple, VariantException)
