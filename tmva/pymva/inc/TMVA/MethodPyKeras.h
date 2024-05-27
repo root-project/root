@@ -97,6 +97,7 @@ namespace TMVA {
       TString fUserCodeName; // filename of an optional user script that will be executed before loading the Keras model
       TString fKerasString;  // string identifying keras or tf.keras
 
+      bool fUseKeras3 = false; // use new Keras API (available from TF 2.16)
       bool fModelIsSetup = false; // flag whether current model is setup for being used
       bool fModelIsSetupForEval = false; // flag to indicate whether model is setup for evaluation
       std::vector<float> fVals; // variables array used for GetMvaValue
