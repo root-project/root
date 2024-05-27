@@ -426,6 +426,22 @@ bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
    return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
 }
 
+auto RStringCache::Insert(const std::string &string) -> decltype(fStrings)::const_iterator
+{
+   {
+      std::shared_lock l{fMutex};
+      if (auto it = fStrings.find(string); it != fStrings.end())
+         return it;
+   }
+
+   // TODO: Would be nicer to use a lock upgrade strategy a-la TVirtualRWMutex
+   // but that is unfortunately not usable outside the already available ROOT mutexes
+   std::unique_lock l{fMutex};
+   if (auto it = fStrings.find(string); it != fStrings.end())
+      return it;
+
+   return fStrings.insert(string).first;
+}
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT
