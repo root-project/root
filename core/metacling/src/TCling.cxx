@@ -7034,6 +7034,7 @@ static std::string GetClassSharedLibsForModule(const char *cls, cling::LookupHel
             case TemplateArgument::Integral:
             case TemplateArgument::Pack:
             case TemplateArgument::NullPtr:
+            case TemplateArgument::StructuralValue:
             case TemplateArgument::Expression:
             case TemplateArgument::Template:
             case TemplateArgument::TemplateExpansion: return;
