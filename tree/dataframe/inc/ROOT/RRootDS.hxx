@@ -45,6 +45,7 @@ protected:
 public:
    RRootDS(std::string_view treeName, std::string_view fileNameGlob);
    ~RRootDS();
+   std::size_t GetNFiles() const final;
    std::string GetTypeName(std::string_view colName) const final;
    const std::vector<std::string> &GetColumnNames() const final;
    bool HasColumn(std::string_view colName) const final;
