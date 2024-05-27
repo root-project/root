@@ -310,6 +310,9 @@ the same effect as before.
 with very deep computation graphs (more than O(10K) nodes in the same branch). Preliminary tests indicate between 30%
 and a factor 2.5 in memory decrease. This improvement is transparent for `RDataFrame` users.
 
+## Graphics backends
+
+
 ## 2D Graphics Libraries
 
 - TMultiGraph: Add the objects from the list of functions in legend produce by TLegend.
@@ -444,8 +447,6 @@ are now just the ones automatically produced by cmake (see https://cmake.org/cma
 
 Many implementation details of the ROOT pythonizations were moved from C++ functions to pure Python bindings using the
 public cppyy API. This helps in the integration with the tool but also improves code efficiency and memory usage.
-
-## JavaScript ROOT
 
 ## Class Reference Guide
 
