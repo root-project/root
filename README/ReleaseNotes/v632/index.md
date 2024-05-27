@@ -311,7 +311,10 @@ with very deep computation graphs (more than O(10K) nodes in the same branch). P
 and a factor 2.5 in memory decrease. This improvement is transparent for `RDataFrame` users.
 
 ## Graphics backends
+The ROOT release 6.32 brings a lot of impressive enhancements to the Web Graphics package, greatly surpassing the features and capabilities of version 6.30. 
+This update provides users with a more robust Web Graphics.
 
+* The JSROOT version has been updated to v7.7
 
 ## 2D Graphics Libraries
 
