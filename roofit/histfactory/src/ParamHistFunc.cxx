@@ -724,19 +724,25 @@ std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xl
   // copied and edited from RooHistFunc
   RooAbsLValue* lvarg = &obs;
 
-  // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
-  double* boundaries = binning->array() ;
-
-  std::list<double>* hint = new std::list<double> ;
-
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]) ;
+  // look for variable in the DataHist, and if found, return the binning
+  std::string varName = dynamic_cast<TObject*>(lvarg)->GetName();
+  auto& vars = _dataSet->getVariables();
+  auto& binnings = _dataSet->getBinnings();
+  for(size_t i=0; i < vars.size(); i++ ) {
+    if(varName == vars.at(i)->GetName()) {
+      // found the variable, return its binning
+      const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
+      double* boundaries = binnings.at(i)->array();
+      std::list<double>* hint = new std::list<double> ;
+      for (Int_t i=0 ; i<binnings.at(i)->numBoundaries() ; i++) {
+        if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
+          hint->push_back(boundaries[i]) ;
+        }
+      }
+      return hint ;
     }
   }
-
-  return hint ;
+  // variable not found, return null
+  return nullptr;
+  
 }
