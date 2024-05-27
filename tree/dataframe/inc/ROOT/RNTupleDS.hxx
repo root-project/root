@@ -124,6 +124,7 @@ public:
    ~RNTupleDS();
 
    void SetNSlots(unsigned int nSlots) final;
+   std::size_t GetNFiles() const final { return fFileNames.empty() ? 1 : fFileNames.size(); }
    const std::vector<std::string> &GetColumnNames() const final { return fColumnNames; }
    bool HasColumn(std::string_view colName) const final;
    std::string GetTypeName(std::string_view colName) const final;

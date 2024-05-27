@@ -85,6 +85,12 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
 }
 
+TEST_F(RNTupleDSTest, NFiles)
+{
+   RNTupleDS ds(fNtplName, fFileName);
+
+   EXPECT_EQ(1, ds.GetNFiles());
+}
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
