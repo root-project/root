@@ -75,7 +75,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
             // could change in the future.
             throw RException(R__FAIL("compression setting mismatch between column ranges (" +
                                      std::to_string(fCompressionSettings) + " vs " +
-                                     std::to_string(columnRange.fCompressionSettings) + ")"));
+                                     std::to_string(columnRange.fCompressionSettings) +
+                                     ") for column with physical ID " + std::to_string(colId)));
          }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
