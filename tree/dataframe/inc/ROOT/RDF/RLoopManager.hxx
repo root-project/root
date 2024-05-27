@@ -17,6 +17,7 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
 
 #include <functional>
 #include <limits>
@@ -181,7 +182,7 @@ class RLoopManager : public RNodeBase {
    void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
    void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
-   std::unordered_set<std::string> fCachedColNames;
+   ROOT::Internal::RDF::RStringCache fCachedColNames;
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>>
       fUniqueDefinesWithReaders;
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
@@ -261,7 +262,7 @@ public:
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
-   std::unordered_set<std::string> &GetColumnNamesCache() { return fCachedColNames; }
+   ROOT::Internal::RDF::RStringCache &GetColumnNamesCache() { return fCachedColNames; }
    std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>> &
    GetUniqueDefinesWithReaders()
    {

@@ -13,6 +13,7 @@
 
 #include "RColumnReaderBase.hxx"
 #include "RDefineBase.hxx"
+#include "Utils.hxx"
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 
 #include <limits>
@@ -64,11 +65,11 @@ class RDefinesWithReaders {
    std::vector<std::unordered_map<std::string_view, std::unique_ptr<RDefineReader>>> fReadersPerVariation;
 
    // Strings that were already used to represent column names in this RDataFrame instance.
-   std::unordered_set<std::string> &fCachedColNames;
+   ROOT::Internal::RDF::RStringCache &fCachedColNames;
 
 public:
    RDefinesWithReaders(std::shared_ptr<ROOT::Detail::RDF::RDefineBase> define, unsigned int nSlots,
-                       std::unordered_set<std::string> &cachedColNames);
+                       ROOT::Internal::RDF::RStringCache &cachedColNames);
    ROOT::Detail::RDF::RDefineBase &GetDefine() const { return *fDefine; }
    ROOT::Internal::RDF::RDefineReader &GetReader(unsigned int slot, std::string_view variationName);
 };
