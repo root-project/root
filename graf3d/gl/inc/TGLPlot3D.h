@@ -22,8 +22,8 @@ class TH3;
 class TGLPlot3D : public TGLObject
 {
 private:
-   TGLPlot3D(const TGLPlot3D&);            // Not implemented
-   TGLPlot3D& operator=(const TGLPlot3D&); // Not implemented
+   TGLPlot3D(const TGLPlot3D&) = delete;
+   TGLPlot3D& operator=(const TGLPlot3D&) = delete;
 
 protected:
    TGLPlotPainter     *fPlotPainter;

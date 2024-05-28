@@ -20,13 +20,14 @@
 #include "llvm/Support/Program.h"
 #include "llvm/Support/raw_ostream.h"
 #include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Support/TargetRegistry.h>
+#include <llvm/MC/TargetRegistry.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 #include <llvm/Target/TargetOptions.h>
 
 #include <algorithm>
 #include <bitset>
+#include <optional>
 #include <string>
 #include <system_error>
 
@@ -292,8 +293,8 @@ namespace cling {
     }
 
     // is not important, because PTX does not use any object format
-    llvm::Optional<llvm::Reloc::Model> RM =
-        llvm::Optional<llvm::Reloc::Model>(llvm::Reloc::Model::PIC_);
+    std::optional<llvm::Reloc::Model> RM =
+        std::optional<llvm::Reloc::Model>(llvm::Reloc::Model::PIC_);
 
     llvm::TargetOptions TO = llvm::TargetOptions();
 

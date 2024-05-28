@@ -33,7 +33,7 @@ Base class of TTreeReaderArray.
          TTreeReaderValueBase(reader, branchname, dict) {}
 
       std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
-      Bool_t IsEmpty() const { return !GetSize(); }
+      bool IsEmpty() const { return !GetSize(); }
 
       EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 
@@ -221,5 +221,13 @@ protected:
    // FIXME: re-introduce once we have ClassDefTInline!
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
+
+namespace cling {
+template <typename T>
+std::string printValue(TTreeReaderArray<T> *val)
+{
+   return printValue(static_cast<ROOT::Internal::TTreeReaderValueBase *>(val));
+}
+} // namespace cling
 
 #endif // ROOT_TTreeReaderArray

@@ -73,9 +73,9 @@ public:
    //GLXPbuffer   fPBDC;
 
    TGLContextPrivate()
-      : fDpy(0),
-        fVisualInfo(0),
-        fGLContext(0),
+      : fDpy(nullptr),
+        fVisualInfo(nullptr),
+        fGLContext(nullptr),
         fWindowID(0)
    {
    }

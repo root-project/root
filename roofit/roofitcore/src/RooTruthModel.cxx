@@ -31,17 +31,57 @@ functions used in D mixing have been hand coded for increased execution speed.
 #include <RooBatchCompute.h>
 #include <RooGenContext.h>
 
+#include <RooFit/Detail/MathFuncs.h>
+
 #include <Riostream.h>
 
 #include <TError.h>
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 
-using namespace std ;
+namespace {
+
+enum RooTruthBasis {
+   noBasis = 0,
+   expBasisMinus = 1,
+   expBasisSum = 2,
+   expBasisPlus = 3,
+   sinBasisMinus = 11,
+   sinBasisSum = 12,
+   sinBasisPlus = 13,
+   cosBasisMinus = 21,
+   cosBasisSum = 22,
+   cosBasisPlus = 23,
+   linBasisPlus = 33,
+   quadBasisPlus = 43,
+   coshBasisMinus = 51,
+   coshBasisSum = 52,
+   coshBasisPlus = 53,
+   sinhBasisMinus = 61,
+   sinhBasisSum = 62,
+   sinhBasisPlus = 63,
+   genericBasis = 100
+};
+
+enum BasisType {
+   none = 0,
+   expBasis = 1,
+   sinBasis = 2,
+   cosBasis = 3,
+   linBasis = 4,
+   quadBasis = 5,
+   coshBasis = 6,
+   sinhBasis = 7
+};
+
+enum BasisSign { Both = 0, Plus = +1, Minus = -1 };
+
+} // namespace
 
 ClassImp(RooTruthModel);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of a truth resolution model, i.e. a delta function in observable 'xIn'
@@ -50,18 +90,6 @@ RooTruthModel::RooTruthModel(const char *name, const char *title, RooAbsRealLVal
   RooResolutionModel(name,title,xIn)
 {
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor
-
-RooTruthModel::RooTruthModel(const RooTruthModel& other, const char* name) :
-  RooResolutionModel(other,name)
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return basis code for given basis definition string. Return special
@@ -170,36 +198,35 @@ double RooTruthModel::evaluate() const
       (basisSign==Plus  && x<0)) return 0 ;
 
 
-  double tau = ((RooAbsReal*)basis().getParameter(1))->getVal() ;
+  double tau = (static_cast<RooAbsReal*>(basis().getParameter(1)))->getVal() ;
   // Return desired basis function
   switch(basisType) {
   case expBasis: {
-    //cout << " RooTruthModel::eval(" << GetName() << ") expBasis mode ret = " << exp(-std::abs((double)x)/tau) << " tau = " << tau << endl ;
-    return exp(-std::abs((double)x)/tau) ;
+    return std::exp(-std::abs((double)x)/tau) ;
   }
   case sinBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-std::abs((double)x)/tau)*sin(x*dm) ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
+    return std::exp(-std::abs((double)x)/tau)*std::sin(x*dm) ;
   }
   case cosBasis: {
-    double dm = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-std::abs((double)x)/tau)*cos(x*dm) ;
+    double dm = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
+    return std::exp(-std::abs((double)x)/tau)*std::cos(x*dm) ;
   }
   case linBasis: {
     double tscaled = std::abs((double)x)/tau;
-    return exp(-tscaled)*tscaled ;
+    return std::exp(-tscaled)*tscaled ;
   }
   case quadBasis: {
     double tscaled = std::abs((double)x)/tau;
-    return exp(-tscaled)*tscaled*tscaled;
+    return std::exp(-tscaled)*tscaled*tscaled;
   }
   case sinhBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-std::abs((double)x)/tau)*sinh(x*dg/2) ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
+    return std::exp(-std::abs((double)x)/tau)*std::sinh(x*dg/2) ;
   }
   case coshBasis: {
-    double dg = ((RooAbsReal*)basis().getParameter(2))->getVal() ;
-    return exp(-std::abs((double)x)/tau)*cosh(x*dg/2) ;
+    double dg = (static_cast<RooAbsReal*>(basis().getParameter(2)))->getVal() ;
+    return std::exp(-std::abs((double)x)/tau)*std::cosh(x*dg/2) ;
   }
   default:
     R__ASSERT(0) ;
@@ -209,20 +236,20 @@ double RooTruthModel::evaluate() const
 }
 
 
-void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooTruthModel::doEval(RooFit::EvalContext &ctx) const
 {
-   auto config = dataMap.config(this);
-   auto xVals = dataMap.at(x);
+   auto config = ctx.config(this);
+   auto xVals = ctx.at(x);
 
    // No basis: delta function
    if (_basisCode == noBasis) {
-      RooBatchCompute::compute(config, RooBatchCompute::DeltaFunction, output, nEvents, {xVals});
+      RooBatchCompute::compute(config, RooBatchCompute::DeltaFunction, ctx.output(), {xVals});
       return;
    }
 
    // Generic basis: evaluate basis function object
    if (_basisCode == genericBasis) {
-      RooBatchCompute::compute(config, RooBatchCompute::Identity, output, nEvents, {dataMap.at(&basis())});
+      RooBatchCompute::compute(config, RooBatchCompute::Identity, ctx.output(), {ctx.at(&basis())});
       return;
    }
 
@@ -235,44 +262,44 @@ void RooTruthModel::computeBatch(double *output, size_t nEvents, RooFit::Detail:
 
    auto param1 = static_cast<RooAbsReal const *>(basis().getParameter(1));
    auto param2 = static_cast<RooAbsReal const *>(basis().getParameter(2));
-   auto param1Vals = param1 ? dataMap.at(param1) : std::span<const double>{};
-   auto param2Vals = param2 ? dataMap.at(param2) : std::span<const double>{};
+   auto param1Vals = param1 ? ctx.at(param1) : std::span<const double>{};
+   auto param2Vals = param2 ? ctx.at(param2) : std::span<const double>{};
 
    // Return desired basis function
-   RooBatchCompute::ArgVector extraArgs{basisSign};
+   std::array<double, 1> extraArgs{basisSign};
    switch (basisType) {
    case expBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelExpBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case sinBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case cosBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCosBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCosBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case linBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelLinBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case quadBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelQuadBasis, ctx.output(), {xVals, param1Vals},
                                extraArgs);
       break;
    }
    case sinhBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinhBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelSinhBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
    case coshBasis: {
-      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCoshBasis, output, nEvents,
+      RooBatchCompute::compute(config, RooBatchCompute::TruthModelCoshBasis, ctx.output(),
                                {xVals, param1Vals, param2Vals}, extraArgs);
       break;
    }
@@ -406,21 +433,21 @@ inline double indefiniteIntegralCoshBasisPlus(double x, double tau, double dm)
 }
 
 // Integrate one of the basis functions. Takes a function that represents the
-// indefinite integral, some parameters, and a flag that indicats whether the
+// indefinite integral, some parameters, and a flag that indicates whether the
 // basis function is symmetric or antisymmetric. This information is used to
 // evaluate the integrals for the "Minus" and "Sum" cases.
 template <class Function>
 double definiteIntegral(Function indefiniteIntegral, double xmin, double xmax, double tau, double dm,
-                        RooTruthModel::BasisSign basisSign, bool isSymmetric)
+                        BasisSign basisSign, bool isSymmetric)
 {
    // Note: isSymmetric == false implies antisymmetric
    if (tau == 0.0)
       return isSymmetric ? 1.0 : 0.0;
    double result = 0.0;
-   if (basisSign != RooTruthModel::Minus) {
+   if (basisSign != Minus) {
       result += indefiniteIntegral(xmax, tau, dm) - indefiniteIntegral(xmin, tau, dm);
    }
-   if (basisSign != RooTruthModel::Plus) {
+   if (basisSign != Plus) {
       const double resultMinus = indefiniteIntegral(-xmax, tau, dm) - indefiniteIntegral(-xmin, tau, dm);
       result += isSymmetric ? -resultMinus : resultMinus;
    }
@@ -449,9 +476,9 @@ double RooTruthModel::analyticalIntegral(Int_t code, const char *rangeName) cons
    const bool needsDm =
       basisType == sinBasis || basisType == cosBasis || basisType == sinhBasis || basisType == coshBasis;
 
-   const double tau = ((RooAbsReal *)basis().getParameter(1))->getVal();
+   const double tau = (static_cast<RooAbsReal *>(basis().getParameter(1)))->getVal();
    const double dm =
-      needsDm ? ((RooAbsReal *)basis().getParameter(2))->getVal() : std::numeric_limits<Double_t>::quiet_NaN();
+      needsDm ? (static_cast<RooAbsReal *>(basis().getParameter(2)))->getVal() : std::numeric_limits<Double_t>::quiet_NaN();
 
    const double xmin = x.min(rangeName);
    const double xmax = x.max(rangeName);

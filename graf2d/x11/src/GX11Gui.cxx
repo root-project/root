@@ -13,11 +13,11 @@
 // TGX11 class. Most of the methods are used by the machine independent
 // GUI classes (libGUI.so).
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <limits.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
+#include <climits>
 #include <unistd.h>
 
 #include <X11/Xlib.h>
@@ -1764,7 +1764,7 @@ Bool_t TGX11::CheckEvent(Window_t id, EGEventType type, Event_t &ev)
    tev.fCount = 0;
    tev.fFormat = 0;
    tev.fHandle = 0;
-   tev.fSendEvent = 0;
+   tev.fSendEvent = false;
    tev.fTime = 0;
    tev.fX = tev.fY = 0;
    tev.fXRoot = tev.fYRoot = 0;

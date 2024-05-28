@@ -34,16 +34,10 @@ namespace ZMQ {
 
 struct TimeOutException : std::exception {
    TimeOutException() = default;
-   TimeOutException(const TimeOutException &) = default;
-   ~TimeOutException() = default;
-   TimeOutException &operator=(const TimeOutException &) = default;
 };
 
 struct MoreException : std::exception {
    MoreException() = default;
-   MoreException(const MoreException &) = default;
-   ~MoreException() = default;
-   MoreException &operator=(const MoreException &) = default;
 };
 
 } // namespace ZMQ

@@ -13,8 +13,9 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <numeric>
-#include <string.h>
+#include <cstring>
 #include <cassert>
 
 #include "Math/Error.h"
@@ -270,9 +271,9 @@ namespace Math {
       fDist = kUserDefined;
       // function will be cloned inside the wrapper PDFIntegral of CDFWrapper classes
       if (isPDF)
-         fCDF.reset(new PDFIntegral(f, xmin, xmax) );
+         fCDF = std::make_unique<PDFIntegral>(f, xmin, xmax );
       else
-         fCDF.reset(new CDFWrapper(f, xmin, xmax) );
+         fCDF = std::make_unique<CDFWrapper>(f, xmin, xmax );
    }
 
    void GoFTest::Instantiate(const Double_t* sample, size_t sampleSize) {

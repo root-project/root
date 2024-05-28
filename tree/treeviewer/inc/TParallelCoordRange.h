@@ -36,7 +36,7 @@ private:
    TParallelCoordVar *fVar;       ///< Variable owning the range.
    TParallelCoordSelect* fSelect; ///< Selection owning the range.
 
-   void              PaintSlider(Double_t value,Bool_t fill=kFALSE);
+   void              PaintSlider(Double_t value,bool fill=false);
    TPoint*           GetBindingLinePoints(Int_t pos,Int_t mindragged);
    TPoint*           GetSliderPoints(Double_t value);
    TPoint*           GetSliderPoints(Int_t pos);
@@ -55,7 +55,7 @@ public:
    virtual Double_t GetMax() {return fMax;}
    TParallelCoordVar* GetVar() {return fVar;}
    TParallelCoordSelect* GetSelection() {return fSelect;}
-   Bool_t IsIn(Double_t evtval);
+   bool IsIn(Double_t evtval);
    void Paint(Option_t *options) override;
    void Print(Option_t *options) const override; // *MENU*
    virtual void SendToBack(); // *MENU*
@@ -82,8 +82,8 @@ public:
    ~TParallelCoordSelect() override;   // Destructor.
 
    const char* GetTitle() const override {return fTitle.Data();}
-   void        SetActivated(Bool_t on);
-   void        SetShowRanges(Bool_t s);
+   void        SetActivated(bool on);
+   void        SetShowRanges(bool s);
    void        SetTitle(const char* title) {fTitle = title;}
 
    ClassDefOverride(TParallelCoordSelect,1); // A TParallelCoordSelect is a specialised TList to hold TParallelCoordRanges used by TParallelCoord.

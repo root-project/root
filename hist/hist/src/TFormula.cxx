@@ -12,7 +12,6 @@
 #include "TROOT.h"
 #include "TBuffer.h"
 #include "TMethod.h"
-#include "TMath.h"
 #include "TF1.h"
 #include "TMethodCall.h"
 #include <TBenchmark.h>
@@ -25,7 +24,6 @@
 #include "ROOT/StringUtils.hxx"
 
 #include <array>
-#include <cassert>
 #include <iostream>
 #include <memory>
 #include <unordered_map>
@@ -33,7 +31,7 @@
 #include <set>
 #include <sstream>
 
-using namespace std;
+using std::map, std::pair, std::make_pair, std::list, std::max, std::string;
 
 #ifdef WIN32
 #pragma optimize("",off)
@@ -820,7 +818,7 @@ prepareMethod(bool HasParameters, bool HasVariables, const char* FuncName,
    // We need an extra Double_t* for the gradient return result.
    if (AddCladArrayRef) {
       prototypeArguments.Append(",");
-      prototypeArguments.Append("clad::array_ref<Double_t>");
+      prototypeArguments.Append("Double_t*");
    }
 
    // Initialize the method call using real function name (cling name) defined
@@ -2975,30 +2973,9 @@ void TFormula::SetParameters(const Double_t *params)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set a list of parameters.
-/// The order is by default the alphabetic order given to the parameters
-/// apart if the users has defined explicitly the parameter names
-
-void TFormula::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3, Double_t p4, Double_t p5, Double_t p6,
-                             Double_t p7, Double_t p8, Double_t p9, Double_t p10)
-{
-   if(fNpar >= 1) SetParameter(0,p0);
-   if(fNpar >= 2) SetParameter(1,p1);
-   if(fNpar >= 3) SetParameter(2,p2);
-   if(fNpar >= 4) SetParameter(3,p3);
-   if(fNpar >= 5) SetParameter(4,p4);
-   if(fNpar >= 6) SetParameter(5,p5);
-   if(fNpar >= 7) SetParameter(6,p6);
-   if(fNpar >= 8) SetParameter(7,p7);
-   if(fNpar >= 9) SetParameter(8,p8);
-   if(fNpar >= 10) SetParameter(9,p9);
-   if(fNpar >= 11) SetParameter(10,p10);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set a parameter given a parameter index
-/// The parameter index is by default the alphabetic order given to the parameters
-/// apart if the users has defined explicitly the parameter names
+/// Set a parameter given a parameter index.
+/// The parameter index is by default the alphabetic order given to the parameters,
+/// apart if the users has defined explicitly the parameter names.
 
 void TFormula::SetParameter(Int_t param, Double_t value)
 {
@@ -3007,35 +2984,6 @@ void TFormula::SetParameter(Int_t param, Double_t value)
    fClingParameters[param] = value;
    // TString name = TString::Format("%d",param);
    // SetParameter(name,value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-void TFormula::SetParNames(const char *name0, const char *name1, const char *name2, const char *name3,
-                           const char *name4, const char *name5, const char *name6, const char *name7,
-                           const char *name8, const char *name9, const char *name10)
-{
-   if (fNpar >= 1)
-      SetParName(0, name0);
-   if (fNpar >= 2)
-      SetParName(1, name1);
-   if (fNpar >= 3)
-      SetParName(2, name2);
-   if (fNpar >= 4)
-      SetParName(3, name3);
-   if (fNpar >= 5)
-      SetParName(4, name4);
-   if (fNpar >= 6)
-      SetParName(5, name5);
-   if (fNpar >= 7)
-      SetParName(6, name6);
-   if (fNpar >= 8)
-      SetParName(7, name7);
-   if (fNpar >= 9)
-      SetParName(8, name8);
-   if (fNpar >= 10)
-      SetParName(9, name9);
-   if (fNpar >= 11)
-      SetParName(10, name10);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3208,9 +3156,9 @@ GetFuncPtr(std::string FuncName, Int_t Npar, Int_t Ndim, Bool_t Vectorized) {
    return prepareFuncPtr(method.get());
 }
 
-static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr,
-                             const Double_t *vars, const Double_t *pars,
-                             Double_t *result, const Int_t result_size) {
+static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr, const Double_t *vars,
+                             const Double_t *pars, Double_t *result, const Int_t /*result_size*/)
+{
    void *args[3];
    args[0] = &vars;
    if (!pars) {
@@ -3229,24 +3177,13 @@ static void CallCladFunction(TInterpreter::CallFuncIFacePtr_t::Generic_t FuncPtr
    } else {
       // __attribute__((used)) extern "C" void __cf_0(void* obj, int nargs, void** args, void* ret)
       // {
-      //    ((void (&)(double*, double*,
-      //               clad::array_ref<double>))TFormula____id_grad_1)(*(double**)args[0],
-      //                                                             *(double**)args[1],
-      //                                                             *(clad::array_ref<double> *)args[2]);
+      //    ((void (&)(double*, double*, double*))TFormula____id_grad_1)(*(double**)args[0],
+      //                                                                 *(double**)args[1],
+      //                                                                 *(double**)args[2]);
       //    return;
       // }
       args[1] = &pars;
-
-      // Using the interpreter to obtain the pointer to clad::array_ref is too
-      // slow and we do not want to expose clad::array_ref to the interpreter
-      // so this struct acts as a lightweight implementation of it
-      struct array_ref_interface {
-        Double_t *arr;
-        std::size_t size;
-      };
-
-      array_ref_interface ari{result, static_cast<size_t>(result_size)};
-      args[2] = &ari;
+      args[2] = &result;
       (*FuncPtr)(nullptr, 3, args, /*ret*/nullptr); // We do not use ret in a return-void func.
    }
 }
@@ -3412,42 +3349,6 @@ ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *par
    return answers;
 }
 #endif
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
-
-Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
-{
-   double xxx[4] = {x,y,z,t};
-   return EvalPar(xxx, nullptr); // takes care of case where formula is vectorized
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sets first 3  variables (e.g. x, y, z) and evaluate formula.
-
-Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
-{
-   double xxx[3] = {x,y,z};
-   return EvalPar(xxx, nullptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sets first 2  variables (e.g. x and y) and evaluate formula.
-
-Double_t TFormula::Eval(Double_t x, Double_t y) const
-{
-   double xxx[2] = {x,y};
-   return EvalPar(xxx, nullptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Sets first variable (e.g. x) and evaluate formula.
-
-Double_t TFormula::Eval(Double_t x) const
-{
-   double * xxx = &x;
-   return EvalPar(xxx, nullptr);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate formula.
@@ -3692,7 +3593,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
 
 TString TFormula::GetGradientFormula() const {
    std::unique_ptr<TInterpreterValue> v = gInterpreter->MakeInterpreterValue();
-   std::string s("(void (&)(Double_t *, Double_t *, clad::array_ref<Double_t>)) ");
+   std::string s("(void (&)(Double_t *, Double_t *, Double_t *)) ");
    s += GetGradientFuncName();
    gInterpreter->Evaluate(s.c_str(), *v);
    return v->ToString();

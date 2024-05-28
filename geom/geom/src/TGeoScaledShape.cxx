@@ -34,8 +34,8 @@ ClassImp(TGeoScaledShape);
 
 TGeoScaledShape::TGeoScaledShape()
 {
-   fShape = 0;
-   fScale = 0;
+   fShape = nullptr;
+   fScale = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -187,7 +187,7 @@ TGeoVolume *TGeoScaledShape::Divide(TGeoVolume * /*voldiv*/, const char *divname
                                     Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Scaled shapes cannot be divided. Division volume %s not created", divname);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ const TBuffer3D &TGeoScaledShape::GetBuffer3D(Int_t reqSections, Bool_t localFra
 TGeoShape *TGeoScaledShape::GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const
 {
    Error("GetMakeRuntimeShape", "Scaled shapes cannot be parametrized.");
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

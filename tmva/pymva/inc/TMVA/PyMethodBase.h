@@ -55,8 +55,7 @@ namespace TMVA {
 
    /// Function to find current Python executable
    /// used by ROOT
-   /// If Python2 is installed return "python"
-   /// Instead if "Python3" return "python3"
+   /// If "Python3" is installed, return "python3"
    TString Python_Executable();
 
    class PyMethodBase : public MethodBase {

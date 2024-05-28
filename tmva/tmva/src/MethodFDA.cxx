@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : MethodFDA                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation                                                            *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::MethodFDA
@@ -736,10 +736,10 @@ void TMVA::MethodFDA::GetHelpMessage() const
    Log() << "Please consult the Users Guide for the format of the formula string" << Endl;
    Log() << "and the allowed parameter ranges:" << Endl;
    if (gConfig().WriteOptionsReference()) {
-      Log() << "<a href=\"http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf\">"
-            << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf</a>" << Endl;
+      Log() << "<a href=\"https://github.com/root-project/root/blob/master/documentation/tmva/UsersGuide/TMVAUsersGuide.pdf\">"
+            << "TMVAUsersGuide.pdf</a>" << Endl;
    }
-   else Log() << "http://tmva.sourceforge.net/docu/TMVAUsersGuide.pdf" << Endl;
+   else Log() << "documentation/tmva/UsersGuide/TMVAUsersGuide.pdf" << Endl;
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Performance optimisation:" << gTools().Color("reset") << Endl;
    Log() << Endl;

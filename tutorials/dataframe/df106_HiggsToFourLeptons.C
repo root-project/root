@@ -16,6 +16,8 @@
 /// Systematic uncertainties for those scale factors are evaluated and the Vary function of RDataFrame is used to
 /// propagate the variations to the final four leptons mass distribution.
 ///
+/// See the [corresponding spec json file](https://github.com/root-project/root/blob/master/tutorials/dataframe/df106_HiggsToFourLeptons_spec.json).
+///
 /// \macro_code
 /// \macro_image
 ///
@@ -86,7 +88,7 @@ void df106_HiggsToFourLeptons()
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
-   // The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RDFSampleInfo`
+   // The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RSampleInfo`
    // class
    auto df_analysis =
       df.DefinePerSample("xsecs", [](unsigned int slot, const RSampleInfo &id) { return id.GetD("xsecs"); })

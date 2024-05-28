@@ -45,6 +45,7 @@ TPavesText::TPavesText(): TPaveText()
 ///  - option = "L" Left frame
 ///  - option = "NDC" x1,y1,x2,y2 are given in NDC
 ///  - option = "ARC" corners are rounded
+/// To add a shadow to the TPavesText, use the function TPave::SetBorderSize
 
 TPavesText::TPavesText(Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Int_t npaves,Option_t *option)
            :TPaveText(x1,y1,x2,y2,option)

@@ -164,7 +164,7 @@ public:
 
    std::string GetUrl() override
    {
-      return "../"s + fWebCanvas->GetWebWindow()->GetAddr() + "/"s;
+      return fWebCanvas->GetWebWindow()->GetUrl(false);
    }
 
    std::string GetTitle() override

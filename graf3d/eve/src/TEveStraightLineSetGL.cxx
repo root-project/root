@@ -26,7 +26,7 @@ ClassImp(TEveStraightLineSetGL);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(0)
+TEveStraightLineSetGL::TEveStraightLineSetGL() : TGLObject(), fM(nullptr)
 {
    // fDLCache = false; // Disable display list.
    fMultiColor = kTRUE;

@@ -91,15 +91,15 @@ namespace Internal {
       Int_t nbins = gEnv->GetValue("Hist.Binning.1D.x",100);
       Double_t vmin=0, vmax=0;
       Double_t xmin=0, xmax=0;
-      Bool_t canExtend = kTRUE;
+      bool canExtend = true;
       TString opt( options );
-      Bool_t optSame = opt.Contains("same");
-      if (optSame) canExtend = kFALSE;
+      bool optSame = opt.Contains("same");
+      if (optSame) canExtend = false;
 
       if (gPad && optSame) {
          TListIter np(gPad->GetListOfPrimitives());
          TObject *op;
-         TH1 *oldhtemp = 0;
+         TH1 *oldhtemp = nullptr;
          while ((op = np()) && !oldhtemp) {
             if (op->InheritsFrom(TH1::Class())) oldhtemp = (TH1 *)op;
          }
@@ -114,7 +114,7 @@ namespace Internal {
       } else {
          vmin = xmin;
          vmax = xmax;
-         if (xmin < xmax) canExtend = kFALSE;
+         if (xmin < xmax) canExtend = false;
       }
       TH1F *hist = new TH1F("htemp","htemp",nbins,vmin,vmax);
       hist->SetLineColor(fTree->GetLineColor());
@@ -128,7 +128,7 @@ namespace Internal {
       if (canExtend) hist->SetCanExtend(TH1::kAllAxes);
       hist->GetXaxis()->SetTitle("var");
       hist->SetBit(kCanDelete);
-      hist->SetDirectory(0);
+      hist->SetDirectory(nullptr);
 
       if (opt.Length() && opt.Contains("e")) hist->Sumw2();
       return hist;
@@ -149,7 +149,7 @@ namespace Internal {
 
    ////////////////////////////////////////////////////////////////////////////////
 
-   Bool_t TBranchProxyDirector::Notify() {
+   bool TBranchProxyDirector::Notify() {
       fEntry = -1;
       bool retVal = true;
       for_each(fDirected.begin(),fDirected.end(),NotifyDirected);

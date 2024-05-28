@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriteOptionsDaos.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPage.hxx>
@@ -40,8 +41,9 @@
 #include <cassert>
 
 namespace {
-using AttributeKey_t = ROOT::Experimental::Detail::RDaosContainer::AttributeKey_t;
-using DistributionKey_t = ROOT::Experimental::Detail::RDaosContainer::DistributionKey_t;
+using AttributeKey_t = ROOT::Experimental::Internal::RDaosContainer::AttributeKey_t;
+using DistributionKey_t = ROOT::Experimental::Internal::RDaosContainer::DistributionKey_t;
+using ntuple_index_t = ROOT::Experimental::Internal::ntuple_index_t;
 
 /// \brief RNTuple page-DAOS mappings
 enum EDaosMapping { kOidPerCluster, kOidPerPage };
@@ -71,7 +73,7 @@ static constexpr daos_oclass_id_t kCidMetadata = OC_SX;
 static constexpr EDaosMapping kDefaultDaosMapping = kOidPerCluster;
 
 template <EDaosMapping mapping>
-RDaosKey GetPageDaosKey(ROOT::Experimental::Detail::ntuple_index_t ntplId, long unsigned clusterId,
+RDaosKey GetPageDaosKey(ROOT::Experimental::Internal::ntuple_index_t ntplId, long unsigned clusterId,
                         long unsigned columnId, long unsigned pageCount)
 {
    if constexpr (mapping == kOidPerCluster) {
@@ -120,125 +122,183 @@ ROOT::Experimental::RNTupleLocatorObject64 EncodeDaosPagePosition(uint64_t posit
    uint64_t address = (position & 0xFFFFFFFF) | (offset << 32);
    return ROOT::Experimental::RNTupleLocatorObject64{address};
 }
-} // namespace
+
+/// \brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
+/// It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to
+/// index the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for
+/// storing any future metadata related to container-wide management; a zero-index ntuple is thus disallowed and
+/// remapped to "1". Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a
+/// partially-filled builder with the ntuple's anchor, header and footer, lacking only pagelists. Upon that call,
+/// a copy of the anchor is stored in `fAnchor`.
+struct RDaosContainerNTupleLocator {
+   std::string fName{};
+   ntuple_index_t fIndex{};
+   std::optional<ROOT::Experimental::Internal::RDaosNTupleAnchor> fAnchor;
+   static const ntuple_index_t kReservedIndex = 0;
+
+   RDaosContainerNTupleLocator() = default;
+   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+
+   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
+   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
+   static ntuple_index_t Hash(const std::string &ntupleName)
+   {
+      // Convert string to numeric representation via `std::hash`.
+      uint64_t h = std::hash<std::string>{}(ntupleName);
+      // Fold the hash into 32-bit using `boost::hash_combine()` algorithm and magic number.
+      auto seed = static_cast<uint32_t>(h >> 32);
+      seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      auto hash = static_cast<ntuple_index_t>(seed);
+      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
+   }
+
+   int InitNTupleDescriptorBuilder(ROOT::Experimental::Internal::RDaosContainer &cont,
+                                   ROOT::Experimental::Internal::RNTupleDecompressor &decompressor,
+                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder &builder)
+   {
+      std::unique_ptr<unsigned char[]> buffer, zipBuffer;
+      auto &anchor = fAnchor.emplace();
+      int err;
+
+      const auto anchorSize = ROOT::Experimental::Internal::RDaosNTupleAnchor::GetSize();
+      daos_obj_id_t oidMetadata{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(this->GetIndex())};
+
+      buffer = std::make_unique<unsigned char[]>(anchorSize);
+      if ((err = cont.ReadSingleAkey(buffer.get(), anchorSize, oidMetadata, kDistributionKeyDefault,
+                                     kAttributeKeyAnchor, kCidMetadata))) {
+         return err;
+      }
+
+      anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
+      if (anchor.fVersionEpoch != ROOT::Experimental::RNTuple::kVersionEpoch) {
+         throw ROOT::Experimental::RException(
+            R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.fVersionEpoch)));
+      }
+      if (anchor.fVersionEpoch == 0) {
+         static std::once_flag once;
+         std::call_once(once, [&anchor]() {
+            R__LOG_WARNING(ROOT::Experimental::NTupleLog())
+               << "Pre-release format version: RC " << anchor.fVersionMajor;
+         });
+      }
+
+      builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
+      buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
+      zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesHeader);
+      if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesHeader, oidMetadata, kDistributionKeyDefault,
+                                     kAttributeKeyHeader, kCidMetadata)))
+         return err;
+      decompressor.Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
+      ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
+
+      builder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
+      buffer = std::make_unique<unsigned char[]>(anchor.fLenFooter);
+      zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesFooter);
+      if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesFooter, oidMetadata, kDistributionKeyDefault,
+                                     kAttributeKeyFooter, kCidMetadata)))
+         return err;
+      decompressor.Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
+      ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
+
+      return 0;
+   }
+
+   static std::pair<RDaosContainerNTupleLocator, ROOT::Experimental::Internal::RNTupleDescriptorBuilder>
+   LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName,
+                ROOT::Experimental::Internal::RNTupleDecompressor &decompressor)
+   {
+      auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName),
+                                   ROOT::Experimental::Internal::RNTupleDescriptorBuilder());
+
+      auto &loc = result.first;
+      auto &builder = result.second;
+
+      if (int err = loc.InitNTupleDescriptorBuilder(cont, decompressor, builder); !err) {
+         if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
+            // Hash already taken by a differently-named ntuple.
+            throw ROOT::Experimental::RException(
+               R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
+         }
+      }
+      return result;
+   }
+};
+
+} // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::Serialize(void *buffer) const
+std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::Serialize(void *buffer) const
 {
-   using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
+   using RNTupleSerializer = RNTupleSerializer;
    if (buffer != nullptr) {
       auto bytes = reinterpret_cast<unsigned char *>(buffer);
-      bytes += RNTupleSerializer::SerializeUInt32(fVersion, bytes);
+      bytes += RNTupleSerializer::SerializeUInt64(fVersionAnchor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionEpoch, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMajor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionMinor, bytes);
+      bytes += RNTupleSerializer::SerializeUInt16(fVersionPatch, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fLenHeader, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fNBytesFooter, bytes);
       bytes += RNTupleSerializer::SerializeUInt32(fLenFooter, bytes);
       bytes += RNTupleSerializer::SerializeString(fObjClass, bytes);
    }
-   return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 20;
+   return RNTupleSerializer::SerializeString(fObjClass, nullptr) + 32;
 }
 
 ROOT::Experimental::RResult<std::uint32_t>
-ROOT::Experimental::Detail::RDaosNTupleAnchor::Deserialize(const void *buffer, std::uint32_t bufSize)
+ROOT::Experimental::Internal::RDaosNTupleAnchor::Deserialize(const void *buffer, std::uint32_t bufSize)
 {
-   if (bufSize < 20)
+   if (bufSize < 32)
       return R__FAIL("DAOS anchor too short");
 
    using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
    auto bytes = reinterpret_cast<const unsigned char *>(buffer);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, fVersion);
+   bytes += RNTupleSerializer::DeserializeUInt64(bytes, fVersionAnchor);
+   if (fVersionAnchor != RDaosNTupleAnchor().fVersionAnchor) {
+      return R__FAIL("unsupported DAOS anchor version: " + std::to_string(fVersionAnchor));
+   }
+
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionEpoch);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionMajor);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionMinor);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, fVersionPatch);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesHeader);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenHeader);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fNBytesFooter);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fLenFooter);
-   auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 20, fObjClass);
+   auto result = RNTupleSerializer::DeserializeString(bytes, bufSize - 32, fObjClass);
    if (!result)
       return R__FORWARD_ERROR(result);
-   return result.Unwrap() + 20;
+   return result.Unwrap() + 32;
 }
 
-std::uint32_t ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize()
+std::uint32_t ROOT::Experimental::Internal::RDaosNTupleAnchor::GetSize()
 {
-   return RDaosNTupleAnchor().Serialize(nullptr) +
-          ROOT::Experimental::Detail::RDaosObject::ObjClassId::kOCNameMaxLength;
-}
-
-int ROOT::Experimental::Detail::RDaosContainerNTupleLocator::InitNTupleDescriptorBuilder(
-   ROOT::Experimental::Detail::RDaosContainer &cont, ROOT::Experimental::Detail::RNTupleDecompressor &decompressor,
-   RNTupleDescriptorBuilder &builder)
-{
-   std::unique_ptr<unsigned char[]> buffer, zipBuffer;
-   auto &anchor = fAnchor.emplace();
-   int err;
-
-   const auto anchorSize = ROOT::Experimental::Detail::RDaosNTupleAnchor::GetSize();
-   daos_obj_id_t oidMetadata{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(this->GetIndex())};
-
-   buffer = std::make_unique<unsigned char[]>(anchorSize);
-   if ((err = cont.ReadSingleAkey(buffer.get(), anchorSize, oidMetadata, kDistributionKeyDefault, kAttributeKeyAnchor,
-                                  kCidMetadata)))
-      return err;
-
-   anchor.Deserialize(buffer.get(), anchorSize).Unwrap();
-
-   builder.SetOnDiskHeaderSize(anchor.fNBytesHeader);
-   buffer = std::make_unique<unsigned char[]>(anchor.fLenHeader);
-   zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesHeader);
-   if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesHeader, oidMetadata, kDistributionKeyDefault,
-                                  kAttributeKeyHeader, kCidMetadata)))
-      return err;
-   decompressor.Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
-   ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeaderV1(buffer.get(), anchor.fLenHeader, builder);
-
-   builder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
-   buffer = std::make_unique<unsigned char[]>(anchor.fLenFooter);
-   zipBuffer = std::make_unique<unsigned char[]>(anchor.fNBytesFooter);
-   if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesFooter, oidMetadata, kDistributionKeyDefault,
-                                  kAttributeKeyFooter, kCidMetadata)))
-      return err;
-   decompressor.Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
-   ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooterV1(buffer.get(), anchor.fLenFooter, builder);
-
-   return 0;
-}
-
-std::pair<ROOT::Experimental::Detail::RDaosContainerNTupleLocator, ROOT::Experimental::RNTupleDescriptorBuilder>
-ROOT::Experimental::Detail::RDaosContainerNTupleLocator::LocateNTuple(RDaosContainer &cont,
-                                                                      const std::string &ntupleName,
-                                                                      RNTupleDecompressor &decompressor)
-{
-   auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName), RNTupleDescriptorBuilder());
-
-   auto &loc = result.first;
-   auto &builder = result.second;
-
-   if (int err = loc.InitNTupleDescriptorBuilder(cont, decompressor, builder); !err) {
-      if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
-         // Hash already taken by a differently-named ntuple.
-         throw ROOT::Experimental::RException(
-            R__FAIL("LocateNTuple: ntuple name '" + ntupleName + "' unavailable in this container."));
-      }
-   }
-   return result;
+   return RDaosNTupleAnchor().Serialize(nullptr) + RDaosObject::ObjClassId::kOCNameMaxLength;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Detail::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
-                                                         const RNTupleWriteOptions &options)
-   : RPageSink(ntupleName, options), fPageAllocator(std::make_unique<RPageAllocatorHeap>()), fURI(uri)
+ROOT::Experimental::Internal::RPageSinkDaos::RPageSinkDaos(std::string_view ntupleName, std::string_view uri,
+                                                           const RNTupleWriteOptions &options)
+   : RPagePersistentSink(ntupleName, options),
+     fPageAllocator(std::make_unique<Internal::RPageAllocatorHeap>()),
+     fURI(uri)
 {
-   R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
-                               << "Do not store real data with this version of RNTuple!";
+   static std::once_flag once;
+   std::call_once(once, []() {
+      R__LOG_WARNING(NTupleLog()) << "The DAOS backend is experimental and still under development. "
+                                  << "Do not store real data with this version of RNTuple!";
+   });
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkDaos");
 }
 
-ROOT::Experimental::Detail::RPageSinkDaos::~RPageSinkDaos() = default;
+ROOT::Experimental::Internal::RPageSinkDaos::~RPageSinkDaos() = default;
 
-void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & /* model */,
-                                                           unsigned char *serializedHeader, std::uint32_t length)
+void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serializedHeader, std::uint32_t length)
 {
    auto opts = dynamic_cast<RNTupleWriteOptionsDaos *>(fOptions.get());
    fNTupleAnchor.fObjClass = opts ? opts->GetObjectClass() : RNTupleWriteOptionsDaos().GetObjectClass();
@@ -267,12 +327,12 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CreateImpl(const RNTupleModel & 
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
+ROOT::Experimental::Internal::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page)
 {
    auto element = columnHandle.fColumn->GetElement();
    RPageStorage::RSealedPage sealedPage;
    {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
       sealedPage = SealPage(page, *element, GetWriteOptions().GetCompression());
    }
 
@@ -281,14 +341,14 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitPageImpl(ColumnHandle_t columnH
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
-                                                                const RPageStorage::RSealedPage &sealedPage)
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t physicalColumnId,
+                                                                  const RPageStorage::RSealedPage &sealedPage)
 {
    auto offsetData = fPageId.fetch_add(1);
-   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
+   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
 
    {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, offsetData);
       fDaosContainer->WriteSingleAkey(sealedPage.fBuffer, sealedPage.fSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
    }
@@ -304,7 +364,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t p
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
@@ -316,9 +376,9 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
 
    const uint32_t maxCageSz = fCageSizeLimit;
    const bool useCaging = fCageSizeLimit > 0;
-   const std::uint8_t locatorFlags = useCaging ? Internal::EDaosLocatorFlags::kCagedPage : 0;
+   const std::uint8_t locatorFlags = useCaging ? EDaosLocatorFlags::kCagedPage : 0;
 
-   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNClusters();
+   DescriptorId_t clusterId = fDescriptorBuilder.GetDescriptor().GetNActiveClusters();
    int64_t payloadSz = 0;
    std::size_t positionOffset;
    uint32_t positionIndex;
@@ -363,7 +423,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    fNBytesCurrentCluster += payloadSz;
 
    {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       if (int err = fDaosContainer->WriteV(writeRequests))
          throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(d_errstr(err))));
    }
@@ -374,15 +434,14 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    return locators;
 }
 
-std::uint64_t
-ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterImpl(ROOT::Experimental::NTupleSize_t /* nEntries */)
+std::uint64_t ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterImpl()
 {
    return std::exchange(fNBytesCurrentCluster, 0);
 }
 
 ROOT::Experimental::RNTupleLocator
-ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char *serializedPageList,
-                                                                  std::uint32_t length)
+ROOT::Experimental::Internal::RPageSinkDaos::CommitClusterGroupImpl(unsigned char *serializedPageList,
+                                                                    std::uint32_t length)
 {
    auto bufPageListZip = std::make_unique<unsigned char[]>(length);
    auto szPageListZip = fCompressor->Zip(serializedPageList, length, GetWriteOptions().GetCompression(),
@@ -401,7 +460,8 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitClusterGroupImpl(unsigned char 
    return result;
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length)
+void ROOT::Experimental::Internal::RPageSinkDaos::CommitDatasetImpl(unsigned char *serializedFooter,
+                                                                    std::uint32_t length)
 {
    auto bufFooterZip = std::make_unique<unsigned char[]>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
@@ -410,7 +470,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::CommitDatasetImpl(unsigned char 
    WriteNTupleAnchor();
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader)
+void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader)
 {
    fDaosContainer->WriteSingleAkey(
       data, nbytes, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
@@ -419,7 +479,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleHeader(const void *da
    fNTupleAnchor.fNBytesHeader = nbytes;
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter)
+void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter)
 {
    fDaosContainer->WriteSingleAkey(
       data, nbytes, daos_obj_id_t{kOidLowMetadata, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)},
@@ -428,7 +488,7 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleFooter(const void *da
    fNTupleAnchor.fNBytesFooter = nbytes;
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor()
+void ROOT::Experimental::Internal::RPageSinkDaos::WriteNTupleAnchor()
 {
    const auto ntplSize = RDaosNTupleAnchor::GetSize();
    auto buffer = std::make_unique<unsigned char[]>(ntplSize);
@@ -438,8 +498,8 @@ void ROOT::Experimental::Detail::RPageSinkDaos::WriteNTupleAnchor()
       kDistributionKeyDefault, kAttributeKeyAnchor, kCidMetadata);
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSinkDaos::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSinkDaos::ReservePage(ColumnHandle_t columnHandle, std::size_t nElements)
 {
    if (nElements == 0)
       throw RException(R__FAIL("invalid call: request empty page"));
@@ -447,15 +507,15 @@ ROOT::Experimental::Detail::RPageSinkDaos::ReservePage(ColumnHandle_t columnHand
    return fPageAllocator->NewPage(columnHandle.fPhysicalId, elementSize, nElements);
 }
 
-void ROOT::Experimental::Detail::RPageSinkDaos::ReleasePage(RPage &page)
+void ROOT::Experimental::Internal::RPageSinkDaos::ReleasePage(RPage &page)
 {
    fPageAllocator->DeletePage(page);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
-                                                             const RNTupleReadOptions &options)
+ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view ntupleName, std::string_view uri,
+                                                               const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
      fPagePool(std::make_shared<RPagePool>()),
      fURI(uri),
@@ -469,9 +529,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::RPageSourceDaos(std::string_view nt
    fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel);
 }
 
-ROOT::Experimental::Detail::RPageSourceDaos::~RPageSourceDaos() = default;
+ROOT::Experimental::Internal::RPageSourceDaos::~RPageSourceDaos() = default;
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDaos::AttachImpl()
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceDaos::AttachImpl()
 {
    ROOT::Experimental::RNTupleDescriptor ntplDesc;
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
@@ -488,11 +548,11 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
 
    fDaosContainer->SetDefaultObjectClass(oclass);
    fNTupleIndex = locator.GetIndex();
-
-   ntplDesc = descBuilder.MoveDescriptor();
    daos_obj_id_t oidPageList{kOidLowPageList, static_cast<decltype(daos_obj_id_t::hi)>(fNTupleIndex)};
 
-   for (const auto &cgDesc : ntplDesc.GetClusterGroupIterable()) {
+   auto desc = descBuilder.MoveDescriptor();
+
+   for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
       buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
       zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
       fDaosContainer->ReadSingleAkey(
@@ -501,24 +561,19 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceDao
       fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
                            buffer.get());
 
-      auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, cgDesc.GetId());
-      Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
-      for (std::size_t i = 0; i < clusters.size(); ++i) {
-         ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
-      }
+      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
 
-   return ntplDesc;
+   return desc;
 }
 
-std::string ROOT::Experimental::Detail::RPageSourceDaos::GetObjectClass() const
+std::string ROOT::Experimental::Internal::RPageSourceDaos::GetObjectClass() const
 {
    return fDaosContainer->GetDefaultObjectClass().ToString();
 }
 
-void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t physicalColumnId,
-                                                                 const RClusterIndex &clusterIndex,
-                                                                 RSealedPage &sealedPage)
+void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_t physicalColumnId,
+                                                                   RClusterIndex clusterIndex, RSealedPage &sealedPage)
 {
    const auto clusterId = clusterIndex.GetClusterId();
 
@@ -529,7 +584,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
-   if (pageInfo.fLocator.fReserved & Internal::EDaosLocatorFlags::kCagedPage) {
+   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
       throw ROOT::Experimental::RException(
          R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
    }
@@ -549,10 +604,10 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
    }
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandle_t columnHandle,
-                                                                     const RClusterInfo &clusterInfo,
-                                                                     ClusterSize_t::ValueType idxInCluster)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHandle_t columnHandle,
+                                                                       const RClusterInfo &clusterInfo,
+                                                                       ClusterSize_t::ValueType idxInCluster)
 {
    const auto columnId = columnHandle.fPhysicalId;
    const auto clusterId = clusterInfo.fClusterId;
@@ -575,7 +630,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
    }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      if (pageInfo.fLocator.fReserved & Internal::EDaosLocatorFlags::kCagedPage) {
+      if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
          throw ROOT::Experimental::RException(
             R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
@@ -606,7 +661,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
 
    RPage newPage;
    {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
       newPage = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element, columnId);
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
@@ -614,14 +669,13 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
-      newPage,
-      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
+      newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
    fCounters->fNPagePopulated.Inc();
    return newPage;
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex)
 {
    const auto columnId = columnHandle.fPhysicalId;
    auto cachedPage = fPagePool->GetPage(columnId, globalIndex);
@@ -633,7 +687,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       clusterInfo.fClusterId = descriptorGuard->FindClusterId(columnId, globalIndex);
-      R__ASSERT(clusterInfo.fClusterId != kInvalidDescriptorId);
+
+      if (clusterInfo.fClusterId == kInvalidDescriptorId)
+         throw RException(R__FAIL("entry with index " + std::to_string(globalIndex) + " out of bounds"));
 
       const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterInfo.fClusterId);
       clusterInfo.fColumnOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex;
@@ -644,9 +700,8 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
-ROOT::Experimental::Detail::RPage
-ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle,
-                                                          const RClusterIndex &clusterIndex)
+ROOT::Experimental::Internal::RPage
+ROOT::Experimental::Internal::RPageSourceDaos::PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex)
 {
    const auto clusterId = clusterIndex.GetClusterId();
    const auto idxInCluster = clusterIndex.GetIndex();
@@ -655,7 +710,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    if (!cachedPage.IsNull())
       return cachedPage;
 
-   R__ASSERT(clusterId != kInvalidDescriptorId);
+   if (clusterId == kInvalidDescriptorId)
+      throw RException(R__FAIL("entry out of bounds"));
+
    RClusterInfo clusterInfo;
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
@@ -668,19 +725,19 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePage(ColumnHandle_t columnH
    return PopulatePageFromCluster(columnHandle, clusterInfo, idxInCluster);
 }
 
-void ROOT::Experimental::Detail::RPageSourceDaos::ReleasePage(RPage &page)
+void ROOT::Experimental::Internal::RPageSourceDaos::ReleasePage(RPage &page)
 {
    fPagePool->ReturnPage(page);
 }
 
-std::unique_ptr<ROOT::Experimental::Detail::RPageSource> ROOT::Experimental::Detail::RPageSourceDaos::Clone() const
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::Clone() const
 {
    auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);
    return std::unique_ptr<RPageSourceDaos>(clone);
 }
 
-std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>>
-ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
+std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
+ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
    struct RDaosSealedPageLocator {
       DescriptorId_t fClusterId = 0;
@@ -761,14 +818,14 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
 
    fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
-   std::vector<std::unique_ptr<ROOT::Experimental::Detail::RCluster>> clusters;
+   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
    RDaosContainer::MultiObjectRWOperation_t readRequests;
    for (auto key : clusterKeys) {
       clusters.emplace_back(fnPrepareSingleCluster(key, readRequests));
    }
 
    {
-      RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
       if (int err = fDaosContainer->ReadV(readRequests))
          throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + std::string(d_errstr(err))));
    }
@@ -778,10 +835,9 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
    return clusters;
 }
 
-void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *cluster)
+void ROOT::Experimental::Internal::RPageSourceDaos::UnzipClusterImpl(RCluster *cluster)
 {
-   RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-   fTaskScheduler->Reset();
+   Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
 
    const auto clusterId = cluster->GetId();
    auto descriptorGuard = GetSharedDescriptorGuard();
@@ -811,9 +867,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *clu
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(
-               newPage,
-               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); },
-                            nullptr));
+               newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
          };
 
          fTaskScheduler->AddTask(taskFunc);

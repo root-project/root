@@ -88,7 +88,7 @@ in calculation speed.
 #include "RooDataHist.h"
 #include "TH1.h"
 
-using namespace std;
+ using std::flush, std::endl;
 
 ClassImp(RooIntegralMorph);
 
@@ -147,7 +147,7 @@ RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualObservables(const RooArgSet
 
 RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
 {
-  auto par1 = pdf1->getParameters(static_cast<RooArgSet*>(nullptr));
+  std::unique_ptr<RooArgSet> par1{pdf1->getParameters(static_cast<RooArgSet*>(nullptr))};
   RooArgSet par2;
   pdf2->getParameters(nullptr, par2);
   par1->add(par2,true) ;
@@ -155,7 +155,7 @@ RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet&
   if (!_cacheAlpha) {
     par1->add(alpha.arg()) ;
   }
-  return RooFit::OwningPtr<RooArgSet>{std::move(par1)};
+  return RooFit::makeOwningPtr(std::move(par1));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -235,37 +235,38 @@ RooArgList RooIntegralMorph::MorphCacheElem::containedArgs(Action action)
 /// create the cdfs from the input p.d.fs and instantiate the root finders
 /// on the cdfs to perform the inversion.
 
-RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const RooArgSet* nsetIn) : PdfCacheElem(self,nsetIn)
+RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph &self, const RooArgSet *nsetIn)
+   : PdfCacheElem(self, nsetIn),
+     _self(&self),
+     _pdf1(static_cast<RooAbsPdf *>(self.pdf1.absArg())),
+     _pdf2(static_cast<RooAbsPdf *>(self.pdf2.absArg())),
+     _x(static_cast<RooRealVar *>(self.x.absArg())),
+     _alpha(static_cast<RooAbsReal *>(self.alpha.absArg())),
+     _yatXmin(0),
+     _yatXmax(0),
+     _ccounter(0),
+     _ycutoff(1e-7)
 {
   // Mark in base class that normalization of cached pdf is invariant under pdf parameters
-  _x = (RooRealVar*)self.x.absArg() ;
+
   _nset = std::make_unique<RooArgSet>(*_x);
 
-  _alpha = (RooAbsReal*)self.alpha.absArg() ;
-  _pdf1 = (RooAbsPdf*)(self.pdf1.absArg()) ;
-  _pdf2 = (RooAbsPdf*)(self.pdf2.absArg()) ;
   _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
   _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
   _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nset.get())};
   _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nset.get())};
-  _self = &self ;
 
   _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);
   _rf2 = std::make_unique<RooBrentRootFinder>(*_cb2);
-  _ccounter = 0 ;
 
   _rf1->setTol(1e-12) ;
   _rf2->setTol(1e-12) ;
-  _ycutoff = 1e-7 ;
 
   // _yatX = 0 ;
   // _calcX = 0 ;
 
   // Must do this here too: fillCache() may not be called if cache contents is retrieved from EOcache
   pdf()->setUnitNorm(true) ;
-
-  _yatXmax = 0 ;
-  _yatXmin = 0 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -284,7 +285,8 @@ double RooIntegralMorph::MorphCacheElem::calcX(double y, bool& ok)
   if (y<0 || y>1) {
     oocoutW(_self,Eval) << "RooIntegralMorph::MorphCacheElem::calcX() WARNING: requested root finding for unphysical CDF value " << y << endl ;
   }
-  double x1,x2 ;
+  double x1;
+  double x2;
 
   double xmax = _x->getMax("cache") ;
   double xmin = _x->getMin("cache") ;
@@ -560,10 +562,13 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   double xmax = _x->getMax("cache") ;
   Int_t nbins = _x->numBins("cache") ;
 
-  double x1,x2 ;
+  double x1;
+  double x2;
   bool ok = true ;
-  double ymin=0.1,yminSave(-1) ;
-  double Xsave(-1),Xlast=xmax ;
+  double ymin = 0.1;
+  double yminSave(-1);
+  double Xsave(-1);
+  double Xlast = xmax;
 
   // Find lowest Y value that can be measured
   // Start at 0.1 and iteratively lower limit by sqrt(10)
@@ -601,7 +606,8 @@ void RooIntegralMorph::MorphCacheElem::findRange()
   // Find highest Y value that can be measured
   // Start at 1 - 0.1 and iteratively lower delta by sqrt(10)
   ok = true ;
-  double deltaymax=0.1, deltaymaxSave(-1) ;
+  double deltaymax = 0.1;
+  double deltaymaxSave(-1);
   Xlast=xmin ;
   while(true) {
     ok &= _rf1->findRoot(x1,xmin,xmax,1-deltaymax) ;

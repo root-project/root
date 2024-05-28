@@ -80,7 +80,7 @@ private:
 
 public:
    REveDataItemList(const std::string& n = "Items", const std::string& t = "");
-   virtual ~REveDataItemList() {}
+   ~REveDataItemList() override {}
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    virtual void ItemChanged(REveDataItem *item);
@@ -128,7 +128,7 @@ public:
    std::function<bool(void *)> fFilterFoo = [](void *) { return true; };
 
    REveDataCollection(const std::string& n = "REveDataCollection", const std::string& t = "");
-   virtual ~REveDataCollection() {}
+   ~REveDataCollection() override {}
 
    void ReserveItems(Int_t items_size) { fItemList->fItems.reserve(items_size); }
    void AddItem(void *data_ptr, const std::string& n, const std::string& t);

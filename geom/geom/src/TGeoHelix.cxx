@@ -70,7 +70,7 @@ TGeoHelix::TGeoHelix()
    fDir[0] = fDir[1] = fDir[2] = 0.;
    fB[0] = fB[1] = fB[2] = 0.;
    fQ = 0;
-   fMatrix = 0;
+   fMatrix = nullptr;
    TObject::SetBit(kHelixNeedUpdate, kTRUE);
    TObject::SetBit(kHelixStraight, kFALSE);
    TObject::SetBit(kHelixCircle, kFALSE);

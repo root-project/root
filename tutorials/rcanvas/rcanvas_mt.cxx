@@ -33,10 +33,6 @@
 #include <thread>
 #include <iostream>
 
-// macro must be here while cling is not capable to load
-// library automatically for outlined function see ROOT-10336
-R__LOAD_LIBRARY(libROOTHistDraw)
-
 using namespace ROOT::Experimental;
 
 void draw_canvas(const std::string &title, RColor col)

@@ -87,11 +87,9 @@ class RooCFunction2Map {
 
  private:
 
-#ifndef __CINT__
   std::map<std::string,VO (*)(VI1,VI2)> _ptrmap ; // Pointer-to-name map
   std::map<VO (*)(VI1,VI2),std::string> _namemap ; // Name-to-pointer map
   std::map<VO (*)(VI1,VI2),std::vector<std::string> > _argnamemap ; // Pointer-to-argnamelist map
-#endif
 } ;
 
 
@@ -176,7 +174,8 @@ void RooCFunction2Ref<VO,VI1,VI2>::Streamer(TBuffer &R__b)
    // Stream an object of class RooCFunction2Ref
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
+     UInt_t R__s;
+     UInt_t R__c;
      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
      // Read name from file

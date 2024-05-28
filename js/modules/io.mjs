@@ -1,4 +1,4 @@
-import { createHttpRequest, BIT, loadScript, internals, settings, browser,
+import { createHttpRequest, BIT, internals, settings, browser,
          create, getMethods, addMethods, isNodeJs, isObject, isFunc, isStr,
          clTObject, clTNamed, clTString, clTObjString, clTKey, clTFile, clTList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTStyle, clTImagePalette,
@@ -91,7 +91,7 @@ CustomStreamers = {
       const pos = classv.lastIndexOf(';');
 
       if (pos > 0) {
-         clv = parseInt(classv.slice(pos + 1));
+         clv = Number.parseInt(classv.slice(pos + 1));
          classv = classv.slice(0, pos);
       }
 
@@ -486,6 +486,18 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
+function getTDatimeDate() {
+   const res = new Date();
+   res.setFullYear((this.fDatime >>> 26) + 1995);
+   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
+   res.setDate((this.fDatime << 10) >>> 27);
+   res.setHours((this.fDatime << 15) >>> 27);
+   res.setMinutes((this.fDatime << 20) >>> 26);
+   res.setSeconds((this.fDatime << 26) >>> 26);
+   res.setMilliseconds(0);
+   return res;
+}
+
 
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
@@ -499,17 +511,7 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      //  obj.GetDate = function() {
-      //  let res = new Date();
-      //  res.setFullYear((this.fDatime >>> 26) + 1995);
-      //  res.setMonth((this.fDatime << 6) >>> 28);
-      //  res.setDate((this.fDatime << 10) >>> 27);
-      //  res.setHours((this.fDatime << 15) >>> 27);
-      //  res.setMinutes((this.fDatime << 20) >>> 26);
-      //  res.setSeconds((this.fDatime << 26) >>> 26);
-      //  res.setMilliseconds(0);
-      //  return res;
-      //  }
+      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
@@ -1342,16 +1344,6 @@ zip_MASK_BITS = [
    zip_border = [  // Order of the bit length code lengths
    16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15];
 
-//    zip_STORED_BLOCK = 0,
-//    zip_STATIC_TREES = 1,
-//    zip_DYN_TREES    = 2,
-
-/* for inflate */
-//    zip_lbits = 9,            // bits in base literal/length lookup table
-//    zip_dbits = 6,            // bits in base distance lookup table
-//    zip_INBUFSIZ = 32768,     // Input buffer size
-//    zip_INBUF_EXTRA = 64,     // Extra buffer
-
 function ZIP_inflate(arr, tgt) {
    /* variables (inflate) */
    const zip_slide = new Array(2 * zip_WSIZE),
@@ -1389,35 +1381,27 @@ function ZIP_inflate(arr, tgt) {
    }
 
    /* objects (inflate) */
-   function ZIP_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
+   function zip_HuftBuild(b,     // code lengths in bits (all assumed <= BMAX)
                           n,     // number of codes (assumed <= N_MAX)
                           s,     // number of simple-valued codes (0..s-1)
                           d,     // list of base values for non-simple codes
                           e,     // list of extra bits for non-simple codes
                           mm) {  // maximum lookup bits
-      this.status = 0;     // 0: success, 1: incomplete table, 2: bad input
-      this.root = null;    // (zip_HuftList) starting table
-      this.m = 0;          // maximum lookup bits, returns actual
-
-   /* Given a list of code lengths and a maximum table size, make a set of
-      tables to decode that set of codes. Return zero on success, one if
-      the given code set is incomplete (the tables are still built in this
-      case), two if the input is invalid (all zero length codes or an
-      oversubscribed set of lengths), and three if not enough memory.
-      The code with value 256 is special, and the tables are constructed
-      so that no bits beyond that code are fetched when that code is
-      decoded. */
-
-      const BMAX = 16,      // maximum bit length of any code
-            N_MAX = 288,    // maximum number of codes in any set
-            c = Array(BMAX+1).fill(0),  // bit length count table
-            lx = Array(BMAX+1).fill(0), // stack of bits per table
-            u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
-            v = Array(N_MAX).fill(0), // values in order of bit length
-            x = Array(BMAX+1).fill(0), // bit offsets, then code stack
-            r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
-            el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
-       let rr = null, // temporary variable, use in assignment
+      const res = {
+         status: 0,    // 0: success, 1: incomplete table, 2: bad input
+         root: null,   // (zip_HuftList) starting table
+         m: 0          // maximum lookup bits, returns actual
+      },
+      BMAX = 16,      // maximum bit length of any code
+      N_MAX = 288,    // maximum number of codes in any set
+      c = Array(BMAX+1).fill(0),  // bit length count table
+      lx = Array(BMAX+1).fill(0), // stack of bits per table
+      u = Array(BMAX).fill(null), // zip_HuftNode[BMAX][]  table stack
+      v = Array(N_MAX).fill(0), // values in order of bit length
+      x = Array(BMAX+1).fill(0), // bit offsets, then code stack
+      r = { e: 0, b: 0, n: 0, t: null }, // new zip_HuftNode(), // table entry for structure assignment
+      el = (n > 256) ? b[256] : BMAX; // set length of EOB code, if any
+      let rr = null, // temporary variable, use in assignment
           a,         // counter for codes of length k
           f,         // i repeats in table every f entries
           h,         // table level
@@ -1431,7 +1415,7 @@ function ZIP_inflate(arr, tgt) {
           y,         // number of dummy codes added
           z,         // number of entries in current table
           o,
-          tail = this.root = null, // (zip_HuftList)
+          tail = null,   // (zip_HuftList)
           i = n;         // counter, current code
 
       // Generate counts for each bit length
@@ -1439,12 +1423,8 @@ function ZIP_inflate(arr, tgt) {
          c[p[pidx++]]++; // assume all entries <= BMAX
       while (--i > 0);
 
-      if (c[0] === n) {   // null input--all zero length codes
-         this.root = null;
-         this.m = 0;
-         this.status = 0;
-         return this;
-      }
+      if (c[0] === n)    // null input--all zero length codes
+         return res;
 
       // Find minimum and maximum length, bound *m by those
       for (j = 1; j <= BMAX; ++j)
@@ -1463,15 +1443,15 @@ function ZIP_inflate(arr, tgt) {
       // Adjust last length count to fill out codes, if needed
       for (y = 1 << j; j < i; ++j, y <<= 1) {
          if ((y -= c[j]) < 0) {
-            this.status = 2;  // bad input: more codes than bits
-            this.m = mm;
-            return this;
+            res.status = 2;  // bad input: more codes than bits
+            res.m = mm;
+            return res;
          }
       }
       if ((y -= c[i]) < 0) {
-         this.status = 2;
-         this.m = mm;
-         return this;
+         res.status = 2;
+         res.m = mm;
+         return res;
       }
       c[i] += y;
 
@@ -1532,7 +1512,7 @@ function ZIP_inflate(arr, tgt) {
                   q[o] = { e: 0, b: 0, n: 0, t: null }; // new zip_HuftNode
 
                if (tail == null)
-                  tail = this.root = { next: null, list: null }; // new zip_HuftList();
+                  tail = res.root = { next: null, list: null }; // new zip_HuftList();
                else
                   tail = tail.next = { next: null, list: null }; // new zip_HuftList();
                tail.next = null;
@@ -1588,13 +1568,12 @@ function ZIP_inflate(arr, tgt) {
       }
 
       /* return actual size of base table */
-      this.m = lx[1];
+      res.m = lx[1];
 
       /* Return true (1) if we were given an incomplete table */
-      this.status = ((y !== 0 && g !== 1) ? 1 : 0);
-     /* end of constructor */
+      res.status = ((y !== 0 && g !== 1) ? 1 : 0);
 
-      return this;
+      return res;
    }
 
    /* routines (inflate) */
@@ -1724,7 +1703,7 @@ function ZIP_inflate(arr, tgt) {
          // make a complete, but wrong code set
          zip_fixed_bl = 7;
 
-         let h = new ZIP_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
+         let h = zip_HuftBuild(l, 288, 257, zip_cplens, zip_cplext, zip_fixed_bl);
          if (h.status !== 0)
             throw new Error('HufBuild error: ' + h.status);
          zip_fixed_tl = h.root;
@@ -1734,7 +1713,7 @@ function ZIP_inflate(arr, tgt) {
          l.fill(5, 0, 30); // make an incomplete code set
          zip_fixed_bd = 5;
 
-         h = new ZIP_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
+         h = zip_HuftBuild(l, 30, 0, zip_cpdist, zip_cpdext, zip_fixed_bd);
          if (h.status > 1) {
             zip_fixed_tl = null;
             throw new Error('HufBuild error: '+h.status);
@@ -1755,7 +1734,7 @@ function ZIP_inflate(arr, tgt) {
       let i, j,  // temporary variables
           l,     // last length
           t,     // (zip_HuftNode) literal/length code table
-          h;     // (ZIP_HuftBuild)
+          h;     // (zip_HuftBuild)
       const ll = new Array(286+30).fill(0); // literal/length and distance code lengths
 
       // read in table lengths
@@ -1782,7 +1761,7 @@ function ZIP_inflate(arr, tgt) {
 
       // build decoding table for trees--single level, 7 bit lookup
       zip_bl = 7;
-      h = new ZIP_HuftBuild(ll, 19, 19, null, null, zip_bl);
+      h = zip_HuftBuild(ll, 19, 19, null, null, zip_bl);
       if (h.status !== 0)
          return -1;  // incomplete code set
 
@@ -1831,31 +1810,23 @@ function ZIP_inflate(arr, tgt) {
 
       // build the decoding tables for literal/length and distance codes
       zip_bl = 9; // zip_lbits;
-      h = new ZIP_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
+      h = zip_HuftBuild(ll, nl, 257, zip_cplens, zip_cplext, zip_bl);
       if (zip_bl === 0)  // no literals or lengths
          h.status = 1;
-      if (h.status !== 0) {
-         // if (h.status == 1); // **incomplete literal tree**
+      if (h.status !== 0)
          return -1;     // incomplete code set
-      }
       zip_tl = h.root;
       zip_bl = h.m;
 
       for (i = 0; i < nd; ++i)
          ll[i] = ll[i + nl];
       zip_bd = 6; // zip_dbits;
-      h = new ZIP_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
+      h = zip_HuftBuild(ll, nd, 0, zip_cpdist, zip_cpdext, zip_bd);
       zip_td = h.root;
       zip_bd = h.m;
 
-      if (zip_bd === 0 && nl > 257) {   // lengths but no distances
-         // **incomplete distance tree**
-         return -1;
-      }
-
-      // if (h.status == 1); // **incomplete distance tree**
-
-      if (h.status !== 0)
+      // incomplete distance tree
+      if ((zip_bd === 0 && nl > 257) || (h.status !== 0))   // lengths but no distances
          return -1;
 
       // decompress until an end-of-block code
@@ -2019,6 +1990,7 @@ function LZ4_uncompress(input, output, sIdx, eIdx) {
    return j;
 }
 
+
 /** @summary Reads header envelope, determines zipped size and unzip content
   * @return {Promise} with unzipped content
   * @private */
@@ -2040,12 +2012,12 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
 
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'L') && getCode(curr + 2) === 8) { fmt = 'new'; off = 2; } else
          if (checkChar(curr, 'C') && checkChar(curr+1, 'S') && getCode(curr + 2) === 8) { fmt = 'old'; off = 0; } else
-         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) fmt = 'LZMA'; else
+         if (checkChar(curr, 'X') && checkChar(curr+1, 'Z') && getCode(curr + 2) === 0) { fmt = 'LZMA'; off = 0; } else
          if (checkChar(curr, 'Z') && checkChar(curr+1, 'S') && getCode(curr + 2) === 1) fmt = 'ZSTD'; else
          if (checkChar(curr, 'L') && checkChar(curr+1, '4')) { fmt = 'LZ4'; off = 0; CHKSUM = 8; }
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD')) {
+         if ((fmt !== 'new') && (fmt !== 'old') && (fmt !== 'LZ4') && (fmt !== 'ZSTD') && (fmt !== 'LZMA')) {
             if (!noalert) console.error(`R__unzip: ${fmt} format is not supported!`);
             return Promise.resolve(null);
          }
@@ -2053,52 +2025,38 @@ async function R__unzip(arr, tgtsize, noalert, src_shift) {
          const srcsize = HDRSIZE + ((getCode(curr + 3) & 0xff) | ((getCode(curr + 4) & 0xff) << 8) | ((getCode(curr + 5) & 0xff) << 16)),
                uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off + CHKSUM, Math.min(arr.byteLength - curr - HDRSIZE - off - CHKSUM, srcsize - HDRSIZE - CHKSUM));
 
+         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const tgt8arr = new Uint8Array(tgtbuf, fullres);
+
          if (fmt === 'ZSTD') {
-            const handleZsdt = ZstdCodec => {
-               return new Promise((resolveFunc, rejectFunc) => {
-                  ZstdCodec.run(zstd => {
-                     // const simple = new zstd.Simple();
-                     const streaming = new zstd.Streaming(),
-                           data2 = streaming.decompress(uint8arr),
-                           reslen = data2.length;
+            const promise = internals._ZstdStream
+                            ? Promise.resolve(internals._ZstdStream)
+                            : (isNodeJs() ? import('@oneidentity/zstd-js') : import(/* webpackIgnore: true */ './base/zstd.mjs'))
+                              .then(({ ZstdInit }) => ZstdInit()).then(({ ZstdStream }) => { internals._ZstdStream = ZstdStream; return ZstdStream; });
+            return promise.then(ZstdStream => {
+               const data2 = ZstdStream.decompress(uint8arr),
+                     reslen = data2.length;
 
-                     if (data2.byteOffset !== 0)
-                        return rejectFunc(Error('ZSTD result with byteOffset != 0'));
+               for (let i = 0; i < reslen; ++i)
+                   tgt8arr[i] = data2[i];
 
-                     // shortcut when exactly required data unpacked
-                     // if ((tgtsize == reslen) && data2.buffer)
-                     //    resolveFunc(new DataView(data2.buffer));
-
-                     // need to copy data while zstd does not provide simple way of doing it
-                     if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
-                     const tgt8arr = new Uint8Array(tgtbuf, fullres);
-
-                     for (let i = 0; i < reslen; ++i)
-                        tgt8arr[i] = data2[i];
-
-                     fullres += reslen;
-                     curr += srcsize;
-                     resolveFunc(true);
-                  });
-               });
-            },
-
-            promise = isNodeJs()
-                        ? import('zstd-codec').then(handle => handleZsdt(handle.ZstdCodec))
-                        : loadScript('../../zstd/zstd-codec.min.js')
-                          .catch(() => loadScript('https://root.cern/js/zstd/zstd-codec.min.js'))
-                          // eslint-disable-next-line no-undef
-                         .then(() => handleZsdt(ZstdCodec));
-            return promise.then(() => nextPortion());
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
+         } else if (fmt === 'LZMA') {
+            return import(/* webpackIgnore: true */ './base/lzma.mjs').then(lzma => {
+               const expected_len = (getCode(curr + 6) & 0xff) | ((getCode(curr + 7) & 0xff) << 8) | ((getCode(curr + 8) & 0xff) << 16),
+                     reslen = lzma.decompress(uint8arr, tgt8arr, expected_len);
+               fullres += reslen;
+               curr += srcsize;
+               return nextPortion();
+            });
          }
 
-         //  place for unpacking
-         if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
+         const reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
 
-         const tgt8arr = new Uint8Array(tgtbuf, fullres),
-               reslen = (fmt === 'LZ4') ? LZ4_uncompress(uint8arr, tgt8arr) : ZIP_inflate(uint8arr, tgt8arr);
          if (reslen <= 0) break;
-
          fullres += reslen;
          curr += srcsize;
       }
@@ -2824,16 +2782,14 @@ class TFile {
          }
 
          if (res && first_req) {
-            if (file.fAcceptRanges && !first_req.getResponseHeader('Accept-Ranges')) {
-               file.fAcceptRanges = false;
-               if (res?.byteLength === place[1]) {
-                  // special case with cernbox, let try to get full size content
-                  console.warn(`First block is ${place[1]} bytes but browser does not provides access to header - try to read full file`);
-                  first_block_retry = true;
-                  return send_new_request();
-               }
+            // special workaround for servers like cernbox blocking access to some response headers
+            // as result, it is not possible to parse multipart responses
+            if (file.fAcceptRanges && (first_req.status === 206) && (res?.byteLength === place[1]) && !first_req.getResponseHeader('Content-Range') && (file.fMaxRanges > 1)) {
+               console.warn('Server response with 206 code but browser does not provide access to Content-Range header - setting fMaxRanges = 1, consider to load full file with "filename.root+" argument or adjust server configurations');
+               file.fMaxRanges = 1;
             }
 
+            // workaround for simpleHTTP
             const kind = browser.isFirefox ? first_req.getResponseHeader('Server') : '';
             if (isStr(kind) && kind.indexOf('SimpleHTTP') === 0) {
                file.fMaxRanges = 1;
@@ -2843,7 +2799,6 @@ class TFile {
 
          if (res && first_block && !file.fFileContent) {
             // special case - keep content of first request (could be complete file) in memory
-
             file.fFileContent = new TBuffer(isStr(res) ? res : new DataView(res));
 
             if (!file.fAcceptRanges)
@@ -2896,8 +2851,8 @@ class TFile {
             if (isStr(hdr_range) && hdr_range.indexOf('bytes') >= 0) {
                const parts = hdr_range.slice(hdr_range.indexOf('bytes') + 6).split(/[\s-/]+/);
                if (parts.length === 3) {
-                  segm_start = parseInt(parts[0]);
-                  segm_last = parseInt(parts[1]);
+                  segm_start = Number.parseInt(parts[0]);
+                  segm_last = Number.parseInt(parts[1]);
                   if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                      segm_start = 0; segm_last = -1;
                   }
@@ -2954,8 +2909,8 @@ class TFile {
                   if ((line.indexOf('content-range') >= 0) && (line.indexOf('bytes') > 0)) {
                      const parts = line.slice(line.indexOf('bytes') + 6).split(/[\s-/]+/);
                      if (parts.length === 3) {
-                        segm_start = parseInt(parts[0]);
-                        segm_last = parseInt(parts[1]);
+                        segm_start = Number.parseInt(parts[0]);
+                        segm_last = Number.parseInt(parts[1]);
                         if (!Number.isInteger(segm_start) || !Number.isInteger(segm_last) || (segm_start > segm_last)) {
                            segm_start = 0; segm_last = -1;
                         }
@@ -3007,7 +2962,10 @@ class TFile {
    getDir(dirname, cycle) {
       if ((cycle === undefined) && isStr(dirname)) {
          const pos = dirname.lastIndexOf(';');
-         if (pos > 0) { cycle = parseInt(dirname.slice(pos + 1)); dirname = dirname.slice(0, pos); }
+         if (pos > 0) {
+            cycle = Number.parseInt(dirname.slice(pos + 1));
+            dirname = dirname.slice(0, pos);
+         }
       }
 
       for (let j = 0; j < this.fDirectories.length; ++j) {
@@ -3064,7 +3022,9 @@ class TFile {
          }
 
          return R__unzip(blob1, key.fObjlen).then(objbuf => {
-            if (!objbuf) return Promise.reject(Error('Fail to UNZIP buffer'));
+            if (!objbuf)
+               return Promise.reject(Error(`Fail to UNZIP buffer for ${key.fName}`));
+
             const buf = new TBuffer(objbuf, 0, this);
             buf.fTagOffset = key.fKeylen;
             return buf;
@@ -3084,8 +3044,8 @@ class TFile {
      * console.log(`Read object of type ${obj._typename}`); */
    async readObject(obj_name, cycle, only_dir) {
       const pos = obj_name.lastIndexOf(';');
-      if (pos > 0) {
-         cycle = parseInt(obj_name.slice(pos + 1));
+      if (pos >= 0) {
+         cycle = Number.parseInt(obj_name.slice(pos + 1));
          obj_name = obj_name.slice(0, pos);
       }
 
@@ -3152,7 +3112,13 @@ class TFile {
 
       const lst = {};
       buf.mapObject(1, lst);
-      buf.classStreamer(lst, clTList);
+
+      try {
+         buf.classStreamer(lst, clTList);
+      } catch (err) {
+          console.error('Fail extract streamer infos', err);
+          return;
+      }
 
       lst._typename = clTStreamerInfoList;
 

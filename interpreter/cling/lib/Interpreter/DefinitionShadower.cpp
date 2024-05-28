@@ -73,7 +73,7 @@ namespace cling {
 
   bool DefinitionShadower::isClingShadowNamespace(const DeclContext *DC) {
     auto NS = dyn_cast<NamespaceDecl>(DC);
-    return NS && NS->getName().startswith("__cling_N5");
+    return NS && NS->getName().starts_with("__cling_N5");
   }
 
   void DefinitionShadower::hideDecl(clang::NamedDecl *D) const {
@@ -210,7 +210,7 @@ namespace cling {
                                  SourceLocation(), SourceLocation(),
                                  &m_Context.Idents.get("__cling_N5"
                                        + std::to_string(m_UniqueNameCounter++)),
-                                 nullptr);
+                                 /*PrevDecl=*/nullptr, /*Nested=*/false);
       //NS->setImplicit();
       m_TU->addDecl(NS);
       T->setDefinitionShadowNS(NS);

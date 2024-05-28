@@ -1,4 +1,5 @@
 import { gStyle, settings, isObject, isFunc, isStr, nsREX, getPromise } from '../core.mjs';
+import { kAxisLabels, kAxisTime } from '../base/ObjectPainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -359,12 +360,12 @@ class RHistPainter extends RObjectPainter {
           axis = this.getAxis(name),
           x1 = axis.GetBinCoord(bin);
 
-      if (handle.kind === 'labels')
+      if (handle.kind === kAxisLabels)
          return pmain.axisAsText(name, x1);
 
       const x2 = axis.GetBinCoord(bin+(step || 1));
 
-      if (handle.kind === 'time')
+      if (handle.kind === kAxisTime)
          return pmain.axisAsText(name, (x1+x2)/2);
 
       return `[${pmain.axisAsText(name, x1)}, ${pmain.axisAsText(name, x2)})`;
@@ -632,7 +633,7 @@ class RHistPainter extends RObjectPainter {
 
          menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
+         menu.addchk(fp?.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && main.mode3d && isFunc(main.highlightBin3D))
                main.highlightBin3D(null);

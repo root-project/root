@@ -41,11 +41,12 @@ namespace RooStats {
 
       virtual void SetCacheSize(Int_t size)
       {
-         if (size > 0)
+         if (size > 0) {
             fCacheSize = size;
-         else
-            coutE(Eval) << "Warning: Requested non-positive cache size: " <<
-                           size << ". Cache size unchanged." << std::endl;
+         } else {
+            coutE(Eval) << "Warning: Requested non-positive cache size: " << size << ". Cache size unchanged."
+                        << std::endl;
+         }
       }
 
       virtual void SetUpdateProposalParameters(bool updateParams)
@@ -99,24 +100,24 @@ namespace RooStats {
       }
 
    protected:
-      RooAbsPdf* fPdf;               ///< the main proposal density function
-      RooAbsPdf* fCluesPdf;          ///< proposal dens. func. with clues for certain points
-      RooAbsPdf* fUniformPdf;        ///< uniform proposal dens. func.
-      RooDataSet* fClues;            ///< data set of clues
-      TMatrixDSym* fCovMatrix;       ///< covariance matrix for multi var gaussian pdf
-      PdfProposal* fPdfProp;         ///< the PdfProposal we are (probably) going to return
-      RooArgList* fVars;             ///< the RooRealVars to generate proposals for
-      Int_t fCacheSize;              ///< for generating proposals from PDFs
+      RooAbsPdf *fPdf = nullptr;         ///< the main proposal density function
+      RooAbsPdf *fCluesPdf = nullptr;    ///< proposal dens. func. with clues for certain points
+      RooAbsPdf *fUniformPdf = nullptr;  ///< uniform proposal dens. func.
+      RooDataSet *fClues = nullptr;      ///< data set of clues
+      TMatrixDSym *fCovMatrix = nullptr; ///< covariance matrix for multi var gaussian pdf
+      PdfProposal* fPdfProp = nullptr;   ///< the PdfProposal we are (probably) going to return
+      RooArgList *fVars = nullptr;   ///< the RooRealVars to generate proposals for
+      Int_t fCacheSize = -1;         ///< for generating proposals from PDFs
       double fSigmaRangeDivisor;   ///< range divisor to get sigma for each variable
-      double fUniFrac;             ///< what fraction of the PDF integral is uniform
-      double fCluesFrac;           ///< what fraction of the PDF integral comes from clues
-      bool fOwnsPdfProp;           ///< whether we own the PdfProposal; equivalent to:
-                                     ///< !(whether we have returned it in GetProposalFunction)
-      bool fOwnsPdf;               ///< whether we created (and own) the main pdf
-      bool fOwnsCluesPdf;          ///< whether we created (and own) the clues pdf
-      bool fOwnsVars;              ///< whether we own fVars
-      bool fUseUpdates;            ///< whether to set updates for proposal params in PdfProposal
-      const Option_t* fCluesOptions; ///< option string for clues RooNDKeysPdf
+      double fUniFrac = -1;        ///< what fraction of the PDF integral is uniform
+      double fCluesFrac = -1;      ///< what fraction of the PDF integral comes from clues
+      bool fOwnsPdfProp = true;    ///< whether we own the PdfProposal; equivalent to:
+                                   ///< !(whether we have returned it in GetProposalFunction)
+      bool fOwnsPdf = false;       ///< whether we created (and own) the main pdf
+      bool fOwnsCluesPdf = false;  ///< whether we created (and own) the clues pdf
+      bool fOwnsVars = false;      ///< whether we own fVars
+      bool fUseUpdates = false;    ///< whether to set updates for proposal params in PdfProposal
+      const Option_t *fCluesOptions = nullptr; ///< option string for clues RooNDKeysPdf
 
       void CreatePdf();
       void CreateCluesPdf();

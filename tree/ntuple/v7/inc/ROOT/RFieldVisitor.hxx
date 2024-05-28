@@ -42,9 +42,11 @@ by the RPrintSchemaVisitor class. The RFieldBase class and classes which inherit
 // clang-format on
 class RFieldVisitor {
 public:
-   virtual void VisitField(const Detail::RFieldBase &field) = 0;
+   virtual void VisitField(const RFieldBase &field) = 0;
    virtual void VisitFieldZero(const RFieldZero &field) { VisitField(field); }
    virtual void VisitArrayField(const RArrayField &field) { VisitField(field); }
+   virtual void VisitArrayAsRVecField(const RArrayAsRVecField &field) { VisitField(field); }
+   virtual void VisitAtomicField(const RAtomicField &field) { VisitField(field); }
    virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
@@ -55,6 +57,7 @@ public:
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitEnumField(const REnumField &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
+   virtual void VisitByteField(const RField<std::byte> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
    virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
    virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
@@ -90,7 +93,7 @@ private:
 
 public:
    RPrepareVisitor() = default;
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
    void VisitFieldZero(const RFieldZero &field) final;
 
    unsigned int GetDeepestLevel() const { return fDeepestLevel; }
@@ -131,7 +134,7 @@ public:
       SetAvailableSpaceForStrings();
    }
    /// Prints summary of Field
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
    void VisitFieldZero(const RFieldZero &fieldZero) final;
    void SetFrameSymbol(char s) { fFrameSymbol = s; }
    void SetWidth(int w) { fWidth = w; }
@@ -177,28 +180,29 @@ public:
    };
 
 private:
-   Detail::RFieldBase::RValue fValue;
+   RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
    RPrintOptions fPrintOptions;
 
    void PrintIndent();
-   void PrintName(const Detail::RFieldBase &field);
-   void PrintCollection(const Detail::RFieldBase &field);
+   void PrintName(const RFieldBase &field);
+   void PrintCollection(const RFieldBase &field);
 
 public:
-   RPrintValueVisitor(Detail::RFieldBase::RValue &&value, std::ostream &output, unsigned int level = 0,
+   RPrintValueVisitor(RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
+      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options)
    {
    }
 
-   void VisitField(const Detail::RFieldBase &field) final;
+   void VisitField(const RFieldBase &field) final;
 
    void VisitBoolField(const RField<bool> &field) final;
    void VisitDoubleField(const RField<double> &field) final;
    void VisitFloatField(const RField<float> &field) final;
+   void VisitByteField(const RField<std::byte> &field) final;
    void VisitCharField(const RField<char> &field) final;
    void VisitInt8Field(const RField<std::int8_t> &field) final;
    void VisitInt16Field(const RField<std::int16_t> &field) final;
@@ -212,6 +216,7 @@ public:
 
    void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
+   void VisitArrayAsRVecField(const RArrayAsRVecField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
    void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
@@ -221,6 +226,7 @@ public:
    void VisitBitsetField(const RBitsetField &field) final;
    void VisitNullableField(const RNullableField &field) final;
    void VisitEnumField(const REnumField &field) final;
+   void VisitAtomicField(const RAtomicField &field) final;
 };
 
 

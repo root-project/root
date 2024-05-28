@@ -51,7 +51,7 @@ the Clang C++ compiler, not CINT.
 
 using namespace llvm;
 using namespace clang;
-using namespace std;
+using std::string, std::ostringstream;
 
 TClingBaseClassInfo::TClingBaseClassInfo(cling::Interpreter* interp,
                                          TClingClassInfo* ci)

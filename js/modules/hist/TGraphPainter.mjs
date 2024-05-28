@@ -14,6 +14,8 @@ class TGraphPainter extends TGraphPainter2D {
       if (fp.zoom_xmin !== fp.zoom_xmax)
         if ((this.options.pos3d < fp.zoom_xmin) || (this.options.pos3d > fp.zoom_xmax)) return;
 
+      this.createGraphDrawAttributes(true);
+
       const drawbins = this.optimizeBins(1000);
       let first = 0, last = drawbins.length-1;
 
@@ -36,7 +38,7 @@ class TGraphPainter extends TGraphPainter2D {
 
       const lines = createLineSegments(pnts, create3DLineMaterial(this, graph));
 
-      fp.toplevel.add(lines);
+      fp.add3DMesh(lines, this, true);
 
       fp.render3D(100);
    }

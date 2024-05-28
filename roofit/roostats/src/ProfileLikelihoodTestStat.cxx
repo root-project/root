@@ -39,7 +39,7 @@ either use:
 
 #include "RooStats/RooStatsUtils.h"
 
-using namespace std;
+using std::cout, std::endl;
 
 bool RooStats::ProfileLikelihoodTestStat::fgAlwaysReuseNll = true ;
 
@@ -54,12 +54,8 @@ void RooStats::ProfileLikelihoodTestStat::SetAlwaysReuseNLL(bool flag) { fgAlway
 
 double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, RooAbsData& data, RooArgSet& paramsOfInterest) {
 
-       if( fDetailedOutputEnabled && fDetailedOutput ) {
-          delete fDetailedOutput;
-          fDetailedOutput = nullptr;
-       }
-       if( fDetailedOutputEnabled && !fDetailedOutput ) {
-          fDetailedOutput = new RooArgSet();
+       if (fDetailedOutputEnabled) {
+          fDetailedOutput = std::make_unique<RooArgSet>();
        }
 
        //data.Print("V");
@@ -68,7 +64,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        tsw.Start();
 
        double initial_mu_value  = 0;
-       RooRealVar* firstPOI = dynamic_cast<RooRealVar*>( paramsOfInterest.first());
+       RooRealVar* firstPOI = dynamic_cast<RooRealVar*>(paramsOfInterest.first());
        if (firstPOI) initial_mu_value = firstPOI->getVal();
        //paramsOfInterest.getRealValue(firstPOI->GetName());
        if (fPrintLevel > 1) {
@@ -232,10 +228,11 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
              pll = fNll->getVal();
           }
           else {
-             if (type == 1)
-                pll = uncondML;
-             else if (type == 2)
-                pll = condML;
+             if (type == 1) {
+               pll = uncondML;
+             } else if (type == 2) {
+               pll = condML;
+             }
           }
        }
        else {  // type == 0

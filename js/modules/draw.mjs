@@ -4,8 +4,8 @@ import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, is
          clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
-         clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTH3,
-         clTProfile, clTProfile2D, clTProfile3D,
+         clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTF3, clTH3,
+         clTProfile, clTProfile2D, clTProfile3D, clTFrame,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
          clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, atob_func } from './core.mjs';
@@ -43,7 +43,7 @@ drawFuncs = { lst: [
    { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
    { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
    { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
-   { name: 'TFrame', icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
+   { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => import('./hist/TPavePainter.mjs').then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
    { name: clTPavesText, sameas: clTPave },
@@ -64,7 +64,7 @@ drawFuncs = { lst: [
    { name: 'TH2PolyBin', icon: 'img_histo2d', draw_field: 'fPoly', draw_field_opt: 'L' },
    { name: /^TH2/, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), dflt: 'col', opt: ';COL;COLZ;COL0;COL1;COL0Z;COL1Z;COLA;BOX;BOX1;PROJ;PROJX1;PROJX2;PROJX3;PROJY1;PROJY2;PROJY3;SCAT;TEXT;TEXTE;TEXTE0;CANDLE;CANDLE1;CANDLE2;CANDLE3;CANDLE4;CANDLE5;CANDLE6;CANDLEY1;CANDLEY2;CANDLEY3;CANDLEY4;CANDLEY5;CANDLEY6;VIOLIN;VIOLIN1;VIOLIN2;VIOLINY1;VIOLINY2;CONT;CONT1;CONT2;CONT3;CONT4;ARR;SURF;SURF1;SURF2;SURF4;SURF6;E;A;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same', ctrl: 'lego', expand_item: fFunctions, for_derived: true },
    { name: clTProfile2D, sameas: clTH2 },
-   { name: /^TH3/, icon: 'img_histo3d', class: () => import('./hist/TH3Painter.mjs').then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions },
+   { name: /^TH3/, icon: 'img_histo3d', class: () => import('./hist/TH3Painter.mjs').then(h => h.TH3Painter), opt: ';SCAT;BOX;BOX2;BOX3;GLBOX1;GLBOX2;GLCOL', expand_item: fFunctions, for_derived: true },
    { name: clTProfile3D, sameas: clTH3 },
    { name: clTHStack, icon: 'img_histo1d', class: () => import('./hist/THStackPainter.mjs').then(h => h.THStackPainter), expand_item: 'fHists', opt: 'NOSTACK;HIST;E;PFC;PLC' },
    { name: clTPolyMarker3D, icon: 'img_histo3d', draw: () => import('./draw/draw3d.mjs').then(h => h.drawPolyMarker3D), direct: true, frame: '3d' },
@@ -93,8 +93,9 @@ drawFuncs = { lst: [
    { name: 'TPadWebSnapshot', sameas: clTCanvasWebSnapshot },
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
-   { name: clTF1, icon: 'img_tf1', class: () => import('./hist/TF1Painter.mjs').then(h => h.TF1Painter) },
+   { name: clTF1, icon: 'img_tf1', class: () => import('./hist/TF1Painter.mjs').then(h => h.TF1Painter), opt: ';L;C;FC;FL' },
    { name: clTF2, icon: 'img_tf2', class: () => import('./hist/TF2Painter.mjs').then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
+   { name: clTF3, icon: 'img_histo3d', class: () => import('./hist/TF3Painter.mjs').then(h => h.TF3Painter), opt: ';SURF' },
    { name: clTSpline3, icon: 'img_tf1', class: () => import('./draw/TSplinePainter.mjs').then(h => h.TSplinePainter) },
    { name: 'TSpline5', sameas: clTSpline3 },
    { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
@@ -383,7 +384,10 @@ async function draw(dom, obj, opt) {
          promise = getPromise(handle.func(dom, obj, opt));
 
       return promise.then(p => {
-         if (!painter) painter = p;
+         if (!painter)
+            painter = p;
+         if (painter === false)
+            return null;
          if (!painter)
              throw Error(`Fail to draw object ${type_info}`);
          if (isObject(painter) && !painter.options)
@@ -622,9 +626,14 @@ async function makeImage(args) {
          main.selectAll('g.root_frame').each(clear_element);
          main.selectAll('svg').each(clear_element);
 
-         const svg = compressSVG(main.html());
-         if (args.format === 'svg')
-            return complete(svg);
+         let svg;
+         if (args.format === 'pdf')
+            svg = { node: main.select('svg').node(), width: args.width, height: args.height, can_modify: true };
+         else {
+            svg = compressSVG(main.html());
+            if (args.format === 'svg')
+               return complete(svg);
+         }
 
          return svgToImage(svg, args.format, args.as_buffer).then(complete);
       });
@@ -662,7 +671,7 @@ internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
    PadPainterClass.prototype.drawObject = (...args) =>
-      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err.stack ?? 'uncknown place'}`); return null; });
+      draw(...args).catch(err => { console.log(`Error ${err?.message ?? err}  at ${err?.stack ?? 'uncknown place'}`); return null; });
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 

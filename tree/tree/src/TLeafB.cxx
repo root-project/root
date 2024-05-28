@@ -30,8 +30,8 @@ TLeafB::TLeafB()
 : TLeaf()
 , fMinimum(0)
 , fMaximum(0)
-, fValue(0)
-, fPointer(0)
+, fValue(nullptr)
+, fPointer(nullptr)
 {
    fLenType = 1;
 }
@@ -43,8 +43,8 @@ TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
    : TLeaf(parent, name, type)
    , fMinimum(0)
    , fMaximum(0)
-   , fValue(0)
-   , fPointer(0)
+   , fValue(nullptr)
+   , fPointer(nullptr)
 {
    fLenType = 1;
 }
@@ -54,12 +54,12 @@ TLeafB::TLeafB(TBranch *parent, const char* name, const char* type)
 
 TLeafB::~TLeafB()
 {
-   if (ResetAddress(0, kTRUE)) {
+   if (ResetAddress(nullptr, true)) {
       delete[] fValue;
-      fValue = 0;
+      fValue = nullptr;
    }
    // Note: We do not own this, the user's object does.
-   fPointer = 0;
+   fPointer = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,16 +109,16 @@ const char *TLeafB::GetTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafB::IncludeRange(TLeaf *input)
+bool TLeafB::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             this->SetMaximum( input->GetMaximum() );
         if (input->GetMinimum() < this->GetMinimum())
             this->SetMinimum( input->GetMinimum() );
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
@@ -217,7 +217,7 @@ void TLeafB::SetAddress(void *addr)
    if (ResetAddress(addr)) {
       // -- We owned the old value buffer, delete it.
       delete[] fValue;
-      fValue = 0;
+      fValue = nullptr;
    }
    if (addr) {
       // -- We have been provided a new value buffer.
@@ -233,7 +233,7 @@ void TLeafB::SetAddress(void *addr)
          // Reallocate the value buffer if needed.
          if ((fLeafCount && (Int_t(fLeafCount->GetValue()) < ncountmax)) ||
              (fNdata < ncountmax) ||
-             (*fPointer == 0)) {
+             (*fPointer == nullptr)) {
             // -- Reallocate.
             // Note:
             //      1) For a varying length array we do this based on
@@ -259,7 +259,7 @@ void TLeafB::SetAddress(void *addr)
                fNdata = ncountmax;
             }
             delete[] *fPointer;
-            *fPointer = 0;
+            *fPointer = nullptr;
             *fPointer = new Char_t[fNdata];
          }
          fValue = *fPointer;

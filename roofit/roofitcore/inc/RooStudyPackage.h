@@ -16,22 +16,17 @@
 #ifndef ROO_STUDY_PACKAGE
 #define ROO_STUDY_PACKAGE
 
-#include "TNamed.h"
+#include <TNamed.h>
 
-class RooAbsPdf;
-class RooDataSet ;
-class RooAbsData ;
-class RooFitResult ;
-class RooPlot ;
-class RooRealVar ;
-class RooWorkspace ;
-class RooAbsStudy ;
 #include <list>
+
+class RooAbsStudy ;
+class RooWorkspace ;
 
 class RooStudyPackage : public TNamed {
 public:
 
-  RooStudyPackage() ;
+  RooStudyPackage() = default;
   RooStudyPackage(RooWorkspace& w) ;
   RooStudyPackage(const RooStudyPackage&) ;
   void addStudy(RooAbsStudy& study) ;
@@ -54,7 +49,7 @@ public:
 
 protected:
 
-  RooWorkspace* _ws ;
+  RooWorkspace* _ws = nullptr;
   std::list<RooAbsStudy*> _studies ;
 
 

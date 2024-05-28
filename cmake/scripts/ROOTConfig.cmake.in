@@ -58,6 +58,11 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 # It's up to the user what to do with these
 @ROOT_COMPILER_FLAG_HINTS@
 
+#-----------------------------------------------------------------------
+# Provide the C++ standard used by this build of ROOT
+#
+set(ROOT_CXX_STANDARD @CMAKE_CXX_STANDARD@)
+
 #----------------------------------------------------------------------------
 # Configure the path to the ROOT headers, using a relative path if possible.
 # This is only known at CMake time, so we expand a CMake supplied variable.
@@ -69,7 +74,7 @@ get_filename_component(_thisdir "${CMAKE_CURRENT_LIST_FILE}" PATH)
 @ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
-set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING_Development_Main@)
+set(ROOT_PYTHON_VERSION @Python3_VERSION@)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros

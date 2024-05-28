@@ -13,26 +13,25 @@ TEST(RNTuple, View)
    fieldJets->push_back(3);
 
    {
-      RNTupleWriter ntuple(std::move(model),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       fieldJets->clear();
-      ntuple.Fill();
+      writer->Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   auto viewPt = ntuple.GetView<float>("pt");
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   auto viewPt = reader->GetView<float>("pt");
    int n = 0;
-   for (auto i : ntuple.GetEntryRange()) {
+   for (auto i : reader->GetEntryRange()) {
       EXPECT_EQ(42.0, viewPt(i));
       n++;
    }
    EXPECT_EQ(2, n);
 
-   auto viewJets = ntuple.GetView<std::vector<std::int32_t>>("jets");
+   auto viewJets = reader->GetView<std::vector<std::int32_t>>("jets");
    n = 0;
-   for (auto i : ntuple.GetEntryRange()) {
+   for (auto i : reader->GetEntryRange()) {
       if (i == 0) {
          EXPECT_EQ(3U, viewJets(i).size());
          EXPECT_EQ(1, viewJets(i)[0]);
@@ -45,7 +44,7 @@ TEST(RNTuple, View)
    }
    EXPECT_EQ(2, n);
 
-   auto viewJetElements = ntuple.GetView<std::int32_t>("jets._0");
+   auto viewJetElements = reader->GetView<std::int32_t>("jets._0");
    n = 0;
    for (auto i : viewJetElements.GetFieldRange()) {
       n++;
@@ -93,7 +92,7 @@ TEST(RNTuple, BulkView)
    }
 }
 
-TEST(RNTuple, BulkViewCollection)
+TEST(RNTuple, BulkCollectionView)
 {
    FileRaii fileGuard("test_ntuple_bulk_view_collection.root");
 
@@ -171,9 +170,9 @@ TEST(RNTuple, Composable)
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = ntuple->GetView<float>("pt");
-   auto viewTracks = ntuple->GetViewCollection("tracks");
+   auto viewTracks = ntuple->GetCollectionView("tracks");
    auto viewTrackEnergy = viewTracks.GetView<float>("energy");
-   auto viewHits = viewTracks.GetViewCollection("hits");
+   auto viewHits = viewTracks.GetCollectionView("hits");
    auto viewHitX = viewHits.GetView<float>("x");
    auto viewHitY = viewHits.GetView<float>("y");
 
@@ -200,6 +199,26 @@ TEST(RNTuple, Composable)
    EXPECT_EQ(8, nEv);
 }
 
+TEST(RNTuple, VoidView)
+{
+   FileRaii fileGuard("test_ntuple_voidview.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1u, reader->GetNEntries());
+   auto viewPt = reader->GetView<void>("pt");
+   viewPt(0);
+   EXPECT_FLOAT_EQ(42.0, viewPt.GetValue().GetRef<float>());
+   EXPECT_STREQ("pt", viewPt.GetField().GetFieldName().c_str());
+}
+
 TEST(RNTuple, MissingViewNames)
 {
    FileRaii fileGuard("test_ntuple_missing_view_names.root");
@@ -213,7 +232,7 @@ TEST(RNTuple, MissingViewNames)
    }
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    auto viewPt = ntuple->GetView<float>("pt");
-   auto viewMuon = ntuple->GetViewCollection("Muon");
+   auto viewMuon = ntuple->GetCollectionView("Muon");
    try {
       auto badView = ntuple->GetView<float>("pT");
       FAIL() << "missing field names should throw";
@@ -221,7 +240,7 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'pT' in RNTuple 'myNTuple'"));
    }
    try {
-      auto badView = ntuple->GetViewCollection("Moun");
+      auto badView = ntuple->GetCollectionView("Moun");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'Moun' in RNTuple 'myNTuple'"));
@@ -233,9 +252,113 @@ TEST(RNTuple, MissingViewNames)
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badField' in RNTuple 'myNTuple'"));
    }
    try {
-      auto badView = viewMuon.GetViewCollection("badC");
+      auto badView = viewMuon.GetCollectionView("badC");
       FAIL() << "missing field names should throw";
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("no field named 'badC' in RNTuple 'myNTuple'"));
    }
+}
+
+TEST(RNTuple, ViewWithExternalAddress)
+{
+   FileRaii fileGuard("test_ntuple_viewexternal.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt", 42.0);
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // Typed shared_ptr
+   auto data_1 = std::make_shared<float>();
+   auto view_1 = reader->GetView("pt", data_1);
+   view_1(0);
+   EXPECT_FLOAT_EQ(42.0, *data_1);
+
+   // Void shared_ptr
+   std::shared_ptr<void> data_2{new float()};
+   auto view_2 = reader->GetView("pt", data_2);
+   view_2(0);
+   EXPECT_FLOAT_EQ(42.0, *static_cast<float *>(data_2.get()));
+}
+
+TEST(RNTuple, BindEmplaceTyped)
+{
+   FileRaii fileGuard("test_ntuple_bindvalueemplacetyped.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fieldPt = 11.f;
+      writer->Fill();
+      *fieldPt = 22.f;
+      writer->Fill();
+      *fieldPt = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // bind to shared_ptr
+   auto value1 = std::make_shared<float>();
+   auto view = reader->GetView<float>("pt", nullptr);
+   view.Bind(value1);
+   view(0);
+   EXPECT_FLOAT_EQ(11.f, *value1);
+
+   // bind to raw pointer
+   float value2;
+   view.BindRawPtr(&value2);
+   view(1);
+   EXPECT_FLOAT_EQ(22.f, value2);
+
+   // emplace new value
+   view.EmplaceNew();
+   EXPECT_FLOAT_EQ(33.f, view(2));
+   EXPECT_FLOAT_EQ(22.f, value2); // The previous value was not modified
+}
+
+TEST(RNTuple, BindEmplaceVoid)
+{
+   FileRaii fileGuard("test_ntuple_bindvalueemplacevoid.root");
+
+   auto model = RNTupleModel::Create();
+   auto fieldPt = model->MakeField<float>("pt");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *fieldPt = 11.f;
+      writer->Fill();
+      *fieldPt = 22.f;
+      writer->Fill();
+      *fieldPt = 33.f;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+
+   // bind to shared_ptr
+   std::shared_ptr<void> value1{new float()};
+   auto view = reader->GetView<void>("pt", nullptr);
+   view.Bind(value1);
+   view(0);
+   EXPECT_FLOAT_EQ(11.f, *reinterpret_cast<float *>(value1.get()));
+
+   // bind to raw pointer
+   float value2;
+   view.BindRawPtr(&value2);
+   view(1);
+   EXPECT_FLOAT_EQ(22.f, value2);
+
+   // emplace new value
+   view.EmplaceNew();
+   view(2);
+   EXPECT_FLOAT_EQ(33.f, view.GetValue().GetRef<float>());
+   EXPECT_FLOAT_EQ(22.f, value2); // The previous value was not modified
 }

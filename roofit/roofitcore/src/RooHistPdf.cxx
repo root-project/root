@@ -19,7 +19,7 @@
 \class RooHistPdf
 \ingroup Roofitcore
 
-RooHistPdf implements a propability density function sampled from a
+A propability density function sampled from a
 multidimensional histogram. The histogram distribution is explicitly
 normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.
@@ -55,10 +55,9 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
              const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(vars) ;
   _pdfObsList.add(vars) ;
@@ -81,11 +80,11 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
-      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+      (static_cast<RooRealVar*>(hobs))->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
 
@@ -105,10 +104,9 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
              const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder) :
   RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist),
+  _dataHist(const_cast<RooDataHist*>(&dhist)),
   _codeReg(10),
-  _intOrder(intOrder),
-  _cdfBoundaries(false)
+  _intOrder(intOrder)
 {
   _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
@@ -137,27 +135,26 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 
   // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
-    // Guaranteed to succeed, since checked above in ctor
+    // Guaranteed to succeed, since checked above in constructor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
     RooRealVar* dhreal = dynamic_cast<RooRealVar*>(dhobs) ;
     if (dhreal){
-      ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
+      (static_cast<RooRealVar*>(hobs))->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
 }
 
-
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistPdf{name, title, vars, *dhist, intOrder}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet &vars, std::unique_ptr<RooDataHist> dhist,
+                       int intOrder)
+   : RooHistPdf{name, title, vars, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
-           std::unique_ptr<RooDataHist> dhist, int intOrder)
-  : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList &pdfObs, const RooArgList &histObs,
+                       std::unique_ptr<RooDataHist> dhist, int intOrder)
+   : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
 {
-  _ownedDataHist = std::move(dhist);
+   initializeOwnedDataHist(std::move(dhist));
 }
 
 
@@ -175,18 +172,6 @@ RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
   _unitNorm(other._unitNorm)
 {
   _histObsList.addClone(other._histObsList) ;
-
-}
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooHistPdf::~RooHistPdf()
-{
-
 }
 
 RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
@@ -196,16 +181,18 @@ RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
    return _dataHist;
 }
 
-void RooHistPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooHistPdf::doEval(RooFit::EvalContext &ctx) const
+{
+   std::span<double> output = ctx.output();
 
-  // For interpolation and histograms of higher dimension, use base function
-  if(_pdfObsList.size() > 1) {
-      RooAbsReal::computeBatch(output, nEvents, dataMap);
+   // For interpolation and histograms of higher dimension, use base function
+   if (_pdfObsList.size() > 1) {
+      RooAbsReal::doEval(ctx);
       return;
-  }
+   }
 
-  auto xVals = dataMap.at(_pdfObsList[0]);
-  _dataHist->weights(output, xVals, _intOrder, true, _cdfBoundaries);
+   auto xVals = ctx.at(_pdfObsList[0]);
+   _dataHist->weights(output.data(), xVals, _intOrder, true, _cdfBoundaries);
 }
 
 
@@ -247,7 +234,10 @@ void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::Co
 
    std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
    std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
-   ctx.addResult(klass, weightName + "[" + idxName + "]");
+   std::string res = weightName;
+   if (weightName[0] == '_')
+      res += "[" + idxName + "]";
+   ctx.addResult(klass, res);
 }
 
 void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -625,10 +615,10 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
-      if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
+      if (areIdentical(static_cast<RooDataHist&>(*wsdata),*_dataHist)) {
 
    // Exists and is of correct type, and identical -- adjust internal pointer to WS copy
-   _dataHist = (RooDataHist*) wsdata ;
+   _dataHist = static_cast<RooDataHist*>(wsdata) ;
       } else {
 
    // not identical, clone rename and import
@@ -638,7 +628,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
      coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
      return true ;
    }
-   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName) ;
+   _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName)) ;
       }
 
     } else {
@@ -660,7 +650,7 @@ bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
   ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
-  _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
+  _dataHist = static_cast<RooDataHist*>(ws.embeddedData(_dataHist->GetName())) ;
   return false ;
 }
 

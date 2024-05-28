@@ -399,8 +399,8 @@ void TXTRU::Print(Option_t *option) const
    printf("TXTRU %s Nxy=%d [of %d] Nz=%d [of %d] Option=%s\n",
           GetName(),fNxy,fNxyAlloc,fNz,fNzAlloc,option);
 
-   const char *shape = 0;
-   const char *zorder = 0;
+   const char *shape = nullptr;
+   const char *zorder = nullptr;
 
    switch (fPolygonShape) {
    case kUncheckedXY:   shape = "Unchecked  ";  break;
@@ -432,8 +432,8 @@ void TXTRU::Print(Option_t *option) const
       nz    = fNzAlloc;
    }
 
-   const char *name = 0;
-   Float_t *p=0;
+   const char *name = nullptr;
+   Float_t *p=nullptr;
    Int_t   nlimit = 0;
    Bool_t  print_vtx = opt.Contains("xy");
    Bool_t  print_z   = opt.Contains("z");

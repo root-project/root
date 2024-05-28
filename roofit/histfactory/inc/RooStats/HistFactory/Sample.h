@@ -154,8 +154,8 @@ protected:
   /// Properties
   RooStats::HistFactory::StatError fStatError;
 
-  bool fNormalizeByTheory;
-  bool fStatErrorActivate;
+  bool fNormalizeByTheory = false;
+  bool fStatErrorActivate = false;
 
 
   /// The Nominal Shape

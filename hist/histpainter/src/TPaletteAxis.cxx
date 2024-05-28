@@ -477,9 +477,23 @@ void TPaletteAxis::Paint(Option_t *)
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
    // import Attributes already here since we might need them for CJUST
-   if (fH && fH->GetDimension() == 2) fAxis.ImportAxisAttributes(fH->GetZaxis());
-   // for 3D histograms there is no palette's title
-   if (fH && fH->GetDimension() >  2) fAxis.SetTitle("");
+   if (fH && fH->GetDimension() == 2) {
+      fAxis.ImportAxisAttributes(fH->GetZaxis());
+      TString ztit = fAxis.GetTitle();
+      if (ztit.Index(";")>0) {
+         ztit.Remove(ztit.Index(";"),ztit.Length());
+         fAxis.SetTitle(ztit.Data());
+      }
+   }
+   // the 3D histogram's title is stored in Zaxis
+   if (fH && fH->GetDimension() >  2) {
+      TString ztit = fH->GetZaxis()->GetTitle();
+      fAxis.SetTitle("");
+      if (ztit.Index(";")>0) {
+         ztit.Remove(0,ztit.Index(";")+1);
+         fAxis.SetTitle(ztit.Data());
+      }
+   }
    // case option "CJUST": put labels directly at color boundaries
    TLatex *label = nullptr;
    TLine *line = nullptr;

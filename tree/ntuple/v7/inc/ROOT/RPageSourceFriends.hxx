@@ -19,7 +19,7 @@
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RSpan.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <memory>
 #include <vector>
@@ -27,11 +27,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceFriends
+\class ROOT::Experimental::Internal::RPageSourceFriends
 \ingroup NTuple
 \brief Virtual storage that combines several other sources horizontally
 */
@@ -73,7 +73,7 @@ private:
       }
    };
 
-   RNTupleMetrics fMetrics;
+   Detail::RNTupleMetrics fMetrics;
    std::vector<std::unique_ptr<RPageSource>> fSources;
    RIdBiMap fIdBiMap;
 
@@ -96,19 +96,17 @@ public:
    void DropColumn(ColumnHandle_t columnHandle) final;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void
-   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
-};
+   Detail::RNTupleMetrics &GetMetrics() final { return fMetrics; }
+}; // class RPageSourceFriends
 
-
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

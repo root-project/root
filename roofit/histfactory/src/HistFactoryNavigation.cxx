@@ -88,7 +88,7 @@ namespace RooStats {
       }
 
       // Get the workspace
-      RooWorkspace* wspace = (RooWorkspace*) file->Get(WorkspaceName.c_str());
+      RooWorkspace* wspace = static_cast<RooWorkspace*>(file->Get(WorkspaceName.c_str()));
       if( !wspace ) {
    std::cout << "Error: Failed to get workspace: " << WorkspaceName
         << " from file: " << FileName << std::endl;
@@ -96,7 +96,7 @@ namespace RooStats {
       }
 
       // Get the ModelConfig
-      ModelConfig* mc = (ModelConfig*) wspace->obj(ModelConfigName);
+      ModelConfig* mc = static_cast<ModelConfig*>(wspace->obj(ModelConfigName));
       if( !mc ) {
    std::cout << "Error: Failed to find ModelConfig: " << ModelConfigName
         << " from workspace: " << WorkspaceName
@@ -230,7 +230,7 @@ namespace RooStats {
       for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin();
       itr != SampleFunctionMap.end(); ++itr) {
    std::string sample_name = itr->first;
-   label_print_width = TMath::Max(label_print_width, (int)sample_name.size()+2);
+   label_print_width = std::max(label_print_width, (int)sample_name.size()+2);
       }
       */
 
@@ -253,7 +253,7 @@ namespace RooStats {
 
       // Make the line break as a set of "===============" ...
       std::string line_break;
-      int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
+      int high_bin = _maxBinToPrint==-1 ? num_bins : std::min(_maxBinToPrint, (int)num_bins);
       int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
       int break_length = (high_bin - low_bin + 1) * _bin_print_width;
       break_length += _label_print_width;
@@ -291,10 +291,10 @@ namespace RooStats {
       for( std::map< std::string, RooAbsReal*>::iterator itr = SampleFunctionMap.begin();
       itr != SampleFunctionMap.end(); ++itr) {
    std::string sample_name = itr->first;
-   _label_print_width = TMath::Max(_label_print_width, (int)sample_name.size()+2);
+   _label_print_width = std::max(_label_print_width, (int)sample_name.size()+2);
       }
 
-      _label_print_width = TMath::Max( _label_print_width, (int)channel.size() + 7);
+      _label_print_width = std::max( _label_print_width, (int)channel.size() + 7);
     }
 
 
@@ -562,7 +562,7 @@ namespace RooStats {
    RooAbsReal* sample_function = itr->second;
    std::unique_ptr<TH1> sample_hist{MakeHistFromRooFunction(sample_function, observable_list,
                      tmp_hist_name)};
-   total_hist = (TH1*) sample_hist->Clone("TotalHist");
+   total_hist = static_cast<TH1*>(sample_hist->Clone("TotalHist"));
    break;
       }
       if (!total_hist)
@@ -641,18 +641,18 @@ namespace RooStats {
       if(strcmp(fModel->ClassName(),"RooSimultaneous")==0){
 
    // If so, get a list of the component pdf's:
-   RooSimultaneous* simPdf = (RooSimultaneous*) fModel;
-   RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+   RooSimultaneous* simPdf = static_cast<RooSimultaneous*>(fModel);
+   auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
 
    dataset_list = std::unique_ptr<TList>{data->split(*channelCat)};
 
-   data = dynamic_cast<RooDataSet*>( dataset_list->FindObject(channel.c_str()) );
+   data = dynamic_cast<RooDataSet*>(dataset_list->FindObject(channel.c_str()) );
 
       }
 
       RooArgList vars( *GetObservableSet(channel) );
 
-      int dim = vars.getSize();
+      int dim = vars.size();
 
       TH1* hist = nullptr;
 
@@ -663,19 +663,19 @@ namespace RooStats {
    }
         throw hf_exc();
       } else if( dim==1 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
    hist = data->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()) );
       }
       else if( dim==2 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
-   RooRealVar* varY = (RooRealVar*) vars.at(1);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
+   RooRealVar* varY = static_cast<RooRealVar*>(vars.at(1));
    hist = data->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()),
                   RooFit::YVar(*varY, RooFit::Binning(varY->getBinning())) );
       }
       else if( dim==3 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
-   RooRealVar* varY = (RooRealVar*) vars.at(1);
-   RooRealVar* varZ = (RooRealVar*) vars.at(2);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
+   RooRealVar* varY = static_cast<RooRealVar*>(vars.at(1));
+   RooRealVar* varZ = static_cast<RooRealVar*>(vars.at(2));
    hist = data->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()),
                   RooFit::YVar(*varY, RooFit::Binning(varY->getBinning())),
                   RooFit::YVar(*varZ, RooFit::Binning(varZ->getBinning())) );
@@ -758,8 +758,8 @@ namespace RooStats {
       if(strcmp(modelPdf->ClassName(),"RooSimultaneous")==0){
 
    // If so, get a list of the component pdf's:
-   RooSimultaneous* simPdf = (RooSimultaneous*) modelPdf;
-   RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+   auto simPdf = static_cast<RooSimultaneous*>(modelPdf);
+   auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
 
    // Iterate over the categories and get the
    // pdf and observables for each category
@@ -962,7 +962,7 @@ namespace RooStats {
    // For alpha's, the sigma points to a global RooConstVar
    // with the name "1"
    // For gamma_stat_*, the sigma is named *_sigma
-   std::string sigmaName = "";
+   std::string sigmaName;
    if( parameter.find("alpha_")!=std::string::npos ) {
      sigmaName = "1";;
    }
@@ -983,14 +983,14 @@ namespace RooStats {
       else if( ConstraintType == "RooPoisson" ){
    // Poisson errors are given by inverting: tau = 1 / (sigma*sigma)
    std::string tauName = "nom_" + parameter;
-   RooAbsReal* tauVar = dynamic_cast<RooAbsReal*>( constraintTerm->findServer(tauName.c_str()) );
+   RooAbsReal* tauVar = dynamic_cast<RooAbsReal*>(constraintTerm->findServer(tauName.c_str()) );
    if( tauVar==nullptr ) {
      std::cout << "Error: Failed to find the nominal 'tau' node: " << tauName
           << " for the RooPoisson: " << constraintTerm->GetName() << std::endl;
      throw hf_exc();
    }
    double tau_val = tauVar->getVal();
-   sigma = 1.0 / TMath::Sqrt( tau_val );
+   sigma = 1.0 / std::sqrt( tau_val );
       }
       else {
    std::cout << "Error: Encountered unknown constraint type for Stat Uncertainties: "
@@ -1077,7 +1077,7 @@ namespace RooStats {
       {
         for (auto *component : static_range_cast<RooAbsReal*>(components)) {
           std::string NodeName = component->GetName();
-          label_print_width = TMath::Max(label_print_width, static_cast<int>(NodeName.size())+2);
+          label_print_width = std::max(label_print_width, static_cast<int>(NodeName.size())+2);
         }
       }
 
@@ -1115,7 +1115,7 @@ namespace RooStats {
       }
       /////
       std::string line_break;
-      int high_bin = _maxBinToPrint==-1 ? num_bins : TMath::Min(_maxBinToPrint, (int)num_bins);
+      int high_bin = _maxBinToPrint==-1 ? num_bins : std::min(_maxBinToPrint, (int)num_bins);
       int low_bin = _minBinToPrint==-1 ? 1 : _minBinToPrint;
       int break_length = (high_bin - low_bin + 1) * bin_print_width;
       break_length += label_print_width;
@@ -1145,24 +1145,24 @@ namespace RooStats {
       // Cone and empty the template
       //      TH1* hist = (TH1*) histTemplate.Clone( name.c_str() );
 
-      int dim = vars.getSize();
+      int dim = vars.size();
 
       TH1* hist=nullptr;
 
       if( dim==1 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
    hist = func->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()), RooFit::Scaling(false) );
       }
       else if( dim==2 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
-   RooRealVar* varY = (RooRealVar*) vars.at(1);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
+   RooRealVar* varY = static_cast<RooRealVar*>(vars.at(1));
    hist = func->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()), RooFit::Scaling(false),
                   RooFit::YVar(*varY, RooFit::Binning(varY->getBinning())) );
       }
       else if( dim==3 ) {
-   RooRealVar* varX = (RooRealVar*) vars.at(0);
-   RooRealVar* varY = (RooRealVar*) vars.at(1);
-   RooRealVar* varZ = (RooRealVar*) vars.at(2);
+   RooRealVar* varX = static_cast<RooRealVar*>(vars.at(0));
+   RooRealVar* varY = static_cast<RooRealVar*>(vars.at(1));
+   RooRealVar* varZ = static_cast<RooRealVar*>(vars.at(2));
    hist = func->createHistogram( name.c_str(),*varX, RooFit::Binning(varX->getBinning()), RooFit::Scaling(false),
                   RooFit::YVar(*varY, RooFit::Binning(varY->getBinning())),
                   RooFit::YVar(*varZ, RooFit::Binning(varZ->getBinning())) );

@@ -33,6 +33,8 @@ typedef void (*RooNumIntInitializerFunc)(RooNumIntFactory&) ;
 class RooNumIntFactory : public TObject {
 public:
 
+  RooNumIntFactory(const RooNumIntFactory& other) = delete;
+
   using Creator = std::function<std::unique_ptr<RooAbsIntegrator>(RooAbsFunc const& function, const RooNumIntConfig& config)>;
 
   static RooNumIntFactory& instance() ;
@@ -40,7 +42,8 @@ public:
   bool registerPlugin(std::string const &name, Creator const &creator, const RooArgSet &defConfig, bool canIntegrate1D,
                     bool canIntegrate2D, bool canIntegrateND, bool canIntegrateOpenEnded, const char *depName = "");
 
-  std::unique_ptr<RooAbsIntegrator> createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, Int_t ndim=0, bool isBinned=false) const;
+  std::string getIntegratorName(RooAbsFunc& func, const RooNumIntConfig& config, int ndim=0, bool isBinned=false) const;
+  std::unique_ptr<RooAbsIntegrator> createIntegrator(RooAbsFunc& func, const RooNumIntConfig& config, int ndim=0, bool isBinned=false) const;
 
 
 private:
@@ -56,7 +59,7 @@ private:
     std::string depName;
   };
 
-  PluginInfo const* getPluginInfo(const char* name) const
+  PluginInfo const* getPluginInfo(std::string const& name) const
   {
     auto item = _map.find(name);
     return item == _map.end() ? nullptr : &item->second;
@@ -64,8 +67,7 @@ private:
 
   std::map<std::string,PluginInfo> _map;
 
-  RooNumIntFactory() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-  RooNumIntFactory(const RooNumIntFactory& other) = delete;
+  RooNumIntFactory() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see https://sft.its.cern.ch/jira/browse/ROOT-10300
 
   void init();
 

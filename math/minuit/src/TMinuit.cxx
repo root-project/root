@@ -11,6 +11,7 @@
 
 
 /*! \class TMinuit
+\see Minuit2 for a newer version of this package
 \ingroup MinuitOld
 
 Implementation in C++ of the Minuit package written by Fred James.
@@ -49,7 +50,7 @@ The main changes are:
 
 ## Basic concepts of MINUIT
 
-The [MINUIT](https://root.cern.ch/download/minuit.pdf)
+The [MINUIT](https://root.cern/download/minuit.pdf)
 package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
@@ -320,8 +321,8 @@ into account the non-linearities much more precisely.
 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #include "TROOT.h"
 #include "TList.h"
@@ -605,7 +606,7 @@ TObject *TMinuit::Clone(const char *newname) const
 /// Equivalent to MNEXCM except that the command is given as a character string.
 /// See TMinuit::mnhelp for the full list of available commands
 /// See also the
-/// [complete documentation of all the available commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+/// [complete documentation of all the available commands](https://root.cern/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
 ///
 /// Returns the status of the execution:
 ///   -  0: command executed normally
@@ -2658,7 +2659,7 @@ void TMinuit::mneval(Double_t anext, Double_t &fnext, Int_t &ierev)
 ///           -  12: RETURN command
 ///
 /// see also
-/// [the possible list of all Minuit commands](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf).
+/// [the possible list of all Minuit commands](https://root.cern/sites/d35c7d8c.web.cern.ch/files/minuit.pdf).
 
 void TMinuit::mnexcm(const char *command, Double_t *plist, Int_t llist, Int_t &ierflg)
 {
@@ -4929,18 +4930,16 @@ void TMinuit::mnline(Double_t *start, Double_t fstart, Double_t *step, Double_t 
 
 //                                               end of iteration
 //           stop because too many iterations
-   if (!l70 && !l80) {
+   if (!l70 && !l80 && ldebug) {
       cmess = " LINE SEARCH HAS EXHAUSTED THE LIMIT OF FUNCTION CALLS ";
-      if (ldebug) {
-         Printf(" MNLINE DEBUG: steps=");
-         for (kk = 1; kk <= fNpar; ++kk) {
-            Printf("  %12.4g",step[kk-1]);
-         }
+      Printf(" MNLINE DEBUG: steps=");
+      for (kk = 1; kk <= fNpar; ++kk) {
+        Printf("  %12.4g",step[kk-1]);
       }
    }
 //           stop because within tolerance
-   if (l70) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
-   if (l80) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
+   if (l70 && ldebug) cmess = " LINE SEARCH HAS ATTAINED TOLERANCE ";
+   if (l80 && ldebug) cmess = " STEP SIZE AT ARITHMETICALLY ALLOWED MINIMUM";
 
    fAmin = fvmin;
    for (i = 1; i <= fNpar; ++i) {

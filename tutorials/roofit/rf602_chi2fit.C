@@ -68,8 +68,8 @@ void rf602_chi2fit()
    // Note that entries with zero bins are _not_ allowed
    // for a proper chi^2 calculation and will give error
    // messages
-   RooDataSet *dsmall = (RooDataSet *)d->reduce(EventRange(1, 100));
-   RooDataHist *dhsmall = dsmall->binnedClone();
+   std::unique_ptr<RooAbsData> dsmall{d->reduce(EventRange(1, 100))};
+   std::unique_ptr<RooDataHist> dhsmall{static_cast<RooDataSet&>(*dsmall).binnedClone()};
    std::unique_ptr<RooAbsReal> chi2_lowstat{model.createChi2(*dhsmall)};
    cout << chi2_lowstat->getVal() << endl;
 }

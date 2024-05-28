@@ -1,10 +1,10 @@
-import { BIT, settings, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
+import { BIT, settings, browser, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
-import { TPadPainter, clTButton } from './TPadPainter.mjs';
+import { TPadPainter, clTButton, createWebObjectOptions } from './TPadPainter.mjs';
 
 const kShowEventStatus = BIT(15),
      // kAutoExec = BIT(16),
@@ -39,6 +39,11 @@ class TCanvasPainter extends TPadPainter {
       super(dom, canvas, true);
       this._websocket = null;
       this.tooltip_allowed = settings.Tooltip;
+      if ((dom === null) && (canvas === null)) {
+         // for web canvas details are important
+         settings.SmallPad.width = 20;
+         settings.SmallPad.height = 10;
+      }
    }
 
    /** @summary Cleanup canvas painter */
@@ -251,7 +256,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Submit menu request
      * @private */
-   async submitMenuRequest(painter, kind, reqid) {
+   async submitMenuRequest(_painter, _kind, reqid) {
       // only single request can be handled, no limit better in RCanvas
       return new Promise(resolveFunc => {
          this._getmenu_callback = resolveFunc;
@@ -387,9 +392,9 @@ class TCanvasPainter extends TPadPainter {
          this.websocketTimeout(`proj${kind}`, 'reset');
          this.drawProjection(kind, hist);
       } else if (msg.slice(0, 5) === 'CTRL:') {
-         const ctrl = parse(msg.slice(5));
+         const ctrl = parse(msg.slice(5)) || {};
          let resized = false;
-         if ((ctrl?.title !== undefined) && (typeof document !== 'undefined'))
+         if ((ctrl.title !== undefined) && (typeof document !== 'undefined'))
             document.title = ctrl.title;
          if (ctrl.x && ctrl.y && typeof window !== 'undefined') {
             window.moveTo(ctrl.x, ctrl.y);
@@ -611,6 +616,8 @@ class TCanvasPainter extends TPadPainter {
    completeCanvasSnapDrawing() {
       if (!this.pad) return;
 
+      this.addPadInteractive();
+
       if ((typeof document !== 'undefined') && !this.embed_canvas && this._websocket)
          document.title = this.pad.fTitle;
 
@@ -678,12 +685,11 @@ class TCanvasPainter extends TPadPainter {
             if (painter.snapid)
                msg = 'DRAWOPT:' + JSON.stringify([painter.snapid.toString(), painter.getDrawOpt() || '']);
             break;
-         case 'pave_moved':
-            if (isFunc(painter.fillWebObjectOptions)) {
-               const info = painter.fillWebObjectOptions();
-               if (info) msg = 'PRIMIT6:' + toJSON(info);
-            }
+         case 'pave_moved': {
+            const info = createWebObjectOptions(painter);
+            if (info) msg = 'PRIMIT6:' + toJSON(info);
             break;
+         }
          case 'logx':
          case 'logy':
          case 'logz': {
@@ -757,24 +763,61 @@ class TCanvasPainter extends TPadPainter {
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
    produceJSON() {
       const canv = this.getObject(),
-          fill0 = (canv.fFillStyle === 0);
+            fill0 = (canv.fFillStyle === 0),
+            axes = [];
 
       if (fill0) canv.fFillStyle = 1001;
+
+      // write selected range into TAxis properties
+      this.forEachPainterInPad(pp => {
+         const main = pp.getMainPainter(),
+               fp = pp.getFramePainter();
+         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension)) return;
+
+         const hist = main.getHisto(),
+               ndim = main.getDimension();
+         if (!hist?.fXaxis) return;
+
+         const setAxisRange = (name, axis) => {
+            if (fp?.zoomChangedInteractive(name)) {
+               axes.push({ axis, f: axis.fFirst, l: axis.fLast, b: axis.fBits });
+               axis.fFirst = main.getSelectIndex(name, 'left');
+               axis.fLast = main.getSelectIndex(name, 'right');
+               const has_range = (axis.fFirst > 0) || (axis.fLast < axis.fNbins);
+               if (has_range !== axis.TestBit(EAxisBits.kAxisRange))
+                  axis.InvertBit(EAxisBits.kAxisRange);
+            }
+         };
+
+         setAxisRange('x', hist.fXaxis);
+         if (ndim > 1) setAxisRange('y', hist.fYaxis);
+         if (ndim > 2) setAxisRange('z', hist.fZaxis);
+      }, 'pads');
 
       if (!this.normal_canvas) {
          // fill list of primitives from painters
          this.forEachPainterInPad(p => {
-            if (p.$secondary) return; // ignore all secondary painters
-
+            // ignore all secondary painters
+            if (p.isSecondary())
+               return;
             const subobj = p.getObject();
             if (subobj?._typename)
                canv.fPrimitives.Add(subobj, p.getDrawOpt());
          }, 'objects');
       }
 
+      // const fp = this.getFramePainter();
+      // fp?.setRootPadRange(this.getRootPad());
+
       const res = toJSON(canv);
 
       if (fill0) canv.fFillStyle = 0;
+
+      axes.forEach(e => {
+         e.axis.fFirst = e.f;
+         e.axis.fLast = e.l;
+         e.axis.fBits = e.b;
+      });
 
       if (!this.normal_canvas)
          canv.fPrimitives.Clear();
@@ -786,6 +829,12 @@ class TCanvasPainter extends TPadPainter {
    resizeBrowser(fullW, fullH) {
       if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
+
+      // workaround for qt5-based display where inner window size is used
+      if (browser.qt5 && fullW > 100 && fullH > 60) {
+         fullW -= 3;
+         fullH -= 30;
+      }
 
       this._websocket?.resizeWindow(fullW, fullH);
    }
@@ -819,6 +868,7 @@ class TCanvasPainter extends TPadPainter {
       selectActivePad({ pp: painter, active: true });
 
       return painter.drawPrimitives().then(() => {
+         painter.addPadInteractive();
          painter.showPadButtons();
          return painter;
       });
@@ -837,9 +887,9 @@ async function ensureTCanvas(painter, frame_kind) {
 
    // simple check - if canvas there, can use painter
    const noframe = (frame_kind === false) || (frame_kind === '3d') ? 'noframe' : '',
-       promise = painter.getCanvSvg().empty()
-                 ? TCanvasPainter.draw(painter.getDom(), null, noframe)
-                 : Promise.resolve(true);
+         promise = painter.getCanvSvg().empty()
+                   ? TCanvasPainter.draw(painter.getDom(), null, noframe)
+                   : Promise.resolve(true);
 
    return promise.then(() => {
       if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
@@ -854,7 +904,7 @@ async function ensureTCanvas(painter, frame_kind) {
   * @private */
 async function drawTPadSnapshot(dom, snap /*, opt */) {
    const can = create(clTCanvas),
-       painter = new TCanvasPainter(dom, can);
+         painter = new TCanvasPainter(dom, can);
    painter.normal_canvas = false;
    painter.addPadButtons();
 
@@ -865,14 +915,12 @@ async function drawTPadSnapshot(dom, snap /*, opt */) {
    });
 }
 
-/** @summary draw TGaxis object
+/** @summary draw TFrame object
   * @private */
-function drawTFrame(dom, obj, opt) {
+async function drawTFrame(dom, obj, opt) {
    const fp = new TFramePainter(dom, obj);
-   return ensureTCanvas(fp, false).then(() => {
-      if (opt === '3d') fp.mode3d = true;
-      return fp.redraw();
-   });
+   fp.mode3d = opt === '3d';
+   return ensureTCanvas(fp, false).then(() => fp.redraw());
 }
 
 export { ensureTCanvas, drawTPadSnapshot, drawTFrame, TPadPainter, TCanvasPainter };

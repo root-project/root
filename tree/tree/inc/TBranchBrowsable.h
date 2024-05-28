@@ -51,7 +51,7 @@ public:
    void GetScope(TString &scope) const;
 
    /** check whether we have sub-elements */
-   Bool_t IsFolder() const override { return (GetLeaves() && GetLeaves()->GetSize()); }
+   bool IsFolder() const override { return (GetLeaves() && GetLeaves()->GetSize()); }
 
    static Int_t FillListOfBrowsables(TList &list, const TBranch *branch,
          const TVirtualBranchBrowsable *parent = nullptr);
@@ -66,7 +66,7 @@ public:
    TClass *GetClassType() const { return fClass; }
 
    /** return whether the type of this browsable object is a pointer */
-   Bool_t TypeIsPointer() const { return fTypeIsPointer; }
+   bool TypeIsPointer() const { return fTypeIsPointer; }
 
    TList *GetLeaves() const;
 
@@ -74,7 +74,7 @@ public:
    // static void Unregister() has to be implemented for all derived classes!
 
 protected:
-   TVirtualBranchBrowsable(const TBranch *b, TClass *type, Bool_t typeIsPointer,
+   TVirtualBranchBrowsable(const TBranch *b, TClass *type, bool typeIsPointer,
          const TVirtualBranchBrowsable *parent = nullptr);
    static TClass* GetCollectionContainedType(const TBranch *b,
          const TVirtualBranchBrowsable *parent, TClass *&contained);
@@ -85,7 +85,7 @@ protected:
    void SetType(TClass* type) { fClass = type; }
 
    /** sets whether the type of this browsable object is a pointer */
-   void SetTypeIsPointer(Bool_t set=kTRUE) { fTypeIsPointer = set; }
+   void SetTypeIsPointer(bool set=true) { fTypeIsPointer = set; }
 
 private:
    static void RegisterDefaultGenerators();
@@ -93,9 +93,9 @@ private:
    const TVirtualBranchBrowsable *fParent{nullptr}; ///< parent method if this method is member of a returned class
    TList            *fLeaves{nullptr}; ///< pointer to leaves
    TClass           *fClass{nullptr};  ///< pointer to TClass representing our type (i.e. return type for methods), 0 if basic type
-   Bool_t            fTypeIsPointer{kFALSE}; ///< return type is pointer to class
+   bool              fTypeIsPointer{false}; ///< return type is pointer to class
    static std::list<MethodCreateListOfBrowsables_t> fgGenerators; ///< list of MethodCreateListOfBrowsables_t called by CreateListOfBrowsables
-   static Bool_t     fgGeneratorsSet; ///< have we set the generators yet? empty is not good enough - user might have removed them
+   static bool       fgGeneratorsSet; ///< have we set the generators yet? empty is not good enough - user might have removed them
    ClassDefOverride(TVirtualBranchBrowsable, 0); ///< Base class for helper objects used for browsing
 };
 
@@ -114,7 +114,7 @@ public:
          return "TMethodBrowsable-branch";
       return "TMethodBrowsable-leaf";
    }
-   static Bool_t IsMethodBrowsable(const TMethod *m);
+   static bool IsMethodBrowsable(const TMethod *m);
    static void Register();
    static void Unregister();
 
@@ -165,7 +165,7 @@ protected:
    TCollectionPropertyBrowsable(const char *name, const char *title,
          const char *draw, const TBranch *branch,
          const TVirtualBranchBrowsable *parent = nullptr) :
-         TVirtualBranchBrowsable(branch, nullptr, kFALSE, parent), fDraw(draw)
+         TVirtualBranchBrowsable(branch, nullptr, false, parent), fDraw(draw)
    {
       SetNameTitle(name, title);
    }

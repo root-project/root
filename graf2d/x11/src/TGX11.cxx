@@ -1613,7 +1613,7 @@ Int_t TGX11::RequestLocator(int mode, int ctyp, int &x, int &y)
 
          case LeaveNotify :
             if (mode == 0) {
-               while (1) {
+               while (true) {
                   XNextEvent((Display*)fDisplay, &event);
                   if (event.type == EnterNotify) break;
                }

@@ -52,9 +52,9 @@ public:
    class RExceptionHandler : public TStdExceptionHandler {
    public:
       RExceptionHandler() : TStdExceptionHandler() { Add(); }
-      virtual ~RExceptionHandler()                 { Remove(); }
+      ~RExceptionHandler() override                 { Remove(); }
 
-      virtual EStatus Handle(std::exception& exc);
+      EStatus Handle(std::exception& exc) override;
    };
 
    class ChangeGuard {
@@ -185,8 +185,12 @@ public:
 
    REveScene *GetWorld() const { return fWorld; }
 
+   REveViewer* GetDefaultViewer() const;
+
    REveViewer *SpawnNewViewer(const char *name, const char *title = "");
    REveScene  *SpawnNewScene (const char *name, const char *title = "");
+
+   void AllowMultipleRemoteConnections(bool loopBack = true, bool useAuthKey = true);
 
    void BeginChange();
    void EndChange();

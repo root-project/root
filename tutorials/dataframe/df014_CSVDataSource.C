@@ -23,7 +23,7 @@ int df014_CSVDataSource()
 {
    // Let's first create a RDF that will read from the CSV file.
    // The types of the columns will be automatically inferred.
-   auto fileNameUrl = "http://root.cern.ch/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
+   auto fileNameUrl = "http://root.cern/files/tutorials/df014_CsvDataSource_MuRun2010B.csv";
    auto fileName = "df014_CsvDataSource_MuRun2010B_cpp.csv";
    if(gSystem->AccessPathName(fileName))
       TFile::Cp(fileNameUrl, fileName);
@@ -71,6 +71,7 @@ int df014_CSVDataSource()
    leftPad->SetLogy();
    fullSpectrum->DrawClone("Hist");
    dualCanvas->cd(2);
+   jpsi->SetMarkerStyle(20);
    jpsi->DrawClone("HistP");
 
    return 0;

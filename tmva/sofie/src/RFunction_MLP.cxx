@@ -12,17 +12,18 @@ namespace Experimental {
 namespace SOFIE {
 
 RFunction_MLP::RFunction_MLP(FunctionTarget target, Int_t numLayers, Activation activation_function, bool activate_final, GraphType gType):
-    RFunction_Update(target, gType), fNumLayers(numLayers), fActivationFunction(activation_function), fActivateFinal(activate_final) {
-    if(fActivationFunction == Activation::Invalid) {
-        throw std::runtime_error("TMVA SOFIE GNN doesn't currently supports the provided activation function for " + fFuncName + " update.");
-    }
-
-    // assuming all the linear layers has a kernel and a bias initialized tensors
-    if(fActivateFinal) {
-        function_block->AddOutputTensorNameList({fFuncName+"Relu"+std::to_string(fNumLayers)});
-    } else {
-        function_block->AddOutputTensorNameList({fFuncName+"Gemm"+std::to_string(fNumLayers)});
-    }
+    RFunction_Update(target, gType), fNumLayers(numLayers), fActivationFunction(activation_function), fActivateFinal(activate_final)
+{
+   // assuming all the linear layers has a kernel and a bias initialized tensors
+   if (fActivateFinal) {
+      if (fActivationFunction == Activation::Invalid) {
+         throw std::runtime_error("TMVA SOFIE GNN doesn't currently supports the provided activation function for " +
+                                  fFuncName + " update.");
+      }
+      function_block->AddOutputTensorNameList({fFuncName + "Relu" + std::to_string(fNumLayers)});
+   } else {
+      function_block->AddOutputTensorNameList({fFuncName + "Gemm" + std::to_string(fNumLayers)});
+   }
 }
 
 void RFunction_MLP::Initialize() {
@@ -40,7 +41,8 @@ void RFunction_MLP::Initialize() {
 
     std::unique_ptr<ROperator> op_gemm;
     for(int i=0; i<fNumLayers-1; ++i) {
-        op_gemm.reset(new ROperator_Gemm<float>(1.0,1.0,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors[i]),UTILITY::Clean_name(fBiasTensors[i]),fFuncName+"Gemm"+std::to_string(i)));
+        double beta = (fBiasTensors[i].empty()) ? 0. : 1.;
+        op_gemm.reset(new ROperator_Gemm<float>(1.0,beta,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors[i]),UTILITY::Clean_name(fBiasTensors[i]),fFuncName+"Gemm"+std::to_string(i)));
         function_block->AddOperator(std::move(op_gemm));
         fGemmInput = fFuncName+"Gemm"+i;
         if (fActivationFunction == Activation::RELU) {
@@ -51,8 +53,8 @@ void RFunction_MLP::Initialize() {
 
         }
     }
-
-    op_gemm.reset(new ROperator_Gemm<float>(1.0,1.0,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors.back()),UTILITY::Clean_name(fBiasTensors.back()),fFuncName+"Gemm"+std::to_string(fNumLayers)));
+    double beta = (fBiasTensors.back().empty()) ? 0. : 1.;
+    op_gemm.reset(new ROperator_Gemm<float>(1.0,beta,0,0,fGemmInput,UTILITY::Clean_name(fKernelTensors.back()),UTILITY::Clean_name(fBiasTensors.back()),fFuncName+"Gemm"+std::to_string(fNumLayers)));
     function_block->AddOperator(std::move(op_gemm));
     if(fActivateFinal) {
         if (fActivationFunction == Activation::RELU) {

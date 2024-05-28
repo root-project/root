@@ -20,8 +20,8 @@ class TGLLightSet;
 class TGLLightSetSubEditor : public TGVerticalFrame
 {
 private:
-   TGLLightSetSubEditor(const TGLLightSetSubEditor&);            // Not implemented
-   TGLLightSetSubEditor& operator=(const TGLLightSetSubEditor&); // Not implemented
+   TGLLightSetSubEditor(const TGLLightSetSubEditor&) = delete;
+   TGLLightSetSubEditor& operator=(const TGLLightSetSubEditor&) = delete;
 
 protected:
    TGLLightSet      *fM;
@@ -54,8 +54,8 @@ public:
 class TGLLightSetEditor : public TGedFrame
 {
 private:
-   TGLLightSetEditor(const TGLLightSetEditor&);            // Not implemented
-   TGLLightSetEditor& operator=(const TGLLightSetEditor&); // Not implemented
+   TGLLightSetEditor(const TGLLightSetEditor&) = delete;
+   TGLLightSetEditor& operator=(const TGLLightSetEditor&) = delete;
 
 protected:
    TGLLightSet          *fM;  // fModel dynamic-casted to TGLLightSetEditor

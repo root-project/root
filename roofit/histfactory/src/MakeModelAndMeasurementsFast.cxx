@@ -189,7 +189,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       }
 
       // Get the Parameter of Interest as a RooRealVar
-      RooRealVar* poi = dynamic_cast<RooRealVar*>( ws_single->var(measurement.GetPOI()));
+      RooRealVar* poi = dynamic_cast<RooRealVar*>(ws_single->var(measurement.GetPOI()));
 
       // do fit unless exportOnly requested
       if(! measurement.GetExportOnly()){
@@ -225,7 +225,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
     HistoToWorkspaceFactoryFast::ConfigureWorkspaceForMeasurement("simPdf", ws.get(), measurement);
 
     // Get the Parameter of interest as a RooRealVar
-    RooRealVar* poi = dynamic_cast<RooRealVar*>( ws->var(measurement.GetPOI()));
+    RooRealVar* poi = dynamic_cast<RooRealVar*>(ws->var(measurement.GetPOI()));
 
     {
       std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
@@ -263,7 +263,7 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
 
   msgSvc.getStream(1).addTopic(RooFit::ObjectHandling);
 
-  return RooFit::Detail::owningPtr(std::move(ws));
+  return RooFit::makeOwningPtr(std::move(ws));
 }
 
 
@@ -412,7 +412,7 @@ void RooStats::HistFactory::FitModel(RooWorkspace * combined, std::string data_n
    using namespace RooFit;
 
     cxcoutIHF << "In Fit Model" << std::endl;
-    ModelConfig * combined_config = (ModelConfig *) combined->obj("ModelConfig");
+    ModelConfig * combined_config = static_cast<ModelConfig *>(combined->obj("ModelConfig"));
     if(!combined_config){
       cxcoutEHF << "no model config " << "ModelConfig" << " exiting" << std::endl;
       return;

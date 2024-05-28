@@ -11,19 +11,22 @@
 ## \author Anirudh Dagar <anirudhdagar6@gmail.com> - IIT, Roorkee
 
 
-from ROOT import TMVA, TFile, TTree, TCut, gROOT
-from os.path import isfile
-
+# PyTorch has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
 import torch
 from torch import nn
+
+from ROOT import TMVA, TFile, TTree, TCut, gROOT
+from os.path import isfile
 
 
 # Setup TMVA
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
-factory = TMVA.Factory('TMVAClassification', output,
+# create factory without output file since it is not needed
+factory = TMVA.Factory('TMVAClassification',
     '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=multiclass')
 
 

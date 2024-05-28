@@ -17,13 +17,17 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDF/Utils.hxx"
 
 #include <functional>
 #include <limits>
 #include <map>
 #include <memory>
+#include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // forward declarations
@@ -44,6 +48,8 @@ std::vector<std::string> GetBranchNames(TTree &t, bool allowDuplicates = true);
 class GraphNode;
 class RActionBase;
 class RVariationBase;
+class RDefinesWithReaders;
+class RVariationsWithReaders;
 
 namespace GraphDrawing {
 class GraphCreatorHelper;
@@ -176,13 +182,26 @@ class RLoopManager : public RNodeBase {
    void UpdateSampleInfo(unsigned int slot, const std::pair<ULong64_t, ULong64_t> &range);
    void UpdateSampleInfo(unsigned int slot, TTreeReader &r);
 
+   ROOT::Internal::RDF::RStringCache fCachedColNames;
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>>
+      fUniqueDefinesWithReaders;
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>>
+      fUniqueVariationsWithReaders;
+
 public:
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
+   RLoopManager(std::unique_ptr<TTree> tree, const ColumnNames_t &defaultBranches);
    RLoopManager(ULong64_t nEmptyEntries);
    RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches);
    RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec);
+
+   // Rule of five
+
    RLoopManager(const RLoopManager &) = delete;
    RLoopManager &operator=(const RLoopManager &) = delete;
+   RLoopManager(RLoopManager &&) = delete;
+   RLoopManager &operator=(RLoopManager &&) = delete;
+   ~RLoopManager() = default;
 
    void JitDeclarations();
    void Jit();
@@ -242,10 +261,86 @@ public:
 
    void SetEmptyEntryRange(std::pair<ULong64_t, ULong64_t> &&newRange);
    void ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec);
+
+   ROOT::Internal::RDF::RStringCache &GetColumnNamesCache() { return fCachedColNames; }
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RDefinesWithReaders>>> &
+   GetUniqueDefinesWithReaders()
+   {
+      return fUniqueDefinesWithReaders;
+   }
+   std::set<std::pair<std::string_view, std::unique_ptr<ROOT::Internal::RDF::RVariationsWithReaders>>> &
+   GetUniqueVariationsWithReaders()
+   {
+      return fUniqueVariationsWithReaders;
+   }
 };
 
-} // ns RDF
-} // ns Detail
+/// \brief Create an RLoopManager that reads a TChain.
+/// \param[in] datasetName Name of the TChain
+/// \param[in] fileNameGlob File name (or glob) in which the TChain is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+CreateLMFromTTree(std::string_view datasetName, std::string_view fileNameGlob,
+                  const std::vector<std::string> &defaultColumns, bool checkFile = true);
+
+/// \brief Create an RLoopManager that reads a TChain.
+/// \param[in] datasetName Name of the TChain
+/// \param[in] fileNameGlobs List of file names (potentially globs).
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
+CreateLMFromTTree(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
+                  const std::vector<std::string> &defaultColumns, bool checkFile = true);
+
+#ifdef R__HAS_ROOT7
+/// \brief Create an RLoopManager that reads an RNTuple.
+/// \param[in] datasetName Name of the RNTuple
+/// \param[in] fileNameGlob File name (or glob) in which the RNTuple is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromRNTuple(std::string_view datasetName,
+                                                                     std::string_view fileNameGlob,
+                                                                     const std::vector<std::string> &defaultColumns);
+
+/// \brief Create an RLoopManager that reads multiple RNTuples chained vertically.
+/// \param[in] datasetName Name of the RNTuple
+/// \param[in] fileNameGlobs List of file names (potentially globs).
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \return the RLoopManager instance.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromRNTuple(std::string_view datasetName,
+                                                                     const std::vector<std::string> &fileNameGlobs,
+                                                                     const std::vector<std::string> &defaultColumns);
+
+/// \brief Create an RLoopManager opening a file and checking the data format of the dataset.
+/// \param[in] datasetName Name of the dataset in the file.
+/// \param[in] fileNameGlob File name (or glob) in which the dataset is stored.
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \throws std::invalid_argument if the file could not be opened.
+/// \return an RLoopManager of the appropriate data source.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromFile(std::string_view datasetName,
+                                                                  std::string_view fileNameGlob,
+                                                                  const std::vector<std::string> &defaultColumns);
+
+/// \brief Create an RLoopManager that reads many files. The first is opened to infer the data source type.
+/// \param[in] datasetName Name of the dataset.
+/// \param[in] fileNameGlobs List of file names (potentially globs).
+/// \param[in] defaultColumns List of default columns, see
+/// \ref https://root.cern/doc/master/classROOT_1_1RDataFrame.html#default-branches "Default column lists"
+/// \throws std::invalid_argument if the file could not be opened.
+/// \return an RLoopManager of the appropriate data source.
+std::shared_ptr<ROOT::Detail::RDF::RLoopManager> CreateLMFromFile(std::string_view datasetName,
+                                                                  const std::vector<std::string> &fileNameGlobs,
+                                                                  const std::vector<std::string> &defaultColumns);
+#endif
+
+} // namespace RDF
+} // namespace Detail
 } // namespace ROOT
 
 #endif

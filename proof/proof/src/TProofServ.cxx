@@ -43,8 +43,6 @@ master server.
 #include <exception>
 #include <new>
 
-using namespace std;
-
 #if (defined(__FreeBSD__) && (__FreeBSD__ < 4)) || \
     (defined(__APPLE__) && (!defined(MAC_OS_X_VERSION_10_3) || \
      (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3)))
@@ -3079,7 +3077,6 @@ Int_t TProofServ::SetupCommon()
       Info("SetupCommon", "data directory set to %s", fDataDir.Data());
 
    // Check and apply possible options
-   // (see http://root.cern.ch/drupal/content/configuration-reference-guide#datadir)
    TString dataDirOpts = gEnv->GetValue("ProofServ.DataDirOpts","");
    if (!dataDirOpts.IsNull()) {
       // Do they apply to this server type

@@ -47,7 +47,7 @@ public:
 
    std::string GetUrl() override
    {
-      return "../"s + fCanvas->GetWindowAddr() + "/"s;
+      return fCanvas->GetWindowUrl(false);
    }
 
    std::string GetTitle() override

@@ -15,7 +15,6 @@
 //*-*   We need the second table since CINT doesn't understand the "define" pre-processor command
 
 
-#ifndef __CINT__
 #ifndef GLConstants
 
 #define GLConstants1(abc_prefix) \
@@ -211,6 +210,5 @@ enum EG3D2GLmode {
                   ,kVIEWPORT,         kZOOM_X,          kZOOM_Y
                   ,kSMOOTH,           kFLAT
                  };
-#endif
 
 #endif

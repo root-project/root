@@ -62,6 +62,9 @@
 #include <shlobj.h>
 #include <conio.h>
 #include <time.h>
+#include <bcrypt.h>
+#include <chrono>
+#include <thread>
 
 #if defined (_MSC_VER) && (_MSC_VER >= 1400)
    #include <intrin.h>
@@ -1129,6 +1132,7 @@ Bool_t TWinNTSystem::Init()
       if (buf[0]) AddDynamicPath(buf);
    }
    delete [] buf;
+   std::this_thread::sleep_for(std::chrono::duration<double, std::nano>(10));
    SetConsoleWindowName();
    fGroupsInitDone = kFALSE;
 
@@ -1259,6 +1263,17 @@ const char *TWinNTSystem::GetError()
       return error_msg;
    }
    return sys_errlist[err];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return cryptographic random number
+/// Fill provided buffer with random values
+/// Returns number of bytes written to buffer or -1 in case of error
+
+Int_t TWinNTSystem::GetCryptoRandom(void *buf, Int_t len)
+{
+   auto res = BCryptGenRandom((BCRYPT_ALG_HANDLE) NULL, (PUCHAR) buf, (ULONG) len, BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+   return !res ? len : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2256,20 +2271,44 @@ const char *TWinNTSystem::TempDirectory() const
 /// Create a secure temporary file by appending a unique
 /// 6 letter string to base. The file will be created in
 /// a standard (system) directory or in the directory
-/// provided in dir. The full filename is returned in base
+/// provided in dir. Optionally one can provide suffix
+/// append to the final name - like extension ".txt" or ".html".
+/// The full filename is returned in base
 /// and a filepointer is returned for safely writing to the file
 /// (this avoids certain security problems). Returns 0 in case
 /// of error.
 
-FILE *TWinNTSystem::TempFileName(TString &base, const char *dir)
+FILE *TWinNTSystem::TempFileName(TString &base, const char *dir, const char *suffix)
 {
    char tmpName[MAX_PATH];
 
-   ::GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
-   base = tmpName;
-   FILE *fp = fopen(tmpName, "w+");
+   auto res = ::GetTempFileName(dir ? dir : TempDirectory(), base.Data(), 0, tmpName);
+   if (res == 0) {
+      ::SysError("TempFileName", "Fail to generate temporary file name");
+      return nullptr;
+   }
 
-   if (!fp) ::SysError("TempFileName", "error opening %s", tmpName);
+   base = tmpName;
+   if (suffix && *suffix) {
+      base.Append(suffix);
+
+      if (!AccessPathName(base, kFileExists)) {
+         ::SysError("TempFileName", "Temporary file %s already exists", base.Data());
+         Unlink(tmpName);
+         return nullptr;
+      }
+
+      auto res2 = Rename(tmpName, base.Data());
+      if (res2 != 0) {
+         ::SysError("TempFileName", "Fail to rename temporary file to %s", base.Data());
+         Unlink(tmpName);
+         return nullptr;
+      }
+   }
+
+   FILE *fp = fopen(base.Data(), "w+");
+
+   if (!fp) ::SysError("TempFileName", "error opening %s", base.Data());
 
    return fp;
 }
@@ -4543,7 +4582,7 @@ TTime TWinNTSystem::Now()
 
 void TWinNTSystem::Sleep(UInt_t milliSec)
 {
-   ::Sleep(milliSec);
+   std::this_thread::sleep_for(std::chrono::milliseconds(milliSec));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

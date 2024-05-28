@@ -33,10 +33,9 @@ and it has a protected version of getVal()
 #include "RooCategory.h"
 #include "RooMsgService.h"
 
-using namespace std;
+using std::ostream, std::istream, std::endl;
 
 ClassImp(RooAbsHiddenReal);
-;
 
 RooCategory* RooAbsHiddenReal::_dummyBlindState = nullptr;
 
@@ -71,16 +70,6 @@ RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* na
   _state("state",this,other._state)
 {
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsHiddenReal::~RooAbsHiddenReal()
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

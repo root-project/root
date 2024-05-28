@@ -8,6 +8,7 @@
 #include <RooFitResult.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
+#include <RooMinimizer.h>
 #include <RooProdPdf.h>
 #include <RooRandom.h>
 #include <RooRealVar.h>
@@ -18,50 +19,6 @@
 #include "gtest_wrapper.h"
 
 #include <memory>
-
-/// GitHub issue #8307.
-/// A likelihood with a model wrapped in a RooSimultaneous in one category
-/// should give the same results as the likelihood with the model directly.
-TEST(RooSimultaneous, SingleChannelCrossCheck)
-{
-   using namespace RooFit;
-
-   // silence log output
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   RooWorkspace ws;
-   ws.factory("Gaussian::gauss1(x[0, 10], mean[1., 0., 10.], width[1, 0.1, 10])");
-   ws.factory("AddPdf::model({gauss1}, {nsig[500, 100, 1000]})");
-   ws.factory("Gaussian::fconstraint(2.0, mean, 0.2)");
-   ws.factory("ProdPdf::modelConstrained({model, fconstraint})");
-
-   RooRealVar &x = *ws.var("x");
-   RooAbsPdf &model = *ws.pdf("model");
-   RooAbsPdf &modelConstrained = *ws.pdf("modelConstrained");
-
-   RooCategory cat("cat", "cat");
-   cat.defineType("physics");
-
-   RooSimultaneous modelSim("modelSim", "modelSim", RooArgList{modelConstrained}, cat);
-
-   std::unique_ptr<RooDataSet> data{model.generate(x)};
-   RooDataSet combData("combData", "combData", x, Index(cat), Import("physics", *data));
-
-   using AbsRealPtr = std::unique_ptr<RooAbsReal>;
-
-   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, EvalBackend::Cpu())};
-   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, EvalBackend::Cpu())};
-
-   EXPECT_FLOAT_EQ(nllDirectBatch->getVal(), nllSimWrappedBatch->getVal()) << "Inconsistency in BatchMode";
-
-#ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, EvalBackend::Legacy())};
-   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, EvalBackend::Legacy())};
-
-   EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal()) << "Inconsistency in old RooFit";
-   EXPECT_FLOAT_EQ(nllDirect->getVal(), nllDirectBatch->getVal()) << "Old RooFit and BatchMode don't agree";
-#endif
-}
 
 /// Forum issue
 /// https://root-forum.cern.ch/t/roofit-failed-to-create-nll-for-simultaneous-pdfs-with-multiple-range-names/49363.
@@ -110,9 +67,9 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    RooRealVar x("x", "", 0, 1);
    RooRealVar rnd("rnd", "", 0, 1);
-   RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
-   catThr.addThreshold(1. / 3, "v0", 0);
-   catThr.addThreshold(2. / 3, "v1", 1);
+   RooThresholdCategory catThreshold("cat", "", rnd, "v2", 2);
+   catThreshold.addThreshold(1. / 3, "v0", 0);
+   catThreshold.addThreshold(2. / 3, "v1", 1);
 
    RooRealVar m0("m0", "", 0.5, 0, 1);
    RooRealVar m1("m1", "", 0.5, 0, 1);
@@ -122,7 +79,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
 
    std::unique_ptr<RooDataSet> ds{pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100))};
-   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
+   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThreshold));
 
    RooSimultaneous sim("sim", "", *cat);
    sim.addPdf(g0, "v0");
@@ -229,6 +186,65 @@ private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
+/// GitHub issue #8307.
+/// A likelihood with a model wrapped in a RooSimultaneous in one category
+/// should give the same results as the likelihood with the model directly. We
+/// also test that things go well if you wrap the simultaneous NLL again in
+/// another class, which can happen in user frameworks.
+TEST_P(TestStatisticTest, RooSimultaneousSingleChannelCrossCheck)
+{
+   using namespace RooFit;
+
+   // silence log output
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooWorkspace ws;
+   ws.factory("Gaussian::gauss1(x[0, 10], mean[1., 0., 10.], width[1, 0.1, 10])");
+   ws.factory("AddPdf::model({gauss1}, {nsig[500, 100, 1000]})");
+   ws.factory("Gaussian::fconstraint(2.0, mean, 0.2)");
+   ws.factory("ProdPdf::modelConstrained({model, fconstraint})");
+
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
+   RooAbsPdf &modelConstrained = *ws.pdf("modelConstrained");
+
+   RooCategory cat("cat", "cat");
+   cat.defineType("physics");
+
+   RooSimultaneous modelSim("modelSim", "modelSim", RooArgList{modelConstrained}, cat);
+
+   std::unique_ptr<RooDataSet> data{model.generate(x)};
+
+   RooArgSet params;
+   RooArgSet initialParams;
+   modelConstrained.getParameters(data->get(), params);
+   params.snapshot(initialParams);
+
+   RooDataSet combData("combData", "combData", x, Index(cat), Import("physics", *data));
+
+   using AbsRealPtr = std::unique_ptr<RooAbsReal>;
+
+   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, _evalBackend)};
+   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, _evalBackend)};
+   RooAddition nllAdditionWrapped{"nll_wrapped_cpu", "nll_wrapped_cpu", {*nllSimWrapped}};
+
+   auto minimize = [&](RooAbsReal &nll) {
+      params.assign(initialParams);
+      RooMinimizer minim{nll};
+      minim.setPrintLevel(-1);
+      minim.minimize("", "");
+      return std::unique_ptr<RooFitResult>{minim.save()};
+   };
+
+   std::unique_ptr<RooFitResult> resDirect{minimize(*nllDirect)};
+   std::unique_ptr<RooFitResult> resSimWrapped{minimize(*nllSimWrapped)};
+   std::unique_ptr<RooFitResult> resAdditionWrapped{minimize(nllAdditionWrapped)};
+
+   EXPECT_TRUE(resSimWrapped->isIdentical(*resDirect)) << "Inconsistency in RooSimultaneous wrapping";
+   EXPECT_TRUE(resAdditionWrapped->isIdentical(*resDirect))
+      << "Inconsistency in RooSimultaneous + RooAddition wrapping";
+}
+
 /// Checks that the Range() command argument for fitTo can be used to select
 /// specific components from a RooSimultaneous. Covers GitHub issue #8231.
 TEST_P(TestStatisticTest, RangedCategory)
@@ -283,8 +299,7 @@ TEST_P(TestStatisticTest, RangedCategory)
    // Function to do the fit
    auto doFit = [&](RooAbsPdf &pdf, RooAbsData &dataset, const char *range = nullptr) {
       resetParameters();
-      std::unique_ptr<RooFitResult> res{
-         pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), _evalBackend)};
+      std::unique_ptr<RooFitResult> res{pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), _evalBackend)};
       resetParameters();
       return res;
    };

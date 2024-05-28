@@ -112,8 +112,8 @@ double RooVoigtian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Voigtian distribution.
-void RooVoigtian::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+void RooVoigtian::doEval(RooFit::EvalContext &ctx) const
 {
-   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Voigtian, output, nEvents,
-                            {dataMap.at(x), dataMap.at(mean), dataMap.at(width), dataMap.at(sigma)});
+   RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Voigtian, ctx.output(),
+                            {ctx.at(x), ctx.at(mean), ctx.at(width), ctx.at(sigma)});
 }

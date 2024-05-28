@@ -59,7 +59,7 @@ TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
-   ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
+   ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -90,18 +90,42 @@ TEST(Packing, Bitfield)
    }
 }
 
+TEST(Packing, HalfPrecisionFloat)
+{
+   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   float in = 3.14;
+   std::uint16_t b = 0;
+   element.Pack(&b, &in, 1);
+   EXPECT_EQ(0x4248, b); // Expected bit representation: 0b01000010 01001000
+   float out = 0.;
+   element.Unpack(&out, &b, 1);
+   EXPECT_FLOAT_EQ(3.140625, out);
+
+   float in4[] = {0.1, 0.2, 0.3, 0.4};
+   std::uint64_t b4;
+   element.Pack(&b4, &in4, 4);
+   float out4[] = {0., 0., 0., 0.};
+   element.Unpack(&out4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, out4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, out4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, out4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, out4[3]);
+}
+
 TEST(Packing, RColumnSwitch)
 {
-   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::RColumnSwitch,
-                                              ROOT::Experimental::EColumnType::kSwitch>
+   ROOT::Experimental::Internal::RColumnElement<ROOT::Experimental::RColumnSwitch,
+                                                ROOT::Experimental::EColumnType::kSwitch>
       element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
    ROOT::Experimental::RColumnSwitch s1(ClusterSize_t{0xaa}, 0x55);
-   std::uint64_t out = 0;
+   std::pair<std::uint64_t, std::uint32_t> out;
    element.Pack(&out, &s1, 1);
-   EXPECT_NE(0, out);
    ROOT::Experimental::RColumnSwitch s2;
    element.Unpack(&s2, &out, 1);
    EXPECT_EQ(0xaa, s2.GetIndex());
@@ -113,7 +137,7 @@ TYPED_TEST(PackingReal, SplitReal)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -138,7 +162,7 @@ TYPED_TEST(PackingInt, SplitInt)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -160,7 +184,7 @@ TYPED_TEST(PackingIndex, SplitIndex)
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
    using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
-   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
+   ROOT::Experimental::Internal::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element;
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
@@ -201,6 +225,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<std::uint32_t, ROOT::Experimental::EColumnType::kSplitUInt32>(*model, "uint32");
    AddField<std::uint64_t, ROOT::Experimental::EColumnType::kSplitUInt64>(*model, "uint64");
    AddField<float, ROOT::Experimental::EColumnType::kSplitReal32>(*model, "float");
+   AddField<float, ROOT::Experimental::EColumnType::kReal16>(*model, "float16");
    AddField<double, ROOT::Experimental::EColumnType::kSplitReal64>(*model, "double");
    AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>(*model, "index32");
    AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex64>(*model, "index64");
@@ -212,31 +237,33 @@ TEST(Packing, OnDiskEncoding)
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
       auto e = writer->CreateEntry();
 
-      *e->Get<std::int16_t>("int16") = 1;
-      *e->Get<std::int32_t>("int32") = 0x00010203;
-      *e->Get<std::int64_t>("int64") = 0x0001020304050607L;
-      *e->Get<std::uint16_t>("uint16") = 1;
-      *e->Get<std::uint32_t>("uint32") = 0x00010203;
-      *e->Get<std::uint64_t>("uint64") = 0x0001020304050607L;
-      *e->Get<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
-      *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
-      *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
-      *e->Get<ClusterSize_t>("index64") = 0x0706050403020100L;
-      e->Get<std::string>("str")->assign("abc");
+      *e->GetPtr<std::int16_t>("int16") = 1;
+      *e->GetPtr<std::int32_t>("int32") = 0x00010203;
+      *e->GetPtr<std::int64_t>("int64") = 0x0001020304050607L;
+      *e->GetPtr<std::uint16_t>("uint16") = 1;
+      *e->GetPtr<std::uint32_t>("uint32") = 0x00010203;
+      *e->GetPtr<std::uint64_t>("uint64") = 0x0001020304050607L;
+      *e->GetPtr<float>("float") = std::nextafterf(1.f, 2.f);   // 0 01111111 00000000000000000000001 == 0x3f800001
+      *e->GetPtr<float>("float16") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
+      *e->GetPtr<double>("double") = std::nextafter(1., 2.);    // 0x3ff0 0000 0000 0001
+      *e->GetPtr<ClusterSize_t>("index32") = 39916801;          // 0x0261 1501
+      *e->GetPtr<ClusterSize_t>("index64") = 0x0706050403020100L;
+      e->GetPtr<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
 
-      *e->Get<std::int16_t>("int16") = -3;
-      *e->Get<std::int32_t>("int32") = -0x04050607;
-      *e->Get<std::int64_t>("int64") = -0x08090a0b0c0d0e0fL;
-      *e->Get<std::uint16_t>("uint16") = 2;
-      *e->Get<std::uint32_t>("uint32") = 0x04050607;
-      *e->Get<std::uint64_t>("uint64") = 0x08090a0b0c0d0e0fL;
-      *e->Get<float>("float") = std::nextafterf(1.f, 0.f);            // 0 01111110 11111111111111111111111 = 0x3f7fffff
-      *e->Get<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
-      *e->Get<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
-      *e->Get<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
-      e->Get<std::string>("str")->assign("de");
+      *e->GetPtr<std::int16_t>("int16") = -3;
+      *e->GetPtr<std::int32_t>("int32") = -0x04050607;
+      *e->GetPtr<std::int64_t>("int64") = -0x08090a0b0c0d0e0fL;
+      *e->GetPtr<std::uint16_t>("uint16") = 2;
+      *e->GetPtr<std::uint32_t>("uint32") = 0x04050607;
+      *e->GetPtr<std::uint64_t>("uint64") = 0x08090a0b0c0d0e0fL;
+      *e->GetPtr<float>("float") = std::nextafterf(1.f, 0.f);     // 0 01111110 11111111111111111111111 = 0x3f7fffff
+      *e->GetPtr<float>("float16") = std::nextafterf(0.1f, 0.2f); // 0 01111011 10011001100110011001110 = 0x3dccccce
+      *e->GetPtr<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
+      *e->GetPtr<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
+      *e->GetPtr<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
+      e->GetPtr<std::string>("str")->assign("de");
 
       writer->Fill(*e);
    }
@@ -282,6 +309,10 @@ TEST(Packing, OnDiskEncoding)
    unsigned char expFloat[] = {0x01, 0xff, 0x00, 0xff, 0x80, 0x7f, 0x3f, 0x3f};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat, sizeof(expFloat)), 0);
 
+   source->LoadSealedPage(fnGetColumnId("float16"), RClusterIndex(0, 0), sealedPage);
+   unsigned char expFloat16[] = {0x00, 0x3c, 0x66, 0x2e};
+   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat16, sizeof(expFloat16)), 0);
+
    source->LoadSealedPage(fnGetColumnId("double"), RClusterIndex(0, 0), sealedPage);
    unsigned char expDouble[] = {0x01, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff,
                                 0x00, 0xff, 0x00, 0xff, 0xf0, 0xef, 0x3f, 0x7f};
@@ -296,10 +327,10 @@ TEST(Packing, OnDiskEncoding)
                                  0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex64, sizeof(expIndex64)), 0);
 
-   auto reader = RNTupleReader(std::move(source));
-   EXPECT_EQ(EColumnType::kIndex64, reader.GetModel()->GetField("str")->GetColumnRepresentative()[0]);
-   EXPECT_EQ(2u, reader.GetNEntries());
-   auto viewStr = reader.GetView<std::string>("str");
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentative()[0]);
+   EXPECT_EQ(2u, reader->GetNEntries());
+   auto viewStr = reader->GetView<std::string>("str");
    EXPECT_EQ(std::string("abc"), viewStr(0));
    EXPECT_EQ(std::string("de"), viewStr(1));
 }

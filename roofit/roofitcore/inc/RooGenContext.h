@@ -21,7 +21,6 @@
 
 class RooAbsPdf;
 class RooDataSet;
-class RooRealIntegral;
 class RooAcceptReject;
 class TRandom;
 class RooRealVar ;
@@ -43,12 +42,12 @@ protected:
   void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
   RooArgSet _cloneSet;    ///< Clone of all nodes of input p.d.f
-  RooAbsPdf *_pdfClone;   ///< Clone of input p.d.f
+  RooAbsPdf *_pdfClone = nullptr;   ///< Clone of input p.d.f
   RooArgSet _directVars,_uniformVars,_otherVars; ///< List of observables generated internally, randomly, and by accept/reject sampling
   Int_t _code;                                   ///< Internal generation code
   double _maxProb{0.}, _area{0.}, _norm{0.};   ///< Maximum probability, p.d.f area and normalization
   std::unique_ptr<RooAbsReal> _acceptRejectFunc; ///< Projection function to be passed to accept/reject sampler
-  RooAbsNumGenerator *_generator;     ///< MC sampling generation engine
+  RooAbsNumGenerator *_generator = nullptr;     ///< MC sampling generation engine
   RooRealVar *_maxVar ;               ///< Variable holding maximum value of p.d.f
   Int_t _updateFMaxPerEvent ;         ///< If true, maximum p.d.f value needs to be recalculated for each event
 

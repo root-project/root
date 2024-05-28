@@ -20,7 +20,7 @@
 #include "RooArgSet.h"
 #include "RooAbsData.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "TNamed.h"
 
 #include <list>

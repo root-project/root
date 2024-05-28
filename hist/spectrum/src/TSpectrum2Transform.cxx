@@ -6,7 +6,7 @@
     \brief Advanced 2-dimensional orthogonal transform functions
     \author Miroslav Morhac
 
- \legacy{TSpectrum2Transform}
+ \legacy{TSpectrum2Transform, For modeling a spectrum fitting and estimating the background one can use RooFit while for deconvolution and unfolding one can use TUnfold.}
 
  Class to carry out transforms of 2D spectra, its filtering and
  enhancement. It allows to calculate classic Fourier, Cosine, Sin,

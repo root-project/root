@@ -74,7 +74,7 @@ The following method are available from the TFormLeafInfo interface:
 TFormLeafInfo::TFormLeafInfo(TClass* classptr, Longptr_t offset,
                              TStreamerElement* element) :
      fClass(classptr),fOffset(offset),fElement(element),
-     fCounter(0), fNext(0),fMultiplicity(0)
+     fCounter(nullptr), fNext(nullptr),fMultiplicity(0)
 {
    if (fClass) fClassName = fClass->GetName();
    if (fElement) {
@@ -85,7 +85,7 @@ TFormLeafInfo::TFormLeafInfo(TClass* classptr, Longptr_t offset,
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor.
 
-TFormLeafInfo::TFormLeafInfo(const TFormLeafInfo& orig) : TObject(orig),fClass(orig.fClass),fOffset(orig.fOffset),fElement(orig.fElement),fCounter(0),fNext(0),fClassName(orig.fClassName),fElementName(orig.fElementName),fMultiplicity(orig.fMultiplicity)
+TFormLeafInfo::TFormLeafInfo(const TFormLeafInfo& orig) : TObject(orig),fClass(orig.fClass),fOffset(orig.fOffset),fElement(orig.fElement),fCounter(nullptr),fNext(nullptr),fClassName(orig.fClassName),fElementName(orig.fElementName),fMultiplicity(orig.fMultiplicity)
 {
    // Deep copy the pointers.
    if (orig.fCounter) fCounter = orig.fCounter->DeepCopy();
@@ -200,7 +200,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
       // Branch is *not* a top-level branch.
       offset = info->TStreamerInfo::GetElementOffset(id);
    }
-   char* address = 0;
+   char* address = nullptr;
    // Branch is *not* a top-level branch.
    if (branch->GetTree()->GetMakeClass()) {
       // Branch belongs to a MakeClass tree.
@@ -208,7 +208,7 @@ char* TFormLeafInfo::GetObjectAddress(TLeafElement* leaf, Int_t& instance)
    } else {
       address = (char*) branch->GetObject();
    }
-   char* thisobj = 0;
+   char* thisobj = nullptr;
    if (!address) {
       // FIXME: This makes no sense, if the branch address is not set, then object will not be set either.
       thisobj = branch->GetObject();
@@ -338,43 +338,43 @@ Int_t TFormLeafInfo::GetNdata()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if any of underlying data has a array size counter
 
-Bool_t TFormLeafInfo::HasCounter() const
+bool TFormLeafInfo::HasCounter() const
 {
-   Bool_t result = kFALSE;
+   bool result = false;
    if (fNext) result = fNext->HasCounter();
-   return fCounter!=0 || result;
+   return fCounter!=nullptr || result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the underlying data is a string
 
-Bool_t TFormLeafInfo::IsString() const
+bool TFormLeafInfo::IsString() const
 {
    if (fNext) return fNext->IsString();
-   if (!fElement) return kFALSE;
+   if (!fElement) return false;
 
    switch (fElement->GetNewType()) {
       // basic types
       case kChar_t:
          // This is new in ROOT 3.02/05
-         return kFALSE;
+         return false;
       case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
          // This is new in ROOT 3.02/05
-         return kTRUE;
+         return true;
       case TStreamerInfo::kCharStar:
-         return kTRUE;
+         return true;
       default:
-         return kFALSE;
+         return false;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the underlying data is an integral value
 
-Bool_t TFormLeafInfo::IsInteger() const
+bool TFormLeafInfo::IsInteger() const
 {
    if (fNext) return fNext->IsInteger();
-   if (!fElement) return kFALSE;
+   if (!fElement) return false;
 
    Int_t atype = fElement->GetNewType();
    if (TStreamerInfo::kOffsetL < atype &&
@@ -399,16 +399,16 @@ Bool_t TFormLeafInfo::IsInteger() const
       case TStreamerInfo::kULong:
       case TStreamerInfo::kLong64:
       case TStreamerInfo::kULong64:
-         return kTRUE;
+         return true;
       case TStreamerInfo::kCharStar:
-         return kTRUE; // For consistency with the leaf list method and proper axis setting
+         return true; // For consistency with the leaf list method and proper axis setting
       case TStreamerInfo::kFloat:
       case TStreamerInfo::kFloat16:
       case TStreamerInfo::kDouble:
       case TStreamerInfo::kDouble32:
-         return kFALSE;
+         return false;
       default:
-         return kFALSE;
+         return false;
    }
 }
 
@@ -506,14 +506,14 @@ void TFormLeafInfo::UpdateSizes(TArrayI *garr)
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfo::Update()
+bool TFormLeafInfo::Update()
 {
    if (fClass) {
       TClass * new_class = TClass::GetClass(fClassName);
       if (new_class==fClass) {
          if (fNext) fNext->Update();
          if (fCounter) fCounter->Update();
-         return kFALSE;
+         return false;
       }
       fClass = new_class;
    }
@@ -566,7 +566,7 @@ Bool_t TFormLeafInfo::Update()
    }
    if (fNext) fNext->Update();
    if (fCounter) fCounter->Update();
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -602,13 +602,13 @@ Int_t TFormLeafInfo::ReadCounterValue(char* where)
 
 void* TFormLeafInfo::GetLocalValuePointer(TLeaf *leaf, Int_t instance)
 {
-   char *thisobj = 0;
+   char *thisobj = nullptr;
    if (leaf->InheritsFrom(TLeafObject::Class()) ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
    }
-   if (!thisobj) return 0;
+   if (!thisobj) return nullptr;
    return GetLocalValuePointer(thisobj, instance);
 }
 
@@ -640,7 +640,7 @@ void* TFormLeafInfo::GetValuePointer(char *thisobj, Int_t instance)
 
 void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 {
-   if (fElement==0 || thisobj==0) return thisobj;
+   if (fElement==nullptr || thisobj==nullptr) return thisobj;
 
    switch (fElement->GetNewType()) {
       // basic types
@@ -665,7 +665,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:
-         {Bool_t *val   = (Bool_t*)(thisobj+fOffset);      return &(val[instance]);}
+         {bool *val   = (bool*)(thisobj+fOffset);      return &(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
          {Char_t *val   = (Char_t*)(thisobj+fOffset);      return &(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:
@@ -712,7 +712,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
          }
 
          // pointer to an array of basic types  array[n]
-      case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    GET_ARRAY(Bool_t)
+      case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    GET_ARRAY(bool)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    GET_ARRAY(Char_t)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   GET_ARRAY(Short_t)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     GET_ARRAY(Int_t)
@@ -779,7 +779,7 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
          {TObject *obj = (TObject*)(thisobj+fOffset);   return obj; }
 
       case kOther_t:
-      default:        return 0;
+      default:        return nullptr;
    }
 }
 
@@ -790,13 +790,13 @@ void* TFormLeafInfo::GetLocalValuePointer(char *thisobj, Int_t instance)
 template <typename T>
 T TFormLeafInfo::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
-   char *thisobj = 0;
+   char *thisobj = nullptr;
    if (leaf->InheritsFrom(TLeafObject::Class()) ) {
       thisobj = (char*)((TLeafObject*)leaf)->GetObject();
    } else {
       thisobj = GetObjectAddress((TLeafElement*)leaf, instance); // instance might be modified
    }
-   if (thisobj==0) return 0;
+   if (thisobj==nullptr) return 0;
    return ReadTypedValue<T>(thisobj,instance);
 }
 
@@ -836,7 +836,7 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
    //   return fInfo->ReadValue(thisobj+fOffset,fElement->GetNewType(),instance,1);
    switch (fElement->GetNewType()) {
          // basic types
-      case TStreamerInfo::kBool:       return (T)(*(Bool_t*)(thisobj+fOffset));
+      case TStreamerInfo::kBool:       return (T)(*(bool*)(thisobj+fOffset));
       case TStreamerInfo::kChar:       return (T)(*(Char_t*)(thisobj+fOffset));
       case TStreamerInfo::kUChar:      return (T)(*(UChar_t*)(thisobj+fOffset));
       case TStreamerInfo::kShort:      return (T)(*(Short_t*)(thisobj+fOffset));
@@ -856,7 +856,7 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
 
          // array of basic types  array[8]
       case TStreamerInfo::kOffsetL + TStreamerInfo::kBool:
-         {Bool_t *val    = (Bool_t*)(thisobj+fOffset);    return T(val[instance]);}
+         {bool *val    = (bool*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
          {Char_t *val    = (Char_t*)(thisobj+fOffset);    return T(val[instance]);}
       case TStreamerInfo::kOffsetL + TStreamerInfo::kShort:
@@ -907,7 +907,7 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
          }
 
          // pointer to an array of basic types  array[n]
-      case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    READ_ARRAY(Bool_t)
+      case TStreamerInfo::kOffsetP + TStreamerInfo::kBool:    READ_ARRAY(bool)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kChar:    READ_ARRAY(Char_t)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kShort:   READ_ARRAY(Short_t)
       case TStreamerInfo::kOffsetP + TStreamerInfo::kInt:     READ_ARRAY(Int_t)
@@ -1002,8 +1002,8 @@ void* TFormLeafInfoDirect::GetLocalValuePointer(char *thisobj, Int_t instance)
 /// Constructor.
 
 TFormLeafInfoNumerical::TFormLeafInfoNumerical(EDataType kind) :
-   TFormLeafInfo(0,0,0),
-   fKind(kind), fIsBool(kFALSE)
+   TFormLeafInfo(nullptr,0,nullptr),
+   fKind(kind), fIsBool(false)
 {
    fElement = new TStreamerElement("data","in collection", 0, fKind, "");
 }
@@ -1012,8 +1012,8 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(EDataType kind) :
 /// Construct a TFormLeafInfo for the numerical type contained in the collection.
 
 TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collection) :
-   TFormLeafInfo(0,0,0),
-   fKind(kNoType_t), fIsBool(kFALSE)
+   TFormLeafInfo(nullptr,0,nullptr),
+   fKind(kNoType_t), fIsBool(false)
 {
    if (collection) {
       fKind = (EDataType)collection->GetType();
@@ -1021,7 +1021,7 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collecti
          // Could be a bool
          if (strcmp( collection->GetCollectionClass()->GetName(), "vector<bool>") == 0
              || strncmp( collection->GetCollectionClass()->GetName(), "bitset<", strlen("bitset<") ) ==0 ) {
-            fIsBool = kTRUE;
+            fIsBool = true;
             fKind = (EDataType)18;
          }
       }
@@ -1034,7 +1034,7 @@ TFormLeafInfoNumerical::TFormLeafInfoNumerical(TVirtualCollectionProxy *collecti
 
 TFormLeafInfoNumerical::TFormLeafInfoNumerical(const TFormLeafInfoNumerical& orig) :
    TFormLeafInfo(orig),
-   fKind(orig.fKind), fIsBool(kFALSE)
+   fKind(orig.fKind), fIsBool(false)
 {
    fElement = new TStreamerElement("data","in collection", 0, fKind, "");
 }
@@ -1078,9 +1078,9 @@ TFormLeafInfoNumerical::~TFormLeafInfoNumerical()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the underlying data is a string
 
-Bool_t TFormLeafInfoNumerical::IsString() const
+bool TFormLeafInfoNumerical::IsString() const
 {
-   if (fIsBool) return kFALSE;
+   if (fIsBool) return false;
    return TFormLeafInfo::IsString();
 }
 
@@ -1089,12 +1089,12 @@ Bool_t TFormLeafInfoNumerical::IsString() const
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoNumerical::Update()
+bool TFormLeafInfoNumerical::Update()
 {
    //R__ASSERT(fNext==0);
 
    if (fCounter) return fCounter->Update();
-   return kFALSE;
+   return false;
 }
 
 namespace {
@@ -1115,7 +1115,7 @@ namespace {
 /// Constructor.
 
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Longptr_t offset) :
-   TFormLeafInfo(classptr,offset,R__GetFakeClonesElem()),fTop(kFALSE)
+   TFormLeafInfo(classptr,offset,R__GetFakeClonesElem()),fTop(false)
 {
 }
 
@@ -1123,7 +1123,7 @@ TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Longptr_t offset) :
 /// Constructor.
 
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Longptr_t offset,
-                                         Bool_t top) :
+                                         bool top) :
    TFormLeafInfo(classptr,offset,R__GetFakeClonesElem()),fTop(top)
 {
 }
@@ -1133,7 +1133,7 @@ TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Longptr_t offset,
 
 TFormLeafInfoClones::TFormLeafInfoClones(TClass* classptr, Longptr_t offset,
                                          TStreamerElement* element,
-                                         Bool_t top) :
+                                         bool top) :
    TFormLeafInfo(classptr,offset,element),fTop(top)
 {
 }
@@ -1200,7 +1200,7 @@ Int_t TFormLeafInfoClones::ReadCounterValue(char* where)
 template <typename T>
 T TFormLeafInfoClones::ReadValueImpl(char *where, Int_t instance)
 {
-   if (fNext==0) return 0;
+   if (fNext==nullptr) return 0;
    Int_t len,index,sub_instance;
    len = fNext->GetArrayLength();
    if (len) {
@@ -1254,9 +1254,9 @@ void* TFormLeafInfoClones::GetLocalValuePointer(char *where, Int_t instance)
 template <typename T>
 T TFormLeafInfoClones::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
-   if (fNext==0) return 0;
+   if (fNext==nullptr) return 0;
    Int_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+   len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
    Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
@@ -1269,7 +1269,7 @@ T TFormLeafInfoClones::GetValueImpl(TLeaf *leaf, Int_t instance)
       sub_instance = 0;
    }
    TClonesArray *clones = (TClonesArray*)GetLocalValuePointer(leaf);
-   if (clones==0) return 0;
+   if (clones==nullptr) return 0;
 
    // Note we take advantage of having only one physically variable
    // dimension:
@@ -1286,7 +1286,7 @@ void * TFormLeafInfoClones::GetValuePointer(TLeaf *leaf, Int_t instance)
    if (fNext && clones) {
       // Same as in TFormLeafInfoClones::GetValue
       Int_t len,index,sub_instance;
-      len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+      len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
       if (len) {
          index = instance / len;
          sub_instance = instance % len;
@@ -1309,7 +1309,7 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance)
    if (fNext) {
       // Same as in TFormLeafInfoClones::GetValue
       Int_t len,index,sub_instance;
-      len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+      len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
       if (len) {
          index = instance / len;
          sub_instance = instance % len;
@@ -1331,7 +1331,7 @@ void * TFormLeafInfoClones::GetValuePointer(char *where, Int_t instance)
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr, Bool_t top) :
+TFormLeafInfoCollectionObject::TFormLeafInfoCollectionObject(TClass* classptr, bool top) :
    TFormLeafInfo(classptr,0,R__GetFakeClonesElem()),fTop(top)
 {
 }
@@ -1416,7 +1416,7 @@ T TFormLeafInfoCollectionObject::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    char * obj = (char*)GetLocalValuePointer(leaf);
 
-   if (fNext==0) return 0;
+   if (fNext==nullptr) return 0;
    return fNext->ReadTypedValue<T>(obj,instance);
 }
 
@@ -1456,12 +1456,12 @@ void * TFormLeafInfoCollectionObject::GetValuePointer(char *where, Int_t instanc
 TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* classptr,
                                                  Longptr_t offset,
                                                  TStreamerElement* element,
-                                                 Bool_t top) :
+                                                 bool top) :
    TFormLeafInfo(classptr,offset,element),
    fTop(top),
-   fCollClass( 0),
-   fCollProxy( 0),
-   fLocalElement( 0)
+   fCollClass( nullptr),
+   fCollProxy( nullptr),
+   fLocalElement( nullptr)
 {
    if (element) {
       fCollClass = element->GetClass();
@@ -1483,7 +1483,7 @@ TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* classptr,
 TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* motherclassptr,
                                                  Longptr_t offset,
                                                  TClass* elementclassptr,
-                                                 Bool_t top) :
+                                                 bool top) :
    TFormLeafInfo(motherclassptr,offset,
                  new TStreamerElement("collection","in class",
                                       0,
@@ -1495,8 +1495,8 @@ TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* motherclassptr,
                                           : "Unknown")
                                       ) ),
    fTop(top),
-   fCollClass( 0),
-   fCollProxy( 0) ,
+   fCollClass( nullptr),
+   fCollProxy( nullptr) ,
    fLocalElement( fElement )
 {
    if (elementclassptr) {
@@ -1518,10 +1518,10 @@ TFormLeafInfoCollection::TFormLeafInfoCollection(TClass* motherclassptr,
 
 TFormLeafInfoCollection::TFormLeafInfoCollection() :
    TFormLeafInfo(),
-   fTop(kFALSE),
-   fCollClass( 0),
-   fCollProxy( 0),
-   fLocalElement( 0)
+   fTop(false),
+   fCollClass( nullptr),
+   fCollProxy( nullptr),
+   fLocalElement( nullptr)
 {
 }
 
@@ -1533,8 +1533,8 @@ TFormLeafInfoCollection::TFormLeafInfoCollection(const TFormLeafInfoCollection& 
    fTop( orig.fTop),
    fCollClass( orig.fCollClass ),
    fCollClassName( orig.fCollClassName ),
-   fCollProxy( orig.fCollProxy ? orig.fCollProxy->Generate() : 0 ),
-   fLocalElement( 0 ) // humm why not initialize it?
+   fCollProxy( orig.fCollProxy ? orig.fCollProxy->Generate() : nullptr ),
+   fLocalElement( nullptr ) // humm why not initialize it?
 {
 }
 
@@ -1583,17 +1583,17 @@ TFormLeafInfo* TFormLeafInfoCollection::DeepCopy() const
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoCollection::Update()
+bool TFormLeafInfoCollection::Update()
 {
-   Bool_t changed = kFALSE;
+   bool changed = false;
    TClass * new_class = TClass::GetClass(fCollClassName);
    if (new_class!=fCollClass) {
-      delete fCollProxy; fCollProxy = 0;
+      delete fCollProxy; fCollProxy = nullptr;
       fCollClass = new_class;
       if (fCollClass && fCollClass->GetCollectionProxy()) {
          fCollProxy = fCollClass->GetCollectionProxy()->Generate();
       }
-      changed = kTRUE;
+      changed = true;
    }
    return changed || TFormLeafInfo::Update();
 }
@@ -1601,9 +1601,9 @@ Bool_t TFormLeafInfoCollection::Update()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the underlying data has a array size counter
 
-Bool_t TFormLeafInfoCollection::HasCounter() const
+bool TFormLeafInfoCollection::HasCounter() const
 {
-   return fCounter!=0 || fCollProxy!=0;
+   return fCounter!=nullptr || fCollProxy!=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1616,7 +1616,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf)
    if (fCounter) { return (Int_t)fCounter->ReadValue((char*)ptr); }
 
    R__ASSERT(fCollProxy);
-   if (ptr==0) return 0;
+   if (ptr==nullptr) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
 }
@@ -1628,7 +1628,7 @@ Int_t TFormLeafInfoCollection::ReadCounterValue(char* where)
 {
    if (fCounter) { return (Int_t)fCounter->ReadValue(where); }
    R__ASSERT(fCollProxy);
-   if (where==0) return 0;
+   if (where==nullptr) return 0;
    void *ptr = GetLocalValuePointer(where,0);
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
@@ -1644,7 +1644,7 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
       return (Int_t)fCounter->ReadValue((char*)ptr);
    }
    R__ASSERT(fCollProxy);
-   if (ptr==0) return 0;
+   if (ptr==nullptr) return 0;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
 }
@@ -1656,9 +1656,9 @@ Int_t TFormLeafInfoCollection::GetCounterValue(TLeaf* leaf, Int_t instance)
 template <typename T>
 T TFormLeafInfoCollection::ReadValueImpl(char *where, Int_t instance)
 {
-   if (fNext==0) return 0;
+   if (fNext==nullptr) return 0;
    UInt_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+   len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
    Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
@@ -1719,9 +1719,9 @@ void* TFormLeafInfoCollection::GetLocalValuePointer(char *where, Int_t instance)
 template <typename T>
 T TFormLeafInfoCollection::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
-   if (fNext==0) return 0;
+   if (fNext==nullptr) return 0;
    Int_t len,index,sub_instance;
-   len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+   len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
    Int_t primary = fNext->GetPrimaryIndex();
    if (len) {
       index = instance / len;
@@ -1741,9 +1741,9 @@ T TFormLeafInfoCollection::GetValueImpl(TLeaf *leaf, Int_t instance)
    // Note we take advantage of having only one physically variable
    // dimension:
    char * obj = (char*)fCollProxy->At(index);
-   if (obj==0) return 0;
+   if (obj==nullptr) return 0;
    if (fCollProxy->HasPointers()) obj = *(char**)obj;
-   if (obj==0) return 0;
+   if (obj==nullptr) return 0;
    return fNext->ReadTypedValue<T>(obj,sub_instance);
 }
 
@@ -1792,7 +1792,7 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance)
    if (fNext) {
       // Same as in TFormLeafInfoClones::GetValue
       Int_t len,index,sub_instance;
-      len = (fNext->fElement==0)? 0 : fNext->GetArrayLength();
+      len = (fNext->fElement==nullptr)? 0 : fNext->GetArrayLength();
       if (len) {
          index = instance / len;
          sub_instance = instance % len;
@@ -1816,7 +1816,7 @@ void * TFormLeafInfoCollection::GetValuePointer(char *where, Int_t instance)
 /// Constructor.
 
 TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(TClass* classptr) :
-   TFormLeafInfo(), fCollClass(classptr), fCollProxy(0)
+   TFormLeafInfo(), fCollClass(classptr), fCollProxy(nullptr)
 {
    if (fCollClass
        && fCollClass!=TClonesArray::Class()
@@ -1832,7 +1832,7 @@ TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(TClass* classptr) :
 
 TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(
    TClass* classptr,Longptr_t offset,TStreamerElement* element) :
-   TFormLeafInfo(classptr,offset,element), fCollClass(element->GetClassPointer()), fCollProxy(0)
+   TFormLeafInfo(classptr,offset,element), fCollClass(element->GetClassPointer()), fCollProxy(nullptr)
 {
    if (fCollClass
        && fCollClass!=TClonesArray::Class()
@@ -1847,7 +1847,7 @@ TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(
 /// Constructor.
 
 TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize() :
-   TFormLeafInfo(), fCollClass(0), fCollProxy(0)
+   TFormLeafInfo(), fCollClass(nullptr), fCollProxy(nullptr)
 {
 }
 
@@ -1858,7 +1858,7 @@ TFormLeafInfoCollectionSize::TFormLeafInfoCollectionSize(
    const TFormLeafInfoCollectionSize& orig) :  TFormLeafInfo(),
       fCollClass(orig.fCollClass),
       fCollClassName(orig.fCollClassName),
-      fCollProxy(orig.fCollProxy?orig.fCollProxy->Generate():0)
+      fCollProxy(orig.fCollProxy?orig.fCollProxy->Generate():nullptr)
 {
 }
 
@@ -1904,17 +1904,17 @@ TFormLeafInfo* TFormLeafInfoCollectionSize::DeepCopy() const
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoCollectionSize::Update()
+bool TFormLeafInfoCollectionSize::Update()
 {
-   Bool_t changed = kFALSE;
+   bool changed = false;
    TClass *new_class = TClass::GetClass(fCollClassName);
    if (new_class!=fCollClass) {
-      delete fCollProxy; fCollProxy = 0;
+      delete fCollProxy; fCollProxy = nullptr;
       fCollClass = new_class;
       if (fCollClass && fCollClass->GetCollectionProxy()) {
          fCollProxy = fCollClass->GetCollectionProxy()->Generate();
       }
-      changed = kTRUE;
+      changed = true;
    }
    return changed;
 }
@@ -1925,7 +1925,7 @@ Bool_t TFormLeafInfoCollectionSize::Update()
 void *TFormLeafInfoCollectionSize::GetValuePointer(TLeaf * /* leaf */, Int_t  /* instance */)
 {
    Error("GetValuePointer","This should never be called");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1934,7 +1934,7 @@ void *TFormLeafInfoCollectionSize::GetValuePointer(TLeaf * /* leaf */, Int_t  /*
 void *TFormLeafInfoCollectionSize::GetValuePointer(char  * /* from */, Int_t  /* instance */)
 {
    Error("GetValuePointer","This should never be called");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1943,7 +1943,7 @@ void *TFormLeafInfoCollectionSize::GetValuePointer(char  * /* from */, Int_t  /*
 void *TFormLeafInfoCollectionSize::GetLocalValuePointer(TLeaf * /* leaf */, Int_t  /* instance */)
 {
    Error("GetLocalValuePointer","This should never be called");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1952,7 +1952,7 @@ void *TFormLeafInfoCollectionSize::GetLocalValuePointer(TLeaf * /* leaf */, Int_
 void *TFormLeafInfoCollectionSize::GetLocalValuePointer( char * /* from */, Int_t  /* instance */)
 {
    Error("GetLocalValuePointer","This should never be called");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1961,7 +1961,7 @@ void *TFormLeafInfoCollectionSize::GetLocalValuePointer( char * /* from */, Int_
 Double_t  TFormLeafInfoCollectionSize::ReadValue(char *where, Int_t /* instance */)
 {
    R__ASSERT(fCollProxy);
-   if (where==0) return 0;
+   if (where==nullptr) return 0;
    void *ptr = fElement ? TFormLeafInfo::GetLocalValuePointer(where) : where;
    TVirtualCollectionProxy::TPushPop helper(fCollProxy, ptr);
    return (Int_t)fCollProxy->Size();
@@ -2066,7 +2066,7 @@ T  TFormLeafInfoPointer::GetValueImpl(TLeaf *leaf, Int_t instance)
 {
    if (!fNext) return 0;
    char * where = (char*)GetLocalValuePointer(leaf,instance);
-   if (where==0) return 0;
+   if (where==nullptr) return 0;
    return fNext->ReadTypedValue<T>(where,instance);
 }
 
@@ -2083,8 +2083,8 @@ INSTANTIATE_READVAL(TFormLeafInfoPointer);
 
 TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
                                           TMethodCall *method) :
-   TFormLeafInfo(classptr,0,0),fMethod(method),
-   fResult(0), fCopyFormat(),fDeleteFormat(),fValuePointer(0),fIsByValue(kFALSE)
+   TFormLeafInfo(classptr,0,nullptr),fMethod(method),
+   fResult(0), fCopyFormat(),fDeleteFormat(),fValuePointer(nullptr),fIsByValue(false)
 {
    if (method) {
       fMethodName = method->GetMethodName();
@@ -2106,7 +2106,7 @@ TFormLeafInfoMethod::TFormLeafInfoMethod( TClass* classptr,
             fDeleteFormat += rtype;
             fDeleteFormat += "*)0x%zx";
 
-            fIsByValue = kTRUE;
+            fIsByValue = true;
          }
       }
    }
@@ -2125,11 +2125,11 @@ TFormLeafInfoMethod::TFormLeafInfoMethod(const TFormLeafInfoMethod& orig)
       fMethod = new TMethodCall();
       fMethod->Init(orig.fMethod->GetMethod());
    } else {
-      fMethod = 0;
+      fMethod = nullptr;
    }
    fCopyFormat = orig.fCopyFormat;
    fDeleteFormat = orig.fDeleteFormat;
-   fValuePointer = 0;
+   fValuePointer = nullptr;
    fIsByValue = orig.fIsByValue;
 }
 
@@ -2220,7 +2220,7 @@ TClass* TFormLeafInfoMethod::GetClass() const
 {
    if (fNext) return fNext->GetClass();
    TMethodCall::EReturnType r = fMethod->ReturnType();
-   if (r!=TMethodCall::kOther) return 0;
+   if (r!=TMethodCall::kOther) return nullptr;
 
    return ReturnTClass(fMethod);
 }
@@ -2228,18 +2228,18 @@ TClass* TFormLeafInfoMethod::GetClass() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the return value is integral.
 
-Bool_t TFormLeafInfoMethod::IsInteger() const
+bool TFormLeafInfoMethod::IsInteger() const
 {
    TMethodCall::EReturnType r = fMethod->ReturnType();
    if (r == TMethodCall::kLong) {
-      return kTRUE;
-   } else return kFALSE;
+      return true;
+   } else return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the return value is a string.
 
-Bool_t TFormLeafInfoMethod::IsString() const
+bool TFormLeafInfoMethod::IsString() const
 {
    if (fNext) return fNext->IsString();
 
@@ -2252,12 +2252,12 @@ Bool_t TFormLeafInfoMethod::IsString() const
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoMethod::Update()
+bool TFormLeafInfoMethod::Update()
 {
-   if (!TFormLeafInfo::Update()) return kFALSE;
+   if (!TFormLeafInfo::Update()) return false;
    delete fMethod;
    fMethod = new TMethodCall(fClass, fMethodName, fParams);
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2277,7 +2277,7 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
                                                 Int_t /*instance*/)
 {
    void *thisobj = from;
-   if (!thisobj) return 0;
+   if (!thisobj) return nullptr;
 
    TMethodCall::EReturnType r = fMethod->ReturnType();
    fResult = 0;
@@ -2299,17 +2299,17 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
       return &fResult;
 
    } else if (r == TMethodCall::kString) {
-      char *returntext = 0;
+      char *returntext = nullptr;
       fMethod->Execute(thisobj,&returntext);
       gInterpreter->ClearStack();
       return returntext;
 
    } else if (r == TMethodCall::kOther) {
-      char * char_result = 0;
+      char * char_result = nullptr;
       if (fIsByValue) {
          if (fValuePointer) {
             gROOT->ProcessLine(Form(fDeleteFormat.Data(),fValuePointer));
-            fValuePointer = 0;
+            fValuePointer = nullptr;
          }
       }
       fMethod->Execute(thisobj, &char_result);
@@ -2321,7 +2321,7 @@ void *TFormLeafInfoMethod::GetLocalValuePointer(char *from,
       return char_result;
 
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2347,12 +2347,12 @@ T TFormLeafInfoMethod::ReadValueImpl(char *where, Int_t instance)
       result = (T) d;
 
    } else if (r == TMethodCall::kString) {
-      char *returntext = 0;
+      char *returntext = nullptr;
       fMethod->Execute(thisobj,&returntext);
       result = T((Longptr_t) returntext);
 
    } else if (fNext) {
-      char * char_result = 0;
+      char * char_result = nullptr;
       fMethod->Execute(thisobj, &char_result);
       result = fNext->ReadTypedValue<T>(char_result,instance);
 
@@ -2379,7 +2379,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
                                                     Longptr_t offset,
                                                     TStreamerElement* element,
                                                     TFormLeafInfo* parent) :
-   TFormLeafInfo(classptr,offset,element),fNsize(0),fCounter2(0),fSumOfSizes(0),
+   TFormLeafInfo(classptr,offset,element),fNsize(0),fCounter2(nullptr),fSumOfSizes(0),
    fDim(0),fVirtDim(-1),fPrimaryIndex(-1),fSecondaryIndex(-1)
 {
    if (element && element->InheritsFrom(TStreamerBasicPointer::Class())) {
@@ -2390,7 +2390,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
       if (!parent) return;
       fCounter2 = parent->DeepCopy();
       TFormLeafInfo ** next = &(fCounter2->fNext);
-      while(*next != 0) next = &( (*next)->fNext);
+      while(*next != nullptr) next = &( (*next)->fNext);
       *next = new TFormLeafInfo(classptr,counterOffset,counter);
 
    } else Error("Constructor","Called without a proper TStreamerElement");
@@ -2400,7 +2400,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim( TClass* classptr,
 /// Constructor.
 
 TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim() :
-   TFormLeafInfo(0,0,0),fNsize(0),fCounter2(0),fSumOfSizes(0),
+   TFormLeafInfo(nullptr,0,nullptr),fNsize(0),fCounter2(nullptr),fSumOfSizes(0),
    fDim(0),fVirtDim(-1),fPrimaryIndex(-1),fSecondaryIndex(-1)
 {
 }
@@ -2412,7 +2412,7 @@ TFormLeafInfoMultiVarDim::TFormLeafInfoMultiVarDim(const TFormLeafInfoMultiVarDi
 {
    fNsize = orig.fNsize;
    orig.fSizes.Copy(fSizes);
-   fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():0;
+   fCounter2 = orig.fCounter2?orig.fCounter2->DeepCopy():nullptr;
    fSumOfSizes = orig.fSumOfSizes;
    fDim = orig.fDim;
    fVirtDim = orig.fVirtDim;
@@ -2584,9 +2584,9 @@ Int_t TFormLeafInfoMultiVarDim::GetVirtVarDim()
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoMultiVarDim::Update()
+bool TFormLeafInfoMultiVarDim::Update()
 {
-   Bool_t res = TFormLeafInfo::Update();
+   bool res = TFormLeafInfo::Update();
    if (fCounter2) fCounter2->Update();
    return res;
 }
@@ -2670,7 +2670,7 @@ TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
-   while(*next != 0) next = &( (*next)->fNext);
+   while(*next != nullptr) next = &( (*next)->fNext);
    *next = new TFormLeafInfoCollectionSize(elementclassptr);
 }
 
@@ -2688,7 +2688,7 @@ TFormLeafInfoMultiVarDimCollection::TFormLeafInfoMultiVarDimCollection(
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
-   while(*next != 0) next = &( (*next)->fNext);
+   while(*next != nullptr) next = &( (*next)->fNext);
    *next = new TFormLeafInfoCollectionSize(motherclassptr,offset,element);
 }
 
@@ -2780,7 +2780,7 @@ TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
-   while(*next != 0) next = &( (*next)->fNext);
+   while(*next != nullptr) next = &( (*next)->fNext);
    *next = new TFormLeafInfoClones(elementclassptr);
 }
 
@@ -2798,7 +2798,7 @@ TFormLeafInfoMultiVarDimClones::TFormLeafInfoMultiVarDimClones(
    fCounter = parent->DeepCopy();
    fCounter2 = parent->DeepCopy();
    TFormLeafInfo ** next = &(fCounter2->fNext);
-   while(*next != 0) next = &( (*next)->fNext);
+   while(*next != nullptr) next = &( (*next)->fNext);
    *next = new TFormLeafInfoClones(motherclassptr,offset,element);
 }
 
@@ -2871,7 +2871,7 @@ INSTANTIATE_READVAL(TFormLeafInfoMultiVarDimClones);
 /// Constructor.
 
 TFormLeafInfoCast::TFormLeafInfoCast(TClass* classptr, TClass* casted) :
-   TFormLeafInfo(classptr),fCasted(casted),fGoodCast(kTRUE)
+   TFormLeafInfo(classptr),fCasted(casted),fGoodCast(true)
 {
    if (casted) { fCastedName = casted->GetName(); }
    fMultiplicity = -1;
@@ -2949,13 +2949,13 @@ T TFormLeafInfoCast::ReadValueImpl(char *where, Int_t instance)
    // casted class
    // First assume TObject ...
    if ( fIsTObject && !((TObject*)where)->InheritsFrom(fCasted) ) {
-      fGoodCast = kFALSE;
+      fGoodCast = false;
       return 0;
    } else {
       // We know we have a TBranchElement and we need to find out the
       // real class name.
    }
-   fGoodCast = kTRUE;
+   fGoodCast = true;
    return fNext->ReadTypedValue<T>(where,instance);
 }
 
@@ -2967,7 +2967,7 @@ INSTANTIATE_READVAL(TFormLeafInfoCast);
 /// information has changed (for example when changing from the 'emulated'
 /// class to the real class.
 
-Bool_t TFormLeafInfoCast::Update()
+bool TFormLeafInfoCast::Update()
 {
    if (fCasted) {
       TClass * new_class = TClass::GetClass(fCastedName);
@@ -2988,9 +2988,9 @@ Bool_t TFormLeafInfoCast::Update()
 /// Constructor.
 
 TFormLeafInfoTTree::TFormLeafInfoTTree(TTree *tree, const char *alias, TTree *current) :
-TFormLeafInfo( TTree::Class(), 0, 0 ), fTree(tree),fCurrent(current),fAlias(alias)
+TFormLeafInfo( TTree::Class(), 0, nullptr ), fTree(tree),fCurrent(current),fAlias(alias)
 {
-   if (fCurrent==0) fCurrent = fTree->GetFriend(alias);
+   if (fCurrent==nullptr) fCurrent = fTree->GetFriend(alias);
 }
 
 TFormLeafInfoTTree::TFormLeafInfoTTree(const TFormLeafInfoTTree& orig) :
@@ -3045,7 +3045,7 @@ INSTANTIATE_READVAL(TFormLeafInfoTTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// Update after a change of file in a chain
 
-Bool_t TFormLeafInfoTTree::Update()
+bool TFormLeafInfoTTree::Update()
 {
    if (fAlias.Length() && fAlias != fTree->GetName()) {
       fCurrent = fTree->GetFriend(fAlias.Data());

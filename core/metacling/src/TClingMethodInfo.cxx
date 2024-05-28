@@ -197,14 +197,15 @@ TClingCXXRecMethIter::InstantiateTemplateWithDefaults(const clang::RedeclarableT
    SmallVector<DeducedTemplateArgument, 4> DeducedArgs;
    sema::TemplateDeductionInfo Info{SourceLocation()};
 
+   auto *FTD = const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD));
    Sema::InstantiatingTemplate Inst(
-      S, Info.getLocation(), const_cast<clang::FunctionTemplateDecl *>(llvm::dyn_cast<clang::FunctionTemplateDecl>(TD)),
+      S, Info.getLocation(), FTD,
       defaultTemplateArgs, Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution, Info);
 
    // Collect the function arguments of the templated function, substituting
    // dependent types as possible.
    TemplateArgumentList templArgList(TemplateArgumentList::OnStack, defaultTemplateArgs);
-   MultiLevelTemplateArgumentList MLTAL{templArgList};
+   MultiLevelTemplateArgumentList MLTAL{FTD, templArgList.asArray(), /*Final=*/false};
    for (const clang::ParmVarDecl *param : templatedDecl->parameters()) {
       QualType paramType = param->getOriginalType();
 

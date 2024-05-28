@@ -19,7 +19,7 @@
 \class RooLinTransBinning
 \ingroup Roofitcore
 
-RooLinTransBinning is a special binning implementation for RooLinearVar
+Special binning implementation for RooLinearVar
 that transforms the binning of the RooLinearVar input variable in the same
 way that RooLinearVar does
 **/
@@ -28,11 +28,7 @@ way that RooLinearVar does
 
 #include <stdexcept>
 
-using namespace std;
-
 ClassImp(RooLinTransBinning);
-;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -50,25 +46,10 @@ RooLinTransBinning::RooLinTransBinning(const RooAbsBinning& input, double slope,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning& other, const char* name) :
-  RooAbsBinning(name)
+RooLinTransBinning::RooLinTransBinning(const RooLinTransBinning &other, const char *name)
+   : RooAbsBinning(name), _slope(other._slope), _offset(other._offset), _input(other._input)
 {
-  _input = other._input ;
-  _slope = other._slope ;
-  _offset = other._offset ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooLinTransBinning::~RooLinTransBinning()
-{
-  if (_array) delete[] _array ;
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -85,8 +66,7 @@ double* RooLinTransBinning::array() const
 {
   const int n = numBoundaries();
   // Return array with boundary values
-  if (_array) delete[] _array ;
-  _array = new double[n] ;
+  _array.resize(n);
 
   const double* inputArray = _input->array() ;
 
@@ -100,7 +80,7 @@ double* RooLinTransBinning::array() const
     }
   }
 
-  return _array;
+  return _array.data();
 }
 
 
@@ -110,7 +90,7 @@ double* RooLinTransBinning::array() const
 
 void RooLinTransBinning::updateInput(const RooAbsBinning& input, double slope, double offset)
 {
-  _input = (RooAbsBinning*) &input ;
+  _input = const_cast<RooAbsBinning*>(&input);
   _slope = slope ;
   _offset = offset ;
 }

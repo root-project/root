@@ -22,18 +22,39 @@
 ## The difference between signal and background is in the gaussian width.
 ## The width for the background gaussian is slightly larger than the signal width by few % values
 
+import os
+import importlib.util
+
+opt = [1, 1, 1, 1, 1]
+useTMVACNN = opt[0] if len(opt) > 0  else False
+useKerasCNN = opt[1] if len(opt) > 1 else False
+useTMVADNN = opt[2] if len(opt) > 2 else False
+useTMVABDT = opt[3] if len(opt) > 3 else False
+usePyTorchCNN = opt[4] if len(opt) > 4 else False
+
+tf_spec = importlib.util.find_spec("tensorflow")
+if tf_spec is None:
+    useKerasCNN = False
+    print("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
+else:
+    import tensorflow
+
+# PyTorch has to be imported before ROOT to avoid crashes because of clashing
+# std::regexp symbols that are exported by cppyy.
+# See also: https://github.com/wlav/cppyy/issues/227
+torch_spec = importlib.util.find_spec("torch")
+if torch_spec is None:
+    usePyTorchCNN = False
+    print("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
+else:
+    import torch
+
 
 import ROOT
 
-#switch off MT in OpenMP (BLAS)
-ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
-
-
-import os
-import importlib
 
 TMVA.Tools.Instance()
 
@@ -105,37 +126,21 @@ def MakeImagesTree(n, nh, nw):
     bkg.Print()
     f.Close()
 
-hasGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
-hasCPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes"
+hasGPU = "tmva-gpu" in ROOT.gROOT.GetConfigFeatures()
+hasCPU = "tmva-cpu" in ROOT.gROOT.GetConfigFeatures()
 
 nevt = 1000    # use a larger value to get better results
-opt = [1, 1, 1, 1, 1]
-useTMVACNN = opt[0] if len(opt) > 0  else False
-useKerasCNN = opt[1] if len(opt) > 1 else False
-useTMVADNN = opt[2] if len(opt) > 2 else False
-useTMVABDT = opt[3] if len(opt) > 3 else False
-usePyTorchCNN = opt[4] if len(opt) > 4 else False
 
 if (not hasCPU and not hasGPU) :
     ROOT.Warning("TMVA_CNN_Classificaton","ROOT is not supporting tmva-cpu and tmva-gpu skip using TMVA-DNN and TMVA-CNN")
     useTMVACNN = False
     useTMVADNN = False
 
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") != "yes":
+if not "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
     useKerasCNN = False
     usePyTorchCNN = False
 else:
     TMVA.PyMethodBase.PyInitialize()
-
-tf_spec = importlib.util.find_spec("tensorflow")
-if tf_spec is None:
-    useKerasCNN = False
-    ROOT.Warning("TMVA_CNN_Classificaton","Skip using Keras since tensorflow is not installed")
-
-torch_spec = importlib.util.find_spec("torch")
-if torch_spec is None:
-    usePyTorchCNN = False
-    ROOT.Warning("TMVA_CNN_Classificaton","Skip using PyTorch since torch is not installed")
 
 if not useTMVACNN:
     ROOT.Warning(
@@ -145,15 +150,18 @@ if not useTMVACNN:
 
 writeOutputFile = True
 
-num_threads = 4  # use default threads
+num_threads = 4  # use max 4 threads
 max_epochs = 10  # maximum number of epochs used for training
 
 
 # do enable MT running
-if num_threads >= 0:
+if "imt" in ROOT.gROOT.GetConfigFeatures():
     ROOT.EnableImplicitMT(num_threads)
+    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")  # switch OFF MT in OpenBLAS
+    print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
+else:
+    print("Running in serial mode since ROOT does not support MT")
 
-print("Running with nthreads  = ", ROOT.GetThreadPoolSize())
 
 
 

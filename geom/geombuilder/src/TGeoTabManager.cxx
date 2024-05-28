@@ -60,12 +60,12 @@ TGeoTabManager::TGeoTabManager(TGedEditor *ged)
    fGedEditor = ged;
    fPad = ged->GetPad();
    fTab = ged->GetTab();
-   fVolume = 0;
-   fShapePanel = 0;
-   fMediumPanel = 0;
-   fMaterialPanel = 0;
-   fMatrixPanel = 0;
-   fVolumeTab = 0;
+   fVolume = nullptr;
+   fShapePanel = nullptr;
+   fMediumPanel = nullptr;
+   fMaterialPanel = nullptr;
+   fMatrixPanel = nullptr;
+   fVolumeTab = nullptr;
    fgEditorToMgrMap.Add(ged, this);
 }
 
@@ -202,7 +202,7 @@ void TGeoTabManager::GetEditors(TClass *cl)
       TGedEditor::SetFrameCreator(fGedEditor);
       TGedFrame *gfr = reinterpret_cast<TGedFrame *>(class2->New());
       gfr->SetModelClass(cl);
-      TGedEditor::SetFrameCreator(0);
+      TGedEditor::SetFrameCreator(nullptr);
       client->SetRoot(exroot);
       fVolumeTab->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->MapSubwindows();
@@ -216,7 +216,7 @@ void TGeoTabManager::GetEditors(TClass *cl)
 TGeoTabManager *TGeoTabManager::GetMakeTabManager(TGedEditor *ged)
 {
    if (!ged)
-      return NULL;
+      return nullptr;
    TPair *pair = (TPair *)fgEditorToMgrMap.FindObject(ged);
    if (pair) {
       return (TGeoTabManager *)pair->Value();
@@ -250,7 +250,7 @@ void TGeoTabManager::MoveFrame(TGCompositeFrame *fr, TGCompositeFrame *p)
 {
    TList *list = p->GetList();
    TIter next(list);
-   TGFrameElement *el = 0;
+   TGFrameElement *el = nullptr;
    while ((el = (TGFrameElement *)next())) {
       if (el->fFrame == fr)
          break;
@@ -295,7 +295,7 @@ void TGeoTabManager::SetTab()
 
 ClassImp(TGeoTreeDialog);
 
-TObject *TGeoTreeDialog::fgSelectedObj = 0;
+TObject *TGeoTreeDialog::fgSelectedObj = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// static; return selected object
@@ -311,7 +311,7 @@ TObject *TGeoTreeDialog::GetSelected()
 TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, UInt_t h)
    : TGTransientFrame(main, main, w, h)
 {
-   fgSelectedObj = 0;
+   fgSelectedObj = nullptr;
    fCanvas = new TGCanvas(this, 100, 200, kSunkenFrame | kDoubleBorder);
    fLT = new TGListTree(fCanvas->GetViewPort(), 100, 200);
    fLT->Associate(this);
@@ -356,7 +356,7 @@ void TGeoTreeDialog::DoSelect(TGListTreeItem *item)
 {
    static TString name;
    if (!item || !item->GetUserData()) {
-      fgSelectedObj = 0;
+      fgSelectedObj = nullptr;
       name = "Selected: -none-";
       fObjLabel->SetText(name);
       return;
@@ -394,7 +394,7 @@ void TGeoVolumeDialog::BuildListTree()
    const TGPicture *pic_fldo = gClient->GetPicture("ofolder_t.xpm");
    const TGPicture *pic_file = gClient->GetPicture("mdi_default.xpm");
    const TGPicture *pic_fileo = gClient->GetPicture("fileopen.xpm");
-   TGListTreeItem *parent_item = 0;
+   TGListTreeItem *parent_item = nullptr;
    TGeoVolume *parent_vol = gGeoManager->GetMasterVolume();
    TGeoVolume *vol;
    // Existing volume hierarchy
@@ -412,7 +412,7 @@ void TGeoVolumeDialog::BuildListTree()
          fLT->SetSelected(parent_item);
       }
    }
-   parent_item = fLT->AddItem(NULL, "Other volumes", pic_fldo, pic_fld);
+   parent_item = fLT->AddItem(nullptr, "Other volumes", pic_fldo, pic_fld);
    parent_item->SetTipText("Select a volume from the list of unconnected volumes");
    TIter next1(gGeoManager->GetListOfVolumes());
    Bool_t found = kFALSE;
@@ -517,7 +517,7 @@ void TGeoShapeDialog::BuildListTree()
    const TGPicture *pic_fld = gClient->GetPicture("folder_t.xpm");
    const TGPicture *pic_fldo = gClient->GetPicture("ofolder_t.xpm");
    const TGPicture *pic_shape;
-   TGListTreeItem *parent_item = 0;
+   TGListTreeItem *parent_item = nullptr;
    TGeoShape *shape;
    const char *shapename;
    TString fld_name;
@@ -534,9 +534,9 @@ void TGeoShapeDialog::BuildListTree()
       fld_name = shapename;  // e.g. "TGeoBBox"
       fld_name.Remove(0, 4); // remove "TGeo" part -> "BBox"
       fld_name += " Shapes";
-      parent_item = fLT->FindChildByName(NULL, fld_name.Data());
+      parent_item = fLT->FindChildByName(nullptr, fld_name.Data());
       if (!parent_item) {
-         parent_item = fLT->AddItem(NULL, fld_name.Data(), pic_fldo, pic_fld);
+         parent_item = fLT->AddItem(nullptr, fld_name.Data(), pic_fldo, pic_fld);
          parent_item->SetTipText(TString::Format("List of %s shapes", fld_name.Data()));
       }
       fLT->AddItem(parent_item, shape->GetName(), shape, pic_shape, pic_shape);
@@ -604,7 +604,7 @@ void TGeoMediumDialog::BuildListTree()
    // Existing media
    for (Int_t i = 0; i < nmed; i++) {
       med = (TGeoMedium *)gGeoManager->GetListOfMedia()->At(i);
-      fLT->AddItem(NULL, med->GetName(), med, pic_med, pic_med);
+      fLT->AddItem(nullptr, med->GetName(), med, pic_med, pic_med);
    }
 }
 
@@ -670,7 +670,7 @@ void TGeoMaterialDialog::BuildListTree()
    // Existing materials
    for (Int_t i = 0; i < nmat; i++) {
       mat = (TGeoMaterial *)gGeoManager->GetListOfMaterials()->At(i);
-      fLT->AddItem(NULL, mat->GetName(), mat, pic_mat, pic_mat);
+      fLT->AddItem(nullptr, mat->GetName(), mat, pic_mat, pic_mat);
    }
 }
 
@@ -731,7 +731,7 @@ void TGeoMatrixDialog::BuildListTree()
    const TGPicture *pic_rot = gClient->GetPicture("georotation_t.xpm");
    const TGPicture *pic_combi = gClient->GetPicture("geocombi_t.xpm");
    const TGPicture *pic;
-   TGListTreeItem *parent_item = 0;
+   TGListTreeItem *parent_item = nullptr;
    TGeoMatrix *matrix;
    Int_t nmat = gGeoManager->GetListOfMatrices()->GetEntriesFast();
    if (!nmat)
@@ -743,24 +743,24 @@ void TGeoMatrixDialog::BuildListTree()
          continue;
       if (!strcmp(matrix->IsA()->GetName(), "TGeoTranslation")) {
          pic = pic_tr;
-         parent_item = fLT->FindChildByName(NULL, "Translations");
+         parent_item = fLT->FindChildByName(nullptr, "Translations");
          if (!parent_item) {
-            parent_item = fLT->AddItem(NULL, "Translations", pic, pic);
+            parent_item = fLT->AddItem(nullptr, "Translations", pic, pic);
             parent_item->SetTipText("List of translations");
          }
       } else if (!strcmp(matrix->IsA()->GetName(), "TGeoRotation")) {
          pic = pic_rot;
-         parent_item = fLT->FindChildByName(NULL, "Rotations");
+         parent_item = fLT->FindChildByName(nullptr, "Rotations");
          if (!parent_item) {
-            parent_item = fLT->AddItem(NULL, "Rotations", pic, pic);
+            parent_item = fLT->AddItem(nullptr, "Rotations", pic, pic);
             parent_item->SetTipText("List of rotations");
          }
       } else if (!strcmp(matrix->IsA()->GetName(), "TGeoCombiTrans") ||
                  !strcmp(matrix->IsA()->GetName(), "TGeoHMatrix")) {
          pic = pic_combi;
-         parent_item = fLT->FindChildByName(NULL, "Combined");
+         parent_item = fLT->FindChildByName(nullptr, "Combined");
          if (!parent_item) {
-            parent_item = fLT->AddItem(NULL, "Combined", pic, pic);
+            parent_item = fLT->AddItem(nullptr, "Combined", pic, pic);
             parent_item->SetTipText("List of combined transformations");
          }
       } else
@@ -872,7 +872,7 @@ void TGeoTransientPanel::GetEditors(TClass *cl)
       TGedEditor::SetFrameCreator(fGedEditor);
       TGedFrame *gfr = reinterpret_cast<TGedFrame *>(class2->New());
       gfr->SetModelClass(cl);
-      TGedEditor::SetFrameCreator(0);
+      TGedEditor::SetFrameCreator(nullptr);
       client->SetRoot(exroot);
       fStyle->AddFrame(gfr, new TGLayoutHints(kLHintsTop | kLHintsExpandX, 0, 0, 2, 2));
       gfr->MapSubwindows();

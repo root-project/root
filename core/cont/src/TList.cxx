@@ -81,8 +81,6 @@ LastLink() and lnk->Prev() or by using the Before() member.
 
 #include <string>
 
-using namespace std;
-
 ClassImp(TList);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,9 +761,12 @@ TList::TObjLinkPtr_t TList::NewOptLink(TObject *obj, Option_t *opt, const TObjLi
 
 void TList::RecursiveRemove(TObject *obj)
 {
-   R__COLLECTION_WRITE_GUARD();
+   // Note, we can assume that the Collection Read lock is held, see
+   // THashList::RecursiveRemove for a more complete discussion.
+   if (!obj || (fSize == 0 && fCache.expired()))
+      return;
 
-   if (!obj) return;
+   R__COLLECTION_WRITE_GUARD();
 
    // When fCache is set and has no previous and next node, it represents
    // the node being cleared and/or deleted.
@@ -778,9 +779,6 @@ void TList::RecursiveRemove(TObject *obj)
          }
       }
    }
-
-   if (!fFirst.get())
-      return;
 
    auto lnk  = fFirst;
    decltype(lnk) next;
@@ -1205,7 +1203,7 @@ void TList::Streamer(TBuffer &b)
          TObject::Streamer(b);
          fName.Streamer(b);
          b >> nobjects;
-         string readOption;
+         std::string readOption;
          for (Int_t i = 0; i < nobjects; i++) {
             b >> obj;
             b >> nch;

@@ -194,6 +194,10 @@ long TClingClassInfo::ClassProperty() const
    if (CRD->isPolymorphic()) {
       property |= kClassHasVirtual;
    }
+   if (CRD->isAggregate() || CRD->isPOD()) {
+      // according to the C++ standard, being a POD implies being an aggregate
+      property |= kClassIsAggregate;
+   }
    return property;
 }
 
@@ -840,6 +844,8 @@ EDataType TClingClassInfo::GetUnderlyingType() const
    if (auto ED = llvm::dyn_cast<EnumDecl>(GetDecl())) {
       R__LOCKGUARD(gInterpreterMutex);
       auto Ty = ED->getIntegerType().getTypePtrOrNull();
+      if (Ty)
+         Ty = Ty->getUnqualifiedDesugaredType();
       if (auto BTy = llvm::dyn_cast_or_null<BuiltinType>(Ty)) {
          switch (BTy->getKind()) {
          case BuiltinType::Bool:

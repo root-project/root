@@ -9,7 +9,7 @@
 #include <exception>
 #include <memory>
 
-using namespace std;
+using std::runtime_error, std::unique_ptr, std::shared_ptr;
 
 namespace TMVA {
 

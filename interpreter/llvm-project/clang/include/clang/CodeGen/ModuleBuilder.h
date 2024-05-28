@@ -14,6 +14,7 @@
 #define LLVM_CLANG_CODEGEN_MODULEBUILDER_H
 
 #include "clang/AST/ASTConsumer.h"
+#include "clang/Basic/LLVM.h"
 
 namespace llvm {
   class Constant;
@@ -22,6 +23,10 @@ namespace llvm {
   class Module;
   class StringRef;
   class raw_ostream;
+
+  namespace vfs {
+  class FileSystem;
+  }
 }
 
 namespace clang {
@@ -76,6 +81,10 @@ public:
   /// This may return null if there was no matching declaration.
   const Decl *GetDeclForMangledName(llvm::StringRef MangledName);
 
+  /// Given a global declaration, return a mangled name for this declaration
+  /// which has been added to this code generator via a Handle method.
+  llvm::StringRef GetMangledName(GlobalDecl GD);
+
   /// Return the LLVM address of the given global entity.
   ///
   /// \param isForDefinition If true, the caller intends to define the
@@ -92,11 +101,12 @@ public:
   /// enable codegen in interactive processing environments.
   llvm::Module* StartModule(llvm::StringRef ModuleName, llvm::LLVMContext &C);
 
-  void forgetGlobal(llvm::GlobalValue* GV);
-  void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName);
   llvm::Module* StartModule(llvm::StringRef ModuleName,
                             llvm::LLVMContext& C,
                             const CodeGenOptions& CGO);
+
+  void forgetGlobal(llvm::GlobalValue* GV);
+  void forgetDecl(llvm::StringRef MangledName);
 };
 
 /// CreateLLVMCodeGen - Create a CodeGenerator instance.
@@ -104,10 +114,11 @@ public:
 /// the allocated CodeGenerator instance.
 CodeGenerator *CreateLLVMCodeGen(DiagnosticsEngine &Diags,
                                  llvm::StringRef ModuleName,
+                                 IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS,
                                  const HeaderSearchOptions &HeaderSearchOpts,
                                  const PreprocessorOptions &PreprocessorOpts,
                                  const CodeGenOptions &CGO,
-                                 llvm::LLVMContext& C,
+                                 llvm::LLVMContext &C,
                                  CoverageSourceInfo *CoverageInfo = nullptr);
 
 } // end namespace clang

@@ -19,7 +19,7 @@
 \class RooAddGenContext
 \ingroup Roofitcore
 
-RooAddGenContext is an efficient implementation of the
+Efficient implementation of the
 generator context specific for RooAddPdf PDFs. The strategy
 of RooAddGenContext is to defer generation of each component
 to a dedicated generator context for that component and to
@@ -58,7 +58,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = std::make_unique<RooArgSet>();
   RooArgSet(model).snapshot(*_pdfSet, true);
-  _pdf = (RooAddPdf*) _pdfSet->find(model.GetName()) ;
+  _pdf = static_cast<RooAddPdf*>(_pdfSet->find(model.GetName())) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf
@@ -69,7 +69,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
       _pdf->fixAddCoefNormalization(coefNSet,false) ;
     }
 
-  _nComp = model._pdfList.getSize() ;
+  _nComp = model._pdfList.size() ;
   _coefThresh.resize(_nComp+1);
   _vars = std::make_unique<RooArgSet>();
   vars.snapshot(*_vars, false);
@@ -85,7 +85,7 @@ RooAddGenContext::RooAddGenContext(const RooAddPdf &model, const RooArgSet &vars
     _gcList.emplace_back(pdf->genContext(vars,prototype,auxProto,verbose));
   }
 
-  ((RooAddPdf*)_pdf)->getProjCache(_vars.get()) ;
+  (static_cast<RooAddPdf*>(_pdf))->getProjCache(_vars.get()) ;
   _pdf->recursiveRedirectServers(_theEvent) ;
 }
 
@@ -108,9 +108,9 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
   // Constructor. Build an array of generator contexts for each product component PDF
   _pdfSet = std::make_unique<RooArgSet>();
   RooArgSet(model).snapshot(*_pdfSet, true);
-  _pdf = (RooAbsPdf*) _pdfSet->find(model.GetName()) ;
+  _pdf = static_cast<RooAbsPdf*>(_pdfSet->find(model.GetName())) ;
 
-  _nComp = model._pdfList.getSize() ;
+  _nComp = model._pdfList.size() ;
   _coefThresh.resize(_nComp+1);
   _vars = std::make_unique<RooArgSet>();
   vars.snapshot(*_vars, false);
@@ -120,7 +120,7 @@ RooAddGenContext::RooAddGenContext(const RooAddModel &model, const RooArgSet &va
     _gcList.emplace_back(pdf->genContext(vars,prototype,auxProto,verbose));
   }
 
-  ((RooAddModel*)_pdf)->getProjCache(_vars.get()) ;
+  (static_cast<RooAddModel*>(_pdf))->getProjCache(_vars.get()) ;
   _pdf->recursiveRedirectServers(_theEvent) ;
 }
 
@@ -150,10 +150,10 @@ void RooAddGenContext::initGenerator(const RooArgSet &theEvent)
   _pdf->recursiveRedirectServers(theEvent) ;
 
   if (_isModel) {
-    RooAddModel* amod = (RooAddModel*) _pdf ;
+    RooAddModel* amod = static_cast<RooAddModel*>(_pdf) ;
     _pcache = amod->getProjCache(_vars.get()) ;
   } else {
-    RooAddPdf* apdf = (RooAddPdf*) _pdf ;
+    RooAddPdf* apdf = static_cast<RooAddPdf*>(_pdf) ;
     _pcache = apdf->getProjCache(_vars.get(),nullptr) ;
   }
 

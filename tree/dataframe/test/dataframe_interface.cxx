@@ -3,8 +3,9 @@
 
 #include "ROOT/RCsvDS.hxx"
 #include "ROOT/RDataFrame.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RTrivialDS.hxx"
+#include "ROOT/TestSupport.hxx"
 #include "TMemFile.h"
 #include "TSystem.h"
 #include "TTree.h"
@@ -18,24 +19,59 @@ using namespace ROOT::RDF;
 
 TEST(RDataFrameInterface, CreateFromCStrings)
 {
-   RDataFrame tdf("t", "file");
+   TString path_to_file{"file"};
+   // Cross-platform friendly way to generate full path to file. Modifies
+   // the TString argument in-place.
+   gSystem->PrependPathName(gSystem->pwd(), path_to_file);
+   TString expecteddiag;
+   expecteddiag.Form("file %s does not exist", path_to_file.Data());
+
+   // File does not exist, an exception is thrown at construction time.
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(RDataFrame tdf("t", "file");), "TFile::TFile", expecteddiag.Data());
 }
 
 TEST(RDataFrameInterface, CreateFromStrings)
 {
    std::string t("t"), f("file");
-   RDataFrame tdf(t, f);
+
+   TString path_to_file{"file"};
+   // Cross-platform friendly way to generate full path to file. Modifies
+   // the TString argument in-place.
+   gSystem->PrependPathName(gSystem->pwd(), path_to_file);
+   TString expecteddiag;
+   expecteddiag.Form("file %s does not exist", path_to_file.Data());
+
+   // File does not exist, an exception is thrown at construction time.
+   ROOT_EXPECT_ERROR(EXPECT_ANY_THROW(RDataFrame tdf(t, f);), "TFile::TFile", expecteddiag.Data());
 }
+
+class TreeInFileRAII {
+private:
+   std::string fPath;
+   TFile fFile;
+
+public:
+   explicit TreeInFileRAII(const std::string &path) : fPath(path), fFile(path.c_str(), "recreate")
+   {
+      TTree t("t", "t");
+      fFile.WriteObject(&t, "t");
+      fFile.Close();
+   }
+   ~TreeInFileRAII() { std::remove(fPath.c_str()); }
+};
 
 TEST(RDataFrameInterface, CreateFromContainer)
 {
-   std::string t("t");
-   std::vector<std::string> f({"f1", "f2"});
-   RDataFrame tdf(t, f);
+   std::vector<std::string> fs({"f1", "f2"});
+   TreeInFileRAII f1("f1");
+   TreeInFileRAII f2("f2");
+   RDataFrame tdf("t", fs);
 }
 
 TEST(RDataFrameInterface, CreateFromInitList)
 {
+   TreeInFileRAII f1("f1");
+   TreeInFileRAII f2("f2");
    RDataFrame tdf("t", {"f1", "f2"});
 }
 
@@ -876,4 +912,28 @@ TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
    // ensure that order of operations does not matter
    EXPECT_EQ(df.Filter("fr.x < 0 && x > 0").Count().GetValue(), 1);
    EXPECT_EQ(df.Filter("x > 0 && fr.x < 0").Count().GetValue(), 1);
+}
+
+TEST(RDataFrameInterface, PrintValueFromTree)
+{
+   TMemFile f("dataframe_PrintValueFromTree.root", "RECREATE");
+   TTree t("t", "t");
+   RDataFrame df(t);
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "A data frame built on top of the t dataset.");
+}
+
+TEST(RDataFrameInterface, PrintValueNoData)
+{
+   RDataFrame df(100);
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "An empty data frame that will create 100 entries\n");
+}
+
+TEST(RDataFrameInterface, PrintValueDataSource)
+{
+   std::unique_ptr<RDataSource> ds(new RTrivialDS(1));
+   RDataFrame df(std::move(ds));
+   auto printValue = cling::printValue(&df);
+   EXPECT_EQ(printValue, "A data frame associated to the data source \"trivial data source\"");
 }

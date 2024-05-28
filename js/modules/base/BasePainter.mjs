@@ -1,5 +1,8 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, isObject, btoa_func, getDocument, source_dir, loadScript, httpRequest } from '../core.mjs';
+import { detectFont, addCustomFont, getCustomFont, FontHandler } from './FontHandler.mjs';
+import { approximateLabelWidth, replaceSymbolsInTextNode } from './latex.mjs';
+import { getColor } from './colors.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -111,7 +114,7 @@ function floatToString(value, fmt, ret_fmt) {
 
    if (significance) {
       // when using fixed representation, one could get 0
-      if (value && (Number(sg) === 0) && (prec > 0)) {
+      if ((value !== 0) && (Number(sg) === 0) && (prec > 0)) {
          prec = 20; sg = value.toFixed(prec);
       }
 
@@ -167,7 +170,19 @@ class DrawOptions {
          this.part = this.opt.slice(pos, pos2);
          this.opt = this.opt.slice(0, pos) + this.opt.slice(pos2);
       }
-      return true;
+
+      if (postpart !== 'color')
+         return true;
+
+      this.color = this.partAsInt(1) - 1;
+      if (this.color >= 0) return true;
+      for (let col = 0; col < 8; ++col) {
+         if (getColor(col).toUpperCase() === this.part) {
+            this.color = col;
+            return true;
+         }
+      }
+      return false;
    }
 
    /** @summary Returns remaining part of found option as integer. */
@@ -712,9 +727,144 @@ function addHighlightStyle(elem, drag) {
    }
 }
 
+/** @summary Create pdf for existing SVG element
+  * @return {Promise} with produced PDF file as url string
+  * @private */
+async function svgToPDF(args, as_buffer) {
+   const nodejs = isNodeJs();
+   let _jspdf, _svg2pdf, need_symbols = false;
+
+   const pr = nodejs
+      ? import('../../scripts/jspdf.es.min.js').then(h1 => { _jspdf = h1; return import('../../scripts/svg2pdf.es.min.js'); }).then(h2 => { _svg2pdf = h2; })
+      : loadScript(source_dir + 'scripts/jspdf.umd.min.js').then(() => loadScript(source_dir + 'scripts/svg2pdf.umd.min.js')).then(() => { _jspdf = globalThis.jspdf; _svg2pdf = globalThis.svg2pdf; }),
+        restore_fonts = [], restore_dominant = [], restore_text = [],
+        node_transform = args.node.getAttribute('transform'), custom_fonts = {};
+
+   if (args.reset_tranform)
+      args.node.removeAttribute('transform');
+
+   return pr.then(() => {
+      d3_select(args.node).selectAll('g').each(function() {
+         if (this.hasAttribute('font-family')) {
+            const name = this.getAttribute('font-family');
+            if (name === 'Courier New') {
+               this.setAttribute('font-family', 'courier');
+               if (!args.can_modify) restore_fonts.push(this); // keep to restore it
+            }
+         }
+      });
+
+      d3_select(args.node).selectAll('text').each(function() {
+         if (this.hasAttribute('dominant-baseline')) {
+            this.setAttribute('dy', '.2em'); // slightly different as in plain text
+            this.removeAttribute('dominant-baseline');
+            if (!args.can_modify) restore_dominant.push(this); // keep to restore it
+         } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
+            this.setAttribute('dy', '.2em'); // better allignment in PDF
+
+         if (replaceSymbolsInTextNode(this)) {
+            need_symbols = true;
+            if (!args.can_modify) restore_text.push(this); // keep to restore it
+         }
+      });
+
+      if (nodejs) {
+         const doc = internals.nodejs_document;
+         doc.oldFunc = doc.createElementNS;
+         globalThis.document = doc;
+         globalThis.CSSStyleSheet = internals.nodejs_window.CSSStyleSheet;
+         globalThis.CSSStyleRule = internals.nodejs_window.CSSStyleRule;
+         doc.createElementNS = function(ns, kind) {
+            const res = doc.oldFunc(ns, kind);
+            res.getBBox = function() {
+               let width = 50, height = 10;
+               if (this.tagName === 'text') {
+                  // TODO: use jsDOC fonts for label width estimation
+                  const font = detectFont(this);
+                  width = approximateLabelWidth(this.textContent, font);
+                  height = font.size;
+               }
+
+               return { x: 0, y: 0, width, height };
+            };
+            return res;
+         };
+      }
+
+      // eslint-disable-next-line new-cap
+      const doc = new _jspdf.jsPDF({
+         orientation: 'landscape',
+         unit: 'px',
+         format: [args.width + 10, args.height + 10]
+      });
+
+      // add custom fonts to PDF document, only TTF format supported
+      d3_select(args.node).selectAll('style').each(function() {
+         const fh = this.$fonthandler;
+         if (!fh || custom_fonts[fh.name] || (fh.format !== 'ttf')) return;
+         const filename = fh.name.toLowerCase().replace(/\s/g, '') + '.ttf';
+         doc.addFileToVFS(filename, fh.base64);
+         doc.addFont(filename, fh.name, 'normal', 'normal', (fh.name === 'symbol') ? 'StandardEncoding' : 'Identity-H');
+         custom_fonts[fh.name] = true;
+      });
+
+      let pr2 = Promise.resolve(true);
+
+      if (need_symbols && !custom_fonts.symbol) {
+         if (!getCustomFont('symbol')) {
+            pr2 = nodejs
+              ? import('fs').then(fs => {
+                 const base64 = fs.readFileSync('../../fonts/symbol.ttf').toString('base64');
+                 console.log('reading symbol.ttf', base64.length);
+                 addCustomFont(25, 'symbol', 'ttf', base64);
+              })
+              : httpRequest(source_dir+'fonts/symbol.ttf', 'bin').then(buf => {
+               const base64 = btoa_func(buf);
+               addCustomFont(25, 'symbol', 'ttf', base64);
+            });
+         }
+
+         pr2 = pr2.then(() => {
+            const fh = getCustomFont('symbol'),
+                  handler = new FontHandler(1242, 10);
+            handler.name = 'symbol';
+            handler.base64 = fh.base64;
+            handler.addCustomFontToSvg(d3_select(args.node));
+            doc.addFileToVFS('symbol.ttf', fh.base64);
+            doc.addFont('symbol.ttf', 'symbol', 'normal', 'normal', 'StandardEncoding' /* 'WinAnsiEncoding' */);
+         });
+      }
+
+      return pr2.then(() => _svg2pdf.svg2pdf(args.node, doc, { x: 5, y: 5, width: args.width, height: args.height }))
+         .then(() => {
+            if (args.reset_tranform && !args.can_modify && node_transform)
+               args.node.setAttribute('transform', node_transform);
+
+            restore_fonts.forEach(node => node.setAttribute('font-family', 'Courier New'));
+            restore_dominant.forEach(node => {
+               node.setAttribute('dominant-baseline', 'middle');
+               node.removeAttribute('dy');
+            });
+
+            restore_text.forEach(node => { node.innerHTML = node.$originalHTML; });
+
+            const res = as_buffer ? doc.output('arraybuffer') : doc.output('dataurlstring');
+            if (nodejs) {
+               globalThis.document = undefined;
+               globalThis.CSSStyleSheet = undefined;
+               globalThis.CSSStyleRule = undefined;
+               internals.nodejs_document.createElementNS = internals.nodejs_document.oldFunc;
+               if (as_buffer) return Buffer.from(res);
+            }
+             return res;
+         });
+   });
+}
+
+
 /** @summary Create image based on SVG
   * @param {string} svg - svg code of the image
-  * @param {string} [image_format] - image format like 'png' or 'jpeg'
+  * @param {string} [image_format] - image format like 'png', 'jpeg' or 'webp'
   * @param {boolean} [as_buffer] - return Buffer object for image
   * @return {Promise} with produced image in base64 form or as Buffer (or canvas when no image_format specified)
   * @private */
@@ -722,16 +872,17 @@ async function svgToImage(svg, image_format, as_buffer) {
    if (image_format === 'svg')
       return svg;
 
-   if (!isNodeJs()) {
-      // required with df104.py/df105.py example with RCanvas
-      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-      svg = encodeURIComponent(doctype + svg);
-      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
-          const c = String.fromCharCode('0x'+p1);
-          return c === '%' ? '%25' : c;
-      });
-      svg = decodeURIComponent(svg);
-   }
+   if (image_format === 'pdf')
+      return svgToPDF(svg, as_buffer);
+
+   // required with df104.py/df105.py example with RCanvas or any special symbols in TLatex
+   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+   svg = encodeURIComponent(doctype + svg);
+   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+       const c = String.fromCharCode('0x'+p1);
+       return c === '%' ? '%25' : c;
+   });
+   svg = decodeURIComponent(svg);
 
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
@@ -773,6 +924,20 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
-export { getElementRect, getAbsPosInCanvas,
+/** @summary Convert Date object into string used preconfigured time zone
+ * @desc Time zone stored in settings.TimeZone */
+function convertDate(dt) {
+   let res = '';
+   if (settings.TimeZone && isStr(settings.TimeZone)) {
+     try {
+        res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
+     } catch (err) {
+        res = '';
+     }
+   }
+   return res || dt.toLocaleString('en-GB');
+}
+
+export { getElementRect, getAbsPosInCanvas, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

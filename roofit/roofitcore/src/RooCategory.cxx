@@ -91,7 +91,7 @@ for advanced uses of categories.
 #include <iostream>
 #include <memory>
 
-using namespace std;
+using std::endl, std::istream, std::ostream;
 
 ClassImp(RooCategory);
 
@@ -431,7 +431,8 @@ bool RooCategory::isStateInRange(const char* rangeName, const char* stateName) c
 
 void RooCategory::Streamer(TBuffer &R__b)
 {
-  UInt_t R__s, R__c;
+  UInt_t R__s;
+  UInt_t R__c;
   if (R__b.IsReading()) {
 
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);

@@ -42,6 +42,7 @@ class TStyle;
 #include "RooLinkedList.h"
 #include "RooCmdArg.h"
 #include "TQObject.h"
+#include "TMatrixDSym.h"
 
 BEGIN_XROOFIT_NAMESPACE;
 
@@ -131,7 +132,7 @@ public:
    /** @private */
    xRooNode(double value);
 
-   virtual ~xRooNode();
+   ~xRooNode() override;
 
    void SetName(const char *name) override;   // *MENU*
    void SetTitle(const char *title) override; // *MENU*
@@ -170,7 +171,7 @@ public:
          : std::vector<std::shared_ptr<xRooNode>>::const_iterator(itr)
       {
       }
-      decltype(auto) operator*() const
+      std::iterator_traits<const std::shared_ptr<xRooNode> *>::reference operator*() const
       {
          const std::shared_ptr<xRooNode> &out = std::vector<std::shared_ptr<xRooNode>>::const_iterator::operator*();
          if (out->get() && out->empty()) {
@@ -328,11 +329,11 @@ public:
 
    // following versions are for the menu in the GUI
    /** @private */
-   void _Add_(const char *name, const char *opt);                     // *MENU*
+   void _Add_(const char *name, const char *opt); // *MENU*
    /** @private */
-   xRooNode _Multiply_(const char *what) { return Multiply(what); }   // *MENU*
+   xRooNode _Multiply_(const char *what) { return Multiply(what); } // *MENU*
    /** @private */
-   void _Vary_(const char *what);                                     // *MENU*
+   void _Vary_(const char *what); // *MENU*
    /** @private */
    xRooNode _Constrain_(const char *what) { return Constrain(what); } // *MENU*
    /** @private */
@@ -348,7 +349,7 @@ public:
       operator=(obj);
       return true;
    } // populates the node's comp (creating if necessary)  from given object
-   bool SetData(const TObject &obj, const char *dataName = "obsData");
+   bool SetData(const TObject &obj, const xRooNode &data = "obsData");
 
    bool SetContent(double value);                                     // uses a RooConst
    bool SetContent(double value, const char *par, double parVal = 1); // shortcut to setting a variation content
@@ -359,10 +360,10 @@ public:
    }
    bool SetBinError(int bin, double value);
    bool SetBinContent(int bin, double value, const char *par = nullptr, double parVal = 1);
-   bool SetBinData(int bin, double value, const char *dataName = "obsData"); // only valid for pdf nodes
+   bool SetBinData(int bin, double value, const xRooNode &data = "obsData"); // only valid for pdf nodes
 
    /** @private */
-   void _SetContent_(double value);                                                      // *MENU*
+   void _SetContent_(double value); // *MENU*
    /** @private */
    void _SetBinContent_(int bin, double value, const char *par = "", double parVal = 1); // *MENU*
 
@@ -382,7 +383,7 @@ public:
 
    TAxis *GetXaxis() const;
 
-   double GetBinData(int bin, const char *dataName = "obsData");
+   double GetBinData(int bin, const xRooNode &data = "obsData");
    double GetBinContent(int bin) const { return GetBinContents(bin, bin).at(0); }
    std::vector<double> GetBinContents(int binStart = 1, int binEnd = 0) const; // default will get all bins
    double GetBinError(int bin, const xRooNode &fr = "") const;
@@ -395,7 +396,11 @@ public:
    {
       return (fBinNumber == -1) ? IntegralAndError(fr).second : GetBinError(fBinNumber, fr);
    }
-   double GetData(const char *dataName = "obsData") { return GetBinData(fBinNumber, dataName); }
+   double GetData(const xRooNode &data = "obsData") { return GetBinData(fBinNumber, data); }
+
+   // methods to access content and covariances of the CHILDREN of a node
+   std::vector<double> contents() const;
+   TMatrixDSym covariances(const xRooNode &fr = "") const;
 
    xRooNLLVar nll(const xRooNode &_data, std::initializer_list<RooCmdArg> nllOpts) const;
    xRooNLLVar nll(const xRooNode &_data, const RooLinkedList &nllOpts) const;
@@ -411,7 +416,7 @@ public:
             int seed = 0); // generate a dataset from a pdf node using given fr - if none given will use current fit
 
    /** @private */
-   void _fit_(const char *constParValues = "");                   // *MENU*
+   void _fit_(const char *constParValues = ""); // *MENU*
    /** @private */
    void _generate_(const char *name = "", bool expected = false); // *MENU*
    /** @private */
@@ -468,7 +473,7 @@ public:
    int fTimes = 1;      // when the same comp appears multiple times in a parent node, this is increased to reflect that
    int fBinNumber = -1; // used by 'bin' nodes (a node that refers to a specific bin of a parent)
    std::shared_ptr<xRooNode> fParent; //!
-   std::string fFolder = "";          // folder to put this node in when 'organising' the parent
+   std::string fFolder;               // folder to put this node in when 'organising' the parent
 
    void SetRange(const char *range, double low = std::numeric_limits<double>::quiet_NaN(),
                  double high = std::numeric_limits<double>::quiet_NaN()); // *MENU*
@@ -499,7 +504,7 @@ public:
 };
 
 namespace cling {
-std::string printValue(const xRooNode* val);
+std::string printValue(const xRooNode *val);
 }
 
 END_XROOFIT_NAMESPACE;

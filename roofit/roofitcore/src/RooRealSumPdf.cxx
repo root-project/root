@@ -59,7 +59,7 @@ to the fractions of the various functions. **This requires setting the last argu
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
+using std::list, std::endl, std::ostream;
 
 ClassImp(RooRealSumPdf);
 
@@ -69,12 +69,7 @@ bool RooRealSumPdf::_doFloorGlobal = false ;
 /// Default constructor
 /// coverity[UNINIT_CTOR]
 
-RooRealSumPdf::RooRealSumPdf() : _normIntMgr(this,10)
-{
-
-}
-
-
+RooRealSumPdf::RooRealSumPdf() : _normIntMgr(this, 10) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with name and title
@@ -84,13 +79,9 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title) :
   _normIntMgr(this,10),
   _funcList("!funcList","List of functions",this),
   _coefList("!coefList","List of coefficients",this),
-  _extended(false),
-  _doFloor(false)
+  _extended(false)
 {
-
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct p.d.f consisting of \f$ \mathrm{coef}_1 * \mathrm{func}_1 + (1-\mathrm{coef}_1) * \mathrm{func}_2 \f$.
@@ -135,11 +126,12 @@ RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
 /// \param inCoefList List of coefficients
 /// \param extended   Interpret as extended PDF (requires equal number of functions and coefficients)
 
-RooRealSumPdf::RooRealSumPdf(const char *name, const char *title,
-    const RooArgList& inFuncList, const RooArgList& inCoefList, bool extended) :
-  RooRealSumPdf(name, title)
+RooRealSumPdf::RooRealSumPdf(const char *name, const char *title, const RooArgList &inFuncList,
+                             const RooArgList &inCoefList, bool extended)
+   : RooRealSumPdf(name, title)
 {
-  _extended = extended;
+  setExtended(extended);
+
   RooRealSumPdf::initializeFuncsAndCoefs(*this, inFuncList, inCoefList, _funcList, _coefList);
 }
 
@@ -202,25 +194,11 @@ RooRealSumPdf::RooRealSumPdf(const RooRealSumPdf& other, const char* name) :
 
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRealSumPdf::~RooRealSumPdf()
-{
-
-}
-
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooAbsPdf::ExtendMode RooRealSumPdf::extendMode() const
 {
-  return (_extended && (_funcList.getSize()==_coefList.getSize())) ? CanBeExtended : CanNotBeExtended ;
+  return (_extended && (_funcList.size()==_coefList.size())) ? CanBeExtended : CanNotBeExtended ;
 }
 
 
@@ -271,7 +249,11 @@ double RooRealSumPdf::evaluate() const
 }
 
 
-void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
+void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+  std::size_t nEvents = output.size();
+
   // Do running sum of coef/func pairs, calculate lastCoef.
   for (unsigned int j = 0; j < nEvents; ++j) {
     output[j] = 0.0;
@@ -281,10 +263,10 @@ void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail:
   for (unsigned int i = 0; i < _funcList.size(); ++i) {
     const auto func = static_cast<RooAbsReal*>(&_funcList[i]);
     const auto coef = static_cast<RooAbsReal*>(i < _coefList.size() ? &_coefList[i] : nullptr);
-    const double coefVal = coef != nullptr ? dataMap.at(coef)[0] : (1. - sumCoeff);
+    const double coefVal = coef != nullptr ? ctx.at(coef)[0] : (1. - sumCoeff);
 
     if (func->isSelectedComp()) {
-      auto funcValues = dataMap.at(func);
+      auto funcValues = ctx.at(func);
       if(funcValues.size() == 1) {
         for (unsigned int j = 0; j < nEvents; ++j) {
           output[j] += funcValues[0] * coefVal;
@@ -299,7 +281,7 @@ void RooRealSumPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail:
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
       if (!_haveWarned) {
-        coutW(Eval) << "RooRealSumPdf::computeBatch(" << GetName()
+        coutW(Eval) << "RooRealSumPdf::doEval(" << GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
             << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
         _haveWarned = true;
@@ -348,13 +330,12 @@ void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbs
       std::string const &funcName = ctx.buildArg(funcList);
       std::string const &coeffName = ctx.buildArg(coefList);
       std::string const &coeffSize = std::to_string(coefList.size());
-      std::string const &className = klass->GetName();
 
       sum = ctx.getTmpVarName();
       lastCoeff = ctx.getTmpVarName();
       ctx.addToCodeBody(klass, "double " + sum + " = 0, " + lastCoeff + "= 0;\n");
 
-      std::string iterator = "i_" + className;
+      std::string iterator = "i_" + ctx.getTmpVarName();
       std::string subscriptExpr = "[" + iterator + "]";
 
       std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
@@ -498,7 +479,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
 
   // WVE needs adaptation for rangeName feature
   auto* cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1));
-  if (cache==0) { // revive the (sterilized) cache
+  if (cache==nullptr) { // revive the (sterilized) cache
     //cout << "RooRealSumPdf("<<this<<")::analyticalIntegralWN:"<<GetName()<<"("<<code<<","<<(normSet2?*normSet2:RooArgSet())<<","<<(rangeName?rangeName:"<none>") << ": reviving cache "<< endl;
     RooArgSet vars;
     caller.getParameters(nullptr, vars);
@@ -507,8 +488,8 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     RooArgSet dummy;
     Int_t code2 = caller.getAnalyticalIntegralWN(iset,dummy,&nset,rangeName);
     R__ASSERT(code==code2); // must have revived the right (sterilized) slot...
-    cache = (CacheElem*) normIntMgr.getObjByIndex(code-1) ;
-    R__ASSERT(cache!=0);
+    cache = static_cast<CacheElem*>(normIntMgr.getObjByIndex(code-1)) ;
+    R__ASSERT(cache!=nullptr);
   }
 
   double value(0) ;
@@ -526,7 +507,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     double coefVal = coef->getVal(normSet2) ;
     if (coefVal) {
       assert(func);
-      if (normSet2 ==0 || func->isSelectedComp()) {
+      if (normSet2 ==nullptr || func->isSelectedComp()) {
         assert(funcInt);
         value += funcInt->getVal()*coefVal ;
       }
@@ -542,7 +523,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
     const auto funcInt = static_cast<RooAbsReal*>(*funcIntIt);
     assert(func);
 
-    if (normSet2 ==0 || func->isSelectedComp()) {
+    if (normSet2 ==nullptr || func->isSelectedComp()) {
       assert(funcInt);
       value += funcInt->getVal()*lastCoef ;
     }
@@ -556,7 +537,7 @@ double RooRealSumPdf::analyticalIntegralWN(RooAbsReal const& caller, RooObjCache
   }
 
   double normVal(1) ;
-  if (normSet2 && normSet2->getSize()>0) {
+  if (normSet2 && !normSet2->empty()) {
     normVal = 0 ;
 
     // N funcs, N-1 coefficients

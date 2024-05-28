@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from itertools import accumulate
 from math import floor
 
-from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
+from typing import Dict, Iterable, List, Optional, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from DistRDF._graph_cache import ExecutionIdentifier
@@ -127,6 +127,23 @@ class TaskTreeEntries:
     processed_entries: int = 0
     trees_with_entries: Dict[str, int] = field(default_factory=dict)
 
+@dataclass
+class RNTupleFileRange(DataRange):
+    ntuplename: str
+    filenames: List[str] = field(default_factory=list)
+
+def split_equal_size(filenames: Iterable[str], npartitions: int):
+    """Function to split the list of filenames into exactly N chunks of approximately equal size."""
+    quotient, remainder = divmod(len(filenames), npartitions)
+    return (filenames[i*quotient+min(i, remainder):(i+1)*quotient+min(i+1, remainder)] for i in range(npartitions))
+
+def get_ntuple_ranges(ntuplename, filenames, npartitions, exec_id):
+
+    files_by_partition = split_equal_size(filenames, npartitions)
+    return [
+        RNTupleFileRange(exec_id, range_id, ntuplename, files_in_partition)
+        for range_id, files_in_partition in enumerate(files_by_partition)
+    ]
 
 def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
     """
@@ -170,28 +187,6 @@ def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
         rangeid += 1
 
     return ranges
-
-
-def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
-    """
-    Retrieve cluster boundaries and number of entries of a TTree.
-    """
-
-    with ROOT.TFile.Open(filename, "READ_WITHOUT_GLOBALREGISTRATION") as tfile:
-        ttree = tfile.Get(treename)
-
-        entries: int = ttree.GetEntriesFast()
-
-        it = ttree.GetClusterIterator(0)
-        cluster_startentry: int = it()
-        clusters: List[int] = [cluster_startentry]
-
-        while cluster_startentry < entries:
-            cluster_startentry = it()
-            clusters.append(cluster_startentry)
-
-    return clusters, entries
-
 
 def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
                           friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo],
@@ -343,7 +338,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
     # are friends, all files in the dataset are opened and their number of
     # entries are retrieved in order to ensure friend alignment.
     all_clusters_entries = (
-        get_clusters_and_entries(treename, filename)
+        ROOT.Internal.TreeUtils.GetClustersAndEntries(treename, filename)
         for treename, filename in zip(percrange.treenames, percrange.filenames)
     )
     all_clusters, all_entries = zip(*all_clusters_entries)

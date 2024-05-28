@@ -32,7 +32,6 @@ Function taken from H. Ikeda et al. NIM A441 (2000), p. 401 (Belle Collaboration
 #include "TMath.h"
 
 #include <cmath>
-using namespace std;
 
 ClassImp(RooNovosibirsk);
 
@@ -67,8 +66,8 @@ RooNovosibirsk::RooNovosibirsk(const RooNovosibirsk& other, const char *name):
 
 double RooNovosibirsk::evaluate() const
 {
-  if (TMath::Abs(tail) < 1.e-7) {
-    return TMath::Exp( -0.5 * TMath::Power( ( (x - peak) / width ), 2 ));
+  if (std::abs(tail) < 1.e-7) {
+    return std::exp( -0.5 * std::pow( ( (x - peak) / width ), 2 ));
   }
 
   double arg = 1.0 - ( x - peak ) * tail / width;
@@ -78,21 +77,21 @@ double RooNovosibirsk::evaluate() const
     return 0.0;
   }
 
-  double log = TMath::Log(arg);
+  double log = std::log(arg);
   static const double xi = 2.3548200450309494; // 2 Sqrt( Ln(4) )
 
   double width_zero = ( 2.0 / xi ) * TMath::ASinH( tail * xi * 0.5 );
   double width_zero2 = width_zero * width_zero;
   double exponent = ( -0.5 / (width_zero2) * log * log ) - ( width_zero2 * 0.5 );
 
-  return TMath::Exp(exponent) ;
+  return std::exp(exponent) ;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Novosibirsk distribution.
-void RooNovosibirsk::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooNovosibirsk::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Novosibirsk, output, nEvents,
-          {dataMap.at(x), dataMap.at(peak), dataMap.at(width), dataMap.at(tail)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::Novosibirsk, ctx.output(),
+          {ctx.at(x), ctx.at(peak), ctx.at(width), ctx.at(tail)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,11 +130,11 @@ double RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) con
 
 
     //If tail==0 the function becomes gaussian, thus we return a Gaussian integral
-    if (TMath::Abs(tail) < 1.e-7) {
+    if (std::abs(tail) < 1.e-7) {
 
       double xscale = sqrt2*width;
 
-      result = rootpiby2*width*(TMath::Erf((B-peak)/xscale)-TMath::Erf((A-peak)/xscale));
+      result = rootpiby2*width*(std::erf((B-peak)/xscale)-std::erf((A-peak)/xscale));
 
       return result;
 
@@ -159,10 +158,10 @@ double RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) con
     double term1_2 =  term1 * term1;
 
     //Calculate the error function arguments
-    double erf_termA = ( term1_2 - log4 * TMath::Log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
-    double erf_termB = ( term1_2 - log4 * TMath::Log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
+    double erf_termA = ( term1_2 - log4 * std::log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
+    double erf_termB = ( term1_2 - log4 * std::log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
 
-    result = 0.5 / tail * width * term1 * ( TMath::Erf(erf_termB) - TMath::Erf(erf_termA)) * sqpibylog2;
+    result = 0.5 / tail * width * term1 * ( std::erf(erf_termB) - std::erf(erf_termA)) * sqpibylog2;
 
     return result;
 
@@ -174,11 +173,11 @@ double RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) con
 
 
     //If tail==0 the function becomes gaussian, thus we return a Gaussian integral
-    if (TMath::Abs(tail) < 1.e-7) {
+    if (std::abs(tail) < 1.e-7) {
 
       double xscale = sqrt2*width;
 
-      result = rootpiby2*width*(TMath::Erf((B-x)/xscale)-TMath::Erf((A-x)/xscale));
+      result = rootpiby2*width*(std::erf((B-x)/xscale)-std::erf((A-x)/xscale));
 
       return result;
 
@@ -202,10 +201,10 @@ double RooNovosibirsk::analyticalIntegral(Int_t code, const char* rangeName) con
     double term1_2 =  term1 * term1;
 
     //Calculate the error function arguments
-    double erf_termA = ( term1_2 - log4 * TMath::Log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
-    double erf_termB = ( term1_2 - log4 * TMath::Log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
+    double erf_termA = ( term1_2 - log4 * std::log( log_argument_A ) ) / ( 2 * term1 * sqlog2 );
+    double erf_termB = ( term1_2 - log4 * std::log( log_argument_B ) ) / ( 2 * term1 * sqlog2 );
 
-    result = 0.5 / tail * width * term1 * ( TMath::Erf(erf_termB) - TMath::Erf(erf_termA)) * sqpibylog2;
+    result = 0.5 / tail * width * term1 * ( std::erf(erf_termB) - std::erf(erf_termA)) * sqpibylog2;
 
     return result;
 

@@ -59,7 +59,7 @@ RooLinearCombination::RooLinearCombination(const RooLinearCombination &other,
 void RooLinearCombination::printArgs(std::ostream &os) const {
   // detailed printing method
   os << "[";
-  const std::size_t n(_actualVars.getSize());
+  const std::size_t n(_actualVars.size());
   for (std::size_t i = 0; i < n; ++i) {
     const RooAbsReal *r =
         static_cast<const RooAbsReal *>(_actualVars.at(i));
@@ -78,7 +78,7 @@ RooLinearCombination::~RooLinearCombination() {
 TObject *RooLinearCombination::clone(const char *newname) const {
   // create a clone (deep copy) of this object
   RooLinearCombination *retval = new RooLinearCombination(newname);
-  const std::size_t n(_actualVars.getSize());
+  const std::size_t n(_actualVars.size());
   for (std::size_t i = 0; i < n; ++i) {
     const RooAbsReal *r =
         static_cast<const RooAbsReal *>(_actualVars.at(i));
@@ -108,7 +108,7 @@ double RooLinearCombination::evaluate() const {
 #ifdef USE_UBLAS
     RooFit::SuperFloat result;
   result.assign(0.0);
-  const std::size_t n(_actualVars.getSize());
+  const std::size_t n(_actualVars.size());
   for (std::size_t i = 0; i < n; ++i) {
       RooFit::SuperFloat tmp;
     tmp.assign(static_cast<const RooAbsReal *>(_actualVars.at(i))->getVal());
@@ -116,7 +116,7 @@ double RooLinearCombination::evaluate() const {
   }
   return result.convert_to<double>();
 #else
-  const std::size_t n(_actualVars.getSize());
+  const std::size_t n(_actualVars.size());
   std::vector<double> values(n);
   for (std::size_t i = 0; i < n; ++i) {
     values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(_actualVars.at(i))->getVal();

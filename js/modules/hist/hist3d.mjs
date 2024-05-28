@@ -1,9 +1,10 @@
-import { constants, isFunc, isStr, getDocument } from '../core.mjs';
+import { constants, isFunc, isStr, getDocument, isNodeJs } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
-         TextGeometry, Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+         Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+import { TextGeometry } from '../three_addons.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
@@ -547,7 +548,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       this.first_render_tm = 0;
       this.enable_highlight = false;
 
-      if (!this.isBatchMode() && this.webgl)
+      if (!this.isBatchMode() && this.webgl && !isNodeJs())
          create3DControl(this);
 
       return this;
@@ -571,6 +572,35 @@ function change3DCamera(orthographic) {
       create3DControl(this);
 
    this.render3D();
+}
+
+/** @summary Add 3D mesh to frame painter
+  * @private */
+function add3DMesh(mesh, painter, the_only) {
+   if (!mesh)
+      return;
+   if (!this.toplevel)
+      return console.error('3D objects are not yet created in the frame');
+   if (painter && the_only)
+      this.remove3DMeshes(painter);
+   this.toplevel.add(mesh);
+   mesh._painter = painter;
+}
+
+/** @summary Remove 3D meshed for specified painter
+  * @private */
+function remove3DMeshes(painter) {
+   if (!painter || !this.toplevel)
+      return;
+   let i = this.toplevel.children.length;
+
+   while (i > 0) {
+      const mesh = this.toplevel.children[--i];
+      if (mesh._painter === painter) {
+         this.toplevel.remove(mesh);
+         disposeThreejsObject(mesh);
+      }
+   }
 }
 
 
@@ -843,8 +873,10 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       this.z_handle.setPadName(this.getPadName());
       this.z_handle.snapid = this.snapid;
    }
+
    this.z_handle.configureAxis('zaxis', this.zmin, this.zmax, zmin, zmax, false, [grminz, grmaxz],
-                               { log: pad?.fLogz ?? 0, reverse: opts.reverse_z });
+                               { log: ((opts.use_y_for_z || (opts.ndim === 2)) ? pad?.fLogv : undefined) ?? pad?.fLogz ?? 0,
+                                  reverse: opts.reverse_z });
    this.z_handle.assignFrameMembers(this, 'z');
    this.z_handle.extractDrawAttributes(scalingSize);
 
@@ -897,7 +929,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          const text3d = createTextGeometry(this, lbl, this.x_handle.labelsFont.size);
          text3d.computeBoundingBox();
          const draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
-             draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+               draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
@@ -1426,7 +1458,7 @@ function convert3DtoPadNDC(x, y, z) {
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
+   Object.assign(fpainter, { create3DScene, add3DMesh, remove3DMeshes, render3D, resize3D, change3DCamera, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 /** @summary Draw histograms in 3D mode
@@ -1670,7 +1702,7 @@ function drawBinsLego(painter, is_v7 = false) {
          return tip;
       };
 
-      main.toplevel.add(mesh);
+      main.add3DMesh(mesh);
 
       if (num2vertices > 0) {
          const geom2 = createLegoGeom(painter, pos2, norm2),
@@ -1686,7 +1718,7 @@ function drawBinsLego(painter, is_v7 = false) {
          mesh2.baseline = mesh.baseline;
          mesh2.tip_color = mesh.tip_color;
 
-         main.toplevel.add(mesh2);
+         main.add3DMesh(mesh2);
       }
    }
 
@@ -1779,7 +1811,7 @@ function drawBinsLego(painter, is_v7 = false) {
    }
    */
 
-   main.toplevel.add(line);
+   main.add3DMesh(line);
 }
 
 /** @summary Draw TH2 histogram in error mode
@@ -1886,7 +1918,7 @@ function drawBinsError3D(painter, is_v7 = false) {
        return tip;
     };
 
-    main.toplevel.add(line);
+    main.add3DMesh(line);
 }
 
 /** @summary Draw TH2 as 3D contour plot
@@ -1919,7 +1951,7 @@ function drawBinsContour3D(painter, realz = false, is_v7 = false) {
    );
 
    const lines = createLineSegments(pnts, create3DLineMaterial(painter, is_v7 ? 'line_' : histo));
-   main.toplevel.add(lines);
+   main.add3DMesh(lines);
 }
 
 /** @summary Draw TH2 histograms in surf mode
@@ -1933,8 +1965,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 
-   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5 });
-
+   let handle = painter.prepareDraw({ rounding: false, use3d: true, extra: 1, middle: 0.5,
+                                      cutg: isFunc(painter.options?.cutg?.IsInside) ? painter.options?.cutg : null });
    if ((handle.i2 - handle.i1 < 2) || (handle.j2 - handle.j1 < 2)) return;
 
    let ilevels = null, levels = null, palette = null;
@@ -2038,7 +2070,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
       const mesh = new Mesh(geometry, material);
 
-      main.toplevel.add(mesh);
+      main.add3DMesh(mesh);
 
       mesh.painter = painter; // to let use it with context menu
    }, (isgrid, lpos) => {
@@ -2055,7 +2087,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
 
       const line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
       line.painter = painter;
-      main.toplevel.add(line);
+      main.add3DMesh(line);
    });
 
    if (painter.options.Surf === 17)
@@ -2118,7 +2150,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                    material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
                    mesh = new Mesh(geometry, material);
              mesh.painter = painter;
-             main.toplevel.add(mesh);
+             main.add3DMesh(mesh);
          }
       );
    }

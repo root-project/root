@@ -47,7 +47,8 @@ public:
     virtual void Initialize() {};
     virtual void AddLayerNormalization(int, float, size_t, const std::string&,
                                        const std::string&, const std::string&, const std::string&) {};
-    void AddInputTensors(const std::vector<std::vector<std::size_t>>& fInputShape);
+    void AddInputTensors(const std::vector<std::vector<std::size_t>>& inputShapes);
+    void AddInputTensors(const std::vector<std::vector<Dim>>& inputShapes);
     std::shared_ptr<RModel> GetFunctionBlock() {
         return function_block;
     }

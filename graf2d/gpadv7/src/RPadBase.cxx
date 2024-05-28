@@ -63,7 +63,7 @@ std::shared_ptr<RDrawable> RPadBase::FindPrimitive(const std::string &id) const
 
 std::shared_ptr<RDrawable> RPadBase::FindPrimitiveByDisplayId(const std::string &id) const
 {
-   auto p = id.find("_");
+   auto p = id.find('_');
    if (p == std::string::npos)
       return nullptr;
 
@@ -86,7 +86,7 @@ std::shared_ptr<RDrawable> RPadBase::FindPrimitiveByDisplayId(const std::string 
 
 const RPadBase *RPadBase::FindPadForPrimitiveWithDisplayId(const std::string &id) const
 {
-   auto p = id.find("_");
+   auto p = id.find('_');
    if (p == std::string::npos)
       return nullptr;
 

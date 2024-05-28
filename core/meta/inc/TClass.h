@@ -92,18 +92,17 @@ public:
    enum EStatusBits {
       kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
 
-      kClassSaved  = BIT(12),
+      /* had kClassSaved  = BIT(12), */
       kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
                               // loaded and has been unloaded from memory.
       kIsTObject = BIT(17),
       kIsForeign   = BIT(18),
-      kIsEmulation = BIT(19), // Deprecated
+      /* had kIsEmulation = BIT(19), // Deprecated */
       kStartWithTObject = BIT(20),  // see comments for IsStartingWithTObject()
       kWarned      = BIT(21),
-      kHasNameMapNode = BIT(22),
-      kHasCustomStreamerMember = BIT(23) // The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+      kHasNameMapNode = BIT(22)
    };
    enum ENewType { kRealNew = 0, kClassNew, kDummyNew };
    enum ECheckSum {
@@ -243,12 +242,15 @@ private:
    ClassConvStreamerFunc_t fConvStreamerFunc;   //Wrapper around this class custom conversion Streamer member function.
    Int_t               fSizeof;         //Sizeof the class.
 
-   // Bit field
-   Int_t fCanSplit : 3;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
+   std::atomic<Char_t> fCanSplit;          //!Indicates whether this class can be split or not. Values are -1, 0, 1, 2
 
+   // Bit field
    /// Indicates whether this class represents a pair and was not created from a dictionary nor interpreter info but has
    /// compiler compatible offset and size (and all the info is in the StreamerInfo per se)
    Bool_t fIsSyntheticPair : 1;  //!
+
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t fHasCustomStreamerMember : 1; //!
 
    mutable std::atomic<Long_t> fProperty; //!Property See TClass::Property() for details
    mutable Long_t     fClassProperty;     //!C++ Property of the class (is abstract, has virtual table, etc.)
@@ -429,7 +431,7 @@ public:
    ROOT::DesFunc_t    GetDestructor() const;
    ROOT::DelArrFunc_t GetDeleteArray() const;
    ClassInfo_t       *GetClassInfo() const {
-      if (fCanLoadClassInfo && !TestBit(kLoading))
+      if (fCanLoadClassInfo)
          LoadClassInfo();
       return fClassInfo;
    }
@@ -502,6 +504,8 @@ public:
          SetRuntimeProperties();
       return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
    }
+   /// @brief The class has a Streamer method and it is implemented by the user or an older (not StreamerInfo based) automatic streamer.
+   Bool_t             HasCustomStreamerMember() const { return fHasCustomStreamerMember; }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
    Bool_t             HasLocalHashMember() const;
@@ -548,7 +552,7 @@ public:
    void               SetContextMenuTitle(const char *title);
    void               SetCurrentStreamerInfo(TVirtualStreamerInfo *info);
    void               SetGlobalIsA(IsAGlobalFunc_t);
-   void               SetDeclFile(const char *name, int line) { fDeclFileName = name; fDeclFileLine = line; }
+   void               SetDeclFile(const char *name, Short_t line) { fDeclFileName = name; fDeclFileLine = line; }
    void               SetDelete(ROOT::DelFunc_t deleteFunc);
    void               SetDeleteArray(ROOT::DelArrFunc_t deleteArrayFunc);
    void               SetDirectoryAutoAdd(ROOT::DirAutoAdd_t dirAutoAddFunc);

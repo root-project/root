@@ -18,9 +18,10 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <array>
 #include <atomic>
@@ -33,26 +34,21 @@ namespace ROOT {
 namespace Experimental {
 
 namespace Internal {
+using ntuple_index_t = std::uint32_t;
+class RCluster;
+class RClusterPool;
+class RDaosPool;
+class RDaosContainer;
+class RPageAllocatorHeap;
+class RPagePool;
 enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
    kCagedPage = 0x01,
 };
-}
-
-namespace Detail {
-
-class RCluster;
-class RClusterPool;
-class RPageAllocatorHeap;
-class RPagePool;
-class RDaosPool;
-class RDaosContainer;
-
-using ntuple_index_t = std::uint32_t;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RDaosNTupleAnchor
+\class ROOT::Experimental::Internal::RDaosNTupleAnchor
 \ingroup NTuple
 \brief Entry point for an RNTuple in a DAOS container. It encodes essential
 information to read the ntuple; currently, it contains (un)compressed size of
@@ -62,7 +58,12 @@ The length of a serialized anchor cannot be greater than the value returned by t
 // clang-format on
 struct RDaosNTupleAnchor {
    /// Allows for evolving the struct in future versions
-   std::uint32_t fVersion = 0;
+   std::uint64_t fVersionAnchor = 1;
+   /// Version of the binary format supported by the writer
+   std::uint16_t fVersionEpoch = RNTuple::kVersionEpoch;
+   std::uint16_t fVersionMajor = RNTuple::kVersionMajor;
+   std::uint16_t fVersionMinor = RNTuple::kVersionMinor;
+   std::uint16_t fVersionPatch = RNTuple::kVersionPatch;
    /// The size of the compressed ntuple header
    std::uint32_t fNBytesHeader = 0;
    /// The size of the uncompressed ntuple header
@@ -75,64 +76,22 @@ struct RDaosNTupleAnchor {
    std::string fObjClass{};
 
    bool operator ==(const RDaosNTupleAnchor &other) const {
-      return fVersion == other.fVersion &&
-         fNBytesHeader == other.fNBytesHeader &&
-         fLenHeader == other.fLenHeader &&
-         fNBytesFooter == other.fNBytesFooter &&
-         fLenFooter == other.fLenFooter &&
-         fObjClass == other.fObjClass;
+      return fVersionAnchor == other.fVersionAnchor && fVersionEpoch == other.fVersionEpoch &&
+             fVersionMajor == other.fVersionMajor && fVersionMinor == other.fVersionMinor &&
+             fVersionPatch == other.fVersionPatch && fNBytesHeader == other.fNBytesHeader &&
+             fLenHeader == other.fLenHeader && fNBytesFooter == other.fNBytesFooter && fLenFooter == other.fLenFooter &&
+             fObjClass == other.fObjClass;
    }
 
    std::uint32_t Serialize(void *buffer) const;
    RResult<std::uint32_t> Deserialize(const void *buffer, std::uint32_t bufSize);
 
    static std::uint32_t GetSize();
-};
+}; // struct RDaosNTupleAnchor
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RDaosContainerNTupleLocator
-\ingroup NTuple
-\brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
-It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to index
-the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for storing any
-future metadata related to container-wide management; a zero-index ntuple is thus disallowed and remapped to "1".
-Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a partially-filled builder with
-the ntuple's anchor, header and footer, lacking only pagelists. Upon that call, a copy of the anchor is stored in `fAnchor`.
-*/
-// clang-format on
-struct RDaosContainerNTupleLocator {
-   std::string fName{};
-   ntuple_index_t fIndex{};
-   std::optional<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
-   static const ntuple_index_t kReservedIndex = 0;
-
-   RDaosContainerNTupleLocator() = default;
-   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
-
-   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
-   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
-   static ntuple_index_t Hash(const std::string &ntupleName)
-   {
-      // Convert string to numeric representation via `std::hash`.
-      uint64_t h = std::hash<std::string>{}(ntupleName);
-      // Fold the hash into 32-bit using `boost::hash_combine()` algorithm and magic number.
-      auto seed = static_cast<uint32_t>(h >> 32);
-      seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-      auto hash = static_cast<ntuple_index_t>(seed);
-      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
-   }
-
-   int InitNTupleDescriptorBuilder(RDaosContainer &cont, RNTupleDecompressor &decompressor,
-                                   RNTupleDescriptorBuilder &builder);
-
-   static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
-   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, RNTupleDecompressor &decompressor);
-};
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RPageSinkDaos
+\class ROOT::Experimental::Internal::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
@@ -140,7 +99,7 @@ Currently, an object is allocated for ntuple metadata (anchor/header/footer).
 Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
-class RPageSinkDaos : public RPageSink {
+class RPageSinkDaos : public RPagePersistentSink {
 private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
@@ -163,12 +122,13 @@ private:
    uint32_t fCageSizeLimit{};
 
 protected:
-   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
+   using RPagePersistentSink::InitImpl;
+   void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
-   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
+   std::uint64_t CommitClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
@@ -181,11 +141,11 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
+}; // class RPageSinkDaos
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceDaos
+\class ROOT::Experimental::Internal::RPageSourceDaos
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a DAOS container
 */
@@ -232,19 +192,18 @@ public:
    ~RPageSourceDaos() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void
-   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
-};
+}; // class RPageSourceDaos
 
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

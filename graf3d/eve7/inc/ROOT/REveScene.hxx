@@ -85,7 +85,7 @@ protected:
 
 public:
    REveScene(const std::string &n = "REveScene", const std::string &t = "");
-   virtual ~REveScene();
+   ~REveScene() override;
 
    Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
    Bool_t SingleRnrState() const override { return kTRUE; }
@@ -139,7 +139,7 @@ private:
 protected:
 public:
    REveSceneList(const std::string &n = "REveSceneList", const std::string &t = "");
-   virtual ~REveSceneList() {}
+   ~REveSceneList() override {}
 
    void DestroyScenes();
 

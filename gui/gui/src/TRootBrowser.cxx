@@ -576,7 +576,7 @@ Longptr_t TRootBrowser::ExecPlugin(const char *name, const char *fname,
    Bool_t new_canvas = command.Contains("new TCanvas");
    Bool_t is_web_canvas = strcmp(gEnv->GetValue("Canvas.Name", ""), "TWebCanvas") == 0;
 
-   if (IsWebGUI() && gROOT->IsWebDisplay() && new_canvas && is_web_canvas)
+   if (IsWebGUI() && new_canvas && is_web_canvas)
       return gROOT->ProcessLine(command.Data());
 
    if (new_canvas && is_web_canvas)

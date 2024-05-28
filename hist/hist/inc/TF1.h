@@ -37,6 +37,8 @@
 #include "Math/Types.h"
 #include "Math/ParamFunctor.h"
 
+#include <string>
+
 class TF1;
 class TH1;
 class TAxis;
@@ -110,9 +112,8 @@ public:
    {
       std::copy(params, params + fParameters.size(), fParameters.begin());
    }
-   void  SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0, Double_t p3 = 0, Double_t p4 = 0,
-                       Double_t p5 = 0, Double_t p6 = 0, Double_t p7 = 0, Double_t p8 = 0,
-                       Double_t p9 = 0, Double_t p10 = 0);
+   template <typename... Args>
+   void   SetParameters(Double_t arg1, Args &&... args);
 
    void   SetParameter(const char *name, Double_t value)
    {
@@ -123,12 +124,8 @@ public:
       if (!CheckIndex(iparam)) return;
       fParNames[iparam] = std::string(name);
    }
-   void   SetParNames(const char *name0 = "p0", const char *name1 = "p1", const char *name2 = "p2",
-                      const char *name3 = "p3", const char *name4 = "p4", const char *name5 = "p5",
-                      const char *name6 = "p6", const char *name7 = "p7", const char *name8 = "p8",
-                      const char *name9 = "p9", const char *name10 = "p10");
-
-
+   template <typename... Args>
+   void   SetParNames(Args &&... args);
 
    ClassDef(TF1Parameters, 1)  // The Parameters of a parameteric function
 private:
@@ -141,6 +138,28 @@ private:
    std::vector<Double_t> fParameters;    // parameter values
    std::vector<std::string> fParNames;   // parameter names
 };
+
+/// Set parameter values.
+/// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
+template <typename... Args>
+void TF1Parameters::SetParameters(Double_t arg1, Args &&...args)
+{
+   int i = 0;
+   for (double val : {arg1, static_cast<Double_t>(args)...}) {
+      if(!TMath::IsNaN(val)) SetParameter(i++, val);
+   }
+}
+
+/// Set parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
+template <typename... Args>
+void TF1Parameters::SetParNames(Args &&...args)
+{
+   int i = 0;
+   for (auto name : {static_cast<std::string const&>(args)...}) {
+      if(!name.empty()) SetParName(i++, name.c_str());
+   }
+}
 
 namespace ROOT {
    namespace Internal {
@@ -447,6 +466,7 @@ public:
    {
       return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
+   /// Return the Chisquare after fitting. See ROOT::Fit::FitResult::Chi2()
    Double_t     GetChisquare() const
    {
       return fChisquare;
@@ -652,19 +672,27 @@ public:
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
       Update();
    }
-   virtual void     SetParameters(double p0, double p1 = 0.0, double p2 = 0.0, double p3 = 0.0, double p4 = 0.0,
-                                  double p5 = 0.0, double p6 = 0.0, double p7 = 0.0, double p8 = 0.0,
-                                  double p9 = 0.0, double p10 = 0.0)
+   /// Set parameter values.
+   /// NaN values will be skipped, meaning that the corresponding parameters will not be changed.
+   virtual void SetParameters(double p0, double p1 = TMath::QuietNaN(), double p2 = TMath::QuietNaN(),
+                              double p3 = TMath::QuietNaN(), double p4 = TMath::QuietNaN(), double p5 = TMath::QuietNaN(),
+                              double p6 = TMath::QuietNaN(), double p7 = TMath::QuietNaN(), double p8 = TMath::QuietNaN(),
+                              double p9 = TMath::QuietNaN(), double p10 = TMath::QuietNaN())
    {
+      // Note: this is not made a variadic template method because it would
+      // presumably break the context menu in the TBrowser. Also, probably this
+      // method should not be virtual, because if the user wants to change
+      // parameter setting behavior, the SetParameter() method can be
+      // overridden.
       if (fFormula) fFormula->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       else          fParams->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       Update();
    } // *MENU*
    virtual void     SetParName(Int_t ipar, const char *name);
-   virtual void     SetParNames(const char *name0 = "p0", const char *name1 = "p1", const char *name2 = "p2",
-                                const char *name3 = "p3", const char *name4 = "p4", const char *name5 = "p5",
-                                const char *name6 = "p6", const char *name7 = "p7", const char *name8 = "p8",
-                                const char *name9 = "p9", const char *name10 = "p10"); // *MENU*
+   virtual void     SetParNames(const char *name0 = "", const char *name1 = "", const char *name2 = "",
+                                const char *name3 = "", const char *name4 = "", const char *name5 = "",
+                                const char *name6 = "", const char *name7 = "", const char *name8 = "",
+                                const char *name9 = "", const char *name10 = ""); // *MENU*
    virtual void     SetParError(Int_t ipar, Double_t error);
    virtual void     SetParErrors(const Double_t *errors);
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);

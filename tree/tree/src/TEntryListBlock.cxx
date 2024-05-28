@@ -53,11 +53,11 @@ ClassImp(TEntryListBlock);
 
 TEntryListBlock::TEntryListBlock()
 {
-   fIndices = 0;
+   fIndices = nullptr;
    fN = kBlockSize;
    fNPassed = 0;
    fType = -1;
-   fPassing = 1;
+   fPassing = true;
    fCurrent = 0;
    fLastIndexReturned = -1;
    fLastIndexQueried = -1;
@@ -74,7 +74,7 @@ TEntryListBlock::TEntryListBlock(const TEntryListBlock &eblock) : TObject(eblock
       for (Int_t i=0; i<fN; i++)
          fIndices[i] = eblock.fIndices[i];
    } else {
-      fIndices = 0;
+      fIndices = nullptr;
    }
    fNPassed = eblock.fNPassed;
    fType = eblock.fType;
@@ -91,7 +91,7 @@ TEntryListBlock::~TEntryListBlock()
 {
    if (fIndices)
       delete [] fIndices;
-   fIndices = 0;
+   fIndices = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,7 +108,7 @@ TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
          for (Int_t i=0; i<fN; i++)
             fIndices[i] = eblock.fIndices[i];
       } else {
-         fIndices = 0;
+         fIndices = nullptr;
       }
       fNPassed = eblock.fNPassed;
       fType = eblock.fType;
@@ -125,11 +125,11 @@ TEntryListBlock &TEntryListBlock::operator=(const TEntryListBlock &eblock)
 /// are stored as a list and not as bits, trying to enter a new entry
 /// will make the block switch to bits representation
 
-Bool_t TEntryListBlock::Enter(Int_t entry)
+bool TEntryListBlock::Enter(Int_t entry)
 {
    if (entry > kBlockSize*16) {
       Error("Enter", "illegal entry value!");
-      return 0;
+      return false;
    }
    if (!fIndices){
       fIndices = new UShort_t[kBlockSize] ;
@@ -144,17 +144,17 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
       if ((fIndices[i] & (1<<j))==0){
          fIndices[i] |= 1<<j;
          fNPassed++;
-         return 1;
+         return true;
       } else {
-         return 0;
+         return false;
       }
    }
    //list
    //change to bits
    UShort_t *bits = new UShort_t[kBlockSize];
-   Transform(1, bits);
+   Transform(true, bits);
    Enter(entry);
-   return 0;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -163,11 +163,11 @@ Bool_t TEntryListBlock::Enter(Int_t entry)
 /// are stored as a list and not as bits, trying to remove a new entry
 /// will make the block switch to bits representation
 
-Bool_t TEntryListBlock::Remove(Int_t entry)
+bool TEntryListBlock::Remove(Int_t entry)
 {
    if (entry > kBlockSize*16) {
       Error("Remove", "Illegal entry value!\n");
-      return 0;
+      return false;
    }
    if (fType==0){
       Int_t i = entry>>4;
@@ -175,15 +175,15 @@ Bool_t TEntryListBlock::Remove(Int_t entry)
       if ((fIndices[i] & (1<<j))!=0){
          fIndices[i] &= (0xFFFF^(1<<j));
          fNPassed--;
-         return 1;
+         return true;
       } else {
-         return 0;
+         return false;
       }
    }
    //list
    //change to bits
    UShort_t *bits = new UShort_t[kBlockSize];
-   Transform(1, bits);
+   Transform(true, bits);
    return Remove(entry);
    //return 0;
 }
@@ -203,7 +203,7 @@ Int_t TEntryListBlock::Contains(Int_t entry)
       //bits
       Int_t i = entry>>4;
       Int_t j = entry & 15;
-      Bool_t result = (fIndices[i] & (1<<j))!=0;
+      bool result = (fIndices[i] & (1<<j))!=0;
       return result;
    }
    //list
@@ -212,24 +212,24 @@ Int_t TEntryListBlock::Contains(Int_t entry)
       for (Int_t i = fCurrent; i<fNPassed; i++){
          if (fIndices[i]==entry){
             fCurrent = i;
-            return kTRUE;
+            return true;
          }
       }
    } else {
       if (!fIndices || fNPassed==0){
          //all entries pass
-         return kTRUE;
+         return true;
       }
       if (entry > fIndices[fNPassed-1])
-         return kTRUE;
+         return true;
       for (Int_t i= fCurrent; i<fNPassed; i++){
          if (fIndices[i]==entry){
             fCurrent = i;
-            return kFALSE;
+            return false;
          }
          if (fIndices[i]>entry){
             fCurrent = i;
-            return kTRUE;
+            return true;
          }
       }
    }
@@ -294,7 +294,7 @@ Int_t TEntryListBlock::Merge(TEntryListBlock *block)
       if (GetNPassed() + block->GetNPassed() > kBlockSize){
          //change to bits
          UShort_t *bits = new UShort_t[kBlockSize];
-         Transform(1, bits);
+         Transform(true, bits);
          Merge(block);
       } else {
          //this is only possible if fPassing=1 in both blocks
@@ -459,7 +459,7 @@ Int_t TEntryListBlock::Next()
       fLastIndexReturned++;
       i = fLastIndexReturned>>4;
       j = fLastIndexReturned & 15;
-      Bool_t result=(fIndices[i] & (1<<j))!=0;
+      bool result=(fIndices[i] & (1<<j))!=0;
       while (!result) {
          if (j==15) {j=0; i++;}
          else j++;
@@ -506,7 +506,7 @@ void TEntryListBlock::PrintWithShift(Int_t shift) const
    Int_t i;
    if (fType==0){
       Int_t ibit, ibite;
-      Bool_t result;
+      bool result;
       for (i=0; i<kBlockSize*16; i++){
          ibite = i>>4;
          ibit = i & 15;
@@ -548,11 +548,11 @@ void TEntryListBlock::OptimizeStorage()
 {
    if (fType!=0) return;
    if (fNPassed > kBlockSize*15)
-      fPassing = 0;
+      fPassing = false;
    if (fNPassed<kBlockSize || !fPassing){
       //less than 4000 entries passing, makes sense to change from bits to list
       UShort_t *indexnew = new UShort_t[fNPassed];
-      Transform(0, indexnew);
+      Transform(false, indexnew);
    }
 }
 
@@ -561,7 +561,7 @@ void TEntryListBlock::OptimizeStorage()
 /// - dir=0 - transform from bits to a list
 /// - dir=1 - tranform from a list to bits
 
-void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
+void TEntryListBlock::Transform(bool dir, UShort_t *indexnew)
 {
    Int_t i=0;
    Int_t ilist = 0;
@@ -570,7 +570,7 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
          for (i=0; i<kBlockSize*16; i++){
             ibite = i >> 4;
             ibit = i & 15;
-            Bool_t result = (fIndices[ibite] & (1<<ibit))!=0;
+            bool result = (fIndices[ibite] & (1<<ibit))!=0;
             if (result && fPassing){
                //fill with the entries that pass
                indexnew[ilist] = i;
@@ -615,6 +615,6 @@ void TEntryListBlock::Transform(Bool_t dir, UShort_t *indexnew)
    fIndices = indexnew;
    fType = 0;
    fN = kBlockSize;
-   fPassing = 1;
+   fPassing = true;
    return;
 }

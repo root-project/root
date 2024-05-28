@@ -91,7 +91,7 @@ void randomizeParameters(const RooArgSet &parameters)
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    RooWorkspace ws;
-   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()});
+   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()}, RooFit::Silence());
    ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
    ws.factory("prod::sigma_scaled(sigma[2.0, 0.01, 10], 1.5)");
    ws.factory("Gaussian::gauss(x, mu_shifted, sigma_scaled)");
@@ -101,8 +101,10 @@ TEST(RooFuncWrapper, GaussianNormalized)
    RooRealVar &mu = *ws.var("mu");
 
    RooArgSet normSet{x};
+   std::unique_ptr<RooAbsReal> gaussNormalized = RooFit::Detail::compileForNormSet(gauss, normSet);
 
-   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet, nullptr, nullptr, true);
+   RooFit::Experimental::RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
+   gaussFunc.createGradient();
 
    RooArgSet paramsGauss;
    gauss.getParameters(nullptr, paramsGauss);
@@ -142,7 +144,11 @@ TEST(RooFuncWrapper, Exponential)
 
       RooArgSet normSet{x};
 
-      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), expo, normSet, nullptr, nullptr, true);
+      std::unique_ptr<RooAbsReal> expoNormalized = RooFit::Detail::compileForNormSet(expo, normSet);
+
+      RooFit::Experimental::RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr,
+                                                    false);
+      expoFunc.createGradient();
 
       RooArgSet params;
       expo.getParameters(nullptr, params);
@@ -493,7 +499,7 @@ FactoryTestParams param8{"Lognormal",
 FactoryTestParams param8p1{"LognormalStandard",
                            [](RooWorkspace &ws) {
                               ws.factory(
-                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 1.6], true)");
+                                 "Lognormal::model(x[1.0, 1.1, 10], mu[0.7, 0.1, 2.3], k[0.7, 0.1, 0.95], true)");
                               ws.defineSet("observables", "x");
                            },
                            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
@@ -548,9 +554,111 @@ FactoryTestParams param11{"ClassFactory1D",
                           5e-3, // increase tolerance because the numeric integration algos are still different
                           /*randomizeParameters=*/true};
 
-INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param8p1,
-                                         param9, param10, param11),
+FactoryTestParams param12{"BifurGauss",
+                          [](RooWorkspace &ws) {
+                             ws.factory("x[0, -10, 10]");
+                             ws.factory("mu[0, -10, 10]");
+                             ws.factory("BifurGauss::model(x, mu, sigmaL[3.0, 0.01, 10], sigmaR[2.0, 0.01, 10])");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/false};
+
+FactoryTestParams param13{"RooFormulaVar",
+                          [](RooWorkspace &ws) {
+                             ws.factory("expr::mu_shifted('mu+shift',{mu[0, -10, 10], shift[1.0, -10, 10]})");
+                             ws.factory("expr::sigma_scaled('sigma*1.5',{sigma[3.0, 0.01, 10]})");
+                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/false};
+
+// Test for the uniform pdf. Since it doesn't depend on any parameters, we need
+// to add it with some other model like a Gaussian to get a meaningful model to
+// fit.
+FactoryTestParams param14{"Uniform",
+                          [](RooWorkspace &ws) {
+                             ws.factory("Gaussian::sig(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
+                             ws.factory("Uniform::bkg(x)");
+                             ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
+// Test for RooRecursiveFraction.
+FactoryTestParams param15{"RecursiveFraction",
+                          [](RooWorkspace &ws) {
+                             ws.factory("Gaussian::sig1(x[0, 10], 5.0, sigma1[0.50, .01, 10])");
+                             ws.factory("Gaussian::sig2(x, 2.0, sigma2[1.0, .01, 10])");
+                             ws.factory("Gaussian::sig3(x, 7.0, sigma3[1.5, .01, 10])");
+                             ws.factory("Gaussian::sig4(x, 6.0, sigma4[2.0, .01, 10])");
+                             ws.factory("RecursiveFraction::recfrac({a1[0.25, 0.0, 1.0], a2[0.25, 0.0, 1.0]})");
+                             ws.factory("SUM::model(a1 * sig1, a2 * sig2, recfrac * sig3, sig4)");
+
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                             using namespace RooFit;
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                          },
+                          5e-3,
+                          /*randomizeParameters=*/true};
+
+FactoryTestParams makeTestParams(const char *name, std::string const& expr, bool randomizeParameters)
+{
+   return FactoryTestParams{name,
+                            [=](RooWorkspace &ws) {
+                               ws.factory(expr.c_str());
+                               ws.defineSet("observables", "x");
+                            },
+                            [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, RooFit::EvalBackend backend) {
+                               using namespace RooFit;
+                               return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, backend)};
+                            },
+                            5e-3, randomizeParameters};
+}
+
+auto testValues = testing::Values(
+   param1, param2,
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+   param3,
+#endif
+   param4, param5, param6, param7, param8, param8p1, param9, param10, param11, param12, param13, param15,
+   // TODO: the RooCBShape test is disabled for now, because the gradient doesn't work with Clad v1.4.
+   // makeTestParams("RooCBShape",
+   //               "CBShape::model(x[0., -200., 200.], x0[100., -200., 200.], sigma[2., 1.E-6, 100.], alpha[1., 1.E-6, 100.], n[1., 1.E-6, 100.])",
+   //               true),
+   makeTestParams(
+      "RooBernstein",
+      "Bernstein::model(x[0., 100.], {c0[0.3, 0., 10.], c1[0.7, 0., 10.], c2[0.2, 0., 10.], c3[0.5, 0., 10.]})", true),
+   // We're testing several Landau configurations, because the underlying
+   // ROOT::Math::landau_cdf is defined piecewise. Like this, we're covering
+   // all possible code paths in the pullback.
+   makeTestParams("RooLandau1", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[1., 0.01, 50.])", false),
+   makeTestParams("RooLandau2", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[2.1, 0.01, 50.])", false),
+   makeTestParams("RooLandau3", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[10., 0.01, 50.])", false),
+   makeTestParams("RooLandau4", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.3, 0.01, 50.])", false),
+   makeTestParams("RooLandau5", "Landau::model(x[5., 0., 30.], ml[6., 1., 30.], sl[0.07, 0.01, 50.])", false)
+);
+
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testValues,
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

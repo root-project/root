@@ -30,7 +30,7 @@ namespace mathtext {
    tree_view_prefix(const std::vector<bool> &branch,
                     const bool final) const
    {
-      if(branch.size() > 0) {
+      if(!branch.empty()) {
          std::cerr << ' ';
          for (std::vector<bool>::const_iterator iterator = branch.begin(); iterator != branch.end(); ++iterator) {
             if(*iterator) {

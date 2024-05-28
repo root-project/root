@@ -103,16 +103,7 @@ RooParametricStepFunction::RooParametricStepFunction(const char* name, const cha
     _nBins=0 ;
   }
 
-  for (auto *coef : coefList) {
-    if (!dynamic_cast<RooAbsReal*>(coef)) {
-      std::stringstream errorMsg;
-      errorMsg << "RooParametricStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                << " is not of type RooAbsReal";
-      coutE(InputArguments) << errorMsg.str() << std::endl;
-      throw std::invalid_argument(errorMsg.str().c_str());
-    }
-    _coefList.add(*coef) ;
-  }
+  _coefList.addTyped<RooAbsReal>(coefList);
 
   // Bin limits
   limits.Copy(_limits);
@@ -185,7 +176,7 @@ double RooParametricStepFunction::lastBinValue() const
   double sum(0.);
   double binSize(0.);
   for (Int_t j=1;j<_nBins;j++){
-    RooRealVar* tmp = (RooRealVar*) _coefList.at(j-1);
+    RooRealVar* tmp = static_cast<RooRealVar*>(_coefList.at(j-1));
     binSize = _limits[j] - _limits[j-1];
     sum = sum + tmp->getVal()*binSize;
   }

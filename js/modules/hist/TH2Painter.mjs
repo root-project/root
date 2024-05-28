@@ -86,7 +86,7 @@ function drawTH2PolyLego(painter) {
             if (faces && (faces.length > pnts.length-3)) break;
          }
 
-         if (faces && faces.length && pnts) {
+         if (faces?.length && pnts) {
             all_pnts.push(pnts);
             all_faces.push(faces);
 
@@ -102,7 +102,7 @@ function drawTH2PolyLego(painter) {
          const pnts = all_pnts[ngr], faces = all_faces[ngr];
 
          for (let layer = 0; layer < 2; ++layer) {
-            for (let n=0; n<faces.length; ++n) {
+            for (let n = 0; n < faces.length; ++n) {
                const face = faces[n],
                    pnt1 = pnts[face[0]],
                    pnt2 = pnts[face[layer === 0 ? 2 : 1]],
@@ -127,8 +127,7 @@ function drawTH2PolyLego(painter) {
 
          if (z1>z0) {
             for (let n = 0; n < pnts.length; ++n) {
-               const pnt1 = pnts[n],
-                   pnt2 = pnts[n > 0 ? n-1 : pnts.length-1];
+               const pnt1 = pnts[n], pnt2 = pnts[n > 0 ? n - 1 : pnts.length - 1];
 
                pos[indx] = pnt1.x;
                pos[indx+1] = pnt1.y;
@@ -170,7 +169,7 @@ function drawTH2PolyLego(painter) {
       const material = new MeshBasicMaterial(getMaterialArgs(painter._color_palette?.getColor(colindx), { vertexColors: false })),
             mesh = new Mesh(geometry, material);
 
-      pmain.toplevel.add(mesh);
+      pmain.add3DMesh(mesh);
 
       mesh.painter = painter;
       mesh.bins_index = i;
@@ -217,22 +216,23 @@ class TH2Painter extends TH2Painter2D {
       if (reason === 'resize') {
          if (is_main && main.resize3D()) main.render3D();
       } else {
-         const pad = this.getPadPainter().getRootPad(true);
+         const pad = this.getPadPainter().getRootPad(true),
+               logz = pad?.fLogv ?? pad?.fLogz;
          let zmult = 1;
 
          if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
             this.zmin = this.options.minimum;
             this.zmax = this.options.maximum;
          } else if (this.draw_content || (this.gmaxbin !== 0)) {
-            this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
+            this.zmin = logz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
             zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
-         if (pad?.fLogz && (this.zmin <= 0))
+         if (logz && (this.zmin <= 0))
             this.zmin = this.zmax * 1e-5;
 
-         this.deleteAttr();
+         this.createHistDrawAttributes(true);
 
          if (is_main) {
             assignFrame3DMethods(main);
@@ -272,10 +272,12 @@ class TH2Painter extends TH2Painter2D {
       //  (re)draw palette by resize while canvas may change dimension
       if (is_main) {
          pr = pr.then(() => this.drawColorPalette(this.options.Zscale && ((this.options.Lego === 12) || (this.options.Lego === 14) ||
-                                                  (this.options.Surf === 11) || (this.options.Surf === 12)))).then(() => this.drawHistTitle());
+                                                  (this.options.Surf === 11) || (this.options.Surf === 12))));
       }
 
-      return pr.then(() => this);
+      return pr.then(() => this.updateFunctions())
+               .then(() => this.updateHistTitle())
+               .then(() => this);
    }
 
    /** @summary draw TH2 object */

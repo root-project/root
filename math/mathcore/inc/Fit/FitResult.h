@@ -105,7 +105,7 @@ public:
    bool IsValid() const { return fValid; }
 
    /// True if a fit result does not exist (even invalid) with parameter values
-   bool IsEmpty() const { return (fParams.size() == 0);  }
+   bool IsEmpty() const { return (fParams.empty());  }
 
    /// Return value of the objective function (chi2 or likelihood) used in the fit
    double MinFcnValue() const { return fVal; }
@@ -146,8 +146,10 @@ public:
    const BinData * FittedBinData() const;
 
 
-   /// Chi2 fit value
-   /// in case of likelihood must be computed ?
+   /// Return the Chi2 value after fitting
+   /// In case of unbinned fits (or not defined one, see the documentation of Fitter::FitFCN) return -1
+   /// In case of binned likelihood fits (Poisson Likelihood) return the 2 * negative log-likelihood ratio
+   /// using the definition of Baker-Cousins
    double Chi2() const { return fChi2; }
 
    /// Number of degree of freedom
@@ -212,7 +214,7 @@ public:
    /// retrieve covariance matrix element
    double CovMatrix (unsigned int i, unsigned int j) const {
       if ( i >= fErrors.size() || j >= fErrors.size() ) return 0;
-      if (fCovMatrix.size() == 0) return 0; // no matrix is available in case of non-valid fits
+      if (fCovMatrix.empty()) return 0; // no matrix is available in case of non-valid fits
       if ( j < i )
          return fCovMatrix[j + i* (i+1) / 2];
       else
@@ -222,7 +224,7 @@ public:
    /// retrieve correlation elements
    double Correlation(unsigned int i, unsigned int j ) const {
       if ( i >= fErrors.size() || j >= fErrors.size() ) return 0;
-      if (fCovMatrix.size() == 0) return 0; // no matrix is available in case of non-valid fits
+      if (fCovMatrix.empty()) return 0; // no matrix is available in case of non-valid fits
       double tmp = CovMatrix(i,i)*CovMatrix(j,j);
       return ( tmp > 0) ? CovMatrix(i,j)/ std::sqrt(tmp) : 0;
    }

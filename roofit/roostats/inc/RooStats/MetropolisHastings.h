@@ -29,7 +29,7 @@ namespace RooStats {
       enum FunctionType {kRegular, kLog, kTypeUnset};
 
       /// default constructor
-      MetropolisHastings();
+      MetropolisHastings() = default;
 
       /// alternate constructor
       MetropolisHastings(RooAbsReal& function, const RooArgSet& paramsOfInterest,
@@ -65,14 +65,14 @@ namespace RooStats {
 
 
    protected:
-      RooAbsReal* fFunction;       ///< function that will generate likelihood values
+      RooAbsReal *fFunction = nullptr; ///< function that will generate likelihood values
       RooArgSet fParameters;       ///< RooRealVars that define all parameter space
       RooArgSet fChainParams;      ///< RooRealVars that are stored in the chain
-      ProposalFunction* fPropFunc; ///< Proposal function for MCMC integration
-      Int_t fNumIters;             ///< number of iterations to run metropolis algorithm
-      Int_t fNumBurnInSteps;       ///< number of iterations to discard as burn-in, starting from the first
-      enum FunctionSign fSign;     ///< whether the likelihood is negative (like NLL) or positive
-      enum FunctionType fType;     ///< whether the likelihood is on a regular, log, (or other) scale
+      ProposalFunction *fPropFunc = nullptr; ///< Proposal function for MCMC integration
+      Int_t fNumIters = 0;                   ///< number of iterations to run metropolis algorithm
+      Int_t fNumBurnInSteps = 0;             ///< number of iterations to discard as burn-in, starting from the first
+      enum FunctionSign fSign = kSignUnset;  ///< whether the likelihood is negative (like NLL) or positive
+      enum FunctionType fType = kTypeUnset;  ///< whether the likelihood is on a regular, log, (or other) scale
 
       // whether we should take the step, based on the value of d, fSign, fType
       virtual bool ShouldTakeStep(double d);

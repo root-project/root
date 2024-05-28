@@ -29,8 +29,6 @@ that models a non-relativistic Breit-Wigner shape
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
-using namespace std;
-
 ClassImp(RooBreitWigner);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +61,9 @@ double RooBreitWigner::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of BreitWigner distribution.
-void RooBreitWigner::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooBreitWigner::doEval(RooFit::EvalContext & ctx) const
 {
-  RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::BreitWigner, output, nEvents, {dataMap.at(x), dataMap.at(mean), dataMap.at(width)});
+  RooBatchCompute::compute(ctx.config(this), RooBatchCompute::BreitWigner, ctx.output(), {ctx.at(x), ctx.at(mean), ctx.at(width)});
 }
 
 ////////////////////////////////////////////////////////////////////////////////

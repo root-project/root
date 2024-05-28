@@ -24,11 +24,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageDeleter
+\class ROOT::Experimental::Internal::RPageDeleter
 \ingroup NTuple
 \brief A closure that can free the memory associated with a mapped page
 
@@ -59,7 +59,7 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageAllocatorHeap
+\class ROOT::Experimental::Internal::RPageAllocatorHeap
 \ingroup NTuple
 \brief Uses standard C++ memory allocation for the column data pages
 
@@ -77,7 +77,7 @@ public:
    static void DeletePage(const RPage &page);
 };
 
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

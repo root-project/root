@@ -90,7 +90,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           coordinates, or using a different Scalar type
        */
        template< class Coords >
-       explicit LorentzVector(const LorentzVector<Coords> & v ) :
+       explicit constexpr LorentzVector(const LorentzVector<Coords> & v ) :
           fCoordinates( v.Coordinates() ) { }
 
        /**
@@ -102,7 +102,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
                                     + std::declval<ForeignLorentzVector>().y()
                                     + std::declval<ForeignLorentzVector>().z()
                                     + std::declval<ForeignLorentzVector>().t())>
-       explicit LorentzVector( const ForeignLorentzVector & v) :
+       explicit constexpr LorentzVector( const ForeignLorentzVector & v) :
           fCoordinates(PxPyPzE4D<Scalar>( v.x(), v.y(), v.z(), v.t()  ) ) { }
 
 #ifdef LATER
@@ -115,7 +115,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
           \param index0 index of first vector element (Px)
        */
        template< class LAVector >
-       explicit LorentzVector(const LAVector & v, size_t index0 ) {
+       explicit constexpr LorentzVector(const LAVector & v, size_t index0 ) {
           fCoordinates = CoordSystem ( v[index0], v[index0+1], v[index0+2], v[index0+3] );
        }
 #endif
@@ -262,6 +262,14 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
        }
 
        // ------ Individual element access, in various coordinate systems ------
+
+       /**
+          dimension
+       */
+       unsigned int Dimension() const
+       {
+          return fDimension;
+       };
 
        // individual coordinate accessors in various coordinate systems
 
@@ -675,7 +683,7 @@ ROOT provides specialisations and aliases to them of the ROOT::Math::LorentzVect
     private:
 
        CoordSystem  fCoordinates;    // internal coordinate system
-
+       static constexpr unsigned int fDimension = CoordinateType::Dimension;
 
     };  // LorentzVector<>
 

@@ -27,9 +27,9 @@ TUnuranDiscrDist::TUnuranDiscrDist (const ROOT::Math::IGenFunction & func, bool 
    fXmax(-1),
    fMode(0),
    fSum(0),
-   fHasDomain(0),
-   fHasMode(0),
-   fHasSum(0),
+   fHasDomain(false),
+   fHasMode(false),
+   fHasSum(false),
    fOwnFunc(copyFunc)
 {
    //Constructor from a generic function object
@@ -47,9 +47,9 @@ TUnuranDiscrDist::TUnuranDiscrDist (TF1 * func) :
    fXmax(-1),
    fMode(0),
    fSum(0),
-   fHasDomain(0),
-   fHasMode(0),
-   fHasSum(0),
+   fHasDomain(false),
+   fHasMode(false),
+   fHasSum(false),
    fOwnFunc(true)
 {
    //Constructor from a TF1 objects

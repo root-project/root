@@ -3,12 +3,12 @@
 
 // program to test new KDTree class
 
-#include <time.h>
+#include <ctime>
 // STL include(s)
 #include <iostream>
-#include <stdlib.h>
+#include <cstdlib>
 #include <vector>
-#include "assert.h"
+#include <cassert>
 
 // custom include(s)
 #include "Math/KDTree.h"

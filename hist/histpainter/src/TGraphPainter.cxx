@@ -144,7 +144,7 @@ Begin_Macro(source)
       x[i] = i*0.1;
       y[i] = 10*sin(x[i]+0.2);
    }
-   gr = new TGraph(n,x,y);
+   auto gr = new TGraph(n,x,y);
    gr->SetLineColor(2);
    gr->SetLineWidth(4);
    gr->SetMarkerColor(4);
@@ -1465,12 +1465,13 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             npt++;
          }
          if (i == nloop) {
-            ComputeLogs(npt, optionZ);
+            if (optionFill) ComputeLogs(nloop, optionZ);
+            else            ComputeLogs(npt, optionZ);
             Int_t bord = gStyle->GetDrawBorder();
             if (optionR) {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl.data(),gxworkl.data());
-                  if (bord) gPad->PaintPolyLine(npt,gyworkl.data(),gxworkl.data());
+                  if (bord) gPad->PaintPolyLine(nloop,gyworkl.data(),gxworkl.data());
                }
                if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl.data(), gxworkl.data());
@@ -1479,7 +1480,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             } else {
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl.data(),gyworkl.data());
-                  if (bord) gPad->PaintPolyLine(npt,gxworkl.data(),gyworkl.data());
+                  if (bord) gPad->PaintPolyLine(nloop,gxworkl.data(),gyworkl.data());
                }
                if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gxworkl.data(), gyworkl.data());
@@ -3527,6 +3528,7 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
 
    TArrow arrow;
    arrow.SetLineWidth(theGraph->GetLineWidth());
+   arrow.SetLineStyle(theGraph->GetLineStyle());
    arrow.SetLineColor(theGraph->GetLineColor());
    arrow.SetFillColor(theGraph->GetFillColor());
 

@@ -39,7 +39,6 @@ public:
   // Constructors, assignment etc
   RooCustomizer(const RooAbsArg& pdf, const RooAbsCategoryLValue& masterCat, RooArgSet& splitLeafListOwned, RooArgSet* splitLeafListAll=nullptr) ;
   RooCustomizer(const RooAbsArg& pdf, const char* name) ;
-  ~RooCustomizer() = default;
 
   /// If flag is true, make customizer own all created components
   void setOwning(bool flag) {
@@ -97,7 +96,7 @@ protected:
   RooArgSet  _internalCloneBranchList;   ///< List of branches of internal clone
   RooArgSet* _cloneBranchList = nullptr; ///< Pointer to list of cloned branches used
 
-  // Cloned leafs are owned by the user supplied list in the ctor
+  // Cloned leaves are owned by the user supplied list in the constructor
   RooArgSet* _cloneNodeListAll = nullptr;  ///< List of all cloned nodes
   RooArgSet* _cloneNodeListOwned = nullptr;///< List of owned cloned nodes
 } ;

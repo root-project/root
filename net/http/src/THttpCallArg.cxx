@@ -368,12 +368,13 @@ std::string THttpCallArg::FillHttpHeader(const char *name)
                  "Content-Length: 0\r\n"
                  "Connection: close\r\n\r\n");
    else
-      hdr.append(Form(" 200 OK\r\n"
-                      "Content-Type: %s\r\n"
-                      "Connection: keep-alive\r\n"
-                      "Content-Length: %ld\r\n"
-                      "%s\r\n",
-                      GetContentType(), GetContentLength(), fHeader.Data()));
+      hdr.append(TString::Format(" 200 OK\r\n"
+                                 "Content-Type: %s\r\n"
+                                 "Connection: keep-alive\r\n"
+                                 "Content-Length: %ld\r\n"
+                                 "%s\r\n",
+                                 GetContentType(), GetContentLength(), fHeader.Data())
+                    .Data());
 
    return hdr;
 }

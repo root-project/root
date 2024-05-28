@@ -29,7 +29,7 @@ ClassImp(TLeafElement);
 
 TLeafElement::TLeafElement(): TLeaf()
 {
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID   = -1;
    fType = -1;
 }
@@ -41,7 +41,7 @@ TLeafElement::TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t ty
    : TLeaf(parent, name,name)
 {
    fLenType    = 0;
-   fAbsAddress = 0;
+   fAbsAddress = nullptr;
    fID         = id;
    fType       = type;
    if (type < TVirtualStreamerInfo::kObject) {
@@ -141,7 +141,7 @@ TLeafElement::GetDeserializeType() const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Deserialize N events from an input buffer.
-Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
+bool TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 {
    if (R__unlikely(fDeserializeTypeCache.load(std::memory_order_relaxed) == DeserializeType::kInvalid))
       GetDeserializeType(); // Set fDataTypeCache if need be.
@@ -156,7 +156,7 @@ Bool_t TLeafElement::ReadBasketFast(TBuffer &input_buf, Long64_t N)
 
 TMethodCall *TLeafElement::GetMethodCall(const char * /*name*/)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,22 +177,22 @@ TString TLeafElement::GetFullName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy/set fMinimum and fMaximum to include/be wide than those of the parameter
 
-Bool_t TLeafElement::IncludeRange(TLeaf *input)
+bool TLeafElement::IncludeRange(TLeaf *input)
 {
     if (input) {
         if (input->GetMaximum() > this->GetMaximum())
             ((TBranchElement*)fBranch)->fMaximum = input->GetMaximum();
-        return kTRUE;
+        return true;
     } else {
-        return kFALSE;
+        return false;
     }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
 
-Bool_t TLeafElement::IsOnTerminalBranch() const
+bool TLeafElement::IsOnTerminalBranch() const
 {
-   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
-   return kTRUE;
+   if (fBranch->GetListOfBranches()->GetEntriesFast()) return false;
+   return true;
 }

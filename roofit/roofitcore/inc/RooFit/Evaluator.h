@@ -15,7 +15,7 @@
 #define RooFit_Evaluator_h
 
 #include <RooAbsReal.h>
-#include <RooFit/Detail/DataMap.h>
+#include <RooFit/EvalContext.h>
 
 #include <RConfig.h>
 
@@ -45,7 +45,9 @@ public:
    std::span<const double> run();
    void setInput(std::string const &name, std::span<const double> inputArray, bool isOnDevice);
    RooArgSet getParameters() const;
-   void print(std::ostream &os) const;
+   void print(std::ostream &os);
+
+   void setOffsetMode(RooFit::EvalContext::OffsetMode);
 
 private:
    void processVariable(NodeInfo &nodeInfo);
@@ -63,8 +65,8 @@ private:
    const bool _useGPU = false;
    int _nEvaluations = 0;
    bool _needToUpdateOutputSizes = false;
-   RooFit::Detail::DataMap _dataMapCPU;
-   RooFit::Detail::DataMap _dataMapCUDA;
+   RooFit::EvalContext _evalContextCPU;
+   RooFit::EvalContext _evalContextCUDA;
    std::vector<NodeInfo> _nodes; // the ordered computation graph
    std::stack<std::unique_ptr<ChangeOperModeRAII>> _changeOperModeRAIIs;
 };

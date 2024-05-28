@@ -12,15 +12,15 @@ if(NOT APPLE)
   return()
 endif()
 
-set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TMacOSXSystem.h)
-
-target_include_directories(Core PRIVATE inc)
-
 target_link_libraries(Core PRIVATE
   "-F/System/Library/PrivateFrameworks -framework CoreSymbolication"
 )
 
 if(cocoa)
+  set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TMacOSXSystem.h)
+
+  target_include_directories(Core PRIVATE inc)
+
   target_link_libraries(Core PRIVATE "-framework Cocoa")
 
   ROOT_OBJECT_LIBRARY(Macosx

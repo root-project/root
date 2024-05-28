@@ -3,6 +3,8 @@
 
 #include "TMVA/RTensor.hxx"
 
+#include "ROOT/RSpan.hxx"
+
 #include <stdexcept>
 #include <type_traits>
 #include <cstdint>
@@ -32,11 +34,22 @@ ETensorType ConvertStringToType(std::string type);
 
 struct Dim{
    bool isParam = false;
-   size_t dim;
+   size_t dim = 0;
    std::string param;
-};
 
-std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+    // default constructor (for I/O)
+   Dim() {}
+
+   // constructor for a parametric dimension with the option to pass a default dim value
+   Dim(const std::string & p, size_t d = 0) : isParam(true), dim(d), param(p) {}
+
+   // constructor for a non-parametric dimension
+   Dim(size_t d) : dim(d) {}
+
+   std::string GetVal() const {
+      return (isParam) ? param : std::to_string(dim);
+   }
+};
 
 
 struct InputTensorInfo{
@@ -49,63 +62,92 @@ struct TensorInfo{
    std::vector<size_t> shape;
 };
 
+struct DynamicTensorInfo{
+   ETensorType type;
+   std::vector<Dim> shape;
+};
+
+std::vector<Dim> ConvertShapeToDim(std::vector<size_t> shape);
+
+std::vector<size_t> ConvertShapeToInt(std::vector<Dim> shape);
+
 std::size_t ConvertShapeToLength(std::vector<size_t> shape);
 
 std::string ConvertShapeToString(std::vector<size_t> shape);
+std::string ConvertDynamicShapeToString(std::vector<Dim> shape);
+// std::string ConvertShapeToString(std::vector<Dim> shape) {
+//    return ConvertDynamicShapeToString(shape);
+// }
 
-struct InitializedTensor{
-   ETensorType fType;
-   std::vector<std::size_t> fShape;
-   std::shared_ptr<void> fData;     //! Transient
-   int fSize=1;
-   char* fPersistentData=nullptr;   //[fSize] Persistent
+std::string ConvertDynamicShapeToLength(std::vector<Dim> shape);
 
-   void CastSharedToPersistent(){
-      for(auto item:fShape){
-         fSize*=(int)item;
-      }
-      switch(fType){
-         case ETensorType::FLOAT: fSize*=sizeof(float); break;
-         case ETensorType::DOUBLE: fSize*=sizeof(double); break;
-         case ETensorType::INT32: fSize*=sizeof(int32_t); break;
-         case ETensorType::INT64: fSize*=sizeof(int64_t); break;
-         default:
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " + ConvertTypeToString(fType));
-      }
-      fPersistentData=(char*)fData.get();
+class InitializedTensor {
+public:
+   InitializedTensor() = default;
+   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data)
+      : fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
+   {
    }
-   void CastPersistentToShared(){
+
+   ETensorType const &type() const { return fType; }
+   std::vector<std::size_t> const &shape() const { return fShape; }
+   std::shared_ptr<void> const &sharedptr() const { return fData; }
+
+   template <class T = void>
+   T const *data() const
+   {
+      return static_cast<T const *>(fData.get());
+   }
+
+   void CastSharedToPersistent()
+   {
+      // We only calculate fSize here, because it is only used for IO to know
+      // the size of the persistent data.
+      fSize = 1;
+      for (std::size_t item : fShape) {
+         fSize *= static_cast<int>(item);
+      }
       switch (fType) {
-      case ETensorType::FLOAT: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(float)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(float));
-          fData = tData;
-          break;
+      case ETensorType::FLOAT: fSize *= sizeof(float); break;
+      case ETensorType::DOUBLE: fSize *= sizeof(double); break;
+      case ETensorType::INT32: fSize *= sizeof(int32_t); break;
+      case ETensorType::INT64: fSize *= sizeof(int64_t); break;
+      case ETensorType::BOOL: fSize *= sizeof(bool); break;
+      default:
+         throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
+                                  ConvertTypeToString(fType));
       }
-      case ETensorType::DOUBLE: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(double)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(double));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT32: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int32_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int32_t));
-          fData = tData;
-          break;
-      }
-      case ETensorType::INT64: {
-          std::shared_ptr<void> tData(malloc(fSize * sizeof(int64_t)), free);
-          std::memcpy(tData.get(), fPersistentData, fSize * sizeof(int64_t));
-          fData = tData;
-          break;
-      }
-      default: {
-          throw std::runtime_error("TMVA::SOFIE doesn't yet supports serialising data-type " +
-                                   ConvertTypeToString(fType));
-      }
-      }
+      fPersistentData = static_cast<char *>(fData.get());
    }
+   void CastPersistentToShared()
+   {
+      // If there is no persistent data, do nothing
+      if (fSize == 0 || fPersistentData == nullptr) {
+         return;
+      }
+
+      // Nothing to be done if the pointed-to data is the same
+      if (fPersistentData == static_cast<char *>(fData.get())) {
+         return;
+      }
+
+      // Initialize the shared_ptr
+      fData = std::shared_ptr<void>{malloc(fSize), free};
+      std::memcpy(fData.get(), fPersistentData, fSize);
+
+      // Make sure the data read from disk doesn't leak and delete the
+      // persistent data
+      delete[] fPersistentData;
+      fPersistentData = nullptr;
+      fSize = 0;
+   }
+
+private:
+   ETensorType fType;               ///< Encodes the type of the data
+   std::vector<std::size_t> fShape; ///< The shape of the data in terms of elements in each dimension
+   std::shared_ptr<void> fData;     ///<! Transient shared data
+   int fSize = 0;                   ///< The size of the persistent data in bytes (not number of elements!)
+   char *fPersistentData = nullptr; ///<[fSize] Persistent version of the data
 };
 
 template <typename T>
@@ -129,6 +171,9 @@ ETensorType GetTemplatedType(T /*obj*/ ){
 namespace UTILITY{
 // Check if two shapes are equal
 bool AreSameShape(const std::vector<size_t>&, const std::vector<size_t>&);
+bool AreSameShape(const std::vector<size_t>&, const std::vector<Dim>&);
+bool AreSameShape(const std::vector<Dim>&, const std::vector<Dim>&);
+
 
 // Multidirectional broadcast a list of tensors to the same shape
 std::vector<size_t> MultidirectionalBroadcastShape(std::vector<std::vector<size_t>>);
@@ -248,6 +293,7 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
 
 /// compute stride of a tensor given its shape (assume layout is row-major)
 std::vector<size_t> ComputeStrideFromShape(const std::vector<size_t> & shape);
+std::vector<Dim> ComputeStrideFromShape(const std::vector<Dim> & shape);
 
 /// function to check if a >> 0 and a < MAX using a single comparison
 //// use trick casting to unsigned values so it becomes a single comparison
@@ -424,15 +470,15 @@ extern "C" void sgemm_(const char * transa, const char * transb, const int * m, 
 
 
 struct GNN_Data {
-      RTensor<float> node_data;
-      RTensor<float> edge_data;
-      RTensor<float> global_data;
+      RTensor<float> node_data;      // the node feature data, tensor with shape (num_nodes, num_node_features)
+      RTensor<float> edge_data;      // the edge feature data, tensor with shape (num_edges, num_edge_features)
+      RTensor<float> global_data;    // the global features, tensor with shape (1, num_global_features)
+      RTensor<int> edge_index;       // the edge index (receivers and senders for each edge), tensor with shape (2, num_edges)
+                                     // edge_index[0,:] are the receivers and edge_index[1,:] are the senders
 
-      std::vector<int> receivers;
-      std::vector<int> senders;
 
       // need to have default constructor since RTensor has not one
-      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})) {}
+      GNN_Data(): node_data(RTensor<float>({})), edge_data(RTensor<float>({})), global_data(RTensor<float>({})), edge_index(RTensor<int>({})) {}
 
 };
 
@@ -444,8 +490,12 @@ TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have different memory layout");
    auto & shape1 = t1.GetShape();
    auto & shape2 = t2.GetShape();
-   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis])
+   if (t1.GetSize()/shape1[axis] != t2.GetSize()/shape2[axis]) {
+      std::cout << "axis " << axis << " sizes " << t1.GetSize() << " " << t2.GetSize() << "  ";
+      std::cout << "shape 1 : " << ConvertShapeToString(t1.GetShape());
+      std::cout << " shape 2 : " << ConvertShapeToString(t2.GetShape()) << std::endl;
       throw std::runtime_error("TMVA RTensor Concatenate - tensors have incompatible shapes");
+   }
    std::vector<size_t> outShape = shape1;
    outShape[axis] = shape1[axis] + shape2[axis];
    TMVA::Experimental::RTensor<T> tout(outShape, t1.GetMemoryLayout());
@@ -476,10 +526,7 @@ inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
    out.edge_data = Concatenate(data1.edge_data,data2.edge_data, axis);
    out.global_data = Concatenate<float>(data1.global_data,data2.global_data, axis-1);
    // assume sender/receivers of data1 and data2 are the same
-   if (data1.receivers != data2.receivers || data1.senders != data2.senders)
-       throw std::runtime_error("GNN_Data Concatenate: data1 and data2 have different net structures");
-   out.receivers = data1.receivers;
-   out.senders = data1.senders;
+   out.edge_index = data1.edge_index.Copy();
    return out;
 }
 
@@ -488,11 +535,11 @@ inline GNN_Data Copy(const GNN_Data & data) {
    out.node_data = RTensor<float>(data.node_data.GetShape());
    out.edge_data = RTensor<float>(data.edge_data.GetShape());
    out.global_data = RTensor<float>(data.global_data.GetShape());
+   out.edge_index = RTensor<int>(data.edge_index.GetShape());
    std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
    std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
    std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
-   out.receivers = data.receivers;
-   out.senders = data.senders;
+   std::copy(data.edge_index.GetData(), data.edge_index.GetData()+ data.edge_index.GetSize(), out.edge_index.GetData());
    return out;
 }
 

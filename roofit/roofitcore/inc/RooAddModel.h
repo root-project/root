@@ -36,7 +36,7 @@ public:
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
 
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   Int_t basisCode(const char* name) const override ;
@@ -119,7 +119,7 @@ protected:
   RooListProxy _coefList ;  ///<  List of coefficients
   mutable RooArgList* _snormList{nullptr};  ///<!  List of supplemental normalization factors
 
-  bool _haveLastCoef = false;    ///<  Flag indicating if last PDFs coefficient was supplied in the ctor
+  bool _haveLastCoef = false;    ///<  Flag indicating if last PDFs coefficient was supplied in the constructor
   bool _allExtendable = false;   ///<  Flag indicating if all PDF components are extendable
 
   mutable Int_t _coefErrCount ; ///<! Coefficient error counter

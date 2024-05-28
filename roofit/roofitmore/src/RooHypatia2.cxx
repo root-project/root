@@ -77,7 +77,7 @@
  * make it concave, and re-enable the tails. Especially \f$ \beta \f$ needs to be close to zero.
  *
  * ## Relation to RooIpatia2
- * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/blob/master/PhysFit/P2VV/src/RooIpatia2.cxx,
+ * This implementation is largely based on RooIpatia2, https://gitlab.cern.ch/lhcb/Urania/-/blob/master/PhysFit/B2DXFitters/src/RooIpatia2.cxx,
  * but there are differences:
  * - At construction time, the Hypatia implementation checks if the range of parameters extends into regions where
  *   the function might be undefined.
@@ -471,36 +471,35 @@ void compute(std::span<double> output, std::span<const double> x,
 
 }
 
-void RooHypatia2::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+void RooHypatia2::doEval(RooFit::EvalContext & ctx) const
 {
   using namespace RooBatchCompute;
 
-  auto x = dataMap.at(_x);
-  auto lambda = dataMap.at(_lambda);
-  auto zeta = dataMap.at(_zeta);
-  auto beta = dataMap.at(_beta);
-  auto sig = dataMap.at(_sigma);
-  auto mu = dataMap.at(_mu);
-  auto a = dataMap.at(_a);
-  auto n = dataMap.at(_n);
-  auto a2 = dataMap.at(_a2);
-  auto n2 = dataMap.at(_n2);
+  auto x = ctx.at(_x);
+  auto lambda = ctx.at(_lambda);
+  auto zeta = ctx.at(_zeta);
+  auto beta = ctx.at(_beta);
+  auto sig = ctx.at(_sigma);
+  auto mu = ctx.at(_mu);
+  auto a = ctx.at(_a);
+  auto n = ctx.at(_n);
+  auto a2 = ctx.at(_a2);
+  auto n2 = ctx.at(_n2);
 
   size_t paramSizeSum=0;
   for (const auto& i:{lambda, zeta, beta, sig, mu, a, n, a2, n2}) {
     paramSizeSum += i.size();
   }
-  std::span<double> outputSpan{output, size};
 
   // Run high performance compute if only x has multiple values
   if (x.size()>1 && paramSizeSum==9) {
-    compute(outputSpan, x,
+    compute(ctx.output(), x,
         BracketAdapter<double>(_lambda), BracketAdapter<double>(_zeta),
         BracketAdapter<double>(_beta), BracketAdapter<double>(_sigma), BracketAdapter<double>(_mu),
         BracketAdapter<double>(_a), BracketAdapter<double>(_n),
         BracketAdapter<double>(_a2), BracketAdapter<double>(_n2));
   } else {
-    compute(outputSpan, BracketAdapterWithMask(_x, x),
+    compute(ctx.output(), BracketAdapterWithMask(_x, x),
         BracketAdapterWithMask(_lambda, lambda), BracketAdapterWithMask(_zeta, zeta),
         BracketAdapterWithMask(_beta, beta), BracketAdapterWithMask(_sigma, sig),
         BracketAdapterWithMask(_mu, mu),

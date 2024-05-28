@@ -19,6 +19,8 @@
 #include "TROOT.h"
 #include "TApplication.h"
 
+using std::cout, std::endl;
+
 /////////////////////////////////////////////////////////////////
 // Utility classes / functions
 
@@ -216,10 +218,9 @@ void InterpreterStress::prepareSTLDict() {
    gSystem->FreeDirectory(dir);
 }
 bool InterpreterStress::stressSTLDict() {
-   using namespace std;
 
    bool allres = true;
-   for (Int_t i = 1; i < fNtimes; ++i) {
+   for (Int_t i = 0; i < fNtimes; ++i) {
       int res = 3;
       TInterpreter::EErrorCode interpError = TInterpreter::kNoError;
       TString cmd
@@ -257,7 +258,7 @@ bool InterpreterStress::stressSTLDict() {
       }
    }
 #ifdef ClingWorkAroundDeletedSourceFile
-   for (Int_t i = 1; i < fNtimes; ++i) {
+   for (Int_t i = 0; i < fNtimes; ++i) {
       TString tmpfilename = TString::Format("stressInterpreter_tmp%d.C", i);
       gSystem->Unlink(tmpfilename);
    }
@@ -390,7 +391,6 @@ bool InterpreterStress::stressNestedStatements() {
 // Driver
 
 bool InterpreterStress::run(Int_t ntimes /*= 10*/, const char* runTests /*= 0*/) {
-   using namespace std;
    static const char* benchmark = "stressInterpreter";
 
    fNtimes = ntimes;

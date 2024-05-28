@@ -204,20 +204,20 @@ struct MaterialExtractor {
 
 TGDMLWrite::TGDMLWrite()
    : TObject(),
-     fIsotopeList(0),
-     fElementList(0),
-     fAccPatt(0),
-     fRejShape(0),
-     fNameList(0),
+     fIsotopeList(nullptr),
+     fElementList(nullptr),
+     fAccPatt(nullptr),
+     fRejShape(nullptr),
+     fNameList(nullptr),
      fgNamingSpeed(0),
-     fgG4Compatibility(0),
-     fGdmlFile(0),
+     fgG4Compatibility(false),
+     fGdmlFile(nullptr),
      fTopVolumeName(0),
-     fGdmlE(0),
-     fDefineNode(0),
-     fMaterialsNode(0),
-     fSolidsNode(0),
-     fStructureNode(0),
+     fGdmlE(nullptr),
+     fDefineNode(nullptr),
+     fMaterialsNode(nullptr),
+     fSolidsNode(nullptr),
+     fStructureNode(nullptr),
      fVolCnt(0),
      fPhysVolCnt(0),
      fActNameErr(0),
@@ -240,7 +240,7 @@ TGDMLWrite::~TGDMLWrite()
    delete fRejShape;
    delete fNameList;
 
-   fgGDMLWrite = 0;
+   fgGDMLWrite = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +607,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode *node)
    XMLNodePointer_t volumeN, childN;
    TGeoVolume *volume = node->GetVolume();
    TString volname, matname, solname, pattClsName, nodeVolNameBak;
-   TGeoPatternFinder *pattFinder = 0;
+   TGeoPatternFinder *pattFinder = nullptr;
    Bool_t isPattern = kFALSE;
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
@@ -1741,11 +1741,11 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated *geoShape)
       bool triangular = facet.GetNvert() == 3;
       TString ntype = (triangular) ? "triangular" : "quadrangular";
       childN = fGdmlE->NewChild(nullptr, nullptr, ntype.Data(), nullptr);
-      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(0)));
-      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(1)));
-      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(2)));
+      fGdmlE->NewAttr(childN, nullptr, "vertex1", TString::Format("%s_%d", genname.Data(), facet[0]));
+      fGdmlE->NewAttr(childN, nullptr, "vertex2", TString::Format("%s_%d", genname.Data(), facet[1]));
+      fGdmlE->NewAttr(childN, nullptr, "vertex3", TString::Format("%s_%d", genname.Data(), facet[2]));
       if (!triangular)
-         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet.GetVertexIndex(3)));
+         fGdmlE->NewAttr(childN, nullptr, "vertex4", TString::Format("%s_%d", genname.Data(), facet[3]));
       fGdmlE->NewAttr(childN, nullptr, "type", "ABSOLUTE");
       fGdmlE->AddChild(mainN, childN);
    }
@@ -2142,7 +2142,7 @@ XMLNodePointer_t TGDMLWrite::CreatePhysVolN(const char *name, Int_t copyno, cons
 XMLNodePointer_t TGDMLWrite::CreateDivisionN(Double_t offset, Double_t width, Int_t number, const char *axis,
                                              const char *unit, const char *volref)
 {
-   XMLNodePointer_t childN = 0;
+   XMLNodePointer_t childN = nullptr;
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "divisionvol", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "axis", axis);
    fGdmlE->NewAttr(mainN, nullptr, "number", TString::Format("%i", number));

@@ -21,8 +21,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
     RooFitMoreLib.h
-    RooAdaptiveGaussKronrodIntegrator1D.h
-    RooGaussKronrodIntegrator1D.h
     RooLegendre.h
     RooMathMoreReg.h
     RooSpHarmonic.h
@@ -65,7 +63,7 @@ target_link_libraries(RooFitMore PRIVATE ${GSL_LIBRARIES})
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-if(NOT MSVC)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitMore PUBLIC -fno-math-errno)
 endif()
 

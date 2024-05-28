@@ -37,7 +37,7 @@ TEveGValuatorBase::TEveGValuatorBase(const TGWindow *p, const char* name,
    fNELength (5),
    fNEHeight (20),
 
-   fLabel (0)
+   fLabel (nullptr)
 {
    SetName(name);
 }
@@ -63,8 +63,8 @@ TEveGValuator::TEveGValuator(const TGWindow *p, const char* title,
 
    fSliderNewLine (kFALSE),
    fSliderDivs    (-1),
-   fEntry  (0),
-   fSlider (0)
+   fEntry  (nullptr),
+   fSlider (nullptr)
 {
 }
 
@@ -252,9 +252,9 @@ TEveGDoubleValuator::TEveGDoubleValuator(const TGWindow *p, const char* title,
                                          UInt_t w, UInt_t h, Int_t widgetId) :
    TEveGValuatorBase(p, title, w, h, widgetId),
 
-   fMinEntry(0),
-   fMaxEntry(0),
-   fSlider(0)
+   fMinEntry(nullptr),
+   fMaxEntry(nullptr),
+   fSlider(nullptr)
 {
 }
 

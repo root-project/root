@@ -24,12 +24,12 @@
 #include <stack>
 // for shared_ptr
 #include <memory>
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include <algorithm>
 
 #include "TSpinLockGuard.h"
 
-using namespace std;
+using std::string, std::string_view, std::vector, std::set;
 
 namespace {
    static TClassEdit::TInterpreterLookupHelper *gInterpreterHelper = nullptr;

@@ -19,16 +19,13 @@
 \class RooConstVar
 \ingroup Roofitcore
 
-RooConstVar represent a constant real-valued object
+Represents a constant real-valued object.
 **/
 
 #include "RooConstVar.h"
 #include "RooNumber.h"
 
-using namespace std;
-
 ClassImp(RooConstVar);
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +51,7 @@ RooConstVar::RooConstVar(const RooConstVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to stream
 
-void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
+void RooConstVar::writeToStream(std::ostream& os, bool /*compact*/) const
 {
   os << _value ;
 }

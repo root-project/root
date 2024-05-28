@@ -29,9 +29,9 @@ ClassImp(TLeafObject);
 
 TLeafObject::TLeafObject(): TLeaf()
 {
-   fClass      = 0;
-   fObjAddress = 0;
-   fVirtual    = kTRUE;
+   fClass      = nullptr;
+   fObjAddress = nullptr;
+   fVirtual    = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -42,8 +42,8 @@ TLeafObject::TLeafObject(TBranch *parent, const char *name, const char *type)
 {
    SetTitle(type);
    fClass      = TClass::GetClass(type);
-   fObjAddress = 0;
-   fVirtual    = kTRUE;
+   fObjAddress = nullptr;
+   fVirtual    = true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +102,7 @@ TMethodCall *TLeafObject::GetMethodCall(const char *name)
    if (m->GetMethod()) return m;
    Error("GetMethodCall","Unknown method:%s",name);
    delete m;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,10 +116,10 @@ const char *TLeafObject::GetTypeName() const
 ////////////////////////////////////////////////////////////////////////////////
 /// This method must be overridden to handle object notification.
 
-Bool_t TLeafObject::Notify()
+bool TLeafObject::Notify()
 {
    fClass      = TClass::GetClass(GetTitle());
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,11 +171,11 @@ void TLeafObject::ReadBasket(TBuffer &b)
       if (object->TestBit(kInvalidObject)) {
          if (object->GetUniqueID() == 123456789) {
             fClass->Destructor(object);
-            object = 0;
+            object = nullptr;
          }
       }
       *fObjAddress = object;
-   } else GetBranch()->SetAddress(0);
+   } else GetBranch()->SetAddress(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,8 +196,8 @@ void TLeafObject::Streamer(TBuffer &b)
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
       if (R__v > 3 || R__v == 2) {
          b.ReadClassBuffer(TLeafObject::Class(), this, R__v, R__s, R__c);
-         if (R__v == 2) fVirtual = kTRUE;
-         fObjAddress = 0;
+         if (R__v == 2) fVirtual = true;
+         fObjAddress = nullptr;
          fClass  = TClass::GetClass(fTitle.Data());
          if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
 
@@ -209,11 +209,11 @@ void TLeafObject::Streamer(TBuffer &b)
       }
       //====process old versions before automatic schema evolution
       TLeaf::Streamer(b);
-      fObjAddress = 0;
+      fObjAddress = nullptr;
       fClass  = TClass::GetClass(fTitle.Data());
       if (!fClass) Warning("Streamer","Cannot find class:%s",fTitle.Data());
-      if (R__v  < 1) fVirtual = kFALSE;
-      if (R__v == 1) fVirtual = kTRUE;
+      if (R__v  < 1) fVirtual = false;
+      if (R__v == 1) fVirtual = true;
       if (R__v == 3) b >> fVirtual;
       // We should rewarn in this process.
       ResetBit(kOldWarn);
@@ -227,8 +227,8 @@ void TLeafObject::Streamer(TBuffer &b)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if this leaf is does not have any sub-branch/leaf.
 
-Bool_t TLeafObject::IsOnTerminalBranch() const
+bool TLeafObject::IsOnTerminalBranch() const
 {
-   if (fBranch->GetListOfBranches()->GetEntriesFast()) return kFALSE;
-   return kTRUE;
+   if (fBranch->GetListOfBranches()->GetEntriesFast()) return false;
+   return true;
 }

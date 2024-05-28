@@ -37,7 +37,6 @@ and the outer two pieces, if required are calculated using a 1/x transform
 #include "TClass.h"
 
 
-ClassImp(RooImproperIntegrator1D);
 
 // Register this class with RooNumIntConfig
 
@@ -66,7 +65,7 @@ void RooImproperIntegrator1D::registerIntegrator(RooNumIntFactory &fact)
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(true),
-  _origFunc((RooAbsFunc*)&function)
+  _origFunc(const_cast<RooAbsFunc*>(&function))
 {
   initialize(&function) ;
 }
@@ -80,7 +79,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function) :
 RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function),
   _useIntegrandLimits(true),
-  _origFunc((RooAbsFunc*)&function),
+  _origFunc(const_cast<RooAbsFunc*>(&function)),
   _config(config)
 {
   initialize(&function) ;
@@ -96,7 +95,7 @@ RooImproperIntegrator1D::RooImproperIntegrator1D(const RooAbsFunc& function, dou
   _xmin(xmin),
   _xmax(xmax),
   _useIntegrandLimits(false),
-  _origFunc((RooAbsFunc*)&function),
+  _origFunc(const_cast<RooAbsFunc*>(&function)),
   _config(config)
 {
   initialize(&function) ;

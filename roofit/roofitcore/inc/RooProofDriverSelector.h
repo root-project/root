@@ -15,15 +15,15 @@ class RooStudyPackage ;
 
 class RooProofDriverSelector : public TSelector {
 public :
-   TTree          *fChain;   ///<!pointer to the analyzed TTree or TChain
+   TTree          *fChain = nullptr;   ///<!pointer to the analyzed TTree or TChain
 
    // Declaration of leaf types
    Int_t           i;
 
    // List of branches
-   TBranch        *b_i;   ///<!
+   TBranch        *b_i = nullptr;   ///<!
 
-   RooProofDriverSelector(TTree * /*tree*/ =nullptr) { b_i = nullptr ; _pkg = nullptr ; fChain = nullptr ; }
+   RooProofDriverSelector(TTree * /*tree*/ = nullptr) {}
    Int_t   Version() const override { return 2; }
    void    SlaveBegin(TTree *tree) override;
    void    Init(TTree* tree) override;
@@ -36,7 +36,7 @@ public :
    void    SlaveTerminate() override ;
    TList  *GetOutputList() const override { return fOutput; }
 
-   RooStudyPackage* _pkg ;
+   RooStudyPackage* _pkg = nullptr;
    Int_t      seed ;
 
    ClassDefOverride(RooProofDriverSelector,0);

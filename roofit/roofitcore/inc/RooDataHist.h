@@ -20,7 +20,7 @@
 #include "RooDirItem.h"
 #include "RooArgSet.h"
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "Rtypes.h"
 
 #include <map>
@@ -59,7 +59,7 @@ public:
 
   /// Return empty clone of this RooDataHist.
   RooFit::OwningPtr<RooAbsData> emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet*vars=nullptr, const char* /*wgtVarName*/=nullptr) const override {
-    return RooFit::Detail::owningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
+    return RooFit::makeOwningPtr(std::make_unique<RooDataHist>(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars?*vars:*get()));
   }
 
   /// Add `wgt` to the bin content enclosed by the coordinates passed in `row`.
@@ -118,7 +118,8 @@ public:
   /// \copydoc RooAbsData::weightError(RooAbsData::ErrorType) const
   double weightError(ErrorType etype=Poisson) const override {
     // Return symmetric error on current bin calculated either from Poisson statistics or from SumOfWeights
-    double lo,hi ;
+    double lo;
+    double hi;
     weightError(lo,hi,etype) ;
     return (lo+hi)/2 ;
   }

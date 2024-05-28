@@ -90,6 +90,8 @@ TPaveText::TPaveText(): TPave(), TAttText()
 ///  If none of these four above options is specified the default the
 ///  option "BR" will be used to draw the border. To produces a pave
 ///  without any border it is enough to specify the option "NB" (no border).
+///  If you want to remove the border or shadow of an already existing TPaveText,
+///  then use the function TPave::SetBorderSize.
 ///
 ///  - option = "NDC" x1,y1,x2,y2 are given in NDC
 ///  - option = "ARC" corners are rounded
@@ -576,7 +578,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;
       y2 = fY2 + 0.02*dy;
-      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),GetDrawOption());
+      TString opt = GetDrawOption(); opt.ReplaceAll("NDC", "");
+      TPaveLabel title(x1,y1,x2,y2,fLabel.Data(),opt.Data());
       title.SetFillColor(GetFillColor());
       title.SetTextColor(GetTextColor());
       title.SetTextFont(GetTextFont());
@@ -628,7 +631,7 @@ void TPaveText::ReadFile(const char *filename, Option_t *option, Int_t nlines, I
    char *ss, *sclose, *s = nullptr;
 
    Int_t kline = 0;
-   while (1) {
+   while (true) {
       file.getline(currentline,linesize);
       if (file.eof())break;
       if (kline >= fromline && kline < fromline+nlines) {

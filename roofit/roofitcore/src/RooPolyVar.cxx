@@ -19,24 +19,25 @@
 \class RooPolyVar
 \ingroup Roofitcore
 
-Class RooPolyVar is a RooAbsReal implementing a polynomial in terms
+A RooAbsReal implementing a polynomial in terms
 of a list of RooAbsReal coefficients
 \f[f(x) = \sum_{i} a_{i} \cdot x^i \f]
 Class RooPolyvar implements analytical integrals of all polynomials
 it can define.
 **/
 
-#include <cmath>
-
 #include "RooPolyVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
 #include "RooBatchCompute.h"
 
-#include <RooFit/Detail/AnalyticalIntegrals.h>
-#include <RooFit/Detail/EvaluateFuncs.h>
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "TError.h"
+
+#include <algorithm>
+#include <array>
+#include <cmath>
 
 ClassImp(RooPolyVar);
 
@@ -59,14 +60,7 @@ RooPolyVar::RooPolyVar(const char *name, const char *title, RooAbsReal &x, const
       _lowestOrder = 0;
    }
 
-   for (RooAbsArg *coef : coefList) {
-      if (!dynamic_cast<RooAbsReal *>(coef)) {
-         coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-                               << " is not of type RooAbsReal" << std::endl;
-         R__ASSERT(0);
-      }
-      _coefList.add(*coef);
-   }
+   _coefList.addTyped<RooAbsReal>(coefList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,13 +103,13 @@ void RooPolyVar::fillCoeffValues(std::vector<double> &wksp, RooListProxy const &
 
 double RooPolyVar::evaluate() const
 {
-   const unsigned sz = _coefList.getSize();
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? 1. : 0.;
 
    fillCoeffValues(_wksp, _coefList);
 
-   return RooFit::Detail::EvaluateFuncs::polynomialEvaluate(_wksp.data(), sz, _lowestOrder, _x);
+   return RooFit::Detail::MathFuncs::polynomial(_wksp.data(), sz, _lowestOrder, _x);
 }
 
 void RooPolyVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -126,44 +120,46 @@ void RooPolyVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
       return;
    }
 
-   ctx.addResult(this,
-                 ctx.buildCall("RooFit::Detail::EvaluateFuncs::polynomialEvaluate", _coefList, sz, _lowestOrder, _x));
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::polynomial", _coefList, sz, _lowestOrder, _x));
 }
 
-void RooPolyVar::computeBatchImpl(RooAbsArg const* caller, double *output, size_t nEvents,
-                                  RooFit::Detail::DataMap const &dataMap, RooAbsReal const &x, RooArgList const &coefs,
-                                  int lowestOrder)
+void RooPolyVar::doEvalImpl(RooAbsArg const *caller, RooFit::EvalContext &ctx, RooAbsReal const &x,
+                            RooArgList const &coefs, int lowestOrder)
 {
+   std::span<double> output = ctx.output();
    if (coefs.empty()) {
       output[0] = lowestOrder ? 1.0 : 0.0;
       return;
    }
 
-   RooBatchCompute::VarVector vars;
+   std::vector<std::span<const double>> vars;
    vars.reserve(coefs.size() + 2);
 
    // Fill the coefficients for the skipped orders. By a conventions started in
    // RooPolynomial, if the zero-th order is skipped, it implies a coefficient
    // for the constant term of one.
-   const double zero = 1.0;
-   const double one = 1.0;
+   std::array<double, RooBatchCompute::bufferSize> zeros;
+   std::array<double, RooBatchCompute::bufferSize> ones;
+   std::fill_n(zeros.data(), zeros.size(), 0.0);
+   std::fill_n(ones.data(), ones.size(), 1.0);
+   std::span<const double> zerosSpan{zeros.data(), 1};
+   std::span<const double> onesSpan{ones.data(), 1};
    for (int i = lowestOrder - 1; i >= 0; --i) {
-      vars.push_back(i == 0 ? std::span<const double>{&one, 1} : std::span<const double>{&zero, 1});
+      vars.push_back(i == 0 ? onesSpan : zerosSpan);
    }
 
    for (RooAbsArg *coef : coefs) {
-      vars.push_back(dataMap.at(coef));
+      vars.push_back(ctx.at(coef));
    }
-   vars.push_back(dataMap.at(&x));
-   RooBatchCompute::ArgVector extraArgs{double(vars.size() - 1)};
-   RooBatchCompute::compute(dataMap.config(caller), RooBatchCompute::Polynomial, output, nEvents, vars, extraArgs);
+   vars.push_back(ctx.at(&x));
+   std::array<double, 1> extraArgs{double(vars.size() - 1)};
+   RooBatchCompute::compute(ctx.config(caller), RooBatchCompute::Polynomial, ctx.output(), vars, extraArgs);
 }
 
 /// Compute multiple values of Polynomial.
-void RooPolyVar::computeBatch(double *output, size_t nEvents,
-                              RooFit::Detail::DataMap const &dataMap) const
+void RooPolyVar::doEval(RooFit::EvalContext &ctx) const
 {
-   computeBatchImpl(this, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+   doEvalImpl(this, ctx, _x.arg(), _coefList, _lowestOrder);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,9 +167,7 @@ void RooPolyVar::computeBatch(double *output, size_t nEvents,
 
 Int_t RooPolyVar::getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char * /*rangeName*/) const
 {
-   if (matchArgs(allVars, analVars, _x))
-      return 1;
-   return 0;
+   return matchArgs(allVars, analVars, _x) ? 1 : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,24 +177,25 @@ double RooPolyVar::analyticalIntegral(Int_t code, const char *rangeName) const
 {
    R__ASSERT(code == 1);
 
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return _lowestOrder ? xmax - xmin : 0.0;
 
    fillCoeffValues(_wksp, _coefList);
 
-   return RooFit::Detail::AnalyticalIntegrals::polynomialIntegral(_wksp.data(), sz, _lowestOrder, xmin, xmax);
+   return RooFit::Detail::MathFuncs::polynomialIntegral(_wksp.data(), sz, _lowestOrder, xmin, xmax);
 }
 
 std::string RooPolyVar::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
                                                     RooFit::Detail::CodeSquashContext &ctx) const
 {
-   const double xmin = _x.min(rangeName), xmax = _x.max(rangeName);
-   const unsigned sz = _coefList.getSize();
+   const double xmin = _x.min(rangeName);
+   const double xmax = _x.max(rangeName);
+   const unsigned sz = _coefList.size();
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
 
-   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::polynomialIntegral", _coefList, sz, _lowestOrder, xmin,
-                        xmax);
+   return ctx.buildCall("RooFit::Detail::MathFuncs::polynomialIntegral", _coefList, sz, _lowestOrder, xmin, xmax);
 }

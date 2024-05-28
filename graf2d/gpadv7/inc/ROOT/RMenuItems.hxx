@@ -83,7 +83,7 @@ public:
    }
 
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
-   virtual ~RCheckedMenuItem() {}
+   ~RCheckedMenuItem() override {}
 
    /** Set checked state for the item, default is none */
    void SetChecked(bool on = true) { fChecked = on; }
@@ -137,7 +137,7 @@ public:
    RArgsMenuItem(const std::string &name, const std::string &title) : RMenuItem(name, title) {}
 
    /** virtual destructor need for vtable, used when vector of RMenuItem* is stored */
-   virtual ~RArgsMenuItem() {}
+   ~RArgsMenuItem() override {}
 
    void AddArg(const RMenuArgument &arg) { fArgs.emplace_back(arg); }
 };
@@ -168,7 +168,7 @@ public:
       fSpecifier = _specifier;
    }
 
-   virtual ~RMenuItems();
+   ~RMenuItems() override;
 
    const std::string &GetFullId() const { return fId; }
    const std::string &GetSpecifier() const { return fSpecifier; }

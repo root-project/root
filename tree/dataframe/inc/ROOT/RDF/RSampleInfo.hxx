@@ -12,7 +12,7 @@
 #define ROOT_RDF_RSAMPLEINFO
 
 #include <ROOT/RDF/RSample.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <Rtypes.h>
 
 #include <functional>
@@ -25,7 +25,7 @@ namespace ROOT {
 namespace RDF {
 
 /// This type represents a sample identifier, to be used in conjunction with RDataFrame features such as
-/// DefinePerSample() and per-sample callbacks.
+/// \ref ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" and per-sample callbacks.
 ///
 /// When the input data comes from a TTree, the string representation of RSampleInfo (which is returned by AsString()
 /// and that can be queried e.g. with Contains()) is of the form "<filename>/<treename>".
@@ -59,51 +59,56 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
+   /// @brief Get the name of the sample as a string.
    const std::string &GetSampleName() const
    {
       ThrowIfNoSample();
       return fSample->GetSampleName();
    }
 
+   /// @brief Get the sample id as an int.
    unsigned int GetSampleId() const
    {
       ThrowIfNoSample();
       return fSample->GetSampleId();
    }
 
+   /// @brief Return the metadata value of type int given the key.
    int GetI(const std::string &key) const
    {
       ThrowIfNoSample();
       return fSample->GetMetaData().GetI(key);
    }
 
+   /// @brief Return the metadata value of type double given the key.
    double GetD(const std::string &key) const
    {
       ThrowIfNoSample();
       return fSample->GetMetaData().GetD(key);
    }
 
+   /// @brief Return the metadata value of type string given the key.
    std::string GetS(const std::string &key) const
    {
       ThrowIfNoSample();
       return fSample->GetMetaData().GetS(key);
    }
 
-   /// Check whether the sample name contains the given substring.
+   /// @brief Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const
    {
       // C++14 needs the conversion from std::string_view to std::string
       return fID.find(std::string(substr)) != std::string::npos;
    }
 
-   /// Check whether the sample name is empty.
+   /// @brief Check whether the sample name is empty.
    ///
    /// This is the case e.g. when using a RDataFrame with no input data, constructed as `RDataFrame(nEntries)`.
    bool Empty() const {
       return fID.empty();
    }
 
-   /// Return a string representation of the sample name.
+   /// @brief Return a string representation of the sample name.
    ///
    /// The representation is of the form "<filename>/<treename>" if the input data comes from a TTree or a TChain.
    const std::string &AsString() const
@@ -111,20 +116,21 @@ public:
       return fID;
    }
 
-   /// Return the entry range in this sample that is being taken into consideration.
+   /// @brief Return the entry range in the sample that is being taken into consideration.
    ///
    /// Multiple multi-threading tasks might process different entry ranges of the same sample.
    std::pair<ULong64_t, ULong64_t> EntryRange() const { return fEntryRange; }
 
-   /// Return the number of entries of this sample that is being taken into consideration.
+   /// @brief Return the number of entries of this sample that is being taken into consideration.
    ULong64_t NEntries() const { return fEntryRange.second - fEntryRange.first; }
 
    bool operator==(const RSampleInfo &other) const { return fID == other.fID; }
    bool operator!=(const RSampleInfo &other) const { return !(*this == other); }
 };
 
-/// The type of a data-block callback, registered with a RDataFrame computation graph via e.g.
-/// DefinePerSample() or by certain actions (e.g. Snapshot()).
+/// The type of a data-block callback, registered with an RDataFrame computation graph via e.g.  \ref
+/// ROOT::RDF::RInterface< Proxied, DS_t >::DefinePerSample "DefinePerSample()" or by certain actions (e.g. \ref
+/// ROOT::RDF::RInterface<Proxied,DataSource>::Snapshot "Snapshot()").
 using SampleCallback_t = std::function<void(unsigned int, const ROOT::RDF::RSampleInfo &)>;
 
 } // namespace RDF

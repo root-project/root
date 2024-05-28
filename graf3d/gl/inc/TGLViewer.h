@@ -431,8 +431,8 @@ public:
 
 class TGLFaderHelper {
 private:
-   TGLFaderHelper(const TGLFaderHelper&); // Not implemented
-   TGLFaderHelper& operator=(const TGLFaderHelper&); // Not implemented
+   TGLFaderHelper(const TGLFaderHelper&) = delete;
+   TGLFaderHelper& operator=(const TGLFaderHelper&) = delete;
 
 public:
    TGLViewer *fViewer;

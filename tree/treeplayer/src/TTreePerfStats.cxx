@@ -108,13 +108,13 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
 {
    fName      = "";
    fHostInfo  = "";
-   fTree      = 0;
+   fTree      = nullptr;
    fNleaves   = 0;
-   fFile      = 0;
-   fGraphIO   = 0;
-   fGraphTime = 0;
-   fWatch     = 0;
-   fPave      = 0;
+   fFile      = nullptr;
+   fGraphIO   = nullptr;
+   fGraphTime = nullptr;
+   fWatch     = nullptr;
+   fPave      = nullptr;
    fTreeCacheSize = 0;
    fReadCalls     = 0;
    fReadaheadSize = 0;
@@ -128,8 +128,8 @@ TTreePerfStats::TTreePerfStats() : TVirtualPerfStats()
    fUnzipInputSize= 0;
    fUnzipObjSize  = 0;
    fCompress      = 0;
-   fRealTimeAxis  = 0;
-   fHostInfoText  = 0;
+   fRealTimeAxis  = nullptr;
+   fHostInfoText  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +152,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fGraphTime->SetTitle("Real time vs entries");
    fWatch  = new TStopwatch();
    fWatch->Start();
-   fPave  = 0;
+   fPave  = nullptr;
    fTreeCacheSize = 0;
    fReadCalls     = 0;
    fReadaheadSize = 0;
@@ -165,10 +165,10 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fUnzipTime     = 0;
    fUnzipInputSize= 0;
    fUnzipObjSize  = 0;
-   fRealTimeAxis  = 0;
+   fRealTimeAxis  = nullptr;
    fCompress      = (T->GetTotBytes()+0.00001)/T->GetZipBytes();
 
-   Bool_t isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   bool isUNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    if (isUNIX)
       fHostInfo = gSystem->GetFromPipe("uname -a");
    else
@@ -177,7 +177,7 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
    fHostInfo += TString::Format("ROOT %s, Git: %s", gROOT->GetVersion(), gROOT->GetGitCommit());
    TDatime dt;
    fHostInfo += TString::Format(" %s",dt.AsString());
-   fHostInfoText   = 0;
+   fHostInfoText   = nullptr;
 
    gPerfStats = this;
 }
@@ -187,8 +187,8 @@ TTreePerfStats::TTreePerfStats(const char *name, TTree *T) : TVirtualPerfStats()
 
 TTreePerfStats::~TTreePerfStats()
 {
-   fTree = 0;
-   fFile = 0;
+   fTree = nullptr;
+   fFile = nullptr;
    delete fGraphIO;
    delete fGraphTime;
    delete fPave;
@@ -197,7 +197,7 @@ TTreePerfStats::~TTreePerfStats()
    delete fHostInfoText;
 
    if (gPerfStats == this) {
-      gPerfStats = 0;
+      gPerfStats = nullptr;
    }
 }
 
@@ -435,7 +435,7 @@ TTreePerfStats::BasketList_t TTreePerfStats::GetDuplicateBasketCache() const
 
    auto branches = cache->GetCachedBranches();
    for (size_t i = 0; i < fBasketsInfo.size(); ++i) {
-      Bool_t first = kTRUE;
+      bool first = true;
       for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {
          auto &info(fBasketsInfo[i][j]);
          if ((info.fLoaded + info.fLoadedMiss) > 1) {
@@ -471,7 +471,7 @@ void TTreePerfStats::Paint(Option_t *option)
 
    TString opts(option);
    opts.ToLower();
-   Bool_t unzip = opts.Contains("unzip");
+   bool unzip = opts.Contains("unzip");
 
    //superimpose the time info (max 10 points)
    if (fGraphTime) {
@@ -541,8 +541,8 @@ void TTreePerfStats::Print(Option_t * option) const
 {
    TString opts(option);
    opts.ToLower();
-   Bool_t unzip = opts.Contains("unzip");
-   Bool_t basket = opts.Contains("basket");
+   bool unzip = opts.Contains("unzip");
+   bool basket = opts.Contains("basket");
    TTreePerfStats *ps = (TTreePerfStats*)this;
    ps->Finish();
 
@@ -583,7 +583,7 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
 
    TString opts(option);
    opts.ToLower();
-   Bool_t all = opts.Contains("allbasketinfo");
+   bool all = opts.Contains("allbasketinfo");
 
    TFile *file = fTree->GetCurrentFile();
    if (!file)
@@ -598,7 +598,7 @@ void TTreePerfStats::PrintBasketInfo(Option_t *option) const
       const char *branchname = branches->At(i)->GetName();
 
       printf("  br=%zu %s read not cached: ", i, branchname);
-      if (fBasketsInfo[i].size() == 0) {
+      if (fBasketsInfo[i].empty()) {
          printf("none");
       } else
          for (size_t j = 0; j < fBasketsInfo[i].size(); ++j) {

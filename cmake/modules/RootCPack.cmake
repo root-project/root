@@ -10,9 +10,11 @@
 #---------------------------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------------------------
-# Package up needed system libraries - only for WIN32?
+# Package up needed system libraries - except for WIN32
 #
-include(InstallRequiredSystemLibraries)
+if(NOT WIN32)
+  include(InstallRequiredSystemLibraries)
+endif()
 
 #----------------------------------------------------------------------------------------------------
 # General packaging setup - variable relavant to all package formats
@@ -117,6 +119,8 @@ else()
     execute_process(COMMAND lsb_release -rs OUTPUT_VARIABLE osvers OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
   string(TOLOWER "${osid}" osid)
+  # "fedora linux" => "fedora"
+  string(REGEX REPLACE " linux$" "" osid "${osid}")
   if(osid MATCHES ubuntu)
     string(REGEX REPLACE "([0-9]+[.][0-9]+)[.].*" "\\1" osvers "${osvers}")
   endif()

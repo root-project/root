@@ -28,7 +28,7 @@
 // Last update: Wed Dec  1 15:04:51 2004
 //
 
-#include <assert.h>
+#include <cassert>
 
 #include "Math/GSLMinimizer1D.h"
 #include "Math/Error.h"

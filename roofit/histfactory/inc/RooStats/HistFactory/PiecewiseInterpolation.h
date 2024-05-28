@@ -31,11 +31,8 @@ class PiecewiseInterpolation : public RooAbsReal {
 public:
 
   PiecewiseInterpolation() ;
-  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-              , bool takeOwnership=false
-#endif
-  );
+  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal, const RooArgList &lowSet,
+                         const RooArgList &highSet, const RooArgList &paramSet);
   ~PiecewiseInterpolation() override ;
 
   PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);
@@ -98,12 +95,12 @@ protected:
   RooListProxy _highSet ;          ///< High-side variation
   RooListProxy _paramSet ;         ///< interpolation parameters
   RooListProxy _normSet ;          ///< interpolation parameters
-  bool _positiveDefinite;        ///< protect against negative and 0 bins.
+  bool _positiveDefinite = false;  ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
 
   ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };

@@ -8,28 +8,27 @@ TEST(RNTuple, Variant)
    auto wrVariant = modelWrite->MakeField<std::variant<double, int>>("variant");
    *wrVariant = 2.0;
 
+   modelWrite->Freeze();
    auto modelRead = std::unique_ptr<RNTupleModel>(modelWrite->Clone());
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
-      ntuple.CommitCluster();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
+      writer->CommitCluster();
       *wrVariant = 4;
-      ntuple.Fill();
+      writer->Fill();
       *wrVariant = 8.0;
-      ntuple.Fill();
+      writer->Fill();
    }
-   auto rdVariant = modelRead->Get<std::variant<double, int>>("variant");
+   auto rdVariant = modelRead->GetDefaultEntry().GetPtr<std::variant<double, int>>("variant").get();
 
-   RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(3U, ntuple.GetNEntries());
+   auto reader = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(3U, reader->GetNEntries());
 
-   ntuple.LoadEntry(0);
+   reader->LoadEntry(0);
    EXPECT_EQ(2.0, *std::get_if<double>(rdVariant));
-   ntuple.LoadEntry(1);
+   reader->LoadEntry(1);
    EXPECT_EQ(4, *std::get_if<int>(rdVariant));
-   ntuple.LoadEntry(2);
+   reader->LoadEntry(2);
    EXPECT_EQ(8.0, *std::get_if<double>(rdVariant));
 }

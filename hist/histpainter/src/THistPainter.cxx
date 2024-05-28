@@ -2427,7 +2427,7 @@ Begin_Macro(source)
    auto p = new TH2Poly("USA","USA Population",lon1,lon2,lat1,lat2);
 
    TFile::SetCacheFileDir(".");
-   auto f = TFile::Open("http://root.cern.ch/files/usa.root", "CACHEREAD");
+   auto f = TFile::Open("http://root.cern/files/usa.root", "CACHEREAD");
 
    TMultiGraph *mg;
    TKey *key;
@@ -8405,6 +8405,11 @@ void THistPainter::PaintLegoAxis(TGaxis *axis, Double_t ang)
          }
       }
       axis->SetOption(chopaz);
+      TString ztit = fZaxis->GetTitle();
+      if (ztit.Index(";")>0) {
+         ztit.Remove(ztit.Index(";"),ztit.Length());
+         axis->SetTitle(ztit.Data());
+      }
       axis->PaintAxis(z1[0], z1[1], z2[0], z2[1], bmin, bmax, ndivz, chopaz);
    }
 
@@ -9528,6 +9533,10 @@ void THistPainter::PaintTriangles(Option_t *option)
       fYbuf[1] = rmax[1];
       fXbuf[2] = rmin[2];
       fYbuf[2] = rmax[2];
+      fH->SetMaximum(rmax[2]);
+      fH->SetMinimum(rmin[2]);
+      fH->GetXaxis()->SetRangeUser(rmin[0],rmax[0]);
+      fH->GetYaxis()->SetRangeUser(rmin[1],rmax[1]);
    } else {
       fXbuf[0] = Hparam.xmin;
       fYbuf[0] = Hparam.xmax;
@@ -9739,12 +9748,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
          g->TAttFill::Modify();
          if (line) {
             Int_t fs = g->GetFillStyle();
-            Int_t fc = g->GetFillColor();
+            Int_t db = gStyle->GetDrawBorder();
             g->SetFillStyle(0);
-            g->SetFillColor(g->GetLineColor());
+            gStyle->SetDrawBorder(1);
             g->Paint("F");
+            gStyle->SetDrawBorder(db);
             g->SetFillStyle(fs);
-            g->SetFillColor(fc);
          }
          if (fill) g->Paint("F");
          if (mark) g->Paint("P");
@@ -9763,12 +9772,12 @@ void THistPainter::PaintTH2PolyBins(Option_t *option)
             g->TAttFill::Modify();
             if (line) {
                Int_t fs = g->GetFillStyle();
-               Int_t fc = g->GetFillColor();
+               Int_t db = gStyle->GetDrawBorder();
                g->SetFillStyle(0);
-               g->SetFillColor(g->GetLineColor());
+               gStyle->SetDrawBorder(1);
                g->Paint("F");
+               gStyle->SetDrawBorder(db);
                g->SetFillStyle(fs);
-               g->SetFillColor(fc);
             }
             if (fill) g->Paint("F");
             if (mark) g->Paint("P");

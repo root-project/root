@@ -44,7 +44,7 @@
 
 #include <stdexcept>
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooXYChi2Var);
 
@@ -136,13 +136,14 @@ RooXYChi2Var::RooXYChi2Var(const char *name, const char *title, RooAbsReal &func
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var& other, const char* name) :
-  RooAbsOptTestStatistic(other,name),
-  _extended(other._extended),
-  _integrate(other._integrate),
-  _intConfig(other._intConfig)
+RooXYChi2Var::RooXYChi2Var(const RooXYChi2Var &other, const char *name)
+   : RooAbsOptTestStatistic(other, name),
+     _extended(other._extended),
+     _integrate(other._integrate),
+     _yvar(other._yvar ? static_cast<RooRealVar *>(_dataClone->get()->find(other._yvar->GetName())) : nullptr),
+     _intConfig(other._intConfig)
 {
-  _yvar = other._yvar ? (RooRealVar*) _dataClone->get()->find(other._yvar->GetName()) : nullptr ;
+
   initialize() ;
 
 }
@@ -306,7 +307,7 @@ double RooXYChi2Var::fy() const
     return ret / volume ;
   }
   if (_extended) {
-    RooAbsPdf* pdf = (RooAbsPdf*) _funcClone ;
+    RooAbsPdf* pdf = static_cast<RooAbsPdf*>(_funcClone) ;
     // Multiply with expected number of events
     yfunc *= pdf->expectedEvents(_dataClone->get()) ;
   }
@@ -320,10 +321,11 @@ double RooXYChi2Var::fy() const
 
 double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const
 {
-  double result(0), carry(0);
+  double result(0);
+  double carry(0);
 
   // Loop over bins of dataset
-  RooDataSet* xydata = (RooDataSet*) _dataClone ;
+  RooDataSet* xydata = static_cast<RooDataSet*>(_dataClone) ;
 
   for (auto i=firstEvent ; i<lastEvent ; i+=stepSize) {
 
@@ -335,7 +337,8 @@ double RooXYChi2Var::evaluatePartition(std::size_t firstEvent, std::size_t lastE
 
     // Get data value and error
     double ydata ;
-    double eylo,eyhi ;
+    double eylo;
+    double eyhi;
     if (_yvar) {
       ydata = _yvar->getVal() ;
       eylo = -1*_yvar->getErrorLo() ;

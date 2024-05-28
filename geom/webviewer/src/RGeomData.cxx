@@ -82,7 +82,7 @@ public:
 
    int GetNodeId() const { return fNodeId; }
 
-   bool HasChilds() const { return (fNodeId < 0) ? true : fDesc.fDesc[fNodeId].chlds.size() > 0; }
+   bool HasChilds() const { return (fNodeId < 0) ? true : !fDesc.fDesc[fNodeId].chlds.empty(); }
 
    int NumChilds() const { return (fNodeId < 0) ? 1 : fDesc.fDesc[fNodeId].chlds.size(); }
 
@@ -98,7 +98,7 @@ public:
          return false;
 
       auto &node = fDesc.fDesc[fNodeId];
-      if (node.chlds.size() == 0)
+      if (node.chlds.empty())
          return false;
       fStackParents.emplace_back(fParentId);
       fStackChilds.emplace_back(fChild);
@@ -110,7 +110,7 @@ public:
 
    bool Leave()
    {
-      if (fStackParents.size() == 0) {
+      if (fStackParents.empty()) {
          fNodeId = -1;
          return false;
       }
@@ -176,7 +176,7 @@ public:
    /** Navigate to specified path - path specified as string and should start with "/" */
    bool Navigate(const std::string &path)
    {
-      size_t pos = path.find("/");
+      size_t pos = path.find('/');
       if (pos != 0)
          return false;
 
@@ -185,7 +185,7 @@ public:
       while (++pos < path.length()) {
          auto last = pos;
 
-         pos = path.find("/", last);
+         pos = path.find('/', last);
 
          if (pos == std::string::npos)
             pos = path.length();
@@ -612,7 +612,7 @@ int RGeomDescription::MarkVisible(bool on_screen)
          if (node && !node->IsVisDaughters())
             desc.nochlds = true;
 
-         if ((desc.vis > 0) && (desc.chlds.size() > 0) && !desc.nochlds)
+         if ((desc.vis > 0) && (!desc.chlds.empty()) && !desc.nochlds)
             desc.vis = 1;
       }
 
@@ -643,7 +643,7 @@ void RGeomDescription::ProduceIdShifts()
       return node.idshift + 1;
    };
 
-   if (fDesc.size() > 0)
+   if (!fDesc.empty())
       scan_func(fDesc[0]);
 }
 
@@ -677,7 +677,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 
       if ((viter != fVisibility.end()) && (compare_stacks(viter->stack, stack) == 0)) {
          can_display = scan_childs = viter->visible;
-         desc_vis = !viter->visible ? 0 : (desc.chlds.size() > 0 ? 1 : 99);
+         desc_vis = !viter->visible ? 0 : (!desc.chlds.empty() ? 1 : 99);
          viter++;
       }
 
@@ -690,7 +690,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 
       counter++; // count sequence id of current position in scan, will be used later for merging drawing lists
 
-      if ((desc.chlds.size() > 0) && (((lvl > 0) && scan_childs) || !only_visible)) {
+      if ((!desc.chlds.empty()) && (((lvl > 0) && scan_childs) || !only_visible)) {
          auto pos = stack.size();
          stack.emplace_back(0);
          for (unsigned k = 0; k < desc.chlds.size(); ++k) {
@@ -791,7 +791,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 
       res = "DESCR:"s + TBufferJSON::ToJSON(&vect, GetJsonComp()).Data();
 
-      if (fVisibility.size() > 0) {
+      if (!fVisibility.empty()) {
          res += ":__PHYSICAL_VISIBILITY__:";
          res += TBufferJSON::ToJSON(&fVisibility, GetJsonComp()).Data();
       }
@@ -832,7 +832,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                   temp_nodes.back().SetTop(true);
                request->number--;
 
-               if (stack.size() > 0)
+               if (!stack.empty())
                   stack[stack.size() - 1]++;
 
                if (!iter.Next())
@@ -1400,7 +1400,7 @@ bool RGeomDescription::IsPrincipalEndNode(int nodeid)
 
    auto &desc = fDesc[nodeid];
 
-   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.size() == 0);
+   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.empty());
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1624,7 +1624,7 @@ std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 
    std::vector<int> stack;
 
-   if (ids.size() == 0)
+   if (ids.empty())
       return stack;
 
    if (ids[0] != 0) {
@@ -1720,7 +1720,8 @@ std::vector<std::string> RGeomDescription::MakePathByStack(const std::vector<int
    std::vector<std::string> path;
 
    auto ids = MakeIdsByStack(stack);
-   for (auto &id : ids)
+   path.reserve(ids.size());
+for (auto &id : ids)
       path.emplace_back(fDesc[id].name);
 
    return path;
@@ -1789,7 +1790,7 @@ bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool che
    });
 
    // no any visible nodes were done
-   if (drawing.visibles.size() == 0) {
+   if (drawing.visibles.empty()) {
       json.append("NO");
       return false;
    }
@@ -1866,7 +1867,7 @@ bool RGeomDescription::ChangeNodeVisibility(const std::vector<std::string> &path
 
    dnode.vis = selected ? 99 : 0;
    vol->SetVisibility(selected);
-   if (dnode.chlds.size() > 0) {
+   if (!dnode.chlds.empty()) {
       if (selected)
          dnode.vis = 1; // visibility disabled when any child
       vol->SetVisDaughters(selected);
@@ -2022,7 +2023,7 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::string &itemname, bool o
          p1++;
          continue;
       }
-      auto p = itemname.find("/", p1);
+      auto p = itemname.find('/', p1);
       if (p == std::string::npos) {
          path.emplace_back(itemname.substr(p1));
          p1 = itemname.length();
@@ -2089,7 +2090,7 @@ bool RGeomDescription::ClearAllPhysVisibility()
 {
    TLockGuard lock(fMutex);
 
-   if (fVisibility.size() == 0)
+   if (fVisibility.empty())
       return false;
 
    fVisibility.clear();

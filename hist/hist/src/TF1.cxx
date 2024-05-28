@@ -3457,11 +3457,17 @@ void TF1::SetParName(Int_t ipar, const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set up to 10 parameter names
+/// Set up to 10 parameter names.
+/// Empty strings will be skipped, meaning that the corresponding name will not be changed.
 
 void TF1::SetParNames(const char *name0, const char *name1, const char *name2, const char *name3, const char *name4,
                       const char *name5, const char *name6, const char *name7, const char *name8, const char *name9, const char *name10)
 {
+   // Note: this is not made a variadic template method because it would
+   // presumably break the context menu in the TBrowser. Also, probably this
+   // method should not be virtual, because if the user wants to change
+   // parameter name setting behavior, the SetParName() method can be
+   // overridden.
    if (fFormula)
       fFormula->SetParNames(name0, name1, name2, name3, name4, name5, name6, name7, name8, name9, name10);
    else
@@ -3612,8 +3618,37 @@ void TF1::Streamer(TBuffer &b)
 
 void TF1::Update()
 {
-   delete fHistogram;
-   fHistogram = nullptr;
+   if (fHistogram) {
+      TString XAxisTitle = fHistogram->GetXaxis()->GetTitle();
+      TString YAxisTitle = fHistogram->GetYaxis()->GetTitle();
+      Int_t XLabCol = fHistogram->GetXaxis()->GetLabelColor();
+      Int_t YLabCol = fHistogram->GetYaxis()->GetLabelColor();
+      Int_t XLabFont = fHistogram->GetXaxis()->GetLabelFont();
+      Int_t YLabFont = fHistogram->GetYaxis()->GetLabelFont();
+      Float_t XLabOffset = fHistogram->GetXaxis()->GetLabelOffset();
+      Float_t YLabOffset = fHistogram->GetYaxis()->GetLabelOffset();
+      Float_t XLabSize = fHistogram->GetXaxis()->GetLabelSize();
+      Float_t YLabSize = fHistogram->GetYaxis()->GetLabelSize();
+      Int_t XNdiv = fHistogram->GetXaxis()->GetNdivisions();
+      Int_t YNdiv = fHistogram->GetYaxis()->GetNdivisions();
+
+      delete fHistogram;
+      fHistogram = nullptr;
+      GetHistogram();
+
+      fHistogram->GetXaxis()->SetTitle(XAxisTitle.Data());
+      fHistogram->GetYaxis()->SetTitle(YAxisTitle.Data());
+      fHistogram->GetXaxis()->SetLabelColor(XLabCol);
+      fHistogram->GetYaxis()->SetLabelColor(YLabCol);
+      fHistogram->GetXaxis()->SetLabelFont(XLabFont);
+      fHistogram->GetYaxis()->SetLabelFont(YLabFont);
+      fHistogram->GetXaxis()->SetLabelOffset(XLabOffset);
+      fHistogram->GetYaxis()->SetLabelOffset(YLabOffset);
+      fHistogram->GetXaxis()->SetLabelSize(XLabSize);
+      fHistogram->GetYaxis()->SetLabelSize(YLabSize);
+      fHistogram->GetXaxis()->SetNdivisions(XNdiv);
+      fHistogram->GetYaxis()->SetNdivisions(YNdiv);
+   }
    if (!fIntegral.empty()) {
       fIntegral.clear();
       fAlpha.clear();
@@ -3814,46 +3849,4 @@ Int_t TF1Parameters::GetParNumber(const char *name) const
       if (fParNames[i] == std::string(name)) return i;
    }
    return -1;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set parameter values
-
-void  TF1Parameters::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3, Double_t p4,
-                                   Double_t p5, Double_t p6, Double_t p7, Double_t p8,
-                                   Double_t p9, Double_t p10)
-{
-   unsigned int npar = fParameters.size();
-   if (npar > 0) fParameters[0] = p0;
-   if (npar > 1) fParameters[1] = p1;
-   if (npar > 2) fParameters[2] = p2;
-   if (npar > 3) fParameters[3] = p3;
-   if (npar > 4) fParameters[4] = p4;
-   if (npar > 5) fParameters[5] = p5;
-   if (npar > 6) fParameters[6] = p6;
-   if (npar > 7) fParameters[7] = p7;
-   if (npar > 8) fParameters[8] = p8;
-   if (npar > 9) fParameters[9] = p9;
-   if (npar > 10) fParameters[10] = p10;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set parameter names
-
-void TF1Parameters::SetParNames(const char *name0, const char *name1, const char *name2, const char *name3,
-                                const char *name4, const char *name5, const char *name6, const char *name7,
-                                const char *name8, const char *name9, const char *name10)
-{
-   unsigned int npar = fParNames.size();
-   if (npar > 0) fParNames[0] = name0;
-   if (npar > 1) fParNames[1] = name1;
-   if (npar > 2) fParNames[2] = name2;
-   if (npar > 3) fParNames[3] = name3;
-   if (npar > 4) fParNames[4] = name4;
-   if (npar > 5) fParNames[5] = name5;
-   if (npar > 6) fParNames[6] = name6;
-   if (npar > 7) fParNames[7] = name7;
-   if (npar > 8) fParNames[8] = name8;
-   if (npar > 9) fParNames[9] = name9;
-   if (npar > 10) fParNames[10] = name10;
 }

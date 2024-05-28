@@ -576,7 +576,7 @@ TGeoTube::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndi
          ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
       }
       return vmulti;
-   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return 0;
+   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return nullptr;
    }
 }
 
@@ -642,7 +642,7 @@ void TGeoTube::GetBoundingCylinder(Double_t *param) const
 TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    Double_t rmin, rmax, dz;
    Double_t xmin, xmax;
    rmin = fRmin;
@@ -651,18 +651,18 @@ TGeoShape *TGeoTube::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/
    if (fDz < 0) {
       mother->GetAxisRange(3, xmin, xmax);
       if (xmax < 0)
-         return 0;
+         return nullptr;
       dz = xmax;
    }
    mother->GetAxisRange(1, xmin, xmax);
    if (fRmin < 0) {
       if (xmin < 0)
-         return 0;
+         return nullptr;
       rmin = xmin;
    }
    if (fRmax < 0) {
       if (xmax <= 0)
-         return 0;
+         return nullptr;
       rmax = xmax;
    }
 
@@ -1976,7 +1976,7 @@ TGeoTubeSeg::Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t 
          ((TGeoNodeOffset *)voldiv->GetNodes()->At(voldiv->GetNdaughters() - 1))->SetFinder(finder);
       }
       return vmulti;
-   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return 0;
+   default: Error("Divide", "In shape %s wrong axis type for division", GetName()); return nullptr;
    }
 }
 
@@ -2029,10 +2029,10 @@ void TGeoTubeSeg::GetBoundingCylinder(Double_t *param) const
 TGeoShape *TGeoTubeSeg::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
-      return 0;
+      return nullptr;
    }
    Double_t rmin, rmax, dz;
    rmin = fRmin;
@@ -3123,7 +3123,7 @@ TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, 
                              Double_t /*start*/, Double_t /*step*/)
 {
    Warning("Divide", "In shape %s division of a cut tube not implemented", GetName());
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3133,10 +3133,10 @@ TGeoVolume *TGeoCtub::Divide(TGeoVolume * /*voldiv*/, const char * /*divname*/, 
 TGeoShape *TGeoCtub::GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix * /*mat*/) const
 {
    if (!TestShapeBit(kGeoRunTimeShape))
-      return 0;
+      return nullptr;
    if (!mother->TestShapeBit(kGeoTube)) {
       Error("GetMakeRuntimeShape", "Invalid mother for shape %s", GetName());
-      return 0;
+      return nullptr;
    }
    Double_t rmin, rmax, dz;
    rmin = fRmin;

@@ -38,15 +38,21 @@ class TTreeIndex;
 class TChain;
 
 class TChainIndex : public TVirtualIndex {
-
 public:
+   // holds a description of indices of trees in the chain.
    class TChainIndexEntry {
-      // holds a description of indices of trees in the chain.
+      void Swap(TChainIndexEntry &other);
+
    public:
       TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
                            fMaxIndexValue(0), fMaxIndexValMinor(0),
                            fTreeIndex(nullptr) {}
-
+      TChainIndexEntry(const TChainIndexEntry &other);
+      TChainIndexEntry &operator=(TChainIndexEntry other)
+      {
+         other.Swap(*this);
+         return *this;
+      }
       typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
 
       IndexValPair_t GetMinIndexValPair() const { return IndexValPair_t(fMinIndexValue, fMinIndexValMinor); }
@@ -78,20 +84,20 @@ protected:
 public:
    TChainIndex();
    TChainIndex(const TTree *T, const char *majorname, const char *minorname);
-                 ~TChainIndex() override;
-   void           Append(const TVirtualIndex *, Bool_t delaySort = kFALSE) override;
+   ~TChainIndex() override;
+   void           Append(const TVirtualIndex *, bool delaySort = false) override;
    Long64_t       GetEntryNumberFriend(const TTree *parent) override;
    Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
    Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
    const char    *GetMajorName()    const override {return fMajorName.Data();}
    const char    *GetMinorName()    const override {return fMinorName.Data();}
    Long64_t       GetN()            const override {return fEntries.size();}
-   Bool_t         IsValidFor(const TTree *parent) override;
+   bool           IsValidFor(const TTree *parent) override;
    void           UpdateFormulaLeaves(const TTree *parent) override;
    void           SetTree(TTree *T) override;
+   TObject *Clone(const char *newname = "") const override;
 
    ClassDefOverride(TChainIndex,1)  //A Tree Index with majorname and minorname.
 };
 
 #endif
-

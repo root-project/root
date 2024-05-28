@@ -29,7 +29,7 @@ for changes to trigger a refilling of the cache histogram.
 **/
 
 #include "Riostream.h"
-using namespace std ;
+using std::string, std::endl, std::ostream;
 
 #include "TString.h"
 #include "RooAbsCachedReal.h"
@@ -67,17 +67,6 @@ RooAbsCachedReal::RooAbsCachedReal(const RooAbsCachedReal& other, const char* na
    _disableCache(other._disableCache)
  {
  }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsCachedReal::~RooAbsCachedReal()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation of getVal() overriding default implementation
@@ -125,7 +114,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 {
   // Check if this configuration was created becfore
   Int_t sterileIdx(-1) ;
-  FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObj(nset,nullptr,&sterileIdx) ;
+  FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObj(nset,nullptr,&sterileIdx)) ;
   if (cache) {
     if (cache->paramTracker()->hasChanged(true)) {
       ccoutD(Eval) << "RooAbsCachedReal::getCache(" << GetName() << ") cached function "
@@ -144,7 +133,7 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
   }
 
   // Check if we have contents registered already in global expensive object cache
-  RooDataHist* histTmp = (RooDataHist*) expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()) ;
+  auto histTmp = static_cast<RooDataHist const*>(expensiveObjectCache().retrieveObject(cache->hist()->GetName(),RooDataHist::Class(),cache->paramTracker()->parameters()));
 
   if (histTmp) {
 
@@ -177,11 +166,10 @@ RooAbsCachedReal::FuncCacheElem* RooAbsCachedReal::getCache(const RooArgSet* nse
 /// meta object that tracks changes in declared parameters of p.d.f
 /// through actualParameters()
 
-RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, const RooArgSet* nset)
+RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal &self, const RooArgSet *nset)
+   : _sourceClone(nullptr), _cacheSource(false)
 {
   // Disable source caching by default
-  _cacheSource = false ;
-  _sourceClone = nullptr ;
 
   std::unique_ptr<RooArgSet> nset2{self.actualObservables(nset?*nset:RooArgSet())};
 
@@ -238,7 +226,7 @@ TString RooAbsCachedReal::cacheNameSuffix(const RooArgSet& nset) const
 {
   TString name ;
   name.Append("_Obs[") ;
-  if (nset.getSize()>0) {
+  if (!nset.empty()) {
     bool first(true) ;
     for (RooAbsArg * arg : nset) {
       if (first) {
@@ -268,7 +256,7 @@ void RooAbsCachedReal::setInterpolationOrder(Int_t order)
   _ipOrder = order ;
 
   for (Int_t i=0 ; i<_cacheMgr.cacheSize() ; i++) {
-    FuncCacheElem* cache = (FuncCacheElem*) _cacheMgr.getObjByIndex(i) ;
+    FuncCacheElem* cache = static_cast<FuncCacheElem*>(_cacheMgr.getObjByIndex(i)) ;
     if (cache) {
       cache->func()->setInterpolationOrder(order) ;
     }

@@ -2,7 +2,7 @@
 /// \ingroup tutorial_graphs
 /// \notebook
 /// This example test all the various case of reverse graphs
-/// combined with logarithmic scale..
+/// combined with logarithmic scale.
 ///
 /// \macro_image
 /// \macro_code

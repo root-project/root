@@ -32,6 +32,8 @@ class TAxis;
 #include "TH1.h"
 #endif
 
+#include <limits>
+
 class TBrowser;
 class TFileMergeInfo;
 
@@ -72,8 +74,8 @@ public:
    TIter            end() const { return TIter::End(); }
    Int_t            GetNhists() const;
    TObjArray       *GetStack();
-   virtual Double_t GetMaximum(Option_t *option="");
-   virtual Double_t GetMinimum(Option_t *option="");
+   virtual Double_t GetMaximum(Option_t *option = "", Double_t maxval = std::numeric_limits<Double_t>::max());
+   virtual Double_t GetMinimum(Option_t *option = "", Double_t minval = -std::numeric_limits<Double_t>::max());
    TAxis           *GetXaxis() const;
    TAxis           *GetYaxis() const;
    TAxis           *GetZaxis() const;

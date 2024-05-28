@@ -34,9 +34,9 @@ TVirtualGeoTrack::TVirtualGeoTrack()
 {
    fPDG = 0;
    fId = -1;
-   fParent = 0;
-   fParticle = 0;
-   fTracks = 0;
+   fParent = nullptr;
+   fParticle = nullptr;
+   fTracks = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ TVirtualGeoTrack::TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *pa
    fId = id;
    fParent = parent;
    fParticle = particle;
-   fTracks = 0;
+   fTracks = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -82,21 +82,21 @@ Int_t TVirtualGeoTrack::GetDaughterId(Int_t index) const
 
 TVirtualGeoTrack *TVirtualGeoTrack::FindTrackWithId(Int_t id) const
 {
-   TVirtualGeoTrack *trk = 0;
+   TVirtualGeoTrack *trk = nullptr;
    if (GetId() == id) {
       trk = (TVirtualGeoTrack *)this;
       return trk;
    }
-   TVirtualGeoTrack *kid = 0;
+   TVirtualGeoTrack *kid = nullptr;
    Int_t nd = GetNdaughters();
    for (Int_t i = 0; i < nd; i++)
       if (GetDaughterId(i) == id)
          return GetDaughter(i);
    for (Int_t i = 0; i < nd; i++) {
       kid = GetDaughter(i);
-      if (kid != 0) {
+      if (kid != nullptr) {
          trk = kid->FindTrackWithId(id);
-         if (trk != 0)
+         if (trk != nullptr)
             break;
       }
    }

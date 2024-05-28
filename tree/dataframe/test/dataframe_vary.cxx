@@ -26,7 +26,7 @@ protected:
       if (GetParam())
          ROOT::EnableImplicitMT(NSLOTS);
    }
-   ~RDFVary()
+   ~RDFVary() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -1629,7 +1629,7 @@ struct HelperWithCallback : ROOT::Detail::RDF::RActionImpl<HelperWithCallback> {
    void Initialize() {}
    void Finalize() { *fResult = fCallbackCallCount; }
    std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
-   ROOT::RDF::SampleCallback_t GetSampleCallback() // increments fCallbackCallCount
+   ROOT::RDF::SampleCallback_t GetSampleCallback() override // increments fCallbackCallCount
    {
       auto callback = [](unsigned int, const ROOT::RDF::RSampleInfo &) { ++fCallbackCallCount; };
       return callback;

@@ -28,11 +28,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkBuf
+\class ROOT::Experimental::Internal::RPageSinkBuf
 \ingroup NTuple
 \brief Wrapper sink that coalesces cluster column page writes
 *
@@ -51,10 +51,11 @@ private:
          // Compression scratch buffer for fSealedPage.
          std::unique_ptr<unsigned char[]> fBuf;
          RPageStorage::RSealedPage *fSealedPage = nullptr;
-         explicit RPageZipItem(RPage page)
-            : fPage(page), fBuf(nullptr) {}
          bool IsSealed() const { return fSealedPage != nullptr; }
-         void AllocateSealedPageBuf() { fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[fPage.GetNBytes()]); }
+         void AllocateSealedPageBuf(std::size_t nBytes)
+         {
+            fBuf = std::unique_ptr<unsigned char[]>(new unsigned char[nBytes]);
+         }
       };
    public:
       RColumnBuf() = default;
@@ -66,17 +67,14 @@ private:
 
       /// Returns a reference to the newly buffered page. The reference remains
       /// valid until the return value of DrainBufferedPages() is destroyed.
-      /// Note that `BufferPage()` yields the ownership of `page` to RColumnBuf.
-      RPageZipItem &BufferPage(
-         RPageStorage::ColumnHandle_t columnHandle, const RPage &page)
+      RPageZipItem &BufferPage(RPageStorage::ColumnHandle_t columnHandle)
       {
          if (!fCol) {
             fCol = columnHandle;
          }
          // Safety: Insertion at the end of a deque never invalidates references
          // to existing elements.
-         fBufferedPages.push_back(RPageZipItem(page));
-         return fBufferedPages.back();
+         return fBufferedPages.emplace_back();
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
       bool IsEmpty() const { return fBufferedPages.empty(); }
@@ -119,10 +117,11 @@ private:
 private:
    /// I/O performance counters that get registered in fMetrics
    struct RCounters {
-      RNTuplePlainCounter &fParallelZip;
+      Detail::RNTuplePlainCounter &fParallelZip;
+      Detail::RNTuplePlainCounter &fTimeWallCriticalSection;
+      Detail::RNTupleTickCounter<Detail::RNTuplePlainCounter> &fTimeCpuCriticalSection;
    };
    std::unique_ptr<RCounters> fCounters;
-   RNTupleMetrics fMetrics;
    /// The inner sink, responsible for actually performing I/O.
    std::unique_ptr<RPageSink> fInnerSink;
    /// The buffered page sink maintains a copy of the RNTupleModel for the inner sink.
@@ -130,14 +129,10 @@ private:
    std::unique_ptr<RNTupleModel> fInnerModel;
    /// Vector of buffered column pages. Indexed by column id.
    std::vector<RColumnBuf> fBufferedColumns;
+   DescriptorId_t fNFields = 0;
+   DescriptorId_t fNColumns = 0;
 
-protected:
-   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
-   RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
-   RNTupleLocator CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
-   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
-   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
-   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
+   void ConnectFields(const std::vector<RFieldBase *> &fields, NTupleSize_t firstEntry);
 
 public:
    explicit RPageSinkBuf(std::unique_ptr<RPageSink> inner);
@@ -147,14 +142,25 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override;
 
+   ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
+
+   const RNTupleDescriptor &GetDescriptor() const final;
+
+   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+
+   void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
+   void CommitSealedPage(DescriptorId_t physicalColumnId, const RSealedPage &sealedPage) final;
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitCluster(NTupleSize_t nNewEntries) final;
+   void CommitClusterGroup() final;
+   void CommitDataset() final;
+
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
+}; // RPageSinkBuf
 
-   RNTupleMetrics &GetMetrics() final { return fMetrics; }
-};
-
-} // namespace Detail
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

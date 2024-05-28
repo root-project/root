@@ -61,11 +61,9 @@ class CodeSquashContext;
 
 class RooRefArray : public TObjArray {
  public:
-  RooRefArray() : TObjArray() {
-  } ;
-  RooRefArray(const RooRefArray& other) : TObjArray(other) {
-  }
-  RooRefArray& operator=(const RooRefArray& other) = default;
+    RooRefArray() = default;
+    RooRefArray(const RooRefArray &other) : TObjArray(other) {}
+    RooRefArray &operator=(const RooRefArray &other) = default;
  protected:
   ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
@@ -135,36 +133,36 @@ public:
 
   /// Retrieve a client iterator.
   inline TIterator* clientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use clients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use clients() and begin(), end() or range-based loops.") {
     // Return iterator over all client RooAbsArgs
     return makeLegacyIterator(_clientList);
   }
   inline TIterator* valueClientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
     // Return iterator over all shape client RooAbsArgs
     return makeLegacyIterator(_clientListValue);
   }
   inline TIterator* shapeClientIterator() const
-  R__SUGGEST_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
     // Return iterator over all shape client RooAbsArgs
     return makeLegacyIterator(_clientListShape);
   }
   inline TIterator* serverIterator() const
-  R__SUGGEST_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
     // Return iterator over all server RooAbsArgs
     return makeLegacyIterator(_serverList);
   }
 
   inline RooFIter valueClientMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use valueClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use valueClients() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListValue)));
   }
   inline RooFIter shapeClientMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use shapeClients() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use shapeClients() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_clientListShape)));
   }
   inline RooFIter serverMIterator() const
-  R__SUGGEST_ALTERNATIVE("Use servers() and begin(), end() or range-based loops.") {
+  R__DEPRECATED(6,34, "Use servers() and begin(), end() or range-based loops.") {
     return RooFIter(std::unique_ptr<RefCountListLegacyIterator_t>(makeLegacyIterator(_serverList)));
   }
 

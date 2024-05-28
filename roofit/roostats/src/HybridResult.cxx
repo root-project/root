@@ -24,9 +24,8 @@ New contributions to this class have been written by Matthias Wolf (error estima
 The objects of this class store and access with lightweight methods the
 information calculated by LimitResults through a Lent calculation using
 MC toy experiments.
-In some ways can be considered an extended and extensible implementation of the
-TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
-
+In some ways can be considered an extended and extensible implementation of
+TConfidenceLevel.
 */
 
 
@@ -42,7 +41,6 @@ TConfidenceLevel class (http://root.cern.ch/root/html/TConfidenceLevel.html).
 #include <TMath.h>
 
 /// ClassImp for building the THtml documentation of the class
-using namespace std;
 
 ClassImp(RooStats::HybridResult);
 
@@ -183,7 +181,7 @@ double HybridResult::AlternatePValue() const
 double HybridResult::CLbError() const
 {
   unsigned const int n = fTestStat_b.size();
-  return TMath::Sqrt(CLb() * (1. - CLb()) / n);
+  return std::sqrt(CLb() * (1. - CLb()) / n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -196,7 +194,7 @@ double HybridResult::CLbError() const
 double HybridResult::CLsplusbError() const
 {
   unsigned const int n = fTestStat_sb.size();
-  return TMath::Sqrt(CLsplusb() * (1. - CLsplusb()) / n);
+  return std::sqrt(CLsplusb() * (1. - CLsplusb()) / n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -217,7 +215,7 @@ double HybridResult::CLsError() const
   double cl_b_err = (1. - CLb()) / (n_b * CLb());
   double cl_sb_err = (1. - CLsplusb()) / (n_sb * CLsplusb());
 
-  return CLs() * TMath::Sqrt(cl_b_err + cl_sb_err);
+  return CLs() * std::sqrt(cl_b_err + cl_sb_err);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

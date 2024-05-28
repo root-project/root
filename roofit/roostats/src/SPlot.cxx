@@ -110,10 +110,10 @@
 #include "TMatrixD.h"
 
 
-ClassImp(RooStats::SPlot); ;
+ClassImp(RooStats::SPlot);
 
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -127,56 +127,41 @@ SPlot::~SPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-SPlot::SPlot():
-  TNamed()
+SPlot::SPlot()
 {
   RooArgList Args;
 
   fSWeightVars.assign(Args);
-
-  fSData = nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SPlot::SPlot(const char* name, const char* title):
-  TNamed(name, title)
+SPlot::SPlot(const char *name, const char *title) : TNamed(name, title)
 {
   RooArgList Args;
-
   fSWeightVars.assign(Args);
-
-  fSData = nullptr;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Constructor from a RooDataSet
 ///No sWeighted variables are present
 
-SPlot::SPlot(const char* name, const char* title, const RooDataSet &data):
-  TNamed(name, title)
+SPlot::SPlot(const char *name, const char *title, const RooDataSet &data)
+   : TNamed(name, title), fSData(const_cast<RooDataSet *>(&data))
 {
   RooArgList Args;
 
   fSWeightVars.assign(Args);
-
-  fSData = (RooDataSet*) &data;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy Constructor from another SPlot
 
-SPlot::SPlot(const SPlot &other):
-  TNamed(other)
+SPlot::SPlot(const SPlot &other) : TNamed(other), fSData((RooDataSet *)other.GetSDataSet())
 {
   RooArgList Args = (RooArgList) other.GetSWeightVars();
 
   fSWeightVars.addClone(Args);
-
-  fSData = (RooDataSet*) other.GetSDataSet();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +187,7 @@ SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* p
   TNamed(name, title)
 {
   if(cloneData) {
-    fSData = (RooDataSet*) data.Clone(newName);
+    fSData = static_cast<RooDataSet*>(data.Clone(newName));
     SetBit(kOwnData);
   }
   else
@@ -387,7 +372,7 @@ Int_t SPlot::GetNumSWeightVars() const
 {
   RooArgList Args = fSWeightVars;
 
-  return Args.getSize();
+  return Args.size();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -438,9 +423,9 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // be set to not constant
   std::vector<RooAbsRealLValue*> constVarHolder;
 
-  for(Int_t i = 0; i < constParameters->getSize(); i++)
+  for(std::size_t i = 0; i < constParameters->size(); i++)
   {
-    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( (*constParameters)[i] );
+    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>((*constParameters)[i] );
     if(varTemp &&  varTemp->isConstant() == 0 )
     {
       varTemp->setConstant();
@@ -459,13 +444,13 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
 
-  yieldsHolder.reserve(yieldsTmp.getSize());
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++) {
+  yieldsHolder.reserve(yieldsTmp.size());
+  for(std::size_t i = 0; i < yieldsTmp.size(); i++) {
     yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal(&vars));
   }
 
-  const Int_t nspec = yieldsTmp.getSize();
-  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(false);
+  const Int_t nspec = yieldsTmp.size();
+  RooArgList yields = *static_cast<RooArgList*>(yieldsTmp.snapshot(false));
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
     coutI(InputArguments) << "Printing Yields" << endl;
@@ -591,14 +576,16 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       for(Int_t k = 0; k < nspec; ++k)
    dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
 
-      for(Int_t n=0; n<nspec; ++n)
+      for (Int_t n = 0; n < nspec; ++n) {
    for(Int_t j=0; j<nspec; ++j)
      {
-       if(includeWeights)
-         covInv(n,j) +=  fSData->weight()*pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
-       else
-         covInv(n,j) +=                   pdfvalues[ievt][n]*pdfvalues[ievt][j]/(dsum*dsum) ;
-     }
+        if (includeWeights) {
+           covInv(n, j) += fSData->weight() * pdfvalues[ievt][n] * pdfvalues[ievt][j] / (dsum * dsum);
+        } else {
+           covInv(n, j) += pdfvalues[ievt][n] * pdfvalues[ievt][j] / (dsum * dsum);
+        }
+   }
+      }
 
       //ADDED WEIGHT ABOVE
 
@@ -704,7 +691,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   //Restore yield values
 
-  for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
+  for(std::size_t i = 0; i < yieldsTmp.size(); i++)
     static_cast<RooAbsRealLValue*>(yieldsTmp.at(i))->setVal(yieldsHolder.at(i));
 
   //Make any variables that were forced to constant no longer constant

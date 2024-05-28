@@ -513,7 +513,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                    && GetStreamMemberWise()
                    && cl->CanSplit()
                    && !(strspn(aElement->GetTitle(),"||") == 2)
-                   && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+                   && !(vClass->HasCustomStreamerMember()) ) {
                   // Let's save the collection member-wise.
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);
@@ -574,7 +574,7 @@ Int_t TStreamerInfo::WriteBufferAux(TBuffer &b, const T &arr,
                    && proxy && vClass
                    && GetStreamMemberWise() && cl->CanSplit()
                    && !(strspn(aElement->GetTitle(),"||") == 2)
-                   && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+                   && !(vClass->HasCustomStreamerMember()) ) {
                   // Let's save the collection in member-wise order.
 
                   UInt_t pos = b.WriteVersionMemberWise(this->IsA(),kTRUE);

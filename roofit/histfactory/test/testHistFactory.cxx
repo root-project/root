@@ -649,7 +649,7 @@ TEST_P(HFFixtureFit, Fit)
    auto mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
-   // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
+   // This tests both correct pre-caching of constant terms and (if false) that all doEval() are correct.
    for (bool constTermOptimization : {true, false}) {
 
       // constTermOptimization makes only sense in the legacy backend
@@ -774,6 +774,7 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                                           testing::Values(ROOFIT_EVAL_BACKENDS)),
                          getNameFromInfo);
 
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS) // See https://github.com/vgvassilev/clad/issues/752
 #ifdef TEST_CODEGEN_AD
 // TODO: merge with the previous HFFixtureFix test suite once the codegen AD
 // supports all of HistFactory
@@ -783,4 +784,5 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
                                           testing::Values(false), // no non-uniform bins
                                           testing::Values(RooFit::EvalBackend::Codegen())),
                          getNameFromInfo);
-#endif
+#endif // TEST_CODEGEN_AD
+#endif // R__WIN32

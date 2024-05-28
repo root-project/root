@@ -12,11 +12,11 @@
 #define RooFit_RooAbsSelfCachedReal_h
 
 /**
-\file RooAbsSelfCached.h
+\file RooAbsSelfCachedReal.h
 \class RooAbsSelfCached
 \ingroup Roofitcore
 
-RooAbsSelfCached is an abstract base class for functions whose
+Abstract base class for functions whose
 output is cached in terms of a histogram in all observables between
 getVal() and evaluate(). For certain p.d.f.s that are very
 expensive to calculate it may be beneficial to implement them as a

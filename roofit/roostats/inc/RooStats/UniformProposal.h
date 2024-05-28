@@ -25,7 +25,7 @@ namespace RooStats {
    class UniformProposal : public ProposalFunction {
 
    public:
-      UniformProposal() : ProposalFunction() {}
+      UniformProposal() = default;
 
       /// Populate xPrime with a new proposed point
       void Propose(RooArgSet& xPrime, RooArgSet& x) override;

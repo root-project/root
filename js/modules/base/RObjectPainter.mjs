@@ -180,7 +180,8 @@ class RObjectPainter extends ObjectPainter {
        if (!Number.isFinite(text_size) || (text_size <= 0)) text_size = 12;
        if (!fontScale) fontScale = pp?.getPadHeight() || 100;
 
-       const handler = new FontHandler(null, text_size, fontScale, font_family, font_style, font_weight);
+       const handler = new FontHandler(null, text_size, fontScale);
+       handler.setNameStyleWeight(font_family, font_style, font_weight);
 
        if (text_angle) handler.setAngle(360 - text_angle);
        if (text_align !== 'none') handler.setAlign(text_align);

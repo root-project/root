@@ -57,10 +57,12 @@ private:
   public:
     inline PoissonSum(Int_t n) : RooAbsFunc(1), _n(n) { }
     inline double operator()(const double xvec[]) const override {
-      double mu(xvec[0]),result(1),factorial(1);
-      for(Int_t k= 1; k <= _n; k++) {
-   factorial*= k;
-   result+= pow(mu,k)/factorial;
+       double mu(xvec[0]);
+       double result(1);
+       double factorial(1);
+       for (Int_t k = 1; k <= _n; k++) {
+          factorial *= k;
+          result += pow(mu, k) / factorial;
       }
       return exp(-mu)*result;
     };
@@ -84,10 +86,17 @@ private:
     }
     inline double operator()(const double xvec[]) const override
       {
-   double p1(0.5*(1+xvec[0])),p2(1-p1),result(0),fact1(1),fact2(1);
-   for(Int_t k= 0; k <= _n1; k++) {
-     if(k > 0) { fact2*= k; fact1*= _N1-k+1; }
-     result+= fact1/fact2*pow(p1,k)*pow(p2,_N1-k);
+      double p1(0.5 * (1 + xvec[0]));
+      double p2(1 - p1);
+      double result(0);
+      double fact1(1);
+      double fact2(1);
+      for (Int_t k = 0; k <= _n1; k++) {
+         if (k > 0) {
+            fact2 *= k;
+            fact1 *= _N1 - k + 1;
+         }
+         result += fact1 / fact2 * pow(p1, k) * pow(p2, _N1 - k);
    }
    return result;
       };
@@ -115,7 +124,11 @@ private:
     }
     inline double operator()(const double xvec[]) const override
       {
-   double p1(xvec[0]),p2(1-p1),result(0),fact1(1),fact2(1);
+   double p1(xvec[0]);
+   double p2(1 - p1);
+   double result(0);
+   double fact1(1);
+   double fact2(1);
    for(Int_t k= 0; k <= _n1; k++) {
      if(k > 0) { fact2*= k; fact1*= _N1-k+1; }
      result+= fact1/fact2*pow(p1,k)*pow(p2,_N1-k);

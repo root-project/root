@@ -13,7 +13,7 @@
 /**
 \file RooBatchCompute.cu
 \class RbcClass
-\ingroup Roobatchcompute
+\ingroup roofit_dev_docs_batchcompute
 
 This file contains the code for cuda computations using the RooBatchCompute library.
 **/
@@ -25,6 +25,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <TError.h>
 
 #include <algorithm>
+#include <vector>
 
 #ifndef RF_ARCH
 #error "RF_ARCH should always be defined"
@@ -39,24 +40,30 @@ constexpr int blockSize = 512;
 
 namespace {
 
-void fillBatches(Batches &batches, RestrictArr output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
+void fillBatches(Batches &batches, double *output, size_t nEvents, std::size_t nBatches, std::size_t nExtraArgs)
 {
-   batches._nEvents = nEvents;
-   batches._nBatches = nBatches;
-   batches._nExtraArgs = nExtraArgs;
-   batches._output = output;
+   batches.nEvents = nEvents;
+   batches.nBatches = nBatches;
+   batches.nExtra = nExtraArgs;
+   batches.output = output;
 }
 
-void fillArrays(Batch *arrays, const VarVector &vars, double *buffer, double *bufferDevice)
+void fillArrays(Batch *arrays, VarSpan vars, double *buffer, double *bufferDevice, std::size_t nEvents)
 {
    for (int i = 0; i < vars.size(); i++) {
       const std::span<const double> &span = vars[i];
-      if (span.size() == 1) {
+      arrays[i]._isVector = span.empty() || span.size() >= nEvents;
+      if (!arrays[i]._isVector) {
+         // In the scalar case, the value is not on the GPU yet, so we have to
+         // copy the value to the GPU buffer.
          buffer[i] = span[0];
-         arrays[i].set(bufferDevice + i, false);
+         arrays[i]._array = bufferDevice + i;
       } else {
+         // In the vector input cases, they are already on the GPU, so we can
+         // fill be buffer with some dummy value and set the input span
+         // directly.
          buffer[i] = 0.0;
-         arrays[i].set(span.data(), true);
+         arrays[i]._array = span.data();
       }
    }
 }
@@ -80,13 +87,13 @@ int getGridSize(std::size_t n)
 
 } // namespace
 
-std::vector<void (*)(BatchesHandle)> getFunctions();
+std::vector<void (*)(Batches &)> getFunctions();
 
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a cuda specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
 private:
-   const std::vector<void (*)(BatchesHandle)> _computeFunctions;
+   const std::vector<void (*)(Batches &)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -108,13 +115,14 @@ public:
    The compute function is launched as a cuda kernel.
    \param computer An enum specifying the compute function to be used.
    \param output The array where the computation results are stored.
-   \param nEvents The number of events to be processed.
-   \param vars A std::vector containing pointers to the variables involved in the computation.
-   \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
-   void compute(RooBatchCompute::Config const &cfg, Computer computer, RestrictArr output, size_t nEvents,
-                const VarVector &vars, ArgVector &extraArgs) override
+   \param vars A std::span containing pointers to the variables involved in the computation.
+   \param extraArgs An optional std::span containing extra double values that may participate in the computation. **/
+   void compute(RooBatchCompute::Config const &cfg, Computer computer, std::span<double> output, VarSpan vars,
+                ArgSpan extraArgs) override
    {
       using namespace RooFit::Detail::CudaInterface;
+
+      std::size_t nEvents = output.size();
 
       const std::size_t memSize = sizeof(Batches) + vars.size() * sizeof(Batch) + vars.size() * sizeof(double) +
                                   extraArgs.size() * sizeof(double);
@@ -131,13 +139,13 @@ public:
       auto scalarBufferDevice = reinterpret_cast<double *>(arraysDevice + vars.size());
       auto extraArgsDevice = reinterpret_cast<double *>(scalarBufferDevice + vars.size());
 
-      fillBatches(*batches, output, nEvents, vars.size(), extraArgs.size());
-      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice);
-      batches->_arrays = arraysDevice;
+      fillBatches(*batches, output.data(), nEvents, vars.size(), extraArgs.size());
+      fillArrays(arrays, vars, scalarBuffer, scalarBufferDevice, nEvents);
+      batches->args = arraysDevice;
 
       if (!extraArgs.empty()) {
          std::copy(std::cbegin(extraArgs), std::cend(extraArgs), extraArgsHost);
-         batches->_extraArgs = extraArgsDevice;
+         batches->extra = extraArgsDevice;
       }
 
       copyHostToDevice(hostMem.data(), deviceMem.data(), hostMem.size(), cfg.cudaStream());
@@ -255,6 +263,8 @@ __global__ void nllSumKernel(const double *__restrict__ probas, const double *__
 
 double RooBatchComputeClass::reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n)
 {
+   if (n == 0)
+      return 0.0;
    const int gridSize = getGridSize(n);
    cudaStream_t stream = *cfg.cudaStream();
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
@@ -270,6 +280,9 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
                                                 std::span<const double> weights, std::span<const double> offsetProbas)
 {
    ReduceNLLOutput out;
+   if (probas.empty()) {
+      return out;
+   }
    const int gridSize = getGridSize(probas.size());
    CudaInterface::DeviceArray<double> devOut(2 * gridSize);
    cudaStream_t stream = *cfg.cudaStream();

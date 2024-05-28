@@ -110,10 +110,11 @@ class ObjectPainter extends BasePainter {
      * @param {string|object} arg - typename (or object with _typename member)
      * @protected */
    matchObjectType(arg) {
-      if (!arg || !this.draw_object) return false;
-      if (isStr(arg)) return this.draw_object._typename === arg;
-      if (arg._typename) return this.draw_object._typename === arg._typename;
-      return this.draw_object._typename.match(arg);
+      const clname = this.getClassName();
+      if (!arg || !clname) return false;
+      if (isStr(arg)) return arg === clname;
+      if (isStr(arg._typename)) return arg._typename === clname;
+      return clname.match(arg);
    }
 
    /** @summary Change item name
@@ -193,7 +194,7 @@ class ObjectPainter extends BasePainter {
       document.body.style.cursor = 'wait';
       const res = this.redrawPad();
       doc.body.style.cursor = current;
-      return res || true;
+      return res;
    }
 
    /** @summary Generic method to update object content.
@@ -314,10 +315,11 @@ class ObjectPainter extends BasePainter {
             layer.selectChildren('.most_upper_primitives').raise();
       }
 
-      // set attributes for debugging
-      if (this.draw_object) {
-         this.draw_g.attr('objname', (this.draw_object.fName || 'name').replace(/[^\w]/g, '_'));
-         this.draw_g.attr('objtype', (this.draw_object._typename || 'type').replace(/[^\w]/g, '_'));
+      // set attributes for debugging, both should be there for opt out them later
+      const clname = this.getClassName(), objname = this.getObjectName();
+      if (objname || clname) {
+         this.draw_g.attr('objname', (objname || 'name').replace(/[^\w]/g, '_'))
+                    .attr('objtype', (clname || 'type').replace(/[^\w]/g, '_'));
       }
 
       this.draw_g.property('in_frame', !!frame_layer); // indicates coordinate system
@@ -368,22 +370,26 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Assign unique identifier for the painter
      * @private */
-   getUniqueId() {
-      if (this._unique_painter_id === undefined)
+   getUniqueId(only_read = false) {
+      if (!only_read && (this._unique_painter_id === undefined))
          this._unique_painter_id = internals.id_counter++; // assign unique identifier
       return this._unique_painter_id;
    }
 
    /** @summary Assign secondary id
      * @private */
-   setSecondaryId(main) {
+   setSecondaryId(main, name) {
       this._main_painter_id = main.getUniqueId();
+      this._secondary_id = name;
    }
 
    /** @summary Check if this is secondary painter
+     * @desc if main painter provided - check if this really main for this
      * @private */
-   isSecondaryPainter(main) {
-      return this._main_painter_id === main.getUniqueId();
+   isSecondary(main) {
+      if (this._main_painter_id === undefined)
+         return false;
+      return !isObject(main) ? true : this._main_painter_id === main.getUniqueId(true);
    }
 
    /** @summary Provides identifier on server for requested sublement */
@@ -442,18 +448,22 @@ class ObjectPainter extends BasePainter {
      * Only can be used for painting in the pad, means CreateG() should be called without arguments
      * @param {boolean} isndc - if NDC coordinates will be used
      * @param {boolean} [noround] - if set, return coordinates will not be rounded
+     * @param {boolean} [use_frame_coordinates] - use frame coordinates even when drawing on the pad
      * @protected */
-   getAxisToSvgFunc(isndc, nornd) {
+   getAxisToSvgFunc(isndc, nornd, use_frame_coordinates) {
       const func = { isndc, nornd },
             use_frame = this.draw_g?.property('in_frame');
-      if (use_frame) func.main = this.getFramePainter();
+      if (use_frame || (use_frame_coordinates && !isndc))
+         func.main = this.getFramePainter();
       if (func.main?.grx && func.main?.gry) {
+         func.x0 = (use_frame_coordinates && !isndc) ? func.main.getFrameX() : 0;
+         func.y0 = (use_frame_coordinates && !isndc) ? func.main.getFrameY() : 0;
          if (nornd) {
-            func.x = function(x) { return this.main.grx(x); };
-            func.y = function(y) { return this.main.gry(y); };
+            func.x = function(x) { return this.x0 + this.main.grx(x); };
+            func.y = function(y) { return this.y0 + this.main.gry(y); };
          } else {
-            func.x = function(x) { return Math.round(this.main.grx(x)); };
-            func.y = function(y) { return Math.round(this.main.gry(y)); };
+            func.x = function(x) { return this.x0 + Math.round(this.main.grx(x)); };
+            func.y = function(y) { return this.y0 + Math.round(this.main.gry(y)); };
          }
       } else if (!use_frame) {
          const pp = this.getPadPainter();
@@ -672,7 +682,7 @@ class ObjectPainter extends BasePainter {
    createAttText(args) {
       if (!isObject(args))
          args = { std: true };
-      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextSize !== undefined)
+      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextColor !== undefined)
          args = { attr: args, std: false };
 
       if (args.std === undefined) args.std = true;
@@ -884,6 +894,8 @@ class ObjectPainter extends BasePainter {
       if (!draw_g || draw_g.empty()) return;
 
       const font = (font_size === 'font') ? font_face : new FontHandler(font_face, font_size);
+
+      font.setPainter(this); // may be required when custom font is used
 
       draw_g.call(font.func);
 
@@ -1662,9 +1674,9 @@ const EAxisBits = {
    kIsInteger: BIT(22),
    kMoreLogLabels: BIT(23),
    kOppositeTitle: BIT(32) // atrificial bit, not possible to set in ROOT
-};
+}, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits };
+         ObjectPainter, drawRawText, EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

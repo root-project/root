@@ -14,7 +14,7 @@
 #include <iostream>
 
 namespace {
-static std::string GetStringRepr(const std::vector<const ROOT::Internal::RDF::RVariationBase *> &variations)
+std::string GetStringRepr(const std::vector<const ROOT::Internal::RDF::RVariationBase *> &variations)
 {
    std::string s;
 

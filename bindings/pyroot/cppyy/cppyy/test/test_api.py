@@ -1,17 +1,11 @@
-import py, os, sys
-from pytest import raises
-
-try:
-    import __pypy__
-    is_pypy = True
-except ImportError:
-    is_pypy = False
+from pytest import raises, skip
+from .support import ispypy
 
 
 class TestAPI:
     def setup_class(cls):
-        if is_pypy:
-            py.test.skip('C++ API only available on CPython')
+        if ispypy:
+            skip('C++ API only available on CPython')
 
         import cppyy
         cppyy.include('CPyCppyy/API.h')
@@ -111,21 +105,12 @@ class TestAPI:
                 *a3 = *(APICheck3*)CPyCppyy::Instance_AsVoidPtr(value);
                 return true;
             }
-        #ifdef WIN32
-            virtual bool HasState() { return true; }  // see register_a3 for reason
-        #endif
         };
 
         typedef CPyCppyy::ConverterFactory_t cf_t;
         void register_a3() {
-        #ifndef WIN32
-            CPyCppyy::RegisterConverter("APICheck3",  (cf_t)+[](Py_ssize_t*) { static APICheck3Converter c{}; return &c; });
-            CPyCppyy::RegisterConverter("APICheck3&", (cf_t)+[](Py_ssize_t*) { static APICheck3Converter c{}; return &c; });
-        #else
-        // Clang's JIT does not support relocation of the static variable on Windows
-            CPyCppyy::RegisterConverter("APICheck3",  (cf_t)+[](Py_ssize_t*) { return new APICheck3Converter{}; });
-            CPyCppyy::RegisterConverter("APICheck3&", (cf_t)+[](Py_ssize_t*) { return new APICheck3Converter{}; });
-        #endif
+            CPyCppyy::RegisterConverter("APICheck3",  (cf_t)+[](CPyCppyy::cdims_t) { static APICheck3Converter c{}; return &c; });
+            CPyCppyy::RegisterConverter("APICheck3&", (cf_t)+[](CPyCppyy::cdims_t) { static APICheck3Converter c{}; return &c; });
         }
         void unregister_a3() {
             CPyCppyy::UnregisterConverter("APICheck3");
@@ -179,19 +164,11 @@ class TestAPI:
                  a4->setExecutorCalled();
                  return CPyCppyy::Instance_FromVoidPtr(a4, "APICheck4", true);
              }
-        #ifdef WIN32
-            virtual bool HasState() { return true; }  // see register_a4 for reason
-        #endif
         };
 
         typedef CPyCppyy::ExecutorFactory_t ef_t;
         void register_a4() {
-        #ifndef WIN32
-            CPyCppyy::RegisterExecutor("APICheck4*", (ef_t)+[]() { static APICheck4Executor c{}; return &c; });
-        #else
-        // Clang's JIT does not support relocation of the static variable on Windows
-            CPyCppyy::RegisterExecutor("APICheck4*", (ef_t)+[]() { return new APICheck4Executor{}; });
-        #endif
+            CPyCppyy::RegisterExecutor("APICheck4*", (ef_t)+[](CPyCppyy::cdims_t) { static APICheck4Executor c{}; return &c; });
         }
         void unregister_a4() {
             CPyCppyy::UnregisterExecutor("APICheck4*");

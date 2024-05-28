@@ -13,7 +13,7 @@
 #define ROOT_RRawFileUnix
 
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstddef>
 #include <cstdint>

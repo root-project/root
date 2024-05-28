@@ -71,8 +71,8 @@ if(MSVC)
    target_include_directories(MetaCling PRIVATE
       ${CMAKE_SOURCE_DIR}/core/winnt/inc
    )
-   if(winrtdebug AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-      set_source_files_properties(TCling.cxx COMPILE_FLAGS "/bigobj")
+   if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+     set_source_files_properties(TCling.cxx COMPILE_FLAGS $<$<CONFIG:Debug>:/bigobj>)
    endif()
 endif()
 
@@ -103,6 +103,10 @@ if (clad)
   else()
     set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
   endif()
+  # Link our clad libraries to clang. If users use the clang from ROOT they will
+  # also be able to use clad out of the box.
+  add_dependencies(clang clad)
+  target_link_libraries(clang PUBLIC ${CLING_PLUGIN_LINK_LIBS})
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
@@ -111,11 +115,8 @@ ROOT_LINKER_LIBRARY(Cling
         $<TARGET_OBJECTS:MetaCling>
         LIBRARIES ${CLING_LIBRARIES} ${LINK_LIBS} ${CLING_PLUGIN_LINK_LIBS})
 
-string(TOUPPER "${LLVM_BUILD_TYPE}" THE_BUILD_TYPE)
-if("${THE_BUILD_TYPE}" STREQUAL DEBUG OR "${THE_BUILD_TYPE}" STREQUAL RELWITHDEBINFO)
-  # When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
-  add_dependencies(Cling rootcling_stage1)
-endif()
+# When these two link at the same time, they can exhaust the RAM on many machines, since they both link against llvm.
+add_dependencies(Cling rootcling_stage1)
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -135,12 +136,6 @@ if(MSVC)
         __std_find_trivial_2
         __std_find_trivial_4
         __std_find_trivial_8
-    )
-  endif()
-
-  if(MSVC_VERSION GREATER_EQUAL 1939)
-    set(cling_exports ${cling_exports}
-      _Thrd_sleep_for
     )
   endif()
 
@@ -196,6 +191,18 @@ if(MSVC)
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
+    if(MSVC_VERSION GREATER_EQUAL 1938)
+      set(cling_exports ${cling_exports}
+        ??$__std_find_trivial@$$CBDD@@YAPBDPBD0D@Z
+        ??$__std_find_trivial@DD@@YAPADPAD0D@Z
+        ??$__std_find_trivial@HH@@YAPAHPAH0H@Z
+        ??$__std_find_trivial@IH@@YAPAIPAI0H@Z
+        ___std_find_trivial_1@12
+        ___std_find_trivial_2@12
+        ___std_find_trivial_4@12
+        ___std_find_trivial_8@16
+      )
+    endif()
     if(MSVC_VERSION LESS 1914)
       set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
     endif()

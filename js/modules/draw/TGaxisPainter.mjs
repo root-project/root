@@ -5,7 +5,8 @@ import { EAxisBits, TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
 import { assignContextMenu } from '../gui/menu.mjs';
-import { proivdeEvalPar } from '../hist/TF1Painter.mjs';
+import { getHPainter } from '../gui/display.mjs';
+import { proivdeEvalPar } from '../base/func.mjs';
 
 
 /** @summary Drawing TGaxis
@@ -144,15 +145,30 @@ class TGaxisPainter extends TAxisPainter {
    }
 
    /** @summary Check if there is function for TGaxis can be found */
-   checkFuncion() {
+   async checkFuncion() {
       const gaxis = this.getObject();
-      if (!gaxis.fFunctionName)
+      if (!gaxis.fFunctionName) {
          this.axis_func = null;
-      else
-         this.axis_func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
+         return;
+      }
+      const func = this.getPadPainter()?.findInPrimitives(gaxis.fFunctionName, clTF1);
 
-      if (this.axis_func)
-         proivdeEvalPar(this.axis_func);
+      let promise = Promise.resolve(func);
+      if (!func) {
+         const h = getHPainter(),
+               item = h?.findItem({ name: gaxis.fFunctionName, check_keys: true });
+         if (item) {
+            promise = h.getObject({ item }).then(res => {
+               return res?.obj?._typename === clTF1 ? res.obj : null;
+            });
+         }
+      }
+
+      return promise.then(f => {
+         this.axis_func = f;
+         if (f)
+            proivdeEvalPar(f);
+      });
    }
 
    /** @summary Create handle for custom function in the axis */
@@ -209,9 +225,8 @@ class TGaxisPainter extends TAxisPainter {
 
       return ensureTCanvas(painter, false).then(() => {
          if (opt) painter.convertTo(opt);
-         painter.checkFuncion();
-         return painter.redraw();
-      });
+         return painter.checkFuncion();
+      }).then(() => painter.redraw());
    }
 
 } // class TGaxisPainter

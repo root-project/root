@@ -5,12 +5,15 @@ import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, de
 import { select as d3_select } from '../d3.mjs';
 import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
-import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
+import { BasePainter, getElementRect, _loadJSDOM, convertDate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
 import { BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout, getHPainter, setHPainter } from './display.mjs';
 import { showProgress, ToolbarIcons, registerForResize, injectStyle } from './utils.mjs';
+
+
+const kTopFolder = 'TopFolder';
 
 function injectHStyle(node) {
    function img(name, sz, fmt, code) {
@@ -78,6 +81,18 @@ ${img('member', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJL
 ${img('tf1', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8/SMz///+Cf5VqAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4QHgSCla+2AAAAL0lEQVQI12MQYAACrAQXiFBoABINCgwMQgwcDAwSDEwMDKmhodMYJjAwaKDrAAEAoRAEjHDJ/uQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMTEtMTRUMTc6Mjk6MjErMDE6MDDxcSccAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTExLTE0VDE3OjI5OjA1KzAxOjAwNka8zgAAAABJRU5ErkJggg==')}
 ${img('tf2', 16, 'png', 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII=')}
 `, node, 'jsroot_hstyle');
+}
+
+/** @summary Return size as string with suffix like MB or KB
+  * @private */
+function getSizeStr(sz) {
+   if (sz < 10000)
+      return sz.toFixed(0) + 'B';
+   if (sz < 1e6)
+      return (sz/1e3).toFixed(2) + 'KiB';
+   if (sz < 1e9)
+      return (sz/1e6).toFixed(2) + 'MiB';
+   return (sz/1e9).toFixed(2) + 'GiB';
 }
 
 /** @summary draw list content
@@ -259,14 +274,11 @@ function keysHierarchy(folder, keys, file, dirname) {
          _name: key.fName + ';' + key.fCycle,
          _cycle: key.fCycle,
          _kind: prROOT + key.fClassName,
-         _title: key.fTitle,
+         _title: key.fTitle + ` (size: ${getSizeStr(key.fObjlen)})`,
          _keyname: key.fName,
          _readobj: null,
          _parent: folder
       };
-
-      if (key.fObjlen > 1e5)
-         item._title += ' (size: ' + (key.fObjlen/1e6).toFixed(1) + 'MB)';
 
       if (key.fRealName)
          item._realname = key.fRealName + ';' + key.fCycle;
@@ -767,19 +779,19 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Create file hierarchy
      * @private */
-   fileHierarchy(file) {
-      const painter = this,
+   fileHierarchy(file, folder) {
+      const painter = this;
+      if (!folder) folder = {};
 
-       folder = {
-         _name: file.fFileName,
-         _title: (file.fTitle ? file.fTitle + ', path ' : '') + file.fFullURL,
-         _kind: kindTFile,
-         _file: file,
-         _fullurl: file.fFullURL,
-         _localfile: file.fLocalFile,
-         _had_direct_read: false,
-         // this is central get method, item or itemname can be used, returns promise
-         _get(item, itemname) {
+      folder._name = file.fFileName;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
+      folder._kind = kindTFile;
+      folder._file = file;
+      folder._fullurl = file.fFullURL;
+      folder._localfile = file.fLocalFile;
+      folder._had_direct_read = false;
+      // this is central get method, item or itemname can be used, returns promise
+      folder._get = function(item, itemname) {
             if (item?._readobj)
                return Promise.resolve(item._readobj);
 
@@ -824,8 +836,7 @@ class HierarchyPainter extends BasePainter {
             if (this._localfile) return openFile(this._localfile).then(f => readFileObject(f));
             if (this._fullurl) return openFile(this._fullurl).then(f => readFileObject(f));
             return Promise.resolve(null);
-         }
-      };
+         };
 
       keysHierarchy(folder, file.fKeys, file, '');
 
@@ -866,7 +877,7 @@ class HierarchyPainter extends BasePainter {
 
          let pos = fullname.length;
 
-         if (!top._parent && (top._kind !== 'TopFolder') && (fullname.indexOf(top._name) === 0)) {
+         if (!top._parent && (top._kind !== kTopFolder) && (fullname.indexOf(top._name) === 0)) {
             // it is allowed to provide item name, which includes top-parent like file.root/folder/item
             // but one could skip top-item name, if there are no other items
             if (fullname === top._name) return top;
@@ -899,7 +910,7 @@ class HierarchyPainter extends BasePainter {
                }
 
                // if first child online, check its elements
-               if ((top._kind === 'TopFolder') && (top._childs[0]._online !== undefined)) {
+               if ((top._kind === kTopFolder) && (top._childs[0]._online !== undefined)) {
                   for (let i = 0; i < top._childs[0]._childs.length; ++i) {
                      if (top._childs[0]._childs[i]._name === localname)
                         return process_child(top._childs[0]._childs[i], true);
@@ -945,21 +956,26 @@ class HierarchyPainter extends BasePainter {
              return process_child(child);
          }
 
-         return (arg.last_exists && top) ? { last: top, rest: fullname } : null;
+         return arg.last_exists ? { last: top, rest: fullname } : null;
       }
 
       let top = this.h, itemname = '';
 
       if (isStr(arg)) {
-         itemname = arg; arg = {};
+         itemname = arg;
+         arg = {};
       } else if (isObject(arg)) {
-         itemname = arg.name; if ('top' in arg) top = arg.top;
+         itemname = arg.name;
+         if ('top' in arg)
+            top = arg.top;
       } else
          return null;
 
-      if (itemname === '__top_folder__') return top;
+      if (itemname === '__top_folder__')
+         return top;
 
-      if (isStr(itemname) && (itemname.indexOf('img:') === 0)) return null;
+      if (isStr(itemname) && (itemname.indexOf('img:') === 0))
+         return null;
 
       return find_in_hierarchy(top, itemname);
    }
@@ -971,7 +987,8 @@ class HierarchyPainter extends BasePainter {
      * @return {string} produced name
      * @private */
    itemFullName(node, uptoparent, compact) {
-      if (node && node._kind === 'TopFolder') return '__top_folder__';
+      if (node?._kind === kTopFolder)
+         return '__top_folder__';
 
       let res = '';
 
@@ -979,7 +996,7 @@ class HierarchyPainter extends BasePainter {
          // online items never includes top-level folder
          if ((node._online !== undefined) && !uptoparent) return res;
 
-         if ((node === uptoparent) || (node._kind === 'TopFolder')) break;
+         if ((node === uptoparent) || (node._kind === kTopFolder)) break;
          if (compact && !node._parent) break; // in compact form top-parent is not included
          if (res) res = '/' + res;
          res = node._name + res;
@@ -1697,6 +1714,8 @@ class HierarchyPainter extends BasePainter {
             this.refreshHtml();
          } else if (arg === 'dark')
             this.changeDarkMode();
+         else if (arg === 'width')
+            this.brlayout?.adjustSeparators(settings.BrowserWidth, null);
       });
    }
 
@@ -1834,9 +1853,10 @@ class HierarchyPainter extends BasePainter {
             }
 
             if (fileprop && sett.opts && !fileprop.localfile) {
+               const url = settings.NewTabUrl || source_dir;
                let filepath = qualifyURL(fileprop.fileurl);
-               if (filepath.indexOf(source_dir) === 0)
-                  filepath = filepath.slice(source_dir.length);
+               if (filepath.indexOf(url) === 0)
+                  filepath = filepath.slice(url.length);
                filepath = `${fileprop.kind}=${filepath}`;
                if (fileprop.itemname) {
                   let name = fileprop.itemname;
@@ -1847,9 +1867,49 @@ class HierarchyPainter extends BasePainter {
                let arg0 = 'nobrowser';
                if (settings.WithCredentials)
                   arg0 += '&with_credentials';
+               if (settings.NewTabUrlPars)
+                  arg0 += '&' + settings.NewTabUrlPars;
+               if (settings.NewTabUrlExportSettings) {
+                  if (gStyle.fOptStat !== 1111)
+                     arg0 += `&optstat=${gStyle.fOptStat}`;
+                  if (gStyle.fOptFit !== 0)
+                     arg0 += `&optfit=${gStyle.fOptFit}`;
+                  if (gStyle.fOptDate !== 0)
+                     arg0 += `&optdate=${gStyle.fOptDate}`;
+                  if (gStyle.fOptFile !== 0)
+                     arg0 += `&optfile=${gStyle.fOptFile}`;
+                  if (gStyle.fOptTitle !== 1)
+                     arg0 += `&opttitle=${gStyle.fOptTitle}`;
+                  if (settings.TimeZone === 'UTC')
+                     arg0 += '&utc';
+                  else if (settings.TimeZone)
+                     arg0 += `&timezone='${settings.TimeZone}'`;
+                  if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
+                     arg0 += `&datex=${gStyle.fDateX.toFixed(3)}`;
+                  if (Math.abs(gStyle.fDateY - 0.01) > 1e-3)
+                     arg0 += `&datey=${gStyle.fDateY.toFixed(3)}`;
+                  if (gStyle.fHistMinimumZero)
+                     arg0 += '&histzero';
+                  if (settings.DarkMode)
+                     arg0 += '&dark=on';
+                  if (!settings.UseStamp)
+                     arg0 += '&usestamp=off';
+                  if (settings.OnlyLastCycle)
+                     arg0 += '&lastcycle';
+                  if (settings.OptimizeDraw !== 1)
+                     arg0 += `&optimize=${settings.OptimizeDraw}`;
+                  if (settings.MaxRanges !== 200)
+                     arg0 += `&maxranges=${settings.MaxRanges}`;
+                  if (settings.FuncAsCurve)
+                     arg0 += '&tf1=curve';
+                  if (!settings.ToolBar && !settings.Tooltip && !settings.ContextMenu && !settings.Zooming && !settings.MoveResize && !settings.DragAndDrop)
+                     arg0 += '&interactive=0';
+                  else if (!settings.ContextMenu)
+                     arg0 += '&nomenu';
+               }
 
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${source_dir}?${arg0}&${filepath}&opt=${arg}`),
+                                arg => window.open(`${url}?${arg0}&${filepath}&opt=${arg}`),
                                 'Draw item in the new browser tab or window');
             }
 
@@ -2110,7 +2170,7 @@ class HierarchyPainter extends BasePainter {
       if (itemname === '$legend') {
          const cp = getElementCanvPainter(divid);
          if (isFunc(cp?.buildLegend))
-            return cp.buildLegend(opt).then(lp => drop_complete(lp));
+            return cp.buildLegend(0, 0, 0, 0, '', opt).then(lp => drop_complete(lp));
          console.error('Not possible to build legend');
          return drop_complete(null);
       }
@@ -2429,7 +2489,7 @@ class HierarchyPainter extends BasePainter {
             hitem = d.last;
          }
 
-         if (hitem) {
+         if (hitem) { // deepscan-disable-line
             // check that item is visible (opened), otherwise should enable parent
 
             let prnt = hitem._parent;
@@ -2511,7 +2571,7 @@ class HierarchyPainter extends BasePainter {
          }
 
          // try to use expand function
-         if (_obj && isFunc(_item?._expand)) {
+         if (_obj && isFunc(_item._expand)) {
             if (_item._expand(_item, _obj)) {
                _item._isopen = true;
                if (_item._parent && !_item._parent._isopen) {
@@ -2607,6 +2667,7 @@ class HierarchyPainter extends BasePainter {
       if (isfileopened) return;
 
       return httpRequest(filepath, 'object').then(res => {
+         if (!res) return;
          const h1 = { _jsonfile: filepath, _kind: prROOT + res._typename, _jsontmp: res, _name: filepath.split('/').pop() };
          if (res.fTitle) h1._title = res.fTitle;
          h1._get = function(item /* ,itemname */) {
@@ -2620,11 +2681,11 @@ class HierarchyPainter extends BasePainter {
          };
          if (!this.h)
             this.h = h1;
-         else if (this.h._kind === 'TopFolder')
+         else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
          else {
             const h0 = this.h, topname = ('_jsonfile' in h0) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1] };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1] };
          }
 
          return this.refreshHtml();
@@ -2647,6 +2708,18 @@ class HierarchyPainter extends BasePainter {
       }
    }
 
+   /** @summary Find ROOT file which corresponds to provided item name
+     * @private */
+   findRootFileForItem(itemname) {
+      let item = this.findItem(itemname);
+      while (item) {
+         if ((item._kind === kindTFile) && item._fullurl && item._file)
+            return item;
+         item = item?._parent;
+      }
+      return null;
+   }
+
    /** @summary Open ROOT file
      * @param {string} filepath - URL to ROOT file, argument for openFile
      * @return {Promise} when file is opened */
@@ -2665,11 +2738,11 @@ class HierarchyPainter extends BasePainter {
          if (!this.h) {
             this.h = h1;
             if (this._topname) h1._name = this._topname;
-         } else if (this.h._kind === 'TopFolder')
+         } else if (this.h._kind === kTopFolder)
             this.h._childs.push(h1);
            else {
             const h0 = this.h, topname = (h0._kind === kindTFile) ? 'Files' : 'Items';
-            this.h = { _name: topname, _kind: 'TopFolder', _childs: [h0, h1], _isopen: true };
+            this.h = { _name: topname, _kind: kTopFolder, _childs: [h0, h1], _isopen: true };
          }
 
          return this.refreshHtml();
@@ -2681,6 +2754,61 @@ class HierarchyPainter extends BasePainter {
             setTimeout(() => d3_select('#gui_fileCORS').style('background', ''), 5000);
          return false;
       }).finally(() => showProgress());
+   }
+
+   /** @summary Create list of files for specified directory */
+   async listServerDir(dirname) {
+      return httpRequest(dirname, 'text').then(res => {
+         if (!res) return false;
+         const h = { _name: 'Files', _kind: kTopFolder, _childs: [], _isopen: true };
+         let p = 0;
+         while (p < res.length) {
+            p = res.indexOf('a href="', p+1);
+            if (p < 0) break;
+            p += 8;
+            const p2 = res.indexOf('"', p+1);
+            if (p2 < 0) break;
+
+            const fname = res.slice(p, p2);
+            p = p2 + 1;
+            if ((fname.lastIndexOf('.root') === fname.length - 5) && (fname.length > 5)) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _url: dirname + fname, _kind: kindTFile,
+                  _click_action: 'expand', _more: true, _obj: {},
+                  _expand: item => {
+                     return openFile(item._url).then(file => {
+                        if (!file) return false;
+                        delete item._exapnd;
+                        delete item._more;
+                        delete item._click_action;
+                        delete item._obj;
+                        item._isopen = true;
+                        this.fileHierarchy(file, item);
+                        this.updateTreeNode(item);
+                     });
+                  }
+               });
+            } else if (((fname.lastIndexOf('.json.gz') === fname.length - 8) && (fname.length > 8)) ||
+                       ((fname.lastIndexOf('.json') === fname.length - 5) && (fname.length > 5))) {
+               h._childs.push({
+                  _name: fname, _title: dirname + fname, _jsonfile: dirname + fname, _can_draw: true,
+                  _get: item => {
+                     return httpRequest(item._jsonfile, 'object').then(res => {
+                        if (res) {
+                          item._kind = prROOT + res._typename;
+                          item._jsontmp = res;
+                          this.updateTreeNode(item);
+                        }
+                        return res;
+                     });
+                  }
+               });
+            }
+         }
+         if (h._childs.length > 0)
+            this.h = h;
+         return true;
+      });
    }
 
    /** @summary Apply loaded TStyle object
@@ -2843,9 +2971,10 @@ class HierarchyPainter extends BasePainter {
      * @param {string} server_address - URL to server like 'http://localhost:8090/'
      * @return {Promise} when ready */
    async openOnline(server_address) {
-      const AdoptHierarchy = result => {
+      const adoptHierarchy = async result => {
          this.h = result;
-         if (!result) return Promise.resolve(null);
+         if (!result)
+            return Promise.resolve(null);
 
          if (this.h?._title && (typeof document !== 'undefined'))
             document.title = this.h._title;
@@ -2855,9 +2984,7 @@ class HierarchyPainter extends BasePainter {
          // mark top hierarchy as online data and
          this.h._online = server_address;
 
-         this.h._get = (item, itemname, option) => {
-            return this.getOnlineItem(item, itemname, option);
-         };
+         this.h._get = (item, itemname, option) => this.getOnlineItem(item, itemname, option);
 
          this.h._expand = onlineHierarchy;
 
@@ -2904,10 +3031,10 @@ class HierarchyPainter extends BasePainter {
       if (isObject(server_address)) {
          const h = server_address;
          server_address = '';
-         return AdoptHierarchy(h);
+         return adoptHierarchy(h);
       }
 
-      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => AdoptHierarchy(hh));
+      return httpRequest(server_address + 'h.json?compact=3', 'object').then(hh => adoptHierarchy(hh));
    }
 
    /** @summary Get properties for online item  - server name and relative name
@@ -3308,6 +3435,7 @@ class HierarchyPainter extends BasePainter {
 
       let prereq = getOption('prereq') || '',
           load = getOption('load'),
+          dir = getOption('dir'),
           inject = getOption('inject'),
           filesarr = getOptionAsArray('#file;files'),
           itemsarr = getOptionAsArray('#item;items'),
@@ -3358,6 +3486,8 @@ class HierarchyPainter extends BasePainter {
       if (!this.disp_kind) {
          if (isStr(layout) && layout)
             this.disp_kind = layout;
+         else if (settings.DislpayKind && settings.DislpayKind !== 'simple')
+            this.disp_kind = settings.DislpayKind;
          else {
             switch (itemsarr.length) {
                case 0:
@@ -3420,7 +3550,9 @@ class HierarchyPainter extends BasePainter {
             promise = this.openJsonFile(jsonarr.shift());
          else if (filesarr.length > 0)
             promise = this.openRootFile(filesarr.shift());
-         else if (expanditems.length > 0)
+         else if (dir) {
+            promise = this.listServerDir(dir); dir = '';
+         } else if (expanditems.length > 0)
             promise = this.expandItem(expanditems.shift());
          else if (style.length > 0)
             promise = this.applyStyle(style.shift());
@@ -3622,7 +3754,7 @@ class HierarchyPainter extends BasePainter {
             menu.show();
          });
       }).on('dblclick', () => {
-         this.createBrowser(this?.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
+         this.createBrowser(this.brlayout?.browser_kind === 'float' ? 'fix' : 'float', true);
       });
 
       if (!this.is_online && !this.no_select) {
@@ -3664,7 +3796,11 @@ class HierarchyPainter extends BasePainter {
          ['simple', 'vert2', 'vert3', 'vert231', 'horiz2', 'horiz32', 'flex', 'tabs',
           'grid 2x2', 'grid 1x3', 'grid 2x3', 'grid 3x3', 'grid 4x4'].forEach(kind => layout.append('option').attr('value', kind).html(kind));
 
-         layout.on('change', ev => this.setDisplay(ev.target.value || 'flex', this.gui_div + '_drawing'));
+         layout.on('change', ev => {
+            const kind = ev.target.value || 'flex';
+            this.setDisplay(kind, this.gui_div + '_drawing');
+            settings.DislpayKind = kind;
+         });
       }
 
       this.setDom(this.gui_div + '_browser_hierarchy');
@@ -3755,7 +3891,7 @@ ObjectPainter.prototype.showInspector = function(opt, obj) {
        .style('right', w);
 
    if (!obj?._typename)
-      obj = this.getObject();
+      obj = isFunc(this.getPrimaryObject) ? this.getPrimaryObject() : this.getObject();
 
    return drawInspector(id, obj, opt);
 };

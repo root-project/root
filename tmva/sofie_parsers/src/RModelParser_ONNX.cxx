@@ -1,3 +1,4 @@
+#include "Byteswap.h"
 #include "TMVA/RModelParser_ONNX.hxx"
 #include "onnx_proto3.pb.h"
 
@@ -32,6 +33,12 @@ extern ParserFuncSignature ParseMax;
 extern ParserFuncSignature ParseMin;
 extern ParserFuncSignature ParseMean;
 extern ParserFuncSignature ParseSum;
+//Comparision Operators
+extern ParserFuncSignature ParseEq;
+extern ParserFuncSignature ParseLess;
+extern ParserFuncSignature ParseLessEq;
+extern ParserFuncSignature ParseGreater;
+extern ParserFuncSignature ParseGreaterEq;
 // Reduce operators
 extern ParserFuncSignature ParseReduceMean;
 extern ParserFuncSignature ParseReduceSumsquare;
@@ -63,6 +70,9 @@ extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
 extern ParserFuncSignature ParseErf;
+extern ParserFuncSignature ParseElu;
+extern ParserFuncSignature ParseEyeLike;
+extern ParserFuncSignature ParseRange;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -94,6 +104,12 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Min", ParseMin);
    RegisterOperator("Mean", ParseMean);
    RegisterOperator("Sum", ParseSum);
+   //Comparision Operators
+   RegisterOperator("Equal", ParseEq);
+   RegisterOperator("Less", ParseLess);
+   RegisterOperator("LessOrEqual", ParseLessEq);
+   RegisterOperator("Greater", ParseGreater);
+   RegisterOperator("GreaterOrEqual", ParseGreaterEq);
    // Reduce operators
    RegisterOperator("ReduceMean", ParseReduceMean);
    RegisterOperator("ReduceSumsquare", ParseReduceSumsquare);
@@ -132,6 +148,9 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
    RegisterOperator("Erf", ParseErf);
+   RegisterOperator("Elu", ParseElu);
+   RegisterOperator("EyeLike", ParseEyeLike);
+   RegisterOperator("Range", ParseRange);
 }
 
 // Destructor of the parser
@@ -176,37 +195,40 @@ ETensorType RModelParser_ONNX::GetTensorType(const std::string &name)
 std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes)
 {
-   int idx = (nodes.size() > i) ? nodes[i] : (int)i;
+   if (i >= nodes.size())
+      throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
+   int idx = nodes[i];
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
    if (fVerbose)
       std::cout << "Parsing an operator " << op_type << std::endl;
 
-
-   if (op_type == "MatMul") {
-      // Fuse MatMul and Add
-      int idx2 = (nodes.size() > i + 1) ? nodes[i + 1] : (int)i + 1;
-      if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
-         return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
-      }
-      else if(graphproto.node(idx2).op_type() != "Add"){
-         return ParseMatMul(*this, graphproto.node(idx));
-      }
-   } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
+   // try to fuse with following operator in case it is not last one
+   if (i < nodes.size() - 1) {
+      int idx2 = nodes[i+1];
+      if (op_type == "MatMul") {
+        // Fuse MatMul and Add
+         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
+            return ParseFuseMatMulAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+         }
+         else {
+            return ParseMatMul(*this, graphproto.node(idx));
+         }
+      } else if (nodeproto.op_type() == "Conv" || nodeproto.op_type() == "ConvTranspose") {
       // Fuse Conv or ConvTranspose without bias and Add
-      int j = (nodes.size() > i + 1) ? nodes[i + 1] : (int)i + 1;
-      if (j < graphproto.node_size() && graphproto.node(j).op_type() == "Add") {
-         if (nodeproto.op_type() == "Conv") {
-            return ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(j));
-         } else {
-            return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(j));
+         if (idx2 < graphproto.node_size() && graphproto.node(idx2).op_type() == "Add") {
+            if (nodeproto.op_type() == "Conv") {
+               return ParseFuseConvAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+            } else {
+               return ParseFuseConvTransposeAdd(*this, graphproto.node(idx), graphproto.node(idx2));
+            }
          }
       }
    }
 
-   // skip then the following Add
+   // skip then the following Add if it was fused before
    if (idx > 0 && op_type == "Add") {
-      int idx0 = (nodes.size() > i) ? nodes[i - 1] : (int)i - 1;
+      int idx0 = nodes[i - 1];
       if (graphproto.node(idx0).op_type() == "MatMul")
          return nullptr;
       else if (graphproto.node(idx0).op_type() == "ConvTranspose")
@@ -353,9 +375,14 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       case ETensorType::FLOAT: {
          std::shared_ptr<void> data(malloc(fLength * sizeof(float)), free);
 
-         if (tensorproto->raw_data().empty() == false) {
-            auto raw_data_ptr = reinterpret_cast<float *>(const_cast<char *>(tensorproto->raw_data().c_str()));
-            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(float));
+         if (!tensorproto->raw_data().empty()) {
+#ifdef R__BYTESWAP
+            std::memcpy(data.get(), tensorproto->raw_data().c_str(), fLength * sizeof(float));
+#else
+            for (std::size_t k = 0; k < fLength; ++k)
+               (reinterpret_cast<uint32_t *>(data.get()))[k] =
+                  Rbswap_32((reinterpret_cast<const uint32_t *>(tensorproto->raw_data().c_str()))[k]);
+#endif
          } else {
             tensorproto->mutable_float_data()->ExtractSubrange(0, tensorproto->float_data_size(),
                                                                static_cast<float *>(data.get()));
@@ -369,9 +396,14 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       case ETensorType::INT64: {
          std::shared_ptr<void> data(malloc(fLength * sizeof(int64_t)), free);
 
-         if (tensorproto->raw_data().empty() == false) {
-            auto raw_data_ptr = reinterpret_cast<int64_t *>(const_cast<char *>(tensorproto->raw_data().c_str()));
-            std::memcpy(data.get(), raw_data_ptr, fLength * sizeof(int64_t));
+         if (!tensorproto->raw_data().empty()) {
+#ifdef R__BYTESWAP
+            std::memcpy(data.get(), tensorproto->raw_data().c_str(), fLength * sizeof(int64_t));
+#else
+            for (std::size_t k = 0; k < fLength; ++k)
+               (reinterpret_cast<uint64_t *>(data.get()))[k] =
+                  Rbswap_64((reinterpret_cast<const uint64_t *>(tensorproto->raw_data().c_str()))[k]);
+#endif
          } else {
             tensorproto->mutable_int64_data()->ExtractSubrange(0, tensorproto->int64_data_size(),
                                                                static_cast<int64_t *>(data.get()));

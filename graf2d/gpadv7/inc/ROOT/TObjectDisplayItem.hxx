@@ -58,7 +58,7 @@ public:
       fOwner = true;
    }
 
-   virtual ~TObjectDisplayItem()
+   ~TObjectDisplayItem() override
    {
       if (fOwner) delete fObject;
    }

@@ -28,8 +28,8 @@ public:
    enum EMode { kPlaneIntersect, kBar, kAxis, kGridFront, kGridBack };
 
 private:
-   TGLCameraOverlay(const TGLCameraOverlay&);            // Not implemented
-   TGLCameraOverlay& operator=(const TGLCameraOverlay&); // Not implemented
+   TGLCameraOverlay(const TGLCameraOverlay&) = delete;
+   TGLCameraOverlay& operator=(const TGLCameraOverlay&) = delete;
 
 protected:
    Bool_t         fShowOrthographic;

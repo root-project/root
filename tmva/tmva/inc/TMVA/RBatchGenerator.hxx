@@ -29,7 +29,7 @@ private:
    std::string fTreeName;
 
    std::vector<std::string> fCols;
-   std::vector<std::string> fFilters;
+   std::string fFilters;
 
    std::size_t fChunkSize;
    std::size_t fMaxChunks;
@@ -65,10 +65,10 @@ private:
 
 public:
    RBatchGenerator(const std::string &treeName, const std::string &fileName, const std::size_t chunkSize,
-                   const std::size_t batchSize, const std::vector<std::string> &cols,
-                   const std::vector<std::string> &filters = {}, const std::vector<std::size_t> &vecSizes = {},
-                   const float vecPadding = 0.0, const float validationSplit = 0.0, const std::size_t maxChunks = 0,
-                   const std::size_t numColumns = 0, bool shuffle = true)
+                   const std::size_t batchSize, const std::vector<std::string> &cols, const std::string &filters = "",
+                   const std::vector<std::size_t> &vecSizes = {}, const float vecPadding = 0.0,
+                   const float validationSplit = 0.0, const std::size_t maxChunks = 0, const std::size_t numColumns = 0,
+                   bool shuffle = true)
       : fTreeName(treeName),
         fFileName(fileName),
         fChunkSize(chunkSize),
@@ -97,7 +97,7 @@ public:
 
       // Create tensor to load the chunk into
       fChunkTensor =
-         std::make_unique<TMVA::Experimental::RTensor<float>>((std::vector<std::size_t>){fChunkSize, fNumColumns});
+         std::make_unique<TMVA::Experimental::RTensor<float>>(std::vector<std::size_t>{fChunkSize, fNumColumns});
    }
 
    ~RBatchGenerator() { DeActivate(); }

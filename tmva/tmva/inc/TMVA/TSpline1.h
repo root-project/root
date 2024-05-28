@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TSpline1                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Linear interpolation class; derivative of TSpline                         *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline1
@@ -43,8 +43,7 @@ namespace TMVA {
    class TSpline1 : public TSpline {
 
    public:
-
-      TSpline1( const TString& title, TGraph* theGraph );
+      TSpline1(const TString &title, const TGraph *theGraph);
       virtual ~TSpline1( void );
 
       virtual  Double_t Eval( Double_t x ) const;
@@ -53,11 +52,9 @@ namespace TMVA {
       virtual void BuildCoeff( void );
       virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
-      const TGraph* GetGraph() const { return fGraph; }
-
    private:
-
-      TGraph *fGraph;  ///< graph that is splined
+      std::vector<Double_t> fX;
+      std::vector<Double_t> fY;
 
       ClassDef(TSpline1,0); //Linear interpolation class
    };

@@ -269,6 +269,40 @@ TGDMLMatrix *TGeoOpticalSurface::GetProperty(Int_t i) const
 }
 
 //_____________________________________________________________________________
+const char *TGeoOpticalSurface::GetConstPropertyRef(const char *property) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed *)fConstProperties.FindObject(property);
+   return (prop) ? prop->GetTitle() : nullptr;
+}
+
+//_____________________________________________________________________________
+Double_t TGeoOpticalSurface::GetConstProperty(const char *property, Bool_t *err) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed *)fConstProperties.FindObject(property);
+   if (!prop) {
+      if (err)
+         *err = kTRUE;
+      return 0.;
+   }
+   return gGeoManager->GetProperty(prop->GetTitle(), err);
+}
+
+//_____________________________________________________________________________
+Double_t TGeoOpticalSurface::GetConstProperty(Int_t i, Bool_t *err) const
+{
+   // Find reference for a given constant property
+   TNamed *prop = (TNamed *)fConstProperties.At(i);
+   if (!prop) {
+      if (err)
+         *err = kTRUE;
+      return 0.;
+   }
+   return gGeoManager->GetProperty(prop->GetTitle(), err);
+}
+
+//_____________________________________________________________________________
 bool TGeoOpticalSurface::AddProperty(const char *property, const char *ref)
 {
    fProperties.SetOwner();
@@ -277,6 +311,18 @@ bool TGeoOpticalSurface::AddProperty(const char *property, const char *ref)
       return false;
    }
    fProperties.Add(new TNamed(property, ref));
+   return true;
+}
+
+//_____________________________________________________________________________
+bool TGeoOpticalSurface::AddConstProperty(const char *property, const char *ref)
+{
+   fConstProperties.SetOwner();
+   if (GetConstPropertyRef(property)) {
+      Error("AddConstProperty", "Constant property %s already added to material %s", property, GetName());
+      return false;
+   }
+   fConstProperties.Add(new TNamed(property, ref));
    return true;
 }
 
@@ -292,6 +338,16 @@ void TGeoOpticalSurface::Print(Option_t *) const
       TNamed *property;
       while ((property = (TNamed *)next()))
          printf("   property: %s ref: %s\n", property->GetName(), property->GetTitle());
+   }
+   if (fConstProperties.GetSize()) {
+      TIter next(&fConstProperties);
+      TNamed *property;
+      Bool_t err;
+      while ((property = (TNamed *)next()))   {
+         Double_t value = this->GetConstProperty(property->GetName(), &err);
+         printf("   constant: %s ref: %s value: %g\n",
+                property->GetName(), property->GetTitle(), value);
+      }
    }
 }
 

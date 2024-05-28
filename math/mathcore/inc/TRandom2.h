@@ -38,8 +38,9 @@ public:
     void     RndmArray(Int_t n, Float_t *array) override;
     void     RndmArray(Int_t n, Double_t *array) override;
     void     SetSeed(ULong_t seed=0) override;
+    UInt_t GetSeed() const override;
 
-   ClassDefOverride(TRandom2,1)  //Random number generator with periodicity of 10**26
+    ClassDefOverride(TRandom2, 1) // Random number generator with periodicity of 10**26
 };
 
 R__EXTERN TRandom *gRandom;

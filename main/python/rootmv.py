@@ -23,9 +23,17 @@ EPILOG = """Examples:
 - rootmv --recreate source.root:hist dest.root
   Recreate the destination file 'dest.root' and move the histogram named 'hist' from 'source.root' into it.
 
-- rootmv -c 1 source.root:hist dest.root
-  Change the compression level of the destination file 'dest.root' and move the histogram named 'hist' from 'source.root' into it. For more information about compression settings of ROOT file, please look at the reference guide available on the ROOT site.
-"""
+- rootmv -c 101 source.root:hist dest.root
+  Change the compression settings of the destination file 'dest.root' to ZLIB algorithm with compression level 1 and move the histogram named 'hist' from 'source.root' into it.
+  Meaning of the '-c' argument is given by 'compress = 100 * algorithm + level'.
+  Other examples of usage:
+    * -c 509 : ZSTD with compression level 9
+    * -c 404 : LZ4 with compression level 4
+    * -c 207 : LZMA with compression level 7
+  For more information see https://root.cern.ch/doc/master/classTFile.html#ad0377adf2f3d88da1a1f77256a140d60
+  and https://root.cern.ch/doc/master/structROOT_1_1RCompressionSetting.html
+
+  """
 
 def get_argparse():
 	# Collect arguments with the module argparse

@@ -70,7 +70,7 @@ namespace utils {
     if (!ND->getDeclName().isIdentifier())
       return false;
 
-    return ND->getName().startswith(Synthesize::UniquePrefix);
+    return ND->getName().starts_with(Synthesize::UniquePrefix);
   }
 
   void Analyze::maybeMangleDeclName(const GlobalDecl& GD,
@@ -114,8 +114,7 @@ namespace utils {
 
     Expr* result = nullptr;
     if (CompoundStmt* CS = dyn_cast<CompoundStmt>(FD->getBody())) {
-      ArrayRef<Stmt*> Stmts
-        = llvm::makeArrayRef(CS->body_begin(), CS->size());
+      ArrayRef<Stmt*> Stmts(CS->body_begin(), CS->size());
       int indexOfLastExpr = Stmts.size();
       while(indexOfLastExpr--) {
         if (!isa<NullStmt>(Stmts[indexOfLastExpr]))
@@ -150,8 +149,12 @@ namespace utils {
               newBody.insert(newBody.begin() + indexOfLastExpr, DRE);
 
               // Attach a new body.
+              FPOptionsOverride FPFeatures;
+              if (CS->hasStoredFPFeatures()) {
+                FPFeatures = CS->getStoredFPFeatures();
+              }
               auto newCS = CompoundStmt::Create(S->getASTContext(), newBody,
-                                                CS->getLBracLoc(),
+                                                FPFeatures, CS->getLBracLoc(),
                                                 CS->getRBracLoc());
               FD->setBody(newCS);
               if (FoundAt)
@@ -214,9 +217,12 @@ namespace utils {
       NNS = CreateNestedNameSpecifierForScopeOf(Ctx, argtdecl, true);
     }
     if (NNS) {
+      TemplateName UnderlyingTN(argtdecl);
+      if (UsingShadowDecl *USD = tname.getAsUsingShadowDecl())
+        UnderlyingTN = TemplateName(USD);
       tname = Ctx.getQualifiedTemplateName(NNS,
                                            /*TemplateKeyword=*/ false,
-                                           argtdecl);
+                                           UnderlyingTN);
       changed = true;
     }
     return changed;
@@ -370,6 +376,9 @@ namespace utils {
                                                    true /*FullyQualified*/);
       } else if (const TypedefType* TDD = dyn_cast<TypedefType>(type)) {
         return TypeName::CreateNestedNameSpecifier(Ctx, TDD->getDecl(),
+                                                   true /*FullyQualified*/);
+      } else if (const UsingType* UT = dyn_cast<UsingType>(type)) {
+        return TypeName::CreateNestedNameSpecifier(Ctx, UT->getFoundDecl(),
                                                    true /*FullyQualified*/);
       }
     } else if (const NamespaceDecl* NS = scope->getAsNamespace()) {
@@ -551,8 +560,12 @@ namespace utils {
         Decl* decl = nullptr;
         const TypedefType* typedeftype =
           dyn_cast_or_null<TypedefType>(&(*desugared));
+        const UsingType* usingtype =
+          dyn_cast_or_null<UsingType>(&(*desugared));
         if (typedeftype) {
           decl = typedeftype->getDecl();
+        } else if (usingtype) {
+          decl = usingtype->getFoundDecl();
         } else {
           // There are probably other cases ...
           const TagType* tagdecltype = dyn_cast_or_null<TagType>(&(*desugared));
@@ -727,6 +740,11 @@ namespace utils {
         QT = Ty->desugar();
         return true;
       }
+      case Type::Using: {
+        const UsingType* Ty = llvm::cast<UsingType>(QTy);
+        QT = Ty->desugar();
+        return true;
+      }
       case Type::TypeOf: {
         const TypeOfType* Ty = llvm::cast<TypeOfType>(QTy);
         QT = Ty->desugar();
@@ -769,13 +787,12 @@ namespace utils {
         return false;
       }
       case Type::UnaryTransform: {
+        const UnaryTransformType* Ty = llvm::cast<UnaryTransformType>(QTy);
+        if (Ty->isSugared()) {
+          QT = Ty->desugar();
+          return true;
+        }
         return false;
-        //const UnaryTransformType* Ty = llvm::cast<UnaryTransformType>(QTy);
-        //if (Ty->isSugared()) {
-        //  QT = Ty->desugar();
-        //  return true;
-        //}
-        //return false;
       }
       case Type::Auto: {
         return false;
@@ -839,6 +856,7 @@ namespace utils {
       QualType SubTy = arg.getAsType();
       // Check if the type needs more desugaring and recurse.
       if (isa<TypedefType>(SubTy)
+          || isa<UsingType>(SubTy)
           || isa<TemplateSpecializationType>(SubTy)
           || isa<ElaboratedType>(SubTy)
           || fullyQualifyTmpltArg) {
@@ -1118,8 +1136,12 @@ namespace utils {
       Decl *decl = nullptr;
       const TypedefType* typedeftype =
         dyn_cast_or_null<TypedefType>(QT.getTypePtr());
+      const UsingType* usingtype =
+        dyn_cast_or_null<UsingType>(QT.getTypePtr());
       if (typedeftype) {
         decl = typedeftype->getDecl();
+      } else if (usingtype) {
+        decl = usingtype->getFoundDecl();
       } else {
         // There are probably other cases ...
         const TagType* tagdecltype = dyn_cast_or_null<TagType>(QT.getTypePtr());
@@ -1279,6 +1301,7 @@ namespace utils {
         QualType SubTy = I->getAsType();
         // Check if the type needs more desugaring and recurse.
         if (isa<TypedefType>(SubTy)
+            || isa<UsingType>(SubTy)
             || isa<TemplateSpecializationType>(SubTy)
             || isa<ElaboratedType>(SubTy)
             || fullyQualifyTmpltArg) {
@@ -1350,6 +1373,7 @@ namespace utils {
             QualType SubTy = templateArgs[I].getAsType();
             // Check if the type needs more desugaring and recurse.
             if (isa<TypedefType>(SubTy)
+                || isa<UsingType>(SubTy)
                 || isa<TemplateSpecializationType>(SubTy)
                 || isa<ElaboratedType>(SubTy)
                 || fullyQualifyTmpltArg) {
@@ -1542,6 +1566,8 @@ namespace utils {
     Decl *decl = nullptr;
     if (const TypedefType* typedeftype = llvm::dyn_cast<TypedefType>(TypePtr)) {
       decl = typedeftype->getDecl();
+    } else if (const UsingType* usingtype = llvm::dyn_cast<UsingType>(TypePtr)) {
+      decl = usingtype->getFoundDecl();
     } else {
       // There are probably other cases ...
       if (const TagType* tagdecltype = llvm::dyn_cast_or_null<TagType>(TypePtr))
@@ -1579,6 +1605,16 @@ namespace utils {
                                                            FullyQualify),
                                        true /*Template*/,
                                        TD->getTypeForDecl());
+  }
+
+  NestedNameSpecifier*
+  TypeName::CreateNestedNameSpecifier(const ASTContext& Ctx,
+                                      const UsingShadowDecl* USD,
+                                      bool FullyQualify) {
+    return NestedNameSpecifier::Create(Ctx, CreateOuterNNS(Ctx, USD,
+                                                           FullyQualify),
+                                       true /*Template*/,
+                                       cast<TypeDecl>(USD)->getTypeForDecl());
   }
 
   NestedNameSpecifier*
@@ -1649,7 +1685,7 @@ namespace utils {
     }
 
     NestedNameSpecifier* prefix = nullptr;
-    Qualifiers prefix_qualifiers;
+    Qualifiers prefix_qualifiers = QT.getLocalQualifiers();
     if (const ElaboratedType* etype_input
         = llvm::dyn_cast<ElaboratedType>(QT.getTypePtr())) {
       // Intentionally, we do not care about the other compononent of
@@ -1660,15 +1696,14 @@ namespace utils {
         const NamespaceDecl *ns = prefix->getAsNamespace();
         if (prefix != NestedNameSpecifier::GlobalSpecifier(Ctx)
             && !(ns && ns->isAnonymousNamespace())) {
-          prefix_qualifiers = QT.getLocalQualifiers();
           prefix = GetFullyQualifiedNameSpecifier(Ctx, prefix);
-          QT = QualType(etype_input->getNamedType().getTypePtr(), 0);
         } else {
           prefix = nullptr;
         }
       }
-    } else {
-
+      QT = etype_input->getNamedType();
+    }
+    if (prefix == nullptr) {
       // Create a nested name specifier if needed (i.e. if the decl context
       // is not the global scope.
       prefix = CreateNestedNameSpecifierForScopeOf(Ctx,QT.getTypePtr(),
@@ -1676,7 +1711,7 @@ namespace utils {
 
       // move the qualifiers on the outer type (avoid 'std::const string'!)
       if (prefix) {
-        prefix_qualifiers = QT.getLocalQualifiers();
+        prefix_qualifiers.addQualifiers(QT.getLocalQualifiers());
         QT = QualType(QT.getTypePtr(),0);
       }
     }
@@ -1703,6 +1738,8 @@ namespace utils {
       // We intentionally always use ETK_None, we never want
       // the keyword (humm ... what about anonymous types?)
       QT = Ctx.getElaboratedType(ETK_None,prefix,QT);
+    }
+    if (prefix_qualifiers) {
       QT = Ctx.getQualifiedType(QT, prefix_qualifiers);
     }
     return QT;

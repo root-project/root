@@ -31,7 +31,7 @@ Two-dimensional kernel estimation PDF.
 
 //#include <math.h>
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(Roo2DKeysPdf);
 
@@ -144,7 +144,7 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
     cout << "ERROR:  Roo2DKeysPdf::loadDataSet The input data set is empty.  Unable to begin generating the PDF" << endl;
     return 1;
   }
-  _n16       =  TMath::Power(_nEvents, -0.166666666); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
+  _n16       =  std::pow(_nEvents, -1./6.); // = (4/[n(dim(R) + 2)])^1/(dim(R)+4); dim(R) = 2
 
   _lox       = x.min();
   _hix       = x.max();
@@ -167,12 +167,12 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
   Int_t bad = 0;
   const RooAbsReal & xx = x.arg();
   const RooAbsReal & yy = y.arg();
-  if(! (RooRealVar*)( (RooArgSet*)data.get(0) )->find( xx.GetName() ) )
+  if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( xx.GetName() )) )
   {
     cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<xx.GetName()<<" not in the data set" <<endl;
     bad = 1;
   }
-  if(! (RooRealVar*)( (RooArgSet*)data.get(0) )->find( yy.GetName() ) )
+  if(! static_cast<RooRealVar*>((const_cast<RooArgSet *>(data.get(0)))->find( yy.GetName() )) )
   {
     cout << "Roo2DKeysPdf::Roo2DKeysPdf invalid RooAbsReal name: "<<yy.GetName()<<" not in the data set" << endl;
     bad = 1;
@@ -186,8 +186,8 @@ Int_t Roo2DKeysPdf::loadDataSet(RooDataSet& data, TString options)
 
   //copy the data into local arrays
   const RooArgSet * values = data.get();
-  const RooRealVar* X = ((RooRealVar*)(values->find(xx.GetName())) ) ;
-  const RooRealVar* Y = ((RooRealVar*)(values->find(yy.GetName())) ) ;
+  auto X = static_cast<RooRealVar const*>(values->find(xx.GetName()));
+  auto Y = static_cast<RooRealVar const*>(values->find(yy.GetName()));
 
   for (Int_t j=0;j<_nEvents;++j)
   {
@@ -316,11 +316,11 @@ Int_t Roo2DKeysPdf::calculateBandWidth(Int_t kernel)
   {
     cout << "Roo2DKeysPdf::calculateBandWidth Using an adaptive bandwidth (in general different for all events) [default]"<<endl;
     cout << "                                 scaled by a factor of "<<_widthScaleFactor<<endl;
-    double xnorm   = h * TMath::Power(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
-    double ynorm   = h * TMath::Power(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
+    double xnorm   = h * std::pow(_xSigma/sqrtSum, 1.5) * _widthScaleFactor;
+    double ynorm   = h * std::pow(_ySigma/sqrtSum, 1.5) * _widthScaleFactor;
     for(Int_t j=0;j<_nEvents;++j)
     {
-      double f_ti =  TMath::Power( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
+      double f_ti =  std::pow( g(_x[j], _x, hXSigma, _y[j], _y, hYSigma), -0.25 ) ;
       _hx[j] = xnorm * f_ti;
       _hy[j] = ynorm * f_ti;
       if(_hx[j]<xhmin) _hx[j] = xhmin;
@@ -361,7 +361,10 @@ double Roo2DKeysPdf::evaluateFull(double thisX, double thisY) const
 
   double f=0.0;
 
-  double rx2, ry2, zx, zy;
+  double rx2;
+  double ry2;
+  double zx;
+  double zy;
   if( _MirrorAtBoundary )
   {
     for (Int_t j = 0; j < _nEvents; ++j)
@@ -534,11 +537,11 @@ void Roo2DKeysPdf::writeHistToFile(char * outputFile, const char * histName) con
   const RooAbsReal & xx = x.arg();
   const RooAbsReal & yy = y.arg();
   RooArgSet values( RooArgList( xx, yy ));
-  RooRealVar * xArg = ((RooRealVar*)(values.find(xx.GetName())) ) ;
-  RooRealVar * yArg = ((RooRealVar*)(values.find(yy.GetName())) ) ;
+  RooRealVar * xArg = (static_cast<RooRealVar*>(values.find(xx.GetName())) ) ;
+  RooRealVar * yArg = (static_cast<RooRealVar*>(values.find(yy.GetName())) ) ;
 
   TH2F * hist = (TH2F*)xArg->createHistogram("hist", *yArg);
-  hist = (TH2F*)this->fillHistogram(hist, RooArgList(*xArg, *yArg) );
+  hist = static_cast<TH2F*>(this->fillHistogram(hist, RooArgList(*xArg, *yArg) ));
   hist->SetName(histName);
 
   file->Write();
@@ -567,7 +570,9 @@ void Roo2DKeysPdf::writeNTupleToFile(char * outputFile, const char * name) const
   RooAbsReal & xArg = (RooAbsReal&)x.arg();
   RooAbsReal & yArg = (RooAbsReal&)y.arg();
 
-  double theX, theY, hx/*, hy*/;
+  double theX;
+  double theY;
+  double hx;
   TString label = name;
   label += " the source data for 2D Keys PDF";
   TTree * _theTree =  new TTree(name, label);

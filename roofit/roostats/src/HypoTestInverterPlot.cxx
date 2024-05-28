@@ -41,8 +41,6 @@ hypotheses.
 
 #include <cmath>
 
-using namespace std;
-
 ClassImp(RooStats::HypoTestInverterPlot);
 
 using namespace RooStats;
@@ -101,7 +99,8 @@ TGraphErrors* HypoTestInverterPlot::MakePlot(Option_t * opt)
    std::vector<double> yErrArray;
 
    for (int i=0; i<nEntries; i++) {
-      double CLVal = 0., CLErr = 0.;
+      double CLVal = 0.;
+      double CLErr = 0.;
       if (type == Default) {
          CLVal = fResults->GetYValue(index[i]);
          CLErr = fResults->GetYError(index[i]);
@@ -169,17 +168,19 @@ TMultiGraph* HypoTestInverterPlot::MakeExpectedPlot(double nsig1, double nsig2 )
    TGraphAsymmErrors * g2 = nullptr;
    if (doFirstBand) {
       g1 = new TGraphAsymmErrors;
-      if (nsig1 - int(nsig1) < 0.01)
+      if (nsig1 - int(nsig1) < 0.01) {
          g1->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig1)) );
-      else
-         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig1) );
+      } else {
+         g1->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig1));
+      }
    }
    if (doSecondBand) {
       g2 = new TGraphAsymmErrors;
-      if (nsig2 - int(nsig2) < 0.01)
+      if (nsig2 - int(nsig2) < 0.01) {
          g2->SetTitle(TString::Format("Expected %s #pm %d #sigma",pValueName.Data(),int(nsig2)) );
-      else
-         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma",pValueName.Data(),nsig2) );
+      } else {
+         g2->SetTitle(TString::Format("Expected %s #pm %3.1f #sigma", pValueName.Data(), nsig2));
+      }
    }
    double p[7];
    double q[7];
@@ -304,7 +305,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
       if (drawAxis && !drawObs) {
          gexp->Draw("A");
          if (gexp->GetHistogram()) gexp->GetHistogram()->SetTitle( GetTitle() );
-         gplot = (TGraph*) gexp->GetListOfGraphs()->First();
+         gplot = static_cast<TGraph*>(gexp->GetListOfGraphs()->First());
       }
       else
          gexp->Draw();
@@ -394,7 +395,7 @@ void HypoTestInverterPlot::Draw(Option_t * opt) {
 SamplingDistPlot * HypoTestInverterPlot::MakeTestStatPlot(int index, int type, int nbins) {
    SamplingDistPlot * pl = nullptr;
    if (type == 0) {
-      HypoTestResult * result = (HypoTestResult*) fResults->fYObjects.At(index);
+      HypoTestResult * result = static_cast<HypoTestResult*>(fResults->fYObjects.At(index));
       if (result)
          pl = new HypoTestPlot(*result, nbins );
       return pl;

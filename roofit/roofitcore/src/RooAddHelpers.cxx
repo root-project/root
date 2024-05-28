@@ -13,10 +13,11 @@
 #include <RooAbsPdf.h>
 #include <RooArgSet.h>
 #include <RooNaNPacker.h>
+#include <RooProduct.h>
+#include <RooRatio.h>
 #include <RooRealConstant.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
-#include <RooRatio.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooAddPdf cache element for a given normalization set and
@@ -91,7 +92,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
          auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(nset2, nset2, normRange.c_str()));
          if (snorm) {
             auto oldSnorm = std::move(snorm);
-            snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
+            snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm);
             snorm->addOwnedComponents(std::move(snormTerm), std::move(oldSnorm));
          } else {
             snorm = std::move(snormTerm);
@@ -171,10 +172,11 @@ void AddCacheElem::print() const
       std::cout << "+++ " << name << ":" << std::endl;
       for (auto const &arg : vec) {
          std::cout << "    ";
-         if (arg)
+         if (arg) {
             arg->Print();
-         else
+         } else {
             std::cout << "nullptr" << std::endl;
+         }
       }
    };
 

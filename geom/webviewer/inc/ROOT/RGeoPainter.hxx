@@ -32,7 +32,7 @@ public:
    TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override { return nullptr; }
    void       AddTrackPoint(Double_t *, Double_t *, Bool_t =kFALSE) override {}
    void       BombTranslation(const Double_t *, Double_t *) override {}
-   void       CheckPoint(Double_t =0, Double_t =0, Double_t =0, Option_t * ="") override {}
+   void       CheckPoint(Double_t =0, Double_t =0, Double_t =0, Option_t * ="", Double_t = 0.) override {}
    void       CheckShape(TGeoShape *, Int_t, Int_t, Option_t *) override {}
    void       CheckBoundaryErrors(Int_t =1000000, Double_t =-1.) override {}
    void       CheckBoundaryReference(Int_t =-1) override {}

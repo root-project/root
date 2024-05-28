@@ -29,3 +29,8 @@
 #include "TMVA/ROperator_Gather.hxx"
 #include "TMVA/ROperator_Swish.hxx"
 #include "TMVA/ROperator_Erf.hxx"
+#include "TMVA/ROperator_Elu.hxx"
+#include "TMVA/ROperator_Comparision.hxx"
+#include "TMVA/ROperator_EyeLike.hxx"
+#include "TMVA/ROperator_Range.hxx"
+

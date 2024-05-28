@@ -195,7 +195,7 @@ namespace {
     } else {
       std::string resourcePath;
       llvm::SmallString<512> tmp(llvmdir);
-      llvm::sys::path::append(tmp, "lib", "clang", CLANG_VERSION_STRING);
+      llvm::sys::path::append(tmp, "lib", "clang", CLANG_VERSION_MAJOR_STRING);
       resourcePath.assign(&tmp[0], tmp.size());
       return resourcePath;
     }
@@ -386,6 +386,7 @@ namespace {
 #else
     Opts.RTTIData = 0;
 #endif // _CPPRTTI
+    Opts.MSVolatile = 1;
     Opts.Trigraphs = 0;
     Opts.setDefaultCallingConv(clang::LangOptions::DCC_CDecl);
 #else // !_MSC_VER
@@ -1224,7 +1225,7 @@ namespace {
       DumpModuleInfoListener Listener(Out);
       HeaderSearchOptions &HSOpts =
         PP.getHeaderSearchInfo().getHeaderSearchOpts();
-      ASTReader::readASTFileControlBlock(CurInput, FileMgr,
+      ASTReader::readASTFileControlBlock(CurInput, FileMgr, CI.getModuleCache(),
                                          CI.getPCHContainerReader(),
                                          /*FindModuleFileExtensions=*/true,
                                          Listener,
@@ -1352,18 +1353,21 @@ namespace {
     if(COpts.CUDAHost)
       argvCompile.push_back("--cuda-host-only");
 
+    // argv[0] already inserted, get the rest
+    argvCompile.insert(argvCompile.end(), argv+1, argv + argc);
+
 #ifdef __linux__
     // Keep frame pointer to make JIT stack unwinding reliable for profiling
     if (profilingEnabled)
       argvCompile.push_back("-fno-omit-frame-pointer");
 #endif
 
-    // Disable optimizations and keep frame pointer when debugging
-    if (debuggingEnabled)
-      argvCompile.push_back("-O0 -fno-omit-frame-pointer");
-
-    // argv[0] already inserted, get the rest
-    argvCompile.insert(argvCompile.end(), argv+1, argv + argc);
+    // Disable optimizations and keep frame pointer when debugging, overriding
+    // other optimization options that might be in argv
+    if (debuggingEnabled) {
+      argvCompile.push_back("-O0");
+      argvCompile.push_back("-fno-omit-frame-pointer");
+    }
 
     // Add host specific includes, -resource-dir if necessary, and -isysroot
     std::string ClingBin = GetExecutablePath(argv[0]);
@@ -1510,6 +1514,7 @@ namespace {
         PCHListener listener(Invocation);
         if (ASTReader::readASTFileControlBlock(PCHFile,
                                                CI->getFileManager(),
+                                               CI->getModuleCache(),
                                                CI->getPCHContainerReader(),
                                                false /*FindModuleFileExt*/,
                                                listener,
@@ -1681,7 +1686,6 @@ namespace {
     // Set CodeGen options.
     CodeGenOptions& CGOpts = CI->getCodeGenOpts();
 #ifdef _MSC_VER
-    CGOpts.MSVolatile = 1;
     CGOpts.RelaxedAliasing = 1;
     CGOpts.EmitCodeView = 1;
     CGOpts.CXXCtorDtorAliases = 1;

@@ -110,7 +110,7 @@ REveTrack::REveTrack(REveMCTrack* t, REveTrackPropagator* prop):
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    // Constructor from REveUtil Monte Carlo track.
 
@@ -144,7 +144,7 @@ REveTrack::REveTrack(REveRecTrackD* t, REveTrackPropagator* prop) :
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -171,7 +171,7 @@ REveTrack::REveTrack(REveRecTrack* t, REveTrackPropagator* prop) :
    fLockPoints(kFALSE),
    fPathMarks(),
    fLastPMIdx(0),
-   fPropagator(0)
+   fPropagator(nullptr)
 {
    SetPropagator(prop);
    fMainColorPtr = &fLineColor;
@@ -565,7 +565,7 @@ REveTrackList::REveTrackList(REveTrackPropagator* prop) :
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fPropagator(0),
+   fPropagator(nullptr),
    fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
@@ -591,7 +591,7 @@ REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop)
    TAttMarker(1, 20, 1),
    TAttLine(1,1,1),
 
-   fPropagator(0),
+   fPropagator(nullptr),
    fRecurse(kTRUE),
    fRnrLine(kTRUE),
    fRnrPoints(kFALSE),
@@ -612,7 +612,7 @@ REveTrackList::REveTrackList(const std::string& name, REveTrackPropagator* prop)
 
 REveTrackList::~REveTrackList()
 {
-   SetPropagator(0);
+   SetPropagator(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -27,9 +27,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
 
 #include "TMath.h"
 
@@ -634,7 +634,7 @@ static int XRotDrawHorizontalString(Display *dpy, XFontStruct *font, Drawable dr
       /* move to next line */
       yp+=height;
 
-      str3=my_strtok((char *)0, str2);
+      str3=my_strtok((char *)nullptr, str2);
    }
    while(str3);
 

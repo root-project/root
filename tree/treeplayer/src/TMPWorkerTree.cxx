@@ -45,7 +45,7 @@
 
 TMPWorkerTree::TMPWorkerTree()
    : TMPWorker(), fFileNames(), fTreeName(), fTree(nullptr), fFile(nullptr), fEntryList(nullptr), fFirstEntry(0),
-     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true), fCacheSize(-1)
 {
    Setup();
 }
@@ -53,7 +53,7 @@ TMPWorkerTree::TMPWorkerTree()
 TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries,
                              const std::string &treeName, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fFileNames(fileNames), fTreeName(treeName), fTree(nullptr), fFile(nullptr),
-     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE),
+     fEntryList(entries), fFirstEntry(firstEntry), fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true),
      fCacheSize(-1)
 {
    Setup();
@@ -62,7 +62,7 @@ TMPWorkerTree::TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryLi
 TMPWorkerTree::TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries,
                              ULong64_t firstEntry)
    : TMPWorker(nWorkers, maxEntries), fTree(tree), fFile(nullptr), fEntryList(entries), fFirstEntry(firstEntry),
-     fTreeCache(0), fTreeCacheIsLearning(kFALSE), fUseTreeCache(kTRUE), fCacheSize(-1)
+     fTreeCache(nullptr), fTreeCacheIsLearning(false), fUseTreeCache(true), fCacheSize(-1)
 {
    Setup();
 }
@@ -78,7 +78,7 @@ TMPWorkerTree::~TMPWorkerTree()
 void TMPWorkerTree::Setup()
 {
    Int_t uc = gEnv->GetValue("MultiProc.UseTreeCache", 1);
-   if (uc != 1) fUseTreeCache = kFALSE;
+   if (uc != 1) fUseTreeCache = false;
    fCacheSize = gEnv->GetValue("MultiProc.CacheSize", -1);
 }
 
@@ -89,9 +89,9 @@ void TMPWorkerTree::CloseFile()
 {
    // Avoid destroying the cache; must be placed before deleting the trees
    if (fFile) {
-      if (fTree) fFile->SetCacheRead(0, fTree);
+      if (fTree) fFile->SetCacheRead(nullptr, fTree);
       delete fFile ;
-      fFile = 0;
+      fFile = nullptr;
    }
 }
 
@@ -121,7 +121,7 @@ TTree *TMPWorkerTree::RetrieveTree(TFile *fp)
    //retrieve the TTree with the specified name from file
    //we are not the owner of the TTree object, the file is!
    TTree *tree = nullptr;
-   if(fTreeName == "") {
+   if(fTreeName.empty()) {
       // retrieve the first TTree
       // (re-adapted from TEventIter.cxx)
       if (fp->GetListOfKeys()) {
@@ -243,7 +243,7 @@ void TMPWorkerTreeSel::Process(UInt_t code, MPCodeBufPair &msg)
 
    Long64_t start = 0;
    Long64_t finish = 0;
-   TEntryList *enl = 0;
+   TEntryList *enl = nullptr;
    std::string errmsg;
    if (LoadTree(code, msg, start, finish, &enl, errmsg) != 0) {
       SendError(errmsg);
@@ -285,11 +285,11 @@ Int_t TMPWorkerTree::LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, 
 
    UInt_t fileN = 0;
    UInt_t nProcessed = 0;
-   Bool_t setupcache = true;
+   bool setupcache = true;
 
    std::string mgroot = "[S" + std::to_string(GetNWorker()) + "]: ";
 
-   TTree *tree = 0;
+   TTree *tree = nullptr;
    if (code ==  MPCode::kProcTree) {
 
       mgroot += "MPCode::kProcTree: ";

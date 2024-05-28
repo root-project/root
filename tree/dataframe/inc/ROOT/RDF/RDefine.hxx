@@ -16,7 +16,7 @@
 #include "ROOT/RDF/RDefineBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h"
 

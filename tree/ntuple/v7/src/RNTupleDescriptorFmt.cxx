@@ -62,7 +62,7 @@ struct ColumnInfo {
    }
 };
 
-static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
+std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
@@ -71,7 +71,7 @@ static std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
    return GetFieldName(fieldDesc.GetParentId(), ntupleDesc) + "." + fieldDesc.GetFieldName();
 }
 
-static std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
+std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
    const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
@@ -98,9 +98,14 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::uint64_t nPages = 0;
    int compression = -1;
    for (const auto &column : fColumnDescriptors) {
+      // Alias columns (columns of projected fields) don't contribute to the storage consumption. Count them
+      // but don't add the the page sizes to the overall volume.
+      if (column.second.IsAliasColumn())
+         continue;
+
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = Detail::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
+      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();
@@ -179,8 +184,8 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    for (const auto &col : columns) {
       auto avgPageSize = (col.fNPages == 0) ? 0 : (col.fBytesOnStorage / col.fNPages);
       auto avgElementsPerPage = (col.fNPages == 0) ? 0 : (col.fNElements / col.fNPages);
-      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]"
-         + "  --  " + Detail::RColumnElementBase::GetTypeName(col.fType);
+      std::string nameAndType = std::string("  ") + col.fFieldName + " [#" + std::to_string(col.fLocalOrder) + "]" +
+                                "  --  " + Internal::RColumnElementBase::GetTypeName(col.fType);
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);

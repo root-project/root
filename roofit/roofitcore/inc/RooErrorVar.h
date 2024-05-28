@@ -96,7 +96,7 @@ protected:
   void syncCache(const RooArgSet* set=nullptr) override ;
 
   RooRealProxy _realVar ;   ///< RealVar with the original error
-  RooAbsBinning* _binning ; ///<! Pointer to default binning definition
+  std::unique_ptr<RooAbsBinning> _binning ; ///<! Pointer to default binning definition
 
   ClassDefOverride(RooErrorVar,1) // RooAbsRealLValue representation of an error of a RooRealVar
 };

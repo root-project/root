@@ -31,11 +31,11 @@
 
 namespace ROOT {
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::RColumn
+\class ROOT::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */
@@ -112,11 +112,12 @@ public:
    RColumn &operator =(const RColumn&) = delete;
    ~RColumn();
 
-   /// Connect the column to a page storage.  If `pageStorage` is a page sink, `firstElementIndex` can be used to
-   /// specify the first column element index with backing storage for this column.  On read back, elements before
-   /// `firstElementIndex` will cause the zero page to be mapped.
-   /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
-   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
+   /// Connect the column to a page sink.  `firstElementIndex` can be used to specify the first column element index
+   /// with backing storage for this column.  On read back, elements before `firstElementIndex` will cause the zero page
+   /// to be mapped.
+   void ConnectPageSink(DescriptorId_t fieldId, RPageSink &pageSink, NTupleSize_t firstElementIndex = 0U);
+   /// Connect the column to a page source.
+   void ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource);
 
    void Append(const void *from)
    {
@@ -174,7 +175,7 @@ public:
       std::memcpy(to, from, elemSize);
    }
 
-   void Read(const RClusterIndex &clusterIndex, void *to)
+   void Read(RClusterIndex clusterIndex, void *to)
    {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
@@ -204,7 +205,7 @@ public:
       }
    }
 
-   void ReadV(const RClusterIndex &clusterIndex, const ClusterSize_t::ValueType count, void *to)
+   void ReadV(RClusterIndex clusterIndex, const ClusterSize_t::ValueType count, void *to)
    {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
@@ -230,7 +231,8 @@ public:
    }
 
    template <typename CppT>
-   CppT *Map(const RClusterIndex &clusterIndex) {
+   CppT *Map(RClusterIndex clusterIndex)
+   {
       NTupleSize_t nItems;
       return MapV<CppT>(clusterIndex, nItems);
    }
@@ -248,7 +250,8 @@ public:
    }
 
    template <typename CppT>
-   CppT *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems) {
+   CppT *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
@@ -259,7 +262,8 @@ public:
          (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * RColumnElement<CppT>::kSize);
    }
 
-   NTupleSize_t GetGlobalIndex(const RClusterIndex &clusterIndex) {
+   NTupleSize_t GetGlobalIndex(RClusterIndex clusterIndex)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
@@ -298,8 +302,7 @@ public:
       *collectionStart = RClusterIndex(fReadPage.GetClusterInfo().GetId(), idxStart);
    }
 
-   void GetCollectionInfo(const RClusterIndex &clusterIndex,
-                          RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
+   void GetCollectionInfo(RClusterIndex clusterIndex, RClusterIndex *collectionStart, ClusterSize_t *collectionSize)
    {
       auto index = clusterIndex.GetIndex();
       auto idxStart = (index == 0) ? 0 : *Map<ClusterSize_t>(clusterIndex - 1);
@@ -317,7 +320,7 @@ public:
 
    void Flush();
    void MapPage(const NTupleSize_t index);
-   void MapPage(const RClusterIndex &clusterIndex);
+   void MapPage(RClusterIndex clusterIndex);
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    const RColumnModel &GetModel() const { return fModel; }
@@ -328,10 +331,9 @@ public:
    RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
-};
+}; // class RColumn
 
-} // namespace Detail
-
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

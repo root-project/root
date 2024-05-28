@@ -291,7 +291,8 @@ void Messenger::test_receive(X2X expected_ping_value, test_rcv_pipes rcv_pipe, s
 {
    X2X handshake = X2X::initial_value;
 
-   std::size_t max_tries = 3, tries = 0;
+   std::size_t max_tries = 3;
+   std::size_t tries = 0;
    bool carry_on = true;
    while (carry_on && (tries++ < max_tries)) {
       try {
@@ -463,10 +464,6 @@ void Messenger::set_send_flag(zmq::send_flags flag)
 {
    send_flag_ = flag;
 }
-
-// -- MASTER - WORKER COMMUNICATION --
-
-void Messenger::send_from_worker_to_master() {}
 
 // for debugging
 #define PROCESS_VAL(p) \

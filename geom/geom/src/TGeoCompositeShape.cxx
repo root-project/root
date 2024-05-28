@@ -218,7 +218,7 @@ void TGeoCompositeShape::CreateThreadData(Int_t nthreads)
 TGeoCompositeShape::TGeoCompositeShape() : TGeoBBox(0, 0, 0)
 {
    SetShapeBit(TGeoShape::kGeoComb);
-   fNode = 0;
+   fNode = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -228,7 +228,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
 {
    SetShapeBit(TGeoShape::kGeoComb);
    SetName(name);
-   fNode = 0;
+   fNode = nullptr;
    MakeNode(expression);
    if (!fNode) {
       Error("ctor", "Composite %s: cannot parse expression: %s", name, expression);
@@ -243,7 +243,7 @@ TGeoCompositeShape::TGeoCompositeShape(const char *name, const char *expression)
 TGeoCompositeShape::TGeoCompositeShape(const char *expression) : TGeoBBox(0, 0, 0)
 {
    SetShapeBit(TGeoShape::kGeoComb);
-   fNode = 0;
+   fNode = nullptr;
    MakeNode(expression);
    if (!fNode) {
       TString message = TString::Format("Composite (no name) could not parse expression %s", expression);
@@ -369,7 +369,7 @@ TGeoVolume *TGeoCompositeShape::Divide(TGeoVolume * /*voldiv*/, const char * /*d
                                        Int_t /*ndiv*/, Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Composite shapes cannot be divided");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,7 +401,7 @@ void TGeoCompositeShape::MakeNode(const char *expression)
 {
    if (fNode)
       delete fNode;
-   fNode = 0;
+   fNode = nullptr;
    SetTitle(expression);
    TString sleft, sright, smat;
    Int_t boolop;

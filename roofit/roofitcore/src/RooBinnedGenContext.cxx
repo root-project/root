@@ -33,7 +33,7 @@ Efficient implementation of the generator context specific for binned pdfs.
 #include "RooDataSet.h"
 #include "RooRandom.h"
 
-using namespace std;
+using std::endl, std::vector, std::ostream;
 
 ClassImp(RooBinnedGenContext);
 
@@ -49,12 +49,12 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   cxcoutI(Generation) << "RooBinnedGenContext::ctor() setting up event special generator context for sum p.d.f. " << model.GetName()
          << " for generation of observable(s) " << vars ;
   if (prototype) ccxcoutI(Generation) << " with prototype data for " << *prototype->get() ;
-  if (auxProto && auxProto->getSize()>0)  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
+  if (auxProto && !auxProto->empty())  ccxcoutI(Generation) << " with auxiliary prototypes " << *auxProto ;
   ccxcoutI(Generation) << endl ;
 
   // Constructor. Build an array of generator contexts for each product component PDF
   RooArgSet(model).snapshot(_pdfSet, true);
-  _pdf = (RooAbsPdf*) _pdfSet.find(model.GetName()) ;
+  _pdf = static_cast<RooAbsPdf*>(_pdfSet.find(model.GetName())) ;
   _pdf->setOperMode(RooAbsArg::ADirty,true) ;
 
   // Fix normalization set of this RooAddPdf

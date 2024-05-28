@@ -18,7 +18,7 @@
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
 #include <iostream>
-using namespace std ;
+using std::ostream;
 
 /**
 \file RooArgProxy.cxx
@@ -58,13 +58,17 @@ RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
 /// control if the inserted client-server link in the owner propagates value and/or
 /// shape dirty flags. If proxyOwnsArg is true, the proxy takes ownership of its component
 
-RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
-  TNamed(inName,desc), _owner(owner), _arg(&arg),
-  _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
+RooArgProxy::RooArgProxy(const char *inName, const char *desc, RooAbsArg *owner, RooAbsArg &arg, bool valueServer,
+                         bool shapeServer, bool proxyOwnsArg)
+   : TNamed(inName, desc),
+     _owner(owner),
+     _arg(&arg),
+     _valueServer(valueServer),
+     _shapeServer(shapeServer),
+     _isFund(_arg->isFundamental()),
+     _ownArg(proxyOwnsArg)
 {
   _owner->registerProxy(*this) ;
-  _isFund = _arg->isFundamental() ;
 }
 
 
@@ -78,7 +82,7 @@ RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy
   _isFund(other._isFund), _ownArg(other._ownArg)
 {
   if (_ownArg) {
-    _arg = _arg ? (RooAbsArg*) _arg->Clone() : nullptr ;
+    _arg = _arg ? static_cast<RooAbsArg*>(_arg->Clone()) : nullptr ;
   }
 
   _owner->registerProxy(*this) ;

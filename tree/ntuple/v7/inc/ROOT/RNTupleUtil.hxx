@@ -47,7 +47,7 @@ enum ENTupleStructure {
 /// Integer type long enough to hold the maximum number of entries in a column
 using NTupleSize_t = std::uint64_t;
 constexpr NTupleSize_t kInvalidNTupleIndex = std::uint64_t(-1);
-/// Wrap the integer in a struct in order to avoid template specialization clash with std::uint32_t
+/// Wrap the integer in a struct in order to avoid template specialization clash with std::uint64_t
 struct RClusterSize {
    using ValueType = std::uint64_t;
 
@@ -121,10 +121,8 @@ public:
    RClusterIndex  operator-(ClusterSize_t::ValueType off) const { return RClusterIndex(fClusterId, fIndex - off); }
    RClusterIndex  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
    RClusterIndex& operator++()    /* prefix */         { ++fIndex; return *this; }
-   bool operator==(const RClusterIndex &other) const {
-      return fClusterId == other.fClusterId && fIndex == other.fIndex;
-   }
-   bool operator!=(const RClusterIndex &other) const { return !(*this == other); }
+   bool operator==(RClusterIndex other) const { return fClusterId == other.fClusterId && fIndex == other.fIndex; }
+   bool operator!=(RClusterIndex other) const { return !(*this == other); }
 
    DescriptorId_t GetClusterId() const { return fClusterId; }
    ClusterSize_t::ValueType GetIndex() const { return fIndex; }
@@ -173,6 +171,15 @@ struct RNTupleLocator {
       return std::get<T>(fPosition);
    }
 };
+
+namespace Internal {
+template <typename T>
+auto MakeAliasedSharedPtr(T *rawPtr)
+{
+   const static std::shared_ptr<T> fgRawPtrCtrlBlock;
+   return std::shared_ptr<T>(fgRawPtrCtrlBlock, rawPtr);
+}
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

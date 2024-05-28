@@ -19,8 +19,8 @@
 #include <cassert>
 #include <cctype>
 #include <functional>
+#include <tuple>
 #include "ROOT/RSpan.hxx"
-#include "ROOT/RTupleApply.hxx"
 
 #include "ROOT/RAxis.hxx"
 #include "ROOT/RHistBinIter.hxx"

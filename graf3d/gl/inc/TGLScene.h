@@ -28,8 +28,8 @@ class TGLContextIdentity;
 class TGLScene : public TGLSceneBase
 {
 private:
-   TGLScene(const TGLScene&);            // Not implemented
-   TGLScene& operator=(const TGLScene&); // Not implemented
+   TGLScene(const TGLScene&) = delete;
+   TGLScene& operator=(const TGLScene&) = delete;
 
    // Compare physical-shape volumes/diagonals -- for draw-vec sorting
    static Bool_t ComparePhysicalVolumes(const TGLPhysicalShape* shape1,

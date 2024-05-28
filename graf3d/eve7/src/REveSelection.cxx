@@ -618,7 +618,7 @@ void REveSelection::NewElementPickedStr(ElementId_t id, bool multi, bool seconda
 {
    static const REveException eh("REveSelection::NewElementPickedStr ");
 
-   if (secondary_idcs == 0 || secondary_idcs[0] == 0)
+   if (secondary_idcs == nullptr || secondary_idcs[0] == 0)
    {
       NewElementPicked(id, multi, secondary);
       return;

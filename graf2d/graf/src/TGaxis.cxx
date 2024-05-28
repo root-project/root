@@ -600,7 +600,7 @@ So the complete macro is:
 
 Begin_Macro(source)
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -628,7 +628,7 @@ will produce the following axis:
 
 Begin_Macro
 {
-   c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
+   auto c1 = new TCanvas("c1","Examples of TGaxis",10,10,700,100);
    c1->Range(-10,-1,10,1);
 
    TGaxis *axis = new TGaxis(-8,0.,8,0.,-100000,150000,2405,"tS");
@@ -1063,7 +1063,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    Int_t ndyn;
    Int_t nhilab = 0;
    Int_t idn;
-   Bool_t flexe = 0;
+   Bool_t flexe = false;
    Bool_t flexpo,flexne;
    char *label;
    char *chtemp;
@@ -1876,7 +1876,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
 
                if (flexpo) {
                   flexe = kTRUE;
-                  while (1) {
+                  while (true) {
                      nexe++;
                      ww      /= 10;
                      wlabel  /= 10;
@@ -1888,7 +1888,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                if (flexne) {
                   flexe = kTRUE;
                   rne   = 1/TMath::Power(10,maxDigits-2);
-                  while (1) {
+                  while (true) {
                      nexe--;
                      ww      *= 10;
                      wlabel  *= 10;

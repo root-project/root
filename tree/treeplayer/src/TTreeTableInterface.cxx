@@ -43,11 +43,11 @@ of the changes.
 TTreeTableInterface::TTreeTableInterface (TTree *tree, const char *varexp,
    const char *selection, Option_t *option, Long64_t nentries,
    Long64_t firstentry)
-   : TVirtualTableInterface(), fTree(tree), fFormulas(0), fEntry(0),
-     fNEntries(nentries), fFirstEntry(firstentry), fManager(0), fSelect(0), fSelector(0), fInput(0),
-     fForceDim(kFALSE), fEntries(0), fNRows(0), fNColumns(0)
+   : TVirtualTableInterface(), fTree(tree), fFormulas(nullptr), fEntry(0),
+     fNEntries(nentries), fFirstEntry(firstentry), fManager(nullptr), fSelect(nullptr), fSelector(nullptr), fInput(nullptr),
+     fForceDim(false), fEntries(nullptr), fNRows(0), fNColumns(0)
 {
-   if (fTree == 0) {
+   if (fTree == nullptr) {
       Error("TTreeTableInterface", "No tree supplied");
       return;
    }
@@ -90,7 +90,7 @@ TTreeTableInterface::~TTreeTableInterface()
    delete fInput;
    delete fSelector;
 
-   if (fTree) fTree->SetEntryList(0);
+   if (fTree) fTree->SetEntryList(nullptr);
    delete fEntries;
 }
 
@@ -101,13 +101,13 @@ void TTreeTableInterface::SetVariablesExpression(const char *varexp)
 {
    // FIXME check if enough protection against wrong expressions is in place
 
-   Bool_t allvar = kFALSE;
+   bool allvar = false;
 
    if (varexp) {
-      if (!strcmp(varexp, "*")) { allvar = kTRUE; }
+      if (!strcmp(varexp, "*")) { allvar = true; }
    } else {
       // if varexp is empty, take all available leaves as a column
-      allvar = kTRUE;
+      allvar = true;
    }
 
    if (allvar) {
@@ -143,7 +143,7 @@ void TTreeTableInterface::SetSelection(const char *selection)
    if (fSelect) {
       fFormulas->Remove(fSelect);
       delete fSelect;
-      fSelect = 0;
+      fSelect = nullptr;
    }
    if (selection && strlen(selection)) {
       fSelect = new TTreeFormula("Selection", selection, fTree);
@@ -185,7 +185,7 @@ void TTreeTableInterface::SyncFormulas()
             case  1:
             case  2:
             case -1:
-               fForceDim = kTRUE;
+               fForceDim = true;
                break;
             case  0:
                break;
@@ -225,7 +225,7 @@ void TTreeTableInterface::InitEntries()
       Int_t ndata = 1;
       if (fForceDim){
          if (fManager)
-            ndata = fManager->GetNdata(kTRUE);
+            ndata = fManager->GetNdata(true);
          else {
             for (ui = 0; ui < fNColumns; ui++){
                if (ndata < ((TTreeFormula*)fFormulas->At(ui))->GetNdata())
@@ -237,13 +237,13 @@ void TTreeTableInterface::InitEntries()
                ndata = 0;
          }
       }
-      Bool_t skip = kFALSE;
+      bool skip = false;
 
       // Loop over the instances of the selection condition
       for (Int_t inst = 0; inst < ndata; inst++){
          if (fSelect){
             if (fSelect->EvalInstance(inst) == 0){
-               skip = kTRUE;
+               skip = true;
                entry++;
             }
          }
@@ -312,7 +312,7 @@ const char *TTreeTableInterface::GetValueAsString(UInt_t row, UInt_t column)
       fTree->LoadTree(entry);
    } else {
       Error("TTreeTableInterface", "Row requested does not exist");
-      return 0;
+      return nullptr;
    }
    if (column < fNColumns) {
       TTreeFormula *formula = (TTreeFormula *)fFormulas->At(column);
@@ -323,7 +323,7 @@ const char *TTreeTableInterface::GetValueAsString(UInt_t row, UInt_t column)
       }
    } else {
       Error("TTreeTableInterface", "Column requested does not exist");
-      return 0;
+      return nullptr;
    }
 }
 

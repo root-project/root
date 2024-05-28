@@ -1,13 +1,17 @@
 #include <ROOT/RNTupleInspector.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <TFile.h>
 #include <ROOT/TestSupport.hxx>
 
+#include "gmock/gmock.h"
+
 #include "CustomStructUtil.hxx"
 #include "ntupleutil_test.hxx"
 
+using ROOT::Experimental::EColumnType;
 using ROOT::Experimental::RField;
+using ROOT::Experimental::RFieldBase;
 using ROOT::Experimental::RNTuple;
 using ROOT::Experimental::RNTupleInspector;
 using ROOT::Experimental::RNTupleModel;
@@ -42,11 +46,6 @@ TEST(RNTupleInspector, CreateFromString)
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
 
    EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::Experimental::RException);
-
-   ROOT::TestSupport::CheckDiagsRAII diag;
-   diag.requiredDiag(kError, "TFile::TFile", "nonexistent.root does not exist",
-                     /*matchFullMessage=*/false);
-   EXPECT_THROW(RNTupleInspector::Create("ntuple", "nonexistent.root"), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, CompressionSettings)
@@ -114,7 +113,7 @@ TEST(RNTupleInspector, SizeUncompressedComplex)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   int nIndexCols = inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kIndex64);
+   int nIndexCols = inspector->GetColumnCountByType(EColumnType::kIndex64);
    int nEntries = inspector->GetDescriptor()->GetNEntries();
 
    EXPECT_EQ(2, nIndexCols);
@@ -134,17 +133,23 @@ TEST(RNTupleInspector, SizeCompressedInt)
       writeOptions.SetCompression(505);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
-      for (int32_t i = 0; i < 50; ++i) {
+      for (int32_t i = 0; i < 500; ++i) {
          *nFldInt = i;
          ntuple->Fill();
+
+         // Store the data in ten clusters to be able to test that the size is correctly computed in this way.
+         if (i % 50 == 49)
+            ntuple->CommitCluster();
       }
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetUncompressedSize());
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
+   EXPECT_EQ(sizeof(int32_t) * 500, inspector->GetUncompressedSize());
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   // Check the target size with a 5% tolerance to account for small fluctuations across different platforms.
+   std::uint64_t targetSize = 800;
+   EXPECT_NEAR(inspector->GetCompressedSize(), targetSize, targetSize * .05f);
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -159,20 +164,26 @@ TEST(RNTupleInspector, SizeCompressedComplex)
       writeOptions.SetCompression(505);
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
 
-      for (int i = 0; i < 25; ++i) {
+      for (int i = 0; i < 100; ++i) {
          nFldObject->Init1();
          ntuple->Fill();
          nFldObject->Init2();
          ntuple->Fill();
          nFldObject->Init3();
          ntuple->Fill();
+
+         // Store the data in ten clusters to be able to test that the size is correctly computed in this way.
+         if (i % 10 == 9)
+            ntuple->CommitCluster();
       }
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
    EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   // Check the target size with a 5% tolerance to account for small fluctuations across different platforms.
+   std::uint64_t targetSize = 3210;
+   EXPECT_NEAR(inspector->GetCompressedSize(), targetSize, targetSize * .05f);
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -188,6 +199,28 @@ TEST(RNTupleInspector, SizeEmpty)
 
    EXPECT_EQ(0, inspector->GetCompressedSize());
    EXPECT_EQ(0, inspector->GetUncompressedSize());
+}
+
+TEST(RNTupleInspector, SizeProjectedFields)
+{
+   FileRaii fileGuard("test_ntuple_inspector_size_projected_fields.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto muonPt = model->MakeField<std::vector<float>>("muonPt");
+      muonPt->emplace_back(1.0);
+      muonPt->emplace_back(2.0);
+
+      auto nMuons = RFieldBase::Create("nMuons", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+      model->AddProjectedField(std::move(nMuons), [](const std::string &) { return "muonPt"; });
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   EXPECT_EQ(inspector->GetFieldTreeInspector("muonPt").GetUncompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_EQ(inspector->GetFieldTreeInspector("muonPt").GetCompressedSize(), inspector->GetCompressedSize());
 }
 
 TEST(RNTupleInspector, ColumnInfoCompressed)
@@ -216,7 +249,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
    std::uint64_t totalOnDiskSize = 0;
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
-      auto colInfo = inspector->GetColumnInfo(i);
+      auto colInfo = inspector->GetColumnInspector(i);
       totalOnDiskSize += colInfo.GetCompressedSize();
 
       EXPECT_GT(colInfo.GetCompressedSize(), 0);
@@ -226,7 +259,7 @@ TEST(RNTupleInspector, ColumnInfoCompressed)
 
    EXPECT_EQ(totalOnDiskSize, inspector->GetCompressedSize());
 
-   EXPECT_THROW(inspector->GetColumnInfo(42), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetColumnInspector(42), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, ColumnInfoUncompressed)
@@ -236,11 +269,11 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
       auto model = RNTupleModel::Create();
 
       auto int32fld = std::make_unique<RField<std::int32_t>>("int32");
-      int32fld->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt32});
+      int32fld->SetColumnRepresentative({EColumnType::kInt32});
       model->AddField(std::move(int32fld));
 
       auto splitReal64fld = std::make_unique<RField<double>>("splitReal64");
-      splitReal64fld->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal64});
+      splitReal64fld->SetColumnRepresentative({EColumnType::kSplitReal64});
       model->AddField(std::move(splitReal64fld));
 
       auto writeOptions = RNTupleWriteOptions();
@@ -249,8 +282,8 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
 
       for (int i = 0; i < 5; ++i) {
          auto e = ntuple->CreateEntry();
-         *e->Get<std::int32_t>("int32") = i;
-         *e->Get<double>("splitReal64") = i;
+         *e->GetPtr<std::int32_t>("int32") = i;
+         *e->GetPtr<double>("splitReal64") = i;
          ntuple->Fill(*e);
       }
    }
@@ -260,7 +293,7 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
    std::uint64_t colTypeSizes[] = {sizeof(std::int32_t), sizeof(double)};
 
    for (std::size_t i = 0; i < inspector->GetDescriptor()->GetNLogicalColumns(); ++i) {
-      auto colInfo = inspector->GetColumnInfo(i);
+      auto colInfo = inspector->GetColumnInspector(i);
       EXPECT_EQ(colInfo.GetCompressedSize(), colInfo.GetUncompressedSize());
       EXPECT_EQ(colInfo.GetCompressedSize(), colTypeSizes[i] * 5);
    }
@@ -280,9 +313,9 @@ TEST(RNTupleInspector, ColumnTypeCount)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(2, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitIndex64));
-   EXPECT_EQ(4, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitReal32));
-   EXPECT_EQ(3, inspector->GetColumnCountByType(ROOT::Experimental::EColumnType::kSplitInt32));
+   EXPECT_EQ(2, inspector->GetColumnCountByType(EColumnType::kSplitIndex64));
+   EXPECT_EQ(4, inspector->GetColumnCountByType(EColumnType::kSplitReal32));
+   EXPECT_EQ(3, inspector->GetColumnCountByType(EColumnType::kSplitInt32));
 }
 
 TEST(RNTupleInspector, ColumnsByType)
@@ -302,23 +335,44 @@ TEST(RNTupleInspector, ColumnsByType)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64).size());
-   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitInt64)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64, inspector->GetColumnInfo(colId).GetType());
+   EXPECT_EQ(2U, inspector->GetColumnsByType(EColumnType::kSplitInt64).size());
+   for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitInt64)) {
+      EXPECT_EQ(EColumnType::kSplitInt64, inspector->GetColumnInspector(colId).GetType());
    }
 
-   EXPECT_EQ(2U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32).size());
-   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal32)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitReal32, inspector->GetColumnInfo(colId).GetType());
+   EXPECT_EQ(2U, inspector->GetColumnsByType(EColumnType::kSplitReal32).size());
+   for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitReal32)) {
+      EXPECT_EQ(EColumnType::kSplitReal32, inspector->GetColumnInspector(colId).GetType());
    }
 
-   EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
-   EXPECT_EQ(1U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64).size());
-   for (const auto colId : inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitIndex64)) {
-      EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitIndex64, inspector->GetColumnInfo(colId).GetType());
+   EXPECT_EQ(1U, inspector->GetColumnsByType(EColumnType::kSplitIndex64).size());
+   EXPECT_EQ(1U, inspector->GetColumnsByType(EColumnType::kSplitIndex64).size());
+   for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitIndex64)) {
+      EXPECT_EQ(EColumnType::kSplitIndex64, inspector->GetColumnInspector(colId).GetType());
    }
 
-   EXPECT_EQ(0U, inspector->GetColumnsByType(ROOT::Experimental::EColumnType::kSplitReal64).size());
+   EXPECT_EQ(0U, inspector->GetColumnsByType(EColumnType::kSplitReal64).size());
+}
+
+TEST(RNTupleInspector, ColumnTypes)
+{
+   FileRaii fileGuard("test_ntuple_inspector_column_types.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt1 = model->MakeField<std::int64_t>("int1");
+      auto nFldInt2 = model->MakeField<std::int64_t>("int2");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   auto types = inspector->GetColumnTypes();
+   EXPECT_THAT(types, testing::UnorderedElementsAre(EColumnType::kSplitInt64, EColumnType::kSplitReal32,
+                                                    EColumnType::kSplitIndex64));
 }
 
 TEST(RNTupleInspector, PrintColumnTypeInfo)
@@ -357,7 +411,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    std::string colTypeStr;
    while (std::getline(csvOutput, line)) {
       ++nLines;
-      colTypeStr = line.substr(0, line.find(","));
+      colTypeStr = line.substr(0, line.find(','));
 
       if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
          FAIL() << "Unexpected column type: " << colTypeStr;
@@ -376,7 +430,7 @@ TEST(RNTupleInspector, PrintColumnTypeInfo)
    nLines = 0;
    while (std::getline(tableOutput, line)) {
       ++nLines;
-      colTypeStr = line.substr(0, line.find("|"));
+      colTypeStr = line.substr(0, line.find('|'));
       colTypeStr.erase(remove_if(colTypeStr.begin(), colTypeStr.end(), isspace), colTypeStr.end());
 
       if (colTypeStr != "SplitIndex64" && colTypeStr != "SplitInt64" && colTypeStr != "SplitReal32")
@@ -441,6 +495,94 @@ TEST(RNTupleInspector, ColumnTypeInfoHist)
    EXPECT_EQ(inspector->GetUncompressedSize(), uncompressedSizeHist->Integral());
 }
 
+TEST(RNTupleInspector, PageSizeDistribution)
+{
+   FileRaii fileGuard("test_ntuple_inspector_page_size_distribution.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto nFldInt = model->MakeField<std::int64_t>("int");
+      auto nFldFloat = model->MakeField<float>("float");
+      auto nFldFloatVec = model->MakeField<std::vector<float>>("floatVec");
+
+      auto writeOptions = RNTupleWriteOptions();
+      writeOptions.SetCompression(505);
+      writeOptions.SetApproxUnzippedPageSize(64);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), writeOptions);
+
+      for (unsigned i = 0; i < 100; ++i) {
+         *nFldInt = static_cast<std::int64_t>(i);
+         *nFldFloat = static_cast<float>(i) * .1f;
+         *nFldFloatVec = {static_cast<float>(i), 3.14f, static_cast<float>(i) * *nFldFloat};
+         ntuple->Fill();
+      }
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+
+   int intColId = inspector->GetColumnsByType(EColumnType::kSplitInt64)[0];
+   auto intPageSizeHisto = inspector->GetPageSizeDistribution(intColId);
+   EXPECT_STREQ("pageSizeHist", intPageSizeHisto->GetName());
+   EXPECT_STREQ(Form("Page size distribution for column with ID %d", intColId), intPageSizeHisto->GetTitle());
+   EXPECT_STREQ("Page size (B)", intPageSizeHisto->GetXaxis()->GetTitle());
+   EXPECT_STREQ("N_{pages}", intPageSizeHisto->GetYaxis()->GetTitle());
+   EXPECT_EQ(64, intPageSizeHisto->GetNbinsX());
+   // Make sure that all page sizes are included in the histogram
+   int nIntPages = inspector->GetColumnInspector(intColId).GetNPages();
+   EXPECT_EQ(nIntPages, intPageSizeHisto->Integral());
+
+   auto floatPageSizeHisto = inspector->GetPageSizeDistribution(EColumnType::kSplitReal32, "floatPageSize",
+                                                                "Float page size distribution", 100);
+   EXPECT_STREQ("floatPageSize", floatPageSizeHisto->GetName());
+   EXPECT_STREQ("Float page size distribution", floatPageSizeHisto->GetTitle());
+   EXPECT_STREQ("Page size (B)", floatPageSizeHisto->GetXaxis()->GetTitle());
+   EXPECT_STREQ("N_{pages}", floatPageSizeHisto->GetYaxis()->GetTitle());
+   EXPECT_EQ(100, floatPageSizeHisto->GetNbinsX());
+   // Make sure that all page sizes are included in the histogram
+   int nFloatPages = 0;
+   for (const auto colId : inspector->GetColumnsByType(EColumnType::kSplitReal32)) {
+      nFloatPages += inspector->GetColumnInspector(colId).GetNPages();
+   }
+   EXPECT_EQ(nFloatPages, floatPageSizeHisto->Integral());
+
+   auto multipleColsSizeHisto = inspector->GetPageSizeDistribution({0, 1, 2});
+   EXPECT_STREQ("pageSizeHist", multipleColsSizeHisto->GetName());
+   EXPECT_STREQ("Page size distribution", multipleColsSizeHisto->GetTitle());
+   int nPages = inspector->GetColumnInspector(0).GetNPages() + inspector->GetColumnInspector(1).GetNPages() +
+                inspector->GetColumnInspector(2).GetNPages();
+   EXPECT_EQ(nPages, multipleColsSizeHisto->Integral());
+
+   auto intFloatPageSizeHisto =
+      inspector->GetPageSizeDistribution({EColumnType::kSplitInt64, EColumnType::kSplitReal32}, "intFloatPageSize");
+   EXPECT_STREQ("intFloatPageSize", intFloatPageSizeHisto->GetName());
+   EXPECT_STREQ("Per-column type page size distribution", intFloatPageSizeHisto->GetTitle());
+   EXPECT_EQ(2, intFloatPageSizeHisto->GetNhists());
+
+   int intFloatIntegral = 0;
+   for (auto hist : TRangeDynCast<TH1D>(intFloatPageSizeHisto->GetHists())) {
+      intFloatIntegral += hist->Integral();
+   }
+   EXPECT_EQ(nIntPages + nFloatPages, intFloatIntegral);
+
+   auto allColsSizeHisto = inspector->GetPageSizeDistribution();
+   nPages = 0;
+   for (const auto &col : inspector->GetDescriptor()->GetColumnIterable()) {
+      nPages += inspector->GetColumnInspector(col.GetPhysicalId()).GetNPages();
+   }
+   int allColsIntegral = 0;
+   for (auto hist : TRangeDynCast<TH1D>(allColsSizeHisto->GetHists())) {
+      allColsIntegral += hist->Integral();
+   }
+   EXPECT_EQ(nPages, allColsIntegral);
+
+   // Requesting a histogram for a column with a physical ID not present in the given RNTuple should throw
+   EXPECT_THROW(inspector->GetPageSizeDistribution(inspector->GetDescriptor()->GetNPhysicalColumns() + 1),
+                ROOT::Experimental::RException);
+
+   // Requesting a histogram for a column type not present in the given RNTuple should give an empty histogram
+   auto nonExistingTypeHisto = inspector->GetPageSizeDistribution(EColumnType::kReal32);
+   EXPECT_EQ(0, nonExistingTypeHisto->Integral());
+}
+
 TEST(RNTupleInspector, FieldInfoCompressed)
 {
    FileRaii fileGuard("test_ntuple_inspector_field_info_compressed.root");
@@ -464,7 +606,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInspector("object");
 
    EXPECT_GT(topFieldInfo.GetCompressedSize(), 0);
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), inspector->GetUncompressedSize());
@@ -474,7 +616,7 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
@@ -482,8 +624,9 @@ TEST(RNTupleInspector, FieldInfoCompressed)
    EXPECT_EQ(topFieldInfo.GetCompressedSize(), subFieldOnDiskSize);
    EXPECT_EQ(topFieldInfo.GetUncompressedSize(), subFieldInMemorySize);
 
-   EXPECT_THROW(inspector->GetFieldTreeInfo("invalid_field"), ROOT::Experimental::RException);
-   EXPECT_THROW(inspector->GetFieldTreeInfo(inspector->GetDescriptor()->GetNFields()), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector("invalid_field"), ROOT::Experimental::RException);
+   EXPECT_THROW(inspector->GetFieldTreeInspector(inspector->GetDescriptor()->GetNFields()),
+                ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, FieldInfoUncompressed)
@@ -509,7 +652,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
 
-   auto topFieldInfo = inspector->GetFieldTreeInfo("object");
+   auto topFieldInfo = inspector->GetFieldTreeInspector("object");
 
    EXPECT_EQ(topFieldInfo.GetCompressedSize(), topFieldInfo.GetUncompressedSize());
 
@@ -517,7 +660,7 @@ TEST(RNTupleInspector, FieldInfoUncompressed)
    std::uint64_t subFieldInMemorySize = 0;
 
    for (const auto &subField : inspector->GetDescriptor()->GetFieldIterable(topFieldInfo.GetDescriptor().GetId())) {
-      auto subFieldInfo = inspector->GetFieldTreeInfo(subField.GetId());
+      auto subFieldInfo = inspector->GetFieldTreeInspector(subField.GetId());
       subFieldOnDiskSize += subFieldInfo.GetCompressedSize();
       subFieldInMemorySize += subFieldInfo.GetUncompressedSize();
    }
@@ -586,6 +729,6 @@ TEST(RNTupleInspector, FieldsByName)
 
    EXPECT_EQ(3, intFieldIds.size());
    for (const auto fieldId : intFieldIds) {
-      EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInfo(fieldId).GetDescriptor().GetTypeName());
+      EXPECT_EQ("std::int32_t", inspector->GetFieldTreeInspector(fieldId).GetDescriptor().GetTypeName());
    }
 }

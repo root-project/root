@@ -51,7 +51,7 @@ double RooRealL::evaluate() const
          const auto parg = vars_proxy_[i];
 
          if (harg != parg) {
-            ((RooAbsRealLValue*)harg)->setVal(((RooAbsReal*)parg)->getVal());
+            (static_cast<RooAbsRealLValue*>(harg))->setVal((static_cast<RooAbsReal*>(parg))->getVal());
          }
       }
    }

@@ -19,7 +19,7 @@
 \class RooMCStudy
 \ingroup Roofitcore
 
-RooMCStudy is a helper class to facilitate Monte Carlo studies
+Helper class to facilitate Monte Carlo studies
 such as 'goodness-of-fit' studies, that involve fitting a PDF
 to multiple toy Monte Carlo sets. These may be generated from either same PDF
 or from a different PDF with similar parameters.
@@ -50,35 +50,32 @@ Check the RooFit tutorials
 for usage examples.
 **/
 
-#include "snprintf.h"
+
+#include <RooMCStudy.h>
+
+#include <RooAbsMCStudyModule.h>
+#include <RooAbsPdf.h>
+#include <RooArgList.h>
+#include <RooCmdConfig.h>
+#include <RooDataHist.h>
+#include <RooDataSet.h>
+#include <RooErrorVar.h>
+#include <RooFitResult.h>
+#include <RooFormulaVar.h>
+#include <RooGenContext.h>
+#include <RooGlobalFunc.h>
+#include <RooMsgService.h>
+#include <RooPlot.h>
+#include <RooProdPdf.h>
+#include <RooPullVar.h>
+#include <RooRandom.h>
+#include <RooRealVar.h>
+#include <RooWorkspace.h>
+
+#include <snprintf.h>
 #include <iostream>
 
-#include "RooMCStudy.h"
-#include "RooAbsMCStudyModule.h"
-
-#include "RooGenContext.h"
-#include "RooAbsPdf.h"
-#include "RooDataSet.h"
-#include "RooDataHist.h"
-#include "RooRealVar.h"
-#include "RooFitResult.h"
-#include "RooErrorVar.h"
-#include "RooFormulaVar.h"
-#include "RooArgList.h"
-#include "RooPlot.h"
-#include "RooRandom.h"
-#include "RooCmdConfig.h"
-#include "RooGlobalFunc.h"
-#include "RooPullVar.h"
-#include "RooMsgService.h"
-#include "RooProdPdf.h"
-#include "RooWorkspace.h"
-
-using namespace std ;
-
 ClassImp(RooMCStudy);
-  ;
-
 
 /**
 Construct Monte Carlo Study Manager. This class automates generating data from a given PDF,
@@ -145,7 +142,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   // Save fit command options
   if (pc.hasProcessed("FitOptArgs")) {
     RooCmdArg* fitOptArg = static_cast<RooCmdArg*>(cmdList.FindObject("FitOptArgs")) ;
-    for (Int_t i=0 ; i<fitOptArg->subArgs().GetSize() ;i++) {
+    for (int i=0 ; i<fitOptArg->subArgs().GetSize() ;i++) {
       _fitOptList.Add(new RooCmdArg(static_cast<RooCmdArg&>(*fitOptArg->subArgs().At(i)))) ;
     }
   }
@@ -200,13 +197,12 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
 
     _perExptGenParams = true ;
 
-    coutI(Generation) << "RooMCStudy::RooMCStudy: INFO have pdf with constraints, will generate parameters from constraint pdf for each experiment" << endl ;
+    coutI(Generation) << "RooMCStudy::RooMCStudy: INFO have pdf with constraints, will generate parameters from constraint pdf for each experiment" << std::endl ;
   }
 
 
   // Extract generator and fit models
   _genModel = const_cast<RooAbsPdf*>(&model) ;
-  _genSample = nullptr ;
   RooAbsPdf* fitModel = static_cast<RooAbsPdf*>(pc.getObject("fitModel",nullptr)) ;
   _fitModel = fitModel ? fitModel : _genModel ;
 
@@ -222,10 +218,10 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   _canAddFitResults = true ;
 
   if (_extendedGen && _genProtoData && !_randProto) {
-    oocoutW(_fitModel,Generation) << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << endl
-              << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << endl
-              << "                        Use option \"r\" to randomize prototype dataset order and thus to randomize" << endl
-              << "                        the set of over/undersampled prototype events for each generation cycle." << endl ;
+    oocoutW(_fitModel,Generation) << "RooMCStudy::RooMCStudy: WARNING Using generator option 'e' (Poisson distribution of #events) together " << std::endl
+              << "                        with a prototype dataset implies incomplete sampling or oversampling of proto data." << std::endl
+              << "                        Use option \"r\" to randomize prototype dataset order and thus to randomize" << std::endl
+              << "                        the set of over/undersampled prototype events for each generation cycle." << std::endl ;
   }
 
   _genModel->getParameters(&_dependents, _genParams);
@@ -277,11 +273,10 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   }
 
   // Call module initializers
-  list<RooAbsMCStudyModule*>::iterator iter ;
-  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
+  for (auto iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
     bool ok = (*iter)->doInitializeInstance(*this) ;
     if (!ok) {
-      oocoutE(_fitModel,Generation) << "RooMCStudy::ctor: removing study module " << (*iter)->GetName() << " from analysis chain because initialization failed" << endl ;
+      oocoutE(_fitModel,Generation) << "RooMCStudy::ctor: removing study module " << (*iter)->GetName() << " from analysis chain because initialization failed" << std::endl ;
       iter = _modList.erase(iter) ;
     }
   }
@@ -332,12 +327,11 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     RooMsgService::instance().setGlobalKillBelow(RooFit::PROGRESS) ;
   }
 
-  list<RooAbsMCStudyModule*>::iterator iter ;
-  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
-    (*iter)->initializeRun(nSamples) ;
+  for (RooAbsMCStudyModule *mod : _modList) {
+    mod->initializeRun(nSamples) ;
   }
 
-  Int_t prescale = nSamples>100 ? Int_t(nSamples/100) : 1 ;
+  int prescale = nSamples>100 ? int(nSamples/100) : 1 ;
 
   while(nSamples--) {
 
@@ -346,14 +340,15 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
       if (doGenerate) ooccoutI(_fitModel,Generation) << "Generating " ;
       if (doGenerate && DoFit) ooccoutI(_fitModel,Generation) << "and " ;
       if (DoFit) ooccoutI(_fitModel,Generation) << "fitting " ;
-      ooccoutP(_fitModel,Generation) << "sample " << nSamples << endl ;
+      ooccoutP(_fitModel,Generation) << "sample " << nSamples << std::endl ;
     }
 
+    std::unique_ptr<RooAbsData> ownedGenSample;
     _genSample = nullptr;
     bool existingData = false ;
     if (doGenerate) {
       // Generate sample
-      Int_t nEvt(nEvtPerSample) ;
+      int nEvt(nEvtPerSample) ;
 
       // Reset generator parameters to initial values
       _genParams.assign(_genInitParams) ;
@@ -369,9 +364,8 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
       }
 
       // Call module before-generation hook
-      list<RooAbsMCStudyModule*>::iterator iter2 ;
-      for (iter2=_modList.begin() ; iter2!= _modList.end() ; ++iter2) {
-   (*iter2)->processBeforeGen(nSamples) ;
+      for (RooAbsMCStudyModule *mod : _modList) {
+         mod->processBeforeGen(nSamples) ;
       }
 
       if (_binGenData) {
@@ -383,7 +377,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
    }
 
    // Binned generation
-   _genSample = std::unique_ptr<RooDataHist>{_genModel->generateBinned(_dependents,nEvt)}.release();
+   ownedGenSample = std::unique_ptr<RooDataHist>{_genModel->generateBinned(_dependents,nEvt)};
 
       } else {
 
@@ -395,23 +389,22 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
 
    // Optional randomization of protodata for this run
    if (_randProto && _genProtoData && _genProtoData->numEntries()!=nEvt) {
-     oocoutI(_fitModel,Generation) << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << endl ;
+     oocoutI(_fitModel,Generation) << "RooMCStudy: (Re)randomizing event order in prototype dataset (Nevt=" << nEvt << ")" << std::endl ;
      Int_t* newOrder = _genModel->randomizeProtoOrder(_genProtoData->numEntries(),nEvt) ;
      _genContext->setProtoDataOrder(newOrder) ;
      delete[] newOrder ;
    }
 
-   coutP(Generation) << "RooMCStudy: now generating " << nEvt << " events" << endl ;
-
    // Actual generation of events
    if (nEvt>0) {
-     _genSample = _genContext->generate(nEvt) ;
+     ownedGenSample = std::unique_ptr<RooAbsData>{_genContext->generate(nEvt)};
    } else {
      // Make empty dataset
-     _genSample = new RooDataSet("emptySample","emptySample",_dependents) ;
+     ownedGenSample = std::make_unique<RooDataSet>("emptySample","emptySample",_dependents);
    }
       }
 
+   _genSample = ownedGenSample.get();
 
     //} else if (asciiFilePat && &asciiFilePat) { //warning: the address of 'asciiFilePat' will always evaluate as 'true'
     } else if (asciiFilePat) {
@@ -420,15 +413,16 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
       char asciiFile[1024] ;
       snprintf(asciiFile,1024,asciiFilePat,nSamples) ;
       RooArgList depList(_allDependents) ;
-      _genSample = RooDataSet::read(asciiFile,depList,"q") ;
+      ownedGenSample = std::unique_ptr<RooDataSet>{RooDataSet::read(asciiFile,depList,"q")};
+      _genSample = ownedGenSample.get();
 
     } else {
 
       // Load sample from internal list
-      _genSample = (RooDataSet*) _genDataList.At(nSamples) ;
+      _genSample = static_cast<RooDataSet*>(_genDataList.At(nSamples)) ;
       existingData = true ;
       if (!_genSample) {
-      oocoutW(_fitModel,Generation) << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << endl ;
+      oocoutW(_fitModel,Generation) << "RooMCStudy::run: WARNING: Sample #" << nSamples << " not loaded, skipping" << std::endl ;
       continue ;
       }
     }
@@ -437,42 +431,38 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
     _ngenVar->setVal(_genSample->sumEntries()) ;
 
     // Call module between generation and fitting hook
-    list<RooAbsMCStudyModule*>::iterator iter3 ;
-    for (iter3=_modList.begin() ; iter3!= _modList.end() ; ++iter3) {
-      (*iter3)->processBetweenGenAndFit(nSamples) ;
+    for (RooAbsMCStudyModule *mod : _modList) {
+      mod->processBetweenGenAndFit(nSamples) ;
     }
 
     if (DoFit) fitSample(_genSample) ;
 
     // Call module between generation and fitting hook
-    for (iter3=_modList.begin() ; iter3!= _modList.end() ; ++iter3) {
-      (*iter3)->processAfterFit(nSamples) ;
+    for (RooAbsMCStudyModule *mod : _modList) {
+      mod->processAfterFit(nSamples) ;
     }
 
     // Optionally write to ascii file
     if (doGenerate && asciiFilePat && *asciiFilePat) {
       char asciiFile[1024] ;
       snprintf(asciiFile,1024,asciiFilePat,nSamples) ;
-      RooDataSet* unbinnedData = dynamic_cast<RooDataSet*>(_genSample) ;
-      if (unbinnedData) {
+      if (RooDataSet* unbinnedData = dynamic_cast<RooDataSet*>(_genSample)) {
    unbinnedData->write(asciiFile) ;
       } else {
-   coutE(InputArguments) << "RooMCStudy::run(" << GetName() << ") ERROR: ASCII writing of binned datasets is not supported" << endl ;
+   coutE(InputArguments) << "RooMCStudy::run(" << GetName() << ") ERROR: ASCII writing of binned datasets is not supported" << std::endl ;
       }
     }
 
     // Add to list or delete
     if (!existingData) {
       if (keepGenData) {
-   _genDataList.Add(_genSample) ;
-      } else {
-   delete _genSample ;
+   _genDataList.Add(ownedGenSample.release()) ;
       }
     }
   }
 
-  for (iter=_modList.begin() ; iter!= _modList.end() ; ++iter) {
-    if (RooDataSet* auxData = (*iter)->finalizeRun()) {
+  for (RooAbsMCStudyModule *mod : _modList) {
+    if (RooDataSet* auxData = mod->finalizeRun()) {
       _fitParData->merge(auxData) ;
     }
   }
@@ -640,7 +630,7 @@ RooFit::OwningPtr<RooFitResult> RooMCStudy::refit(RooAbsData* genSample)
     fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
   }
 
-  return RooFit::Detail::owningPtr(std::move(fr));
+  return RooFit::makeOwningPtr(std::move(fr));
 }
 
 
@@ -704,7 +694,7 @@ bool RooMCStudy::fitSample(RooAbsData* genSample)
 bool RooMCStudy::addFitResult(const RooFitResult& fr)
 {
   if (!_canAddFitResults) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::addFitResult: ERROR cannot add fit results in current state" << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::addFitResult: ERROR cannot add fit results in current state" << std::endl ;
     return true ;
   }
 
@@ -741,7 +731,8 @@ void RooMCStudy::calcPulls()
     const auto par = static_cast<RooRealVar*>(*it);
     _fitParData->addColumn(*std::unique_ptr<RooErrorVar>{par->errorVar()});
 
-    TString name(par->GetName()), title(par->GetTitle()) ;
+    TString name(par->GetName());
+    TString title(par->GetTitle());
     name.Append("pull") ;
     title.Append(" Pull") ;
 
@@ -824,7 +815,7 @@ const RooArgSet* RooMCStudy::fitParams(Int_t sampleNum) const
 {
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitParData->numEntries()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitParams: ERROR, invalid sample number: " << sampleNum << std::endl ;
     return nullptr ;
   }
 
@@ -842,17 +833,17 @@ const RooFitResult* RooMCStudy::fitResult(Int_t sampleNum) const
 {
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_fitResList.GetSize()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, invalid sample number: " << sampleNum << std::endl ;
     return nullptr ;
   }
 
   // Retrieve fit result object
-  const RooFitResult* fr = (RooFitResult*) _fitResList.At(sampleNum) ;
+  const RooFitResult* fr = static_cast<RooFitResult*>(_fitResList.At(sampleNum)) ;
   if (fr) {
     return fr ;
   } else {
     oocoutE(_fitModel,InputArguments) << "RooMCStudy::fitResult: ERROR, no fit result saved for sample "
-           << sampleNum << ", did you use the 'r; fit option?" << endl ;
+           << sampleNum << ", did you use the 'r; fit option?" << std::endl ;
   }
   return nullptr ;
 }
@@ -867,17 +858,17 @@ RooAbsData* RooMCStudy::genData(Int_t sampleNum) const
 {
   // Check that generated data was saved
   if (_genDataList.GetSize()==0) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, generated data was not saved" << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, generated data was not saved" << std::endl ;
     return nullptr ;
   }
 
   // Check if sampleNum is in range
   if (sampleNum<0 || sampleNum>=_genDataList.GetSize()) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, invalid sample number: " << sampleNum << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::genData() ERROR, invalid sample number: " << sampleNum << std::endl ;
     return nullptr ;
   }
 
-  return  (RooAbsData*) _genDataList.At(sampleNum) ;
+  return  static_cast<RooAbsData*>(_genDataList.At(sampleNum)) ;
 }
 
 
@@ -920,7 +911,7 @@ RooPlot* RooMCStudy::plotParam(const char* paramName, const RooCmdArg& arg1, con
   // Find parameter in fitParDataSet
   RooRealVar* param = static_cast<RooRealVar*>(_fitParData->get()->find(paramName)) ;
   if (!param) {
-    oocoutE(_fitModel,InputArguments) << "RooMCStudy::plotParam: ERROR: no parameter defined with name " << paramName << endl ;
+    oocoutE(_fitModel,InputArguments) << "RooMCStudy::plotParam: ERROR: no parameter defined with name " << paramName << std::endl ;
     return nullptr ;
   }
 
@@ -1106,7 +1097,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   cmdList.Add(const_cast<RooCmdArg*>(&arg5)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg6)) ;
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,-100,100) ;
   pvar.setBins(100) ;
@@ -1255,8 +1247,8 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, double lo, double hi, Int
     _canAddFitResults=false ;
   }
 
-
-  TString name(param.GetName()), title(param.GetTitle()) ;
+  TString name(param.GetName());
+  TString title(param.GetTitle());
   name.Append("pull") ; title.Append(" Pull") ;
   RooRealVar pvar(name,title,lo,hi) ;
   pvar.setBins(nbins) ;

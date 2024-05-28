@@ -31,12 +31,12 @@ namespace Experimental {
 
 enum class EColumnType;
 class RClusterDescriptor;
-class RClusterDescriptorBuilder;
 class RNTupleDescriptor;
-class RNTupleDescriptorBuilder;
-
 
 namespace Internal {
+
+class RClusterDescriptorBuilder;
+class RNTupleDescriptorBuilder;
 
 // clang-format off
 /**
@@ -54,10 +54,9 @@ Deserialization errors throw exceptions. Only when indicated or when passed as a
 // clang-format on
 class RNTupleSerializer {
 public:
-   /// In order to handle changes to the serialization routine in future ntuple versions
-   static constexpr std::uint16_t kEnvelopeCurrentVersion = 1;
-   static constexpr std::uint16_t kEnvelopeMinVersion     = 1;
-   static constexpr std::uint32_t kReleaseCandidateTag    = 1;
+   static constexpr std::uint16_t kEnvelopeTypeHeader = 0x01;
+   static constexpr std::uint16_t kEnvelopeTypeFooter = 0x02;
+   static constexpr std::uint16_t kEnvelopeTypePageList = 0x03;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
 
@@ -69,7 +68,7 @@ public:
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
    struct REnvelopeLink {
-      std::uint32_t fUnzippedSize = 0;
+      std::uint64_t fLength = 0;
       RNTupleLocator fLocator;
    };
 
@@ -81,6 +80,8 @@ public:
    };
 
    struct RClusterGroup {
+      std::uint64_t fMinEntry = 0;
+      std::uint64_t fEntrySpan = 0;
       std::uint32_t fNClusters = 0;
       REnvelopeLink fPageListEnvelopeLink;
    };
@@ -90,8 +91,8 @@ public:
    /// footer serialization in a second step.
    class RContext {
    private:
-      std::uint32_t fHeaderSize = 0;
-      std::uint32_t fHeaderCrc32 = 0;
+      std::uint64_t fHeaderSize = 0;
+      std::uint64_t fHeaderXxHash3 = 0;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskColumnIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2OnDiskClusterIDs;
@@ -103,10 +104,10 @@ public:
       std::size_t fHeaderExtensionOffset = -1U;
 
    public:
-      void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
-      std::uint32_t GetHeaderSize() const { return fHeaderSize; }
-      void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
-      std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
+      void SetHeaderSize(std::uint64_t size) { fHeaderSize = size; }
+      std::uint64_t GetHeaderSize() const { return fHeaderSize; }
+      void SetHeaderXxHash3(std::uint64_t xxhash3) { fHeaderXxHash3 = xxhash3; }
+      std::uint64_t GetHeaderXxHash3() const { return fHeaderXxHash3; }
       /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
       /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
@@ -167,12 +168,12 @@ public:
       std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
    };
 
-   /// Writes a CRC32 checksum of the byte range given by data and length.
-   static std::uint32_t SerializeCRC32(const unsigned char *data, std::uint32_t length,
-                                       std::uint32_t &crc32, void *buffer);
-   /// Expects a CRC32 checksum in the 4 bytes following data + length and verifies it.
-   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length, std::uint32_t &crc32);
-   static RResult<void> VerifyCRC32(const unsigned char *data, std::uint32_t length);
+   /// Writes a XxHash-3 64bit checksum of the byte range given by data and length.
+   static std::uint32_t
+   SerializeXxHash3(const unsigned char *data, std::uint64_t length, std::uint64_t &xxhash3, void *buffer);
+   /// Expects an xxhash3 checksum in the 8 bytes following data + length and verifies it.
+   static RResult<void> VerifyXxHash3(const unsigned char *data, std::uint64_t length, std::uint64_t &xxhash3);
+   static RResult<void> VerifyXxHash3(const unsigned char *data, std::uint64_t length);
 
    static std::uint32_t SerializeInt16(std::int16_t val, void *buffer);
    static std::uint32_t DeserializeInt16(const void *buffer, std::int16_t &val);
@@ -190,7 +191,7 @@ public:
    static std::uint32_t DeserializeUInt64(const void *buffer, std::uint64_t &val);
 
    static std::uint32_t SerializeString(const std::string &val, void *buffer);
-   static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint32_t bufSize, std::string &val);
+   static RResult<std::uint32_t> DeserializeString(const void *buffer, std::uint64_t bufSize, std::string &val);
 
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
@@ -199,65 +200,62 @@ public:
    static RResult<std::uint16_t> DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
    static RResult<std::uint16_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
 
-   static std::uint32_t SerializeEnvelopePreamble(void *buffer);
-   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size, void *buffer);
-   static std::uint32_t SerializeEnvelopePostscript(const unsigned char *envelope, std::uint32_t size,
-                                                    std::uint32_t &crc32, void *buffer);
-   // The bufSize must include the 4 bytes for the final CRC32 checksum.
-   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize);
-   static RResult<std::uint32_t> DeserializeEnvelope(const void *buffer, std::uint32_t bufSize, std::uint32_t &crc32);
+   static std::uint32_t SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer);
+   static std::uint32_t SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size);
+   static std::uint32_t
+   SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size, std::uint64_t &xxhash3);
+   // The bufSize must include the 8 bytes for the final xxhash3 checksum.
+   static RResult<std::uint32_t>
+   DeserializeEnvelope(const void *buffer, std::uint64_t bufSize, std::uint16_t expectedType);
+   static RResult<std::uint32_t>
+   DeserializeEnvelope(const void *buffer, std::uint64_t bufSize, std::uint16_t expectedType, std::uint64_t &xxhash3);
 
    static std::uint32_t SerializeRecordFramePreamble(void *buffer);
    static std::uint32_t SerializeListFramePreamble(std::uint32_t nitems, void *buffer);
-   static std::uint32_t SerializeFramePostscript(void *frame, std::int32_t size);
-   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
-                                                        std::uint32_t &frameSize, std::uint32_t &nitems);
-   static RResult<std::uint32_t> DeserializeFrameHeader(const void *buffer, std::uint32_t bufSize,
-                                                        std::uint32_t &frameSize);
+   static std::uint32_t SerializeFramePostscript(void *frame, std::uint64_t size);
+   static RResult<std::uint32_t>
+   DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize, std::uint64_t &frameSize, std::uint32_t &nitems);
+   static RResult<std::uint32_t>
+   DeserializeFrameHeader(const void *buffer, std::uint64_t bufSize, std::uint64_t &frameSize);
 
    // An empty flags vector will be serialized as a single, zero feature flag
    // The most significant bit in every flag is reserved and must _not_ be set
-   static std::uint32_t SerializeFeatureFlags(const std::vector<std::int64_t> &flags, void *buffer);
-   static RResult<std::uint32_t> DeserializeFeatureFlags(const void *buffer, std::uint32_t bufSize,
-                                                         std::vector<std::int64_t> &flags);
+   static std::uint32_t SerializeFeatureFlags(const std::vector<std::uint64_t> &flags, void *buffer);
+   static RResult<std::uint32_t>
+   DeserializeFeatureFlags(const void *buffer, std::uint64_t bufSize, std::vector<std::uint64_t> &flags);
 
    static std::uint32_t SerializeLocator(const RNTupleLocator &locator, void *buffer);
    static std::uint32_t SerializeEnvelopeLink(const REnvelopeLink &envelopeLink, void *buffer);
-   static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint32_t bufSize, RNTupleLocator &locator);
-   static RResult<std::uint32_t> DeserializeEnvelopeLink(const void *buffer, std::uint32_t bufSize,
-                                                         REnvelopeLink &envelopeLink);
+   static RResult<std::uint32_t> DeserializeLocator(const void *buffer, std::uint64_t bufSize, RNTupleLocator &locator);
+   static RResult<std::uint32_t>
+   DeserializeEnvelopeLink(const void *buffer, std::uint64_t bufSize, REnvelopeLink &envelopeLink);
 
    static std::uint32_t SerializeClusterSummary(const RClusterSummary &clusterSummary, void *buffer);
    static std::uint32_t SerializeClusterGroup(const RClusterGroup &clusterGroup, void *buffer);
-   static RResult<std::uint32_t> DeserializeClusterSummary(const void *buffer, std::uint32_t bufSize,
-                                                           RClusterSummary &clusterSummary);
-   static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
-                                                         RClusterGroup &clusterGroup);
+   static RResult<std::uint32_t>
+   DeserializeClusterSummary(const void *buffer, std::uint64_t bufSize, RClusterSummary &clusterSummary);
+   static RResult<std::uint32_t>
+   DeserializeClusterGroup(const void *buffer, std::uint64_t bufSize, RClusterGroup &clusterGroup);
 
    /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
    /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
    static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
                                                    bool forHeaderExtension = false);
    static RResult<std::uint32_t>
-   DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   DeserializeSchemaDescription(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
 
-   static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
-   static std::uint32_t SerializePageListV1(void *buffer,
-                                            const RNTupleDescriptor &desc,
-                                            std::span<DescriptorId_t> physClusterIDs,
-                                            const RContext &context);
-   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+   static RContext SerializeHeader(void *buffer, const RNTupleDescriptor &desc);
+   static std::uint32_t SerializePageList(void *buffer, const RNTupleDescriptor &desc,
+                                          std::span<DescriptorId_t> physClusterIDs, const RContext &context);
+   static std::uint32_t SerializeFooter(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
-   static RResult<void> DeserializeHeaderV1(const void *buffer,
-                                            std::uint32_t bufSize,
-                                            RNTupleDescriptorBuilder &descBuilder);
-   static RResult<void> DeserializeFooterV1(const void *buffer,
-                                            std::uint32_t bufSize,
-                                            RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void>
+   DeserializeHeader(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+   static RResult<void>
+   DeserializeFooter(const void *buffer, std::uint64_t bufSize, RNTupleDescriptorBuilder &descBuilder);
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
-   static RResult<void> DeserializePageListV1(const void *buffer,
-                                              std::uint32_t bufSize,
-                                              std::vector<RClusterDescriptorBuilder> &clusters);
+   static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
+                                            RNTupleDescriptor &desc);
 }; // class RNTupleSerializer
 
 } // namespace Internal

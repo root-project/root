@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : TSpline2                                                              *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Quadratic spline class; uses quadrax function for interpolation           *
@@ -22,7 +22,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 #ifndef ROOT_TMVA_TSpline2
@@ -44,7 +44,7 @@ namespace TMVA {
 
    public:
   
-      TSpline2( const TString& title, TGraph* theGraph );
+      TSpline2( const TString& title, const TGraph *theGraph );
       virtual ~TSpline2( void );
 
       virtual  Double_t Eval( Double_t x ) const;
@@ -54,8 +54,9 @@ namespace TMVA {
       virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
    private:
+      std::vector<Double_t> fX;
+      std::vector<Double_t> fY;
 
-      TGraph *fGraph;   // graph that is splined
       Double_t Quadrax( Float_t dm, Float_t dm1,
                         Float_t dm2, Float_t dm3,
                         Float_t cos1, Float_t cos2, 

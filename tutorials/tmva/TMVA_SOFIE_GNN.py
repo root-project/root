@@ -101,9 +101,9 @@ DecodeGraphData = get_graph_data_dict(num_nodes,num_edges, LATENT_SIZE, LATENT_S
 
 # Make prediction of GNN
 output_gn = ep_model(input_graph_data, processing_steps)
-print("---> Input:\n",input_graph_data)
-print("\n\n------> Input core data:\n",input_core_graph_data)
-print("\n\n---> Output:\n",output_gn)
+#print("---> Input:\n",input_graph_data)
+#print("\n\n------> Input core data:\n",input_core_graph_data)
+#print("\n\n---> Output:\n",output_gn)
 
 # Make SOFIE Model
 encoder = ROOT.TMVA.Experimental.SOFIE.RModel_GraphIndependent.ParseFromMemory(ep_model._encoder._network, GraphData, filename = "encoder")
@@ -177,7 +177,7 @@ def GenerateData():
     data = get_graph_data_dict(num_nodes,num_edges, node_size, edge_size, global_size)
     return data
 
-numevts = 100
+numevts = 40
 dataSet = []
 for i in range(0,numevts):
     data = GenerateData()
@@ -197,7 +197,7 @@ def RunGNet(inputGraphData) :
     return output_gn
 
 start = time.time()
-hG = ROOT.TH1D("hG","Result from graphnet",100,1,0)
+hG = ROOT.TH1D("hG","Result from graphnet",20,1,0)
 for i in range(0,numevts):
     out = RunGNet(gnetData[i])
     g = out[1].globals.numpy()
@@ -214,19 +214,14 @@ for i in range(0,numevts):
     input_data.node_data = ROOT.TMVA.Experimental.AsRTensor(graphData['nodes'])
     input_data.edge_data = ROOT.TMVA.Experimental.AsRTensor(graphData['edges'])
     input_data.global_data = ROOT.TMVA.Experimental.AsRTensor(graphData['globals'])
-    #make sure dtype of graphData['receivers'] and senders is int32
-    input_data.receivers = graphData['receivers']
-    input_data.senders = graphData['senders']
+    input_data.edge_index = ROOT.TMVA.Experimental.AsRTensor(np.stack((graphData['receivers'],graphData['senders'])))
     sofieData.append(input_data)
 
-print("SOFIE Data: first event")
-print("receivers",sofieData[0].receivers)
-print("senders",sofieData[0].senders)
 
 endSC = time.time()
 print("time to convert data to SOFIE format",endSC-end)
 
-hS = ROOT.TH1D("hS","Result from SOFIE",100,1,0)
+hS = ROOT.TH1D("hS","Result from SOFIE",20,1,0)
 start0 = time.time()
 gnn = SofieGNN()
 start = time.time()
@@ -249,9 +244,9 @@ hG.Draw()
 c1.cd(2)
 hS.Draw()
 
-hDe = ROOT.TH1D("hDe","Difference for edge data",100,1,0)
-hDn = ROOT.TH1D("hDn","Difference for node data",100,1,0)
-hDg = ROOT.TH1D("hDg","Difference for global data",100,1,0)
+hDe = ROOT.TH1D("hDe","Difference for edge data",40,1,0)
+hDn = ROOT.TH1D("hDn","Difference for node data",40,1,0)
+hDg = ROOT.TH1D("hDg","Difference for global data",40,1,0)
 #compute differences between SOFIE and GNN
 for i in range(0,numevts):
     outSofie = gnn.infer(sofieData[i])
@@ -285,4 +280,5 @@ c2.cd(3)
 hDg.Draw()
 
 c0.Draw()
+
 

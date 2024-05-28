@@ -21,8 +21,8 @@ class TH2;
 class TF2GL : public TGLPlot3D
 {
 private:
-   TF2GL(const TF2GL&);            // Not implemented
-   TF2GL& operator=(const TF2GL&); // Not implemented
+   TF2GL(const TF2GL&) = delete;
+   TF2GL& operator=(const TF2GL&) = delete;
 
 protected:
    TF2                *fM; // fModel dynamic-casted to TH2

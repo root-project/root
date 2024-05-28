@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : GiniIndex                                                             *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description: Implementation of the GiniIndex as separation criterion           *
  *              Large Gini Indices (maximum 0.5) mean , that the sample is well   *

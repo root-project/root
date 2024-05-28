@@ -57,7 +57,7 @@ The following macro gives an example:
 
 Begin_Macro(source)
 {
-   cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
+   auto cV3D = new TCanvas("cV3D","PolyLine3D & PolyMarker3D Window",200,10,500,500);
 
    // Creating a view
    TView3D *view = (TView3D*) TView::CreateView(1);
@@ -109,7 +109,7 @@ Several coordinate systems are available:
 TView3D::TView3D() :TView()
 {
    fSystem = 0;
-   fOutline = 0;
+   fOutline = nullptr;
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
    fChanged        = kFALSE;
@@ -157,7 +157,7 @@ TView3D::TView3D(Int_t system, const Double_t *rmin, const Double_t *rmax) : TVi
    SetBit(kMustCleanup);
 
    fSystem = system;
-   fOutline = 0;
+   fOutline = nullptr;
    fDefaultOutline = kFALSE;
    fAutoRange      = kFALSE;
    fChanged        = kFALSE;
@@ -277,7 +277,7 @@ TView3D::~TView3D()
 {
    if (fOutline) fOutline->Delete();
    delete fOutline;
-   fOutline = 0;
+   fOutline = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

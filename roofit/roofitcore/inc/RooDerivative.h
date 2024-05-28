@@ -51,8 +51,8 @@ protected:
   RooSetProxy  _nset ;                                    ///< Normalization set (optional)
   RooRealProxy _func ;                                    ///< Input function
   RooRealProxy _x     ;                                   ///< Observable
-  mutable RooFunctor*  _ftor = nullptr;                   ///<! Functor binding of RooAbsReal
-  mutable ROOT::Math::RichardsonDerivator *_rd = nullptr; ///<! Derivator
+  mutable std::unique_ptr<RooFunctor> _ftor;                   ///<! Functor binding of RooAbsReal
+  mutable std::unique_ptr<ROOT::Math::RichardsonDerivator> _rd; ///<! Derivator
 
   double evaluate() const override;
 

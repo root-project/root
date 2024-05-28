@@ -34,7 +34,7 @@ ClassImp(TEveCalo3DGL);
 /// Constructor.
 
 TEveCalo3DGL::TEveCalo3DGL() :
-   TGLObject(), fM(0)
+   TGLObject(), fM(nullptr)
 {
    fMultiColor = kTRUE;
 }

@@ -1,6 +1,7 @@
-import { create, createHistogram, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
+import { create, createHistogram, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
 
@@ -52,20 +53,32 @@ class TMultiGraphPainter extends ObjectPainter {
       const ngr = Math.min(graphs.arr.length, this.painters.length);
 
       for (let i = 0; i < ngr; ++i) {
-         if (this.painters[i].updateObject(graphs.arr[i], graphs.opt[i]))
+         if (this.painters[i].updateObject(graphs.arr[i], (graphs.opt[i] || this._restopt) + this._auto))
             isany = true;
       }
 
-      const nfunc = obj.fFunctions?.arr?.length ?? 0;
-      for (let i = 0; i < nfunc; ++i) {
-         const func = obj.fFunctions.arr[i],
-               fopt = obj.fFunctions.opt[i];
-         if (func?._typename && func?.fName)
-            pp?.findPainterFor(null, func.fName, func._typename)?.updateObject(func, fopt);
-      }
+      this._funcHandler = new FunctionsHandler(this, pp, obj.fFunctions);
 
       return isany;
    }
+
+   /** @summary Redraw multigraph
+     * @desc may redraw histogram which was used to draw axes
+     * @return {Promise} for ready */
+    async redraw(reason) {
+       const promise = this.firstpainter?.redraw(reason) ?? Promise.resolve(true),
+             redrawNext = async indx => {
+                if (indx >= this.painters.length)
+                   return this;
+                return this.painters[indx].redraw(reason).then(() => redrawNext(indx + 1));
+             };
+
+       return promise.then(() => redrawNext(0)).then(() => {
+          const res = this._funcHandler?.drawNext(0) ?? this;
+          delete this._funcHandler;
+          return res;
+       });
+    }
 
    /** @summary Scan graphs range
      * @return {object} histogram for axes drawing */
@@ -77,7 +90,7 @@ class TMultiGraphPainter extends ObjectPainter {
 
       if (pad) {
          logx = pad.fLogx;
-         logy = pad.fLogy;
+         logy = pad.fLogv ?? pad.fLogy;
          rw.xmin = pad.fUxmin;
          rw.xmax = pad.fUxmax;
          rw.ymin = pad.fUymin;
@@ -210,53 +223,33 @@ class TMultiGraphPainter extends ObjectPainter {
       return TH1Painter.draw(this.getDom(), histo, hopt);
    }
 
-   /** @summary method draws next function from the functions list  */
-   async drawNextFunction(indx) {
-      const mgraph = this.getObject();
-
-      if (!mgraph.fFunctions || (indx >= mgraph.fFunctions.arr.length))
-         return this;
-
-      return this.getPadPainter().drawObject(this.getDom(), mgraph.fFunctions.arr[indx], mgraph.fFunctions.opt[indx])
-                                 .then(() => this.drawNextFunction(indx+1));
-   }
-
    /** @summary Draw graph  */
    async drawGraph(gr, opt /*, pos3d */) {
       return TGraphPainter.draw(this.getDom(), gr, opt);
    }
 
    /** @summary method draws next graph  */
-   async drawNextGraph(indx, opt) {
+   async drawNextGraph(indx) {
       const graphs = this.getObject().fGraphs;
-      let exec = '';
 
       // at the end of graphs drawing draw functions (if any)
-      if (indx >= graphs.arr.length) {
-         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
-         return this.drawNextFunction(0);
-      }
+      if (indx >= graphs.arr.length)
+         return this;
 
-      const gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
+      const gr = graphs.arr[indx],
+            draw_opt = (graphs.opt[indx] || this._restopt) + this._auto;
 
-      // if there is auto colors assignment, try to provide it
-      if (this._pfc || this._plc || this._pmc) {
-         const mp = this.getMainPainter();
-         if (isFunc(mp?.createAutoColor)) {
-            const icolor = mp.createAutoColor(graphs.arr.length);
-            if (this._pfc) { gr.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
-            if (this._plc) { gr.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
-            if (this._pmc) { gr.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
-         }
-      }
+      // used in automatic colors numbering
+      if (this._auto)
+         gr.$num_graphs = graphs.arr.length;
 
-      return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
+      return this.drawGraph(gr, draw_opt, graphs.arr.length - indx).then(subp => {
          if (subp) {
+            subp.setSecondaryId(this, `graphs_${indx}`);
             this.painters.push(subp);
-            subp._auto_exec = exec;
          }
 
-         return this.drawNextGraph(indx+1, opt);
+         return this.drawNextGraph(indx+1);
       });
    }
 
@@ -266,13 +259,14 @@ class TMultiGraphPainter extends ObjectPainter {
       const d = new DrawOptions(opt);
 
       painter._3d = d.check('3D');
-      painter._pfc = d.check('PFC');
-      painter._plc = d.check('PLC');
-      painter._pmc = d.check('PMC');
+      painter._auto = ''; // extra options for auto colors
+      ['PFC', 'PLC', 'PMC'].forEach(f => { if (d.check(f)) painter._auto += ' ' + f; });
 
       let hopt = '';
       if (d.check('FB') && painter._3d) hopt += 'FB'; // will be directly combined with LEGO
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
+
+      painter._restopt = d.remain();
 
       let promise = Promise.resolve(true);
       if (d.check('A') || !painter.getMainPainter()) {
@@ -280,15 +274,17 @@ class TMultiGraphPainter extends ObjectPainter {
                 histo = painter.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, painter.getPadPainter()?.getRootPad(true));
 
          promise = painter.drawAxisHist(histo, hopt).then(ap => {
+            ap.setSecondaryId(painter, 'hist'); // mark that axis painter generated from mg
             painter.firstpainter = ap;
-            ap.$secondary = 'hist'; // mark histogram painter as secondary
-            if (mgraph.fHistogram) painter.$primary = true; // mark mg painter as primary
          });
       }
 
       return promise.then(() => {
          painter.addToPadPrimitives();
-         return painter.drawNextGraph(0, d.remain());
+         return painter.drawNextGraph(0);
+      }).then(() => {
+         const handler = new FunctionsHandler(painter, painter.getPadPainter(), painter.getObject().fFunctions, true);
+         return handler.drawNext(0); // returns painter
       });
    }
 

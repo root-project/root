@@ -111,6 +111,8 @@ public:
 
   bool valid() const { return Stream.valid(); }
 
+  bool isOffsetValid(uint32_t Offset) const { return at(Offset) != end(); }
+
   uint32_t skew() const { return Skew; }
   Iterator end() const { return Iterator(E); }
 
@@ -153,7 +155,7 @@ private:
 template <typename ValueType, typename Extractor>
 class VarStreamArrayIterator
     : public iterator_facade_base<VarStreamArrayIterator<ValueType, Extractor>,
-                                  std::forward_iterator_tag, ValueType> {
+                                  std::forward_iterator_tag, const ValueType> {
   typedef VarStreamArrayIterator<ValueType, Extractor> IterType;
   typedef VarStreamArray<ValueType, Extractor> ArrayType;
 
@@ -193,11 +195,6 @@ public:
   }
 
   const ValueType &operator*() const {
-    assert(Array && !HasError);
-    return ThisValue;
-  }
-
-  ValueType &operator*() {
     assert(Array && !HasError);
     return ThisValue;
   }

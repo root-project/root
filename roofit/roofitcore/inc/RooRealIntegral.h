@@ -16,20 +16,15 @@
 #ifndef ROO_REAL_INTEGRAL
 #define ROO_REAL_INTEGRAL
 
-#include "RooAbsReal.h"
-#include "RooArgSet.h"
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-#include "RooSetProxy.h"
-#include "RooListProxy.h"
-#include <list>
+#include <RooAbsPdf.h>
+#include <RooAbsReal.h>
+#include <RooArgSet.h>
+#include <RooListProxy.h>
+#include <RooRealProxy.h>
+#include <RooSetProxy.h>
 
-class RooArgSet ;
-class TH1F ;
-class RooAbsCategory ;
-class RooRealVar ;
-class RooAbsIntegrator ;
-class RooNumIntConfig ;
+class RooAbsIntegrator;
+class RooNumIntConfig;
 
 class RooRealIntegral : public RooAbsReal {
 public:
@@ -104,8 +99,6 @@ protected:
   // Evaluation and validation implementation
   double evaluate() const override ;
   bool isValidReal(double value, bool printError=false) const override ;
-  bool servesExclusively(const RooAbsArg* server,const RooArgSet& exclLVBranches, const RooArgSet& allBranches) const ;
-
 
   bool redirectServersHook(const RooAbsCollection& newServerList,
                  bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
@@ -118,29 +111,28 @@ protected:
   }
 
   // Function pointer and integrands list
-  mutable RooSetProxy _sumList ; ///< Set of discrete observable over which is summed numerically
-  mutable RooSetProxy _intList ; ///< Set of continuous observables over which is integrated numerically
-  mutable RooSetProxy _anaList ; ///< Set of observables over which is integrated/summed analytically
-  mutable RooSetProxy _jacList ; ///< Set of lvalue observables over which is analytically integration that have a non-unit Jacobian
-  mutable RooSetProxy _facList ; ///< Set of observables on which function does not depends, which are integrated nevertheless
+  RooSetProxy _sumList; ///< Set of discrete observable over which is summed numerically
+  RooSetProxy _intList; ///< Set of continuous observables over which is integrated numerically
+  RooSetProxy _anaList; ///< Set of observables over which is integrated/summed analytically
+  RooSetProxy _jacList; ///< Set of lvalue observables over which is analytically integration that have a non-unit Jacobian
+  RooSetProxy _facList; ///< Set of observables on which function does not depends, which are integrated nevertheless
 
-  mutable RooArgSet   _facListOwned ;  ///< Owned components in _facList
-  RooRealProxy       _function ;     ///<Function being integration
+  RooRealProxy       _function ;     ///< Function being integrated
   std::unique_ptr<RooArgSet> _funcNormSet; ///< Optional normalization set passed to function
 
-  mutable RooArgSet       _saveInt ; ///<! do not persist
-  mutable RooArgSet       _saveSum ; ///<! do not persist
+  RooArgSet _saveInt; ///<!
+  RooArgSet _saveSum; ///<!
 
   RooNumIntConfig* _iconfig = nullptr;
 
-  mutable RooListProxy _sumCat ; ///<! do not persist
+  RooListProxy _sumCat ; ///<!
 
   Int_t _mode = 0;
   IntOperMode _intOperMode = Hybrid;   ///< integration operation mode
 
-  mutable bool _restartNumIntEngine = false; ///<! do not persist
-  mutable std::unique_ptr<RooAbsIntegrator> _numIntEngine;  ///<! do not persist
-  mutable std::unique_ptr<RooAbsFunc> _numIntegrand;        ///<! do not persist
+  mutable bool _restartNumIntEngine = false; ///<!
+  mutable std::unique_ptr<RooAbsIntegrator> _numIntEngine;  ///<!
+  mutable std::unique_ptr<RooAbsFunc> _numIntegrand;        ///<!
 
   TNamed* _rangeName = nullptr;
 
@@ -149,7 +141,10 @@ protected:
   bool _cacheNum = false;           ///< Cache integral if numeric
   static Int_t _cacheAllNDim ; ///<! Cache all integrals with given numeric dimension
 
-  ClassDefOverride(RooRealIntegral,4) // Real-valued function representing an integral over a RooAbsReal object
+private:
+  void addNumIntDep(RooAbsArg const &arg);
+
+  ClassDefOverride(RooRealIntegral,5) // Real-valued function representing an integral over a RooAbsReal object
 };
 
 #endif

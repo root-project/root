@@ -42,7 +42,7 @@ enum ETGeoTrd1Wid { kTRD1_NAME, kTRD1_X1, kTRD1_X2, kTRD1_Y, kTRD1_Z, kTRD1_APPL
 TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape = 0;
+   fShape = nullptr;
    fDxi1 = fDxi2 = fDyi = fDzi = 0.0;
    fNamei = "";
    fIsModified = kFALSE;
@@ -166,7 +166,7 @@ void TGeoTrd1Editor::ConnectSignals2Slots()
 
 void TGeoTrd1Editor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA() != TGeoTrd1::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoTrd1::Class())) {
       SetActive(kFALSE);
       return;
    }

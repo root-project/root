@@ -1,6 +1,6 @@
-import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
+import { settings, internals, browser, gStyle, isObject, isFunc, isStr, clTGaxis, kInspect, getDocument } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
+import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec, changeObjectMember } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
@@ -107,7 +107,7 @@ class JSRootMenu {
       for (let i = 1; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
              group = i+1;
-         if ((opts.length > 5) && name) {
+         if (opts.length > 5) {
             // check if there are similar options, which can be grouped once again
             while ((group < opts.length) && (opts[group].indexOf(name) === 0)) group++;
          }
@@ -208,7 +208,7 @@ class JSRootMenu {
       }
 
       this.add('sub:' + name, () => this.input('Enter value of ' + name, conv(size_value, true), (step >= 1) ? 'int' : 'float').then(set_func), title);
-      values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? parseInt(res) : parseFloat(res))));
+      values.forEach(v => this.addchk(match(v), conv(v), v, res => set_func((step >= 1) ? Number.parseInt(res) : Number.parseFloat(res))));
       this.add('endsub:');
    }
 
@@ -484,34 +484,45 @@ class JSRootMenu {
       const hnames = ['left', 'middle', 'right'], vnames = ['bottom', 'centered', 'top'];
       for (let h = 1; h < 4; ++h) {
          for (let v = 1; v < 4; ++v)
-            this.addchk(h*10+v === value, `${h*10+v}: ${hnames[h-1]} ${vnames[h-1]}`, h*10+v, arg => set_func(parseInt(arg)));
+            this.addchk(h*10+v === value, `${h*10+v}: ${hnames[h-1]} ${vnames[v-1]}`, h*10+v, arg => set_func(parseInt(arg)));
       }
 
       this.add('endsub:');
    }
 
    /** @summary Fill context menu for graphical attributes in painter
+     * @desc this method used to fill entries for different attributes of the object
+     * like TAttFill, TAttLine, TAttText
+     * There is special handling for the frame where attributes handled by the pad
      * @private */
    addAttributesMenu(painter, preffix) {
-      // this method used to fill entries for different attributes of the object
-      // like TAttFill, TAttLine, ....
-      // all menu call-backs need to be rebind, while menu can be used from other painter
-
+      const is_frame = painter === painter.getFramePainter(),
+            pp = is_frame ? painter.getPadPainter() : null;
       if (!preffix) preffix = '';
 
       if (painter.lineatt?.used) {
          this.add(`sub:${preffix}Line att`);
-         this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width,
-            arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
-         this.addColorMenu('color', painter.lineatt.color,
-            arg => { painter.lineatt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetLineColor')); });
+         this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width, arg => {
+            painter.lineatt.change(undefined, arg);
+            changeObjectMember(painter, 'fLineWidth', arg);
+            if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
+            painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`);
+         });
+         this.addColorMenu('color', painter.lineatt.color, arg => {
+            painter.lineatt.change(arg);
+            changeObjectMember(painter, 'fLineColor', arg, true);
+            if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
+            painter.interactiveRedraw(true, getColorExec(arg, 'SetLineColor'));
+         });
          this.addLineStyleMenu('style', painter.lineatt.style, id => {
             painter.lineatt.change(undefined, undefined, id);
+            changeObjectMember(painter, 'fLineStyle', id);
+            if (pp) changeObjectMember(pp, 'fFrameLineStyle', id);
             painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
          });
          this.add('endsub:');
 
-         if (painter.lineatt?.excl_side) {
+         if (!is_frame && painter.lineatt?.excl_side) {
             this.add('sub:Exclusion');
             this.add('sub:side');
             for (let side = -1; side <= 1; ++side) {
@@ -531,10 +542,14 @@ class JSRootMenu {
          this.add(`sub:${preffix}Fill att`);
          this.addColorMenu('color', painter.fillatt.colorindx, arg => {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
+            changeObjectMember(painter, 'fFillColor', arg, true);
+            if (pp) changeObjectMember(pp, 'fFrameFillColor', arg, true);
             painter.interactiveRedraw(true, getColorExec(arg, 'SetFillColor'));
          }, painter.fillatt.kind);
          this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
             painter.fillatt.change(undefined, id, painter.getCanvSvg());
+            changeObjectMember(painter, 'fFillStyle', id);
+            if (pp) changeObjectMember(pp, 'fFrameFillStyle', id);
             painter.interactiveRedraw(true, `exec:SetFillStyle(${id})`);
          });
          this.add('endsub:');
@@ -542,10 +557,16 @@ class JSRootMenu {
 
       if (painter.markeratt?.used) {
          this.add(`sub:${preffix}Marker att`);
-         this.addColorMenu('color', painter.markeratt.color,
-            arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor')); });
-         this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size,
-            arg => { painter.markeratt.change(undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetMarkerSize(${arg})`); });
+         this.addColorMenu('color', painter.markeratt.color, arg => {
+            changeObjectMember(painter, 'fMarkerColor', arg, true);
+            painter.markeratt.change(arg);
+            painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor'));
+         });
+         this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size, arg => {
+            changeObjectMember(painter, 'fMarkerSize', arg);
+            painter.markeratt.change(undefined, undefined, arg);
+            painter.interactiveRedraw(true, `exec:SetMarkerSize(${arg})`);
+         });
 
          this.add('sub:style');
          const supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
@@ -564,23 +585,39 @@ class JSRootMenu {
       if (painter.textatt?.used) {
          this.add(`sub:${preffix}Text att`);
 
-         this.addFontMenu('font', painter.textatt.font,
-                         arg => { painter.textatt.change(arg); painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`); });
+         this.addFontMenu('font', painter.textatt.font, arg => {
+            changeObjectMember(painter, 'fTextFont', arg);
+            painter.textatt.change(arg);
+            painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`);
+         });
 
          const rel = painter.textatt.size < 1.0;
 
-         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size,
-            arg => { painter.textatt.change(undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`); });
-
-         this.addColorMenu('color', painter.textatt.color,
-            arg => { painter.textatt.change(undefined, undefined, arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor')); });
-
-         this.addAlignMenu('align', painter.textatt.align, arg => {
-            painter.textatt.change(undefined, undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
+         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size, arg => {
+            changeObjectMember(painter, 'fTextSize', arg);
+            painter.textatt.change(undefined, arg);
+            painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`);
          });
 
-         this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
-            arg => { painter.textatt.change(undefined, undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+         this.addColorMenu('color', painter.textatt.color, arg => {
+            changeObjectMember(painter, 'fTextColor', arg, true);
+            painter.textatt.change(undefined, undefined, arg);
+            painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor'));
+         });
+
+         this.addAlignMenu('align', painter.textatt.align, arg => {
+            changeObjectMember(painter, 'fTextAlign', arg);
+            painter.textatt.change(undefined, undefined, undefined, arg);
+            painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
+         });
+
+         if (painter.textatt.can_rotate) {
+            this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle, arg => {
+               changeObjectMember(painter, 'fTextAngle', arg);
+               painter.textatt.change(undefined, undefined, undefined, undefined, arg);
+               painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`);
+            });
+         }
 
          this.add('endsub:');
       }
@@ -707,7 +744,9 @@ class JSRootMenu {
       this.addchk(settings.MoveResize, 'Move and resize', flag => { settings.MoveResize = flag; });
       this.addchk(settings.DragAndDrop, 'Drag and drop', flag => { settings.DragAndDrop = flag; });
       this.addchk(settings.DragGraphs, 'Drag graph points', flag => { settings.DragGraphs = flag; });
-      this.addchk(settings.ProgressBox, 'Progress box', flag => { settings.ProgressBox = flag; });
+      this.addSelectMenu('Progress box', ['off', 'on', 'modal'], isStr(settings.ProgressBox) ? settings.ProgressBox : (settings.ProgressBox ? 'on' : 'off'), value => {
+         settings.ProgressBox = (value === 'off') ? false : (value === ' on' ? true : value);
+      });
       this.add('endsub:');
 
       this.add('sub:Drawing');
@@ -726,10 +765,16 @@ class JSRootMenu {
       this.add('endsub:');
 
       if (with_hierarchy) {
+         this.add('sub:Browser');
          this.add('Hierarchy limit:  ' + settings.HierarchyLimit, () => this.input('Max number of items in hierarchy', settings.HierarchyLimit, 'int', 10, 100000).then(val => {
             settings.HierarchyLimit = val;
             if (handle_func) handle_func('refresh');
          }));
+         this.add('Browser width:  ' + settings.BrowserWidth, () => this.input('Browser width in px', settings.BrowserWidth, 'int', 50, 2000).then(val => {
+            settings.BrowserWidth = val;
+            if (handle_func) handle_func('width');
+         }));
+         this.add('endsub:');
       }
 
       this.add('Dark mode: ' + (settings.DarkMode ? 'On' : 'Off'), () => {
@@ -740,8 +785,9 @@ class JSRootMenu {
       const setStyleField = arg => { gStyle[arg.slice(1)] = parseInt(arg[0]); },
             addStyleIntField = (name, field, arr) => {
          this.add('sub:' + name);
+         const curr = gStyle[field] >= arr.length ? 1 : gStyle[field];
          for (let v = 0; v < arr.length; ++v)
-            this.addchk(gStyle[field] === v, arr[v], `${v}${field}`, setStyleField);
+            this.addchk(curr === v, arr[v], `${v}${field}`, setStyleField);
          this.add('endsub:');
       };
 
@@ -749,8 +795,9 @@ class JSRootMenu {
 
       this.add('sub:Canvas');
       this.addColorMenu('Color', gStyle.fCanvasColor, col => { gStyle.fCanvasColor = col; });
-      this.addchk(gStyle.fOptDate, 'Draw date', flag => { gStyle.fOptDate = flag ? 1 : 0; });
-      this.addchk(gStyle.fOptFile, 'Draw item', flag => { gStyle.fOptFile = flag ? 1 : 0; });
+      addStyleIntField('Draw date', 'fOptDate', ['Off', 'Current time', 'File create time', 'File modify time']);
+      this.add(`Time zone: ${settings.TimeZone}`, () => this.input('Input time zone like UTC. empty string - local timezone', settings.TimeZone, 'string').then(val => { settings.TimeZone = val; }));
+      addStyleIntField('Draw file', 'fOptFile', ['Off', 'File name', 'Full file URL', 'Item name']);
       this.addSizeMenu('Date X', 0.01, 0.1, 0.01, gStyle.fDateX, x => { gStyle.fDateX = x; }, 'configure gStyle.fDateX for date/item name drawings');
       this.addSizeMenu('Date Y', 0.01, 0.1, 0.01, gStyle.fDateY, y => { gStyle.fDateY = y; }, 'configure gStyle.fDateY for date/item name drawings');
       this.add('endsub:');
@@ -847,10 +894,10 @@ class JSRootMenu {
       this.add('separator');
 
       this.add('Save settings', () => {
-         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings as browser cookies');
+         const promise = readSettings(true) ? Promise.resolve(true) : this.confirm('Save settings', 'Pressing OK one agreess that JSROOT will store settings in browser local storage');
          promise.then(res => { if (res) { saveSettings(); saveStyle(); } });
-      }, 'Store settings and gStyle as cookies');
-      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from cookies');
+      }, 'Store settings and gStyle in browser local storage');
+      this.add('Delete settings', () => { saveSettings(-1); saveStyle(-1); }, 'Delete settings and gStyle from browser local storage');
 
       if (!alone) this.add('endsub:');
    }
@@ -905,7 +952,7 @@ class JSRootMenu {
             if (!element) return;
             let val = element.querySelector('.jsroot_dlginp').value;
             if (kind === 'float') {
-               val = parseFloat(val);
+               val = Number.parseFloat(val);
                if (Number.isFinite(val))
                   resolveFunc(val);
             } else if (kind === 'int') {
@@ -1298,7 +1345,7 @@ class StandaloneMenu extends JSRootMenu {
       if (!event && this.show_evnt) event = this.show_evnt;
 
       const doc = getDocument(),
-            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.pageXOffset, y: window.pageYOffset };
+            woffset = typeof window === 'undefined' ? { x: 0, y: 0 } : { x: window.scrollX, y: window.scrollY };
 
       doc.body.addEventListener('click', this.remove_handler);
 
@@ -1313,18 +1360,21 @@ class StandaloneMenu extends JSRootMenu {
    }
 
    /** @summary Run modal elements with standalone code */
-   async runModal(title, main_content, args) {
+   createModal(title, main_content, args) {
       if (!args) args = {};
-      const dlg_id = this.menuname + '_dialog';
+
+      if (!args.Ok) args.Ok = 'Ok';
+
+      const modal = { args }, dlg_id = (this?.menuname ?? 'root_modal') + '_dialog';
       d3_select(`#${dlg_id}`).remove();
       d3_select(`#${dlg_id}_block`).remove();
 
-      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
-          block = d3_select('body').append('div')
+      const w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth));
+      modal.block = d3_select('body').append('div')
                                    .attr('id', `${dlg_id}_block`)
                                    .attr('class', 'jsroot_dialog_block')
-                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white'),
-          element = d3_select('body')
+                                   .attr('style', 'z-index: 100000; position: absolute; left: 0px; top: 0px; bottom: 0px; right: 0px; opacity: 0.2; background-color: white');
+      modal.element = d3_select('body')
                       .append('div')
                       .attr('id', dlg_id)
                       .attr('class', 'jsroot_dialog')
@@ -1339,37 +1389,60 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            '<div class=\'jsroot_dialog_footer\' style=\'flex: 0 1 auto; padding: 5px\'>'+
-              '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Ok</button>'+
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>${args.Ok}</button>`+
               (args.btns ? '<button class=\'jsroot_dialog_button\' style=\'float: right; width: fit-content; margin-right: 1em\'>Cancel</button>' : '') +
          '</div></div>');
 
-      return new Promise(resolveFunc => {
-         element.on('keyup', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-               resolveFunc(evnt.code === 'Enter' ? element.node() : null);
-               element.remove();
-               block.remove();
-            }
-         });
-         element.on('keydown', evnt => {
-            if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
-               evnt.preventDefault();
-               evnt.stopPropagation();
-            }
-         });
-         element.selectAll('.jsroot_dialog_button').on('click', evnt => {
-            resolveFunc(args.btns && (d3_select(evnt.target).text() === 'Ok') ? element.node() : null);
-            element.remove();
-            block.remove();
-         });
+      modal.done = function(res) {
+         if (this._done) return;
+         this._done = true;
+         if (isFunc(this.call_back))
+            this.call_back(res);
+         this.element.remove();
+         this.block.remove();
+      };
 
-         let f = element.select('.jsroot_dialog_content').select('input');
-         if (f.empty()) f = element.select('.jsroot_dialog_footer').select('button');
-         if (!f.empty()) f.node().focus();
+      modal.setContent = function(content, btn_text) {
+         if (!this._done) {
+            this.element.select('.jsroot_dialog_content').html(content);
+            if (btn_text) {
+               this.args.Ok = btn_text;
+               this.element.select('.jsroot_dialog_button').text(btn_text);
+            }
+         }
+      };
+
+      modal.element.on('keyup', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+            modal.done(evnt.code === 'Enter' ? modal.element.node() : null);
+         }
+      });
+      modal.element.on('keydown', evnt => {
+         if ((evnt.code === 'Enter') || (evnt.code === 'Escape')) {
+            evnt.preventDefault();
+            evnt.stopPropagation();
+         }
+      });
+      modal.element.selectAll('.jsroot_dialog_button').on('click', evnt => {
+         modal.done(args.btns && (d3_select(evnt.target).text() === args.Ok) ? modal.element.node() : null);
+      });
+
+      let f = modal.element.select('.jsroot_dialog_content').select('input');
+      if (f.empty()) f = modal.element.select('.jsroot_dialog_footer').select('button');
+      if (!f.empty()) f.node().focus();
+      return modal;
+   }
+
+   /** @summary Run modal elements with standalone code */
+   async runModal(title, main_content, args) {
+      const modal = this.createModal(title, main_content, args);
+      return new Promise(resolveFunc => {
+         modal.call_back = resolveFunc;
       });
    }
+
 
 } // class StandaloneMenu
 
@@ -1415,6 +1488,23 @@ function showPainterMenu(evnt, painter, kind) {
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
+
+/** @summary Internal method to implement modal progress
+  * @private */
+internals._modalProgress = function(msg, click_handle) {
+   if (!msg || !isStr(msg)) {
+      internals.modal?.done();
+      delete internals.modal;
+      return;
+   }
+
+   if (!internals.modal)
+      internals.modal = StandaloneMenu.prototype.createModal('Progress', msg);
+
+   internals.modal.setContent(msg, click_handle ? 'Abort' : 'Ok');
+
+   internals.modal.call_back = click_handle;
+};
 
 /** @summary Assign handler for context menu for painter draw element
   * @private */

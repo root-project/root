@@ -75,9 +75,6 @@ def main():
         **load_config(f'{this_script_dir}/buildconfig/{args.platform}.txt')
     }
 
-    if args.binaries:
-        options_dict = remove_gpl_options(options_dict)
-
     options = build_utils.cmake_options_from_dict(options_dict)
 
     if WINDOWS:
@@ -151,7 +148,7 @@ def main():
     if testing:
         extra_ctest_flags = ""
         if WINDOWS:
-            extra_ctest_flags += "--repeat until-pass:4 "
+            extra_ctest_flags += "--repeat until-pass:5 "
             extra_ctest_flags += "--build-config " + args.buildtype
 
         ctest_returncode = run_ctest(extra_ctest_flags)
@@ -214,13 +211,6 @@ def parse_args():
 
 def print_trace():
     build_utils.log.print()
-
-def remove_gpl_options(options_dict: dict):
-    gpl_options = ['builtin_fftw3', 'builtin_gsl', 'builtin_unuran', 'fftw3', 'mathmore', 'pythia6', 'pythia8', 'unuran']
-    for opt in gpl_options:
-        options_dict[opt] = 'off'
-    return options_dict
-
 
 @github_log_group("Clean up from previous runs")
 def cleanup_previous_build():

@@ -72,8 +72,8 @@ protected:
    Int_t            fLen;             ///<  Number of fixed length elements in the leaf's data.
    Int_t            fLenType;         ///<  Number of bytes for this data type
    Int_t            fOffset;          ///<  Offset in ClonesArray object (if one)
-   Bool_t           fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise).  This is equivalent to being a 'leafcount'.  For a TLeafElement the range information is actually store in the TBranchElement.
-   Bool_t           fIsUnsigned;      ///<  (=kTRUE if unsigned, kFALSE otherwise)
+   bool             fIsRange;         ///<  (=true if leaf has a range, false otherwise).  This is equivalent to being a 'leafcount'.  For a TLeafElement the range information is actually store in the TBranchElement.
+   bool             fIsUnsigned;      ///<  (=true if unsigned, false otherwise)
    TLeaf           *fLeafCount;       ///<  Pointer to Leaf count if variable length (we do not own the counter)
    TBranch         *fBranch;          ///<! Pointer to supporting branch (we do not own the branch)
    LeafCountValues *fLeafCountValues; ///<! Cache of collection/array sizes
@@ -109,7 +109,7 @@ public:
    ~TLeaf() override;
 
            void     Browse(TBrowser *b) override;
-   virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
+   virtual bool     CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.
    virtual void     Export(TClonesArray *, Int_t) {}
    virtual void     FillBasket(TBuffer &b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
@@ -143,11 +143,11 @@ public:
    virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return GetValue(i); } // overload only when it matters.
    template <typename T> T GetTypedValue(Int_t i = 0) const { return GetValueHelper<T>::Exec(this, i); }
 
-   virtual Bool_t   IncludeRange(TLeaf *) { return kFALSE; } // overload to copy/set fMinimum and fMaximum to include/be wide than those of the parameter
+   virtual bool     IncludeRange(TLeaf *) { return false; } // overload to copy/set fMinimum and fMaximum to include/be wide than those of the parameter
    virtual void     Import(TClonesArray *, Int_t) {}
-   virtual Bool_t   IsOnTerminalBranch() const { return kTRUE; }
-   virtual Bool_t   IsRange() const { return fIsRange; }
-   virtual Bool_t   IsUnsigned() const { return fIsUnsigned; }
+   virtual bool     IsOnTerminalBranch() const { return true; }
+   virtual bool     IsRange() const { return fIsRange; }
+   virtual bool     IsUnsigned() const { return fIsUnsigned; }
    virtual void     PrintValue(Int_t i = 0) const;
    virtual void     ReadBasket(TBuffer &) {}
    virtual void     ReadBasketExport(TBuffer &, TClonesArray *, Int_t) {}
@@ -156,14 +156,14 @@ public:
    virtual void     ReadValue(std::istream & /*s*/, Char_t /*delim*/ = ' ') {
       Error("ReadValue", "Not implemented!");
    }
-           Int_t    ResetAddress(void *add, Bool_t calledFromDestructor = kFALSE);
+           Int_t    ResetAddress(void *add, bool calledFromDestructor = false);
    virtual void     SetAddress(void *add = nullptr);
    virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
    virtual void     SetLeafCount(TLeaf *leaf);
    virtual void     SetLen(Int_t len = 1) { fLen = len; }
    virtual void     SetOffset(Int_t offset = 0) { fOffset = offset; }
-   virtual void     SetRange(Bool_t range = kTRUE) { fIsRange = range; }
-   virtual void     SetUnsigned() { fIsUnsigned = kTRUE; }
+   virtual void     SetRange(bool range = true) { fIsRange = range; }
+   virtual void     SetUnsigned() { fIsUnsigned = true; }
 
    ClassDefOverride(TLeaf, 2); // Leaf: description of a Branch data type
 };

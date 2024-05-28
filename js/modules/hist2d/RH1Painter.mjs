@@ -81,7 +81,7 @@ class RH1Painter extends RHistPainter {
 
       this.ymin_nz = hmin_nz; // value can be used to show optimal log scale
 
-      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300 && Math.abs(hmax) < 1e-300)))
+      if ((this.nbinsx === 0) || ((Math.abs(hmin) < 1e-300) && (Math.abs(hmax) < 1e-300)))
          this.draw_content = false;
       else
          this.draw_content = true;

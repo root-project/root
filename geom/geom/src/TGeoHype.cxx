@@ -422,7 +422,7 @@ TGeoVolume *TGeoHype::Divide(TGeoVolume * /*voldiv*/, const char *divname, Int_t
                              Double_t /*start*/, Double_t /*step*/)
 {
    Error("Divide", "Hyperboloids cannot be divided. Division volume %s not created", divname);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

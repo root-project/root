@@ -824,9 +824,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                RooAbsPdf *constraint = findConstraint(g);
                if (!constraint)
                   constraint = ws->pdf(constraintName(g->GetName()));
-               if (!constraint && !g->isConstant())
+               if (!constraint && !g->isConstant()) {
                   RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(g->GetName()));
-               else if (!constraint) {
+               } else if (!constraint) {
                   sys.constraints.push_back(0.0);
                } else if (auto constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   sys.constraints.push_back(1. / std::sqrt(constraint_p->getX().getVal()));

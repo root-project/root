@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoamCell                                                           *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Objects of this class are hyperrectangular cells organized in             *
@@ -25,7 +25,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::PDEFoamCell
@@ -37,13 +37,10 @@
 #include "TMVA/PDEFoamVect.h"
 
 #include <iostream>
-#include <ostream>
 
 #include "Rtypes.h"
 #include "TObject.h"
 #include "TRef.h"
-
-using namespace std;
 
 ClassImp(TMVA::PDEFoamCell);
 
@@ -255,13 +252,13 @@ void TMVA::PDEFoamCell::Print(Option_t *option) const
    std::cout <<  " Parent=  {"<< (GetPare() ? GetPare()->GetSerial() : -1) <<"} "; // extra DEBUG
    std::cout <<  " Daught0= {"<< (GetDau0() ? GetDau0()->GetSerial() : -1 )<<"} "; // extra DEBUG
    std::cout <<  " Daught1= {"<< (GetDau1() ? GetDau1()->GetSerial()  : -1 )<<"} "; // extra DEBUG
-   std::cout << std::endl;;
+   std::cout << std::endl;
    //
    //
    if (fDim>0 ) {
       PDEFoamVect cellPosi(fDim); PDEFoamVect cellSize(fDim);
       GetHcub(cellPosi,cellSize);
-      std::cout <<"   Posi= "; cellPosi.Print("1"); std::cout<<","<< std::endl;;
-      std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;;
+      std::cout <<"   Posi= "; cellPosi.Print("1"); std::cout<<","<< std::endl;
+      std::cout <<"   Size= "; cellSize.Print("1"); std::cout<<","<< std::endl;
    }
 }

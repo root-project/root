@@ -1,3 +1,4 @@
+/// \file
 /// \brief This file contains a specialised ROOT message handler to test for diagnostic in unit tests.
 ///
 /// \author Stephan Hageboeck <stephan.hageboeck@cern.ch>
@@ -66,10 +67,21 @@ static struct ForbidDiagnostics {
         std::cerr << "Warning in " << location << " " << msg << std::endl;
         return;
       }
+      if (level == kWarning && strstr(msg, "Merging RNTuples is experimental") != nullptr) {
+         std::cerr << "Warning in " << location << " " << msg << std::endl;
+         return;
+      }
 
       // FIXME: DOAS backend is exprimental.
       if (level == kWarning
           && strstr(msg, "The DAOS backend is experimental and still under development") != nullptr) {
+        std::cerr << "Warning in " << location << " " << msg << std::endl;
+        return;
+      }
+
+      // FIXME: RooNaNPacker warns about not being implemented for big endian
+      if (level == kWarning
+	  && strcmp(msg, "Fast recovery from undefined function values only implemented for little-endian machines. If necessary, request an extension of functionality on https://root.cern") == 0) {
         std::cerr << "Warning in " << location << " " << msg << std::endl;
         return;
       }

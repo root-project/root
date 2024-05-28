@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Class  : Factory                                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementation (see header for description)                               *
@@ -18,7 +18,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::ClassifierFactory
@@ -101,6 +101,7 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
+      return nullptr;
    }
 
    return (it->second)(job, title, dsi, option);
@@ -123,6 +124,7 @@ TMVA::IMethod* TMVA::ClassifierFactory::Create( const std::string &name,
    if (it == fCalls.end()) {
       std::cerr << "ClassifierFactory<>::Create - don't know anything about " << name << std::endl;
       assert(0);
+      return nullptr;
    }
 
    return (it->second)("", "", dsi, weightfile);

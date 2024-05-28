@@ -41,10 +41,10 @@
 #include <stdexcept>
 
 /** \class RooJSONFactoryWSTool
-\ingroup roofit
+\ingroup roofit_dev_docs_hs3
 
-When using `RooFit`, statistical models can be conveniently handled and
-stored as a `RooWorkspace`. However, for the sake of interoperability
+When using \ref Roofitmain, statistical models can be conveniently handled and
+stored as a RooWorkspace. However, for the sake of interoperability
 with other statistical frameworks, and also ease of manipulation, it
 may be useful to store statistical models in text form.
 
@@ -66,8 +66,7 @@ tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.exportJSON("myjson.json")
 ~~~
 
-For more details, consult the tutorial <a
-href="https://root.cern/doc/v626/rf515__hfJSON_8py.html">rf515_hfJSON</a>.
+For more details, consult the tutorial <a href="rf515__hfJSON_8py.html">rf515_hfJSON</a>.
 
 In order to import and export YML files, `ROOT` needs to be compiled
 with the external dependency <a
@@ -77,9 +76,7 @@ to be installed on your system when building `ROOT`.
 The RooJSONFactoryWSTool only knows about a limited set of classes for
 import and export. If import or export of a class you're interested in
 fails, you might need to add your own importer or exporter. Please
-consult the <a
-href="https://github.com/root-project/root/blob/master/roofit/hs3/README.md">README</a>
-to learn how to do that.
+consult the relevant section in the \ref roofit_dev_docs to learn how to do that (\ref roofit_dev_docs_hs3).
 
 You can always get a list of all the available importers and exporters by calling the following functions:
 ~~~ {.py}
@@ -94,7 +91,6 @@ Alternatively, you can generate a LaTeX version of the available importers and e
 tool = ROOT.RooJSONFactoryWSTool(ws)
 tool.writedoc("hs3.tex")
 ~~~
-
 */
 
 constexpr auto hs3VersionTag = "0.2";
@@ -223,10 +219,11 @@ void configureVariable(RooFit::JSONIO::Detail::Domains &domains, const JSONNode 
       v.setError(v.getVal() * n->val_double());
    if (auto n = p.find("err"))
       v.setError(n->val_double());
-   if (auto n = p.find("const"))
+   if (auto n = p.find("const")) {
       v.setConstant(n->val_bool());
-   else
+   } else {
       v.setConstant(false);
+   }
 }
 
 JSONNode const *getVariablesNode(JSONNode const &rootNode)
@@ -250,18 +247,21 @@ Var::Var(const JSONNode &val)
       this->min = this->edges[0];
       this->max = this->edges[this->nbins - 1];
    } else {
-      if (!val.find("nbins"))
+      if (!val.find("nbins")) {
          this->nbins = 1;
-      else
+      } else {
          this->nbins = val["nbins"].val_int();
-      if (!val.find("min"))
+      }
+      if (!val.find("min")) {
          this->min = 0;
-      else
+      } else {
          this->min = val["min"].val_double();
-      if (!val.find("max"))
+      }
+      if (!val.find("max")) {
          this->max = 1;
-      else
+      } else {
          this->max = val["max"].val_double();
+      }
    }
 }
 
@@ -669,10 +669,11 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (const auto &p : pars) {
       if (mc->GetParametersOfInterest()->find(*p))
          continue;
-      if (p->isConstant() && !mainPars.find(*p))
+      if (p->isConstant() && !mainPars.find(*p)) {
          globs.add(*p);
-      else
+      } else {
          nps.add(*p);
+      }
    }
    mc->SetGlobalObservables(globs);
    mc->SetNuisanceParameters(nps);
@@ -793,10 +794,11 @@ void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll,
    for (RooAbsArg const *arg : coll) {
       if (n >= nMax)
          break;
-      if (isLiteralConstVar(*arg))
+      if (isLiteralConstVar(*arg)) {
          node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
-      else
+      } else {
          node.append_child() << arg->GetName();
+      }
       ++n;
    }
    if (node.num_children() != old_children + coll.size()) {
@@ -1107,7 +1109,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
                 << " 3: you are reading a file with export keys - call RooFit::JSONIO::printExportKeys() to "
                    "see what is available\n"
                 << " 2 & 1: you might need to write a serialization definition yourself. check "
-                   "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
+                   "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to "
                    "see how to do this!\n";
       return;
    }
@@ -1139,10 +1141,11 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
-         if (isLiteralConstVar(*r->absArg()))
+         if (isLiteralConstVar(*r->absArg())) {
             elem[k->second] << static_cast<RooConstVar *>(r->absArg())->getVal();
-         else
+         } else {
             elem[k->second] << r->absArg()->GetName();
+         }
       }
    }
 
@@ -1240,7 +1243,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
                "RooFit::JSONIO::printFactoryExpressions() "
                "to see what is available\n"
             << " 2 & 1: you might need to write a deserialization definition yourself. check "
-               "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
+               "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to see "
                "how to do this!"
             << std::endl;
          RooJSONFactoryWSTool::error(ss.str());

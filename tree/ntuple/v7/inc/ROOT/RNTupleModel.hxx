@@ -20,7 +20,7 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <cstdint>
 #include <functional>
@@ -33,15 +33,16 @@
 namespace ROOT {
 namespace Experimental {
 
-class RCollectionNTupleWriter;
+class RNTupleCollectionWriter;
 class RNTupleModel;
 class RNTupleWriter;
 
-namespace Detail {
+namespace Internal {
+class RPageSinkBuf;
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleModelChangeset
+\class ROOT::Experimental::Internal::RNTupleModelChangeset
 \ingroup NTuple
 \brief The incremental changes to a `RNTupleModel`
 
@@ -61,7 +62,7 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
-} // namespace Detail
+} // namespace Internal
 
 // clang-format off
 /**
@@ -70,8 +71,12 @@ struct RNTupleModelChangeset {
 \brief The RNTupleModel encapulates the schema of an ntuple.
 
 The ntuple model comprises a collection of hierarchically organized fields. From a model, "entries"
-can be extracted. For convenience, the model provides a default entry. Models have a unique model identifier
-that faciliates checking whether entries are compatible with it (i.e.: have been extracted from that model).
+can be extracted. For convenience, the model provides a default entry unless it is created as a "bare model".
+Models have a unique model identifier that faciliates checking whether entries are compatible with it
+(i.e.: have been extracted from that model).
+
+A model is subject to a state transition during its lifetime: it starts in a building state, in which fields can be
+added and modified.  Once the schema is finalized, the model gets frozen.  Only frozen models can create entries.
 */
 // clang-format on
 class RNTupleModel {
@@ -79,6 +84,7 @@ public:
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
    struct NameWithDescription_t {
       NameWithDescription_t(const char *name) : fName(name) {}
+      NameWithDescription_t(const std::string &name) : fName(name) {}
       NameWithDescription_t(std::string_view name) : fName(name) {}
       NameWithDescription_t(std::string_view name, std::string_view descr) : fName(name), fDescription(descr) {}
 
@@ -95,7 +101,7 @@ public:
    public:
       /// The map keys are the projected target fields, the map values are the backing source fields
       /// Note that sub fields are treated individually and indepently of their parent field
-      using FieldMap_t = std::unordered_map<const Detail::RFieldBase *, const Detail::RFieldBase *>;
+      using FieldMap_t = std::unordered_map<const RFieldBase *, const RFieldBase *>;
 
    private:
       explicit RProjectedFields(std::unique_ptr<RFieldZero> fieldZero) : fFieldZero(std::move(fieldZero)) {}
@@ -108,7 +114,7 @@ public:
 
       /// Asserts that the passed field is a valid target of the source field provided in the field map.
       /// Checks the field without looking into sub fields.
-      RResult<void> EnsureValidMapping(const Detail::RFieldBase *target, const FieldMap_t &fieldMap);
+      RResult<void> EnsureValidMapping(const RFieldBase *target, const FieldMap_t &fieldMap);
 
    public:
       explicit RProjectedFields(const RNTupleModel *model) : fFieldZero(std::make_unique<RFieldZero>()), fModel(model)
@@ -124,10 +130,10 @@ public:
       std::unique_ptr<RProjectedFields> Clone(const RNTupleModel *newModel) const;
 
       RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
-      const Detail::RFieldBase *GetSourceField(const Detail::RFieldBase *target) const;
+      const RFieldBase *GetSourceField(const RFieldBase *target) const;
       /// Adds a new projected field. The field map needs to provide valid source fields of fModel for 'field'
       /// and each of its sub fields.
-      RResult<void> Add(std::unique_ptr<Detail::RFieldBase> field, const FieldMap_t &fieldMap);
+      RResult<void> Add(std::unique_ptr<RFieldBase> field, const FieldMap_t &fieldMap);
       bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
    };
 
@@ -139,7 +145,8 @@ public:
    class RUpdater {
    private:
       RNTupleWriter &fWriter;
-      Detail::RNTupleModelChangeset fOpenChangeset;
+      Internal::RNTupleModelChangeset fOpenChangeset;
+      std::uint64_t fNewModelId = 0; ///< The model ID after committing
 
    public:
       explicit RUpdater(RNTupleWriter &writer);
@@ -152,20 +159,22 @@ public:
       /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
       void CommitUpdate();
 
-      void AddField(std::unique_ptr<Detail::RFieldBase> field);
-      template <typename T>
-      void AddField(const NameWithDescription_t &fieldNameDesc, T *fromWhere)
+      template <typename T, typename... ArgsT>
+      std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
       {
-         fOpenChangeset.fModel.AddField<T>(fieldNameDesc, fromWhere);
-         auto fieldZero = fOpenChangeset.fModel.GetFieldZero();
+         auto objPtr = fOpenChangeset.fModel.MakeField<T>(fieldNameDesc, std::forward<ArgsT>(args)...);
+         auto fieldZero = fOpenChangeset.fModel.fFieldZero.get();
          auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
-                                [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
+                                [&](const auto &f) { return f.GetFieldName() == fieldNameDesc.fName; });
          R__ASSERT(it != fieldZero->end());
          fOpenChangeset.fAddedFields.emplace_back(&(*it));
+         return objPtr;
       }
 
-      RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
-                                      std::function<std::string(const std::string &)> mapping);
+      void AddField(std::unique_ptr<RFieldBase> field);
+
+      RResult<void>
+      AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
    };
 
 private:
@@ -179,9 +188,11 @@ private:
    std::string fDescription;
    /// The set of projected top-level fields
    std::unique_ptr<RProjectedFields> fProjectedFields;
-   /// Upon freezing, every model has a unique ID to distingusish it from other models.  Cloning preserves the ID.
-   /// Entries are linked to models via the ID.
+   /// Every model has a unique ID to distinguish it from other models. Entries are linked to models via the ID.
+   /// Cloned models get a new model ID.
    std::uint64_t fModelId = 0;
+   /// Changed by Freeze() / Unfreeze() and by the RUpdater.
+   bool fIsFrozen = false;
 
    /// Checks that user-provided field names are valid in the context
    /// of this NTuple model. Throws an RException for invalid names.
@@ -193,7 +204,10 @@ private:
    /// Throws an RException if fDefaultEntry is nullptr
    void EnsureNotBare() const;
 
-   RNTupleModel();
+   /// The field name can be a top-level field or a nested field. Returns nullptr if the field is not in the model.
+   RFieldBase *FindField(std::string_view fieldName) const;
+
+   RNTupleModel(std::unique_ptr<RFieldZero> fieldZero);
 
 public:
    RNTupleModel(const RNTupleModel&) = delete;
@@ -202,15 +216,18 @@ public:
 
    std::unique_ptr<RNTupleModel> Clone() const;
    static std::unique_ptr<RNTupleModel> Create();
+   static std::unique_ptr<RNTupleModel> Create(std::unique_ptr<RFieldZero> fieldZero);
    /// A bare model has no default entry
    static std::unique_ptr<RNTupleModel> CreateBare();
+   static std::unique_ptr<RNTupleModel> CreateBare(std::unique_ptr<RFieldZero> fieldZero);
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
-   /// corresponding tree value that is managed by a shared pointer.
+   /// corresponding value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
+   /// #include <ROOT/RNTupleWriter.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    /// using ROOT::Experimental::RNTupleWriter;
    ///
@@ -222,18 +239,18 @@ public:
    ///
    /// // The RNTuple is written to disk when the RNTupleWriter goes out of scope
    /// {
-   ///    auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
+   ///    auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "myFile.root");
    ///    for (int i = 0; i < 100; i++) {
    ///       *pt = static_cast<float>(i);
    ///       *vec = {i, i+1, i+2};
-   ///       ntuple->Fill();
+   ///       writer->Fill();
    ///    }
    /// }
    /// ~~~
    ///
    /// **Example: create a field with an initial value**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
@@ -242,7 +259,7 @@ public:
    /// ~~~
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
-   /// #include <ROOT/RNTuple.hxx>
+   /// #include <ROOT/RNTupleModel.hxx>
    /// using ROOT::Experimental::RNTupleModel;
    ///
    /// auto model = RNTupleModel::Create();
@@ -251,8 +268,7 @@ public:
    /// });
    /// ~~~
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc,
-      ArgsT&&... args)
+   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc, ArgsT &&...args)
    {
       EnsureNotFrozen();
       EnsureValidFieldName(fieldNameDesc.fName);
@@ -260,7 +276,8 @@ public:
       field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
-         ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
+         ptr = fDefaultEntry->AddValue<T>(*field, std::forward<ArgsT>(args)...);
+      fFieldNames.insert(field->GetFieldName());
       fFieldZero->Attach(std::move(field));
       return ptr;
    }
@@ -268,58 +285,43 @@ public:
    /// Adds a field whose type is not known at compile time.  Thus there is no shared pointer returned.
    ///
    /// Throws an exception if the field is null.
-   void AddField(std::unique_ptr<Detail::RFieldBase> field);
-
-   /// Throws an exception if fromWhere is null.
-   template <typename T>
-   void AddField(const NameWithDescription_t &fieldNameDesc, T* fromWhere) {
-      EnsureNotFrozen();
-      EnsureNotBare();
-      if (!fromWhere)
-         throw RException(R__FAIL("null field fromWhere"));
-      EnsureValidFieldName(fieldNameDesc.fName);
-
-      auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
-      field->SetDescription(fieldNameDesc.fDescription);
-      fDefaultEntry->AddValue(field->BindValue(fromWhere));
-      fFieldZero->Attach(std::move(field));
-   }
+   void AddField(std::unique_ptr<RFieldBase> field);
 
    /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
    /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
    /// Projected fields can only be used for models used to write data.
-   RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
-                                   std::function<std::string(const std::string &)> mapping);
-
-   template <typename T>
-   T *Get(std::string_view fieldName) const
-   {
-      EnsureNotBare();
-      return fDefaultEntry->Get<T>(fieldName);
-   }
-
+   RResult<void>
+   AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
    void Unfreeze();
-   bool IsFrozen() const { return fModelId != 0; }
+   bool IsFrozen() const { return fIsFrozen; }
    std::uint64_t GetModelId() const { return fModelId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model
    ///
    /// Throws an exception if collectionModel is null.
-   std::shared_ptr<RCollectionNTupleWriter> MakeCollection(
-      std::string_view fieldName,
-      std::unique_ptr<RNTupleModel> collectionModel);
+   std::shared_ptr<RNTupleCollectionWriter>
+   MakeCollection(std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel);
 
    std::unique_ptr<REntry> CreateEntry() const;
-   /// In a bare entry, all values point to nullptr. The resulting entry shall use CaptureValueUnsafe() in order
+   /// In a bare entry, all values point to nullptr. The resulting entry shall use BindValue() in order
    /// set memory addresses to be serialized / deserialized
    std::unique_ptr<REntry> CreateBareEntry() const;
-   REntry *GetDefaultEntry() const;
+   /// Creates a token to be used in REntry methods to address a top-level field
+   REntry::RFieldToken GetToken(std::string_view fieldName) const;
+   /// Calls the given field's CreateBulk() method. Throws an exception if no field with the given name exists.
+   RFieldBase::RBulk CreateBulk(std::string_view fieldName) const;
 
-   RFieldZero *GetFieldZero() const { return fFieldZero.get(); }
-   const Detail::RFieldBase *GetField(std::string_view fieldName) const;
+   REntry &GetDefaultEntry();
+   const REntry &GetDefaultEntry() const;
+
+   /// Non-const access to the root field is used to commit clusters during writing
+   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
+   RFieldZero &GetFieldZero();
+   const RFieldZero &GetFieldZero() const { return *fFieldZero; }
+   const RFieldBase &GetField(std::string_view fieldName) const;
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);

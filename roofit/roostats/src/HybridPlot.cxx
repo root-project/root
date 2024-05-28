@@ -30,7 +30,6 @@ http://www-ekp.physik.uni-karlsruhe.de/~schott/roostats/hybridplot_example.png
 #include <algorithm>
 
 /// To build the THtml documentation
-using namespace std;
 
 ClassImp(RooStats::HybridPlot);
 
@@ -152,11 +151,11 @@ void HybridPlot::Draw(const char* )
    }
 
    // Shaded
-   fB_histo_shaded = (TH1F*)fB_histo->Clone("b_shaded");
+   fB_histo_shaded = static_cast<TH1F*>(fB_histo->Clone("b_shaded"));
    fB_histo_shaded->SetFillStyle(3005);
    fB_histo_shaded->SetFillColor(kRed);
 
-   fSb_histo_shaded = (TH1F*)fSb_histo->Clone("sb_shaded");
+   fSb_histo_shaded = static_cast<TH1F*>(fSb_histo->Clone("sb_shaded"));
    fSb_histo_shaded->SetFillStyle(3004);
    fSb_histo_shaded->SetFillColor(kBlue);
 
@@ -242,7 +241,7 @@ double HybridPlot::GetHistoCenter(TH1* histo_orig, double n_rms, bool display_re
    TString optfit = "Q0";
    if (display_result) optfit = "Q";
 
-   TH1F* histo = (TH1F*)histo_orig->Clone();
+   TH1F* histo = static_cast<TH1F*>(histo_orig->Clone());
 
    // get the histo x extremes
    double x_min = histo->GetXaxis()->GetXmin();
@@ -324,8 +323,10 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    // Now select the couple of extremes which have the lower bin content diff
    std::map<int,int>::iterator it;
-   int a,b;
-   double left_bin_center(0.),right_bin_center(0.);
+   int a;
+   int b;
+   double left_bin_center(0.);
+   double right_bin_center(0.);
    double diff=10e40;
    double current_diff;
    for (it = extremes_map.begin();it != extremes_map.end();++it){
@@ -354,9 +355,10 @@ double HybridPlot::GetMedian(TH1* histo){
    //int xbin_median;
    double* integral = histo->GetIntegral();
    int median_i = 0;
-   for (int j=0;j<histo->GetNbinsX(); j++)
+   for (int j = 0; j < histo->GetNbinsX(); j++) {
       if (integral[j]<0.5)
          median_i = j;
+   }
 
    double median_x =
       histo->GetBinCenter(median_i)+

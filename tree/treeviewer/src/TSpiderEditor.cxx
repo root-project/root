@@ -59,7 +59,7 @@ TSpiderEditor::TSpiderEditor(const TGWindow* /*p*/, Int_t /*width*/, Int_t /*hei
    MakeTitle("Spider");
 
    fBgroup = new TGButtonGroup(this,2,1,0,0, "Plot type");
-   fBgroup->SetRadioButtonExclusive(kTRUE);
+   fBgroup->SetRadioButtonExclusive(true);
    fPolyLines = new TGRadioButton(fBgroup, "PolyLine", kPolyLines);
    fPolyLines->SetToolTipText("Set a polyline plot type");
    fSegment = new TGRadioButton(fBgroup, "Segment", kSegment);
@@ -138,7 +138,7 @@ TSpiderEditor::~TSpiderEditor()
 
 void TSpiderEditor::ConnectSignals2Slots()
 {
-   fDisplayAverage->Connect("Toggled(Bool_t)", "TSpiderEditor", this, "DoDisplayAverage(Bool_t)");
+   fDisplayAverage->Connect("Toggled(bool)", "TSpiderEditor", this, "DoDisplayAverage(bool)");
    fSetNx->Connect("ReturnPressed()", "TSpiderEditor", this, "DoSetNx()");
    fSetNy->Connect("ReturnPressed()", "TSpiderEditor", this, "DoSetNy()");
    fBgroup->Connect("Clicked(Int_t)","TSpiderEditor",this,"DoSetPlotType()");
@@ -155,7 +155,7 @@ void TSpiderEditor::ConnectSignals2Slots()
    fAvFillColorSelect->Connect("ColorSelected(Pixel_t)", "TSpiderEditor", this, "DoAvFillColor(Pixel_t)");
    fAvFillPatternSelect->Connect("PatternSelected(Style_t)", "TSpiderEditor", this, "DoAvFillPattern(Style_t)");
 
-   fInit = kFALSE;
+   fInit = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -254,19 +254,19 @@ void TSpiderEditor::SetModel(TObject* obj)
    if (!obj) return;
    fSpider = dynamic_cast<TSpider*>(obj);
    if (!fSpider) return;
-   fAvoidSignal = kTRUE;
+   fAvoidSignal = true;
 
-   Bool_t av = fSpider->GetDisplayAverage();
+   bool av = fSpider->GetDisplayAverage();
    if(av) fDisplayAverage->SetState(kButtonDown);
    else fDisplayAverage->SetState(kButtonUp);
 
    fSetNx->SetNumber(fSpider->GetNx());
    fSetNy->SetNumber(fSpider->GetNy());
 
-   Bool_t seg = fSpider->GetSegmentDisplay();
+   bool seg = fSpider->GetSegmentDisplay();
 
-   if(seg) fBgroup->SetButton(kSegment,kTRUE);
-   else fBgroup->SetButton(kPolyLines,kTRUE);
+   if(seg) fBgroup->SetButton(kSegment,true);
+   else fBgroup->SetButton(kPolyLines,true);
 
    fGotoEntry->SetNumber(fSpider->GetCurrentEntry());
 
@@ -280,12 +280,12 @@ void TSpiderEditor::SetModel(TObject* obj)
    fAvLineColorSelect->SetColor(p);
    c = fSpider->GetAverageFillColor();
    p = TColor::Number2Pixel(c);
-   fAvFillColorSelect->SetColor(p,kFALSE);
-   fAvFillPatternSelect->SetPattern(fSpider->GetAverageFillStyle(),kFALSE);
+   fAvFillColorSelect->SetColor(p,false);
+   fAvFillPatternSelect->SetPattern(fSpider->GetAverageFillStyle(),false);
 
    if (fInit) ConnectSignals2Slots();
 
-   fAvoidSignal = kFALSE;
+   fAvoidSignal = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -370,7 +370,7 @@ void TSpiderEditor::DoDeleteVar()
 ////////////////////////////////////////////////////////////////////////////////
 /// Slot Connected to the average display.
 
-void TSpiderEditor::DoDisplayAverage(Bool_t av)
+void TSpiderEditor::DoDisplayAverage(bool av)
 {
    if (fAvoidSignal) return;
 
@@ -456,7 +456,7 @@ void  TSpiderEditor::DoSetNy()
 
 void  TSpiderEditor::DoSetPlotType()
 {
-   if(fSegment->GetState() == kButtonDown) fSpider->SetSegmentDisplay(kTRUE);
-   else fSpider->SetSegmentDisplay(kFALSE);
+   if(fSegment->GetState() == kButtonDown) fSpider->SetSegmentDisplay(true);
+   else fSpider->SetSegmentDisplay(false);
    Update();
 }

@@ -30,7 +30,7 @@
 #include <cstring>
 #include <cctype>
 
-using namespace std;
+using std::cout, std::endl;
 
 ClassImp(RooBlindTools);
 
@@ -95,11 +95,6 @@ void RooBlindTools::setup(const char *stSeedIn)
 
   _STagConstant = Randomizer("fghijklmnopqrstuvwxyzabcde");
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBlindTools::~RooBlindTools(){}
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -9,7 +9,6 @@
 ################################################################################
 
 from . import pythonization
-from libcppyy import SetOwnership
 
 import sys
 
@@ -20,12 +19,7 @@ def _check_type(idx, msg):
     # Parameters:
     # - idx: index whose type needs to be checked
     # - msg: message to show in case of type issue
-
-    # Python2 also allows long indices
-    if sys.version_info >= (3,0):
-        allowed_types = (int,)
-    else:
-        allowed_types = (int, long)
+    allowed_types = (int,)
 
     t = type(idx)
     if not t in allowed_types:
@@ -80,6 +74,9 @@ def _remove_at(self, idx):
     return self.Remove(lnk)
 
 def _setitem_pyz(self, idx, val):
+
+    import ROOT
+
     # Parameters:
     # - self: collection where to set item/s
     # - idx: index/slice of the item/s
@@ -99,7 +96,7 @@ def _setitem_pyz(self, idx, val):
             # Prevent this new Python proxy from owning the C++ object
             # Otherwise we get an 'already deleted' error in
             # TList::Clear when the application ends
-            SetOwnership(elem, False)
+            ROOT.SetOwnership(elem, False)
             try:
                 i = next(it)
                 self[i] = elem

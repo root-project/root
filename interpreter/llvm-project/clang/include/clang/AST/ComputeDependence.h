@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CLANG_AST_COMPUTE_DEPENDENCE_H
-#define LLVM_CLANG_AST_COMPUTE_DEPENDENCE_H
+#ifndef LLVM_CLANG_AST_COMPUTEDEPENDENCE_H
+#define LLVM_CLANG_AST_COMPUTEDEPENDENCE_H
 
 #include "clang/AST/DependenceFlags.h"
 #include "clang/Basic/ExceptionSpecificationType.h"
@@ -79,6 +79,7 @@ class CXXUnresolvedConstructExpr;
 class CXXDependentScopeMemberExpr;
 class MaterializeTemporaryExpr;
 class CXXFoldExpr;
+class CXXParenListInitExpr;
 class TypeTraitExpr;
 class ConceptSpecializationExpr;
 class SYCLUniqueStableNameExpr;
@@ -168,6 +169,7 @@ ExprDependence computeDependence(CXXUnresolvedConstructExpr *E);
 ExprDependence computeDependence(CXXDependentScopeMemberExpr *E);
 ExprDependence computeDependence(MaterializeTemporaryExpr *E);
 ExprDependence computeDependence(CXXFoldExpr *E);
+ExprDependence computeDependence(CXXParenListInitExpr *E);
 ExprDependence computeDependence(TypeTraitExpr *E);
 ExprDependence computeDependence(ConceptSpecializationExpr *E,
                                  bool ValueDependent);

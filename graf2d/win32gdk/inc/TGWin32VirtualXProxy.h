@@ -39,7 +39,7 @@ public:
    TGWin32VirtualXProxy(const char *name, const char *title) {}
      ~TGWin32VirtualXProxy() override {}
 
-   Bool_t    Init(void *display=0) override;
+   Bool_t    Init(void *display=nullptr) override;
    void      ClearWindow() override;
    void      ClosePixmap() override;
    void      CloseWindow() override;
@@ -56,7 +56,7 @@ public:
    EDrawMode GetDrawMode();
    Int_t     GetDoubleBuffer(Int_t wid) override;
    void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
-   const char *DisplayName(const char * = 0) override;
+   const char *DisplayName(const char * = nullptr) override;
    Handle_t  GetNativeEvent() const override;
    ULong_t   GetPixel(Color_t cindex) override;
    void      GetPlanes(Int_t &nplanes) override;
@@ -149,7 +149,7 @@ public:
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
                           UInt_t w, UInt_t h, UInt_t border, Int_t depth, UInt_t clss,
                           void *visual, SetWindowAttributes_t *attr, UInt_t wtype) override;
-   Int_t        OpenDisplay(const char *dpyName=0) override;
+   Int_t        OpenDisplay(const char *dpyName=nullptr) override;
    void         CloseDisplay() override;
    Display_t    GetDisplay() const override;
    Visual_t     GetVisual() const override;

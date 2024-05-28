@@ -29,11 +29,23 @@ class RLoopManager;
 namespace RDF {
 namespace Experimental {
 
+// clang-format off
 /**
+\class ROOT::RDF::Experimental::RDatasetSpec
 \ingroup dataframe
-\brief A dataset specification for RDataFrame.
+\brief The dataset specification for RDataFrame.
+
+This class allows users to create the dataset specification for RDataFrame 
+to which they add samples (using the RSample class object) with tree names and file names, 
+and, optionally, the metadata information (using the RMetaData class objects). 
+Adding global friend trees and/or setting the range of events to be processed
+are also available.
+
+Note, there exists yet another method to build RDataFrame from the dataset information using the JSON file format: \ref FromSpec(const std::string &jsonFile) "FromSpec()". 
 */
+
 class RDatasetSpec {
+   // clang-format on 
    friend class ::ROOT::Detail::RDF::RLoopManager; // for MoveOutSamples
 
 public:
@@ -76,7 +88,7 @@ public:
 
    RDatasetSpec &WithGlobalFriends(const std::vector<std::string> &treeNames,
                                    const std::vector<std::string> &fileNameGlobs, const std::string &alias = "");
-
+ 
    RDatasetSpec &WithGlobalRange(const RDatasetSpec::REntryRange &entryRange = {});
 };
 

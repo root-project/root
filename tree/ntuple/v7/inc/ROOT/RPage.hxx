@@ -24,12 +24,11 @@
 
 namespace ROOT {
 namespace Experimental {
-
-namespace Detail {
+namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPage
+\class ROOT::Experimental::Internal::RPage
 \ingroup NTuple
 \brief A page is a slice of a column that is mapped into memory
 
@@ -82,7 +81,6 @@ public:
    ColumnId_t GetColumnId() const { return fColumnId; }
    /// The space taken by column elements in the buffer
    std::uint32_t GetNBytes() const { return fElementSize * fNElements; }
-   std::uint32_t GetElementSize() const { return fElementSize; }
    std::uint32_t GetNElements() const { return fNElements; }
    std::uint32_t GetMaxElements() const { return fMaxElements; }
    NTupleSize_t GetGlobalRangeFirst() const { return fRangeFirst; }
@@ -97,13 +95,14 @@ public:
       return (globalIndex >= fRangeFirst) && (globalIndex < fRangeFirst + NTupleSize_t(fNElements));
    }
 
-   bool Contains(const RClusterIndex &clusterIndex) const {
+   bool Contains(RClusterIndex clusterIndex) const
+   {
       if (fClusterInfo.GetId() != clusterIndex.GetClusterId())
          return false;
       auto clusterRangeFirst = ClusterSize_t(fRangeFirst - fClusterInfo.GetIndexOffset());
       return (clusterIndex.GetIndex() >= clusterRangeFirst) &&
              (clusterIndex.GetIndex() < clusterRangeFirst + fNElements);
-    }
+   }
 
    void* GetBuffer() const { return fBuffer; }
    /// Called during writing: returns a pointer after the last element and increases the element counter
@@ -145,10 +144,9 @@ public:
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }
-};
+}; // class RPage
 
-} // namespace Detail
-
+} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
 

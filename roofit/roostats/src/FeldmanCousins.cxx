@@ -53,11 +53,11 @@ conditional MLE (eg. profiled values).
 
 */
 
-ClassImp(RooStats::FeldmanCousins); ;
+ClassImp(RooStats::FeldmanCousins);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -161,11 +161,11 @@ void FeldmanCousins::CreateParameterPoints() const{
     // get dataset for POI scan
     //     RooDataHist* parameterScan = nullptr;
     RooAbsData* parameterScan = nullptr;
-    if(fPOIToTest)
+    if (fPOIToTest) {
       parameterScan = fPOIToTest;
-    else
+    } else {
       parameterScan = new RooDataHist("parameterScan", "", *fModel.GetParametersOfInterest());
-
+    }
 
     ooccoutP(&fModel,Generation) << "FeldmanCousins: # points to test = " << parameterScan->numEntries() << endl;
     // make profile construction

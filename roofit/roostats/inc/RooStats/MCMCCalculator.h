@@ -130,11 +130,12 @@ namespace RooStats {
       /// Keys PDF sometimes does not have extremely high accuracy.
       virtual void SetKeysConfidenceAccuracy(double epsilon)
       {
-         if (epsilon < 0)
+         if (epsilon < 0) {
             coutE(InputArguments) << "MCMCInterval::SetEpsilon will not allow "
                                   << "negative epsilon value" << std::endl;
-         else
+         } else {
             fEpsilon = epsilon;
+         }
       }
 
       /// When the shortest interval using Keys PDF could not be found to have
@@ -150,19 +151,19 @@ namespace RooStats {
       /// that the search will terminate when topCutoff (a) and bottomCutoff (b)
       /// satisfy this condition:
       ///
-      /// TMath::Abs(a - b) < TMath::Abs(delta * (a + b)/2)
+      /// std::abs(a - b) < std::abs(delta * (a + b)/2)
       virtual void SetKeysTerminationThreshold(double delta)
       {
-         if (delta < 0.)
+         if (delta < 0.) {
             coutE(InputArguments) << "MCMCInterval::SetDelta will not allow "
                                   << "negative delta value" << std::endl;
-         else
+         } else {
             fDelta = delta;
+         }
       }
 
    protected:
-
-      double fSize;              ///< size of the test (eg. specified rate of Type I error)
+      double fSize = -1;           ///< size of the test (eg. specified rate of Type I error)
       RooArgSet   fPOI;            ///< parameters of interest for interval
       RooArgSet   fNuisParams;     ///< nuisance parameters for interval (not really used)
       RooArgSet   fChainParams;    ///< parameters to store in the chain (if not specified they are all of them )
@@ -172,23 +173,23 @@ namespace RooStats {
       RooAbsPdf * fPdf;      ///< pointer to common PDF (owned by the workspace)
       RooAbsPdf * fPriorPdf; ///< pointer to prior  PDF (owned by the workspace)
       RooAbsData * fData;    ///< pointer to the data (owned by the workspace)
-      Int_t fNumIters;       ///< number of iterations to run metropolis algorithm
-      Int_t fNumBurnInSteps; ///< number of iterations to discard as burn-in, starting from the first
-      Int_t fNumBins;        ///< set the number of bins to create for each
-                             ///< axis when constructing the interval
+      Int_t fNumIters = 0;   ///< number of iterations to run metropolis algorithm
+      Int_t fNumBurnInSteps = 0; ///< number of iterations to discard as burn-in, starting from the first
+      Int_t fNumBins = 0;        ///< set the number of bins to create for each
+                                 ///< axis when constructing the interval
       RooArgList * fAxes;    ///< which variables to put on each axis
-      bool fUseKeys;       ///< whether to use kernel estimation to determine interval
-      bool fUseSparseHist; ///< whether to use sparse histogram (if using hist at all)
-      double fLeftSideTF;  ///< left side tail-fraction for interval
-      double fEpsilon;     ///< acceptable error for Keys interval determination
+      bool fUseKeys = false; ///< whether to use kernel estimation to determine interval
+      bool fUseSparseHist = false; ///< whether to use sparse histogram (if using hist at all)
+      double fLeftSideTF = -1;     ///< left side tail-fraction for interval
+      double fEpsilon = -1;        ///< acceptable error for Keys interval determination
 
-      double fDelta; ///< acceptable error for Keys cutoffs being equal
-                       ///< topCutoff (a) considered == bottomCutoff (b) iff
-                       ///< (TMath::Abs(a - b) < TMath::Abs(fDelta * (a + b)/2));
-                       ///< Theoretically, the Abs is not needed here, but
-                       ///< floating-point arithmetic does not always work
-                       ///< perfectly, and the Abs doesn't hurt
-      enum MCMCInterval::IntervalType fIntervalType; // type of interval to find
+      double fDelta = -1; ///< acceptable error for Keys cutoffs being equal
+                          ///< topCutoff (a) considered == bottomCutoff (b) iff
+                          ///< (std::abs(a - b) < std::abs(fDelta * (a + b)/2));
+                          ///< Theoretically, the Abs is not needed here, but
+                          ///< floating-point arithmetic does not always work
+                          ///< perfectly, and the Abs doesn't hurt
+      enum MCMCInterval::IntervalType fIntervalType = MCMCInterval::kShortest; // type of interval to find
 
       void SetupBasicUsage();
       void SetBins(const RooAbsCollection &coll, Int_t numBins) const

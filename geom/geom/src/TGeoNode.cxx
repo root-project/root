@@ -94,13 +94,13 @@ ClassImp(TGeoNode);
 
 TGeoNode::TGeoNode()
 {
-   fVolume = 0;
-   fMother = 0;
+   fVolume = nullptr;
+   fMother = nullptr;
    fNumber = 0;
    fNovlp = 0;
-   fOverlaps = 0;
-   fUserExtension = 0;
-   fFWExtension = 0;
+   fOverlaps = nullptr;
+   fUserExtension = nullptr;
+   fFWExtension = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,12 +116,12 @@ TGeoNode::TGeoNode(const TGeoVolume *vol)
    if (fVolume->IsAdded())
       fVolume->SetReplicated();
    fVolume->SetAdded();
-   fMother = 0;
+   fMother = nullptr;
    fNumber = 0;
    fNovlp = 0;
-   fOverlaps = 0;
-   fUserExtension = 0;
-   fFWExtension = 0;
+   fOverlaps = nullptr;
+   fUserExtension = nullptr;
+   fFWExtension = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -133,11 +133,11 @@ TGeoNode::~TGeoNode()
       delete[] fOverlaps;
    if (fUserExtension) {
       fUserExtension->Release();
-      fUserExtension = 0;
+      fUserExtension = nullptr;
    }
    if (fFWExtension) {
       fFWExtension->Release();
-      fFWExtension = 0;
+      fFWExtension = nullptr;
    }
 }
 
@@ -281,10 +281,10 @@ void TGeoNode::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 char *TGeoNode::GetObjectInfo(Int_t px, Int_t py) const
 {
    if (!fVolume)
-      return 0;
+      return nullptr;
    TVirtualGeoPainter *painter = fVolume->GetGeoManager()->GetPainter();
    if (!painter)
-      return 0;
+      return nullptr;
    return (char *)painter->GetVolumeInfo(fVolume, px, py);
 }
 
@@ -501,7 +501,7 @@ void TGeoNode::SetUserExtension(TGeoExtension *ext)
 {
    if (fUserExtension)
       fUserExtension->Release();
-   fUserExtension = 0;
+   fUserExtension = nullptr;
    if (ext)
       fUserExtension = ext->Grab();
 }
@@ -518,7 +518,7 @@ void TGeoNode::SetFWExtension(TGeoExtension *ext)
 {
    if (fFWExtension)
       fFWExtension->Release();
-   fFWExtension = 0;
+   fFWExtension = nullptr;
    if (ext)
       fFWExtension = ext->Grab();
 }
@@ -532,7 +532,7 @@ TGeoExtension *TGeoNode::GrabUserExtension() const
 {
    if (fUserExtension)
       return fUserExtension->Grab();
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -544,7 +544,7 @@ TGeoExtension *TGeoNode::GrabFWExtension() const
 {
    if (fFWExtension)
       return fFWExtension->Grab();
-   return 0;
+   return nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Check the overlab between the bounding box of the node overlaps with the one
@@ -746,7 +746,7 @@ ClassImp(TGeoNodeMatrix);
 
 TGeoNodeMatrix::TGeoNodeMatrix()
 {
-   fMatrix = 0;
+   fMatrix = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -846,7 +846,7 @@ TGeoNodeOffset::TGeoNodeOffset()
    TObject::SetBit(kGeoNodeOffset);
    fOffset = 0;
    fIndex = 0;
-   fFinder = 0;
+   fFinder = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -857,7 +857,7 @@ TGeoNodeOffset::TGeoNodeOffset(const TGeoVolume *vol, Int_t index, Double_t offs
    TObject::SetBit(kGeoNodeOffset);
    fOffset = offset;
    fIndex = index;
-   fFinder = 0;
+   fFinder = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -996,7 +996,7 @@ TGeoIterator::TGeoIterator(TGeoVolume *top)
    fArray = new Int_t[30];
    fMatrix = new TGeoHMatrix();
    fTopName = fTop->GetName();
-   fPlugin = 0;
+   fPlugin = nullptr;
    fPluginAutoexec = kFALSE;
 }
 
@@ -1063,14 +1063,14 @@ TGeoIterator &TGeoIterator::operator=(const TGeoIterator &iter)
 TGeoNode *TGeoIterator::Next()
 {
    if (fMustStop)
-      return 0;
-   TGeoNode *mother = 0;
-   TGeoNode *next = 0;
+      return nullptr;
+   TGeoNode *mother = nullptr;
+   TGeoNode *next = nullptr;
    Int_t i;
    Int_t nd = fTop->GetNdaughters();
    if (!nd) {
       fMustStop = kTRUE;
-      return 0;
+      return nullptr;
    }
    if (!fLevel) {
       fArray[++fLevel] = 0;
@@ -1117,7 +1117,7 @@ TGeoNode *TGeoIterator::Next()
                return fTop->GetNode(fArray[fLevel]);
             }
             fMustStop = kTRUE;
-            return 0;
+            return nullptr;
          } else {
             nd = next->GetNdaughters();
             if (fArray[fLevel] < nd - 1) {
@@ -1144,7 +1144,7 @@ TGeoNode *TGeoIterator::Next()
       }
    }
    fMustStop = kTRUE;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1178,7 +1178,7 @@ const TGeoMatrix *TGeoIterator::GetCurrentMatrix() const
 TGeoNode *TGeoIterator::GetNode(Int_t level) const
 {
    if (!level || level > fLevel)
-      return 0;
+      return nullptr;
    TGeoNode *node = fTop->GetNode(fArray[1]);
    for (Int_t i = 2; i < level + 1; i++)
       node = node->GetDaughter(fArray[i]);
@@ -1250,7 +1250,7 @@ void TGeoIterator::Skip()
       // cd up and pick next
       while (next) {
          next = GetNode(fLevel - 1);
-         nd = (next == 0) ? fTop->GetNdaughters() : next->GetNdaughters();
+         nd = (next == nullptr) ? fTop->GetNdaughters() : next->GetNdaughters();
          if (fArray[fLevel] < nd - 1) {
             ++fArray[fLevel];
             return;
@@ -1264,7 +1264,7 @@ void TGeoIterator::Skip()
       break;
    case 1: // one level search
       next = GetNode(fLevel - 1);
-      nd = (next == 0) ? fTop->GetNdaughters() : next->GetNdaughters();
+      nd = (next == nullptr) ? fTop->GetNdaughters() : next->GetNdaughters();
       if (fArray[fLevel] < nd - 1) {
          ++fArray[fLevel];
          return;

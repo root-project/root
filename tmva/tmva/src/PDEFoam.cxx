@@ -5,7 +5,7 @@
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
  * Classes: PDEFoam                                                               *
- * Web    : http://tmva.sourceforge.net                                           *
+ *                                             *
  *                                                                                *
  * Description:                                                                   *
  *      Implementations                                                           *
@@ -23,7 +23,7 @@
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
+ * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
 /*! \class TMVA::PDEFoam
@@ -86,16 +86,14 @@ PDEFoamEventDensity.
 
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <limits>
-#include <sstream>
 
 ClassImp(TMVA::PDEFoam);
 
 static const Float_t kHigh= FLT_MAX;
 static const Float_t kVlow=-FLT_MAX;
 
-using namespace std;
+using std::numeric_limits, std::nothrow, std::map;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for streamer, user should not use it.

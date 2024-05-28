@@ -19,7 +19,7 @@
 \class RooMultiCategory
 \ingroup Roofitcore
 
-RooMultiCategory connects several RooAbsCategory objects into
+Connects several RooAbsCategory objects into
 a single category. The states of the multi-category consist of all the permutations
 of the input categories.
 RooMultiCategory states are automatically defined and updated whenever an input
@@ -41,7 +41,7 @@ setting the states.
 
 #include "TString.h"
 
-using namespace std;
+using std::endl, std::ostream;
 
 ClassImp(RooMultiCategory);
 
@@ -76,16 +76,6 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
 {
   setShapeDirty();
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMultiCategory::~RooMultiCategory()
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compile a string with all the labels of the serving categories,

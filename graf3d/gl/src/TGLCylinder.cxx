@@ -654,6 +654,6 @@ void TGLCylinder::DirectDraw(TGLRnrCtx & rnrCtx) const
    // Delete mesh parts
    for (UInt_t i = 0; i < meshParts.size(); ++i) {
       delete meshParts[i];
-      meshParts[i] = 0;//not to have invalid pointer for pseudo-destructor call :)
+      meshParts[i] = nullptr;//not to have invalid pointer for pseudo-destructor call :)
    }
 }

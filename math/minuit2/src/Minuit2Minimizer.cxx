@@ -191,11 +191,11 @@ bool Minuit2Minimizer::SetVariable(unsigned int ivar, const std::string &name, d
 
    if (step <= 0) {
       print.Info("Parameter", name, "has zero or invalid step size - consider it as constant");
-      fState.Add(name.c_str(), val);
+      fState.Add(name, val);
    } else
-      fState.Add(name.c_str(), val, step);
+      fState.Add(name, val, step);
 
-   unsigned int minuit2Index = fState.Index(name.c_str());
+   unsigned int minuit2Index = fState.Index(name);
    if (minuit2Index != ivar) {
       print.Warn("Wrong index", minuit2Index, "used for the variable", name);
       ivar = minuit2Index;
@@ -243,7 +243,7 @@ bool Minuit2Minimizer::SetFixedVariable(unsigned int ivar, const std::string &na
    // use 10%
    double step = (val != 0) ? 0.1 * std::abs(val) : 0.1;
    if (!SetVariable(ivar, name, val, step)) {
-      ivar = fState.Index(name.c_str());
+      ivar = fState.Index(name);
    }
    fState.Fix(ivar);
    return true;
@@ -664,8 +664,8 @@ bool Minuit2Minimizer::ExamineMinimum(const ROOT::Minuit2::FunctionMinimum &min)
 
    // set the minimum values in the fValues vector
    const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0)
-      return 0;
+   if (paramsObj.empty())
+      return false;
    assert(fDim == paramsObj.size());
    // re-size vector if it has changed after a new minimization
    if (fValues.size() != fDim)
@@ -703,7 +703,7 @@ void Minuit2Minimizer::PrintResults()
             std::cout << "+/-  " << par.Error() << std::endl;
       }
    } else {
-      std::cout << "Minuit2Minimizer : Invalid Minimum - status = " << fStatus << std::endl;
+      std::cout << "Minuit2Minimizer : Invalid minimum - status = " << fStatus << std::endl;
       std::cout << "FVAL  = " << fState.Fval() << std::endl;
       std::cout << "Edm   = " << fState.Edm() << std::endl;
       std::cout << "Nfcn  = " << fState.NFcn() << std::endl;
@@ -714,7 +714,7 @@ const double *Minuit2Minimizer::Errors() const
 {
    // return error at minimum (set to zero for fixed and constant params)
    const std::vector<MinuitParameter> &paramsObj = fState.MinuitParameters();
-   if (paramsObj.size() == 0)
+   if (paramsObj.empty())
       return nullptr;
    assert(fDim == paramsObj.size());
    // be careful for multiple calls of this function. I will redo an allocation here

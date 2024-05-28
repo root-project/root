@@ -20,12 +20,13 @@
 #include "RooPrintable.h"
 #include "RooArgSet.h"
 
+#include <TFoamIntegrand.h>
+#include <TFoam.h>
+
 class RooAbsReal;
 class RooRealVar;
 class RooDataSet;
 
-class TFoam ;
-class RooTFoamBinding ;
 class RooNumGenFactory ;
 
 class RooFoamGenerator : public RooAbsNumGenerator {
@@ -36,7 +37,6 @@ public:
              const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const override {
     return new RooFoamGenerator(func,genVars,config,verbose,maxFuncVal) ;
   }
-  ~RooFoamGenerator() override;
 
   const RooArgSet *generateEvent(UInt_t remaining, double& resampleRatio) override;
 
@@ -52,11 +52,11 @@ protected:
   friend class RooNumGenFactory ;
   static void registerSampler(RooNumGenFactory& fact) ;
 
-  RooTFoamBinding *_binding = nullptr; ///< Binding of RooAbsReal to TFoam function interface
-  TFoam *_tfoam = nullptr;             ///< Instance of TFOAM generator
-  double *_xmin = nullptr;             ///< Lower bound of observables to be generated ;
-  double *_range = nullptr;            ///< Range of observables to be generated ;
-  double *_vec = nullptr;              ///< Transfer array for FOAM output
+  std::unique_ptr<TFoamIntegrand> _binding; ///< Binding of RooAbsReal to TFoam function interface
+  std::unique_ptr<TFoam> _tfoam;             ///< Instance of TFOAM generator
+  std::vector<double> _xmin ;                ///< Lower bound of observables to be generated ;
+  std::vector<double> _range;                ///< Range of observables to be generated ;
+  std::vector<double> _vec;                  ///< Transfer array for FOAM output
 };
 
 #endif

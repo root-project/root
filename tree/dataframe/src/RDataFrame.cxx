@@ -15,7 +15,7 @@
 #include "ROOT/RDF/RInterface.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/Utils.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "TChain.h"
 #include "TDirectory.h"
 #include "RtypesCore.h" // for ULong64_t
@@ -57,7 +57,7 @@ alt="DOI"></a>
 \endhtmlonly
 
 ## For the impatient user
-You can directly see RDataFrame in action in our [tutorials](https://root.cern.ch/doc/master/group__tutorial__dataframe.html), in C++ or Python.
+You can directly see RDataFrame in action in our [tutorials](https://root.cern/doc/master/group__tutorial__dataframe.html), in C++ or Python.
 
 ## Table of Contents
 - [Cheat sheet](\ref cheatsheet)
@@ -977,14 +977,14 @@ You don't need to read all these to start using RDataFrame, but they are useful 
 ### Systematic variations
 
 Starting from ROOT v6.26, RDataFrame provides a flexible syntax to define systematic variations.
-This is done in two steps: a) variations for one or more existing columns are registered via Vary() and b) variations
-of normal RDataFrame results are extracted with a call to VariationsFor(). In between these steps, no other change
+This is done in two steps: a) register variations for one or more existing columns using Vary() and b) extract variations
+of normal RDataFrame results using \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()". In between these steps, no other change
 to the analysis code is required: the presence of systematic variations for certain columns is automatically propagated
 through filters, defines and actions, and RDataFrame will take these dependencies into account when producing varied
-results. VariationsFor() is included in header `ROOT/RDFHelpers.hxx`, which compiled C++ programs must include
-explicitly.
+results. \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" is included in header `ROOT/RDFHelpers.hxx`. The compiled C++ programs must include this header
+explicitly, this is not required for ROOT macros. 
 
-An example usage of Vary() and VariationsFor() in C++:
+An example usage of Vary() and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in C++:
 
 ~~~{.cpp}
 auto nominal_hx =
@@ -993,7 +993,7 @@ auto nominal_hx =
      .Define("x", someFunc, {"pt"})
      .Histo1D<float>("x");
 
-// request the generation of varied results from the nominal
+// request the generation of varied results from the nominal_hx
 ROOT::RDF::Experimental::RResultMap<TH1D> hx = ROOT::RDF::Experimental::VariationsFor(nominal_hx);
 
 // the event loop runs here, upon first access to any of the results or varied results:
@@ -1002,20 +1002,20 @@ hx["pt:down"].Draw("SAME");
 hx["pt:up"].Draw("SAME");
 ~~~
 
-A list of variation "tags" is passed as last argument to Vary(): they give a name to the varied values that are returned
-as elements of an RVec of the appropriate type. The number of variation tags must correspond to the number of elements
-the RVec returned by the expression (2 in the example above: the first element will correspond to tag "down", the second
-to tag "up"). The _full_ variation name will be composed of the varied column name and the variation tags (e.g.
+A list of variation "tags" is passed as the last argument to Vary(). The tags give names to the varied values that are returned
+as elements of an RVec of the appropriate C++ type. The number of variation tags must correspond to the number of elements of
+this RVec (2 in the example above: the first element will correspond to the tag "down", the second
+to the tag "up"). The _full_ variation name will be composed of the varied column name and the variation tags (e.g.
 "pt:down", "pt:up" in this example). Python usage looks similar.
 
 Note how we use the "pt" column as usual in the Filter() and Define() calls and we simply use "x" as the value to fill
 the resulting histogram. To produce the varied results, RDataFrame will automatically execute the Filter and Define
 calls for each variation and fill the histogram with values and cuts that depend on the variation.
 
-There is no limitation to the complexity of a Vary() expression, and just like for Define() and Filter() calls users are
+There is no limitation to the complexity of a Vary() expression. Just like for the Define() and Filter() calls, users are
 not limited to string expressions but they can also pass any valid C++ callable, including lambda functions and
 complex functors. The callable can be applied to zero or more existing columns and it will always receive their
-_nominal_ values in input.
+_nominal_ value in input.
 
 #### Varying multiple columns in lockstep
 
@@ -1029,15 +1029,15 @@ df.Vary(["pt", "eta"],
         variationName="ptAndEta")
 ~~~
 
-The expression returns an RVec of two RVecs: each inner vector contains the varied values for one column, and the
-inner vectors follow the same ordering as the column names passed as first argument. Besides the variation tags, in
-this case we also have to explicitly pass a variation name as there is no one column name that can be used as default.
+The expression returns an RVec of two RVecs: each inner vector contains the varied values for one column. The
+inner vectors follow the same ordering as the column names that are passed as the first argument. Besides the variation tags, in
+this case we also have to explicitly pass the variation name (here: "ptAndEta") as the default column name does not exist.
 
-The call above will produce variations "ptAndEta:down" and "ptAndEta:up".
+The above call will produce variations "ptAndEta:down" and "ptAndEta:up".
 
 #### Combining multiple variations
 
-Even if a result depends on multiple variations, only one is applied at a time, i.e. there will be no result produced
+Even if a result depends on multiple variations, only one variation is applied at a time, i.e. there will be no result produced
 by applying multiple systematic variations at the same time.
 For example, in the following example snippet, the RResultMap instance `all_h` will contain keys "nominal", "pt:down",
 "pt:up", "eta:0", "eta:1", but no "pt:up&&eta:0" or similar:
@@ -1059,12 +1059,15 @@ all_hs.GetKeys(); // returns {"nominal", "pt:down", "pt:up", "eta:0", "eta:1"}
 Note how we passed the integer `2` instead of a list of variation tags to the second Vary() invocation: this is a
 shorthand that automatically generates tags 0 to N-1 (in this case 0 and 1).
 
-\note As of v6.26, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
+\note Currently, VariationsFor() and RResultMap are in the `ROOT::RDF::Experimental` namespace, to indicate that these
       interfaces might still evolve and improve based on user feedback. We expect that some aspects of the related
       programming model will be streamlined in future versions.
 
-\note As of v6.26, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
-      call VariationsFor() on them. These limitations will be lifted in future releases.
+\note Currently, the results of a Snapshot(), Report() or Display() call cannot be varied (i.e. it is not possible to
+      call \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" on them. These limitations will be lifted in future releases.
+
+See the Vary() method for more information and [this tutorial](https://root.cern/doc/master/df106__HiggsToFourLeptons_8C.html) 
+for an example usage of Vary and \ref ROOT::RDF::Experimental::VariationsFor "VariationsFor()" in the analysis.
 
 \anchor rnode
 ### RDataFrame objects as function arguments and return values
@@ -1509,7 +1512,8 @@ ROOT::RDF::Experimental::AddProgressBar(df);
 
 Alternatively, RDataFrame can be cast to an RNode first, giving the user more flexibility 
 For example, it can be called at any computational node, such as Filter or Define, not only the head node,
-with no change to the ProgressBar function itself: 
+with no change to the ProgressBar function itself (please see the [Efficient analysis in Python](#python) 
+section for appropriate usage in Python): 
 ~~~{.cpp}
 ROOT::RDataFrame df("tree", "file.root");
 auto df_1 = ROOT::RDF::RNode(df.Filter("x>1"));
@@ -1562,15 +1566,17 @@ RDataFrame::RDataFrame(std::string_view treeName, TDirectory *dirPtr, const Colu
 /// The default columns are looked at in case no column is specified in the
 /// booking of actions or transformations.
 /// \see ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
+#ifdef R__HAS_ROOT7
+RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
+   : RInterface(ROOT::Detail::RDF::CreateLMFromFile(treeName, fileNameGlob, defaultColumns))
 {
-   const std::string treeNameInt(treeName);
-   const std::string filenameglobInt(filenameglob);
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
-   chain->Add(filenameglobInt.c_str());
-   GetProxiedPtr()->SetTree(std::move(chain));
 }
+#else
+RDataFrame::RDataFrame(std::string_view treeName, std::string_view fileNameGlob, const ColumnNames_t &defaultColumns)
+   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(treeName, fileNameGlob, defaultColumns))
+{
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
@@ -1583,16 +1589,19 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 ///
 /// The default columns are looked at in case no column is specified in the booking of actions or transformations.
 /// \see ROOT::RDF::RInterface for the documentation of the methods available.
-RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string> &fileglobs,
+#ifdef R__HAS_ROOT7
+RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                        const ColumnNames_t &defaultColumns)
-   : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
+   : RInterface(ROOT::Detail::RDF::CreateLMFromFile(datasetName, fileNameGlobs, defaultColumns))
 {
-   std::string treeNameInt(treeName);
-   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
-   for (auto &f : fileglobs)
-      chain->Add(f.c_str());
-   GetProxiedPtr()->SetTree(std::move(chain));
 }
+#else
+RDataFrame::RDataFrame(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
+                       const ColumnNames_t &defaultColumns)
+   : RInterface(ROOT::Detail::RDF::CreateLMFromTTree(datasetName, fileNameGlobs, defaultColumns))
+{
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe.
@@ -1657,6 +1666,17 @@ RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
 {
 }
 
+RDataFrame::~RDataFrame()
+{
+   // If any node of the computation graph associated with this RDataFrame
+   // declared code to jit, we need to make sure the compilation actually
+   // happens. For example, a jitted Define could have been booked but
+   // if the computation graph is not actually run then the code of the
+   // Define node is not jitted. This in turn would cause memory leaks.
+   // See https://github.com/root-project/root/issues/15399
+   fLoopManager->Jit();
+}
+
 namespace RDF {
 namespace Experimental {
 
@@ -1693,7 +1713,7 @@ namespace Experimental {
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::ordered_json fullData = nlohmann::ordered_json::parse(std::ifstream(jsonFile));
-   if (!fullData.contains("samples") || fullData["samples"].size() == 0) {
+   if (!fullData.contains("samples") || fullData["samples"].empty()) {
       throw std::runtime_error(
          R"(The input specification does not contain any samples. Please provide the samples in the specification like:
 {
@@ -1775,11 +1795,22 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 namespace cling {
 //////////////////////////////////////////////////////////////////////////
 /// Print an RDataFrame at the prompt
-std::string printValue(ROOT::RDataFrame *tdf)
+std::string printValue(ROOT::RDataFrame *df)
 {
-   auto &df = *tdf->GetLoopManager();
-   auto *tree = df.GetTree();
-   auto defCols = df.GetDefaultColumnNames();
+   // The loop manager is never null, except when its construction failed.
+   // This can happen e.g. if the constructor of RLoopManager that expects
+   // a file name is used and that file doesn't exist. This point is usually
+   // not even reached in that situation, since the exception thrown by the
+   // constructor will also stop execution of the program. But it can still
+   // be reached at the prompt, if the user tries to print the RDataFrame
+   // variable after an incomplete initialization.
+   auto *lm = df->GetLoopManager();
+   if (!lm) {
+      throw std::runtime_error("Cannot print information about this RDataFrame, "
+                               "it was not properly created. It must be discarded.");
+   }
+   auto *tree = lm->GetTree();
+   auto defCols = lm->GetDefaultColumnNames();
 
    std::ostringstream ret;
    if (tree) {
@@ -1794,10 +1825,10 @@ std::string printValue(ROOT::RDataFrame *tdf)
             }
          }
       }
-   } else if (auto ds = tdf->fDataSource) {
+   } else if (auto ds = df->fDataSource) {
       ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
-      ret << "An empty data frame that will create " << df.GetNEmptyEntries() << " entries\n";
+      ret << "An empty data frame that will create " << lm->GetNEmptyEntries() << " entries\n";
    }
 
    return ret.str();

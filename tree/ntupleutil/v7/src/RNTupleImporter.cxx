@@ -15,13 +15,14 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleImporter.hxx>
-#include <ROOT/RNTupleOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriter.hxx>
+#include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TBranch.h>
 #include <TChain.h>
@@ -46,7 +47,7 @@ private:
    std::uint64_t fNbytesNext = gUpdateFrequencyBytes;
 
 public:
-   virtual ~RDefaultProgressCallback() {}
+   ~RDefaultProgressCallback() override {}
    void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
    {
       // Report if more than 50MB (compressed) where written since the last status update
@@ -54,6 +55,10 @@ public:
          return;
       std::cout << "Wrote " << nbytesWritten / 1000 / 1000 << "MB, " << neventsWritten << " entries" << std::endl;
       fNbytesNext += gUpdateFrequencyBytes;
+      if (nbytesWritten > fNbytesNext) {
+         // If we already passed the next threshold, increase by a sensible amount.
+         fNbytesNext = nbytesWritten + gUpdateFrequencyBytes;
+      }
    }
 
    void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) final
@@ -135,7 +140,6 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
    fDestFileName = destFileName;
-   fWriteOptions.SetCompression(kDefaultCompressionSettings);
    fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
    if (!fDestFile || fDestFile->IsZombie()) {
       return R__FAIL("cannot open dest file " + std::string(fDestFileName));
@@ -147,7 +151,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDesti
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
 {
    for (const auto &f : fImportFields) {
-      std::cout << "Importing '" << f.fField->GetName() << "' [" << f.fField->GetType() << ']' << std::endl;
+      std::cout << "Importing '" << f.fField->GetFieldName() << "' [" << f.fField->GetTypeName() << ']' << std::endl;
    }
 }
 
@@ -205,7 +209,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
       std::size_t branchBufferSize = 0; // Size of the memory location into which TTree reads the events' branch data
       // For leaf lists, every leaf translates into a sub field of an untyped RNTuple record
-      std::vector<std::unique_ptr<Detail::RFieldBase>> recordItems;
+      std::vector<std::unique_ptr<RFieldBase>> recordItems;
       for (auto l : TRangeDynCast<TLeaf>(b->GetListOfLeaves())) {
          if (l->IsA() == TLeafObject::Class()) {
             return R__FAIL("unsupported: TObject branches, branch: " + std::string(b->GetName()));
@@ -243,14 +247,14 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
          RImportField f;
          f.fIsClass = isClass;
-         auto fieldOrError = Detail::RFieldBase::Create(fieldName, fieldType);
+         auto fieldOrError = RFieldBase::Create(fieldName, fieldType);
          if (!fieldOrError)
             return R__FORWARD_ERROR(fieldOrError);
          auto field = fieldOrError.Unwrap();
          if (isCString) {
             branchBufferSize = l->GetMaximum();
-            f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
-            f.fFieldBuffer = f.fValue->GetRawPtr();
+            f.fValue = std::make_unique<RFieldBase::RValue>(field->CreateValue());
+            f.fFieldBuffer = f.fValue->GetPtr<void>().get();
             fImportTransformations.emplace_back(
                std::make_unique<RCStringTransformation>(fImportBranches.size(), fImportFields.size()));
          } else {
@@ -269,8 +273,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          if (isLeafList) {
             recordItems.emplace_back(std::move(field));
          } else if (isLeafCountArray) {
-            f.fValue = std::make_unique<Detail::RFieldBase::RValue>(field->GenerateValue());
-            f.fFieldBuffer = f.fValue->GetRawPtr();
+            f.fValue = std::make_unique<RFieldBase::RValue>(field->CreateValue());
+            f.fFieldBuffer = f.fValue->GetPtr<void>().get();
             f.fIsInUntypedCollection = true;
             const std::string countleafName = countleaf->GetName();
             fLeafCountCollections[countleafName].fCollectionModel->AddField(std::move(field));
@@ -324,17 +328,18 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       c.fCollectionModel->Freeze();
       c.fCollectionEntry = c.fCollectionModel->CreateBareEntry();
       for (auto idx : c.fImportFieldIndexes) {
-         const auto name = fImportFields[idx].fField->GetName();
+         const auto name = fImportFields[idx].fField->GetFieldName();
          const auto buffer = fImportFields[idx].fFieldBuffer;
-         c.fCollectionEntry->CaptureValueUnsafe(name, buffer);
+         c.fCollectionEntry->BindRawPtr(name, buffer);
       }
       c.fFieldName = "_collection" + std::to_string(iLeafCountCollection);
       c.fCollectionWriter = fModel->MakeCollection(c.fFieldName, std::move(c.fCollectionModel));
       // Add projected fields for all leaf count arrays
       for (auto idx : c.fImportFieldIndexes) {
-         const auto name = fImportFields[idx].fField->GetName();
+         const auto name = fImportFields[idx].fField->GetFieldName();
          auto projectedField =
-            Detail::RFieldBase::Create(name, "ROOT::RVec<" + fImportFields[idx].fField->GetType() + ">").Unwrap();
+            RFieldBase::Create(name, "ROOT::VecOps::RVec<" + fImportFields[idx].fField->GetTypeName() + ">").Unwrap();
+         R__ASSERT(dynamic_cast<RRVecField *>(projectedField.get()));
          fModel->AddProjectedField(std::move(projectedField), [&name, &c](const std::string &fieldName) {
             if (fieldName == name)
                return c.fFieldName;
@@ -344,7 +349,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       }
       // Add projected fields for count leaf
       auto projectedField =
-         Detail::RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
+         RFieldBase::Create(countLeafName, "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
       fModel->AddProjectedField(std::move(projectedField), [&c](const std::string &) { return c.fFieldName; });
       iLeafCountCollection++;
    }
@@ -354,10 +359,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)
          continue;
-      fEntry->CaptureValueUnsafe(f.fField->GetName(), f.fFieldBuffer);
+      fEntry->BindRawPtr(f.fField->GetFieldName(), f.fFieldBuffer);
    }
    for (const auto &[_, c] : fLeafCountCollections) {
-      fEntry->CaptureValueUnsafe(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
+      fEntry->BindRawPtr<void>(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
    }
 
    if (!fIsQuiet)
@@ -373,11 +378,16 @@ void ROOT::Experimental::RNTupleImporter::Import()
 
    PrepareSchema();
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+   std::unique_ptr<Internal::RPageSink> sink =
+      std::make_unique<Internal::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
-   auto ntplWriter = std::make_unique<RNTupleWriter>(std::move(fModel), std::move(sink));
+   if (fWriteOptions.GetUseBufferedWrite()) {
+      sink = std::make_unique<Internal::RPageSinkBuf>(std::move(sink));
+   }
+
+   auto ntplWriter = Internal::CreateRNTupleWriter(std::move(fModel), std::move(sink));
    // The guard needs to be destructed before the writer goes out of scope
    RImportGuard importGuard(*this);
 
@@ -399,7 +409,7 @@ void ROOT::Experimental::RNTupleImporter::Import()
                if (!result)
                   throw RException(R__FORWARD_ERROR(result));
             }
-            c.fCollectionWriter->Fill(c.fCollectionEntry.get());
+            c.fCollectionWriter->Fill(*c.fCollectionEntry);
          }
          for (auto &t : c.fTransformations)
             t->ResetEntry();

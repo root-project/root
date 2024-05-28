@@ -13,6 +13,7 @@
 
 #include <stack>
 #include <string>
+#include <optional>
 
 namespace clang {
    class Decl;
@@ -45,8 +46,6 @@ private:
    bool fIsAutoLoading = false;
    bool fIsAutoLoadingRecursively = false;
    bool fIsAutoParsingSuspended = false;
-   bool fPPOldFlag = false;
-   bool fPPChanged = false;
    bool fIsCodeGening = false;
    bool fIsLoadingModule = false;
    llvm::DenseMap<llvm::StringRef, clang::DeclarationName> m_LoadedModuleFiles;
@@ -68,14 +67,14 @@ public:
 
    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                            llvm::StringRef FileName, bool /*IsAngled*/, clang::CharSourceRange /*FilenameRange*/,
-                           const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                           clang::OptionalFileEntryRef /*File*/, llvm::StringRef /*SearchPath*/,
                            llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
                            clang::SrcMgr::CharacteristicKind /*FileType*/) override;
 
    // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"
    //
-   bool FileNotFound(llvm::StringRef FileName, llvm::SmallVectorImpl<char> &RecoveryPath) override;
+   bool FileNotFound(llvm::StringRef FileName) override;
 
    bool LookupObject(clang::LookupResult &R, clang::Scope *S) override;
    bool LookupObject(const clang::DeclContext *DC, clang::DeclarationName Name) override;
@@ -128,8 +127,8 @@ public:
    void UnlockCompilationDuringUserCodeExecution(void *StateInfo) override;
 
 private:
-   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
-                            clang::Scope *S, const clang::FileEntry* FE = 0);
+   bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R, clang::Scope *S,
+                             clang::OptionalFileEntryRef FE = std::nullopt);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

@@ -16,7 +16,7 @@
 #include "RLoopManager.hxx"
 #include "RVariationBase.hxx"
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/TypeTraits.hxx>
 #include <Rtypes.h> // R__CLING_PTRCHECK, Long64_t
 

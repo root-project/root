@@ -26,10 +26,10 @@
 class TLeafO : public TLeaf {
 
 protected:
-   Bool_t       fMinimum;         ///<  Minimum value if leaf range is specified
-   Bool_t       fMaximum;         ///<  Maximum value if leaf range is specified
-   Bool_t       *fValue;          ///<! Pointer to data buffer
-   Bool_t       **fPointer;       ///<! Address of a pointer to data buffer!
+   bool         fMinimum;         ///<  Minimum value if leaf range is specified
+   bool         fMaximum;         ///<  Maximum value if leaf range is specified
+   bool         *fValue;          ///<! Pointer to data buffer
+   bool         **fPointer;       ///<! Address of a pointer to data buffer!
 
 public:
    TLeafO();
@@ -44,15 +44,15 @@ public:
    const char     *GetTypeName() const override;
    Double_t        GetValue(Int_t i=0) const override;
    void           *GetValuePointer() const override { return fValue; }
-   Bool_t          IncludeRange(TLeaf *) override;
+   bool            IncludeRange(TLeaf *) override;
    void            Import(TClonesArray *list, Int_t n) override;
    void            PrintValue(Int_t i=0) const override;
    void            ReadBasket(TBuffer &b) override;
    void            ReadBasketExport(TBuffer &b, TClonesArray *list, Int_t n) override;
    void            ReadValue(std::istream& s, Char_t delim = ' ') override;
    void            SetAddress(void *add=nullptr) override;
-   virtual void    SetMaximum(Bool_t max) { fMaximum = max; }
-   virtual void    SetMinimum(Bool_t min) { fMinimum = min; }
+   virtual void    SetMaximum(bool max) { fMaximum = max; }
+   virtual void    SetMinimum(bool min) { fMinimum = min; }
 
    // Deserialize N events from an input buffer.  Since chars are stored unchanged, there
    // is nothing to do here but return true if we don't have variable-length arrays.

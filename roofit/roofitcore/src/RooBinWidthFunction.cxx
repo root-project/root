@@ -20,7 +20,7 @@
  * \class RooBinWidthFunction
  *  \ingroup Roofitcore
  *
- * RooBinWidthFunction is a class that returns the bin width (or volume) given a RooHistFunc.
+ * Returns the bin width (or volume) given a RooHistFunc.
  * It can be used to normalise by bin width or to compute event densities. Using the extra
  * argument of the constructor, it can also return the inverse of the bin width (or volume).
  */
@@ -97,26 +97,28 @@ double RooBinWidthFunction::evaluate() const {
 /// Compute bin index for all values of the observable(s) in `evalData`, and return their volumes or inverse volumes, depending
 /// on the configuration chosen in the constructor.
 /// If a bin is not valid, return a volume of 1.
-void RooBinWidthFunction::computeBatch(double* output, size_t, RooFit::Detail::DataMap const& dataMap) const {
-  const RooDataHist& dataHist = _histFunc->dataHist();
-  std::vector<Int_t> bins = _histFunc->getBins(dataMap);
-  auto volumes = dataHist.binVolumes(0, dataHist.numEntries());
+void RooBinWidthFunction::doEval(RooFit::EvalContext &ctx) const
+{
+   std::span<double> output = ctx.output();
+   const RooDataHist &dataHist = _histFunc->dataHist();
+   std::vector<Int_t> bins = _histFunc->getBins(ctx);
+   auto volumes = dataHist.binVolumes(0, dataHist.numEntries());
 
-  if(!_enabled){
-    for (std::size_t i=0; i < bins.size(); ++i) {
-      output[i] = 1.;
-    }
-  } else {
-    if (_divideByBinWidth) {
-      for (std::size_t i=0; i < bins.size(); ++i) {
-        output[i] = bins[i] >= 0 ? 1./volumes[bins[i]] : 1.;
+   if (!_enabled) {
+      for (std::size_t i = 0; i < bins.size(); ++i) {
+         output[i] = 1.;
       }
-    } else {
-      for (std::size_t i=0; i < bins.size(); ++i) {
-        output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
+   } else {
+      if (_divideByBinWidth) {
+         for (std::size_t i = 0; i < bins.size(); ++i) {
+            output[i] = bins[i] >= 0 ? 1. / volumes[bins[i]] : 1.;
+         }
+      } else {
+         for (std::size_t i = 0; i < bins.size(); ++i) {
+            output[i] = bins[i] >= 0 ? volumes[bins[i]] : 1.;
+         }
       }
-    }
-  }
+   }
 }
 
 

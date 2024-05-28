@@ -19,7 +19,7 @@
 \class RooAICRegistry
 \ingroup Roofitcore
 
-RooAICRegistry is a utility class for operator p.d.f
+Utility class for operator p.d.f
 classes that keeps track of analytical integration codes and
 associated normalization and integration sets.
 **/
@@ -29,9 +29,6 @@ associated normalization and integration sets.
 #include "RooArgSet.h"
 
 #include "Riostream.h"
-
-
-using namespace std;
 
 ClassImp(RooAICRegistry);
 

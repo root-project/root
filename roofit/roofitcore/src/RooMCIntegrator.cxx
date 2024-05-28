@@ -19,7 +19,7 @@
 \class RooMCIntegrator
 \ingroup Roofitcore
 
-RooMCIntegrator implements an adaptive multi-dimensional Monte Carlo
+Implements an adaptive multi-dimensional Monte Carlo
 numerical integration, following the VEGAS algorithm originally described
 in G. P. Lepage, J. Comp. Phys. 27, 192(1978). This implementation is
 based on a C version from the 0.9 beta release of the GNU scientific library.
@@ -39,11 +39,8 @@ based on a C version from the 0.9 beta release of the GNU scientific library.
 #include <cmath>
 
 
+using std::endl;
 
-using namespace std;
-
-ClassImp(RooMCIntegrator);
-;
 
 // Register this class with RooNumIntFactory
 
@@ -120,7 +117,7 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, SamplingMode mode,
 RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooAbsIntegrator(function), _grid(function)
 {
-  const RooArgSet& configSet = config.getConfigSection(ClassName()) ;
+  const RooArgSet& configSet = config.getConfigSection("RooMCIntegrator") ;
   _verbose = (bool) configSet.getCatIndex("verbose",0) ;
   _alpha = configSet.getRealValue("alpha",1.5) ;
   _mode = (SamplingMode) configSet.getCatIndex("samplingMode",Importance) ;
@@ -133,16 +130,6 @@ RooMCIntegrator::RooMCIntegrator(const RooAbsFunc& function, const RooNumIntConf
   if(!(_valid= _grid.isValid())) return;
   if(_verbose) _grid.print(std::cout);
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooMCIntegrator::~RooMCIntegrator()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if we can integrate over the current domain. If return value
@@ -205,7 +192,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     if(_mode != ImportanceOnly) {
       // calculate the largest number of equal subdivisions ("boxes") along each
       // axis that results in an average of no more than 2 integrand calls per cell
-      boxes = (UInt_t)floor(TMath::Power(calls/2.0,1.0/dim));
+      boxes = (UInt_t)floor(std::pow(calls/2.0,1.0/dim));
       // use stratified sampling if we are allowed enough calls (or equivalently,
       // if the dimension is low enough)
       _mode = Importance;
@@ -226,7 +213,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     }
 
     // calculate the total number of n-dim boxes for this step
-    double tot_boxes = TMath::Power((double)boxes,(double)dim);
+    double tot_boxes = std::pow((double)boxes,(double)dim);
 
     // increase the total number of calls to get at least 2 calls per box, if necessary
     _calls_per_box = (UInt_t)(calls/tot_boxes);
@@ -234,7 +221,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     calls= (UInt_t)(_calls_per_box*tot_boxes);
 
     // calculate the Jacobean factor: volume/(avg # of calls/bin)
-    _jac = _grid.getVolume()*TMath::Power((double)bins,(double)dim)/calls;
+    _jac = _grid.getVolume()*std::pow((double)bins,(double)dim)/calls;
 
     // setup our grid to use the calculated number of boxes and bins
     _grid.setNBoxes(boxes);
@@ -248,11 +235,15 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
 
 
   // loop over iterations for this step
-  double cum_int(0),cum_sig(0);
+  double cum_int(0);
+  double cum_sig(0);
   _it_start = _it_num;
   _chisq = 0.0;
   for (UInt_t it = 0; it < iterations; it++) {
-    double intgrl(0),intgrl_sq(0),sig(0),jacbin(_jac);
+    double intgrl(0);
+    double intgrl_sq(0);
+    double sig(0);
+    double jacbin(_jac);
 
     _it_num = _it_start + it;
 
@@ -262,7 +253,8 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
     // loop over grid boxes
     _grid.firstBox(box.data());
     do {
-      double m(0),q(0);
+      double m(0);
+      double q(0);
       // loop over integrand evaluations within this grid box
       for(UInt_t k = 0; k < _calls_per_box; k++) {
         // generate a random point in this box
@@ -293,7 +285,7 @@ double RooMCIntegrator::vegas(Stage stage, UInt_t calls, UInt_t iterations, doub
           index += box[i] * sizeOfDim;
           sizeOfDim *= _grid.getNBoxes();
         }
-        coutP(Integration) << "RooMCIntegrator: still working ... iteration "
+        oocoutP(nullptr, Integration) << "RooMCIntegrator: still working ... iteration "
             << it << '/' << iterations << "  box " << index << "/"<< std::pow(_grid.getNBoxes(), _grid.getDimension()) << endl;
         _timer.Start(true);
       }

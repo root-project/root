@@ -17,7 +17,7 @@
 #define ROOT7_RNTupleMetrics
 
 #include <ROOT/RConfig.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <TError.h>
 

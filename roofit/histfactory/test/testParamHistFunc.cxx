@@ -2,7 +2,6 @@
 // Authors: Jonas Rembser, CERN  08/2022
 
 #include <RooArgSet.h>
-#include <RooArgSet.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooRandom.h>
@@ -11,7 +10,7 @@
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooFit/Evaluator.h>
 
-#include "../src/RooFit/BatchModeDataHelpers.h"
+#include "RooFit/Detail/BatchModeDataHelpers.h"
 
 #include <gtest/gtest.h>
 #include <array>
@@ -74,8 +73,9 @@ TEST(ParamHistFunc, ValidateND)
    std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(paramHistFunc, *data.get());
    RooFit::Evaluator evaluator(*clone);
    std::stack<std::vector<double>> vectorBuffers;
-   auto dataSpans = RooFit::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/true,
-                                                               /*takeGlobalObservablesFromData=*/false, vectorBuffers);
+   auto dataSpans =
+      RooFit::Detail::BatchModeDataHelpers::getDataSpans(data, "", nullptr, /*skipZeroWeights=*/true,
+                                                         /*takeGlobalObservablesFromData=*/false, vectorBuffers);
    for (auto const &item : dataSpans) {
       evaluator.setInput(item.first->GetName(), item.second, false);
    }

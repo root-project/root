@@ -32,6 +32,7 @@
 #include "TArrayC.h"
 #include "TArrayS.h"
 #include "TArrayI.h"
+#include "TArrayL64.h"
 #include "TArrayF.h"
 #include "TArrayD.h"
 #include "Foption.h"
@@ -155,7 +156,8 @@ protected:
    static bool CheckBinLabels(const TAxis* a1, const TAxis* a2);
    static bool CheckEqualAxes(const TAxis* a1, const TAxis* a2);
    static bool CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin1, const TAxis *a2, Int_t firstBin2=0, Int_t lastBin2=0);
-   static bool CheckConsistency(const TH1* h1, const TH1* h2);
+   static int CheckConsistency(const TH1* h1, const TH1* h2);
+   int LoggedInconsistency(const char* name, const TH1* h1, const TH1* h2, bool useMerge=false) const;
 
 public:
    /// TH1 status bits
@@ -354,6 +356,7 @@ public:
            void     RecursiveRemove(TObject *obj) override;
    virtual void     Reset(Option_t *option = "");
    virtual void     ResetStats();
+           void     SaveAs(const char *filename = "hist", Option_t *option = "") const override;  // *MENU*
            void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
@@ -550,7 +553,7 @@ public:
    void     Reset(Option_t *option="") override;
    void     SetBinsLength(Int_t n=-1) override;
 
-   ClassDefOverride(TH1I,3)  //1-Dim histograms (one 32 bits integer per channel)
+   ClassDefOverride(TH1I,3)  //1-Dim histograms (one 32 bit integer per channel)
 
    friend  TH1I     operator*(Double_t c1, const TH1I &h1);
    friend  TH1I     operator*(const TH1I &h1, Double_t c1);
@@ -574,6 +577,47 @@ TH1I operator/(const TH1I &h1, const TH1I &h2);
 
 //________________________________________________________________________
 
+class TH1L: public TH1, public TArrayL64 {
+
+public:
+   TH1L();
+   TH1L(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t xup);
+   TH1L(const char *name,const char *title,Int_t nbinsx,const Float_t  *xbins);
+   TH1L(const char *name,const char *title,Int_t nbinsx,const Double_t *xbins);
+   TH1L(const TH1L &h1l);
+   TH1L& operator=(const TH1L &h1);
+   ~TH1L() override;
+
+   void     AddBinContent(Int_t bin) override;
+   void     AddBinContent(Int_t bin, Double_t w) override;
+   void     Copy(TObject &hnew) const override;
+   void     Reset(Option_t *option="") override;
+   void     SetBinsLength(Int_t n=-1) override;
+
+   ClassDefOverride(TH1L,0)  //1-Dim histograms (one 64 bit integer per channel)
+
+   friend  TH1L     operator*(Double_t c1, const TH1L &h1);
+   friend  TH1L     operator*(const TH1L &h1, Double_t c1);
+   friend  TH1L     operator+(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator-(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator*(const TH1L &h1, const TH1L &h2);
+   friend  TH1L     operator/(const TH1L &h1, const TH1L &h2);
+
+protected:
+   Double_t RetrieveBinContent(Int_t bin) const override { return Double_t (fArray[bin]); }
+   void     UpdateBinContent(Int_t bin, Double_t content) override { fArray[bin] = Int_t (content); }
+};
+
+TH1L operator*(Double_t c1, const TH1L &h1);
+inline
+TH1L operator*(const TH1L &h1, Double_t c1) {return operator*(c1,h1);}
+TH1L operator+(const TH1L &h1, const TH1L &h2);
+TH1L operator-(const TH1L &h1, const TH1L &h2);
+TH1L operator*(const TH1L &h1, const TH1L &h2);
+TH1L operator/(const TH1L &h1, const TH1L &h2);
+
+//________________________________________________________________________
+
 class TH1F : public TH1, public TArrayF {
 
 public:
@@ -586,7 +630,12 @@ public:
    TH1F& operator=(const TH1F &h1);
    ~TH1F() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w.
+   /// \warning The value of w is cast to `Float_t` before being added.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           { fArray[bin] += Float_t (w); }
    void     Copy(TObject &hnew) const override;
@@ -629,7 +678,11 @@ public:
    TH1D& operator=(const TH1D &h1);
    ~TH1D() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           {fArray[bin] += Double_t (w);}
    void     Copy(TObject &hnew) const override;

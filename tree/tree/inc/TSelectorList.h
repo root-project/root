@@ -31,8 +31,8 @@
 class TSelectorList : public THashList {
 
 private:
-   Bool_t UnsetDirectory(TObject *obj);
-   Bool_t CheckDuplicateName(TObject *obj);
+   bool UnsetDirectory(TObject *obj);
+   bool CheckDuplicateName(TObject *obj);
 
 public:
    TSelectorList() : THashList() { SetOwner();}

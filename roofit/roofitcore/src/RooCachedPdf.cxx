@@ -14,7 +14,7 @@
 \class RooCachedPdf
 \ingroup Roofitcore
 
-RooCachedPdf is an implementation of RooAbsCachedPdf that can cache
+Implementation of RooAbsCachedPdf that can cache
 any external RooAbsPdf input function provided in the constructor.
 **/
 
@@ -27,11 +27,9 @@ any external RooAbsPdf input function provided in the constructor.
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooCachedPdf);
-  ;
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,17 +83,6 @@ RooCachedPdf::RooCachedPdf(const RooCachedPdf& other, const char* name) :
  {
  }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooCachedPdf::~RooCachedPdf()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Update contents of cache histogram by resampling the input p.d.f. Note that
 /// the cache is filled with normalized p.d.f values so that the RooHistPdf
@@ -105,14 +92,14 @@ RooCachedPdf::~RooCachedPdf()
 void RooCachedPdf::fillCacheObject(RooAbsCachedPdf::PdfCacheElem& cache) const
 {
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     coutP(Eval) << "RooCachedPdf::fillCacheObject(" << GetName() << ") filling multi-dimensional cache" ;
   }
 
   // Update contents of histogram
-  ((RooAbsPdf&)pdf.arg()).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
+  (const_cast<RooAbsPdf &>(static_cast<RooAbsPdf const&>(pdf.arg()))).fillDataHist(cache.hist(),&cache.nset(),1.0,false,true) ;
 
-  if (cache.hist()->get()->getSize()>1) {
+  if (cache.hist()->get()->size()>1) {
     ccoutP(Eval) << endl ;
   }
 

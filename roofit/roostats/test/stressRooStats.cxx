@@ -34,7 +34,7 @@
 // Tests file
 #include "stressRooStats_tests.h"
 
-using namespace std;
+using std::cout, std::endl, std::string, std::list, std::setw, std::setfill, std::left;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -92,7 +92,7 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       RooNumIntConfig::defaultConfig();
       RooResolutionModel::identity();
 
-      RooTrace::active(1);
+      RooTrace::active(true);
    }
 
    // Add dedicated logging stream for errors that will remain active in silent mode
@@ -246,10 +246,11 @@ int stressRooStats(const char *refFile, bool writeRef, int verbose, bool allTest
       }
    } else {
       const Char_t *os = gSystem->Getenv("OS");
-      if (!os)
+      if (!os) {
          cout << "*  SYS: Windows 95" << endl;
-      else
+      } else {
          cout << "*  SYS: " << os << " " << gSystem->Getenv("PROCESSOR_IDENTIFIER") << endl;
+      }
    }
 
    cout << setw(lineWidth) << setfill('*') << "" << endl;
@@ -310,7 +311,7 @@ int main(int argc, const char *argv[])
    bool doTreeStore = false;
    auto backend = RooFit::EvalBackend::Legacy();
 
-   // string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
+   // string refFileName = "http://root.cern/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root";
    string minimizerName = "Minuit";
 

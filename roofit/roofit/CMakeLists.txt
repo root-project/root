@@ -39,8 +39,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooDecay.h
     RooDstD0BG.h
     RooExponential.h
-    RooExpPoly.h
-    RooPower.h
+    RooLegacyExpPoly.h
+    RooPowerSum.h
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
@@ -102,8 +102,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooDecay.cxx
     src/RooDstD0BG.cxx
     src/RooExponential.cxx
-    src/RooExpPoly.cxx
-    src/RooPower.cxx
+    src/RooLegacyExpPoly.cxx
+        src/RooPowerSum.cxx
     src/RooFunctor1DBinding.cxx
     src/RooFunctorBinding.cxx
     src/RooGamma.cxx
@@ -159,7 +159,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-if(NOT MSVC)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFit PUBLIC -fno-math-errno)
 endif()
 

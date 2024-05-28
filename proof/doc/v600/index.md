@@ -10,11 +10,11 @@ The following is a summary of the major modifications since 5.34 .
         large numbers of histograms.
    -   Use an hash table for the output list to significantly speed up names lookups during merging.
 -   Add support for dynamic addition of workers to a currently running process (currently supported by the unit packetizer).
--   Automatization of the usage of file-based technology to handle outputs (see [Handling Outputs](http://root.cern.ch/drupal/content/handling-outputs)).
--   [Improved dataset management model](http://proof.web.cern.ch/proof/TDataSetManagerAliEn.html#a-proof-interface-to-the-alien-file-catalog)
+-   Automatization of the usage of file-based technology to handle outputs.
+-   [Improved dataset management model](https://root.cern/doc/v628/classTDataSetManagerAliEn.html)
     where the PROOF (ROOT) dataset manager is a light frontend to the experiment file catalogs; TDataSetManagerFile is still
     used as local cache of the experiment information or to store the work-in-progress status of the dataset manager daemon. This model addresses the scalability issues observed at ALICE AFs.
--   Improvements in [TProofBench](http://root.cern.ch/drupal/content/proof-benchmark-framework-tproofbench):
+-   Improvements in [TProofBench](https://root.cern.ch/doc/master/classTProofBench.html):
     -   Recording and display of the maximum rate during query, CPU efficiency calculation for PROOF-Lite runs, better measurement of wall time.
     -   Support for dynamic startup mode
 
@@ -44,6 +44,6 @@ The following is a summary of the major modifications since 5.34 .
 
 ### Bug fixes
 
-Several consolidation fixes in several parts of the system (see the [5.34 patch release notes for details](http://root.cern.ch/drupal/content/root-version-v5-34-00-patch-release-notes)). In particular, those for 'xproofd' were provided by B. Butler and  M. Swiatlowski and greatly contributed to consolidate the daemon.
+Several consolidation fixes in several parts of the system (see the [5.34 patch release notes for details](https://root.cern/install/all_releases/root-version-v5-34-00-patch-release-notes/)). In particular, those for 'xproofd' were provided by B. Butler and  M. Swiatlowski and greatly contributed to consolidate the daemon.
 
 

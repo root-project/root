@@ -35,10 +35,10 @@ namespace RooStats {
  class DebuggingSampler: public TestStatSampler {
 
    public:
-     DebuggingSampler() {
-       fTestStatistic = new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1);
-       fRand = new TRandom();
-     }
+     DebuggingSampler() :
+       fTestStatistic{new RooRealVar("UniformTestStatistic","UniformTestStatistic",0,0,1)},
+       fRand{new TRandom()}
+     {}
      ~DebuggingSampler() override {
        delete fRand;
        delete fTestStatistic;

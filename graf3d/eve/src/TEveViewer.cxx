@@ -60,9 +60,9 @@ Bool_t TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 /// more care.
 
 TEveViewer::TEveViewer(const char* n, const char* t) :
-   TEveWindowFrame(0, n, t),
-   fGLViewer      (0),
-   fGLViewerFrame (0)
+   TEveWindowFrame(nullptr, n, t),
+   fGLViewer      (nullptr),
+   fGLViewerFrame (nullptr)
 {
    SetChildClass(TEveSceneInfo::Class());
    fGUIFrame->SetCleanup(kNoCleanup); // the gl-viewer's frame deleted elsewhere.
@@ -78,7 +78,7 @@ TEveViewer::TEveViewer(const char* n, const char* t) :
 
 TEveViewer::~TEveViewer()
 {
-   fGLViewer->SetEventHandler(0);
+   fGLViewer->SetEventHandler(nullptr);
 
    fGLViewerFrame->UnmapWindow();
    GetGUICompositeFrame()->RemoveFrame(fGLViewerFrame);
@@ -158,7 +158,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t qu
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
-   TGLFormat *form = 0;
+   TGLFormat *form = nullptr;
    if (stereo && quad_buf)
    {
       form = new TGLFormat;
@@ -166,10 +166,10 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t qu
    }
 
    cf->SetEditable(kTRUE);
-   TGLSAViewer* v = 0;
+   TGLSAViewer* v = nullptr;
    try
    {
-      v = new TGLSAViewer(cf, 0, ged, form);
+      v = new TGLSAViewer(cf, nullptr, ged, form);
    }
    catch (std::exception&)
    {
@@ -188,7 +188,7 @@ TGLSAViewer* TEveViewer::SpawnGLViewer(TGedEditor* ged, Bool_t stereo, Bool_t qu
    if (stereo)
       v->SetStereo(kTRUE, quad_buf);
 
-   if (fEveFrame == 0)
+   if (fEveFrame == nullptr)
       PreUndock();
 
    return v;
@@ -203,14 +203,14 @@ TGLEmbeddedViewer* TEveViewer::SpawnGLEmbeddedViewer(TGedEditor* ged, Int_t bord
 
    TGCompositeFrame* cf = GetGUICompositeFrame();
 
-   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, 0, ged, border);
+   TGLEmbeddedViewer* v = new TGLEmbeddedViewer(cf, nullptr, ged, border);
    SetGLViewer(v, v->GetFrame());
 
    cf->AddFrame(fGLViewerFrame, new TGLayoutHints(kLHintsNormal | kLHintsExpandX | kLHintsExpandY));
 
    fGLViewerFrame->MapWindow();
 
-   if (fEveFrame == 0)
+   if (fEveFrame == nullptr)
       PreUndock();
 
    return v;
@@ -263,7 +263,7 @@ void TEveViewer::AddScene(TEveScene* scene)
    static const TEveException eh("TEveViewer::AddScene ");
 
    TGLSceneInfo* glsi = fGLViewer->AddScene(scene->GetGLScene());
-   if (glsi != 0) {
+   if (glsi != nullptr) {
       TEveSceneInfo* si = new TEveSceneInfo(this, scene, glsi);
       AddElement(si);
    } else {
@@ -311,7 +311,7 @@ Bool_t TEveViewer::HandleElementPaste(TEveElement* el)
    static const TEveException eh("TEveViewer::HandleElementPaste ");
 
    TEveScene* scene = dynamic_cast<TEveScene*>(el);
-   if (scene != 0) {
+   if (scene != nullptr) {
       AddScene(scene);
       return kTRUE;
    } else {
@@ -540,7 +540,7 @@ void TEveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
 {
    TEveElement *el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    void *qsender = gTQSender;
    gEve->GetHighlight()->UserPickedElement(el, kFALSE);
@@ -562,7 +562,7 @@ void TEveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
 {
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    void *qsender = gTQSender;
    gEve->GetHighlight()->UserRePickedElement(el);
@@ -584,7 +584,7 @@ void TEveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
 {
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
 
    void *qsender = gTQSender;
    gEve->GetHighlight()->UserUnPickedElement(el);
@@ -606,7 +606,7 @@ void TEveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
 {
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }
 
@@ -623,7 +623,7 @@ void TEveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    gEve->GetSelection()->UserRePickedElement(el);
 }
 
@@ -640,7 +640,7 @@ void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 {
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
-      el = 0;
+      el = nullptr;
    gEve->GetSelection()->UserUnPickedElement(el);
 }
 
@@ -649,7 +649,7 @@ void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
 
 void TEveViewerList::SetColorBrightness(Float_t b)
 {
-   TEveUtil::SetColorBrightness(b, 1);
+   TEveUtil::SetColorBrightness(b, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

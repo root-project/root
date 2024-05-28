@@ -19,7 +19,7 @@
 \class RooRealVar
 \ingroup Roofitcore
 
-RooRealVar represents a variable that can be changed from the outside.
+Variable that can be changed from the outside.
 For example by the user or a fitter.
 
 It can be written into datasets, can hold a (possibly asymmetric) error, and
@@ -46,7 +46,7 @@ or integrals to sub ranges. The range without any name is used as default range.
 #include "TBranch.h"
 #include "snprintf.h"
 
-using namespace std;
+using std::endl, std::ostream, std::istream;
 
 ClassImp(RooRealVar);
 
@@ -111,7 +111,7 @@ RooRealVarSharedProperties& RooRealVar::_nullProp()
 RooRealVar::RooRealVar()  :  _error(0), _asymErrLo(0), _asymErrHi(0), _binning(new RooUniformBinning())
 {
   _fast = true ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -126,7 +126,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
   _fast = true ;
   removeRange();
   setConstant(true) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -161,7 +161,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 
   //   setPlotRange(minValue,maxValue) ;
   setRange(minValue,maxValue) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -181,7 +181,7 @@ RooRealVar::RooRealVar(const char *name, const char *title,
     inRange(value,nullptr,&clipValue) ;
     _value = clipValue ;
 
-    TRACE_CREATE
+    TRACE_CREATE;
 }
 
 
@@ -207,7 +207,7 @@ RooRealVar::RooRealVar(const RooRealVar& other, const char* name) :
     _altNonSharedBinning[item.first] = std::move(abc);
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 
 }
 
@@ -222,7 +222,7 @@ RooRealVar::~RooRealVar()
   // _sharedPropList get erased.
   deleteSharedProperties();
 
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -277,7 +277,8 @@ void RooRealVar::setVal(double value, const char* rangeName)
 
 RooErrorVar* RooRealVar::errorVar() const
 {
-  TString name(GetName()), title(GetTitle()) ;
+  TString name(GetName());
+  TString title(GetTitle());
   name.Append("err") ;
   title.Append(" Error") ;
 
@@ -554,7 +555,8 @@ void RooRealVar::setRange(const char* name, RooAbsReal& min, RooAbsReal& max)
 
 bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
 {
-  TString token,errorPrefix("RooRealVar::readFromStream(") ;
+  TString token;
+  TString errorPrefix("RooRealVar::readFromStream(");
   errorPrefix.Append(GetName()) ;
   errorPrefix.Append(")") ;
   RooStreamParser parser(is,errorPrefix) ;
@@ -605,7 +607,8 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
 
    } else {
      // Have error
-     double asymErrLo=0., asymErrHi=0.;
+     double asymErrLo = 0.;
+     double asymErrHi = 0.;
      if (parser.readDouble(asymErrLo,true) ||
          parser.expectToken(",",true) ||
          parser.readDouble(asymErrHi,true) ||
@@ -622,8 +625,9 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("P")) {
 
    // Next tokens are plot limits
-   double plotMin(0), plotMax(0) ;
-        Int_t plotBins(0) ;
+   double plotMin(0);
+   double plotMax(0);
+   Int_t plotBins(0);
    if (parser.expectToken("(",true) ||
        parser.readDouble(plotMin,true) ||
        parser.expectToken("-",true) ||
@@ -638,7 +642,8 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("F")) {
 
    // Next tokens are fit limits
-   double fitMin, fitMax ;
+   double fitMin;
+   double fitMax;
    Int_t fitBins ;
    if (parser.expectToken("(",true) ||
        parser.readDouble(fitMin,true) ||
@@ -656,8 +661,9 @@ bool RooRealVar::readFromStream(istream& is, bool compact, bool verbose)
       } else if (!token.CompareTo("L")) {
 
    // Next tokens are fit limits
-   double fitMin = 0.0, fitMax = 0.0;
-// Int_t fitBins ;
+   double fitMin = 0.0;
+   double fitMax = 0.0;
+   // Int_t fitBins ;
    if (parser.expectToken("(",true) ||
        parser.readDouble(fitMin,true) ||
        parser.expectToken("-",true) ||
@@ -700,7 +706,8 @@ void RooRealVar::writeToStream(ostream& os, bool compact) const
 
     // Write value with error (if not zero)
     if (_printScientific) {
-      char fmtVal[16], fmtErr[16] ;
+      char fmtVal[16];
+      char fmtErr[16];
       snprintf(fmtVal,16,"%%.%de",_printSigDigits) ;
       snprintf(fmtErr,16,"%%.%de",(_printSigDigits+1)/2) ;
       if (_value>=0) os << " " ;
@@ -947,7 +954,8 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
   Int_t leadingDigitErr= (Int_t)floor(log10(std::abs(_error+1e-10)));
   Int_t whereVal= leadingDigitVal - sigDigits + 1;
   Int_t whereErr= leadingDigitErr - sigDigits + 1;
-  char fmtVal[16], fmtErr[16];
+  char fmtVal[16];
+  char fmtErr[16];
 
   if (_value<0) whereVal -= 1 ;
   snprintf(fmtVal,16,"%%.%df", whereVal < 0 ? -whereVal : 0);
@@ -1210,14 +1218,16 @@ void RooRealVar::copyCache(const RooAbsArg* source, bool valueOnly, bool setValD
 
 void RooRealVar::Streamer(TBuffer &R__b)
 {
-  UInt_t R__s, R__c;
+  UInt_t R__s;
+  UInt_t R__c;
   if (R__b.IsReading()) {
 
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
     RooAbsRealLValue::Streamer(R__b);
     if (R__v==1) {
       coutI(Eval) << "RooRealVar::Streamer(" << GetName() << ") converting version 1 data format" << endl ;
-      double fitMin, fitMax ;
+      double fitMin;
+      double fitMax;
       Int_t fitBins ;
       R__b >> fitMin;
       R__b >> fitMax;

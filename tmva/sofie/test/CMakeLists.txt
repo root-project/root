@@ -44,7 +44,7 @@ target_include_directories(emitFromONNX PRIVATE
    ${CMAKE_CURRENT_BINARY_DIR}   # this is for the protobuf headerfile
 )
 
-target_link_libraries(emitFromONNX ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
+target_link_libraries(emitFromONNX protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromONNX PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromONNX PRIVATE -Wno-unused-parameter -Wno-array-bounds)
@@ -84,7 +84,7 @@ target_include_directories(emitFromROOT PRIVATE
    ${CMAKE_SOURCE_DIR}/tmva/inc
    ${CMAKE_CURRENT_BINARY_DIR}
 )
-target_link_libraries(emitFromROOT ${Protobuf_LIBRARIES} ROOTTMVASofie ROOTTMVASofieParser)
+target_link_libraries(emitFromROOT protobuf::libprotobuf ROOTTMVASofie ROOTTMVASofieParser)
 set_target_properties(emitFromROOT PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 ## silence protobuf warnings seen in version 3.0 and 3.6. Not needed from protobuf version 3.17
 target_compile_options(emitFromROOT PRIVATE -Wno-unused-parameter -Wno-array-bounds)

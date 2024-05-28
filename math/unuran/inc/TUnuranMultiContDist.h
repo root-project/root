@@ -117,14 +117,14 @@ public:
       get the distribution lower domain values. Return a null pointer if domain is not defined
    */
    const double * GetLowerDomain() const {
-      if (fXmin.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return nullptr;
+      if (fXmin.empty() || (  fXmin.size() != fXmax.size() )  ) return nullptr;
       return &fXmin[0];
    }
    /**
       get the distribution upper domain values. Return a null pointer if domain is not defined
    */
    const double * GetUpperDomain() const {
-      if (fXmax.size() == 0 || (  fXmin.size() != fXmax.size() )  ) return nullptr;
+      if (fXmax.empty() || (  fXmin.size() != fXmax.size() )  ) return nullptr;
       return &fXmax[0];
    }
 
@@ -134,7 +134,7 @@ public:
       If a mode has not defined return a NULL pointer
    */
    const double * GetMode() const {
-      if (fMode.size() == 0) return nullptr;
+      if (fMode.empty()) return nullptr;
       return &fMode.front();
    }
 

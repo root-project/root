@@ -120,8 +120,8 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
 /// Sets a feature in the `TIOFeatures` object; emits an Error message if
 /// the IO feature is not supported by this version of ROOT.
 ///
-/// If the feature is supported by ROOT, this function returns kTRUE; otherwise,
-/// it returns kFALSE.
+/// If the feature is supported by ROOT, this function returns true; otherwise,
+/// it returns false.
 bool TIOFeatures::Set(Experimental::EIOFeatures input_bits)
 {
    return Set(static_cast<EIOFeatures>(input_bits));
@@ -134,8 +134,8 @@ bool TIOFeatures::Set(Experimental::EIOFeatures input_bits)
 /// Sets a feature in the `TIOFeatures` object; emits an Error message if
 /// the IO feature is not supported by this version of ROOT.
 ///
-/// If the feature is supported by ROOT, this function returns kTRUE; otherwise,
-/// it returns kFALSE.
+/// If the feature is supported by ROOT, this function returns true; otherwise,
+/// it returns false.
 bool TIOFeatures::Set(EIOFeatures input_bits)
 {
    TBasket::EIOBits enum_bits = static_cast<TBasket::EIOBits>(input_bits);
@@ -149,10 +149,10 @@ bool TIOFeatures::Set(EIOFeatures input_bits)
          Error("SetFeature", "An unknown feature was requested (flag=%s); cannot enable it.",
                std::bitset<32>(unsupported).to_string().c_str());
       }
-      return kFALSE;
+      return false;
    }
    fIOBits |= bits;
-   return kTRUE;
+   return true;
 }
 
 
@@ -167,19 +167,19 @@ bool TIOFeatures::Set(EIOFeatures input_bits)
 /// use the type-safe `Set` version instead.  This has been added for better
 /// CLI interfaces.
 ///
-/// Returns kTRUE only if a new feature was set; otherwise emits an error message
-/// and returns kFALSE.
+/// Returns true only if a new feature was set; otherwise emits an error message
+/// and returns false.
 bool TIOFeatures::Set(const std::string &value)
 {
    TClass *cl = TBasket::Class();
    if (cl == nullptr) {
       Error("Set", "Could not retrieve TBasket's class");
-      return kFALSE;
+      return false;
    }
    TEnum *eIOBits = static_cast<TEnum*>(cl->GetListOfEnums()->FindObject("EIOBits"));
    if (eIOBits == nullptr) {
       Error("Set", "Could not locate TBasket::EIOBits enum");
-      return kFALSE;
+      return false;
    }
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
       if (!strcmp(constant->GetName(), value.c_str())) {
@@ -187,7 +187,7 @@ bool TIOFeatures::Set(const std::string &value)
       }
    }
    Error("Set", "Could not locate %s in TBasket::EIOBits", value.c_str());
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -223,7 +223,7 @@ void TIOFeatures::Print() const
 /// \brief Test to see if a given feature is set
 /// \param[in] input_bits The specific feature to test.
 ///
-/// Returns kTRUE if the feature is enables in this object and supported by
+/// Returns true if the feature is enables in this object and supported by
 /// this version of ROOT.
 bool TIOFeatures::Test(Experimental::EIOFeatures input_bits) const
 {
@@ -234,7 +234,7 @@ bool TIOFeatures::Test(Experimental::EIOFeatures input_bits) const
 /// \brief Test to see if a given feature is set
 /// \param[in] input_bits The specific feature to test.
 ///
-/// Returns kTRUE if the feature is enables in this object and supported by
+/// Returns true if the feature is enables in this object and supported by
 /// this version of ROOT.
 bool TIOFeatures::Test(EIOFeatures input_bits) const
 {
@@ -242,7 +242,7 @@ bool TIOFeatures::Test(EIOFeatures input_bits) const
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being tested for that is not supported or known.");
-      return kFALSE;
+      return false;
    }
    return (fIOBits & bits) == bits;
 }

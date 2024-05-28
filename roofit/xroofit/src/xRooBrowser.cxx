@@ -89,7 +89,7 @@ xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browse
             auto keys = _file->GetListOfKeys();
             if (keys) {
                for (auto &&k : *keys) {
-                  auto cl = TClass::GetClass(((TKey *)k)->GetClassName());
+                  auto cl = TClass::GetClass((static_cast<TKey *>(k))->GetClassName());
                   if (cl == RooWorkspace::Class() || cl->InheritsFrom("RooWorkspace")) {
                      if (auto w = _file->Get<RooWorkspace>(k->GetName()); w) {
                         if (!in->contains(_file->GetName())) {
@@ -130,7 +130,7 @@ void xRooBrowser::HandleMenu(Int_t id)
       if (fi.fMultipleSelection && fi.fFileNamesList) {
          TObjString *el;
          TIter next(fi.fFileNamesList);
-         while ((el = (TObjString *)next())) {
+         while ((el = static_cast<TObjString *>(next()))) {
             filesToOpen.push_back(gSystem->UnixPathName(el->GetString()));
          }
       } else if (fi.fFilename) {
@@ -175,9 +175,9 @@ void xRooBrowser::ls(const char *path) const
 {
    if (!fNode)
       return;
-   if (!path)
+   if (!path) {
       fNode->Print();
-   else {
+   } else {
       // will throw exception if not found
       fNode->at(path)->Print();
    }

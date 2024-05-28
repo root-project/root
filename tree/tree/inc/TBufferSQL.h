@@ -44,12 +44,12 @@ public:
    TBufferSQL();
    TBufferSQL(TBuffer::EMode mode, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
    TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr);
-   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, Bool_t adopt = kTRUE);
+   TBufferSQL(TBuffer::EMode mode, Int_t bufsiz, std::vector<Int_t> *vc, TString *insert_query, TSQLRow **rowPtr,void *buf, bool adopt = true);
    ~TBufferSQL() override;
 
    void ResetOffset();
 
-   void     ReadBool(Bool_t       &b) final;
+   void     ReadBool(bool         &b) final;
    void     ReadChar(Char_t       &c) final;
    void     ReadUChar(UChar_t     &c) final;
    void     ReadShort(Short_t     &s) final;
@@ -68,7 +68,7 @@ public:
    using    TBuffer::ReadStdString;
    void     ReadCharStar(char* &s) final;
 
-   void     WriteBool(Bool_t       b) final;
+   void     WriteBool(bool         b) final;
    void     WriteChar(Char_t       c) final;
    void     WriteUChar(UChar_t     c) final;
    void     WriteShort(Short_t     s) final;
@@ -87,24 +87,24 @@ public:
    using    TBuffer::WriteStdString;
    void     WriteCharStar(char *s) final;
 
-   void     WriteFastArray(const Bool_t    *b, Int_t n) final;
-   void     WriteFastArray(const Char_t    *c, Int_t n) final;
-   void     WriteFastArrayString(const Char_t   *c, Int_t n) final;
-   void     WriteFastArray(const UChar_t   *c, Int_t n) final;
-   void     WriteFastArray(const Short_t   *h, Int_t n) final;
-   void     WriteFastArray(const UShort_t  *h, Int_t n) final;
-   void     WriteFastArray(const Int_t     *i, Int_t n) final;
-   void     WriteFastArray(const UInt_t    *i, Int_t n) final;
-   void     WriteFastArray(const Long_t    *l, Int_t n) final;
-   void     WriteFastArray(const ULong_t   *l, Int_t n) final;
-   void     WriteFastArray(const Long64_t  *l, Int_t n) final;
-   void     WriteFastArray(const ULong64_t *l, Int_t n) final;
-   void     WriteFastArray(const Float_t   *f, Int_t n) final;
-   void     WriteFastArray(const Double_t  *d, Int_t n) final;
-   void     WriteFastArray(void  *start,  const TClass *cl, Int_t n=1, TMemberStreamer *s=nullptr) final;
-   Int_t    WriteFastArray(void **startp, const TClass *cl, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=nullptr) final;
+   void     WriteFastArray(const bool      *b, Long64_t n) final;
+   void     WriteFastArray(const Char_t    *c, Long64_t n) final;
+   void     WriteFastArrayString(const Char_t   *c, Long64_t n) final;
+   void     WriteFastArray(const UChar_t   *c, Long64_t n) final;
+   void     WriteFastArray(const Short_t   *h, Long64_t n) final;
+   void     WriteFastArray(const UShort_t  *h, Long64_t n) final;
+   void     WriteFastArray(const Int_t     *i, Long64_t n) final;
+   void     WriteFastArray(const UInt_t    *i, Long64_t n) final;
+   void     WriteFastArray(const Long_t    *l, Long64_t n) final;
+   void     WriteFastArray(const ULong_t   *l, Long64_t n) final;
+   void     WriteFastArray(const Long64_t  *l, Long64_t n) final;
+   void     WriteFastArray(const ULong64_t *l, Long64_t n) final;
+   void     WriteFastArray(const Float_t   *f, Long64_t n) final;
+   void     WriteFastArray(const Double_t  *d, Long64_t n) final;
+   void     WriteFastArray(void  *start,  const TClass *cl, Long64_t n=1, TMemberStreamer *s=nullptr) final;
+   Int_t    WriteFastArray(void **startp, const TClass *cl, Long64_t n=1, bool isPreAlloc=false, TMemberStreamer *s=nullptr) final;
 
-   void     ReadFastArray(Bool_t    *, Int_t ) final;
+   void     ReadFastArray(bool      *, Int_t ) final;
    void     ReadFastArray(Char_t    *, Int_t ) final;
    void     ReadFastArrayString(Char_t   *, Int_t ) final;
    void     ReadFastArray(UChar_t   *, Int_t ) final;
@@ -125,7 +125,7 @@ public:
    void     ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue) final;
    void     ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits)  final;
    void     ReadFastArray(void  *, const TClass *, Int_t n=1, TMemberStreamer *s=nullptr, const TClass *onFileClass=nullptr) final;
-   void     ReadFastArray(void **, const TClass *, Int_t n=1, Bool_t isPreAlloc=kFALSE, TMemberStreamer *s=nullptr, const TClass *onFileClass=nullptr) final;
+   void     ReadFastArray(void **, const TClass *, Int_t n=1, bool isPreAlloc=false, TMemberStreamer *s=nullptr, const TClass *onFileClass=nullptr) final;
 
    ClassDefOverride(TBufferSQL, 0); // Implementation of TBuffer to load and write to a SQL database
 

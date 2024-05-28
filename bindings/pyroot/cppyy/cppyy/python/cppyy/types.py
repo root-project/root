@@ -20,6 +20,7 @@ except ImportError:
         'Method',
         'Scope',
         'InstanceArray',
+        'LowLevelView',
         'Template'
     ]
 
@@ -27,7 +28,8 @@ except ImportError:
     Function        = bck.CPPOverload
     Method          = bck.CPPOverload
     Scope           = bck.CPPScope
-    InstanceArray   = bck.InstancesArray
+    InstanceArray   = bck.InstanceArray
+    LowLevelView    = bck.LowLevelView
     Template        = bck.TemplateProxy
 
 del bck

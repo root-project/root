@@ -68,10 +68,10 @@ be larger than one.
 #define NaN numeric_limits<float>::quiet_NaN()
 #define IsNaN(a) TMath::IsNaN(a)
 
-ClassImp(RooStats::HypoTestResult); ;
+ClassImp(RooStats::HypoTestResult);
 
 using namespace RooStats;
-using namespace std;
+using std::numeric_limits, std::endl;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -171,16 +171,17 @@ HypoTestResult & HypoTestResult::operator=(const HypoTestResult& other) {
 /// set (otherwise, ignore the new one).
 
 void HypoTestResult::Append(const HypoTestResult* other) {
-   if(fNullDistr)
+   if (fNullDistr) {
       fNullDistr->Add(other->GetNullDistribution());
-   else
-      if(other->GetNullDistribution()) fNullDistr = new SamplingDistribution( *other->GetNullDistribution() );
+   } else if (other->GetNullDistribution()) {
+      fNullDistr = new SamplingDistribution(*other->GetNullDistribution());
+   }
 
-   if(fAltDistr)
+   if (fAltDistr) {
       fAltDistr->Add(other->GetAltDistribution());
-   else
-      if(other->GetAltDistribution()) fAltDistr = new SamplingDistribution( *other->GetAltDistribution() );
-
+   } else if (other->GetAltDistribution()) {
+      fAltDistr = new SamplingDistribution(*other->GetAltDistribution());
+   }
 
    if( fNullDetailedOutput ) {
       if( other->GetNullDetailedOutput() ) fNullDetailedOutput->append( *other->GetNullDetailedOutput() );
@@ -237,10 +238,10 @@ void HypoTestResult::SetAllTestStatisticsData(const RooArgList* tsd) {
       delete fAllTestStatisticsData;
       fAllTestStatisticsData = nullptr;
    }
-   if (tsd) fAllTestStatisticsData = (const RooArgList*)tsd->snapshot();
+   if (tsd) fAllTestStatisticsData = static_cast<const RooArgList*>(tsd->snapshot());
 
-   if( fAllTestStatisticsData  &&  fAllTestStatisticsData->getSize() > 0 ) {
-      RooRealVar* firstTS = (RooRealVar*)fAllTestStatisticsData->at(0);
+   if( fAllTestStatisticsData  &&  !fAllTestStatisticsData->empty() ) {
+      RooRealVar* firstTS = static_cast<RooRealVar*>(fAllTestStatisticsData->at(0));
       if( firstTS ) SetTestStatisticData( firstTS->getVal() );
    }
 }
@@ -309,7 +310,7 @@ double HypoTestResult::CLsError() const {
    double cl_b_err2 = pow(CLbError(),2);
    double cl_sb_err2 = pow(CLsplusbError(),2);
 
-   return TMath::Sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
+   return std::sqrt(cl_sb_err2 + cl_b_err2 * pow(CLs(),2))/CLb();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

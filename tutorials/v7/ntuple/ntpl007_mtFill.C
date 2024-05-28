@@ -1,7 +1,7 @@
 /// \file
 /// \ingroup tutorial_ntuple
 /// \notebook
-/// Example of multi-threaded writes using multuple REntry objects
+/// Example of multi-threaded writes using multiple REntry objects
 ///
 /// \macro_image
 /// \macro_code
@@ -13,13 +13,10 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
-// triggering autoloading from the use of templated types would require an exhaustive enumeration
-// of "all" template instances in the LinkDef file.
-R__LOAD_LIBRARY(ROOTNTuple)
-
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/REntry.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <TCanvas.h>
 #include <TH1F.h>
@@ -37,10 +34,10 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <utility>
 
 // Import classes from experimental namespace for the time being
-using REntry = ROOT::Experimental::REntry;
-using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RNTupleReader = ROOT::Experimental::RNTupleReader;
-using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
+using ROOT::Experimental::REntry;
+using ROOT::Experimental::RNTupleModel;
+using ROOT::Experimental::RNTupleReader;
+using ROOT::Experimental::RNTupleWriter;
 
 // Where to store the ntuple of this example
 constexpr char const *kNTupleFileName = "ntpl007_mtFill.root";
@@ -52,7 +49,7 @@ constexpr int kNWriterThreads = 4;
 constexpr int kNEventsPerThread = 25000;
 
 // Thread function to generate and write events
-void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
+void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *writer) {
    // Protect the ntuple->Fill() call
    static std::mutex gLock;
 
@@ -62,16 +59,16 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
    auto prng = std::make_unique<TRandom3>();
    prng->SetSeed();
 
-   auto id = entry->Get<std::uint32_t>("id");
-   auto vpx = entry->Get<std::vector<float>>("vpx");
-   auto vpy = entry->Get<std::vector<float>>("vpy");
-   auto vpz = entry->Get<std::vector<float>>("vpz");
+   auto id = entry->GetPtr<std::uint32_t>("id");
+   *id = threadId;
+   auto vpx = entry->GetPtr<std::vector<float>>("vpx");
+   auto vpy = entry->GetPtr<std::vector<float>>("vpy");
+   auto vpz = entry->GetPtr<std::vector<float>>("vpz");
 
    for (int i = 0; i < kNEventsPerThread; i++) {
       vpx->clear();
       vpy->clear();
       vpz->clear();
-      *id = threadId;
 
       int npx = static_cast<int>(prng->Rndm(1) * 15);
       // Set the field data for the current event
@@ -86,7 +83,7 @@ void FillData(std::unique_ptr<REntry> entry, RNTupleWriter *ntuple) {
       }
 
       std::lock_guard<std::mutex> guard(gLock);
-      ntuple->Fill(*entry);
+      writer->Fill(*entry);
    }
 }
 
@@ -101,18 +98,18 @@ void Write()
    model->MakeField<std::vector<float>>("vpz");
 
    // We hand-over the data model to a newly created ntuple of name "NTuple", stored in kNTupleFileName
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "NTuple", kNTupleFileName);
 
    std::vector<std::unique_ptr<REntry>> entries;
    std::vector<std::thread> threads;
    for (int i = 0; i < kNWriterThreads; ++i)
-      entries.emplace_back(ntuple->CreateEntry());
+      entries.emplace_back(writer->CreateEntry());
    for (int i = 0; i < kNWriterThreads; ++i)
-      threads.emplace_back(FillData, std::move(entries[i]), ntuple.get());
+      threads.emplace_back(FillData, std::move(entries[i]), writer.get());
    for (int i = 0; i < kNWriterThreads; ++i)
       threads[i].join();
 
-   // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
+   // The writer unique pointer goes out of scope here.  On destruction, the writer flushes unwritten data to disk
    // and closes the attached ROOT file.
 }
 
@@ -120,9 +117,8 @@ void Write()
 // For all of the events, histogram only one of the written vectors
 void Read()
 {
-   auto ntuple = RNTupleReader::Open("NTuple", kNTupleFileName);
-   // TODO(jblomer): the "inner name" of the vector should become "vpx._0"
-   auto viewVpx = ntuple->GetView<float>("vpx._0");
+   auto reader = RNTupleReader::Open("NTuple", kNTupleFileName);
+   auto viewVpx = reader->GetView<float>("vpx._0");
 
    gStyle->SetOptStat(0);
 
@@ -139,11 +135,11 @@ void Read()
    h.DrawCopy();
 
    c1->cd(2);
-   auto nEvents = ntuple->GetNEntries();
-   auto viewId = ntuple->GetView<std::uint32_t>("id");
-   TH2F hFillSequence("","Entry Id vs Thread Id;Entry Sequence Number;Filling Thread",
-                      100, 0, nEvents, 100, 0, kNWriterThreads);
-   for (auto i : ntuple->GetEntryRange())
+   auto nEvents = reader->GetNEntries();
+   auto viewId = reader->GetView<std::uint32_t>("id");
+   TH2F hFillSequence("", "Entry Id vs Thread Id;Entry Sequence Number;Filling Thread", 100, 0, nEvents, 100, 0,
+                      kNWriterThreads + 1);
+   for (auto i : reader->GetEntryRange())
       hFillSequence.Fill(i, viewId(i));
    hFillSequence.DrawCopy();
 }

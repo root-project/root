@@ -147,7 +147,7 @@ playing with the parameters and plot the function again. The class `TF1`
 has a large number of very useful methods, including integration and
 differentiation. To make full use of this and other ROOT classes, visit
 the documentation on the Internet under
-<http://root.cern.ch/drupal/content/reference-guide>. Formulae in ROOT
+<https://root.cern/doc/master/>. Formulae in ROOT
 are evaluated using the class `TFormula`, so also look up the relevant
 class documentation for examples, implemented functions and syntax.
 

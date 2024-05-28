@@ -18,6 +18,9 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 
 namespace ROOT {
 
@@ -132,7 +135,15 @@ public:
       // Ranges don't keep track of Defines (they have no RColumnRegister data member).
       // Let's pretend that the Defines of this node are the same as the node above, so that in the graph
       // the Defines will just appear below the Range instead (no functional change).
-      thisNode->AddDefinedColumns(prevColumns);
+      // TODO: Converting the string_views for backward compatibility.
+      // Since they are names of defined columns, they were added to the
+      // register of column names of the RLoopManager object by the
+      // RColumnRegister, so we could also change GetDefinedColumns to return string_views directly
+      std::vector<std::string_view> colsViews;
+      colsViews.reserve(prevColumns.size());
+      for (const auto &col : prevColumns)
+         colsViews.push_back(col);
+      thisNode->AddDefinedColumns(colsViews);
 
       return thisNode;
    }

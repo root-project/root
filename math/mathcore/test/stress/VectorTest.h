@@ -199,7 +199,7 @@ public:
       V *v1 = new V();
 
       // need to add namespace to full type name
-      if (typeName == "") {
+      if (typeName.empty()) {
          typeName = "ROOT::Math::" + VecType<V>::name();
       }
 

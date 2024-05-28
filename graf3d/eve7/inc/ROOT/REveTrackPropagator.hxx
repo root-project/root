@@ -65,7 +65,7 @@ protected:
 
 public:
    REveMagFieldConst(Double_t x, Double_t y, Double_t z) : REveMagField(), fB(x, y, z) { fFieldConstant = kTRUE; }
-   virtual ~REveMagFieldConst() {}
+   ~REveMagFieldConst() override {}
 
    Double_t    GetMaxFieldMag() const override { return fB.Mag(); };
    REveVectorD GetField(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
@@ -89,7 +89,7 @@ public:
    {
       fFieldConstant = kFALSE;
    }
-   virtual ~REveMagFieldDuo() {}
+   ~REveMagFieldDuo() override {}
 
    Double_t GetMaxFieldMag() const override
    {
@@ -231,7 +231,7 @@ protected:
 public:
    REveTrackPropagator(const std::string& n = "REveTrackPropagator", const std::string& t = "", REveMagField *field = nullptr,
                        Bool_t own_field = kTRUE);
-   virtual ~REveTrackPropagator();
+   ~REveTrackPropagator() override;
 
    void OnZeroRefCount() override;
 

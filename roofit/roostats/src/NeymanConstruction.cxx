@@ -66,11 +66,11 @@ construction by:
 #include "TMath.h"
 #include "TH1F.h"
 
-ClassImp(RooStats::NeymanConstruction); ;
+ClassImp(RooStats::NeymanConstruction);
 
 using namespace RooFit;
 using namespace RooStats;
-using namespace std;
+using std::endl, std::string;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,7 +131,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
   // loop over points to test
   for(Int_t i=0; i<fPointsToTest->numEntries(); ++i){
      // get a parameter point from the list of points to test.
-    point = (RooArgSet*) fPointsToTest->get(i);//->clone("temp");
+    point = const_cast<RooArgSet*>(fPointsToTest->get(i));//->clone("temp");
 
     // set parameters of interest to current point
     fPOI->assign(*point);
@@ -154,8 +154,12 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
 
     SamplingDistribution* samplingDist=nullptr;
     double sigma;
-    double upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
-    double lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
+    double upperEdgeOfAcceptance;
+    double upperEdgeMinusSigma;
+    double upperEdgePlusSigma;
+    double lowerEdgeOfAcceptance;
+    double lowerEdgeMinusSigma;
+    double lowerEdgePlusSigma;
     Int_t additionalMC=0;
 
     // the adaptive sampling algorithm wants at least one toy event to be outside
@@ -168,7 +172,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     // thus, a good guess for the first iteration of events is N=3.73/alpha~4/alpha
     // should replace alpha here by smaller tail probability: eg. alpha*Min(leftsideFrac, 1.-leftsideFrac)
     // totalMC will be incremented by 2 before first call, so initiated it at half the value
-    Int_t totalMC = (Int_t) (2./fSize/TMath::Min(fLeftSideFraction,1.-fLeftSideFraction));
+    Int_t totalMC = (Int_t) (2./fSize/std::min(fLeftSideFraction,1.-fLeftSideFraction));
     if(fLeftSideFraction==0. || fLeftSideFraction ==1.){
       totalMC = (Int_t) (2./fSize);
     }

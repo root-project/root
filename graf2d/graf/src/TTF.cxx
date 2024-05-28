@@ -470,23 +470,22 @@ Int_t TTF::SetTextFont(const char *fontname, Int_t italic)
 /// Set specified font.
 /// List of the currently supported fonts (screen and PostScript)
 ///
-/// | Font ID |   X11                     |     TTF          |
-/// |---------|---------------------------|------------------|
-/// |      1  | times-medium-i-normal     | timesi.ttf       |
-/// |      2  | times-bold-r-normal       | timesbd.ttf      |
-/// |      3  | times-bold-i-normal       | timesbi.ttf      |
-/// |      4  | helvetica-medium-r-normal | arial.ttf        |
-/// |      5  | helvetica-medium-o-normal | ariali.ttf       |
-/// |      6  | helvetica-bold-r-normal   | arialbd.ttf      |
-/// |      7  | helvetica-bold-o-normal   | arialbi.ttf      |
-/// |      8  | courier-medium-r-normal   | cour.ttf         |
-/// |      9  | courier-medium-o-normal   | couri.ttf        |
-/// |     10  | courier-bold-r-normal     | courbd.ttf       |
-/// |     11  | courier-bold-o-normal     | courbi.ttf       |
-/// |     12  | symbol-medium-r-normal    | symbol.ttf       |
-/// |     13  | times-medium-r-normal     | times.ttf        |
-/// |     14  |                           | wingding.ttf     |
-/// |     15  | symbol oblique is emulated from symbol.ttf | |
+/// | Font number |     TTF Names             |     PostScript/PDF Names      |
+/// |-------------|---------------------------|-------------------------------|
+/// |      1      |   Free Serif Italic       |    Times-Italic               |
+/// |      2      |   Free Serif Bold         |    Times-Bold                 |
+/// |      3      |   Free Serif Bold Italic  |    Times-BoldItalic           |
+/// |      4      |   Tex Gyre Regular        |    Helvetica                  |
+/// |      5      |   Tex Gyre Italic         |    Helvetica-Oblique          |
+/// |      6      |   Tex Gyre Bold           |    Helvetica-Bold             |
+/// |      7      |   Tex Gyre Bold Italic    |    Helvetica-BoldOblique      |
+/// |      8      |   Free Mono               |    Courier                    |
+/// |      9      |   Free Mono Oblique       |    Courier-Oblique            |
+/// |     10      |   Free Mono Bold          |    Courier-Bold               |
+/// |     11      |   Free Mono Bold Oblique  |    Courier-BoldOblique        |
+/// |     12      |   Symbol                  |    Symbol                     |
+/// |     13      |   Free Serif              |    Times-Roman                |
+/// |     14      |   Wingdings               |    ZapfDingbats               |
 
 void TTF::SetTextFont(Font_t fontnumber)
 {
@@ -498,10 +497,10 @@ void TTF::SetTextFont(Font_t fontnumber)
      { "Root.TTFont.1", "FreeSerifItalic.otf" },
      { "Root.TTFont.2", "FreeSerifBold.otf" },
      { "Root.TTFont.3", "FreeSerifBoldItalic.otf" },
-     { "Root.TTFont.4", "FreeSans.otf" },
-     { "Root.TTFont.5", "FreeSansOblique.otf" },
-     { "Root.TTFont.6", "FreeSansBold.otf" },
-     { "Root.TTFont.7", "FreeSansBoldOblique.otf" },
+     { "Root.TTFont.4", "texgyreheros-regular.otf" },
+     { "Root.TTFont.5", "texgyreheros-italic.otf" },
+     { "Root.TTFont.6", "texgyreheros-bold.otf" },
+     { "Root.TTFont.7", "texgyreheros-bolditalic.otf" },
      { "Root.TTFont.8", "FreeMono.otf" },
      { "Root.TTFont.9", "FreeMonoOblique.otf" },
      { "Root.TTFont.10", "FreeMonoBold.otf" },
@@ -571,8 +570,10 @@ void TTF::SetTextSize(Float_t textsize)
    }
 
    Int_t tsize = (Int_t)(textsize*kScale+0.5) << 6;
-   if (FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72))
-      Error("TTF::SetTextSize", "error in FT_Set_Char_Size");
+   FT_Error err = FT_Set_Char_Size(fgFace[fgCurFontIdx], tsize, tsize, 72, 72);
+   if (err)
+      Error("TTF::SetTextSize", "error in FT_Set_Char_Size: 0x%x (input size %f, calc. size 0x%x)", err, textsize,
+            tsize);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

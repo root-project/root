@@ -19,7 +19,7 @@
 \class RooPullVar
 \ingroup Roofitcore
 
-RooPullVar represents the pull of a measurement w.r.t. the true value
+Represents the pull of a measurement w.r.t. the true value
 using the measurement and its error. Both the true value and
 the measured value (with error) are taken from two user-supplied
 RooRealVars. If the measured parameter has an asymmetric error, the proper
@@ -34,20 +34,7 @@ side of that error will be used:
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 
-using namespace std;
-
 ClassImp(RooPullVar);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooPullVar::RooPullVar()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct the pull of the RooRealVar 'meas'.
@@ -77,17 +64,6 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooPullVar::~RooPullVar()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate pull. Use asymmetric error if defined in measurement,
 /// otherwise use symmetric error. If measurement has no error
@@ -109,5 +85,3 @@ double RooPullVar::evaluate() const
     return 0 ;
   }
 }
-
-

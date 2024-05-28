@@ -10,5 +10,8 @@
 # build products
 dist
 *.egg-info
+__pycache__
 .cache
+.pytest_cache
+.vscode
 build

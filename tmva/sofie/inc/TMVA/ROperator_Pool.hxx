@@ -131,8 +131,9 @@ public:
                           k3 + (fAttrDilations[2] - 1) * (k3 - 1)};
 
       if (fAttrAutopad == "NOTSET") {
+         // in auto_pad is NOTSET then fAttrPads should have been set or default zero is used
          if (fAttrPads.empty()) {
-            fAttrPads = {1, 1, 1, 1, 1, 1};
+            fAttrPads = {0, 0, 0, 0, 0, 0};
          }
       } else if (fAttrAutopad == "SAME_UPPER" || fAttrAutopad == "SAME_LOWER") {
          if (fDim == 1)

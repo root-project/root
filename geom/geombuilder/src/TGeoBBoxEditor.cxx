@@ -42,7 +42,7 @@ enum ETGeoBBoxWid { kBOX_NAME, kBOX_X, kBOX_Y, kBOX_Z, kBOX_OX, kBOX_OY, kBOX_OZ
 TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
    : TGeoGedFrame(p, width, height, options | kVerticalFrame, back)
 {
-   fShape = 0;
+   fShape = nullptr;
    fDxi = fDyi = fDzi = 0.0;
    memset(fOrigi, 0, 3 * sizeof(Double_t));
    fNamei = "";
@@ -194,7 +194,7 @@ void TGeoBBoxEditor::ConnectSignals2Slots()
 
 void TGeoBBoxEditor::SetModel(TObject *obj)
 {
-   if (obj == 0 || (obj->IsA() != TGeoBBox::Class())) {
+   if (obj == nullptr || (obj->IsA() != TGeoBBox::Class())) {
       SetActive(kFALSE);
       return;
    }

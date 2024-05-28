@@ -22,6 +22,7 @@
 #include "TList.h"
 #include "TBaseClass.h"
 
+#include <memory>
 #include <sstream>
 #include <regex>
 
@@ -207,7 +208,7 @@ std::string REveDataItemList::GetHighlightTooltip(const std::set<int>& secondary
 //______________________________________________________________________________
 void REveDataItemList::AddTooltipExpression(const std::string &title, const std::string &expr, bool init)
 {
-   fTooltipExpressions.push_back(std::unique_ptr<TTip>(new TTip()));
+   fTooltipExpressions.push_back(std::make_unique<TTip>());
    TTip *tt = fTooltipExpressions.back().get();
 
    tt->fTooltipTitle = title;
@@ -259,7 +260,7 @@ REveDataCollection::REveDataCollection(const std::string& n, const std::string& 
    REveElement(n, t)
 {
    std::string lname = n + "Items";
-   fItemList = new REveDataItemList(lname.c_str());
+   fItemList = new REveDataItemList(lname);
    AddElement(fItemList);
 
    SetupDefaultColorAndTransparency(fgDefaultColor, true, true);

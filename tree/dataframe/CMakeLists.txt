@@ -39,6 +39,7 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
   HEADERS
     ROOT/RCsvDS.hxx
+    ROOT/RVecDS.hxx
     ROOT/RDataFrame.hxx
     ROOT/RDataSource.hxx
     ROOT/RDFHelpers.hxx
@@ -100,6 +101,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RActionBase.cxx
     src/RCsvDS.cxx
     src/RDefineBase.cxx
+    src/RDefineReader.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
     src/RDatasetSpec.cxx
@@ -124,6 +126,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RSample.cxx
     src/RResultPtr.cxx
     src/RVariationBase.cxx
+    src/RVariationReader.cxx
     src/RVariationsDescription.cxx
     src/RRootDS.cxx
     src/RTrivialDS.cxx

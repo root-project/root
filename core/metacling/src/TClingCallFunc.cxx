@@ -74,7 +74,7 @@ C++ interpreter and the Clang C++ compiler, not CINT.
 using namespace ROOT;
 using namespace llvm;
 using namespace clang;
-using namespace std;
+using std::string, std::map, std::ostringstream, std::make_pair;
 
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");
@@ -1421,12 +1421,6 @@ void TClingCallFunc::exec(void *address, void *ret)
             return;
          }
 
-
-      //
-      //  Convert the arguments from cling::Value to their
-      //  actual type and store them in a holder for passing to the
-      //  wrapper function by pointer to value.
-      //
       vp_ary.reserve(num_args);
       for (unsigned i = 0; i < num_args; ++i) {
          QualType QT;
@@ -1446,8 +1440,27 @@ void TClingCallFunc::exec(void *address, void *ret)
             // the argument is already a pointer value (points to the same thing
             // as the reference or pointing to object passed by value.
             vp_ary.push_back(fArgVals[i].getPtr());
-         } else
+         } else {
+            // Check if arguments need readjusting. This can happen if we called
+            // cling::Value::Create which instantiates to say double but the
+            // function signature requires a float.
+            ASTContext &C = FD->getASTContext();
+            if (QT->isBuiltinType() && !C.hasSameType(QT, fArgVals[i].getType())) {
+               switch(QT->getAs<BuiltinType>()->getKind()) {
+               default:
+                  ROOT::TMetaUtils::Error("TClingCallFunc::exec", "Unknown builtin type!");
+#ifndef NDEBUG
+                  QT->dump();
+#endif // NDEBUG
+                  break;
+#define X(type, name)                                                   \
+                  case BuiltinType::name: fArgVals[i] = cling::Value::Create(*fInterp, fArgVals[i].castAs<type>()); break;
+                  CLING_VALUE_BUILTIN_TYPES
+#undef X
+              }
+            }
             vp_ary.push_back(fArgVals[i].getPtrAddress());
+         }
       }
    } // End of scope holding the lock
    (*fWrapper)(address, (int)num_args, (void **)vp_ary.data(), ret);

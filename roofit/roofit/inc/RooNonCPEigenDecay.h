@@ -80,7 +80,6 @@ public:
   TObject* clone(const char* newname) const override {
     return new RooNonCPEigenDecay(*this,newname);
   }
-  ~RooNonCPEigenDecay( void ) override;
 
   double coefficient( Int_t basisIndex ) const override;
 

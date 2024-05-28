@@ -110,22 +110,22 @@ TClass* TGLObject::SearchGLRenderer(TClass* cls)
    TString rnr( cls->GetName() );
    rnr += "GL";
    TClass* c = TClass::GetClass(rnr);
-   if (c != 0)
+   if (c != nullptr)
       return c;
 
    TList* bases = cls->GetListOfBases();
-   if (bases == 0 || bases->IsEmpty())
-      return 0;
+   if (bases == nullptr || bases->IsEmpty())
+      return nullptr;
 
    TIter  next_base(bases);
    TBaseClass* bc;
-   while ((bc = (TBaseClass*) next_base()) != 0) {
+   while ((bc = (TBaseClass*) next_base()) != nullptr) {
       cls = bc->GetClassPointer();
-      if ((c = SearchGLRenderer(cls)) != 0) {
+      if ((c = SearchGLRenderer(cls)) != nullptr) {
          return c;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +136,7 @@ TClass* TGLObject::GetGLRenderer(TClass* isa)
 {
    TPair* p = (TPair*) fgGLClassMap.FindObject(isa);
    TClass* cls;
-   if (p != 0) {
+   if (p != nullptr) {
       cls = (TClass*) p->Value();
    } else {
       cls = SearchGLRenderer(isa);

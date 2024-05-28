@@ -18,45 +18,25 @@
 \file RooFirstMoment.cxx
 \class RooFirstMoment
 \ingroup Roofitcore
-
-RooFirstMoment represents the first, second, or third order derivative
-of any RooAbsReal as calculated (numerically) by the MathCore Richardson
-derivator class.
 **/
 
+#include <RooFirstMoment.h>
+#include <RooAbsReal.h>
+#include <RooAbsPdf.h>
+#include <RooArgSet.h>
+#include <RooMsgService.h>
+#include <RooRealVar.h>
+#include <RooGlobalFunc.h>
+#include <RooRealIntegral.h>
+#include <RooNumIntConfig.h>
+#include <RooProduct.h>
 
-#include "Riostream.h"
+#include <Riostream.h>
+
 #include <cmath>
-
-#include "RooFirstMoment.h"
-#include "RooAbsReal.h"
-#include "RooAbsPdf.h"
-#include "RooErrorHandler.h"
-#include "RooArgSet.h"
-#include "RooMsgService.h"
-#include "RooRealVar.h"
-#include "RooFunctor.h"
-#include "RooGlobalFunc.h"
-#include "RooConstVar.h"
-#include "RooRealIntegral.h"
-#include "RooNumIntConfig.h"
-#include "RooProduct.h"
 #include <string>
-using namespace std;
-
 
 ClassImp(RooFirstMoment);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooFirstMoment::RooFirstMoment()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +91,7 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
     XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
-  if (intNSet && _nset.getSize()>0 && func.isBinnedDistribution(_nset)) {
+  if (intNSet && !_nset.empty() && func.isBinnedDistribution(_nset)) {
     XF->specialIntegratorConfig(true)->method2D().setLabel("RooBinIntegrator");
     XF->specialIntegratorConfig(true)->methodND().setLabel("RooBinIntegrator");
   }
@@ -143,17 +123,6 @@ RooFirstMoment::RooFirstMoment(const RooFirstMoment& other, const char* name) :
 {
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFirstMoment::~RooFirstMoment()
-{
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate value
 
@@ -163,5 +132,3 @@ double RooFirstMoment::evaluate() const
   //cout << "\nRooFirstMoment::eval(" << GetName() << ") val = " << ratio << endl ;
   return ratio ;
 }
-
-

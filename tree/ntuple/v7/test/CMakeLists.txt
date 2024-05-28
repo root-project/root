@@ -26,6 +26,7 @@ endif()
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(ntuple_compat ntuple_compat.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_descriptor ntuple_descriptor.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_friends ntuple_friends.cxx LIBRARIES ROOTNTuple CustomStruct)
@@ -39,10 +40,17 @@ ROOT_ADD_GTEST(ntuple_modelext ntuple_modelext.cxx LIBRARIES ROOTNTuple MathCore
 ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTNTuple CustomStruct)
 if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple CustomStruct)
+  ROOT_GENERATE_DICTIONARY(ProxiedSTLContainerDict ${CMAKE_CURRENT_SOURCE_DIR}/ProxiedSTLContainer.hxx
+                         MODULE ntuple_types
+                         LINKDEF ProxiedSTLContainerLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES CustomStruct)
 endif()
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple CustomStruct)
 
+ROOT_ADD_GTEST(rfield_blob rfield_blob.cxx LIBRARIES ROOTNTuple)
+ROOT_ADD_GTEST(rfield_check rfield_check.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
@@ -52,6 +60,10 @@ ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Tree Cus
 ROOT_ADD_GTEST(ntuple_show ntuple_show.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_storage ntuple_storage.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_extended ntuple_extended.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+
+ROOT_ADD_GTEST(ntuple_parallel_writer ntuple_parallel_writer.cxx LIBRARIES ROOTNTuple)
+
+ROOT_ADD_GTEST(ntuple_limits ntuple_limits.cxx LIBRARIES ROOTNTuple)
 
 if(daos OR daos_mock)
   # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).
@@ -66,4 +78,10 @@ if(daos OR daos_mock)
     set_property(SOURCE ntuple_storage_daos.cxx
             APPEND PROPERTY COMPILE_DEFINITIONS R__DAOS_TEST_MOCK=1)
   endif()
+endif()
+
+
+# RNTuple Python interface tests
+if(pyroot)
+  ROOT_ADD_PYUNITTEST(ntuple_py_model ntuple_model.py)
 endif()

@@ -40,8 +40,8 @@ TGLCameraOverlay::TGLCameraOverlay(Bool_t showOrtho, Bool_t showPersp) :
    fOrthographicMode(kAxis),
    fPerspectiveMode(kPlaneIntersect),
 
-   fAxisPainter(0),
-   fAxis(0),
+   fAxisPainter(nullptr),
+   fAxis(nullptr),
    fAxisExtend(0.9),
    fUseAxisColors(kFALSE),
 

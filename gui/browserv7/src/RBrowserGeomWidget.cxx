@@ -64,7 +64,7 @@ public:
 
    void Show(const std::string &arg) override { fViewer.Show(arg); }
 
-   std::string GetUrl() override { return "../"s + fViewer.GetWindowAddr() + "/"s; }
+   std::string GetUrl() override { return fViewer.GetWindowUrl(false); }
 
    bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {

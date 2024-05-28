@@ -36,7 +36,7 @@ protected:
    std::vector<std::shared_ptr<RStyle>> fStyles; ///<! locked styles of the objects and pad until streaming is performed
 public:
    RPadBaseDisplayItem() = default;
-   virtual ~RPadBaseDisplayItem() = default;
+   ~RPadBaseDisplayItem() override = default;
    void SetAttributes(const RAttrMap *f) { fAttr = f; }
    /// Add display item and style which should be used for it
    void Add(std::unique_ptr<RDisplayItem> &&item, std::shared_ptr<RStyle> &&style)
@@ -72,7 +72,7 @@ protected:
    const RPadExtent *fSize{nullptr};    ///< pad size
 public:
    RPadDisplayItem() = default;
-   virtual ~RPadDisplayItem() {}
+   ~RPadDisplayItem() override {}
    void SetPadPosSize(const RPadPos *pos, const RPadExtent *size) { fPos = pos; fSize = size; }
 
    void BuildFullId(const std::string &prefix) override
@@ -100,7 +100,7 @@ protected:
    std::array<int, 2> fWinSize;         ///< canvas window size
 public:
    RCanvasDisplayItem() = default;
-   virtual ~RCanvasDisplayItem() = default;
+   ~RCanvasDisplayItem() override = default;
    void SetTitle(const std::string &title) { fTitle = title; }
    void SetWindowSize(int width, int height) { fWinSize[0] = width; fWinSize[1] = height; }
 

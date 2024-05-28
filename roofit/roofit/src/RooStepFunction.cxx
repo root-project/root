@@ -49,23 +49,8 @@ RooStepFunction::RooStepFunction(const char* name, const char* title,
   _boundaryList("boundaryList","List of boundaries",this),
   _interpolate(interpolate)
 {
-  for (auto *coef : coefList) {
-    if (!dynamic_cast<RooAbsReal*>(coef)) {
-      std::cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-      << " is not of type RooAbsReal" << std::endl ;
-      assert(0) ;
-    }
-    _coefList.add(*coef) ;
-  }
-
-  for (auto *boundary : boundaryList) {
-    if (!dynamic_cast<RooAbsReal*>(boundary)) {
-      std::cout << "RooStepFunction::ctor(" << GetName() << ") ERROR: boundary " << boundary->GetName()
-      << " is not of type RooAbsReal" << std::endl;
-      assert(0) ;
-    }
-    _boundaryList.add(*boundary) ;
-  }
+  _coefList.addTyped<RooAbsReal>(coefList);
+  _boundaryList.addTyped<RooAbsReal>(boundaryList);
 
   if (_boundaryList.size()!=_coefList.size()+1) {
     coutE(InputArguments) << "RooStepFunction::ctor(" << GetName() << ") ERROR: Number of boundaries must be number of coefficients plus 1" << std::endl ;
@@ -107,7 +92,7 @@ double RooStepFunction::evaluate() const
     // No interpolation -- Return values bin-by-bin
     for (Int_t i=0;i<nb-1;i++){
       if (_x>b[i]&&_x<=b[i+1]) {
-   return ((RooAbsReal*)_coefList.at(i))->getVal() ;
+   return (static_cast<RooAbsReal*>(_coefList.at(i)))->getVal() ;
       }
     }
     return 0 ;

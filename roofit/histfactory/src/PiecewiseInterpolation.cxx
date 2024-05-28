@@ -20,7 +20,7 @@
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
-#include "RooFit/Detail/EvaluateFuncs.h"
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "Riostream.h"
 #include "TBuffer.h"
@@ -33,27 +33,23 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
+#include "RooDataHist.h"
+#include "RooHistFunc.h"
 
 #include <exception>
 #include <cmath>
 #include <algorithm>
 
-using namespace std;
+using std::endl, std::cout;
 
 ClassImp(PiecewiseInterpolation);
-;
-
-using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 {
-  _positiveDefinite=false;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a new interpolation. The value of the function will be
@@ -66,26 +62,20 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 /// \param lowSet  Set of down variations.
 /// \param highSet Set of up variations.
 /// \param paramSet Parameters that control the interpolation.
-/// \param takeOwnership If true, the PiecewiseInterpolation object will take ownership of the arguments in the low, high and parameter sets.
-PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
-                      const RooArgList& lowSet,
-                      const RooArgList& highSet,
-                      const RooArgList& paramSet
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-                     , bool takeOwnership
-#endif
-  ) :
-  RooAbsReal(name, title),
-  _normIntMgr(this),
-  _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
-  _lowSet("!lowSet","low-side variation",this),
-  _highSet("!highSet","high-side variation",this),
-  _paramSet("!paramSet","high-side variation",this),
-  _positiveDefinite(false)
+PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal,
+                                               const RooArgList &lowSet, const RooArgList &highSet,
+                                               const RooArgList &paramSet)
+   : RooAbsReal(name, title),
+     _normIntMgr(this),
+     _nominal("!nominal", "nominal value", this, (RooAbsReal &)nominal),
+     _lowSet("!lowSet", "low-side variation", this),
+     _highSet("!highSet", "high-side variation", this),
+     _paramSet("!paramSet", "high-side variation", this),
+     _positiveDefinite(false)
 
 {
   // KC: check both sizes
-  if (lowSet.getSize() != highSet.getSize()) {
+  if (lowSet.size() != highSet.size()) {
     coutE(InputArguments) << "PiecewiseInterpolation::ctor(" << GetName() << ") ERROR: input lists should be of equal length" << endl ;
     RooErrorHandler::softAbort() ;
   }
@@ -97,11 +87,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _lowSet.add(*comp) ;
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) {
-      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-    }
-#endif
   }
 
 
@@ -112,11 +97,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _highSet.add(*comp) ;
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) {
-      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-    }
-#endif
   }
 
 
@@ -127,11 +107,6 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _paramSet.add(*comp) ;
-#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
-    if (takeOwnership) {
-      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
-    }
-#endif
     _interpCode.push_back(0); // default code: linear interpolation
   }
 
@@ -192,7 +167,8 @@ double PiecewiseInterpolation::evaluate() const
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
                  << " with unknown interpolation code" << icode << endl ;
     }
-    sum += flexibleInterp(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
+    using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+    sum += flexibleInterpSingle(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -210,22 +186,63 @@ double PiecewiseInterpolation::evaluate() const
 
 void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   unsigned int n = _interpCode.size();
+   std::size_t n = _interpCode.size();
 
    std::string resName = "total_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(this, "double " + resName + " = " + ctx.getResult(_nominal) + ";\n");
-   std::string code = "";
    for (std::size_t i = 0; i < n; ++i) {
       if (_interpCode[i] < 0 || _interpCode[i] > 5) {
          coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
                                << " with unknown interpolation code" << _interpCode[i] << endl;
       }
-      std::string funcCall;
-       funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i], _lowSet[i],
-                                _highSet[i], 1.0, _nominal, _paramSet[i], resName);
-
-      code += resName + " += " + funcCall + ";\n";
+      if (_interpCode[i] != _interpCode[0]) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
+                                  "different interpolation codes for the same class object "
+                               << endl;
+      }
    }
+
+   // The PiecewiseInterpolation class is used in the context of HistFactory
+   // models, where is is always used the same way: all RooAbsReals in _lowSet,
+   // _histSet, and also nominal are 1D RooHistFuncs with with same structure.
+   //
+   // Therefore, we can make a big optimization: we get the bin index only once
+   // here in the generated code for PiecewiseInterpolation. Then, we also
+   // rearrange the histogram data in such a way that we can always pass the
+   // same arrays to the free function that implements the interpolation, just
+   // with a dynamic offset calculated from the bin index.
+   RooDataHist const &nomHist = dynamic_cast<RooHistFunc const &>(*_nominal).dataHist();
+   int nBins = nomHist.numEntries();
+   std::vector<double> valsNominal;
+   std::vector<double> valsLow;
+   std::vector<double> valsHigh;
+   for (int i = 0; i < nBins; ++i) {
+      valsNominal.push_back(nomHist.weight(i));
+   }
+   for (int i = 0; i < nBins; ++i) {
+      for (std::size_t iParam = 0; iParam < n; ++iParam) {
+         valsLow.push_back(dynamic_cast<RooHistFunc const &>(_lowSet[iParam]).dataHist().weight(i));
+         valsHigh.push_back(dynamic_cast<RooHistFunc const &>(_highSet[iParam]).dataHist().weight(i));
+      }
+   }
+   std::string idxName =
+      nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables());
+   std::string valsNominalStr = ctx.buildArg(valsNominal);
+   std::string valsLowStr = ctx.buildArg(valsLow);
+   std::string valsHighStr = ctx.buildArg(valsHigh);
+   std::string nStr = std::to_string(n);
+   std::string code;
+
+   std::string lowName = ctx.getTmpVarName();
+   std::string highName = ctx.getTmpVarName();
+   std::string nominalName = ctx.getTmpVarName();
+   code += "double * " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
+
+   std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", _interpCode[0], _paramSet, n,
+                                        lowName, highName, 1.0, nominalName, 0.0);
+   code += "double " + resName + " = " + funcCall + ";\n";
+
    if (_positiveDefinite)
       code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
 
@@ -237,26 +254,30 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
 /// Interpolate between input distributions for all values of the observable in `evalData`.
 /// \param[in,out] evalData Struct holding spans pointing to input data. The results of this function will be stored here.
 /// \param[in] normSet Arguments to normalise over.
-void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::Detail::DataMap const& dataMap) const {
-  auto nominal = dataMap.at(_nominal);
+void PiecewiseInterpolation::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> sum = ctx.output();
+
+  auto nominal = ctx.at(_nominal);
   for(unsigned int j=0; j < nominal.size(); ++j) {
     sum[j] = nominal[j];
   }
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
     const double param = static_cast<RooAbsReal*>(_paramSet.at(i))->getVal();
-    auto low   = dataMap.at(_lowSet.at(i));
-    auto high  = dataMap.at(_highSet.at(i));
+    auto low   = ctx.at(_lowSet.at(i));
+    auto high  = ctx.at(_highSet.at(i));
     const int icode = _interpCode[i];
 
     if (icode < 0 || icode > 5) {
-      coutE(InputArguments) << "PiecewiseInterpolation::computeBatch(): " << _paramSet[i].GetName()
+      coutE(InputArguments) << "PiecewiseInterpolation::doEval(): " << _paramSet[i].GetName()
                        << " with unknown interpolation code" << icode << std::endl;
-      throw std::invalid_argument("PiecewiseInterpolation::computeBatch() got invalid interpolation code " + std::to_string(icode));
+      throw std::invalid_argument("PiecewiseInterpolation::doEval() got invalid interpolation code " + std::to_string(icode));
     }
 
     for (unsigned int j=0; j < nominal.size(); ++j) {
-       sum[j] += flexibleInterp(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
+       using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+       sum[j] += flexibleInterpSingle(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
     }
   }
 
@@ -272,10 +293,10 @@ void PiecewiseInterpolation::computeBatch(double* sum, size_t /*size*/, RooFit::
 
 bool PiecewiseInterpolation::setBinIntegrator(RooArgSet& allVars)
 {
-  if(allVars.getSize()==1){
+  if(allVars.size()==1){
     RooAbsReal* temp = const_cast<PiecewiseInterpolation*>(this);
     temp->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator")  ;
-    int nbins = ((RooRealVar*) allVars.first())->numBins();
+    int nbins = (static_cast<RooRealVar*>(allVars.first()))->numBins();
     temp->specialIntegratorConfig(true)->getConfigSection("RooBinIntegrator").setRealValue("numBins",nbins);
     return true;
   }else{
@@ -327,7 +348,7 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }
@@ -401,7 +422,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   vars->remove(_paramSet);
   _paramSet.Print("v");
   vars->Print("v");
-  if(vars->getSize()==1){
+  if(vars->size()==1){
     RooRealVar* obs = (RooRealVar*) vars->first();
     for(int i=0; i<obs->numBins(); ++i){
       obs->setVal( obs->getMin() + (.5+i)*(obs->getMax()-obs->getMin())/obs->numBins());
@@ -434,7 +455,7 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
   */
 
   // old integral, only works for linear and not positive definite
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObjByIndex(code-1) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObjByIndex(code-1)) ;
   if( cache==nullptr ) {
     std::cout << "Error: Cache Element is nullptr" << std::endl;
     throw std::exception();
@@ -442,7 +463,8 @@ double PiecewiseInterpolation::analyticalIntegralWN(Int_t code, const RooArgSet*
 
   // old integral, only works for linear and not positive definite
 
-  RooAbsReal *low, *high;
+  RooAbsReal *low;
+  RooAbsReal *high;
   double value(0);
   double nominal(0);
 
@@ -609,7 +631,7 @@ void PiecewiseInterpolation::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.ReadClassBuffer(PiecewiseInterpolation::Class(),this);
       specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator") ;
-      if (_interpCode.empty()) _interpCode.resize(_paramSet.getSize());
+      if (_interpCode.empty()) _interpCode.resize(_paramSet.size());
    } else {
       R__b.WriteClassBuffer(PiecewiseInterpolation::Class(),this);
    }
@@ -631,7 +653,7 @@ void PiecewiseInterpolation::printMetaArgs(ostream& os) const
   bool first(true) ;
 
   RooAbsArg* arg1, *arg2 ;
-  if (_highSet.getSize()!=0) {
+  if (_highSet.size()!=0) {
 
     while((arg1=(RooAbsArg*)_lowIter->Next())) {
       if (!first) {

@@ -93,10 +93,9 @@ and there is no guarantee that this works.
 #include "TClass.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream, std::setw, std::hex, std::dec, std::map, std::string;
 
 ClassImp(RooTrace);
-;
 
 RooTrace* RooTrace::_instance=nullptr ;
 
@@ -210,7 +209,7 @@ void RooTrace::verbose(bool flag)
 
 void RooTrace::create2(const TObject* obj)
 {
-  _list.Add((RooAbsArg*)obj) ;
+  _list.Add(const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>(obj)));
   if (_verbose) {
     cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName()
     << " created " << endl ;
@@ -225,7 +224,7 @@ void RooTrace::create2(const TObject* obj)
 
 void RooTrace::destroy2(const TObject* obj)
 {
-  if (!_list.Remove((RooAbsArg*)obj)) {
+  if (!_list.Remove(const_cast<RooAbsArg *>(static_cast<RooAbsArg const*>(obj)))) {
   } else if (_verbose) {
     cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName()
     << " destroyed [" << obj->GetTitle() << "]" << endl ;
@@ -302,8 +301,8 @@ void RooTrace::dump3(ostream& os, bool sinceMarked)
 {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 
-
-  Int_t i, nMarked(0) ;
+  Int_t i;
+  Int_t nMarked(0);
   for(i=0 ; i<_list.GetSize() ; i++) {
     if (!sinceMarked || _markList.IndexOf(_list.At(i)) == -1) {
       os << hex << setw(10) << _list.At(i) << dec << " : " << setw(20) << _list.At(i)->ClassName() << setw(0) << " - " << _list.At(i)->GetName() << endl ;

@@ -1,22 +1,29 @@
 import { decodeUrl, settings, constants, gStyle, internals, browser, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
-import { readSettings, readStyle } from './gui/utils.mjs';
+import { setStoragePrefix, readSettings, readStyle } from './gui/utils.mjs';
 
 
 /** @summary Read style and settings from URL
   * @private */
 function readStyleFromURL(url) {
    // first try to read settings from coockies
+   const d = decodeUrl(url),
+         prefix = d.get('storage_prefix');
+
+   if (isStr(prefix) && prefix)
+      setStoragePrefix(prefix);
+
    readSettings();
    readStyle();
 
-   const d = decodeUrl(url);
-
-   function get_bool(name, field) {
+   function get_bool(name, field, special) {
       if (d.has(name)) {
          const val = d.get(name);
-         settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
+         if (special && (val === special))
+            settings[field] = special;
+         else
+            settings[field] = (val !== '0') && (val !== 'false') && (val !== 'off');
       }
    }
 
@@ -45,6 +52,12 @@ function readStyleFromURL(url) {
 
    if (d.has('prefer_saved_points'))
       settings.PreferSavedPoints = true;
+
+   const tf1_style = d.get('tf1');
+   if (tf1_style === 'curve')
+      settings.FuncAsCurve = true;
+   else if (tf1_style === 'line')
+      settings.FuncAsCurve = false;
 
    if (d.has('with_credentials'))
       settings.WithCredentials = true;
@@ -84,11 +97,16 @@ function readStyleFromURL(url) {
       settings.Latex = constants.Latex.fromString(latex);
 
    if (d.has('nomenu')) settings.ContextMenu = false;
-   if (d.has('noprogress')) settings.ProgressBox = false;
+   if (d.has('noprogress'))
+      settings.ProgressBox = false;
+   else
+      get_bool('progress', 'ProgressBox', 'modal');
+
    if (d.has('notouch')) browser.touches = false;
    if (d.has('adjframe')) settings.CanAdjustFrame = true;
 
-   if (d.has('toolbar')) {
+   const has_toolbar = d.has('toolbar');
+   if (has_toolbar) {
       const toolbar = d.get('toolbar', '');
       let val = null;
       if (toolbar.indexOf('popup') >= 0) val = 'popup';
@@ -127,15 +145,36 @@ function readStyleFromURL(url) {
          gStyle[field] = 0;
       else
          gStyle[field] = parseInt(val);
+      return gStyle[field] !== 0;
+   }
+   function get_float_style(name, field) {
+      if (!d.has(name)) return;
+      const val = d.get(name),
+            flt = Number.parseFloat(val);
+      if (Number.isFinite(flt))
+         gStyle[field] = flt;
    }
 
    if (d.has('histzero')) gStyle.fHistMinimumZero = true;
    if (d.has('histmargin')) gStyle.fHistTopMargin = parseFloat(d.get('histmargin'));
    get_int_style('optstat', 'fOptStat', 1111);
    get_int_style('optfit', 'fOptFit', 0);
-   get_int_style('optdate', 'fOptDate', 1);
-   get_int_style('optfile', 'fOptFile', 1);
+   const has_date = get_int_style('optdate', 'fOptDate', 1),
+         has_file = get_int_style('optfile', 'fOptFile', 1);
+   if ((has_date || has_file) && !has_toolbar)
+      settings.ToolBarVert = true;
+   get_float_style('datex', 'fDateX');
+   get_float_style('datey', 'fDateY');
+
    get_int_style('opttitle', 'fOptTitle', 1);
+   if (d.has('utc'))
+      settings.TimeZone = 'UTC';
+   else if (d.has('timezone')) {
+      settings.TimeZone = d.get('timezone');
+      if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = '';
+   }
+
    gStyle.fStatFormat = d.get('statfmt', gStyle.fStatFormat);
    gStyle.fFitFormat = d.get('fitfmt', gStyle.fFitFormat);
 }

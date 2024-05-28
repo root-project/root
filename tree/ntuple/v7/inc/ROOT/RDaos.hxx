@@ -16,7 +16,7 @@
 #ifndef ROOT7_RDaos
 #define ROOT7_RDaos
 
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/RSpan.hxx>
 
@@ -38,7 +38,7 @@
 namespace ROOT {
 
 namespace Experimental {
-namespace Detail {
+namespace Internal {
 
 struct RDaosEventQueue {
    daos_handle_t fQueue;
@@ -310,7 +310,7 @@ public:
    int WriteV(MultiObjectRWOperation_t &map) { return WriteV(map, fDefaultObjectClass); }
 };
 
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

@@ -77,7 +77,7 @@ void rf316_llratioplot()
    data->addColumn(llratio_func);
 
    // Extract the subset of data with large signal likelihood
-   RooDataSet *dataSel = (RooDataSet *)data->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> dataSel{data->reduce(Cut("llratio>0.7"))};
 
    // Make plot frame
    RooPlot *frame2 = x.frame(Title("Same projection on X with LLratio(y,z)>0.7"), Bins(40));
@@ -93,7 +93,7 @@ void rf316_llratioplot()
 
    // Calculate LL ratio for each generated event and select MC events with llratio)0.7
    mcprojData->addColumn(llratio_func);
-   RooDataSet *mcprojDataSel = (RooDataSet *)mcprojData->reduce(Cut("llratio>0.7"));
+   std::unique_ptr<RooAbsData> mcprojDataSel{mcprojData->reduce(Cut("llratio>0.7"))};
 
    // Project model on x, integrating projected observables (y,z) with Monte Carlo technique
    // on set of events with the same llratio cut as was applied to data

@@ -103,7 +103,8 @@ TEST(RooDataHist, UnWeightedEntries)
                0.7); // TODO What is the actual value?
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::Poisson);
       EXPECT_LT(lo, hi);
       EXPECT_NEAR(lo, weight - computePoissonLower(weight), 3.E-2);
@@ -113,7 +114,8 @@ TEST(RooDataHist, UnWeightedEntries)
    EXPECT_NEAR(dataHist.weightError(RooAbsData::SumW2), sqrt(targetBinContent), 1.E-14);
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::SumW2);
       EXPECT_NEAR(lo, sqrt(targetBinContent), 1.E-14);
       EXPECT_NEAR(lo, sqrt(targetBinContent), 1.E-14);
@@ -155,7 +157,8 @@ TEST(RooDataHist, WeightedEntries)
    EXPECT_NEAR(dataHist.weightError(RooAbsData::Poisson), targetError, 1.5); // TODO What is the actual value?
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::Poisson);
       EXPECT_LT(lo, hi);
       EXPECT_NEAR(lo, weight - computePoissonLower(weight), 3.E-2);
@@ -165,7 +168,8 @@ TEST(RooDataHist, WeightedEntries)
    EXPECT_NEAR(dataHist.weightError(RooAbsData::SumW2), targetError, 1.E-14);
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::SumW2);
       EXPECT_NEAR(lo, targetError, 1.E-14);
       EXPECT_NEAR(lo, targetError, 1.E-14);
@@ -222,7 +226,8 @@ TEST_P(RooDataHistIO, ReadLegacy)
    EXPECT_NEAR(dataHist.weightError(RooAbsData::Poisson), targetError, 1.5); // TODO What is the actual value?
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::Poisson);
       EXPECT_LT(lo, hi);
       EXPECT_NEAR(lo, weight - computePoissonLower(weight), 3.E-2);
@@ -232,7 +237,8 @@ TEST_P(RooDataHistIO, ReadLegacy)
    EXPECT_NEAR(dataHist.weightError(RooAbsData::SumW2), targetError, 1.E-14);
 
    {
-      double lo, hi;
+      double lo;
+      double hi;
       dataHist.weightError(lo, hi, RooAbsData::SumW2);
       EXPECT_NEAR(lo, targetError, 1.E-14);
       EXPECT_NEAR(lo, targetError, 1.E-14);

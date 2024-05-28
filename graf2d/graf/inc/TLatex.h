@@ -71,12 +71,13 @@ protected:
    TLatex& operator=(const TLatex&);
 
    //Text analysis and painting
-   TLatexFormSize Analyse(Double_t x, Double_t y, TextSpec_t spec, const Char_t* t,Int_t length);
-   TLatexFormSize Anal1(TextSpec_t spec, const Char_t* t,Int_t length);
+   TLatexFormSize Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t,Int_t length);
+   TLatexFormSize Anal1(const TextSpec_t &spec, const Char_t *t,Int_t length);
 
-   void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec);
-   void DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec);
-   void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, TextSpec_t spec);
+   void DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width = 0.);
+   void DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec);
+   void DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec);
+   void DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2, Double_t phimin, Double_t phimax, const TextSpec_t &spec);
 
    TLatexFormSize FirstParse(Double_t angle, Double_t size, const Char_t *text);
 

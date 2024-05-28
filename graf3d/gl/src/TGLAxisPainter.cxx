@@ -38,7 +38,7 @@ TGLAxisPainter::TGLAxisPainter():
    fMaxDigits(5),
    fDecimals(0),
 
-   fAttAxis(0), fUseAxisColors(kTRUE),
+   fAttAxis(nullptr), fUseAxisColors(kTRUE),
 
    fFontMode(TGLFont::kTexture),
    fDir(1, 0, 0),
@@ -48,7 +48,7 @@ TGLAxisPainter::TGLAxisPainter():
 
    fLabelAlignH(TGLFont::kCenterH),
    fLabelAlignV(TGLFont::kCenterV),
-   fAllZeroesRE(0)
+   fAllZeroesRE(nullptr)
 {
    // Constructor.
 
@@ -138,14 +138,14 @@ void TGLAxisPainter::SetTextFormat(Double_t min, Double_t max, Double_t bw1)
       Int_t clog = Int_t(af) + 1;
 
       if (clog > fMaxDigits) {
-         while (1) {
+         while (true) {
             fExp++;
             absMax    /= 10;
             if (fExp % 3 == 0 && absMax <= TMath::Power(10, fMaxDigits - 1)) break;
          }
       } else if (clog < -fMaxDigits) {
          Double_t rne   = 1 / TMath::Power(10, fMaxDigits - 2);
-         while (1) {
+         while (true) {
             fExp--;
             absMax  *= 10;
             if (fExp % 3 == 0 && absMax >= rne) break;
@@ -451,7 +451,7 @@ ClassImp(TGLAxisPainterBox);
 TGLAxisPainterBox::TGLAxisPainterBox() :
    TGLAxisPainter()
 {
-   fAxis[0] = fAxis[1] = fAxis[2] = 0;
+   fAxis[0] = fAxis[1] = fAxis[2] = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

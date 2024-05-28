@@ -26,19 +26,19 @@ namespace DNN
 //______________________________________________________________________________
 
 template<typename Real_t>
-void TReference<Real_t>::DropoutForward(TMatrixT<Real_t> & B, TDescriptors*, TWorkspace*, Real_t dropoutProbability)
+void TReference<Real_t>::DropoutForward(TReference<Real_t>::Tensor_t & A, TDescriptors*, TWorkspace*, Real_t dropoutProbability)
 {
    size_t m,n;
-   m = B.GetNrows();
-   n = B.GetNcols();
+   m = A.GetNrows();
+   n = A.GetNcols();
 
    for (size_t i = 0; i < m; i++) {
       for (size_t j = 0; j < n; j++) {
          Real_t r = gRandom->Uniform();
          if (r >= dropoutProbability) {
-            B(i,j) = 0.0;
+            A(i,j) = 0.0;
          } else {
-            B(i,j) /= dropoutProbability;
+            A(i,j) /= dropoutProbability;
          }
       }
    }

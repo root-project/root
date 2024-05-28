@@ -99,8 +99,8 @@ public:
 private:
 
    // objects of this class are not meant for copying or assignment
-   FitTransformFunction(const FitTransformFunction& rhs);
-   FitTransformFunction& operator=(const FitTransformFunction& rhs);
+   FitTransformFunction(const FitTransformFunction& rhs) = delete;
+   FitTransformFunction& operator=(const FitTransformFunction& rhs) = delete;
 
    virtual double DoEval(const double * x) const  {
       return fFunc( fTransform->Transformation(x) );
@@ -456,7 +456,7 @@ const double * GSLNLSMinimizer::MinGradient() const {
 double GSLNLSMinimizer::CovMatrix(unsigned int i , unsigned int j ) const {
    // return covariance matrix element
    unsigned int ndim = NDim();
-   if ( fCovMatrix.size() == 0) return 0;
+   if ( fCovMatrix.empty()) return 0;
    if (i > ndim || j > ndim) return 0;
    return fCovMatrix[i*ndim + j];
 }
@@ -464,7 +464,7 @@ double GSLNLSMinimizer::CovMatrix(unsigned int i , unsigned int j ) const {
 int GSLNLSMinimizer::CovMatrixStatus( ) const {
    // return covariance  matrix status = 0 not computed,
    // 1 computed but is approximate because minimum is not valid, 3 is fine
-   if ( fCovMatrix.size() == 0) return 0;
+   if ( fCovMatrix.empty()) return 0;
    // case minimization did not finished correctly
    if (fStatus != GSL_SUCCESS) return 1;
    return 3;

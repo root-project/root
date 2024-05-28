@@ -116,10 +116,10 @@ private:
   Int_t _i[2] ;            ///< Payload integers
   std::string _s[3] ;      ///< Payload strings
   TObject* _o[2] ;         ///< Payload objects
-  bool _procSubArgs ;    ///< If true argument requires recursive processing
-  RooArgSet* _c ;          ///< Payload RooArgSets
+  bool _procSubArgs = false; ///< If true argument requires recursive processing
+  RooArgSet *_c = nullptr;   ///< Payload RooArgSets
   RooLinkedList _argList ; ///< Payload sub-arguments
-  bool _prefixSubArgs ;  ///< Prefix sub-arguments with container name?
+  bool _prefixSubArgs = true; ///< Prefix sub-arguments with container name?
 
   ClassDefOverride(RooCmdArg,0) // Generic named argument container
 };

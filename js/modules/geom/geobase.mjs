@@ -20,7 +20,6 @@ function geoCfg(name, value) {
    cfg[name] = value;
 }
 
-
 const kindGeo = 0,    // TGeoNode / TGeoShape
       kindEve = 1,    // TEveShape / TEveGeoShapeExtract
       kindShape = 2,  // special kind for single shape handling
@@ -358,7 +357,7 @@ class GeometryCreator {
       let indx = this.indx - ((reduce > 0) ? 9 : 18);
       const norm = this.norm;
 
-      if (reduce!==1) {
+      if (reduce !== 1) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -368,10 +367,10 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
+         indx += 9;
       }
 
-      if (reduce!==2) {
+      if (reduce !== 2) {
          norm[indx] = nx12;
          norm[indx+1] = ny12;
          norm[indx+2] = nz12;
@@ -381,7 +380,6 @@ class GeometryCreator {
          norm[indx+6] = nx34;
          norm[indx+7] = ny34;
          norm[indx+8] = nz34;
-         indx+=9;
       }
    }
 
@@ -2038,7 +2036,7 @@ function makeEveGeometry(rd) {
       rd.prefixBuf = new Uint32Array(rd.raw.buffer, off, 2);
       off += 2*4;
       rd.idxBuff = new Uint32Array(rd.raw.buffer, off, rd.sz[2]-2);
-      off += (rd.sz[2]-2)*4;
+      // off += (rd.sz[2]-2)*4;
    }
 
    const GL_TRIANGLES = 4; // same as in EVE7
@@ -2528,7 +2526,8 @@ class ClonedNodes {
                   issimple = (clone.matrix[k] === ((k === 5) || (k === 10) || (k === 15) ? 1 : 0));
                if (issimple) delete clone.matrix;
             }
-            if (clone.matrix && (kind === kindEve)) clone.abs_matrix = true;
+            if (clone.matrix && (kind === kindEve))  // deepscan-disable-line INSUFFICIENT_NULL_CHECK
+               clone.abs_matrix = true;
          }
          if (shape) {
             clone.fDX = shape.fDX;
@@ -2595,8 +2594,10 @@ class ClonedNodes {
    /** @summary Mark visisble nodes.
      * @desc Set only basic flags, actual visibility depends from hierarchy */
    markVisibles(on_screen, copy_bits, hide_top_volume) {
-      if (this.plain_shape) return 1;
-      if (!this.origin || !this.nodes) return 0;
+      if (this.plain_shape)
+         return 1;
+      if (!this.origin || !this.nodes)
+         return 0;
 
       let res = 0;
 
@@ -2623,11 +2624,12 @@ class ClonedNodes {
                } else {
                   clone.vis = !testGeoBit(obj.fVolume, geoBITS.kVisNone) && testGeoBit(obj.fVolume, geoBITS.kVisThis) ? 99 : 0;
 
-                  if (!testGeoBit(obj, geoBITS.kVisDaughters) ||
-                      !testGeoBit(obj.fVolume, geoBITS.kVisDaughters)) clone.nochlds = true;
+                  if (!testGeoBit(obj, geoBITS.kVisDaughters) || !testGeoBit(obj.fVolume, geoBITS.kVisDaughters))
+                     clone.nochlds = true;
 
                   // node with childs only shown in case if it is last level in hierarchy
-                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds) clone.vis = 1;
+                  if ((clone.vis > 0) && clone.chlds && !clone.nochlds)
+                     clone.vis = 1;
 
                   // special handling for top node
                   if (n === 0) {
@@ -2822,7 +2824,9 @@ class ClonedNodes {
 
       let node_vis = node.vis, node_nochlds = node.nochlds;
 
-      if (arg.testPhysVis) {
+      if ((arg.nodeid === 0) && arg.main_visible)
+         node_vis = vislvl + 1;
+      else if (arg.testPhysVis) {
          const res = arg.testPhysVis();
          if (res !== undefined) {
             node_vis = res && !node.chlds ? vislvl + 1 : 0;
@@ -3090,9 +3094,8 @@ class ClonedNodes {
       }
 
       const volume = node.fVolume,
-
-       prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
-                   chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
+            prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
+                     chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       if (visible) {
          // TODO: maybe correctly extract ROOT colors here?
@@ -3106,7 +3109,7 @@ class ClonedNodes {
          else if (volume.fLineColor >= 0)
             prop.fillcolor = root_colors[volume.fLineColor];
 
-         const mat = volume?.fMedium?.fMaterial;
+         const mat = volume.fMedium?.fMaterial;
 
          if (mat) {
             const fillstyle = mat.fFillStyle;
@@ -3170,6 +3173,12 @@ class ClonedNodes {
          if (!force) return null;
 
          obj3d = new Object3D();
+
+         if (this._cfg?.set_names)
+            obj3d.name = this.getNodeName(node.id);
+
+         if (this._cfg?.set_origin && this.origin)
+            obj3d.userData = this.origin[node.id];
 
          if (node.abs_matrix) {
             obj3d.absMatrix = new Matrix4();
@@ -3267,6 +3276,12 @@ class ClonedNodes {
       mesh.stack = entry.stack;
       mesh.renderOrder = this.maxdepth - entry.stack.length; // order of transparency handling
 
+      if (ctrl.set_names)
+         mesh.name = this.getNodeName(entry.nodeid);
+
+      if (ctrl.set_origin)
+         mesh.userData = prop.volume;
+
       // keep hierarchy level
       mesh.$jsroot_order = obj3d.$jsroot_depth;
 
@@ -3340,17 +3355,18 @@ class ClonedNodes {
             if (instance.entries.length === 1)
                this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
             else {
-               const arr1 = [], arr2 = [], stacks1 = [], stacks2 = [];
+               const arr1 = [], arr2 = [], stacks1 = [], stacks2 = [], names1 = [], names2 = [];
 
                instance.entries.forEach(entry => {
                   const info = this.resolveStack(entry.stack, true);
-
                   if (info.matrix.determinant() > -0.9) {
                      arr1.push(info.matrix);
                      stacks1.push(entry.stack);
+                     names1.push(this.getNodeName(entry.nodeid));
                   } else {
                      arr2.push(info.matrix);
                      stacks2.push(entry.stack);
+                     names2.push(this.getNodeName(entry.nodeid));
                   }
                   entry.done = true;
                });
@@ -3364,6 +3380,14 @@ class ClonedNodes {
                   toplevel.add(mesh1);
 
                   mesh1.renderOrder = 1;
+
+                  if (ctrl.set_names) {
+                     mesh1.name = names1[0];
+                     mesh1.names = names1;
+                  }
+
+                  if (ctrl.set_origin)
+                     mesh1.userData = prop.volume;
 
                   mesh1.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
@@ -3386,6 +3410,13 @@ class ClonedNodes {
                   toplevel.add(mesh2);
 
                   mesh2.renderOrder = 1;
+                  if (ctrl.set_names) {
+                     mesh2.name = names2[0];
+                     mesh2.names = names2;
+                  }
+                  if (ctrl.set_origin)
+                     mesh2.userData = prop.volume;
+
                   mesh2.$jsroot_order = 1;
                   ctrl.info.num_meshes++;
                   ctrl.info.num_faces += shape.nfaces*arr2.length;
@@ -3459,6 +3490,13 @@ class ClonedNodes {
       arg.reset();
 
       let total = this.scanVisible(arg);
+      if ((total === 0) && (this.nodes[0].vis < 2) && !this.nodes[0].nochlds) {
+         // try to draw only main node by default
+         arg.reset();
+         arg.main_visible = true;
+         total = this.scanVisible(arg);
+      }
+
       const maxnumnodes = this.getMaxVisNodes();
 
       if (maxnumnodes > 0) {
@@ -3472,8 +3510,6 @@ class ClonedNodes {
       this.actual_level = arg.vislvl; // not used, can be shown somewhere in the gui
 
       let minVol = 0, maxVol = 0, camVol = -1, camFact = 10, sortidcut = this.nodes.length + 1;
-
-      console.log(`Total visible nodes ${total} numfaces ${arg.facecnt}`);
 
       if (arg.facecnt > maxnumfaces) {
          const bignumfaces = maxnumfaces * (frustum ? 0.8 : 1.0),

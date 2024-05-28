@@ -18,8 +18,8 @@
 
 #include "../inc/fontembed.h"
 #include <algorithm>
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #ifdef WIN32
 #define snprintf _snprintf
 #endif
@@ -318,7 +318,7 @@ namespace mathtext {
                                      {
                                         std::vector<uint8_t> font_data;
 
-                                        if (fp == NULL) {
+                                        if (fp == nullptr) {
                                            return font_data;
                                         }
                                         if (fseek(fp, 0L, SEEK_SET) == -1) {
@@ -359,7 +359,7 @@ namespace mathtext {
                                         FILE *fp = fopen(filename.c_str(), "r");
                                         std::vector<uint8_t> font_data;
 
-                                        if (fp == NULL) {
+                                        if (fp == nullptr) {
                                            perror("fopen");
                                            return font_data;
                                         }

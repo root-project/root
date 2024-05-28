@@ -144,6 +144,7 @@ clang/LLVM technology.
 #include <utility>
 #include <vector>
 #include <functional>
+#include <optional>
 
 #ifndef R__WIN32
 #include <cxxabi.h>
@@ -198,6 +199,7 @@ extern "C" {
 #else
 #include "Windows4Root.h"
 #include <Psapi.h>
+#include <direct.h>
 #undef GetModuleFileName
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
@@ -255,7 +257,7 @@ R__DLLEXPORT bool TCling__TEST_isInvalidDecl(ClassInfo_t *input) {
    return info->GetDecl()->isInvalidDecl();
 }
 
-using namespace std;
+using std::string, std::vector;
 using namespace clang;
 using namespace ROOT;
 
@@ -861,7 +863,7 @@ namespace {
    // Yes, throwing exceptions in error handlers is bad.
    // Doing nothing is pretty terrible, too.
    void exceptionErrorHandler(void * /*user_data*/,
-                              const std::string& reason,
+                              const char *reason,
                               bool /*gen_crash_diag*/) {
       throw std::runtime_error(std::string(">>> Interpreter compilation error:\n") + reason);
    }
@@ -1398,9 +1400,10 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
-      // The -O1 optimization flag has nasty side effects on Windows (32 bit)
+      // The -O1 optimization flag has nasty side effects on Windows (32 and 64 bit)
       // See the GitHub issues #9809 and #9944
-#if !defined(_MSC_VER) || defined(_WIN64)
+      // TODO: to be reviewed after the upgrade of LLVM & Clang
+#ifndef _MSC_VER
       clingArgsStorage.push_back("-O1");
       // Disable optimized register allocation which is turned on automatically
       // by -O1, but seems to require -O2 to not explode in run time.
@@ -1410,8 +1413,8 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    }
 
    // Process externally passed arguments if present.
-   llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
-   if (EnvOpt.hasValue()) {
+   std::optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
+   if (EnvOpt.has_value()) {
       StringRef Env(*EnvOpt);
       while (!Env.empty()) {
          StringRef Arg;
@@ -1420,10 +1423,9 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       }
    }
 
-   auto GetEnvVarPath = [](const std::string &EnvVar,
-                       std::vector<std::string> &Paths) {
-      llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
-      if (EnvOpt.hasValue()) {
+   auto GetEnvVarPath = [](const std::string &EnvVar, std::vector<std::string> &Paths) {
+      std::optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
+      if (EnvOpt.has_value()) {
          StringRef Env(*EnvOpt);
          while (!Env.empty()) {
             StringRef Arg;
@@ -1450,7 +1452,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
-   if (EnvOpt.hasValue())
+   if (EnvOpt.has_value())
      clingArgsStorage.push_back("-ftime-report");
 
    // Add the overlay file. Note that we cannot factor it out for both root
@@ -1473,7 +1475,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       std::string ModulesCachePath;
       EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
-      if (EnvOpt.hasValue()){
+      if (EnvOpt.has_value()){
          StringRef Env(*EnvOpt);
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
@@ -1535,7 +1537,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // Add the Rdict module file extension.
    cling::Interpreter::ModuleFileExtensions extensions;
    EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
-   if (!EnvOpt.hasValue())
+   if (!EnvOpt.has_value())
       extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
    fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
@@ -2540,7 +2542,7 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
             if (strncmp(sLine.Data(), ".L", 2) != 0) {
                // if execution was requested.
 
-               if (arguments.Length()==0) {
+               if (arguments.Length() == 0) {
                   arguments = "()";
                }
                // We need to remove the extension.
@@ -2553,8 +2555,37 @@ Longptr_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
                indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
             }
          }
+      } else if (cling::DynamicLibraryManager::isSharedLibrary(fname.Data()) &&
+                 strncmp(sLine.Data(), ".L", 2) != 0) { // .x *.so or *.dll
+         if (gSystem->Load(fname) < 0) {
+            // Loading failed.
+            compRes = cling::Interpreter::kFailure;
+         } else {
+            if (arguments.Length() == 0) {
+               arguments = "()";
+            }
+            // We need to remove the extension. (*.so or *.dll)
+            Ssiz_t ext = fname.Last('.');
+            if (ext != kNPOS) {
+               fname.Remove(ext);
+            }
+            // Now we try to find the 'main' function to run within this shared library
+            // We distinguish two cases: a library.so with a function library(args),
+            // or a precompiled ACLiC macro (macro_C.so) with a function macro(args).
+            // Only in the second case, we need to strip the suffix _C or _cpp from fname.
+            if (!gInterpreter->GetFunction(nullptr, gSystem->BaseName(fname))) { // AcLiC macro
+               // We need to remove the automatically appended _ extension when compiling (macro_C from macro.C)
+               ext = fname.Last('_');
+               if (ext != kNPOS) {
+                  fname.Remove(ext);
+               }
+            }
+            const char *function = gSystem->BaseName(fname);
+            mod_line = function + arguments + io;
+            indent = HandleInterpreterException(GetMetaProcessorImpl(), mod_line, compRes, &result);
+         }
       } else {
-         // not ACLiC
+         // neither ACLiC nor run shared-library (.x)
          size_t unnamedMacroOpenCurly;
          {
             std::string code;
@@ -2646,6 +2677,13 @@ void TCling::AddIncludePath(const char *path)
       path += 2;
    TString sPath(path);
    gSystem->ExpandPathName(sPath);
+#ifdef _MSC_VER
+   if (sPath.BeginsWith("/")) {
+      char drive[3];
+      snprintf(drive, 3, "%c:", _getdrive() + 'A' - 1);
+      sPath.Prepend(drive);
+   }
+#endif
    fInterpreter->AddIncludePath(sPath.Data());
 }
 
@@ -3189,7 +3227,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
       return kTRUE;
 
    //FIXME: We must use the cling::Interpreter::lookupFileOrLibrary iface.
-   const clang::DirectoryLookup *CurDir = nullptr;
+   clang::ConstSearchDirIterator *CurDir = nullptr;
    clang::Preprocessor &PP = fInterpreter->getCI()->getPreprocessor();
    clang::HeaderSearch &HS = PP.getHeaderSearchInfo();
    auto FE = HS.LookupFile(file_name.c_str(),
@@ -3208,7 +3246,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            /*BuildSystemModule*/ false,
                            /*OpenFile*/ false,
                            /*CacheFail*/ false);
-   if (FE && FE->isValid()) {
+   if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...
@@ -4076,7 +4114,6 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    if (cl->fState != TClass::kHasTClassInit) {
       if (cl->fClassInfo) {
          cl->fState = TClass::kInterpreted;
-         cl->ResetBit(TClass::kIsEmulation);
       } else {
 //         if (TClassEdit::IsSTLCont(cl->GetName()) {
 //            There will be an emulated collection proxy, is that the same?
@@ -4509,9 +4546,7 @@ TClass *TCling::GenerateTClass(const char *classname, Bool_t emulation, Bool_t s
    }
    R__LOCKGUARD(gInterpreterMutex);
    TClass *cl = new TClass(classname, version, silent);
-   if (emulation) {
-      cl->SetBit(TClass::kIsEmulation);
-   } else {
+   if (!emulation) {
       // Set the class version if the class is versioned.
       // Note that we cannot just call CLASS::Class_Version() as we might not have
       // an execution engine (when invoked from rootcling).
@@ -4635,7 +4670,6 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
       if (cl == nullptr) {
          int version = TClass::GetClass("TVirtualStreamerInfo")->GetClassVersion();
          cl = new TClass(classinfo, version, nullptr, nullptr, -1, -1, silent);
-         cl->SetBit(TClass::kIsEmulation);
       }
    } else {
       // For regular class, just create a TClass on the fly ...
@@ -6606,7 +6640,6 @@ void TCling::RefreshClassInfo(TClass *cl, const clang::NamedDecl *def, bool alia
          if (cl->fState != TClass::kHasTClassInit) {
             // if (!cl->fClassInfo->IsValid()) cl->fState = TClass::kForwardDeclared; else
             cl->fState = TClass::kInterpreted;
-            cl->ResetBit(TClass::kIsEmulation);
          }
          TClass::AddClassToDeclIdMap(((TClingClassInfo *)(cl->fClassInfo))->GetDeclId(), cl);
       } else {
@@ -7384,6 +7417,7 @@ int TCling::DisplayIncludePath(FILE *fout) const
 
 void* TCling::FindSym(const char* entry) const
 {
+   R__LOCKGUARD(gInterpreterMutex);
    return fInterpreter->getAddressOfGlobal(entry);
 }
 

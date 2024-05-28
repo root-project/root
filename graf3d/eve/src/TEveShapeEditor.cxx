@@ -33,11 +33,11 @@ ClassImp(TEveShapeEditor);
 TEveShapeEditor::TEveShapeEditor(const TGWindow *p, Int_t width, Int_t height,
              UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
-   fLineWidth(0),
-   fLineColor(0),
-   fDrawFrame(0),
-   fHighlightFrame(0)
+   fM(nullptr),
+   fLineWidth(nullptr),
+   fLineColor(nullptr),
+   fDrawFrame(nullptr),
+   fHighlightFrame(nullptr)
 {
    MakeTitle("TEveShape");
 

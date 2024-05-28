@@ -11,16 +11,17 @@
 #include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
 #include "TCollection.h" // TRangeStaticCast
+#include "TDirectory.h"  // TDirectory::TContext
 #include "TFile.h"
 #include "TFriendElement.h"
 #include "TObjString.h"
 #include "TRegexp.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "TSystemFile.h"
 #include "TTree.h"
 #include "TVirtualIndex.h"
 
-#include <cstdint> // std::uint64_t
 #include <limits>
 #include <utility> // std::pair
 #include <vector>
@@ -175,7 +176,7 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
    std::vector<std::pair<std::string, std::string>> friendNames;
    std::vector<std::vector<std::string>> friendFileNames;
    std::vector<std::vector<std::string>> friendChainSubNames;
-   std::vector<std::vector<std::int64_t>> nEntriesPerTreePerFriend;
+   std::vector<std::vector<Long64_t>> nEntriesPerTreePerFriend;
    std::vector<std::unique_ptr<TVirtualIndex>> treeIndexes;
 
    // Reserve space for all friends
@@ -210,7 +211,7 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
       auto *treeIndex = frTree->GetTreeIndex();
       treeIndexes.emplace_back(static_cast<TVirtualIndex *>(treeIndex ? treeIndex->Clone() : nullptr));
 
-      // If the current tree is a TChain
+      // If the friend tree is a TChain
       if (auto frChain = dynamic_cast<const TChain *>(frTree)) {
          // Note that each TChainElement returned by TChain::GetListOfFiles has a name
          // equal to the tree name of this TChain and a title equal to the filename.
@@ -264,7 +265,7 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
                nEntriesInThisFriend.emplace_back(maxEntries);
             }
          }
-      } else {
+      } else { // frTree is not a chain but a simple TTree
          // Get name of the tree
          const auto realName = GetTreeFullPaths(*frTree)[0];
          friendNames.emplace_back(std::make_pair(realName, alias));
@@ -326,7 +327,7 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       }
       std::string fullPath = treeDir->GetPath();            // e.g. "file.root:/dir"
       fullPath = fullPath.substr(fullPath.rfind(":/") + 1); // e.g. "/dir"
-      fullPath += "/";
+      fullPath += '/';
       fullPath += tree.GetName(); // e.g. "/dir/tree"
       return {fullPath};
    }
@@ -395,7 +396,7 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
          }
       }
 
-      auto &treeIndex = finfo.fTreeIndexInfos[i];
+      const auto &treeIndex = finfo.fTreeIndexInfos[i];
       if (treeIndex) {
          auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
          copyOfIndex->SetTree(frChain.get());
@@ -409,35 +410,53 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \brief Expands input glob into a collection of full paths to files.
+/// \brief Recursively expand the glob to take care of potential wildcard
+/// specials for subdirectories in the glob.
+/// \param[in] l The list of full paths to files.
 /// \param[in] glob The glob to expand.
-/// \throws std::runtime_error If the directory part of the glob refers to a
+/// \throws std::runtime_error If the directory parts of the glob refer to a
 ///         path that cannot be opened.
-/// \return A vector of strings, the fully expanded paths to the files referred
-///         to by the glob.
 ///
-/// The two parts of the glob (directory, fileglob) are separated. The directory
-/// is first expanded via TSystem::ExpandPathName then opened via
-/// TSystem::OpenDirectory. If the directory can be opened, then the remaining
-/// fileglob is used as regex expression (via TRegexp) and the function stores
-/// those files in the directory that match the regex.
-std::vector<std::string> ExpandGlob(const std::string &glob)
+/// If the glob contains a wildcard special for subdirectories, the three parts
+/// of the glob (directory, subdirectoryglob, remainder) are separated.
+/// Otherwise the glob is expanded to (directory, fileglob).
+/// The directory is first expanded via TSystem::ExpandPathName then opened via
+/// TSystem::OpenDirectory. If the directory can be opened, then current
+/// glob is used as regex expression (via TRegexp) to find subdirectories or
+/// store those files in the directory that match the regex.
+void RecursiveGlob(TList &out, const std::string &glob)
 {
-   // TODO: Also implement this pattern in some other free function
-   // This is practically Python's os.path.split
    std::string dirname;
-   std::string basename;
+   std::string basename; // current glob to expand, could be a directory or file.
+   std::string remainder;
 
-   const auto slashpos = glob.rfind('/');
+   // This list of characters is currently only defined inside TString::MaybeWildcard() at
+   // https://github.com/root-project/root/blob/5df0ef8bfa3c127e554e845cd6582bc0b4d7f96a/core/base/src/TString.cxx#L960.
+   const char *wildcardSpecials = "[]*?";
 
-   if (slashpos != std::string::npos) {
-      // Separate the glob into its two components
-      dirname = glob.substr(0, slashpos);
-      basename = glob.substr(slashpos + 1);
+   const auto wildcardPos = glob.find_first_of(wildcardSpecials);
+   // Get the closest slash, to the left of the first wildcard
+   auto slashLPos = glob.rfind('/', wildcardPos);
+   // Get the closest slash, to the right of the first wildcard
+   const auto slashRPos = glob.find('/', wildcardPos);
+
+   if (slashLPos != std::string::npos) {
+      // Separate the base directory in the glob.
+      dirname = glob.substr(0, slashLPos);
    } else {
       // There is no directory component in the glob, use the CWD
       dirname = gSystem->UnixPathName(gSystem->WorkingDirectory());
-      basename = glob;
+
+      // Set to -1 to extract the basename from the beginning of the glob string when doing +1 below.
+      slashLPos = -1;
+   }
+
+   // Seperate the subdirectory and/or file component.
+   if (slashRPos != std::string::npos) {
+      basename = glob.substr(slashLPos + 1, slashRPos - (slashLPos + 1));
+      remainder = glob.substr(slashRPos + 1);
+   } else {
+      basename = glob.substr(slashLPos + 1);
    }
 
    // Attempt opening of directory contained in the glob
@@ -446,36 +465,111 @@ std::vector<std::string> ExpandGlob(const std::string &glob)
    delete[] epath;
 
    if (dir) {
-      // Create a TList to store the file names (not yet sorted)
-      TList l;
-      l.SetOwner(); // Make sure the TList will delete its objects
       TRegexp re(basename.c_str(), true);
-      const char *file;
-      TString fname;
-      while ((file = gSystem->GetDirEntry(dir))) {
-         if (!strcmp(file, ".") || !strcmp(file, ".."))
-            continue;
-         fname = file;
-         if ((basename != file) && fname.Index(re) == kNPOS)
-            continue;
-         // Using '/' as separator here as it was done in TChain::Add
-         // In principle this should be using the appropriate platform separator
-         l.Add(new TObjString((dirname + '/' + file).c_str()));
-      }
-      gSystem->FreeDirectory(dir);
-      // Sort the files in alphanumeric order
-      l.Sort();
+      TString entryName;
 
-      // Convert TList<TObjString> to std::vector<std::string>
-      std::vector<std::string> ret;
-      ret.reserve(l.GetEntries());
-      for (const auto *tobjstr : ROOT::RangeStaticCast<const TObjString *>(l)) {
-         ret.push_back(tobjstr->GetName());
+      while (const char *dirEntry = gSystem->GetDirEntry(dir)) {
+         if (!strcmp(dirEntry, ".") || !strcmp(dirEntry, ".."))
+            continue;
+         entryName = dirEntry;
+         if ((basename != dirEntry) && entryName.Index(re) == kNPOS)
+            continue;
+
+         // TODO: It might be better to use std::file_system::is_directory(),
+         // but for GCC < 9.1 this requires an extra linking flag https://en.cppreference.com/w/cpp/filesystem
+         bool isDirectory = TSystemFile().IsDirectory((dirname + '/' + dirEntry).c_str());
+         if (!remainder.empty() && isDirectory) {
+            RecursiveGlob(out, dirname + '/' + dirEntry + '/' + remainder);
+         } else if (remainder.empty() && !isDirectory) {
+            // Using '/' as separator here as it was done in TChain::Add
+            // In principle this should be using the appropriate platform separator
+            out.Add(new TObjString((dirname + '/' + dirEntry).c_str()));
+         }
       }
-      return ret;
+
+      gSystem->FreeDirectory(dir);
    } else {
       throw std::runtime_error("ExpandGlob: could not open directory '" + dirname + "'.");
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Expands input glob into a collection of full paths to files.
+/// \param[in] glob The glob to expand.
+/// \throws std::runtime_error If the directory parts of the glob refer to a
+///         path that cannot be opened.
+/// \return A vector of strings, the fully expanded paths to the files referred
+///         to by the glob.
+///
+/// The glob is expanded recursively, but subdirectories are only expanded when
+/// it is explicitly included in the pattern. For example, "dir/*" will only
+/// list the files in the subdirectories of "dir", but "dir/*/*" will list the
+/// files in the subsubdirectories of "dir".
+std::vector<std::string> ExpandGlob(const std::string &glob)
+{
+   TList l;
+   RecursiveGlob(l, glob);
+
+   // Sort the files in alphanumeric order
+   l.Sort();
+
+   std::vector<std::string> ret;
+   ret.reserve(l.GetEntries());
+   for (const auto *tobjstr : ROOT::RangeStaticCast<const TObjString *>(l)) {
+      ret.push_back(tobjstr->GetName());
+   }
+
+   return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns the cluster boundaries and number of entries of the input tree.
+/// \param[in] treename Name of the tree.
+/// \param[in] filename Path to the file.
+/// \return a pair (cluster_boundaries, n_entries). The vector of cluster
+///         of cluster boundaries contains the beginning entry of the first
+///         cluster up to the ending entry of the last cluster, e.g. for a tree
+///         with 3 clusters of 10 entries each, this will return [0, 10, 20, 30]
+std::pair<std::vector<Long64_t>, Long64_t> GetClustersAndEntries(std::string_view treename, std::string_view path)
+{
+   ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
+   std::unique_ptr<TFile> inFile{TFile::Open(path.data(), "READ_WITHOUT_GLOBALREGISTRATION")};
+   if (!inFile || inFile->IsZombie())
+      throw std::invalid_argument("GetClustersAndEntries: could not open file \"" + std::string(path) + "\".");
+   std::unique_ptr<TTree> tree{inFile->Get<TTree>(treename.data())};
+   if (!tree)
+      throw std::invalid_argument("GetClustersAndEntries: could not find tree \"" + std::string(treename) +
+                                  "\" in file \"" + std::string(path) + "\".");
+   // One TTree in one file, we can assume GetEntriesFast returns the correct number of entries
+   auto nEntries{tree->GetEntriesFast()};
+
+   auto clusterIt{tree->GetClusterIterator(0)};
+   auto clusterBegin{clusterIt()};
+   std::vector boundaries{clusterBegin};
+   while (clusterBegin < nEntries) {
+      clusterBegin = clusterIt();
+      boundaries.push_back(clusterBegin);
+   }
+
+   return std::make_pair(std::move(boundaries), std::move(nEntries));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Check whether the input tree is using any TTreeIndex
+/// \param[in] tree The input TTree/TChain.
+/// \return A pair. The first item is a boolean telling whether the tree is using
+///         an index. The second item is a string with the name of the first
+///         friend tree found with a connected index.
+std::pair<bool, std::string> TreeUsesIndexedFriends(const TTree &tree)
+{
+   if (auto friends = tree.GetListOfFriends(); friends && friends->GetEntries() > 0) {
+      for (auto *fr : ROOT::Detail::TRangeStaticCast<TFriendElement>(friends)) {
+         auto *frTree = fr->GetTree();
+         if (frTree->GetTreeIndex())
+            return {true, frTree->GetName()};
+      }
+   }
+   return {false, ""};
 }
 
 } // namespace TreeUtils

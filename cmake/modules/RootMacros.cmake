@@ -568,7 +568,10 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
 
   # modules.idx deps
   get_property(local_modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
+  get_property(local_no_cxxmodules GLOBAL PROPERTY no_cxxmodules_property)
   if (ARG_NO_CXXMODULE)
+    list(APPEND local_no_cxxmodules ${cpp_module})
+    set_property(GLOBAL PROPERTY no_cxxmodules_property "${local_no_cxxmodules}")
     unset(cpp_module)
     unset(cpp_module_file)
   else()
@@ -589,7 +592,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
-      if (runtime_cxxmodules)
+      if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
       endif()
       set(newargs ${newargs} -m  ${dependent_pcm})
@@ -785,9 +788,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   set(excluded_headers RConfig.h RVersion.h core/foundation/inc/ROOT/RVersion.hxx RtypesImp.h
                         RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
-                        DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
-                        libcpp_string_view.h
-                        RWrap_libcpp_string_view.h
+                        DllImport.h ESTLType.h Varargs.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLWSIncludes.h
                         snprintf.h strlcpy.h)
@@ -899,7 +900,7 @@ function(ROOT_LINKER_LIBRARY library)
     set(library ${library}_new)
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
-    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    if(MSVC)
       set(library_name ${libprefix}${library})
     endif()
     #---create a shared library with the .def file------------------------
@@ -1749,7 +1750,7 @@ function(ROOT_ADD_TEST test)
   if(ARG_PYTHON_DEPS)
     foreach(python_dep ${ARG_PYTHON_DEPS})
       if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${PYTHON_EXECUTABLE_Development_Main} -c "import ${python_dep}")
+        add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
         set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
       endif()
       list(APPEND fixtures "requires_${python_dep}")
@@ -1810,6 +1811,7 @@ endfunction()
 #----------------------------------------------------------------------------
 # function ROOT_ADD_GTEST(<testsuite> source1 source2...
 #                        [WILLFAIL] Negate output of test
+#                        [TIMEOUT seconds]
 #                        [COPY_TO_BUILDDIR file1 file2] Copy listed files when ctest invokes the test.
 #                        [LIBRARIES lib1 lib2...] -- Libraries to link against
 #                        [LABELS label1 label2...] -- Labels to annotate the test
@@ -1821,7 +1823,7 @@ endfunction()
 function(ROOT_ADD_GTEST test_suite)
   cmake_parse_arguments(ARG
     "WILLFAIL"
-    "REPEATS;FAILREGEX"
+    "TIMEOUT;REPEATS;FAILREGEX"
     "COPY_TO_BUILDDIR;LIBRARIES;LABELS;INCLUDE_DIRS" ${ARGN})
 
   ROOT_GET_SOURCES(source_files . ${ARG_UNPARSED_ARGUMENTS})
@@ -1852,9 +1854,7 @@ function(ROOT_ADD_GTEST test_suite)
   if(ARG_WILLFAIL)
     set(willfail WILLFAIL)
   endif()
-  if(ARG_LABELS)
-    set(labels "LABELS ${ARG_LABELS}")
-  endif()
+
   if(ARG_REPEATS)
     set(extra_command --gtest_repeat=${ARG_REPEATS} --gtest_break_on_failure)
   endif()
@@ -1864,10 +1864,11 @@ function(ROOT_ADD_GTEST test_suite)
     gtest${mangled_name}
     COMMAND ${test_suite} ${extra_command}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    COPY_TO_BUILDDIR ${ARG_COPY_TO_BUILDDIR}
+    COPY_TO_BUILDDIR "${ARG_COPY_TO_BUILDDIR}"
     ${willfail}
-    ${labels}
-    FAILREGEX ${ARG_FAILREGEX}
+    TIMEOUT "${ARG_TIMEOUT}"
+    LABELS "${ARG_LABELS}"
+    FAILREGEX "${ARG_FAILREGEX}"
   )
 endfunction()
 
@@ -1895,7 +1896,7 @@ function(ROOT_ADD_PYUNITTESTS name)
   endif()
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1938,7 +1939,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   endif()
 
   ROOT_ADD_TEST(pyunittests-${good_name}
-              COMMAND ${PYTHON_EXECUTABLE_Development_Main} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+              COMMAND ${Python3_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
               ENVIRONMENT ${ROOT_ENV} ${ARG_ENVIRONMENT}
               LABELS ${labels}
               ${copy_to_builddir}
@@ -1996,7 +1997,7 @@ function(find_python_module module)
       endif()
       # A module's location is usually a directory, but for binary modules
       # it's a .so file.
-      execute_process(COMMAND "${PYTHON_EXECUTABLE_Development_Main}" "-c"
+      execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
          "import re, ${module}; print(re.compile('/__init__.py.*').sub('',${module}.__file__))"
          RESULT_VARIABLE _${module}_status
          OUTPUT_VARIABLE _${module}_location
@@ -2030,7 +2031,7 @@ function(generateHeader target input output)
     DEPENDS
       ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
   )
   target_sources(${target} PRIVATE ${output})
 endfunction()
@@ -2050,7 +2051,7 @@ function(generateManual name input output)
     DEPENDS
       ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py
     COMMAND
-      ${PYTHON_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
+      ${Python3_EXECUTABLE} -B ${CMAKE_SOURCE_DIR}/build/misc/argparse2help.py ${input} ${output}
   )
 
   install(FILES ${output} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)

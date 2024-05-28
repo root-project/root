@@ -1461,7 +1461,7 @@ protected:
 public:
    GLUtesselator *fTess;
 
-   TGLTesselatorWrap(tessfuncptr_t vertex_func) : fTess(0)
+   TGLTesselatorWrap(tessfuncptr_t vertex_func) : fTess(nullptr)
    {
       fTess = gluNewTess();
       if (!fTess)
@@ -2902,7 +2902,7 @@ void ObjectIDToColor(Int_t objectID, Bool_t highColor)
    if (!highColor)
       glColor3ub(objectID & 0xff, (objectID & 0xff00) >> 8, (objectID & 0xff0000) >> 16);
    else {
-      if (!gObjectIDToColor.size()) {
+      if (gObjectIDToColor.empty()) {
       //Initialize lookup tables.
          for (Int_t i = 0, id = 1; i < Int_t(sizeof gColorTriplets / sizeof(RGB_t)); ++i, ++id)
             gObjectIDToColor[id] = gColorTriplets[i];
@@ -2928,7 +2928,7 @@ Int_t ColorToObjectID(const UChar_t *pixel, Bool_t highColor)
    if (!highColor)
       return pixel[0] | (pixel[1] << 8) | (pixel[2] << 16);
    else {
-      if (!gObjectIDToColor.size())
+      if (gObjectIDToColor.empty())
          return 0;
 
       RGB_t triplet = {{pixel[0], pixel[1], pixel[2]}};
@@ -3206,8 +3206,8 @@ void DrawBoxFrontTextured(Double_t xMin, Double_t xMax, Double_t yMin,
 void DrawBoxWithGradientFill(Double_t y1, Double_t y2, Double_t x1, Double_t x2,
                              const Double_t *rgba1, const Double_t *rgba2)
 {
-   assert(rgba1 != 0 && "DrawBoxWithGradientFill, parameter 'rgba1' is null");
-   assert(rgba2 != 0 && "DrawBoxWithGradientFill, parameter 'rgba2' is null");
+   assert(rgba1 != nullptr && "DrawBoxWithGradientFill, parameter 'rgba1' is null");
+   assert(rgba2 != nullptr && "DrawBoxWithGradientFill, parameter 'rgba2' is null");
 
    glBegin(GL_POLYGON);
    glColor4dv(rgba1);
@@ -3228,13 +3228,13 @@ void DrawQuadStripWithRadialGradientFill(unsigned nPoints, const Double_t *inner
 {
    assert(nPoints != 0 &&
           "DrawQuadStripWithRadialGradientFill, invalid number of points");
-   assert(inner != 0 &&
+   assert(inner != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'inner' is null");
-   assert(innerRGBA != 0 &&
+   assert(innerRGBA != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'innerRGBA' is null");
-   assert(outer != 0 &&
+   assert(outer != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'outer' is null");
-   assert(outerRGBA != 0 &&
+   assert(outerRGBA != nullptr &&
           "DrawQuadStripWithRadialGradientFill, parameter 'outerRGBA' is null");
 
    glBegin(GL_QUAD_STRIP);
@@ -4157,7 +4157,7 @@ void GetColor(Float_t v, Float_t vmin, Float_t vmax, Int_t type, Float_t *rgba)
 ///Ctor.
 
 TGLLevelPalette::TGLLevelPalette()
-                  : fContours(0),
+                  : fContours(nullptr),
                     fPaletteSize(0),
                     fTexture(0),
                     fMaxPaletteSize(0)

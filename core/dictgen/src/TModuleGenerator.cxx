@@ -115,7 +115,7 @@ TModuleGenerator::GetSourceFileKind(const char *filename) const
       // via the FileManager.
       clang::Preprocessor &PP = fCI->getPreprocessor();
       clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
-      const clang::DirectoryLookup *CurDir = nullptr;
+      clang::ConstSearchDirIterator *CurDir = nullptr;
       auto hdrFileEntry
          =  HdrSearch.LookupFile(filename, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,
@@ -577,7 +577,7 @@ bool TModuleGenerator::FindHeader(const std::string &hdrName, std::string &hdrFu
    }
    clang::Preprocessor &PP = fCI->getPreprocessor();
    clang::HeaderSearch &HdrSearch = PP.getHeaderSearchInfo();
-   const clang::DirectoryLookup *CurDir = nullptr;
+   clang::ConstSearchDirIterator *CurDir = nullptr;
    if (auto hdrFileEntry
          =  HdrSearch.LookupFile(hdrName, clang::SourceLocation(),
                                  true /*isAngled*/, nullptr /*FromDir*/, CurDir,

@@ -250,8 +250,8 @@ namespace FitUtil {
 #endif
 
      // objects of this class are not meant to be copied / assigned
-     IntegralEvaluator(const IntegralEvaluator &rhs);
-     IntegralEvaluator &operator=(const IntegralEvaluator &rhs);
+     IntegralEvaluator(const IntegralEvaluator &rhs) = delete;
+     IntegralEvaluator &operator=(const IntegralEvaluator &rhs) = delete;
 
      unsigned int fDim;
      const double *fParams;

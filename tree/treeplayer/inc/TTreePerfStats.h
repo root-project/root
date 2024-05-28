@@ -115,7 +115,7 @@ public:
    void     SimpleEvent(EEventType) override {}
    void     PacketEvent(const char *, const char *, const char *,
                             Long64_t , Double_t ,Double_t , Double_t ,Long64_t ) override {}
-   void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) override {}
+   void     FileEvent(const char *, const char *, const char *, const char *, bool) override {}
    void     FileOpenEvent(TFile *, const char *, Double_t) override {}
    void     FileReadEvent(TFile *file, Int_t len, Double_t start) override;
    void     UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen) override;

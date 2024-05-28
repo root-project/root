@@ -12,7 +12,7 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDF/RVariationBase.hxx>
 #include <ROOT/RDF/Utils.hxx> // CacheLineStep
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <ROOT/RVec.hxx>
 #include <RtypesCore.h>
 

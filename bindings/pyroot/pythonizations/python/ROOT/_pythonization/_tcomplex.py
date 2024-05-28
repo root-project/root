@@ -60,7 +60,3 @@ def pythonize_tcomplex(klass):
     # implements __rtruediv__ by assigning the function previously defined
     # necessary for Python3
     klass.__rtruediv__ = _rtruediv
-
-    # implements __rtruediv__ by assigning the function previously defined
-    # necessary for Python2
-    klass.__rdiv__ = _rdiv

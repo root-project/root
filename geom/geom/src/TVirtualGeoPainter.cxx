@@ -20,7 +20,7 @@ Abstract class for geometry painters
 #include "TPluginManager.h"
 #include "TGeoManager.h"
 
-TVirtualGeoPainter *TVirtualGeoPainter::fgGeoPainter = 0;
+TVirtualGeoPainter *TVirtualGeoPainter::fgGeoPainter = nullptr;
 
 ClassImp(TVirtualGeoPainter);
 
@@ -34,7 +34,7 @@ TVirtualGeoPainter::TVirtualGeoPainter(TGeoManager *) {}
 
 TVirtualGeoPainter::~TVirtualGeoPainter()
 {
-   fgGeoPainter = 0;
+   fgGeoPainter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ TVirtualGeoPainter *TVirtualGeoPainter::GeoPainter()
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGeoPainter"))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          fgGeoPainter = (TVirtualGeoPainter *)h->ExecPlugin(1, gGeoManager);
       }
    }

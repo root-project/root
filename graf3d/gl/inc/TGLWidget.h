@@ -86,8 +86,8 @@ public:
    void   DoRedraw() override;
 
 private:
-   TGLWidget(const TGLWidget &);              // Not implemented.
-   TGLWidget &operator = (const TGLWidget &); // Not implemented.
+   TGLWidget(const TGLWidget &) = delete;
+   TGLWidget &operator = (const TGLWidget &) = delete;
 
 protected:
    TGLWidget(Window_t glw, const TGWindow* parent, Bool_t selectInput);

@@ -27,7 +27,7 @@ ClassImp(TGeoStateInfo);
 /// Constructor
 
 TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
-   : fNode(0),
+   : fNode(nullptr),
      fAsmCurrent(0),
      fAsmNext(0),
      fDivCurrent(0),
@@ -37,14 +37,14 @@ TGeoStateInfo::TGeoStateInfo(Int_t maxdaughters)
      fDivCombi(),
      fVoxNcandidates(0),
      fVoxCurrent(0),
-     fVoxCheckList(0),
-     fVoxBits1(0),
+     fVoxCheckList(nullptr),
+     fVoxBits1(nullptr),
      fBoolSelected(0),
      fXtruSeg(0),
      fXtruIz(0),
-     fXtruXc(0),
-     fXtruYc(0),
-     fXtruPoly(0)
+     fXtruXc(nullptr),
+     fXtruYc(nullptr),
+     fXtruPoly(nullptr)
 {
    Int_t maxDaughters = (maxdaughters > 0) ? maxdaughters : TGeoManager::GetMaxDaughters();
    Int_t maxXtruVert = TGeoManager::GetMaxXtruVert();

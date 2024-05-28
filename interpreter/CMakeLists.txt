@@ -4,7 +4,7 @@ if (NOT builtin_clang)
 endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
-set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 13)
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 16)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -81,21 +81,17 @@ set(LLVM_ABI_BREAKING_CHECKS FORCE_OFF CACHE BOOL "" FORCE)
 
 set(CMAKE_REQUIRED_QUIET 1)  # Make the configuration of LLVM quiet
 
-if(ROOT_ARCHITECTURE MATCHES linuxarm64)
+if(ROOT_ARCHITECTURE MATCHES arm64)
   set(ROOT_CLING_TARGET "AArch64")
-elseif(ROOT_ARCHITECTURE MATCHES linuxarm)
+elseif(ROOT_ARCHITECTURE MATCHES arm)
   set(ROOT_CLING_TARGET "ARM")
-elseif(ROOT_ARCHITECTURE MATCHES linuxppc64gcc)
+elseif(ROOT_ARCHITECTURE MATCHES ppc64)
   set(ROOT_CLING_TARGET "PowerPC")
-elseif(ROOT_ARCHITECTURE MATCHES linuxs390)
+elseif(ROOT_ARCHITECTURE MATCHES s390)
   set(ROOT_CLING_TARGET "SystemZ")
-elseif(ROOT_ARCHITECTURE MATCHES linuxriscv64)
+elseif(ROOT_ARCHITECTURE MATCHES riscv64)
   set(ROOT_CLING_TARGET "RISCV")
-elseif(ROOT_ARCHITECTURE MATCHES linux)
-  set(ROOT_CLING_TARGET "X86")
-elseif(ROOT_ARCHITECTURE MATCHES macosxarm64)
-  set(ROOT_CLING_TARGET "AArch64")
-elseif(ROOT_ARCHITECTURE MATCHES macosx)
+elseif(ROOT_ARCHITECTURE MATCHES freebsd OR ROOT_ARCHITECTURE MATCHES linux OR ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES win32 OR ROOT_ARCHITECTURE MATCHES win64)
   set(ROOT_CLING_TARGET "X86")
@@ -181,6 +177,13 @@ if(LLVM_EXE_LINKER_FLAGS)
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_EXE_LINKER_FLAGS}")
 endif()
 
+# Explicitly disable -Wmisleading-indentation for GCC: Some LLVM source files
+# are too large.
+set(cxx_flags_prev ${CMAKE_CXX_FLAGS})
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-misleading-indentation")
+endif()
+
 if(builtin_llvm)
   # Since debug builds of LLVM are quite large, we want to be able
   # to control the build types of ROOT and LLVM independently. The
@@ -238,11 +241,19 @@ if(builtin_llvm)
     CACHE STRING "LLVM include directories."
     )
   list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/cmake/modules")
-  #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-  get_directory_property(_llvm_version DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
-  set(LLVM_VERSION "${_llvm_version}" PARENT_SCOPE)
-  #---Forward TARGET_TRIPLE for check-cling------------------------------------------------------------
-  get_directory_property(TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION TARGET_TRIPLE)
+  #---Set into parent scope LLVM_VERSION_MAJOR --------------------------------------------------------
+  get_directory_property(_llvm_version_major DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION_MAJOR)
+  set(LLVM_VERSION_MAJOR "${_llvm_version_major}" PARENT_SCOPE)
+  #---Forward LLVM_TARGET_TRIPLE for check-cling-------------------------------------------------------
+  get_directory_property(LLVM_TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGET_TRIPLE)
+  #---Get back the potentially updated LLVM_TARGETS_TO_BUILD (expanding all/host/Native)---------------
+  get_directory_property(LLVM_TARGETS_TO_BUILD DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGETS_TO_BUILD)
+
+  if(MSVC)
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/$<CONFIG>/bin/llvm-tblgen.exe")
+  else()
+      set(LLVM_TABLEGEN_EXE "${LLVM_BINARY_DIR}/bin/llvm-tblgen")
+  endif()
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
@@ -283,9 +294,7 @@ else()
   list(GET CONFIG_OUTPUT 4 LLVM_OBJ_ROOT)
   list(GET CONFIG_OUTPUT 5 LLVM_CONFIG_CMAKE_PATH)
   list(GET CONFIG_OUTPUT 6 LLVM_BUILD_MODE)
-  list(GET CONFIG_OUTPUT 7 LLVM_VERSION_S)
-
-  set(LLVM_VERSION_SAVE "${LLVM_VERSION_S}")
+  list(GET CONFIG_OUTPUT 7 LLVM_VERSION)
 
   message(STATUS "External llvm built in ${LLVM_BUILD_MODE} mode.")
 
@@ -317,6 +326,9 @@ else()
   else()
     message(FATAL_ERROR "Not found: ${LLVMCONFIG_FILE}")
   endif()
+  # We already FORCE-d the CACHE value to OFF, but LLVMConfig.cmake might have
+  # set the variable to ON again...
+  set(LLVM_ENABLE_WARNINGS OFF)
 
   # They are used as destination of target generators.
   # We try to keep these locations consistent with the builtin_llvm. This is important
@@ -332,7 +344,6 @@ else()
     set(LLVM_SHLIB_OUTPUT_INTDIR ${LLVM_LIBRARY_OUTPUT_INTDIR})
   endif()
 
-  option(LLVM_ENABLE_WARNINGS "Enable compiler warnings." ON)
   option(LLVM_INSTALL_TOOLCHAIN_ONLY
     "Only include toolchain files in the 'install' target." OFF)
 
@@ -364,18 +375,7 @@ else()
 #  set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib${LLVM_LIBDIR_SUFFIX} )
 
   if(LLVM_INCLUDE_TESTS OR clingtest)
-    set(Python_ADDITIONAL_VERSIONS 2.7)
-    include(FindPythonInterp)
-    if(NOT PYTHONINTERP_FOUND)
-      message(FATAL_ERROR
-"Unable to find Python interpreter, required for builds and testing.
-
-Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
-    endif()
-
-    if( ${PYTHON_VERSION_STRING} VERSION_LESS 2.7 )
-      message(FATAL_ERROR "Python 2.7 or newer is required")
-    endif()
+    find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
 
     # Check prebuilt llvm/utils.
     if(EXISTS ${LLVM_TOOLS_BINARY_DIR}/FileCheck${CMAKE_EXECUTABLE_SUFFIX}
@@ -431,14 +431,11 @@ Please install Python or specify the PYTHON_EXECUTABLE CMake variable.")
   set(LLVM_INCLUDE_DIRS ${LLVM_MAIN_INCLUDE_DIR}
     CACHE STRING "System LLVM include directories."
     )
-  # We cannot include LLVMConfig.cmake here. We reply on builtin clang to discover the available
-  # llvm version and set it in clang version.
-  # FIXME: This is a very ugly workaround. Is there a better way to do this?
-  if ($CLANG_VERSION)
-    set(LLVM_VERSION ${CLANG_VERSION} PARENT_SCOPE)
-  else()
-    set(LLVM_VERSION ${LLVM_VERSION_SAVE} PARENT_SCOPE)
-  endif()
+
+  # We checked above that LLVM_VERSION is what we require in ROOT_LLVM_VERSION_REQUIRED_MAJOR.
+  # To simplify code, just forward that requirement to the rest of ROOT, for example to
+  # construct the resource directory in core/clingutils.
+  set(LLVM_VERSION_MAJOR ${ROOT_LLVM_VERSION_REQUIRED_MAJOR} PARENT_SCOPE)
 
   # We are in the case of NOT builtin_llvm
   if (builtin_clang)
@@ -471,6 +468,10 @@ if (builtin_clang)
 else()
   set(Clang_DIR "${LLVM_BINARY_DIR}/lib/cmake/clang/")
 endif()
+
+# Reset the compiler flags after compiling LLVM and Clang
+set(CMAKE_CXX_FLAGS ${cxx_flags_prev})
+unset(cxx_flags_prev)
 
 add_custom_target(CLING)
 set(CLING_LIBRARIES clingInterpreter;clingMetaProcessor;clingUtils CACHE STRING "")

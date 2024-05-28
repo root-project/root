@@ -27,8 +27,7 @@ class RooAbsLValue {
 public:
 
   // Constructors, cloning and assignment
-  RooAbsLValue() ;
-  virtual ~RooAbsLValue();
+  virtual ~RooAbsLValue() = default;
 
   virtual void setBin(Int_t ibin, const char* rangeName=nullptr) = 0 ;
   virtual Int_t getBin(const char* rangeName=nullptr) const = 0 ;

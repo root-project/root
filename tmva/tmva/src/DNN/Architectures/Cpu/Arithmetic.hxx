@@ -17,7 +17,7 @@
 #include "TMVA/DNN/Architectures/Cpu.h"
 
 #ifdef R__HAS_TMVACPU
-#include "TMVA/DNN/Architectures/Cpu/Blas.h"
+#include "Blas.h"
 #else
 #include "TMVA/DNN/Architectures/Reference.h"
 #include "TVectorT.h"

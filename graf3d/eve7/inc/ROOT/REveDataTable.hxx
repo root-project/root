@@ -27,13 +27,13 @@ protected:
 
 public:
    REveDataTable(const std::string& n = "REveDataTable", const std::string& t = "");
-   virtual ~REveDataTable() {}
+   ~REveDataTable() override {}
 
    void SetCollection(const REveDataCollection *col) { fCollection = col; }
    const REveDataCollection *GetCollection() const { return fCollection; }
 
    void PrintTable();
-   virtual Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset);
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 
    void AddNewColumn(const std::string& expr, const std::string& title, int prec = 2);
 };
@@ -62,7 +62,7 @@ public:
 
 public:
    REveDataColumn(const std::string& n = "REveDataColumn", const std::string& t = "");
-   virtual ~REveDataColumn() {}
+   ~REveDataColumn() override {}
 
    void SetExpressionAndType(const std::string &expr, FieldType_e type);
    void SetExpressionAndType(const std::string &expr, FieldType_e type, TClass* c);

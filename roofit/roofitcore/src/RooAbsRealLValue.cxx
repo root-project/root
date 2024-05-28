@@ -19,7 +19,7 @@
 \class RooAbsRealLValue
 \ingroup Roofitcore
 
-RooAbsRealLValue is the common abstract base class for objects that represent a
+Abstract base class for objects that represent a
 real value that may appear on the left hand side of an equation ('lvalue').
 Each implementation must provide a setVal() member to allow direct modification
 of the value. RooAbsRealLValue may be derived, but its functional relation
@@ -55,7 +55,7 @@ interpreted as a parameter.
 
 #include <cmath>
 
-using namespace std;
+using std::endl, std::istream, std::ostream;
 
 ClassImp(RooAbsRealLValue);
 
@@ -76,16 +76,6 @@ RooAbsRealLValue::RooAbsRealLValue(const RooAbsRealLValue& other, const char* na
   RooAbsReal(other,name), RooAbsLValue(other)
 {
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsRealLValue::~RooAbsRealLValue()
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if the input value is within our fit range. Otherwise, return
@@ -160,9 +150,10 @@ void RooAbsRealLValue::inRange(std::span<const double> values, std::string const
 bool RooAbsRealLValue::isValidReal(double value, bool verbose) const
 {
   if (!inRange(value,nullptr)) {
-    if (verbose)
-      coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value
-             << " out of range (" << getMin() << " - " << getMax() << ")" << endl ;
+    if (verbose) {
+       coutI(InputArguments) << "RooRealVar::isValid(" << GetName() << "): value " << value << " out of range ("
+                             << getMin() << " - " << getMax() << ")" << endl;
+    }
     return false ;
   }
   return true ;
@@ -261,7 +252,8 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
   }
 
   // Extract values from named arguments
-  double xmin(getMin()),xmax(getMax()) ;
+  double xmin(getMin());
+  double xmax(getMax());
   if (pc.hasProcessed("Range")) {
     xmin = pc.getDouble("min") ;
     xmax = pc.getDouble("max") ;
@@ -290,7 +282,7 @@ RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
     } else {
       // Symmetric mode: range is centered at mean of distribution with enough width to include
       // both lowest and highest point with margin
-      double dmean = rangeData->moment((RooRealVar&)*this,1) ;
+      double dmean = rangeData->moment(const_cast<RooRealVar &>(static_cast<RooRealVar const&>(*this)),1) ;
       double ddelta = ((xmax-dmean)>(dmean-xmin)?(xmax-dmean):(dmean-xmin))*(1+pc.getDouble("rangeMargin")) ;
       xmin = dmean-ddelta ;
       xmax = dmean+ddelta ;
@@ -707,7 +699,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   Int_t nbins = getBins() ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nbins));
 }
 
 
@@ -724,7 +716,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   RooArgList list(*this) ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &xlo, &xhi, &nBins));
 }
 
 
@@ -738,7 +730,7 @@ TH1F *RooAbsRealLValue::createHistogram(const char *name, const char *yAxisLabel
   const RooAbsBinning* pbins = &bins ;
 
   // coverity[ARRAY_VS_SINGLETON]
-  return (TH1F*)createHistogram(name, list, yAxisLabel, &pbins);
+  return static_cast<TH1F*>(createHistogram(name, list, yAxisLabel, &pbins));
 }
 
 
@@ -799,7 +791,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
 
   RooArgList list(*this,yvar) ;
   // coverity[OVERRUN_STATIC]
-  return (TH2F*)createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2);
+  return static_cast<TH2F*>(createHistogram(name, list, zAxisLabel, xlo2, xhi2, nBins2));
 }
 
 
@@ -812,7 +804,7 @@ TH2F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
                const char *zAxisLabel, const RooAbsBinning** bins) const
 {
   RooArgList list(*this,yvar) ;
-  return (TH2F*)createHistogram(name, list, zAxisLabel, bins);
+  return static_cast<TH2F*>(createHistogram(name, list, zAxisLabel, bins));
 }
 
 
@@ -879,7 +871,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   }
 
   RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2);
+  return static_cast<TH3F*>(createHistogram(name, list, tAxisLabel, xlo2, xhi2, nBins2));
 }
 
 
@@ -890,7 +882,7 @@ TH3F *RooAbsRealLValue::createHistogram(const char *name, const RooAbsRealLValue
   // and the specified y,z variables.
 
   RooArgList list(*this,yvar,zvar) ;
-  return (TH3F*)createHistogram(name, list, tAxisLabel, bins);
+  return static_cast<TH3F*>(createHistogram(name, list, tAxisLabel, bins));
 }
 
 
@@ -906,7 +898,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
                    double* xlo, double* xhi, Int_t* nBins)
 {
   const RooAbsBinning* bin[3] ;
-  Int_t ndim = vars.getSize() ;
+  Int_t ndim = vars.size() ;
   bin[0] = new RooUniformBinning(xlo[0],xhi[0],nBins[0]) ;
   bin[1] = (ndim>1) ? new RooUniformBinning(xlo[1],xhi[1],nBins[1]) : nullptr ;
   bin[2] = (ndim>2) ? new RooUniformBinning(xlo[2],xhi[2],nBins[2]) : nullptr ;
@@ -931,7 +923,7 @@ TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const
 TH1 *RooAbsRealLValue::createHistogram(const char *name, RooArgList &vars, const char *tAxisLabel, const RooAbsBinning** bins)
 {
   // Check that we have 1-3 vars
-  Int_t dim= vars.getSize();
+  Int_t dim= vars.size();
   if(dim < 1 || dim > 3) {
     oocoutE(nullptr,InputArguments) << "RooAbsReal::createHistogram: dimension not supported: " << dim << endl;
     return nullptr;

@@ -79,6 +79,27 @@ File features.h
     }
 
     //-----
+    class Abstract1 {
+    public:
+        virtual ~Abstract1() {}
+        virtual std::string abstract_method1() = 0;
+    };
+
+    class Abstract2 {
+    public:
+        virtual ~Abstract2() {}
+        virtual std::string abstract_method2() = 0;
+    };
+
+    std::string call_abstract_method1(Abstract1* a) {
+        return a->abstract_method1();
+    }
+
+    std::string call_abstract_method2(Abstract2* a) {
+        return a->abstract_method2();
+    }
+
+    //-----
     int global_function(int) {
         return 42;
     }

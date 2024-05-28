@@ -25,22 +25,22 @@ ClassImp(TGLLightSetSubEditor);
 
 TGLLightSetSubEditor::TGLLightSetSubEditor(const TGWindow *p) :
    TGVerticalFrame(p),
-   fM             (0),
+   fM             (nullptr),
 
-   fLightFrame    (0),
-   fTopLight      (0),
-   fRightLight    (0),
-   fBottomLight   (0),
-   fLeftLight     (0),
-   fFrontLight    (0),
-   fSpecularLight (0)
+   fLightFrame    (nullptr),
+   fTopLight      (nullptr),
+   fRightLight    (nullptr),
+   fBottomLight   (nullptr),
+   fLeftLight     (nullptr),
+   fFrontLight    (nullptr),
+   fSpecularLight (nullptr)
 {
    // Constructor.
 
    fLightFrame = new TGGroupFrame(this, "Light sources:", kVerticalFrame);//, kLHintsTop | kLHintsCenterX);
    fLightFrame->SetTitlePos(TGGroupFrame::kLeft);
    AddFrame(fLightFrame, new TGLayoutHints(kLHintsTop| kLHintsExpandX, 1, 1, 1, 1));//-
-   TGCompositeFrame* hf =0;
+   TGCompositeFrame* hf =nullptr;
 
    hf = new TGHorizontalFrame(fLightFrame);
    fTopLight      = MakeLampButton("Top",      TGLLightSet::kLightTop, hf);
@@ -121,8 +121,8 @@ TGLLightSetEditor::TGLLightSetEditor(const TGWindow *p,
                                      Int_t width, Int_t height,
                                      UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM  (0),
-   fSE (0)
+   fM  (nullptr),
+   fSE (nullptr)
 {
    MakeTitle("TGLLightSet");
 

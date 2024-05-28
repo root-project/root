@@ -18,25 +18,24 @@ void TestClassVector(const char *fname)
    wrKlassVec->emplace_back(klass);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-                           std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
 
       // enlarge
-      wrKlassVec->emplace_back(CustomStruct{1.f, {1.f, 2.f, 3.f}, {{42.f}}, "foo"});
-      wrKlassVec->emplace_back(CustomStruct{2.f, {4.f, 5.f, 6.f}, {{1.f}, {2.f, 3.f}}, "bar"});
-      ntuple.Fill();
+      wrKlassVec->emplace_back(CustomStruct{1.f, {1.f, 2.f, 3.f}, {{42.f}}, "foo", std::byte{0}});
+      wrKlassVec->emplace_back(CustomStruct{2.f, {4.f, 5.f, 6.f}, {{1.f}, {2.f, 3.f}}, "bar", std::byte{0}});
+      writer->Fill();
 
       // shrink
       wrKlassVec->clear();
-      wrKlassVec->emplace_back(CustomStruct{3.f, {7.f, 8.f, 9.f}, {{4.f, 5.f}, {}}, "baz"});
-      ntuple.Fill();
+      wrKlassVec->emplace_back(CustomStruct{3.f, {7.f, 8.f, 9.f}, {{4.f, 5.f}, {}}, "baz", std::byte{0}});
+      writer->Fill();
    }
 
-   RNTupleReader ntuple(std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(3U, ntuple.GetNEntries());
+   auto reader = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(3U, reader->GetNEntries());
 
-   auto viewKlassVec = ntuple.GetViewCollection("klassVec");
+   auto viewKlassVec = reader->GetCollectionView("klassVec");
    auto viewKlass = viewKlassVec.GetView<CustomStruct>("_0");
    auto viewKlassA = viewKlassVec.GetView<float>("_0.a");
    auto viewKlassV1 = viewKlassVec.GetView<std::vector<float>>("_0.v1");
@@ -108,9 +107,8 @@ TEST(RNTuple, InsideCollection)
    wrKlassVec->emplace_back(klass);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
    auto source = std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions());
@@ -125,32 +123,31 @@ TEST(RNTuple, InsideCollection)
    ASSERT_NE(idA, ROOT::Experimental::kInvalidDescriptorId);
    auto fieldInner = std::unique_ptr<RFieldBase>(RFieldBase::Create("klassVec.a", "float").Unwrap());
    fieldInner->SetOnDiskId(idA);
-   fieldInner->ConnectPageSource(*source);
 
    auto field = std::make_unique<ROOT::Experimental::RVectorField>("klassVec", std::move(fieldInner));
    field->SetOnDiskId(idKlassVec);
-   field->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*field, *source);
 
    auto fieldCardinality64 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
    fieldCardinality64->SetOnDiskId(idKlassVec);
-   fieldCardinality64->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality64, *source);
    auto fieldCardinality32 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
    fieldCardinality32->SetOnDiskId(idKlassVec);
-   fieldCardinality32->ConnectPageSource(*source);
+   ROOT::Experimental::Internal::CallConnectPageSourceOnField(*fieldCardinality32, *source);
 
-   auto value = field->GenerateValue();
+   auto value = field->CreateValue();
    value.Read(0);
-   auto aVec = value.Get<std::vector<float>>();
-   EXPECT_EQ(1U, aVec->size());
-   EXPECT_EQ(42.0, (*aVec)[0]);
+   auto aVec = value.GetRef<std::vector<float>>();
+   EXPECT_EQ(1U, aVec.size());
+   EXPECT_EQ(42.0, aVec[0]);
 
-   auto valueCardinality64 = fieldCardinality64->GenerateValue();
+   auto valueCardinality64 = fieldCardinality64->CreateValue();
    valueCardinality64.Read(0);
-   EXPECT_EQ(1U, *valueCardinality64.Get<std::uint64_t>());
+   EXPECT_EQ(1U, valueCardinality64.GetRef<std::uint64_t>());
 
-   auto valueCardinality32 = fieldCardinality32->GenerateValue();
+   auto valueCardinality32 = fieldCardinality32->CreateValue();
    valueCardinality32.Read(0);
-   EXPECT_EQ(1U, *valueCardinality32.Get<std::uint32_t>());
+   EXPECT_EQ(1U, valueCardinality32.GetRef<std::uint32_t>());
 
    // TODO: test reading of "klassVec.v1"
 }
@@ -166,43 +163,40 @@ TEST(RNTuple, RVec)
    wrJets->push_back(7.0);
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
       wrJets->clear();
       wrJets->push_back(1.0);
-      ntuple.Fill();
+      writer->Fill();
    }
 
    auto modelReadAsRVec = RNTupleModel::Create();
    auto rdJetsAsRVec = modelReadAsRVec->MakeField<ROOT::VecOps::RVec<float>>("jets");
 
-   RNTupleReader ntupleRVec(std::move(modelReadAsRVec),
-      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(2U, ntupleRVec.GetNEntries());
+   auto ntupleRVec = RNTupleReader::Open(std::move(modelReadAsRVec), "myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntupleRVec->GetNEntries());
 
-   ntupleRVec.LoadEntry(0);
+   ntupleRVec->LoadEntry(0);
    EXPECT_EQ(2U, rdJetsAsRVec->size());
    EXPECT_EQ(42.0, (*rdJetsAsRVec)[0]);
    EXPECT_EQ(7.0, (*rdJetsAsRVec)[1]);
 
-   ntupleRVec.LoadEntry(1);
+   ntupleRVec->LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsRVec->size());
    EXPECT_EQ(1.0, (*rdJetsAsRVec)[0]);
 
    auto modelReadAsStdVector = RNTupleModel::Create();
    auto rdJetsAsStdVector = modelReadAsStdVector->MakeField<std::vector<float>>("jets");
 
-   RNTupleReader ntupleStdVector(std::move(modelReadAsStdVector), std::make_unique<RPageSourceFile>(
-      "myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(2U, ntupleRVec.GetNEntries());
+   auto ntupleStdVector = RNTupleReader::Open(std::move(modelReadAsStdVector), "myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntupleStdVector->GetNEntries());
 
-   ntupleStdVector.LoadEntry(0);
+   ntupleStdVector->LoadEntry(0);
    EXPECT_EQ(2U, rdJetsAsStdVector->size());
    EXPECT_EQ(42.0, (*rdJetsAsStdVector)[0]);
    EXPECT_EQ(7.0, (*rdJetsAsStdVector)[1]);
 
-   ntupleStdVector.LoadEntry(1);
+   ntupleStdVector->LoadEntry(1);
    EXPECT_EQ(1U, rdJetsAsStdVector->size());
    EXPECT_EQ(1.0, (*rdJetsAsStdVector)[0]);
 }
@@ -219,7 +213,7 @@ TEST(RNTuple, RVecTypeErased)
       auto field = RFieldBase::Create("v", "ROOT::VecOps::RVec<int>").Unwrap();
       m->AddField(std::move(field));
       m->Freeze();
-      m->GetDefaultEntry()->CaptureValueUnsafe("v", (void *)&rvec);
+      m->GetDefaultEntry().BindRawPtr("v", &rvec);
 
       auto w = RNTupleWriter::Recreate(std::move(m), "r", fileGuard.GetPath());
       w->Fill();
@@ -232,7 +226,7 @@ TEST(RNTuple, RVecTypeErased)
 
    // read back RVec with type-erased API
    auto r = RNTupleReader::Open("r", fileGuard.GetPath());
-   auto v = r->GetModel()->Get<ROOT::RVec<int>>("v");
+   auto v = r->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<int>>("v");
 
    r->LoadEntry(0);
    EXPECT_EQ(v->size(), 3);
@@ -291,20 +285,19 @@ TEST(RNTuple, BoolVector)
    wrBoolRVec->push_back(true);
    wrBoolRVec->push_back(false);
 
+   modelWrite->Freeze();
    auto modelRead = modelWrite->Clone();
 
    {
-      RNTupleWriter ntuple(std::move(modelWrite),
-         std::make_unique<RPageSinkFile>("myNTuple", fileGuard.GetPath(), RNTupleWriteOptions()));
-      ntuple.Fill();
+      auto writer = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      writer->Fill();
    }
 
-   auto rdBoolStdVec = modelRead->Get<std::vector<bool>>("boolStdVec");
-   auto rdBoolRVec = modelRead->Get<ROOT::RVec<bool>>("boolRVec");
-   RNTupleReader ntuple(std::move(modelRead),
-      std::make_unique<RPageSourceFile>("myNTuple", fileGuard.GetPath(), RNTupleReadOptions()));
-   EXPECT_EQ(1U, ntuple.GetNEntries());
-   ntuple.LoadEntry(0);
+   auto rdBoolStdVec = modelRead->GetDefaultEntry().GetPtr<std::vector<bool>>("boolStdVec");
+   auto rdBoolRVec = modelRead->GetDefaultEntry().GetPtr<ROOT::RVec<bool>>("boolRVec");
+   auto reader = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(1U, reader->GetNEntries());
+   reader->LoadEntry(0);
 
    EXPECT_EQ(4U, rdBoolStdVec->size());
    EXPECT_TRUE((*rdBoolStdVec)[0]);
@@ -359,7 +352,7 @@ TEST(RNTuple, ComplexVector)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<std::vector<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<std::vector<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());
@@ -402,7 +395,7 @@ TEST(RNTuple, ComplexRVec)
    ComplexStruct::SetNCallDestructor(0);
    {
       auto ntuple = RNTupleReader::Open("T", fileGuard.GetPath());
-      auto rdV = ntuple->GetModel()->GetDefaultEntry()->Get<ROOT::RVec<ComplexStruct>>("v");
+      auto rdV = ntuple->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<ComplexStruct>>("v");
 
       ntuple->LoadEntry(0);
       EXPECT_EQ(0, ComplexStruct::GetNCallConstructor());

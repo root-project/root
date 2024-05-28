@@ -19,7 +19,7 @@
 \class RooRombergIntegrator
 \ingroup Roofitcore
 
-RooRombergIntegrator implements an adaptive numerical integration algorithm.
+Adaptive numerical integration algorithm.
 
 It uses Romberg's method with trapezoids or midpoints.
 The integrand is approximated by \f$ 1, 2, 4, 8, \ldots, 2^n \f$ trapezoids, and
@@ -230,7 +230,6 @@ std::pair<double, int> integrate1d(std::function<double(double)> func, bool doTr
 } // namespace Detail
 } // namespace RooFit
 
-ClassImp(RooRombergIntegrator);
 
 // Register this class with RooNumIntConfig
 
@@ -307,9 +306,8 @@ void RooRombergIntegrator::registerIntegrator(RooNumIntFactory &fact)
 /// limits are taken from the function binding.
 
 RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, SummationRule rule, int maxSteps, double eps)
-   : RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
 {
-   _useIntegrandLimits = true;
    _valid = initialize();
 }
 
@@ -321,9 +319,13 @@ RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, Summation
 
 RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax, SummationRule rule,
                                            int maxSteps, double eps)
-   : RooAbsIntegrator(function), _rule(rule), _maxSteps(maxSteps), _epsAbs(eps), _epsRel(eps)
+   : RooAbsIntegrator(function),
+     _useIntegrandLimits(false),
+     _rule(rule),
+     _maxSteps(maxSteps),
+     _epsAbs(eps),
+     _epsRel(eps)
 {
-   _useIntegrandLimits = false;
    _xmin.push_back(xmin);
    _xmax.push_back(xmax);
    _valid = initialize();
@@ -371,6 +373,7 @@ RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, const Roo
 RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, double xmin, double xmax,
                                            const RooNumIntConfig &config, int nDim)
    : RooAbsIntegrator(function, config.printEvalCounter()),
+     _useIntegrandLimits(false),
      _nDim{nDim},
      _epsAbs(config.epsAbs()),
      _epsRel(config.epsRel())
@@ -383,7 +386,6 @@ RooRombergIntegrator::RooRombergIntegrator(const RooAbsFunc &function, double xm
    _fixSteps = (int)configSet.getRealValue("fixSteps", 0);
    _doExtrap = (bool)configSet.getCatIndex("extrapolation", 1);
 
-   _useIntegrandLimits = false;
    _xmin.push_back(xmin);
    _xmax.push_back(xmax);
    _valid = initialize();

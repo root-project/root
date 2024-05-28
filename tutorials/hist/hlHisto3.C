@@ -2,8 +2,8 @@
 /// \ingroup tutorial_hist
 ///
 /// This tutorial demonstrates how the highlight mechanism can be used on a ntuple.
-/// The ntuple in `hsimple.root` is drawn with three differents selection. Moving
-/// the mouse ove the two 1D representation display the on 2D plot the events
+/// The ntuple in `hsimple.root` is drawn with three different selections. Moving
+/// the mouse over the two 1D representation display the on 2D plot the events
 /// contributing to the highlighted bin.
 ///
 /// \macro_code

@@ -18,7 +18,7 @@
 
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <iterator>
 #include <memory>
@@ -96,7 +96,7 @@ public:
       using reference = RClusterIndex&;
 
       RIterator() = default;
-      explicit RIterator(const RClusterIndex &index) : fIndex(index) {}
+      explicit RIterator(RClusterIndex index) : fIndex(index) {}
       ~RIterator() = default;
 
       iterator  operator++(int) /* postfix */        { auto r = *this; fIndex++; return r; }
@@ -130,6 +130,9 @@ inline constexpr bool isMappable<FieldT, std::void_t<decltype(std::declval<Field
 \ingroup NTuple
 \brief An RNTupleView provides read-only access to a single field of the ntuple
 
+\tparam T The type of the object that will be read by the view
+\tparam UserProvidedAddress Whether the user provided an external memory location to read data into
+
 The view owns a field and its underlying columns in order to fill an ntuple value object with data. Data can be
 accessed by index. For top-level fields, the index refers to the entry number. Fields that are part of
 nested collections have global index numbers that are derived from their parent indexes.
@@ -137,9 +140,10 @@ nested collections have global index numbers that are derived from their parent 
 Fields of simple types with a Map() method will use that and thus expose zero-copy access.
 */
 // clang-format on
-template <typename T>
+template <typename T, bool UserProvidedAddress>
 class RNTupleView {
-   friend class RNTupleViewCollection;
+   friend class RNTupleReader;
+   friend class RNTupleCollectionView;
 
    using FieldT = RField<T>;
 
@@ -147,52 +151,66 @@ private:
    /// fFieldId has fParent always set to null; views access nested fields without looking at the parent
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
-   Detail::RFieldBase::RValue fValue;
+   RFieldBase::RValue fValue;
 
-public:
-   using FieldTypeT = T;
-
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
-      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
-        fValue(fField.GenerateValue())
+   void SetupField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
    {
       fField.SetOnDiskId(fieldId);
-      fField.ConnectPageSource(*pageSource);
-      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
-         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
-      for (auto &f : fField) {
-         auto subFieldId =
-            pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
-         f.SetOnDiskId(subFieldId);
-         f.ConnectPageSource(*pageSource);
+      Internal::CallConnectPageSourceOnField(fField, *pageSource);
+      if constexpr (!UserProvidedAddress) {
+         if ((fField.GetTraits() & RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+            throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       }
    }
 
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.CreateValue())
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, std::shared_ptr<T> objPtr)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.BindValue(objPtr))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, T *rawPtr)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+public:
    RNTupleView(const RNTupleView& other) = delete;
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
    RNTupleView& operator=(RNTupleView&& other) = default;
    ~RNTupleView() = default;
 
+   const FieldT &GetField() const { return fField; }
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
    const T &operator()(NTupleSize_t globalIndex)
    {
-      if constexpr (Internal::isMappable<FieldT>)
+      if constexpr (Internal::isMappable<FieldT> && !UserProvidedAddress) {
          return *fField.Map(globalIndex);
-      else {
+      } else {
          fValue.Read(globalIndex);
-         return *fValue.Get<T>();
+         return fValue.GetRef<T>();
       }
    }
 
-   const T &operator()(const RClusterIndex &clusterIndex)
+   const T &operator()(RClusterIndex clusterIndex)
    {
-      if constexpr (Internal::isMappable<FieldT>)
+      if constexpr (Internal::isMappable<FieldT> && !UserProvidedAddress) {
          return *fField.Map(clusterIndex);
-      else {
+      } else {
          fValue.Read(clusterIndex);
-         return *fValue.Get<T>();
+         return fValue.GetRef<T>();
       }
    }
 
@@ -204,40 +222,151 @@ public:
    }
 
    // TODO(bgruber): turn enable_if into requires clause with C++20
-   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C*> = nullptr>
-   const C *MapV(const RClusterIndex &clusterIndex, NTupleSize_t &nItems)
+   template <typename C = T, std::enable_if_t<Internal::isMappable<FieldT>, C *> = nullptr>
+   const C *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
    {
       return fField.MapV(clusterIndex, nItems);
    }
-};
 
+   void Bind(std::shared_ptr<T> objPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.Bind(objPtr);
+   }
+
+   void BindRawPtr(T *rawPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.BindRawPtr(rawPtr);
+   }
+
+   void EmplaceNew()
+   {
+      // Let the user know they are misusing this function in case the field is
+      // mappable and they are providing an external address after construction.
+      // This would mean creating a new RValue member but not using it since
+      // reading would be done by RField::Map directly.
+      static_assert(!(Internal::isMappable<FieldT> && !UserProvidedAddress),
+                    "Cannot emplace a new value into a view of a mappable type, unless an external memory location is "
+                    "provided at construction time.");
+      fValue.EmplaceNew();
+   }
+};
 
 // clang-format off
 /**
-\class ROOT::Experimental::RNTupleViewCollection
+\class ROOT::Experimental::RNTupleView<void>
+\ingroup NTuple
+\brief An RNTupleView where the type is not known at compile time.
+
+Can be used to read individual fields whose type is unknown. The void view gives access to the RValue
+in addition to the field, so that the read object can be retrieved.
+*/
+// clang-format on
+template <bool UserProvidedAddress>
+class RNTupleView<void, UserProvidedAddress> {
+   friend class RNTupleReader;
+   friend class RNTupleCollectionView;
+
+private:
+   std::unique_ptr<RFieldBase> fField;
+   RFieldBase::RValue fValue;
+
+   static std::unique_ptr<RFieldBase> CreateField(DescriptorId_t fieldId, const RNTupleDescriptor &desc)
+   {
+      return desc.GetFieldDescriptor(fieldId).CreateField(desc);
+   }
+
+   void SetupField(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+   {
+      fField->SetOnDiskId(fieldId);
+      Internal::CallConnectPageSourceOnField(*fField, *pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->CreateValue())
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, std::shared_ptr<void> objPtr)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())), fValue(fField->BindValue(objPtr))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+   RNTupleView(DescriptorId_t fieldId, Internal::RPageSource *pageSource, void *rawPtr)
+      : fField(CreateField(fieldId, pageSource->GetSharedDescriptorGuard().GetRef())),
+        fValue(fField->BindValue(Internal::MakeAliasedSharedPtr(rawPtr)))
+   {
+      SetupField(fieldId, pageSource);
+   }
+
+public:
+   RNTupleView(const RNTupleView &other) = delete;
+   RNTupleView(RNTupleView &&other) = default;
+   RNTupleView &operator=(const RNTupleView &other) = delete;
+   RNTupleView &operator=(RNTupleView &&other) = default;
+   ~RNTupleView() = default;
+
+   const RFieldBase &GetField() const { return *fField; }
+   const RFieldBase::RValue &GetValue() const { return fValue; }
+   RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField->GetNElements()); }
+
+   void operator()(NTupleSize_t globalIndex) { fValue.Read(globalIndex); }
+   void operator()(RClusterIndex clusterIndex) { fValue.Read(clusterIndex); }
+
+   void Bind(std::shared_ptr<void> objPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.Bind(objPtr);
+   }
+
+   void BindRawPtr(void *rawPtr)
+   {
+      static_assert(
+         UserProvidedAddress,
+         "Only views which were created with an external memory location at construction time can be bound to a "
+         "different memory location afterwards. Call the RNTupleReader::GetView overload with a shared_ptr.");
+      fValue.BindRawPtr(rawPtr);
+   }
+
+   void EmplaceNew() { fValue.EmplaceNew(); }
+};
+
+// clang-format off
+/**
+\class ROOT::Experimental::RNTupleCollectionView
 \ingroup NTuple
 \brief A view for a collection, that can itself generate new ntuple views for its nested fields.
 */
 // clang-format on
-class RNTupleViewCollection : public RNTupleView<ClusterSize_t> {
-    friend class RNTupleReader;
+class RNTupleCollectionView : public RNTupleView<ClusterSize_t, false> {
+   friend class RNTupleReader;
 
 private:
-   Detail::RPageSource* fSource;
+   Internal::RPageSource *fSource;
    DescriptorId_t fCollectionFieldId;
 
-   RNTupleViewCollection(DescriptorId_t fieldId, Detail::RPageSource* source)
-      : RNTupleView<ClusterSize_t>(fieldId, source)
-      , fSource(source)
-      , fCollectionFieldId(fieldId)
+   RNTupleCollectionView(DescriptorId_t fieldId, Internal::RPageSource *source)
+      : RNTupleView<ClusterSize_t, false>(fieldId, source), fSource(source), fCollectionFieldId(fieldId)
    {}
 
 public:
-   RNTupleViewCollection(const RNTupleViewCollection& other) = delete;
-   RNTupleViewCollection(RNTupleViewCollection&& other) = default;
-   RNTupleViewCollection& operator=(const RNTupleViewCollection& other) = delete;
-   RNTupleViewCollection& operator=(RNTupleViewCollection&& other) = default;
-   ~RNTupleViewCollection() = default;
+   RNTupleCollectionView(const RNTupleCollectionView &other) = delete;
+   RNTupleCollectionView(RNTupleCollectionView &&other) = default;
+   RNTupleCollectionView &operator=(const RNTupleCollectionView &other) = delete;
+   RNTupleCollectionView &operator=(RNTupleCollectionView &&other) = default;
+   ~RNTupleCollectionView() = default;
 
    RNTupleClusterRange GetCollectionRange(NTupleSize_t globalIndex) {
       ClusterSize_t size;
@@ -246,7 +375,8 @@ public:
       return RNTupleClusterRange(collectionStart.GetClusterId(), collectionStart.GetIndex(),
                                  collectionStart.GetIndex() + size);
    }
-   RNTupleClusterRange GetCollectionRange(const RClusterIndex &clusterIndex) {
+   RNTupleClusterRange GetCollectionRange(RClusterIndex clusterIndex)
+   {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);
@@ -256,22 +386,24 @@ public:
 
    /// Raises an exception if there is no field with the given name.
    template <typename T>
-   RNTupleView<T> GetView(std::string_view fieldName) {
+   RNTupleView<T, false> GetView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return RNTupleView<T>(fieldId, fSource);
+      return RNTupleView<T, false>(fieldId, fSource);
    }
    /// Raises an exception if there is no field with the given name.
-   RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
+   RNTupleCollectionView GetCollectionView(std::string_view fieldName)
+   {
       auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
          throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
                                   fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
-      return RNTupleViewCollection(fieldId, fSource);
+      return RNTupleCollectionView(fieldId, fSource);
    }
 
    ClusterSize_t operator()(NTupleSize_t globalIndex) {
@@ -280,7 +412,8 @@ public:
       fField.GetCollectionInfo(globalIndex, &collectionStart, &size);
       return size;
    }
-   ClusterSize_t operator()(const RClusterIndex &clusterIndex) {
+   ClusterSize_t operator()(RClusterIndex clusterIndex)
+   {
       ClusterSize_t size;
       RClusterIndex collectionStart;
       fField.GetCollectionInfo(clusterIndex, &collectionStart, &size);

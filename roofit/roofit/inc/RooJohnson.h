@@ -32,8 +32,6 @@ public:
 
   RooJohnson(const RooJohnson& other, const char* newName = nullptr);
 
-  ~RooJohnson() override = default;
-
   TObject* clone(const char* newname) const override {
     return new RooJohnson(*this,newname);
   }
@@ -57,7 +55,7 @@ private:
   double _massThreshold{-1.E300};
 
   double evaluate() const override;
-  void computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
   ClassDefOverride(RooJohnson,1)

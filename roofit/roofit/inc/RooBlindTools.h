@@ -54,7 +54,7 @@ public:
   RooBlindTools(const RooBlindTools& );
 
   // Destructor
-  virtual ~RooBlindTools( );
+  virtual ~RooBlindTools( ) = default;
 
   // Operators
 

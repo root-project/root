@@ -127,15 +127,17 @@ void checkRangeOfParameters(const RooAbsReal *callingClass, std::initializer_lis
                   (!limitsInAllowedRange && (par->getMin() == min || par->getMax() == max)))) {
          std::stringstream rangeMsg;
          rangeMsg << openBr;
-         if (min > -std::numeric_limits<double>::max())
+         if (min > -std::numeric_limits<double>::max()) {
             rangeMsg << min << ", ";
-         else
+         } else {
             rangeMsg << "-inf, ";
+         }
 
-         if (max < std::numeric_limits<double>::max())
+         if (max < std::numeric_limits<double>::max()) {
             rangeMsg << max << closeBr;
-         else
+         } else {
             rangeMsg << "inf" << closeBr;
+         }
 
          oocoutW(callingClass, InputArguments)
             << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", " << par->getMax()

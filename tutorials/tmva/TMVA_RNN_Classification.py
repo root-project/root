@@ -24,12 +24,13 @@ import ROOT
 
 num_threads = 4  # use max 4 threads
 # do enable MT running
-if ROOT.gSystem.GetFromPipe("root-config --has-imt") == "yes":
+if "imt" in ROOT.gROOT.GetConfigFeatures():
     ROOT.EnableImplicitMT(num_threads)
-    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")  # switch OFF MT in OpenBLAS
+    # switch off MT in OpenBLAS to avoid conflict with tbb
+    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
     print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
 else:
-    print("Running in serail mode since ROOT does not support MT")
+    print("Running in serial mode since ROOT does not support MT")
 
 
 TMVA = ROOT.TMVA
@@ -174,8 +175,8 @@ if 0 <= use_type < 3:
 
 useGPU = True  # use GPU for TMVA if available
 
-useGPU = ROOT.gSystem.GetFromPipe("root-config --has-tmva-gpu") == "yes"
-useTMVA_RNN = ROOT.gSystem.GetFromPipe("root-config --has-tmva-cpu") == "yes" or useGPU
+useGPU = "tmva-gpu" in ROOT.gROOT.GetConfigFeatures()
+useTMVA_RNN = ("tmva-cpu" in ROOT.gROOT.GetConfigFeatures()) or useGPU
 
 if useTMVA_RNN:
     ROOT.Warning(
@@ -189,7 +190,7 @@ writeOutputFile = True
 
 rnn_type = "RNN"
 
-if ROOT.gSystem.GetFromPipe("root-config --has-tmva-pymva") == "yes":
+if "tmva-pymva" in ROOT.gROOT.GetConfigFeatures():
     TMVA.PyMethodBase.PyInitialize()
 else:
     useKeras = False

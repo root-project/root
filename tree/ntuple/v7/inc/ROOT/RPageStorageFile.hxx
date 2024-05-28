@@ -21,7 +21,7 @@
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
 #include <ROOT/RRawFile.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 
 #include <array>
 #include <cstdio>
@@ -40,27 +40,25 @@ class RRawFile;
 namespace Experimental {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
 
-namespace Detail {
-
+namespace Internal {
 class RClusterPool;
 class RPageAllocatorHeap;
 class RPagePool;
 
-
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSinkFile
+\class ROOT::Experimental::Internal::RPageSinkFile
 \ingroup NTuple
 \brief Storage provider that write ntuple pages into a file
 
 The written file can be either in ROOT format or in RNTuple bare format.
 */
 // clang-format on
-class RPageSinkFile : public RPageSink {
+class RPageSinkFile : public RPagePersistentSink {
 private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
-   std::unique_ptr<Internal::RNTupleFileWriter> fWriter;
+   std::unique_ptr<RNTupleFileWriter> fWriter;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
@@ -69,18 +67,18 @@ private:
                                                 std::size_t bytesPacked);
 
 protected:
-   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
+   using RPagePersistentSink::InitImpl;
+   void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator
    CommitSealedPageImpl(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
-   std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
+   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
+   std::uint64_t CommitClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
-   RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options,
-                 std::unique_ptr<TFile> &file);
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
    RPageSinkFile(const RPageSinkFile&) = delete;
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
@@ -90,11 +88,11 @@ public:
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
-};
+}; // class RPageSinkFile
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageSourceFile
+\class ROOT::Experimental::Internal::RPageSourceFile
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a file
 */
@@ -120,19 +118,17 @@ private:
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
-   Internal::RMiniFileReader fReader;
+   RMiniFileReader fReader;
    /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
    /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
-   void InitDescriptor(const Internal::RFileNTupleAnchor &anchor);
+   void InitDescriptor(const RNTuple &anchor);
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-   /// Used from the RNTuple class to build a datasource if the anchor is already available
-   static std::unique_ptr<RPageSourceFile> CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
-                                                            std::string_view path, const RNTupleReadOptions &options);
+
    RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
@@ -150,6 +146,12 @@ protected:
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
+   RPageSourceFile(std::string_view ntupleName, std::unique_ptr<ROOT::Internal::RRawFile> file,
+                   const RNTupleReadOptions &options);
+   /// Used from the RNTuple class to build a datasource if the anchor is already available.
+   /// Requires the RNTuple object to be streamed from a file.
+   static std::unique_ptr<RPageSourceFile>
+   CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
    /// The meta-data (header and footer) is reread and parsed by the clone.
    std::unique_ptr<RPageSource> Clone() const final;
@@ -161,17 +163,15 @@ public:
    ~RPageSourceFile() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
-   RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
+   RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void
-   LoadSealedPage(DescriptorId_t physicalColumnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
-};
+}; // class RPageSourceFile
 
-
-} // namespace Detail
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

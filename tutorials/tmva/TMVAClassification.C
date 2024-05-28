@@ -179,7 +179,7 @@ int TMVAClassification( TString myMethodList = "" )
    }
    else {
       TFile::SetCacheFileDir(".");
-      input = TFile::Open("http://root.cern.ch/files/tmva_class_example.root", "CACHEREAD");
+      input = TFile::Open("http://root.cern/files/tmva_class_example.root", "CACHEREAD");
    }
    if (!input) {
       std::cout << "ERROR: could not open data file" << std::endl;
@@ -306,7 +306,7 @@ int TMVAClassification( TString myMethodList = "" )
    // ### Book MVA methods
    //
    // Please lookup the various method configuration options in the corresponding cxx files, eg:
-   // src/MethoCuts.cxx, etc, or here: http://tmva.sourceforge.net/optionRef.html
+   // src/MethoCuts.cxx, etc, or here: http://tmva.sourceforge.net/old_site/optionRef.html
    // it is possible to preset ranges in the option string in which the cut optimisation should be done:
    // "...:CutRangeMin[2]=-1:CutRangeMax[2]=1"...", where [2] is the third input variable
 

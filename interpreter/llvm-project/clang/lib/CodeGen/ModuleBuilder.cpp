@@ -12,7 +12,6 @@
 
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "CGDebugInfo.h"
-#include "CGCXXABI.h"
 #include "CodeGenModule.h"
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/DeclObjC.h"
@@ -24,23 +23,17 @@
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/VirtualFileSystem.h"
 #include <memory>
 
 using namespace clang;
 using namespace CodeGen;
 
-namespace {
-  struct CXXABICtxSwapper: clang::CodeGen::CGCXXABI {
-    void SwapCtx(clang::CodeGen::CGCXXABI &other) {
-      std::swap(MangleCtx, ((CXXABICtxSwapper&)other).MangleCtx);
-    }
-  };
-}
-
 namespace clang {
   class CodeGeneratorImpl : public CodeGenerator {
     DiagnosticsEngine &Diags;
     ASTContext *Ctx;
+    IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS; // Only used for debug info.
     const HeaderSearchOptions &HeaderSearchOpts; // Only used for debug info.
     const PreprocessorOptions &PreprocessorOpts; // Only used for debug info.
     CodeGenOptions CodeGenOpts;  // Intentionally copied in.
@@ -83,11 +76,12 @@ namespace clang {
 
   public:
     CodeGeneratorImpl(DiagnosticsEngine &diags, llvm::StringRef ModuleName,
+                      IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS,
                       const HeaderSearchOptions &HSO,
                       const PreprocessorOptions &PPO, const CodeGenOptions &CGO,
                       llvm::LLVMContext &C,
                       CoverageSourceInfo *CoverageInfo = nullptr)
-        : Diags(diags), Ctx(nullptr), HeaderSearchOpts(HSO),
+        : Diags(diags), Ctx(nullptr), FS(std::move(FS)), HeaderSearchOpts(HSO),
           PreprocessorOpts(PPO), CodeGenOpts(CGO), HandlingTopLevelDecls(0),
           CoverageInfo(CoverageInfo),
           M(new llvm::Module(ExpandModuleName(ModuleName, CGO), C)) {
@@ -136,48 +130,12 @@ namespace clang {
       return D;
     }
 
-    llvm::Constant *GetAddrOfGlobal(GlobalDecl global, bool isForDefinition) {
-      return Builder->GetAddrOfGlobal(global, ForDefinition_t(isForDefinition));
+    llvm::StringRef GetMangledName(GlobalDecl GD) {
+      return Builder->getMangledName(GD);
     }
 
-    llvm::Module *StartModule(llvm::StringRef ModuleName,
-                              llvm::LLVMContext& C,
-                              const CodeGenOptions& CGO) {
-      assert(!M && "Replacing existing Module?");
-
-      std::unique_ptr<CodeGen::CodeGenModule> OldBuilder;
-      OldBuilder.swap(Builder);
-      CodeGenOpts = CGO;
-      M.reset(new llvm::Module(ModuleName, C));
-      Initialize(*Ctx);
-
-      assert(OldBuilder->DeferredDeclsToEmit.empty()
-             && "Should have emitted all decls deferred to emit.");
-      assert(Builder->DeferredDecls.empty()
-             && "Newly created module should not have deferred decls");
-      Builder->DeferredDecls.swap(OldBuilder->DeferredDecls);
-
-      assert(OldBuilder->EmittedDeferredDecls.empty()
-             && "Still have (unmerged) EmittedDeferredDecls deferred decls");
-
-      assert(Builder->DeferredVTables.empty()
-             && "Newly created module should not have deferred vtables");
-      Builder->DeferredVTables.swap(OldBuilder->DeferredVTables);
-
-      assert(Builder->Manglings.empty()
-             && "Newly created module should not have manglings");
-      // Calls swap() internally, *also* swapping the Allocator object which is
-      // essential to keep the storage!
-      Builder->Manglings = std::move(OldBuilder->Manglings);
-
-      assert(Builder->WeakRefReferences.empty()
-             && "Newly created module should not have weakRefRefs");
-      Builder->WeakRefReferences.swap(OldBuilder->WeakRefReferences);
-
-      ((CXXABICtxSwapper&)*Builder->ABI).SwapCtx(*OldBuilder->ABI);
-      Builder->TBAA.swap(OldBuilder->TBAA);
-
-      return M.get();
+    llvm::Constant *GetAddrOfGlobal(GlobalDecl global, bool isForDefinition) {
+      return Builder->GetAddrOfGlobal(global, ForDefinition_t(isForDefinition));
     }
 
     void print(llvm::raw_ostream& out) {
@@ -297,8 +255,22 @@ namespace clang {
                               llvm::LLVMContext &C) {
       assert(!M && "Replacing existing Module?");
       M.reset(new llvm::Module(ExpandModuleName(ModuleName, CodeGenOpts), C));
+
+      std::unique_ptr<CodeGenModule> OldBuilder = std::move(Builder);
+
       Initialize(*Ctx);
+
+      if (OldBuilder)
+        OldBuilder->moveLazyEmissionStates(Builder.get());
+
       return M.get();
+    }
+
+    llvm::Module *StartModule(llvm::StringRef ModuleName,
+                              llvm::LLVMContext& C,
+                              const CodeGenOptions& CGO) {
+      CodeGenOpts = CGO;
+      return StartModule(ModuleName, C);
     }
 
     void forgetGlobal(llvm::GlobalValue* GV) {
@@ -311,7 +283,7 @@ namespace clang {
       }
     }
 
-    void forgetDecl(const GlobalDecl& GD, llvm::StringRef MangledName) {
+    void forgetDecl(llvm::StringRef MangledName) {
       Builder->DeferredDecls.erase(MangledName);
       Builder->Manglings.erase(MangledName);
     }
@@ -324,7 +296,12 @@ namespace clang {
       const auto &SDKVersion = Ctx->getTargetInfo().getSDKVersion();
       if (!SDKVersion.empty())
         M->setSDKVersion(SDKVersion);
-      Builder.reset(new CodeGen::CodeGenModule(Context, HeaderSearchOpts,
+      if (const auto *TVT = Ctx->getTargetInfo().getDarwinTargetVariantTriple())
+        M->setDarwinTargetVariantTriple(TVT->getTriple());
+      if (auto TVSDKVersion =
+              Ctx->getTargetInfo().getDarwinTargetVariantSDKVersion())
+        M->setDarwinTargetVariantSDKVersion(*TVSDKVersion);
+      Builder.reset(new CodeGen::CodeGenModule(Context, FS, HeaderSearchOpts,
                                                PreprocessorOpts, CodeGenOpts,
                                                *M, Diags, CoverageInfo));
 
@@ -342,6 +319,7 @@ namespace clang {
     }
 
     bool HandleTopLevelDecl(DeclGroupRef DG) override {
+      // FIXME: Why not return false and abort parsing?
       if (Diags.hasErrorOccurred())
         return true;
 
@@ -507,6 +485,10 @@ const Decl *CodeGenerator::GetDeclForMangledName(llvm::StringRef name) {
   return static_cast<CodeGeneratorImpl*>(this)->GetDeclForMangledName(name);
 }
 
+llvm::StringRef CodeGenerator::GetMangledName(GlobalDecl GD) {
+  return static_cast<CodeGeneratorImpl *>(this)->GetMangledName(GD);
+}
+
 llvm::Constant *CodeGenerator::GetAddrOfGlobal(GlobalDecl global,
                                                bool isForDefinition) {
   return static_cast<CodeGeneratorImpl*>(this)
@@ -522,26 +504,28 @@ llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
   return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C);
 }
 
-void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
-  static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
-}
-
-void CodeGenerator::forgetDecl(const GlobalDecl& GD,
-                               llvm::StringRef MangledName) {
-  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(GD, MangledName);
-}
-
 llvm::Module *CodeGenerator::StartModule(llvm::StringRef ModuleName,
                                          llvm::LLVMContext& C,
                                          const CodeGenOptions& CGO) {
   return static_cast<CodeGeneratorImpl*>(this)->StartModule(ModuleName, C, CGO);
 }
 
-CodeGenerator *clang::CreateLLVMCodeGen(
-    DiagnosticsEngine &Diags, llvm::StringRef ModuleName,
-    const HeaderSearchOptions &HeaderSearchOpts,
-    const PreprocessorOptions &PreprocessorOpts, const CodeGenOptions &CGO,
-    llvm::LLVMContext &C, CoverageSourceInfo *CoverageInfo) {
-  return new CodeGeneratorImpl(Diags, ModuleName, HeaderSearchOpts,
-                               PreprocessorOpts, CGO, C, CoverageInfo);
+void CodeGenerator::forgetGlobal(llvm::GlobalValue* GV) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetGlobal(GV);
+}
+
+void CodeGenerator::forgetDecl(llvm::StringRef MangledName) {
+  static_cast<CodeGeneratorImpl*>(this)->forgetDecl(MangledName);
+}
+
+CodeGenerator *
+clang::CreateLLVMCodeGen(DiagnosticsEngine &Diags, llvm::StringRef ModuleName,
+                         IntrusiveRefCntPtr<llvm::vfs::FileSystem> FS,
+                         const HeaderSearchOptions &HeaderSearchOpts,
+                         const PreprocessorOptions &PreprocessorOpts,
+                         const CodeGenOptions &CGO, llvm::LLVMContext &C,
+                         CoverageSourceInfo *CoverageInfo) {
+  return new CodeGeneratorImpl(Diags, ModuleName, std::move(FS),
+                               HeaderSearchOpts, PreprocessorOpts, CGO, C,
+                               CoverageInfo);
 }

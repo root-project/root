@@ -1,3 +1,5 @@
+/// \cond ROOFIT_INTERNAL
+
 /*
  * Project: RooFit
  * Authors:
@@ -14,29 +16,29 @@
 #define RooFit_FitHelpers_h
 
 #include <memory>
-#include <string>
 
 class RooAbsData;
 class RooAbsPdf;
 class RooAbsReal;
-class RooArgSet;
 class RooCmdConfig;
 class RooFitResult;
 class RooLinkedList;
-class RooMinimizer;
 
 namespace RooFit {
 namespace FitHelpers {
 
-int calcAsymptoticCorrectedCovariance(RooAbsPdf &pdf, RooMinimizer &minimizer, RooAbsData const &data);
-int calcSumW2CorrectedCovariance(RooAbsPdf const &pdf, RooMinimizer &minimizer, RooAbsReal &nll);
-
 void defineMinimizationOptions(RooCmdConfig &pc);
+
 std::unique_ptr<RooFitResult> minimize(RooAbsReal &model, RooAbsReal &nll, RooAbsData const &data, RooCmdConfig const &pc);
 
-constexpr int extendedFitDefault = 2;
+std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const RooLinkedList &cmdList);
+std::unique_ptr<RooAbsReal> createChi2(RooAbsReal &real, RooAbsData &data, const RooLinkedList &cmdList);
+
+std::unique_ptr<RooFitResult> fitTo(RooAbsReal &pdf, RooAbsData &data, const RooLinkedList &cmdList, bool chi2);
 
 } // namespace FitHelpers
 } // namespace RooFit
 
 #endif
+
+/// \endcond

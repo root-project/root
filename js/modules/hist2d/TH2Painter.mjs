@@ -1,8 +1,7 @@
 import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
          clTMultiGraph, clTH1D, clTF2, clTProfile2D, kInspect } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
-import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
-import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
+import { kBlack } from '../base/colors.mjs';
 import { TRandom, floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -97,7 +96,7 @@ function buildHist2dContour(histo, handle, levels, palette, contour_func) {
          for (k = 0; k < 4; k++)
             ir[k] = LevelSearch(zc[k]);
 
-         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) {
+         if ((ir[0] !== ir[1]) || (ir[1] !== ir[2]) || (ir[2] !== ir[3]) || (ir[3] !== ir[0])) { // deepscan-disable-line
             x[3] = x[0] = (arrx[i] + arrx[i+1])/2;
             x[2] = x[1] = (arrx[i+1] + arrx[i+2])/2;
 
@@ -391,7 +390,7 @@ class Triangles3DHandler {
 
                // check if any(contours for given level exists
                if (((side1 > 0) || (side2 > 0) || (side3 > 0)) &&
-                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1)))
+                   ((side1 !== side2) || (side2 !== side3) || (side3 !== side1))) // deepscan-disable-line
                       ++ngridsegments;
 
                continue;
@@ -751,7 +750,7 @@ class TH2Painter extends THistPainter {
          this.interactiveRedraw('pad', 'drawopt');
       });
 
-      if (this.options.Color || this.options.Contour || this.options.Surf || this.options.Lego === 12 || this.options.Lego === 14)
+      if (this.options.Color || this.options.Contour || this.options.Hist || this.options.Surf || this.options.Lego === 12 || this.options.Lego === 14)
          this.fillPaletteMenu(menu, true);
    }
 
@@ -876,11 +875,13 @@ class TH2Painter extends THistPainter {
             const bin_content = histo.fBins.arr[n].fContent;
             if (n === 0) this.gminbin = this.gmaxbin = bin_content;
 
-            if (bin_content < this.gminbin) this.gminbin = bin_content; else
-               if (bin_content > this.gmaxbin) this.gmaxbin = bin_content;
+            if (bin_content < this.gminbin)
+               this.gminbin = bin_content;
+            else if (bin_content > this.gmaxbin)
+               this.gmaxbin = bin_content;
 
-            if (bin_content > 0)
-               if ((this.gminposbin === null) || (this.gminposbin > bin_content)) this.gminposbin = bin_content;
+            if ((bin_content > 0) && ((this.gminposbin === null) || (this.gminposbin > bin_content)))
+               this.gminposbin = bin_content;
          }
       } else {
          // global min/max, used at the moment in 3D drawing
@@ -902,35 +903,40 @@ class TH2Painter extends THistPainter {
       }
 
       // this value used for logz scale drawing
-      if (this.gminposbin === null)
+      if ((this.gminposbin === null) && (this.gmaxbin > 0))
          this.gminposbin = this.gmaxbin*1e-4;
+
+      const is_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
 
       if (this.options.Axis > 0) {
          // Paint histogram axis only
          this.draw_content = false;
-      } else {
-         this.draw_content = (this.gmaxbin !== 0) || (this.gminbin !== 0);
-         if (!this.draw_content && this.options.Zero && this.isTH2Poly()) {
+      } else if (this.isTH2Poly()) {
+         this.draw_content = is_content || this.options.Line || this.options.Fill || this.options.Mark;
+         if (!this.draw_content && this.options.Zero) {
             this.draw_content = true;
             this.options.Line = 1;
          }
-      }
+      } else
+         this.draw_content = is_content;
    }
 
    /** @summary Count TH2 histogram statistic
      * @desc Optionally one could provide condition function to select special range */
-   countStat(cond) {
-      if (!cond && this.options.cutg)
-         cond = (x, y) => this.options.cutg.IsInside(x, y);
+   countStat(cond, count_skew) {
+      if (!isFunc(cond))
+         cond = this.options.cutg ? (x, y) => this.options.cutg.IsInside(x, y) : null;
 
       const histo = this.getHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis,
             fp = this.getFramePainter(),
             funcs = fp.getGrFuncs(this.options.second_x, this.options.second_y),
-            res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0], xmax: 0, ymax: 0, wmax: null },
+            res = { name: histo.fName, entries: 0, eff_entries: 0, integral: 0,
+                    meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    xmax: 0, ymax: 0, wmax: null, skewx: 0, skewy: 0, skewd: 0, kurtx: 0, kurty: 0, kurtd: 0 },
             has_counted_stat = !fp.isAxisZoomed('x') && !fp.isAxisZoomed('y') && (Math.abs(histo.fTsumw) > 1e-300) && !cond;
-      let stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
+      let stat_sum0 = 0, stat_sumw2 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0,
-          xside, yside, xx, yy, zz;
+          xside, yside, xx, yy, zz, xleft, xright, yleft, yright;
 
       if (this.isTH2Poly()) {
          const len = histo.fBins.arr.length;
@@ -977,6 +983,7 @@ class TH2Painter extends THistPainter {
 
             if (!has_counted_stat) {
                stat_sum0 += zz;
+               stat_sumw2 += zz * zz;
                stat_sumx1 += xx * zz;
                stat_sumy1 += yy * zz;
                stat_sumx2 += xx * xx * zz;
@@ -984,10 +991,10 @@ class TH2Painter extends THistPainter {
             }
          }
       } else {
-         const xleft = this.getSelectIndex('x', 'left'),
-               xright = this.getSelectIndex('x', 'right'),
-               yleft = this.getSelectIndex('y', 'left'),
-               yright = this.getSelectIndex('y', 'right');
+         xleft = this.getSelectIndex('x', 'left');
+         xright = this.getSelectIndex('x', 'right');
+         yleft = this.getSelectIndex('y', 'left');
+         yright = this.getSelectIndex('y', 'right');
 
          for (let xi = 0; xi <= this.nbinsx + 1; ++xi) {
             xside = (xi <= xleft) ? 0 : (xi > xright ? 2 : 1);
@@ -1013,6 +1020,7 @@ class TH2Painter extends THistPainter {
 
                if (!has_counted_stat) {
                   stat_sum0 += zz;
+                  stat_sumw2 += zz * zz;
                   stat_sumx1 += xx * zz;
                   stat_sumy1 += yy * zz;
                   stat_sumx2 += xx**2 * zz;
@@ -1025,6 +1033,7 @@ class TH2Painter extends THistPainter {
 
       if (has_counted_stat) {
          stat_sum0 = histo.fTsumw;
+         stat_sumw2 = histo.fTsumw2;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
          stat_sumy1 = histo.fTsumwy;
@@ -1046,6 +1055,40 @@ class TH2Painter extends THistPainter {
       if (histo.fEntries > 1)
          res.entries = histo.fEntries;
 
+      res.eff_entries = stat_sumw2 ? stat_sum0*stat_sum0/stat_sumw2 : Math.abs(stat_sum0);
+
+      if (count_skew && !this.isTH2Poly()) {
+         let sumx3 = 0, sumy3 = 0, sumx4 = 0, sumy4 = 0, np = 0, w = 0;
+         for (let xi = xleft; xi < xright; ++xi) {
+            xx = xaxis.GetBinCoord(xi + 0.5);
+            for (let yi = yleft; yi < yright; ++yi) {
+               yy = yaxis.GetBinCoord(yi + 0.5);
+               if (cond && !cond(xx, yy)) continue;
+               w = histo.getBinContent(xi + 1, yi + 1);
+               np += w;
+               sumx3 += w * Math.pow(xx - res.meanx, 3);
+               sumy3 += w * Math.pow(yy - res.meany, 3);
+               sumx4 += w * Math.pow(xx - res.meanx, 4);
+               sumy4 += w * Math.pow(yy - res.meany, 4);
+            }
+         }
+
+         const stddev3x = Math.pow(res.rmsx, 3),
+               stddev3y = Math.pow(res.rmsy, 3),
+               stddev4x = Math.pow(res.rmsx, 4),
+               stddev4y = Math.pow(res.rmsy, 4);
+         if (np * stddev3x !== 0)
+            res.skewx = sumx3 / (np * stddev3x);
+         if (np * stddev3y !== 0)
+            res.skewy = sumy3 / (np * stddev3y);
+         res.skewd = res.eff_entries > 0 ? Math.sqrt(6/res.eff_entries) : 0;
+         if (np * stddev4x !== 0)
+            res.kurtx = sumx4 / (np * stddev4x) - 3;
+         if (np * stddev4y !== 0)
+            res.kurty = sumy4 / (np * stddev4y) - 3;
+         res.kurtd = res.eff_entries > 0 ? Math.sqrt(24/res.eff_entries) : 0;
+      }
+
       return res;
    }
 
@@ -1056,16 +1099,16 @@ class TH2Painter extends THistPainter {
 
       if (dostat === 1) dostat = 1111;
 
-      const data = this.countStat(),
-          print_name = Math.floor(dostat % 10),
-          print_entries = Math.floor(dostat / 10) % 10,
-          print_mean = Math.floor(dostat / 100) % 10,
-          print_rms = Math.floor(dostat / 1000) % 10,
-          print_under = Math.floor(dostat / 10000) % 10,
-          print_over = Math.floor(dostat / 100000) % 10,
-          print_integral = Math.floor(dostat / 1000000) % 10,
-          print_skew = Math.floor(dostat / 10000000) % 10,
-          print_kurt = Math.floor(dostat / 100000000) % 10;
+      const print_name = Math.floor(dostat % 10),
+            print_entries = Math.floor(dostat / 10) % 10,
+            print_mean = Math.floor(dostat / 100) % 10,
+            print_rms = Math.floor(dostat / 1000) % 10,
+            print_under = Math.floor(dostat / 10000) % 10,
+            print_over = Math.floor(dostat / 100000) % 10,
+            print_integral = Math.floor(dostat / 1000000) % 10,
+            print_skew = Math.floor(dostat / 10000000) % 10,
+            print_kurt = Math.floor(dostat / 100000000) % 10,
+            data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
 
       stat.clearPave();
 
@@ -1088,13 +1131,21 @@ class TH2Painter extends THistPainter {
       if (print_integral > 0)
          stat.addText('Integral = ' + stat.format(data.matrix[4], 'entries'));
 
-      if (print_skew > 0) {
-         stat.addText('Skewness x = <undef>');
-         stat.addText('Skewness y = <undef>');
+      if (print_skew === 2) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)} #pm ${stat.format(data.skewd)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)} #pm ${stat.format(data.skewd)}`);
+      } else if (print_skew > 0) {
+         stat.addText(`Skewness x = ${stat.format(data.skewx)}`);
+         stat.addText(`Skewness y = ${stat.format(data.skewy)}`);
       }
 
-      if (print_kurt > 0)
-         stat.addText('Kurt = <undef>');
+      if (print_kurt === 2) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)} #pm ${stat.format(data.kurtd)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)} #pm ${stat.format(data.kurtd)}`);
+      } else if (print_kurt > 0) {
+         stat.addText(`Kurtosis x = ${stat.format(data.kurtx)}`);
+         stat.addText(`Kurtosis y = ${stat.format(data.kurty)}`);
+      }
 
       if ((print_under > 0) || (print_over > 0)) {
          const get = i => data.matrix[i].toFixed(0);
@@ -1373,8 +1424,8 @@ class TH2Painter extends THistPainter {
 
          switch (this.options.Contour) {
             case 1: break;
-            case 11: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: icol }); break;
-            case 12: fillcolor = 'none'; lineatt = new TAttLineHandler({ color: 1, style: (ipoly%5 + 1), width: 1 }); break;
+            case 11: fillcolor = 'none'; lineatt = this.createAttLine({ color: icol, std: false }); break;
+            case 12: fillcolor = 'none'; lineatt = this.createAttLine({ color: 1, style: (ipoly%5 + 1), width: 1, std: false }); break;
             case 13: fillcolor = 'none'; lineatt = this.lineatt; break;
             case 14: break;
          }
@@ -1396,95 +1447,92 @@ class TH2Painter extends THistPainter {
       return handle;
    }
 
-   /** @summary Create poly bin */
-   createPolyBin(funcs, bin, text_pos) {
-      let cmd = '', grcmd = '', acc_x = 0, acc_y = 0, ngr, ngraphs = 1, gr = null;
+   getGrNPoints(gr) {
+      const x = gr.fX, y = gr.fY;
+      let npnts = gr.fNpoints;
+      if ((npnts > 2) && (x[0] === x[npnts-1]) && (y[0] === y[npnts-1]))
+         npnts--;
+      return npnts;
+   }
 
-      if (bin.fPoly._typename === clTMultiGraph)
-         ngraphs = bin.fPoly.fGraphs.arr.length;
-      else
-         gr = bin.fPoly;
+   /** @summary Create single graph path from TH2PolyBin */
+   createPolyGr(funcs, gr, textbin) {
+      let grcmd = '', acc_x = 0, acc_y = 0;
 
-      if (text_pos)
-         bin._sumx = bin._sumy = bin._suml = 0;
+      const x = gr.fX, y = gr.fY,
+         flush = () => {
+            if (acc_x) { grcmd += 'h' + acc_x; acc_x = 0; }
+            if (acc_y) { grcmd += 'v' + acc_y; acc_y = 0; }
+         }, addPoint = (x1, y1, x2, y2) => {
+            const len = Math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2);
+            textbin.sumx += (x1 + x2) * len / 2;
+            textbin.sumy += (y1 + y2) * len / 2;
+            textbin.sum += len;
+         }, npnts = this.getGrNPoints(gr);
 
-      const addPoint = (x1, y1, x2, y2) => {
-         const len = Math.sqrt((x1-x2)**2 + (y1-y2)**2);
-         bin._sumx += (x1+x2)*len/2;
-         bin._sumy += (y1+y2)*len/2;
-         bin._suml += len;
-      },
+      if (npnts < 2)
+         return '';
 
-       flush = () => {
-         if (acc_x) { grcmd += 'h' + acc_x; acc_x = 0; }
-         if (acc_y) { grcmd += 'v' + acc_y; acc_y = 0; }
-      };
+      const grx0 = Math.round(funcs.grx(x[0])),
+            gry0 = Math.round(funcs.gry(y[0]));
+      let grx = grx0, gry = gry0;
 
-      for (ngr = 0; ngr < ngraphs; ++ngr) {
-         if (!gr || (ngr > 0)) gr = bin.fPoly.fGraphs.arr[ngr];
+      for (let n = 1; n < npnts; ++n) {
+         const nextx = Math.round(funcs.grx(x[n])),
+               nexty = Math.round(funcs.gry(y[n])),
+               dx = nextx - grx,
+               dy = nexty - gry;
 
-         const x = gr.fX, y = gr.fY;
-         let n, nextx, nexty, npnts = gr.fNpoints, dx, dy,
-             grx = Math.round(funcs.grx(x[0])),
-             gry = Math.round(funcs.gry(y[0]));
-
-         if ((npnts > 2) && (x[0] === x[npnts-1]) && (y[0] === y[npnts-1])) npnts--;
-
-         const poscmd = `M${grx},${gry}`;
-
-         grcmd = '';
-
-         for (n = 1; n < npnts; ++n) {
-            nextx = Math.round(funcs.grx(x[n]));
-            nexty = Math.round(funcs.gry(y[n]));
-            if (text_pos) addPoint(grx, gry, nextx, nexty);
-            dx = nextx - grx;
-            dy = nexty - gry;
-            if (dx || dy) {
-               if (dx === 0) {
-                  if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
-                  acc_y += dy;
-               } else if (dy === 0) {
-                  if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
-                  acc_x += dx;
-               } else {
-                  flush();
-                  grcmd += 'l' + dx + ',' + dy;
-               }
-
-               grx = nextx; gry = nexty;
+         if (textbin) addPoint(grx, gry, nextx, nexty);
+         if (dx || dy) {
+            if (dx === 0) {
+               if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
+               acc_y += dy;
+            } else if (dy === 0) {
+               if ((acc_x === 0) || ((dx < 0) !== (acc_x < 0))) flush();
+               acc_x += dx;
+            } else {
+               flush();
+               grcmd += `l${dx},${dy}`;
             }
-         }
 
-         if (text_pos) addPoint(grx, gry, Math.round(funcs.grx(x[0])), Math.round(funcs.gry(y[0])));
-         flush();
-
-         if (grcmd)
-            cmd += poscmd + grcmd + 'z';
-      }
-
-      if (text_pos) {
-         if (bin._suml > 0) {
-            bin._midx = Math.round(bin._sumx / bin._suml);
-            bin._midy = Math.round(bin._sumy / bin._suml);
-         } else {
-            bin._midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
-            bin._midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+            grx = nextx; gry = nexty;
          }
       }
 
+      if (textbin) addPoint(grx, gry, grx0, gry0);
+      flush();
+
+      return grcmd ? `M${grx0},${gry0}` + grcmd + 'z' : '';
+   }
+
+   /** @summary Create path for complete TH2PolyBin */
+   createPolyBin(funcs, bin) {
+      const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+      let cmd = '';
+      for (let k = 0; k < arr.length; ++k)
+         cmd += this.createPolyGr(funcs, arr[k]);
       return cmd;
    }
 
-   /** @summary draw TH2Poly as color */
-   async drawPolyBinsColor() {
+   /** @summary draw TH2Poly bins */
+   async drawPolyBins() {
       const histo = this.getObject(),
             pmain = this.getFramePainter(),
             funcs = pmain.getGrFuncs(this.options.second_x, this.options.second_y),
+            draw_colors = this.options.Color || (!this.options.Line && !this.options.Fill && !this.options.Text && !this.options.Mark),
+            draw_lines = this.options.Line || (this.options.Text && !draw_colors),
+            draw_fill = this.options.Fill && !draw_colors,
+            draw_mark = this.options.Mark,
             h = pmain.getFrameHeight(),
-            colPaths = [], textbins = [],
+            textbins = [],
             len = histo.fBins.arr.length;
-       let colindx, cmd, bin, item, i;
+       let colindx, cmd,
+           full_cmd = '', allmarkers_cmd = '',
+           bin, item, i, gr0 = null,
+           lineatt_match = draw_lines,
+           fillatt_match = draw_fill,
+           markatt_match = draw_mark;
 
       // force recalculations of contours
       // use global coordinates
@@ -1492,43 +1540,120 @@ class TH2Painter extends THistPainter {
       this.minbin = this.gminbin;
       this.minposbin = this.gminposbin;
 
-      const cntr = this.getContour(true), palette = this.getHistPalette(),
-            draw_lines = this.options.Line || this.options.Text;
+      const cntr = draw_colors ? this.getContour(true) : null,
+            palette = cntr ? this.getHistPalette() : null,
+            rejectBin = bin => {
+               // check if bin outside visible range
+               return ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
+                       (bin.fYmin > funcs.scale_ymax) || (bin.fYmax < funcs.scale_ymin));
+            };
 
+      // check if similar fill attributes
       for (i = 0; i < len; ++i) {
          bin = histo.fBins.arr[i];
-         colindx = cntr.getPaletteIndex(palette, bin.fContent);
-         if (colindx === null) {
-            if (!draw_lines) continue;
-            colindx = 0;
+         if (rejectBin(bin)) continue;
+
+         const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+         for (let k = 0; k < arr.length; ++k) {
+            const gr = arr[k];
+            if (!gr0) { gr0 = gr; continue; }
+            if (lineatt_match && ((gr0.fLineColor !== gr.fLineColor) || (gr0.fLineWidth !== gr.fLineWidth) || (gr0.fLineStyle !== gr.fLineStyle)))
+               lineatt_match = false;
+            if (fillatt_match && ((gr0.fFillColor !== gr.fFillColor) || (gr0.fFillStyle !== gr.fFillStyle)))
+               fillatt_match = false;
+            if (markatt_match && ((gr0.fMarkerColor !== gr.fMarkerColor) || (gr0.fMarkerStyle !== gr.fMarkerStyle) || (gr0.fMarkerSize !== gr.fMarkerSize)))
+               markatt_match = false;
          }
-         // contrary to TH2 col drawing always, empty bins not drawn only when Zero option is specified
-         if ((bin.fContent === 0) && !this.options.Zero) continue;
-
-         // check if bin outside visible range
-         if ((bin.fXmin > funcs.scale_xmax) || (bin.fXmax < funcs.scale_xmin) ||
-             (bin.fYmin > funcs.scale_ymax) || (bin.fYmax < funcs.scale_ymin)) continue;
-
-         cmd = this.createPolyBin(funcs, bin, this.options.Text && bin.fContent);
-
-         if (colPaths[colindx] === undefined)
-            colPaths[colindx] = cmd;
-         else
-            colPaths[colindx] += cmd;
-
-         if (this.options.Text && bin.fContent)
-            textbins.push(bin);
+         if (!lineatt_match && !fillatt_match && !markatt_match)
+            break;
       }
 
-      for (colindx = 0; colindx < colPaths.length; ++colindx) {
-         if (colPaths[colindx]) {
-            item = this.draw_g
-                     .append('svg:path')
-                     .style('fill', colindx ? this._color_palette.getColor(colindx) : 'none')
-                     .attr('d', colPaths[colindx]);
-            if (draw_lines)
-               item.call(this.lineatt.func);
-         }
+      // do not try color draw optimization as with plain th2 while
+      // bins are not rectangular and drawings artefacts are nasty
+      // therefore draw each bin separately when doing color draw
+      const lineatt0 = lineatt_match && gr0 ? this.createAttLine(gr0) : null,
+            fillatt0 = fillatt_match && gr0 ? this.createAttFill(gr0) : null,
+            markeratt0 = markatt_match && gr0 ? this.createAttMarker({ attr: gr0, style: this.options.MarkStyle, std: false }) : null,
+            optimize_draw = !draw_colors && (draw_lines ? lineatt_match : true) && (draw_fill ? fillatt_match : true);
+
+      // draw bins
+      for (i = 0; i < len; ++i) {
+         bin = histo.fBins.arr[i];
+         if (rejectBin(bin)) continue;
+
+         const draw_bin = bin.fContent || this.options.Zero,
+               arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+
+         colindx = draw_colors && draw_bin ? cntr.getPaletteIndex(palette, bin.fContent) : null;
+
+         const textbin = this.options.Text && draw_bin ? { bin, sumx: 0, sumy: 0, sum: 0 } : null;
+
+         for (let k = 0; k < arr.length; ++k) {
+            const gr = arr[k];
+            if (markeratt0) {
+               const npnts = this.getGrNPoints(gr);
+               for (let n = 0; n < npnts; ++n)
+                  allmarkers_cmd += markeratt0.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
+            }
+
+            cmd = this.createPolyGr(funcs, gr, textbin);
+            if (!cmd) continue;
+
+            if (optimize_draw)
+               full_cmd += cmd;
+            else if ((colindx !== null) || draw_fill || draw_lines) {
+               item = this.draw_g.append('svg:path').attr('d', cmd);
+               if (draw_colors && (colindx !== null))
+                  item.style('fill', this._color_palette.getColor(colindx));
+               else if (draw_fill)
+                  item.call('fill', this.createAttFill(gr).func);
+               else
+                  item.style('fill', 'none');
+               if (draw_lines)
+                  item.call(this.createAttLine(gr).func);
+            }
+         } // loop over graphs
+
+         if (textbin?.sum)
+            textbins.push(textbin);
+      } // loop over bins
+
+      if (optimize_draw) {
+         item = this.draw_g.append('svg:path').attr('d', full_cmd);
+         if (draw_fill && fillatt0)
+            item.call(fillatt0.func);
+         else
+            item.style('fill', 'none');
+         if (draw_lines && lineatt0)
+            item.call(lineatt0.func);
+      }
+
+      if (markeratt0 && !markeratt0.empty() && allmarkers_cmd) {
+         this.draw_g.append('svg:path')
+                    .attr('d', allmarkers_cmd)
+                    .call(markeratt0.func);
+      } else if (draw_mark) {
+         for (i = 0; i < len; ++i) {
+            bin = histo.fBins.arr[i];
+            if (rejectBin(bin)) continue;
+
+            const arr = (bin.fPoly._typename === clTMultiGraph) ? bin.fPoly.fGraphs.arr : [bin.fPoly];
+
+            for (let k = 0; k < arr.length; ++k) {
+               const gr = arr[k], npnts = this.getGrNPoints(gr),
+                     markeratt = this.createAttMarker({ attr: gr, style: this.options.MarkStyle, std: false });
+               if (!npnts || markeratt.empty())
+                  continue;
+               let cmd = '';
+
+               for (let n = 0; n < npnts; ++n)
+                  cmd += markeratt.create(funcs.grx(gr.fX[n]), funcs.gry(gr.fY[n]));
+
+               this.draw_g.append('svg:path')
+                   .attr('d', cmd)
+                   .call(markeratt.func);
+            } // loop over graphs
+         } // loop over bins
       }
 
       let pr = Promise.resolve(true);
@@ -1542,7 +1667,17 @@ class TH2Painter extends THistPainter {
          this.startTextDrawing(42, text_size, text_g, text_size);
 
          for (i = 0; i < textbins.length; ++i) {
-            bin = textbins[i];
+            const textbin = textbins[i];
+
+            bin = textbin.bin;
+
+            if (textbin.sum > 0) {
+               textbin.midx = Math.round(textbin.sumx / textbin.sum);
+               textbin.midy = Math.round(textbin.sumy / textbin.sum);
+            } else {
+               textbin.midx = Math.round(funcs.grx((bin.fXmin + bin.fXmax)/2));
+               textbin.midy = Math.round(funcs.gry((bin.fYmin + bin.fYmax)/2));
+            }
 
             let text;
 
@@ -1554,7 +1689,7 @@ class TH2Painter extends THistPainter {
                   text = bin.fNumber.toString();
             }
 
-            this.drawText({ align: 22, x: bin._midx, y: bin._midy, rotate, text, color, latex: 0, draw_g: text_g });
+            this.drawText({ align: 22, x: textbin.midx, y: textbin.midy, rotate, text, color, latex: 0, draw_g: text_g });
          }
 
          pr = this.finishTextDrawing(text_g, true);
@@ -1724,7 +1859,7 @@ class TH2Painter extends THistPainter {
           zdiff, dgrx, dgry, xx, yy, ww, hh, xyfactor,
           uselogz = false, logmin = 0;
 
-      if (pad?.fLogz && (absmax > 0)) {
+      if ((pad?.fLogv ?? pad?.fLogz) && (absmax > 0)) {
          uselogz = true;
          const logmax = Math.log(absmax);
          if (absmin > 0)
@@ -1989,7 +2124,7 @@ class TH2Painter extends THistPainter {
          markers += swapXY ? this.markeratt.create(y, x) : this.markeratt.create(x, y);
       }, make_cmarker = (x, y) => {
          if (!attrcmarkers) {
-            attrcmarkers = new TAttMarkerHandler({ attr: histo, style: 24 });
+            attrcmarkers = this.createAttMarker({ attr: histo, style: 24, std: false });
             attrcmarkers.resetPos();
          }
          cmarkers += swapXY ? attrcmarkers.create(y, x) : attrcmarkers.create(x, y);
@@ -2253,7 +2388,7 @@ class TH2Painter extends THistPainter {
       }
 
       if (dashed_lines) {
-         const dashed = new TAttLineHandler({ attr: histo, style: 2 });
+         const dashed = this.createAttLine({ attr: histo, style: 2, std: false, color: kBlack });
          this.draw_g.append('svg:path')
              .attr('d', dashed_lines)
              .call(dashed.func)
@@ -2437,7 +2572,7 @@ class TH2Painter extends THistPainter {
       let handle, pr;
 
       if (this.isTH2Poly())
-         pr = this.drawPolyBinsColor();
+         pr = this.drawPolyBins();
        else {
          if (this.options.Scat)
             handle = this.drawBinsScatter();
@@ -2816,7 +2951,7 @@ class TH2Painter extends THistPainter {
                    (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
 
                // ignore empty bins with col0 option
-               if ((bin.fContent === 0) && !this.options.Zero) continue;
+               if (!bin.fContent && !this.options.Zero) continue;
 
                let gr = bin.fPoly, numgraphs = 1;
                if (gr._typename === clTMultiGraph) { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
@@ -3097,7 +3232,7 @@ class TH2Painter extends THistPainter {
       const need_palette = this.options.Zscale && this.options.canHavePalette();
 
       // draw new palette, resize frame if required
-      return this.drawColorPalette(need_palette, true).then(pp => {
+      return this.drawColorPalette(need_palette, true).then(async pp => {
          let pr;
          if (this.options.Circular && this.isMainPainter())
             pr = this.drawBinsCircular();
@@ -3107,8 +3242,8 @@ class TH2Painter extends THistPainter {
             pr = this.drawAxes().then(() => this.draw2DBins());
 
          return pr.then(() => this.completePalette(pp));
-      }).then(() => this.drawHistTitle())
-        .then(() => this.drawNextFunction(0, true))
+      }).then(() => this.updateFunctions())
+        .then(() => this.updateHistTitle())
         .then(() => {
             this.updateStatWebCanvas();
             return this.addInteractivity();

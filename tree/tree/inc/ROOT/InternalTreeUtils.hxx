@@ -18,6 +18,7 @@
 #ifndef ROOT_INTERNAL_TREEUTILS_H
 #define ROOT_INTERNAL_TREEUTILS_H
 
+#include "RtypesCore.h"
 #include "TTree.h"
 #include "TChain.h"
 #include "TNotifyLink.h"
@@ -79,6 +80,10 @@ std::unique_ptr<TChain> MakeChainForMT(const std::string &name = "", const std::
 std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendInfo &finfo);
 
 std::vector<std::string> ExpandGlob(const std::string &glob);
+
+std::pair<std::vector<Long64_t>, Long64_t> GetClustersAndEntries(std::string_view treename, std::string_view path);
+
+std::pair<bool, std::string> TreeUsesIndexedFriends(const TTree &tree);
 
 } // namespace TreeUtils
 } // namespace Internal

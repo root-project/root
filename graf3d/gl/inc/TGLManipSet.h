@@ -24,8 +24,8 @@ public:
    enum EManip { kTrans, kScale, kRotate, kEndType };
 
 private:
-   TGLManipSet(const TGLManipSet&);            // Not implemented
-   TGLManipSet& operator=(const TGLManipSet&); // Not implemented
+   TGLManipSet(const TGLManipSet&) = delete;
+   TGLManipSet& operator=(const TGLManipSet&) = delete;
 
 protected:
    TGLManip  *fManip[3]; //! manipulator store

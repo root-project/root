@@ -127,7 +127,7 @@ class TASImagePainter extends ObjectPainter {
 
       let offx = 0, offy = 0, sizex = width, sizey = height;
 
-      if (constRatio && fp) {
+      if (constRatio) {
          const image_ratio = height/width,
                frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
 
@@ -382,7 +382,7 @@ class TASImagePainter extends ObjectPainter {
 
          this.selectCurrentPad(prev_name);
          // mark painter as secondary - not in list of TCanvas primitives
-         pal_painter.$secondary = true;
+         pal_painter.setSecondary(this);
 
          // make dummy redraw, palette will be updated only from histogram painter
          pal_painter.redraw = function() {};

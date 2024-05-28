@@ -1,0 +1,44 @@
+
+name: 'ROOT 6.26'
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: v6.26/16
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: v6.26/16
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: false
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: true
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: RelWithDebInfo
+
+jobs:
+  run_nightlies:
+    uses: root-project/root/.github/workflows/root-ci.yml@v6-26-00-patches
+    secrets: inherit

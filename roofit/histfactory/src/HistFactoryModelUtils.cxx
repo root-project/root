@@ -77,8 +77,8 @@ namespace HistFactory{
    if (id == typeid(RooProdPdf)) {
       RooProdPdf *prod = dynamic_cast<RooProdPdf *>(&pdf);
       RooArgList list(prod->pdfList());
-      for (int i = 0, n = list.getSize(); i < n; ++i) {
-         RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
+      for (int i = 0, n = list.size(); i < n; ++i) {
+         RooAbsPdf *pdfi = static_cast<RooAbsPdf *>(list.at(i));
             FactorizeHistFactoryPdf(observables, *pdfi, obsTerms, constraints);
          }
       } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
@@ -119,7 +119,7 @@ namespace HistFactory{
     }
 
     // Now, get the set of gamma's
-    gammaList = (RooArgList*) &( paramfunc->paramList());
+    gammaList = const_cast<RooArgList*>(&( paramfunc->paramList()));
     if(verbose) gammaList->Print("V");
 
     return true;
@@ -132,7 +132,7 @@ namespace HistFactory{
 
     bool verbose=false;
 
-    RooSimultaneous* simPdf = (RooSimultaneous*) pdf;
+    RooSimultaneous* simPdf = static_cast<RooSimultaneous*>(pdf);
 
     // get category label
     RooCategory* cat = nullptr;
@@ -159,7 +159,7 @@ namespace HistFactory{
     // RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject("");
 
     // loop over channels
-    RooCategory* channelCat = (RooCategory*) (&simPdf->indexCat());
+    auto channelCat = static_cast<RooCategory const*>(&simPdf->indexCat());
     for (const auto& nameIdx : *channelCat) {
 
       // Get pdf associated with state from simpdf
@@ -169,12 +169,12 @@ namespace HistFactory{
       if(verbose) std::cout << "Getting data for channel: " << ChannelName << std::endl;
       ChannelBinDataMap[ ChannelName ] = std::vector<double>();
 
-      RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject(nameIdx.first.c_str());
+      RooAbsData* dataForChan = static_cast<RooAbsData*>(dataByCategory->FindObject(nameIdx.first.c_str()));
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
       std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*dataForChan->get())};
-      RooRealVar* obs = ((RooRealVar*)obstmp->first());
+      RooRealVar* obs = (static_cast<RooRealVar*>(obstmp->first()));
       if(verbose) obs->Print();
 
       //double expected = pdftmp->expectedEvents(*obstmp);
@@ -257,7 +257,7 @@ namespace HistFactory{
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("nom_")!=std::string::npos ) {
    FoundNomMean = true;
-   pois_nom = (RooRealVar*) term_pois;
+   pois_nom = static_cast<RooRealVar*>(term_pois);
       }
     }
     if( !FoundNomMean || !pois_nom ) {
@@ -295,7 +295,7 @@ namespace HistFactory{
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("_tau")!=std::string::npos ) {
    FoundTau = true;
-   tau = (RooRealVar*) term_in_product;
+   tau = static_cast<RooRealVar*>(term_in_product);
       }
     }
     if( !FoundTau || !tau ) {

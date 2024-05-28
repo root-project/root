@@ -15,10 +15,10 @@ RooRealVar sigma("sigma", "Two sigma of normal distribution", 2., 0., 100.);\
 RooRealVar gamma("gamma", "gamma", -10., -100., 100.);\
 RooRealVar delta("delta", "delta", 3., 0., 100.);
 
-const char* fixedFormula = "delta/(sigma*TMath::Sqrt(TMath::TwoPi()))"
-    "*TMath::Exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
+const char* fixedFormula = "delta/(sigma*std::sqrt(TMath::TwoPi()))"
+    "*std::exp(-0.5*(gamma+delta*TMath::ASinH((mass-mu)/sigma))"
                     "*(gamma+delta*TMath::ASinH((mass-mu)/sigma)))"
-    "/TMath::Sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
+    "/std::sqrt(1+(mass-mu)*(mass-mu)/(sigma*sigma))";
 
 
 

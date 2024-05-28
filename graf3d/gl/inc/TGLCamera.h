@@ -68,8 +68,8 @@ private:
    TGLBoundingBox Frustum(Bool_t asBox = kTRUE) const; // current frustum
 
    // Non-copyable class
-   TGLCamera(const TGLCamera &);
-   TGLCamera & operator=(const TGLCamera &);
+   TGLCamera(const TGLCamera &) = delete;
+   TGLCamera & operator=(const TGLCamera &) = delete;
 
 protected:
     // Fields

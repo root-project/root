@@ -29,17 +29,14 @@ In
 both cases, entry-list can be applied using the syntax
 "dataset&lt;&lt;entrylist", e.g.
 "dataset1&lt;&lt;el1|dataset2&lt;&lt;el2|".<br>
-The datasets to be processed can also be specified on one or multiple lines in a text file.<br> See <a href="http://root.cern.ch/drupal/content/working-data-sets">http://root.cern.ch/drupal/content/working-data-sets</a>
-for more details.</li>
+The datasets to be processed can also be specified on one or multiple lines in a text file.</li>
 <li>Add
 support for automatic download of a package when available on the
 master but not locally. The downloaded packages are store under <span style="font-style: italic;">&lt;sandbox&gt;/packages/downloaded</span>
 and automatically checked for updates against the master repository. If
 a local version of the same package is created (using the
 UploadPackage) the entry in&nbsp;<span style="font-style: italic;">downloaded</span> is
-cleared, so that the behaviour is unchanged.<br>
-The new functionality is described in <a href="http://root.cern.ch/drupal/content/working-packages-par-files">http://root.cern.ch/drupal/content/working-packages-par-files</a>
-.</li>
+cleared, so that the behaviour is unchanged.</li>
 <li>Add
 the possibility to remap the server for the files in a dataset. This
 allows, for example, to reuse the dataset information for the same
@@ -48,9 +45,8 @@ files stored in a different cluster.</li>
 TDataSetManagerFile. This is mainly used to improve the speed of
 TDataSetManager::ShowDataSets, which is run very often by users and may
 be very slow if the number of dataset is large. The cache is also used
-to cache frequently received dataset objects.</li><li>Add the possibility to audit the activity on the nodes via syslog. See <a href="http://root.cern.ch/drupal/content/enabling-query-monitoring">http://root.cern.ch/drupal/content/enabling-query-monitoring</a>
-.</li><li>New
-packetizer TPacketizerFile generating packets which contain a single
+to cache frequently received dataset objects.</li><li>Add the possibility to audit the activity on the nodes via syslog. .</li>
+<li>New packetizer TPacketizerFile generating packets which contain a single
 file path to be used in processing single files. Used, for example, in
 tasks generating files. The files are specified into a TMap - named
 'PROOF_FilesToProcess' - containing the list of files to be generated
@@ -68,8 +64,7 @@ e.g. histograms.</li>
 variables to be transmitted to the master and workers. This is done via
 the environment variable PROOF_ENVVARS. This addition allows to change
 the variables wthout changing the macro or application running
-TProof::Open. See <a href="http://root.cern.ch/drupal/content/controlling-environment-proof-session">http://root.cern.ch/drupal/content/controlling-environment-proof-session</a>
-.</li>
+TProof::Open.</li>
       <li>Add the possibility to save the perfomance information shown
 by the dialog into a small ntuple included in the output list. The
 ntuple contains 5 floats (processing time, number of active workers,
@@ -86,10 +81,7 @@ Avahi/Bonjour technology. The new functionality is supported on Mac
 the Avahi framework, available by default on most of the
 distributions). To use this functionality (instead-of or in-addition-to
 the the static worker configuration via proof.conf or xpd.worker) the
-new directive 'xpd.bonjour' must be used (see description at <br>
-        <a href="http://root.cern.ch/drupal/content/configuration-reference-guide#bonjour">http://root.cern.ch/drupal/content/configuration-reference-guide#bonjour</a>).<br>
-        <br>
-      </li>
+new directive 'xpd.bonjour' must be used.</li>
 
 </ul>
 </li>
@@ -128,10 +120,12 @@ the validation step in the case not all the entries are required. The
 validation step is stopped as soon as the requested number of events is
 reached. If the parameter "PROOF_ValidateByFile" is set to 1, the
 number of files is exactly what needed; otherwise the number of files
-may exceed the number of files needed by (Number_Of_Workers - 1) .</li><li>New directive '<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#datadir">xpd.datadir</a>' to better control the user data directories and their permission settings.&nbsp;</li><li>In TPacketizerUnit, add the possibility to exactly share the number of cycles between the workers. See the parameter <a href="http://root.cern.ch/drupal/content/list-input-parameters-used-proof#FixedNum">PROOF_PacketizerFixedNum</a>.</li><li>Implement
+may exceed the number of files needed by (Number_Of_Workers - 1) .</li>
+<li>New directive 'xpd.datadir' to better control the user data directories and their permission settings.&nbsp;</li><li>In TPacketizerUnit, add the possibility to exactly share the number of cycles between the workers.
+See the parameter PROOF_PacketizerFixedNum.</li><li>Implement
 a timer to terminate idle sessions. The timeout value is controlled by
 the variable ProofServ.IdleTimeout (value in seconds). This variable
-can be set for all sessions in the xproofd config file via the&nbsp;'<a href="http://root.cern.ch/drupal/content/configuration-reference-guide#putrc">xpd.putrc</a>' directive.</li>
+can be set for all sessions in the xproofd config file via the 'xpd.putrc' directive.</li>
       <li>Add the possibility to control the use of sub-mergers with
 the ROOTrc variable Proof.SubMergers. It has the same meaning of the
 parameter 'PROOF_UseMergers'. The capabilities of the latter have been

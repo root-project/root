@@ -215,11 +215,6 @@ set(glewlibdir ${GLEW_LIBRARY_DIR})
 set(glewlibs ${GLEW_LIBRARIES})
 set(glewincdir ${GLEW_INCLUDE_DIR})
 
-set(buildgfal ${value${gfal}})
-set(gfallibdir ${GFAL_LIBRARY_DIR})
-set(gfallib ${GFAL_LIBRARY})
-set(gfalincdir ${GFAL_INCLUDE_DIR})
-
 set(buildarrow ${value${arrow}})
 set(arrowlibdir ${ARROW_LIBRARY_DIR})
 set(arrowlib ${ARROW_LIBRARY})
@@ -237,10 +232,6 @@ set(asimageincdir)
 set(asimagelib)
 set(asimagelibdir)
 
-set(buildpythia6 ${value${pythia6}})
-set(pythia6libdir ${PYTHIA6_LIBRARY_DIR})
-set(pythia6lib ${PYTHIA6_LIBRARY})
-set(pythia6cppflags)
 set(buildpythia8 ${value${pythia8}})
 set(pythia8libdir ${PYTHIA8_LIBRARY_DIR})
 set(pythia8lib ${PYTHIA8_LIBRARY})
@@ -263,9 +254,9 @@ set(gvizincdir ${GVIZ_INCLUDE_DIR})
 set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
-set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARIES})
-set(pythonincdir ${PYTHON_INCLUDE_DIRS})
+set(pythonlibdir ${Python3_LIBRARY_DIR})
+set(pythonlib ${Python3_LIBRARIES})
+set(pythonincdir ${Python3_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
@@ -425,6 +416,11 @@ if((tbb OR builtin_tbb) AND NOT MSVC)
 else()
   set(hastbb undef)
 endif()
+if(root7)
+  set(hasroot7 define)
+else()
+  set(hasroot7 undef)
+endif()
 
 set(uselz4 undef)
 set(usezlib undef)
@@ -500,111 +496,6 @@ else()
   set(hasuring undef)
 endif()
 
-# clear cache to allow reconfiguring
-# with a different CMAKE_CXX_STANDARD
-unset(found_stdapply CACHE)
-unset(found_stdindexsequence CACHE)
-unset(found_stdinvoke CACHE)
-unset(found_stdstringview CACHE)
-unset(found_stdexpstringview CACHE)
-unset(found_stod_stringview CACHE)
-
-set(hasstdexpstringview undef)
-set(cudahasstdstringview undef)
-CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-  int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
-if(found_stdstringview)
-  set(hasstdstringview define)
-  if(cuda)
-      if (WIN32)
-        set(PLATFORM_NULL_FILE "nul")
-      else()
-        set(PLATFORM_NULL_FILE "/dev/null")
-      endif()
-      execute_process(
-        COMMAND "echo"
-          "-e" "#include <string_view>\nint main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}"
-        COMMAND "${CMAKE_CUDA_COMPILER}" "-std=c++${CMAKE_CUDA_STANDARD}" "-o" "${PLATFORM_NULL_FILE}" "-x" "c++" "-"
-        RESULT_VARIABLE nvcc_compiled_string_view)
-      unset(PLATFORM_NULL_FILE CACHE)
-      if (nvcc_compiled_string_view EQUAL "0")
-        set(cudahasstdstringview define)
-      endif()
-  endif()
-else()
-  set(hasstdstringview undef)
-
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
-  if(found_stdexpstringview)
-    set(hasstdexpstringview define)
-  else()
-    set(hasstdexpstringview undef)
-  endif()
-endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string_view>
-     int main() { size_t pos; std::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-     int main() { size_t pos; std::experimental::string_view str; std::stod(str,&pos); return 0;}" found_stod_stringview)
-else()
-  set(found_stod_stringview false)
-endif()
-
-if(found_stod_stringview)
-  set(hasstodstringview define)
-else()
-  set(hasstodstringview undef)
-endif()
-
-if(found_stdstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <string_view>
-     int main() { std::string s; std::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-elseif(found_stdexpstringview)
-  CHECK_CXX_SOURCE_COMPILES("#include <string>
-     #include <experimental/string_view>
-     int main() { std::string s; std::experimental::string_view v; s += v; return 0;}" found_opplusequal_stringview)
-else()
-  set(found_opplusequal_stringview false)
-endif()
-
-if(found_opplusequal_stringview)
-  set(hasopplusequalstringview define)
-else()
-  set(hasopplusequalstringview undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
-if(found_stdapply)
-  set(hasstdapply define)
-else()
-  set(hasstdapply undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <functional>
-int main() { return std::invoke([](int i){return i;}, 0); }" found_stdinvoke)
-if(found_stdinvoke)
-  set(hasstdinvoke define)
-else()
-  set(hasstdinvoke undef)
-endif()
-
-CHECK_CXX_SOURCE_COMPILES("#include <utility>
-#include <type_traits>
-int main() {
-  static_assert(std::is_same<std::integer_sequence<std::size_t, 0, 1, 2>, std::make_index_sequence<3>>::value, \"\");
-  return 0;
-}" found_stdindexsequence)
-if(found_stdindexsequence)
-  set(hasstdindexsequence define)
-else()
-  set(hasstdindexsequence undef)
-endif()
-
 CHECK_CXX_SOURCE_COMPILES("
 inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
 int main() { return TestBit(0); }" found_attribute_always_inline)
@@ -660,11 +551,8 @@ get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
-set(pythonvers ${PYTHON_VERSION_STRING_Development_Main})
-set(python${PYTHON_VERSION_MAJOR_Development_Main}vers ${PYTHON_VERSION_STRING_Development_Main})
-if(PYTHON_VERSION_STRING_Development_Other)
-   set(python${PYTHON_VERSION_MAJOR_Development_Other}vers ${PYTHON_VERSION_STRING_Development_Other})
-endif()
+set(pythonvers ${Python3_VERSION})
+set(python${Python3_VERSION_MAJOR}vers ${Python3_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
@@ -720,6 +608,7 @@ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __fflags "${CMAKE_Fortran_FLAGS}")
 string(REGEX MATCHALL "(-Wp,)?-(D|U)[^ ]*" __defs "${CMAKE_CXX_FLAGS}")
 set(ROOT_COMPILER_FLAG_HINTS "#
 set(ROOT_DEFINITIONS \"${__defs}\")
+set(ROOT_CXX_STANDARD ${CMAKE_CXX_STANDARD})
 set(ROOT_CXX_FLAGS \"${__cxxflags}\")
 set(ROOT_C_FLAGS \"${__cflags}\")
 set(ROOT_fortran_FLAGS \"${__fflags}\")
@@ -830,9 +719,11 @@ if(WIN32)
   # We cannot use the compiledata.sh script for windows
   configure_file(${CMAKE_SOURCE_DIR}/cmake/scripts/compiledata.win32.in ${CMAKE_BINARY_DIR}/ginclude/compiledata.h NEWLINE_STYLE UNIX)
 else()
+  # Needed by ACLIC, while in ROOT we are using everywhere C++ standard via CMake features that are requested to build target
+  set(CMAKE_CXX_ACLIC_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
   execute_process(COMMAND ${CMAKE_SOURCE_DIR}/build/unix/compiledata.sh
     ${CMAKE_BINARY_DIR}/ginclude/compiledata.h "${CMAKE_CXX_COMPILER}"
-        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_FLAGS}"
+        "${CMAKE_CXX_FLAGS_RELEASE}" "${CMAKE_CXX_FLAGS_DEBUG}" "${CMAKE_CXX_ACLIC_FLAGS}"
         "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS}" "${CMAKE_EXE_LINKER_FLAGS}" "so"
         "${libdir}" "-lCore" "-lRint" "${incdir}" "" "" "${ROOT_ARCHITECTURE}" "${ROOTBUILD}")
 endif()

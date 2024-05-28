@@ -101,6 +101,7 @@ set(BASE_HEADERS
   TVirtualFFT.h
   TVirtualGL.h
   TVirtualMonitoring.h
+  TVirtualMapFile.h
   TVirtualMutex.h
   TVirtualPadEditor.h
   TVirtualPad.h
@@ -199,6 +200,7 @@ set(BASE_SOURCES
 if(root7)
   set(BASE_HEADER_DIRS inc/ v7/inc/)
   list(APPEND BASE_HEADERS
+      ROOT/RFloat16.hxx
       ROOT/RDirectoryEntry.hxx
       ROOT/RIndexIter.hxx)
   target_sources(Core PRIVATE v7/src/RDirectory.cxx)
@@ -214,7 +216,14 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/v7/inc>
 )
 
-target_link_libraries(Core PRIVATE PCRE::PCRE)
+if(PCRE2_FOUND)
+  target_link_libraries(Core PRIVATE PCRE2::PCRE2)
+  set_source_files_properties(src/TPRegexp.cxx
+    TARGET_DIRECTORY Core
+    PROPERTIES COMPILE_DEFINITIONS USE_PCRE2)
+else()
+  target_link_libraries(Core PRIVATE PCRE::PCRE)
+endif()
 
 ROOT_INSTALL_HEADERS(${BASE_HEADER_DIRS})
 

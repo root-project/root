@@ -19,8 +19,8 @@
 \class RooGenericPdf
 \ingroup Roofitcore
 
-RooGenericPdf is a concrete implementation of a probability density function,
-which takes a RooArgList of servers and a C++ expression string defining how
+Implementation of a probability density function
+that takes a RooArgList of servers and a C++ expression string defining how
 its value should be calculated from the given list of servers.
 A fully numerical integration is automatically performed to normalize the given
 expression. RooGenericPdf uses a RooFormula object to perform the expression evaluation.
@@ -49,7 +49,7 @@ the names of the arguments are not hard coded.
 #include "RooArgList.h"
 #include "RooFormula.h"
 
-using namespace std;
+using std::istream, std::ostream, std::endl;
 
 ClassImp(RooGenericPdf);
 
@@ -135,9 +135,9 @@ double RooGenericPdf::evaluate() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-void RooGenericPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooGenericPdf::doEval(RooFit::EvalContext & ctx) const
 {
-  formula().computeBatch(output, nEvents, dataMap);
+  formula().doEval(ctx);
 }
 
 
@@ -201,3 +201,27 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
     os << GetTitle() ;
   }
 }
+
+void RooGenericPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // If the number of elements to sum is less than 3, just build a sum expression.
+   // Otherwise build a loop to sum over the values.
+   unsigned int eleSize = _actualVars.size();
+   std::string className = GetName();
+   std::string varName = "elements" + className;
+   std::string sumName = "sum" + className;
+   std::string code;
+   std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
+   int idx = 0;
+   for (RooAbsArg *it : _actualVars) {
+      decl += ctx.getResult(*it) + ",";
+      ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
+      idx++;
+   }
+   decl.back() = '}';
+   code += decl + ";\n";
+
+   ctx.addResult(this, (_formula->getTFormula()->GetUniqueFuncName() + "(" + varName + ")").Data());
+   ctx.addToCodeBody(this, code);
+}
+

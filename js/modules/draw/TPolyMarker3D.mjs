@@ -50,11 +50,11 @@ async function drawPolyMarker3D() {
       mesh.tip_color = (poly.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
       mesh.tip_name = poly.fName || 'Poly3D';
       mesh.poly = poly;
-      mesh.painter = fp;
+      mesh.fp = fp;
       mesh.scale0 = 0.7*pnts.scale;
       mesh.index = index;
 
-      fp.toplevel.add(mesh);
+      fp.add3DMesh(mesh, this, true);
 
       mesh.tooltip = function(intersect) {
          let indx = Math.floor(intersect.index / this.nvertex);
@@ -62,10 +62,10 @@ async function drawPolyMarker3D() {
 
          indx = this.index[indx];
 
-         const p = this.painter,
-             grx = p.grx(this.poly.fP[indx]),
-             gry = p.gry(this.poly.fP[indx+1]),
-             grz = p.grz(this.poly.fP[indx+2]);
+         const fp = this.fp,
+               grx = fp.grx(this.poly.fP[indx]),
+               gry = fp.gry(this.poly.fP[indx+1]),
+               grz = fp.grz(this.poly.fP[indx+2]);
 
          return {
             x1: grx - this.scale0,
@@ -77,9 +77,9 @@ async function drawPolyMarker3D() {
             color: this.tip_color,
             lines: [this.tip_name,
                      'pnt: ' + indx/3,
-                     'x: ' + p.axisAsText('x', this.poly.fP[indx]),
-                     'y: ' + p.axisAsText('y', this.poly.fP[indx+1]),
-                     'z: ' + p.axisAsText('z', this.poly.fP[indx+2])
+                     'x: ' + fp.axisAsText('x', this.poly.fP[indx]),
+                     'y: ' + fp.axisAsText('y', this.poly.fP[indx+1]),
+                     'z: ' + fp.axisAsText('z', this.poly.fP[indx+2])
                    ]
          };
       };

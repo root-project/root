@@ -640,7 +640,7 @@ UInt_t TKDTreeBinning::FindBin(const Double_t * point) const {
 std::vector<std::vector<Double_t> > TKDTreeBinning::GetPointsInBin(UInt_t bin) const {
    std::vector<Double_t> point(fDim);
    std::vector< std::vector<Double_t> > thePoints;
-   if (fData.size() == 0) {
+   if (fData.empty()) {
       Error("GetPointsInBin","Internal data set is not valid");
       return thePoints;
    }

@@ -309,12 +309,15 @@ const TList *THashList::GetListForObject(const TObject *obj) const
 
 void THashList::RecursiveRemove(TObject *obj)
 {
-   if (!obj) return;
+   if (!obj || fSize == 0)
+      return;
 
    // It might not be safe to rely on TROOT::RecursiveRemove to take the readlock in case user code
    // is calling directly gROOT->GetListOfCleanups()->RecursiveRemove(...)
    // However this can become a significant bottleneck if there are a very large number of
    // TDirectory object.
+   // If we need to enabling this read lock, we need to move the fSize check afterwards.
+   // TList::RecursiveRemove has the same pattern.
    // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (obj->HasInconsistentHash()) {
@@ -334,9 +337,6 @@ void THashList::RecursiveRemove(TObject *obj)
          fTable->Remove(object);
    }
 
-   if (!fFirst.get())
-      return;
-
    // Scan again the list and invoke RecursiveRemove for all objects
    // We need to make sure to go through all the node even those
    // marked as empty by another thread (Eventhough we hold the
@@ -345,7 +345,7 @@ void THashList::RecursiveRemove(TObject *obj)
    // another thread can modify the list; thanks to the shared_pointer
    // forward-and-backward links, our view of the list is still intact
    // but might contains node will nullptr payload)
-   auto lnk  = fFirst;
+   auto lnk = fFirst;
    decltype(lnk) next;
    while (lnk.get()) {
       next = lnk->NextSP();

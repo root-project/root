@@ -97,15 +97,15 @@ void rf401_importttreethx()
    // ----------------------------------------------------------------------------------------
 
    // Create three RooDataSets in (y,z)
-   RooDataSet *dsA = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z<-5");
-   RooDataSet *dsB = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "abs(z)<5");
-   RooDataSet *dsC = (RooDataSet *)ds2.reduce(RooArgSet(x, y), "z>5");
+   std::unique_ptr<RooAbsData> dsA{ds2.reduce({x, y}, "z<-5")};
+   std::unique_ptr<RooAbsData> dsB{ds2.reduce({x, y}, "abs(z)<5")};
+   std::unique_ptr<RooAbsData> dsC{ds2.reduce({x, y}, "z>5")};
 
    // Create a dataset that imports contents of all the above datasets mapped by index category c
-   RooDataSet *dsABC = new RooDataSet("dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
-                                      Import("SampleB", *dsB), Import("SampleC", *dsC));
+   RooDataSet dsABC{"dsABC", "dsABC", RooArgSet(x, y), Index(c), Import("SampleA", *dsA),
+                    Import("SampleB", *dsB), Import("SampleC", *dsC)};
 
-   dsABC->Print();
+   dsABC.Print();
 }
 
 TH1 *makeTH1(const char *name, double mean, double sigma)

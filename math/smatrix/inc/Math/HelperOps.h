@@ -19,7 +19,7 @@
  */
 #include "Math/StaticCheck.h"
 #include <algorithm>  // required by std::copy
-#include <assert.h>
+#include <cassert>
 
 namespace ROOT {
 

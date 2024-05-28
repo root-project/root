@@ -17,9 +17,8 @@
 class RooNumCdf : public RooNumRunningInt {
 public:
   RooNumCdf(const char *name, const char *title, RooAbsPdf& _pdf, RooRealVar& _x, const char* binningName="cache");
-  RooNumCdf(const RooNumCdf& other, const char* name=nullptr) ;
+  RooNumCdf(const RooNumCdf& other, const char* name=nullptr) : RooNumRunningInt{other, name} {}
   TObject* clone(const char* newname) const override { return new RooNumCdf(*this,newname); }
-  ~RooNumCdf() override ;
 
 protected:
 

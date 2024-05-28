@@ -1,4 +1,4 @@
-/// \file ROOT/RNTuplerInspector.hxx
+/// \file ROOT/RNTupleInspector.hxx
 /// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2023-01-09
@@ -17,19 +17,27 @@
 #define ROOT7_RNTupleInspector
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
 #include <TFile.h>
 #include <TH1D.h>
+#include <THStack.h>
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
+#include <numeric>
 #include <regex>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
+
+class RNTuple;
+
+namespace Internal {
+class RPageSource;
+} // namespace Internal
 
 enum class ENTupleInspectorPrintFormat { kTable, kCSV };
 enum class ENTupleInspectorHist { kCount, kNElems, kCompressedSize, kUncompressedSize };
@@ -67,26 +75,34 @@ std::cout << "The compression factor is " << inspector->GetCompressionFactor()
 class RNTupleInspector {
 public:
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Holds column-level storage information.
+   /// \brief Provides column-level storage information.
    ///
-   /// The RColumnInfo class provides storage information for an individual column. This information is either
-   /// collected during the construction of the RNTupleInpector object, or can be accessed using
-   /// the RColumnDescriptor that belongs to this column.
-   class RColumnInfo {
+   /// The RColumnInspector class provides storage information for an individual column. This information is partly
+   /// collected during the construction of the RNTupleInspector object, and can partly be accessed using the
+   /// RColumnInspector that belongs to this field.
+   class RColumnInspector {
    private:
       const RColumnDescriptor &fColumnDescriptor;
-      std::uint64_t fCompressedSize = 0;
+      const std::vector<std::uint64_t> fCompressedPageSizes = {};
       std::uint32_t fElementSize = 0;
       std::uint64_t fNElements = 0;
 
    public:
-      RColumnInfo(const RColumnDescriptor &colDesc, std::uint64_t onDiskSize, std::uint32_t elemSize,
-                  std::uint64_t nElems)
-         : fColumnDescriptor(colDesc), fCompressedSize(onDiskSize), fElementSize(elemSize), fNElements(nElems){};
-      ~RColumnInfo() = default;
+      RColumnInspector(const RColumnDescriptor &colDesc, const std::vector<std::uint64_t> &compressedPageSizes,
+                       std::uint32_t elemSize, std::uint64_t nElems)
+         : fColumnDescriptor(colDesc),
+           fCompressedPageSizes(compressedPageSizes),
+           fElementSize(elemSize),
+           fNElements(nElems){};
+      ~RColumnInspector() = default;
 
       const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
-      std::uint64_t GetCompressedSize() const { return fCompressedSize; }
+      const std::vector<std::uint64_t> &GetCompressedPageSizes() const { return fCompressedPageSizes; }
+      std::uint64_t GetNPages() const { return fCompressedPageSizes.size(); }
+      std::uint64_t GetCompressedSize() const
+      {
+         return std::accumulate(fCompressedPageSizes.begin(), fCompressedPageSizes.end(), 0);
+      }
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
@@ -94,21 +110,21 @@ public:
    };
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Holds field-level storage information.
+   /// \brief Provides field-level storage information.
    ///
-   /// The RFieldTreeInfo class provides storage information for a field **and** its subfields. This information is
-   /// either collected during the construction of the RNTupleInpector object, or can be accessed using
+   /// The RFieldTreeInspector class provides storage information for a field **and** its subfields. This information is
+   /// partly collected during the construction of the RNTupleInspector object, and can partly be accessed using
    /// the RFieldDescriptor that belongs to this field.
-   class RFieldTreeInfo {
+   class RFieldTreeInspector {
    private:
       const RFieldDescriptor &fRootFieldDescriptor;
       std::uint64_t fCompressedSize = 0;
       std::uint64_t fUncompressedSize = 0;
 
    public:
-      RFieldTreeInfo(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
+      RFieldTreeInspector(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
          : fRootFieldDescriptor(fieldDesc), fCompressedSize(onDiskSize), fUncompressedSize(inMemSize){};
-      ~RFieldTreeInfo() = default;
+      ~RFieldTreeInspector() = default;
 
       const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
       std::uint64_t GetCompressedSize() const { return fCompressedSize; }
@@ -116,17 +132,16 @@ public:
    };
 
 private:
-   std::unique_ptr<TFile> fSourceFile;
-   std::unique_ptr<Detail::RPageSource> fPageSource;
+   std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unique_ptr<RNTupleDescriptor> fDescriptor;
    int fCompressionSettings = -1;
    std::uint64_t fCompressedSize = 0;
    std::uint64_t fUncompressedSize = 0;
 
-   std::map<int, RColumnInfo> fColumnInfo;
-   std::map<int, RFieldTreeInfo> fFieldTreeInfo;
+   std::unordered_map<int, RColumnInspector> fColumnInfo;
+   std::unordered_map<int, RFieldTreeInspector> fFieldTreeInfo;
 
-   RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
+   RNTupleInspector(std::unique_ptr<Internal::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Gather column-level and RNTuple-level information.
@@ -142,10 +157,10 @@ private:
    /// \param[in] fieldId The ID of the field from which to start the recursive traversal. Typically this is the "zero
    /// ID", i.e. the logical parent of all top-level fields.
    ///
-   /// \return The RFieldTreeInfo for the provided field ID.
+   /// \return The RFieldTreeInspector for the provided field ID.
    ///
-   // / This method iscalled when the RNTupleInpector is initially created.
-   RFieldTreeInfo CollectFieldTreeInfo(DescriptorId_t fieldId);
+   /// This method is called when the RNTupleInspector is initially created.
+   RFieldTreeInspector CollectFieldTreeInfo(DescriptorId_t fieldId);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the columns that make up the given field, including its subfields.
@@ -182,14 +197,6 @@ public:
    ///
    /// \see Create(RNTuple *sourceNTuple)
    static std::unique_ptr<RNTupleInspector> Create(std::string_view ntupleName, std::string_view storage);
-
-   /////////////////////////////////////////////////////////////////////////////
-   /// \brief Create a new RNTupleInspector.
-   ///
-   /// \param[in] pageSource The RPageSource object belonging to the RNTuple to be inspected.
-   ///
-   /// \see Create(RNTuple *sourceNTuple)
-   static std::unique_ptr<RNTupleInspector> Create(std::unique_ptr<Detail::RPageSource> pageSource);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the descriptor for the RNTuple being inspected.
@@ -244,7 +251,7 @@ public:
    /// \param[in] physicalColumnId The physical ID of the column for which to get the information.
    ///
    /// \return The storage information for the provided column.
-   const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
+   const RColumnInspector &GetColumnInspector(DescriptorId_t physicalColumnId) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of columns of a given type present in the RNTuple.
@@ -261,6 +268,12 @@ public:
    ///
    /// \return A vector containing the physical IDs of columns of the provided type.
    const std::vector<DescriptorId_t> GetColumnsByType(EColumnType colType);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get all column types present in the RNTuple being inspected.
+   ///
+   /// \return A vector containing all column types present in the RNTuple.
+   const std::vector<EColumnType> GetColumnTypes();
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Print storage information per column type.
@@ -280,7 +293,7 @@ public:
    /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
    /// inspector->PrintColumnTypeInfo();
    /// ~~~
-   /// Ouput:
+   /// Output:
    /// ~~~
    ///  column type    | count   | # elements      | compressed bytes  | uncompressed bytes
    /// ----------------|---------|-----------------|-------------------|--------------------
@@ -298,7 +311,7 @@ public:
    /// auto inspector = RNTupleInspector::Create("myNTuple", "some/file.root");
    /// inspector->PrintColumnTypeInfo();
    /// ~~~
-   /// Ouput:
+   /// Output:
    /// ~~~
    /// columnType,count,nElements,compressedSize,uncompressedSize
    /// SplitIndex64,2,150,72,1200
@@ -323,20 +336,99 @@ public:
                                                  std::string_view histTitle = "");
 
    /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for an individual column.
+   ///
+   /// \param[in] physicalColumnId The physical ID of the column for which to get the page size distribution.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(DescriptorId_t physicalColumnId, std::string histName = "",
+                                                 std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given type.
+   ///
+   /// \param[in] colType The column type for which to get the size distribution, as defined by
+   /// ROOT::Experimental::EColumnType.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(EColumnType colType, std::string histName = "",
+                                                 std::string histTitle = "", size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for a collection columns.
+   ///
+   /// \param[in] colIds The physical IDs of the columns for which to get the page size distribution.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `TH1D` containing the (cumulative) page size distribution.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   std::unique_ptr<TH1D> GetPageSizeDistribution(std::initializer_list<DescriptorId_t> colIds,
+                                                 std::string histName = "", std::string histTitle = "",
+                                                 size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Get a histogram containing the size distribution of the compressed pages for all columns of a given list
+   /// of types.
+   ///
+   /// \param[in] colTypes The column types for which to get the size distribution, as defined by
+   /// ROOT::Experimental::EColumnType. The default is an empty vector, which indicates that the distribution for *all*
+   /// physical columns will be returned.
+   /// \param[in] histName The name of the histogram. An empty string means a default name will be used. The name of
+   /// each histogram inside the `THStack` will be `histName + colType`.
+   /// \param[in] histTitle The title of the histogram. An empty string means a default title will be used.
+   /// \param[in] nBins The desired number of histogram bins.
+   ///
+   /// \return A pointer to a `THStack` with one histogram for each column type.
+   ///
+   /// The x-axis will range from the smallest page size, to the largest (inclusive).
+   ///
+   /// **Example: Drawing a non-stacked page size distribution with a legend**
+   /// ~~~ {.cpp}
+   /// auto canvas = std::make_unique<TCanvas>();
+   /// auto inspector = RNTupleInspector::Create("myNTuple", "ntuple.root");
+   ///
+   /// // We want to show the page size distributions of columns with type `kSplitReal32` and `kSplitReal64`.
+   /// auto hist = inspector->GetPageSizeDistribution(
+   ///     {ROOT::Experimental::EColumnType::kSplitReal32,
+   ///      ROOT::Experimental::EColumnType::kSplitReal64});
+   /// // The "PLC" option automatically sets the line color for each histogram in the `THStack`.
+   /// // The "NOSTACK" option will draw the histograms on top of each other instead of stacked.
+   /// hist->DrawClone("PLC NOSTACK");
+   /// canvas->BuildLegend(0.7, 0.8, 0.89, 0.89);
+   /// canvas->DrawClone();
+   /// ~~~
+   std::unique_ptr<THStack> GetPageSizeDistribution(std::initializer_list<EColumnType> colTypes = {},
+                                                    std::string histName = "", std::string histTitle = "",
+                                                    size_t nBins = 64);
+
+   /////////////////////////////////////////////////////////////////////////////
    /// \brief Get storage information for a given (sub)field by ID.
    ///
    /// \param[in] fieldId The ID of the (sub)field for which to get the information.
    ///
-   /// \return The storage information for the provided (sub)field.
-   const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
+   /// \return The storage information inspector for the provided (sub)field tree.
+   const RFieldTreeInspector &GetFieldTreeInspector(DescriptorId_t fieldId) const;
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Get storage information for a given (sub)field by name.
+   /// \brief Get a storage information inspector for a given (sub)field by name, including its subfields.
    ///
    /// \param[in] fieldName The name of the (sub)field for which to get the information.
    ///
-   /// \return The storage information for the provided (sub)field.
-   const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
+   /// \return The storage information inspector for the provided (sub)field tree.
+   const RFieldTreeInspector &GetFieldTreeInspector(std::string_view fieldName) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the number of fields of a given type or class present in the RNTuple.

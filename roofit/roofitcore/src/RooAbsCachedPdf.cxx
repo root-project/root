@@ -379,7 +379,10 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
     return getVal(normSet) ;
   }
 
-  RooArgSet *allVars(nullptr),*anaVars(nullptr),*normSet2(nullptr),*dummy(nullptr) ;
+  RooArgSet *allVars(nullptr);
+  RooArgSet *anaVars(nullptr);
+  RooArgSet *normSet2(nullptr);
+  RooArgSet *dummy(nullptr);
   const std::vector<int> codeList = _anaReg.retrieve(code-1,allVars,anaVars,normSet2,dummy) ;
 
   PdfCacheElem* cache = getCache(normSet2?normSet2:anaVars,false) ;
@@ -397,10 +400,9 @@ double RooAbsCachedPdf::analyticalIntegralWN(int code, const RooArgSet* normSet,
 }
 
 
-void RooAbsCachedPdf::computeBatch(double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+void RooAbsCachedPdf::doEval(RooFit::EvalContext &ctx) const
 {
-  auto * cachePdf = getCachePdf(_normSet);
-  cachePdf->computeBatch(output, nEvents, dataMap);
+   getCachePdf(_normSet)->doEval(ctx);
 }
 
 

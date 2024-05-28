@@ -160,7 +160,7 @@ void create_lin_Nvar_withFriend(Int_t N = 2000)
    const Int_t nvar2 = 1;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -383,7 +383,7 @@ void create_lin_Nvar_2(Int_t N = 50000)
 {
    const int nvar = 4;
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
 
@@ -414,7 +414,7 @@ void create_lin_Nvar(Int_t N = 50000)
    const Int_t nvar = 4;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -501,7 +501,7 @@ void create_lin_Nvar_categories(Int_t N = 10000, Int_t type = 2)
    Float_t xvar[nvar];
    Float_t eta;
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -606,12 +606,12 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
 
 
    cout << endl << endl << endl;
-   cout << "please use .L createData.C++ if you want to run this MC geneation" <<endl;
+   cout << "please use .L createData.C++ if you want to run this MC generation" <<endl;
    cout << "otherwise you will wait for ages!!! " << endl;
    cout << endl << endl << endl;
 
 
-   // output flie
+   // output file
    TString fileName;
    if (BackgroundContamination) fileName = Form("linCorGauss%d_weighted+background.root",seed);
    else                         fileName = Form("linCorGauss%d_weighted.root",seed);
@@ -707,7 +707,7 @@ void create_lin_Nvar_weighted(Int_t N = 10000, int WeightedSignal=0, int Weighte
 
 
    if (BackgroundContamination > 0){  // add "background contamination" in the Signal (which later is again "subtracted" with
-            // using (statistically indepentent) background events with negative weight)
+            // using (statistically independent) background events with negative weight)
       Float_t*  x=xB;
       TMatrixD* m = sqrtMatB;
       TTree* tree = treeS;
@@ -774,7 +774,7 @@ void create_lin_Nvar_Arr(Int_t N = 1000)
    const Int_t nvar = 4;
    std::vector<float>* xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -875,7 +875,7 @@ void create_lin_Nvar_double()
    Double_t xvarD[nvar];
    Float_t  xvarF[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -974,7 +974,7 @@ void create_lin_Nvar_discrete()
    Float_t xvar[nvar];
    Int_t   xvarI[2];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1071,7 +1071,7 @@ void create_ManyVars()
    const Int_t nvar = 20;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1152,7 +1152,7 @@ void create_lin_NvarObsolete()
    const Int_t nvar = 20;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1241,7 +1241,7 @@ void create_lin(Int_t N = 2000)
    Double_t xvar[nvar];
    Float_t weight;
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1370,7 +1370,7 @@ void create_circ(Int_t N  = 6000, Bool_t distort = false)
    const Int_t nvar = 2;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1449,7 +1449,7 @@ void create_schachbrett(Int_t nEvents = 20000) {
    const Int_t nvar = 2;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1467,8 +1467,8 @@ void create_schachbrett(Int_t nEvents = 20000) {
    Double_t meanY;
    Int_t xtype=1, ytype=1;
    Int_t iev=0;
-   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every interger value
-                     // between in the Inteval [-m_nDim,m_nDim]
+   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every integer value
+                     // between in the Interval [-m_nDim,m_nDim]
    while (iev < nEvents){
       xtype=1;
       for (Int_t i=-m_nDim; i <=  m_nDim; i++){
@@ -1508,7 +1508,7 @@ void create_schachbrett_5D(Int_t nEvents = 200000) {
    const Int_t nvar = 5;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1524,8 +1524,8 @@ void create_schachbrett_5D(Int_t nEvents = 200000) {
    Double_t sigma=0.3;
    Int_t itype[nvar];
    Int_t iev=0;
-   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every interger value
-                     // between in the Inteval [-m_nDim,m_nDim]
+   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every integer value
+                     // between in the Interval [-m_nDim,m_nDim]
 
    int idx[nvar];
    while (iev < nEvents){
@@ -1579,7 +1579,7 @@ void create_schachbrett_4D(Int_t nEvents = 200000) {
    const Int_t nvar = 4;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1595,8 +1595,8 @@ void create_schachbrett_4D(Int_t nEvents = 200000) {
    Double_t sigma=0.3;
    Int_t itype[nvar];
    Int_t iev=0;
-   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every interger value
-                     // between in the Inteval [-m_nDim,m_nDim]
+   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every integer value
+                     // between in the Interval [-m_nDim,m_nDim]
 
    int idx[nvar];
    while (iev < nEvents){
@@ -1646,7 +1646,7 @@ void create_schachbrett_3D(Int_t nEvents = 20000) {
    const Int_t nvar = 3;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1662,8 +1662,8 @@ void create_schachbrett_3D(Int_t nEvents = 20000) {
    Double_t sigma=0.3;
    Int_t itype[nvar];
    Int_t iev=0;
-   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every interger value
-                     // between in the Inteval [-m_nDim,m_nDim]
+   Int_t m_nDim = 2; // actually the boundary, there is a "bump" for every integer value
+                     // between in the Interval [-m_nDim,m_nDim]
 
    int idx[nvar];
    while (iev < nEvents){
@@ -1709,7 +1709,7 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
    const Int_t nvar = 2;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -1725,8 +1725,8 @@ void create_schachbrett_2D(Int_t nEvents = 100000, Int_t nbumps=2) {
    Double_t sigma=0.35;
    Int_t itype[nvar];
    Int_t iev=0;
-   Int_t m_nDim = nbumps; // actually the boundary, there is a "bump" for every interger value
-                     // between in the Inteval [-m_nDim,m_nDim]
+   Int_t m_nDim = nbumps; // actually the boundary, there is a "bump" for every integer value
+                     // between in the Interval [-m_nDim,m_nDim]
 
    int idx[nvar];
    while (iev < nEvents){
@@ -1773,7 +1773,7 @@ void create_3Bumps(Int_t nEvents = 5000) {
    const Int_t nvar = 2;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TString filename = "data_3Bumps.root";
    TFile* dataFile = TFile::Open( filename, "RECREATE" );
 
@@ -1915,7 +1915,7 @@ void create_array_with_different_lengths(Int_t N = 100)
    Int_t nvarCurrent = 4;
    Float_t xvar[nvar];
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "data.root", "RECREATE" );
 
    // create signal and background trees
@@ -2004,7 +2004,7 @@ void create_MultipleBackground(Int_t N = 50000)
 {
    const int nvar = 4;
 
-   // output flie
+   // output file
    TFile* dataFile = TFile::Open( "tmva_example_multiple_background.root", "RECREATE" );
 
 

@@ -38,8 +38,8 @@ void rs701_BayesianCalculator(bool useBkg = true, double confLevel = 0.90)
 
    w->factory("n[3]"); // observed number of events
    // create a data set with n observed events
-   RooDataSet data("data", "", RooArgSet(*(w->var("x")), *(w->var("n"))), "n");
-   data.add(RooArgSet(*(w->var("x"))), w->var("n")->getVal());
+   RooDataSet data("data", "", {*w->var("x"), *w->var("n")}, RooFit::WeightVar("n"));
+   data.add({*(w->var("x"))}, w->var("n")->getVal());
 
    // to suppress messages when pdf goes to zero
    RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);

@@ -19,11 +19,7 @@
 \class RooFactoryWSTool
 \ingroup Roofitcore
 
-RooFactoryWSTool is a class similar to TTree::MakeClass() that generates
-skeleton code for RooAbsPdf and RooAbsReal functions given
-a list of input parameter names. The factory can also compile
-the generated code on the fly, and on request also
-instantiate the objects.
+Implementation detail of the RooWorkspace.
 
 It interprets all expressions for RooWorkspace::factory(const char*).
 **/
@@ -66,8 +62,8 @@ It interprets all expressions for RooWorkspace::factory(const char*).
 #include "RooNLLVar.h"
 #endif
 
-using namespace RooFit ;
-using namespace std ;
+using namespace RooFit;
+using std::string, std::map, std::list, std::pair, std::endl, std::vector;
 
 #define BUFFER_SIZE 64000
 
@@ -123,32 +119,6 @@ Int_t init()
 }
 
 }
-
-#ifndef _WIN32
-#include <strings.h>
-#endif
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-RooFactoryWSTool::RooFactoryWSTool(RooWorkspace& inws) : _ws(&inws), _errorCount(0), _autoClassPostFix("")
-
-{
-  // Default constructor
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooFactoryWSTool::~RooFactoryWSTool()
-{
-}
-
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Low-level factory interface for creating a RooRealVar with a given range and initial value
@@ -328,7 +298,9 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
 
   _args.clear();
   string tmp(varList);
-  size_t blevel = 0, end_tok, start_tok = 0;
+  size_t blevel = 0;
+  size_t end_tok;
+  size_t start_tok = 0;
   bool litmode = false;
   for (end_tok = 0; end_tok < tmp.length(); end_tok++) {
     // Keep track of opening and closing brackets
@@ -576,7 +548,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     return nullptr;
   }
 
-  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.getSize()==coefList.getSize())) ;
+  RooRealSumPdf pdf(objName,objName,amplList,coefList,(amplList.size()==coefList.size())) ;
   pdf.setStringAttribute("factory_tag",Form("ASUM::%s(%s)",objName,specList)) ;
   if (_ws->import(pdf,Silence())) logError() ;
   return static_cast<RooRealSumPdf*>(_ws->pdf(objName));
@@ -641,7 +613,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   if (pdf) {
     pdf->setStringAttribute("factory_tag",Form("PROD::%s(%s)",objName,pdfList)) ;
     if (_ws->import(*pdf,Silence())) logError() ;
-    return (RooProdPdf*) _ws->pdf(objName) ;
+    return static_cast<RooProdPdf*>(_ws->pdf(objName)) ;
   } else {
     return nullptr;
   }
@@ -693,7 +665,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   // Import pdf into workspace
   pdf->setStringAttribute("factory_tag",Form("SIMUL::%s(%s,%s)",objName,indexCat,pdfMap)) ;
   if (_ws->import(*pdf,Silence())) logError() ;
-  return (RooSimultaneous*) _ws->pdf(objName) ;
+  return static_cast<RooSimultaneous*>(_ws->pdf(objName)) ;
 }
 
 
@@ -730,7 +702,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
     return nullptr ;
   }
 
-  if (sumlist2.getSize()>0 && (sumlist1.getSize()!=sumlist2.getSize())) {
+  if (!sumlist2.empty() && (sumlist1.size()!=sumlist2.size())) {
     coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: syntax error: either all sum terms must be products or none" << endl ;
     logError() ;
     return nullptr ;
@@ -742,7 +714,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
   sum->setStringAttribute("factory_tag",Form("sum::%s(%s)",objName,specList)) ;
   if (_ws->import(*sum,Silence())) logError() ;
-  return (RooAddition*) _ws->pdf(objName) ;
+  return static_cast<RooAddition*>(_ws->function(objName));
 
 }
 
@@ -753,7 +725,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
 
 RooProduct* RooFactoryWSTool::prodfunc(const char *objName, const char* pdfList)
 {
-  return (RooProduct*) createArg("RooProduct",objName,Form("{%s}",pdfList)) ;
+  return static_cast<RooProduct*>(createArg("RooProduct",objName,Form("{%s}",pdfList))) ;
 }
 
 
@@ -1015,7 +987,8 @@ std::string RooFactoryWSTool::processSingleExpression(const char* arg)
   strlcpy(buf.data(),arg,bufSize) ;
   char* bufptr = buf.data();
 
-  string func,prefix ;
+  string func;
+  string prefix;
   vector<string> args ;
 
   // Process token into arguments
@@ -1508,7 +1481,9 @@ vector<string> RooFactoryWSTool::splitFunctionArgs(const char* funcExpr)
 bool RooFactoryWSTool::checkSyntax(const char* arg)
 {
   // Count parentheses
-  Int_t nParentheses(0), nBracket(0), nAccolade(0) ;
+  Int_t nParentheses(0);
+  Int_t nBracket(0);
+  Int_t nAccolade(0);
   const char* ptr = arg ;
   while(*ptr) {
     if (*ptr=='(') nParentheses++ ;
@@ -2037,7 +2012,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     // taylorexpand::name[func,{var,var,..},val,order]
     int order(1);
-    double eps1(1e-6), eps2(1e-3), observablesValue(0.0);
+    double eps1(1e-6);
+    double eps2(1e-3);
+    double observablesValue(0.0);
 
     if (pargv.size() < 2)
       throw string(Form("taylorexpand::%s, requires atleast 2 arguments (function, observables) atleast, has %d arguments", instName, (Int_t)pargv.size()));
@@ -2048,9 +2025,12 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     if (pargv.size() > 3)
       order = atoi(pargv[3].c_str());
     if (pargv.size() > 2) {
-      if (pargv[2].find(',') != string::npos)
-        throw string(Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
-      else observablesValue = atof(pargv[2].c_str());
+      if (pargv[2].find(',') != string::npos) {
+   throw string(
+      Form("taylorexpand::%s, factory syntax supports expansion only around same value for all observables", instName));
+      } else {
+   observablesValue = atof(pargv[2].c_str());
+      }
     }
 
     if (pargv.size() > 3)
@@ -2060,9 +2040,10 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     if (pargv.size() > 5)
       eps2 = atof(pargv[5].c_str());
 
-    if (pargv.size() > 6)
+    if (pargv.size() > 6) {
       throw string(
-        Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
+         Form("taylorexpand::%s, requires max. 6 arguments, has %d arguments", instName, (Int_t)pargv.size()));
+    }
 
     auto taylor = RooPolyFunc::taylorExpand(instName, instName, func, observables, order, {observablesValue}, eps1, eps2);
     if (ft.ws().import(*taylor, Silence())) ft.logError();
@@ -2076,13 +2057,13 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
   } else if (cl=="nll") {
 
     // nll::name[pdf,data]
-    RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str())) ;
+    RooNLLVar nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDATA(pargv[1].c_str()), /*extended=*/false) ;
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
   } else if (cl=="chi2") {
 
     // chi2::name[pdf,data]
-    RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str())) ;
+    RooChi2Var nll(instName,instName,ft.asPDF(pargv[0].c_str()),ft.asDHIST(pargv[1].c_str()), /*extended=*/false, /*etype=*/RooAbsData::Auto);
     if (ft.ws().import(nll,Silence())) ft.logError() ;
 
 #endif

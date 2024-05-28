@@ -17,7 +17,7 @@
 #include "ROOT/RHistBufferedFill.hxx"
 
 using namespace ROOT;
-using namespace std;
+using std::cout, std::swap;
 
 constexpr unsigned short gRepeat = 2;
 

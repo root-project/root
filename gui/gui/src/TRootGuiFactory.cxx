@@ -79,17 +79,6 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
    TString canvName = gEnv->GetValue("Canvas.Name", "TRootCanvas");
-
-   if ((canvName == "TWebCanvas") && !gROOT->IsWebDisplay()) {
-      printf("\nWARNING!\n");
-      printf("rootrc parameter \"Canvas.Name\" with web canvas disabled for security reason.\n");
-      printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
-      printf("For environments controlling the security issues you can enable web display by calling\n");
-      printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
-
-      canvName = "TRootCanvas";
-   }
-
    if (canvName == "TWebCanvas") {
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
@@ -110,17 +99,6 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
    TString canvName = gEnv->GetValue("Canvas.Name", "TRootCanvas");
-
-   if ((canvName == "TWebCanvas") && !gROOT->IsWebDisplay()) {
-      printf("\nWARNING!\n");
-      printf("rootrc parameter \"Canvas.Name\" with web canvas disabled for security reason.\n");
-      printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
-      printf("For environments controlling the security issues you can enable web display by calling\n");
-      printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
-
-      canvName = "TRootCanvas";
-   }
-
    if (canvName == "TWebCanvas") {
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
@@ -142,17 +120,6 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
                                                Option_t *opt)
 {
    TString browserVersion(gEnv->GetValue("Browser.Name", "TRootBrowserLite"));
-
-   if ((browserVersion == "ROOT::RWebBrowserImp") && !gROOT->IsWebDisplay()) {
-      printf("\nWARNING!\n");
-      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reasons.\n");
-      printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
-      printf("For environments controlling the security issues you can enable web display by calling\n");
-      printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
-
-      browserVersion = "TRootBrowser";
-   }
-
    TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp",
                                                                browserVersion);
    TString browserOptions(gEnv->GetValue("Browser.Options", "FECI"));
@@ -180,17 +147,6 @@ TBrowserImp *TRootGuiFactory::CreateBrowserImp(TBrowser *b, const char *title,
                                                UInt_t height, Option_t *opt)
 {
    TString browserVersion(gEnv->GetValue("Browser.Name", "TRootBrowserLite"));
-
-   if ((browserVersion == "ROOT::RWebBrowserImp") && !gROOT->IsWebDisplay()) {
-      printf("\nWARNING!\n");
-      printf("rootrc parameter \"Browser.Name\" with web browser disabled for security reasons.\n");
-      printf("See https://root.cern/about/security/#2023-11-26-open-port-for-control-of-web-gui-allows-read-and-write-access-to-file-system for more information.\n");
-      printf("For environments controlling the security issues you can enable web display by calling\n");
-      printf("gROOT->SetWebDisplay(); in ROOT prompt or in startup scripts\n\n");
-
-      browserVersion = "TRootBrowser";
-   }
-
    TPluginHandler *ph = gROOT->GetPluginManager()->FindHandler("TBrowserImp",
                                                                browserVersion);
    TString browserOptions(gEnv->GetValue("Browser.Options", "FECI"));

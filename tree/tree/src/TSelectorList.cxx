@@ -30,20 +30,20 @@ ClassImp(TSelectorList);
 /// selector list or owned by the list and not by the directory that
 /// was active when they were created. Returns true in case of success.
 
-Bool_t TSelectorList::UnsetDirectory(TObject *obj)
+bool TSelectorList::UnsetDirectory(TObject *obj)
 {
    if (!obj || !obj->IsA())
-      return kFALSE;
+      return false;
 
    TMethodCall callEnv;
    callEnv.InitWithPrototype(obj->IsA(), "SetDirectory", "TDirectory*");
    if (!callEnv.IsValid())
-      return kFALSE;
+      return false;
 
    callEnv.SetParam((Longptr_t) nullptr);
    callEnv.Execute(obj);
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -52,23 +52,23 @@ Bool_t TSelectorList::UnsetDirectory(TObject *obj)
 /// look up objects in different output lists by name. Returns true
 /// in case name is unique.
 
-Bool_t TSelectorList::CheckDuplicateName(TObject *obj)
+bool TSelectorList::CheckDuplicateName(TObject *obj)
 {
    if (!obj)
-      return kFALSE;
+      return false;
 
    TObject *org = FindObject(obj->GetName());
    if (org == obj) {
       Error("CheckDuplicateName","object with name: %s already in the list",obj->GetName());
-      return kFALSE;
+      return false;
    }
 
    if (org) {
       Error("CheckDuplicateName","an object with the same name: %s is already in the list",obj->GetName());
-      return kFALSE;
+      return false;
    }
 
-   return kTRUE;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

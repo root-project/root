@@ -45,27 +45,30 @@ ulimit -s
 and try reading again.
 **/
 
-#include "RooWorkspace.h"
-#include "RooWorkspaceHandle.h"
-#include "RooAbsPdf.h"
-#include "RooRealVar.h"
-#include "RooCategory.h"
-#include "RooAbsData.h"
-#include "RooCmdConfig.h"
-#include "RooMsgService.h"
-#include "RooConstVar.h"
-#include "RooResolutionModel.h"
-#include "RooPlot.h"
-#include "RooRandom.h"
+#include <RooWorkspace.h>
+
+#include <RooAbsData.h>
+#include <RooAbsPdf.h>
+#include <RooAbsStudy.h>
+#include <RooCategory.h>
+#include <RooCmdConfig.h>
+#include <RooConstVar.h>
+#include <RooFactoryWSTool.h>
+#include <RooLinkedListIter.h>
+#include <RooMsgService.h>
+#include <RooPlot.h>
+#include <RooRandom.h>
+#include <RooRealVar.h>
+#include <RooResolutionModel.h>
+#include <RooTObjWrap.h>
+#include <RooWorkspaceHandle.h>
+
 #include "TBuffer.h"
 #include "TInterpreter.h"
 #include "TClassTable.h"
 #include "TBaseClass.h"
 #include "TSystem.h"
 #include "TRegexp.h"
-#include "RooFactoryWSTool.h"
-#include "RooAbsStudy.h"
-#include "RooTObjWrap.h"
 #include "TROOT.h"
 #include "TFile.h"
 #include "TH1.h"
@@ -96,7 +99,7 @@ bool isCacheSet(std::string const& setName) {
 
 } // namespace
 
-using namespace std;
+using std::string, std::list, std::cout, std::endl, std::map, std::vector, std::ifstream, std::ofstream, std::fstream, std::make_unique;
 
 ClassImp(RooWorkspace);
 
@@ -712,7 +715,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Import a dataset (RooDataSet or RooDataHist) into the work space. The workspace will contain a copy of the data.
+///  Import a dataset (RooDataSet or RooDataHist) into the workspace. The workspace will contain a copy of the data.
 ///  The dataset and its variables can be renamed upon insertion with the options below
 ///
 ///  <table>
@@ -790,9 +793,9 @@ bool RooWorkspace::import(RooAbsData const& inData,
   if (dsetName) {
     if (!silence)
       coutI(ObjectHandling) << "RooWorkSpace::import(" << GetName() << ") changing name of dataset from  " << inData.GetName() << " to " << dsetName << endl ;
-    clone = (RooAbsData*) inData.Clone(dsetName) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(dsetName)) ;
   } else {
-    clone = (RooAbsData*) inData.Clone(inData.GetName()) ;
+    clone = static_cast<RooAbsData*>(inData.Clone(inData.GetName())) ;
   }
 
 
@@ -894,7 +897,7 @@ bool RooWorkspace::defineSetInternal(const char *name, const RooArgSet &aset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
 bool RooWorkspace::defineSet(const char* name, const char* contentList)
@@ -929,7 +932,7 @@ bool RooWorkspace::defineSet(const char* name, const char* contentList)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Define a named set in the work space through a comma separated list of
+/// Define a named set in the workspace through a comma separated list of
 /// names of objects already in the workspace
 
 bool RooWorkspace::extendSet(const char* name, const char* newContents)
@@ -1179,7 +1182,7 @@ bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, boo
 
 bool RooWorkspace::loadSnapshot(const char* name)
 {
-  RooArgSet* snap = (RooArgSet*) _snapshots.find(name) ;
+  RooArgSet* snap = static_cast<RooArgSet*>(_snapshots.find(name)) ;
   if (!snap) {
     coutE(ObjectHandling) << "RooWorkspace::loadSnapshot(" << GetName() << ") no snapshot with name " << name << " is available" << endl ;
     return false ;
@@ -1306,7 +1309,7 @@ RooAbsArg* RooWorkspace::fundArg(RooStringView name) const
 
 RooAbsData* RooWorkspace::data(RooStringView name) const
 {
-  return (RooAbsData*)_dataList.FindObject(name.c_str()) ;
+  return static_cast<RooAbsData*>(_dataList.FindObject(name.c_str())) ;
 }
 
 
@@ -1315,7 +1318,7 @@ RooAbsData* RooWorkspace::data(RooStringView name) const
 
 RooAbsData* RooWorkspace::embeddedData(RooStringView name) const
 {
-  return (RooAbsData*)_embeddedDataList.FindObject(name.c_str()) ;
+  return static_cast<RooAbsData*>(_embeddedDataList.FindObject(name.c_str())) ;
 }
 
 
@@ -1408,7 +1411,7 @@ RooArgSet RooWorkspace::allResolutionModels() const
   // Split list of components in pdfs, functions and variables
   for(RooAbsArg* parg : _allOwnedNodes) {
     if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-      if (!((RooResolutionModel*)parg)->isConvolved()) {
+      if (!(static_cast<RooResolutionModel*>(parg))->isConvolved()) {
    ret.add(*parg) ;
       }
     }
@@ -1473,7 +1476,7 @@ std::list<TObject*> RooWorkspace::allGenericObjects() const
 
     // If found object is wrapper, return payload
     if (gobj->IsA()==RooTObjWrap::Class()) {
-      ret.push_back(((RooTObjWrap*)gobj)->obj()) ;
+      ret.push_back((static_cast<RooTObjWrap*>(gobj))->obj()) ;
     } else {
       ret.push_back(gobj) ;
     }
@@ -1530,9 +1533,9 @@ bool RooWorkspace::CodeRepo::autoImportClass(TClass* tc, bool doReplace)
     return true ;
   }
 
-  // Require that class meets technical criteria to be persistable (i.e it has a default ctor)
-  // (We also need a default ctor of abstract classes, but cannot check that through is interface
-  //  as TClass::HasDefaultCtor only returns true for callable default ctors)
+  // Require that class meets technical criteria to be persistable (i.e it has a default constructor)
+  // (We also need a default constructor of abstract classes, but cannot check that through is interface
+  //  as TClass::HasDefaultCtor only returns true for callable default constructors)
   if (!(tc->Property() & kIsAbstract) && !tc->HasDefaultConstructor()) {
     oocoutW(_wspace,ObjectHandling) << "RooWorkspace::autoImportClass(" << _wspace->GetName() << ") WARNING cannot import class "
                 << tc->GetName() << " : it cannot be persisted because it doesn't have a default constructor. Please fix " << endl ;
@@ -1980,7 +1983,7 @@ bool RooWorkspace::import(TObject const& object, const char* aliasName, bool rep
 
 bool RooWorkspace::addStudy(RooAbsStudy& study)
 {
-  RooAbsStudy* clone = (RooAbsStudy*) study.Clone() ;
+  RooAbsStudy* clone = static_cast<RooAbsStudy*>(study.Clone()) ;
   _studyMods.Add(clone) ;
   return false ;
 }
@@ -2030,7 +2033,7 @@ TObject* RooWorkspace::genobj(RooStringView name)  const
   if (!gobj) return nullptr;
 
   // If found object is wrapper, return payload
-  if (gobj->IsA()==RooTObjWrap::Class()) return ((RooTObjWrap*)gobj)->obj() ;
+  if (gobj->IsA()==RooTObjWrap::Class()) return (static_cast<RooTObjWrap*>(gobj))->obj() ;
 
   return gobj ;
 }
@@ -2146,7 +2149,7 @@ void RooWorkspace::Print(Option_t* opts) const
     } else {
 
       if (parg->IsA()->InheritsFrom(RooResolutionModel::Class())) {
-   if (((RooResolutionModel*)parg)->isConvolved()) {
+   if ((static_cast<RooResolutionModel*>(parg))->isConvolved()) {
      convResoSet.add(*parg) ;
    } else {
      resoSet.add(*parg) ;
@@ -2303,7 +2306,7 @@ void RooWorkspace::Print(Option_t* opts) const
     cout << "---------------" << endl ;
     for(TObject* gobj : _genObjects) {
       if (gobj->IsA()==RooTObjWrap::Class()) {
-   cout << ((RooTObjWrap*)gobj)->obj()->ClassName() << "::" << gobj->GetName() << endl ;
+   cout << (static_cast<RooTObjWrap*>(gobj))->obj()->ClassName() << "::" << gobj->GetName() << endl ;
       } else {
    cout << gobj->ClassName() << "::" << gobj->GetName() << endl ;
       }
@@ -2349,97 +2352,97 @@ void RooWorkspace::Print(Option_t* opts) const
 
 void RooWorkspace::CodeRepo::Streamer(TBuffer &R__b)
 {
-  typedef ::RooWorkspace::CodeRepo thisClass;
+   typedef ::RooWorkspace::CodeRepo thisClass;
 
    // Stream an object of class RooWorkspace::CodeRepo.
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v =  R__b.ReadVersion(&R__s, &R__c);
+      UInt_t R__s;
+      UInt_t R__c;
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
-     // Stream contents of ClassFiles map
-     Int_t count(0) ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _fmap[name]._hext.Streamer(R__b) ;
-       _fmap[name]._hfile.Streamer(R__b) ;
-       _fmap[name]._cxxfile.Streamer(R__b) ;
-     }
+      // Stream contents of ClassFiles map
+      Int_t count(0);
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _fmap[name]._hext.Streamer(R__b);
+         _fmap[name]._hfile.Streamer(R__b);
+         _fmap[name]._cxxfile.Streamer(R__b);
+      }
 
-     // Stream contents of ClassRelInfo map
-     count=0 ;
-     R__b >> count ;
-     while(count--) {
-       TString name ;
-       name.Streamer(R__b) ;
-       _c2fmap[name]._baseName.Streamer(R__b) ;
-       _c2fmap[name]._fileBase.Streamer(R__b) ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = 0;
+      R__b >> count;
+      while (count--) {
+         TString name;
+         name.Streamer(R__b);
+         _c2fmap[name]._baseName.Streamer(R__b);
+         _c2fmap[name]._fileBase.Streamer(R__b);
+      }
 
-     if (R__v==2) {
+      if (R__v == 2) {
 
-       count=0 ;
-       R__b >> count ;
-       while(count--) {
-    TString name ;
-    name.Streamer(R__b) ;
-    _ehmap[name]._hname.Streamer(R__b) ;
-    _ehmap[name]._hfile.Streamer(R__b) ;
-       }
-     }
+         count = 0;
+         R__b >> count;
+         while (count--) {
+            TString name;
+            name.Streamer(R__b);
+            _ehmap[name]._hname.Streamer(R__b);
+            _ehmap[name]._hfile.Streamer(R__b);
+         }
+      }
 
-     R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
+      R__b.CheckByteCount(R__s, R__c, thisClass::IsA());
 
-     // Instantiate any classes that are not defined in current session
-     _compiledOK = !compileClasses() ;
+      // Instantiate any classes that are not defined in current session
+      _compiledOK = !compileClasses();
 
    } else {
 
-     UInt_t R__c;
-     R__c = R__b.WriteVersion(thisClass::IsA(), true);
+      UInt_t R__c;
+      R__c = R__b.WriteVersion(thisClass::IsA(), true);
 
-     // Stream contents of ClassFiles map
-     UInt_t count = _fmap.size() ;
-     R__b << count ;
-     map<TString,ClassFiles>::iterator iter = _fmap.begin() ;
-     while(iter!=_fmap.end()) {
-       TString key_copy(iter->first) ;
-       key_copy.Streamer(R__b) ;
-       iter->second._hext.Streamer(R__b) ;
-       iter->second._hfile.Streamer(R__b);
-       iter->second._cxxfile.Streamer(R__b);
+      // Stream contents of ClassFiles map
+      UInt_t count = _fmap.size();
+      R__b << count;
+      map<TString, ClassFiles>::iterator iter = _fmap.begin();
+      while (iter != _fmap.end()) {
+         TString key_copy(iter->first);
+         key_copy.Streamer(R__b);
+         iter->second._hext.Streamer(R__b);
+         iter->second._hfile.Streamer(R__b);
+         iter->second._cxxfile.Streamer(R__b);
 
-       ++iter ;
-     }
+         ++iter;
+      }
 
-     // Stream contents of ClassRelInfo map
-     count = _c2fmap.size() ;
-     R__b << count ;
-     map<TString,ClassRelInfo>::iterator iter2 = _c2fmap.begin() ;
-     while(iter2!=_c2fmap.end()) {
-       TString key_copy(iter2->first) ;
-       key_copy.Streamer(R__b) ;
-       iter2->second._baseName.Streamer(R__b) ;
-       iter2->second._fileBase.Streamer(R__b);
-       ++iter2 ;
-     }
+      // Stream contents of ClassRelInfo map
+      count = _c2fmap.size();
+      R__b << count;
+      map<TString, ClassRelInfo>::iterator iter2 = _c2fmap.begin();
+      while (iter2 != _c2fmap.end()) {
+         TString key_copy(iter2->first);
+         key_copy.Streamer(R__b);
+         iter2->second._baseName.Streamer(R__b);
+         iter2->second._fileBase.Streamer(R__b);
+         ++iter2;
+      }
 
-     // Stream contents of ExtraHeader map
-     count = _ehmap.size() ;
-     R__b << count ;
-     map<TString,ExtraHeader>::iterator iter3 = _ehmap.begin() ;
-     while(iter3!=_ehmap.end()) {
-       TString key_copy(iter3->first) ;
-       key_copy.Streamer(R__b) ;
-       iter3->second._hname.Streamer(R__b) ;
-       iter3->second._hfile.Streamer(R__b);
-       ++iter3 ;
-     }
+      // Stream contents of ExtraHeader map
+      count = _ehmap.size();
+      R__b << count;
+      map<TString, ExtraHeader>::iterator iter3 = _ehmap.begin();
+      while (iter3 != _ehmap.end()) {
+         TString key_copy(iter3->first);
+         key_copy.Streamer(R__b);
+         iter3->second._hname.Streamer(R__b);
+         iter3->second._hfile.Streamer(R__b);
+         ++iter3;
+      }
 
-     R__b.SetByteCount(R__c, true);
-
+      R__b.SetByteCount(R__c, true);
    }
 }
 
@@ -2456,106 +2459,107 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-      R__b.ReadClassBuffer(RooWorkspace::Class(),this);
+      R__b.ReadClassBuffer(RooWorkspace::Class(), this);
 
       // Perform any pass-2 schema evolution here
-      for(RooAbsArg* node : _allOwnedNodes) {
-   node->ioStreamerPass2() ;
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->ioStreamerPass2();
       }
-      RooAbsArg::ioStreamerPass2Finalize() ;
+      RooAbsArg::ioStreamerPass2Finalize();
 
       // Make expensive object cache of all objects point to intermal copy.
       // Somehow this doesn't work OK automatically
-      for(RooAbsArg* node : _allOwnedNodes) {
-   node->setExpensiveObjectCache(_eocache) ;
-   node->setWorkspace(*this);
+      for (RooAbsArg *node : _allOwnedNodes) {
+         node->setExpensiveObjectCache(_eocache);
+         node->setWorkspace(*this);
 #ifdef ROOFIT_LEGACY_EVAL_BACKEND
-   if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
-      RooAbsOptTestStatistic *tmp = (RooAbsOptTestStatistic *)node;
-      if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
-         cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
-              << " : " << tmp->sealNotice() << endl;
-      }
-   }
+         if (node->IsA()->InheritsFrom(RooAbsOptTestStatistic::Class())) {
+            RooAbsOptTestStatistic *tmp = static_cast<RooAbsOptTestStatistic *>(node);
+            if (tmp->isSealed() && tmp->sealNotice() && strlen(tmp->sealNotice()) > 0) {
+               cout << "RooWorkspace::Streamer(" << GetName() << ") " << node->ClassName() << "::" << node->GetName()
+                    << " : " << tmp->sealNotice() << endl;
+            }
+         }
 #endif
       }
 
    } else {
 
-     // Make lists of external clients of WS objects, and remove those links temporarily
+      // Make lists of external clients of WS objects, and remove those links temporarily
 
-     map<RooAbsArg*,vector<RooAbsArg *> > extClients, extValueClients, extShapeClients ;
+      map<RooAbsArg *, vector<RooAbsArg *>> extClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extValueClients;
+      map<RooAbsArg *, vector<RooAbsArg *>> extShapeClients;
 
-     for(RooAbsArg* tmparg : _allOwnedNodes) {
+      for (RooAbsArg *tmparg : _allOwnedNodes) {
 
-       // Loop over client list of this arg
-       std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
-       for (auto client : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*client)) {
+         // Loop over client list of this arg
+         std::vector<RooAbsArg *> clientsTmp{tmparg->_clientList.begin(), tmparg->_clientList.end()};
+         for (auto client : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*client)) {
 
-           const auto refCount = tmparg->_clientList.refCount(client);
-           auto& bufferVec = extClients[tmparg];
+               const auto refCount = tmparg->_clientList.refCount(client);
+               auto &bufferVec = extClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, client);
-           tmparg->_clientList.Remove(client, true);
+               bufferVec.insert(bufferVec.end(), refCount, client);
+               tmparg->_clientList.Remove(client, true);
+            }
          }
-       }
 
-       // Loop over value client list of this arg
-       clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
-       for (auto vclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*vclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-                   << " has external value client link to " << vclient << " (" << vclient->GetName() << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl ;
+         // Loop over value client list of this arg
+         clientsTmp.assign(tmparg->_clientListValue.begin(), tmparg->_clientListValue.end());
+         for (auto vclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*vclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external value client link to " << vclient << " (" << vclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListValue.refCount(vclient) << endl;
 
-           const auto refCount = tmparg->_clientListValue.refCount(vclient);
-           auto& bufferVec = extValueClients[tmparg];
+               const auto refCount = tmparg->_clientListValue.refCount(vclient);
+               auto &bufferVec = extValueClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, vclient);
-           tmparg->_clientListValue.Remove(vclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, vclient);
+               tmparg->_clientListValue.Remove(vclient, true);
+            }
          }
-       }
 
-       // Loop over shape client list of this arg
-       clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
-       for (auto sclient : clientsTmp) {
-         if (!_allOwnedNodes.containsInstance(*sclient)) {
-           cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
-                     << " has external shape client link to " << sclient << " (" << sclient->GetName() << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl ;
+         // Loop over shape client list of this arg
+         clientsTmp.assign(tmparg->_clientListShape.begin(), tmparg->_clientListShape.end());
+         for (auto sclient : clientsTmp) {
+            if (!_allOwnedNodes.containsInstance(*sclient)) {
+               cxcoutD(ObjectHandling) << "RooWorkspace::Streamer(" << GetName() << ") element " << tmparg->GetName()
+                                       << " has external shape client link to " << sclient << " (" << sclient->GetName()
+                                       << ") with ref count " << tmparg->_clientListShape.refCount(sclient) << endl;
 
-           const auto refCount = tmparg->_clientListShape.refCount(sclient);
-           auto& bufferVec = extShapeClients[tmparg];
+               const auto refCount = tmparg->_clientListShape.refCount(sclient);
+               auto &bufferVec = extShapeClients[tmparg];
 
-           bufferVec.insert(bufferVec.end(), refCount, sclient);
-           tmparg->_clientListShape.Remove(sclient, true);
+               bufferVec.insert(bufferVec.end(), refCount, sclient);
+               tmparg->_clientListShape.Remove(sclient, true);
+            }
          }
-       }
+      }
 
-     }
+      R__b.WriteClassBuffer(RooWorkspace::Class(), this);
 
-     R__b.WriteClassBuffer(RooWorkspace::Class(),this);
+      // Reinstate clients here
 
-     // Reinstate clients here
+      for (auto &iterx : extClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientList.Add(client);
+         }
+      }
 
+      for (auto &iterx : extValueClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListValue.Add(client);
+         }
+      }
 
-     for (auto &iterx : extClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientList.Add(client);
-       }
-     }
-
-     for (auto &iterx : extValueClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListValue.Add(client);
-       }
-     }
-
-     for (auto &iterx : extShapeClients) {
-       for (auto client : iterx.second) {
-         iterx.first->_clientListShape.Add(client);
-       }
-     }
-
+      for (auto &iterx : extShapeClients) {
+         for (auto client : iterx.second) {
+            iterx.first->_clientListShape.Add(client);
+         }
+      }
    }
 }
 
@@ -2938,4 +2942,9 @@ void RooWorkspace::RecursiveRemove(TObject *removedObj)
    }
 
    _eocache.RecursiveRemove(removedObj); // RooExpensiveObjectCache
+}
+
+TIterator *RooWorkspace::componentIterator() const
+{
+   return new RooLinkedListIter(_allOwnedNodes.makeLegacyIterator());
 }

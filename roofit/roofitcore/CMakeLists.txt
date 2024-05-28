@@ -76,7 +76,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsSelfCachedPdf.h
     RooAbsSelfCachedReal.h
     RooAbsStudy.h
-    RooAdaptiveIntegratorND.h
     RooAddGenContext.h
     RooAddModel.h
     RooAddPdf.h
@@ -84,7 +83,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooArgList.h
     RooArgProxy.h
     RooArgSet.h
-    RooBinIntegrator.h
     RooBinSamplingPdf.h
     RooBinWidthFunction.h
     RooBinnedGenContext.h
@@ -113,7 +111,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooDataHistSliceIter.h
     RooDataProjBinding.h
     RooDataSet.h
-    RooDataWeightedAverage.h
     RooDerivative.h
     RooDirItem.h
     RooDouble.h
@@ -132,11 +129,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFit/Config.h
-    RooFit/Detail/AnalyticalIntegrals.h
+    RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
-    RooFit/Detail/DataMap.h
-    RooFit/Detail/EvaluateFuncs.h
+    RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
+    RooFit/EvalContext.h
     RooFit/Evaluator.h
     RooFit/Floats.h
     RooFit/ModelConfig.h
@@ -149,6 +146,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooSumL.h
     RooFit/TestStatistics/RooUnbinnedL.h
     RooFit/TestStatistics/buildLikelihood.h
+    RooFit/TestStatistics/SharedOffset.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
     RooFitLegacy/RooTreeData.h
@@ -161,13 +159,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooGenFitStudy.h
     RooGenericPdf.h
     RooGlobalFunc.h
-    RooGrid.h
     RooHelpers.h
     RooHist.h
     RooHistError.h
     RooHistFunc.h
     RooHistPdf.h
-    RooImproperIntegrator1D.h
     RooInvTransform.h
     RooLinTransBinning.h
     RooLinearCombination.h
@@ -176,7 +172,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooLinkedListElem.h
     RooLinkedListIter.h
     RooListProxy.h
-    RooMCIntegrator.h
     RooMCStudy.h
     RooMappedCategory.h
     RooMath.h
@@ -226,7 +221,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooRecursiveFraction.h
     RooRefCountList.h
     RooResolutionModel.h
-    RooRombergIntegrator.h
     RooSTLRefCountList.h
     RooSecondMoment.h
     RooSetProxy.h
@@ -249,7 +243,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooTreeDataStore.h
     RooTruthModel.h
     RooUniformBinning.h
-    RooUnitTest.h
     RooVectorDataStore.h
     RooWorkspace.h
     RooWorkspaceHandle.h
@@ -257,7 +250,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/BatchModeHelpers.cxx
     src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
@@ -330,7 +322,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooDataHistSliceIter.cxx
     src/RooDataProjBinding.cxx
     src/RooDataSet.cxx
-    src/RooDataWeightedAverage.cxx
     src/RooDerivative.cxx
     src/RooDirItem.cxx
     src/RooDouble.cxx
@@ -348,7 +339,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooFactoryWSTool.cxx
     src/RooFirstMoment.cxx
     src/RooFit/Detail/CodeSquashContext.cxx
-    src/RooFit/Detail/DataMap.cxx
+    src/RooFit/EvalContext.cxx
     src/RooFit/Evaluator.cxx
     src/RooFitImplHelpers.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
@@ -442,7 +433,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooStudyManager.cxx
     src/RooStudyPackage.cxx
     src/RooSuperCategory.cxx
-    src/RooTFoamBinding.cxx
     src/RooTObjWrap.cxx
     src/RooThresholdCategory.cxx
     src/RooTrace.cxx
@@ -465,6 +455,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooSumL.cxx
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
+    src/TestStatistics/SharedOffset.cxx
     ${LegacyEvalBackendSources}
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
@@ -507,11 +498,15 @@ if(fftw3)
   target_compile_definitions(RooFitCore PUBLIC ROOFIT_MATH_FFTW3)
 endif()
 
+# To avoid deprecation warnings when including old test statistics headers.
+# RooFit has to include them to build the documentation.
+target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
+
 target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:
-if(NOT MSVC)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
   target_compile_options(RooFitCore PUBLIC -fno-math-errno)
 endif()
 

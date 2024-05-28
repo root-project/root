@@ -112,22 +112,22 @@ namespace BidirMMapPipe_impl {
         private:
             // use as small a data type as possible to maximise payload area
             // of pages
-            short m_next;               ///< next page in list (in pagesizes)
-            unsigned short m_size;      ///< size of payload (in bytes)
-            unsigned short m_pos;       ///< index of next byte in payload area
-            /// copy construction forbidden
-            Page(const Page&) {}
-            /// assignment forbidden
-            Page& operator=(const Page&) = delete;
+           short m_next = 0;          ///< next page in list (in pagesizes)
+           unsigned short m_size = 0; ///< size of payload (in bytes)
+           unsigned short m_pos = 0;  ///< index of next byte in payload area
         public:
             /// constructor
-            Page() : m_next(0), m_size(0), m_pos(0)
+            Page()
             {
                 // check that short is big enough - must be done at runtime
                 // because the page size is not known until runtime
                 assert(std::numeric_limits<unsigned short>::max() >=
                         PageChunk::pagesize());
             }
+            /// copy construction forbidden
+            Page(const Page &) = delete;
+            /// assignment forbidden
+            Page &operator=(const Page &) = delete;
             /// set pointer to next page
             void setNext(const Page* p);
             /// return pointer to next page
@@ -253,7 +253,7 @@ namespace BidirMMapPipe_impl {
             /// chunk size map (histogram of chunk sizes)
             unsigned m_szmap[(maxsz - minsz) / szincr];
             /// current chunk size
-            int m_cursz;
+            int m_cursz = minsz;
             /// page group size
             unsigned m_nPgPerGrp;
 
@@ -577,8 +577,7 @@ namespace BidirMMapPipe_impl {
         delete this;
     }
 
-    PagePool::PagePool(unsigned nPgPerGroup) :
-        m_cursz(minsz), m_nPgPerGrp(nPgPerGroup)
+    PagePool::PagePool(unsigned nPgPerGroup) : m_nPgPerGrp(nPgPerGroup)
     {
         // if logical and physical page size differ, we may have to adjust
         // m_nPgPerGrp to make things fit
@@ -1071,7 +1070,8 @@ unsigned BidirMMapPipe::recvpages()
 {
     unsigned char pg;
     unsigned retVal = 0;
-    Page *plisthead = nullptr, *plisttail = nullptr;
+    Page *plisthead = nullptr;
+    Page *plisttail = nullptr;
     if (1 == xferraw(m_inpipe, &pg, 1, ::read)) {
         plisthead = plisttail = m_pages[pg];
         // ok, have number of pages
@@ -1141,7 +1141,8 @@ void BidirMMapPipe::feedPageLists(Page* plist)
     // ok, might have to send free pages to other end, and (if we do have to
     // send something to the other end) while we're at it, send any dirty
     // pages which are completely full, too
-    Page *sendlisthead = nullptr, *sendlisttail = nullptr;
+    Page *sendlisthead = nullptr;
+    Page *sendlisttail = nullptr;
     // loop over plist
     while (plist) {
         Page* p = plist;
@@ -1275,7 +1276,8 @@ void BidirMMapPipe::doFlush(bool forcePartialPages)
 {
     assert(!(m_flags & failbit));
     // build a list of pages to flush
-    Page *flushlisthead = nullptr, *flushlisttail = nullptr;
+    Page *flushlisthead = nullptr;
+    Page *flushlisttail = nullptr;
     while (m_dirtylist) {
         Page* p = m_dirtylist;
         if (!forcePartialPages && !p->full()) break;

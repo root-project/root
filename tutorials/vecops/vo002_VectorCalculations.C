@@ -41,7 +41,7 @@ void vo002_VectorCalculations()
 
    // Dot product and the extraction of quantities such as Mean, Min and Max
    // are also easy to express (see here for the full list:
-   // https://root.cern.ch/doc/master/namespaceROOT_1_1VecOps.html)
+   // https://root.cern/doc/master/namespaceROOT_1_1VecOps.html)
    auto v1_mean = Mean(v1);
    auto v1_dot_v2 = Dot(v1, v2);
 
@@ -69,7 +69,7 @@ void vo002_VectorCalculations()
              << "fast_sin(" << v1 << ") = " << v_fast_sin << std::endl;
 
    // It may happen that a custom operation needs to be applied to the RVec.
-   // In this case, the Map utitlity can be used:
+   // In this case, the Map utility can be used:
    auto v_transf = Map(v1, [](double x) { return x * 2 / 3; });
 
    std::cout << "Applying [](double x){return x * 2 / 3;} to " << v1 << " leads to " << v_transf << "\n";

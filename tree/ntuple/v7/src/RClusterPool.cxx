@@ -30,7 +30,7 @@
 #include <set>
 #include <utility>
 
-bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(const RInFlightCluster &other) const
+bool ROOT::Experimental::Internal::RClusterPool::RInFlightCluster::operator<(const RInFlightCluster &other) const
 {
    if (fClusterKey.fClusterId == other.fClusterKey.fClusterId) {
       if (fClusterKey.fPhysicalColumnSet.size() == other.fClusterKey.fPhysicalColumnSet.size()) {
@@ -48,17 +48,16 @@ bool ROOT::Experimental::Detail::RClusterPool::RInFlightCluster::operator <(cons
    return fClusterKey.fClusterId < other.fClusterKey.fClusterId;
 }
 
-ROOT::Experimental::Detail::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize)
-   : fPageSource(pageSource)
-   , fClusterBunchSize(clusterBunchSize)
-   , fPool(2 * clusterBunchSize)
-   , fThreadIo(&RClusterPool::ExecReadClusters, this)
-   , fThreadUnzip(&RClusterPool::ExecUnzipClusters, this)
+ROOT::Experimental::Internal::RClusterPool::RClusterPool(RPageSource &pageSource, unsigned int clusterBunchSize)
+   : fPageSource(pageSource),
+     fClusterBunchSize(clusterBunchSize),
+     fPool(2 * clusterBunchSize),
+     fThreadIo(&RClusterPool::ExecReadClusters, this)
 {
    R__ASSERT(clusterBunchSize > 0);
 }
 
-ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
+ROOT::Experimental::Internal::RClusterPool::~RClusterPool()
 {
    {
       // Controlled shutdown of the I/O thread
@@ -67,44 +66,9 @@ ROOT::Experimental::Detail::RClusterPool::~RClusterPool()
       fCvHasReadWork.notify_one();
    }
    fThreadIo.join();
-
-   {
-      // Controlled shutdown of the unzip thread
-      std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-      fUnzipQueue.emplace_back(RUnzipItem());
-      fCvHasUnzipWork.notify_one();
-   }
-   fThreadUnzip.join();
 }
 
-void ROOT::Experimental::Detail::RClusterPool::ExecUnzipClusters()
-{
-   // The thread keeps its local buffer of elements to be processed. On wakeup, the local copy is swapped with
-   // `fUnzipQueue`, which not only reduces contention but also reduces the overall number of allocations, as the
-   // internal storage of both copies is reused. The local copy should be cleared before the `std::swap()` in the next
-   // iteration.
-   std::deque<RUnzipItem> unzipItems;
-   while (true) {
-      {
-         std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-         fCvHasUnzipWork.wait(lock, [&]{ return !fUnzipQueue.empty(); });
-         std::swap(unzipItems, fUnzipQueue);
-      }
-
-      for (auto &item : unzipItems) {
-         if (!item.fCluster)
-            return;
-
-         fPageSource.UnzipCluster(item.fCluster.get());
-
-         // Afterwards the GetCluster() method in the main thread can pick-up the cluster
-         item.fPromise.set_value(std::move(item.fCluster));
-      }
-      unzipItems.clear();
-   } // while (true)
-}
-
-void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
+void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
 {
    std::deque<RReadItem> readItems;
    while (true) {
@@ -132,7 +96,6 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
          }
 
          auto clusters = fPageSource.LoadClusters(clusterKeys);
-         bool unzipQueueDirty = false;
          for (std::size_t i = 0; i < clusters.size(); ++i) {
             // Meanwhile, the user might have requested clusters outside the look-ahead window, so that we don't
             // need the cluster anymore, in which case we simply discard it right away, before moving it to the pool
@@ -146,23 +109,16 @@ void ROOT::Experimental::Detail::RClusterPool::ExecReadClusters()
             }
             if (discard) {
                clusters[i].reset();
-               readItems[i].fPromise.set_value(std::move(clusters[i]));
-            } else {
-               // Hand-over the loaded cluster pages to the unzip thread
-               std::unique_lock<std::mutex> lock(fLockUnzipQueue);
-               fUnzipQueue.emplace_back(RUnzipItem{std::move(clusters[i]), std::move(readItems[i].fPromise)});
-               unzipQueueDirty = true;
             }
+            readItems[i].fPromise.set_value(std::move(clusters[i]));
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
-         if (unzipQueueDirty)
-            fCvHasUnzipWork.notify_one();
       }
    } // while (true)
 }
 
-ROOT::Experimental::Detail::RCluster *
-ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId) const
+ROOT::Experimental::Internal::RCluster *
+ROOT::Experimental::Internal::RClusterPool::FindInPool(DescriptorId_t clusterId) const
 {
    for (const auto &cptr : fPool) {
       if (cptr && (cptr->GetId() == clusterId))
@@ -171,7 +127,7 @@ ROOT::Experimental::Detail::RClusterPool::FindInPool(DescriptorId_t clusterId) c
    return nullptr;
 }
 
-size_t ROOT::Experimental::Detail::RClusterPool::FindFreeSlot() const
+size_t ROOT::Experimental::Internal::RClusterPool::FindFreeSlot() const
 {
    auto N = fPool.size();
    for (unsigned i = 0; i < N; ++i) {
@@ -189,7 +145,7 @@ namespace {
 /// Helper class for the (cluster, column list) pairs that should be loaded in the background
 class RProvides {
    using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
-   using ColumnSet_t = ROOT::Experimental::Detail::RCluster::ColumnSet_t;
+   using ColumnSet_t = ROOT::Experimental::Internal::RCluster::ColumnSet_t;
 
 public:
    struct RInfo {
@@ -238,9 +194,9 @@ public:
 
 } // anonymous namespace
 
-ROOT::Experimental::Detail::RCluster *
-ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
-                                                     const RCluster::ColumnSet_t &physicalColumns)
+ROOT::Experimental::Internal::RCluster *
+ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
+                                                       const RCluster::ColumnSet_t &physicalColumns)
 {
    std::set<DescriptorId_t> keep;
    RProvides provide;
@@ -267,6 +223,10 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
          auto cid = next;
          next = descriptorGuard->FindNextClusterId(cid);
+         if (next != kInvalidClusterIndex) {
+            if (!fPageSource.GetEntryRange().IntersectsWith(descriptorGuard->GetClusterDescriptor(next)))
+               next = kInvalidClusterIndex;
+         }
          if (next == kInvalidDescriptorId)
             provideInfo.fFlags |= RProvides::kFlagLast;
 
@@ -369,7 +329,7 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
 
             fReadQueue.emplace_back(std::move(readItem));
          }
-         if (fReadQueue.size() > 0)
+         if (!fReadQueue.empty())
             fCvHasReadWork.notify_one();
       }
    } // work queue lock guard
@@ -377,9 +337,9 @@ ROOT::Experimental::Detail::RClusterPool::GetCluster(DescriptorId_t clusterId,
    return WaitFor(clusterId, physicalColumns);
 }
 
-ROOT::Experimental::Detail::RCluster *
-ROOT::Experimental::Detail::RClusterPool::WaitFor(DescriptorId_t clusterId,
-                                                  const RCluster::ColumnSet_t &physicalColumns)
+ROOT::Experimental::Internal::RCluster *
+ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
+                                                    const RCluster::ColumnSet_t &physicalColumns)
 {
    while (true) {
       // Fast exit: the cluster happens to be already present in the cache pool
@@ -415,6 +375,8 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(DescriptorId_t clusterId,
 
       auto cptr = itr->fFuture.get();
       if (result) {
+         // Noop unless the page source has a task scheduler
+         fPageSource.UnzipCluster(cptr.get());
          result->Adopt(std::move(*cptr));
       } else {
          auto idxFreeSlot = FindFreeSlot();
@@ -426,8 +388,7 @@ ROOT::Experimental::Detail::RClusterPool::WaitFor(DescriptorId_t clusterId,
    }
 }
 
-
-void ROOT::Experimental::Detail::RClusterPool::WaitForInFlightClusters()
+void ROOT::Experimental::Internal::RClusterPool::WaitForInFlightClusters()
 {
    while (true) {
       decltype(fInFlightClusters)::iterator itr;

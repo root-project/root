@@ -19,7 +19,7 @@
 \class RooAbsMCStudyModule
 \ingroup Roofitcore
 
-RooAbsMCStudyModule is a base class for add-on modules to RooMCStudy that
+Base class for add-on modules to RooMCStudy that
 can perform additional calculations on each generate+fit cycle managed
 by RooMCStudy.
 
@@ -34,8 +34,6 @@ Look at RooDLLSignificanceMCSModule for an example of an implementation.
 #include <RooAbsMCStudyModule.h>
 
 #include <RooFitResult.h>
-
-using namespace std;
 
 ClassImp(RooAbsMCStudyModule);
 

@@ -1364,27 +1364,28 @@ Int_t TTabCom::Complete(const TRegexp & re,
    // 4. finally write text into the buffer.
    // ---------------------------------------
    {
-      int i = strlen(fBuf);     // old EOL position is i
-      int l = strlen(match) - (loc - start);  // new EOL position will be i+L
+      const int old_len = strlen(fBuf);                 // old EOL position is old_len
+      const int match_len = strlen(match);
+      const int added_len = match_len - (loc - start);  // new EOL position will be old_len+added_len
 
       // first check for overflow
-      if (strlen(fBuf) + strlen(match) + 1 > BUF_SIZE) {
+      if (old_len + added_len + 1 > BUF_SIZE || start > loc || start + match_len + 1 > BUF_SIZE) {
          Error("TTabCom::Complete", "buffer overflow");
          pos = -2;
          goto done;             /* RETURN */
       }
       // debugging output
-      IfDebug(std::cerr << "  i=" << i << std::endl);
-      IfDebug(std::cerr << "  L=" << l << std::endl);
+      IfDebug(std::cerr << "  i=" << old_len << std::endl);
+      IfDebug(std::cerr << "  L=" << added_len << std::endl);
       IfDebug(std::cerr << "loc=" << loc << std::endl);
 
       // slide everything (including the null terminator) over to make space
-      for (; i >= loc; i -= 1) {
-         fBuf[i + l] = fBuf[i];
+      for (int i = old_len; i >= loc; i -= 1) {
+         fBuf[i + added_len] = fBuf[i];
       }
 
       // insert match
-      strlcpy(fBuf + start, match, BUF_SIZE - start);
+      memcpy(fBuf + start, match, match_len);
 
       // the "get"->"Get" case of TString::kIgnore sets pos to -2
       // and falls through to update the buffer; we need to return
@@ -1397,7 +1398,7 @@ Int_t TTabCom::Complete(const TRegexp & re,
             pos = start;
          }
       }
-      *fpLoc = loc + l;         // new cursor position
+      *fpLoc = loc + added_len;    // new cursor position
    }
 
 done:                         // <----- goto label

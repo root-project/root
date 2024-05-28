@@ -39,11 +39,8 @@ Computes the integral over a binned distribution by summing the bin contents of 
 #include <memory>
 
 
+using std::endl, std::list;
 
-using namespace std;
-
-ClassImp(RooBinIntegrator);
-;
 
 // Register this class with RooNumIntConfig
 
@@ -73,10 +70,9 @@ void RooBinIntegrator::registerIntegrator(RooNumIntFactory& fact)
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct integrator on given function binding binding
 
-RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
-  RooAbsIntegrator(function)
+RooBinIntegrator::RooBinIntegrator(const RooAbsFunc &function, int numBins)
+   : RooAbsIntegrator(function), _useIntegrandLimits(true)
 {
-  _useIntegrandLimits= true;
   assert(_function && _function->isValid());
 
   // Allocate coordinate buffer size after number of function dimensions
@@ -113,14 +109,6 @@ RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, int numBins):
 
 RooBinIntegrator::RooBinIntegrator(const RooAbsFunc& function, const RooNumIntConfig& config) :
   RooBinIntegrator(function, static_cast<int>(config.getConfigSection("RooBinIntegrator").getRealValue("numBins")))
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooBinIntegrator::~RooBinIntegrator()
 {
 }
 

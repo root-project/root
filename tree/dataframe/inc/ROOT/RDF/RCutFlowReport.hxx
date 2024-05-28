@@ -11,7 +11,7 @@
 #ifndef ROOT_RCUTFLOWREPORT
 #define ROOT_RCUTFLOWREPORT
 
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "RtypesCore.h"
 
 #include <string>
@@ -32,12 +32,14 @@ class TCutInfo {
    friend class ROOT::Detail::RDF::RFilterBase;
 
 private:
-   const std::string fName;
-   const ULong64_t fPass;
-   const ULong64_t fAll;
+   std::string fName;
+   ULong64_t fPass;
+   ULong64_t fAll;
    TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
 
 public:
+   // Default constructor for the I/O
+   TCutInfo() = default;
    const std::string &GetName() const { return fName; }
    ULong64_t GetAll() const { return fAll; }
    ULong64_t GetPass() const { return fPass; }

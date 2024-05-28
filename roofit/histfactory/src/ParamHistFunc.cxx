@@ -103,7 +103,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -138,7 +138,7 @@ ParamHistFunc::ParamHistFunc(const char* name, const char* title,
   _numBins = GetNumBins( vars );
 
   // Add the parameters (with checking)
-  addVarSet( vars );
+  _dataVars.addTyped<RooRealVar>(vars);
   addParamSet( paramSet );
 }
 
@@ -293,7 +293,7 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
 
   RooArgList paramSet;
 
-  Int_t numVars = vars.getSize();
+  Int_t numVars = vars.size();
   Int_t numBins = GetNumBins( vars );
 
   if( numVars == 0 ) {
@@ -331,8 +331,8 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
 
     // For each bin, create a RooRealVar
     for( Int_t j = 0; j < vary->numBins(); ++j) {
@@ -366,9 +366,9 @@ RooArgList ParamHistFunc::createParamSet(RooWorkspace& w, const std::string& Pre
     // all starting at 0
     std::vector< Int_t > Indices(numVars, 0);
 
-    RooRealVar* varx = (RooRealVar*) vars.at(0);
-    RooRealVar* vary = (RooRealVar*) vars.at(1);
-    RooRealVar* varz = (RooRealVar*) vars.at(2);
+    RooRealVar* varx = static_cast<RooRealVar*>(vars.at(0));
+    RooRealVar* vary = static_cast<RooRealVar*>(vars.at(1));
+    RooRealVar* varz = static_cast<RooRealVar*>(vars.at(2));
 
     // For each bin, create a RooRealVar
     for( Int_t k = 0; k < varz->numBins(); ++k) {
@@ -520,27 +520,6 @@ Int_t ParamHistFunc::getCurrentBin() const {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return 0 for success
-/// return 1 for failure
-/// Check that the elements
-/// are actually RooRealVar's
-/// If so, add them to the
-/// list of vars
-Int_t ParamHistFunc::addVarSet( const RooArgList& vars ) {
-  for(auto const& comp : vars) {
-    if (!dynamic_cast<RooRealVar*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in variables list is not of type RooRealVar";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-    _dataVars.add( *comp );
-  }
-  return 0;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 
 Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // return 0 for success
@@ -550,7 +529,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // the right number of arguments:
 
   Int_t numVarBins  = GetNumBins(_dataVars);
-  Int_t numElements = params.getSize();
+  Int_t numElements = params.size();
 
   if( numVarBins != numElements ) {
     std::cout << "ParamHistFunc::addParamSet - ERROR - "
@@ -567,16 +546,7 @@ Int_t ParamHistFunc::addParamSet( const RooArgList& params ) {
   // If so, add them to the
   // list of params
 
-  for (const auto comp : params) {
-    if (!dynamic_cast<const RooAbsReal*>(comp)) {
-      auto errorMsg = std::string("ParamHistFunc::(") + GetName() + ") ERROR: component "
-                      + comp->GetName() + " in parameter list is not of type RooAbsReal.";
-      coutE(InputArguments) <<  errorMsg << std::endl;
-      throw std::runtime_error(errorMsg);
-    }
-
-    _paramSet.add( *comp );
-  }
+  _paramSet.addTyped<RooAbsReal>(params);
 
   return 0;
 }
@@ -610,7 +580,10 @@ void ParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 /// the associated parameters.
 /// \param[in,out] evalData Input/output data for evaluating the ParamHistFunc.
 /// \param[in] normSet Normalisation set passed on to objects that are serving values to us.
-void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const {
+void ParamHistFunc::doEval(RooFit::EvalContext & ctx) const
+{
+  std::span<double> output = ctx.output();
+  std::size_t size = output.size();
 
   auto const& n = _numBinsPerDim;
   // check if _numBins needs to be filled
@@ -626,14 +599,14 @@ void ParamHistFunc::computeBatch(double* output, size_t size, RooFit::Detail::Da
   // As a working buffer for the bin indices, we use the tail of the output
   // buffer. We can't use the same starting pointer, otherwise we would
   // overwrite the later bin indices as we fill the output.
-  auto indexBuffer = reinterpret_cast<int*>(output + size) - size;
+  auto indexBuffer = reinterpret_cast<int*>(output.data() + size) - size;
   std::fill(indexBuffer, indexBuffer + size, 0); // output buffer for bin indices needs to be zero-initialized
 
   // Use the vectorized RooAbsBinning::binNumbers() to update the total bin
   // index for each dimension, using the `coef` parameter to multiply with the
   // right index multiplication factor for each dimension.
   for (std::size_t iVar = 0; iVar < _dataVars.size(); ++iVar) {
-    _dataSet.getBinnings()[iVar]->binNumbers(dataMap.at(&_dataVars[iVar]).data(), indexBuffer, size, idxMult[iVar]);
+    _dataSet.getBinnings()[iVar]->binNumbers(ctx.at(&_dataVars[iVar]).data(), indexBuffer, size, idxMult[iVar]);
   }
 
   // Finally, look up the parameters and get their values to fill the output buffer
@@ -659,7 +632,7 @@ Int_t ParamHistFunc::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& anal
 
   // Check if this configuration was created before
   Int_t sterileIdx(-1) ;
-  CacheElem* cache = (CacheElem*) _normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr) ;
+  CacheElem* cache = static_cast<CacheElem*>(_normIntMgr.getObj(normSet,&analVars,&sterileIdx,(const char*)nullptr)) ;
   if (cache) {
     return _normIntMgr.lastIndex()+1 ;
   }

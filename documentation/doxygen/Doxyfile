@@ -1076,7 +1076,8 @@ EXCLUDE_PATTERNS       = */G__* \
                          */src/lexertk.hpp \
                          *.xml \
                          *.dtd \
-                         */tutorials/webgui/qt5web/*
+                         */tutorials/webgui/qt5web/* \
+                         */math/mathcore/src/CDT*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

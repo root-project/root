@@ -51,13 +51,6 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
-#pragma link C++ class std::set<std::int64_t> +;
-#pragma link C++ class std::set<std::string> +;
-#pragma link C++ class std::set<float> +;
-#pragma link C++ class std::set<std::set<CustomStruct>> +;
-#pragma link C++ class std::set<std::set<char>> +;
-#pragma link C++ class std::set<std::pair<int, CustomStruct>> +;
-
 #pragma link C++ options = version(3) class StructWithIORulesBase + ;
 #pragma link C++ options = version(3) class StructWithTransientString + ;
 #pragma link C++ options = version(3) class StructWithIORules + ;
@@ -77,5 +70,17 @@
 
 #pragma read sourceClass = "StructWithIORules" source = "float a;float b" version = "[1-]" targetClass = \
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
+
+#pragma link C++ class Cyclic + ;
+#pragma link C++ class CyclicCollectionProxy + ;
+#pragma link C++ class Unsupported + ;
+
+#pragma link C++ class BaseA + ;
+#pragma link C++ class DiamondVirtualB + ;
+#pragma link C++ class DiamondVirtualC + ;
+#pragma link C++ class DiamondVirtualD + ;
+#pragma link C++ class DuplicateBaseB + ;
+#pragma link C++ class DuplicateBaseC + ;
+#pragma link C++ class DuplicateBaseD + ;
 
 #endif

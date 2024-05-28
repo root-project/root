@@ -1,5 +1,5 @@
 // @(#)root/mathcore:$Id: Delaunay2D.h,v 1.00
-// Author: Daniel Funke, Lorenzo Moneta
+// Authors: Daniel Funke, Lorenzo Moneta, Olivier Couet
 
 /*************************************************************************
  * Copyright (C) 2015 ROOT Math Team                                     *
@@ -16,16 +16,17 @@
 
 //#include <thread>
 
-// use the triangle library if we do not use CGAL
+// use the CDT library if we do not use CGAL
 #ifndef HAS_CGAL
-#include "triangle.h"
+#include "CDT/CDT.h"
 #endif
 
 #include <algorithm>
-#include <stdlib.h>
+#include <cstdlib>
 
 #include <iostream>
 #include <limits>
+
 
 namespace ROOT {
 
@@ -93,8 +94,6 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
    } else {
       fInit = true;
    }
-   //printf("Normalized space extends from (%f,%f) to (%f,%f)\n", fXNmin, fYNmin, fXNmax, fYNmax);
-
 
 #ifndef HAS_CGAL
    fXCellStep    = 0.;
@@ -176,102 +175,44 @@ void Delaunay2D::DoNormalizePoints() {
 /// Triangle implementation for finding all the triangles
 void Delaunay2D::DoFindTriangles() {
 
-   auto initStruct = [] (triangulateio & s) {
-      s.pointlist = nullptr;              /* In / out */
-      s.pointattributelist = nullptr;     /* In / out */
-      s.pointmarkerlist = nullptr;        /* In / out */
-      s.numberofpoints = 0;               /* In / out */
-      s.numberofpointattributes = 0;      /* In / out */
+   int i;
+   std::vector<CDT::V2d<double>> points(fNpoints);
+   for (i = 0; i < fNpoints; ++i) points[i] = CDT::V2d<double>::make(fXN[i], fYN[i]);
+   CDT::RemoveDuplicates(points);
 
-      s.trianglelist = nullptr;           /* In / out */
-      s.triangleattributelist = nullptr;  /* In / out */
-      s.trianglearealist = nullptr;       /* In only */
-      s.neighborlist = nullptr;           /* Out only */
-      s.numberoftriangles = 0;            /* In / out */
-      s.numberofcorners = 0;              /* In / out */
-      s.numberoftriangleattributes = 0;   /* In / out */
+   CDT::Triangulation<double> cdt;
+   cdt.insertVertices(points);
+   cdt.eraseSuperTriangle();
 
-      s.segmentlist = nullptr;            /* In / out */
-      s.segmentmarkerlist = nullptr;      /* In / out */
-      s.numberofsegments = 0;             /* In / out */
+   auto AllTriangles      = cdt.triangles;
+   auto AllVertices       = cdt.vertices;
+   int  NumberOfTriangles = cdt.triangles.size();
 
-      s.holelist = nullptr;               /* In / pointer to array copied out */
-      s.numberofholes = 0;                /* In / copied out */
+   fTriangles.resize(NumberOfTriangles);
 
-      s.regionlist = nullptr;             /* In / pointer to array copied out */
-      s.numberofregions = 0;              /* In / copied out */
-
-      s.edgelist = nullptr;               /* Out only */
-      s.edgemarkerlist = nullptr;         /* Not used with Voronoi diagram; out only */
-      s.normlist = nullptr;               /* Used only with Voronoi diagram; out only */
-      s.numberofedges = 0;                /* Out only */
-   };
-
-   auto freeStruct = [] (triangulateio & s) {
-      if(s.pointlist != nullptr) free(s.pointlist);                         /* In / out */
-      if(s.pointattributelist != nullptr) free(s.pointattributelist);       /* In / out */
-      if(s.pointmarkerlist != nullptr) free(s.pointmarkerlist);             /* In / out */
-
-      if(s.trianglelist != nullptr) free(s.trianglelist);                   /* In / out */
-      if(s.triangleattributelist != nullptr) free(s.triangleattributelist); /* In / out */
-      if(s.trianglearealist != nullptr) free(s.trianglearealist);           /* In only */
-      if(s.neighborlist != nullptr) free(s.neighborlist);                   /* Out only */
-
-      if(s.segmentlist != nullptr) free(s.segmentlist);                     /* In / out */
-      if(s.segmentmarkerlist != nullptr) free(s.segmentmarkerlist);         /* In / out */
-
-      if(s.holelist != nullptr) free(s.holelist);             /* In / pointer to array copied out */
-
-      if(s.regionlist != nullptr) free(s.regionlist);         /* In / pointer to array copied out */
-
-      if(s.edgelist != nullptr) free(s.edgelist);             /* Out only */
-      if(s.edgemarkerlist != nullptr) free(s.edgemarkerlist); /* Not used with Voronoi diagram; out only */
-      if(s.normlist != nullptr) free(s.normlist);             /* Used only with Voronoi diagram; out only */
-   };
-
-   struct triangulateio in, out;
-   initStruct(in); initStruct(out);
-
-   /* Define input points. */
-
-   in.numberofpoints = fNpoints;
-   in.pointlist = (REAL *) malloc(in.numberofpoints * 2 * sizeof(REAL));
-
-   for (Int_t i = 0; i < fNpoints; ++i) {
-      in.pointlist[2 * i] = fXN[i];
-      in.pointlist[2 * i + 1] = fYN[i];
-   }
-
-   triangulate((char *) "zQN", &in, &out, nullptr);
-
-   fTriangles.resize(out.numberoftriangles);
-   for(int t = 0; t < out.numberoftriangles; ++t){
+   for(i = 0; i < NumberOfTriangles; i++){
       Triangle tri;
+      const auto& t = AllTriangles[i];
 
-      auto transform = [&] (const unsigned int v) {
-         //each triangle as numberofcorners vertices ( = 3)
-         tri.idx[v] = out.trianglelist[t*out.numberofcorners + v];
+      const auto& v0  = AllVertices[t.vertices[0]];
+      tri.x[0]   = v0.x;
+      tri.y[0]   = v0.y;
+      tri.idx[0] = t.vertices[0];
 
-         //printf("triangle %u vertex %u: point %u/%i\n", t, v, tri.idx[v], out.numberofpoints);
+      const auto& v1  = AllVertices[t.vertices[1]];
+      tri.x[1]   = v1.x;
+      tri.y[1]   = v1.y;
+      tri.idx[1] = t.vertices[1];
 
-         //pointlist is [x0 y0 x1 y1 ...]
-         tri.x[v] = in.pointlist[tri.idx[v] * 2 + 0];
+      const auto& v2  = AllVertices[t.vertices[2]];
+      tri.x[2]   = v2.x;
+      tri.y[2]   = v2.y;
+      tri.idx[2] = t.vertices[2];
 
-         //printf("\t x: %f\n", tri.x[v]);
-
-         tri.y[v] = in.pointlist[tri.idx[v] * 2 + 1];
-
-         //printf("\t y: %f\n", tri.y[v]);
-      };
-
-      transform(0);
-      transform(1);
-      transform(2);
-
-      //see comment in header for CGAL fallback section
+      // see comment in header for CGAL fallback section
       tri.invDenom = 1 / ( (tri.y[1] - tri.y[2])*(tri.x[0] - tri.x[2]) + (tri.x[2] - tri.x[1])*(tri.y[0] - tri.y[2]) );
 
-      fTriangles[t] = tri;
+      fTriangles[i] = tri;
 
       auto bx = std::minmax({tri.x[0], tri.x[1], tri.x[2]});
       auto by = std::minmax({tri.y[0], tri.y[1], tri.y[2]});
@@ -282,15 +223,12 @@ void Delaunay2D::DoFindTriangles() {
       unsigned int cellYmin = CellY(by.first);
       unsigned int cellYmax = CellY(by.second);
 
-      for(unsigned int i = cellXmin; i <= cellXmax; ++i) {
-         for(unsigned int j = cellYmin; j <= cellYmax; ++j) {
-            //printf("(%u,%u) = %u\n", i, j, Cell(i,j));
-            fCells[Cell(i,j)].insert(t);
+      for(unsigned int j = cellXmin; j <= cellXmax; j++) {
+         for(unsigned int k = cellYmin; k <= cellYmax; k++) {
+            fCells[Cell(j,k)].insert(i);
          }
       }
    }
-
-   freeStruct(in); freeStruct(out);
 }
 
 /// Triangle implementation for interpolation
@@ -346,8 +284,6 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
                 std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
       }
    }
-
-   // printf("Could not find a triangle for point (%f,%f)\n", xx, yy);
 
    // no triangle found return standard value
    return fZout;
@@ -410,10 +346,8 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 
    //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
 
-   if(!nn.third) //neighbor finding was NOT successful, return standard value
+   if(!nn.third) // neighbour finding was NOT successful, return standard value
       return fZout;
-
-   //printf("found neighbors %u\n", coords.size());
 
    Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
                                                nn.second, Value_access(fNormalizedPoints, fZ));

@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "ROOT/RAxisConfig.hxx"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RLogger.hxx"
 
 namespace ROOT {

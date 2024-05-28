@@ -1,34 +1,32 @@
 #include "ntuple_test.hxx"
+#include <TKey.h>
 #include <TTree.h>
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
-bool IsEqual(const ROOT::Experimental::Internal::RFileNTupleAnchor &a,
-             const ROOT::Experimental::Internal::RFileNTupleAnchor &b)
+namespace {
+bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
-   return a.fVersion == b.fVersion && a.fSize == b.fSize && a.fSeekHeader == b.fSeekHeader &&
-          a.fNBytesHeader == b.fNBytesHeader && a.fLenHeader == b.fLenHeader && a.fSeekFooter == b.fSeekFooter &&
-          a.fNBytesFooter == b.fNBytesFooter && a.fLenFooter == b.fLenFooter && a.fReserved == b.fReserved;
+   return a.GetVersionEpoch() == b.GetVersionEpoch() && a.GetVersionMajor() == b.GetVersionMajor() &&
+          a.GetVersionMinor() == b.GetVersionMinor() && a.GetVersionPatch() == b.GetVersionPatch() &&
+          a.GetSeekHeader() == b.GetSeekHeader() && a.GetNBytesHeader() == b.GetNBytesHeader() &&
+          a.GetLenHeader() == b.GetLenHeader() && a.GetSeekFooter() == b.GetSeekFooter() &&
+          a.GetNBytesFooter() == b.GetNBytesFooter() && a.GetLenFooter() == b.GetLenFooter() &&
+          a.GetChecksum() == b.GetChecksum();
 }
 
 struct RNTupleTester {
    ROOT::Experimental::RNTuple fNtpl;
 
    explicit RNTupleTester(const ROOT::Experimental::RNTuple &ntpl) : fNtpl(ntpl) {}
-   Internal::RFileNTupleAnchor GetAnchor() const { return fNtpl.GetAnchor(); }
+   RNTuple GetAnchor() const { return fNtpl; }
 };
-
-} // namespace Internal
-} // namespace Experimental
-} // namespace ROOT
+} // namespace
 
 TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kBare));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -40,8 +38,8 @@ TEST(MiniFile, Raw)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -58,7 +56,7 @@ TEST(MiniFile, Stream)
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -70,8 +68,8 @@ TEST(MiniFile, Stream)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -84,7 +82,7 @@ TEST(MiniFile, Stream)
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
    ASSERT_TRUE(file);
    auto k = std::unique_ptr<ROOT::Experimental::RNTuple>(file->Get<ROOT::Experimental::RNTuple>("MyNTuple"));
-   EXPECT_TRUE(IsEqual(ntuple, ROOT::Experimental::Internal::RNTupleTester(*k).GetAnchor()));
+   EXPECT_TRUE(IsEqual(ntuple, RNTupleTester(*k).GetAnchor()));
 }
 
 
@@ -92,8 +90,8 @@ TEST(MiniFile, Proper)
 {
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
-   std::unique_ptr<TFile> file;
-   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), file));
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
 
    char header = 'h';
    char footer = 'f';
@@ -106,8 +104,8 @@ TEST(MiniFile, Proper)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple = reader.GetNTuple("MyNTuple").Inspect();
-   EXPECT_EQ(offHeader, ntuple.fSeekHeader);
-   EXPECT_EQ(offFooter, ntuple.fSeekFooter);
+   EXPECT_EQ(offHeader, ntuple.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob);
@@ -118,14 +116,247 @@ TEST(MiniFile, Proper)
    EXPECT_EQ(footer, buf);
 }
 
+TEST(MiniFile, SimpleKeys)
+{
+   FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
+
+   auto writer = std::unique_ptr<RNTupleFileWriter>(
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
+
+   char blob1 = '1';
+   auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+
+   // Reserve a blob and fully write it.
+   char blob2 = '2';
+   auto offBlob2 = writer->ReserveBlob(1, 1);
+   writer->WriteIntoReservedBlob(&blob2, 1, offBlob2);
+
+   // Reserve a blob, but only write at the beginning.
+   char blob3 = '3';
+   auto offBlob3 = writer->ReserveBlob(2, 2);
+   writer->WriteIntoReservedBlob(&blob3, 1, offBlob3);
+
+   // Reserve a blob, but only write somewhere in the middle.
+   char blob4 = '4';
+   auto offBlob4 = writer->ReserveBlob(3, 3);
+   auto offBlob4Write = offBlob4 + 1;
+   writer->WriteIntoReservedBlob(&blob4, 1, offBlob4Write);
+
+   // Reserve a blob, but don't write it at all.
+   auto offBlob5 = writer->ReserveBlob(2, 2);
+
+   // For good measure, write a final blob to make sure all indices match up.
+   char blob6 = '6';
+   auto offBlob6 = writer->WriteBlob(&blob6, 1, 1);
+
+   writer->Commit();
+
+   // Manually check the written keys.
+   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb");
+   fseek(f, 0, SEEK_END);
+   long size = ftell(f);
+   rewind(f);
+
+   std::unique_ptr<char[]> buffer(new char[size]);
+   ASSERT_EQ(fread(buffer.get(), 1, size, f), size);
+
+   Long64_t offset = 100;
+   std::unique_ptr<TKey> key;
+   auto readNextKey = [&]() {
+      if (offset >= size) {
+         return false;
+      }
+
+      char *keyBuffer = buffer.get() + offset;
+      key.reset(new TKey(offset, /*size=*/0, nullptr));
+      key->ReadKeyBuffer(keyBuffer);
+      offset = key->GetSeekKey() + key->GetNbytes();
+      return true;
+   };
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "TFile");
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
+   EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob2);
+   EXPECT_EQ(buffer[offBlob2], blob2);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob3);
+   EXPECT_EQ(buffer[offBlob3], blob3);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob4);
+   EXPECT_EQ(buffer[offBlob4Write], blob4);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob5);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob6);
+   EXPECT_EQ(buffer[offBlob6], blob6);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+
+   ASSERT_TRUE(readNextKey());
+   // KeysList
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetName(), "StreamerInfo");
+
+   ASSERT_TRUE(readNextKey());
+   // FreeSegments
+
+   EXPECT_EQ(offset, size);
+}
+
+TEST(MiniFile, ProperKeys)
+{
+   FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("MyNTuple", *file));
+
+   char blob1 = '1';
+   auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
+
+   // Reserve a blob and fully write it.
+   char blob2 = '2';
+   auto offBlob2 = writer->ReserveBlob(1, 1);
+   writer->WriteIntoReservedBlob(&blob2, 1, offBlob2);
+
+   // Reserve a blob, but only write at the beginning.
+   char blob3 = '3';
+   auto offBlob3 = writer->ReserveBlob(2, 2);
+   writer->WriteIntoReservedBlob(&blob3, 1, offBlob3);
+
+   // Reserve a blob, but only write somewhere in the middle.
+   char blob4 = '4';
+   auto offBlob4 = writer->ReserveBlob(3, 3);
+   auto offBlob4Write = offBlob4 + 1;
+   writer->WriteIntoReservedBlob(&blob4, 1, offBlob4Write);
+
+   // Reserve a blob, but don't write it at all.
+   auto offBlob5 = writer->ReserveBlob(2, 2);
+
+   // For good measure, write a final blob to make sure all indices match up.
+   char blob6 = '6';
+   auto offBlob6 = writer->WriteBlob(&blob6, 1, 1);
+
+   writer->Commit();
+
+   // Manually check the written keys.
+   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb");
+   fseek(f, 0, SEEK_END);
+   long size = ftell(f);
+   rewind(f);
+
+   std::unique_ptr<char[]> buffer(new char[size]);
+   ASSERT_EQ(fread(buffer.get(), 1, size, f), size);
+
+   Long64_t offset = 100;
+   std::unique_ptr<TKey> key;
+   auto readNextKey = [&]() {
+      if (offset >= size) {
+         return false;
+      }
+
+      char *keyBuffer = buffer.get() + offset;
+      key.reset(new TKey(offset, /*size=*/0, nullptr));
+      key->ReadKeyBuffer(keyBuffer);
+      offset = key->GetSeekKey() + key->GetNbytes();
+      return true;
+   };
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "TFile");
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob1);
+   EXPECT_EQ(buffer[offBlob1], blob1);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob2);
+   EXPECT_EQ(buffer[offBlob2], blob2);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob3);
+   EXPECT_EQ(buffer[offBlob3], blob3);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob4);
+   EXPECT_EQ(buffer[offBlob4Write], blob4);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob5);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "RBlob");
+   EXPECT_EQ(key->GetSeekKey() + key->GetKeylen(), offBlob6);
+   EXPECT_EQ(buffer[offBlob6], blob6);
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetClassName(), "ROOT::Experimental::RNTuple");
+
+   ASSERT_TRUE(readNextKey());
+   // KeysList
+
+   ASSERT_TRUE(readNextKey());
+   EXPECT_STREQ(key->GetName(), "StreamerInfo");
+
+   ASSERT_TRUE(readNextKey());
+   // FreeSegments
+
+   EXPECT_EQ(offset, size);
+}
+
+TEST(MiniFile, LongString)
+{
+   FileRaii fileGuard("test_ntuple_minifile_long_string.root");
+
+   static constexpr const char *LongString =
+      "This is a very long text with exactly 254 characters, which is the maximum that the RNTupleWriter can currently "
+      "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
+      "followed by an integer length.";
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("ntuple", *file));
+
+   char header = 'h';
+   char footer = 'f';
+   auto offHeader = writer->WriteNTupleHeader(&header, 1, 1);
+   auto offFooter = writer->WriteNTupleFooter(&footer, 1, 1);
+   writer->Commit();
+
+   auto rawFile = RRawFile::Create(fileGuard.GetPath());
+   RMiniFileReader reader(rawFile.get());
+   auto ntuple1 = reader.GetNTuple("ntuple").Inspect();
+   EXPECT_EQ(offHeader, ntuple1.GetSeekHeader());
+   EXPECT_EQ(offFooter, ntuple1.GetSeekFooter());
+}
 
 TEST(MiniFile, Multi)
 {
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
-   std::unique_ptr<TFile> file;
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto writer1 =
-      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Recreate("FirstNTuple", fileGuard.GetPath(), file));
+      std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("FirstNTuple", *file));
    auto writer2 = std::unique_ptr<RNTupleFileWriter>(RNTupleFileWriter::Append("SecondNTuple", *file));
 
    char header1 = 'h';
@@ -146,11 +377,11 @@ TEST(MiniFile, Multi)
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
    auto ntuple1 = reader.GetNTuple("FirstNTuple").Inspect();
-   EXPECT_EQ(offHeader1, ntuple1.fSeekHeader);
-   EXPECT_EQ(offFooter1, ntuple1.fSeekFooter);
+   EXPECT_EQ(offHeader1, ntuple1.GetSeekHeader());
+   EXPECT_EQ(offFooter1, ntuple1.GetSeekFooter());
    auto ntuple2 = reader.GetNTuple("SecondNTuple").Inspect();
-   EXPECT_EQ(offHeader2, ntuple2.fSeekHeader);
-   EXPECT_EQ(offFooter2, ntuple2.fSeekFooter);
+   EXPECT_EQ(offHeader2, ntuple2.GetSeekHeader());
+   EXPECT_EQ(offFooter2, ntuple2.GetSeekFooter());
 
    char buf;
    reader.ReadBuffer(&buf, 1, offBlob1);
@@ -171,12 +402,13 @@ TEST(MiniFile, Multi)
 TEST(MiniFile, Failures)
 {
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, ENTupleContainerFormat::kTFile), ".*");
+   EXPECT_DEATH(
+      RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, RNTupleFileWriter::EContainerFormat::kTFile), ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
    auto writer = std::unique_ptr<RNTupleFileWriter>(
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, ENTupleContainerFormat::kTFile));
+      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile));
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -187,7 +419,7 @@ TEST(MiniFile, Failures)
 
    auto rawFile = RRawFile::Create(fileGuard.GetPath());
    RMiniFileReader reader(rawFile.get());
-   ROOT::Experimental::Internal::RFileNTupleAnchor anchor;
+   ROOT::Experimental::RNTuple anchor;
    try {
       anchor = reader.GetNTuple("No such RNTuple").Inspect();
       FAIL() << "bad RNTuple names should throw";
@@ -229,52 +461,4 @@ TEST(MiniFile, DifferentTKeys)
    file->Close();
    auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
    EXPECT_EQ(1, ntuple->GetNEntries());
-}
-
-TEST(MiniFile, FailOnForwardIncompatibility)
-{
-   FileRaii fileGuard("test_ntuple_minifile_forward_incompat.root");
-
-   // First create a regular RNTuple
-   auto model = RNTupleModel::Create();
-   auto fldPt = model->MakeField<float>("pt", 42.0);
-   {
-      RNTupleWriteOptions options;
-      options.SetCompression(0);
-      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
-      writer->Fill();
-   }
-   {
-      auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-      ASSERT_EQ(1U, reader->GetNEntries());
-      reader->LoadEntry(0);
-      EXPECT_EQ(42.0, *(reader->GetModel()->GetDefaultEntry()->Get<float>("pt")));
-   }
-
-   // Fix the version numbers in the header
-
-   // Figure out the header offset
-   auto rawFile = RRawFile::Create(fileGuard.GetPath());
-   RMiniFileReader reader(rawFile.get());
-   auto ntuple = reader.GetNTuple("ntuple").Inspect();
-   // Construct incompatible version numbers in little-endian binary format
-   std::uint16_t futureVersion = RNTupleSerializer::kEnvelopeCurrentVersion + 1;
-   unsigned char futureVersionLE[2];
-   futureVersionLE[0] = (futureVersion & 0x00FF);
-   futureVersionLE[1] = (futureVersion & 0xFF00) >> 8;
-   // Write out twice (min version and writer version)
-   FILE *f = fopen(fileGuard.GetPath().c_str(), "rb+");
-   ASSERT_TRUE(f != nullptr);
-   int posHeader = ntuple.fSeekHeader;
-   EXPECT_EQ(0, fseek(f, posHeader, SEEK_SET));
-   EXPECT_EQ(2u, fwrite(futureVersionLE, 1, 2, f));
-   EXPECT_EQ(2u, fwrite(futureVersionLE, 1, 2, f));
-   fclose(f);
-
-   try {
-      auto readerFail = RNTupleReader::Open("ntuple", fileGuard.GetPath());
-      FAIL() << "unsupported minimum version number should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("RNTuple format is too new"));
-   }
 }

@@ -122,10 +122,10 @@ public:
       Float_t fValue;
 
       CellData_t() : CellGeom_t(), fValue(0) {}
-      virtual ~CellData_t() {}
+      ~CellData_t() override {}
 
       Float_t Value(Bool_t) const;
-      virtual void Dump() const;
+      void Dump() const override;
    };
 
 
@@ -174,7 +174,7 @@ protected:
 
 public:
    REveCaloData(const char* n="REveCaloData", const char* t="");
-   virtual ~REveCaloData() {}
+   ~REveCaloData() override {}
 
    void    FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>& sec_idcs) override;
 
@@ -263,7 +263,7 @@ protected:
 
 public:
    REveCaloDataVec(Int_t nslices);
-   virtual ~REveCaloDataVec();
+   ~REveCaloDataVec() override;
 
    Int_t AddSlice();
    Int_t AddTower(Float_t etaMin, Float_t etaMax, Float_t phiMin, Float_t phiMax);
@@ -274,18 +274,18 @@ public:
    std::vector<Float_t>&  GetSliceVals(Int_t slice) { return fSliceVec[slice]; }
    std::vector<REveCaloData::CellGeom_t>& GetCellGeom() { return fGeomVec; }
 
-   virtual void GetCellList(Float_t etaMin, Float_t etaMax,
+   void GetCellList(Float_t etaMin, Float_t etaMax,
                             Float_t phi,    Float_t phiRng,
-                            vCellId_t &out) const;
+                            vCellId_t &out) const override;
 
-   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+   void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   virtual void GetCellData(const REveCaloData::CellId_t &id, REveCaloData::CellData_t& data) const;
-   virtual void GetEtaLimits(Double_t &min, Double_t &max) const { min=fEtaMin, max=fEtaMax;}
-   virtual void GetPhiLimits(Double_t &min, Double_t &max) const { min=fPhiMin; max=fPhiMax;}
+   void GetCellData(const REveCaloData::CellId_t &id, REveCaloData::CellData_t& data) const override;
+   void GetEtaLimits(Double_t &min, Double_t &max) const override { min=fEtaMin, max=fEtaMax;}
+   void GetPhiLimits(Double_t &min, Double_t &max) const override { min=fPhiMin; max=fPhiMax;}
 
 
-   virtual void  DataChanged();
+   void  DataChanged() override;
    void          SetAxisFromBins(Double_t epsX=0.001, Double_t epsY=0.001);
 };
 
@@ -302,20 +302,20 @@ protected:
 
 public:
    REveCaloDataHist();
-   virtual ~REveCaloDataHist();
+   ~REveCaloDataHist() override;
 
-   virtual void GetCellList( Float_t etaMin, Float_t etaMax,
-                             Float_t phi, Float_t phiRng, vCellId_t &out) const;
+   void GetCellList( Float_t etaMin, Float_t etaMax,
+                             Float_t phi, Float_t phiRng, vCellId_t &out) const override;
 
-   virtual void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const;
+   void Rebin(TAxis *ax, TAxis *ay, vCellId_t &in, Bool_t et, RebinData_t &out) const override;
 
-   virtual void GetCellData(const REveCaloData::CellId_t &id, REveCaloData::CellData_t& data) const;
+   void GetCellData(const REveCaloData::CellId_t &id, REveCaloData::CellData_t& data) const override;
 
-   virtual void GetEtaLimits(Double_t &min, Double_t &max) const;
-   virtual void GetPhiLimits(Double_t &min, Double_t &max) const;
+   void GetEtaLimits(Double_t &min, Double_t &max) const override;
+   void GetPhiLimits(Double_t &min, Double_t &max) const override;
 
 
-   virtual void DataChanged();
+   void DataChanged() override;
 
    THStack* GetStack() { return fHStack; }
 

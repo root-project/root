@@ -36,8 +36,8 @@ class TGLOverlayElement;
 class TGLViewerBase : public TGLLockable // : public TObject
 {
 private:
-   TGLViewerBase(const TGLViewerBase&);            // Not implemented
-   TGLViewerBase& operator=(const TGLViewerBase&); // Not implemented
+   TGLViewerBase(const TGLViewerBase&) = delete;
+   TGLViewerBase& operator=(const TGLViewerBase&) = delete;
 
 protected:
    typedef std::list<TGLSceneInfo*>             SceneInfoList_t;

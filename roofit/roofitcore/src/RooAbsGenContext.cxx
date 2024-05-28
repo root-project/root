@@ -37,10 +37,9 @@ prototype data etc..
 #include "Riostream.h"
 
 
-using namespace std;
+using std::cout, std::endl, std::ostream;
 
 ClassImp(RooAbsGenContext);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +184,8 @@ RooDataSet *RooAbsGenContext::generate(double nEvents, bool skipInit, bool exten
   if (_verbose) Print("v") ;
 
   // create a new dataset
-  TString name(GetName()),title(GetTitle());
+  TString name(GetName());
+  TString title(GetTitle());
   name.Append("Data");
   title.Prepend("Generated From ");
 

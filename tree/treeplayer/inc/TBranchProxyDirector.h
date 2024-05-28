@@ -70,7 +70,7 @@ namespace Internal{
          }
       }
       TTree*   SetTree(TTree *newtree);
-      Bool_t   Notify();
+      bool     Notify();
 
    };
 

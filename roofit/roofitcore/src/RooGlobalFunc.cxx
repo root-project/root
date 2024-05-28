@@ -33,7 +33,7 @@
 
 #include <algorithm>
 
-using namespace std;
+using std::ostream;
 
 namespace RooFit {
 
@@ -406,15 +406,17 @@ RooCmdArg TimingAnalysis(bool flag)
 }
 RooCmdArg BatchMode(std::string const &batchMode)
 {
-   oocoutW(nullptr, InputArguments) << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
+   oocoutW(nullptr, InputArguments)
+      << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
-   if (lower == "off")
+   if (lower == "off") {
       return EvalBackend::Legacy();
-   else if (lower == "cpu")
+   } else if (lower == "cpu") {
       return EvalBackend::Cpu();
-   else if (lower == "cuda")
+   } else if (lower == "cuda") {
       return EvalBackend::Cuda();
+   }
    throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
 }
 /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see
@@ -545,7 +547,7 @@ std::string EvalBackend::toName(EvalBackend::Value value)
 }
 EvalBackend::Value &EvalBackend::defaultValue()
 {
-   static Value value = Value::Legacy;
+   static Value value = Value::Cpu;
    return value;
 }
 
@@ -673,12 +675,13 @@ RooCmdArg Offset(std::string const &mode)
    std::string lower = mode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
    OffsetMode modeVal = OffsetMode::None;
-   if (lower == "none")
+   if (lower == "none") {
       modeVal = OffsetMode::None;
-   else if (lower == "initial")
+   } else if (lower == "initial") {
       modeVal = OffsetMode::Initial;
-   else if (lower == "bin")
+   } else if (lower == "bin") {
       modeVal = OffsetMode::Bin;
+   }
    return RooCmdArg("OffsetLikelihood", static_cast<int>(modeVal));
 }
 

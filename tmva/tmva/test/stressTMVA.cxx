@@ -166,7 +166,7 @@ inline void UnitTest::reset()
 #pragma warning(disable : 4290)
 #endif
 
-using namespace std;
+using std::string, std::cout, std::endl, std::cerr, std::setw, std::vector;
 using namespace UnitTesting;
 
 void UnitTest::do_test(bool cond, const std::string &lbl, const char *fname, long lineno)
@@ -297,7 +297,7 @@ inline void UnitTestSuite::setStream(std::ostream *sptr)
 #include <iostream>
 #include <iomanip>
 #include <cassert>
-using namespace std;
+
 using namespace UnitTesting;
 
 void UnitTestSuite::addTest(UnitTest *t)
@@ -474,7 +474,6 @@ private:
 #include "TMVA/ClassInfo.h"
 #include "TMVA/Event.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -652,7 +651,6 @@ private:
 
 #include "TString.h"
 
-using namespace std;
 using namespace TMVA;
 
 utDataSet::utDataSet() : UnitTest("DataSet", __FILE__)
@@ -846,7 +844,6 @@ private:
 
 #include "TMVA/Event.h"
 
-using namespace std;
 using namespace TMVA;
 
 utEvent::utEvent() : UnitTest("Event", __FILE__)
@@ -1160,7 +1157,6 @@ private:
 #include "TMVA/Reader.h"
 #include "TMVA/Types.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -1233,6 +1229,8 @@ void utReader::run()
 #include "TMVA/Reader.h"
 #include "TMVA/Types.h"
 
+using std::thread;
+
 namespace UnitTesting {
 class utReaderMT : public UnitTest {
 public:
@@ -1261,7 +1259,6 @@ private:
 #include "TMVA/Reader.h"
 #include "TMVA/Types.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -1382,7 +1379,6 @@ private:
 #include "TMVA/MethodBase.h"
 #include "TMVA/Types.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -1673,7 +1669,6 @@ private:
 
 #include "TMVA/VariableInfo.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -1859,9 +1854,9 @@ private:
 #include <fstream>
 #include <sstream>
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
+using std::ofstream;
 
 MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA &theMethod, const TString &methodTitle,
                                                          const TString &theOption, double lowLimit, double upLimit,
@@ -2310,7 +2305,6 @@ private:
 #include "TMVA/Reader.h"
 #include <cstdlib>
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -2561,7 +2555,6 @@ private:
 #include "TFile.h"
 #include "TMVA/MethodBase.h"
 
-using namespace std;
 using namespace UnitTesting;
 using namespace TMVA;
 
@@ -2884,7 +2877,6 @@ void utIPythonInteractive::testMethods()
 #include "TMVA/Types.h"
 
 using namespace UnitTesting;
-using namespace std;
 
 void addClassificationTests(UnitTestSuite &TMVA_test, bool full = true)
 {

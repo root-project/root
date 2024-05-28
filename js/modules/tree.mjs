@@ -496,7 +496,7 @@ class TDrawVariable {
                if (code[pos2] === '(') { pos2 = prev - 1; break; }
 
                // this is selection of member, but probably we need to activate iterator for ROOT collection
-               if ((arriter.length === 0) && br) {
+               if (arriter.length === 0) {
                   // TODO: if selected member is simple data type - no need to make other checks - just break here
                   if ((br.fType === kClonesNode) || (br.fType === kSTLNode))
                      arriter.push(undefined);
@@ -1686,7 +1686,7 @@ async function treeProcess(tree, selector, args) {
       while (item.getBasketEntry(item.numbaskets + 1)) item.numbaskets++;
 
       // check all counters if we
-      const nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0,
+      const nb_leaves = branch.fLeaves?.arr?.length ?? 0,
             leaf = (nb_leaves > 0) ? branch.fLeaves.arr[0] : null,
             is_brelem = (branch._typename === clTBranchElement);
       let elem = null, // TStreamerElement used to create reader
@@ -2630,7 +2630,7 @@ function treeIOTest(tree, args) {
       const br = branches[nbr],
             object_class = getBranchObjectClass(br, tree),
             num = br.fEntries,
-            skip_branch = object_class ? (nchilds[nbr] > 100) : (!br.fLeaves || (br.fLeaves.arr.length === 0));
+            skip_branch = object_class ? (nchilds[nbr] > 100) : !br.fLeaves?.arr?.length;
 
       if (skip_branch || (num <= 0))
          return testBranch(nbr+1);
@@ -2667,8 +2667,8 @@ function treeHierarchy(node, obj) {
    function createBranchItem(node, branch, tree, parent_branch) {
       if (!node || !branch) return false;
 
-      const nb_branches = branch.fBranches ? branch.fBranches.arr.length : 0,
-            nb_leaves = branch.fLeaves ? branch.fLeaves.arr.length : 0;
+      const nb_branches = branch.fBranches?.arr?.length ?? 0,
+            nb_leaves = branch.fLeaves?.arr?.length ?? 0;
 
       function ClearName(arg) {
          const pos = arg.indexOf('[');
@@ -2704,7 +2704,7 @@ function treeHierarchy(node, obj) {
 
             if (!bnode._childs) bnode._childs = [];
 
-            if (bobj.fLeaves && (bobj.fLeaves.arr.length === 1) &&
+            if ((bobj.fLeaves?.arr?.length === 1) &&
                 ((bobj.fType === kClonesNode) || (bobj.fType === kSTLNode))) {
                  bobj.fLeaves.arr[0].$branch = bobj;
                  bnode._childs.push({

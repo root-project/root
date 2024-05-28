@@ -12,7 +12,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/BatchModeDataHelpers.h"
+#include "RooFit/Detail/BatchModeDataHelpers.h"
 
 #include <RooAbsData.h>
 #include <RooRealVar.h>
@@ -53,12 +53,6 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
    };
 
    std::size_t nEvents = static_cast<size_t>(data.numEntries());
-
-   // We also want to support empty datasets: in this case the
-   // RooFitDriver::Dataset is not filled with anything.
-   if (nEvents == 0) {
-      return dataSpans;
-   }
 
    auto weight = data.getWeightBatch(0, nEvents, /*sumW2=*/false);
    auto weightSumW2 = data.getWeightBatch(0, nEvents, /*sumW2=*/true);
@@ -210,9 +204,10 @@ getSingleDataSpans(RooAbsData const &data, std::string_view rangeName, std::stri
 ///            object can't be used directly (e.g. because you used the range
 ///            selection or the splitting by categories).
 std::map<RooFit::Detail::DataKey, std::span<const double>>
-RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
-                                           RooSimultaneous const *simPdf, bool skipZeroWeights,
-                                           bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers)
+RooFit::Detail::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string const &rangeName,
+                                                   RooSimultaneous const *simPdf, bool skipZeroWeights,
+                                                   bool takeGlobalObservablesFromData,
+                                                   std::stack<std::vector<double>> &buffers)
 {
    std::vector<std::pair<std::string, RooAbsData const *>> datasets;
    std::vector<bool> isBinnedL;
@@ -272,8 +267,8 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string c
 /// \return A `std::map` with output sizes for each node in the computation graph.
 /// \param[in] topNode The top node of the computation graph.
 /// \param[in] inputSizeFunc A function to get the input sizes.
-std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::determineOutputSizes(
-   RooAbsArg const &topNode, std::function<std::size_t(RooFit::Detail::DataKey)> const &inputSizeFunc)
+std::map<RooFit::Detail::DataKey, std::size_t> RooFit::Detail::BatchModeDataHelpers::determineOutputSizes(
+   RooAbsArg const &topNode, std::function<int(RooFit::Detail::DataKey)> const &inputSizeFunc)
 {
    std::map<RooFit::Detail::DataKey, std::size_t> output;
 
@@ -281,8 +276,10 @@ std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::det
    RooHelpers::getSortedComputationGraph(topNode, serverSet);
 
    for (RooAbsArg *arg : serverSet) {
-      std::size_t inputSize = inputSizeFunc(arg);
-      if (inputSize > 0) {
+      int inputSize = inputSizeFunc(arg);
+      // The size == -1 encodes that the input doesn't come from an array
+      // input.
+      if (inputSize != -1) {
          output[arg] = inputSize;
       }
    }
@@ -295,7 +292,14 @@ std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::det
       if (!arg->isReducerNode()) {
          for (RooAbsArg *server : arg->servers()) {
             if (server->isValueServer(*arg)) {
-               size = std::max(output.at(server), size);
+               std::size_t inputSize = output.at(server);
+               if (inputSize != 1) {
+                  // If the input if from an external array, the output will
+                  // adopt its size and we can stop the checking of other
+                  // servers.
+                  size = inputSize;
+                  break;
+               }
             }
          }
       }

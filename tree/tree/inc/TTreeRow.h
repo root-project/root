@@ -38,7 +38,7 @@ private:
    TTreeRow    *fOriginal;     ///<! pointer to original row
 
    TTreeRow(TSQLRow *original);
-   Bool_t  IsValid(Int_t field);
+   bool    IsValid(Int_t field);
 
    TTreeRow(const TTreeRow&) = delete;
    TTreeRow &operator=(const TTreeRow&) = delete;

@@ -340,7 +340,7 @@ Bool_t TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, c
    fMask = super.fMask & kActions;
    if (fRestriction == 0)
       fRestriction = super.fRestriction; // get restriction from parent
-   Bool_t topelement(kFALSE);
+   Bool_t topelement = kFALSE;
 
    if (fMask & kScan) {
       // if scanning only fields, ignore all childs
@@ -559,9 +559,8 @@ Int_t TRootSniffer::CheckRestriction(const char *full_item_name)
 
    const char *options = nullptr;
    TIter iter(&fRestrictions);
-   TObject *obj;
 
-   while ((obj = iter()) != nullptr) {
+   while (auto obj = iter()) {
       const char *title = obj->GetTitle();
 
       if (strstr(title, pattern1.Data()) == title) {
@@ -616,9 +615,8 @@ void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char 
       cl->BuildRealData();
 
    // scan only real data
-   TObject *obj = nullptr;
    TIter iter(cl->GetListOfRealData());
-   while ((obj = iter()) != nullptr) {
+   while (auto obj = iter()) {
       TRealData *rdata = dynamic_cast<TRealData *>(obj);
       if (!rdata || strchr(rdata->GetName(), '.'))
          continue;
@@ -648,7 +646,7 @@ void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char 
             break;
 
          const char *title = member->GetTitle();
-         if (title && (strlen(title) != 0))
+         if (title && *title)
             chld.SetField(item_prop_title, title);
 
          if (member->GetTypeName())
@@ -708,14 +706,14 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
       return;
 
    pos += 7;
-   while (*pos != 0) {
+   while (*pos) {
       if (*pos == ' ') {
          pos++;
          continue;
       }
       // first locate identifier
       const char *pos0 = pos;
-      while ((*pos != 0) && (*pos != '='))
+      while (*pos && (*pos != '='))
          pos++;
       if (*pos == 0)
          return;
@@ -726,7 +724,7 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
          pos++;
       pos0 = pos;
       // then value with or without quotes
-      while ((*pos != 0) && (*pos != (quotes ? '\"' : ' ')))
+      while (*pos && (*pos != (quotes ? '\"' : ' ')))
          pos++;
       TString value(pos0, pos - pos0);
       rec.SetField(name, value);
@@ -815,7 +813,7 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, co
          if (chld.SetResult(obj, obj->IsA()))
             return;
 
-         Bool_t has_kind(kFALSE), has_title(kFALSE);
+         Bool_t has_kind = kFALSE, has_title = kFALSE;
 
          ScanObjectProperties(chld, obj);
          // now properties, coded as TNamed objects, placed after object in the hierarchy
@@ -846,9 +844,8 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, co
 
    if (keys_lst) {
       TIter iter(keys_lst);
-      TObject *kobj = nullptr;
 
-      while ((kobj = iter()) != nullptr) {
+      while (auto kobj = iter()) {
          TKey *key = dynamic_cast<TKey *>(kobj);
          if (!key)
             continue;
@@ -1448,6 +1445,16 @@ Bool_t TRootSniffer::ProduceBinary(const std::string & /*path*/, const std::stri
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Produce ROOT file for specified item
+///
+/// Implemented only in TRootSnifferFull class
+
+Bool_t TRootSniffer::ProduceRootFile(const std::string & /*path*/, const std::string & /*query*/, std::string & /*res*/)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
 ///
 /// Parameters:
@@ -1496,6 +1503,7 @@ Bool_t TRootSniffer::CallProduceImage(const std::string &/*kind*/, const std::st
 /// * "root.gif"  - gif image
 /// * "root.xml"  - xml representation
 /// * "root.json" - json representation
+/// * "file.root" - ROOT file with stored object
 /// * "exe.json"  - method execution with json reply
 /// * "exe.bin"   - method execution with binary reply
 /// * "exe.txt"   - method execution with debug output
@@ -1528,6 +1536,9 @@ Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, c
 
    if (file == "root.json")
       return ProduceJson(path, options, res);
+
+   if (file == "file.root")
+      return ProduceRootFile(path, options, res);
 
    // used for debugging
    if (file == "exe.txt")
@@ -1574,7 +1585,7 @@ TObject *TRootSniffer::GetItem(const char *fullname, TFolder *&parent, Bool_t fo
       path = fObjectsPath + "/" + path;
 
    TString tok;
-   Ssiz_t from(0);
+   Ssiz_t from = 0;
 
    while (path.Tokenize(tok, from, "/")) {
       if (tok.Length() == 0)
@@ -1716,14 +1727,13 @@ Bool_t TRootSniffer::AccessField(TFolder *parent, TObject *chld, const char *nam
 
    TIter iter(parent->GetListOfFolders());
 
-   TObject *obj = nullptr;
-   Bool_t find(kFALSE), last_find(kFALSE);
+   Bool_t find = kFALSE, last_find = kFALSE;
    // this is special case of top folder - fields are on very top
-   if (parent == chld) {
+   if (parent == chld)
       last_find = find = kTRUE;
-   }
+
    TNamed *curr = nullptr;
-   while ((obj = iter()) != nullptr) {
+   while (auto obj = iter()) {
       if (IsItemField(obj)) {
          if (last_find && obj->GetName() && !strcmp(name, obj->GetName()))
             curr = (TNamed *)obj;
@@ -1873,14 +1883,14 @@ const char *TRootSniffer::GetItemField(const char *fullname, const char *name)
 
 Bool_t TRootSniffer::RegisterCommand(const char *cmdname, const char *method, const char *icon)
 {
-   CreateItem(cmdname, Form("command %s", method));
+   CreateItem(cmdname, TString::Format("command %s", method).Data());
    SetItemField(cmdname, "_kind", "Command");
    if (icon) {
       if (strncmp(icon, "button;", 7) == 0) {
          SetItemField(cmdname, "_fastcmd", "true");
          icon += 7;
       }
-      if (*icon != 0)
+      if (*icon)
          SetItemField(cmdname, "_icon", icon);
    }
    SetItemField(cmdname, "method", method);

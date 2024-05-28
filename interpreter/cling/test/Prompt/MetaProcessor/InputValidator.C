@@ -6,15 +6,18 @@
 // LICENSE.TXT for details.
 //------------------------------------------------------------------------------
 
+// clang-format off
 // RUN: cat %s | %cling | FileCheck %s
 "simple"
-//CHECK: (const char [7]) "simple"
+//CHECK: (const char[7]) "simple"
 "It's me"
-//CHECK: (const char [8]) "It's me"
+//CHECK: (const char[8]) "It's me"
 "Luke, I'm your (father({}{["
-//CHECK: const char [28]) "Luke, I'm your (father({}{["
+//CHECK: const char[28]) "Luke, I'm your (father({}{["
 ("http://foo/bar/whatever")
-//CHECK: (const char [24]) "http://foo/bar/whatever"
+//CHECK: (const char[24]) "http://foo/bar/whatever"
 ("http://foo.bar/whatever")
-//CHECK: (const char [24]) "http://foo.bar/whatever"
+//CHECK: (const char[24]) "http://foo.bar/whatever"
+#
+// CHECK-EMPTY:
 .q

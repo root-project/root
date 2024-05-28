@@ -65,7 +65,7 @@ void rf605_profilell()
    // The profile likelihood estimator on nll for frac will minimize nll w.r.t
    // all floating parameters except frac for each evaluation
 
-   RooAbsReal *pll_frac = nll->createProfile(frac);
+   std::unique_ptr<RooAbsReal> pll_frac{nll->createProfile(frac)};
 
    // Plot the profile likelihood in frac
    pll_frac->plotOn(frame1, LineColor(kRed));
@@ -79,7 +79,7 @@ void rf605_profilell()
 
    // The profile likelihood estimator on nll for sigma_g2 will minimize nll
    // w.r.t all floating parameters except sigma_g2 for each evaluation
-   RooAbsReal *pll_sigmag2 = nll->createProfile(sigma_g2);
+   std::unique_ptr<RooAbsReal> pll_sigmag2{nll->createProfile(sigma_g2)};
 
    // Plot the profile likelihood in sigma_g2
    pll_sigmag2->plotOn(frame2, LineColor(kRed));
@@ -99,7 +99,4 @@ void rf605_profilell()
    gPad->SetLeftMargin(0.15);
    frame2->GetYaxis()->SetTitleOffset(1.4);
    frame2->Draw();
-
-   delete pll_frac;
-   delete pll_sigmag2;
 }

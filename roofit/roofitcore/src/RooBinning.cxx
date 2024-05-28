@@ -19,7 +19,7 @@
 \class RooBinning
 \ingroup Roofitcore
 
-Class RooBinning is an implements RooAbsBinning in terms
+Implements a RooAbsBinning in terms
 of an array of boundary values, posing no constraints on the choice
 of binning, thus allowing variable bin sizes. Various methods allow
 the user to add single bin boundaries, mirrored pairs, or sets of
@@ -39,10 +39,9 @@ uniformly spaced boundaries.
 #include <algorithm>
 #include <cmath>
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooBinning);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -157,9 +156,9 @@ bool RooBinning::removeBoundary(double boundary)
 void RooBinning::addUniform(Int_t nbins, double xlo, double xhi)
 {
   _boundaries.reserve(_boundaries.size() + nbins + 1);
-  for (Int_t i = 0; i <= nbins; ++i)
-    addBoundary((double(nbins - i) / double(nbins)) * xlo +
-   (double(i) / double(nbins)) * xhi);
+  for (Int_t i = 0; i <= nbins; ++i) {
+    addBoundary((double(nbins - i) / double(nbins)) * xlo + (double(i) / double(nbins)) * xhi);
+  }
 }
 
 namespace {
@@ -191,7 +190,8 @@ void RooBinning::binNumbers(double const * x, int * bins, std::size_t n, int coe
 
 double RooBinning::nearestBoundary(double x) const
 {
-  double xl, xh;
+  double xl;
+  double xh;
   if (binEdges(binNumber(x), xl, xh)) return 0;
   return (std::abs(xl - x) < std::abs(xh - x)) ? xl : xh;
 }
@@ -266,7 +266,8 @@ bool RooBinning::binEdges(Int_t bin, double& xlo, double& xhi) const
 
 double RooBinning::binCenter(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return 0.5 * (xlo + xhi);
 }
@@ -276,7 +277,8 @@ double RooBinning::binCenter(Int_t bin) const
 
 double RooBinning::binWidth(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return (xhi - xlo);
 }
@@ -286,7 +288,8 @@ double RooBinning::binWidth(Int_t bin) const
 
 double RooBinning::binLow(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return 0;
   return xlo;
 }
@@ -296,7 +299,8 @@ double RooBinning::binLow(Int_t bin) const
 
 double RooBinning::binHigh(Int_t bin) const
 {
-  double xlo, xhi;
+  double xlo;
+  double xhi;
   if (binEdges(bin, xlo, xhi)) return  0;
   return xhi;
 }
@@ -308,8 +312,10 @@ void RooBinning::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
-     UInt_t R__s, R__c;
-     Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+    UInt_t R__s;
+    UInt_t R__c;
+    Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
+    if (R__v) { }
      switch (R__v) {
        case 3:
     // current version - fallthrough intended

@@ -6,13 +6,18 @@
 #include <ROOT/RField.hxx>
 #include <ROOT/RFieldVisitor.hxx>
 #include <ROOT/RMiniFile.hxx>
-#include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleOptions.hxx>
+#include <ROOT/RNTupleReadOptions.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleParallelWriter.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
+#include <ROOT/RNTupleWriteOptionsDaos.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageAllocator.hxx>
 #include <ROOT/RPagePool.hxx>
@@ -54,21 +59,19 @@
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
-using ENTupleContainerFormat = ROOT::Experimental::ENTupleContainerFormat;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
-using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
-using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
-using RColumnDescriptorBuilder = ROOT::Experimental::RColumnDescriptorBuilder;
-using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
+using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
+using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;
+using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptorBuilder;
+using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
 using RField = ROOT::Experimental::RField<T>;
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+using RFieldBase = ROOT::Experimental::RFieldBase;
 using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
-using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
 using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
@@ -76,32 +79,34 @@ using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
 using RNTupleAtomicTimer = ROOT::Experimental::Detail::RNTupleAtomicTimer;
 using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
-using RNTupleCompressor = ROOT::Experimental::Detail::RNTupleCompressor;
-using RNTupleDecompressor = ROOT::Experimental::Detail::RNTupleDecompressor;
+using RNTupleCompressor = ROOT::Experimental::Internal::RNTupleCompressor;
+using RNTupleDecompressor = ROOT::Experimental::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
-using RNTupleDescriptorBuilder = ROOT::Experimental::RNTupleDescriptorBuilder;
+using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
+using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleReadOptions = ROOT::Experimental::RNTupleReadOptions;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 using RNTupleWriteOptionsDaos = ROOT::Experimental::RNTupleWriteOptionsDaos;
 using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
+using RNTupleMerger = ROOT::Experimental::Internal::RNTupleMerger;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-using RPage = ROOT::Experimental::Detail::RPage;
-using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
-using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;
-using RPagePool = ROOT::Experimental::Detail::RPagePool;
-using RPageSink = ROOT::Experimental::Detail::RPageSink;
-using RPageSinkBuf = ROOT::Experimental::Detail::RPageSinkBuf;
-using RPageSinkFile = ROOT::Experimental::Detail::RPageSinkFile;
-using RPageSource = ROOT::Experimental::Detail::RPageSource;
-using RPageSourceFile = ROOT::Experimental::Detail::RPageSourceFile;
-using RPageSourceFriends = ROOT::Experimental::Detail::RPageSourceFriends;
-using RPageStorage = ROOT::Experimental::Detail::RPageStorage;
+using RPage = ROOT::Experimental::Internal::RPage;
+using RPageAllocatorHeap = ROOT::Experimental::Internal::RPageAllocatorHeap;
+using RPageDeleter = ROOT::Experimental::Internal::RPageDeleter;
+using RPagePool = ROOT::Experimental::Internal::RPagePool;
+using RPageSink = ROOT::Experimental::Internal::RPageSink;
+using RPageSinkBuf = ROOT::Experimental::Internal::RPageSinkBuf;
+using RPageSinkFile = ROOT::Experimental::Internal::RPageSinkFile;
+using RPageSource = ROOT::Experimental::Internal::RPageSource;
+using RPageSourceFile = ROOT::Experimental::Internal::RPageSourceFile;
+using RPageSourceFriends = ROOT::Experimental::Internal::RPageSourceFriends;
+using RPageStorage = ROOT::Experimental::Internal::RPageStorage;
 using RPrepareVisitor = ROOT::Experimental::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;

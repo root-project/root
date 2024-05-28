@@ -842,8 +842,8 @@ TEST(VecOps, TakeWithDefault)
 {
    RVec<int> v0{1, 2, 3};
 
-   auto v1 = Take(v0, {0, 1, 2, 3}, -999);
-   RVec<int> ref{1, 2, 3, -999};
+   auto v1 = Take(v0, {0, 3}, -999);
+   RVec<int> ref{1, -999};
    CheckEqual(v1, ref);
 }
 
@@ -1212,6 +1212,24 @@ TEST(VecOps, DeltaPhi)
    auto dphi4 = DeltaPhi(v4, v3);
    auto r4 = -1.f * r3;
    CheckEqual(dphi4, r4);
+
+   // Checks that calling with different argument types works and yields the
+   // expected return types and values
+   EXPECT_TRUE((std::is_same_v<decltype(DeltaPhi(0.f, 0.0)), double>)) << "DeltaPhi should return double if one of the arguments is double";
+   EXPECT_EQ(DeltaPhi(0.f, 2.0), 2.0);
+   EXPECT_EQ(DeltaPhi(1.0, 0.0, 180.f), -1.0);
+
+   RVec<double> v1d = {0.0, 1.0, -0.5, 0.0, 0.0, 0.0, 0.0};
+   auto dphiMixed = DeltaPhi(v1d, v2);
+   EXPECT_TRUE((std::is_same_v<decltype(dphiMixed), RVec<double>>)) << "DeltaPhi should return double if one of the arguments is double";
+   const RVec<double> r1d = {2.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0};
+   for (size_t i = 0; i < dphiMixed.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+       EXPECT_NEAR(dphiMixed[i], r1d[i], 1e-6);
+   }
 }
 
 TEST(VecOps, InvariantMass)
@@ -1263,6 +1281,24 @@ TEST(VecOps, InvariantMass)
    }
 
    EXPECT_NEAR(p5.M(), invMass3, 1e-4);
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> pt1f =   {0.f, 5.f, 5.f, 10.f, 10.f};
+   RVec<float> eta2f =  {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   const auto invMassF = InvariantMasses(pt1f, eta1, phi1, mass1, pt2, eta2f, phi2, mass2);
+   EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>)) << "InvariantMasses should return double if one of the arguments is double";
+   for (size_t i = 0; i < invMass.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(invMassF[i], invMass[i], 1e-7);
+   }
+
+   const auto invMass2F = InvariantMass(pt1f, eta1, phi1, mass1);
+   EXPECT_TRUE((std::is_same_v<decltype(invMass2F), const double>)) << "InvariantMass should return double if one of the arguments is double";
+   EXPECT_EQ(invMass2F, invMass2);
 }
 
 TEST(VecOps, DeltaR)
@@ -1287,6 +1323,19 @@ TEST(VecOps, DeltaR)
       // Check scalar implementation
       auto dr4 = DeltaR(eta1[i], eta2[i], phi1[i], phi2[i]);
       EXPECT_NEAR(dr3, dr4, 1e-6);
+   }
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> etaf = {0.1f, -1.f, -1.f, 0.5f, -2.5f};
+   auto drf = DeltaR(etaf, eta2, phi1, phi2);
+   EXPECT_TRUE((std::is_same_v<decltype(drf), RVec<double>>)) << "DeltaR should return double if one of the arguments is double";
+   for (std::size_t i = 0; i < etaf.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(dr[i], drf[i], 1e-7);
    }
 }
 

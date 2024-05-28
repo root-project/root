@@ -25,7 +25,6 @@ public:
    RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf, const RooAbsReal &eff, const RooArgSet &vars,
                     const RooDataSet *prototype = nullptr, const RooArgSet *auxProto = nullptr, bool verbose = false,
                     const RooArgSet *forceDirect = nullptr);
-   ~RooEffGenContext() override;
 
    void printMultiline(std::ostream &os, Int_t content, bool verbose = false, TString indent = "") const override;
 
@@ -34,9 +33,14 @@ protected:
    void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
 private:
+   inline void initializeEff(RooAbsReal const &eff)
+   {
+      _eff = dynamic_cast<RooAbsReal *>(_cloneSet.find(eff.GetName()));
+   }
+
    RooArgSet _cloneSet;          ///< Internal clone of p.d.f.
    RooAbsReal *_eff;             ///< Pointer to efficiency function
-   RooAbsGenContext *_generator; ///< Generator context for p.d.f
+   std::unique_ptr<RooAbsGenContext> _generator; ///< Generator context for p.d.f
    RooArgSet _vars;              ///< Vars to generate
    double _maxEff;               ///< Maximum of efficiency in vars
 

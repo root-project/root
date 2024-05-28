@@ -41,7 +41,7 @@ protected:
 
 public:
    REveTrackProjected() = default;
-   virtual ~REveTrackProjected();
+   ~REveTrackProjected() override;
 
    void SetProjection(REveProjectionManager *mng, REveProjectable *model) override;
 
@@ -72,7 +72,7 @@ protected:
 
 public:
    REveTrackListProjected();
-   virtual ~REveTrackListProjected() {}
+   ~REveTrackListProjected() override {}
 
    void SetProjection(REveProjectionManager *proj, REveProjectable *model) override;
    void UpdateProjection() override {}

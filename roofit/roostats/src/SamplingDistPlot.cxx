@@ -37,7 +37,7 @@ objects.
 ClassImp(RooStats::SamplingDistPlot);
 
 using namespace RooStats;
-using namespace std;
+using std::cout, std::endl, std::string;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SamplingDistPlot default constructor with bin size
@@ -77,7 +77,8 @@ double SamplingDistPlot::AddSamplingDistribution(const SamplingDistribution *sam
    TString options(drawOptions);
    options.ToUpper();
 
-   double xmin(TMath::Infinity()), xmax(-TMath::Infinity());
+   double xmin(TMath::Infinity());
+   double xmax(-TMath::Infinity());
    // remove cases where xmin and xmax are +/- inf
    for( unsigned int i=0; i < fSamplingDistr.size(); i++ ) {
       if( fSamplingDistr[i] < xmin  &&  fSamplingDistr[i] != -TMath::Infinity() ) {
@@ -154,7 +155,7 @@ double SamplingDistPlot::AddSamplingDistributionShaded(const SamplingDistributio
    }
    double scaleFactor = AddSamplingDistribution(samplingDist, drawOptions);
 
-   TH1F *shaded = (TH1F*)fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str());
+   TH1F *shaded = static_cast<TH1F*>(fHist->Clone((string(samplingDist->GetName())+string("_shaded")).c_str()));
    shaded->SetDirectory(nullptr);
    shaded->SetFillStyle(fFillStyle++);
    shaded->SetLineWidth(1);
@@ -193,7 +194,7 @@ void SamplingDistPlot::AddLine(double x1, double y1, double x2, double y2, const
 
 void SamplingDistPlot::AddTH1(TH1* h, Option_t *drawOptions) {
    if(fLegend  &&  h->GetTitle()) fLegend->AddEntry(h, h->GetTitle(), "L");
-   TH1 * hcopy = (TH1*) h->Clone();
+   TH1 * hcopy = static_cast<TH1*>(h->Clone());
    hcopy->SetDirectory(nullptr);
    addObject(hcopy, drawOptions);
 }
@@ -262,7 +263,10 @@ void SamplingDistPlot::addOtherObject(TObject *obj, Option_t *drawOptions)
 void SamplingDistPlot::Draw(Option_t * /*options */) {
    ApplyDefaultStyle();
 
-   double theMin(0.), theMax(0.), theYMin(std::numeric_limits<float>::quiet_NaN()), theYMax(0.);
+   double theMin(0.);
+   double theMax(0.);
+   double theYMin(std::numeric_limits<float>::quiet_NaN());
+   double theYMax(0.);
    GetAbsoluteInterval(theMin, theMax, theYMax);
    if( !TMath::IsNaN(fXMin) ) theMin = fXMin;
    if( !TMath::IsNaN(fXMax) ) theMax = fXMax;
@@ -296,7 +300,7 @@ void SamplingDistPlot::Draw(Option_t * /*options */) {
    for(auto * obj : static_range_cast<TH1F*>(fItems)) {
       //obj->Draw(fIterator->GetOption());
       // add cloned objects to avoid mem leaks
-      TH1 * cloneObj = (TH1*)obj->Clone();
+      TH1 * cloneObj = static_cast<TH1*>(obj->Clone());
       if( !TMath::IsNaN(theYMax) ) {
          //coutI(InputArguments) << "Setting maximum of TH1 to " << theYMax << endl;
          cloneObj->SetMaximum(theYMax);

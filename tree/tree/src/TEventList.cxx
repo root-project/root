@@ -63,9 +63,9 @@ TEventList::TEventList(): TNamed()
    fN          = 0;
    fSize       = 100;
    fDelta      = 100;
-   fList       = 0;
-   fDirectory  = 0;
-   fReapply    = kFALSE;
+   fList       = nullptr;
+   fDirectory  = nullptr;
+   fReapply    = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,14 +74,14 @@ TEventList::TEventList(): TNamed()
 /// This Eventlist is added to the list of objects in current directory.
 
 TEventList::TEventList(const char *name, const char *title, Int_t initsize, Int_t delta)
-  :TNamed(name,title), fReapply(kFALSE)
+  :TNamed(name,title), fReapply(false)
 {
    fN = 0;
    if (initsize > 100) fSize  = initsize;
    else                fSize  = 100;
    if (delta > 100)    fDelta = delta;
    else                fDelta = 100;
-   fList       = 0;
+   fList       = nullptr;
    fDirectory  = gDirectory;
    if (fDirectory) fDirectory->Append(this);
 }
@@ -98,7 +98,7 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
    for (Int_t i=0; i<fN; i++)
       fList[i] = list.fList[i];
    fReapply = list.fReapply;
-   fDirectory = 0;
+   fDirectory = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,9 +106,9 @@ TEventList::TEventList(const TEventList &list) : TNamed(list)
 
 TEventList::~TEventList()
 {
-   delete [] fList;  fList = 0;
+   delete [] fList;  fList = nullptr;
    if (fDirectory) fDirectory->Remove(this);
-   fDirectory  = 0;
+   fDirectory  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -162,22 +162,22 @@ void TEventList::Add(const TEventList *alist)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if list contains entry.
 
-Bool_t TEventList::Contains(Long64_t entry)
+bool TEventList::Contains(Long64_t entry)
 {
-   if (GetIndex(entry) < 0) return kFALSE;
-   return kTRUE;
+   if (GetIndex(entry) < 0) return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return TRUE if list contains entries from entrymin to entrymax included.
 
-Bool_t TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
+bool TEventList::ContainsRange(Long64_t entrymin, Long64_t entrymax)
 {
    Long64_t imax = TMath::BinarySearch(fN,fList,entrymax);
    //printf("ContainsRange: entrymin=%lld, entrymax=%lld,imax=%lld, fList[imax]=%lld\n",entrymin,entrymax,imax,fList[imax]);
 
-   if (fList[imax] < entrymin) return kFALSE;
-   return kTRUE;
+   if (fList[imax] < entrymin) return false;
+   return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -400,7 +400,7 @@ void TEventList::Streamer(TBuffer &b)
    if (b.IsReading()) {
       UInt_t R__s, R__c;
       Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      fDirectory = 0;
+      fDirectory = nullptr;
       if (R__v > 1) {
          b.ReadClassBuffer(TEventList::Class(), this, R__v, R__s, R__c);
          ResetBit(kMustCleanup);

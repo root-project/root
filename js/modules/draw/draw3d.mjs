@@ -98,7 +98,7 @@ async function drawPolyLine3D() {
 
    const lines = createLineSegments(pnts, create3DLineMaterial(this, line));
 
-   fp.toplevel.add(lines);
+   fp.add3DMesh(lines, this, true);
 
    fp.render3D(100);
 

@@ -24,6 +24,8 @@ of a ROOT::TThreadedObject, so that each thread works with its own TFile and TTr
 objects.
 */
 
+#include <memory>
+
 #include "TROOT.h"
 #include "ROOT/TTreeProcessorMT.hxx"
 
@@ -34,7 +36,7 @@ namespace {
 using EntryRange = std::pair<Long64_t, Long64_t>;
 
 // note that this routine assumes global entry numbers
-static bool ClustersAreSortedAndContiguous(const std::vector<std::vector<EntryRange>> &cls)
+bool ClustersAreSortedAndContiguous(const std::vector<std::vector<EntryRange>> &cls)
 {
    Long64_t last_end = 0ll;
    for (const auto &fcl : cls) {
@@ -54,7 +56,7 @@ static bool ClustersAreSortedAndContiguous(const std::vector<std::vector<EntryRa
 /// This routine assumes that entry numbers in the TEntryList (and, if present, in the sub-entrylists) are in
 /// ascending order, i.e., for n > m:
 ///   elist.GetEntry(n) + tree_offset_for_entry_from_elist(n) > elist.GetEntry(m) + tree_offset_for_entry_from_elist(m)
-static std::vector<std::vector<EntryRange>>
+std::vector<std::vector<EntryRange>>
 ConvertToElistClusters(std::vector<std::vector<EntryRange>> &&clusters, TEntryList &entryList,
                        const std::vector<std::string> &treeNames, const std::vector<std::string> &fileNames,
                        const std::vector<Long64_t> &entriesPerFile)
@@ -124,7 +126,7 @@ using ClustersAndEntries = std::pair<std::vector<std::vector<EntryRange>>, std::
 
 ////////////////////////////////////////////////////////////////////////
 /// Return a vector of cluster boundaries for the given tree and files.
-static ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames,
+ClustersAndEntries MakeClusters(const std::vector<std::string> &treeNames,
                                        const std::vector<std::string> &fileNames, const unsigned int maxTasksPerFile,
                                        const EntryRange &range = {0, std::numeric_limits<Long64_t>::max()})
 {
@@ -295,7 +297,7 @@ TTreeView::GetTreeReader(Long64_t start, Long64_t end, const std::vector<std::st
    if (needNewChain) {
       MakeChain(treeNames, fileNames, friendInfo, nEntries);
       if (hasEntryList) {
-         fEntryList.reset(new TEntryList(entryList));
+         fEntryList = std::make_unique<TEntryList>(entryList);
          if (fEntryList->GetLists() != nullptr) {
             // need to associate the TEntryList to the TChain for the latter to set entry the fTreeNumbers of the
             // sub-lists of the former...

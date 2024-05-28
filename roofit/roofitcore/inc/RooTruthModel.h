@@ -20,24 +20,10 @@
 
 class RooTruthModel : public RooResolutionModel {
 public:
-
-  enum RooTruthBasis { noBasis=0, expBasisMinus= 1, expBasisSum= 2, expBasisPlus= 3,
-                                  sinBasisMinus=11, sinBasisSum=12, sinBasisPlus=13,
-                                  cosBasisMinus=21, cosBasisSum=22, cosBasisPlus=23,
-                                                          linBasisPlus=33,
-                                                         quadBasisPlus=43,
-              coshBasisMinus=51,coshBasisSum=52,coshBasisPlus=53,
-                 sinhBasisMinus=61,sinhBasisSum=62,sinhBasisPlus=63,
-                       genericBasis=100 } ;
-
-  enum BasisType { none=0, expBasis=1, sinBasis=2, cosBasis=3,
-                   linBasis=4, quadBasis=5, coshBasis=6, sinhBasis=7 } ;
-  enum BasisSign { Both=0, Plus=+1, Minus=-1 } ;
-
   // Constructors, assignment etc
-  inline RooTruthModel() { }
+  RooTruthModel() = default;
   RooTruthModel(const char *name, const char *title, RooAbsRealLValue& x) ;
-  RooTruthModel(const RooTruthModel& other, const char* name=nullptr);
+  RooTruthModel(const RooTruthModel& other, const char* name=nullptr) : RooResolutionModel{other, name} {}
   TObject* clone(const char* newname) const override { return new RooTruthModel(*this,newname) ; }
 
   Int_t basisCode(const char* name) const override ;
@@ -52,7 +38,7 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  void computeBatch(double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+  void doEval(RooFit::EvalContext &) const override;
   inline bool canComputeBatchWithCuda() const override { return true; }
 
 protected:

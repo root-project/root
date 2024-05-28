@@ -55,8 +55,8 @@ namespace RooStats {
       Int_t index = -1;
       for(; it!= fLookupTable.end(); ++it) {
    index++;
-   if( TMath::Abs( (*it).second.first - cl ) < tolerance &&
-       TMath::Abs( (*it).second.second - leftside ) < tolerance )
+   if( std::abs( (*it).second.first - cl ) < tolerance &&
+       std::abs( (*it).second.second - leftside ) < tolerance )
      break; // exit loop, found
       }
 
@@ -96,14 +96,10 @@ namespace RooStats {
   public:
      AcceptanceRegion() : fLookupIndex(0), fLowerLimit(0), fUpperLimit(0) {}
 
-    AcceptanceRegion(Int_t lu, double ll, double ul){
-      fLookupIndex = lu;
-      fLowerLimit = ll;
-      fUpperLimit = ul;
-    }
-    Int_t GetLookupIndex(){return fLookupIndex;}
-    double GetLowerLimit(){return fLowerLimit;}
-    double GetUpperLimit(){return fUpperLimit;}
+     AcceptanceRegion(Int_t lu, double ll, double ul) : fLookupIndex(lu), fLowerLimit(ll), fUpperLimit(ul) {}
+     Int_t GetLookupIndex() { return fLookupIndex; }
+     double GetLowerLimit() { return fLowerLimit; }
+     double GetUpperLimit() { return fUpperLimit; }
 
   private:
     Int_t fLookupIndex; // want a small footprint reference to the RooArgSet for particular parameter point
@@ -155,17 +151,16 @@ namespace RooStats {
   private:
     SamplingSummaryLookup fSamplingSummaryLookup;
     std::vector<SamplingSummary> fSamplingSummaries; // composite of several AcceptanceRegions
-    RooAbsData* fParameterPoints;  // either a histogram (RooDataHist) or a tree (RooDataSet)
+    RooAbsData* fParameterPoints = nullptr;  // either a histogram (RooDataHist) or a tree (RooDataSet)
 
 
   public:
     // constructors,destructors
-    ConfidenceBelt();
+    ConfidenceBelt() = default;
     ConfidenceBelt(const char* name);
     ConfidenceBelt(const char* name, const char* title);
     ConfidenceBelt(const char* name, RooAbsData&);
     ConfidenceBelt(const char* name, const char* title, RooAbsData&);
-    ~ConfidenceBelt() override;
 
     /// add after creating a region
     void AddAcceptanceRegion(RooArgSet&, AcceptanceRegion region, double cl=-1., double leftside=-1.);

@@ -4,7 +4,7 @@
 /// Combined (simultaneous) fit of two histogram with separate functions
 /// and some common parameters
 ///
-/// See http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=11740#p50908
+/// See http://root.cern/phpBB3//viewtopic.php?f=3&t=11740#p50908
 /// for a modified version working with Fumili or GSLMultiFit
 ///
 /// N.B. this macro must be compiled with ACliC
@@ -126,6 +126,8 @@ void combinedFit()
    fitter.FitFCN(6, globalChi2, nullptr, dataB.Size() + dataSB.Size(), true);
    ROOT::Fit::FitResult result = fitter.Result();
    result.Print(std::cout);
+
+   std::cout << "Combined fit Chi2 = " << result.Chi2() << std::endl;
 
    TCanvas *c1 = new TCanvas("Simfit", "Simultaneous fit of two histograms", 10, 10, 700, 700);
    c1->Divide(1, 2);

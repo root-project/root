@@ -13,9 +13,14 @@
 #define ROOT_TTaskGroup
 
 #include <atomic>
+#include <memory>
 #include <functional>
 
 namespace ROOT {
+namespace Internal {
+class RTaskArenaWrapper;
+}
+
 namespace Experimental {
 
 class TTaskGroup {
@@ -28,8 +33,8 @@ class TTaskGroup {
    is executing.
    */
 private:
+   std::shared_ptr<ROOT::Internal::RTaskArenaWrapper> fTaskArenaW;
    void *fTaskContainer{nullptr};
-   std::atomic<bool> fCanRun{true};
    void ExecuteInIsolation(const std::function<void(void)> &operation);
 
 public:

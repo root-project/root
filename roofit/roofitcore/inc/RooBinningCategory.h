@@ -23,12 +23,10 @@
 class RooBinningCategory : public RooAbsCategory {
 
 public:
-  // Constructors etc.
-  inline RooBinningCategory() { }
+  RooBinningCategory() = default;
   RooBinningCategory(const char *name, const char *title, RooAbsRealLValue& inputVar, const char* binningName=nullptr, const char* catTypeName=nullptr);
   RooBinningCategory(const RooBinningCategory& other, const char *name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooBinningCategory(*this, newname); }
-  ~RooBinningCategory() override;
 
   /// Printing interface (human readable)
   void printMultiline(std::ostream& os, Int_t content, bool verbose=false, TString indent="") const override ;

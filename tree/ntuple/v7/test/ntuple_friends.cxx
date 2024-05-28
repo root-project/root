@@ -26,13 +26,13 @@ TEST(RPageStorageFriends, Empty)
    std::span<RNTupleReader::ROpenSpec> ntuples;
    auto reader = RNTupleReader::OpenFriends(ntuples);
    EXPECT_EQ(0u, reader->GetNEntries());
-   EXPECT_EQ(0u, reader->GetModel()->GetFieldZero()->GetOnDiskId());
-   EXPECT_EQ(0u, std::distance(reader->GetModel()->GetDefaultEntry()->begin(),
-                               reader->GetModel()->GetDefaultEntry()->end()));
-   EXPECT_EQ(0u, reader->GetDescriptor()->GetNLogicalColumns());
-   EXPECT_EQ(0u, reader->GetDescriptor()->GetNPhysicalColumns());
-   EXPECT_EQ(1u, reader->GetDescriptor()->GetNFields()); // The zero field
-   EXPECT_EQ(0u, reader->GetDescriptor()->GetNClusters());
+   EXPECT_EQ(0u, reader->GetModel().GetFieldZero().GetOnDiskId());
+   EXPECT_EQ(0u,
+             std::distance(reader->GetModel().GetDefaultEntry().begin(), reader->GetModel().GetDefaultEntry().end()));
+   EXPECT_EQ(0u, reader->GetDescriptor().GetNLogicalColumns());
+   EXPECT_EQ(0u, reader->GetDescriptor().GetNPhysicalColumns());
+   EXPECT_EQ(1u, reader->GetDescriptor().GetNFields()); // The zero field
+   EXPECT_EQ(0u, reader->GetDescriptor().GetNClusters());
 }
 
 
@@ -84,9 +84,23 @@ TEST(RPageStorageFriends, Basic)
    EXPECT_DOUBLE_EQ(2.0, viewPt(1));
    EXPECT_DOUBLE_EQ(3.0, viewPt(2));
 
+   try {
+      viewPt(3);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
+   }
+
    EXPECT_DOUBLE_EQ(4.0, viewEta(0));
    EXPECT_DOUBLE_EQ(5.0, viewEta(1));
    EXPECT_DOUBLE_EQ(6.0, viewEta(2));
+
+   try {
+      viewEta(3);
+      FAIL() << "loading a non-existing entry should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("entry with index 3 out of bounds"));
+   }
 }
 
 

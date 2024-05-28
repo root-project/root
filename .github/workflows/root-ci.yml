@@ -21,13 +21,13 @@ on:
     inputs:
       head_ref:
         type: string
-        default: v6-30-00-patches
+        default: v6-32-00-patches
       base_ref:
         type: string
-        default: v6-30-00-patches
+        default: v6-32-00-patches
       ref_name:
         type: string
-        default: v6-30-00-patches
+        default: v6-32-00-patches
 
   # Enables manual start of workflow
   workflow_dispatch:
@@ -93,15 +93,12 @@ jobs:
       matrix:
         # Specify platform + arch + (optional) build option overrides
         #
-        # Available platforms: mac14, mac-beta
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac12
-            arch: X64
           - platform: mac13   
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
@@ -120,11 +117,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
@@ -254,8 +249,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
 
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
@@ -353,8 +346,6 @@ jobs:
         include:
           - image: fedora39
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-          - image: fedora38
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
@@ -365,7 +356,8 @@ jobs:
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
           - image: ubuntu2310
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-
+          - image: ubuntu2404
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
     runs-on:
       - self-hosted
       - linux
@@ -395,8 +387,6 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.ref_name }}
 
       - name: Dump GitHub context
         env:
@@ -409,7 +399,7 @@ jobs:
               '
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'

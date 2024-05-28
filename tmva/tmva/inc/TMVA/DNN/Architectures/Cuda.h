@@ -399,7 +399,7 @@ public:
 
    /** @name Regularization
     * For each regularization type two functions are required, one named
-    * <tt><Type>Regularization</tt> that evaluates the corresponding
+    * <tt>`<Type>`Regularization</tt> that evaluates the corresponding
     * regularization functional for a given weight matrix and the
     * <tt>Add`<Type>`RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
@@ -424,7 +424,7 @@ public:
 
    /** @name Initialization
     * For each initialization method, one function in the low-level interface
-    * is provided. The naming scheme is <p>Initialize<Type></p> for a given
+    * is provided. The naming scheme is <p>Initialize`<Type>`</p> for a given
     * initialization method Type.
     */
       ///@{
@@ -685,7 +685,7 @@ public:
 
    // dummy RNN functions
    static void RNNForward(const Tensor_t & /* x */, const Matrix_t & /* hx */, const Matrix_t & /* cx */,
-                          const Matrix_t & /* weights */, Tensor_t & /* y */, Matrix_t & /* hy */, Matrix_t & /* cy */,
+                          const Tensor_t & /* weights */, Tensor_t & /* y */, Matrix_t & /* hy */, Matrix_t & /* cy */,
                           const RNNDescriptors_t & /* descr */, RNNWorkspace_t & /* workspace */, bool /* isTraining */)
    {
    }

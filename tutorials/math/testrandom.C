@@ -572,7 +572,7 @@ void testAll() {
   }
   printf(" %8.3f\n",sw.CpuTime()*cpn);
 
-  // Poisson (nned to initialize before with Poisson mu value)
+  // Poisson (need to initialize before with Poisson mu value)
 
   unr0.InitPoisson(10);
   unr1.InitPoisson(10);

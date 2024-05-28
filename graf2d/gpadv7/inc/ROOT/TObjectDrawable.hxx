@@ -86,7 +86,7 @@ public:
    TObjectDrawable(const std::shared_ptr<TObject> &obj);
    TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt);
    TObjectDrawable(EKind kind, bool persistent = false);
-   virtual ~TObjectDrawable();
+   ~TObjectDrawable() override;
 
    void Reset();
 

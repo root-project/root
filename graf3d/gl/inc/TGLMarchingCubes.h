@@ -140,8 +140,8 @@ public:
 
    std::vector<TCell<V> > fCells;
 private:
-   TSlice(const TSlice &rhs);
-   TSlice & operator = (const TSlice &rhs);
+   TSlice(const TSlice &rhs) = delete;
+   TSlice & operator = (const TSlice &rhs) = delete;
 };
 
 /*

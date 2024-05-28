@@ -53,45 +53,43 @@ http://wesnoth.repositoryhosting.com/trac/wesnoth_wesnoth/browser/trunk/include/
 
 #include "TError.h"
 
-using namespace std;
+using std::endl;
 
 ClassImp(RooNonCentralChiSquare);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *title,
-                                               RooAbsReal& _x,
-                                               RooAbsReal& _k,
-                                               RooAbsReal& _lambda) :
-   RooAbsPdf(name,title),
-   x("x","x",this,_x),
-   k("k","k",this,_k),
-   lambda("lambda","lambda",this,_lambda),
-   fErrorTol(1E-3),
-   fMaxIters(10),
-   fHasIssuedConvWarning(false),
-   fHasIssuedSumWarning(false)
+RooNonCentralChiSquare::RooNonCentralChiSquare(const char *name, const char *title, RooAbsReal &_x, RooAbsReal &_k,
+                                               RooAbsReal &_lambda)
+   : RooAbsPdf(name, title),
+     x("x", "x", this, _x),
+     k("k", "k", this, _k),
+     lambda("lambda", "lambda", this, _lambda),
+     fErrorTol(1E-3),
+     fMaxIters(10),
+     fForceSum(false),
+     fHasIssuedConvWarning(false),
+     fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
       "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
-   fForceSum = false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare& other, const char* name) :
-   RooAbsPdf(other,name),
-   x("x",this,other.x),
-   k("k",this,other.k),
-   lambda("lambda",this,other.lambda),
-   fErrorTol(other.fErrorTol),
-   fMaxIters(other.fMaxIters),
-   fHasIssuedConvWarning(false),
-   fHasIssuedSumWarning(false)
+RooNonCentralChiSquare::RooNonCentralChiSquare(const RooNonCentralChiSquare &other, const char *name)
+   : RooAbsPdf(other, name),
+     x("x", this, other.x),
+     k("k", this, other.k),
+     lambda("lambda", this, other.lambda),
+     fErrorTol(other.fErrorTol),
+     fMaxIters(other.fMaxIters),
+     fForceSum(other.fForceSum),
+     fHasIssuedConvWarning(false),
+     fHasIssuedSumWarning(false)
 {
    ccoutD(InputArguments) << "RooNonCentralChiSquare::ctor(" << GetName() <<
      "MathMore Available, will use Bessel function expressions unless SetForceSum(true) "<< endl ;
-   fForceSum = other.fForceSum;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,7 +136,7 @@ double RooNonCentralChiSquare::evaluate() const
       double ithTerm = 0;
       double errorTol = fErrorTol;
       int MaxIters = fMaxIters;
-      int iDominant = (int) TMath::Floor(lambda/2);
+      int iDominant = (int) std::floor(lambda/2);
       //     cout <<"iDominant: " << iDominant << endl;
 
       // do 0th term last
@@ -212,7 +210,7 @@ double RooNonCentralChiSquare::analyticalIntegral(Int_t code, const char* rangeN
    double errorTol = fErrorTol; // for normalization allow slightly larger error
    int MaxIters = fMaxIters; // for normalization use more terms
 
-   int iDominant = (int) TMath::Floor(lambda/2);
+   int iDominant = (int) std::floor(lambda/2);
    //     cout <<"iDominant: " << iDominant << endl;
    //   iDominant=0;
    for(int i = iDominant; ; ++i){

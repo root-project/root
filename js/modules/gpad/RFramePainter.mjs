@@ -80,7 +80,7 @@ class RFramePainter extends RObjectPainter {
    recalculateRange(Proj) {
       this.projection = Proj || 0;
 
-      if ((this.projection === 2) && ((this.scale_ymin <= -90 || this.scale_ymax >=90))) {
+      if ((this.projection === 2) && ((this.scale_ymin <= -90) || (this.scale_ymax >=90))) {
          console.warn(`Mercator Projection: latitude out of range ${this.scale_ymin} ${this.scale_ymax}`);
          this.projection = 0;
       }
@@ -271,9 +271,10 @@ class RFramePainter extends RObjectPainter {
             this.scale_ymax += (this.scale_ymax - this.scale_ymin)*0.1;
       }
 
-      // if (opts.check_pad_range) {
-         // take zooming out of pad or axis attributes - skip!
-      // }
+      if ((opts.zoom_xmin !== opts.zoom_xmax) && ((this.zoom_xmin === this.zoom_xmax) || !this.zoomChangedInteractive('x'))) {
+         this.zoom_xmin = opts.zoom_xmin;
+         this.zoom_xmax = opts.zoom_xmax;
+      }
 
       if ((opts.zoom_ymin !== opts.zoom_ymax) && ((this.zoom_ymin === this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
@@ -316,7 +317,7 @@ class RFramePainter extends RObjectPainter {
                                         log: this.swap_xy ? this.logx : this.logy,
                                         symlog: this.swap_xy ? opts.symlog_x : opts.symlog_y,
                                         logcheckmin: (opts.ndim < 2) || this.swap_xy,
-                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < 0.01*this.ymax) ? 0.3 * opts.ymin_nz : 0,
+                                        log_min_nz: opts.ymin_nz && (opts.ymin_nz < this.ymax) ? 0.5 * opts.ymin_nz : 0,
                                         logminfactor: 3e-4 });
 
       this.y_handle.assignFrameMembers(this, 'y');
@@ -1017,7 +1018,7 @@ class RFramePainter extends RObjectPainter {
 
       menu.add('Unzoom', () => this.unzoom(kind));
 
-      // if (this[kind+'_kind'] === 'normal')
+      // if (this[kind+'_kind'] === kAxisNormal)
       //   menu.addchk(this['log'+kind], 'SetLog'+kind, this.toggleAxisLog.bind(this, kind));
 
       // here should be all axes attributes in offline
@@ -1095,8 +1096,10 @@ class RFramePainter extends RObjectPainter {
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
       menu.add('separator');
-      menu.add('Save as frame.png', () => this.getPadPainter().saveAs('png', 'frame', 'frame.png'));
-      menu.add('Save as frame.svg', () => this.getPadPainter().saveAs('svg', 'frame', 'frame.svg'));
+
+      menu.add('sub:Save as');
+      ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => this.getPadPainter().saveAs(fmt, 'frame', `frame.${fmt}`)));
+      menu.add('endsub:');
 
       return true;
    }

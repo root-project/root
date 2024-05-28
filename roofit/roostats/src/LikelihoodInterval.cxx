@@ -66,10 +66,9 @@
 #include <cctype>   // need to use c version of toupper defined here
 
 
-ClassImp(RooStats::LikelihoodInterval); ;
+ClassImp(RooStats::LikelihoodInterval);
 
 using namespace RooStats;
-using namespace std;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +140,7 @@ bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 
 
   // here we use Wilks' theorem.
-  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.getSize()) < (1.-fConfidenceLevel) ){
+  if ( TMath::Prob( 2* fLikelihoodRatio->getVal(), parameterPoint.size()) < (1.-fConfidenceLevel) ){
     RooMsgService::instance().setGlobalKillBelow(msglevel);
     return false;
   }
@@ -166,7 +165,7 @@ RooArgSet* LikelihoodInterval::GetParameters() const
 
 bool LikelihoodInterval::CheckParameters(const RooArgSet &parameterPoint) const
 {
-  if (parameterPoint.getSize() != fParameters.getSize() ) {
+  if (parameterPoint.size() != fParameters.size() ) {
     std::cout << "size is wrong, parameters don't match" << std::endl;
     return false;
   }
@@ -235,9 +234,9 @@ bool LikelihoodInterval::CreateMinimizer() {
 
    // need to restore values and errors for POI
    if (fBestFitParams) {
-      for (int i = 0; i < params.getSize(); ++i) {
-         RooRealVar & par =  (RooRealVar &) params[i];
-         RooRealVar * fitPar =  (RooRealVar *) (fBestFitParams->find(par.GetName() ) );
+      for (std::size_t i = 0; i < params.size(); ++i) {
+         RooRealVar & par =  static_cast<RooRealVar &>( params[i]);
+         RooRealVar * fitPar =  static_cast<RooRealVar *> (fBestFitParams->find(par.GetName() ) );
          if (fitPar) {
             par.setVal( fitPar->getVal() );
             par.setError( fitPar->getError() );
@@ -274,10 +273,10 @@ bool LikelihoodInterval::CreateMinimizer() {
    fMinimizer->SetFunction(*fMinFunc);
 
    // set minimizer parameters
-   assert( params.getSize() == int(fMinFunc->NDim()) );
+   assert(params.size() == fMinFunc->NDim());
 
    for (unsigned int i = 0; i < fMinFunc->NDim(); ++i) {
-      RooRealVar & v = (RooRealVar &) params[i];
+      RooRealVar & v = static_cast<RooRealVar &>( params[i]);
       fMinimizer->SetLimitedVariable( i, v.GetName(), v.getVal(), v.getError(), v.getMin(), v.getMax() );
    }
    // for finding the contour need to find first global minimum
@@ -313,8 +312,8 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
    RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   int ix = params.index(&param);
-   if (ix < 0 ) {
+   int iX = params.index(&param);
+   if (iX < 0 ) {
       ccoutE(InputArguments) << "Error - invalid parameter " << param.GetName() << " specified for finding the interval limits " << std::endl;
       return false;
    }
@@ -333,7 +332,7 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    err_level = err_level/2; // since we are using -log LR
    fMinimizer->SetErrorDef(err_level);
 
-   unsigned int ivarX = ix;
+   unsigned int ivarX = iX;
 
    double elow = 0;
    double eup = 0;
@@ -372,9 +371,9 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
    RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   int ix = params.index(&paramX);
-   int iy = params.index(&paramY);
-   if (ix < 0 || iy < 0) {
+   int iX = params.index(&paramX);
+   int iY = params.index(&paramY);
+   if (iX < 0 || iY < 0) {
       coutE(InputArguments) << "LikelihoodInterval - Error - invalid parameters specified for finding the contours; parX = " << paramX.GetName()
              << " parY = " << paramY.GetName() << std::endl;
          return 0;
@@ -395,8 +394,8 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    fMinimizer->SetErrorDef(cont_level);
 
    unsigned int ncp = npoints;
-   unsigned int ivarX = ix;
-   unsigned int ivarY = iy;
+   unsigned int ivarX = iX;
+   unsigned int ivarY = iY;
    coutI(Minimization)  << "LikelihoodInterval - Finding the contour of " << paramX.GetName() << " ( " << ivarX << " ) and " << paramY.GetName() << " ( " << ivarY << " ) " << std::endl;
    ret = fMinimizer->Contour(ivarX, ivarY, ncp, x, y );
    if (!ret) {

@@ -92,7 +92,7 @@ getGlobalObservables(RooAbsPdf const &pdf, RooArgSet const *globalObservables, c
 ///            `globalObservables` or `globalObservablesTag` parameters, the
 ///            values of all global observables that are not stored in the
 ///            dataset are taken from the model.
-/// \param[in] removeConstraintsPdf If true, the constraints that are extracted
+/// \param[in] removeConstraintsFromPdf If true, the constraints that are extracted
 ///            from the PDF are removed from the original PDF.
 std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbsPdf const &pdf, RooAbsData const &data,
                                                  RooArgSet const *constrainedParameters,
@@ -162,10 +162,11 @@ std::unique_ptr<RooAbsReal> createConstraintTerm(std::string const &name, RooAbs
          // In this case we don't take global observables from data
          takeGlobalObservablesFromData = false;
       } else {
-         if (!glObs)
+         if (!glObs) {
             oocoutI(&pdf, Minimization)
                << "The global observables are not defined , normalize constraints with respect to the parameters "
                << cPars << std::endl;
+         }
          takeGlobalObservablesFromData = false;
       }
 

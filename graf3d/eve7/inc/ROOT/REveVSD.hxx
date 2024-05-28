@@ -54,7 +54,7 @@ public:
 
 public:
    REveVSD(const char *name = "REveVSD", const char *title = "");
-   virtual ~REveVSD();
+   ~REveVSD() override;
 
    virtual void SetDirectory(TDirectory *dir);
 

@@ -159,17 +159,17 @@ TEST(RNTupleImporter, Simple)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
-   EXPECT_TRUE(*reader->GetModel()->Get<bool>("myBool"));
-   EXPECT_EQ(-8, *reader->GetModel()->Get<char>("myInt8"));
-   EXPECT_EQ(8U, *reader->GetModel()->Get<std::uint8_t>("myUInt8"));
-   EXPECT_EQ(-16, *reader->GetModel()->Get<std::int16_t>("myInt16"));
-   EXPECT_EQ(16U, *reader->GetModel()->Get<std::uint16_t>("myUInt16"));
-   EXPECT_EQ(-32, *reader->GetModel()->Get<std::int32_t>("myInt32"));
-   EXPECT_EQ(32U, *reader->GetModel()->Get<std::uint32_t>("myUInt32"));
-   EXPECT_EQ(-64, *reader->GetModel()->Get<std::int64_t>("myInt64"));
-   EXPECT_EQ(64U, *reader->GetModel()->Get<std::uint64_t>("myUInt64"));
-   EXPECT_FLOAT_EQ(32.0, *reader->GetModel()->Get<float>("myFloat"));
-   EXPECT_FLOAT_EQ(64.0, *reader->GetModel()->Get<double>("myDouble"));
+   EXPECT_TRUE(*reader->GetModel().GetDefaultEntry().GetPtr<bool>("myBool"));
+   EXPECT_EQ(-8, *reader->GetModel().GetDefaultEntry().GetPtr<char>("myInt8"));
+   EXPECT_EQ(8U, *reader->GetModel().GetDefaultEntry().GetPtr<std::uint8_t>("myUInt8"));
+   EXPECT_EQ(-16, *reader->GetModel().GetDefaultEntry().GetPtr<std::int16_t>("myInt16"));
+   EXPECT_EQ(16U, *reader->GetModel().GetDefaultEntry().GetPtr<std::uint16_t>("myUInt16"));
+   EXPECT_EQ(-32, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("myInt32"));
+   EXPECT_EQ(32U, *reader->GetModel().GetDefaultEntry().GetPtr<std::uint32_t>("myUInt32"));
+   EXPECT_EQ(-64, *reader->GetModel().GetDefaultEntry().GetPtr<std::int64_t>("myInt64"));
+   EXPECT_EQ(64U, *reader->GetModel().GetDefaultEntry().GetPtr<std::uint64_t>("myUInt64"));
+   EXPECT_FLOAT_EQ(64.0, *reader->GetModel().GetDefaultEntry().GetPtr<double>("myDouble"));
+   EXPECT_FLOAT_EQ(32.0, *reader->GetModel().GetDefaultEntry().GetPtr<float>("myFloat"));
 }
 
 TEST(RNTupleImporter, FieldName)
@@ -192,7 +192,7 @@ TEST(RNTupleImporter, FieldName)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
-   EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a"));
+   EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("a"));
 }
 
 TEST(RNTupleImporter, ConvertDotsInBranchNames)
@@ -217,7 +217,7 @@ TEST(RNTupleImporter, ConvertDotsInBranchNames)
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    reader->LoadEntry(0);
-   EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a_a"));
+   EXPECT_EQ(42, *reader->GetModel().GetDefaultEntry().GetPtr<std::int32_t>("a_a"));
 }
 
 TEST(RNTupleImporter, CString)
@@ -245,11 +245,11 @@ TEST(RNTupleImporter, CString)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(3U, reader->GetNEntries());
    reader->LoadEntry(0);
-   EXPECT_EQ(std::string("R"), *reader->GetModel()->Get<std::string>("myString"));
+   EXPECT_EQ(std::string("R"), *reader->GetModel().GetDefaultEntry().GetPtr<std::string>("myString"));
    reader->LoadEntry(1);
-   EXPECT_EQ(std::string(""), *reader->GetModel()->Get<std::string>("myString"));
+   EXPECT_EQ(std::string(""), *reader->GetModel().GetDefaultEntry().GetPtr<std::string>("myString"));
    reader->LoadEntry(2);
-   EXPECT_EQ(std::string("ROOT RNTuple"), *reader->GetModel()->Get<std::string>("myString"));
+   EXPECT_EQ(std::string("ROOT RNTuple"), *reader->GetModel().GetDefaultEntry().GetPtr<std::string>("myString"));
 }
 
 TEST(RNTupleImporter, Leaflist)
@@ -378,6 +378,9 @@ TEST(RNTupleImporter, LeafCountArray)
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // Ensure that it's possible to get a ptr to the projected RVec fields.
+   reader->GetModel().GetDefaultEntry().GetPtr<ROOT::RVec<float>>("jet_pt");
+
    EXPECT_EQ(3U, reader->GetNEntries());
    auto viewBegin = reader->GetView<std::int32_t>("begin");
    auto viewMiddle = reader->GetView<std::int32_t>("middle");
@@ -385,10 +388,10 @@ TEST(RNTupleImporter, LeafCountArray)
    EXPECT_EQ(1, viewBegin(0));
    EXPECT_EQ(2, viewMiddle(0));
    EXPECT_EQ(3, viewEnd(0));
-   auto viewJets = reader->GetViewCollection("_collection0");
+   auto viewJets = reader->GetCollectionView("_collection0");
    auto viewJetPt = viewJets.GetView<float>("jet_pt");
    auto viewJetEta = viewJets.GetView<float>("jet_eta");
-   auto viewMuons = reader->GetViewCollection("_collection1");
+   auto viewMuons = reader->GetCollectionView("_collection1");
    auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
    auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("njets");
    auto viewProjectedJetPt = reader->GetView<ROOT::RVec<float>>("jet_pt");
@@ -469,14 +472,14 @@ TEST(RNTupleImporter, STL)
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
 
-   auto vec = reader->GetModel()->Get<std::vector<float>>("vec");
+   auto vec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<float>>("vec");
    EXPECT_EQ(2U, vec->size());
    EXPECT_FLOAT_EQ(1.0, vec->at(0));
    EXPECT_FLOAT_EQ(2.0, vec->at(1));
-   auto pair = reader->GetModel()->Get<std::pair<float, float>>("pair");
+   auto pair = reader->GetModel().GetDefaultEntry().GetPtr<std::pair<float, float>>("pair");
    EXPECT_FLOAT_EQ(3.0, pair->first);
    EXPECT_FLOAT_EQ(4.0, pair->second);
-   auto tuple = reader->GetModel()->Get<std::tuple<int, float, bool>>("tuple");
+   auto tuple = reader->GetModel().GetDefaultEntry().GetPtr<std::tuple<int, float, bool>>("tuple");
    EXPECT_EQ(5, std::get<0>(*tuple));
    EXPECT_FLOAT_EQ(6.0, std::get<1>(*tuple));
    EXPECT_TRUE(std::get<2>(*tuple));
@@ -510,7 +513,7 @@ TEST(RNTupleImporter, CustomClass)
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
-   auto object = reader->GetModel()->Get<CustomStructUtil>("object");
+   auto object = reader->GetModel().GetDefaultEntry().GetPtr<CustomStructUtil>("object");
    EXPECT_EQ(13, object->base);
    EXPECT_FLOAT_EQ(1.0, object->a);
    EXPECT_EQ(2U, object->v1.size());
@@ -552,7 +555,7 @@ TEST(RNTupleImporter, ComplexClass)
 
       auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       EXPECT_EQ(3U, reader->GetNEntries());
-      auto object = reader->GetModel()->Get<ComplexStructUtil>("object");
+      auto object = reader->GetModel().GetDefaultEntry().GetPtr<ComplexStructUtil>("object");
       ComplexStructUtil reference;
       reader->LoadEntry(0);
       reference.Init1();
@@ -594,7 +597,7 @@ TEST(RNTupleImporter, CollectionProxyClass)
 
       auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
       EXPECT_EQ(1U, reader->GetNEntries());
-      auto objectVec = reader->GetModel()->Get<std::vector<BaseUtil>>("objectVec");
+      auto objectVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<BaseUtil>>("objectVec");
 
       reader->LoadEntry(0);
       EXPECT_EQ(3, objectVec->size());

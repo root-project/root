@@ -24,18 +24,20 @@
 #include <utility>
 
 template <>
-std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
-ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
+std::unique_ptr<ROOT::Experimental::Internal::RColumnElementBase>
+ROOT::Experimental::Internal::RColumnElementBase::Generate<void>(EColumnType type)
 {
    switch (type) {
    case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>();
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>();
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>();
-   case EColumnType::kByte: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>();
+   case EColumnType::kByte: return std::make_unique<RColumnElement<std::byte, EColumnType::kByte>>();
    case EColumnType::kChar: return std::make_unique<RColumnElement<char, EColumnType::kChar>>();
    case EColumnType::kBit: return std::make_unique<RColumnElement<bool, EColumnType::kBit>>();
    case EColumnType::kReal64: return std::make_unique<RColumnElement<double, EColumnType::kReal64>>();
    case EColumnType::kReal32: return std::make_unique<RColumnElement<float, EColumnType::kReal32>>();
+   // TODO: Change to std::float16_t in-memory type once available (from C++23).
+   case EColumnType::kReal16: return std::make_unique<RColumnElement<float, EColumnType::kReal16>>();
    case EColumnType::kInt64: return std::make_unique<RColumnElement<std::int64_t, EColumnType::kInt64>>();
    case EColumnType::kUInt64: return std::make_unique<RColumnElement<std::uint64_t, EColumnType::kUInt64>>();
    case EColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>();
@@ -62,16 +64,18 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    return nullptr;
 }
 
-std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
+std::size_t ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(EColumnType type)
+{
    switch (type) {
    case EColumnType::kIndex64: return 64;
    case EColumnType::kIndex32: return 32;
-   case EColumnType::kSwitch: return 64;
+   case EColumnType::kSwitch: return 96;
    case EColumnType::kByte: return 8;
    case EColumnType::kChar: return 8;
    case EColumnType::kBit: return 1;
    case EColumnType::kReal64: return 64;
    case EColumnType::kReal32: return 32;
+   case EColumnType::kReal16: return 16;
    case EColumnType::kInt64: return 64;
    case EColumnType::kUInt64: return 64;
    case EColumnType::kInt32: return 32;
@@ -96,7 +100,8 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    return 0;
 }
 
-std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
+std::string ROOT::Experimental::Internal::RColumnElementBase::GetTypeName(EColumnType type)
+{
    switch (type) {
    case EColumnType::kIndex64: return "Index64";
    case EColumnType::kIndex32: return "Index32";
@@ -106,6 +111,7 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    case EColumnType::kBit: return "Bit";
    case EColumnType::kReal64: return "Real64";
    case EColumnType::kReal32: return "Real32";
+   case EColumnType::kReal16: return "Real16";
    case EColumnType::kInt64: return "Int64";
    case EColumnType::kUInt64: return "UInt64";
    case EColumnType::kInt32: return "Int32";
@@ -128,8 +134,8 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
-  void *dst, void *src, std::size_t count) const
+void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Pack(
+   void *dst, void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(src);
    char *charArray = reinterpret_cast<char *>(dst);
@@ -148,8 +154,8 @@ void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColum
    }
 }
 
-void ROOT::Experimental::Detail::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
-  void *dst, void *src, std::size_t count) const
+void ROOT::Experimental::Internal::RColumnElement<bool, ROOT::Experimental::EColumnType::kBit>::Unpack(
+   void *dst, void *src, std::size_t count) const
 {
    bool *boolArray = reinterpret_cast<bool *>(dst);
    char *charArray = reinterpret_cast<char *>(src);

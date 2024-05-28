@@ -51,25 +51,14 @@ else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
-#---Enable CUDA ---
-if(cuda)
-  check_language(CUDA)
-  if (CMAKE_CUDA_COMPILER)
-    enable_language(CUDA)
-    if(NOT DEFINED CMAKE_CUDA_STANDARD)
-      set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
-    endif()
-  else()
-    if(fail-on-missing)
-       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
-    else()
-       message(STATUS "CUDA not found. Disable RooFit and TMVA cuda computation")
-       set(cuda OFF CACHE BOOL "Disabled because CUDA is not found" FORCE)
-       set(cudnn OFF)
-       set(tmva-gpu OFF)
-    endif()
+#---Enable CUDA if found on the system---
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+  enable_language(CUDA)
+  if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
   endif()
-endif(cuda)
+endif()
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -176,9 +165,6 @@ if(NOT CMAKE_CXX_STANDARD MATCHES "17|20")
   message(FATAL_ERROR "Unsupported C++ standard: ${CMAKE_CXX_STANDARD}. Supported standards are: 17, 20.")
 endif()
 
-# needed by roottest, to be removed once roottest is fixed
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX${CMAKE_CXX_STANDARD}_STANDARD_COMPILE_OPTION}")
-
 #---Check for libcxx option------------------------------------------------------------
 if(libcxx)
   CHECK_CXX_COMPILER_FLAG("-stdlib=libc++" HAS_LIBCXX11)
@@ -249,11 +235,3 @@ check_cxx_source_compiles(
 #endif
 int main() {}
 " GLIBCXX_USE_CXX11_ABI)
-
-#---Print the final compiler flags--------------------------------------------------------------------
-message(STATUS "ROOT Platform: ${ROOT_PLATFORM}")
-message(STATUS "ROOT Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-message(STATUS "ROOT Processor: ${CMAKE_SYSTEM_PROCESSOR}")
-message(STATUS "ROOT Architecture: ${ROOT_ARCHITECTURE}")
-message(STATUS "Build Type: '${CMAKE_BUILD_TYPE}' (flags = '${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}')")
-message(STATUS "Compiler Flags: ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}")

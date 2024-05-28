@@ -29,14 +29,12 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
-# ignore JAVA_ROOT when find_package(Java 1.8 ...) called
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.27)
-  cmake_policy(SET CMP0144 OLD)
-endif()
-
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.24)
-  cmake_policy(SET CMP0135 OLD)
-endif()
+set(policy_old CMP0116 CMP0135 CMP0144)
+foreach(policy ${policy_old})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} OLD)
+  endif()
+endforeach()
 
 include(cmake/modules/CaptureCommandLine.cmake)
 
@@ -98,15 +96,6 @@ else()
   set(NO_CONNECTION TRUE)
 endif()
 
-if(NO_CONNECTION)
-  if(clad AND fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  elseif(clad)
-    message(STATUS "No internet connection, disabling the 'clad' option")
-  endif()
-  set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-endif()
-
 #---Where to look first for cmake modules, before ${CMAKE_ROOT}/Modules/ is checked-------------
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 
@@ -114,12 +103,20 @@ set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 #---Load some basic macros which are needed later for the confiuration and build----------------
-include(SearchRootCoreDeps)
 include(CheckCompiler)
 include(RootBuildOptions)
 include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
+
+if(clad AND NO_CONNECTION)
+  if(fail-on-missing)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'clad' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  else()
+    message(STATUS "No internet connection, disabling the 'clad' option")
+    set(clad OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+  endif()
+endif()
 
 # relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
 #                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
@@ -363,6 +360,15 @@ add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir
 
 add_subdirectory (interpreter)
 
+# Update etc/gitinfo.txt for every build.
+add_custom_target(gitinfotxt
+  ALL
+  COMMAND ${CMAKE_COMMAND} -DSRCDIR=${CMAKE_SOURCE_DIR} -DBINDIR=${CMAKE_BINARY_DIR} -P ${CMAKE_SOURCE_DIR}/cmake/modules/UpdateGitInfo.cmake
+  COMMENT "Updating etc/gitinfo.txt."
+  BYPRODUCTS ${CMAKE_BINARY_DIR}/etc/gitinfo.txt
+)
+install(FILES ${CMAKE_BINARY_DIR}/etc/gitinfo.txt DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
   # Copy-pasted from HandleLLVMOptions.cmake, please keep up to date.
@@ -439,7 +445,7 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins} gitinfotxt)
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(MSVC)
@@ -530,10 +536,10 @@ else()
       etc/dictpch/allHeaders.h
       etc/dictpch/allLinkDefs.h
     COMMAND
-      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
+      ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py
       ${CMAKE_SOURCE_DIR} . ${pyroot_legacy} ${__cling_pch}
     COMMAND
-      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE}
+      ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${Python3_EXECUTABLE}
       ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch
       ${__allIncludes} -I${CMAKE_BINARY_DIR}/include -I${CMAKE_SOURCE_DIR}/core
     DEPENDS
@@ -620,7 +626,7 @@ endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
-add_custom_target(version COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
+add_custom_target(version COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makeversion.py
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 endif()
 
@@ -715,16 +721,30 @@ if(testing)
 
   if(roottest)
     find_package(Git REQUIRED)
-    # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
-    # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
-    # value is used instead.
-    if(DEFINED ENV{GITHUB_PR_ORIGIN})
-      set(originurl $ENV{GITHUB_PR_ORIGIN})
-    else()
-      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # Check whether the repository exists in the source directory or its parent
+    get_filename_component(source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+    if(IS_DIRECTORY ${source_dir}/roottest/.git)
+      set(repo_dir ${source_dir}/roottest)
+    elseif(IS_DIRECTORY ${source_dir}/../roottest/.git)
+      set(repo_dir ${source_dir}/../roottest)
     endif()
-    string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
+    if(DEFINED repo_dir)
+      execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${repo_dir}/.git
+                      remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    else()
+       # The fetch URL of the 'origin' remote is used to determine the prefix for other repositories by
+       # removing the `/root(\.git)?` part.  If `GITHUB_PR_ORIGIN` is defined in the environment, its
+       # value is used instead.
+       if(DEFINED ENV{GITHUB_PR_ORIGIN})
+         set(originurl $ENV{GITHUB_PR_ORIGIN})
+       else()
+         execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
+                         remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
+       endif()
+    endif()
+    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix ${originurl})
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
@@ -759,18 +779,24 @@ endif()
 cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
 
 message(STATUS "ROOT Configuration \n
-System          ${CMAKE_SYSTEM}
-Processor       ${PROCESSOR} (${CMAKE_SYSTEM_PROCESSOR})
-Build type      ${CMAKE_BUILD_TYPE}
-Install path    ${CMAKE_INSTALL_PREFIX}
-Compiler        ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+System:            ${CMAKE_SYSTEM}
+ROOT Platform:     ${ROOT_PLATFORM}
+ROOT Architecture: ${ROOT_ARCHITECTURE}
+Processor:         ${PROCESSOR} (${CMAKE_SYSTEM_PROCESSOR})
+Build type:        ${CMAKE_BUILD_TYPE}
+Install path:      ${CMAKE_INSTALL_PREFIX}
+Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+C++ standard:      ${CMAKE_CXX_STANDARD}
 Compiler flags:
-C               ${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
-C++             ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C:                         ${CMAKE_C_FLAGS}
+ - C (built type specific):   ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C++:                       ${CMAKE_CXX_FLAGS}
+ - C++ (built type specific): ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
 Linker flags:
-Executable      ${CMAKE_EXE_LINKER_FLAGS}
-Module          ${CMAKE_MODULE_LINKER_FLAGS}
-Shared          ${CMAKE_SHARED_LINKER_FLAGS}\n")
+ - Executable:     ${CMAKE_EXE_LINKER_FLAGS}
+ - Module:         ${CMAKE_MODULE_LINKER_FLAGS}
+ - Shared:         ${CMAKE_SHARED_LINKER_FLAGS}\n")
+
 
 ROOT_SHOW_ENABLED_OPTIONS()
 

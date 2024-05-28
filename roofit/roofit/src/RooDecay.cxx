@@ -36,8 +36,6 @@ for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
 
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,13 +76,6 @@ RooDecay::RooDecay(const RooDecay& other, const char* name) :
   _tau("tau",this,other._tau),
   _type(other._type),
   _basisExp(other._basisExp)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooDecay::~RooDecay()
 {
 }
 

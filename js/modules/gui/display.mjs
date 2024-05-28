@@ -1525,8 +1525,7 @@ class BrowserLayout {
       }
 
       if (vsepar !== null) {
-         vsepar = parseInt(vsepar);
-         if (vsepar < 50) vsepar = 50;
+         vsepar = Math.max(50, Number.parseInt(vsepar));
          this._vsepar_position = vsepar;
          main.select('.jsroot_browser_area').style('width', (vsepar-5)+'px');
          this.drawing().style('left', (vsepar+w)+'px');
@@ -1697,70 +1696,71 @@ class BrowserLayout {
              .classed('jsroot_float_browser', true)
              .style('border', 'solid 3px white');
 
-        const drag_move = d3_drag().on('start', () => {
-           const sl = area.style('left'), st = area.style('top');
-           this._float_left = parseInt(sl.slice(0, sl.length-2));
-           this._float_top = parseInt(st.slice(0, st.length-2));
-           this._max_left = Math.max(0, main.node().clientWidth - area.node().offsetWidth - 1);
-           this._max_top = Math.max(0, main.node().clientHeight - area.node().offsetHeight - 1);
-        }).filter(evnt => {
+         const drag_move = d3_drag().on('start', () => {
+            const sl = area.style('left'), st = area.style('top');
+            this._float_left = parseInt(sl.slice(0, sl.length-2));
+            this._float_top = parseInt(st.slice(0, st.length-2));
+            this._max_left = Math.max(0, main.node().clientWidth - area.node().offsetWidth - 1);
+            this._max_top = Math.max(0, main.node().clientHeight - area.node().offsetHeight - 1);
+         }).filter(evnt => {
             return main.select('.jsroot_browser_title').node() === evnt.target;
-        }).on('drag', evnt => {
-           this._float_left += evnt.dx;
-           this._float_top += evnt.dy;
-           area.style('left', Math.min(Math.max(0, this._float_left), this._max_left) + 'px')
-               .style('top', Math.min(Math.max(0, this._float_top), this._max_top) + 'px');
-           this.setButtonsPosition();
-        }),
+         }).on('drag', evnt => {
+            this._float_left += evnt.dx;
+            this._float_top += evnt.dy;
+            area.style('left', Math.min(Math.max(0, this._float_left), this._max_left) + 'px')
+                .style('top', Math.min(Math.max(0, this._float_top), this._max_top) + 'px');
+            this.setButtonsPosition();
+         }),
 
          drag_resize = d3_drag().on('start', () => {
-           const sw = area.style('width');
-           this._float_width = parseInt(sw.slice(0, sw.length-2));
-           this._float_height = area.node().clientHeight;
-           this._max_width = main.node().clientWidth - area.node().offsetLeft - 1;
-           this._max_height = main.node().clientHeight - area.node().offsetTop - 1;
-        }).on('drag', evnt => {
-           this._float_width += evnt.dx;
-           this._float_height += evnt.dy;
+            const sw = area.style('width');
+            this._float_width = parseInt(sw.slice(0, sw.length-2));
+            this._float_height = area.node().clientHeight;
+            this._max_width = main.node().clientWidth - area.node().offsetLeft - 1;
+            this._max_height = main.node().clientHeight - area.node().offsetTop - 1;
+         }).on('drag', evnt => {
+            this._float_width += evnt.dx;
+            this._float_height += evnt.dy;
 
-           area.style('width', Math.min(Math.max(100, this._float_width), this._max_width) + 'px')
-               .style('height', Math.min(Math.max(100, this._float_height), this._max_height) + 'px');
+            area.style('width', Math.min(Math.max(100, this._float_width), this._max_width) + 'px')
+                .style('height', Math.min(Math.max(100, this._float_height), this._max_height) + 'px');
 
-           this.setButtonsPosition();
-        });
+            this.setButtonsPosition();
+         });
 
         main.call(drag_move);
         main.select('.jsroot_browser_resize').call(drag_resize);
 
         this.adjustBrowserSize();
-     } else {
-        area.style('left', '0px').style('top', '0px').style('bottom', '0px').style('height', null);
+      } else {
+         area.style('left', '0px').style('top', '0px').style('bottom', '0px').style('height', null);
 
-        const separ_color = settings.DarkMode ? 'grey' : 'azure',
-              vsepar = main.append('div').classed('jsroot_v_separator', true)
+         const separ_color = settings.DarkMode ? 'grey' : 'azure',
+               vsepar = main.append('div').classed('jsroot_v_separator', true)
                            .attr('style', `pointer-events: all; border: 0; margin: 0; padding: 0; background-color: ${separ_color}; position: absolute; top: 0; bottom: 0; cursor: ew-resize;`),
 
          drag_move = d3_drag().on('start', () => {
             this._vsepar_move = this._vsepar_position;
             vsepar.style('background-color', 'grey');
-        }).on('drag', evnt => {
+         }).on('drag', evnt => {
             this._vsepar_move += evnt.dx;
             this.setButtonsPosition();
-            this.adjustSeparators(Math.round(this._vsepar_move), null);
-        }).on('end', () => {
+            settings.BrowserWidth = Math.max(50, Math.round(this._vsepar_move));
+            this.adjustSeparators(settings.BrowserWidth, null);
+         }).on('end', () => {
             delete this._vsepar_move;
             vsepar.style('background-color', null);
             this.checkResize();
-        });
+         });
 
-        vsepar.call(drag_move);
+         vsepar.call(drag_move);
 
-        // need to get touches events handling in drag
-        if (browser.touches && !main.on('touchmove'))
+         // need to get touches events handling in drag
+         if (browser.touches && !main.on('touchmove'))
            main.on('touchmove', () => {});
 
-        this.adjustSeparators(250, null, true, true);
-     }
+         this.adjustSeparators(settings.BrowserWidth, null, true, true);
+      }
 
       this.setButtonsPosition();
 

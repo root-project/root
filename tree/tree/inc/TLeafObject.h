@@ -33,7 +33,7 @@ class TLeafObject : public TLeaf {
 protected:
    TClassRef    fClass;          ///<! pointer to class
    void       **fObjAddress;     ///<! Address of Pointer to object
-   Bool_t       fVirtual;        ///<  Support for polymorphism, when set classname is written with object.
+   bool         fVirtual;        ///<  Support for polymorphism, when set classname is written with object.
 
 public:
    enum EStatusBits {
@@ -53,7 +53,7 @@ public:
    TLeafObject(TBranch *parent, const char *name, const char *type);
    ~TLeafObject() override;
 
-   Bool_t          CanGenerateOffsetArray() override { return false; }
+   bool            CanGenerateOffsetArray() override { return false; }
    void            FillBasket(TBuffer &b) override;
    virtual Int_t  *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }
    TClass         *GetClass() const {return fClass;}
@@ -61,13 +61,13 @@ public:
    TObject        *GetObject() const {return (TObject*)(*fObjAddress);}
    const char     *GetTypeName() const override;
    void           *GetValuePointer() const override {return fObjAddress;}
-   Bool_t          IsOnTerminalBranch() const override;
-   Bool_t          IsVirtual() const {return fVirtual;}
-   Bool_t          Notify() override;
+   bool            IsOnTerminalBranch() const override;
+   bool            IsVirtual() const {return fVirtual;}
+   bool            Notify() override;
    void            PrintValue(Int_t i=0) const override;
    void            ReadBasket(TBuffer &b) override;
    void            SetAddress(void *add=nullptr) override;
-   virtual void    SetVirtual(Bool_t virt=kTRUE) {fVirtual=virt;}
+   virtual void    SetVirtual(bool virt=true) {fVirtual=virt;}
 
    ClassDefOverride(TLeafObject,4);  //A TLeaf for a general object derived from TObject.
 };

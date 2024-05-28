@@ -18,14 +18,10 @@
 // Functionality, interface, and data format is still subject to changes.
 // Do not use for real data!
 
-// Until C++ runtime modules are universally used, we explicitly load the ntuple library.  Otherwise
-// triggering autoloading from the use of templated types would require an exhaustive enumeration
-// of "all" template instances in the LinkDef file.
-R__LOAD_LIBRARY(ROOTNTuple)
-
 #include <ROOT/RField.hxx>
-#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleReader.hxx>
+#include <ROOT/RNTupleWriter.hxx>
 
 #include <TBranch.h>
 #include <TCanvas.h>
@@ -40,11 +36,11 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
-using RFieldBase = ROOT::Experimental::Detail::RFieldBase;
+using RFieldBase = ROOT::Experimental::RFieldBase;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
-constexpr char const* kTreeFileName = "http://root.cern.ch/files/LHCb/lhcb_B2HHH_MagnetUp.root";
+constexpr char const* kTreeFileName = "http://root.cern/files/LHCb/lhcb_B2HHH_MagnetUp.root";
 constexpr char const* kNTupleFileName = "ntpl003_lhcbOpenData.root";
 
 
@@ -68,7 +64,8 @@ void Convert() {
       // Create an ntuple field with the same name and type than the tree branch
       auto field = RFieldBase::Create(l->GetName(), l->GetTypeName()).Unwrap();
       std::cout << "Convert leaf " << l->GetName() << " [" << l->GetTypeName() << "]"
-                << " --> " << "field " << field->GetName() << " [" << field->GetType() << "]" << std::endl;
+                << " --> "
+                << "field " << field->GetFieldName() << " [" << field->GetTypeName() << "]" << std::endl;
 
       // Hand over ownership of the field to the ntuple model.  This will also create a memory location attached
       // to the model's default entry, that will be used to place the data supposed to be written
@@ -78,13 +75,13 @@ void Convert() {
    // The new ntuple takes ownership of the model
    auto ntuple = RNTupleWriter::Recreate(std::move(model), "DecayTree", kNTupleFileName);
 
-   auto entry = ntuple->GetModel()->CreateEntry();
+   auto entry = ntuple->GetModel().CreateEntry();
    for (auto b : TRangeDynCast<TBranch>(*tree->GetListOfBranches())) {
       auto l = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       // We connect the model's default entry's memory location for the new field to the branch, so that we can
       // fill the ntuple with the data read from the TTree
-      void *fieldDataPtr = entry->GetRawPtr(l->GetName());
-      tree->SetBranchAddress(b->GetName(), fieldDataPtr);
+      std::shared_ptr<void> fieldDataPtr = entry->GetPtr<void>(l->GetName());
+      tree->SetBranchAddress(b->GetName(), fieldDataPtr.get());
    }
 
    auto nEntries = tree->GetEntries();

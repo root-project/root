@@ -40,19 +40,7 @@ though usually only one observable actually changes.
 #include "RooArgSet.h"
 #include "RooMsgService.h"
 
-using namespace std ;
-
 ClassImp(RooChangeTracker);
-;
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooChangeTracker::RooChangeTracker() : _checkVal(false), _init(false)
-{
-}
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. The set trackSet contains the observables to be
@@ -65,10 +53,9 @@ RooChangeTracker::RooChangeTracker(const char* name, const char* title, const Ro
   RooAbsReal(name, title),
   _realSet("realSet","Set of real-valued components to be tracked",this),
   _catSet("catSet","Set of discrete-valued components to be tracked",this),
-  _realRef(trackSet.getSize()),
-  _catRef(trackSet.getSize()),
-  _checkVal(checkValues),
-  _init(false)
+  _realRef(trackSet.size()),
+  _catRef(trackSet.size()),
+  _checkVal(checkValues)
 {
 for (const auto arg : trackSet) {
     if (dynamic_cast<const RooAbsReal*>(arg)) {
@@ -104,8 +91,7 @@ RooChangeTracker::RooChangeTracker(const RooChangeTracker& other, const char* na
   _catSet("catSet",this,other._catSet),
   _realRef(other._realRef),
   _catRef(other._catRef),
-  _checkVal(other._checkVal),
-  _init(false)
+  _checkVal(other._checkVal)
 {
 }
 
@@ -197,18 +183,6 @@ bool RooChangeTracker::hasChanged(bool clearState)
   return false ;
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooChangeTracker::~RooChangeTracker()
-{
-
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 
 RooArgSet RooChangeTracker::parameters() const
@@ -218,6 +192,3 @@ RooArgSet RooChangeTracker::parameters() const
   ret.add(_catSet) ;
   return ret ;
 }
-
-
-

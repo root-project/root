@@ -19,7 +19,7 @@
 \class RooAcceptReject
 \ingroup Roofitcore
 
-Class RooAcceptReject is a generic toy monte carlo generator implement
+Generic Monte Carlo toy generator implement
 the accept/reject sampling technique on any positively valued function.
 The RooAcceptReject generator is used by the various generator context
 classes to take care of generation of observables for which p.d.fs
@@ -46,7 +46,7 @@ do not define internal methods
 
 #include <cassert>
 
-using namespace std;
+using std::endl, std::cerr;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -71,16 +71,15 @@ void RooAcceptReject::registerSampler(RooNumGenFactory& fact)
 /// variables to be generated, genVars. The function and its dependents are
 /// cloned and so will not be disturbed during the generation process.
 
-RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig& config, bool verbose, const RooAbsReal* maxFuncVal) :
-  RooAbsNumGenerator(func,genVars,verbose,maxFuncVal)
+RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVars, const RooNumGenConfig &config,
+                                 bool verbose, const RooAbsReal *maxFuncVal)
+   : RooAbsNumGenerator(func, genVars, verbose, maxFuncVal), _realSampleDim(_realVars.size()), _catSampleMult(1)
 {
   _minTrialsArray[0] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial0D")) ;
   _minTrialsArray[1] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial1D")) ;
   _minTrialsArray[2] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial2D")) ;
   _minTrialsArray[3] = static_cast<Int_t>(config.getConfigSection("RooAcceptReject").getRealValue("nTrial3D")) ;
 
-  _realSampleDim = _realVars.getSize() ;
-  _catSampleMult = 1 ;
   for (auto * cat : static_range_cast<RooAbsCategory*>(_catVars)) {
     _catSampleMult *=  cat->numTypes() ;
   }
@@ -129,10 +128,10 @@ RooAcceptReject::RooAcceptReject(const RooAbsReal &func, const RooArgSet &genVar
       ooccoutI(nullptr, Generation) << "  Category sampling multiplier is " << _catSampleMult << endl ;
       ooccoutI(nullptr, Generation) << "  Min sampling trials is " << _minTrials << endl;
     }
-    if (_catVars.getSize()>0) {
+    if (!_catVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate category vars "<< _catVars << endl ;
     }
-    if (_realVars.getSize()>0) {
+    if (!_realVars.empty()) {
       ooccoutI(nullptr, Generation) << "  Will generate real vars " << _realVars << endl ;
     }
   }
@@ -154,7 +153,7 @@ const RooArgSet *RooAcceptReject::generateEvent(UInt_t remaining, double& resamp
 {
   // are we actually generating anything? (the cache always contains at least our function value)
   const RooArgSet *event= _cache->get();
-  if(event->getSize() == 1) return event;
+  if(event->size() == 1) return event;
 
   if (!_funcMaxVal) {
     // Generation with empirical maximum determination

@@ -20,7 +20,7 @@ ClassImp(TGeoGedFrame);
 /// Constructor.
 
 TGeoGedFrame::TGeoGedFrame(const TGWindow *p, Int_t width, Int_t height, UInt_t options, Pixel_t back)
-   : TGedFrame(p, width, height, options, back), fTab(0), fTabMgr(0), fPad(0)
+   : TGedFrame(p, width, height, options, back), fTab(nullptr), fTabMgr(nullptr), fPad(nullptr)
 {
    fTab = fGedEditor->GetTab();
    fPad = fGedEditor->GetPad();

@@ -70,12 +70,12 @@ void REveTableProxyBuilder::Build()
                REveTableHandle::Entries_t &tableEntries =
                   context->GetTableViewInfo()->RefTableEntries(Collection()->GetItemClass()->GetName());
                for (const REveTableEntry &spec : tableEntries) {
-                  auto c = new REveDataColumn(spec.fName.c_str());
+                  auto c = new REveDataColumn(spec.fName);
                   fTable->AddElement(c);
                   using namespace std::string_literals;
                   std::string exp = spec.fExpression;
                   c->SetPrecision(spec.fPrecision);
-                  c->SetExpressionAndType(exp.c_str(), spec.fType);
+                  c->SetExpressionAndType(exp, spec.fType);
                   ss << c->GetFunctionExpressionString();
                   ss << "\n";
                }

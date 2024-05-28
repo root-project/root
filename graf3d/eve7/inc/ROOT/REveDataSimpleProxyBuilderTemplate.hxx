@@ -54,9 +54,9 @@ protected:
    }
 
 private:
-   REveDataSimpleProxyBuilderTemplate(const REveDataSimpleProxyBuilderTemplate&); // stop default
+   REveDataSimpleProxyBuilderTemplate(const REveDataSimpleProxyBuilderTemplate&) = delete; // stop default
 
-   const REveDataSimpleProxyBuilderTemplate& operator=(const REveDataSimpleProxyBuilderTemplate&); // stop default
+   const REveDataSimpleProxyBuilderTemplate& operator=(const REveDataSimpleProxyBuilderTemplate&) = delete; // stop default
 };
 
 } // namespace Experimental

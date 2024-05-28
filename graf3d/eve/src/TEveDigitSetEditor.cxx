@@ -36,11 +36,11 @@ ClassImp(TEveDigitSetEditor);
 TEveDigitSetEditor::TEveDigitSetEditor(const TGWindow *p, Int_t width, Int_t height,
                                        UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM       (0),
-   fPalette (0),
+   fM       (nullptr),
+   fPalette (nullptr),
 
-   fHistoButtFrame(0),
-   fInfoFrame(0)
+   fHistoButtFrame(nullptr),
+   fInfoFrame(nullptr)
 {
    MakeTitle("Palette controls");
 
@@ -91,7 +91,7 @@ void TEveDigitSetEditor::SetModel(TObject* obj)
 {
    fM = dynamic_cast<TEveDigitSet*>(obj);
 
-   if (fM->fValueIsColor || fM->fPalette == 0) {
+   if (fM->fValueIsColor || fM->fPalette == nullptr) {
       fPalette->UnmapWindow();
    } else {
       fPalette->SetModel(fM->fPalette);
@@ -144,7 +144,7 @@ void TEveDigitSetEditor::PlotHisto(Int_t min, Int_t max)
       nbins /= 2;
 
    TH1F* h = new TH1F(fM->GetName(), fM->GetTitle(), nbins, min-0.5, max+0.5);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    h->SetBit(kCanDelete);
    TEveChunkManager::iterator qi(fM->fPlex);
    while (qi.next())

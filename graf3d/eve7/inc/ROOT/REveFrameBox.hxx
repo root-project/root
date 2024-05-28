@@ -41,7 +41,7 @@ protected:
 
 public:
    REveFrameBox();
-   virtual ~REveFrameBox();
+   ~REveFrameBox() override;
 
    void SetAAQuadXY(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dy);
    void SetAAQuadXZ(Float_t x, Float_t y, Float_t z, Float_t dx, Float_t dz);

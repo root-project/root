@@ -30,18 +30,18 @@ TEveProjectionManagerEditor::TEveProjectionManagerEditor(const TGWindow *p,
                                                          Int_t width, Int_t height,
                                                          UInt_t options, Pixel_t back) :
    TGedFrame(p, width, height, options | kVerticalFrame, back),
-   fM(0),
+   fM(nullptr),
 
-   fType(0),
-   fDistortion(0),
-   fFixR(0), fFixZ(0),
-   fPastFixRFac(0), fPastFixZFac(0),
-   fCurrentDepth(0),
-   fMaxTrackStep(0),
+   fType(nullptr),
+   fDistortion(nullptr),
+   fFixR(nullptr), fFixZ(nullptr),
+   fPastFixRFac(nullptr), fPastFixZFac(nullptr),
+   fCurrentDepth(nullptr),
+   fMaxTrackStep(nullptr),
 
-   fCenterX(0),
-   fCenterY(0),
-   fCenterZ(0)
+   fCenterX(nullptr),
+   fCenterY(nullptr),
+   fCenterZ(nullptr)
 {
    MakeTitle("TEveProjection");
    {

@@ -196,10 +196,6 @@ ifeq ($(BUILDGLEW), yes)
 GLEWCPPFLAGS   := -DBUILTIN_GLEW
 endif
 
-BUILDGFAL      := @buildgfal@
-GFALLIBDIR     := @gfallibdir@
-GFALCLILIB     := @gfallib@
-GFALINCDIR     := $(filter-out /usr/include, @gfalincdir@)
 SRMIFCEINCDIR  := $(filter-out /usr/include, @srmifceincdir@)
 GLIB2INCDIR    := $(filter-out /usr/include, @glib2incdir@)
 
@@ -213,11 +209,6 @@ ASTIFFINCDIR   := $(filter-out /usr/include, @astiffincdir@)
 ASINCDIR       := $(filter-out /usr/include, @asimageincdir@)
 ASLIB          := @asimagelib@
 ASLIBDIR       := @asimagelibdir@
-
-BUILDFPYTHIA6    := @buildpythia6@
-FPYTHIA6LIBDIR   := @pythia6libdir@
-FPYTHIA6LIB      := @pythia6lib@
-FPYTHIA6CPPFLAGS := @pythia6cppflags@
 
 BUILDFPYTHIA8    := @buildpythia8@
 FPYTHIA8INCDIR   := $(filter-out /usr/include, @pythia8incdir@)

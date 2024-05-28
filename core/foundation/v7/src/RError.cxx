@@ -47,8 +47,7 @@ void ROOT::Experimental::RError::AddFrame(RLocation &&sourceLocation)
    fStackTrace.emplace_back(sourceLocation);
 }
 
-
-ROOT::Experimental::Internal::RResultBase::~RResultBase() noexcept(false)
+ROOT::Experimental::RResultBase::~RResultBase() noexcept(false)
 {
    if (R__unlikely(fError && !fIsChecked)) {
       // Prevent from throwing if the object is deconstructed in the course of stack unwinding for another exception
@@ -65,8 +64,7 @@ ROOT::Experimental::Internal::RResultBase::~RResultBase() noexcept(false)
    }
 }
 
-
-void ROOT::Experimental::Internal::RResultBase::Throw()
+void ROOT::Experimental::RResultBase::Throw()
 {
    throw ROOT::Experimental::RException(*fError);
 }

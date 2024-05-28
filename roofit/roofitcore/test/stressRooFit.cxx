@@ -21,9 +21,9 @@
 #include <string>
 #include <list>
 #include <iostream>
-#include <math.h>
+#include <cmath>
 
-using namespace std;
+using std::cout, std::endl, std::string, std::list;
 using namespace RooFit;
 
 //*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*//
@@ -90,7 +90,7 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       RooNumIntConfig::defaultConfig();
       RooResolutionModel::identity();
 
-      RooTrace::active(1);
+      RooTrace::active(true);
    }
 
    // Add dedicated logging stream for errors that will remain active in silent mode
@@ -207,10 +207,11 @@ int stressRooFit(const char *refFile, bool writeRef, int doVerbose, int oneTest,
       }
    } else {
       const Char_t *os = gSystem->Getenv("OS");
-      if (!os)
+      if (!os) {
          printf("*  SYS: Windows 95\n");
-      else
+      } else {
          printf("*  SYS: %s %s \n", os, gSystem->Getenv("PROCESSOR_IDENTIFIER"));
+      }
    }
 
    printf("******************************************************************\n");

@@ -79,9 +79,10 @@ class RooMappedCategoryCache : public RooAbsCache {
     }
 };
 
+RooMappedCategory::RooMappedCategory() : _defCat(0) { }
+
 RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbsCategory& inputCat, const char* defOut, Int_t defOutIdx) :
-  RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat),
-  _mapcache(nullptr)
+  RooAbsCategory(name, title), _inputCat("input","Input category",this,inputCat)
 {
   // Constructor with input category and name of default output state, which is assigned
   // to all input category states that do not follow any mapping rule.
@@ -92,23 +93,15 @@ RooMappedCategory::RooMappedCategory(const char *name, const char *title, RooAbs
   }
 }
 
-
-RooMappedCategory::RooMappedCategory(const RooMappedCategory& other, const char *name) :
-  RooAbsCategory(other,name), _inputCat("input",this,other._inputCat), _mapArray(other._mapArray),
-  _mapcache(nullptr)
+RooMappedCategory::RooMappedCategory(const RooMappedCategory &other, const char *name)
+   : RooAbsCategory(other, name),
+     _inputCat("input", this, other._inputCat),
+     _mapArray(other._mapArray)
 {
-  _defCat = lookupIndex(other.lookupName(other._defCat));
+   setDefCat(lookupIndex(other.lookupName(other._defCat)));
 }
 
-
-
-RooMappedCategory::~RooMappedCategory()
-{
-    // Destructor
-    delete _mapcache;
-}
-
-
+RooMappedCategory::~RooMappedCategory() = default;
 
 bool RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t outIdx)
 {
@@ -165,9 +158,9 @@ RooAbsCategory::value_type RooMappedCategory::evaluate() const
 
 const RooMappedCategoryCache* RooMappedCategory::getOrCreateCache() const
 {
-    if (!_mapcache) _mapcache = new RooMappedCategoryCache(
+    if (!_mapcache) _mapcache = std::make_unique<RooMappedCategoryCache>(
             const_cast<RooMappedCategory*>(this));
-    return _mapcache;
+    return _mapcache.get();
 }
 
 void RooMappedCategory::printMultiline(std::ostream& os, Int_t content, bool verbose, TString indent) const
@@ -207,18 +200,19 @@ bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*ve
      //Clear existing definitions, but preserve default output
      TString defCatName(lookupName(_defCat));
      _mapArray.clear() ;
-     delete _mapcache;
      _mapcache = nullptr;
      clearTypes() ;
      _defCat = defineState(defCatName.Data()).second;
 
-     TString token,errorPrefix("RooMappedCategory::readFromStream(") ;
+     TString token;
+     TString errorPrefix("RooMappedCategory::readFromStream(");
      errorPrefix.Append(GetName()) ;
      errorPrefix.Append(")") ;
      RooStreamParser parser(is,errorPrefix) ;
      parser.setPunctuation(":,") ;
 
-     TString destKey,srcKey ;
+     TString destKey;
+     TString srcKey;
      bool readToken(true) ;
 
     // Loop over definition sequences
@@ -323,11 +317,8 @@ void RooMappedCategory::recomputeShape() {
   }
 }
 
-
-RooMappedCategory::Entry::Entry(const char* exp, RooAbsCategory::value_type cat) :
-    _expr(exp), _regexp(nullptr), _catIdx(cat) {}
-RooMappedCategory::Entry::Entry(const Entry& other) :
-    _expr(other._expr), _regexp(nullptr), _catIdx(other._catIdx) {}
+RooMappedCategory::Entry::Entry(const char *exp, RooAbsCategory::value_type cat) : _expr(exp), _catIdx(cat) {}
+RooMappedCategory::Entry::Entry(const Entry &other) : _expr(other._expr), _catIdx(other._catIdx) {}
 RooMappedCategory::Entry::~Entry() { delete _regexp; }
 bool RooMappedCategory::Entry::ok() { return (const_cast<TRegexp*>(regexp())->Status()==TRegexp::kOK) ; }
 

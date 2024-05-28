@@ -106,6 +106,8 @@ public:
    TMatrixTBase<Element>   &SetMatrixArray  (const Element *data,Option_t * /*option*/="") override
                                                     { memcpy(fElements,data,this->fNelems*sizeof(Element)); return *this; }
    virtual TMatrixTBase<Element>   &SetMatrixArray  (Int_t nr_nonzeros,Int_t *irow,Int_t *icol,Element *data);
+   virtual TMatrixTBase<Element> &
+   SetMatrixArray(Int_t nr_nonzeros, Int_t nrows, Int_t ncols, Int_t *irow, Int_t *icol, Element *data);
    TMatrixTBase<Element>   &InsertRow       (Int_t row,Int_t col,const Element *v,Int_t n=-1) override;
    void                     ExtractRow      (Int_t row,Int_t col,      Element *v,Int_t n=-1) const override;
 
@@ -202,7 +204,6 @@ public:
    ClassDefOverride(TMatrixTSparse,3) // Template of Sparse Matrix class
 };
 
-#ifndef __CINT__
 // When building with -fmodules, it instantiates all pending instantiations,
 // instead of delaying them until the end of the translation unit.
 // We 'got away with' probably because the use and the definition of the
@@ -211,7 +212,6 @@ public:
 // In case we are building with -fmodules, we need to forward declare the
 // specialization in order to compile the dictionary G__Matrix.cxx.
 template <> TClass *TMatrixTSparse<double>::Class();
-#endif // __CINT__
 
 template <class Element> inline const Element *TMatrixTSparse<Element>::GetMatrixArray  () const { return fElements; }
 template <class Element> inline       Element *TMatrixTSparse<Element>::GetMatrixArray  ()       { return fElements; }

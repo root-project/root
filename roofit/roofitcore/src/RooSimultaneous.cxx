@@ -97,7 +97,7 @@ void RooSimultaneous::InitializationOutput::addPdf(const RooAbsPdf &pdf, std::st
    finalCatLabels.emplace_back(catLabel);
 }
 
-using namespace std;
+using std::string, std::endl;
 
 ClassImp(RooSimultaneous);
 
@@ -429,9 +429,9 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
   bool anyMustExtend(false) ;
 
   for (Int_t i=0 ; i<_numPdf ; i++) {
-    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.At(i);
+    RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.At(i));
     if (proxy) {
-      RooAbsPdf* pdf = (RooAbsPdf*) proxy->absArg() ;
+      RooAbsPdf* pdf = static_cast<RooAbsPdf*>(proxy->absArg()) ;
       //cout << " now processing pdf " << pdf->GetName() << endl;
       if (pdf->canBeExtended()) {
          //cout << "RooSim::extendedMode(" << GetName() << ") component " << pdf->GetName() << " can be extended"
@@ -466,7 +466,7 @@ RooAbsPdf::ExtendMode RooSimultaneous::extendMode() const
 double RooSimultaneous::evaluate() const
 {
   // Retrieve the proxy by index name
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
+  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat.label())) ;
 
   //assert(proxy!=0) ;
   if (proxy==nullptr) return 0 ;
@@ -474,17 +474,17 @@ double RooSimultaneous::evaluate() const
   // Calculate relative weighting factor for sim-pdfs of all extendable components
   double catFrac(1) ;
   if (canBeExtended()) {
-    double nEvtCat = ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(_normSet) ;
+    double nEvtCat = (static_cast<RooAbsPdf*>(proxy->absArg()))->expectedEvents(_normSet) ;
 
     double nEvtTot(0) ;
     for(auto * proxy2 : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-      nEvtTot += ((RooAbsPdf*)(proxy2->absArg()))->expectedEvents(_normSet) ;
+      nEvtTot += (static_cast<RooAbsPdf*>(proxy2->absArg()))->expectedEvents(_normSet) ;
     }
     catFrac=nEvtCat/nEvtTot ;
   }
 
   // Return the selected PDF value, normalized by the number of index states
-  return ((RooAbsPdf*)(proxy->absArg()))->getVal(_normSet)*catFrac ;
+  return (static_cast<RooAbsPdf*>(proxy->absArg()))->getVal(_normSet)*catFrac ;
 }
 
 
@@ -502,7 +502,7 @@ double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
     double sum(0) ;
 
     for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-      sum += ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset) ;
+      sum += (static_cast<RooAbsPdf*>(proxy->absArg()))->expectedEvents(nset) ;
     }
 
     return sum ;
@@ -510,13 +510,13 @@ double RooSimultaneous::expectedEvents(const RooArgSet* nset) const
   } else {
 
     // Retrieve the proxy by index name
-    RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
+    RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat.label())) ;
 
     //assert(proxy!=0) ;
     if (proxy==nullptr) return 0 ;
 
     // Return the selected PDF value, normalized by the number of index states
-    return ((RooAbsPdf*)(proxy->absArg()))->expectedEvents(nset);
+    return (static_cast<RooAbsPdf*>(proxy->absArg()))->expectedEvents(nset);
   }
 }
 
@@ -537,7 +537,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
   Int_t code ;
 
   // Check if this configuration was created before
-  CacheElem* cache = (CacheElem*) _partIntMgr.getObj(normSet,&analVars,nullptr,RooNameReg::ptr(rangeName)) ;
+  CacheElem* cache = static_cast<CacheElem*>(_partIntMgr.getObj(normSet,&analVars,nullptr,RooNameReg::ptr(rangeName))) ;
   if (cache) {
     code = _partIntMgr.lastIndex() ;
     return code+1 ;
@@ -568,11 +568,11 @@ double RooSimultaneous::analyticalIntegralWN(Int_t code, const RooArgSet* normSe
   }
 
   // Partial integration scenarios, rangeName already encoded in 'code'
-  CacheElem* cache = (CacheElem*) _partIntMgr.getObjByIndex(code-1) ;
+  CacheElem* cache = static_cast<CacheElem*>(_partIntMgr.getObjByIndex(code-1)) ;
 
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(_indexCat.label()) ;
+  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(_indexCat.label())) ;
   Int_t idx = _pdfProxyList.IndexOf(proxy) ;
-  return ((RooAbsReal*)cache->_partIntList.at(idx))->getVal(normSet) ;
+  return (static_cast<RooAbsReal*>(cache->_partIntList.at(idx)))->getVal(normSet) ;
 }
 
 
@@ -614,10 +614,10 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     return frame ;
   }
 
-  const RooAbsData* projData = (const RooAbsData*) pc.getObject("projData") ;
+  const RooAbsData* projData = static_cast<const RooAbsData*>(pc.getObject("projData")) ;
   const RooArgSet* projDataSet = pc.getSet("projDataSet");
   const RooArgSet* sliceSetTmp = pc.getSet("sliceSet") ;
-  std::unique_ptr<RooArgSet> sliceSet( sliceSetTmp ? ((RooArgSet*) sliceSetTmp->Clone()) : nullptr );
+  std::unique_ptr<RooArgSet> sliceSet( sliceSetTmp ? (static_cast<RooArgSet*>(sliceSetTmp->Clone())) : nullptr );
   const RooArgSet* projSet = pc.getSet("projSet") ;
   double scaleFactor = pc.getDouble("scaleFactor") ;
   ScaleType stype = (ScaleType) pc.getInt("scaleType") ;
@@ -739,7 +739,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
   // affecting the category state of our instance
   RooArgSet idxCloneSet;
   RooArgSet(*_indexCat).snapshot(idxCloneSet, true);
-  auto idxCatClone = static_cast<RooAbsCategoryLValue*>( idxCloneSet.find(_indexCat->GetName()) );
+  auto idxCatClone = static_cast<RooAbsCategoryLValue*>(idxCloneSet.find(_indexCat->GetName()) );
   assert(idxCatClone);
 
   // Make list of category columns to exclude from projection data
@@ -814,7 +814,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     bool skip(false) ;
     for (const auto idxSliceCompArg : *idxCompSliceSet) {
       const auto idxSliceComp = static_cast<RooAbsCategory*>(idxSliceCompArg);
-      RooAbsCategory* idxComp = (RooAbsCategory*) idxCloneSet.find(idxSliceComp->GetName()) ;
+      RooAbsCategory* idxComp = static_cast<RooAbsCategory*>(idxCloneSet.find(idxSliceComp->GetName())) ;
       if (idxComp->getCurrentIndex()!=idxSliceComp->getCurrentIndex()) {
         skip=true ;
         break ;
@@ -1065,7 +1065,7 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
     data->add(globClone) ;
   }
 
-  return RooFit::Detail::owningPtr(std::move(data));
+  return RooFit::makeOwningPtr(std::move(data));
 }
 
 

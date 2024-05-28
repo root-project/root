@@ -10,13 +10,13 @@
  *************************************************************************/
 
 // Bindings
-#include "CPyCppyy.h"
+#include "CPyCppyy/API.h"
+
+#include "../../cppyy/CPyCppyy/src/CPyCppyy.h"
+#include "../../cppyy/CPyCppyy/src/CPPInstance.h"
+#include "../../cppyy/CPyCppyy/src/Utility.h"
+
 #include "PyROOTPythonize.h"
-#include "PyROOTStrings.h"
-#include "CPPInstance.h"
-#include "Utility.h"
-#include "ProxyWrappers.h"
-#include "PyzCppHelpers.hxx"
 
 // ROOT
 #include "TClass.h"
@@ -24,57 +24,36 @@
 using namespace CPyCppyy;
 
 // Cast the void* returned by TClass::DynamicCast to the right type
-PyObject *TClassDynamicCastPyz(CPPInstance *self, PyObject *args)
+PyObject *TClassDynamicCastPyz(PyObject *self, PyObject *args)
 {
    // Parse arguments
-   CPPInstance *pyclass = nullptr;
+   PyObject *pyclass = nullptr;
    PyObject *pyobject = nullptr;
    int up = 1;
-   if (!PyArg_ParseTuple(args, const_cast<char *>("O!O|i:DynamicCast"),
-                         &CPPInstance_Type, &pyclass,
-                         &pyobject,
-                         &up))
+   if (!PyArg_ParseTuple(args, "O!O|i:DynamicCast", &CPPInstance_Type, &pyclass, &pyobject, &up))
       return nullptr;
 
    // Perform actual cast - calls default implementation of DynamicCast
-   auto meth = PyObject_GetAttr((PyObject *)self, PyROOT::PyStrings::gTClassDynCast);
-   auto ptr = meth ? PyObject_Call(meth, args, nullptr) : nullptr;
-   Py_XDECREF(meth);
+   TClass *cl1 = (TClass *)CPyCppyy::Instance_AsVoidPtr(self);
+   TClass *cl2 = (TClass *)CPyCppyy::Instance_AsVoidPtr(pyclass);
 
-   // Simply forward in case of call failure
-   if (!ptr)
-      return nullptr;
+   void *address = cl1->DynamicCast(cl2, CPyCppyy::Instance_AsVoidPtr(pyobject), up);
 
-   // Retrieve object address
-   void *address = nullptr;
-   if (CPPInstance_Check(pyobject)) {
-      address = ((CPPInstance *)pyobject)->GetObject();
+   if (CPyCppyy::Instance_Check(pyobject)) {
+      address = CPyCppyy::Instance_AsVoidPtr(pyobject);
    } else if (PyInt_Check(pyobject) || PyLong_Check(pyobject)) {
       address = (void *)PyLong_AsLongLong(pyobject);
    } else {
       Utility::GetBuffer(pyobject, '*', 1, address, false);
    }
 
-   if (PyErr_Occurred()) {
-      // Error getting object address, just return the void* wrapper
-      PyErr_Clear();
-      return ptr;
-   }
+   // Now use binding to return a usable class. Upcast: result is a base.
+   // Downcast: result is a derived.
+   Cppyy::TCppType_t cpptype = ((CPyCppyy::CPPInstance *)(up ? pyclass : self))->ObjectIsA();
+   TClass *tcl = TClass::GetClass(Cppyy::GetScopedFinalName(cpptype).c_str());
+   TClass *klass = (TClass *)tcl->DynamicCast(TClass::Class(), up ? CPyCppyy::Instance_AsVoidPtr(pyclass) : cl1);
 
-   // Now use binding to return a usable class
-   TClass *klass = nullptr;
-   if (up) {
-      // Upcast: result is a base
-      klass = (TClass *)GetTClass(pyclass)->DynamicCast(TClass::Class(), pyclass->GetObject());
-   } else {
-      // Downcast: result is a derived
-      klass = (TClass *)GetTClass(self)->DynamicCast(TClass::Class(), self->GetObject());
-   }
-
-   PyObject *result = BindCppObjectNoCast(address, Cppyy::GetScope(klass->GetName()));
-   Py_DECREF(ptr);
-
-   return result;
+   return CPyCppyy::Instance_FromVoidPtr(address, klass->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -89,7 +68,6 @@ PyObject *TClassDynamicCastPyz(CPPInstance *self, PyObject *args)
 PyObject *PyROOT::AddTClassDynamicCastPyz(PyObject * /* self */, PyObject *args)
 {
    PyObject *pyclass = PyTuple_GetItem(args, 0);
-   Utility::AddToClass(pyclass, "_TClass__DynamicCast", "DynamicCast");
    Utility::AddToClass(pyclass, "DynamicCast", (PyCFunction)TClassDynamicCastPyz);
    Py_RETURN_NONE;
 }

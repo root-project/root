@@ -20,7 +20,7 @@
 #define ROOT_RDFOPERATIONS
 
 #include "Compression.h"
-#include "ROOT/RStringView.hxx"
+#include <string_view>
 #include "ROOT/RVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/RDF/RCutFlowReport.hxx"

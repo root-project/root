@@ -1,10 +1,10 @@
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.5.5',
+const version_id = '7.7.0',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '4/03/2024',
+version_date = '22/05/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -34,9 +34,11 @@ if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
       source_dir = _src.slice(0, pos);
-      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+      if (!nodejs)
+         console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
-      console.log(`jsroot bundle, ${version}`);
+      if (!nodejs)
+         console.log(`jsroot bundle, ${version}`);
       internals.ignore_v6 = true;
    }
 }
@@ -215,7 +217,7 @@ settings = {
    DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
-   /** @summary Show progress box */
+   /** @summary Show progress box, can be false, true or 'modal' */
    ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
    ToolBar: nodejs ? false : 'popup',
@@ -250,6 +252,10 @@ settings = {
    IgnoreUrlOptions: false,
    /** @summary how many items shown on one level of hierarchy */
    HierarchyLimit: 250,
+   /** @summary default display kind for the hierarchy painter */
+   DislpayKind: 'simple',
+   /** @summary default left area width in browser layout */
+   BrowserWidth: 250,
    /** @summary custom format for all X values, when not specified {@link gStyle.fStatFormat} is used */
    XValuesFormat: undefined,
    /** @summary custom format for all Y values, when not specified {@link gStyle.fStatFormat} is used */
@@ -284,7 +290,17 @@ settings = {
    /** @summary Angle in degree for axis labels tilt when available space is not enough */
    AxisTiltAngle: 25,
    /** @summary Strip axis labels trailing 0 or replace 10^0 by 1 */
-   StripAxisLabels: true
+   StripAxisLabels: true,
+   /** @summary Draw TF1 by default as curve or line */
+   FuncAsCurve: false,
+   /** @summary Time zone used for date/time display of file time */
+   TimeZone: '',
+   /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
+   NewTabUrl: '',
+   /** @summary Extra parameters which will be append to the url when item shown in new tab */
+   NewTabUrlPars: '',
+   /** @summary Export different settings in output URL */
+   NewTabUrlExportSettings: false
 },
 
 /** @namespace
@@ -1027,13 +1043,13 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
-      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
+      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
-      clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
+      clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
 
 
 /** @summary Create some ROOT classes
@@ -1501,7 +1517,10 @@ function getMethods(typename, obj) {
       m.AddText = function(txt) {
          const line = create(clTLatex);
          line.fTitle = txt;
-         line.fTextAlign = this.fTextAlign;
+         line.fTextAlign = 0;
+         line.fTextColor = 0;
+         line.fTextFont = 0;
+         line.fTextSize = 0;
          this.fLines.Add(line);
       };
       m.Clear = function() {
@@ -1612,6 +1631,54 @@ function getMethods(typename, obj) {
                bin3 = Math.max(0, 1 + Math.min(a3.fNbins, Math.floor((z - a3.fXmin) / (a3.fXmax - a3.fXmin) * a3.fNbins)));
          this.fArray[bin1 + (a1.fNbins + 2) * (bin2 + (a2.fNbins + 2)*bin3)] += weight ?? 1;
          this.fEntries++;
+      };
+   }
+
+   if (typename === clTPad || typename === clTCanvas) {
+      m.Divide = function(nx, ny, xmargin = 0.01, ymargin = 0.01) {
+         if (!ny) {
+            const ndiv = nx;
+            if (ndiv < 2) return this;
+            nx = ny = Math.round(Math.sqrt(ndiv));
+            if (nx * ny < ndiv) nx += 1;
+         }
+         if (nx*ny < 2)
+            return 0;
+         this.fPrimitives.Clear();
+         const dy = 1/ny, dx = 1/nx;
+         let n = 0;
+         for (let iy = 0; iy < ny; iy++) {
+            const y2 = 1 - iy*dy - ymargin;
+            let y1 = y2 - dy + 2*ymargin;
+            if (y1 < 0) y1 = 0;
+            if (y1 > y2) continue;
+            for (let ix = 0; ix < nx; ix++) {
+               const x1 = ix*dx + xmargin,
+                     x2 = x1 + dx -2*xmargin;
+               if (x1 > x2) continue;
+               n++;
+               const pad = create(clTPad);
+               pad.fName = pad.fTitle = `${this.fName}_${n}`;
+               pad.fNumber = n;
+               if (this._typename !== clTCanvas) {
+                  pad.fAbsWNDC = (x2-x1) * this.fAbsWNDC;
+                  pad.fAbsHNDC = (y2-y1) * this.fAbsHNDC;
+                  pad.fAbsXlowNDC = this.fAbsXlowNDC + x1 * this.fAbsWNDC;
+                  pad.fAbsYlowNDC = this.fAbsYlowNDC + y1 * this.fAbsWNDC;
+               } else {
+                  pad.fAbsWNDC = x2 - x1;
+                  pad.fAbsHNDC = y2 - y1;
+                  pad.fAbsXlowNDC = x1;
+                  pad.fAbsYlowNDC = y1;
+               }
+
+               this.fPrimitives.Add(pad);
+            }
+         }
+         return nx * ny;
+      };
+      m.GetPad = function(number) {
+         return this.fPrimitives.arr.find(elem => { return elem._typename === clTPad && elem.fNumber === number; });
       };
    }
 
@@ -1809,12 +1876,12 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
-         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
-         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2,
+         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
+         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect, kTitle,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

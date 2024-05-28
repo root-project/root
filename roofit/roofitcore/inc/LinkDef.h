@@ -54,7 +54,6 @@
 #pragma link C++ class RooAbsFunc+ ;
 #pragma link C++ class RooAbsGenContext+ ;
 #pragma link C++ class RooAbsHiddenReal+ ;
-#pragma link C++ class RooAbsIntegrator+ ;
 #pragma link C++ class RooAbsLValue+ ;
 #pragma link C++ class RooAbsMCStudyModule+ ;
 #pragma link C++ class RooAbsPdf+ ;
@@ -118,9 +117,6 @@
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooHist+ ;
-#pragma link C++ class RooImproperIntegrator1D+ ;
-#pragma link C++ class RooRombergIntegrator+ ;
-#pragma link C++ class RooBinIntegrator+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
@@ -136,7 +132,6 @@
 #pragma link C++ class RooMappedCategory::Entry+;
 #pragma read sourceClass="RooMappedCategory::Entry" targetClass="RooMappedCategory::Entry" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" \
     source="RooCatType _cat" target="_catIdx" code="{ _catIdx = onfile._cat.getVal(); }"
-#pragma link C++ class RooMCIntegrator+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link off class RooNameReg+ ;
 #pragma link C++ class RooNumConvolution+ ;
@@ -275,7 +270,6 @@
 // Old LinkDef4.h
 #pragma link C++ class RooConstraintSum+ ;
 #pragma link C++ class RooRecursiveFraction+ ;
-#pragma link C++ class RooDataWeightedAverage+ ;
 #pragma link C++ class RooFracRemainder+ ;
 #pragma link C++ class RooAbsCachedReal+ ;
 #pragma link C++ class RooAbsSelfCachedReal+ ;
@@ -296,7 +290,6 @@
 #pragma link C++ class RooBinningCategory+ ;
 #pragma link C++ class RooDerivative+ ;
 #pragma link C++ class RooFunctor+ ;
-#pragma link C++ class RooAdaptiveIntegratorND+ ;
 #pragma link C++ class RooNumGenConfig+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;
 #pragma link C++ class RooMultiVarGaussian::AnaIntData+ ;
@@ -321,7 +314,6 @@
   code="{_vec.reserve(onfile._vec.size()); for (const auto& cat : onfile._vec) { _vec.push_back(cat.getVal()); } }";
 #pragma link C++ class std::pair<std::string,RooAbsData*>+ ;
 #pragma link C++ class std::pair<int,RooLinkedListElem*>+ ;
-#pragma link C++ class RooUnitTest+ ;
 #pragma link C++ class RooMinimizer+ ;
 #pragma link C++ class RooFit::TestStatistics::RooRealL+ ;
 #pragma link C++ class RooAbsMoment+ ;

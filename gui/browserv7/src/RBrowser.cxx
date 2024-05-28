@@ -235,20 +235,20 @@ public:
 class RBrowserCatchedWidget : public RBrowserWidget {
 public:
 
-   std::string fUrl;   // url of catched widget
+   RWebWindow  *fWindow{nullptr};   // catched widget, TODO: to be changed to shared_ptr
    std::string fCatchedKind;  // kind of catched widget
 
    void Show(const std::string &) override {}
 
    std::string GetKind() const override { return "catched"s; }
 
-   std::string GetUrl() override { return fUrl; }
+   std::string GetUrl() override { return fWindow->GetUrl(false); }
 
    std::string GetTitle() override { return fCatchedKind; }
 
-   RBrowserCatchedWidget(const std::string &name, const std::string &url, const std::string &kind) :
+   RBrowserCatchedWidget(const std::string &name, RWebWindow *win, const std::string &kind) :
       RBrowserWidget(name),
-      fUrl(url),
+      fWindow(win),
       fCatchedKind(kind)
    {
    }
@@ -291,8 +291,8 @@ RBrowser::RBrowser(bool use_rcanvas)
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
 
    // this is call-back, invoked when message received via websocket
-   fWebWindow->SetCallBacks([this](unsigned connid) { if (!fConnId) { fConnId = connid; SendInitMsg(connid); } else fConnId = 0xffffff; },
-                            [this](unsigned connid, const std::string &arg) { if ((connid == fConnId) && (fConnId != 0xffffff)) ProcessMsg(connid, arg); });
+   fWebWindow->SetCallBacks([this](unsigned connid) { fConnId = connid; SendInitMsg(connid); },
+                            [this](unsigned connid, const std::string &arg) { ProcessMsg(connid, arg); });
    fWebWindow->SetGeometry(1200, 700); // configure predefined window geometry
    fWebWindow->SetConnLimit(1); // the only connection is allowed
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -312,9 +312,7 @@ RBrowser::RBrowser(bool use_rcanvas)
 
       if (!fWebWindow || !fCatchWindowShow || kind.empty()) return false;
 
-      std::string url = fWebWindow->GetRelativeAddr(win);
-
-      auto widget = AddCatchedWidget(url, kind);
+      auto widget = AddCatchedWidget(&win, kind);
 
       if (widget && fWebWindow && (fWebWindow->NumConnections() > 0))
          fWebWindow->Send(0, NewWidgetMsg(widget));
@@ -524,6 +522,18 @@ void RBrowser::Hide()
       fWebWindow->CloseConnections();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL parameter for the window showing ROOT Browser
+/// See \ref ROOT::RWebWindow::GetUrl docu for more details
+
+std::string RBrowser::GetWindowUrl(bool remote)
+{
+   if (fWebWindow)
+      return fWebWindow->GetUrl(remote);
+
+   return ""s;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Creates new widget
@@ -560,13 +570,13 @@ std::shared_ptr<RBrowserWidget> RBrowser::AddWidget(const std::string &kind)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Add widget catched from external scripts
 
-std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(const std::string &url, const std::string &kind)
+std::shared_ptr<RBrowserWidget> RBrowser::AddCatchedWidget(RWebWindow *win, const std::string &kind)
 {
-   if (url.empty()) return nullptr;
+   if (!win || kind.empty()) return nullptr;
 
    std::string name = "catched"s + std::to_string(++fWidgetCnt);
 
-   auto widget = std::make_shared<RBrowserCatchedWidget>(name, url, kind);
+   auto widget = std::make_shared<RBrowserCatchedWidget>(name, win, kind);
 
    fWidgets.emplace_back(widget);
 
@@ -667,7 +677,7 @@ void RBrowser::SendInitMsg(unsigned connid)
 
    for (auto &widget : fWidgets) {
       widget->ResetConn();
-      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
+      reply.emplace_back(std::vector<std::string>({ widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle() }));
    }
 
    if (!fActiveWidgetName.empty())
@@ -731,7 +741,7 @@ std::string RBrowser::GetCurrentWorkingDirectory()
 
 std::string RBrowser::NewWidgetMsg(std::shared_ptr<RBrowserWidget> &widget)
 {
-   std::vector<std::string> arr = { widget->GetKind(), widget->GetUrl(), widget->GetName(), widget->GetTitle(),
+   std::vector<std::string> arr = { widget->GetKind(), ".."s + widget->GetUrl(), widget->GetName(), widget->GetTitle(),
                                     Browsable::RElement::GetPathAsString(widget->GetPath()) };
    return "NEWWIDGET:"s + TBufferJSON::ToJSON(&arr, TBufferJSON::kNoSpaces).Data();
 }

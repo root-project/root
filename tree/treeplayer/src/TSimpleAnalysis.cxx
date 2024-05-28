@@ -99,7 +99,7 @@ std::string TSimpleAnalysis::HandleExpressionConfig(const std::string& line)
 {
    static const std::string kCutIntr = " if ";
 
-   std::size_t equal = line.find("=");
+   std::size_t equal = line.find('=');
    if (equal == std::string::npos)
       return "Error: missing '='";
 
@@ -383,7 +383,7 @@ bool TSimpleAnalysis::Run()
 
 bool TSimpleAnalysis::HandleInputFileNameConfig(const std::string& line)
 {
-   if (line.find("=") == std::string::npos) {
+   if (line.find('=') == std::string::npos) {
       fInputFiles.push_back(line);
       return true;
    }

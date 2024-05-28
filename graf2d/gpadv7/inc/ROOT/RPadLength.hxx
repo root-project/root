@@ -132,13 +132,13 @@ public:
    /// Constructor from string representation
    RPadLength(const std::string &csscode) : RPadLength() { if (!csscode.empty()) ParseString(csscode); }
 
-   bool HasNormal() const { return fArr.size() > 0; }
+   bool HasNormal() const { return !fArr.empty(); }
    bool HasPixel() const { return fArr.size() > 1; }
    bool HasUser() const { return fArr.size() > 2; }
 
    RPadLength &SetNormal(double v)
    {
-      if (fArr.size() < 1)
+      if (fArr.empty())
          fArr.resize(1);
       fArr[0] = v;
       return *this;
@@ -160,7 +160,7 @@ public:
       return *this;
    }
 
-   double GetNormal() const { return fArr.size() > 0 ? fArr[0] : 0.; }
+   double GetNormal() const { return !fArr.empty() ? fArr[0] : 0.; }
    double GetPixel() const { return fArr.size() > 1 ? fArr[1] : 0.; }
    double GetUser() const { return fArr.size() > 2 ? fArr[2] : 0.; }
 

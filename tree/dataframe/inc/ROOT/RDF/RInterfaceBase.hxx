@@ -18,7 +18,7 @@
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RResultPtr.hxx>
-#include <ROOT/RStringView.hxx>
+#include <string_view>
 #include <TError.h> // R__ASSERT
 
 #include <memory>
@@ -52,7 +52,7 @@ namespace RDFInternal = ROOT::Internal::RDF;
 class RInterfaceBase {
 protected:
    ///< The RLoopManager at the root of this computation graph. Never null.
-   RDFDetail::RLoopManager *fLoopManager;
+   std::shared_ptr<ROOT::Detail::RDF::RLoopManager> fLoopManager;
    /// Non-owning pointer to a data-source object. Null if no data-source. RLoopManager has ownership of the object.
    RDataSource *fDataSource = nullptr;
 
@@ -71,8 +71,8 @@ protected:
    void SanityChecksForVary(const std::vector<std::string> &colNames, const std::vector<std::string> &variationTags,
                             std::string_view variationName)
    {
-      R__ASSERT(variationTags.size() > 0 && "Must have at least one variation.");
-      R__ASSERT(colNames.size() > 0 && "Must have at least one varied column.");
+      R__ASSERT(!variationTags.empty() && "Must have at least one variation.");
+      R__ASSERT(!colNames.empty() && "Must have at least one varied column.");
       R__ASSERT(!variationName.empty() && "Must provide a variation name.");
 
       for (auto &colName : colNames) {
@@ -125,7 +125,7 @@ protected:
       }
    }
 
-   RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager; }
+   RDFDetail::RLoopManager *GetLoopManager() const { return fLoopManager.get(); }
 
    ColumnNames_t GetValidatedColumnNames(const unsigned int nColumns, const ColumnNames_t &columns)
    {

@@ -29,7 +29,7 @@ TKDEAdapter::TKDEAdapter()
                  fXMin(0.), fXStep(0.),
                  fYMin(0.), fYStep(0.),
                  fZMin(0.), fZStep(0.),
-                 fDE(0),
+                 fDE(nullptr),
                  fE(10.)
 {
 }

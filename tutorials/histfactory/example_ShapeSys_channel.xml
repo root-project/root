@@ -1,5 +1,5 @@
 <!--
-    Single channel configuration exampple.
+    Single channel configuration example.
     The top level configuration XML is example.xml
 
     NormalizedByTheory should be "True" (not "TRUE" or "true") for all non-data-driven backgrounds.

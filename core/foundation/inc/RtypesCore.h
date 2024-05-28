@@ -66,7 +66,7 @@ typedef short          Version_t;   //Class version identifier (short)
 typedef const char     Option_t;    //Option string (const char)
 typedef int            Ssiz_t;      //String size (int)
 typedef float          Real_t;      //TVector and TMatrix element type (float)
-#if defined(R__WIN32) && !defined(__CINT__)
+#if defined(R__WIN32)
 typedef __int64          Long64_t;  //Portable signed long integer 8 bytes
 typedef unsigned __int64 ULong64_t; //Portable unsigned long integer 8 bytes
 #ifdef _WIN64

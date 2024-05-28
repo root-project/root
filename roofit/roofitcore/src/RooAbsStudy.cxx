@@ -30,7 +30,7 @@ Abstract base class for RooStudyManager modules
 #include "RooDataSet.h"
 #include "TList.h"
 
-using namespace std ;
+using std::endl;
 
 ClassImp(RooAbsStudy);
 
@@ -128,7 +128,7 @@ void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
       if (TString(data->GetName()).BeginsWith(Form("%s_summary_data",GetName()))) {
    //cout << "RooAbsStudy::aggregateSummaryOutput(" << GetName() << ") found summary block " << data->GetName() << endl ;
    if (!_summaryData) {
-     _summaryData = (RooDataSet*) data->Clone(Form("%s_summary_data",GetName())) ;
+     _summaryData = static_cast<RooDataSet*>(data->Clone(Form("%s_summary_data",GetName()))) ;
    } else {
      _summaryData->append(*data) ;
    }
