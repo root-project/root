@@ -36,10 +36,11 @@
 std::pair<std::chrono::microseconds, std::chrono::microseconds>
 RooFit::Detail::CudaHelpers::memcpyBenchmark(std::size_t nBytes)
 {
+   std::pair<std::chrono::microseconds, std::chrono::microseconds> ret;
+#ifdef ROOFIT_CUDA
    using namespace std::chrono;
    namespace CudaInterface = RooFit::Detail::CudaInterface;
 
-   std::pair<std::chrono::microseconds, std::chrono::microseconds> ret;
    CudaInterface::PinnedHostArray<char> hostArr{nBytes};
    CudaInterface::DeviceArray<char> deviArr{nBytes};
    constexpr std::size_t nIterations = 5;
@@ -53,5 +54,6 @@ RooFit::Detail::CudaHelpers::memcpyBenchmark(std::size_t nBytes)
    }
    ret.first /= nIterations;
    ret.second /= nIterations;
+#endif
    return ret;
 }

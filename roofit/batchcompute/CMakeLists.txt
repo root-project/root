@@ -1,20 +1,12 @@
 # Library which powers fast batch computations in Roofit.
 
-if(cuda)
-  set(CudaDependencies RooFitCuda)
-endif()
-
 ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
   DEPENDENCIES
     Core
     MathCore
-    ${CudaDependencies}
+    RooFitCuda
 )
-
-if(cuda)
-  target_compile_definitions(RooBatchCompute PUBLIC ROOFIT_CUDA)
-endif()
 
 target_include_directories(RooBatchCompute PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 

@@ -6,7 +6,15 @@
 
 # Library for RooFit to interface with CUDA.
 
-ROOT_LINKER_LIBRARY(RooFitCuda src/CudaInterface.cu src/CudaHelpers.cxx TYPE SHARED)
+if(cuda)
+  set(cuda_sources src/CudaInterface.cu)
+endif()
+
+ROOT_LINKER_LIBRARY(RooFitCuda ${cuda_sources} src/CudaHelpers.cxx TYPE SHARED)
 set_target_properties(RooFitCuda PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
+
+if(cuda)
+  target_compile_definitions(RooFitCuda PRIVATE ROOFIT_CUDA)
+endif()
 
 ROOT_INSTALL_HEADERS()
