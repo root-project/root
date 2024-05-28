@@ -686,37 +686,54 @@ More than 200 items were addressed for this release. The full list is:
 * [[#6616](https://github.com/root-project/root/issues/6616)] - hadd writes files with unspecified compression algorithm
 * [[#6438](https://github.com/root-project/root/issues/6438)] - hadd --help prints wrong usage info
 * [[#6384](https://github.com/root-project/root/issues/6384)] - cxx-standard should not be in CMAKE_CXX_FLAGS
-* [[ROOT-10231](https://its.cern.ch/jira/browse/ROOT-10231)] - TMatrixD(a,TMatrixD::kInvMult,b) requires b.GetNcols() = a.GetNcols()
-* [[ROOT-10320](https://its.cern.ch/jira/browse/ROOT-10320)] - ROOT/meta does not support anonymous unions/structs
-* [[ROOT-10425](https://its.cern.ch/jira/browse/ROOT-10425)] - Missing symbols not reported as missing anymore
-* [[ROOT-10546](https://its.cern.ch/jira/browse/ROOT-10546)] - RDataFrame cannot be interrupted from PyROOT
-* [[ROOT-10593](https://its.cern.ch/jira/browse/ROOT-10593)] - Segmentation fault when calling a not-yet-defined function from ROOT interpreter
-* [[ROOT-10613](https://its.cern.ch/jira/browse/ROOT-10613)] - Configuration does not fail when fail-on-missing is ON and cudnn is not found
-* [[ROOT-10621](https://its.cern.ch/jira/browse/ROOT-10621)] - Segfault if TFile is used with TRint in teardown
-* [[ROOT-10827](https://its.cern.ch/jira/browse/ROOT-10827)] - Missing contribution of extended term in the  error  Correction for extended  weighted likelihood fits 
-* [[ROOT-10866](https://its.cern.ch/jira/browse/ROOT-10866)] - Numerical instabilities when calculating the derivatives for the asymptotically correct erros
-* [[ROOT-10958](https://its.cern.ch/jira/browse/ROOT-10958)] - jupyter notebook does not render geometries with new pyroot
-* [[ROOT-10977](https://its.cern.ch/jira/browse/ROOT-10977)] - Exit code 0 with failing C++ notebook in nbconvert
-* [[ROOT-11006](https://its.cern.ch/jira/browse/ROOT-11006)] - [TTreeReader] Crash when reading array branch
 * [[ROOT-3358](https://its.cern.ch/jira/browse/ROOT-3358)] - SetRootSys()  improperly sets $ROOTSYS
 * [[ROOT-6424](https://its.cern.ch/jira/browse/ROOT-6424)] - Bogus template names suggested by autocompletion
 * [[ROOT-6581](https://its.cern.ch/jira/browse/ROOT-6581)] - .x stress.cxx(1) broken
 * [[ROOT-6713](https://its.cern.ch/jira/browse/ROOT-6713)] - Root attempts to stream null pointers to abstract classes
 * [[ROOT-6867](https://its.cern.ch/jira/browse/ROOT-6867)] - forward declaration 'payload' inadvertently (?) unloaded
+* [[ROOT-7280](https://its.cern.ch/jira/browse/ROOT-7280)] - Memory leaks due to erroneous use of ExpandPathName
+* [[ROOT-7801](https://its.cern.ch/jira/browse/ROOT-7281)] - Typo in TMultiDimFit::MakeRealCode()
 * [[ROOT-7289](https://its.cern.ch/jira/browse/ROOT-7289)] - Documentation for TMath::fooI distributions foo unclear
 * [[ROOT-7970](https://its.cern.ch/jira/browse/ROOT-7970)] - Failure to use implicit auto with initializer lists
+* [[ROOT-8042](https://its.cern.ch/jira/browse/ROOT-8042)] - Allocating buffer close to INT_MAX throws exceptions
+* [[ROOT-8051](https://its.cern.ch/jira/browse/ROOT-8051)] - When projecting THn into TH1, TH2 or TH3, bin labels on the involved axis are lost
+* [[ROOT-8259](https://its.cern.ch/jira/browse/ROOT-8259)] - Minuit constantly modifies debug message even though it is never printed
+* [[ROOT-8274](https://its.cern.ch/jira/browse/ROOT-8274)] - "ComputeIntegral" member function of THnBase.h always returns 1
 * [[ROOT-8384](https://its.cern.ch/jira/browse/ROOT-8384)] - GenVectors objects should tell how many dimensions they have
+* [[ROOT-8501](https://its.cern.ch/jira/browse/ROOT-8501)] - TMultiLayerPerceptron destructor can cause double delete of memory]
 * [[ROOT-8458](https://its.cern.ch/jira/browse/ROOT-8458)] - Templated constructor overload resolution in PyROOT
 * [[ROOT-8644](https://its.cern.ch/jira/browse/ROOT-8644)] - PyRoot - Initializer-list support
+* [[ROOT-8712](https://its.cern.ch/jira/browse/ROOT-8712)] - TGeoBBox::AreOverlapping does not catch all intersections
 * [[ROOT-8800](https://its.cern.ch/jira/browse/ROOT-8800)] - Support rvalue-reference parameters in PyROOT
 * [[ROOT-8801](https://its.cern.ch/jira/browse/ROOT-8801)] - Support variadic template arguments of methods and functions in PyROOT
 * [[ROOT-8919](https://its.cern.ch/jira/browse/ROOT-8919)] - Eigenvalues delivered in wrong format
+* [[ROOT-9000](https://its.cern.ch/jira/browse/ROOT-9000)] - TSpline3 
 * [[ROOT-9076](https://its.cern.ch/jira/browse/ROOT-9076)] - Missing symbol after syntax error
 * [[ROOT-9083](https://its.cern.ch/jira/browse/ROOT-9083)] - ROOT crashes on usage of undeclared identifier
 * [[ROOT-9088](https://its.cern.ch/jira/browse/ROOT-9088)] - Variable destruction issue when macro executed line by line.
+* [[ROOT-9159](https://its.cern.ch/jira/browse/ROOT-9159)] - Function pointers not supported in PyROOT
 * [[ROOT-9181](https://its.cern.ch/jira/browse/ROOT-9181)] - Crash value-printing the std::vector read from a TTreeReaderArray from root prompt
 * [[ROOT-9261](https://its.cern.ch/jira/browse/ROOT-9261)] - TMatrixTSparse fails to transpose non-square matrices
 * [[ROOT-9284](https://its.cern.ch/jira/browse/ROOT-9284)] - BUG (See description note) PyDoubleBuffer tolist and numpy array cause segfault.
 * [[ROOT-9313](https://its.cern.ch/jira/browse/ROOT-9313)] - Crash in TFile::Close on Fedora, ROOT v6.10
 * [[ROOT-9320](https://its.cern.ch/jira/browse/ROOT-9320)] - Make GenVector data structures constexpr
+* [[ROOT-9321](https://its.cern.ch/jira/browse/ROOT-9321)] - Dictionary generation: type normalization issue in pcm file
+* [[ROOT-9448](https://its.cern.ch/jira/browse/ROOT-9448)] - libNew returns nullptr instead of implementing operator new, has many warnings
 * [[ROOT-9983](https://its.cern.ch/jira/browse/ROOT-9983)] - [DOC] hadd --help does not show description and epilogue
+* [[ROOT-10033](https://its.cern.ch/jira/browse/ROOT-10033)] - ROOT::EnableImplicitMT: Number of threads in scheduling environments
+* [[ROOT-10231](https://its.cern.ch/jira/browse/ROOT-10231)] - TMatrixD(a,TMatrixD::kInvMult,b) requires b.GetNcols() = a.GetNcols()
+* [[ROOT-10320](https://its.cern.ch/jira/browse/ROOT-10320)] - ROOT/meta does not support anonymous unions/structs
+* [[ROOT-10425](https://its.cern.ch/jira/browse/ROOT-10425)] - Missing symbols not reported as missing anymore
+* [[ROOT-10546](https://its.cern.ch/jira/browse/ROOT-10546)] - RDataFrame cannot be interrupted from PyROOT
+* [[ROOT-10593](https://its.cern.ch/jira/browse/ROOT-10593)] - Segmentation fault when calling a not-yet-defined function from ROOT interpreter
+* [[ROOT-10607](https://its.cern.ch/jira/browse/ROOT-10607)] - Several ROOT 7 tests fail when assertions are enabled
+* [[ROOT-10613](https://its.cern.ch/jira/browse/ROOT-10613)] - Configuration does not fail when fail-on-missing is ON and cudnn is not found
+* [[ROOT-10621](https://its.cern.ch/jira/browse/ROOT-10621)] - Segfault if TFile is used with TRint in teardown
+* [[ROOT-10705](https://its.cern.ch/jira/browse/ROOT-10705)] - The "x" and "x0" options in THnBase::PrintEntries misbehave
+* [[ROOT-10789](https://its.cern.ch/jira/browse/ROOT-10789)] - some cppyy examples do not work under ROOT
+* [[ROOT-10827](https://its.cern.ch/jira/browse/ROOT-10827)] - Missing contribution of extended term in the  error  Correction for extended  weighted likelihood fits 
+* [[ROOT-10859](https://its.cern.ch/jira/browse/ROOT-10859)] - std.make_shared[T] does not work on macOS
+* [[ROOT-10866](https://its.cern.ch/jira/browse/ROOT-10866)] - Numerical instabilities when calculating the derivatives for the asymptotically correct erros
+* [[ROOT-10958](https://its.cern.ch/jira/browse/ROOT-10958)] - jupyter notebook does not render geometries with new pyroot
+* [[ROOT-10977](https://its.cern.ch/jira/browse/ROOT-10977)] - Exit code 0 with failing C++ notebook in nbconvert
+* [[ROOT-11006](https://its.cern.ch/jira/browse/ROOT-11006)] - [TTreeReader] Crash when reading array branch
