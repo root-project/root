@@ -3094,7 +3094,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
 
    if (!prefix_changed && !mightHaveChanged) return originalType;
    if (prefix) {
-      instanceType = Ctx.getElaboratedType(clang::ETK_None,prefix,instanceType);
+      instanceType = Ctx.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, instanceType);
       instanceType = Ctx.getQualifiedType(instanceType,prefix_qualifiers);
    }
    return instanceType;
@@ -4007,7 +4007,7 @@ static void KeepNParams(clang::QualType& normalizedType,
    // Here we have (prefix_changed==true || mightHaveChanged), in both case
    // we need to reconstruct the type.
    if (prefix) {
-      normalizedType = astCtxt.getElaboratedType(clang::ETK_None,prefix,normalizedType);
+      normalizedType = astCtxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, prefix, normalizedType);
       normalizedType = astCtxt.getQualifiedType(normalizedType,prefix_qualifiers);
    }
 
@@ -4633,7 +4633,8 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       clang::NestedNameSpecifier *scope = ReSubstTemplateArgNNS(Ctxt,etype->getQualifier(),instance);
       clang::QualType subTy = ReSubstTemplateArg(clang::QualType(etype->getNamedType().getTypePtr(),0),instance);
 
-      if (scope) subTy = Ctxt.getElaboratedType(clang::ETK_None,scope,subTy);
+      if (scope)
+         subTy = Ctxt.getElaboratedType(clang::ElaboratedTypeKeyword::None, scope, subTy);
       subTy = Ctxt.getQualifiedType(subTy,scope_qualifiers);
       return subTy;
    }
