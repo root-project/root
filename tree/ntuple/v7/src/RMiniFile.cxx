@@ -964,7 +964,7 @@ constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 class RKeyBlob : public TKey {
 public:
    RKeyBlob() = default;
-   
+
    explicit RKeyBlob(TFile *file) : TKey(file)
    {
       fClassName = kBlobClassName;
@@ -979,9 +979,8 @@ public:
       *seekKey = fSeekKey;
    }
 
-   ClassDefInline(RKeyBlob, 0)
+   ClassDefInlineOverride(RKeyBlob, 0)
 };
-
 
 namespace ROOT {
 namespace Experimental {
