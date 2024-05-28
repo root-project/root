@@ -722,7 +722,7 @@ namespace cling {
 
     // 3. Build the array of addresses
     QualType VarAddrTy = m_Sema->BuildArrayType(m_Context->VoidPtrTy,
-                                                ArrayType::Normal,
+                                                ArraySizeModifier::Normal,
                                                 /*ArraySize*/nullptr,
                                                 /*IndexTypeQuals*/0,
                                                 m_NoRange,
@@ -815,10 +815,10 @@ namespace cling {
     const QualType CCArray = m_Context->getConstantArrayType(CChar,
                                                              ArraySize,
                                                            /*SizeExpr=*/nullptr,
-                                                             ArrayType::Normal,
+                                                             ArraySizeModifier::Normal,
                                                           /*IndexTypeQuals=*/0);
 
-    StringLiteral::StringKind Kind = StringLiteral::Ordinary;
+    StringLiteralKind Kind = StringLiteralKind::Ordinary;
     Expr* Result = StringLiteral::Create(*m_Context,
                                          Value,
                                          Kind,
