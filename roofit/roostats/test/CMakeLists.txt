@@ -4,7 +4,7 @@ ROOT_ADD_GTEST(testHypoTestInvResult testHypoTestInvResult.cxx
 ROOT_ADD_GTEST(testSPlot testSPlot.cxx LIBRARIES RooStats)
 
 #--stressRooStats----------------------------------------------------------------------------------
-ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats Gpad)
+ROOT_EXECUTABLE(stressRooStats stressRooStats.cxx LIBRARIES RooStats Gpad Net)
 if(mathmore)
     target_compile_definitions(stressRooStats PRIVATE ROOFITMORE)
 endif()
