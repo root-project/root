@@ -31,10 +31,10 @@ TString stime(time_t* t, bool utc = false, bool display_time_zone = true) {
 }
 
 
-TCanvas *timeonaxis3() {
+void timeonaxis3() {
    double f = 1.8;
 
-   TCanvas* c = new TCanvas;
+   auto c = new TCanvas;
 
    TLatex tex1;
    tex1.SetNDC();
@@ -107,5 +107,4 @@ TCanvas *timeonaxis3() {
          if(i > 0) l.DrawLine(0, 0.95, 1, 0.95);
       }
    }
-   return c;
 }
