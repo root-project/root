@@ -1351,8 +1351,8 @@ class RVariantField : public RFieldBase {
 private:
    // Most compilers support at least 255 variants (256 - 1 value for the empty variant).
    // Some compilers switch to a two-byte tag field already with 254 variants.
-   // MSVC only supports 250 variants.
-   static constexpr std::size_t kMaxVariants = 250;
+   // MSVC only supports 163 variants in older versions, 250 in newer ones.
+   static constexpr std::size_t kMaxVariants = 160;
 
    class RVariantDeleter : public RDeleter {
    private:
