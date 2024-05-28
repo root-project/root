@@ -531,6 +531,11 @@ if(mathmore OR builtin_gsl)
         set(mathmore OFF CACHE BOOL "Disable because builtin_gsl disabled and external GSL not found (${mathmore_description})" FORCE)
       endif()
     endif()
+    if(WIN32 AND GSL_FOUND)
+      if(GSL_LIBRARY_DEBUG AND GSL_CBLAS_LIBRARY_DEBUG)
+        set(GSL_LIBRARIES optimized;${GSL_LIBRARY};optimized;${GSL_CBLAS_LIBRARY};debug;${GSL_LIBRARY_DEBUG};debug;${GSL_CBLAS_LIBRARY_DEBUG})
+      endif()
+    endif()
   else()
     set(gsl_version 2.5)
     message(STATUS "Downloading and building GSL version ${gsl_version}")
@@ -1840,6 +1845,7 @@ if (builtin_gtest)
     )
 
   if(MSVC)
+    set(GTEST_BUILD_TYPE ${CMAKE_BUILD_TYPE})
     set(_gtest_byproducts
       ${_gtest_byproduct_binary_dir}/lib/gtest.lib
       ${_gtest_byproduct_binary_dir}/lib/gtest_main.lib
@@ -1849,11 +1855,7 @@ if (builtin_gtest)
     if(CMAKE_GENERATOR MATCHES Ninja)
       set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR>")
     else()
-      set(gtestbuild Release)
-      if (CMAKE_BUILD_TYPE MATCHES "Debug")
-        set(gtestbuild Debug)
-      endif()
-      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${gtestbuild}")
+      set(GTEST_BUILD_COMMAND "BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release")
     endif()
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
@@ -1862,6 +1864,8 @@ if (builtin_gtest)
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
       -Dgtest_force_shared_crt=ON
       ${GTEST_BUILD_COMMAND})
+  else()
+    set(GTEST_BUILD_TYPE Release)
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -1880,11 +1884,12 @@ if (builtin_gtest)
     #            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
     #            -Dgtest_force_shared_crt=ON
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
-                  -DCMAKE_BUILD_TYPE=Release
+                  -DCMAKE_BUILD_TYPE=${GTEST_BUILD_TYPE}
                   -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
                   -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${ROOT_EXTERNAL_CXX_FLAGS}
+                  -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
                   -DCMAKE_AR=${CMAKE_AR}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                   ${EXTRA_GTEST_OPTS}

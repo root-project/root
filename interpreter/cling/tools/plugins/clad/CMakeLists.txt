@@ -90,6 +90,7 @@ ExternalProject_Add(
              -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
              -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
              -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+             -DCMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}
              -DCMAKE_INSTALL_PREFIX=${clad_install_dir}/plugins
              -DLLVM_DIR=${LLVM_BINARY_DIR}
              -DCLANG_INCLUDE_DIRS=${CLANG_INCLUDE_DIRS}

@@ -134,7 +134,13 @@ ROOT_GENERATE_DICTIONARY(G__RIO
 # the many scope-local vars to share their stack space / become
 # registers, thanks to the optimizer.
 if(MSVC)
-  set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    if(NOT CMAKE_BUILD_TYPE MATCHES Debug)
+      set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
+    endif()
+  else()
+    set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "/O2")
+  endif()
 else()
   set_source_files_properties(src/TStreamerInfoReadBuffer.cxx COMPILE_FLAGS "-O3")
 endif()
