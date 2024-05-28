@@ -17,9 +17,7 @@
 
 #include <RConfig.h>
 
-#ifdef ROOFIT_CUDA
 #include <RooFit/Detail/CudaInterface.h>
-#endif
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
@@ -46,22 +44,19 @@ typedef const double *__restrict InputArr;
 
 constexpr std::size_t bufferSize = 64;
 
-void init();
+int initCPU();
+int initCUDA();
 
 /// Minimal configuration struct to steer the evaluation of a single node with
 /// the RooBatchCompute library.
 class Config {
 public:
-#ifdef ROOFIT_CUDA
    bool useCuda() const { return _cudaStream != nullptr; }
    void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
    RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 
 private:
    RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
-#else
-   bool useCuda() const { return false; }
-#endif
 };
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
@@ -156,29 +151,21 @@ public:
  *
  * \see RooBatchComputeInterface, RooBatchComputeClass, RF_ARCH
  */
-R__EXTERN RooBatchComputeInterface *dispatchCPU, *dispatchCUDA;
+R__EXTERN RooBatchComputeInterface *dispatchCPU;
+R__EXTERN RooBatchComputeInterface *dispatchCUDA;
 
 inline Architecture cpuArchitecture()
 {
-   init();
    return dispatchCPU->architecture();
 }
 
 inline std::string cpuArchitectureName()
 {
-   init();
    return dispatchCPU->architectureName();
-}
-
-inline bool hasCuda()
-{
-   init();
-   return dispatchCUDA;
 }
 
 inline void compute(Config cfg, Computer comp, std::span<double> output, VarSpan vars, ArgSpan extraArgs = {})
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    dispatch->compute(cfg, comp, output, vars, extraArgs);
 }
@@ -194,7 +181,6 @@ inline void compute(Config cfg, Computer comp, std::span<double> output,
 
 inline double reduceSum(Config cfg, InputArr input, size_t n)
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceSum(cfg, input, n);
 }
@@ -202,7 +188,6 @@ inline double reduceSum(Config cfg, InputArr input, size_t n)
 inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std::span<const double> weights,
                                  std::span<const double> offsetProbas)
 {
-   init();
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
 }

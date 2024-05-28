@@ -41,21 +41,16 @@ void loadWithErrorChecking(const std::string &libName)
 namespace RooBatchCompute {
 
 /// Inspect hardware capabilities, and load the optimal library for RooFit computations.
-void init()
+int initCPU()
 {
    // Check if the library was not initialised already
    static bool isInitialised = false;
    if (isInitialised)
-      return;
+      return 0;
    isInitialised = true;
 
    const std::string userChoice = gEnv->GetValue("RooFit.BatchCompute", "auto");
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
-#ifdef ROOFIT_CUDA
-   if(gSystem->Load("libRooBatchCompute_CUDA") != 0) {
-      RooBatchCompute::dispatchCUDA = nullptr;
-   }
-#endif // ROOFIT_CUDA
 
    __builtin_cpu_init();
 #if __GNUC__ > 5 || defined(__clang__)
@@ -91,6 +86,19 @@ void init()
 
    if (RooBatchCompute::dispatchCPU == nullptr)
       loadWithErrorChecking("libRooBatchCompute_GENERIC");
+
+   return 0;
+}
+
+int initCUDA()
+{
+   // Check if the library was not initialised already
+   static bool isInitialised = false;
+   if (isInitialised)
+      return 0;
+   isInitialised = true;
+
+   return gSystem->Load("libRooBatchCompute_CUDA");
 }
 
 } // namespace RooBatchCompute

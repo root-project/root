@@ -17,10 +17,8 @@
 #include <queue>
 #include <map>
 
-#ifdef ROOFIT_CUDA
 namespace CudaInterface = RooFit::Detail::CudaInterface;
 using CudaInterface::CudaStream;
-#endif
 
 namespace RooFit {
 namespace Detail {
