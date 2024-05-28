@@ -214,7 +214,7 @@ int stressProof(const char *url = 0,
                 Bool_t keeplog = kTRUE, Bool_t catlog = kFALSE);
 
 //_____________________________batch only_____________________
-#ifndef __CINT__
+#ifndef __CLING__
 int main(int argc,const char *argv[])
 {
 

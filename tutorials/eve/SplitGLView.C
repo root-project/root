@@ -1429,7 +1429,7 @@ void SplitGLView::UpdateSummary()
 }
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 void SplitGLView()
 {
    printf("This script is used via ACLiC by the macro \"alice_esd_split.C\"\n");
