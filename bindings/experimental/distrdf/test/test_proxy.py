@@ -173,6 +173,23 @@ class AttrReadTest(unittest.TestCase):
 
         self.assertEqual(proxy.val(21), 144)
 
+    def test_getcolnames(self):
+        """
+        Check newly defined columns are available also locally.
+        """
+
+        node = create_dummy_headnode(1)
+        proxy = Proxy.NodeProxy(node)
+
+        cols_before = proxy.GetColumnNames()
+        self.assertSequenceEqual(cols_before, [])
+
+        proxy = proxy.Define("x", "42").Define("y", "43").Define("z", "44")
+
+        cols_after = proxy.GetColumnNames()
+
+        self.assertSequenceEqual(cols_after, ["x", "y", "z"])
+
 
 class GetValueTests(unittest.TestCase):
     """Check 'GetValue' instance method in Proxy."""
