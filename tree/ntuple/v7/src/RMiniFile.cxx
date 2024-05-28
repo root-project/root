@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "Rtypes.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 
@@ -979,10 +980,16 @@ constexpr char const *kBlobClassName = "RBlob";
 /// The class name of the RNTuple anchor
 constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 
+} // anonymous namespace
+
 /// The RKeyBlob writes an invisible key into a TFile.  That is, a key that is not indexed in the list of keys,
 /// like a TBasket.
+/// NOTE: out of anonymous namespace because otherwise ClassDefInline fails to compile
+/// on some platforms.
 class RKeyBlob : public TKey {
 public:
+   RKeyBlob() = default;
+   
    explicit RKeyBlob(TFile *file) : TKey(file)
    {
       fClassName = kBlobClassName;
@@ -996,9 +1003,10 @@ public:
       Create(nbytes);
       *seekKey = fSeekKey;
    }
+
+   ClassDefInline(RKeyBlob, 0)
 };
 
-} // anonymous namespace
 
 namespace ROOT {
 namespace Experimental {
