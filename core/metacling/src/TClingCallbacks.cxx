@@ -128,8 +128,7 @@ public:
          }
 
          if (addr) {
-            loadedSymbols[symbol] =
-               llvm::JITEvaluatedSymbol(llvm::pointerToJITTargetAddress(addr), llvm::JITSymbolFlags::Exported);
+            loadedSymbols[symbol] = {llvm::orc::ExecutorAddr::fromPtr(addr), llvm::JITSymbolFlags::Exported};
          } else {
             // Collect all failing symbols, delegate their responsibility and then
             // fail their materialization. R->defineNonExistent() sounds like it
