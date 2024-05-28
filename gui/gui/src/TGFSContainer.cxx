@@ -631,8 +631,12 @@ void TGFileContainer::Sort(EFSSortMode sortType)
 
    fList->Sort();
 
-   TGCanvas *canvas = (TGCanvas *) this->GetParent()->GetParent();
-   canvas->Layout();
+   const TGWindow *parent = this->GetParent();
+   if (parent) {
+      TGCanvas *canvas = (TGCanvas *)parent->GetParent();
+      if (canvas)
+         canvas->Layout();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
