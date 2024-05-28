@@ -8902,7 +8902,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
       if (md->isVirtual()) {
          property |= kIsVirtual;
       }
-      if (md->isPure()) {
+      if (md->isPureVirtual()) {
          property |= kIsPureVirtual;
       }
       if (const clang::CXXConstructorDecl *cd =
