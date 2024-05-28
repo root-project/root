@@ -8723,7 +8723,7 @@ void TCling::SetDeclAttr(DeclId_t declId, const char* attribute)
 {
    Decl* decl = static_cast<Decl*>(const_cast<void*>(declId));
    ASTContext &C = decl->getASTContext();
-   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute));
+   decl->addAttr(AnnotateAttr::CreateImplicit(C, attribute, nullptr, 0));
 }
 
 //______________________________________________________________________________

@@ -857,7 +857,7 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
    // is a gross hack, because TClingCallbacks shouldn't know about
    // EvaluateTSynthesizer at all!
 
-   Wrapper->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime"));
+   Wrapper->addAttr(AnnotateAttr::CreateImplicit(C, "__ResolveAtRuntime", nullptr, 0));
 
    // Here we have the scope but we cannot do Sema::PushDeclContext, because
    // on pop it will try to go one level up, which we don't want.
@@ -994,7 +994,7 @@ bool TClingCallbacks::tryInjectImplicitAutoKeyword(LookupResult &R, Scope *S) {
    // Annotate the decl to give a hint in cling.
    // FIXME: We should move this in cling, when we implement turning it on
    // and off.
-   Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto"));
+   Result->addAttr(AnnotateAttr::CreateImplicit(C, "__Auto", nullptr, 0));
 
    R.addDecl(Result);
 
