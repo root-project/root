@@ -21,11 +21,13 @@ TEST(TH1, MapCppNameTest)
    TString n4 =  "<[!@$%&^*()., []/+=-&:|'~]>";
 
    auto g1 = new TGraph(); g1->SetName(n1.Data());
-   for (Int_t i=0; i<10; i++) g1->AddPoint(i*0.123, 10*sin(i*0.123+0.2));
+   for (Int_t i=0; i<10; i++)
+      g1->AddPoint(i*0.123, 10*sin(i*0.123+0.2));
 
    auto h1 = new TH1F(n1.Data(), n1.Data(), 10 , 0, 1);
    auto h2 = new TH2F(n2.Data(), n2.Data(), 10 , 0, 1, 10, 0, 1);
-   auto h3 = new TH2Poly(n3.Data(), n3.Data(), 10 , 0, 1, 10, 0, 1); h3->AddBin(0., 0., 1., 1.);
+   auto h3 = new TH2Poly(n3.Data(), n3.Data(), 10 , 0, 1, 10, 0, 1);
+   h3->AddBin(0., 0., 1., 1.);
    auto h4 = new TProfile(n4.Data(),n4.Data(), 10, 0, 1);
 
    g1->Draw();
@@ -39,7 +41,8 @@ TEST(TH1, MapCppNameTest)
 
    int FileSize = 0;
    FileStat_t fs;
-   if (!gSystem->GetPathInfo(CFile.Data(), fs)) FileSize = (Int_t)fs.fSize;
+   if (!gSystem->GetPathInfo(CFile.Data(), fs))
+      FileSize = (Int_t)fs.fSize;
 
    EXPECT_NEAR(FileSize, 5950, 30);
 
