@@ -400,11 +400,10 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
-ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element,
-                                                  int compressionSetting)
+ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element)
 {
    R__ASSERT(fCompressor);
-   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
+   return SealPage(page, element, GetWriteOptions().GetCompression(), fCompressor->GetZipBuffer());
 }
 
 void ROOT::Experimental::Internal::RPageSink::CommitDataset()
