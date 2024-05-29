@@ -69,8 +69,7 @@ public:
    }
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage &page) final
    {
-      auto P = SealPage(page, fElement, /*compressionSetting=*/0);
-      fPages.emplace_back(P.GetBuffer(), P.GetSize(), P.GetNElements());
+      fPages.emplace_back(SealPage(page, fElement, /*compressionSetting=*/0));
    }
 
    const std::vector<RPageStorage::RSealedPage> &GetPages() const { return fPages; }

@@ -85,15 +85,18 @@ public:
    /// of concrete page sink and page source implementations.
    /// The sealed page can be read-only (used to write out pages) or writable when it get populated from on-disk data.
    class RSealedPage {
-      void *fBuffer = nullptr; /// This may be a const-casted read-only buffer.
-      std::uint32_t fSize = 0;
+      void *fBuffer = nullptr; ///< This may be a const-casted read-only buffer
+      std::uint32_t fBufferSize = 0; ///< Size of the element data and the trailing checksum (if available)
       std::uint32_t fNElements = 0;
+      bool fHasChecksum = false; ///< If set, the last 8 bytes of the buffer are the xxhash of the rest of the buffer
 
    public:
       RSealedPage() = default;
-      RSealedPage(const void *b, std::uint32_t s, std::uint32_t n)
-         : fBuffer(const_cast<void *>(b)), fSize(s), fNElements(n) {}
-      RSealedPage(void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
+      RSealedPage(const void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
+         : fBuffer(const_cast<void *>(buffer)), fBufferSize(bufferSize), fNElements(nElements),
+           fHasChecksum(hasChecksum) {}
+      RSealedPage(void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
+         : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum) {}
       RSealedPage(const RSealedPage &other) = default;
       RSealedPage& operator =(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
@@ -105,11 +108,15 @@ public:
       void *GetWritableBuffer() const { return fBuffer; }
       void SetWritableBuffer(void *buffer) { fBuffer = buffer; }
 
-      std::uint32_t GetSize() const { return fSize; }
-      void SetSize(std::uint32_t size) { fSize = size; }
+      std::uint32_t GetDataSize() const { return fBufferSize - fHasChecksum * sizeof(std::uint64_t); }
+      std::uint32_t GetBufferSize() const { return fBufferSize; }
+      void SetBufferSize(std::uint32_t bufferSize) { fBufferSize = bufferSize; }
 
       std::uint32_t GetNElements() const { return fNElements; }
       void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
+
+      bool GetHasChecksum() const { return fHasChecksum; }
+      void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
