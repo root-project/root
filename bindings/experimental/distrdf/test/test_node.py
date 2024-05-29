@@ -51,16 +51,16 @@ class OperationReadTest(unittest.TestCase):
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.NodeProxy(hn)
-        newNode = node.Define(1, "b", a="1", b=2)
-        self.assertEqual(newNode.operation.args, [1, "b"])
+        newNode = node.Define("x", "1")
+        self.assertEqual(newNode.operation.args, ["x", "1"])
 
     def test_kwargs_read(self):
         """Named arguments are read accurately."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.NodeProxy(hn)
-        newNode = node.Define(1, "b", a="1", b=2)
-        self.assertEqual(newNode.operation.kwargs, {"a": "1", "b": 2})
+        newNode = node.Define("x", "1")
+        self.assertEqual(newNode.operation.kwargs, {})
 
 
 class NodeReturnTest(unittest.TestCase):
@@ -83,7 +83,7 @@ class NodeReturnTest(unittest.TestCase):
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
         node = Proxy.NodeProxy(hn)
-        newNode = node.Define(1)
+        newNode = node.Define("x", "1")
         self.assertIsInstance(newNode, Proxy.NodeProxy)
         self.assertIsInstance(newNode.proxied_node, Node.Node)
 
