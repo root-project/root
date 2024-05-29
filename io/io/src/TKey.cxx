@@ -68,9 +68,6 @@
 #include "RZip.h"
 
 const Int_t kTitleMax = 32000;
-#if 0
-const Int_t kMAXFILEBUFFER = 262144;
-#endif
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)
 const ULong64_t kPidOffsetMask = 0xffffffffffffULL;
@@ -1277,19 +1274,11 @@ Bool_t TKey::ReadFile()
 
    Int_t nsize = fNbytes;
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
-      int nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->ReadBuffer(fBuffer+i,nb);
-   }
-#else
    if( f->ReadBuffer(fBuffer,nsize) )
    {
       Error("ReadFile", "Failed to read data.");
       return kFALSE;
    }
-#endif
    if (gDebug) {
       std::cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<std::endl;
    }
@@ -1475,16 +1464,7 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
 
    if (fLeft > 0) nsize += sizeof(Int_t);
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-      Int_t nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->WriteBuffer(buffer,nb);
-      buffer += nb;
-   }
-#else
    Bool_t result = f->WriteBuffer(buffer,nsize);
-#endif
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {
@@ -1511,16 +1491,7 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
 
    if (fLeft > 0) nsize += sizeof(Int_t);
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-      Int_t nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->WriteBuffer(buffer,nb);
-      buffer += nb;
-   }
-#else
    Bool_t result = f->WriteBuffer(buffer,nsize);
-#endif
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {
