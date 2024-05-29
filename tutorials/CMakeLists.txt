@@ -484,9 +484,6 @@ set(returncode_1 fit/fit2a.C
                  graphics/earth.C
                  graphics/pavetext.C
                  graphics/tmathtext.C graphics/tmathtext2.C
-                 graphs/timeonaxis.C
-                 graphs/timeonaxis2.C
-                 graphs/timeonaxis3.C
                  graphs/exclusiongraph.C
                  graphs/graphstruct.C
                  hist/ContourList.C
