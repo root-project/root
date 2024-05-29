@@ -85,8 +85,11 @@ void timeonaxis()
 //        Time interval: a few years
 
    auto gt2 = new TGraph();
-   int nd;
-   for (i=0;i<10;i++) gt2->AddPoint(i*365*86400, gRandom->Gaus(500,100)*i);
+   TDatime dateBegin(2000,1,1,0,0,0);
+   for (i=0;i<10;i++) {
+      TDatime datePnt(2000 + i,1,1,0,0,0);
+      gt2->AddPoint(datePnt.Convert() - dateBegin.Convert(), 100 + gRandom->Gaus(500,100)*i);
+   }
    gt2->SetTitle("Number of monkeys on the moon");
    ct->cd(3);
    gt2->SetMarkerColor(4);
