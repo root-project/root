@@ -1413,7 +1413,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
          pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
 
          for (const auto &pi : pageRange.fPageInfos) {
-            pos += SerializeUInt32(pi.fNElements, *where);
+            std::int32_t nElements = pi.fHasChecksum ? -static_cast<std::int32_t>(pi.fNElements) : pi.fNElements;
+            pos += SerializeUInt32(nElements, *where);
             pos += SerializeLocator(pi.fLocator, *where);
          }
          pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
@@ -1726,16 +1727,17 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
             if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
                return R__FAIL("inner frame too short");
             std::int32_t nElements;
+            bool hasChecksum = false;
             RNTupleLocator locator;
             bytes += DeserializeInt32(bytes, nElements);
             if (nElements < 0) {
-               // TODO(jblomer): page with checksum
                nElements = -nElements;
+               hasChecksum = true;
             }
             result = DeserializeLocator(bytes, fnInnerFrameSizeLeft(), locator);
             if (!result)
                return R__FORWARD_ERROR(result);
-            pageRange.fPageInfos.push_back({static_cast<std::uint32_t>(nElements), locator});
+            pageRange.fPageInfos.push_back({static_cast<std::uint32_t>(nElements), locator, hasChecksum});
             bytes += result.Unwrap();
          }
 

@@ -266,6 +266,8 @@ public:
          std::uint32_t fNElements = std::uint32_t(-1);
          /// The meaning of fLocator depends on the storage backend.
          RNTupleLocator fLocator;
+         /// If true, the 8 bytes following the serialized page are an xxhash of the on-disk page data
+         bool fHasChecksum = false;
 
          bool operator==(const RPageInfo &other) const {
             return fNElements == other.fNElements && fLocator == other.fLocator;

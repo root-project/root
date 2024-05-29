@@ -118,6 +118,9 @@ public:
 
       std::uint32_t GetNElements() const { return fNElements; }
       void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
+
+      bool GetHasChecksum() const { return fHasChecksum; }
+      void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
