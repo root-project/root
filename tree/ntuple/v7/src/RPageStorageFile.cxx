@@ -106,7 +106,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitPageImpl(ColumnHandle_t colum
    RPageStorage::RSealedPage sealedPage;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallZip, fCounters->fTimeCpuZip);
-      sealedPage = SealPage(page, *element, GetWriteOptions().GetCompression());
+      sealedPage = SealPage(page, *element);
    }
 
    fCounters->fSzZip.Add(page.GetNBytes());
