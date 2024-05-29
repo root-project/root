@@ -54,6 +54,10 @@ ROOT_ADD_GTEST(rfield_check rfield_check.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_class rfield_class.cxx LIBRARIES ROOTNTuple CustomStruct Physics)
 ROOT_ADD_GTEST(rfield_string rfield_string.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(rfield_variant rfield_variant.cxx LIBRARIES ROOTNTuple CustomStruct)
+if(MSVC)
+  # Necessary to have TClass handle very large variants
+  set_property(TARGET rfield_variant APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
+endif()
 ROOT_ADD_GTEST(rfield_vector rfield_vector.cxx LIBRARIES ROOTNTuple CustomStruct)
 
 ROOT_ADD_GTEST(ntuple_minifile ntuple_minifile.cxx LIBRARIES ROOTNTuple Tree CustomStruct)
