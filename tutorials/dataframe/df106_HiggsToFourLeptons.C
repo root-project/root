@@ -44,16 +44,10 @@ using ROOT::RVecF;
 using ROOT::RDF::RSampleInfo;
 using namespace ROOT::RDF::Experimental;
 
-#define STRINGIFY_(x) #x
-#define STRINGIFY(x) STRINGIFY_(x)
-
-#define GoodElectronsAndMuons_Signature \
-   bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e, \
-                              const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0)
-
 // Define functions needed in the analysis
 // Select events for the analysis
-GoodElectronsAndMuons_Signature
+bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e, \
+                           const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0)
 {
    for (size_t i = 0; i < type.size(); i++) {
       PtEtaPhiEVectorF p(0.001 * pt[i], eta[i], phi[i], 0.001 * e[i]);
@@ -69,11 +63,8 @@ GoodElectronsAndMuons_Signature
    return true;
 }
 
-#define ComputeInvariantMass_Signature \
-   float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e)
-
 // Compute the invariant mass of a four-lepton-system.
-ComputeInvariantMass_Signature
+float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e)
 {
    PtEtaPhiEVectorF p1(pt[0], eta[0], phi[0], e[0]);
    PtEtaPhiEVectorF p2(pt[1], eta[1], phi[1], e[1]);
@@ -102,8 +93,9 @@ void df106_HiggsToFourLeptons()
    // clang-format off
    gInterpreter->Declare(
       "using ROOT::RVecF;"
-      STRINGIFY(GoodElectronsAndMuons_Signature) ";"
-      STRINGIFY(ComputeInvariantMass_Signature)  ";"
+      "bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e,"
+                           "const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0);"
+      "float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e);"
    );
    // clang-format on
 #endif
