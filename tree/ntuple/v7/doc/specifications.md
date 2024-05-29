@@ -52,7 +52,7 @@ For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as 
 
 ### Anchor schema
 
-The current **ROOT::Experimental::RNTuple** object has the following schema:
+The current (class version 5) **ROOT::Experimental::RNTuple** object has the following schema:
 
 ```
  0                   1                   2                   3
@@ -92,7 +92,7 @@ The current **ROOT::Experimental::RNTuple** object has the following schema:
 When serialized to disk, a 64 bit checksum is appended to the anchor, calculated as the XXH3 hash of
 all the (serialized) fields of the anchor object.
 As of today, the anchor is allow to evolve only by appending new fields to the existing schema, but
-fields may not be removed, renamed or reordered.
+fields must not be removed, renamed or reordered.
 
 
 ## Compression Block
