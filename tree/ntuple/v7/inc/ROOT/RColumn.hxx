@@ -35,7 +35,7 @@ namespace Internal {
 
 // clang-format off
 /**
-\class ROOT::Internal::RColumn
+\class ROOT::Experimental::Internal::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
 */
