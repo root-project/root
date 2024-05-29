@@ -4,7 +4,7 @@
 
 ## Versioning Notes
 
-The RNTuple binary format vesion is inspired by semantic versioning.
+The RNTuple binary format version is inspired by semantic versioning.
 It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
 _Epoch_: an increment of the epoch indicates backwards-incompatible changes.
@@ -49,6 +49,50 @@ The only relevant means of finding objects is the locator information, consistin
 Every embedding must define an **anchor** that contains the format version supported by the writer,
 and envelope links (location, compressed and uncompressed size) of the header and footer envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
+
+### Anchor schema
+
+The current **ROOT::Experimental::RNTuple** object has the following schema:
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Version Epoch          |         Version Major         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Version Minor          |         Version Patch         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Seek Header                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Nbytes Header                          +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Len Header                            +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Seek Footer                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Nbytes Footer                          +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Len Footer                            +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+```
+
+When serialized to disk, a 64 bit checksum is appended to the anchor, calculated as the XXH3 hash of
+all the (serialized) fields of the anchor object.
+As of today, the anchor is allow to evolve only by appending new fields to the existing schema, but
+fields may not be removed, renamed or reordered.
 
 
 ## Compression Block
