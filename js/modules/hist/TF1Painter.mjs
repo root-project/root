@@ -103,11 +103,14 @@ class TF1Painter extends TH1Painter {
             pad = this.getPadPainter()?.getRootPad(true),
             logx = pad?.fLogx,
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
-      let xmin = tf1.fXmin, xmax = tf1.fXmax;
+      let xmin = tf1.fXmin, xmax = tf1.fXmax, np = Math.max(tf1.fNpx, 100);
 
       if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
+         const dx = (xmax - xmin) / np;
+         if ((xmin < gr.zoom_xmin) && (gr.zoom_xmin < xmax))
+            xmin = Math.max(xmin, gr.zoom_xmin - dx);
+         if ((xmin < gr.zoom_xmax) && (gr.zoom_xmax < xmax))
+            xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
       this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || (this.use_saved > 1));
@@ -127,7 +130,6 @@ class TF1Painter extends TH1Painter {
       // this._use_saved_points = true;
 
       if (!this._use_saved_points) {
-         const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
 
          if (!tf1.evalPar) {
@@ -171,7 +173,7 @@ class TF1Painter extends TH1Painter {
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
       if (this._use_saved_points) {
-         const np = tf1.fSave.length - 3;
+         np = tf1.fSave.length - 3;
          let custom_xaxis = null;
          xmin = tf1.fSave[np + 1];
          xmax = tf1.fSave[np + 2];
