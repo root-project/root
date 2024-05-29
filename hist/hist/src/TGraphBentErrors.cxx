@@ -186,6 +186,15 @@ TGraphBentErrors::~TGraphBentErrors()
    delete [] fEYhighd;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Add a point with bent errors to the graph.
+
+void TGraphBentErrors::AddPointError(Double_t x, Double_t y, Double_t exl, Double_t exh, Double_t eyl, Double_t eyh,
+                                     Double_t exld, Double_t exhd, Double_t eyld, Double_t eyhd)
+{
+   AddPoint(x, y);
+   SetPointError(fNpoints - 1, exl, exh, eyl, eyh, exld, exhd, eyld, eyhd);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Apply a function to all data points \f$ y = f(x,y) \f$.
