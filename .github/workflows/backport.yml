@@ -1,27 +1,24 @@
-name: Backport
+name: Automatic BP
+
 on:
   pull_request_target:
-    types:
-      - closed
-      - labeled
+    types: ["labeled", "closed"]
 
 jobs:
   backport:
-    name: Backport
+    name: Backport PR
     runs-on: ubuntu-latest
-    # Only react to merged PRs for security reasons.
-    # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target.
-    if: >
-      github.event.pull_request.merged
-      && (
-        github.event.action == 'closed'
-        || (
-          github.event.action == 'labeled'
-          && contains(github.event.label.name, 'backport')
-        )
-      )
     steps:
-      - uses: tibdex/backport@v2
+      - name: Backport Action
+        uses: sorenlouv/backport-github-action@v9.5.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          auto_backport_label_prefix: backport-to-
 
+      - name: Info log
+        if: ${{ success() }}
+        run: cat ~/.backport/backport.info.log
+        
+      - name: Debug log
+        if: ${{ failure() }}
+        run: cat ~/.backport/backport.debug.log        
