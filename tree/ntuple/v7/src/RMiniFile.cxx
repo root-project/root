@@ -982,6 +982,18 @@ constexpr char const *kNTupleClassName = "ROOT::Experimental::RNTuple";
 
 } // anonymous namespace
 
+namespace ROOT {
+namespace Experimental {
+namespace Internal {
+/// If a TFile container is written by a C stream (simple file), on dataset commit, the file header
+/// and the TFile record need to be updated
+struct RTFileControlBlock {
+   RTFHeader fHeader;
+   RTFFile fFileRecord;
+   std::uint64_t fSeekNTuple{0}; // Remember the offset for the keys list
+   std::uint64_t fSeekFileRecord{0};
+};
+
 /// The RKeyBlob writes an invisible key into a TFile.  That is, a key that is not indexed in the list of keys,
 /// like a TBasket.
 /// NOTE: out of anonymous namespace because otherwise ClassDefInline fails to compile
@@ -1007,17 +1019,6 @@ public:
    ClassDefInlineOverride(RKeyBlob, 0)
 };
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
-/// If a TFile container is written by a C stream (simple file), on dataset commit, the file header
-/// and the TFile record need to be updated
-struct RTFileControlBlock {
-   RTFHeader fHeader;
-   RTFFile fFileRecord;
-   std::uint64_t fSeekNTuple{0}; // Remember the offset for the keys list
-   std::uint64_t fSeekFileRecord{0};
-};
 } // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
