@@ -13,8 +13,7 @@
 # Imported Targets
 # ^^^^^^^^^^^^^^^^
 #
-# This module defines :prop_tgt:`IMPORTED` target ``VDT::VDT``,
-# if Vdt has been found.
+# VDT::VDT if Vdt has been found.
 #
 # Result Variables
 # ^^^^^^^^^^^^^^^^
@@ -42,8 +41,6 @@ if(NOT VDT_LIBRARY)
   find_library(VDT_LIBRARY NAMES vdt)
 endif()
 
-mark_as_advanced(VDT_INCLUDE_DIR VDT_LIBRARY)
-
 if(VDT_INCLUDE_DIR)
   file(STRINGS "${VDT_INCLUDE_DIR}/vdt/vdtMath.h" VDT_H REGEX "^#define VDT_VERSION_[A-Z]+[ ]+[0-9]+.*$")
   string(REGEX REPLACE ".+VDT_VERSION_MAJOR[ ]+([0-9]+).*$" "\\1" VDT_VERSION_MAJOR "${VDT_H}")
@@ -59,9 +56,14 @@ if(VDT_INCLUDE_DIR)
   endif()
 endif()
 
+# Don't show in GUI
+mark_as_advanced(VDT_FOUND VDT_VERSION VDT_INCLUDE_DIR VDT_LIBRARY)
+
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Vdt FOUND_VAR VDT_FOUND
-  REQUIRED_VARS VDT_INCLUDE_DIR VDT_LIBRARY VERSION_VAR VDT_VERSION)
+find_package_handle_standard_args(Vdt
+  REQUIRED_VARS VDT_INCLUDE_DIR VDT_LIBRARY
+  VERSION_VAR VDT_VERSION)
+
 
 if(VDT_FOUND)
   set(VDT_INCLUDE_DIRS ${VDT_INCLUDE_DIR})
@@ -71,12 +73,12 @@ if(VDT_FOUND)
   endif()
 
   if(NOT TARGET VDT::VDT)
-    add_library(VDT::VDT UNKNOWN IMPORTED)
+    add_library(VDT::VDT SHARED IMPORTED)
+    target_include_directories(VDT::VDT SYSTEM INTERFACE ${VDT_INCLUDE_DIRS})
 
     set_target_properties(VDT::VDT
       PROPERTIES
         IMPORTED_LOCATION "${VDT_LIBRARY}"
-        INTERFACE_INCLUDE_DIRECTORIES "${VDT_INCLUDE_DIRS}"
     )
   endif()
 endif()

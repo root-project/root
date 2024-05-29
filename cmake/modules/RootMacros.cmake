@@ -591,6 +591,11 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   #---Get the library and module dependencies-----------------
   if(ARG_DEPENDENCIES)
     foreach(dep ${ARG_DEPENDENCIES})
+      if(NOT TARGET G__${dep})
+        # This is a library that doesn't come with dictionary/pcm
+        continue()
+      endif()
+
       set(dependent_pcm ${libprefix}${dep}_rdict.pcm)
       if (runtime_cxxmodules AND NOT dep IN_LIST local_no_cxxmodules)
         set(dependent_pcm ${dep}.pcm)
@@ -700,7 +705,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   if(TARGET "${ARG_MODULE}" AND NOT "${ARG_MODULE}" STREQUAL "${dictionary}")
     add_library(${dictionary} OBJECT ${dictionary}.cxx)
     set_target_properties(${dictionary} PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-    target_sources(${ARG_MODULE} PRIVATE $<TARGET_OBJECTS:${dictionary}>)
+    target_link_libraries(${ARG_MODULE} PRIVATE ${dictionary})
 
     target_compile_options(${dictionary} PRIVATE
       $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_OPTIONS>)
@@ -711,8 +716,16 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     target_compile_features(${dictionary} PRIVATE
       $<TARGET_PROPERTY:${ARG_MODULE},COMPILE_FEATURES>)
 
-    target_include_directories(${dictionary} PRIVATE
-      ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+    target_include_directories(${dictionary} PRIVATE ${incdirs} $<TARGET_PROPERTY:${ARG_MODULE},INCLUDE_DIRECTORIES>)
+
+    # Above we are copying all include directories of the module, irrespective of whether they are system includes.
+    # CMake copies them as -I even when they should be -isystem.
+    # We can fix this for INTERFACE includes by also copying the respective property.
+    # For PRIVATE includes this doesn't work. In that case, one needs to link both the library as well as the dictionary explicitly:
+    #   target_link_libraries(MODULE PRIVATE dependency)
+    #   target_link_libraries(G__MODULE PRIVATE dependency)
+    set_property(TARGET ${dictionary} APPEND PROPERTY
+      INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:${ARG_MODULE},INTERFACE_SYSTEM_INCLUDE_DIRECTORIES>)
   else()
     get_filename_component(dictionary_name ${dictionary} NAME)
     add_custom_target(${dictionary_name} DEPENDS ${dictionary}.cxx ${pcm_name} ${rootmap_name} ${cpp_module_file})
@@ -881,9 +894,10 @@ endfunction()
 
 #---------------------------------------------------------------------------------------------------
 #---ROOT_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
-#                        [NOINSTALL] LIBRARIES library1 library2 ...
-#                        DEPENDENCIES dep1 dep2
-#                        BUILTINS dep1 dep2)
+#                        [NOINSTALL]
+#                        LIBRARIES library1 library2 ... # PRIVATE link dependencies
+#                        DEPENDENCIES dep1 dep2          # PUBLIC link dependencies
+#                        BUILTINS dep1 dep2              # dependencies to builtins)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
   CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
@@ -896,8 +910,7 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
   set(library_name ${library})
   if(TARGET ${library})
-    message("Target ${library} already exists. Renaming target name to ${library}_new")
-    set(library ${library}_new)
+    message(FATAL_ERROR "Target ${library} already exists.")
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
     if(MSVC)
@@ -905,15 +918,28 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
-    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
     set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     add_library( ${library} ${_all} ${ARG_TYPE} ${lib_srcs})
     if(ARG_TYPE STREQUAL SHARED)
       set_target_properties(${library} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
     endif()
-    target_link_libraries(${library} PUBLIC ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
   endif()
+
+  # Manage dependencies:
+  target_link_libraries(${library} PUBLIC ${ARG_DEPENDENCIES})
+  target_link_libraries(${library} PRIVATE ${ARG_LIBRARIES})
+
+  if(TARGET G__${library})
+    add_dependencies(${library} G__${library})
+  endif()
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    add_dependencies(${library} move_headers)
+  endif()
+  set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
+
+  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
+
 
   if(DEFINED CMAKE_CXX_STANDARD)
     target_compile_features(${library} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
@@ -925,84 +951,8 @@ function(ROOT_LINKER_LIBRARY library)
     endif()
   endif()
 
-  ROOT_ADD_INCLUDE_DIRECTORIES(${library})
-
-  if(PROJECT_NAME STREQUAL "ROOT")
-    set(dep_list)
-    if(ARG_DEPENDENCIES)
-      foreach(lib ${ARG_DEPENDENCIES})
-        if((TARGET ${lib}) AND NOT (${lib} STREQUAL Core))
-          # Include directories property is different for INTERFACE libraries
-          get_target_property(_target_type ${lib} TYPE)
-          if(${_target_type} STREQUAL "INTERFACE_LIBRARY")
-            get_target_property(lib_incdirs ${lib} INTERFACE_INCLUDE_DIRECTORIES)
-          else()
-            get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
-          endif()
-          if(lib_incdirs)
-            foreach(dir ${lib_incdirs})
-              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
-              if(NOT ${dir} MATCHES "^[$]")
-                list(APPEND dep_list ${dir})
-              endif()
-            endforeach()
-          endif()
-        endif()
-      endforeach()
-    endif()
-    if(dep_list)
-      list(REMOVE_DUPLICATES dep_list)
-    endif()
-    foreach(incl ${dep_list})
-       target_include_directories(${library} PRIVATE ${incl})
-    endforeach()
-  endif()
-
-  if(PROJECT_NAME STREQUAL "ROOT")
-    set(dep_inc_list)
-    if(ARG_LIBRARIES)
-      foreach(lib ${ARG_LIBRARIES})
-        if(TARGET ${lib})
-          get_target_property(_target_type ${lib} TYPE)
-          if(${_target_type} STREQUAL "INTERFACE_LIBRARY")
-            get_target_property(lib_incdirs ${lib} INTERFACE_INCLUDE_DIRECTORIES)
-            get_target_property(lib_rpath   ${lib} INTERFACE_BUILD_RPATH)
-          else()
-            get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
-            get_target_property(lib_rpath   ${lib} BUILD_RPATH)
-          endif()
-          if(lib_incdirs)
-            foreach(dir ${lib_incdirs})
-              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
-              if(NOT ${dir} MATCHES "^[$]")
-                list(APPEND dep_inc_list ${dir})
-              endif()
-            endforeach()
-          endif()
-          if(lib_rpath)
-            set_target_properties(${library} PROPERTIES BUILD_RPATH ${lib_rpath})
-          endif()
-        endif()
-      endforeach()
-    endif()
-    if(dep_inc_list)
-      list(REMOVE_DUPLICATES dep_inc_list)
-      foreach(incl ${dep_inc_list})
-         target_include_directories(${library} PRIVATE ${incl})
-      endforeach()
-    endif()
-  endif()
-
-  if(TARGET G__${library})
-    add_dependencies(${library} G__${library})
-  endif()
-  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
-    add_dependencies(${library} move_headers)
-  endif()
-  set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
-  set_target_properties(${library} PROPERTIES INTERFACE_LINK_LIBRARIES "${ARG_DEPENDENCIES}")
-  target_include_directories(${library} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
@@ -1274,8 +1224,8 @@ endfunction()
 #                                 [NO_SOURCES]                 : don't glob to fill SOURCES variable
 #                                 [OBJECT_LIBRARY]             : use ROOT_OBJECT_LIBRARY to generate object files
 #                                                                and then use those for linking.
-#                                 LIBRARIES lib1 lib2          : linking flags such as dl, readline
-#                                 DEPENDENCIES lib1 lib2       : dependencies such as Core, MathCore
+#                                 LIBRARIES lib1 lib2          : private arguments for target_link_library()
+#                                 DEPENDENCIES lib1 lib2       : PUBLIC arguments for target_link_library() such as Core, MathCore
 #                                 BUILTINS builtin1 builtin2   : builtins like AFTERIMAGE
 #                                 LINKDEF LinkDef.h            : linkdef file, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
@@ -1407,32 +1357,7 @@ function(ROOT_EXECUTABLE executable)
     set(exe_srcs ${exe_srcs} ${ROOT_RC_SCRIPT})
   endif()
   add_executable(${executable} ${_all} ${exe_srcs})
-  target_link_libraries(${executable} ${ARG_LIBRARIES})
-
-  if(PROJECT_NAME STREQUAL "ROOT")
-    set(dep_list)
-    if(ARG_LIBRARIES)
-      foreach(lib ${ARG_LIBRARIES})
-        if(TARGET ${lib})
-          get_target_property(lib_incdirs ${lib} INCLUDE_DIRECTORIES)
-          if(lib_incdirs)
-            foreach(dir ${lib_incdirs})
-              ROOT_REPLACE_BUILD_INTERFACE(dir ${dir})
-              if(NOT ${dir} MATCHES "^[$]")
-                list(APPEND dep_list ${dir})
-              endif()
-            endforeach()
-          endif()
-        endif()
-      endforeach()
-    endif()
-    if(dep_list)
-      list(REMOVE_DUPLICATES dep_list)
-      foreach(incl ${dep_list})
-         target_include_directories(${executable} PRIVATE ${incl})
-      endforeach()
-    endif()
-  endif()
+  target_link_libraries(${executable} PRIVATE ${ARG_LIBRARIES})
 
   if(WIN32 AND ${executable} MATCHES \\.exe)
     set_target_properties(${executable} PROPERTIES SUFFIX "")
@@ -1516,7 +1441,7 @@ set(ROOT_TEST_DRIVER ${CMAKE_CURRENT_LIST_DIR}/RootTestDriver.cmake)
 function(ROOT_ADD_TEST test)
   CMAKE_PARSE_ARGUMENTS(ARG "DEBUG;WILLFAIL;CHECKOUT;CHECKERR;RUN_SERIAL"
                             "TIMEOUT;BUILD;INPUT;OUTPUT;ERROR;SOURCE_DIR;BINARY_DIR;WORKING_DIR;PROJECT;PASSRC;RESOURCE_LOCK"
-                            "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;COMPILEMACROS;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
+                            "COMMAND;COPY_TO_BUILDDIR;DIFFCMD;OUTCNV;OUTCNVCMD;PRECMD;POSTCMD;ENVIRONMENT;DEPENDS;PASSREGEX;OUTREF;ERRREF;FAILREGEX;LABELS;PYTHON_DEPS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED;PROPERTIES"
                             ${ARGN})
 
   #- Handle COMMAND argument
@@ -1747,18 +1672,14 @@ function(ROOT_ADD_TEST test)
     set_tests_properties(${test} PROPERTIES LABELS "${ARG_LABELS}")
   endif()
 
-  if(ARG_PYTHON_DEPS)
-    foreach(python_dep ${ARG_PYTHON_DEPS})
-      if(NOT TEST test-import-${python_dep})
-        add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
-        set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP requires_${python_dep})
-      endif()
-      list(APPEND fixtures "requires_${python_dep}")
-    endforeach()
-    if(fixtures)
-      set_tests_properties(${test} PROPERTIES FIXTURES_REQUIRED "${fixtures}")
+  foreach(python_dep ${ARG_PYTHON_DEPS})
+    set(fixture_name requires_${python_dep})
+    set_property(TEST ${test} APPEND PROPERTY FIXTURES_REQUIRED ${fixture_name})
+    if(NOT TEST test-import-${python_dep})
+      add_test(NAME test-import-${python_dep} COMMAND ${Python3_EXECUTABLE} -c "import ${python_dep}")
+      set_tests_properties(test-import-${python_dep} PROPERTIES FIXTURES_SETUP ${fixture_name})
     endif()
-  endif()
+  endforeach()
 
   if(ARG_RUN_SERIAL)
     set_property(TEST ${test} PROPERTY RUN_SERIAL true)
@@ -1833,9 +1754,9 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  target_link_libraries(${test_suite} gtest_main gmock gmock_main)
+  target_link_libraries(${test_suite} PRIVATE gtest gtest_main gmock gmock_main)
   if(TARGET ROOT::TestSupport)
-    target_link_libraries(${test_suite} ROOT::TestSupport)
+    target_link_libraries(${test_suite} PRIVATE ROOT::TestSupport)
   else()
     message(WARNING "ROOT_ADD_GTEST(${test_suite} ...): The target ROOT::TestSupport is missing. It looks like the test is declared against a ROOT build that is configured with -Dtesting=OFF.
             If this test sends warning or error messages, this will go unnoticed.")

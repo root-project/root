@@ -85,6 +85,16 @@ if(NOT builtin_nlohmannjson)
       set(builtin_nlohmannjson ON CACHE BOOL "Enabled because nlohmann/json.hpp not found" FORCE)
     endif()
   endif()
+
+  # ROOTEve wants to know if it comes with json_fwd.hpp:
+  if(TARGET nlohmann_json::nlohmann_json)
+    get_target_property(inc_dirs nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
+    foreach(dir ${inc_dirs})
+      if(EXISTS "${dir}/nlohmann/json_fwd.hpp")
+        target_compile_definitions(nlohmann_json::nlohmann_json INTERFACE NLOHMANN_JSON_PROVIDES_FWD_HPP)
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(builtin_nlohmannjson)
@@ -678,7 +688,7 @@ if(ssl AND NOT builtin_openssl)
   if(fail-on-missing)
     find_package(OpenSSL REQUIRED)
   else()
-    find_package(OpenSSL)
+    find_package(OpenSSL COMPONENTS SSL)
     if(NOT OPENSSL_FOUND)
       if(NOT APPLE) # builtin OpenSSL is only supported on macOS
         message(STATUS "Switching OFF 'ssl' option.")
@@ -1492,14 +1502,16 @@ if(vdt OR builtin_vdt)
           set(builtin_vdt ON CACHE BOOL "Enabled because external vdt not found (${vdt_description})" FORCE)
         endif()
       endif()
-    endif()
+     else()
+       add_library(VDT ALIAS VDT::VDT)
+     endif()
   endif()
   if(builtin_vdt)
     set(vdt_version 0.4.4)
     set(VDT_FOUND True)
     set(VDT_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
-      VDT
+      BUILTIN_VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
       URL_HASH SHA256=8b1664b45ec82042152f89d171dd962aea9bb35ac53c8eebb35df1cb9c34e498
       INSTALL_DIR ${CMAKE_BINARY_DIR}
@@ -1516,12 +1528,19 @@ if(vdt OR builtin_vdt)
       TIMEOUT 600
     )
     ExternalProject_Add_Step(
-       VDT copy2externals
+       BUILTIN_VDT copy2externals
        COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/vdt ${CMAKE_BINARY_DIR}/ginclude/vdt
        DEPENDEES install
     )
     set(VDT_INCLUDE_DIR ${CMAKE_BINARY_DIR}/ginclude)
     set(VDT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
+    if(NOT TARGET VDT)
+      add_library(VDT IMPORTED SHARED)
+      add_dependencies(VDT BUILTIN_VDT)
+      set_target_properties(VDT PROPERTIES IMPORTED_LOCATION "${VDT_LIBRARIES}")
+      target_include_directories(VDT INTERFACE $<BUILD_INTERFACE:${VDT_INCLUDE_DIR}> $<INSTALL_INTERFACE:include/>)
+    endif()
+
     install(FILES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}vdt${CMAKE_SHARED_LIBRARY_SUFFIX}
             DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/include/vdt

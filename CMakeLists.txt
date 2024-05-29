@@ -735,7 +735,7 @@ if(testing)
                          remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
        endif()
     endif()
-    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix ${originurl})
+    string(REGEX REPLACE "/root(test)?(\.git)?$" "" originprefix "${originurl}")
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
