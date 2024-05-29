@@ -195,7 +195,7 @@ protected:
    /// point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
    /// of fCompressor.  Thus, the buffer pointed to by the RSealedPage should never be freed.
    /// Usage of this method requires construction of fCompressor.
-   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting);
+   RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
    /// Seal a page using the provided buffer.
    static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
