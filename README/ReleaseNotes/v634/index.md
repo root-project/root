@@ -78,6 +78,14 @@ The following people have contributed to this new version:
 
 ## TTree Libraries
 
+## RDataFrame
+
+* The `GetColumnNames` function to retrieve the number of available column names in the RDataFrame object is now also
+  usable from a node of a distributed computation graph. This makes the generation of said computation graph slightly
+  less lazy than before. Notably, it used to be the case that a distributed computation graph could be defined with
+  code that was not yet available on the user's local application, but that would only become available in the
+  distributed worker. Now a call such as `df.Define("mycol", "return run_my_fun();")` needs to be at least declarable
+  to the interpreter also locally so that the column can be properly tracked.
 
 ## Histogram Libraries
 
