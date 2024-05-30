@@ -46,7 +46,7 @@ using namespace ROOT::RDF::Experimental;
 
 // Define functions needed in the analysis
 // Select events for the analysis
-bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e, \
+bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e,
                            const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0)
 {
    for (size_t i = 0; i < type.size(); i++) {
