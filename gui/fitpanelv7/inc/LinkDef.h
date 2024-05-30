@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel+;
 #pragma link C++ struct ROOT::Experimental::RFitPanelModel::RComboBoxItem+;

@@ -10,7 +10,7 @@
 
 #include "RConfigure.h"
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma link off all globals;
 #pragma link off all classes;
