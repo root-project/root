@@ -3,7 +3,7 @@
 
 
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 #pragma extra_include "Math/IFunctionfwd.h";
 #pragma extra_include "Math/IFunction.h";
