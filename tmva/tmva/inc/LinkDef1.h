@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 #include "RConfigure.h"
 
