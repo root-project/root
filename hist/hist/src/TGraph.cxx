@@ -422,6 +422,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 /// `filename` is assumed to contain at least two columns of numbers.
 /// The string format is by default `"%lg %lg"`.
 /// This is a standard c formatting for `scanf()`.
+/// For example, set format to  `"%lg,%lg"` for a comma-separated file.
 ///
 /// If columns of numbers should be skipped, a `"%*lg"` or `"%*s"` for each column
 /// can be added,  e.g. `"%lg %*lg %lg"` would read x-values from the first and
@@ -553,6 +554,10 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       delete token ;
    }
    infile.close();
+   if (fNpoints == 0) {
+      Warning("TGraph", "No points were found in file %s with the specified input format %s", filename, format);
+      return;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
