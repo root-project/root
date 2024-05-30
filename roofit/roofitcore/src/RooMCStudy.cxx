@@ -157,7 +157,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   const RooArgSet* cParsTmp = pc.getSet("cPars") ;
   const RooArgSet* extCons = pc.getSet("extCons") ;
 
-  RooArgSet* cPars = new RooArgSet ;
+  auto cPars = std::make_unique<RooArgSet>();
   if (cParsTmp) {
     cPars->add(*cParsTmp) ;
   }
