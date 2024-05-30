@@ -100,6 +100,9 @@ target_include_directories(rootcling PRIVATE
 set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+  if(CMAKE_GENERATOR MATCHES Ninja AND CMAKE_BUILD_TYPE MATCHES Debug)
+    set_property(TARGET rootcling APPEND_STRING PROPERTY LINK_FLAGS " -STACK:4000000")
+  endif()
 endif()
 
 # Create aliases: rootcint, genreflex.

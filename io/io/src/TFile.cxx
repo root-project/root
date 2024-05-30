@@ -3249,6 +3249,11 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
       } else {
          sOpt = gSystem->GetFlagsDebug();
       }
+#if defined(_MSC_VER) && !defined(NDEBUG)
+      // if ROOT is build in debug mode, ACLiC must also build in debug mode
+      // for compatibility reasons
+      sOpt = gSystem->GetFlagsDebug();
+#endif
       cmd.ReplaceAll("$Opt", sOpt);
 
       if (genreflex) {

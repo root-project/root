@@ -30,7 +30,5 @@ if (opengl)
 endif()
 
 if(webgui AND root7)
-  if(NOT (MSVC AND CMAKE_GENERATOR MATCHES Ninja AND CMAKE_BUILD_TYPE MATCHES Debug))
-    add_subdirectory(eve7) # special CMakeLists.txt
-  endif()
+  add_subdirectory(eve7) # special CMakeLists.txt
 endif()
