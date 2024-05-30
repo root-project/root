@@ -41,6 +41,7 @@ TEST(RNTuple, VariantSizeAlignment)
    using CharArray4_t = std::array<char, 4>;
    using CharArray5_t = std::array<char, 5>;
    using VariantOfOptional_t = std::variant<std::optional<int>, float>;
+   using VariantOfVariant_t = std::variant<std::variant<int, float>, float>;
 
    EXPECT_EQ(sizeof(std::variant<char>), RField<std::variant<char>>("f").GetValueSize());
    EXPECT_EQ(alignof(std::variant<char>), RField<std::variant<char>>("f").GetAlignment());
@@ -58,6 +59,8 @@ TEST(RNTuple, VariantSizeAlignment)
    EXPECT_EQ(alignof(std::variant<CustomStruct>), RField<std::variant<CustomStruct>>("f").GetAlignment());
    EXPECT_EQ(sizeof(VariantOfOptional_t), RField<VariantOfOptional_t>("f").GetValueSize());
    EXPECT_EQ(alignof(VariantOfOptional_t), RField<VariantOfOptional_t>("f").GetAlignment());
+   EXPECT_EQ(sizeof(VariantOfVariant_t), RField<VariantOfVariant_t>("f").GetValueSize());
+   EXPECT_EQ(alignof(VariantOfVariant_t), RField<VariantOfVariant_t>("f").GetAlignment());
 }
 
 TEST(RNTuple, VariantLimits)
@@ -137,24 +140,31 @@ TEST(RNTuple, VariantComplex)
 
    {
       auto model = RNTupleModel::Create();
-      auto ptrVec = model->MakeField<std::vector<std::variant<std::optional<int>, float>>>("v");
+      auto ptrVec1 = model->MakeField<std::vector<std::variant<std::optional<int>, float>>>("v1");
+      auto ptrVec2 = model->MakeField<std::vector<std::variant<std::variant<int, float>, float>>>("v2");
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
 
       for (int i = 0; i < 10; i++) {
-         ptrVec->clear();
+         ptrVec1->clear();
+         ptrVec2->clear();
 
          for (int j = 0; j < 5; ++j) {
-            std::variant<std::optional<int>, float> var;
+            std::variant<std::optional<int>, float> var1;
+            std::variant<std::variant<int, float>, float> var2;
             if (j % 2 == 0) {
                if (j % 4 == 0) {
-                  var = std::optional<int>();
+                  var1 = std::optional<int>();
+                  var2 = std::variant<int, float>(int(1));
                } else {
-                  var = std::optional<int>(42);
+                  var1 = std::optional<int>(42);
+                  var2 = std::variant<int, float>(float(2.0));
                }
             } else {
-               var = float(1.0);
+               var1 = float(1.0);
+               var2 = float(3.0);
             }
-            ptrVec->emplace_back(var);
+            ptrVec1->emplace_back(var1);
+            ptrVec2->emplace_back(var2);
          }
 
          writer->Fill();
@@ -162,21 +172,29 @@ TEST(RNTuple, VariantComplex)
    }
 
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
-   auto ptrVec = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::variant<std::optional<int>, float>>>("v");
+   auto ptrVec1 =
+      reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::variant<std::optional<int>, float>>>("v1");
+   auto ptrVec2 =
+      reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::variant<std::variant<int, float>, float>>>("v2");
    EXPECT_EQ(10u, reader->GetNEntries());
    for (int i = 0; i < 10; i++) {
       reader->LoadEntry(i);
-      EXPECT_EQ(5u, ptrVec->size());
+      EXPECT_EQ(5u, ptrVec1->size());
+      EXPECT_EQ(5u, ptrVec2->size());
       for (int j = 0; j < 5; ++j) {
-         EXPECT_EQ(j % 2, ptrVec->at(j).index());
+         EXPECT_EQ(j % 2, ptrVec1->at(j).index());
+         EXPECT_EQ(j % 2, ptrVec2->at(j).index());
          if (j % 2 == 0) {
             if (j % 4 == 0) {
-               EXPECT_FALSE(std::get<0>(ptrVec->at(j)));
+               EXPECT_FALSE(std::get<0>(ptrVec1->at(j)));
+               EXPECT_EQ(1, std::get<0>(std::get<0>(ptrVec2->at(j))));
             } else {
-               EXPECT_EQ(42, std::get<0>(ptrVec->at(j)));
+               EXPECT_EQ(42, std::get<0>(ptrVec1->at(j)));
+               EXPECT_FLOAT_EQ(2.0, std::get<1>(std::get<0>(ptrVec2->at(j))));
             }
          } else {
-            EXPECT_FLOAT_EQ(1.0, std::get<1>(ptrVec->at(j)));
+            EXPECT_FLOAT_EQ(1.0, std::get<1>(ptrVec1->at(j)));
+            EXPECT_FLOAT_EQ(3.0, std::get<1>(ptrVec2->at(j)));
          }
       }
    }
