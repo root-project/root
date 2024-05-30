@@ -91,8 +91,8 @@ The current (class version 5) **ROOT::Experimental::RNTuple** object has the fol
 
 When serialized to disk, a 64 bit checksum is appended to the anchor, calculated as the XXH3 hash of
 all the (serialized) fields of the anchor object.
-As of today, the anchor is allow to evolve only by appending new fields to the existing schema, but
-fields must not be removed, renamed or reordered.
+The anchor may evolve in future versions only by appending new fields to the existing schema, but
+fields will not be removed, renamed or reordered.
 
 
 ## Compression Block
