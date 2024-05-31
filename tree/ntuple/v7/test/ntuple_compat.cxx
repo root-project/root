@@ -65,43 +65,16 @@ TEST(RNTupleCompat, FeatureFlag)
    }
 }
 
-namespace fwd_compat {
-
-class RHandcraftedKeyRNTuple : public TKey {
-public:
-   RHandcraftedKeyRNTuple() = default;
-
-   RHandcraftedKeyRNTuple(TFile *file, std::size_t keyLen, std::size_t objLen) : TKey(file)
-   {
-      fClassName = RNTuple::Class_Name();
-      fKeylen = keyLen;
-      fObjlen = objLen;
-   }
-
-   /// Register a new key for a data record of size nbytes
-   void Reserve(size_t nbytes, std::uint64_t *seekKey)
-   {
-      Create(nbytes);
-      *seekKey = fSeekKey;
-   }
-
-   ClassDefInlineOverride(RHandcraftedKeyRNTuple, 0)
-};
-
-constexpr static const char *kNtupleObjName = "ntpl";
-
-} // namespace fwd_compat
-
-using ROOT::Experimental::RXTuple;
-
-TEST(RNTupleCompat, FwdCompat_ValidNTuple)
+TEST(RNTupleCompat, FwdCompat_FutureNTuple)
 {
-   using namespace fwd_compat;
+   using ROOT::Experimental::RXTuple;
 
-   // Write a valid hand-crafted RNTuple to disk and verify we can read it.
-   FileRaii fileGuard("test_ntuple_compat_fwd_compat_good.root");
-   fileGuard.PreserveFile();
+   constexpr static const char *kNtupleObjName = "ntpl";
 
+   FileRaii fileGuard("test_ntuple_compat_fwd_compat_future_ntuple.root");
+
+   // Write an RXTuple to disk. It is a simulacrum of a future version of RNTuple, with additional fields and a higher
+   // class version.
    {
       auto file = std::unique_ptr<TFile>(
          TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", "", ROOT::RCompressionSetting::ELevel::kUncompressed));
@@ -130,7 +103,7 @@ TEST(RNTupleCompat, FwdCompat_ValidNTuple)
       std::size_t pos = 0;
       while ((pos = file_view.find("XTuple"), pos) != std::string_view::npos) {
          filebuf[pos] = 'N';
-         pos += 6; // skip 'XTuple'
+         pos += 6; // skip "XTuple"
       }
 
       fseek(f, 0, SEEK_SET);
@@ -140,6 +113,7 @@ TEST(RNTupleCompat, FwdCompat_ValidNTuple)
       delete[] filebuf;
    }
 
+   // Read back the RNTuple from the future with TFile
    {
       auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       assert(!tfile->IsZombie());
@@ -154,5 +128,22 @@ TEST(RNTupleCompat, FwdCompat_ValidNTuple)
       EXPECT_EQ(ntuple->GetSeekFooter(), RXTuple{}.fSeekFooter);
       EXPECT_EQ(ntuple->GetNBytesFooter(), RXTuple{}.fNBytesFooter);
       EXPECT_EQ(ntuple->GetLenFooter(), RXTuple{}.fLenFooter);
+   }
+
+   // Then read it back with RMiniFile
+   {
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      auto ntuple = reader.GetNTuple(kNtupleObjName).Unwrap();
+      EXPECT_EQ(ntuple.GetVersionEpoch(), RXTuple{}.fVersionEpoch);
+      EXPECT_EQ(ntuple.GetVersionMajor(), RXTuple{}.fVersionMajor);
+      EXPECT_EQ(ntuple.GetVersionMinor(), RXTuple{}.fVersionMinor);
+      EXPECT_EQ(ntuple.GetVersionPatch(), RXTuple{}.fVersionPatch);
+      EXPECT_EQ(ntuple.GetSeekHeader(), RXTuple{}.fSeekHeader);
+      EXPECT_EQ(ntuple.GetNBytesHeader(), RXTuple{}.fNBytesHeader);
+      EXPECT_EQ(ntuple.GetLenHeader(), RXTuple{}.fLenHeader);
+      EXPECT_EQ(ntuple.GetSeekFooter(), RXTuple{}.fSeekFooter);
+      EXPECT_EQ(ntuple.GetNBytesFooter(), RXTuple{}.fNBytesFooter);
+      EXPECT_EQ(ntuple.GetLenFooter(), RXTuple{}.fLenFooter);
    }
 }
