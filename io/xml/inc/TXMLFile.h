@@ -49,7 +49,7 @@ private:
 
 public:
    TXMLFile() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TXMLFile(const char *filename, Option_t *option = "read", const char *title = "title", Int_t compression = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TXMLFile() override;
 
    void Close(Option_t *option = "") final; // *MENU*

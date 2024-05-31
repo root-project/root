@@ -2762,9 +2762,10 @@ void TBranch::SetBufferAddress(TBuffer* buf)
 
 void TBranch::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompress = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -2788,7 +2789,8 @@ void TBranch::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+         algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 

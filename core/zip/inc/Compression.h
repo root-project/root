@@ -44,72 +44,77 @@ namespace ROOT {
 ///  - ZSTD is recommended to be used with compression level 5 [505]
 
 struct RCompressionSetting {
-   struct EDefaults { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
-                      /// used.
-      enum EValues {
-         /// Use the global compression setting for this process; may be affected by rootrc.
-         kUseGlobal = 0,
-         /// Use the compile-time default setting
-         kUseCompiledDefault = 101,
-         /// Use the default analysis setting; fast reading but poor compression ratio
-         kUseAnalysis = 404,
-         /// Use the new recommended general-purpose setting; it is a best trade-off between compression
-         /// ratio/decompression speed
-         kUseGeneralPurpose = 505,
-         /// Use the setting that results in the smallest files; very slow read and write
-         kUseSmallest = 207,
-      };
-   };
-   struct ELevel { /// Note: this is only temporarily a struct and will become a enum class hence the name convention
-                   /// used.
-      enum EValues {
-         /// Some objects use this value to denote that the compression algorithm
-         /// should be inherited from the parent object
-         kInherit = -1,
-         /// Compression level reserved for "uncompressed state"
-         kUncompressed = 0,
-         /// Compression level reserved when we are not sure what to use (1 is for the fastest compression)
-         kUseMin = 1,
-         /// Compression level reserved for ZLIB compression algorithm (fastest compression)
-         kDefaultZLIB = 1,
-         /// Compression level reserved for LZ4 compression algorithm (trade-off between file ratio/decompression speed)
-         kDefaultLZ4 = 4,
-         /// Compression level reserved for ZSTD compression algorithm (trade-off between file ratio/decompression
-         /// speed)
-         kDefaultZSTD = 5,
-         /// Compression level reserved for old ROOT compression algorithm
-         kDefaultOld = 6,
-         /// Compression level reserved for LZMA compression algorithm (slowest compression with smallest files)
-         kDefaultLZMA = 7
-      };
-   };
-   struct EAlgorithm { /// Note: this is only temporarily a struct and will become a enum class hence the name
-                       /// convention used.
-      enum EValues {
-         /// Some objects use this value to denote that the compression algorithm
-         /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
-         kInherit = -1,
-         /// Use the global compression algorithm
-         kUseGlobal = 0,
-         /// Use ZLIB compression
-         kZLIB,
-         /// Use LZMA compression
-         kLZMA,
-         /// Use the old compression algorithm
-         kOldCompressionAlgo,
-         /// Use LZ4 compression
-         kLZ4,
-         /// Use ZSTD compression
-         kZSTD,
-         /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
-         kUndefined
-      };
+   enum class EDefaults {
+      /// Use the global compression setting for this process; may be affected by rootrc.
+      kUseGlobal = 0,
+      /// Use the compile-time default setting
+      kUseCompiledDefault = 101,
+      /// Use the default analysis setting; fast reading but poor compression ratio
+      kUseAnalysis = 404,
+      /// Use the new recommended general-purpose setting; it is a best trade-off between compression
+      /// ratio/decompression speed
+      kUseGeneralPurpose = 505,
+      /// Use the setting that results in the smallest files; very slow read and write
+      kUseSmallest = 207,
    };
 
-   static std::string AlgorithmToString(EAlgorithm::EValues algorithm);
+   enum class ELevel {
+      /// Some objects use this value to denote that the compression algorithm
+      /// should be inherited from the parent object
+      kInherit = -1,
+      /// Compression level reserved for "uncompressed state"
+      kUncompressed = 0,
+      /// Compression level reserved when we are not sure what to use (1 is for the fastest compression)
+      kUseMin = 1,
+      /// Compression level reserved for ZLIB compression algorithm (fastest compression)
+      kDefaultZLIB = 1,
+      /// Compression level reserved for LZ4 compression algorithm (trade-off between file ratio/decompression speed)
+      kDefaultLZ4 = 4,
+      /// Compression level reserved for ZSTD compression algorithm (trade-off between file ratio/decompression
+      /// speed)
+      kDefaultZSTD = 5,
+      /// Compression level reserved for old ROOT compression algorithm
+      kDefaultOld = 6,
+      /// Compression level reserved for LZMA compression algorithm (slowest compression with smallest files)
+      kDefaultLZMA = 7
+   };
+
+   enum class EAlgorithm {
+      /// Some objects use this value to denote that the compression algorithm
+      /// should be inherited from the parent object (e.g., TBranch should get the algorithm from the TTree)
+      kInherit = -1,
+      /// Use the global compression algorithm
+      kUseGlobal = 0,
+      /// Use ZLIB compression
+      kZLIB,
+      /// Use LZMA compression
+      kLZMA,
+      /// Use the old compression algorithm
+      kOldCompressionAlgo,
+      /// Use LZ4 compression
+      kLZ4,
+      /// Use ZSTD compression
+      kZSTD,
+      /// Undefined compression algorithm (must be kept the last of the list in case a new algorithm is added).
+      kUndefined
+   };
+
+   static const char *AlgorithmToString(EAlgorithm algorithm);
 };
 
 // clang-format off
+#define COMPRESSION_SETTINGS_IMPL_OPERATOR_EQ(Type) \
+   inline constexpr bool operator==(Type a, int b) { return static_cast<int>(a) == b; } \
+   inline constexpr bool operator!=(Type a, int b) { return static_cast<int>(a) != b; } \
+   inline constexpr bool operator==(int a, Type b) { return b == a; } \
+   inline constexpr bool operator!=(int a, Type b) { return b != a; }
+
+COMPRESSION_SETTINGS_IMPL_OPERATOR_EQ(RCompressionSetting::EAlgorithm)
+COMPRESSION_SETTINGS_IMPL_OPERATOR_EQ(RCompressionSetting::EDefaults)
+COMPRESSION_SETTINGS_IMPL_OPERATOR_EQ(RCompressionSetting::ELevel)
+
+#undef COMPRESSION_SETTINGS_IMPL_OPERATOR_EQ
+
 enum R__DEPRECATED(6, 34, "Use RCompressionSetting instead") ECompressionAlgorithm {
    kUseGlobalCompressionSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
    kUseGlobalSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
@@ -121,7 +126,7 @@ enum R__DEPRECATED(6, 34, "Use RCompressionSetting instead") ECompressionAlgorit
    kUndefinedCompressionAlgorithm = static_cast<int>(RCompressionSetting::EAlgorithm::kUndefined)
 };
 
-int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel);
+int CompressionSettings(RCompressionSetting::EAlgorithm algorithm, int compressionLevel);
 
 int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel)
    R__DEPRECATED(6, 34, "Use the overload accepting RCompressionSetting::EAlgorithm instead");

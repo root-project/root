@@ -21,7 +21,8 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
+   using ECAlgo = ROOT::RCompressionSetting::EAlgorithm;
+
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
@@ -41,7 +42,6 @@ struct RSnapshotOptions {
    RSnapshotOptions(std::string_view mode, Int_t comprAlgo, int comprLevel, int autoFlush,
                                               int splitLevel, bool lazy, bool overwriteIfExists = false)
       : RSnapshotOptions(mode, static_cast<ECAlgo>(comprAlgo), comprLevel, autoFlush, splitLevel, lazy,
-
                          overwriteIfExists)
    {
    }

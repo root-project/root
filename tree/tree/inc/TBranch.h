@@ -191,8 +191,8 @@ private:
 
 public:
    TBranch();
-   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
-   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kInherit);
+   TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize=32000, Int_t compress = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kInherit);
    ~TBranch() override;
 
    virtual void      AddBasket(TBasket &b, bool ondisk, Long64_t startEntry);
@@ -272,9 +272,9 @@ public:
    virtual void      SetAutoDelete(bool autodel=true);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
-           void      SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
-           void      SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
-           void      SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+           void      SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+           void      SetCompressionLevel(Int_t level = (Int_t)ROOT::RCompressionSetting::ELevel::kUseMin);
+           void      SetCompressionSettings(Int_t settings = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, bool updateSubBranches = false);
    virtual void      SetFirstEntry(Long64_t entry);

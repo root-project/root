@@ -426,10 +426,10 @@ int main( int argc, char **argv )
          if (firstInput && !firstInput->IsZombie())
             newcomp = firstInput->GetCompressionSettings();
          else
-            newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
+            newcomp = static_cast<int>(ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
          delete firstInput;
       } else {
-         newcomp = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault;
+         newcomp = static_cast<int>(ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
       }
    }
    if (verbosity > 1) {

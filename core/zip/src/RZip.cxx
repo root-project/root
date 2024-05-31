@@ -49,17 +49,17 @@ static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigne
   speeds - sometimes by an order of magnitude.
 */
 #ifdef R__HAS_DEFAULT_ZSTD
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZSTD;
+ROOT::RCompressionSetting::EAlgorithm R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::kZSTD;
 #elif defined(R__HAS_DEFAULT_LZ4)
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kLZ4;
+ROOT::RCompressionSetting::EAlgorithm R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::kLZ4;
 #else
-ROOT::RCompressionSetting::EAlgorithm::EValues R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::EValues::kZLIB;
+ROOT::RCompressionSetting::EAlgorithm R__ZipMode = ROOT::RCompressionSetting::EAlgorithm::kZLIB;
 #endif
 
 /* ===========================================================================
    Function to set the ZipMode
  */
-extern "C" void R__SetZipMode(ROOT::RCompressionSetting::EAlgorithm::EValues mode)
+extern "C" void R__SetZipMode(ROOT::RCompressionSetting::EAlgorithm mode)
 {
    R__ZipMode = mode;
 }
@@ -76,7 +76,7 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 /*                      1 = zlib */
 /*                      2 = lzma */
 /*                      3 = old */
-void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
+void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, ROOT::RCompressionSetting::EAlgorithm compressionAlgorithm)
 {
   *irep = 0;
 

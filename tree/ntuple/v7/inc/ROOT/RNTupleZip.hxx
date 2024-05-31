@@ -69,7 +69,7 @@ public:
          return nbytes;
       }
 
-      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
+      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));
       int szTarget = kMAXZIPBUF;
@@ -109,7 +109,7 @@ public:
          return nbytes;
       }
 
-      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
+      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm>(compression / 100);
       int szSource = nbytes;
       char *source = const_cast<char *>(static_cast<const char *>(from));
       int szTarget = nbytes;
@@ -134,7 +134,7 @@ public:
          return nbytes;
       }
 
-      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compression / 100);
+      auto cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm>(compression / 100);
       unsigned int nZipBlocks = 1 + (nbytes - 1) / kMAXZIPBUF;
       char *source = const_cast<char *>(static_cast<const char *>(from));
       int szTarget = nbytes;

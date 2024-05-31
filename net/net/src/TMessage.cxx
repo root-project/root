@@ -45,7 +45,7 @@ ClassImp(TMessage);
 
 TMessage::TMessage(UInt_t what, Int_t bufsiz) :
    TBufferFile(TBuffer::kWrite, bufsiz + 2*sizeof(UInt_t)),
-   fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+   fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    // space at the beginning of the message reserved for the message length
    UInt_t   reserved = 0;
@@ -69,7 +69,7 @@ TMessage::TMessage(UInt_t what, Int_t bufsiz) :
 /// read from buf. Use the What() method to get the message type.
 
 TMessage::TMessage(void *buf, Int_t bufsize) : TBufferFile(TBuffer::kRead, bufsize, buf),
-                                               fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                                               fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    // skip space at the beginning of the message reserved for the message length
    fBufCur += sizeof(UInt_t);
@@ -241,10 +241,11 @@ void TMessage::SetWhat(UInt_t what)
 
 void TMessage::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
    Int_t newCompress;
    if (fCompress < 0) {
-      newCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      newCompress = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
       newCompress = 100 * algorithm + level;
@@ -270,7 +271,8 @@ void TMessage::SetCompressionLevel(Int_t level)
       newCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined)) 
+         algorithm = 0;
       newCompress = 100 * algorithm + level;
    }
    if (newCompress != fCompress && fBufComp) {
@@ -357,7 +359,7 @@ Int_t TMessage::Compress()
       else
          bufmax = kMAXZIPBUF;
       R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout,
-                              static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(compressionAlgorithm));
+                              static_cast<ROOT::RCompressionSetting::EAlgorithm>(compressionAlgorithm));
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
          delete [] fBufComp;

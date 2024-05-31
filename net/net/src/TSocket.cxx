@@ -75,7 +75,7 @@ ClassImp(TSocket);
 /// closed on program termination.
 
 TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
-         : TNamed(addr.GetHostName(), service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(addr.GetHostName(), service), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -120,7 +120,7 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
-         : TNamed(addr.GetHostName(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(addr.GetHostName(), ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -163,7 +163,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
-         : TNamed(host, service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(host, service), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -208,7 +208,7 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
-         : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(TUrl(url).GetHost(), ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -251,7 +251,7 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
 /// closed on program termination.
 
 TSocket::TSocket(const char *sockpath) : TNamed(sockpath, ""),
-                                         fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                                         fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -282,7 +282,7 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, ""),
 /// Create a socket. The socket will adopt previously opened TCP socket with
 /// descriptor desc.
 
-TSocket::TSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+TSocket::TSocket(Int_t desc) : TNamed("", ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -312,7 +312,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressionSetti
 /// this method to adopt e.g. a socket created via socketpair().
 
 TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
-                                                     fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                                                     fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -1045,9 +1045,10 @@ Int_t TSocket::GetErrorCode() const
 
 void TSocket::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompress = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
       fCompress = 100 * algorithm + level;
@@ -1066,7 +1067,8 @@ void TSocket::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+         algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 }

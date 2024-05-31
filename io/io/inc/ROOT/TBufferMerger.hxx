@@ -46,7 +46,7 @@ public:
     * @param compress Output file compression level
     */
    TBufferMerger(const char *name, Option_t *option = "RECREATE",
-                 Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+                 Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
    /** Constructor
     * @param output Output \c TFile

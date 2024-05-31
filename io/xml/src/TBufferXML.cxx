@@ -343,10 +343,10 @@ void TBufferXML::ShiftStack(const char *errinfo)
 
 void TBufferXML::SetCompressionAlgorithm(Int_t algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined)
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
       algorithm = 0;
    if (fCompressLevel < 0) {
-      fCompressLevel = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompressLevel = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompressLevel % 100;
       fCompressLevel = 100 * algorithm + level;
@@ -367,7 +367,7 @@ void TBufferXML::SetCompressionLevel(Int_t level)
       fCompressLevel = level;
    } else {
       int algorithm = fCompressLevel / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined)
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
          algorithm = 0;
       fCompressLevel = 100 * algorithm + level;
    }
@@ -398,8 +398,8 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
    char *fZipBuffer = nullptr;
 
    Int_t compressionLevel = GetCompressionLevel();
-   ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm =
-      static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(GetCompressionAlgorithm());
+   ROOT::RCompressionSetting::EAlgorithm compressionAlgorithm =
+      static_cast<ROOT::RCompressionSetting::EAlgorithm>(GetCompressionAlgorithm());
 
    if ((Length() > 512) && (compressionLevel > 0)) {
       int zipBufferSize = Length();

@@ -103,7 +103,7 @@ public:
            void        ls(Option_t *option="") const override;
            TDirectory *mkdir(const char *name, const char *title="", Bool_t returnExistingDirectory = kFALSE) override;
            TFile      *OpenFile(const char *name, Option_t *option= "",
-                            const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                            const char *ftitle = "", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                             Int_t netopt = 0) override;
            void        Purge(Short_t nkeep=1) override;
            void        ReadAll(Option_t *option="") override;

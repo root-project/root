@@ -168,7 +168,7 @@ std::string ROOT::Experimental::RNTupleInspector::GetCompressionSettingsAsString
    int algorithm = fCompressionSettings / 100;
    int level = fCompressionSettings - (algorithm * 100);
 
-   return RCompressionSetting::AlgorithmToString(static_cast<RCompressionSetting::EAlgorithm::EValues>(algorithm)) +
+   return std::string{RCompressionSetting::AlgorithmToString(static_cast<RCompressionSetting::EAlgorithm>(algorithm))} +
           " (level " + std::to_string(level) + ")";
 }
 

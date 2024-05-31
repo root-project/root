@@ -143,7 +143,7 @@ TEST(Cache, InternalColumnsSnapshot)
    auto colName = "tdfMySecretcol_";
    auto orig = tdf.Define(colName, [&f]() { return f++; }).Define("dummy", []() { return 0.f; });
    auto cached = orig.Cache<float, float>({colName, "dummy"});
-   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "",
+   auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", 
                                    {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, false});
 
    auto op = [&]() {
