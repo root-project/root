@@ -91,6 +91,10 @@ The current (class version 5) **ROOT::Experimental::RNTuple** object has the fol
 
 When serialized to disk, a 64 bit checksum is appended to the anchor, calculated as the XXH3 hash of
 all the (serialized) fields of the anchor object.
+
+Note that, since the anchor is serialized as a "classic" TFile key, all integers in the anchor, as well
+as the checksum, are encoded in **big-endian**, and not little-endian like in the RNTuple payload.
+
 The anchor may evolve in future versions only by appending new fields to the existing schema, but
 fields will not be removed, renamed or reordered.
 
