@@ -600,9 +600,14 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddDeferredColumnRanges
                const DescriptorId_t physicalId = c.GetPhysicalId();
                auto &columnRange = fCluster.fColumnRanges[physicalId];
                auto &pageRange = fCluster.fPageRanges[physicalId];
-               // Initialize a RColumnRange for `physicalId` if it was not there
+               // Initialize a RColumnRange for `physicalId` if it was not there. Columns that were created during model
+               // extension won't have on-disk metadata for the clusters that were already committed before the model
+               // was extended. Therefore, these need to be synthetically initialized upon reading.
                if (columnRange.fPhysicalColumnId == kInvalidDescriptorId) {
                   columnRange.fPhysicalColumnId = physicalId;
+                  columnRange.fFirstElementIndex = 0;
+                  columnRange.fNElements = 0;
+
                   pageRange.fPhysicalColumnId = physicalId;
                }
                // Fixup the RColumnRange and RPageRange in deferred columns.  We know what the first element index and
