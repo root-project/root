@@ -565,7 +565,7 @@ TClass *REveElement::IsA() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Export render-element to CINT with variable name var_name.
 
-void REveElement::ExportToCINT(const char *var_name)
+void REveElement::ExportToInterpreter(const char *var_name)
 {
    const char* cname = IsA()->GetName();
    gROOT->ProcessLine(TString::Format("%s* %s = (%s*)0x%zx;", cname, var_name, cname, (size_t)this));

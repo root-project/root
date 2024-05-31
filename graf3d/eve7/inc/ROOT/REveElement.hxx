@@ -190,7 +190,7 @@ public:
 
    TClass *IsA() const;
 
-   virtual void ExportToCINT(const char *var_name); // *MENU*
+   virtual void ExportToInterpreter(const char *var_name); // *MENU*
 
    virtual Bool_t AcceptElement(REveElement *el);
 
