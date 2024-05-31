@@ -85,7 +85,28 @@ void error_ellipse()
    ellipse->SetBaseVectors(v[0], v[1], v[2]);
    ellipse->Outline();
    event->AddElement(ellipse);
-   
+
+   // add TGeoSphere
+   auto sph = new REveGeoShape("Sphere");
+   sph->SetShape(new TGeoSphere(0.99f, 1.f));
+   sph->SetMainColor(kGreen);
+   sph->SetMainTransparency(80);
+   sph->SetNSegments(80);
+
+   float m0 = v[0].Mag();
+   v[0].Normalize();
+   float m1 = v[1].Mag();
+   v[1].Normalize();
+   float m2 = v[2].Mag();
+   v[2].Normalize();
+
+   sph->InitMainTrans();
+   sph->RefMainTrans().SetBaseVec(1, v[0].fX, v[0].fY, v[0].fZ);
+   sph->RefMainTrans().SetBaseVec(2, v[1].fX, v[1].fY, v[1].fZ);
+   sph->RefMainTrans().SetBaseVec(3, v[2].fX, v[2].fY, v[2].fZ);
+   sph->RefMainTrans().SetScale(m0, m1, m2);
+   event->AddElement(sph);
+
    auto ps = new REvePointSet("Vertices");
    ps->SetMainColor(kYellow);
    ps->SetNextPoint(pos[0], pos[1], pos[2]);
