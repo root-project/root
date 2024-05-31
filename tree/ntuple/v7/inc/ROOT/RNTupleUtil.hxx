@@ -63,6 +63,8 @@ struct RClusterSize {
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
+constexpr int kUnknownCompressionSettings = -1;
+
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
 template <typename SizeT>

@@ -232,7 +232,7 @@ public:
       ClusterSize_t fNElements = kInvalidClusterIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
-      std::int64_t fCompressionSettings = 0;
+      int fCompressionSettings = kUnknownCompressionSettings;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
