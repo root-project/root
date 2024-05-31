@@ -25,7 +25,7 @@ void ROOT::Experimental::RXTuple::Streamer(TBuffer &buf)
    } else {
       auto offCkData = buf.Length() + sizeof(UInt_t) + sizeof(Version_t);
       buf.WriteClassBuffer(RXTuple::Class(), this);
-      std::uint64_t checksum = XXH3_64bits(buf.Buffer() + offCkData, sizeof(RXTuple));
+      std::uint64_t checksum = XXH3_64bits(buf.Buffer() + offCkData, buf.Length() - offCkData);
       buf << checksum; 
    }
 }

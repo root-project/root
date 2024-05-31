@@ -1,3 +1,4 @@
+#include "Compression.h"
 #include "Rtypes.h"
 #include "ntuple_test.hxx"
 #include "TKey.h"
@@ -89,18 +90,6 @@ public:
 
 constexpr static const char *kNtupleObjName = "ntpl";
 
-#define EXPECT_CORRECT_NTUPLE(ntuple, epoch, major, minor, patch) \
-   EXPECT_EQ((ntuple).GetVersionEpoch(), epoch);                  \
-   EXPECT_EQ((ntuple).GetVersionMajor(), major);                  \
-   EXPECT_EQ((ntuple).GetVersionMinor(), minor);                  \
-   EXPECT_EQ((ntuple).GetVersionPatch(), patch);                  \
-   EXPECT_EQ((ntuple).GetSeekHeader(), 282);                      \
-   EXPECT_EQ((ntuple).GetNBytesHeader(), 393);                    \
-   EXPECT_EQ((ntuple).GetLenHeader(), 1470);                      \
-   EXPECT_EQ((ntuple).GetSeekFooter(), 1073);                     \
-   EXPECT_EQ((ntuple).GetNBytesFooter(), 82);                     \
-   EXPECT_EQ((ntuple).GetLenFooter(), 172)
-
 } // namespace fwd_compat
 
 using ROOT::Experimental::RXTuple;
@@ -114,14 +103,15 @@ TEST(RNTupleCompat, FwdCompat_ValidNTuple)
    fileGuard.PreserveFile();
 
    {
-      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto file = std::unique_ptr<TFile>(
+         TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", "", ROOT::RCompressionSetting::ELevel::kUncompressed));
 
       auto xtuple = RXTuple{};
       auto key = TKey(&xtuple, RXTuple::Class(), kNtupleObjName, sizeof(RXTuple), file.get());
       key.WriteFile();
       file->Close();
    }
-   
+
    // Patch all instances of 'RXTuple' -> 'RNTuple'.
    // We do this by just scanning the whole file and replacing all occurrences.
    // This is not the optimal way to go about it, but since the file is small (~1KB)
@@ -136,25 +126,33 @@ TEST(RNTupleCompat, FwdCompat_ValidNTuple)
       fseek(f, 0, SEEK_SET);
       fread(filebuf, fsize, 1, f);
 
-      std::string_view file_view { filebuf, fsize };
+      std::string_view file_view{filebuf, fsize};
       std::size_t pos = 0;
       while ((pos = file_view.find("XTuple"), pos) != std::string_view::npos) {
          filebuf[pos] = 'N';
          pos += 6; // skip 'XTuple'
       }
-      
+
       fseek(f, 0, SEEK_SET);
       fwrite(filebuf, fsize, 1, f);
-      
+
       fclose(f);
-      delete [] filebuf;
+      delete[] filebuf;
    }
 
    {
       auto tfile = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       assert(!tfile->IsZombie());
       auto *ntuple = tfile->Get<RNTuple>(kNtupleObjName);
-      EXPECT_CORRECT_NTUPLE(*ntuple, 9, 9, 9, 9);
+      EXPECT_EQ(ntuple->GetVersionEpoch(), RXTuple{}.fVersionEpoch);
+      EXPECT_EQ(ntuple->GetVersionMajor(), RXTuple{}.fVersionMajor);
+      EXPECT_EQ(ntuple->GetVersionMinor(), RXTuple{}.fVersionMinor);
+      EXPECT_EQ(ntuple->GetVersionPatch(), RXTuple{}.fVersionPatch);
+      EXPECT_EQ(ntuple->GetSeekHeader(), RXTuple{}.fSeekHeader);
+      EXPECT_EQ(ntuple->GetNBytesHeader(), RXTuple{}.fNBytesHeader);
+      EXPECT_EQ(ntuple->GetLenHeader(), RXTuple{}.fLenHeader);
+      EXPECT_EQ(ntuple->GetSeekFooter(), RXTuple{}.fSeekFooter);
+      EXPECT_EQ(ntuple->GetNBytesFooter(), RXTuple{}.fNBytesFooter);
+      EXPECT_EQ(ntuple->GetLenFooter(), RXTuple{}.fLenFooter);
    }
 }
-
