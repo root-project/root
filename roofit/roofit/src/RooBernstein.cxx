@@ -45,7 +45,6 @@ RooBernstein::RooBernstein(const char *name, const char *title, RooAbsRealLValue
    : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefficients", "List of coefficients", this)
 {
    _coefList.addTyped<RooAbsReal>(coefList);
-   _buffer.resize(_coefList.size() + 2);
 }
 
 RooBernstein::RooBernstein(const RooBernstein &other, const char *name)
@@ -68,6 +67,7 @@ void RooBernstein::selectNormalizationRange(const char *rangeName, bool force)
 
 void RooBernstein::fillBuffer() const
 {
+   _buffer.resize(_coefList.size() + 2); // will usually be a no-op because size stays the same
    std::size_t n = _coefList.size();
    for (std::size_t i = 0; i < n; ++i) {
       _buffer[i] = static_cast<RooAbsReal &>(_coefList[i]).getVal();
