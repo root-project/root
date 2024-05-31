@@ -1351,8 +1351,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 
    while((obj = next())){
       th2pBin = (TH2PolyBin*) obj;
-      th2pBin->GetPolygon()->SavePrimitive(out,
-                                           TString::Format("th2poly%s",hname.Data()));
+      th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s",hname.Data()));
    }
 
    // save bin contents

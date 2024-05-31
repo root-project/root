@@ -1645,8 +1645,8 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    const char *hname = histName.Data();
 
-   out<<hname<<" = new "<<ClassName()<<"("<<quote<<hname<<quote<<","<<quote<<GetTitle()<<quote
-   <<","<<GetXaxis()->GetNbins();
+   out << hname << " = new " << ClassName() << "(" << quote << hname << quote << "," << quote << GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
    else
