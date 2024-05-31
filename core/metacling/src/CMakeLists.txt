@@ -164,10 +164,9 @@ if(MSVC)
       ??$endl@DU?$char_traits@D@std@@@std@@YAAEAV?$basic_ostream@DU?$char_traits@D@std@@@0@AEAV10@@Z
       ??0LifetimeHandler@internal@runtime@cling@@QEAA@PEAVDynamicExprInfo@123@PEAVDeclContext@clang@@PEBDPEAVInterpreter@3@@Z
       ??1LifetimeHandler@internal@runtime@cling@@QEAA@XZ
-      ?_Facet_Register@std@@YAXPEAV_Facet_base@1@@Z
     )
     if(CMAKE_GENERATOR MATCHES Ninja AND CMAKE_BUILD_TYPE MATCHES Debug)
-      set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
+      set(cling_exports ${cling_exports} ??_R0?AVfacet@locale@std@@@8)
     else()
       if($<CONFIG:Debug>)
          set(cling_exports ${cling_exports} ??$dyn_cast@VValueDecl@clang@@$$CBVDecl@2@@llvm@@YAPEBVValueDecl@clang@@PEBVDecl@2@@Z)
@@ -193,7 +192,6 @@ if(MSVC)
       ??$endl@DU?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@@Z
       ??0LifetimeHandler@internal@runtime@cling@@QAE@PAVDynamicExprInfo@123@PAVDeclContext@clang@@PBDPAVInterpreter@3@@Z
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
-      ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
     if(MSVC_VERSION GREATER_EQUAL 1938)
       set(cling_exports ${cling_exports}

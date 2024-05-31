@@ -59,7 +59,11 @@ elseif(MSVC)
 
   #---Select compiler flags----------------------------------------------------------------
   if(CMAKE_GENERATOR MATCHES Ninja)
-    if (CMAKE_BUILD_TYPE MATCHES Debug AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+  string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+  string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+  string(REPLACE "/Zi" "/Z7" CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}")
+  string(REPLACE "/Zi" "/Z7" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  if (CMAKE_BUILD_TYPE MATCHES Debug AND CMAKE_SIZEOF_VOID_P EQUAL 8)
       string(REGEX MATCH "-D_ITERATOR_DEBUG_LEVEL=0" result ${CMAKE_CXX_FLAGS_DEBUG})
       if(NOT result MATCHES "-D_ITERATOR_DEBUG_LEVEL=0")
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_ITERATOR_DEBUG_LEVEL=0")
@@ -77,6 +81,10 @@ elseif(MSVC)
   #---Set Linker flags----------------------------------------------------------------------
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
+  if(CMAKE_GENERATOR MATCHES Ninja)
+    set(CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} -incremental:no")
+    set(CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} -incremental:no")
+  endif()
 
   string(TIMESTAMP CURRENT_YEAR "%Y")
   set(ROOT_RC_SCRIPT ${CMAKE_BINARY_DIR}/etc/root.rc)
