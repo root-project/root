@@ -745,7 +745,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
       NTupleSize_t fPageNo = 0;
       std::uint64_t fPosition = 0;
       std::uint64_t fCageOffset = 0;
-      std::uint64_t fSize = 0;
+      std::uint64_t fDataSize = 0; // page payload
+      std::uint64_t fBufferSize = 0; // page payload + checksum (if available)
    };
 
    // Prepares read requests for a single cluster; `readRequests` is modified by this function.  Requests are coalesced
@@ -770,10 +771,13 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
                                DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
                             auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
 
-                            itLoc->second.push_back(
-                               {clusterId, physicalColumnId, pageNo, position, offset, pageLocator.fBytesOnStorage});
+                            auto sizeOfPageAndChecksum = pageLocator.fBytesOnStorage;
+                            if (pageInfo.fHasChecksum)
+                               sizeOfPageAndChecksum += sizeof(std::uint64_t);
+                            itLoc->second.push_back({clusterId, physicalColumnId, pageNo, position, offset,
+                                                     pageLocator.fBytesOnStorage, sizeOfPageAndChecksum});
                             ++nPages;
-                            clusterBufSz += pageLocator.fBytesOnStorage;
+                            clusterBufSz += sizeOfPageAndChecksum;
                          });
 
       auto clusterBuffer = new unsigned char[clusterBufSz];
@@ -790,8 +794,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
             assert(cageIndex == s.fPosition);
             // Register the on disk pages in a page map
             ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fSize));
-            cageSz += s.fSize;
+            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fDataSize));
+            cageSz += s.fBufferSize;
          }
 
          // Prepare new read request batched up by object ID and distribution key

@@ -146,7 +146,9 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
-   zipItem.AllocateSealedPageBuf(page.GetNBytes());
+   // The compressed size cannot be larger than the uncompressed size. Add 8 bytes for the checksum if necessary.
+   zipItem.AllocateSealedPageBuf(page.GetNBytes() +
+                                 (GetWriteOptions().GetEnablePageChecksums() ? sizeof(std::uint64_t) : 0));
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
@@ -154,6 +156,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
       RSealPageConfig sealPageConfig(page, element);
       sealPageConfig.fCompressionSetting = GetWriteOptions().GetCompression();
+      sealPageConfig.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       sealPageConfig.fAllowAlias = false;
       sealPageConfig.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(sealPageConfig);
@@ -173,6 +176,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element] {
       RSealPageConfig sealPageConfig(zipItem.fPage, element);
       sealPageConfig.fCompressionSetting = GetWriteOptions().GetCompression();
+      sealPageConfig.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       sealPageConfig.fAllowAlias = true;
       sealPageConfig.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(sealPageConfig);
