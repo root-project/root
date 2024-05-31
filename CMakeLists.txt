@@ -767,6 +767,10 @@ if(testing)
   endif()
 endif()
 
+if(LLVM_LINKER_IS_MOLD)
+  message(FATAL_ERROR "The mold linker is not supported by ROOT. Please use a different linker")
+endif()
+
 cmake_host_system_information(RESULT PROCESSOR QUERY PROCESSOR_DESCRIPTION)
 
 message(STATUS "ROOT Configuration \n
