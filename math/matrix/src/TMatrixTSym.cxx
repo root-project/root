@@ -19,8 +19,8 @@ Template class of a symmetric matrix in the linear algebra package.
 See the \ref Matrix page for the documentation of the linear algebra package
 
 Note that in this implementation both matrix element m[i][j] and
-m[j][i] are updated and stored in memory . However, when making the
-object persistent only the upper right triangle is stored .
+m[j][i] are updated and stored in memory. However, when making the
+object persistent only the upper right triangle is stored.
 
 */
 
