@@ -39,6 +39,17 @@ ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) 
 
 ROOT::Experimental::Internal::RPageStorage::~RPageStorage() {}
 
+void ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
+{
+   if (!fHasChecksum)
+      return;
+
+   auto result = RNTupleSerializer::VerifyXxHash3(reinterpret_cast<unsigned char *>(fBuffer), GetDataSize());
+   if (!result) {
+      throw RException(R__FAIL("page checksum verification failed, data corruption detected"));
+   }
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)

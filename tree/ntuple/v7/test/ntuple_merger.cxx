@@ -51,13 +51,13 @@ TEST(RPageStorage, ReadSealedPages)
    RPageStorage::RSealedPage sealedPage;
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
-   ASSERT_EQ(4U, sealedPage.GetBufferSize());
+   ASSERT_EQ(12U, sealedPage.GetBufferSize());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
    auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
-   ASSERT_EQ(4U, sealedPage.GetBufferSize());
+   ASSERT_EQ(12U, sealedPage.GetBufferSize());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
    EXPECT_EQ(42, ReadRawInt(sealedPage.GetBuffer()));
 

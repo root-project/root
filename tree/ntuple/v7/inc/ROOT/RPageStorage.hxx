@@ -117,6 +117,8 @@ public:
 
       bool GetHasChecksum() const { return fHasChecksum; }
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
+
+      void VerifyChecksumIfEnabled() const;
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;

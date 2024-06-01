@@ -341,7 +341,11 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
-   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   if (pageInfo.fHasChecksum) {
+      bytesOnStorage += sizeof(std::uint64_t);
+      sealedPage.SetHasChecksum(true);
+   }
    sealedPage.SetBufferSize(bytesOnStorage);
    sealedPage.SetNElements(pageInfo.fNElements);
    if (!sealedPage.GetBuffer())
@@ -352,6 +356,8 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
    } else {
       memcpy(sealedPage.GetWritableBuffer(), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
+
+   sealedPage.VerifyChecksumIfEnabled();
 }
 
 ROOT::Experimental::Internal::RPage
