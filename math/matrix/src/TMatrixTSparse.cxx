@@ -491,7 +491,7 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// General matrix multiplication. Replace this matrix with C such that C = A * B'.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -599,7 +599,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// General matrix multiplication. Replace this matrix with C such that C = A * B'.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -690,7 +690,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixTSparse<Element> &a,const TMa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Create a matrix C such that C = A * B'.
+/// General matrix multiplication. Replace this matrix with C such that C = A * B'.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -782,7 +782,7 @@ void TMatrixTSparse<Element>::AMultBt(const TMatrixT<Element> &a,const TMatrixTS
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix addition. Create a matrix C such that C = A + B.
+/// General matrix addition. Replace this matrix with C such that C = A + B.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -864,7 +864,7 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix addition. Create a matrix C such that C = A + B.
+/// General matrix addition. Replace this matrix with C such that C = A + B.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -935,7 +935,7 @@ void TMatrixTSparse<Element>::APlusB(const TMatrixTSparse<Element> &a,const TMat
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -1017,7 +1017,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
@@ -1088,7 +1088,7 @@ void TMatrixTSparse<Element>::AMinusB(const TMatrixTSparse<Element> &a,const TMa
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix subtraction. Create a matrix C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 /// Note, matrix C is allocated for constr=1.
 
 template<class Element>
