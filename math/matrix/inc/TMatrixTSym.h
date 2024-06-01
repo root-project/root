@@ -19,8 +19,8 @@
 // Implementation of a symmetric matrix in the linear algebra package   //
 //                                                                      //
 // Note that in this implementation both matrix element m[i][j] and     //
-// m[j][i] are updated and stored in memory . However, when making the  //
-// object persistent only the upper right triangle is stored .          //
+// m[j][i] are updated and stored in memory. However, when making the   //
+// object persistent only the upper right triangle is stored.           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -137,11 +137,11 @@ public:
 
    // Either access a_ij as a(i,j)
    inline       Element                    operator()(Int_t rown,Int_t coln) const override;
-   inline       Element                   &operator()(Int_t rown,Int_t coln) override;
+   inline       Element                   &operator()(Int_t rown,Int_t coln) override; ///< Access element a_ij where i=rown and j=coln. \warning Modifying this element by the caller breaks the symmetry of the matrix if a_ji is not modified accordingly.
 
    // or as a[i][j]
    inline const TMatrixTRow_const<Element> operator[](Int_t rown) const { return TMatrixTRow_const<Element>(*this,rown); }
-   inline       TMatrixTRow      <Element> operator[](Int_t rown)       { return TMatrixTRow      <Element>(*this,rown); }
+   inline       TMatrixTRow      <Element> operator[](Int_t rown)       { return TMatrixTRow      <Element>(*this,rown); }  ///< Access row a_i where i=rown. \note A concatenated call to [coln] allows to access element a_ij where i=rown and j=coln \warning Modifying this row by the caller breaks the symmetry of the matrix if a_j is not modified accordingly.
 
    TMatrixTSym<Element> &operator= (const TMatrixTSym    <Element> &source);
    TMatrixTSym<Element> &operator= (const TMatrixTSymLazy<Element> &source);
