@@ -306,7 +306,7 @@ void TMatrixTSym<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Symmetric matrix summation. Create a matrix C such that C = A + B.
+/// Symmetric matrix summation. Replace this matrix with C such that C = A + B.
 
 template<class Element>
 void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
@@ -340,7 +340,7 @@ void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Symmetric matrix subtraction. Create a matrix C such that C = A - B.
+/// Symmetric matrix subtraction. Replace this matrix with C such that C = A - B.
 
 template<class Element>
 void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
@@ -374,7 +374,7 @@ void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a matrix C such that C = A' * A. In other words,
+/// Replace this matrix with C such that C = A' * A. In other words,
 /// c[i,j] = SUM{ a[k,i] * a[k,j] }.
 
 template<class Element>
@@ -423,7 +423,7 @@ void TMatrixTSym<Element>::TMult(const TMatrixT<Element> &a)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix multiplication, with A symmetric
-/// Create a matrix C such that C = A' * A = A * A = A * A'
+/// Replace this matrix with C such that C = A' * A = A * A = A * A'
 
 template<class Element>
 void TMatrixTSym<Element>::TMult(const TMatrixTSym<Element> &a)
