@@ -178,7 +178,7 @@ namespace TMVA {
    private:
 
       std::map<TString, TMVA::Types::EMVA> fStr2type; ///< types-to-text map
-      mutable MsgLogger* fLogger;   ///< message logger
+      mutable MsgLogger* fLogger;   ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    };

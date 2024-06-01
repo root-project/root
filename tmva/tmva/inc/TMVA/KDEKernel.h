@@ -85,7 +85,7 @@ namespace TMVA {
       Bool_t        fHiddenIteration;   ///< Defines if whats currently running is the
       // (first) hidden iteration when doing adaptive KDE
 
-      mutable MsgLogger* fLogger;       ///< message logger
+      mutable MsgLogger* fLogger;       ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(KDEKernel,0); // Kernel density estimator for PDF smoothing

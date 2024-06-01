@@ -75,7 +75,7 @@ namespace TMVA {
       std::map<Int_t, Float_t> fEventFraction;     ///< documentation!
       Bool_t        fDebug;                        ///< documentation!
 
-      mutable MsgLogger *fLogger;                  ///< message logging service
+      mutable MsgLogger *fLogger;                  ///<! message logging service
    };
 }
 #endif

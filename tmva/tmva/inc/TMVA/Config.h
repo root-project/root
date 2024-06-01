@@ -142,7 +142,7 @@ namespace TMVA {
       std::atomic<Bool_t> fUseColoredConsole;     ///< coloured standard output
       std::atomic<Bool_t> fSilent;                ///< no output at all
       std::atomic<Bool_t> fWriteOptionsReference; ///< if set true: Configurable objects write file with option reference
-      mutable MsgLogger* fLogger;                 ///< message logger
+      mutable MsgLogger* fLogger;                 ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Config,0); // Singleton class for global configuration settings
