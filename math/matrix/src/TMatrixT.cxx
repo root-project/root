@@ -570,7 +570,7 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a, const TMatrixTSym<Eleme
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Replace this matrix with C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 
 template <class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixT<Element> &b)
@@ -604,7 +604,7 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixT<Element
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Replace this matrix with C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 
 template <class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixTSym<Element> &b)
