@@ -340,7 +340,7 @@ void TMatrixTSym<Element>::Plus(const TMatrixTSym<Element> &a,const TMatrixTSym<
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Symmetric matrix summation. Create a matrix C such that C = A + B.
+/// Symmetric matrix subtraction. Create a matrix C such that C = A - B.
 
 template<class Element>
 void TMatrixTSym<Element>::Minus(const TMatrixTSym<Element> &a,const TMatrixTSym<Element> &b)
