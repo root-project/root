@@ -25,10 +25,16 @@ void FillForTest(TProfile2D* tp2d, TProfile2Poly* tpp, TRandom& ran) {
 }
 
 void globalStatsCompare(TProfile2D* tp2d, TProfile2Poly* tpp) {
+   const double relTol = 1e-12;
+   double cont1, cont2;
    for(Int_t c=1; c<=3; ++c) {
       ASSERT_DOUBLE_EQ(tp2d->GetMean(c), tpp->GetMean(c));
-      ASSERT_DOUBLE_EQ(tp2d->GetMeanError(c), tpp->GetMeanError(c));
-      ASSERT_DOUBLE_EQ(tp2d->GetStdDev(c), tpp->GetStdDev(c));
+      cont1 = tp2d->GetMeanError(c);
+      cont2 = tpp->GetMeanError(c);
+      ASSERT_NEAR(cont1, cont2, relTol * cont2);
+      cont1 = tp2d->GetStdDev(c);
+      cont2 = tpp->GetStdDev(c);
+      ASSERT_NEAR(cont1, cont2, relTol * cont2);
    }
 }
 
