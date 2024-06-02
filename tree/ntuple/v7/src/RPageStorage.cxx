@@ -39,6 +39,16 @@ ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) 
 
 ROOT::Experimental::Internal::RPageStorage::~RPageStorage() {}
 
+void ROOT::Experimental::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled()
+{
+   if (!fHasChecksum)
+      return;
+
+   auto charBuf = reinterpret_cast<unsigned char *>(fBuffer);
+   std::uint64_t xxhash3;
+   RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, charBuf + GetDataSize());
+}
+
 void ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
 {
    if (!fHasChecksum)
@@ -196,8 +206,9 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
       for (const auto &pi : pageRange.fPageInfos) {
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
-         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage));
-         RSealedPage sealedPage{onDiskPage->GetAddress(), pi.fLocator.fBytesOnStorage, pi.fNElements};
+         R__ASSERT(onDiskPage && ((onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage) ||
+                   (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage + sizeof(std::uint64_t))));
+         RSealedPage sealedPage{onDiskPage->GetAddress(), onDiskPage->GetSize(), pi.fNElements, pi.fHasChecksum};
 
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
@@ -350,6 +361,8 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       return page;
    }
 
+   sealedPage.VerifyChecksumIfEnabled();
+
    const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
    using Allocator_t = RPageAllocatorHeap;
    auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
@@ -411,13 +424,11 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &sealPag
 
    R__ASSERT(isAdoptedBuffer);
 
-   if (nBytesChecksum) {
-      std::uint64_t xxhash3;
-      RNTupleSerializer::SerializeXxHash3(pageBuf, nBytesZipped, xxhash3, pageBuf + nBytesZipped);
-   }
+   RSealedPage sealedPage{pageBuf, static_cast<std::uint32_t>(nBytesZipped + nBytesChecksum),
+                          sealPageConfig.fPage.GetNElements(), sealPageConfig.fWriteChecksum};
+   sealedPage.ChecksumIfEnabled();
 
-   return RSealedPage{pageBuf, static_cast<std::uint32_t>(nBytesZipped + nBytesChecksum),
-                      sealPageConfig.fPage.GetNElements(), sealPageConfig.fWriteChecksum};
+   return sealedPage;
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage

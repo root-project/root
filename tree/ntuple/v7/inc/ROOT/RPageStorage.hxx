@@ -118,6 +118,7 @@ public:
       bool GetHasChecksum() const { return fHasChecksum; }
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
 
+      void ChecksumIfEnabled();
       void VerifyChecksumIfEnabled() const;
    };
 

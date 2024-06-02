@@ -43,7 +43,7 @@ class ROnDiskPage {
 private:
    /// The memory location of the bytes
    const void *fAddress = nullptr;
-   /// The compressed and packed size of the page
+   /// The compressed and packed size of the page plus 8 bytes for the checksum, if available
    std::uint32_t fSize = 0;
 
 public:
