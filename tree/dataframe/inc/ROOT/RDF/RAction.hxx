@@ -101,7 +101,8 @@ public:
    template <typename... ColTypes, std::size_t... S>
    void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
+      ROOT::Internal::RDF::CallGuaranteedOrder{[&](auto &&...args) { return fHelper.Exec(slot, args...); },
+                                               fValues[slot][S]->template Get<ColTypes>(entry)...};
       (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
