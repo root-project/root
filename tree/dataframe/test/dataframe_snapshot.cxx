@@ -2,6 +2,7 @@
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TSeq.hxx"
+#include "Compression.h"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -231,7 +232,8 @@ void test_snapshot_options(RInterface<RLoopManager> &tdf)
    opts.fCompressionLevel = 6;
 
    const auto outfile = "snapshot_test_opts.root";
-   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4, ROOT::kZSTD}) {
+   using RCAlgo = ROOT::RCompressionSetting::EAlgorithm;
+   for (auto algorithm : {RCAlgo::kZLIB, RCAlgo::kLZMA, RCAlgo::kLZ4, RCAlgo::kZSTD}) {
       opts.fCompressionAlgorithm = algorithm;
 
       auto s = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
@@ -673,7 +675,7 @@ TEST(RDFSnapshotMore, Lazy)
       ++v;
       return 42;
    };
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Define("c0", genf).Snapshot<int>(treename, fname0, {"c0"}, opts);
    EXPECT_EQ(v, 0U);
    EXPECT_TRUE(gSystem->AccessPathName(fname0)); // This returns FALSE if the file IS there
@@ -695,7 +697,7 @@ TEST(RDFSnapshotMore, LazyJitted)
    // make sure the file is not here beforehand
    gSystem->Unlink(fname);
    RDataFrame d(1);
-   RSnapshotOptions opts = {"RECREATE", ROOT::kZLIB, 0, 0, 99, true};
+   RSnapshotOptions opts = {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 0, 0, 99, true};
    auto ds = d.Alias("c0", "rdfentry_").Snapshot(treename, fname, {"c0"}, opts);
    EXPECT_TRUE(gSystem->AccessPathName(fname)); // This returns FALSE if the file IS there
    *ds;

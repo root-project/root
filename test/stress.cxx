@@ -1247,7 +1247,7 @@ void stress10()
       snprintf(filename,20,"Event_%d.root",file);
       chfile[file] = new TFile(filename,"recreate");
       if (file>=5) {
-         chfile[file]->SetCompressionAlgorithm(ROOT::kLZMA);
+         chfile[file]->SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm::kLZMA);
       }
       chTree[file] = (TTree*)tree->CloneTree(0);
    }
