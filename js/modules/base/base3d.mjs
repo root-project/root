@@ -4,7 +4,7 @@ import { WebGLRenderer, WebGLRenderTarget, CanvasTexture, TextureLoader, Raycast
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial } from '../three.mjs';
 import { Font, OrbitControls, SVGRenderer } from '../three_addons.mjs';
-import { browser, settings, constants, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
+import { browser, settings, constants, isBatchMode, nsSVG, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
@@ -454,7 +454,7 @@ async function createRender3D(width, height, render3d, args) {
    if (render3d === rc.SVG) {
       // SVG rendering
       const r = createSVGRenderer(false, 0, doc);
-      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      r.jsroot_dom = doc.createElementNS(nsSVG, 'svg');
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
       // try to use WebGL inside node.js - need to create headless context
@@ -473,7 +473,7 @@ async function createRender3D(width, height, render3d, args) {
          const r = new WebGLRenderer(args);
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
-         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+         r.jsroot_dom = doc.createElementNS(nsSVG, 'image');
          return r;
       });
    } else if (render3d === rc.WebGL) {
@@ -482,7 +482,7 @@ async function createRender3D(width, height, render3d, args) {
    } else {
       // rendering with WebGL directly into svg image
       const r = new WebGLRenderer(args);
-      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+      r.jsroot_dom = doc.createElementNS(nsSVG, 'image');
       promise = Promise.resolve(r);
    }
 

@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.7.0
+// https://root.cern/js/ v7.7.99
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-const version_id = '7.7.0',
+const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '22/05/2024',
+version_date = '3/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -299,7 +299,7 @@ settings = {
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
    FuncAsCurve: false,
-   /** @summary Time zone used for date/time display of file time */
+   /** @summary Time zone used for date/time display, local by default, can be 'UTC' or 'Europe/Berlin' or any other valid value */
    TimeZone: '',
    /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
    NewTabUrl: '',
@@ -1054,7 +1054,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
-      nsREX = 'ROOT::Experimental::',
+      nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
       kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
 
 
@@ -1982,6 +1982,7 @@ kNoZoom: kNoZoom,
 kTitle: kTitle,
 loadScript: loadScript,
 nsREX: nsREX,
+nsSVG: nsSVG,
 parse: parse,
 parseMulti: parseMulti,
 postponePromise: postponePromise,
@@ -10450,6 +10451,7 @@ function compressSVG(svg) {
             .replace(/ title=""/g, '')                                 // remove all empty titles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
             .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
+            .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
    // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
@@ -10967,10 +10969,23 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
+/** @summary Convert ROOT TDatime object into Date
+ * @desc Always use UTC to avoid any variation between timezones */
+function getTDatime(dt) {
+   const y = (dt.fDatime >>> 26) + 1995,
+         m = ((dt.fDatime << 6) >>> 28) - 1,
+         d = (dt.fDatime << 10) >>> 27,
+         h = (dt.fDatime << 15) >>> 27,
+         min = (dt.fDatime << 20) >>> 26,
+         s = (dt.fDatime << 26) >>> 26;
+   return new Date(Date.UTC(y, m, d, h, min, s));
+}
+
 /** @summary Convert Date object into string used preconfigured time zone
  * @desc Time zone stored in settings.TimeZone */
 function convertDate(dt) {
    let res = '';
+
    if (settings.TimeZone && isStr(settings.TimeZone)) {
      try {
         res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
@@ -56440,7 +56455,7 @@ async function createRender3D(width, height, render3d, args) {
    if (render3d === rc.SVG) {
       // SVG rendering
       const r = createSVGRenderer(false, 0, doc);
-      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      r.jsroot_dom = doc.createElementNS(nsSVG, 'svg');
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
       // try to use WebGL inside node.js - need to create headless context
@@ -56459,7 +56474,7 @@ async function createRender3D(width, height, render3d, args) {
          const r = new WebGLRenderer(args);
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
-         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+         r.jsroot_dom = doc.createElementNS(nsSVG, 'image');
          return r;
       });
    } else if (render3d === rc.WebGL) {
@@ -56468,7 +56483,7 @@ async function createRender3D(width, height, render3d, args) {
    } else {
       // rendering with WebGL directly into svg image
       const r = new WebGLRenderer(args);
-      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
+      r.jsroot_dom = doc.createElementNS(nsSVG, 'image');
       promise = Promise.resolve(r);
    }
 
@@ -60689,7 +60704,7 @@ class JSRootMenu {
       for (let n = 1; n < 20; ++n) {
          const id = n*10 + prec,
                handler = new FontHandler(id, 14),
-               txt = select(doc.createElementNS('http://www.w3.org/2000/svg', 'text'));
+               txt = select(doc.createElementNS(nsSVG, 'text'));
          let fullname = handler.getFontName(), qual = '';
          if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
          if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
@@ -61759,12 +61774,17 @@ function assignContextMenu(painter, kind) {
   * @private */
 function getTimeOffset(axis) {
    const dflt_time_offset = 788918400000;
+
    if (!axis) return dflt_time_offset;
    const idF = axis.fTimeFormat.indexOf('%F');
    if (idF < 0) return gStyle.fTimeOffset * 1000;
    let sof = axis.fTimeFormat.slice(idF + 2);
    // default string in axis offset
-   if (sof.indexOf('1995-01-01 00:00:00s0') === 0) return dflt_time_offset;
+   if (sof.indexOf('1995-01-01 00:00:00s0') === 0)
+      return dflt_time_offset;
+   // another default string with unix time
+   if (sof.indexOf('1970-01-01 00:00:00s0') === 0)
+      return 0;
    // special case, used from DABC painters
    if ((sof === '0') || (sof === '')) return 0;
 
@@ -61782,10 +61802,9 @@ function getTimeOffset(axis) {
       hour = next(':', 0, 23),
       min = next(':', 0, 59),
       sec = next('s', 0, 59),
-      msec = next(' ', 0, 999),
-      dt = new Date(Date.UTC(year, month, day, hour, min, sec, msec));
+      msec = next(' ', 0, 999);
 
-   let offset = dt.getTime();
+   let offset = Date.UTC(year, month, day, hour, min, sec, msec);
 
    // now also handle suffix like GMT or GMT -0600
    sof = sof.toUpperCase();
@@ -61863,7 +61882,18 @@ const AxisPainterMethods = {
 
    /** @summary Convert axis value into the Date object */
    convertDate(v) {
-      return new Date(this.timeoffset + v*1000);
+      const dt = new Date(this.timeoffset + v*1000);
+      let res = dt;
+      if (!this.timegmt && settings.TimeZone) {
+         try {
+            const ms = dt.getMilliseconds();
+            res = new Date(dt.toLocaleString('en-US', { timeZone: settings.TimeZone }));
+            res.setMilliseconds(ms);
+         } catch (err) {
+            res = dt;
+         }
+      }
+      return res;
    },
 
    /** @summary Convert graphical point back into axis value */
@@ -61873,8 +61903,8 @@ const AxisPainterMethods = {
    },
 
    /** @summary Provide label for time axis */
-   formatTime(d, asticks) {
-      return asticks ? this.tfunc1(d) : this.tfunc2(d);
+   formatTime(dt, asticks) {
+      return asticks ? this.tfunc1(dt) : this.tfunc2(dt);
    },
 
    /** @summary Provide label for log axis */
@@ -62169,13 +62199,13 @@ class TAxisPainter extends ObjectPainter {
          this.timegmt = getTimeGMT(axis);
       } else if (opts.axis_func)
          this.kind = kAxisFunc;
-       else
+      else
          this.kind = !axis.fLabels ? kAxisNormal : kAxisLabels;
 
 
       if (this.kind === kAxisTime)
          this.func = time().domain([this.convertDate(smin), this.convertDate(smax)]);
-       else if (this.log) {
+      else if (this.log) {
          if ((this.log === 1) || (this.log === 10))
             this.logbase = 10;
          else if (this.log === 3)
@@ -62695,8 +62725,8 @@ class TAxisPainter extends ObjectPainter {
       if (this.lbls_both_sides)
          label_g.push(axis_g.append('svg:g').attr('class', 'axis_labels').attr('transform', this.vertical ? `translate(${w})` : `translate(0,${-h})`));
 
-       if (frame_ygap > 0)
-          max_tiltsize = frame_ygap / Math.sin(tilt_angle/180*Math.PI) - Math.tan(tilt_angle/180*Math.PI);
+      if (frame_ygap > 0)
+         max_tiltsize = frame_ygap / Math.sin(tilt_angle/180*Math.PI) - Math.tan(tilt_angle/180*Math.PI);
 
       // function called when text is drawn to analyze width, required to correctly scale all labels
       // must be function to correctly handle 'this' argument
@@ -66588,9 +66618,8 @@ class GridDisplay extends MDIDisplay {
          return this.getGridFrame();
 
       let found = super.getActiveFrame();
-      if (found) return found;
-
-      this.forEachFrame(frame => { if (!found) found = frame; });
+      if (!found)
+         this.forEachFrame(frame => { if (!found) found = frame; });
 
       return found;
    }
@@ -67024,6 +67053,7 @@ class FlexibleDisplay extends MDIDisplay {
          .style('box-shadow', '1px 1px 2px 2px #aaa')
          .property('state', 'normal')
          .select('.jsroot_flex_header')
+         .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
          .on('click', function() { mdi.activateFrame(select(this.parentNode).select('.jsroot_flex_draw').node()); })
          .selectAll('button')
          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
@@ -67174,9 +67204,13 @@ class FlexibleDisplay extends MDIDisplay {
    }
 
    /** @summary context menu */
-   showContextMenu(evnt) {
-      // handle context menu only for MDI area
-      if ((evnt.target.getAttribute('class') !== 'jsroot_flex_top') || (this.numDraw() === 0)) return;
+   showContextMenu(evnt, is_header) {
+      // no context menu for no windows
+      if (this.numDraw() === 0)
+         return;
+      // handle context menu only for MDI area or for window header
+      if (!is_header && evnt.target.getAttribute('class') !== 'jsroot_flex_top')
+         return;
 
       evnt.preventDefault();
 
@@ -67278,7 +67312,7 @@ class BatchDisplay extends MDIDisplay {
       if (!frame) return;
       const main = select(frame);
       main.select('svg')
-          .attr('xmlns', 'http://www.w3.org/2000/svg')
+          .attr('xmlns', nsSVG)
           .attr('width', this.width)
           .attr('height', this.height)
           .attr('title', null).attr('style', null).attr('class', null).attr('x', null).attr('y', null);
@@ -68422,7 +68456,7 @@ class TPadPainter extends ObjectPainter {
          this.setTopPainter(); // assign canvas as top painter of that element
 
          if (is_batch)
-            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('xmlns', nsSVG);
          else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
 
@@ -68561,7 +68595,7 @@ class TPadPainter extends ObjectPainter {
       }
       if (((gStyle.fOptDate === 2) || (gStyle.fOptDate === 3)) && fitem?._file) {
          info.selectChild('.canvas_date')
-             .text(convertDate(gStyle.fOptDate === 2 ? fitem._file.fDatimeC.getDate() : fitem._file.fDatimeM.getDate()));
+             .text(convertDate(getTDatime(gStyle.fOptDate === 2 ? fitem._file.fDatimeC : fitem._file.fDatimeM)));
       }
    }
 
@@ -69476,7 +69510,8 @@ class TPadPainter extends ObjectPainter {
          return this.drawNextSnap(lst, indx); // call next
       }
 
-      const snapid = snap.fObjectID;
+      const snapid = snap.fObjectID,
+            is_frame = (snap.fKind === webSnapIds.kObject) && (snap.fSnapshot?._typename === clTFrame);
       let cnt = (this._snaps_map[snapid] || 0) + 1,
           objpainter = null;
 
@@ -69486,8 +69521,17 @@ class TPadPainter extends ObjectPainter {
       // if same object drawn twice, two painters will exists
       for (let k = 0; k < this.painters.length; ++k) {
          const subp = this.painters[k];
-         if (subp.snapid === snapid)
-            if (--cnt === 0) { objpainter = subp; break; }
+         if (subp.snapid === snapid) {
+            if (--cnt === 0) {
+               objpainter = subp;
+               break;
+            }
+         } else if (is_frame && !subp.snapid && (subp === this.getFramePainter())) {
+            // workaround for the case when frame created afterwards by server
+            subp.snapid = snapid;
+            objpainter = subp;
+            break;
+         }
       }
 
       if (objpainter) {
@@ -71713,7 +71757,7 @@ class TPavePainter extends ObjectPainter {
       if (!text_g) text_g = this.draw_g;
 
       const fast = (nlines === 1) && pp._fast_drawing;
-      let num_default = 0;
+      let num_default = 0, is_any_text = false;
 
       for (let nline = 0; nline < nlines; ++nline) {
          const entry = arr[nline], texty = nline*stepy;
@@ -71725,7 +71769,7 @@ class TPavePainter extends ObjectPainter {
 
                let color = entry.fTextColor ? this.getColor(entry.fTextColor) : '';
                if (!color) color = this.textatt.color;
-
+               is_any_text = true;
                if (entry.fX || entry.fY || entry.fTextSize) {
                   // individual positioning
                   const align = entry.fTextAlign || this.textatt.align,
@@ -71781,6 +71825,9 @@ class TPavePainter extends ObjectPainter {
 
       if (num_default > 0)
          promises.push(this.finishTextDrawing(text_g, num_default > 1));
+
+      if (this.isTitle())
+         this.draw_g.style('display', !is_any_text ? 'none' : null);
 
       if (draw_header) {
          const x = Math.round(width*0.25),
@@ -80781,7 +80828,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       // final adjustment like in THistPainter.cxx line 7309
-      if (!this._exact_y_range && !pad_logy) {
+      if (!this._exact_y_range && !this._set_y_range && !pad_logy) {
          if ((this.options.BaseLine !== false) && (this.ymin >= 0))
             this.ymin = 0;
          else {
@@ -80805,17 +80852,22 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       }
 
+      this._set_y_range = false;
+
       if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
          this.ymin = hmin;
          this.ymax = hmax;
+         this._set_y_range = true;
       } else {
          if (hmin !== kNoZoom) {
+            this._set_y_range = true;
             if (hmin < this.ymin)
                this.ymin = hmin;
              set_zoom = true;
          }
          if (hmax !== kNoZoom) {
+            this._set_y_range = true;
             if (hmax > this.ymax)
                this.ymax = hmax;
             set_zoom = true;
@@ -88020,7 +88072,7 @@ function getShapeIcon(shape) {
 /**
  * lil-gui
  * https://lil-gui.georgealways.com
- * @version 0.18.2
+ * @version 0.19.2
  * @author George Michael Brower
  * @license MIT
  */
@@ -88030,7 +88082,7 @@ function getShapeIcon(shape) {
  */
 class Controller {
 
-	constructor( parent, object, property, className, widgetTag = 'div' ) {
+	constructor( parent, object, property, className, elementType = 'div' ) {
 
 		/**
 		 * The GUI that contains this controller.
@@ -88052,7 +88104,7 @@ class Controller {
 
 		/**
 		 * Used to determine if the controller is disabled.
-		 * Use `controller.disable( true|false )` to modify this value
+		 * Use `controller.disable( true|false )` to modify this value.
 		 * @type {boolean}
 		 */
 		this._disabled = false;
@@ -88074,7 +88126,7 @@ class Controller {
 		 * The outermost container DOM element for this controller.
 		 * @type {HTMLElement}
 		 */
-		this.domElement = document.createElement( 'div' );
+		this.domElement = document.createElement( elementType );
 		this.domElement.classList.add( 'controller' );
 		this.domElement.classList.add( className );
 
@@ -88092,11 +88144,11 @@ class Controller {
 		 * The DOM element that contains the controller's "widget" (which differs by controller type).
 		 * @type {HTMLElement}
 		 */
-		this.$widget = document.createElement( widgetTag );
+		this.$widget = document.createElement( 'div' );
 		this.$widget.classList.add( 'widget' );
 
 		/**
-		 * The DOM element that receives the disabled attribute when using disable()
+		 * The DOM element that receives the disabled attribute when using disable().
 		 * @type {HTMLElement}
 		 */
 		this.$disable = this.$widget;
@@ -88130,7 +88182,7 @@ class Controller {
 		 * @type {string}
 		 */
 		this._name = name;
-		this.$name.innerHTML = name;
+		this.$name.textContent = name;
 		return this;
 	}
 
@@ -88292,29 +88344,28 @@ class Controller {
 	}
 
 	/**
-	 * Destroys this controller and replaces it with a new option controller. Provided as a more
-	 * descriptive syntax for `gui.add`, but primarily for compatibility with dat.gui.
+	 * Changes this controller into a dropdown of options.
 	 *
-	 * Use caution, as this method will destroy old references to this controller. It will also
-	 * change controller order if called out of sequence, moving the option controller to the end of
-	 * the GUI.
+	 * Calling this method on an option controller will simply update the options. However, if this
+	 * controller was not already an option controller, old references to this controller are
+	 * destroyed, and a new controller is added to the end of the GUI.
 	 * @example
 	 * // safe usage
 	 *
-	 * gui.add( object1, 'property' ).options( [ 'a', 'b', 'c' ] );
-	 * gui.add( object2, 'property' );
+	 * gui.add( obj, 'prop1' ).options( [ 'a', 'b', 'c' ] );
+	 * gui.add( obj, 'prop2' ).options( { Big: 10, Small: 1 } );
+	 * gui.add( obj, 'prop3' );
 	 *
 	 * // danger
 	 *
-	 * const c = gui.add( object1, 'property' );
-	 * gui.add( object2, 'property' );
+	 * const ctrl1 = gui.add( obj, 'prop1' );
+	 * gui.add( obj, 'prop2' );
 	 *
-	 * c.options( [ 'a', 'b', 'c' ] );
-	 * // controller is now at the end of the GUI even though it was added first
+	 * // calling options out of order adds a new controller to the end...
+	 * const ctrl2 = ctrl1.options( [ 'a', 'b', 'c' ] );
 	 *
-	 * assert( c.parent.children.indexOf( c ) === -1 )
-	 * // c references a controller that no longer exists
-	 *
+	 * // ...and ctrl1 now references a controller that doesn't exist
+	 * assert( ctrl2 !== ctrl1 )
 	 * @param {object|Array} options
 	 * @returns {Controller}
 	 */
@@ -88424,10 +88475,17 @@ class Controller {
 	 * @returns {this}
 	 */
 	setValue( value ) {
-		this.object[ this.property ] = value;
-		this._callOnChange();
-		this.updateDisplay();
+
+		if ( this.getValue() !== value ) {
+
+			this.object[ this.property ] = value;
+			this._callOnChange();
+			this.updateDisplay();
+
+		}
+
 		return this;
+
 	}
 
 	/**
@@ -89244,15 +89302,6 @@ class OptionController extends Controller {
 		this.$display = document.createElement( 'div' );
 		this.$display.classList.add( 'display' );
 
-		this._values = Array.isArray( options ) ? options : Object.values( options );
-		this._names = Array.isArray( options ) ? options : Object.keys( options );
-
-		this._names.forEach( name => {
-			const $option = document.createElement( 'option' );
-			$option.innerHTML = name;
-			this.$select.appendChild( $option );
-		} );
-
 		this.$select.addEventListener( 'change', () => {
 			this.setValue( this._values[ this.$select.selectedIndex ] );
 			this._callOnFinishChange();
@@ -89271,7 +89320,26 @@ class OptionController extends Controller {
 
 		this.$disable = this.$select;
 
+		this.options( options );
+
+	}
+
+	options( options ) {
+
+		this._values = Array.isArray( options ) ? options : Object.values( options );
+		this._names = Array.isArray( options ) ? options : Object.keys( options );
+
+		this.$select.replaceChildren();
+
+		this._names.forEach( name => {
+			const $option = document.createElement( 'option' );
+			$option.textContent = name;
+			this.$select.appendChild( $option );
+		} );
+
 		this.updateDisplay();
+
+		return this;
 
 	}
 
@@ -89279,7 +89347,7 @@ class OptionController extends Controller {
 		const value = this.getValue();
 		const index = this._values.indexOf( value );
 		this.$select.selectedIndex = index;
-		this.$display.innerHTML = index === -1 ? value : this._names[ index ];
+		this.$display.textContent = index === -1 ? value : this._names[ index ];
 		return this;
 	}
 
@@ -89293,6 +89361,7 @@ class StringController extends Controller {
 
 		this.$input = document.createElement( 'input' );
 		this.$input.setAttribute( 'type', 'text' );
+		this.$input.setAttribute( 'spellcheck', 'false' );
 		this.$input.setAttribute( 'aria-labelledby', this.$name.id );
 
 		this.$input.addEventListener( 'input', () => {
@@ -89331,7 +89400,6 @@ const stylesheet = `.lil-gui {
   font-weight: normal;
   font-style: normal;
   text-align: left;
-  background-color: var(--background-color);
   color: var(--text-color);
   user-select: none;
   -webkit-user-select: none;
@@ -89374,6 +89442,7 @@ const stylesheet = `.lil-gui {
   width: var(--width, 245px);
   display: flex;
   flex-direction: column;
+  background: var(--background-color);
 }
 .lil-gui.root > .title {
   background: var(--title-background-color);
@@ -89453,7 +89522,7 @@ const stylesheet = `.lil-gui {
 .lil-gui .controller.string input {
   color: var(--string-color);
 }
-.lil-gui .controller.boolean .widget {
+.lil-gui .controller.boolean {
   cursor: pointer;
 }
 .lil-gui .controller.color .display {
@@ -89545,7 +89614,7 @@ const stylesheet = `.lil-gui {
 .lil-gui .controller.number .slider {
   width: 100%;
   height: var(--widget-height);
-  background-color: var(--widget-color);
+  background: var(--widget-color);
   border-radius: var(--widget-border-radius);
   padding-right: var(--slider-knob-width);
   overflow: hidden;
@@ -89554,11 +89623,11 @@ const stylesheet = `.lil-gui {
 }
 @media (hover: hover) {
   .lil-gui .controller.number .slider:hover {
-    background-color: var(--hover-color);
+    background: var(--hover-color);
   }
 }
 .lil-gui .controller.number .slider.active {
-  background-color: var(--focus-color);
+  background: var(--focus-color);
 }
 .lil-gui .controller.number .slider.active .fill {
   opacity: 0.95;
@@ -89664,8 +89733,10 @@ const stylesheet = `.lil-gui {
   border: none;
 }
 
-.lil-gui input {
+.lil-gui label, .lil-gui input, .lil-gui button {
   -webkit-tap-highlight-color: transparent;
+}
+.lil-gui input {
   border: 0;
   outline: none;
   font-family: var(--font-family);
@@ -89690,24 +89761,16 @@ const stylesheet = `.lil-gui {
 .lil-gui input[type=text],
 .lil-gui input[type=number] {
   padding: var(--widget-padding);
+  -moz-appearance: textfield;
 }
 .lil-gui input[type=text]:focus,
 .lil-gui input[type=number]:focus {
   background: var(--focus-color);
 }
-.lil-gui input::-webkit-outer-spin-button,
-.lil-gui input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.lil-gui input[type=number] {
-  -moz-appearance: textfield;
-}
 .lil-gui input[type=checkbox] {
   appearance: none;
-  -webkit-appearance: none;
-  height: var(--checkbox-size);
   width: var(--checkbox-size);
+  height: var(--checkbox-size);
   border-radius: var(--widget-border-radius);
   text-align: center;
   cursor: pointer;
@@ -89724,7 +89787,6 @@ const stylesheet = `.lil-gui {
   }
 }
 .lil-gui button {
-  -webkit-tap-highlight-color: transparent;
   outline: none;
   cursor: pointer;
   font-family: var(--font-family);
@@ -89735,17 +89797,14 @@ const stylesheet = `.lil-gui {
   text-transform: none;
   background: var(--widget-color);
   border-radius: var(--widget-border-radius);
-  border: 1px solid var(--widget-color);
-  text-align: center;
-  line-height: calc(var(--widget-height) - 4px);
+  border: none;
 }
 @media (hover: hover) {
   .lil-gui button:hover {
     background: var(--hover-color);
-    border-color: var(--hover-color);
   }
   .lil-gui button:focus {
-    border-color: var(--focus-color);
+    box-shadow: inset 0 0 0 1px var(--focus-color);
   }
 }
 .lil-gui button:active {
@@ -89787,7 +89846,7 @@ class GUI {
 	 *
 	 * @param {number} [options.width=245]
 	 * Width of the GUI in pixels, usually set when name labels become too long. Note that you can make
-	 * name labels wider in CSS with `.lil‑gui { ‑‑name‑width: 55% }`
+	 * name labels wider in CSS with `.lil‑gui { ‑‑name‑width: 55% }`.
 	 *
 	 * @param {string} [options.title=Controls]
 	 * Name to display in the title bar.
@@ -90132,7 +90191,7 @@ class GUI {
 
 	/**
 	 * Opens a GUI or folder. GUI and folders are open by default.
-	 * @param {boolean} open Pass false to close
+	 * @param {boolean} open Pass false to close.
 	 * @returns {this}
 	 * @example
 	 * gui.open(); // open
@@ -90242,7 +90301,7 @@ class GUI {
 		 * @type {string}
 		 */
 		this._title = title;
-		this.$title.innerHTML = title;
+		this.$title.textContent = title;
 		return this;
 	}
 
@@ -90358,7 +90417,7 @@ class GUI {
 	}
 
 	/**
-	 * Destroys all DOM elements and event listeners associated with this GUI
+	 * Destroys all DOM elements and event listeners associated with this GUI.
 	 */
 	destroy() {
 
@@ -93156,7 +93215,7 @@ class TGeoPainter extends ObjectPainter {
          if (this._fit_main_area && !this._webgl) {
             // create top-most SVG for geomtery drawings
             const doc = getDocument(),
-                  svg = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                  svg = doc.createElementNS(nsSVG, 'svg');
             svg.setAttribute('width', w);
             svg.setAttribute('height', h);
             svg.appendChild(this._renderer.jsroot_dom);
@@ -96344,8 +96403,10 @@ const clTStreamerElement = 'TStreamerElement', clTStreamerObject = 'TStreamerObj
       // kSTLforwardlist = 9, kSTLunorderedset = 10, kSTLunorderedmultiset = 11, kSTLunorderedmap = 12,
       // kSTLunorderedmultimap = 13, kSTLend = 14
 
+      kBaseClass = 'BASE',
+
       // name of base IO types
-      BasicTypeNames = ['BASE', 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
+      BasicTypeNames = [kBaseClass, 'char', 'short', 'int', 'long', 'float', 'int', 'const char*', 'double', 'Double32_t',
                         'char', 'unsigned  char', 'unsigned short', 'unsigned', 'unsigned long', 'unsigned', 'Long64_t', 'ULong64_t', 'bool', 'Float16_t'],
 
       // names of STL containers
@@ -96792,19 +96853,6 @@ function addUserStreamer(type, user_streamer) {
    CustomStreamers[type] = user_streamer;
 }
 
-function getTDatimeDate() {
-   const res = new Date();
-   res.setFullYear((this.fDatime >>> 26) + 1995);
-   res.setMonth(((this.fDatime << 6) >>> 28) - 1);
-   res.setDate((this.fDatime << 10) >>> 27);
-   res.setHours((this.fDatime << 15) >>> 27);
-   res.setMinutes((this.fDatime << 20) >>> 26);
-   res.setSeconds((this.fDatime << 26) >>> 26);
-   res.setMilliseconds(0);
-   return res;
-}
-
-
 /** @summary these are streamers which do not handle version regularly
   * @desc used for special classes like TRef or TBasket
   * @private */
@@ -96817,7 +96865,6 @@ const DirectStreamers = {
 
    TDatime(buf, obj) {
       obj.fDatime = buf.ntou4();
-      obj.getDate = getTDatimeDate;
    },
 
    TKey(buf, key) {
@@ -97092,7 +97139,7 @@ function createMemberStreamer(element, file) {
       fMaxIndex: element.fMaxIndex
    };
 
-   if (element.fTypeName === 'BASE') {
+   if (element.fTypeName === kBaseClass) {
       if (getArrayKind(member.name) > 0) {
          // this is workaround for arrays as base class
          // we create 'fArray' member, which read as any other data member
@@ -97267,7 +97314,7 @@ function createMemberStreamer(element, file) {
       case kAnyp:
       case kObjectp:
       case kObject: {
-         let classname = (element.fTypeName === 'BASE') ? element.fName : element.fTypeName;
+         let classname = (element.fTypeName === kBaseClass) ? element.fName : element.fTypeName;
          if (classname[classname.length - 1] === '*')
             classname = classname.slice(0, classname.length - 1);
 
@@ -100336,7 +100383,7 @@ function getBranchObjectClass(branch, tree, with_clones = false, with_leafs = fa
       return branch.fClonesName;
 
    const s_elem = findBrachStreamerElement(branch, tree.$file);
-   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === 'BASE'))
+   if ((branch.fType === kBaseClassNode) && s_elem && (s_elem.fTypeName === kBaseClass))
       return s_elem.fName;
 
    if (branch.fType === kObjectNode) {
@@ -101566,7 +101613,7 @@ function defineMemberTypeName(file, parent_class, member_name) {
 
    let elem = null;
    for (let k = 0; k < arr.length; ++k) {
-      if (arr[k].fTypeName === 'BASE') {
+      if (arr[k].fTypeName === kBaseClass) {
          const res = defineMemberTypeName(file, arr[k].fName, member_name);
          if (res) return res;
       } else
@@ -101835,7 +101882,7 @@ async function treeProcess(tree, selector, args) {
             }
 
             const elem = findBrachStreamerElement(br, handle.file);
-            if (elem?.fTypeName === 'BASE') {
+            if (elem?.fTypeName === kBaseClass) {
                // if branch is data of base class, map it to original target
                if (br.fTotBytes && !AddBranchForReading(br, target_object, target_name, read_mode)) return false;
                if (!ScanBranches(br.fBranches, master_target, chld_kind)) return false;
@@ -103357,7 +103404,7 @@ function addStreamerInfosForPainter(lst) {
 
    function checkBaseClasses(si, lvl) {
       const element = si.fElements?.arr[0];
-      if ((element?.fTypeName !== 'BASE') || (lvl > 4))
+      if ((element?.fTypeName !== kBaseClass) || (lvl > 4))
          return null;
       // exclude very basic classes
       if (basics.indexOf(element.fName) >= 0)
@@ -103425,8 +103472,8 @@ async function makeImage(args) {
       args.height = 800;
 
    if (args.use_canvas_size && (args.object?._typename === clTCanvas) && args.object.fCw && args.object.fCh) {
-      args.width = args.object?.fCw;
-      args.height = args.object?.fCh;
+      args.width = args.object.fCw;
+      args.height = args.object.fCh;
    }
 
    async function build(main) {
@@ -103461,7 +103508,7 @@ async function makeImage(args) {
          }
 
          main.select('svg')
-             .attr('xmlns', 'http://www.w3.org/2000/svg')
+             .attr('xmlns', nsSVG)
              .attr('width', args.width)
              .attr('height', args.height)
              .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
@@ -104143,7 +104190,7 @@ function createStreamerInfoContent(lst) {
          if (elem.fTitle)
             _name += ` // ${elem.fTitle}`;
 
-         item._childs.push({ _name, _title, _kind: elem.fTypeName, _icon: (elem.fTypeName === 'BASE') ? 'img_class' : 'img_member' });
+         item._childs.push({ _name, _title, _kind: elem.fTypeName, _icon: (elem.fTypeName === kBaseClass) ? 'img_class' : 'img_member' });
       }
       if (!item._childs.length)
          delete item._childs;
@@ -104328,7 +104375,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(getTDatime(file.fDatimeM))}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -105424,6 +105471,8 @@ class HierarchyPainter extends BasePainter {
                      arg0 += `&opttitle=${gStyle.fOptTitle}`;
                   if (settings.TimeZone === 'UTC')
                      arg0 += '&utc';
+                  else if (settings.TimeZone === 'Europe/Berlin')
+                     arg0 += '&cet';
                   else if (settings.TimeZone)
                      arg0 += `&timezone='${settings.TimeZone}'`;
                   if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
@@ -107031,19 +107080,9 @@ class HierarchyPainter extends BasePainter {
          else if (settings.DislpayKind && settings.DislpayKind !== 'simple')
             this.disp_kind = settings.DislpayKind;
          else {
-            switch (itemsarr.length) {
-               case 0:
-               case 1: this.disp_kind = 'simple'; break;
-               case 2: this.disp_kind = 'vert2'; break;
-               case 3: this.disp_kind = 'vert21'; break;
-               case 4: this.disp_kind = 'vert22'; break;
-               case 5: this.disp_kind = 'vert32'; break;
-               case 6: this.disp_kind = 'vert222'; break;
-               case 7: this.disp_kind = 'vert322'; break;
-               case 8: this.disp_kind = 'vert332'; break;
-               case 9: this.disp_kind = 'vert333'; break;
-               default: this.disp_kind = 'flex';
-            }
+            const _kinds = ['simple', 'simple', 'vert2', 'vert21', 'vert22', 'vert32',
+                             'vert222', 'vert322', 'vert332', 'vert333'];
+            this.disp_kind = _kinds[itemsarr.length] || 'flex';
          }
       }
 
@@ -107701,9 +107740,13 @@ function readStyleFromURL(url) {
    get_int_style('opttitle', 'fOptTitle', 1);
    if (d.has('utc'))
       settings.TimeZone = 'UTC';
+   if (d.has('cet'))
+      settings.TimeZone = 'Europe/Berlin';
    else if (d.has('timezone')) {
       settings.TimeZone = d.get('timezone');
       if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = 'Europe/Berlin';
+      else if (settings.TimeZone === 'local')
          settings.TimeZone = '';
    }
 
@@ -113179,11 +113222,14 @@ class TF1Painter extends TH1Painter$2 {
             pad = this.getPadPainter()?.getRootPad(true),
             logx = pad?.fLogx,
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
-      let xmin = tf1.fXmin, xmax = tf1.fXmax;
+      let xmin = tf1.fXmin, xmax = tf1.fXmax, np = Math.max(tf1.fNpx, 100);
 
       if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
+         const dx = (xmax - xmin) / np;
+         if ((xmin < gr.zoom_xmin) && (gr.zoom_xmin < xmax))
+            xmin = Math.max(xmin, gr.zoom_xmin - dx);
+         if ((xmin < gr.zoom_xmax) && (gr.zoom_xmax < xmax))
+            xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
       this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || (this.use_saved > 1));
@@ -113203,7 +113249,6 @@ class TF1Painter extends TH1Painter$2 {
       // this._use_saved_points = true;
 
       if (!this._use_saved_points) {
-         const np = Math.max(tf1.fNpx, 100);
          let iserror = false;
 
          if (!tf1.evalPar) {
@@ -113247,7 +113292,7 @@ class TF1Painter extends TH1Painter$2 {
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
       if (this._use_saved_points) {
-         const np = tf1.fSave.length - 3;
+         np = tf1.fSave.length - 3;
          let custom_xaxis = null;
          xmin = tf1.fSave[np + 1];
          xmax = tf1.fSave[np + 2];
@@ -114676,16 +114721,24 @@ class TF2Painter extends TH2Painter {
             logx = pad?.fLogx, logy = pad?.fLogy,
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
       let xmin = func.fXmin, xmax = func.fXmax,
-          ymin = func.fYmin, ymax = func.fYmax;
+          ymin = func.fYmin, ymax = func.fYmax,
+          npx = Math.max(func.fNpx, 20),
+          npy = Math.max(func.fNpy, 20);
 
-     if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
+      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         const dx = (xmax - xmin) / npx;
+         if ((xmin < gr.zoom_xmin) && (gr.zoom_xmin < xmax))
+            xmin = Math.max(xmin, gr.zoom_xmin - dx);
+         if ((xmin < gr.zoom_xmax) && (gr.zoom_xmax < xmax))
+            xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
-     if (gr?.zoom_ymin !== gr?.zoom_ymax) {
-         ymin = Math.min(ymin, gr.zoom_ymin);
-         ymax = Math.max(ymax, gr.zoom_ymax);
+      if (gr?.zoom_ymin !== gr?.zoom_ymax) {
+         const dy = (ymax - ymin) / npy;
+         if ((ymin < gr.zoom_ymin) && (gr.zoom_ymin < ymax))
+            ymin = Math.max(ymin, gr.zoom_ymin - dy);
+         if ((ymin < gr.zoom_ymax) && (gr.zoom_ymax < ymax))
+            ymax = Math.min(ymax, gr.zoom_ymax + dy);
       }
 
       const ensureBins = (nx, ny) => {
@@ -114703,8 +114756,6 @@ class TF2Painter extends TH2Painter {
       delete this._fail_eval;
 
       if (!this._use_saved_points) {
-         const npx = Math.max(func.fNpx, 20),
-               npy = Math.max(func.fNpy, 20);
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
@@ -114746,10 +114797,10 @@ class TF2Painter extends TH2Painter {
       }
 
       if (this._use_saved_points) {
+         npx = Math.round(func.fSave[nsave+4]);
+         npy = Math.round(func.fSave[nsave+5]);
          const xmin = func.fSave[nsave], xmax = func.fSave[nsave+1],
                ymin = func.fSave[nsave+2], ymax = func.fSave[nsave+3],
-               npx = Math.round(func.fSave[nsave+4]),
-               npy = Math.round(func.fSave[nsave+5]),
                dx = (xmax - xmin) / npx,
                dy = (ymax - ymin) / npy;
           function getSave(x, y) {
@@ -115018,21 +115069,33 @@ class TF3Painter extends TH2Painter {
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
       let xmin = func.fXmin, xmax = func.fXmax,
           ymin = func.fYmin, ymax = func.fYmax,
-          zmin = func.fZmin, zmax = func.fZmax;
+          zmin = func.fZmin, zmax = func.fZmax,
+          npx = Math.max(func.fNpx, 20),
+          npy = Math.max(func.fNpy, 20),
+          npz = Math.max(func.fNpz, 20);
 
-     if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
+      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         const dx = (xmax - xmin) / npx;
+         if ((xmin < gr.zoom_xmin) && (gr.zoom_xmin < xmax))
+            xmin = Math.max(xmin, gr.zoom_xmin - dx);
+         if ((xmin < gr.zoom_xmax) && (gr.zoom_xmax < xmax))
+            xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
-     if (gr?.zoom_ymin !== gr?.zoom_ymax) {
-         ymin = Math.min(ymin, gr.zoom_ymin);
-         ymax = Math.max(ymax, gr.zoom_ymax);
+      if (gr?.zoom_ymin !== gr?.zoom_ymax) {
+         const dy = (ymax - ymin) / npy;
+         if ((ymin < gr.zoom_ymin) && (gr.zoom_ymin < ymax))
+            ymin = Math.max(ymin, gr.zoom_ymin - dy);
+         if ((ymin < gr.zoom_ymax) && (gr.zoom_ymax < ymax))
+            ymax = Math.min(ymax, gr.zoom_ymax + dy);
       }
 
-     if (gr?.zoom_zmin !== gr?.zoom_zmax) {
-         zmin = Math.min(zmin, gr.zoom_zmin);
-         zmax = Math.max(zmax, gr.zoom_zmax);
+      if (gr?.zoom_zmin !== gr?.zoom_zmax) {
+         // no need for dz here - TH2 is not binned over Z axis
+         if ((zmin < gr.zoom_zmin) && (gr.zoom_zmin < zmax))
+            zmin = gr.zoom_zmin;
+         if ((zmin < gr.zoom_zmax) && (gr.zoom_zmax < zmax))
+            zmax = gr.zoom_zmax;
       }
 
       const ensureBins = (nx, ny) => {
@@ -115056,9 +115119,6 @@ class TF3Painter extends TH2Painter {
       delete this._fail_eval;
 
       if (!this._use_saved_points) {
-         const npx = Math.max(func.fNpx, 20),
-               npy = Math.max(func.fNpy, 20),
-               npz = Math.max(func.fNpz, 20);
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
@@ -115106,12 +115166,12 @@ class TF3Painter extends TH2Painter {
          xmin = func.fSave[nsave]; xmax = func.fSave[nsave+1];
          ymin = func.fSave[nsave+2]; ymax = func.fSave[nsave+3];
          zmin = func.fSave[nsave+4]; zmax = func.fSave[nsave+5];
-         const npx = Math.round(func.fSave[nsave+6]),
-               npy = Math.round(func.fSave[nsave+7]),
-               npz = Math.round(func.fSave[nsave+8]),
-               // dx = (xmax - xmin) / npx,
-               // dy = (ymax - ymin) / npy,
-               dz = (zmax - zmin) / npz;
+         npx = Math.round(func.fSave[nsave+6]);
+         npy = Math.round(func.fSave[nsave+7]);
+         npz = Math.round(func.fSave[nsave+8]);
+         // dx = (xmax - xmin) / npx,
+         // dy = (ymax - ymin) / npy,
+         const dz = (zmax - zmin) / npz;
 
          ensureBins(npx + 1, npy + 1);
 
@@ -116716,7 +116776,7 @@ class RAxisPainter extends RObjectPainter {
 
       if (this.kind === kAxisTime)
          this.func = time().domain([this.convertDate(smin), this.convertDate(smax)]);
-       else if (_symlog && (_symlog > 0)) {
+      else if (_symlog && (_symlog > 0)) {
          this.symlog = _symlog;
          this.func = symlog().constant(_symlog).domain([smin, smax]);
       } else if (_log) {
@@ -127393,6 +127453,7 @@ exports.getElementRect = getElementRect;
 exports.getHPainter = getHPainter;
 exports.getMethods = getMethods;
 exports.getPromise = getPromise;
+exports.getTDatime = getTDatime;
 exports.httpRequest = httpRequest;
 exports.injectCode = injectCode;
 exports.internals = internals;
@@ -127418,6 +127479,7 @@ exports.makeImage = makeImage;
 exports.makeSVG = makeSVG;
 exports.makeTranslate = makeTranslate;
 exports.nsREX = nsREX;
+exports.nsSVG = nsSVG;
 exports.openFile = openFile;
 exports.parse = parse;
 exports.parseMulti = parseMulti;

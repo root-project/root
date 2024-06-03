@@ -169,9 +169,13 @@ function readStyleFromURL(url) {
    get_int_style('opttitle', 'fOptTitle', 1);
    if (d.has('utc'))
       settings.TimeZone = 'UTC';
+   if (d.has('cet'))
+      settings.TimeZone = 'Europe/Berlin';
    else if (d.has('timezone')) {
       settings.TimeZone = d.get('timezone');
       if ((settings.TimeZone === 'default') || (settings.TimeZone === 'dflt'))
+         settings.TimeZone = 'Europe/Berlin';
+      else if (settings.TimeZone === 'local')
          settings.TimeZone = '';
    }
 
