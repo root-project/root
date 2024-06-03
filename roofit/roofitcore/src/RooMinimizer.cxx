@@ -61,6 +61,8 @@ automatic PDF optimization.
 #include "RooFit/MultiProcess/ProcessTimer.h"
 #endif
 
+#include "Math/GenAlgoOptions.h"
+#include "Math/IOptions.h"
 #include "TClass.h"
 #include "Math/Minimizer.h"
 #include "TMarker.h"
@@ -310,6 +312,14 @@ bool RooMinimizer::fitFcn() const
 /// \param[in] alg  Fit algorithm to use. (Optional)
 int RooMinimizer::minimize(const char *type, const char *alg)
 {
+   auto * oldExtraOptions = _theFitter->Config().MinimizerOptions().ExtraOptions();
+   std::unique_ptr<ROOT::Math::IOptions> newExtraOptions;
+   if (oldExtraOptions != nullptr) newExtraOptions = std::unique_ptr<ROOT::Math::IOptions>{oldExtraOptions->Clone()};
+   else newExtraOptions = std::make_unique<ROOT::Math::GenAlgoOptions>();
+
+   newExtraOptions->SetIntValue("seeding_only", 0);
+   _theFitter->Config().MinimizerOptions().SetExtraOptions(*newExtraOptions);
+
    if (_cfg.timingAnalysis) {
 #ifdef ROOFIT_MULTIPROCESS
       addParamsToProcessTimer();
@@ -345,8 +355,16 @@ int RooMinimizer::minimize(const char *type, const char *alg)
 /// propagated back the RooRealVars representing
 /// the floating parameters in the MINUIT operation.
 
-int RooMinimizer::migrad()
+int RooMinimizer::migrad(bool seedingOnly)
 {
+   auto * oldExtraOptions = _theFitter->Config().MinimizerOptions().ExtraOptions();
+   std::unique_ptr<ROOT::Math::IOptions> newExtraOptions;
+   if (oldExtraOptions != nullptr) newExtraOptions = std::unique_ptr<ROOT::Math::IOptions>{oldExtraOptions->Clone()};
+   else newExtraOptions = std::make_unique<ROOT::Math::GenAlgoOptions>();
+
+   newExtraOptions->SetIntValue("seeding_only", seedingOnly);
+   _theFitter->Config().MinimizerOptions().SetExtraOptions(*newExtraOptions);
+
    _fcn->Synchronize(_theFitter->Config().ParamsSettings());
    profileStart();
    {
