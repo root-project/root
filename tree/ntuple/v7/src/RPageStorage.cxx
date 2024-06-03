@@ -207,7 +207,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
          R__ASSERT(onDiskPage && ((onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage) ||
-                   (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage + sizeof(std::uint64_t))));
+                   (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage + kNBytesPageChecksum)));
          RSealedPage sealedPage{onDiskPage->GetAddress(), onDiskPage->GetSize(), pi.fNElements, pi.fHasChecksum};
 
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
@@ -401,7 +401,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &sealPag
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(sealPageConfig.fPage.GetBuffer());
    bool isAdoptedBuffer = true;
    auto nBytesPacked = sealPageConfig.fPage.GetNBytes();
-   auto nBytesChecksum = sealPageConfig.fWriteChecksum ? sizeof(std::uint64_t) : 0;
+   auto nBytesChecksum = sealPageConfig.fWriteChecksum ? kNBytesPageChecksum : 0;
 
    if (!sealPageConfig.fElement.IsMappable()) {
       nBytesPacked = sealPageConfig.fElement.GetPackedSize(sealPageConfig.fPage.GetNElements());

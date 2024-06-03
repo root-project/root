@@ -773,7 +773,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
                             auto sizeOfPageAndChecksum = pageLocator.fBytesOnStorage;
                             if (pageInfo.fHasChecksum)
-                               sizeOfPageAndChecksum += sizeof(std::uint64_t);
+                               sizeOfPageAndChecksum += kNBytesPageChecksum;
                             itLoc->second.push_back({clusterId, physicalColumnId, pageNo, position, offset,
                                                      pageLocator.fBytesOnStorage, sizeOfPageAndChecksum});
                             ++nPages;

@@ -69,6 +69,9 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 // clang-format on
 class RPageStorage {
 public:
+   /// The page checksum is a 64bit xxhash3
+   static constexpr std::size_t kNBytesPageChecksum = sizeof(std::uint64_t);
+
    /// The interface of a task scheduler to schedule page (de)compression tasks
    class RTaskScheduler {
    public:
@@ -108,7 +111,7 @@ public:
       void *GetWritableBuffer() const { return fBuffer; }
       void SetWritableBuffer(void *buffer) { fBuffer = buffer; }
 
-      std::uint32_t GetDataSize() const { return fBufferSize - fHasChecksum * sizeof(std::uint64_t); }
+      std::uint32_t GetDataSize() const { return fBufferSize - fHasChecksum * kNBytesPageChecksum; }
       std::uint32_t GetBufferSize() const { return fBufferSize; }
       void SetBufferSize(std::uint32_t bufferSize) { fBufferSize = bufferSize; }
 

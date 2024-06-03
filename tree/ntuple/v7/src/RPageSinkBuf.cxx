@@ -148,7 +148,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
    // The compressed size cannot be larger than the uncompressed size. Add 8 bytes for the checksum if necessary.
    zipItem.AllocateSealedPageBuf(page.GetNBytes() +
-                                 (GetWriteOptions().GetEnablePageChecksums() ? sizeof(std::uint64_t) : 0));
+                                 (GetWriteOptions().GetEnablePageChecksums() ? kNBytesPageChecksum : 0));
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
