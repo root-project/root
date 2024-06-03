@@ -1,7 +1,7 @@
 /**
  * lil-gui
  * https://lil-gui.georgealways.com
- * @version 0.18.2
+ * @version 0.19.2
  * @author George Michael Brower
  * @license MIT
  */
@@ -11,7 +11,7 @@
  */
 class Controller {
 
-	constructor( parent, object, property, className, widgetTag = 'div' ) {
+	constructor( parent, object, property, className, elementType = 'div' ) {
 
 		/**
 		 * The GUI that contains this controller.
@@ -33,7 +33,7 @@ class Controller {
 
 		/**
 		 * Used to determine if the controller is disabled.
-		 * Use `controller.disable( true|false )` to modify this value
+		 * Use `controller.disable( true|false )` to modify this value.
 		 * @type {boolean}
 		 */
 		this._disabled = false;
@@ -55,7 +55,7 @@ class Controller {
 		 * The outermost container DOM element for this controller.
 		 * @type {HTMLElement}
 		 */
-		this.domElement = document.createElement( 'div' );
+		this.domElement = document.createElement( elementType );
 		this.domElement.classList.add( 'controller' );
 		this.domElement.classList.add( className );
 
@@ -73,11 +73,11 @@ class Controller {
 		 * The DOM element that contains the controller's "widget" (which differs by controller type).
 		 * @type {HTMLElement}
 		 */
-		this.$widget = document.createElement( widgetTag );
+		this.$widget = document.createElement( 'div' );
 		this.$widget.classList.add( 'widget' );
 
 		/**
-		 * The DOM element that receives the disabled attribute when using disable()
+		 * The DOM element that receives the disabled attribute when using disable().
 		 * @type {HTMLElement}
 		 */
 		this.$disable = this.$widget;
@@ -111,7 +111,7 @@ class Controller {
 		 * @type {string}
 		 */
 		this._name = name;
-		this.$name.innerHTML = name;
+		this.$name.textContent = name;
 		return this;
 	}
 
@@ -273,29 +273,28 @@ class Controller {
 	}
 
 	/**
-	 * Destroys this controller and replaces it with a new option controller. Provided as a more
-	 * descriptive syntax for `gui.add`, but primarily for compatibility with dat.gui.
+	 * Changes this controller into a dropdown of options.
 	 *
-	 * Use caution, as this method will destroy old references to this controller. It will also
-	 * change controller order if called out of sequence, moving the option controller to the end of
-	 * the GUI.
+	 * Calling this method on an option controller will simply update the options. However, if this
+	 * controller was not already an option controller, old references to this controller are
+	 * destroyed, and a new controller is added to the end of the GUI.
 	 * @example
 	 * // safe usage
 	 *
-	 * gui.add( object1, 'property' ).options( [ 'a', 'b', 'c' ] );
-	 * gui.add( object2, 'property' );
+	 * gui.add( obj, 'prop1' ).options( [ 'a', 'b', 'c' ] );
+	 * gui.add( obj, 'prop2' ).options( { Big: 10, Small: 1 } );
+	 * gui.add( obj, 'prop3' );
 	 *
 	 * // danger
 	 *
-	 * const c = gui.add( object1, 'property' );
-	 * gui.add( object2, 'property' );
+	 * const ctrl1 = gui.add( obj, 'prop1' );
+	 * gui.add( obj, 'prop2' );
 	 *
-	 * c.options( [ 'a', 'b', 'c' ] );
-	 * // controller is now at the end of the GUI even though it was added first
+	 * // calling options out of order adds a new controller to the end...
+	 * const ctrl2 = ctrl1.options( [ 'a', 'b', 'c' ] );
 	 *
-	 * assert( c.parent.children.indexOf( c ) === -1 )
-	 * // c references a controller that no longer exists
-	 *
+	 * // ...and ctrl1 now references a controller that doesn't exist
+	 * assert( ctrl2 !== ctrl1 )
 	 * @param {object|Array} options
 	 * @returns {Controller}
 	 */
@@ -405,10 +404,17 @@ class Controller {
 	 * @returns {this}
 	 */
 	setValue( value ) {
-		this.object[ this.property ] = value;
-		this._callOnChange();
-		this.updateDisplay();
+
+		if ( this.getValue() !== value ) {
+
+			this.object[ this.property ] = value;
+			this._callOnChange();
+			this.updateDisplay();
+
+		}
+
 		return this;
+
 	}
 
 	/**
@@ -1225,15 +1231,6 @@ class OptionController extends Controller {
 		this.$display = document.createElement( 'div' );
 		this.$display.classList.add( 'display' );
 
-		this._values = Array.isArray( options ) ? options : Object.values( options );
-		this._names = Array.isArray( options ) ? options : Object.keys( options );
-
-		this._names.forEach( name => {
-			const $option = document.createElement( 'option' );
-			$option.innerHTML = name;
-			this.$select.appendChild( $option );
-		} );
-
 		this.$select.addEventListener( 'change', () => {
 			this.setValue( this._values[ this.$select.selectedIndex ] );
 			this._callOnFinishChange();
@@ -1252,7 +1249,26 @@ class OptionController extends Controller {
 
 		this.$disable = this.$select;
 
+		this.options( options );
+
+	}
+
+	options( options ) {
+
+		this._values = Array.isArray( options ) ? options : Object.values( options );
+		this._names = Array.isArray( options ) ? options : Object.keys( options );
+
+		this.$select.replaceChildren();
+
+		this._names.forEach( name => {
+			const $option = document.createElement( 'option' );
+			$option.textContent = name;
+			this.$select.appendChild( $option );
+		} );
+
 		this.updateDisplay();
+
+		return this;
 
 	}
 
@@ -1260,7 +1276,7 @@ class OptionController extends Controller {
 		const value = this.getValue();
 		const index = this._values.indexOf( value );
 		this.$select.selectedIndex = index;
-		this.$display.innerHTML = index === -1 ? value : this._names[ index ];
+		this.$display.textContent = index === -1 ? value : this._names[ index ];
 		return this;
 	}
 
@@ -1274,6 +1290,7 @@ class StringController extends Controller {
 
 		this.$input = document.createElement( 'input' );
 		this.$input.setAttribute( 'type', 'text' );
+		this.$input.setAttribute( 'spellcheck', 'false' );
 		this.$input.setAttribute( 'aria-labelledby', this.$name.id );
 
 		this.$input.addEventListener( 'input', () => {
@@ -1312,7 +1329,6 @@ const stylesheet = `.lil-gui {
   font-weight: normal;
   font-style: normal;
   text-align: left;
-  background-color: var(--background-color);
   color: var(--text-color);
   user-select: none;
   -webkit-user-select: none;
@@ -1355,6 +1371,7 @@ const stylesheet = `.lil-gui {
   width: var(--width, 245px);
   display: flex;
   flex-direction: column;
+  background: var(--background-color);
 }
 .lil-gui.root > .title {
   background: var(--title-background-color);
@@ -1434,7 +1451,7 @@ const stylesheet = `.lil-gui {
 .lil-gui .controller.string input {
   color: var(--string-color);
 }
-.lil-gui .controller.boolean .widget {
+.lil-gui .controller.boolean {
   cursor: pointer;
 }
 .lil-gui .controller.color .display {
@@ -1526,7 +1543,7 @@ const stylesheet = `.lil-gui {
 .lil-gui .controller.number .slider {
   width: 100%;
   height: var(--widget-height);
-  background-color: var(--widget-color);
+  background: var(--widget-color);
   border-radius: var(--widget-border-radius);
   padding-right: var(--slider-knob-width);
   overflow: hidden;
@@ -1535,11 +1552,11 @@ const stylesheet = `.lil-gui {
 }
 @media (hover: hover) {
   .lil-gui .controller.number .slider:hover {
-    background-color: var(--hover-color);
+    background: var(--hover-color);
   }
 }
 .lil-gui .controller.number .slider.active {
-  background-color: var(--focus-color);
+  background: var(--focus-color);
 }
 .lil-gui .controller.number .slider.active .fill {
   opacity: 0.95;
@@ -1645,8 +1662,10 @@ const stylesheet = `.lil-gui {
   border: none;
 }
 
-.lil-gui input {
+.lil-gui label, .lil-gui input, .lil-gui button {
   -webkit-tap-highlight-color: transparent;
+}
+.lil-gui input {
   border: 0;
   outline: none;
   font-family: var(--font-family);
@@ -1671,24 +1690,16 @@ const stylesheet = `.lil-gui {
 .lil-gui input[type=text],
 .lil-gui input[type=number] {
   padding: var(--widget-padding);
+  -moz-appearance: textfield;
 }
 .lil-gui input[type=text]:focus,
 .lil-gui input[type=number]:focus {
   background: var(--focus-color);
 }
-.lil-gui input::-webkit-outer-spin-button,
-.lil-gui input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-.lil-gui input[type=number] {
-  -moz-appearance: textfield;
-}
 .lil-gui input[type=checkbox] {
   appearance: none;
-  -webkit-appearance: none;
-  height: var(--checkbox-size);
   width: var(--checkbox-size);
+  height: var(--checkbox-size);
   border-radius: var(--widget-border-radius);
   text-align: center;
   cursor: pointer;
@@ -1705,7 +1716,6 @@ const stylesheet = `.lil-gui {
   }
 }
 .lil-gui button {
-  -webkit-tap-highlight-color: transparent;
   outline: none;
   cursor: pointer;
   font-family: var(--font-family);
@@ -1716,17 +1726,14 @@ const stylesheet = `.lil-gui {
   text-transform: none;
   background: var(--widget-color);
   border-radius: var(--widget-border-radius);
-  border: 1px solid var(--widget-color);
-  text-align: center;
-  line-height: calc(var(--widget-height) - 4px);
+  border: none;
 }
 @media (hover: hover) {
   .lil-gui button:hover {
     background: var(--hover-color);
-    border-color: var(--hover-color);
   }
   .lil-gui button:focus {
-    border-color: var(--focus-color);
+    box-shadow: inset 0 0 0 1px var(--focus-color);
   }
 }
 .lil-gui button:active {
@@ -1768,7 +1775,7 @@ class GUI {
 	 *
 	 * @param {number} [options.width=245]
 	 * Width of the GUI in pixels, usually set when name labels become too long. Note that you can make
-	 * name labels wider in CSS with `.lil‑gui { ‑‑name‑width: 55% }`
+	 * name labels wider in CSS with `.lil‑gui { ‑‑name‑width: 55% }`.
 	 *
 	 * @param {string} [options.title=Controls]
 	 * Name to display in the title bar.
@@ -2113,7 +2120,7 @@ class GUI {
 
 	/**
 	 * Opens a GUI or folder. GUI and folders are open by default.
-	 * @param {boolean} open Pass false to close
+	 * @param {boolean} open Pass false to close.
 	 * @returns {this}
 	 * @example
 	 * gui.open(); // open
@@ -2223,7 +2230,7 @@ class GUI {
 		 * @type {string}
 		 */
 		this._title = title;
-		this.$title.innerHTML = title;
+		this.$title.textContent = title;
 		return this;
 	}
 
@@ -2339,7 +2346,7 @@ class GUI {
 	}
 
 	/**
-	 * Destroys all DOM elements and event listeners associated with this GUI
+	 * Destroys all DOM elements and event listeners associated with this GUI.
 	 */
 	destroy() {
 

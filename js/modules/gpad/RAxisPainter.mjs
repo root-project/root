@@ -101,7 +101,7 @@ class RAxisPainter extends RObjectPainter {
 
       if (this.kind === kAxisTime)
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
-       else if (_symlog && (_symlog > 0)) {
+      else if (_symlog && (_symlog > 0)) {
          this.symlog = _symlog;
          this.func = d3_scaleSymlog().constant(_symlog).domain([smin, smax]);
       } else if (_log) {
