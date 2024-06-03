@@ -132,7 +132,7 @@ class TH1Painter extends THistPainter {
       }
 
       // final adjustment like in THistPainter.cxx line 7309
-      if (!this._exact_y_range && !pad_logy) {
+      if (!this._exact_y_range && !this._set_y_range && !pad_logy) {
          if ((this.options.BaseLine !== false) && (this.ymin >= 0))
             this.ymin = 0;
          else {
@@ -156,17 +156,22 @@ class TH1Painter extends THistPainter {
          }
       }
 
+      this._set_y_range = false;
+
       if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
          this.ymin = hmin;
          this.ymax = hmax;
+         this._set_y_range = true;
       } else {
          if (hmin !== kNoZoom) {
+            this._set_y_range = true;
             if (hmin < this.ymin)
                this.ymin = hmin;
              set_zoom = true;
          }
          if (hmax !== kNoZoom) {
+            this._set_y_range = true;
             if (hmax > this.ymax)
                this.ymax = hmax;
             set_zoom = true;

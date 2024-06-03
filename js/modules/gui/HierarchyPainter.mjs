@@ -3,9 +3,9 @@ import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, de
          isArrayProto, isRootCollection, isBatchMode, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          prROOT, clTList, clTMap, clTObjString, clTKey, clTFile, clTText, clTLatex, clTColor, clTStyle, kInspect, isPromise } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
-import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
+import { openFile, kBaseClass, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
-import { BasePainter, getElementRect, _loadJSDOM, convertDate } from '../base/BasePainter.mjs';
+import { BasePainter, getElementRect, _loadJSDOM, getTDatime, convertDate } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
 import { getDrawSettings, getDrawHandle, canDrawHandle, addDrawFunc, draw, redraw } from '../draw.mjs';
@@ -599,7 +599,7 @@ function createStreamerInfoContent(lst) {
          if (elem.fTitle)
             _name += ` // ${elem.fTitle}`;
 
-         item._childs.push({ _name, _title, _kind: elem.fTypeName, _icon: (elem.fTypeName === 'BASE') ? 'img_class' : 'img_member' });
+         item._childs.push({ _name, _title, _kind: elem.fTypeName, _icon: (elem.fTypeName === kBaseClass) ? 'img_class' : 'img_member' });
       }
       if (!item._childs.length)
          delete item._childs;
@@ -784,7 +784,7 @@ class HierarchyPainter extends BasePainter {
       if (!folder) folder = {};
 
       folder._name = file.fFileName;
-      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(file.fDatimeM.getDate())}`;
+      folder._title = (file.fTitle ? file.fTitle + ', path: ' : '') + file.fFullURL + `, size: ${getSizeStr(file.fEND)}, modified: ${convertDate(getTDatime(file.fDatimeM))}`;
       folder._kind = kindTFile;
       folder._file = file;
       folder._fullurl = file.fFullURL;
@@ -1882,6 +1882,8 @@ class HierarchyPainter extends BasePainter {
                      arg0 += `&opttitle=${gStyle.fOptTitle}`;
                   if (settings.TimeZone === 'UTC')
                      arg0 += '&utc';
+                  else if (settings.TimeZone === 'Europe/Berlin')
+                     arg0 += '&cet';
                   else if (settings.TimeZone)
                      arg0 += `&timezone='${settings.TimeZone}'`;
                   if (Math.abs(gStyle.fDateX - 0.01) > 1e-3)
@@ -3489,19 +3491,9 @@ class HierarchyPainter extends BasePainter {
          else if (settings.DislpayKind && settings.DislpayKind !== 'simple')
             this.disp_kind = settings.DislpayKind;
          else {
-            switch (itemsarr.length) {
-               case 0:
-               case 1: this.disp_kind = 'simple'; break;
-               case 2: this.disp_kind = 'vert2'; break;
-               case 3: this.disp_kind = 'vert21'; break;
-               case 4: this.disp_kind = 'vert22'; break;
-               case 5: this.disp_kind = 'vert32'; break;
-               case 6: this.disp_kind = 'vert222'; break;
-               case 7: this.disp_kind = 'vert322'; break;
-               case 8: this.disp_kind = 'vert332'; break;
-               case 9: this.disp_kind = 'vert333'; break;
-               default: this.disp_kind = 'flex';
-            }
+            const _kinds = ['simple', 'simple', 'vert2', 'vert21', 'vert22', 'vert32',
+                             'vert222', 'vert322', 'vert332', 'vert333'];
+            this.disp_kind = _kinds[itemsarr.length] || 'flex';
          }
       }
 

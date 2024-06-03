@@ -407,6 +407,7 @@ function compressSVG(svg) {
             .replace(/ title=""/g, '')                                 // remove all empty titles
             .replace(/<g objname="\w*" objtype="\w*"/g, '<g')          // remove object ids
             .replace(/<g transform="translate\(\d+,\d+\)"><\/g>/g, '') // remove all empty groups with transform
+            .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
    // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
@@ -924,10 +925,23 @@ async function svgToImage(svg, image_format, as_buffer) {
    });
 }
 
+/** @summary Convert ROOT TDatime object into Date
+ * @desc Always use UTC to avoid any variation between timezones */
+function getTDatime(dt) {
+   const y = (dt.fDatime >>> 26) + 1995,
+         m = ((dt.fDatime << 6) >>> 28) - 1,
+         d = (dt.fDatime << 10) >>> 27,
+         h = (dt.fDatime << 15) >>> 27,
+         min = (dt.fDatime << 20) >>> 26,
+         s = (dt.fDatime << 26) >>> 26;
+   return new Date(Date.UTC(y, m, d, h, min, s));
+}
+
 /** @summary Convert Date object into string used preconfigured time zone
  * @desc Time zone stored in settings.TimeZone */
 function convertDate(dt) {
    let res = '';
+
    if (settings.TimeZone && isStr(settings.TimeZone)) {
      try {
         res = dt.toLocaleString('en-GB', { timeZone: settings.TimeZone });
@@ -938,6 +952,6 @@ function convertDate(dt) {
    return res || dt.toLocaleString('en-GB');
 }
 
-export { getElementRect, getAbsPosInCanvas, convertDate,
+export { getElementRect, getAbsPosInCanvas, getTDatime, convertDate,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
          BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };
