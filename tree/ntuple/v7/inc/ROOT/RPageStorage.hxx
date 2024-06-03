@@ -248,7 +248,7 @@ public:
    /// Adds an extra type information record to schema. The extra type information will be written to the
    /// extension header. The information in the record will be merged with the existing information, e.g.
    /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
-   /// registered by specific fields (e.g., unsplit field).
+   /// registered by specific fields (e.g., unsplit field) and during merging.
    virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
    /// Write a page to the storage. The column must have been added before.

@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 
 #include <TDictAttributeMap.h>
+#include <TVirtualStreamerInfo.h>
 
 #include "Unsplit.hxx"
 #include "UnsplitXML.h"
@@ -155,4 +156,76 @@ TEST(RField, UnsplitPoly)
    reader->LoadEntry(2);
    EXPECT_EQ(2, ptrPoly->fPoly->x);
    EXPECT_EQ(200, dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b);
+}
+
+TEST(RField, UnsplitMerge)
+{
+   FileRaii fileGuard1("test_ntuple_merge_unsplit_1.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("p", "PolyContainer").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard1.GetPath());
+      auto ptrPoly = writer->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+      ptrPoly->fPoly = std::make_unique<PolyA>();
+      ptrPoly->fPoly->x = 1;
+      dynamic_cast<PolyA *>(ptrPoly->fPoly.get())->a = 100;
+      writer->Fill();
+   }
+
+   FileRaii fileGuard2("test_ntuple_merge_unsplit_2.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->AddField(RFieldBase::Create("p", "PolyContainer").Unwrap());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard2.GetPath());
+      auto ptrPoly = writer->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+      ptrPoly->fPoly = std::make_unique<PolyB>();
+      ptrPoly->fPoly->x = 2;
+      dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b = 200;
+      writer->Fill();
+   }
+
+   // Now merge the inputs
+   FileRaii fileGuard3("test_ntuple_merge_unsplit_out.root");
+   {
+      std::vector<std::unique_ptr<RPageSource>> sources;
+      sources.push_back(RPageSource::Create("ntpl", fileGuard1.GetPath(), RNTupleReadOptions()));
+      sources.push_back(RPageSource::Create("ntpl", fileGuard2.GetPath(), RNTupleReadOptions()));
+      std::vector<RPageSource *> sourcePtrs{sources[0].get(), sources[1].get()};
+      auto destination = std::make_unique<RPageSinkFile>("ntpl", fileGuard3.GetPath(), RNTupleWriteOptions());
+
+      RNTupleMerger merger;
+      EXPECT_NO_THROW(merger.Merge(sourcePtrs, *destination));
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard3.GetPath());
+   EXPECT_EQ(2u, reader->GetNEntries());
+   auto ptrPoly = reader->GetModel().GetDefaultEntry().GetPtr<PolyContainer>("p");
+   reader->LoadEntry(0);
+   EXPECT_EQ(1, ptrPoly->fPoly->x);
+   EXPECT_EQ(100, dynamic_cast<PolyA *>(ptrPoly->fPoly.get())->a);
+   reader->LoadEntry(1);
+   EXPECT_EQ(2, ptrPoly->fPoly->x);
+   EXPECT_EQ(200, dynamic_cast<PolyB *>(ptrPoly->fPoly.get())->b);
+
+   const auto &desc = reader->GetDescriptor();
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &typeInfo = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(ROOT::Experimental::EExtraTypeInfoIds::kStreamerInfo, typeInfo.GetContentId());
+   auto streamerInfoMap = RNTupleSerializer::DeserializeStreamerInfos(typeInfo.GetContent()).Unwrap();
+   EXPECT_EQ(4u, streamerInfoMap.size());
+   std::array<bool, 4> seenStreamerInfos{false, false, false, false};
+   for (const auto [_, streamerInfo] : streamerInfoMap) {
+      if (strcmp(streamerInfo->GetName(), "PolyContainer") == 0)
+         seenStreamerInfos[0] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyBase") == 0)
+         seenStreamerInfos[1] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyA") == 0)
+         seenStreamerInfos[2] = true;
+      else if (strcmp(streamerInfo->GetName(), "PolyB") == 0)
+         seenStreamerInfos[3] = true;
+   }
+   EXPECT_TRUE(seenStreamerInfos[0]);
+   EXPECT_TRUE(seenStreamerInfos[1]);
+   EXPECT_TRUE(seenStreamerInfos[2]);
+   EXPECT_TRUE(seenStreamerInfos[3]);
 }

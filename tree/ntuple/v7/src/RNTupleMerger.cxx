@@ -171,11 +171,6 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
    for (const auto &source : sources) {
       source->Attach();
 
-      // Make sure the source contains events to be merged
-      if (source->GetNEntries() == 0) {
-         continue;
-      }
-
       // Get a handle on the descriptor (metadata)
       auto descriptor = source->GetSharedDescriptorGuard();
 
@@ -187,6 +182,15 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       if (!destination.IsInitialized()) {
          model = descriptor->CreateModel();
          destination.Init(*model.get());
+      }
+
+      for (const auto &extraTypeInfoDesc : descriptor->GetExtraTypeInfoIterable()) {
+         destination.UpdateExtraTypeInfo(extraTypeInfoDesc);
+      }
+
+      // Make sure the source contains events to be merged
+      if (source->GetNEntries() == 0) {
+         continue;
       }
 
       // Now loop over all clusters in this file
