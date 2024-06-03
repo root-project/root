@@ -165,6 +165,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       CollectColumns(destination.GetDescriptor());
    }
 
+   std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
+
    // Append the sources to the destination one-by-one
    for (const auto &source : sources) {
       source->Attach();
@@ -183,7 +185,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
       // Create sink from the input model if not initialized
       if (!destination.IsInitialized()) {
-         auto model = descriptor->CreateModel();
+         model = descriptor->CreateModel();
          destination.Init(*model.get());
       }
 
