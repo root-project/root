@@ -78,11 +78,8 @@ TEST(RNTupleCompat, FwdCompat_FutureNTuple)
    {
       auto file = std::unique_ptr<TFile>(
          TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", "", ROOT::RCompressionSetting::ELevel::kUncompressed));
-
       auto xtuple = RXTuple{};
-      auto key = TKey(&xtuple, RXTuple::Class(), kNtupleObjName, sizeof(RXTuple), file.get());
-      key.WriteFile();
-      file->Close();
+      file->WriteObject(&xtuple, kNtupleObjName);
    }
 
    // Patch all instances of 'RXTuple' -> 'RNTuple'.
