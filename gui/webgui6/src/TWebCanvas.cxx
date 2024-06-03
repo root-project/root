@@ -545,6 +545,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TVirtualPad::TContext ctxt(pad, kFALSE);
          hs->BuildPrimitives(iter.GetOption());
          has_histo = true;
+         need_frame = true;
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
          if (opt.Contains("A")) {
@@ -554,6 +555,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             has_histo = true;
             if (strlen(obj->GetTitle()) > 0)
                need_title = obj->GetTitle();
+            need_frame = true;
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
          if (!frame)
