@@ -24,6 +24,7 @@
 /// \date March 2020, August 2022, August 2023
 /// \authors Stefan Wunsch (KIT, CERN), Julia Mathe (CERN), Marta Czurylo (CERN)
 
+#include "TInterpreter.h"
 #include <Math/Vector4D.h>
 #include <ROOT/RDFHelpers.hxx>
 #include <ROOT/RDataFrame.hxx>
@@ -85,6 +86,19 @@ void df106_HiggsToFourLeptons()
 
    // Add the ProgressBar feature
    ROOT::RDF::Experimental::AddProgressBar(df);
+
+#ifndef __CLING__
+   // If this tutorial is compiled, rather than run as a ROOT macro, the interpreter needs to be fed the signatures
+   // of all the functions we want to JIT in our analysis, as well as any type used in those signatures.
+   // clang-format off
+   gInterpreter->Declare(
+      "using ROOT::RVecF;"
+      "bool GoodElectronsAndMuons(const ROOT::RVecI &type, const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e,"
+                           "const RVecF &trackd0pv, const RVecF &tracksigd0pv, const RVecF &z0);"
+      "float ComputeInvariantMass(const RVecF &pt, const RVecF &eta, const RVecF &phi, const RVecF &e);"
+   );
+   // clang-format on
+#endif
 
    // Perform the analysis
    // Access metadata information that is stored in the JSON config file of the RDataFrame
