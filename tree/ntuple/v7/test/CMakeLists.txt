@@ -30,6 +30,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RXTuple
   LINKDEF RXTupleLinkDef.h
   DEPENDENCIES RIO
 )
+if(MSVC)
+  add_custom_command(TARGET RXTuple POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRXTuple.dll
+                                     ${CMAKE_CURRENT_BINARY_DIR}/libRXTuple.dll)
+endif()
 
 target_link_libraries(RXTuple PRIVATE xxHash::xxHash)
 
