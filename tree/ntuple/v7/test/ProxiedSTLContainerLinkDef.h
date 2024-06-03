@@ -6,6 +6,7 @@
 #pragma link C++ class std::set<std::set<CustomStruct>>+;
 #pragma link C++ class std::set<std::set<char>>+;
 #pragma link C++ class std::set<std::tuple<int, char, CustomStruct>>+;
+#pragma link C++ class std::set<std::array<float, 3>>+;
 
 #pragma link C++ class std::unordered_set<std::int64_t>+;
 #pragma link C++ class std::unordered_set<std::string>+;
