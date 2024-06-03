@@ -25,17 +25,10 @@ set(_CLAD_LIBRARY_PATH ${CMAKE_CURRENT_BINARY_DIR}/clad-prefix/src/clad-build/${
 
 # build byproducts only needed by Ninja
 if(CMAKE_GENERATOR MATCHES Ninja)
-  if(MSVC)
-    set(CLAD_BYPRODUCTS
-      ${_CLAD_LIBRARY_PATH}/cladPlugin.lib
-      ${_CLAD_LIBRARY_PATH}/cladDifferentiator.lib
-    )
-  else()
-    set(CLAD_BYPRODUCTS
-      ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
-      ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
-    )
-  endif()
+  set(CLAD_BYPRODUCTS
+    ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladPlugin${CMAKE_STATIC_LIBRARY_SUFFIX}
+    ${_CLAD_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}cladDifferentiator${CMAKE_STATIC_LIBRARY_SUFFIX}
+  )
 endif()
 
 if(APPLE)

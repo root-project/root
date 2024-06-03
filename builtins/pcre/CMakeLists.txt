@@ -24,7 +24,7 @@ if(WIN32)
     else()
       set(pcre_config_kind "Release")
     endif()
-    set(pcre_config "--config")
+    set(pcre_config "--config ${pcre_config_kind}")
   endif()
 endif()
 
@@ -58,7 +58,7 @@ ExternalProject_Add(PCRE
     -DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=TRUE
 
   BUILD_COMMAND
-    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} ${pcre_config_kind} --target pcre
+    ${CMAKE_COMMAND} --build <BINARY_DIR> ${pcre_config} --target pcre
 
   BUILD_BYPRODUCTS
     ${PCRE_BYPRODUCTS}
