@@ -614,6 +614,22 @@ for el in df.Take[int]("x"):
     print(f"Element: {el}")
 ~~~
 
+### Actions and readers
+
+An action that needs values for its computations will request it from a reader, e.g. a column created via `Define` or
+available from the input dataset. The action will request values from each column of the list of input columns (either
+inferred or specified by the user), in order. For example:
+
+~~~{.cpp}
+ROOT::RDataFrame df{1};
+auto df1 = df.Define("x", []{ return 11; });
+auto df2 = df1.Define("y", []{ return 22; });
+auto graph = df2.Graph<int, int>("x","y");
+~~~
+
+The `Graph` action is going to request first the value from column "x", then that of column "y". Specifically, the order
+of execution of the operations of nodes in this branch of the computation graph is guaranteed to be top to bottom.
+
 \anchor distrdf
 ## Distributed execution
 
