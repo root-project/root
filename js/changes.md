@@ -1,5 +1,9 @@
 # JSROOT changelog
 
+## Changes in 7.7.x
+1. Fix - hide empty title on the canvas
+
+
 ## Changes in 7.7.1
 1. Fix - properly select TF1 range after zooming
 2. Fix - TH1 y-range selection
