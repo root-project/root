@@ -3740,7 +3740,8 @@ ROOT::Experimental::ROptionalField::SplitValue(const RValue &value) const
 size_t ROOT::Experimental::ROptionalField::GetValueSize() const
 {
    const auto alignment = GetAlignment();
-   const auto actualSize = fSubFields[0]->GetValueSize() + 1;
+   // real size is the sum of the value size and the engagement boolean
+   const auto actualSize = fSubFields[0]->GetValueSize() + sizeof(bool);
    auto padding = 0;
    if (alignment > 1) {
       auto remainder = actualSize % alignment;
