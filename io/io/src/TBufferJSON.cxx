@@ -3268,7 +3268,7 @@ void TBufferJSON::JsonWriteFastArray(const T *arr, Long64_t arrsize, const char 
    if (arrsize > maxElements)
    {
       Fatal("JsonWriteFastArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called)
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
 
    TStreamerElement *elem = Stack()->fElem;
