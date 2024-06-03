@@ -21,6 +21,7 @@
 #include <set>
 #include <random>
 
+#include "Compression.h"
 #include "MaxSlotHelper.h"
 #include "SimpleFiller.h"
 
@@ -821,7 +822,8 @@ TEST_P(RDFSimpleTests, DifferentTreesInDifferentThreads)
       auto df = RDataFrame(64)
                    .Define("x", []() { return 1; })
                    .Define("y", []() { return 1; })
-                   .Snapshot<int, int>(treename, filename, {"x", "y"}, {"RECREATE", ROOT::kZLIB, 4, 2, 99, false});
+                   .Snapshot<int, int>(treename, filename, {"x", "y"},
+                                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 4, 2, 99, false});
    }
 
    TFile f(filename);
@@ -859,7 +861,8 @@ TEST_P(RDFSimpleTests, ManyRangesPerWorker)
    {
       ROOT::RDataFrame(184)
          .Define("i", []() { return 0; })
-         .Snapshot<int>("t", filename, {"i"}, {"RECREATE", ROOT::kZLIB, 1, 1, 99, false});
+         .Snapshot<int>("t", filename, {"i"},
+                        {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kZLIB, 1, 1, 99, false});
    }
    ROOT::RDataFrame("t", filename).Mean<int>("i");
    gSystem->Unlink(filename);

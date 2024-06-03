@@ -20,7 +20,7 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ROOT::ECompressionAlgorithm;
+   using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
@@ -35,12 +35,21 @@ struct RSnapshotOptions {
         fOverwriteIfExists(overwriteIfExists)
    {
    }
-   std::string fMode = "RECREATE";             ///< Mode of creation of output file
-   ECAlgo fCompressionAlgorithm = ROOT::kZLIB; ///< Compression algorithm of output file
-   int fCompressionLevel = 1;                  ///< Compression level of output file
-   int fAutoFlush = 0;                         ///< AutoFlush value for output tree
-   int fSplitLevel = 99;                       ///< Split level of output tree
-   bool fLazy = false;                         ///< Do not start the event loop when Snapshot is called
+   [[deprecated("Use the overload accepting a ROOT::RCompressionSetting::EAlgorithm for the `comprAlgo` parameter "
+                "instead")]] RSnapshotOptions(std::string_view mode, Int_t comprAlgo, int comprLevel, int autoFlush,
+                                              int splitLevel, bool lazy, bool overwriteIfExists = false)
+      : RSnapshotOptions(mode, static_cast<ECAlgo>(comprAlgo), comprLevel, autoFlush, splitLevel, lazy,
+
+                         overwriteIfExists)
+   {
+   }
+   std::string fMode = "RECREATE"; ///< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm =
+      ROOT::RCompressionSetting::EAlgorithm::kZLIB; ///< Compression algorithm of output file
+   int fCompressionLevel = 1;                       ///< Compression level of output file
+   int fAutoFlush = 0;                              ///< AutoFlush value for output tree
+   int fSplitLevel = 99;                            ///< Split level of output tree
+   bool fLazy = false;                              ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
 };
 } // namespace RDF
