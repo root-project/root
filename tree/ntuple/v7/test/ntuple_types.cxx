@@ -378,13 +378,16 @@ TEST(RNTuple, StdSet)
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
       auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
+      auto mySet5 = RFieldBase::Create("mySet5", "std::set<std::array<float, 3>>").Unwrap();
 
       model->AddField(std::move(mySet3));
       model->AddField(std::move(mySet4));
+      model->AddField(std::move(mySet5));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
       auto set_field3 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::string>>("mySet3");
       auto set_field4 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::set<char>>>("mySet4");
+      auto set_field5 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::set<std::array<float, 3>>>("mySet5");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
          *set_field2 = {
@@ -392,6 +395,7 @@ TEST(RNTuple, StdSet)
             std::make_tuple(i + 1, static_cast<char>(i + 97), CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
          *set_field3 = {"Hello", "world!", std::to_string(i)};
          *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
+         *set_field5 = {{1.0f * (i + 1), 2.0f * (i + 1), 3.0f * (i + 1)}};
          ntuple->Fill();
       }
    }
@@ -403,6 +407,7 @@ TEST(RNTuple, StdSet)
    auto viewSet2 = ntuple->GetView<std::set<std::tuple<int, char, CustomStruct>>>("mySet2");
    auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
    auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
+   auto viewSet5 = ntuple->GetView<std::set<std::array<float, 3>>>("mySet5");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
 
@@ -413,6 +418,10 @@ TEST(RNTuple, StdSet)
 
       EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
       EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
+
+      EXPECT_FLOAT_EQ(1.0f * (i + 1), viewSet5(i).begin()->at(0));
+      EXPECT_FLOAT_EQ(2.0f * (i + 1), viewSet5(i).begin()->at(1));
+      EXPECT_FLOAT_EQ(3.0f * (i + 1), viewSet5(i).begin()->at(2));
    }
 
    ntuple->LoadEntry(0);
