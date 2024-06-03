@@ -13,6 +13,7 @@
 #include "TH2Poly.h"
 #include "TMultiGraph.h"
 #include "TGraph.h"
+#include "TInterpreter.h"
 #include "Riostream.h"
 #include "TList.h"
 #include "TMath.h"
@@ -1333,7 +1334,8 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
       histName += "__";
       histName += hcounter;
    }
-   const char *hname = histName.Data();
+
+   TString hname = gInterpreter->MapCppName(histName.Data());
 
    //Construct the class initialization
    out << hname << " = new " << ClassName() << "(\"" << hname << "\", \""
@@ -1349,8 +1351,7 @@ void TH2Poly::SavePrimitive(std::ostream &out, Option_t *option)
 
    while((obj = next())){
       th2pBin = (TH2PolyBin*) obj;
-      th2pBin->GetPolygon()->SavePrimitive(out,
-                                           TString::Format("th2poly%s",histName.Data()));
+      th2pBin->GetPolygon()->SavePrimitive(out, TString::Format("th2poly%s",hname.Data()));
    }
 
    // save bin contents
