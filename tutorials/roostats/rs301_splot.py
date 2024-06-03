@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # SPlot tutorial
 #
@@ -22,6 +22,7 @@
 # \macro_output
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 
 import ROOT
@@ -66,7 +67,6 @@ TCanvas = 		 ROOT.TCanvas
 TLegend = 		 ROOT.TLegend
 
 RooArgSet = ROOT.RooArgSet
-#include <iomanip>
 
 
 # see below for implementation
@@ -201,13 +201,13 @@ def DoSPlot(object):
    # of the model that are not yields after doing the fit.
    #
    # This *could* be done with the lines below, however this is taken care of
-   # by the RooStats::SPlot constructor (or more precisely the AddSWeight
+   # by the RooStats.SPlot constructor (or more precisely the AddSWeight
    # method).
    #
-   # RooRealVar* sigmaZ = ws.var("sigmaZ");
-   # RooRealVar* qcdMassDecayConst = ws.var("qcdMassDecayConst");
-   # sigmaZ->setConstant();
-   # qcdMassDecayConst->setConstant();
+   # sigmaZ = ws.var("sigmaZ")
+   # qcdMassDecayConst = ws.var("qcdMassDecayConst")
+   # sigmaZ.setConstant()
+   # qcdMassDecayConst.setConstant()
    
    RooMsgService.instance().setSilentMode(True)
    
@@ -231,7 +231,7 @@ def DoSPlot(object):
    print( "Yield of Z is\t", zYield.getVal(), ".  From sWeights it is ")
    print( sData.GetYieldFromSWeight("zYield") )
 
-   #print("Yield of QCD is\t", qcdYield->getVal(), ".  From sWeights it is ")
+   #print("Yield of QCD is\t", qcdYield.getVal(), ".  From sWeights it is : ")
    print( sData.GetYieldFromSWeight("qcdYield") )
              
 
@@ -280,8 +280,8 @@ def MakePlots(object):
    ##                                 const char* cuts = nullptr
    ## not even using hex(id(nullptr)) 
    ## improve pythonzation...
-   ##RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet* data, const RooArgSet& vars, const RooFormulaVar&     cutVar, const char* wgtVarName = nullptr) 
-   ##RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet* data, const RooArgSet& vars, const char* cuts = nu    llptr, const char* wgtVarName = nullptr) 
+   ## RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet* data, const RooArgSet& vars, const RooFormulaVar&     cutVar, const char* wgtVarName = nullptr) 
+   ## RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet* data, const RooArgSet& vars, const char* cuts = nu    llptr, const char* wgtVarName = nullptr) 
    #"""
    cutVar0 = RooFormulaVar() # continues at ...
    #for the purpose of this tutorial we don't use cuts. 
@@ -297,10 +297,10 @@ def MakePlots(object):
    
    # this shouldn't be necessary, need to fix something with workspace
    # do this to set parameters back to their fitted values.
-   #   model->fitTo(*data, Extended());
+   # model.fitTo(data, Extended())
    
    # plot invMass for data with full model and individual components overlaid
-   #  TCanvas* cdata = new TCanvas();
+   # cdata = TCanvas()
    cdata.cd(1)
    frame = invMass.frame(Title("Fit of model to discriminating variable"))
    data.plotOn(frame)
@@ -365,7 +365,7 @@ def rs301_splot():
    AddData(wspace)
    
    # inspect the workspace if you wish
-   #  wspace->Print();
+   # wspace.Print()
    
    # do sPlot.
    # This will make a new dataset with sWeights added for every event.

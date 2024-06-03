@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # A hypothesis testing example based on number counting  with background uncertainty.
 #
@@ -75,6 +75,7 @@
 # \macro_code
 #
 # \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
+# \translator P. P.
 
 
 import ROOT 
@@ -206,7 +207,7 @@ def HybridStandardForm():
    # P A R T   3  :  A N A L Y T I C   R E S U L T
    # ==============================================
    # In this special case, the integrals are known analytically
-   # and they are implemented in RooStats::NumberCountingUtils
+   # and they are implemented in ROOT.RooStats.NumberCountingUtils
    
    # analytic Z_Bi
    p_Bi = NumberCountingUtils.BinomialWithTauObsP(150, 100, 1)

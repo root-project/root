@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # tutorial demonstrating and validates the RooJeffreysPrior class
 #
@@ -30,10 +30,10 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 import ROOT 
 from ROOT import RooStats, RooFit
-#include "RooJeffreysPrior.h"
 
 RooWorkspace = 		 ROOT.RooWorkspace
 RooDataHist = 		 ROOT.RooDataHist
@@ -136,7 +136,7 @@ def TestJeffreysGaussMean():
    temp = w.set("poi")
    pi.getParameters(temp).Print()
    
-   #  return;
+   #  return
    test =  RooGenericPdf("constant", "Expected = constant", "1", w.set("poi"))
    
    c2 =  TCanvas()
@@ -238,7 +238,7 @@ def TestJeffreysGaussMeanAndSigma():
    
    temp = w.set("poi")
    pi.getParameters(temp).Print()
-   #  return;
+   #  return
    
    c4 =  TCanvas()
    Jeff2d = pi.createHistogram("2dJeffreys", w.var("mu"), Binning(10, -5., 5), YVar(w.var("sigma"), Binning(10, 1., 5.)))

@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
 # Neutrino Oscillation Example from Feldman & Cousins
 #
@@ -13,6 +13,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 import ROOT
 from ROOT import RooStats, RooFit
@@ -111,8 +112,8 @@ def rs401d_FeldmanCousins(doFeldmanCousins = False, doMCMC = True):
    L = RooRealVar("L", "", .800, .600, 1.0, "km") # need these units in formula
    deltaMSq = RooRealVar("deltaMSq", "#Delta m^{2}", 40, 1, 300, "eV/c^{2}")
    sinSq2theta = RooRealVar("sinSq2theta", "sin^{2}(2#theta)", .006, .0, .02)
-   # RooRealVar deltaMSq("deltaMSq","#Delta m^{2}",40,20,70,"eV/c^{2}");
-   #  RooRealVar sinSq2theta("sinSq2theta","sin^{2}(2#theta)", .006,.001,.01);
+   # deltaMSq("deltaMSq","#Delta m^{2}",40,20,70,"eV/c^{2}")
+   # sinSq2theta("sinSq2theta","sin^{2}(2#theta)", .006,.001,.01)
    # PDF for oscillation only describes deltaMSq dependence, sinSq2theta goes into sigNorm
    # 1) The code for this PDF was created by issuing these commands
    #    root [0] RooClassFactory x
@@ -160,8 +161,8 @@ def rs401d_FeldmanCousins(doFeldmanCousins = False, doMCMC = True):
    model = RooAddPdf("model", "", RooArgList(sigModel, bkgEShape), RooArgList(sigNorm, bkgNorm))
    
    # for debugging, check model tree
-   #  model.printCompactTree();
-   #  model.graphVizTree("model.dot");
+   #  model.printCompactTree()
+   #  model.graphVizTree("model.dot")
    
    # turn off some messages
    RooMsgService.instance().setStreamStatus(0, kFALSE)

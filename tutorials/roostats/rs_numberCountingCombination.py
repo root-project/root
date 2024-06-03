@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # 'Number Counting Example' RooStats tutorial macro #100
 #
@@ -26,6 +26,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 import ROOT
 from ROOT import RooStats, RooFit
@@ -76,9 +77,9 @@ def rs_numberCountingCombination_expected():
    ##############
    
    # Step 1, define arrays with signal & bkg expectations and background uncertainties
-   # note: _c means is a ctype. Used for double*[2]
+   # Note: _c means is a ctype. Used for double*[2]
    #          alternatively you can use cppyy: 
-   #          cppyy.cppdef("double s[2]";")
+   #          cppyy.cppdef("double s[2];")
    #          s_c = cppyy.gbl.s
    s = [ 20., 10. ]# expected signal
    s_c = ( ctypes.c_double *len(s))(*s)
@@ -95,13 +96,6 @@ def rs_numberCountingCombination_expected():
    # but they could be added without much change to the example.
    f = NumberCountingPdfFactory()
    wspace =  RooWorkspace()
-   # debugging 
-   global gf, gwspace
-   gf = f
-   gwspace = wspace
-   global gs # list
-   gs = s  
-   #return
    cppyy.cppdef("double s[2] = {20., 10.} ;") 
    s_cpp = cppyy.gbl.s
    
@@ -116,7 +110,7 @@ def rs_numberCountingCombination_expected():
    f.AddExpData(s_c, b_c, db_c, 2, wspace, "ExpectedNumberCountingData")
    
    # see below for a printout of the workspace
-   #  wspace->Print();  #uncomment to see structure of workspace
+   #  wspace.Print()  # to see structure of workspace
    
    ##############
    # The Hypothesis testing stage:
@@ -161,7 +155,7 @@ def rs_numberCountingCombination_expected():
    lrint.SetConfidenceLevel(0.95)
    
    # Step 9, make a plot of the likelihood ratio and the interval obtained
-   # paramsOfInterest->setRealValue("masterSignal",1.);
+   # paramsOfInterest.setRealValue("masterSignal", 1.)
    # find limits
    lower = lrint.LowerLimit(mu)
    upper = lrint.UpperLimit(mu)
@@ -287,7 +281,7 @@ def rs_numberCountingCombination_observed():
    f.AddData(mainMeas_c, bkgMeas_c, dbMeas_c, 2, wspace, "ObservedNumberCountingData")
    
    # see below for a printout of the workspace
-   #  wspace->Print();  #uncomment to see structure of workspace
+   #  wspace.Print()  #to see structure of workspace
    
    ##############
    # The Hypothesis testing stage:

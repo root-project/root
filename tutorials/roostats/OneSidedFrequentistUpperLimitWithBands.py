@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
 # OneSidedFrequentistUpperLimitWithBands
 #
@@ -15,11 +15,11 @@
 # that it produces.
 #
 # The first ~100 lines define a new test statistic, then the main macro starts.
-# You may want to control:
-# ~~~{.cpp}
-#   double confidenceLevel=0.95;
-#   int nPointsToScan = 12;
-#   int nToyMC = 150;
+# You may want to control the next variables:
+# ~~~{.py}
+#   confidenceLevel=0.95
+#   nPointsToScan = 12
+#   nToyMC = 150
 # ~~~
 # This uses a modified version of the profile likelihood ratio as
 # a test statistic for upper limits (eg. test stat = 0 if muhat>mu).
@@ -52,6 +52,7 @@
 # Building the confidence belt can be computationally expensive.  Once it is built,
 # one could save it to a file and use it in a separate step.
 #
+# The next paragraphs only applies to .cxx tutorials, not to python. next paragraphs only applies to .cxx tutorials, not to python.
 # We can use PROOF to speed things along in parallel, however,
 # the test statistic has to be installed on the workers
 # so either turn off PROOF or include the modified test statistic
@@ -62,7 +63,7 @@
 # Note, if you have a boundary on the parameter of interest (eg. cross-section)
 # the threshold on the one-sided test statistic starts off very small because we
 # are only including downward fluctuations.  You can see the threshold in these printouts:
-# ~~~{.cpp}
+# ~~~{.py}
 # [#0] PROGRESS:Generation -- generated toys: 500 / 999
 # NeymanConstruction: Prog: 12/50 total MC = 39 this test stat = 0
 #  SigXsecOverSM=0.69 alpha_syst1=0.136515 alpha_syst3=0.425415 beta_syst2=1.08496 [-1e+30, 0.011215]  in interval = 1
@@ -103,6 +104,7 @@
 # \macro_code
 #
 # \authors Kyle Cranmer, Haichen Wang, Daniel Whiteson
+# \translator P. P.
 
 import ROOT 
 from ROOT import RooStats, RooFit
@@ -211,8 +213,8 @@ dataName = "obsData") :
    # you may want to adjust the range of your POI
    
    firstPOI = mc.GetParametersOfInterest().first()
-   #  firstPOI->setMin(0);
-   #  firstPOI->setMax(10);
+   #  firstPOI.setMin(0)
+   #  firstPOI.setMax(10)
    
    # --------------------------------------------
    # Create and use the FeldmanCousins tool
@@ -234,9 +236,9 @@ dataName = "obsData") :
    # of the nuisance parameters should be used to generate toys.
    # so let's just change the test statistic and realize this is
    # no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
-   #  ProfileLikelihoodTestStatModified onesided(*mc->GetPdf());
-   #  fc.GetTestStatSampler()->SetTestStatistic(&onesided);
-   # ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(True);
+   #  ProfileLikelihoodTestStatModified onesided(mc.GetPdf())
+   #  fc.GetTestStatSampler().SetTestStatistic(onesided)
+   # (fc.GetTestStatSampler()).SetGenerateBinned(True)
    toymcsampler = fc.GetTestStatSampler()
    testStat = (toymcsampler.GetTestStatistic())
    testStat.SetOneSided(True)
@@ -300,7 +302,7 @@ dataName = "obsData") :
    # For FeldmanCousins, the lower cut off is always 0
    for i in range(parameterScan.numEntries() ):
       tmpPoint = parameterScan.get(i).clone("temp")
-      # cout <<"get threshold"<<endl;
+      # print("cget threshold")
       arMax = belt.GetAcceptanceRegionMax(tmpPoint)
       poiVal = tmpPoint.getRealValue(firstPOI.GetName())
       histOfThresholds.Fill(poiVal, arMax)
@@ -345,9 +347,9 @@ dataName = "obsData") :
    for imc in range( nToyMC ):
       
       # set parameters back to values for generating pseudo data
-      #    cout << "\n get current nuis, set vals, print again" << endl;
+      #    print( "\n get current nuis, set vals, print again" ) 
       w.loadSnapshot("paramsToGenerateData")
-      #    poiAndNuisance->Print("v");
+      #    poiAndNuisance.Print("v")
       
       toyData = RooDataSet() 
       # debugging 
@@ -367,7 +369,7 @@ dataName = "obsData") :
       
       # generate global observables
       # need to be careful for simpdf
-      #    RooDataSet* globalData = mc->GetPdf()->generate(*mc->GetGlobalObservables(),1);
+      #    globalData = mc.GetPdf().generate(mc.GetGlobalObservables(),1)
       
       simPdf = (mc.GetPdf())
       if not simPdf:
@@ -397,18 +399,18 @@ dataName = "obsData") :
             
          
       
-      #    globalData->Print("v");
-      #    unconditionalObs = *globalData->get();
-      #    mc->GetGlobalObservables()->Print("v");
-      #    delete globalData;
-      #    cout << "toy data = " << endl;
-      #    toyData->get()->Print("v");
+      #    globalData.Print("v")
+      #    unconditionalObs = globalData.get()
+      #    mc.GetGlobalObservables().Print("v")
+      #    del globalData
+      #    print("toy data = " )
+      #    toyData.get().Print("v")
       
       # get test stat at observed UL in observed data
       firstPOI.setVal(observedUL)
       toyTSatObsUL = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
-      #    toyData->get()->Print("v");
-      #    cout <<"obsTSatObsUL " <<obsTSatObsUL << "toyTS " << toyTSatObsUL << endl;
+      #    toyData.get().Print("v")
+      #    print("obsTSatObsUL " ,obsTSatObsUL , "toyTS " , toyTSatObsUL )
       if (obsTSatObsUL < toyTSatObsUL) :# not sure about <= part yet
          CLb += (1.) / nToyMC
       if (obsTSatObsUL <= toyTSatObsUL): # not sure about <= part yet
@@ -420,12 +422,12 @@ dataName = "obsData") :
          tmpPoint = parameterScan.get(i).clone("temp")
          arMax = belt.GetAcceptanceRegionMax(tmpPoint)
          firstPOI.setVal(tmpPoint.getRealValue(firstPOI.GetName()))
-         #   double thisTS = profile->getVal();
+         #   thisTS = profile.getVal()
          thisTS = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
          
-         #   cout << "poi = " << firstPOI->getVal()
-         # << " max is " << arMax << " this profile = " << thisTS << endl;
-         #      cout << "thisTS = " << thisTS<<endl;
+         #   print( "poi = " , firstPOI.getVal())
+         #   print(" max is " , arMax , " this profile = " , thisTS) 
+         #   print("thisTS = " ,thisTS)
          if (thisTS <= arMax):
             thisUL = firstPOI.getVal()
          else:
@@ -436,41 +438,41 @@ dataName = "obsData") :
       #
       # loop over points in belt to find upper limit for this toy data
       thisUL = 0
-      for i in range(histOfThresholds.GetNbinsX() ++i)
-         tmpPoint = (RooArgSet) parameterScan.get(i).clone("temp")
+      for i in range(histOfThresholds.GetNbinsX() ):
+         tmpPoint =  parameterScan.get(i).clone("temp")
          print("----------------  ", i)
          tmpPoint.Print("v")
          print(f"from hist ", histOfThresholds.GetBinCenter(i+1) )
          arMax = histOfThresholds.GetBinContent(i+1)
-         # cout << " threhold from Hist = aMax " << arMax<<endl;
-         # double arMax2 = belt->GetAcceptanceRegionMax(*tmpPoint);
-         # cout << "from scan arMax2 = "<< arMax2 << endl; # not the same due to TH1F not TH1D
-         # cout << "scan - hist" << arMax2-arMax << endl;
+         # print(" threhold from Hist = aMax " , arMax)
+         # arMax2 = belt.GetAcceptanceRegionMax(tmpPoint)
+         # print("from scan arMax2 = ", arMax2 )# not the same due to TH1F not TH1D
+         # print("scan - hist",  arMax2-arMax )
          firstPOI.setVal( histOfThresholds.GetBinCenter(i+1))
-         #   double thisTS = profile->getVal();
+         # thisTS = profile.getVal()
          thisTS = fc.GetTestStatSampler().EvaluateTestStatistic(toyData,tmpPOI)
          
-         #   cout << "poi = " << firstPOI->getVal()
-         # = ROOT.Double_t() << " max is " << arMax << " this profile = " << thisTS << endl;
-         #      cout << "thisTS = " << thisTS<<endl;
+         # print( "poi = " , firstPOI.getVal())
+         # print( " max is " , arMax , " this profile = " , thisTS )
+         # print("thisTS = " ,thisTS)
          
          # NOTE: need to add a small epsilon term for single precision vs. double precision
-#         if(thisTS<=arMax + 1e-7){
-#            thisUL = firstPOI->getVal();
-#         } else{
-#            break;
-#         }
-#      }
-#      */
-#         
+         # if(thisTS<=arMax + 1e-7):
+         #   thisUL = firstPOI.getVal()
+         # else:
+         #   break
+         
+      
+      
+         
       """ 
       
       histOfUL.Fill(thisUL)
       
       # for few events, data is often the same, and UL is often the same
-      #    cout << "thisUL = " << thisUL<<endl;
+      #    print( "thisUL = " , thisUL)
       
-      #delete toyData
+      #del toyData
    c1.cd(2)   
    histOfUL.Draw()
    c1.Update()
@@ -480,9 +482,9 @@ dataName = "obsData") :
    # if you want to see a plot of the sampling distribution for a particular scan point:
    #
    """
-   SamplingDistPlot sampPlot
+   sampPlot = SamplingDistPlot() 
    indexInScan = 0
-   tmpPoint = (RooArgSet) parameterScan.get(indexInScan).clone("temp")
+   tmpPoint = parameterScan.get(indexInScan).clone("temp")
    firstPOI.setVal( tmpPoint.getRealValue(firstPOI.GetName()) )
    toymcsampler.SetParametersForTestStat(tmpPOI)
    samp = toymcsampler.GetSamplingDistribution(tmpPoint)
@@ -520,7 +522,7 @@ dataName = "obsData") :
    print("inclusive [P(toy>=obs|0)] for observed 95% upper-limit ", CLbinclusive)
    
 OneSidedFrequentistUpperLimitWithBands( \
-infile = "", workspaceName = "combined", \
-modelConfigName = "ModelConfig", \
-dataName = "obsData") 
+                                       infile = "", workspaceName = "combined", \
+                                       modelConfigName = "ModelConfig", \
+                                       dataName = "obsData") 
 

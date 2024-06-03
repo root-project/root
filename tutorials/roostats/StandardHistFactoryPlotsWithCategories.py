@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # StandardHistFactoryPlotsWithCategories
 #
@@ -35,6 +35,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 
 import ROOT
@@ -189,7 +190,7 @@ def StandardHistFactoryPlotsWithCategories(infile = "", workspaceName = "combine
       pdftmp.plotOn(frame, LineWidth(2), Normalization(normCount, RooAbsReal.NumEvent))
       frame.Draw()
       print( "expected events = ", mc.GetPdf().expectedEvents(data.get()) )
-      return;
+      return
    
    nPlots = 0
    if not simPdf:

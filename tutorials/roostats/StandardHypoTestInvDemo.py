@@ -1,18 +1,18 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
-# Standard tutorial macro for performing an inverted  hypothesis test for computing an interval
+# Standard tutorial macro for: Performing an Inverted Hypothesis Test to Calculate an Interval
 #
 # This macro will perform a scan of the p-values for computing the interval or limit
 #
 # Usage:
 #
 # ~~~{.py}
-# ipython3> %run StandardHypoTestInvDemo.C
-# ipython3> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set")
-# name",calculator type, test statistic type, use CLS,
-#                                number of points, xmin, xmax, number of toys, use number counting)
-#
+# ipython3> %run StandardHypoTestInvDemo.py
+# ipython3> StandardHypoTestInvDemo("fileName","workspace name","S+B modelconfig name","B model name","data set name", \
+#                                   "calculator type", "test statistic type", "use CLS", \
+#                                   "number of points", "xmin", "xmax", "number of toys", "use number counting")
+# calculator type:
 # type = 0 Freq calculator
 # type = 1 Hybrid calculator
 # type = 2 Asymptotic calculator
@@ -32,7 +32,7 @@
 # \macro_code
 #
 # \author Lorenzo Moneta
-# \translator Piper Wright Parker McKann
+# \translator 
 
 import ROOT 
 from ROOT import RooStats, RooFit
@@ -72,7 +72,6 @@ TString = ROOT.TString
 
 std = ROOT.std
 
-#include "RooStats/ModelConfig.h"
 RooAbsData = ROOT.RooAbsData
 Info = ROOT.Info
 RooArgSet = ROOT.RooArgSet
@@ -324,7 +323,7 @@ class HypoTestInvTool_plus(RooStats.HypoTestInvTool):
       upperLimit = r.UpperLimit()
       ulError = r.UpperLimitEstimatedError()
       
-      # std::cout << "DEBUG : [ " << lowerLimit << " , " << upperLimit << "  ] " << std::endl;
+      # print("DEBUG : [ ", lowerLimit, ", ", upperLimit, "  ] ")
       
       if (lowerLimit < upperLimit * (1. - 1.E-4) and lowerLimit != 0):
          print(f"The computed lower limit is: ", lowerLimit, " +/- ", llError )
@@ -1130,8 +1129,8 @@ def ReadResult(fileName, resultName = "", useCLs = True):
    StandardHypoTestInvDemo(fileName, resultName, "", "", "", 0, 0, useCLs)
 
 
-#ifdef USE_AS_MAIN
+
 def main():
    StandardHypoTestInvDemo()
 main()
-#endif
+

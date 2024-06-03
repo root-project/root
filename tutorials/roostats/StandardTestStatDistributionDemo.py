@@ -1,7 +1,7 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
-# StandardTestStatDistributionDemo.C
+# StandardTestStatDistributionDemo.py
 #
 # This simple script plots the sampling distribution of the profile likelihood
 # ratio test statistic based on the input Model File.  To do this one needs to
@@ -21,6 +21,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 
 
@@ -35,8 +36,6 @@ TSystem = 	 ROOT.TSystem
 TF1 = 		 ROOT.TF1
 TSystem = 	 ROOT.TSystem
 
-#include "RooWorkspace.h"
-#include "RooAbsData.h"
 RooArgSet = ROOT.RooArgSet  
 Form = ROOT.Form
 

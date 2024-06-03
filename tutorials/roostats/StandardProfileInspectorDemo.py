@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # Standard demo of the ProfileInspector class
 # StandardProfileInspectorDemo
@@ -27,6 +27,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 
 import ROOT
@@ -49,7 +50,7 @@ modelConfigName = "ModelConfig", dataName = "obsData"):
    # or create the standard example file if it doesn't exist
    
    filename = ""
-   if (not ROOT.strcmp(infile, "")) :
+   if infile == "" :
       print("using... results/example...model.root file")
       filename = "results/example_combined_GaussExample_model.root"
       fileExist = not ROOT.gSystem.AccessPathName(filename) # note opposite return code

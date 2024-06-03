@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # Standard demo of the numerical Bayesian calculator
 #
@@ -24,6 +24,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 import ROOT
 from ROOT import RooFit, RooStats
@@ -169,7 +170,7 @@ def StandardBayesianNumericalDemo(infile = "", workspaceName = "combined", \
    mc.SetPriorPdf(w.pdf("prior"))
    
    # do without systematics
-   # mc->SetNuisanceParameters(RooArgSet() );
+   # mc.SetNuisanceParameters(RooArgSet() )
    if nSigmaNuisance > 0:
       pdf = mc.GetPdf()
       assert(pdf)

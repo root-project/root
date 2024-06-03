@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # Standard demo of the Feldman-Cousins calculator
 # StandardFeldmanCousinsDemo
@@ -28,6 +28,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 
 import ROOT 
@@ -120,7 +121,7 @@ def StandardFeldmanCousinsDemo(infile = "", workspaceName = "combined",
    # in the model config
    fc = FeldmanCousins(data, mc)
    fc.SetConfidenceLevel(0.95) # 95% interval
-   # fc.AdditionalNToysFactor(0.1); # to speed up the result
+   # fc.AdditionalNToysFactor(0.1) # to speed up the result
    fc.UseAdaptiveSampling(True) # speed it up a bit
    fc.SetNBins(10)              # set how many points per parameter of interest to scan
    fc.CreateConfBelt(True)      # save the information in the belt for plotting
@@ -140,7 +141,7 @@ def StandardFeldmanCousinsDemo(infile = "", workspaceName = "combined",
       
    
    # We can use PROOF to speed things along in parallel
-   #  pc = ProofConfig(w, 1, "workers=4", kFALSE);
+   #  pc = ProofConfig(w, 1, "workers=4", kFALSE)
    #  toymcsampler = fc.GetTestStatSampler()
    #  toymcsampler.SetProofConfig(pc) # enable proof
    

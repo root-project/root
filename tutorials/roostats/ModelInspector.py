@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # RooStats Model Inspector
 #
 # Usage:
@@ -11,7 +11,7 @@
 # %run ModelInspector.py
 # #ModelInspector(fileName, workspaceName, modelConfigName, dataSetName)
 # ~~~
-# Fails with normal python. 
+# Fails with normal python. Use it only with ipython3 
 # Drag the sliders to adjust the parameters of the model.
 # the min and max range of the sliders are used to define the upper & lower variation
 # the pointer position of the slider is the central blue curve.
@@ -35,7 +35,7 @@
 #  - Version 2, November 2011
 #     - fixes from Bertrand Bellenot for scrolling window for many parameters
 #  - Version 3, April 2024
-#     - translation from C++ macros to python3     
+#     - translation from C++ macros to ipython3     
 # \author Kyle Cranmer
 # \translator P. P.
 

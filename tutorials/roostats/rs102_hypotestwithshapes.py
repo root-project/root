@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # A typical search for a new particle by studying an invariant mass distribution
 #
@@ -16,6 +16,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \translator P. P.
 
 # use this order for safety on library loading
 import ROOT 
@@ -282,7 +283,7 @@ def rs102_hypotestwithshapes():
    AddData(wspace)
    
    # inspect the workspace if you wish
-   #  wspace->Print();
+   #  wspace.Print()
    
    # do the hypothesis test
    DoHypothesisTest(wspace)

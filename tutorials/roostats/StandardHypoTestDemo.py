@@ -1,21 +1,23 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
 # Standard tutorial macro for hypothesis test (for computing the discovery significance) using all
 # RooStats hypothesis tests calculators and test statistics.
 #
 # Usage:
 #
-# ~~~{.cpp}
-# root>.L StandardHypoTestDemo.C
-# root> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set
-# name",calculator type, test statistic type, number of toys)
+# ~~~{.py}
+# ipython3> %run StandardHypoTestDemo.py
+# ipython3> StandardHypoTestDemo("fileName","workspace name","S+B modelconfig name","B model name","data set\
+#                                 name", calculator type, test statistic type, number of toys)
 #
+#  calculator type:
 #  type = 0 Freq calculator
 #  type = 1 Hybrid calculator
 #  type = 2 Asymptotic calculator
 #  type = 3 Asymptotic calculator using nominal Asimov data sets (not using fitted parameter values but nominal ones)
 #
+#  test statistic type:
 # testStatType = 0 LEP
 #              = 1 Tevatron
 #              = 2 Profile Likelihood
@@ -27,6 +29,8 @@
 # \macro_code
 #
 # \author Lorenzo Moneta
+# \translator P. P.
+
 
 from warnings import warn
 from gc import collect
@@ -144,19 +148,19 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
    # printLevel
    
    # disable - can cause some problems
-   # ToyMCSampler::SetAlwaysUseMultiGen(True);
+   # ToyMCSampler.SetAlwaysUseMultiGen(True)
    
    SimpleLikelihoodRatioTestStat.SetAlwaysReuseNLL(True)
    ProfileLikelihoodTestStat.SetAlwaysReuseNLL(True)
    RatioOfProfiledLikelihoodsTestStat.SetAlwaysReuseNLL(True)
    
-   # RooRandom::randomGenerator()->SetSeed(0);
+   # RooRandom.randomGenerator().SetSeed(0)
    
-   # to change minimizers
-   # ~~~{.bash}
-   # ROOT::Math::MinimizerOptions::SetDefaultStrategy(0);
-   # ROOT::Math::MinimizerOptions::SetDefaultMinimizer("Minuit2");
-   # ROOT::Math::MinimizerOptions::SetDefaultTolerance(1);
+   # to change minimizers set the following in the interpreter
+   # ~~~{.ipython3}
+   # ROOT.Math.MinimizerOptions.SetDefaultStrategy(0)
+   # ROOT.Math.MinimizerOptions.SetDefaultMinimizer("Minuit2")
+   # ROOT.Math.MinimizerOptions.SetDefaultTolerance(1)
    # ~~~
    
    # -------------------------------------------------------
@@ -242,7 +246,7 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
          return
       oldval = var.getVal()
       var.setVal(0)
-      # bModel->SetSnapshot( RooArgSet(*var, *w->var("lumi"))  );
+      # bModel.SetSnapshot( RooArgSet(var, w.var("lumi"))  )
       bModel.SetSnapshot(RooArgSet(var))
       var.setVal(oldval)
       
@@ -255,11 +259,11 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
       oldval = var.getVal()
       if poiValue > 0:
          var.setVal(poiValue)
-      # sbModel->SetSnapshot( RooArgSet(*var, *w->var("lumi") ) );
+      # sbModel.SetSnapshot( RooArgSet(var, w.var("lumi") ) )
       sbModel.SetSnapshot(RooArgSet(var))
       if poiValue > 0:
          var.setVal(oldval)
-      # sbModel->SetSnapshot( *sbModel->GetParametersOfInterest() );
+      # sbModel.SetSnapshot( sbModel.GetParametersOfInterest() )
       
    
    # part 1, hypothesis testing
@@ -291,9 +295,9 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
       ropl.EnableDetailedOutput()
       
    
-   # profll.SetReuseNLL(mOptimize);
-   # slrts.SetReuseNLL(mOptimize);
-   # ropl.SetReuseNLL(mOptimize);
+   # profll.SetReuseNLL(mOptimize)
+   # slrts.SetReuseNLL(mOptimize)
+   # ropl.SetReuseNLL(mOptimize)
    
    AsymptoticCalculator.SetPrintLevel(printLevel)
    
@@ -313,7 +317,9 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
       
    elif (calcType == 1) :
       hypoCalc.SetToys(ntoys, ntoys / nToysRatio)
-      # n. a. yetif (enableDetOutput) : ((HybridCalculator*) hypoCalc)->StoreFitInfo(True);
+      # n. a. yet 
+      # if (enableDetOutput) :
+      #     hypoCalc.StoreFitInfo(True)
       
    elif (calcType == 2) :
       if (testStatType == 3) :
@@ -366,8 +372,8 @@ ntoys = 5000, useNC = False, nuisPriorName = 0) :
       hypoCalc.ForcePriorNuisanceNull(nuisPdf)
       
    
-   # hypoCalc->ForcePriorNuisanceAlt(*sbModel->GetPriorPdf());
-   # hypoCalc->ForcePriorNuisanceNull(*bModel->GetPriorPdf());
+   # hypoCalc.ForcePriorNuisanceAlt(sbModel.GetPriorPdf())
+   # hypoCalc.ForcePriorNuisanceNull(bModel.GetPriorPdf())
    
    sampler = hypoCalc.GetTestStatSampler()
    
@@ -509,10 +515,10 @@ infile = ""
 workspaceName = "combined" 
 modelSBName = "ModelConfig"
 modelBName = "" 
-# 0 freq, 1 hybrid, 2 asymptotic 
 dataName = "obsData"
+# calcType options:   0 freq, 1 hybrid, 2 asymptotic, 3 asymp. using asimov
 calcType = 0 
-# 0 LEP, 1 TeV 2 LHC, 3 LHC - one sided 
+# testStatType option : 0 LEP, 1 TeV 2 LHC, 3 LHC - one sided 
 testStatType = 3
 ntoys = 5000
 useNC = False

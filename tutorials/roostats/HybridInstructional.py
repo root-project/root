@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # Example demonstrating usage of HybridCalcultor
 #
@@ -55,12 +55,11 @@
 # \macro_code
 #
 # \authors Kyle Cranmer, Wouter Verkerke, and Sven Kreiss
-
+# \translator P. P.
 
 import ROOT
 from ROOT import RooStats, RooFit
 
-#RooGlobalFunc = 		 ROOT.RooGlobalFunc
 RooRealVar = 		 ROOT.RooRealVar
 RooProdPdf = 		 ROOT.RooProdPdf
 RooWorkspace = 		 ROOT.RooWorkspace
@@ -137,10 +136,11 @@ ROOT.gInterpreter.Declare( long_declaration )
 BinCountTestStat = ROOT.BinCountTestStat
 
 # Employing a direct Class in python has problems
-# Similar to ROOT.Fit.Fitter 
-# It is described here :
+# similar to ROOT.Fit.Fitter. 
+# Such a problem is described here :
 # https://github.com/root-project/root/issues/12391 
 """
+# implementation of the class with problems
 # class BinCountTestStat(TestStatistic): # doesn't work properly. problem with the dispatcher
 class BinCountTestStat(TestStatistic):
    #public:
@@ -383,7 +383,7 @@ def HybridInstructional():
    # $py=Pois(y,tau*b)$ that will be equivalent to multiplying by a uniform.
    #
    # Alternatively, we could explicitly use a gamma distribution:
-   # `w->factory("Gamma::gamma(b,sum::temp(y,1),1,0)");`
+   # `w.factory("Gamma::gamma(b,sum::temp(y,1),1,0)")`
    #
    # or we can use some other ad hoc prior that do not naturally
    # follow from the known form of the auxiliary measurement.
@@ -419,19 +419,19 @@ def HybridInstructional():
    hc1.ForcePriorNuisanceNull(w.pdf("py"))
    # if you wanted to use the ad hoc Gaussian prior instead
    # ~~~
-   #  hc1.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
-   #  hc1.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
+   #  hc1.ForcePriorNuisanceAlt(w.pdf("gauss_prior"))
+   #  hc1.ForcePriorNuisanceNull(w.pdf("gauss_prior"))
    # ~~~
    # if you wanted to use the ad hoc log-normal prior instead
    # ~~~
-   #  hc1.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
-   #  hc1.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
+   #  hc1.ForcePriorNuisanceAlt(w.pdf("lognorm_prior"))
+   #  hc1.ForcePriorNuisanceNull(w.pdf("lognorm_prior"))
    # ~~~
    
    # enable proof
    # NOTE: This test statistic is defined in this macro, and is not
    # working with PROOF currently.  Luckily test stat is fast to evaluate.
-   #  `if(pc) toymcs1->SetProofConfig(pc);`
+   #  `if(pc) toymcs1.SetProofConfig(pc)`
    
    # these lines save current msg level and then kill any messages below ERROR
    RooMsgService.instance().setGlobalKillBelow(RooFit.ERROR)
@@ -472,13 +472,13 @@ def HybridInstructional():
    hc2.ForcePriorNuisanceNull(w.pdf("py"))
    # if you wanted to use the ad hoc Gaussian prior instead
    # ~~~
-   #  hc2.ForcePriorNuisanceAlt(*w->pdf("gauss_prior"));
-   #  hc2.ForcePriorNuisanceNull(*w->pdf("gauss_prior"));
+   #  hc2.ForcePriorNuisanceAlt(w.pdf("gauss_prior"))
+   #  hc2.ForcePriorNuisanceNull(w.pdf("gauss_prior"))
    # ~~~
    # if you wanted to use the ad hoc log-normal prior instead
    # ~~~
-   #  hc2.ForcePriorNuisanceAlt(*w->pdf("lognorm_prior"));
-   #  hc2.ForcePriorNuisanceNull(*w->pdf("lognorm_prior"));
+   #  hc2.ForcePriorNuisanceAlt(w.pdf("lognorm_prior"))
+   #  hc2.ForcePriorNuisanceNull(w.pdf("lognorm_prior"))
    # ~~~
    
    # enable proof
@@ -540,7 +540,7 @@ def HybridInstructional():
    sb_modelXY.SetSnapshot(w.set("poi"))
    
    # without this print, their can be a crash when using PROOF.  Strange.
-   #  w->Print();
+   #  w.Print()
    
    # Test statistics like the profile likelihood ratio
    # (or the ratio of profiled likelihoods (Tevatron) or the MLE for s)
@@ -581,14 +581,14 @@ def HybridInstructional():
    hc3.ForcePriorNuisanceNull(w.pdf("gamma_y0"))
    # if you wanted to use the ad hoc Gaussian prior instead
    # ~~~{.cpp}
-   # hc3.ForcePriorNuisanceAlt(*w->pdf("gauss_prior_y0"));
-   # hc3.ForcePriorNuisanceNull(*w->pdf("gauss_prior_y0"));
+   # hc3.ForcePriorNuisanceAlt(w.pdf("gauss_prior_y0"))
+   # hc3.ForcePriorNuisanceNull(w.pdf("gauss_prior_y0"))
    # ~~~
    
    # choose fit-based test statistic
    toymcs3.SetTestStatistic(profll)
-   # toymcs3->SetTestStatistic(&ropl);
-   # toymcs3->SetTestStatistic(&mlets);
+   # toymcs3.SetTestStatistic(ropl)
+   # toymcs3.SetTestStatistic(mlets)
    
    # enable proof
    if pc:

@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # High Level Factory: creating a complex combined model.
 #
@@ -8,6 +8,7 @@
 # \macro_code
 #
 # \author Danilo Piparo
+# \transltor P. P.
 
 
 # use this order for safety on library loading 

@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
 # Standard demo of the Bayesian MCMC calculator
 #
@@ -26,6 +26,7 @@
 # \macro_code
 #
 # \author Kyle Cranmer
+# \transltor P. P.
 
 import ROOT
 TFile = ROOT.TFile
@@ -108,7 +109,7 @@ def StandardBayesianMCMCDemo(\
    # -------------------------------------------------------
    
    # get the workspace out of the file
-   #w = (RooWorkspace )file.Get(workspaceName)
+   #w = file.Get(workspaceName)
    w = file.Get(workspaceName)
    if not w:
       print(f"workspace not found")
@@ -152,7 +153,7 @@ def StandardBayesianMCMCDemo(\
    # in the model config
    mcmc = MCMCCalculator(data, mc)
    mcmc.SetConfidenceLevel(optMCMC.confLevel) # 95% interval
-   #  mcmc.SetProposalFunction(*pf);
+   #  mcmc.SetProposalFunction(pf)
    mcmc.SetProposalFunction(sp)
    mcmc.SetNumIters(optMCMC.numIters)             # Metropolis-Hastings algorithm iterations
    mcmc.SetNumBurnInSteps(optMCMC.numBurnInSteps) # first N steps to be ignored as burn-in

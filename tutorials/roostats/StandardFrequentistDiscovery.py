@@ -1,5 +1,5 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook
 # StandardFrequentistDiscovery
 #
@@ -19,6 +19,7 @@
 # \macro_code
 #
 # \authors Sven Kreiss, Kyle Cranmer
+# \translator P. P.
 
 
 import ROOT
@@ -167,9 +168,9 @@ def StandardFrequentistDiscovery(infile = "", workspaceName = "channel1",
       
    
    # We can use PROOF to speed things along in parallel
-   # pc = ProofConfig(w, 2, "user@yourfavoriteproofcluster", False);
+   # pc = ProofConfig(w, 2, "user@yourfavoriteproofcluster", False)
    pc = ProofConfig(w, 2, "", False)
-   # toymcs.SetProofConfig(pc);    # enable proof
+   # toymcs.SetProofConfig(pc)    # enable proof
    
    # instantiate the calculator
    freqCalc = FrequentistCalculator(data, mc, mcNull, toymcs)

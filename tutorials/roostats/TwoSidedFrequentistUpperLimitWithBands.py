@@ -1,7 +1,7 @@
 # \file
-# \ingroup tutorial_roostats
+# \ingroup roostats_python_tutorials
 # \notebook -js
-# TwoSidedFrequentistUpperLimitWithBands
+# TwoSidedFrequentistUpperLimitWithBands.py
 #
 #
 # This is a standard demo that can be used with any ROOT file
@@ -16,11 +16,11 @@
 # that it produces.
 #
 # You may want to control:
-# ~~~{.cpp}
-#   double confidenceLevel=0.95;
-#   double additionalToysFac = 1.;
-#   int nPointsToScan = 12;
-#   int nToyMC = 200;
+# ~~~{.py}
+#   confidenceLevel=0.95
+#   additionalToysFac = 1.
+#   nPointsToScan = 12
+#   nToyMC = 200
 # ~~~
 #
 # This uses a modified version of the profile likelihood ratio as
@@ -59,6 +59,7 @@
 # Building the confidence belt can be computationally expensive.
 # Once it is built, one could save it to a file and use it in a separate step.
 #
+# The next paragraph doesn't apply to python tutorial, only to C++.
 # We can use PROOF to speed things along in parallel, however,
 # the test statistic has to be installed on the workers
 # so either turn off PROOF or include the modified test statistic
@@ -98,6 +99,7 @@
 # \macro_code
 #
 # \authors Kyle Cranmer,Contributions from Aaron Armbruster, Haoshuang Ji, Haichen Wang and Daniel Whiteson
+# \translator P. P.
 
 import ROOT
 from ROOT import RooStats, RooFit
@@ -205,8 +207,8 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
    # Now get the POI for convenience
    # you may want to adjust the range of your POI
    firstPOI = mc.GetParametersOfInterest().first()
-   #  firstPOI->setMin(0);
-   #  firstPOI->setMax(10);
+   #  firstPOI.setMin(0)
+   #  firstPOI.setMax(10)
    
    # -------------------------------------------------------
    # create and use the FeldmanCousins tool
@@ -228,8 +230,8 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
    # of the nuisance parameters should be used to generate toys.
    # so let's just change the test statistic and realize this is
    # no longer "Feldman-Cousins" but is a fully frequentist Neyman-Construction.
-   #  fc.GetTestStatSampler()->SetTestStatistic(&onesided);
-   # ((ToyMCSampler*) fc.GetTestStatSampler())->SetGenerateBinned(true);
+   #  fc.GetTestStatSampler().SetTestStatistic(onesided)
+   #  fc.GetTestStatSampler().SetGenerateBinned(True)
    toymcsampler = fc.GetTestStatSampler()
    testStat = toymcsampler.GetTestStatistic()
    
@@ -293,7 +295,7 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
    # For FeldmanCousins, the lower cut off is always 0
    for i in range(parameterScan.numEntries() ):
       tmpPoint = parameterScan.get(i).clone("temp")
-      # cout <<"get threshold"<<endl;
+      # print("get threshold")
       arMax = belt.GetAcceptanceRegionMax(tmpPoint)
       poiVal = tmpPoint.getRealValue(firstPOI.GetName())
       histOfThresholds.Fill(poiVal, arMax)
@@ -336,9 +338,9 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
    for imc in range( nToyMC ):
       
       # set parameters back to values for generating pseudo data
-      #    cout << "\n get current nuis, set vals, print again" << endl;
+      #    print("\n get current nuis, set vals, print again") 
       w.loadSnapshot("paramsToGenerateData")
-      #    poiAndNuisance->Print("v");
+      #    poiAndNuisance.Print("v")
       
        
       # now generate a toy dataset for the main measurement
@@ -348,10 +350,10 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
          else:
             print(f"Not sure what to do about this model")
       else:
-         #      cout << "generating extended dataset"<<endl;
+         #print( "generating extended dataset")
          toyData = mc.GetPdf().generate(mc.GetObservables(), Extended())
          
-      
+      # The next paragraph doesn't apply to pyroot.  
       # generate global observables
       # need to be careful for simpdf.
       # In ROOT 5.28 there is a problem with generating global observables
@@ -375,8 +377,8 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
       # get test stat at observed UL in observed data
       firstPOI.setVal(observedUL)
       toyTSatObsUL = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
-      #    toyData->get()->Print("v");
-      #    cout <<"obsTSatObsUL " <<obsTSatObsUL << "toyTS " << toyTSatObsUL << endl;
+      #    toyData.get().Print("v")
+      #    print( "obsTSatObsUL " ,obsTSatObsUL , "toyTS " , toyTSatObsUL) 
       if (obsTSatObsUL < toyTSatObsUL) : # not sure about <= part yet
          CLb += (1.) / nToyMC
       if (obsTSatObsUL <= toyTSatObsUL) : # not sure about <= part yet
@@ -388,12 +390,12 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
          tmpPoint = parameterScan.get(i).clone("temp")
          arMax = belt.GetAcceptanceRegionMax(tmpPoint)
          firstPOI.setVal(tmpPoint.getRealValue(firstPOI.GetName()))
-         #   double thisTS = profile->getVal();
+         # thisTS = profile.getVal()
          thisTS = fc.GetTestStatSampler().EvaluateTestStatistic(toyData, tmpPOI)
          
-         #   cout << "poi = " << firstPOI->getVal()
-         # << " max is " << arMax << " this profile = " << thisTS << endl;
-         #      cout << "thisTS = " << thisTS<<endl;
+         # print("poi = " , firstPOI.getVal())
+         # print(" max is " , arMax , " this profile = " , thisTS )
+         # print( "thisTS = " , thisTS)
          if (thisTS <= arMax):
             thisUL = firstPOI.getVal()
          else:
@@ -404,7 +406,7 @@ def TwoSidedFrequentistUpperLimitWithBands(infile = "", workspaceName = "combine
       histOfUL.Fill(thisUL)
       
       # for few events, data is often the same, and UL is often the same
-      #    cout << "thisUL = " << thisUL<<endl;
+      # print( "thisUL = " , thisUL)
       
    histOfUL.Draw()
    c1.Update()
