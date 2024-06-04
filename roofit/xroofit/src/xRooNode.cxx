@@ -11075,7 +11075,7 @@ std::string cling::printValue(const xRooNode *v)
             out += "{";
          out += n->GetName();
          if (out.length() > 100 && left > 0) {
-            out += TString::Format(",... and %lu more", left);
+            out += TString::Format(",... and %zu more", left);
             break;
          }
       }

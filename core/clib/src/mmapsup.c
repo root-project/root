@@ -174,7 +174,7 @@ PTR __mmalloc_mmap_morecore(struct mdesc *mdp, int size)
             if (mdp -> top != PAGE_ALIGN(mdp -> top)) {
               fprintf(stderr,
                       "mmap_morecore error: base memory location (%p) is not aligned with %zu as required.\n",
-                      mdp -> top, (long)pagesize);
+                      mdp -> top, pagesize);
               return result;
             }
             mapto = mmap (mdp -> top, mapbytes, PROT_READ | PROT_WRITE,

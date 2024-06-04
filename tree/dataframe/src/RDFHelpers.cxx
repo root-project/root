@@ -74,7 +74,7 @@ unsigned int ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    const unsigned int nToRun =
       std::count_if(handles.begin(), handles.end(), [](const auto &h) { return !h.IsReady(); });
    if (nToRun < handles.size()) {
-      Warning("RunGraphs", "Got %lu handles from which %lu link to results which are already ready.", handles.size(),
+      Warning("RunGraphs", "Got %zu handles from which %zu link to results which are already ready.", handles.size(),
               handles.size() - nToRun);
    }
    if (nToRun == 0u)
