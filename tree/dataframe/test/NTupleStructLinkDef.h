@@ -9,4 +9,6 @@
 #pragma link C++ class std::set < std::set < Electron>> + ;
 #pragma link C++ class std::set < std::vector < Electron>> + ;
 
+#pragma link C++ class Jet + ;
+
 #endif
