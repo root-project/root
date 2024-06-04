@@ -24,6 +24,7 @@ endif()
 
 if(root7)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDS.hxx)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDSHelpers.hxx)
   list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)
 endif()
 
