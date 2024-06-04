@@ -281,7 +281,9 @@ public:
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetCacheRead(TFileCacheRead *cache, TObject *tree = nullptr, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
-   virtual void        SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   virtual void        SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                          R__DEPRECATED(6, 34, "Pass a ROOT::RCompressionSetting::EAlgorithm instead of an int");
+   virtual void        SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
    virtual void        SetCompressionLevel(Int_t level = (Int_t)ROOT::RCompressionSetting::ELevel::kUseMin);
    virtual void        SetCompressionSettings(Int_t settings = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void        SetEND(Long64_t last) { fEND = last; }

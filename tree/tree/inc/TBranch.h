@@ -272,7 +272,9 @@ public:
    virtual void      SetAutoDelete(bool autodel=true);
    virtual void      SetBasketSize(Int_t buffsize);
    virtual void      SetBufferAddress(TBuffer *entryBuffer);
-           void      SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+           void      SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                          R__DEPRECATED(6, 34, "Pass a ROOT::RCompressionSetting::EAlgorithm instead of an int");
+           void      SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
            void      SetCompressionLevel(Int_t level = (Int_t)ROOT::RCompressionSetting::ELevel::kUseMin);
            void      SetCompressionSettings(Int_t settings = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void      SetEntries(Long64_t entries);

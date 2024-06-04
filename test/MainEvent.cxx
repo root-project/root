@@ -93,6 +93,7 @@
 
 #include <stdlib.h>
 
+#include "Compression.h"
 #include "Riostream.h"
 #include "TROOT.h"
 #include "TFile.h"
@@ -120,9 +121,9 @@ int main(int argc, char **argv)
    Int_t arg5   = 600;     //default number of tracks per event
    Int_t enable_imt = 0;   // Whether to enable IMT mode.
 #ifdef R__HAS_DEFAULT_LZ4
-   Int_t compAlg = 4; // Allow user to specify underlying compression algorithm.
+   auto compAlg = ROOT::RCompressionSetting::EAlgorithm::kLZ4; // Allow user to specify underlying compression algorithm.
 #else
-   Int_t compAlg = 1;
+   auto compAlg = ROOT::RCompressionSetting::EAlgorithm::kZLIB;
 #endif
    Int_t netf   = 0;
    Int_t punzip = 0;
@@ -133,7 +134,7 @@ int main(int argc, char **argv)
    if (argc > 4)  arg4   = atoi(argv[4]);
    if (argc > 5)  arg5   = atoi(argv[5]);
    if (argc > 6)  enable_imt = atoi(argv[6]);
-   if (argc > 7) compAlg = atoi(argv[7]);
+   if (argc > 7) compAlg = static_cast<ROOT::RCompressionSetting::EAlgorithm>(atoi(argv[7]));
    if (arg4 ==  0) { write = 0; hfill = 0; read = 1;}
    if (arg4 ==  1) { write = 1; hfill = 0;}
    if (arg4 ==  2) { write = 0; hfill = 0;}

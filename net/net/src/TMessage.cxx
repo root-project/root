@@ -239,16 +239,15 @@ void TMessage::SetWhat(UInt_t what)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set compression algorithm
 
-void TMessage::SetCompressionAlgorithm(Int_t algorithm)
+void TMessage::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
 {
-   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
-      algorithm = 0;
+   Int_t algo = static_cast<Int_t>(algorithm);
    Int_t newCompress;
    if (fCompress < 0) {
-      newCompress = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
+      newCompress = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
-      newCompress = 100 * algorithm + level;
+      newCompress = 100 * algo + level;
    }
    if (newCompress != fCompress && fBufComp) {
       delete [] fBufComp;
@@ -257,6 +256,14 @@ void TMessage::SetCompressionAlgorithm(Int_t algorithm)
       fCompPos    = nullptr;
    }
    fCompress = newCompress;
+}
+
+void TMessage::SetCompressionAlgorithm(Int_t algorithm)
+{
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

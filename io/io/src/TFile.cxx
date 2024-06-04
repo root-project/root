@@ -2303,16 +2303,23 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 /// See comments for function SetCompressionSettings
 ///
 
+void TFile::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
+{
+   Int_t algo = static_cast<Int_t>(algorithm);
+   if (fCompress < 0) {
+      fCompress = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
+   } else {
+      int level = fCompress % 100;
+      fCompress = 100 * algo + level;
+   }
+}
+
 void TFile::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
       algorithm = 0;
-   if (fCompress < 0) {
-      fCompress = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
-   } else {
-      int level = fCompress % 100;
-      fCompress = 100 * algorithm + level;
-   }
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

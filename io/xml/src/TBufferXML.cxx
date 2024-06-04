@@ -341,16 +341,23 @@ void TBufferXML::ShiftStack(const char *errinfo)
 ////////////////////////////////////////////////////////////////////////////////
 /// See comments for function SetCompressionSettings.
 
+void TBufferXML::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
+{
+   Int_t algo = static_cast<Int_t>(algorithm);
+   if (fCompressLevel < 0) {
+      fCompressLevel = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
+   } else {
+      int level = fCompressLevel % 100;
+      fCompressLevel = 100 * algo + level;
+   }
+}
+
 void TBufferXML::SetCompressionAlgorithm(Int_t algorithm)
 {
    if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
       algorithm = 0;
-   if (fCompressLevel < 0) {
-      fCompressLevel = 100 * algorithm + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
-   } else {
-      int level = fCompressLevel % 100;
-      fCompressLevel = 100 * algorithm + level;
-   }
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
