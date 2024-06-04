@@ -1825,7 +1825,7 @@ std::string printValue(ROOT::RDataFrame *df)
             }
          }
       }
-   } else if (auto ds = df->fDataSource) {
+   } else if (auto ds = df->GetDataSource()) {
       ret << "A data frame associated to the data source \"" << cling::printValue(ds) << "\"";
    } else {
       ret << "An empty data frame that will create " << lm->GetNEmptyEntries() << " entries\n";
