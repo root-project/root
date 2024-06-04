@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '3/06/2024',
+version_date = '4/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -72847,6 +72847,7 @@ class THistDrawOptions {
          this.ohmax = false;
          delete this.hmax;
       }
+      this.ignore_min_max = d.check('IGNORE_MIN_MAX');
 
       // let configure histogram titles - only for debug purposes
       if (d.check('HTITLE:', true)) histo.fTitle = decodeURIComponent(d.part.toLowerCase());
@@ -73504,7 +73505,7 @@ class FunctionsHandler {
 const kUserContour = BIT(10), // user specified contour levels
 //      kCanRebin    = BIT(11), // can rebin axis
 //      kLogX        = BIT(15), // X-axis in log scale
-//      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
+      kIsZoomed$1 = BIT(16), // bit set when zooming on Y axis
       kNoTitle = BIT(17); // don't draw the histogram title
 //      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
@@ -73728,12 +73729,17 @@ class THistPainter extends ObjectPainter {
          // one could have THStack or TMultiGraph object
          // The only that could be done is update of content
 
-         // check only stats bit, later other settings can be monitored
          const statpainter = pp?.findPainterFor(this.findStat());
+
+         // copy histogram bits
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
-            histo.fBits = obj.fBits;
-            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats);
+            histo.InvertBit(kNoStats);
+            // here check only stats bit
+            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
          }
+
+         if (histo.TestBit(kIsZoomed$1) !== obj.TestBit(kIsZoomed$1))
+            histo.InvertBit(kIsZoomed$1);
 
          // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined) {
@@ -73780,6 +73786,9 @@ class THistPainter extends ObjectPainter {
          histo.fMinimum = obj.fMinimum;
          histo.fMaximum = obj.fMaximum;
          histo.fSumw2 = obj.fSumw2;
+
+         if (!o.ominimum) o.minimum = histo.fMinimum;
+         if (!o.omaximum) o.omaximum = histo.fMaximum;
 
          if (this.getDimension() === 1)
             o.decodeSumw2(histo);
@@ -74209,7 +74218,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
       if (func._typename === clTPaveStats)
-          return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat);
+          return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat); // && (!this.options.Same || this.options.ForceStat))
 
        if ((func._typename === clTF1) || (func._typename === clTF2))
           return this.options.AllFunc || !func.TestBit(BIT(9)); // TF1::kNotDraw
@@ -80807,7 +80816,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       let set_zoom = false;
 
-      if (this.draw_content || (this.isMainPainter() && (this.options.Axis > 0) && !this.options.ohmin && !this.options.ohmax && histo.fMinimum === kNoZoom && histo.fMaximum === kNoZoom)) {
+      if (this.draw_content || (this.isMainPainter() && (this.options.Axis > 0) && !this.options.ohmin && !this.options.ohmax && (histo.fMinimum === kNoZoom) && (histo.fMaximum === kNoZoom))) {
          if (hmin >= hmax) {
             if (hmin === 0) {
                this.ymin = 0; this.ymax = 1;
@@ -80833,15 +80842,19 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             this.ymin = 0;
          else {
             const positive = (this.ymin >= 0);
-            this.ymin -= gStyle.fHistTopMargin*(this.ymax-this.ymin);
+            this.ymin -= gStyle.fHistTopMargin*(this.ymax - this.ymin);
             if (positive && (this.ymin < 0))
                this.ymin = 0;
          }
-         this.ymax += gStyle.fHistTopMargin*(this.ymax-this.ymin);
+         this.ymax += gStyle.fHistTopMargin*(this.ymax - this.ymin);
       }
 
-      hmin = this.options.minimum;
-      hmax = this.options.maximum;
+      if (this.options.ignore_min_max)
+         hmin = hmax = kNoZoom;
+      else {
+         hmin = this.options.minimum;
+         hmax = this.options.maximum;
+      }
 
       if ((hmin === hmax) && (hmin !== kNoZoom)) {
          if (hmin < 0) {
@@ -80854,7 +80867,10 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       this._set_y_range = false;
 
-      if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
+      if (this.options.ohmin && this.options.ohmax && !this.draw_content) {
+         // case of hstack drawing - histogram range used for zooming, but only for stack
+         set_zoom = !this.options.ignore_min_max;
+      } else if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
          this.ymin = hmin;
          this.ymax = hmax;
@@ -110514,6 +110530,8 @@ drawTreePlayer: drawTreePlayer,
 drawTreePlayerKey: drawTreePlayerKey
 });
 
+const kIsZoomed = BIT(16); // bit set when zooming on Y axis
+
 /**
  * @summary Painter class for THStack
  *
@@ -110647,42 +110665,34 @@ class THStackPainter extends ObjectPainter {
          max = getHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max;
       }
 
-      const adjustRange = () => {
-         if (pad && (pad.fLogv ?? (this.options.ndim === 1 ? pad.fLogy : pad.fLogz))) {
-            if (max <= 0) max = 1;
-            if (min <= 0) min = 1e-4*max;
-            const kmin = 1/(1 + 0.5*Math.log10(max / min)),
-                  kmax = 1 + 0.2*Math.log10(max / min);
-            min *= kmin;
-            max *= kmax;
-         } else if ((min > 0) && (min < 0.05*max))
-            min = 0;
-      };
-
       max *= (1 + gStyle.fHistTopMargin);
 
-      adjustRange();
-
-      let max0 = max, min0 = min, zoomed = false;
-
-      if (stack.fMaximum !== kNoZoom) {
+      if (stack.fMaximum !== kNoZoom)
          max = stack.fMaximum;
-         max0 = Math.max(max, max0);
-         zoomed = true;
-      }
 
-      if (stack.fMinimum !== kNoZoom) {
+      if (stack.fMinimum !== kNoZoom)
          min = stack.fMinimum;
-         min0 = Math.min(min, min0);
-         zoomed = true;
-      }
 
-      if (zoomed)
-         adjustRange();
-      else
-         min = max = kNoZoom;
+      if (pad?.fLogv ?? (this.options.ndim === 1 ? pad?.fLogy : pad?.fLogz)) {
+         if (max <= 0) max = 1;
+         if (min <= 0) min = 1e-4*max;
+         const kmin = 1/(1 + 0.5*Math.log10(max / min)),
+               kmax = 1 + 0.2*Math.log10(max / min);
+         min *= kmin;
+         max *= kmax;
+      } else if ((min > 0) && (min < 0.05*max))
+         min = 0;
 
-      return { min, max, min0, max0, zoomed, hopt: `hmin:${min0};hmax:${max0};minimum:${min};maximum:${max}` };
+      if ((stack.fMaximum !== kNoZoom) && this.options.nostack)
+         max = stack.fMaximum;
+
+      if ((stack.fMinimum !== kNoZoom) && this.options.nostack)
+         min = stack.fMinimum;
+
+      const res = { min, max, hopt: `hmin:${min};hmax:${max}` };
+      if (this.options.nostack || !stack.fHistogram?.TestBit(kIsZoomed))
+         res.hopt += ';ignore_min_max';
+      return res;
    }
 
    /** @summary Provide draw options for the histogram */
@@ -110860,20 +110870,22 @@ class THStackPainter extends ObjectPainter {
             src = stack.fHistogram = this.createHistogram(stack);
 
          const mm = this.getMinMax(this.options.errors || this.options.draw_errors);
+         this.firstpainter.options.hmin = mm.min;
+         this.firstpainter.options.hmax = mm.max;
 
-         this.firstpainter.options.minimum = mm.min;
-         this.firstpainter.options.maximum = mm.max;
          this.firstpainter._checked_zooming = false; // force to check 3d zooming
 
          if (this.options.ndim === 1) {
-            this.firstpainter.ymin = mm.min0;
-            this.firstpainter.ymax = mm.max0;
+            this.firstpainter.ymin = mm.min;
+            this.firstpainter.ymax = mm.max;
          } else {
-            this.firstpainter.zmin = mm.min0;
-            this.firstpainter.zmax = mm.max0;
+            this.firstpainter.zmin = mm.min;
+            this.firstpainter.zmax = mm.max;
          }
 
          this.firstpainter.updateObject(src);
+
+         this.firstpainter.options.ignore_min_max = this.options.nostack || !src.TestBit(kIsZoomed);
       }
 
       // and now update histograms
@@ -110958,7 +110970,10 @@ class THStackPainter extends ObjectPainter {
          if (!painter.options.nostack)
              painter.options.nostack = !painter.buildStack(stack);
 
-         if (painter.options.same) return;
+         if (painter.options.same || !stack.fHists?.arr.length) {
+            painter.addToPadPrimitives();
+            return;
+         }
 
          const no_histogram = !stack.fHistogram;
 
