@@ -20,6 +20,10 @@
 #include "ROOT/RDF/RSampleInfo.hxx"
 #include "ROOT/RDF/Utils.hxx"
 
+#ifdef R__HAS_ROOT7
+#include "ROOT/RNTupleWriter.hxx"
+#endif
+
 #include <functional>
 #include <limits>
 #include <map>
