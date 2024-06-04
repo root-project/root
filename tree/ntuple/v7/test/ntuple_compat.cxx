@@ -80,6 +80,10 @@ TEST(RNTupleCompat, FwdCompat_FutureNTuple)
          TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", "", ROOT::RCompressionSetting::ELevel::kUncompressed));
       auto xtuple = RXTuple{};
       file->WriteObject(&xtuple, kNtupleObjName);
+
+      // The file is supposed to be small enough to allow for quick scanning by the patching done later.
+      // Let's put 4KB as a safe limit.
+      EXPECT_LE(file->GetEND(), 4096);
    }
 
    // Patch all instances of 'RXTuple' -> 'RNTuple'.
