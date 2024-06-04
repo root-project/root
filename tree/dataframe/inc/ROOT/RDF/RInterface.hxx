@@ -1335,29 +1335,64 @@ public:
       const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
       const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
 
-
       const auto fullTreeName = treename;
       const auto parsedTreePath = RDFInternal::ParseTreePath(fullTreeName);
       treename = parsedTreePath.fTreeName;
       const auto &dirname = parsedTreePath.fDirName;
 
-      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
-         RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
-                                         colListWithAliasesAndSizeBranches, options});
-
       ::TDirectory::TContext ctxt;
 
-      // The CreateLMFromTTree function by default opens the file passed as input
-      // to check for the presence of the TTree inside. But at this moment the
-      // filename we are using here corresponds to a file which does not exist yet,
-      // i.e. the output file of the Snapshot call. Thus, checkFile=false will
-      // prevent the function from trying to open a non-existent file.
-      auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
-         fullTreeName, filename, colListNoAliasesWithSizeBranches, /*checkFile*/ false));
+      RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
-         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr, colListNoAliasesWithSizeBranches.size(),
-         options.fVector2RVec);
+      bool isBasedOnRNTuple = RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS";
+
+      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple ||
+          (options.fOutputFormat == ESnapshotOutputFormat::kDefault && isBasedOnRNTuple)) {
+#ifdef R__HAS_ROOT7
+         if (fLoopManager->GetTree()) {
+            throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
+                                     "way to convert TTrees to RNTuple is through the RNTupleImporter.");
+         }
+
+         // The data source of the RNTuple resulting from the Snapshot action does not exist yet here, so we create one
+         // without a data source for now, and set it once the actual data source can be created (i.e., after
+         // writing the RNTuple).
+         auto newRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(colListNoPoundSizes));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
+            options, newRDF->GetLoopManager(), true /* fToNTuple */});
+
+         // The Snapshot helper will use colListNoAliasesWithSizeBranches (with aliases resolved) as input columns, and
+         // colListWithAliasesAndSizeBranches (still with aliases in it, passed through snapHelperArgs) as output column
+         // names.
+         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
+            colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
+            colListNoAliasesWithSizeBranches.size());
+#else
+         throw std::runtime_error("Cannot snapshot to RNTuple: this installation of ROOT has not been build with ROOT7 "
+                                  "components enabled.");
+#endif
+      } else {
+         // The CreateLMFromTTree function by default opens the file passed as input
+         // to check for the presence of the TTree inside. But at this moment the
+         // filename we are using here corresponds to a file which does not exist yet,
+         // i.e. the output file of the Snapshot call. Thus, checkFile=false will
+         // prevent the function from trying to open a non-existent file.
+         auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
+            fullTreeName, filename, /*defaultColumns=*/colListNoPoundSizes, /*checkFile=*/false));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+            std::string(filename), std::string(dirname), std::string(treename), colListWithAliasesAndSizeBranches,
+            options, nullptr, false /* fToNTuple */});
+
+         // The Snapshot helper will use colListNoAliasesWithSizeBranches (with aliases resolved) as input columns, and
+         // colListWithAliasesAndSizeBranches (still with aliases in it, passed through snapHelperArgs) as output column
+         // names.
+         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
+            colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
+            colListNoAliasesWithSizeBranches.size(), options.fVector2RVec);
+      }
 
       if (!options.fLazy)
          *resPtr;
@@ -1383,6 +1418,7 @@ public:
    {
       const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
+
       const auto treeBranchNames = tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
       const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
@@ -1399,7 +1435,12 @@ public:
       // RemoveDuplicates should preserve ordering of the columns: it might be meaningful.
       RDFInternal::RemoveDuplicates(columnNames);
 
-      const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
+      auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
+
+      if (RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS") {
+         RDFInternal::RemoveRNTupleSubFields(selectedColumns);
+      }
+
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -3189,23 +3230,55 @@ private:
       const auto &treename = parsedTreePath.fTreeName;
       const auto &dirname = parsedTreePath.fDirName;
 
-      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
-
       ::TDirectory::TContext ctxt;
 
-      // The CreateLMFromTTree function by default opens the file passed as input
-      // to check for the presence of the TTree inside. But at this moment the
-      // filename we are using here corresponds to a file which does not exist yet,
-      // i.e. the output file of the Snapshot call. Thus, checkFile=false will
-      // prevent the function from trying to open a non-existent file.
-      auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
-         fullTreeName, filename, /*defaultColumns=*/columnListWithoutSizeColumns, /*checkFile=*/false));
+      RResultPtr<RInterface<RLoopManager>> resPtr;
 
-      // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
-      // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column names.
-      auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
-                                                                                    fProxiedPtr);
+      bool isBasedOnRNTuple = RDFInternal::GetDataSourceLabel(*this) == "RNTupleDS";
+
+      if (options.fOutputFormat == ESnapshotOutputFormat::kRNTuple ||
+          (options.fOutputFormat == ESnapshotOutputFormat::kDefault && isBasedOnRNTuple)) {
+#ifdef R__HAS_ROOT7
+         if (fLoopManager->GetTree()) {
+            throw std::runtime_error("Snapshotting from TTree to RNTuple is not yet supported. The current recommended "
+                                     "way to convert TTrees to RNTuple is through the RNTupleImporter.");
+         }
+
+         auto newRDF =
+            std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(columnListWithoutSizeColumns));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
+            std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options,
+            newRDF->GetLoopManager(), true /* fToRNTuple */});
+
+         // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
+         // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
+         // names.
+         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
+                                                                                  fProxiedPtr);
+#else
+         throw std::runtime_error("Cannot snapshot to RNTuple: this installation of ROOT has not been build with ROOT7 "
+                                  "components enabled.");
+#endif
+      } else {
+         // The CreateLMFromTTree function by default opens the file passed as input
+         // to check for the presence of the TTree inside. But at this moment the
+         // filename we are using here corresponds to a file which does not exist yet,
+         // i.e. the output file of the Snapshot call. Thus, checkFile=false will
+         // prevent the function from trying to open a non-existent file.
+         auto newRDF = std::make_shared<RInterface<RLoopManager>>(ROOT::Detail::RDF::CreateLMFromTTree(
+            fullTreeName, filename, /*defaultColumns=*/columnListWithoutSizeColumns, /*checkFile=*/false));
+
+         auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+            RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
+                                            columnListWithoutSizeColumns, options, nullptr, false /* fToRNTuple */});
+
+         // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
+         // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column
+         // names.
+         resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
+                                                                                  fProxiedPtr);
+      }
 
       if (!options.fLazy)
          *resPtr;
