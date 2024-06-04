@@ -2,6 +2,7 @@
 
 ## Changes in 7.7.x
 1. Fix - hide empty title on the canvas
+2. Fix - properly handle zooming in THStack histogram
 
 
 ## Changes in 7.7.1
