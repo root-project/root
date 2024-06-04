@@ -96,6 +96,7 @@ endif()
 
 if(root7)
   ROOT_ADD_GTEST(datasource_ntuple datasource_ntuple.cxx LIBRARIES ROOTDataFrame)
+  ROOT_ADD_GTEST(dataframe_snapshot_ntuple dataframe_snapshot_ntuple.cxx LIBRARIES ROOTDataFrame)
 
   ROOT_STANDARD_LIBRARY_PACKAGE(NTupleStruct
                                 NO_INSTALL_HEADERS

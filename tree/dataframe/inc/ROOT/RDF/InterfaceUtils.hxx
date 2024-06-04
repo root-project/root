@@ -105,6 +105,7 @@ struct Fill{};
 struct StdDev{};
 struct Display{};
 struct Snapshot{};
+struct SnapshotRNTuple{};
 struct Book{};
 }
 // clang-format on
@@ -250,9 +251,10 @@ struct SnapshotHelperArgs {
    std::string fTreeName;
    std::vector<std::string> fOutputColNames;
    ROOT::RDF::RSnapshotOptions fOptions;
+   RDFDetail::RLoopManager *fLoopManager;
 };
 
-// Snapshot action
+// Snapshot action TODO(fdegeus) SnapshotTTree
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
@@ -289,6 +291,48 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       actionPtr.reset(new Action_t(
          Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
          colNames, prevNode, colRegister));
+   }
+   return actionPtr;
+}
+
+// SnapshotRNTuple action
+template <typename... ColTypes, typename PrevNodeType>
+std::unique_ptr<RActionBase>
+BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperArgs> &snapHelperArgs,
+            const unsigned int /*nSlots*/, std::shared_ptr<PrevNodeType> prevNode, ActionTags::SnapshotRNTuple,
+            const RColumnRegister &colRegister)
+{
+   const auto &filename = snapHelperArgs->fFileName;
+   const auto &ntuplename = snapHelperArgs->fTreeName;
+   const auto &outputColNames = snapHelperArgs->fOutputColNames;
+   const auto &options = snapHelperArgs->fOptions;
+   auto loopManager = snapHelperArgs->fLoopManager;
+
+   auto makeIsDefine = [&] {
+      std::vector<bool> isDef;
+      isDef.reserve(sizeof...(ColTypes));
+      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
+         isDef.push_back(colRegister.IsDefineOrAlias(colNames[i]));
+      return isDef;
+   };
+   std::vector<bool> isDefine = makeIsDefine();
+
+   std::unique_ptr<RActionBase> actionPtr;
+   if (!ROOT::IsImplicitMTEnabled()) {
+      // single-thread snapshot
+      using Helper_t = SnapshotRNTupleHelper<ColTypes...>;
+      using Action_t = RAction<Helper_t, PrevNodeType>;
+      actionPtr.reset(new Action_t(
+         Helper_t(filename, ntuplename, colNames, outputColNames, options, loopManager, std::move(isDefine)), colNames,
+         prevNode, colRegister));
+   } else {
+      // TODO(fdegeus)
+      // // multi-thread snapshot
+      // using Helper_t = SnapshotHelperMT<ColTypes...>;
+      // using Action_t = RAction<Helper_t, PrevNodeType>;
+      // actionPtr.reset(new Action_t(
+      //    Helper_t(nSlots, filename, dirname, treename, colNames, outputColNames, options, std::move(isDefine)),
+      //    colNames, prevNode, colRegister));
    }
    return actionPtr;
 }

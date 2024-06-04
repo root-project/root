@@ -17,6 +17,9 @@
 #include "ROOT/RDF/RNodeBase.hxx"
 #include "ROOT/RDF/RNewSampleNotifier.hxx"
 #include "ROOT/RDF/RSampleInfo.hxx"
+#include "ROOT/RDataSource.hxx"
+
+#include "ROOT/RNTupleWriter.hxx"
 
 #include <functional>
 #include <limits>

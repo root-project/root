@@ -1169,7 +1169,7 @@ public:
 
       auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
          RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
-                                         colListWithAliasesAndSizeBranches, options});
+                                         colListWithAliasesAndSizeBranches, options, nullptr});
 
       ::TDirectory::TContext ctxt;
 
@@ -1189,6 +1189,56 @@ public:
          *resPtr;
       return resPtr;
    }
+
+#ifdef R__HAS_ROOT7
+   /// TODO(fdegeus) docs
+   template <typename... ColumnTypes>
+   RResultPtr<RInterface<RLoopManager>>
+   SnapshotRNTuple(std::string_view ntuplename, std::string_view filename, const ColumnNames_t &columnList,
+                   const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      return SnapshotRNTupleImpl<ColumnTypes...>(ntuplename, filename, columnList, options);
+   }
+
+   RResultPtr<RInterface<RLoopManager>> SnapshotRNTuple(std::string_view ntuplename, std::string_view filename,
+                                                        const ColumnNames_t &columnList,
+                                                        const RSnapshotOptions &options = RSnapshotOptions())
+   {
+      // like columnList but with `#var` columns removed
+      auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "SnapshotRNTuple");
+      // like columnListWithoutSizeColumns but with aliases resolved
+      auto colListNoAliases = GetValidatedColumnNames(colListNoPoundSizes.size(), colListNoPoundSizes);
+      RDFInternal::CheckForDuplicateSnapshotColumns(colListNoAliases);
+      // like validCols but with missing size branches required by array branches added in the right positions
+      const auto pairOfColumnLists =
+         RDFInternal::AddSizeBranches(fLoopManager->GetBranchNames(), fLoopManager->GetTree(),
+                                      std::move(colListNoAliases), std::move(colListNoPoundSizes));
+      const auto &colListNoAliasesWithSizeBranches = pairOfColumnLists.first;
+      const auto &colListWithAliasesAndSizeBranches = pairOfColumnLists.second;
+
+      const auto colTypeList = GetColumnTypeNamesList(colListNoAliasesWithSizeBranches);
+
+      const auto fullNTupleName = ntuplename;
+      const auto parsedNTupleName = RDFInternal::ParseTreePath(fullNTupleName);
+      ntuplename = parsedNTupleName.fTreeName;
+
+      ::TDirectory::TContext ctxt;
+
+      auto newRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(0));
+
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+         RDFInternal::SnapshotHelperArgs{std::string(filename), "", std::string(ntuplename),
+                                         colListWithAliasesAndSizeBranches, options, newRDF->GetLoopManager()});
+
+      auto resPtr = CreateAction<RDFInternal::ActionTags::SnapshotRNTuple, RDFDetail::RInferredType>(
+         colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
+         colListNoAliasesWithSizeBranches.size());
+
+      if (!options.fLazy)
+         *resPtr;
+      return resPtr;
+   }
+#endif
 
    // clang-format off
    ////////////////////////////////////////////////////////////////////////////
@@ -3002,8 +3052,9 @@ private:
       const auto &treename = parsedTreePath.fTreeName;
       const auto &dirname = parsedTreePath.fDirName;
 
-      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(RDFInternal::SnapshotHelperArgs{
-         std::string(filename), std::string(dirname), std::string(treename), columnListWithoutSizeColumns, options});
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+         RDFInternal::SnapshotHelperArgs{std::string(filename), std::string(dirname), std::string(treename),
+                                         columnListWithoutSizeColumns, options, nullptr});
 
       ::TDirectory::TContext ctxt;
 
@@ -3019,6 +3070,41 @@ private:
       // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column names.
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, ColumnTypes...>(validCols, newRDF, snapHelperArgs,
                                                                                     fProxiedPtr);
+
+      if (!options.fLazy)
+         *resPtr;
+      return resPtr;
+   }
+
+   // TODO(fdegeus) Docs
+   template <typename... ColumnTypes>
+   RResultPtr<RInterface<RLoopManager>>
+   SnapshotRNTupleImpl(std::string_view fullNTupleName, std::string_view filename, const ColumnNames_t &columnList,
+                       const RSnapshotOptions &options)
+   {
+      const auto columnListWithoutSizeColumns = RDFInternal::FilterArraySizeColNames(columnList, "SnapshotRNTuple");
+
+      RDFInternal::CheckTypesAndPars(sizeof...(ColumnTypes), columnListWithoutSizeColumns.size());
+      // validCols has aliases resolved, while columnListWithoutSizeColumns still has aliases in it.
+      const auto validCols = GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
+      RDFInternal::CheckForDuplicateSnapshotColumns(validCols);
+      CheckAndFillDSColumns(validCols, TTraits::TypeList<ColumnTypes...>());
+
+      const auto parsedNTuplePath = RDFInternal::ParseTreePath(fullNTupleName);
+      const auto &ntuplename = parsedNTuplePath.fTreeName;
+
+      ::TDirectory::TContext ctxt;
+
+      auto newRDF = std::make_shared<RInterface<RLoopManager>>(std::make_shared<RLoopManager>(0));
+
+      auto snapHelperArgs = std::make_shared<RDFInternal::SnapshotHelperArgs>(
+         RDFInternal::SnapshotHelperArgs{std::string(filename), "", std::string(ntuplename),
+                                         columnListWithoutSizeColumns, options, newRDF->GetLoopManager()});
+
+      // The Snapshot helper will use validCols (with aliases resolved) as input columns, and
+      // columnListWithoutSizeColumns (still with aliases in it, passed through snapHelperArgs) as output column names.
+      auto resPtr = CreateAction<RDFInternal::ActionTags::SnapshotRNTuple, ColumnTypes...>(validCols, newRDF,
+                                                                                           snapHelperArgs, fProxiedPtr);
 
       if (!options.fLazy)
          *resPtr;
