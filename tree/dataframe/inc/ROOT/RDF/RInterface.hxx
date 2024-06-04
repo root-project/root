@@ -295,7 +295,7 @@ public:
       RInterface<BaseNodeType_t> upcastInterface(*upcastNodeOnHeap, *fLoopManager, fColRegister);
       const auto jittedFilter =
          RDFInternal::BookFilterJit(upcastNodeOnHeap, name, expression, fLoopManager->GetBranchNames(), fColRegister,
-                                    fLoopManager->GetTree(), fDataSource);
+                                    fLoopManager->GetTree(), GetDataSource());
 
       return RInterface<RDFDetail::RJittedFilter, DS_t>(std::move(jittedFilter), *fLoopManager, fColRegister);
    }
@@ -533,10 +533,10 @@ public:
       RDFInternal::CheckValidCppVarName(name, where);
       // these checks must be done before jitting lest we throw exceptions in jitted code
       RDFInternal::CheckForRedefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
-                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                        GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
+      auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, GetDataSource(), fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
@@ -622,11 +622,11 @@ public:
       constexpr auto where = "Redefine";
       RDFInternal::CheckValidCppVarName(name, where);
       RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
-                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                      GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       RDFInternal::CheckForNoVariations(where, name, fColRegister);
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, fDataSource, fColRegister,
+      auto jittedDefine = RDFInternal::BookDefineJit(name, expression, *fLoopManager, GetDataSource(), fColRegister,
                                                      fLoopManager->GetBranchNames(), upcastNodeOnHeap);
 
       RDFInternal::RColumnRegister newCols(fColRegister);
@@ -679,7 +679,7 @@ public:
       // the column name was not defined previously.
       if (ROOT::Internal::RDF::GetDataSourceLabel(*this) == "EmptyDS")
          RDFInternal::CheckForDefinition(where, column, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       const auto validColumnNames = ColumnNames_t{column.data()};
       CheckAndFillDSColumns(validColumnNames, TTraits::TypeList<T>{});
 
@@ -738,7 +738,7 @@ public:
    {
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
       RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister, fLoopManager->GetBranchNames(),
-                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                        GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
 
       auto retTypeName = RDFInternal::TypeID2TypeName(typeid(RetType_t));
       if (retTypeName.empty()) {
@@ -800,7 +800,7 @@ public:
       RDFInternal::CheckValidCppVarName(name, "DefinePerSample");
       // these checks must be done before jitting lest we throw exceptions in jitted code
       RDFInternal::CheckForRedefinition("DefinePerSample", name, fColRegister, fLoopManager->GetBranchNames(),
-                                        fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                        GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
       auto jittedDefine =
@@ -1220,7 +1220,7 @@ public:
       // - Make aliases accessible based on chains and not globally
 
       // Helper to find out if a name is a column
-      auto &dsColumnNames = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      auto &dsColumnNames = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
 
       constexpr auto where = "Alias";
       RDFInternal::CheckValidCppVarName(alias, where);
@@ -1381,7 +1381,7 @@ public:
       const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames = tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
-      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
@@ -1496,8 +1496,8 @@ public:
 
       const auto validColumnNames =
          GetValidatedColumnNames(columnListWithoutSizeColumns.size(), columnListWithoutSizeColumns);
-      const auto colTypes = GetValidatedArgTypes(validColumnNames, fColRegister, fLoopManager->GetTree(), fDataSource,
-                                                 "Cache", /*vector2RVec=*/false);
+      const auto colTypes = GetValidatedArgTypes(validColumnNames, fColRegister, fLoopManager->GetTree(),
+                                                 GetDataSource(), "Cache", /*vector2RVec=*/false);
       for (const auto &colType : colTypes)
          cacheCall << colType << ", ";
       if (!columnListWithoutSizeColumns.empty())
@@ -1525,7 +1525,7 @@ public:
       auto *tree = fLoopManager->GetTree();
       const auto treeBranchNames =
          tree != nullptr ? ROOT::Internal::TreeUtils::GetTopLevelBranchNames(*tree) : ColumnNames_t{};
-      const auto dsColumns = fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{};
+      const auto dsColumns = GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{};
       // Ignore R_rdf_sizeof_* columns coming from datasources: we don't want to Snapshot those
       ColumnNames_t dsColumnsWithoutSizeColumns;
       std::copy_if(dsColumns.begin(), dsColumns.end(), std::back_inserter(dsColumnsWithoutSizeColumns),
@@ -3117,10 +3117,10 @@ private:
       if (where.compare(0, 8, "Redefine") != 0) { // not a Redefine
          RDFInternal::CheckValidCppVarName(name, where);
          RDFInternal::CheckForRedefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
-                                           fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                           GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       } else {
          RDFInternal::CheckForDefinition(where, name, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
          RDFInternal::CheckForNoVariations(where, name, fColRegister);
       }
 
@@ -3278,7 +3278,7 @@ private:
       for (auto &colName : colNames) {
          RDFInternal::CheckValidCppVarName(colName, "Vary");
          RDFInternal::CheckForDefinition("Vary", colName, fColRegister, fLoopManager->GetBranchNames(),
-                                         fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+                                         GetDataSource() ? GetDataSource()->GetColumnNames() : ColumnNames_t{});
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
 
@@ -3290,9 +3290,9 @@ private:
       }
 
       auto upcastNodeOnHeap = RDFInternal::MakeSharedOnHeap(RDFInternal::UpcastNode(fProxiedPtr));
-      auto jittedVariation =
-         RDFInternal::BookVariationJit(colNames, variationName, variationTags, expression, *fLoopManager, fDataSource,
-                                       fColRegister, fLoopManager->GetBranchNames(), upcastNodeOnHeap, isSingleColumn);
+      auto jittedVariation = RDFInternal::BookVariationJit(
+         colNames, variationName, variationTags, expression, *fLoopManager, GetDataSource(), fColRegister,
+         fLoopManager->GetBranchNames(), upcastNodeOnHeap, isSingleColumn);
 
       RDFInternal::RColumnRegister newColRegister(fColRegister);
       newColRegister.AddVariation(std::move(jittedVariation));
