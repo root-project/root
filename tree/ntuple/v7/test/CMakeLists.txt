@@ -23,25 +23,10 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
 endif()
 
-ROOT_STANDARD_LIBRARY_PACKAGE(RXTuple
-  NO_INSTALL_HEADERS
-  HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
-  SOURCES RXTuple.cxx
-  LINKDEF RXTupleLinkDef.h
-  DEPENDENCIES RIO
-)
-if(MSVC)
-  add_custom_command(TARGET RXTuple POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRXTuple.dll
-                                     ${CMAKE_CURRENT_BINARY_DIR}/libRXTuple.dll)
-endif()
-
-target_link_libraries(RXTuple PRIVATE xxHash::xxHash)
-
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_bulk ntuple_bulk.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_cluster ntuple_cluster.cxx LIBRARIES ROOTNTuple)
-ROOT_ADD_GTEST(ntuple_compat ntuple_compat.cxx LIBRARIES ROOTNTuple RXTuple)
+ROOT_ADD_GTEST(ntuple_compat ntuple_compat.cxx RXTuple.cxx LIBRARIES ROOTNTuple xxHash::xxHash)
 ROOT_GENERATE_DICTIONARY(RXTupleDict ${CMAKE_CURRENT_SOURCE_DIR}/RXTuple.hxx
                        MODULE ntuple_compat
                        LINKDEF RXTupleLinkDef.h)
