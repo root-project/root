@@ -17,7 +17,6 @@
 #ifndef ROOT_RNTupleDS
 #define ROOT_RNTupleDS
 
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDataSource.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -197,14 +196,24 @@ protected:
 };
 
 } // namespace Experimental
+} // ns ROOT
+
+namespace ROOT {
+class RDataFrame;
 
 namespace RDF {
 namespace Experimental {
-RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
-RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Create an RDataFrame from an RNTuple.
+///
+/// \param[in] ntupleName The ntuple name
+/// \param[in] fileName The file name
+///
+/// \return An RDataFrame based on the provided RNTuple
+ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
+ROOT::RDataFrame FromRNTuple(std::string_view ntupleName, const std::vector<std::string> &fileNames);
 } // namespace Experimental
 } // namespace RDF
-
-} // ns ROOT
+} // namespace ROOT
 
 #endif

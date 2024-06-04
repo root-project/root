@@ -15,6 +15,7 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RColumnReaderBase.hxx>
+#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
