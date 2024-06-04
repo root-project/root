@@ -847,6 +847,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = false;
+      } else if (obj->InheritsFrom(THStack::Class())) {
+         flush_master();
+
+         THStack *hs = static_cast<THStack *>(obj);
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         first_obj = hs->GetNhists() > 0; // real drawing only if there are histograms
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
 
