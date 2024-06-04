@@ -1007,7 +1007,7 @@ AddSizeBranches(const std::vector<std::string> &branches, TTree *tree, std::vect
    assert(colsWithoutAliases.size() == colsWithAliases.size());
 
    auto nCols = colsWithoutAliases.size();
-   // Use index-iteration as we modify the vector during the iteration. 
+   // Use index-iteration as we modify the vector during the iteration.
    for (std::size_t i = 0u; i < nCols; ++i) {
       const auto &colName = colsWithoutAliases[i];
       if (!IsStrInVec(colName, branches))
@@ -1044,6 +1044,25 @@ void RemoveDuplicates(ColumnNames_t &columnNames)
       columnNames.end());
 }
 
+#ifdef R__HAS_ROOT7
+void RemoveRNTupleSubFields(ColumnNames_t &columnNames)
+{
+   ColumnNames_t parentFields;
+
+   std::copy_if(columnNames.cbegin(), columnNames.cend(), std::back_inserter(parentFields),
+                [](const std::string &colName) { return colName.find('.') == std::string::npos; });
+
+   columnNames.erase(std::remove_if(columnNames.begin(), columnNames.end(),
+                                    [&parentFields](const std::string &colName) {
+                                       if (colName.find('.') == std::string::npos)
+                                          return false;
+                                       const auto parentFieldName = colName.substr(0, colName.find_first_of('.'));
+                                       return std::find(parentFields.cbegin(), parentFields.cend(), parentFieldName) !=
+                                              parentFields.end();
+                                    }),
+                     columnNames.end());
+}
+#endif
 } // namespace RDF
 } // namespace Internal
 } // namespace ROOT
