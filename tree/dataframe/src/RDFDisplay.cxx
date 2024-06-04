@@ -232,12 +232,12 @@ void RDisplay::Print() const
                // Thus, the first column is only the Row column and the actual first column is printed
          columnsToPrint = 2;
       }
-      Info("Print", "Only showing %lu columns out of %lu\n", columnsToPrint, fNColumns);
+      Info("Print", "Only showing %zu columns out of %zu\n", columnsToPrint, fNColumns);
       allColumnsFit = false;
    }
 
    if (fNMaxCollectionElements < 1)
-      Info("Print", "No collections shown since fNMaxCollectionElements is %lu\n", fNMaxCollectionElements);
+      Info("Print", "No collections shown since fNMaxCollectionElements is %zu\n", fNMaxCollectionElements);
 
    auto nrRows = fTable.size();
    std::cout << DashesBetweenLines(columnsToPrint, allColumnsFit); // Print dashes in the top of the table
