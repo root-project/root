@@ -1,10 +1,13 @@
-import { clone, create, createHistogram, setHistogramTitle, gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom, kNoStats } from '../core.mjs';
+import { clone, create, createHistogram, setHistogramTitle, BIT,
+         gStyle, clTList, clTH1I, clTH2, clTH2I, kNoZoom, kNoStats } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from './TH1Painter.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
+
+const kIsZoomed = BIT(16); // bit set when zooming on Y axis
 
 /**
  * @summary Painter class for THStack
@@ -139,42 +142,34 @@ class THStackPainter extends ObjectPainter {
          max = getHistMinMax(stack.fStack.arr[stack.fStack.arr.length-1], iserr).max;
       }
 
-      const adjustRange = () => {
-         if (pad && (pad.fLogv ?? (this.options.ndim === 1 ? pad.fLogy : pad.fLogz))) {
-            if (max <= 0) max = 1;
-            if (min <= 0) min = 1e-4*max;
-            const kmin = 1/(1 + 0.5*Math.log10(max / min)),
-                  kmax = 1 + 0.2*Math.log10(max / min);
-            min *= kmin;
-            max *= kmax;
-         } else if ((min > 0) && (min < 0.05*max))
-            min = 0;
-      };
-
       max *= (1 + gStyle.fHistTopMargin);
 
-      adjustRange();
-
-      let max0 = max, min0 = min, zoomed = false;
-
-      if (stack.fMaximum !== kNoZoom) {
+      if (stack.fMaximum !== kNoZoom)
          max = stack.fMaximum;
-         max0 = Math.max(max, max0);
-         zoomed = true;
-      }
 
-      if (stack.fMinimum !== kNoZoom) {
+      if (stack.fMinimum !== kNoZoom)
          min = stack.fMinimum;
-         min0 = Math.min(min, min0);
-         zoomed = true;
-      }
 
-      if (zoomed)
-         adjustRange();
-      else
-         min = max = kNoZoom;
+      if (pad?.fLogv ?? (this.options.ndim === 1 ? pad?.fLogy : pad?.fLogz)) {
+         if (max <= 0) max = 1;
+         if (min <= 0) min = 1e-4*max;
+         const kmin = 1/(1 + 0.5*Math.log10(max / min)),
+               kmax = 1 + 0.2*Math.log10(max / min);
+         min *= kmin;
+         max *= kmax;
+      } else if ((min > 0) && (min < 0.05*max))
+         min = 0;
 
-      return { min, max, min0, max0, zoomed, hopt: `hmin:${min0};hmax:${max0};minimum:${min};maximum:${max}` };
+      if ((stack.fMaximum !== kNoZoom) && this.options.nostack)
+         max = stack.fMaximum;
+
+      if ((stack.fMinimum !== kNoZoom) && this.options.nostack)
+         min = stack.fMinimum;
+
+      const res = { min, max, hopt: `hmin:${min};hmax:${max}` };
+      if (this.options.nostack || !stack.fHistogram?.TestBit(kIsZoomed))
+         res.hopt += ';ignore_min_max';
+      return res;
    }
 
    /** @summary Provide draw options for the histogram */
@@ -352,20 +347,22 @@ class THStackPainter extends ObjectPainter {
             src = stack.fHistogram = this.createHistogram(stack);
 
          const mm = this.getMinMax(this.options.errors || this.options.draw_errors);
+         this.firstpainter.options.hmin = mm.min;
+         this.firstpainter.options.hmax = mm.max;
 
-         this.firstpainter.options.minimum = mm.min;
-         this.firstpainter.options.maximum = mm.max;
          this.firstpainter._checked_zooming = false; // force to check 3d zooming
 
          if (this.options.ndim === 1) {
-            this.firstpainter.ymin = mm.min0;
-            this.firstpainter.ymax = mm.max0;
+            this.firstpainter.ymin = mm.min;
+            this.firstpainter.ymax = mm.max;
          } else {
-            this.firstpainter.zmin = mm.min0;
-            this.firstpainter.zmax = mm.max0;
+            this.firstpainter.zmin = mm.min;
+            this.firstpainter.zmax = mm.max;
          }
 
          this.firstpainter.updateObject(src);
+
+         this.firstpainter.options.ignore_min_max = this.options.nostack || !src.TestBit(kIsZoomed);
       }
 
       // and now update histograms
@@ -450,7 +447,10 @@ class THStackPainter extends ObjectPainter {
          if (!painter.options.nostack)
              painter.options.nostack = !painter.buildStack(stack);
 
-         if (painter.options.same) return;
+         if (painter.options.same || !stack.fHists?.arr.length) {
+            painter.addToPadPrimitives();
+            return;
+         }
 
          const no_histogram = !stack.fHistogram;
 
