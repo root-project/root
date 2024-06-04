@@ -1435,7 +1435,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          Double_t hmin = 0., hmax = 0.;
 
          if (r.zx1 == r.zx2)
-            hist->GetXaxis()->SetRange(0,0);
+            hist->GetXaxis()->SetRange(0, 0);
          else
             hist->GetXaxis()->SetRangeUser(r.zx1, r.zx2);
 
@@ -1448,7 +1448,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
                hmax = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy2) : r.uy2;
             }
          } else if (r.zy1 == r.zy2) {
-            hist->GetYaxis()->SetRange(0., 0.);
+            hist->GetYaxis()->SetRange(0, 0);
          } else {
             hist->GetYaxis()->SetRangeUser(r.zy1, r.zy2);
          }
@@ -1463,7 +1463,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             }
          } else if (hist->GetDimension() == 3) {
             if (r.zz1 == r.zz2) {
-               hist->GetZaxis()->SetRange(0., 0.);
+               hist->GetZaxis()->SetRange(0, 0);
             } else {
               hist->GetZaxis()->SetRangeUser(r.zz1, r.zz2);
             }
@@ -1472,7 +1472,14 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hmin == hmax)
             hmin = hmax = -1111;
 
-         if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
+         if (hist_holder && (hist_holder->IsA() == THStack::Class())) {
+            TString opt = objlnk->GetOption();
+            if (!opt.Contains("nostack", TString::kIgnoreCase) && !opt.Contains("lego", TString::kIgnoreCase)) {
+               hist->SetMinimum(hmin);
+               hist->SetMaximum(hmax);
+               hist->SetBit(TH1::kIsZoomed, hmin != hmax);
+            }
+         } else if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
             hist->SetMinimum(hmin);
             hist->SetMaximum(hmax);
          } else {
@@ -2502,7 +2509,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = getHistogram(gr);
             else if (mg)
                obj = getHistogram(mg);
-            else if (hs)
+            else if (hs && (hs->GetNhists() > 0))
                obj = getHistogram(hs);
             else if (scatter)
                obj = getHistogram(scatter);
