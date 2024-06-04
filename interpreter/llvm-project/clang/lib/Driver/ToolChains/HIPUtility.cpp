@@ -10,8 +10,8 @@
 #include "CommonArgs.h"
 #include "clang/Driver/Compilation.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Triple.h"
 #include "llvm/Support/Path.h"
+#include "llvm/TargetParser/Triple.h"
 
 using namespace clang::driver;
 using namespace clang::driver::tools;
@@ -84,6 +84,12 @@ void HIP::constructHIPFatbinCommand(Compilation &C, const JobAction &JA,
       Args.MakeArgString(std::string("-output=").append(Output));
   BundlerArgs.push_back(BundlerOutputArg);
 
+  if (Args.hasFlag(options::OPT_offload_compress,
+                   options::OPT_no_offload_compress, false))
+    BundlerArgs.push_back("-compress");
+  if (Args.hasArg(options::OPT_v))
+    BundlerArgs.push_back("-verbose");
+
   const char *Bundler = Args.MakeArgString(
       T.getToolChain().GetProgramPath("clang-offload-bundler"));
   C.addCommand(std::make_unique<Command>(
@@ -144,6 +150,8 @@ void HIP::constructGenerateObjFileFromHIPFatBinary(
   ObjStream << "  .incbin ";
   llvm::sys::printArg(ObjStream, BundleFile, /*Quote=*/true);
   ObjStream << "\n";
+  if (HostTriple.isOSLinux() && HostTriple.isOSBinFormatELF())
+    ObjStream << "  .section .note.GNU-stack, \"\", @progbits\n";
   ObjStream.flush();
 
   // Dump the contents of the temp object file gen if the user requested that.
