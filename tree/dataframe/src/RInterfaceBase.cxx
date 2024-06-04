@@ -27,11 +27,12 @@
 unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 {
    // TTree/TChain as input
-   const auto tree = fLoopManager->GetTree();
-
-   if (tree && tree->GetCurrentFile()) {
-      const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-      return files.size();
+   if (const auto *tree = fLoopManager->GetTree()) {
+      if (!dynamic_cast<const TChain *>(tree) && !tree->GetCurrentFile()) {
+         // in-memory TTree
+         return 0;
+      }
+      return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
    }
    // Datasource as input
    if (fDataSource) {
