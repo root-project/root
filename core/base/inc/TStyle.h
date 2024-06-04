@@ -62,6 +62,7 @@ private:
    Width_t       fGridWidth;         ///< Grid line width
    Width_t       fLegendBorderSize;  ///< Legend box border size
    Color_t       fLegendFillColor;   ///< Legend fill color
+   Style_t       fLegendFillStyle;   ///< Legend fill style
    Style_t       fLegendFont;        ///< Legend font style
    Double_t      fLegendTextSize;    ///< Legend text size. If 0 the size is computed automatically
    Int_t         fHatchesLineWidth;  ///< Hatches line width for hatch styles > 3100
@@ -200,6 +201,7 @@ public:
    Double_t         GetHatchesSpacing() const  {return fHatchesSpacing;}
    Width_t          GetLegendBorderSize() const {return fLegendBorderSize;}
    Color_t          GetLegendFillColor() const {return fLegendFillColor;}
+   Style_t          GetLegendFillStyle() const {return fLegendFillStyle;}
    Style_t          GetLegendFont() const      {return fLegendFont;}
    Double_t         GetLegendTextSize() const  {return fLegendTextSize;}
    Int_t            GetNumberOfColors() const;
@@ -347,6 +349,7 @@ public:
    void             SetCanvasDefY(Int_t topy=10) {fCanvasDefY = topy;}
    void             SetLegendBorderSize(Width_t size=4) {fLegendBorderSize = size;}
    void             SetLegendFillColor(Color_t color=0) {fLegendFillColor = color;}
+   void             SetLegendFillStyle(Style_t style=1001) {fLegendFillStyle = style;}
    void             SetLegendFont(Style_t font=62) {fLegendFont = font;}
    void             SetLegendTextSize(Double_t size=0.) {fLegendTextSize = size;}
    void             SetPadColor(Color_t color=19) {fPadColor = color;}
@@ -426,7 +429,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 22);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 23);  //A collection of all graphics attributes
 };
 
 
