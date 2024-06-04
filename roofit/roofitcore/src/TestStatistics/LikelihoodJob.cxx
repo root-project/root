@@ -93,7 +93,7 @@ void LikelihoodJob::update_state()
             assert(!more);
             auto offsets_message_begin = offsets_message.data<ROOT::Math::KahanSum<double>>();
             std::size_t N_offsets = offsets_message.size() / sizeof(ROOT::Math::KahanSum<double>);
-            shared_offset_.offsets().reserve(N_offsets);
+            shared_offset_.offsets().resize(N_offsets);
             auto offsets_message_end = offsets_message_begin + N_offsets;
             std::copy(offsets_message_begin, offsets_message_end, shared_offset_.offsets().begin());
          }
