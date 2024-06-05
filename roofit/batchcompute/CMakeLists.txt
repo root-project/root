@@ -2,6 +2,7 @@
 
 ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
+    src/Buffers.cxx
   DEPENDENCIES
     Core
     MathCore

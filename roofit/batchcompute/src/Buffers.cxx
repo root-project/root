@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFit/Detail/Buffers.h"
+#include "RooBatchCompute.h"
 
 #include <stdexcept>
 #include <functional>
@@ -20,8 +20,7 @@
 namespace CudaInterface = RooFit::Detail::CudaInterface;
 using CudaInterface::CudaStream;
 
-namespace RooFit {
-namespace Detail {
+namespace RooBatchCompute {
 
 class ScalarBufferContainer {
 public:
@@ -215,5 +214,4 @@ std::unique_ptr<AbsBuffer> BufferManager::makePinnedBuffer(std::size_t size, Cud
 }
 #endif // ROOFIT_CUDA
 
-} // end namespace Detail
-} // end namespace RooFit
+} // end namespace RooBatchCompute
