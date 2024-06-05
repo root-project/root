@@ -388,18 +388,25 @@ class THStackPainter extends ObjectPainter {
    /** @summary Redraw THStack
      * @desc Do something if previous update had changed number of histograms */
    redraw(reason) {
-      if (this.did_update === 1) {
-         delete this.did_update;
-         return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
-      } else if (this.did_update === 2) {
-         delete this.did_update;
+      if (!this.did_update)
+         return;
+
+      const full_redraw = this.did_update === 1;
+      delete this.did_update;
+
+      const pr = this.firstpainter ? this.firstpainter.redraw(reason) : Promise.resolve(this);
+
+      return pr.then(() => {
+         if (full_redraw)
+            return this.drawNextHisto(0, this.options.pads ? this.getPadPainter() : null);
+
          const redrawSub = indx => {
             if (indx >= this.painters.length)
-               return Promise.resolve(this);
+               return this;
             return this.painters[indx].redraw(reason).then(() => redrawSub(indx+1));
          };
          return redrawSub(0);
-      }
+      });
    }
 
    /** @summary Fill hstack context menu */
