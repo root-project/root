@@ -58,14 +58,15 @@ void FitAndPlotHdmd(TH1 &hdmd)
    // create the canvas for the h1analysis fit
    gStyle->SetOptFit();
    auto c1 = new TCanvas("c1", "h1analysis analysis", 10, 10, 800, 600);
+
    hdmd.GetXaxis()->SetTitleOffset(1.4);
+
+   auto hdraw = (TH1 *) hdmd.DrawClone();
 
    // fit histogram hdmd with function f5 using the loglikelihood option
    auto f5 = new TF1("f5", fdm5, 0.139, 0.17, 5);
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
-   hdmd.Fit("f5", "lr");
-
-   hdmd.DrawClone();
+   hdraw->Fit("f5", "lr");
 }
 
 void FitAndPlotH2(TH2 &h2)
@@ -84,11 +85,12 @@ void FitAndPlotH2(TH2 &h2)
    f2->SetParameters(10000, 10);
    h2.FitSlicesX(f2, 0, -1, 1, "qln");
 
-   // See TH2::FitSlicesX documentation
+   // See TH2::FitSlicesX documentation why h2_1 name is used
    auto h2_1 = (TH1D *)gDirectory->Get("h2_1");
+   h2_1->SetDirectory(nullptr);
    h2_1->GetXaxis()->SetTitle("#tau [ps]");
    h2_1->SetMarkerStyle(21);
-   h2_1->DrawClone();
+   h2_1->Draw();
    c2->Update();
 
    auto line = new TLine(0, 0, 0, c2->GetUymax());
