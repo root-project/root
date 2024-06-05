@@ -40,7 +40,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooBatchCompute.h>
 
 #include "RooFit/Detail/BatchModeDataHelpers.h"
-#include "Detail/Buffers.h"
 #include "RooFitImplHelpers.h"
 
 #include <chrono>
@@ -108,7 +107,7 @@ struct NodeInfo {
    RooAbsArg *absArg = nullptr;
    RooAbsArg::OperMode originalOperMode;
 
-   std::shared_ptr<Detail::AbsBuffer> buffer;
+   std::shared_ptr<RooBatchCompute::AbsBuffer> buffer;
    std::size_t iNode = 0;
    int remClients = 0;
    int remServers = 0;
@@ -147,7 +146,7 @@ struct NodeInfo {
 ///            computation graph that we want to evaluate.
 /// \param[in] useGPU Whether the evaluation should be preferably done on the GPU.
 Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
-   : _bufferManager{std::make_unique<Detail::BufferManager>()},
+   : _bufferManager{std::make_unique<RooBatchCompute::BufferManager>()},
      _topNode{const_cast<RooAbsReal &>(absReal)},
      _useGPU{useGPU}
 {

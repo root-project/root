@@ -21,7 +21,9 @@
 
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
+#include <cstddef>
 #include <initializer_list>
+#include <memory>
 #include <string>
 
 /**
@@ -191,6 +193,35 @@ inline ReduceNLLOutput reduceNLL(Config cfg, std::span<const double> probas, std
    auto dispatch = cfg.useCuda() ? dispatchCUDA : dispatchCPU;
    return dispatch->reduceNLL(cfg, probas, weights, offsetProbas);
 }
+
+class AbsBuffer {
+public:
+   virtual ~AbsBuffer() = default;
+
+   virtual double const *cpuReadPtr() const = 0;
+   virtual double const *gpuReadPtr() const = 0;
+
+   virtual double *cpuWritePtr() = 0;
+   virtual double *gpuWritePtr() = 0;
+};
+
+struct BufferQueuesMaps;
+
+class BufferManager {
+
+public:
+   BufferManager();
+   ~BufferManager();
+
+   std::unique_ptr<AbsBuffer> makeScalarBuffer();
+   std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size);
+   std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size);
+   std::unique_ptr<AbsBuffer>
+   makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr);
+
+private:
+   std::unique_ptr<BufferQueuesMaps> _queuesMaps;
+};
 
 } // End namespace RooBatchCompute
 

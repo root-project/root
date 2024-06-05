@@ -24,7 +24,6 @@
 #include <RooSetProxy.h>
 
 #include "RooFit/Detail/BatchModeDataHelpers.h"
-#include "RooFit/Detail/Buffers.h"
 
 #include <chrono>
 #include <memory>

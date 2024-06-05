@@ -32,7 +32,6 @@ computation times.
 #include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooSetProxy.h>
-#include "RooFit/Detail/Buffers.h"
 #include <RooFit/Detail/MathFuncs.h>
 
 #include "RooFitImplHelpers.h"
