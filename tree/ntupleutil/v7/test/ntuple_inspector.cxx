@@ -69,6 +69,37 @@ TEST(RNTupleInspector, CompressionSettings)
    EXPECT_EQ("LZMA (level 7)", inspector->GetCompressionSettingsAsString());
 }
 
+// Relevant for RNTuples created with late model extension, see https://github.com/root-project/root/issues/15661 for
+// background.
+TEST(RNTupleInspector, UnknownCompression)
+{
+   FileRaii fileGuard("test_ntuple_inspector_unknown_compression.root");
+   std::vector<float> refVec{1., 2., 3.};
+   {
+      auto model = RNTupleModel::Create();
+
+      auto vecFld = model->MakeField<std::vector<float>>("vecFld", refVec);
+
+      RNTupleWriteOptions opts;
+      opts.SetCompression(505);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opts);
+
+      ntuple->Fill();
+      ntuple->CommitCluster();
+
+      auto modelUpdater = ntuple->CreateModelUpdater();
+
+      modelUpdater->BeginUpdate();
+      auto extVecField = modelUpdater->MakeField<std::vector<float>>("extVecFld", refVec);
+      modelUpdater->CommitUpdate();
+
+      ntuple->Fill();
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(505, inspector->GetCompressionSettings());
+}
+
 TEST(RNTupleInspector, SizeUncompressedSimple)
 {
    FileRaii fileGuard("test_ntuple_inspector_size_uncompressed_complex.root");
