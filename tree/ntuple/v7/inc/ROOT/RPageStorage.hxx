@@ -50,6 +50,7 @@ class RColumnElementBase;
 class RNTupleCompressor;
 class RNTupleDecompressor;
 struct RNTupleModelChangeset;
+class RPagePool;
 
 enum class EPageStorageType {
    kSink,
@@ -517,11 +518,12 @@ protected:
    /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
    /// leave it up to the derived class whether or not the decompressor gets constructed.
    std::unique_ptr<RNTupleDecompressor> fDecompressor;
+   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
+   std::shared_ptr<RPagePool> fPagePool;
 
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
-   virtual void UnzipClusterImpl(RCluster * /* cluster */)
-      { }
+   virtual void UnzipClusterImpl(RCluster *cluster);
 
    /// Prepare a page range read for the column set in `clusterKey`.  Specifically, pages referencing the
    /// `kTypePageZero` locator are filled in `pageZeroMap`; otherwise, `perPageFunc` is called for each page. This is

@@ -40,7 +40,6 @@ class RClusterPool;
 class RDaosPool;
 class RDaosContainer;
 class RPageAllocatorHeap;
-class RPagePool;
 enum EDaosLocatorFlags {
    // Indicates that the referenced page is "caged", i.e. it is stored in a larger blob that contains multiple pages.
    kCagedPage = 0x01,
@@ -165,8 +164,6 @@ private:
 
    ntuple_index_t fNTupleIndex{0};
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
@@ -183,7 +180,6 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
-   void UnzipClusterImpl(RCluster *cluster) final;
 
 public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
