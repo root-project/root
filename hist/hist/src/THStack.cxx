@@ -555,7 +555,7 @@ Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
+      h = (TH1*)fStack->At(0);
       themin = h->GetMinimum(minval);
    } else {
       for (Int_t i=0;i<nhists;i++) {
