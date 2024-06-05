@@ -458,3 +458,17 @@ TEST(MiniFile, DifferentTKeys)
    auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
    EXPECT_EQ(1, ntuple->GetNEntries());
 }
+
+TEST(MiniFile, LargeKey)
+{
+   FileRaii fileGuard("test_ntuple_minifile_large_key.root");
+   fileGuard.PreserveFile();
+
+   auto writer =
+      RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+
+   const auto dataSize = RNTuple{}.GetMaxKeySize() * 2;
+   auto data = std::make_unique<char[]>(dataSize);
+   memset(data.get(), 0x99, dataSize);
+   writer->WriteBlob(data.get(), dataSize, dataSize);
+}

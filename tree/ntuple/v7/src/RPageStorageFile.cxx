@@ -126,6 +126,9 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
 std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
+   // TEMP: how do we actually get the max key size?
+   const std::uint64_t maxKeySize = 1000000000;
+
    size_t size = 0, bytesPacked = 0;
    for (auto &range : ranges) {
       if (range.fFirst == range.fLast) {
@@ -136,10 +139,19 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         size += sealedPageIt->GetBufferSize();
+         if (sealedPageIt->GetSize() > maxKeySize) {
+            // XXX: is len really == nbytes necessarily?
+            fWriter->WriteBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetSize(), sealedPageIt->GetSize());
+            continue;
+         }
+         size += sealedPageIt->GetSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
+
+      // TODO(giacomo):
+      //  - every time `size` exceeds `maxKeySize`, commit the write
    }
+
    if (size >= std::numeric_limits<std::int32_t>::max() || bytesPacked >= std::numeric_limits<std::int32_t>::max()) {
       // Cannot fit it into one key, fall back to one key per page.
       // TODO: Remove once there is support for large keys.
