@@ -82,25 +82,7 @@ double RooMinimizerFcn::operator()(const double *x) const
    double fvalue = _funct->getVal();
    RooAbsReal::setHideOffset(true);
 
-   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
-      printEvalErrors();
-      RooAbsReal::clearEvalErrorLog();
-      _numBadNLL++;
-
-      if (cfg().doEEWall) {
-         const double badness = RooNaNPacker::unpackNaN(fvalue);
-         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + cfg().recoverFromNaN * badness;
-      }
-   } else {
-      if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
-         // This is the first time we get a valid function value; while before, the
-         // function was always invalid. For invalid  cases, we returned values > 0.
-         // Now, we offset valid values such that they are < 0.
-         _funcOffset = -fvalue;
-      }
-      fvalue += _funcOffset;
-      _maxFCN = std::max(fvalue, _maxFCN);
-   }
+   fvalue = applyEvalErrorHandling(fvalue);
 
    // Optional logging
    if (_logfile)

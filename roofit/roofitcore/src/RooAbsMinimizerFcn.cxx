@@ -442,6 +442,36 @@ void RooAbsMinimizerFcn::printEvalErrors() const
    ooccoutW(_context, Minimization) << msg.str() << endl;
 }
 
+/// Apply corrections on the fvalue if errors were signaled.
+///
+/// Two kinds of errors are possible: 1. infinite or nan values (the latter
+/// can be a signaling nan, using RooNaNPacker) or 2. logEvalError-type errors.
+/// Both are caught here and fvalue is updated so that Minuit in turn is nudged
+/// to move the search outside of the problematic parameter space area.
+double RooAbsMinimizerFcn::applyEvalErrorHandling(double fvalue) const
+{
+   if (!std::isfinite(fvalue) || RooAbsReal::numEvalErrors() > 0 || fvalue > 1e30) {
+      printEvalErrors();
+      RooAbsReal::clearEvalErrorLog();
+      _numBadNLL++;
+
+      if (cfg().doEEWall) {
+         const double badness = RooNaNPacker::unpackNaN(fvalue);
+         fvalue = (std::isfinite(_maxFCN) ? _maxFCN : 0.) + cfg().recoverFromNaN * badness;
+      }
+   } else {
+      if (_evalCounter > 0 && _evalCounter == _numBadNLL) {
+         // This is the first time we get a valid function value; while before, the
+         // function was always invalid. For invalid  cases, we returned values > 0.
+         // Now, we offset valid values such that they are < 0.
+         _funcOffset = -fvalue;
+      }
+      fvalue += _funcOffset;
+      _maxFCN = std::max(fvalue, _maxFCN);
+   }
+   return fvalue;
+}
+
 void RooAbsMinimizerFcn::finishDoEval() const
 {
 
