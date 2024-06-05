@@ -37,6 +37,9 @@
 #include <string>
 #include <chrono>
 
+// REMOVE ME
+#include <iostream>
+
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
 // `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
@@ -1258,8 +1261,9 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
    auto offsetData = fFilePos;
    // The next key starts after the data.
    fKeyOffset = offsetData + nbytes;
-   if (buffer)
+   if (buffer) {
       Write(buffer, nbytes);
+   }
 
    return offsetData;
 }
@@ -1393,23 +1397,89 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
 {
-   std::uint64_t offset;
-   if (fFileSimple) {
-      if (fIsBare) {
-         offset = fFileSimple.fKeyOffset;
-         fFileSimple.Write(data, nbytes);
-         fFileSimple.fKeyOffset += nbytes;
+   auto writeKey = [this](const void *data, size_t nbytes, size_t len) {
+      std::uint64_t offset;
+      if (fFileSimple) {
+         if (fIsBare) {
+            offset = fFileSimple.fKeyOffset;
+            fFileSimple.Write(data, nbytes);
+            fFileSimple.fKeyOffset += nbytes;
+         } else {
+            offset = fFileSimple.WriteKey(data, nbytes, len, -1, 100, kBlobClassName);
+         }
       } else {
-         offset = fFileSimple.WriteKey(data, nbytes, len, -1, 100, kBlobClassName);
+         offset = fFileProper.WriteKey(data, nbytes, len);
       }
-   } else {
-      offset = fFileProper.WriteKey(data, nbytes, len);
+      return offset;
+   };
+
+   std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
+   // std::uint64_t maxKeySize = 50 * 1024 * 1024; // a mere 50 MB, just to test
+
+   if (nbytes < maxKeySize) {
+      // Fast path: only write 1 key.
+      return writeKey(data, nbytes, len);
    }
-   return offset;
+
+   // Writing a key bigger than the max allowed size. In this case we split the payload
+   // into multiple keys, reserving the end of the first key payload for pointers to the
+   // next ones. E.g. if a key needs to be split into 3 chunks, the first chunk will have
+   // the format:
+   //  +--------------------+
+   //  |                    |
+   //  |        Data        |
+   //  |--------------------|
+   //  | pointer to chunk 2 |
+   //  | pointer to chunk 3 |
+   //  +--------------------+
+   //
+   int nChunks = nbytes / maxKeySize + ((nbytes % maxKeySize) != 0);
+   assert(nChunks > 1);
+
+   size_t nbytesLocators = nChunks * sizeof(std::uint64_t);
+   // TODO(giacomo): should we handle the case where nbytesLocators > maxKeySize?
+   // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks than
+   // we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GB we can fit
+   // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PB.
+   R__ASSERT(nbytesLocators <= maxKeySize);
+
+   size_t nbytesFirstChunk = maxKeySize - nbytesLocators;
+   // Write first chunk.
+   // Note that the last bytes we write here will be overridden later by the other chunks'
+   // offsets, and we're gonna write those bytes again in the following chunk.
+   std::uint64_t firstOffset = writeKey(data, maxKeySize, maxKeySize);
+
+   data = reinterpret_cast<const char *>(data) + nbytesFirstChunk;
+   size_t remainingBytes = nbytes - nbytesFirstChunk;
+   std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
+ 
+   do {
+      size_t bytesWritten = std::min(remainingBytes, maxKeySize);
+      std::uint64_t offset = writeKey(data, bytesWritten, bytesWritten);
+
+      // patch the chunk offset into the first chunk
+      if (fFileSimple)
+         fFileSimple.Write(&offset, sizeof(offset), patchOffset);
+      else
+         fFileProper.Write(&offset, sizeof(offset), patchOffset);
+
+      std::cout << "Written offset " << std::hex << offset << " at offset " << patchOffset << "\n";
+      patchOffset += sizeof(offset);
+
+      assert(remainingBytes >= bytesWritten);
+      remainingBytes -= bytesWritten;
+      data = reinterpret_cast<const char *>(data) + bytesWritten;
+
+   } while (remainingBytes > 0);
+
+   return firstOffset;
 }
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len)
 {
+   // ReserveBlob cannot be used to reserve a multi-key blob
+   R__ASSERT(nbytes < fNTupleAnchor.GetMaxKeySize());
+   
    std::uint64_t offset;
    if (fFileSimple) {
       if (fIsBare) {

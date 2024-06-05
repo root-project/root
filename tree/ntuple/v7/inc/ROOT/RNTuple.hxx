@@ -68,6 +68,7 @@ public:
    static constexpr std::uint16_t kVersionMajor = 2;
    static constexpr std::uint16_t kVersionMinor = 0;
    static constexpr std::uint16_t kVersionPatch = 0;
+   static constexpr std::uint64_t kDefaultMaxKeySize = 0x4000'0000; // 1 GB
 
 private:
    /// Version of the RNTuple binary format that the writer supports (see specification).
@@ -93,8 +94,8 @@ private:
    std::uint64_t fNBytesFooter = 0;
    /// The size of the uncompressed ntuple footer
    std::uint64_t fLenFooter = 0;
-   /// The maximum size for a TKey payload. Payloads bigger than this size will be chained as multiple blobs.
-   std::uint64_t fMaxKeySize = 0;
+   /// The maximum size for a TKey payload. Payloads bigger than this size will be written as multiple blobs.
+   std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
 
    TFile *fFile = nullptr; ///<! The file from which the ntuple was streamed, registered in the custom streamer
 
