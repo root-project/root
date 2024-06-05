@@ -43,7 +43,6 @@ class RNTuple; // for making RPageSourceFile a friend of RNTuple
 namespace Internal {
 class RClusterPool;
 class RPageAllocatorHeap;
-class RPagePool;
 
 // clang-format off
 /**
@@ -112,8 +111,6 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
-   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
-   std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
@@ -143,7 +140,6 @@ private:
 
 protected:
    RNTupleDescriptor AttachImpl() final;
-   void UnzipClusterImpl(RCluster *cluster) final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
