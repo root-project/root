@@ -69,7 +69,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 
          if (fCompressionSettings == -1) {
             fCompressionSettings = columnRange.fCompressionSettings;
-         } else if (fCompressionSettings != columnRange.fCompressionSettings) {
+         } else if (fCompressionSettings != columnRange.fCompressionSettings &&
+                    columnRange.fCompressionSettings != kUnknownCompressionSettings) {
             // Note that currently all clusters and columns are compressed with the same settings and it is not yet
             // possible to do otherwise. This means that currently, this exception should never be thrown, but this
             // could change in the future.
