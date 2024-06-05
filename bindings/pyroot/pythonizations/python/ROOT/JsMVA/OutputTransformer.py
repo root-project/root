@@ -242,7 +242,7 @@ class transformTMVAOutputToHTML:
             if (Header == None and EmptyHeader == None) or j == 0:
                 if j != 0:
                     processed_lines += 1
-                    self.iterLines.next()
+                    next(self.iterLines)
                     tmp_str += "<tr>"
                 if DatasetName or NumEvents or VariableMeanHeader:
                     if DatasetName:
@@ -256,17 +256,17 @@ class transformTMVAOutputToHTML:
                         fLine = VariableMeanHeader
                     count, tmp = func(fLine, self.lineIndex + j, len(self.lines) - self.lineIndex - j)
                     for x in range(count):
-                        lineIter.next()
-                        self.iterLines.next()
+                        next(lineIter)
+                        next(self.iterLines)
                     tmp_str += self.__processGroupContentLine(tmp)
                 elif CorrelationMatrixHeader:
-                    self.iterLines.next()
-                    lineIter.next()
+                    next(self.iterLines)
+                    next(lineIter)
                     ik = 1
                     matrixLines = []
                     while True:
-                        self.iterLines.next()
-                        lineIter.next()
+                        next(self.iterLines)
+                        next(lineIter)
                         ik += 1
                         if self.__isEmpty(self.lines[self.lineIndex + j + ik]):
                             break
@@ -297,8 +297,8 @@ class transformTMVAOutputToHTML:
                         if EndWelcome or re.match(r"[\s_/|]*", nextline) == None:
                             break
                         kw += 1
-                        self.iterLines.next()
-                        lineIter.next()
+                        next(self.iterLines)
+                        next(lineIter)
                     tmp_str += "<td><b>" + WelcomeHeader.group(1) + "</b></td></tr>"
                     tmp_str += "<tr><td><img src='https://rawgit.com/root-project/root/master/tutorials/tmva/tmva_logo.svg' width='100%' /><br />"
                     tmp_str += "<center><b>" + EndWelcome.group(1) + "</b></center></td></tr>"
@@ -376,9 +376,9 @@ class transformTMVAOutputToHTML:
                             r"^\s*-*\s*(<\w+>\s*)*\s*(\w+.*\s+)(\s+)(:)\s*(.*)", self.lines[self.lineIndex + kw], re.I
                         )
                         if Header:
-                            self.iterLines.next()
+                            next(self.iterLines)
                         break
-                    self.iterLines.next()
+                    next(self.iterLines)
                     if self.__isEmpty(nextline):
                         continue
                     lre = re.match(r"\s*:\s*(.*)", nextline)
