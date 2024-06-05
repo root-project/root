@@ -1439,6 +1439,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             hist_holder = nullptr;
 
          Bool_t no_entries = hist->GetEntries();
+         Bool_t is_stack = hist_holder && (hist_holder->IsA() == THStack::Class());
 
          Double_t hmin = 0., hmax = 0.;
 
@@ -1450,7 +1451,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
             hmax = r.zy2;
-            if ((hmin == hmax) && !no_entries) {
+            if ((hmin == hmax) && !no_entries && !is_stack) {
                // if there are no zooming on Y and histogram has no entries, hmin/hmax should be set to full range
                hmin = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy1) : r.uy1;
                hmax = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy2) : r.uy2;
@@ -1480,7 +1481,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hmin == hmax)
             hmin = hmax = -1111;
 
-         if (hist_holder && (hist_holder->IsA() == THStack::Class())) {
+         if (is_stack) {
             TString opt = objlnk->GetOption();
             if (!opt.Contains("nostack", TString::kIgnoreCase) && !opt.Contains("lego", TString::kIgnoreCase)) {
                hist->SetMinimum(hmin);
