@@ -107,6 +107,7 @@ protected:
 
    void printEvalErrors() const;
 
+   double applyEvalErrorHandling(double fvalue) const;
    void finishDoEval() const;
 
    // members
@@ -118,6 +119,10 @@ protected:
    mutable double _funcOffset{0.};
    mutable int _numBadNLL = 0;
    mutable int _evalCounter{0};
+   // PB: these mutables signal a suboptimal design. A separate error handling
+   // object containing all this would clean up this class. It would allow const
+   // functions to be actually const (even though state still changes in the
+   // error handling object).
 
    unsigned int _nDim = 0;
 
