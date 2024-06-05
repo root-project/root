@@ -654,6 +654,19 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          return;
 
       auto f1 = static_cast<TF1 *>(fobj);
+      if (!f1->IsValid())
+         return;
+
+      if (fTF1UseSave == 1) {
+         // check if save buffer empty, workaround for yet missing TF1::IsSaveBuffer()
+         Bool_t is_empty = kTRUE;
+         static auto offset = TF1::Class()->GetDataMemberOffset("fSave");
+         if (offset > 0)
+            is_empty = ((std::vector<Double_t> *) ((char *) f1 + offset))->empty();
+         if (!is_empty)
+            return;
+      }
+
       f1->Save(0, 0, 0, 0, 0, 0);
    };
 
