@@ -185,12 +185,12 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          ROnDiskPage::Key key(columnId, pageNo);
          auto onDiskPage = cluster->GetOnDiskPage(key);
          R__ASSERT(onDiskPage && (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage));
+         RSealedPage sealedPage{onDiskPage->GetAddress(), pi.fLocator.fBytesOnStorage, pi.fNElements};
 
-         auto taskFunc = [this, columnId, clusterId, firstInPage, onDiskPage, element = allElements.back().get(),
-                          nElements = pi.fNElements,
+         auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto newPage = UnsealPage({onDiskPage->GetAddress(), onDiskPage->GetSize(), nElements}, *element, columnId);
-            fCounters->fSzUnzip.Add(element->GetSize() * nElements);
+            auto newPage = UnsealPage(sealedPage, *element, columnId);
+            fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.fNElements);
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(

@@ -90,8 +90,8 @@ public:
 
       RSealedPage() = default;
       RSealedPage(const void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
-      RSealedPage(const RSealedPage &other) = delete;
-      RSealedPage& operator =(const RSealedPage &other) = delete;
+      RSealedPage(const RSealedPage &other) = default;
+      RSealedPage &operator=(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
       RSealedPage& operator =(RSealedPage &&other) = default;
    };
