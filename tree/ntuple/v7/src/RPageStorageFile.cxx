@@ -221,7 +221,6 @@ void ROOT::Experimental::Internal::RPageSinkFile::ReleasePage(RPage &page)
 ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
                                                                const RNTupleReadOptions &options)
    : RPageSource(ntupleName, options),
-     fPagePool(std::make_shared<RPagePool>()),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
@@ -662,51 +661,4 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
    }
 
    return clusters;
-}
-
-void ROOT::Experimental::Internal::RPageSourceFile::UnzipClusterImpl(RCluster *cluster)
-{
-   Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-
-   const auto clusterId = cluster->GetId();
-   auto descriptorGuard = GetSharedDescriptorGuard();
-   const auto &clusterDescriptor = descriptorGuard->GetClusterDescriptor(clusterId);
-
-   std::vector<std::unique_ptr<RColumnElementBase>> allElements;
-
-   const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
-   for (const auto columnId : columnsInCluster) {
-      const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
-
-      allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetModel().GetType()));
-
-      const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
-      std::uint64_t pageNo = 0;
-      std::uint64_t firstInPage = 0;
-      for (const auto &pi : pageRange.fPageInfos) {
-         ROnDiskPage::Key key(columnId, pageNo);
-         auto onDiskPage = cluster->GetOnDiskPage(key);
-         R__ASSERT(onDiskPage && (onDiskPage->GetSize() == pi.fLocator.fBytesOnStorage));
-
-         auto taskFunc = [this, columnId, clusterId, firstInPage, onDiskPage, element = allElements.back().get(),
-                          nElements = pi.fNElements,
-                          indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto newPage = UnsealPage({onDiskPage->GetAddress(), onDiskPage->GetSize(), nElements}, *element, columnId);
-            fCounters->fSzUnzip.Add(element->GetSize() * nElements);
-
-            newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
-            fPagePool->PreloadPage(
-               newPage, RPageDeleter([](const RPage &page, void *) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
-         };
-
-         fTaskScheduler->AddTask(taskFunc);
-
-         firstInPage += pi.fNElements;
-         pageNo++;
-      } // for all pages in column
-   }    // for all columns in cluster
-
-   fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
-
-   fTaskScheduler->Wait();
 }
