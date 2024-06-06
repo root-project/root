@@ -63,6 +63,5 @@ endif() # vector versions of library
 if (cuda)
   set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
-  set_target_properties(RooBatchCompute_CUDA PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
-  target_compile_options(RooBatchCompute_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
+  target_compile_options(RooBatchCompute_CUDA  PRIVATE -lineinfo --expt-relaxed-constexpr)
 endif()
