@@ -17,14 +17,21 @@
 
 #include <RConfig.h>
 
-#include <RooFit/Detail/CudaInterface.h>
-
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
 #include <cstddef>
 #include <initializer_list>
 #include <memory>
 #include <string>
+
+namespace RooFit {
+namespace Detail {
+namespace CudaInterface {
+class CudaEvent;
+class CudaStream;
+} // namespace CudaInterface
+} // namespace Detail
+} // namespace RooFit
 
 /**
  * Namespace for dispatching RooFit computations to various backends.
