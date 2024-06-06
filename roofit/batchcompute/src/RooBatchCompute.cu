@@ -167,6 +167,24 @@ public:
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const;
 
+   CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const override
+   {
+      return new CudaInterface::CudaEvent{forTiming};
+   }
+   CudaInterface::CudaStream *newCudaStream() const override { return new CudaInterface::CudaStream{}; }
+   void deleteCudaEvent(CudaInterface::CudaEvent *event) const override { delete event; }
+   void deleteCudaStream(CudaInterface::CudaStream *stream) const override { delete stream; }
+
+   void cudaEventRecord(CudaInterface::CudaEvent *event, CudaInterface::CudaStream *stream) const override
+   {
+      CudaInterface::cudaEventRecord(*event, *stream);
+   }
+   void cudaStreamWaitForEvent(CudaInterface::CudaStream *stream, CudaInterface::CudaEvent *event) const override
+   {
+      stream->waitForEvent(*event);
+   }
+   bool cudaStreamIsActive(CudaInterface::CudaStream *stream) const override { return stream->isActive(); }
+
 private:
    const std::vector<void (*)(Batches &)> _computeFunctions;
 
