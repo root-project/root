@@ -35,7 +35,7 @@ protected:
 public:
    TNamed(): fName(), fTitle() { } // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
    TNamed(const char *name, const char *title) : fName(name), fTitle(title) { }
-   TNamed(const TString &name, const TString &title) : fName(name), fTitle(title) { }
+   TNamed(TString name, TString title) : fName(std::move(name)), fTitle(std::move(title)) {}
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed();
