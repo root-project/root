@@ -73,8 +73,11 @@ public:
    explicit RMiniFileReader(ROOT::Internal::RRawFile *rawFile);
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RResult<RNTuple> GetNTuple(std::string_view ntupleName);
-   /// Reads a given byte range from the file into the provided memory buffer
-   void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
+   /// Reads a given byte range from the file into the provided memory buffer.
+   /// If `maxBlobSize > 0 ` and `nbytes > maxBlobSize`, this function will assume the
+   /// blob being read is chunked and read all the chunks into the buffer. This is symmetrical to
+   /// what happens in `RNTupleFileWriter::WriteBlob()`.
+   void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset, std::uint64_t maxBlobSize = 0);
 };
 
 // clang-format off
@@ -142,7 +145,7 @@ private:
    /// Header and footer location of the ntuple, written on Commit()
    RNTuple fNTupleAnchor;
 
-   explicit RNTupleFileWriter(std::string_view name);
+   explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize);
 
    /// For a TFile container written by a C file stream, write the header and TFile object
    void WriteTFileSkeleton(int defaultCompression);
@@ -167,9 +170,10 @@ public:
    /// Create or truncate the local file given by path with the new empty RNTuple identified by ntupleName.
    /// Uses a C stream for writing
    static std::unique_ptr<RNTupleFileWriter> Recreate(std::string_view ntupleName, std::string_view path,
-                                                      int defaultCompression, EContainerFormat containerFormat);
+                                                      int defaultCompression, EContainerFormat containerFormat,
+                                                      std::uint64_t maxKeySize);
    /// Add a new RNTuple identified by ntupleName to the existing TFile.
-   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file);
+   static std::unique_ptr<RNTupleFileWriter> Append(std::string_view ntupleName, TFile &file, std::uint64_t maxKeySize);
 
    RNTupleFileWriter(const RNTupleFileWriter &other) = delete;
    RNTupleFileWriter(RNTupleFileWriter &&other) = delete;

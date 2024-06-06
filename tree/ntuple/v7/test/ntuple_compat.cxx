@@ -6,6 +6,8 @@
 #include "RXTuple.hxx"
 #include <gtest/gtest.h>
 
+using EContainerFormat = RNTupleFileWriter::EContainerFormat;
+
 TEST(RNTupleCompat, Epoch)
 {
    FileRaii fileGuard("test_ntuple_compat_epoch.root");
@@ -39,7 +41,7 @@ TEST(RNTupleCompat, FeatureFlag)
    ASSERT_TRUE(static_cast<bool>(descBuilder.EnsureValidDescriptor()));
 
    auto writer =
-      RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+      RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, RNTupleWriteOptions::kDefaultMaxKeySize);
    RNTupleSerializer serializer;
 
    auto ctx = serializer.SerializeHeader(nullptr, descBuilder.GetDescriptor());
