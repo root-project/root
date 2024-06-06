@@ -49,8 +49,9 @@ By default, histograms are shown stacked:
   - then the sum of the first and second histograms is painted, and so on
 
 The axis ranges are computed automatically along the X and Y axes to display the complete
-histogram collection. By design, histogram bins with negative content cannot be part of a
-stack. Therefore, histograms with a negative minimum will be rejected.
+histogram collection.
+
+Warning: Histogram bins with negative content may produce wrong plots.
 
 ### Stack's drawing options
 
@@ -369,10 +370,6 @@ void THStack::Add(TH1 *h1, Option_t *option)
       Error("Add","THStack supports only 1-d and 2-d histograms");
       return;
    }
-   if (h1->GetMinimum() < 0.) {
-      Error("Add","Histograms with a negative minimum cannot be part of a THStack");
-      return;
-   }
    if (!fHists) fHists = new TList();
    fHists->Add(h1,option);
    Modified(); //invalidate stack
@@ -404,6 +401,9 @@ void THStack::BuildStack()
    fStack->Add(h);
    for (Int_t i=1;i<nhists;i++) {
       h = (TH1*)fHists->At(i)->Clone();
+      if (h->GetMinimum() < 0.) {
+         Warning("Add","Histograms with a negative minimum may produce wrong plots");
+      }
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
    }
