@@ -22,22 +22,16 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include "Batches.h"
 #include "CudaInterface.h"
 
-#include <ROOT/RConfig.hxx>
-#include <TError.h>
-
 #include <algorithm>
+#include <functional>
 #include <map>
 #include <queue>
 #include <vector>
 
-#ifndef RF_ARCH
-#error "RF_ARCH should always be defined"
-#endif
-
 namespace CudaInterface = RooFit::Detail::CudaInterface;
 
 namespace RooBatchCompute {
-namespace RF_ARCH {
+namespace CUDA {
 
 constexpr int blockSize = 512;
 
@@ -102,14 +96,8 @@ public:
       dispatchCUDA = this; // Set the dispatch pointer to this instance of the library upon loading
    }
 
-   Architecture architecture() const override { return Architecture::RF_ARCH; };
-   std::string architectureName() const override
-   {
-      // transform to lower case to match the original architecture name passed to the compiler
-      std::string out = _QUOTE_(RF_ARCH);
-      std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) { return std::tolower(c); });
-      return out;
-   };
+   Architecture architecture() const override { return Architecture::CUDA; }
+   std::string architectureName() const override { return "cuda"; }
 
    /** Compute multiple values using cuda kernels.
    This method creates a Batches object and passes it to the correct compute function.
@@ -559,5 +547,5 @@ std::unique_ptr<AbsBufferManager> RooBatchComputeClass::createBufferManager() co
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
 
-} // End namespace RF_ARCH
+} // End namespace CUDA
 } // End namespace RooBatchCompute
