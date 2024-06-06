@@ -62,14 +62,14 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
    : RPageSinkFile(ntupleName, options)
 {
    fWriter = RNTupleFileWriter::Recreate(ntupleName, path, options.GetCompression(),
-                                         RNTupleFileWriter::EContainerFormat::kTFile);
+                                         RNTupleFileWriter::EContainerFormat::kTFile, options.GetMaxKeySize());
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, TFile &file,
                                                            const RNTupleWriteOptions &options)
    : RPageSinkFile(ntupleName, options)
 {
-   fWriter = RNTupleFileWriter::Append(ntupleName, file);
+   fWriter = RNTupleFileWriter::Append(ntupleName, file, options.GetMaxKeySize());
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::~RPageSinkFile() {}
@@ -186,8 +186,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBa
 std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   // TEMP: how do we actually get the max key size?
-   const std::uint64_t maxKeySize = 10000;
+   const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
 
    CommittedBatch batch{};
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
@@ -228,7 +227,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
             assert(batch.fSize == 0);
 
             std::uint64_t offset = fWriter->WriteBlob(sealedPageIt->fBuffer, sealedPageIt->fSize,
-                               (bitsOnStorage * sealedPageIt->fNElements + 7) / 8);
+                                                      (bitsOnStorage * sealedPageIt->fNElements + 7) / 8);
 
             RNTupleLocator locator;
             locator.fPosition = offset;
