@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/Detail/CudaInterface.h>
+#include "CudaInterface.h"
 
 #include <stdexcept>
 #include <sstream>

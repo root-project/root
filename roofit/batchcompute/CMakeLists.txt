@@ -5,7 +5,6 @@ ROOT_LINKER_LIBRARY(RooBatchCompute
   DEPENDENCIES
     Core
     MathCore
-    RooFitCuda
 )
 
 target_include_directories(RooBatchCompute PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
@@ -30,7 +29,6 @@ endif()
 # Instantiations of the shared objects which provide the actual computation functions.
 
 set(shared_object_sources src/RooBatchCompute.cxx src/ComputeFunctions.cxx)
-set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu)
 
 # Generic implementation for CPUs that don't support vector instruction sets.
 ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
@@ -63,6 +61,8 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
 endif() # vector versions of library
 
 if (cuda)
+  set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu src/CudaInterface.cu)
   ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  set_target_properties(RooBatchCompute_CUDA PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
 endif()
