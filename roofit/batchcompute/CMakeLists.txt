@@ -16,14 +16,6 @@ if(builtin_vdt)
   add_dependencies(RooBatchCompute VDT)
 endif()
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  # gcc has a bug in that it fails to put its internal -lgcc into the right place when linking.
-  # We need it to check cpu flags in src/Initialisation.cxx
-  # Here, we add an explicit link instruction according to the workaround posted here:
-  # https://bugs.launchpad.net/ubuntu/+source/gcc-5/+bug/1568899
-  target_link_libraries(RooBatchCompute PRIVATE -lgcc_s -lgcc)
-endif()
-
 
 ############################################################################################################################################
 # Instantiations of the shared objects which provide the actual computation functions.
@@ -42,6 +34,7 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
   ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
   ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
   ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
 
   # Flags -fno-signaling-nans, -fno-trapping-math and -O3 are necessary to enable autovectorization (especially for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
@@ -50,13 +43,7 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
   target_compile_options(RooBatchCompute_SSE4.1  PRIVATE ${common-flags} -msse4    -DRF_ARCH=SSE4)
   target_compile_options(RooBatchCompute_AVX     PRIVATE ${common-flags} -mavx     -DRF_ARCH=AVX)
   target_compile_options(RooBatchCompute_AVX2    PRIVATE ${common-flags} -mavx2    -DRF_ARCH=AVX2)
-
-  # AVX512 is only supported in gcc 6+
-  # We focus on AVX512 capable processors that support at least the skylake-avx512 instruction sets.
-  if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6)
-    ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
-    target_compile_options(RooBatchCompute_AVX512  PRIVATE ${common-flags} -march=skylake-avx512 -DRF_ARCH=AVX512)
-  endif()
+  target_compile_options(RooBatchCompute_AVX512  PRIVATE ${common-flags} -march=skylake-avx512 -DRF_ARCH=AVX512)
 
 endif() # vector versions of library
 
