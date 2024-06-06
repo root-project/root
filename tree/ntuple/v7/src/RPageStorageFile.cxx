@@ -31,11 +31,13 @@
 #include <RVersion.h>
 #include <TError.h>
 #include <TFile.h>
+#include "ROOT/RNTupleUtil.hxx"
 
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iterator>
 #include <limits>
 #include <utility>
 
@@ -123,8 +125,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
    return WriteSealedPage(sealedPage, bytesPacked);
 }
 
-std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBatch &batch,
+                                                                     std::vector<RNTupleLocator> &locators)
 {
    // TEMP: how do we actually get the max key size?
    const std::uint64_t maxKeySize = 1000000000;
@@ -159,8 +161,6 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    }
 
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-   // Reserve a blob that is large enough to hold all pages.
-   std::uint64_t offset = fWriter->ReserveBlob(size, bytesPacked);
 
    // Now write the individual pages and record their locators.
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
@@ -176,8 +176,84 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    }
 
    fCounters->fNPageCommitted.Add(locators.size());
-   fCounters->fSzWritePayload.Add(size);
-   fNBytesCurrentCluster += size;
+   fCounters->fSzWritePayload.Add(batch.fSize);
+   fNBytesCurrentCluster += batch.fSize;
+
+   batch.fSize = 0;
+   batch.fBytesPacked = 0;
+}
+
+std::vector<ROOT::Experimental::RNTupleLocator>
+ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+{
+   // TEMP: how do we actually get the max key size?
+   const std::uint64_t maxKeySize = 10000;
+
+   CommittedBatch batch{};
+   std::vector<ROOT::Experimental::RNTupleLocator> locators;
+
+   for (auto rangeIt = ranges.begin(); rangeIt != ranges.end(); ++rangeIt) {
+      auto &range = *rangeIt;
+      if (range.fFirst == range.fLast) {
+         // Skip empty ranges, they might not have a physical column ID!
+         continue;
+      }
+
+      const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
+         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
+
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (batch.fSize > 0 && batch.fSize + sealedPageIt->fSize > maxKeySize) {
+            /**
+             * Adding this page would exceed maxKeySize. Since we always want to write into a single key
+             * with vectorized writes, we commit the current set of pages before proceeding.
+             * NOTE: we do this *before* checking if sealedPageIt->fSize > maxKeySize to guarantee that
+             * we always flush the current batch before doing an individual WriteBlob. This way we
+             * preserve the assumption that a CommittedBatch always contain a sequential set of pages.
+             * TODO(giacomo): we could optimize this by trying to collect more pages until we can fit
+             * them rather than greedily commit as soon as the next page overflows the max size.
+             * To do that we would need to change a bit the code that commits batches, as they would not
+             * necessarily be sequential any more.
+             */
+            batch.fEnd = std::make_pair(std::next(rangeIt), sealedPageIt);
+            CommitBatchOfPages(batch, locators);
+         }
+
+         if (sealedPageIt->fSize > maxKeySize) {
+            // This page alone is bigger than maxKeySize: save it by itself, since it will need to be
+            // split into multiple keys.
+
+            // Since this check implies the previous check on batchSize + newSize > maxSize, we should
+            // already have committed the current batch before writing this page.
+            assert(batch.fSize == 0);
+
+            std::uint64_t offset = fWriter->WriteBlob(sealedPageIt->fBuffer, sealedPageIt->fSize,
+                               (bitsOnStorage * sealedPageIt->fNElements + 7) / 8);
+
+            RNTupleLocator locator;
+            locator.fPosition = offset;
+            locator.fBytesOnStorage = sealedPageIt->fSize;
+            locators.push_back(locator);
+
+            fCounters->fNPageCommitted.Add(locators.size());
+            fCounters->fSzWritePayload.Add(sealedPageIt->fSize);
+            fNBytesCurrentCluster += sealedPageIt->fSize;
+
+         } else {
+            if (batch.fSize == 0) {
+               // Start a new batch
+               batch.fBegin = std::make_pair(rangeIt, sealedPageIt);
+            }
+            batch.fSize += sealedPageIt->fSize;
+            batch.fBytesPacked += (bitsOnStorage * sealedPageIt->fNElements + 7) / 8;
+         }
+      }
+   }
+
+   if (batch.fSize > 0) {
+      batch.fEnd = std::make_pair(ranges.end(), std::prev(ranges.end())->fLast);
+      CommitBatchOfPages(batch, locators);
+   }
 
    return locators;
 }

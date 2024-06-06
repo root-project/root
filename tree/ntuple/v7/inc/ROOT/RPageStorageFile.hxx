@@ -41,6 +41,7 @@ class RRawFile;
 
 namespace Experimental {
 class RNTuple; // for making RPageSourceFile a friend of RNTuple
+struct RNTupleLocator;
 
 namespace Internal {
 class RClusterPool;
@@ -57,6 +58,17 @@ The written file can be either in ROOT format or in RNTuple bare format.
 // clang-format on
 class RPageSinkFile : public RPagePersistentSink {
 private:
+   // A set of pages to be committed together in a vector write.
+   // Currently we assume they're all sequential (although they may span multiple ranges).
+   struct CommittedBatch {
+      using Iter = std::pair<std::span<RSealedPageGroup>::const_iterator, SealedPageSequence_t::const_iterator>;
+
+      size_t fSize;
+      size_t fBytesPacked;
+      Iter fBegin;
+      Iter fEnd;
+   };
+
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    std::unique_ptr<RNTupleFileWriter> fWriter;
@@ -67,6 +79,8 @@ private:
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
    RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
+
+   void CommitBatchOfPages(CommittedBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
    using RPagePersistentSink::InitImpl;
@@ -83,10 +97,10 @@ protected:
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
    RPageSinkFile(std::string_view ntupleName, TFile &file, const RNTupleWriteOptions &options);
-   RPageSinkFile(const RPageSinkFile&) = delete;
-   RPageSinkFile& operator=(const RPageSinkFile&) = delete;
-   RPageSinkFile(RPageSinkFile&&) = default;
-   RPageSinkFile& operator=(RPageSinkFile&&) = default;
+   RPageSinkFile(const RPageSinkFile &) = delete;
+   RPageSinkFile &operator=(const RPageSinkFile &) = delete;
+   RPageSinkFile(RPageSinkFile &&) = default;
+   RPageSinkFile &operator=(RPageSinkFile &&) = default;
    ~RPageSinkFile() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
@@ -152,9 +166,8 @@ private:
    /// read requests for a given cluster and columns.  The reead requests are appended to
    /// the provided vector.  This way, requests can be collected for multiple clusters before
    /// sending them to RRawFile::ReadV().
-   std::unique_ptr<RCluster> PrepareSingleCluster(
-      const RCluster::RKey &clusterKey,
-      std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
+   std::unique_ptr<RCluster>
+   PrepareSingleCluster(const RCluster::RKey &clusterKey, std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
    void LoadStructureImpl() final;
@@ -171,8 +184,8 @@ public:
    static std::unique_ptr<RPageSourceFile>
    CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
 
-   RPageSourceFile(const RPageSourceFile&) = delete;
-   RPageSourceFile& operator=(const RPageSourceFile&) = delete;
+   RPageSourceFile(const RPageSourceFile &) = delete;
+   RPageSourceFile &operator=(const RPageSourceFile &) = delete;
    RPageSourceFile(RPageSourceFile &&) = delete;
    RPageSourceFile &operator=(RPageSourceFile &&) = delete;
    ~RPageSourceFile() override;
