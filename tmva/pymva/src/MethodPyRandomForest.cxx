@@ -382,7 +382,7 @@ void MethodPyRandomForest::TestClassification()
 }
 
 //_______________________________________________________________________
-std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
+std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t /* logProgress */)
 {
    // Load model if not already done
    if (fClassifier == 0) ReadModelFromFile();
@@ -393,14 +393,6 @@ std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
 
-     // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
-
-   if (logProgress)
-      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
-            << "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
-            << " sample (" << nEvents << " events)" << Endl;
 
    // Get data
    npy_intp dims[2];
@@ -430,11 +422,6 @@ std::vector<Double_t> MethodPyRandomForest::GetMvaValues(Long64_t firstEvt, Long
    Py_DECREF(pEvent);
    Py_DECREF(result);
 
-   if (logProgress) {
-      Log() << kINFO
-            << "Elapsed time for evaluation of " << nEvents <<  " events: "
-            << timer.GetElapsedTime() << "       " << Endl;
-   }
 
    return mvaValues;
 }

@@ -739,6 +739,42 @@ void TMVA::MethodBase::GetRegressionDeviation(UInt_t tgtNum, Types::ETreeType ty
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get al regression values in one call
+std::vector<float> TMVA::MethodBase::GetAllRegressionValues()
+{
+   Long64_t nEvents = Data()->GetNEvents();
+   // use timer
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   // Drawing the progress bar every event was causing a huge slowdown in the evaluation time
+   // So we set some parameters to draw the progress bar a total of totalProgressDraws, i.e. only draw every 1 in 100
+
+   Int_t totalProgressDraws = 100; // total number of times to update the progress bar
+   Int_t drawProgressEvery = 1;    // draw every nth event such that we have a total of totalProgressDraws
+   if(nEvents >= totalProgressDraws) drawProgressEvery = nEvents/totalProgressDraws;
+
+   size_t ntargets = Data()->GetEvent(0)->GetNTargets();
+   std::vector<float> output(nEvents*ntargets);
+   auto itr = output.begin();
+   for (Int_t ievt=0; ievt<nEvents; ievt++) {
+
+      Data()->SetCurrentEvent(ievt);
+      std::vector< Float_t > vals = GetRegressionValues();
+      if (vals.size() != ntargets)
+         Log() << kFATAL << "Output regression vector with size " << vals.size() << " is not consistent with target size of "
+            << ntargets << std::endl;
+
+      std::copy(vals.begin(), vals.end(), itr);
+      itr += vals.size();
+
+      // Only draw the progress bar once in a while, doing this every event causes the evaluation to be ridiculously slow
+      if(ievt % drawProgressEvery == 0 || ievt==nEvents-1) timer.DrawProgressBar( ievt );
+   }
+
+   return output;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// prepare tree branch with the method's discriminating variable
 
 void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
@@ -753,26 +789,31 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
+
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName()) << "Evaluation of " << GetMethodName() << " on "
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    regRes->Resize( nEvents );
 
-   // Drawing the progress bar every event was causing a huge slowdown in the evaluation time
-   // So we set some parameters to draw the progress bar a total of totalProgressDraws, i.e. only draw every 1 in 100
+   std::vector<float> output = GetAllRegressionValues();
+   // assume we have all number of targets for all events
+   Data()->SetCurrentEvent(0);
+   size_t nTargets = GetEvent()->GetNTargets();
+   auto regValuesBegin = output.begin();
+   auto regValuesEnd = regValuesBegin + nTargets;
 
-   Int_t totalProgressDraws = 100; // total number of times to update the progress bar
-   Int_t drawProgressEvery = 1;    // draw every nth event such that we have a total of totalProgressDraws
-   if(nEvents >= totalProgressDraws) drawProgressEvery = nEvents/totalProgressDraws;
+   if (output.size() != nTargets * size_t(nEvents))
+      Log() << kFATAL << "Output regression vector with size " << output.size() << " is not consistent with target size of "
+            << nTargets << " and number of events " << nEvents << std::endl;
+
 
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
 
-      Data()->SetCurrentEvent(ievt);
-      std::vector< Float_t > vals = GetRegressionValues();
+      std::vector< Float_t > vals(regValuesBegin, regValuesEnd);
       regRes->SetValue( vals, ievt );
 
-      // Only draw the progress bar once in a while, doing this every event causes the evaluation to be ridiculously slow
-      if(ievt % drawProgressEvery == 0 || ievt==nEvents-1) timer.DrawProgressBar( ievt );
+      regValuesBegin += nTargets;
+      regValuesEnd += nTargets;
    }
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
@@ -787,7 +828,33 @@ void TMVA::MethodBase::AddRegressionOutput(Types::ETreeType type)
    histNamePrefix += (type==Types::kTraining?"train":"test");
    regRes->CreateDeviationHistograms( histNamePrefix );
 }
+////////////////////////////////////////////////////////////////////////////////
+/// Get all multi-class values
+std::vector<Float_t> TMVA::MethodBase::GetAllMulticlassValues()
+{
+    // use timer for progress bar
 
+   Long64_t nEvents = Data()->GetNEvents();
+   Timer timer( nEvents, GetName(), kTRUE );
+
+   Int_t modulo = Int_t(nEvents/100) + 1;
+   // call first time to get number of classes
+   Data()->SetCurrentEvent(0);
+   std::vector< Float_t > vals = GetMulticlassValues();
+   std::vector<float> output(nEvents * vals.size());
+   auto itr = output.begin();
+   std::copy(vals.begin(), vals.end(), itr);
+   for (Int_t ievt=1; ievt<nEvents; ievt++) {
+      itr += vals.size();
+      Data()->SetCurrentEvent(ievt);
+      vals = GetMulticlassValues();
+
+      std::copy(vals.begin(), vals.end(), itr);
+
+      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
+   }
+   return output;
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// prepare tree branch with the method's discriminating variable
 
@@ -809,13 +876,13 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    resMulticlass->Resize( nEvents );
-   Int_t modulo = Int_t(nEvents/100) + 1;
+   std::vector<Float_t> output = GetAllMulticlassValues();
+   size_t nClasses = output.size()/nEvents;
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
-      Data()->SetCurrentEvent(ievt);
-      std::vector< Float_t > vals = GetMulticlassValues();
+      std::vector< Float_t > vals(output.begin()+ievt*nClasses, output.begin()+(ievt+1)*nClasses);
       resMulticlass->SetValue( vals, ievt );
-      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
+
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
     << "Elapsed time for evaluation of " << nEvents <<  " events: "
@@ -878,7 +945,17 @@ void TMVA::MethodBase::AddClassifierOutput( Types::ETreeType type )
 
    // use timer
    Timer timer( nEvents, GetName(), kTRUE );
+
+   Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
+
    std::vector<Double_t> mvaValues = GetMvaValues(0, nEvents, true);
+
+   Log() << kINFO
+            << "Elapsed time for evaluation of " << nEvents <<  " events: "
+            << timer.GetElapsedTime() << "       " << Endl;
 
    // store time used for testing
    if (type==Types::kTesting)
@@ -936,7 +1013,7 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get all the MVA values for the events of the given Data type
-// (this is used by Method Category and it does not need to be re-implmented by derived classes )
+// (this is used by Method Category and it does not need to be re-implemented by derived classes )
 std::vector<Double_t> TMVA::MethodBase::GetDataMvaValues(DataSet * data, Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress)
 {
    fTmpData = data;
@@ -1010,12 +1087,13 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Log() << kINFO << "Calculate regression for all events" << Endl;
    Timer timer( nevt, GetName(), kTRUE );
    Long64_t modulo = Long64_t(nevt / 100) + 1;
+   auto output = GetAllRegressionValues();
+   int ntargets = Data()->GetEvent(0)->GetNTargets();
    for (Long64_t ievt=0; ievt<nevt; ievt++) {
-
       const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
       Float_t t = ev->GetTarget(0);
       Float_t w = ev->GetWeight();
-      Float_t r = GetRegressionValues()[0];
+      Float_t r = output[ievt*ntargets];
       Float_t d = (r-t);
 
       // find min/max

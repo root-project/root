@@ -65,6 +65,8 @@ MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
 }
 
 MethodPyKeras::~MethodPyKeras() {
+   if (fPyVals != nullptr) Py_DECREF(fPyVals);
+   if (fPyOutput != nullptr) Py_DECREF(fPyOutput);
 }
 
 Bool_t MethodPyKeras::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t) {
@@ -260,7 +262,7 @@ void MethodPyKeras::InitKeras() {
          if (tfMinorVersion >= 16) { // for version >=2.16 use Keras 3 API
             fUseKeras3 = true;
             Log() << kINFO << "Using the new Keras3 API available with tensorflow version " << tfMajorVersion << "." << tfMinorVersion << Endl;
-            if (fFilenameModel.Contains(".h5") || fFilenameTrainedModel.Contains(".h5"))
+            if (fSaveBestOnly && (fFilenameModel.Contains(".h5") || fFilenameTrainedModel.Contains(".h5")) )
                Log() << kFATAL << "Cannot use .h5 files with new Keras 3 API. Use .keras" << Endl;
          }
       }
@@ -419,20 +421,6 @@ void MethodPyKeras::SetupKerasModelForEval() {
 
    SetupKerasModel(true);
 
-   // Init evaluation (needed for getMvaValue)
-   if (fNVars > 0) {
-      fVals.resize(fNVars); // holds values used for classification and regression
-      npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
-      PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
-      PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
-   }
-   // setup output variables
-   if (fNOutputs > 0) {
-      fOutput.resize(fNOutputs); // holds classification probabilities or regression output
-      npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
-      PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
-      PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
-   }
 
    fModelIsSetupForEval = true;
 }
@@ -683,6 +671,37 @@ void MethodPyKeras::TestClassification() {
     MethodBase::TestClassification();
 }
 
+void MethodPyKeras::InitEvaluation(size_t nEvents = 1) {
+
+   size_t inputSize = fNVars*nEvents;
+   size_t outputSize = fNOutputs*nEvents;
+
+   // Init single evaluation
+   if (fNVars > 0 && ( fVals.size() != inputSize || fPyVals == nullptr)) {
+      fVals.resize(inputSize); // holds values used for classification and regression
+      npy_intp dimsVals[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
+      if (fPyVals != nullptr) Py_DECREF(fPyVals);   // delete previous object
+      fPyVals = PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
+      if (!fPyVals)
+         Log() << kFATAL << "Failed to load data to Python array" << Endl;
+      PyDict_SetItemString(fLocalNS, "vals", fPyVals);
+   }
+   // setup output variables (no need to do for multiple outputs- we call a different function)
+   if (fNOutputs > 0  && ( fOutput.size() != outputSize || fPyOutput == nullptr)) {
+      fOutput.resize(outputSize); // holds classification probabilities or regression output
+      // this is needed only for single-event evaluation
+      if (nEvents == 1) {
+         if (fPyOutput != nullptr) Py_DECREF(fPyOutput);   // delete previous object
+         npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+         fPyOutput = PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
+         if (!fPyOutput)
+            Log() << kFATAL << "Failed to create output data Python array" << Endl;
+         PyDict_SetItemString(fLocalNS, "output", fPyOutput);
+      }
+   }
+}
+
+
 Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
    // Cannot determine error
    NoErrorCalc(errLower, errUpper);
@@ -692,6 +711,7 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
    if (!fModelIsSetupForEval) {
       // Setup the trained model
       SetupKerasModelForEval();
+      InitEvaluation(1);
    }
 
    // Get signal probability (called mvaValue here)
@@ -705,7 +725,8 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
    return fOutput[TMVA::Types::kSignal];
 }
 
-std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
+std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t /*logProgress*/) {
+
    // Check whether the model is setup
    // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
    if (!fModelIsSetupForEval) {
@@ -713,55 +734,42 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
       SetupKerasModelForEval();
    }
 
-   // Load data to numpy array
+    // Load data to numpy array
    Long64_t nEvents = Data()->GetNEvents();
    if (firstEvt > lastEvt || lastEvt > nEvents) lastEvt = nEvents;
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
 
-   // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
+   InitEvaluation(nEvents);
 
-   if (logProgress)
-      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
-            << "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
-            << " sample (" << nEvents << " events)" << Endl;
-
-   float* data = new float[nEvents*fNVars];
+   assert (fVals.size() == fNVars*nEvents);
    for (UInt_t i=0; i<nEvents; i++) {
       Data()->SetCurrentEvent(i);
       const TMVA::Event *e = GetEvent();
       for (UInt_t j=0; j<fNVars; j++) {
-         data[j + i*fNVars] = e->GetValue(j);
+         fVals[j + i*fNVars] = e->GetValue(j);
       }
    }
 
    std::vector<double> mvaValues(nEvents);
-   npy_intp dimsData[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
-   PyArrayObject* pDataMvaValues = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsData, NPY_FLOAT, (void*)data);
-   if (pDataMvaValues==0) Log() << "Failed to load data to Python array" << Endl;
 
    // Get prediction for all events
    PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
    if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
-   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", pDataMvaValues);
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", fPyVals);
    if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
-   delete[] data;
+
    // Load predictions to double vector
    // NOTE: The signal probability is given at the output
    float* predictionsData = (float*) PyArray_DATA(pPredictions);
 
+   // need to loop on events since we take only the signal output of the two provided by Keras
    for (UInt_t i=0; i<nEvents; i++) {
       mvaValues[i] = (double) predictionsData[i*fNOutputs + TMVA::Types::kSignal];
    }
 
-   if (logProgress) {
-      Log() << kINFO
-            << "Elapsed time for evaluation of " << nEvents <<  " events: "
-            << timer.GetElapsedTime() << "       " << Endl;
-   }
-
+   // we need to delete the PyArrayObjects
+   Py_DECREF(pPredictions);
 
    return mvaValues;
 }
@@ -771,9 +779,8 @@ std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
    if (!fModelIsSetupForEval){
       // Setup the model and load weights
-      //std::cout << "setup model for evaluation" << std::endl;
-      //PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
       SetupKerasModelForEval();
+      InitEvaluation(1);
    }
 
    // Get regression values
@@ -785,12 +792,12 @@ std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
    PyRunString(code,"Failed to get predictions");
 
    // Use inverse transformation of targets to get final regression values
-   Event * eTrans = new Event(*e);
+   Event eTrans(*e);
    for (UInt_t i=0; i<fNOutputs; ++i) {
-      eTrans->SetTarget(i,fOutput[i]);
+      eTrans.SetTarget(i,fOutput[i]);
    }
 
-   const Event* eTrans2 = GetTransformationHandler().InverseTransform(eTrans);
+   const Event* eTrans2 = GetTransformationHandler().InverseTransform(&eTrans);
    for (UInt_t i=0; i<fNOutputs; ++i) {
       fOutput[i] = eTrans2->GetTarget(i);
    }
@@ -798,7 +805,8 @@ std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
    return fOutput;
 }
 
-std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
+std::vector<Float_t> MethodPyKeras::GetAllRegressionValues() {
+
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
    if (!fModelIsSetupForEval){
@@ -806,6 +814,56 @@ std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
       SetupKerasModelForEval();
    }
 
+   auto nEvents = Data()->GetNEvents();
+   InitEvaluation(nEvents);
+
+
+   assert (fVals.size() == fNVars*nEvents);
+   assert (fOutput.size() == fNOutputs*nEvents);
+   for (UInt_t i=0; i<nEvents; i++) {
+      Data()->SetCurrentEvent(i);
+      const TMVA::Event *e = GetEvent();
+      for (UInt_t j=0; j<fNVars; j++) {
+         fVals[j + i*fNVars] = e->GetValue(j);
+      }
+   }
+
+   // Get prediction for all events
+   PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
+   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", fPyVals);
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+   // Load predictions to double vector
+   float* predictionsData = (float*) PyArray_DATA(pPredictions);
+
+   // need to loop on events since we use an inverse transformation to get final regression values
+   // this can be probably optimized
+   for (UInt_t ievt = 0; ievt < nEvents; ievt++) {
+      const TMVA::Event* e = GetEvent(ievt);
+      Event eTrans(*e);
+      for (UInt_t i = 0; i < fNOutputs; ++i) {
+         eTrans.SetTarget(i,predictionsData[ievt*fNOutputs + i]);
+      }
+      // apply the inverse transformation
+      const Event* eTrans2 = GetTransformationHandler().InverseTransform(&eTrans);
+      for (UInt_t i = 0; i < fNOutputs; ++i) {
+         fOutput[ievt*fNOutputs + i] = eTrans2->GetTarget(i);
+      }
+   }
+   Py_DECREF(pPredictions);
+   return fOutput;
+}
+
+
+
+std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
+   // Check whether the model is setup
+   // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetupForEval){
+      // Setup the model and load weights
+      SetupKerasModelForEval();
+      InitEvaluation(1);
+   }
    // Get class probabilites
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
@@ -813,6 +871,40 @@ std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
    std::string code = "for i,p in enumerate(model.predict(vals, verbose=" + ROOT::Math::Util::ToString(verbose)
                     + ")): output[i]=p\n";
    PyRunString(code,"Failed to get predictions");
+
+   return fOutput;
+}
+
+std::vector<Float_t> MethodPyKeras::GetAllMulticlassValues() {
+   // Check whether the model is setup
+   // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
+   if (!fModelIsSetupForEval){
+      // Setup the model and load weights
+      SetupKerasModelForEval();
+   }
+   auto nEvents = Data()->GetNEvents();
+   InitEvaluation(nEvents);
+
+   assert (fVals.size() == fNVars*nEvents);
+   assert (fOutput.size() == fNOutputs*nEvents);
+   for (UInt_t i=0; i<nEvents; i++) {
+      Data()->SetCurrentEvent(i);
+      const TMVA::Event *e = GetEvent();
+      for (UInt_t j=0; j<fNVars; j++) {
+         fVals[j + i*fNVars] = e->GetValue(j);
+      }
+   }
+
+   // Get prediction for all events
+   PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
+   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallMethod(pModel, (char*)"predict", (char*)"O", fPyVals);
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+   // Load predictions to double vector
+   float* predictionsData = (float*) PyArray_DATA(pPredictions);
+   std::copy(predictionsData, predictionsData+nEvents*fNOutputs, fOutput.begin());
+
+   Py_DECREF(pPredictions);
 
    return fOutput;
 }
