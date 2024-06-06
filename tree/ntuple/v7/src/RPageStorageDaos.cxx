@@ -655,7 +655,8 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHan
 
       ROnDiskPage::Key key(columnId, pageInfo.fPageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage && (bytesOnStorage == onDiskPage->GetSize()));
+      R__ASSERT(onDiskPage && ((bytesOnStorage == onDiskPage->GetSize()) ||
+                (bytesOnStorage + kNBytesPageChecksum == onDiskPage->GetSize())));
       sealedPageBuffer = onDiskPage->GetAddress();
    }
 
@@ -794,7 +795,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
             assert(cageIndex == s.fPosition);
             // Register the on disk pages in a page map
             ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fDataSize));
+            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fBufferSize));
             cageSz += s.fBufferSize;
          }
 
