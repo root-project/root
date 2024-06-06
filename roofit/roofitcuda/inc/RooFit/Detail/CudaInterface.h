@@ -42,7 +42,7 @@ struct Deleter {
  */
 class CudaEvent {
 public:
-   CudaEvent(bool /*forTiming*/);
+   CudaEvent(bool forTiming);
 
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__

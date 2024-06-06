@@ -108,7 +108,26 @@ public:
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
                              std::span<const double> offsetProbas) override;
 
-   std::unique_ptr<AbsBufferManager> createBufferManager() const;
+   std::unique_ptr<AbsBufferManager> createBufferManager() const override;
+
+   RooFit::Detail::CudaInterface::CudaEvent *newCudaEvent(bool) const override { throw std::bad_function_call(); }
+   RooFit::Detail::CudaInterface::CudaStream *newCudaStream() const override { throw std::bad_function_call(); }
+   void deleteCudaEvent(RooFit::Detail::CudaInterface::CudaEvent *) const override { throw std::bad_function_call(); }
+   void deleteCudaStream(RooFit::Detail::CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
+   void cudaEventRecord(RooFit::Detail::CudaInterface::CudaEvent *,
+                        RooFit::Detail::CudaInterface::CudaStream *) const override
+   {
+      throw std::bad_function_call();
+   }
+   void cudaStreamWaitForEvent(RooFit::Detail::CudaInterface::CudaStream *,
+                               RooFit::Detail::CudaInterface::CudaEvent *) const override
+   {
+      throw std::bad_function_call();
+   }
+   bool cudaStreamIsActive(RooFit::Detail::CudaInterface::CudaStream *) const override
+   {
+      throw std::bad_function_call();
+   }
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT
