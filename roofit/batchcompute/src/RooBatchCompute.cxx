@@ -32,8 +32,12 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 #include <Math/Util.h>
 
 #include <algorithm>
+#include <functional>
+#include <map>
+#include <queue>
 #include <sstream>
 #include <stdexcept>
+
 #include <vector>
 
 #ifndef RF_ARCH
@@ -103,6 +107,8 @@ public:
    double reduceSum(Config const &, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(Config const &, std::span<const double> probas, std::span<const double> weights,
                              std::span<const double> offsetProbas) override;
+
+   std::unique_ptr<AbsBufferManager> createBufferManager() const;
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT
@@ -285,6 +291,118 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(Config const &, std::span<const 
    }
 
    return out;
+}
+
+namespace {
+
+class ScalarBufferContainer {
+public:
+   ScalarBufferContainer() {}
+   ScalarBufferContainer(std::size_t size)
+   {
+      if (size != 1)
+         throw std::runtime_error("ScalarBufferContainer can only be of size 1");
+   }
+
+   double const *cpuReadPtr() const { return &_val; }
+   double const *gpuReadPtr() const { return &_val; }
+
+   double *cpuWritePtr() { return &_val; }
+   double *gpuWritePtr() { return &_val; }
+
+private:
+   double _val;
+};
+
+class CPUBufferContainer {
+public:
+   CPUBufferContainer(std::size_t size) : _vec(size) {}
+
+   double const *cpuReadPtr() const { return _vec.data(); }
+   double const *gpuReadPtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+   double *cpuWritePtr() { return _vec.data(); }
+   double *gpuWritePtr()
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+private:
+   std::vector<double> _vec;
+};
+
+template <class Container>
+class BufferImpl : public AbsBuffer {
+public:
+   using Queue = std::queue<std::unique_ptr<Container>>;
+
+   BufferImpl(std::size_t size, Queue &queue) : _queue{queue}
+   {
+      if (_queue.empty()) {
+         _vec = std::make_unique<Container>(size);
+      } else {
+         _vec = std::move(_queue.front());
+         _queue.pop();
+      }
+   }
+
+   ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
+
+   double const *cpuReadPtr() const override { return _vec->cpuReadPtr(); }
+   double const *gpuReadPtr() const override { return _vec->gpuReadPtr(); }
+
+   double *cpuWritePtr() override { return _vec->cpuWritePtr(); }
+   double *gpuWritePtr() override { return _vec->gpuWritePtr(); }
+
+   Container &vec() { return *_vec; }
+
+private:
+   std::unique_ptr<Container> _vec;
+   Queue &_queue;
+};
+
+using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
+using CPUBuffer = BufferImpl<CPUBufferContainer>;
+
+struct BufferQueuesMaps {
+   std::map<std::size_t, ScalarBuffer::Queue> scalarBufferQueuesMap;
+   std::map<std::size_t, CPUBuffer::Queue> cpuBufferQueuesMap;
+};
+
+class BufferManager : public AbsBufferManager {
+
+public:
+   BufferManager() : _queuesMaps{std::make_unique<BufferQueuesMaps>()} {}
+
+   std::unique_ptr<AbsBuffer> makeScalarBuffer() override
+   {
+      return std::make_unique<ScalarBuffer>(1, _queuesMaps->scalarBufferQueuesMap[1]);
+   }
+   std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size) override
+   {
+      return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap[size]);
+   }
+   std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t) override { throw std::bad_function_call(); }
+   std::unique_ptr<AbsBuffer>
+   makePinnedBuffer(std::size_t, RooFit::Detail::CudaInterface::CudaStream * = nullptr) override
+   {
+      throw std::bad_function_call();
+   }
+
+private:
+   std::unique_ptr<BufferQueuesMaps> _queuesMaps;
+};
+
+} // namespace
+
+std::unique_ptr<AbsBufferManager> RooBatchComputeClass::createBufferManager() const
+{
+   return std::make_unique<BufferManager>();
 }
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
