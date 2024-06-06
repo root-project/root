@@ -402,7 +402,7 @@ void THStack::BuildStack()
    for (Int_t i=1;i<nhists;i++) {
       h = (TH1*)fHists->At(i)->Clone();
       if (h->GetMinimum() < 0.) {
-         Warning("Add","Histograms with a negative minimum may produce wrong plots");
+         Warning("BuildStack","Histograms with a negative minimum may produce wrong plots");
       }
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
