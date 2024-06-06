@@ -25,6 +25,8 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <TError.h>
 
 #include <algorithm>
+#include <map>
+#include <queue>
 #include <vector>
 
 #ifndef RF_ARCH
@@ -92,8 +94,6 @@ std::vector<void (*)(Batches &)> getFunctions();
 /// This class overrides some RooBatchComputeInterface functions, for the
 /// purpose of providing a cuda specific implementation of the library.
 class RooBatchComputeClass : public RooBatchComputeInterface {
-private:
-   const std::vector<void (*)(Batches &)> _computeFunctions;
 
 public:
    RooBatchComputeClass() : _computeFunctions(getFunctions())
@@ -164,6 +164,12 @@ public:
    double reduceSum(RooBatchCompute::Config const &cfg, InputArr input, size_t n) override;
    ReduceNLLOutput reduceNLL(RooBatchCompute::Config const &cfg, std::span<const double> probas,
                              std::span<const double> weights, std::span<const double> offsetProbas) override;
+
+   std::unique_ptr<AbsBufferManager> createBufferManager() const;
+
+private:
+   const std::vector<void (*)(Batches &)> _computeFunctions;
+
 }; // End class RooBatchComputeClass
 
 inline __device__ void kahanSumUpdate(double &sum, double &carry, double a, double otherCarry)
@@ -307,6 +313,198 @@ ReduceNLLOutput RooBatchComputeClass::reduceNLL(RooBatchCompute::Config const &c
    out.nllSum = tmpSum;
    out.nllSumCarry = tmpCarry;
    return out;
+}
+
+namespace {
+
+class ScalarBufferContainer {
+public:
+   ScalarBufferContainer() {}
+   ScalarBufferContainer(std::size_t size)
+   {
+      if (size != 1)
+         throw std::runtime_error("ScalarBufferContainer can only be of size 1");
+   }
+
+   double const *cpuReadPtr() const { return &_val; }
+   double const *gpuReadPtr() const { return &_val; }
+
+   double *cpuWritePtr() { return &_val; }
+   double *gpuWritePtr() { return &_val; }
+
+private:
+   double _val;
+};
+
+class CPUBufferContainer {
+public:
+   CPUBufferContainer(std::size_t size) : _vec(size) {}
+
+   double const *cpuReadPtr() const { return _vec.data(); }
+   double const *gpuReadPtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+   double *cpuWritePtr() { return _vec.data(); }
+   double *gpuWritePtr()
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+
+private:
+   std::vector<double> _vec;
+};
+
+class GPUBufferContainer {
+public:
+   GPUBufferContainer(std::size_t size) : _arr(size) {}
+
+   double const *cpuReadPtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+   double const *gpuReadPtr() const { return _arr.data(); }
+
+   double *cpuWritePtr() const
+   {
+      throw std::bad_function_call();
+      return nullptr;
+   }
+   double *gpuWritePtr() const { return const_cast<double *>(_arr.data()); }
+
+private:
+   CudaInterface::DeviceArray<double> _arr;
+};
+
+class PinnedBufferContainer {
+public:
+   PinnedBufferContainer(std::size_t size) : _arr{size}, _gpuBuffer{size} {}
+   std::size_t size() const { return _arr.size(); }
+
+   void setCudaStream(CudaInterface::CudaStream *stream) { _cudaStream = stream; }
+
+   double const *cpuReadPtr() const
+   {
+
+      if (_lastAccess == LastAccessType::GPU_WRITE) {
+         CudaInterface::copyDeviceToHost(_gpuBuffer.gpuReadPtr(), const_cast<double *>(_arr.data()), size(),
+                                         _cudaStream);
+      }
+
+      _lastAccess = LastAccessType::CPU_READ;
+      return const_cast<double *>(_arr.data());
+   }
+   double const *gpuReadPtr() const
+   {
+
+      if (_lastAccess == LastAccessType::CPU_WRITE) {
+         CudaInterface::copyHostToDevice(_arr.data(), _gpuBuffer.gpuWritePtr(), size(), _cudaStream);
+      }
+
+      _lastAccess = LastAccessType::GPU_READ;
+      return _gpuBuffer.gpuReadPtr();
+   }
+
+   double *cpuWritePtr()
+   {
+      _lastAccess = LastAccessType::CPU_WRITE;
+      return _arr.data();
+   }
+   double *gpuWritePtr()
+   {
+      _lastAccess = LastAccessType::GPU_WRITE;
+      return _gpuBuffer.gpuWritePtr();
+   }
+
+private:
+   enum class LastAccessType { CPU_READ, GPU_READ, CPU_WRITE, GPU_WRITE };
+
+   CudaInterface::PinnedHostArray<double> _arr;
+   GPUBufferContainer _gpuBuffer;
+   CudaInterface::CudaStream *_cudaStream = nullptr;
+   mutable LastAccessType _lastAccess = LastAccessType::CPU_READ;
+};
+
+template <class Container>
+class BufferImpl : public AbsBuffer {
+public:
+   using Queue = std::queue<std::unique_ptr<Container>>;
+
+   BufferImpl(std::size_t size, Queue &queue) : _queue{queue}
+   {
+      if (_queue.empty()) {
+         _vec = std::make_unique<Container>(size);
+      } else {
+         _vec = std::move(_queue.front());
+         _queue.pop();
+      }
+   }
+
+   ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
+
+   double const *cpuReadPtr() const override { return _vec->cpuReadPtr(); }
+   double const *gpuReadPtr() const override { return _vec->gpuReadPtr(); }
+
+   double *cpuWritePtr() override { return _vec->cpuWritePtr(); }
+   double *gpuWritePtr() override { return _vec->gpuWritePtr(); }
+
+   Container &vec() { return *_vec; }
+
+private:
+   std::unique_ptr<Container> _vec;
+   Queue &_queue;
+};
+
+using ScalarBuffer = BufferImpl<ScalarBufferContainer>;
+using CPUBuffer = BufferImpl<CPUBufferContainer>;
+using GPUBuffer = BufferImpl<GPUBufferContainer>;
+using PinnedBuffer = BufferImpl<PinnedBufferContainer>;
+
+struct BufferQueuesMaps {
+   std::map<std::size_t, ScalarBuffer::Queue> scalarBufferQueuesMap;
+   std::map<std::size_t, CPUBuffer::Queue> cpuBufferQueuesMap;
+   std::map<std::size_t, GPUBuffer::Queue> gpuBufferQueuesMap;
+   std::map<std::size_t, PinnedBuffer::Queue> pinnedBufferQueuesMap;
+};
+
+class BufferManager : public AbsBufferManager {
+
+public:
+   BufferManager() : _queuesMaps{std::make_unique<BufferQueuesMaps>()} {}
+
+   std::unique_ptr<AbsBuffer> makeScalarBuffer() override
+   {
+      return std::make_unique<ScalarBuffer>(1, _queuesMaps->scalarBufferQueuesMap[1]);
+   }
+   std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size) override
+   {
+      return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap[size]);
+   }
+   std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size) override
+   {
+      return std::make_unique<GPUBuffer>(size, _queuesMaps->gpuBufferQueuesMap[size]);
+   }
+   std::unique_ptr<AbsBuffer>
+   makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr) override
+   {
+      auto out = std::make_unique<PinnedBuffer>(size, _queuesMaps->pinnedBufferQueuesMap[size]);
+      out->vec().setCudaStream(stream);
+      return out;
+   }
+
+private:
+   std::unique_ptr<BufferQueuesMaps> _queuesMaps;
+};
+
+} // namespace
+
+std::unique_ptr<AbsBufferManager> RooBatchComputeClass::createBufferManager() const
+{
+   return std::make_unique<BufferManager>();
 }
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.

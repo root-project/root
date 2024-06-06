@@ -146,9 +146,7 @@ struct NodeInfo {
 ///            computation graph that we want to evaluate.
 /// \param[in] useGPU Whether the evaluation should be preferably done on the GPU.
 Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
-   : _bufferManager{std::make_unique<RooBatchCompute::BufferManager>()},
-     _topNode{const_cast<RooAbsReal &>(absReal)},
-     _useGPU{useGPU}
+   : _topNode{const_cast<RooAbsReal &>(absReal)}, _useGPU{useGPU}
 {
    RooBatchCompute::initCPU();
    if (useGPU && RooBatchCompute::initCUDA() != 0) {
@@ -156,6 +154,9 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    }
    // Some checks and logging of used architectures
    logArchitectureInfo(_useGPU);
+
+   _bufferManager = _useGPU ? RooBatchCompute::dispatchCUDA->createBufferManager()
+                            : RooBatchCompute::dispatchCPU->createBufferManager();
 
    RooArgSet serverSet;
    ::RooHelpers::getSortedComputationGraph(_topNode, serverSet);

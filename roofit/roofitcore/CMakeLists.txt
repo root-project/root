@@ -15,10 +15,6 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(cuda)
-  list(APPEND EXTRA_LIBRARIES RooFitCuda)
-endif()
-
 if(roofit_legacy_eval_backend)
   set(LegacyEvalBackendHeaders
     RooAbsOptTestStatistic.h
