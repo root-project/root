@@ -117,11 +117,14 @@ class AbsBuffer {
 public:
    virtual ~AbsBuffer() = default;
 
-   virtual double const *cpuReadPtr() const = 0;
-   virtual double const *gpuReadPtr() const = 0;
+   virtual double const *hostReadPtr() const = 0;
+   virtual double const *deviceReadPtr() const = 0;
 
-   virtual double *cpuWritePtr() = 0;
-   virtual double *gpuWritePtr() = 0;
+   virtual double *hostWritePtr() = 0;
+   virtual double *deviceWritePtr() = 0;
+
+   virtual void assignFromHost(std::span<const double> input) = 0;
+   virtual void assignFromDevice(std::span<const double> input) = 0;
 };
 
 class AbsBufferManager {

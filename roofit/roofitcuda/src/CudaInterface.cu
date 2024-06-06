@@ -169,6 +169,14 @@ void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost));
 }
 
+void copyDeviceToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
+{
+   if (stream)
+      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToDevice, *stream));
+   else
+      ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToDevice));
+}
+
 /// \endcond
 
 } // namespace CudaInterface
