@@ -20,6 +20,7 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 
 #include "RooBatchCompute.h"
 #include "Batches.h"
+#include "CudaInterface.h"
 
 #include <ROOT/RConfig.hxx>
 #include <TError.h>
