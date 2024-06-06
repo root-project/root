@@ -1,3 +1,4 @@
+#include "ntuple_test.hxx"
 #include "gtest/gtest.h"
 
 #include <ROOT/RCluster.hxx>
@@ -35,21 +36,6 @@ using RPageSource = ROOT::Experimental::Internal::RPageSource;
 namespace {
 
 /**
- * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
- * goes out of scope.
- */
-class FileRaii {
-private:
-   std::string fPath;
-public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
-   std::string GetPath() const { return fPath; }
-};
-
-/**
  * Used to track LoadClusters calls triggered by ClusterPool::GetCluster
  */
 class RPageSourceMock : public RPageSource {
@@ -63,7 +49,8 @@ public:
    std::vector<ROOT::Experimental::DescriptorId_t> fReqsClusterIds;
    std::vector<ROOT::Experimental::Internal::RCluster::ColumnSet_t> fReqsColumns;
 
-   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()) {
+   RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions())
+   {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
@@ -107,7 +94,6 @@ public:
 
 } // anonymous namespace
 
-
 TEST(Cluster, Allocate)
 {
    auto cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(nullptr);
@@ -116,7 +102,6 @@ TEST(Cluster, Allocate)
    cluster = new ROOT::Experimental::Internal::ROnDiskPageMapHeap(std::make_unique<unsigned char[]>(1));
    delete cluster;
 }
-
 
 TEST(Cluster, Basics)
 {
@@ -176,7 +161,6 @@ TEST(Cluster, AdoptPageMaps)
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
 
-
 TEST(Cluster, AdoptClusters)
 {
    auto mem1 = new unsigned char[3];
@@ -217,7 +201,6 @@ TEST(Cluster, AdoptClusters)
    EXPECT_TRUE((onDiskPage->GetAddress() == &mem1[1]) || (onDiskPage->GetAddress() == &mem2[1]));
    EXPECT_EQ(2U, onDiskPage->GetSize());
 }
-
 
 TEST(ClusterPool, GetClusterBasics)
 {
@@ -327,7 +310,6 @@ TEST(ClusterPool, GetClusterIncrementally)
    EXPECT_EQ(3U, p1.fReqsClusterIds[2]);
    EXPECT_EQ(RCluster::ColumnSet_t({1}), p1.fReqsColumns[2]);
 }
-
 
 TEST(PageStorageFile, LoadClusters)
 {

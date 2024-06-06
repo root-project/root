@@ -125,12 +125,9 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
    return WriteSealedPage(sealedPage, bytesPacked);
 }
 
-void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBatch &batch,
-                                                                     std::vector<RNTupleLocator> &locators)
+std::vector<ROOT::Experimental::RNTupleLocator>
+ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   // TEMP: how do we actually get the max key size?
-   const std::uint64_t maxKeySize = 1000000000;
-
    size_t size = 0, bytesPacked = 0;
    for (auto &range : ranges) {
       if (range.fFirst == range.fLast) {
@@ -141,26 +138,18 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBa
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (sealedPageIt->GetSize() > maxKeySize) {
-            // XXX: is len really == nbytes necessarily?
-            fWriter->WriteBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetSize(), sealedPageIt->GetSize());
-            continue;
-         }
          size += sealedPageIt->GetSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
-
-      // TODO(giacomo):
-      //  - every time `size` exceeds `maxKeySize`, commit the write
    }
-
-   if (size >= std::numeric_limits<std::int32_t>::max() || bytesPacked >= std::numeric_limits<std::int32_t>::max()) {
+   if (bytesPacked >= fOptions->GetMaxKeySize()) {
       // Cannot fit it into one key, fall back to one key per page.
-      // TODO: Remove once there is support for large keys.
       return RPagePersistentSink::CommitSealedPageVImpl(ranges);
    }
 
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
+   // Reserve a blob that is large enough to hold all pages.
+   std::uint64_t offset = fWriter->ReserveBlob(size, bytesPacked);
 
    // Now write the individual pages and record their locators.
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
@@ -176,83 +165,8 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBa
    }
 
    fCounters->fNPageCommitted.Add(locators.size());
-   fCounters->fSzWritePayload.Add(batch.fSize);
-   fNBytesCurrentCluster += batch.fSize;
-
-   batch.fSize = 0;
-   batch.fBytesPacked = 0;
-}
-
-std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
-{
-   const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
-
-   CommittedBatch batch{};
-   std::vector<ROOT::Experimental::RNTupleLocator> locators;
-
-   for (auto rangeIt = ranges.begin(); rangeIt != ranges.end(); ++rangeIt) {
-      auto &range = *rangeIt;
-      if (range.fFirst == range.fLast) {
-         // Skip empty ranges, they might not have a physical column ID!
-         continue;
-      }
-
-      const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
-
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         if (batch.fSize > 0 && batch.fSize + sealedPageIt->fSize > maxKeySize) {
-            /**
-             * Adding this page would exceed maxKeySize. Since we always want to write into a single key
-             * with vectorized writes, we commit the current set of pages before proceeding.
-             * NOTE: we do this *before* checking if sealedPageIt->fSize > maxKeySize to guarantee that
-             * we always flush the current batch before doing an individual WriteBlob. This way we
-             * preserve the assumption that a CommittedBatch always contain a sequential set of pages.
-             * TODO(giacomo): we could optimize this by trying to collect more pages until we can fit
-             * them rather than greedily commit as soon as the next page overflows the max size.
-             * To do that we would need to change a bit the code that commits batches, as they would not
-             * necessarily be sequential any more.
-             */
-            batch.fEnd = std::make_pair(std::next(rangeIt), sealedPageIt);
-            CommitBatchOfPages(batch, locators);
-         }
-
-         if (sealedPageIt->fSize > maxKeySize) {
-            // This page alone is bigger than maxKeySize: save it by itself, since it will need to be
-            // split into multiple keys.
-
-            // Since this check implies the previous check on batchSize + newSize > maxSize, we should
-            // already have committed the current batch before writing this page.
-            assert(batch.fSize == 0);
-
-            std::uint64_t offset = fWriter->WriteBlob(sealedPageIt->fBuffer, sealedPageIt->fSize,
-                                                      (bitsOnStorage * sealedPageIt->fNElements + 7) / 8);
-
-            RNTupleLocator locator;
-            locator.fPosition = offset;
-            locator.fBytesOnStorage = sealedPageIt->fSize;
-            locators.push_back(locator);
-
-            fCounters->fNPageCommitted.Add(locators.size());
-            fCounters->fSzWritePayload.Add(sealedPageIt->fSize);
-            fNBytesCurrentCluster += sealedPageIt->fSize;
-
-         } else {
-            if (batch.fSize == 0) {
-               // Start a new batch
-               batch.fBegin = std::make_pair(rangeIt, sealedPageIt);
-            }
-            batch.fSize += sealedPageIt->fSize;
-            batch.fBytesPacked += (bitsOnStorage * sealedPageIt->fNElements + 7) / 8;
-         }
-      }
-   }
-
-   if (batch.fSize > 0) {
-      batch.fEnd = std::make_pair(ranges.end(), std::prev(ranges.end())->fLast);
-      CommitBatchOfPages(batch, locators);
-   }
+   fCounters->fSzWritePayload.Add(size);
+   fNBytesCurrentCluster += size;
 
    return locators;
 }
@@ -388,6 +302,9 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
    fStructureBuffer.fPtrFooter = fStructureBuffer.fBuffer.get() + fAnchor->GetNBytesHeader();
 
    auto readvLimits = fFile->GetReadVLimits();
+   // Never try to vectorize reads to a split key
+   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, fAnchor->GetMaxKeySize());
+
    if ((readvLimits.fMaxReqs < 2) ||
        (std::max(fAnchor->GetNBytesHeader(), fAnchor->GetNBytesFooter()) > readvLimits.fMaxSingleSize) ||
        (fAnchor->GetNBytesHeader() + fAnchor->GetNBytesFooter() > readvLimits.fMaxTotalSize)) {
@@ -417,17 +334,15 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 
    auto desc = fDescriptorBuilder.MoveDescriptor();
 
-   std::vector<unsigned char> buffer;
    for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
-      buffer.resize(
-         std::max<size_t>(buffer.size(), cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().fBytesOnStorage));
-      auto *zipBuffer = buffer.data() + cgDesc.GetPageListLength();
-      fReader.ReadBuffer(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage,
+      auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
+      auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
+      fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
                          cgDesc.GetPageListLocator().GetPosition<std::uint64_t>());
-      fDecompressor->Unzip(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.data());
+      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                           buffer.get());
 
-      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
+      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
@@ -633,8 +548,6 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    // memory consumption, device block size.
    float maxOverhead = 0.25 * float(activeSize);
    std::vector<std::size_t> gaps;
-   if (onDiskPages.size())
-      gaps.reserve(onDiskPages.size() - 1);
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
       gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
    }
@@ -711,18 +624,21 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
 std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
 ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
+   std::uint64_t maxBlobSize = fReader.GetMaxBlobSize();
+
    fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
    std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
-   clusters.reserve(clusterKeys.size());
    for (auto key : clusterKeys) {
       clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
 
    auto nReqs = readRequests.size();
    auto readvLimits = fFile->GetReadVLimits();
+   // We never want to do vectorized reads of split blobs, so we limit our single size to maxBlobSize.
+   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, maxBlobSize);
 
    int iReq = 0;
    while (nReqs > 0) {
@@ -747,7 +663,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
       if (nBatch <= 1) {
          nBatch = 1;
          Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-         fFile->ReadAt(readRequests[iReq].fBuffer, readRequests[iReq].fSize, readRequests[iReq].fOffset);
+         fReader.ReadBuffer(readRequests[iReq].fBuffer, readRequests[iReq].fSize, readRequests[iReq].fOffset);
       } else {
          Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
          fFile->ReadV(&readRequests[iReq], nBatch);

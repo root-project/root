@@ -6,8 +6,6 @@
 #include "RXTuple.hxx"
 #include <gtest/gtest.h>
 
-using EContainerFormat = RNTupleFileWriter::EContainerFormat;
-
 TEST(RNTupleCompat, Epoch)
 {
    FileRaii fileGuard("test_ntuple_compat_epoch.root");

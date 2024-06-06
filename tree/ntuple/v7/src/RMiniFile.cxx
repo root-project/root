@@ -37,9 +37,6 @@
 #include <string>
 #include <chrono>
 
-// REMOVE ME
-#include <iostream>
-
 #ifndef R__LITTLE_ENDIAN
 #ifdef R__BYTESWAP
 // `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
@@ -1209,6 +1206,8 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleProper(std::string_view 
       return R__FAIL("RNTuple anchor checksum mismatch");
    }
 
+   fMaxBlobSize = ntuple->fMaxKeySize;
+
    return CreateAnchor(ntuple->fVersionEpoch, ntuple->fVersionMajor, ntuple->fVersionMinor, ntuple->fVersionPatch,
                        ntuple->fSeekHeader, ntuple->fNBytesHeader, ntuple->fLenHeader, ntuple->fSeekFooter,
                        ntuple->fNBytesFooter, ntuple->fLenFooter, ntuple->fMaxKeySize);
@@ -1237,14 +1236,17 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
    auto checksum = XXH3_64bits(ntuple.GetPtrCkData(), ntuple.GetSizeCkData());
    if (checksum != static_cast<uint64_t>(onDiskChecksum))
       return R__FAIL("RNTuple bare file: anchor checksum mismatch");
+
+   fMaxBlobSize = ntuple.fMaxKeySize;
+
    return CreateAnchor(ntuple.fVersionEpoch, ntuple.fVersionMajor, ntuple.fVersionMinor, ntuple.fVersionPatch,
                        ntuple.fSeekHeader, ntuple.fNBytesHeader, ntuple.fLenHeader, ntuple.fSeekFooter,
                        ntuple.fNBytesFooter, ntuple.fLenFooter, ntuple.fMaxKeySize);
 }
 
-void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset,
-                                                               std::uint64_t maxBlobSize)
+void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
+   std::uint64_t maxBlobSize = fMaxBlobSize;
    size_t nread;
    if (maxBlobSize == 0 || nbytes <= maxBlobSize) {
       // Fast path: read single blob
@@ -1270,7 +1272,7 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
 
       do {
          std::uint64_t chunkOffset = *curLocator++;
-         size_t bytesToRead = std::min(maxBlobSize, remainingBytes);
+         size_t bytesToRead = std::min<size_t>(maxBlobSize, remainingBytes);
          // Ensure we don't read outside of the buffer
          R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<char *>(buffer)) <= nbytes - bytesToRead);
          nread += fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
@@ -1332,9 +1334,8 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::RFileSimple::Writ
    auto offsetData = fFilePos;
    // The next key starts after the data.
    fKeyOffset = offsetData + nbytes;
-   if (buffer) {
+   if (buffer)
       Write(buffer, nbytes);
-   }
 
    return offsetData;
 }
@@ -1472,18 +1473,18 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const void *data, size_t nbytes, size_t len)
 {
-   auto writeKey = [this](const void *data, size_t nbytes, size_t len) {
+   auto writeKey = [this](const void *payload, size_t nBytes, size_t length) {
       std::uint64_t offset;
       if (fFileSimple) {
          if (fIsBare) {
             offset = fFileSimple.fKeyOffset;
-            fFileSimple.Write(data, nbytes);
-            fFileSimple.fKeyOffset += nbytes;
+            fFileSimple.Write(payload, nBytes);
+            fFileSimple.fKeyOffset += nBytes;
          } else {
-            offset = fFileSimple.WriteKey(data, nbytes, len, -1, 100, kBlobClassName);
+            offset = fFileSimple.WriteKey(payload, nBytes, length, -1, 100, kBlobClassName);
          }
       } else {
-         offset = fFileProper.WriteKey(data, nbytes, len);
+         offset = fFileProper.WriteKey(payload, nBytes, length);
       }
       return offset;
    };
@@ -1522,7 +1523,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
 
    do {
-      size_t bytesWritten = std::min(remainingBytes, maxKeySize);
+      size_t bytesWritten = std::min<size_t>(remainingBytes, maxKeySize);
       std::uint64_t offset = writeKey(data, bytesWritten, bytesWritten);
 
       // patch the chunk offset into the first chunk
@@ -1545,7 +1546,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
 std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_t nbytes, size_t len)
 {
    // ReserveBlob cannot be used to reserve a multi-key blob
-   R__ASSERT(nbytes < fNTupleAnchor.GetMaxKeySize());
+   R__ASSERT(nbytes <= fNTupleAnchor.GetMaxKeySize());
 
    std::uint64_t offset;
    if (fFileSimple) {
