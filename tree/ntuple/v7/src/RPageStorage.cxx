@@ -33,6 +33,7 @@
 #include <Compression.h>
 #include <TError.h>
 
+#include <atomic>
 #include <utility>
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
@@ -195,6 +196,8 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
    std::vector<std::unique_ptr<RColumnElementBase>> allElements;
 
+   std::atomic<bool> foundChecksumFailure{false};
+
    const auto &columnsInCluster = cluster->GetAvailPhysicalColumns();
    for (const auto columnId : columnsInCluster) {
       const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
@@ -212,8 +215,14 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          RSealedPage sealedPage{onDiskPage->GetAddress(), onDiskPage->GetSize(), pi.fNElements, pi.fHasChecksum};
 
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
+                          &foundChecksumFailure,
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto newPage = UnsealPage(sealedPage, *element, columnId).Unwrap();
+            auto rv = UnsealPage(sealedPage, *element, columnId);
+            if (!rv) {
+               foundChecksumFailure = true;
+               return;
+            }
+            auto newPage = rv.Unwrap();
             fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
@@ -231,6 +240,10 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
    fCounters->fNPagePopulated.Add(cluster->GetNOnDiskPages());
 
    fTaskScheduler->Wait();
+
+   if (foundChecksumFailure) {
+      throw RException(R__FAIL("page checksum verification failed, data corruption detected"));
+   }
 }
 
 void ROOT::Experimental::Internal::RPageSource::PrepareLoadCluster(

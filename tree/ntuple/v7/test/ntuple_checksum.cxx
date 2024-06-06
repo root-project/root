@@ -51,8 +51,10 @@ TEST(RNTupleChecksum, VerifyOnRead)
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), options);
       EXPECT_EQ(1u, reader->GetNEntries());
 
-      // TODO(jblomer): check that now even reading py fails because pages are unsealed in parallel
-      // Requires fixing the cluster scheduler.
+      auto viewPx = reader->GetView<float>("px");
+      auto viewPy = reader->GetView<float>("py");
+      EXPECT_THROW(viewPx(0), RException);
+      EXPECT_FLOAT_EQ(2.0, viewPy(0));
    }
 }
 
@@ -65,16 +67,18 @@ TEST(RNTupleChecksum, VerifyOnReadImt)
 
    IMTRAII _;
 
-   for (auto co : {RNTupleReadOptions::EClusterCache::kOn, RNTupleReadOptions::EClusterCache::kOff}) {
-      RNTupleReadOptions options;
-      options.SetClusterCache(co);
-      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), options);
-      EXPECT_EQ(1u, reader->GetNEntries());
+   RNTupleReadOptions options;
+   options.SetClusterCache(RNTupleReadOptions::EClusterCache::kOn);
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath(), options);
+   EXPECT_EQ(1u, reader->GetNEntries());
 
-      auto viewPx = reader->GetView<float>("px");
-      auto viewPy = reader->GetView<float>("py");
-      EXPECT_THROW(viewPx(0), RException);
-      EXPECT_FLOAT_EQ(2.0, viewPy(0));
+   auto viewPx = reader->GetView<float>("px");
+   auto viewPy = reader->GetView<float>("py");
+   try {
+      viewPy(0);
+      FAIL() << "now even reading py should fail because pages are unsealed in parallel";
+   } catch (const RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
    }
 }
 #endif // R__USE_IMT
