@@ -270,14 +270,14 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
                _evalContextCUDA.set(info.absArg, inputArray);
                auto gpuSpan = _evalContextCUDA.at(info.absArg);
                info.buffer = _bufferManager->makeCpuBuffer(gpuSpan.size());
-               CudaInterface::copyDeviceToHost(gpuSpan.data(), info.buffer->cpuWritePtr(), gpuSpan.size());
-               _evalContextCPU.set(info.absArg, {info.buffer->cpuReadPtr(), gpuSpan.size()});
+               info.buffer->assignFromDevice(gpuSpan);
+               _evalContextCPU.set(info.absArg, {info.buffer->hostReadPtr(), gpuSpan.size()});
             } else {
                _evalContextCPU.set(info.absArg, inputArray);
                auto cpuSpan = _evalContextCPU.at(info.absArg);
                info.buffer = _bufferManager->makeGpuBuffer(cpuSpan.size());
-               CudaInterface::copyHostToDevice(cpuSpan.data(), info.buffer->gpuWritePtr(), cpuSpan.size());
-               _evalContextCUDA.set(info.absArg, {info.buffer->gpuReadPtr(), cpuSpan.size()});
+               info.buffer->assignFromHost(cpuSpan);
+               _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
             }
 #endif
          } else {
@@ -369,7 +369,7 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
          info.buffer = _bufferManager->makeCpuBuffer(nOut);
 #endif
       }
-      buffer = info.buffer->cpuWritePtr();
+      buffer = info.buffer->hostWritePtr();
    }
    assignSpan(_evalContextCPU._currentOutput, {buffer, nOut});
    _evalContextCPU.set(node, {buffer, nOut});
@@ -381,7 +381,7 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    _evalContextCPU.enableVectorBuffers(false);
 #ifdef ROOFIT_CUDA
    if (info.copyAfterEvaluation) {
-      _evalContextCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
+      _evalContextCUDA.set(node, {info.buffer->deviceReadPtr(), nOut});
       if (info.event) {
          CudaInterface::cudaEventRecord(*info.event, *info.stream);
       }
@@ -550,14 +550,14 @@ void Evaluator::assignToGPU(NodeInfo &info)
    } else {
       info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
                                              : _bufferManager->makeGpuBuffer(nOut);
-      buffer = info.buffer->gpuWritePtr();
+      buffer = info.buffer->deviceWritePtr();
    }
    assignSpan(_evalContextCUDA._currentOutput, {buffer, nOut});
    _evalContextCUDA.set(node, {buffer, nOut});
    node->doEval(_evalContextCUDA);
    CudaInterface::cudaEventRecord(*info.event, *info.stream);
    if (info.copyAfterEvaluation) {
-      _evalContextCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
+      _evalContextCPU.set(node, {info.buffer->hostReadPtr(), nOut});
    }
 #endif // ROOFIT_CUDA
 }
