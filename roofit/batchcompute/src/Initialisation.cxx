@@ -53,12 +53,8 @@ int initCPU()
 #ifdef R__RF_ARCHITECTURE_SPECIFIC_LIBS
 
    __builtin_cpu_init();
-#if __GNUC__ > 5 || defined(__clang__)
    bool supported_avx512 = __builtin_cpu_supports("avx512cd") && __builtin_cpu_supports("avx512vl") &&
                            __builtin_cpu_supports("avx512bw") && __builtin_cpu_supports("avx512dq");
-#else
-   bool supported_avx512 = false;
-#endif
 
    if (userChoice == "auto") {
       if (supported_avx512) {
