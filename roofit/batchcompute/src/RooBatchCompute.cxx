@@ -110,24 +110,19 @@ public:
 
    std::unique_ptr<AbsBufferManager> createBufferManager() const override;
 
-   RooFit::Detail::CudaInterface::CudaEvent *newCudaEvent(bool) const override { throw std::bad_function_call(); }
-   RooFit::Detail::CudaInterface::CudaStream *newCudaStream() const override { throw std::bad_function_call(); }
-   void deleteCudaEvent(RooFit::Detail::CudaInterface::CudaEvent *) const override { throw std::bad_function_call(); }
-   void deleteCudaStream(RooFit::Detail::CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
-   void cudaEventRecord(RooFit::Detail::CudaInterface::CudaEvent *,
-                        RooFit::Detail::CudaInterface::CudaStream *) const override
+   CudaInterface::CudaEvent *newCudaEvent(bool) const override { throw std::bad_function_call(); }
+   CudaInterface::CudaStream *newCudaStream() const override { throw std::bad_function_call(); }
+   void deleteCudaEvent(CudaInterface::CudaEvent *) const override { throw std::bad_function_call(); }
+   void deleteCudaStream(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
+   void cudaEventRecord(CudaInterface::CudaEvent *, CudaInterface::CudaStream *) const override
    {
       throw std::bad_function_call();
    }
-   void cudaStreamWaitForEvent(RooFit::Detail::CudaInterface::CudaStream *,
-                               RooFit::Detail::CudaInterface::CudaEvent *) const override
+   void cudaStreamWaitForEvent(CudaInterface::CudaStream *, CudaInterface::CudaEvent *) const override
    {
       throw std::bad_function_call();
    }
-   bool cudaStreamIsActive(RooFit::Detail::CudaInterface::CudaStream *) const override
-   {
-      throw std::bad_function_call();
-   }
+   bool cudaStreamIsActive(CudaInterface::CudaStream *) const override { throw std::bad_function_call(); }
 
 private:
 #ifdef ROOBATCHCOMPUTE_USE_IMT
@@ -416,8 +411,7 @@ public:
       return std::make_unique<CPUBuffer>(size, _queuesMaps->cpuBufferQueuesMap[size]);
    }
    std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t) override { throw std::bad_function_call(); }
-   std::unique_ptr<AbsBuffer>
-   makePinnedBuffer(std::size_t, RooFit::Detail::CudaInterface::CudaStream * = nullptr) override
+   std::unique_ptr<AbsBuffer> makePinnedBuffer(std::size_t, CudaInterface::CudaStream * = nullptr) override
    {
       throw std::bad_function_call();
    }
