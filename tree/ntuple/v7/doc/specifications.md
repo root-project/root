@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.2.0
+# RNTuple Reference Specifications 0.2.3.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -84,6 +84,10 @@ The current (class version 5) **ROOT::Experimental::RNTuple** object has the fol
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               | 
 +                         Len Footer                            +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Max Key Size                           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
