@@ -1294,6 +1294,43 @@ TEST(VecOps, InvariantMass)
    const auto invMass2F = InvariantMass(pt1f, eta1, phi1, mass1);
    EXPECT_TRUE((std::is_same_v<decltype(invMass2F), const double>)) << "InvariantMass should return double if one of the arguments is double";
    EXPECT_EQ(invMass2F, invMass2);
+
+   // Dummy particle collections
+   RVec<double> px1 = {0, 5, 5, 10, 10};
+   RVec<double> py1 = {0.0, 0.0, -1.0, 0.5, 2.5};
+   RVec<double> pz1 = {0.0, 0.0, 0.0, -0.5, -2.4};
+
+   RVec<double> px2 = {0, 5, 5, 10, 2};
+   RVec<double> py2 = {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> pz2 = {0.0, 0.0, 0.0, 0.5, 2.4};
+
+   // Check with PxPyPxM coordinate systems
+   // Compute invariant mass of two particle system using both collections
+   const auto invMass_XYXM = InvariantMasses_PxPyPzM(px1, py1, pz1, mass1, px2, py2, pz2, mass2);
+
+   for (size_t i = 0; i < mass1.size(); i++) {
+      TLorentzVector p1, p2;
+      p1.SetXYZM(px1[i], py1[i], pz1[i], mass1[i]);
+      p2.SetXYZM(px2[i], py2[i], pz2[i], mass2[i]);
+      // NOTE: The accuracy of the optimized trigonometric functions is relatively
+      // low and the test start to fail with an accuracy of 1e-5.
+      EXPECT_NEAR((p1 + p2).M(), invMass_XYXM[i], 1e-4);
+   }
+
+   // Check that calling with different argument types works and yields the
+   // expected return types and values
+   RVec<float> px1f = {0.f, 5.f, 5.f, 10.f, 10.f};
+   RVec<float> py2f = {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   const auto invMassF_XYXM = InvariantMasses_PxPyPzM(px1f, py1, pz1, mass1, px2, py2f, pz2, mass2);
+   EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>))
+      << "InvariantMasses should return double if one of the arguments is double";
+   for (size_t i = 0; i < invMass.size(); ++i) {
+      // We use the full double result here as reference and allow for some
+      // jitter introduced by the floating point promotion that happens along
+      // the way (in deterministic but different places depending on the types
+      // of the arguments)
+      EXPECT_NEAR(invMassF_XYXM[i], invMass_XYXM[i], 1e-7);
+   }
 }
 
 TEST(VecOps, DeltaR)
