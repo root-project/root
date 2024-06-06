@@ -226,7 +226,7 @@ public:
    /// The window of element indexes of a particular column in a particular cluster
    struct RColumnRange {
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-      /// A 64bit element index
+      /// The global index of the first column element in the cluster
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// The number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
