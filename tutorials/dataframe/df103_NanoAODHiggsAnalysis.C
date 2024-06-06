@@ -343,53 +343,53 @@ template <typename T>
 void plot(T sig, T bkg, T data, const std::string &x_label, const std::string &filename)
 {
    // Canvas and general style options
-   gStyle->SetOptStat(0);
    gStyle->SetTextFont(42);
    auto c = new TCanvas("", "", 800, 700);
    c->SetLeftMargin(0.15);
 
    // Get signal and background histograms and stack them to show Higgs signal
    // on top of the background process
-   auto h_sig = *sig;
-   auto h_bkg = *bkg;
-   auto h_cmb = *(TH1D*)(sig->Clone());
-   h_cmb.Add(&h_bkg);
-   h_cmb.SetTitle("");
-   h_cmb.GetXaxis()->SetTitle(x_label.c_str());
-   h_cmb.GetXaxis()->SetTitleSize(0.04);
-   h_cmb.GetYaxis()->SetTitle("N_{Events}");
-   h_cmb.GetYaxis()->SetTitleSize(0.04);
-   h_cmb.SetLineColor(kRed);
-   h_cmb.SetLineWidth(2);
-   h_cmb.SetMaximum(18);
+   auto h_bkg = static_cast<TH1 *>(bkg->Clone());
+   auto h_cmb = static_cast<TH1 *>(sig->Clone());
 
-   h_bkg.SetLineWidth(2);
-   h_bkg.SetFillStyle(1001);
-   h_bkg.SetLineColor(kBlack);
-   h_bkg.SetFillColor(kAzure - 9);
+   h_cmb->Add(h_bkg);
+   h_cmb->SetTitle("");
+   h_cmb->GetXaxis()->SetTitle(x_label.c_str());
+   h_cmb->GetXaxis()->SetTitleSize(0.04);
+   h_cmb->GetYaxis()->SetTitle("N_{Events}");
+   h_cmb->GetYaxis()->SetTitleSize(0.04);
+   h_cmb->SetLineColor(kRed);
+   h_cmb->SetLineWidth(2);
+   h_cmb->SetMaximum(18);
+   h_cmb->SetStats(kFALSE);
+
+   h_bkg->SetLineWidth(2);
+   h_bkg->SetFillStyle(1001);
+   h_bkg->SetLineColor(kBlack);
+   h_bkg->SetFillColor(kAzure - 9);
 
    // Get histogram of data points
-   auto h_data = *data;
-   h_data.SetLineWidth(1);
-   h_data.SetMarkerStyle(20);
-   h_data.SetMarkerSize(1.0);
-   h_data.SetMarkerColor(kBlack);
-   h_data.SetLineColor(kBlack);
+   auto h_data = static_cast<TH1 *>(data->Clone());
+   h_data->SetLineWidth(1);
+   h_data->SetMarkerStyle(20);
+   h_data->SetMarkerSize(1.0);
+   h_data->SetMarkerColor(kBlack);
+   h_data->SetLineColor(kBlack);
 
    // Draw histograms
-   h_cmb.DrawClone("HIST");
-   h_bkg.DrawClone("HIST SAME");
-   h_data.DrawClone("PE1 SAME");
+   h_cmb->Draw("HIST");
+   h_bkg->Draw("HIST SAME");
+   h_data->Draw("PE1 SAME");
 
    // Add legend
-   TLegend legend(0.62, 0.70, 0.82, 0.88);
-   legend.SetFillColor(0);
-   legend.SetBorderSize(0);
-   legend.SetTextSize(0.03);
-   legend.AddEntry(&h_data, "Data", "PE1");
-   legend.AddEntry(&h_bkg, "ZZ", "f");
-   legend.AddEntry(&h_cmb, "m_{H} = 125 GeV", "f");
-   legend.DrawClone();
+   auto legend = new TLegend(0.62, 0.70, 0.82, 0.88);
+   legend->SetFillColor(0);
+   legend->SetBorderSize(0);
+   legend->SetTextSize(0.03);
+   legend->AddEntry(h_data, "Data", "pe");
+   legend->AddEntry(h_bkg, "ZZ", "f");
+   legend->AddEntry(h_cmb, "m_{H} = 125 GeV", "f");
+   legend->Draw();
 
    // Add header
    TLatex cms_label;
