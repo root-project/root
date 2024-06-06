@@ -94,21 +94,23 @@ TEST(RNTupleCompat, FwdCompat_FutureNTuple)
       FILE *f = fopen(fileGuard.GetPath().c_str(), "r+b");
 
       fseek(f, 0, SEEK_END);
-      std::size_t fsize = ftell(f);
+      size_t fsize = ftell(f);
 
       char *filebuf = new char[fsize];
       fseek(f, 0, SEEK_SET);
-      fread(filebuf, fsize, 1, f);
+      size_t itemsRead = fread(filebuf, fsize, 1, f);
+      EXPECT_EQ(itemsRead, 1);
 
       std::string_view file_view{filebuf, fsize};
-      std::size_t pos = 0;
+      size_t pos = 0;
       while ((pos = file_view.find("XTuple"), pos) != std::string_view::npos) {
          filebuf[pos] = 'N';
          pos += 6; // skip "XTuple"
       }
 
       fseek(f, 0, SEEK_SET);
-      fwrite(filebuf, fsize, 1, f);
+      size_t itemsWritten = fwrite(filebuf, fsize, 1, f);
+      EXPECT_EQ(itemsWritten, 1);
 
       fclose(f);
       delete[] filebuf;
