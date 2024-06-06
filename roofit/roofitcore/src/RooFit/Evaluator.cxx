@@ -47,10 +47,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <numeric>
 #include <thread>
 
-#include <RooFit/Detail/CudaInterface.h>
-
-namespace CudaInterface = RooFit::Detail::CudaInterface;
-
 namespace RooFit {
 
 namespace {
@@ -123,10 +119,8 @@ struct NodeInfo {
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
 
-#ifdef ROOFIT_CUDA
-   std::unique_ptr<RooFit::Detail::CudaInterface::CudaEvent> event;
-   std::unique_ptr<RooFit::Detail::CudaInterface::CudaStream> stream;
-#endif
+   RooFit::Detail::CudaInterface::CudaEvent *event = nullptr;
+   RooFit::Detail::CudaInterface::CudaStream *stream = nullptr;
 
    /// Check the servers of a node that has been computed and release its
    /// resources if they are no longer needed.
@@ -135,6 +129,14 @@ struct NodeInfo {
       if (--remClients == 0 && !fromArrayInput) {
          buffer.reset();
       }
+   }
+
+   ~NodeInfo()
+   {
+      if (event)
+         RooBatchCompute::dispatchCUDA->deleteCudaEvent(event);
+      if (stream)
+         RooBatchCompute::dispatchCUDA->deleteCudaStream(stream);
    }
 };
 
@@ -205,18 +207,16 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
 
    syncDataTokens();
 
-#ifdef ROOFIT_CUDA
    if (_useGPU) {
       // create events and streams for every node
       for (auto &info : _nodes) {
-         info.event = std::make_unique<CudaInterface::CudaEvent>(false);
-         info.stream = std::make_unique<CudaInterface::CudaStream>();
+         info.event = RooBatchCompute::dispatchCUDA->newCudaEvent(false);
+         info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
          RooBatchCompute::Config cfg;
-         cfg.setCudaStream(info.stream.get());
+         cfg.setCudaStream(info.stream);
          _evalContextCUDA.setConfig(info.absArg, cfg);
       }
    }
-#endif
 }
 
 /// If there are servers with the same name that got de-duplicated in the
@@ -257,7 +257,6 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
          info.absArg->setDataToken(iNode);
          info.outputSize = inputArray.size();
          if (_useGPU && info.outputSize <= 1) {
-#ifdef ROOFIT_CUDA
             // Empty or scalar observables from the data don't need to be
             // copied to the GPU.
             _evalContextCPU.set(info.absArg, inputArray);
@@ -279,7 +278,6 @@ void Evaluator::setInput(std::string const &name, std::span<const double> inputA
                info.buffer->assignFromHost(cpuSpan);
                _evalContextCUDA.set(info.absArg, {info.buffer->deviceReadPtr(), cpuSpan.size()});
             }
-#endif
          } else {
             _evalContextCPU.set(info.absArg, inputArray);
          }
@@ -362,12 +360,8 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
          info.hasLogged = true;
       }
       if (!info.buffer) {
-#ifdef ROOFIT_CUDA
-         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
+         info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream)
                                                 : _bufferManager->makeCpuBuffer(nOut);
-#else
-         info.buffer = _bufferManager->makeCpuBuffer(nOut);
-#endif
       }
       buffer = info.buffer->hostWritePtr();
    }
@@ -379,14 +373,12 @@ void Evaluator::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    nodeAbsReal->doEval(_evalContextCPU);
    _evalContextCPU.resetVectorBuffers();
    _evalContextCPU.enableVectorBuffers(false);
-#ifdef ROOFIT_CUDA
    if (info.copyAfterEvaluation) {
       _evalContextCUDA.set(node, {info.buffer->deviceReadPtr(), nOut});
       if (info.event) {
-         CudaInterface::cudaEventRecord(*info.event, *info.stream);
+         RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
       }
    }
-#endif
 }
 
 /// Process a variable in the computation graph. This is a separate non-inlined
@@ -447,7 +439,6 @@ std::span<const double> Evaluator::run()
 /// Returns the value of the top node in the computation graph
 std::span<const double> Evaluator::getValHeterogeneous()
 {
-#ifdef ROOFIT_CUDA
    for (auto &info : _nodes) {
       info.remClients = info.clientInfos.size();
       info.remServers = info.serverInfos.size();
@@ -467,7 +458,7 @@ std::span<const double> Evaluator::getValHeterogeneous()
    while (topNodeInfo.remServers != -2) {
       // find finished GPU nodes
       for (auto &info : _nodes) {
-         if (info.remServers == -1 && !info.stream->isActive()) {
+         if (info.remServers == -1 && !RooBatchCompute::dispatchCUDA->cudaStreamIsActive(info.stream)) {
             info.remServers = -2;
             // Decrement number of remaining servers for clients and start GPU computations
             for (auto *infoClient : info.clientInfos) {
@@ -517,11 +508,6 @@ std::span<const double> Evaluator::getValHeterogeneous()
 
    // return the final value
    return _evalContextCUDA.at(&_topNode);
-#else
-   // Doesn't matter what we do here, because it's a private function that's
-   // not called when RooFit is not built with CUDA support.
-   return {};
-#endif // ROOFIT_CUDA
 }
 
 /// Assign a node to be computed in the GPU. Scan it's clients and also assign them
@@ -532,13 +518,12 @@ void Evaluator::assignToGPU(NodeInfo &info)
 
    info.remServers = -1;
 
-#ifdef ROOFIT_CUDA
    auto node = static_cast<RooAbsReal const *>(info.absArg);
 
    // wait for every server to finish
    for (auto *infoServer : info.serverInfos) {
       if (infoServer->event)
-         info.stream->waitForEvent(*infoServer->event);
+         RooBatchCompute::dispatchCUDA->cudaStreamWaitForEvent(info.stream, infoServer->event);
    }
 
    const std::size_t nOut = info.outputSize;
@@ -548,18 +533,17 @@ void Evaluator::assignToGPU(NodeInfo &info)
       buffer = &info.scalarBuffer;
       _evalContextCPU.set(node, {buffer, nOut});
    } else {
-      info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream.get())
+      info.buffer = info.copyAfterEvaluation ? _bufferManager->makePinnedBuffer(nOut, info.stream)
                                              : _bufferManager->makeGpuBuffer(nOut);
       buffer = info.buffer->deviceWritePtr();
    }
    assignSpan(_evalContextCUDA._currentOutput, {buffer, nOut});
    _evalContextCUDA.set(node, {buffer, nOut});
    node->doEval(_evalContextCUDA);
-   CudaInterface::cudaEventRecord(*info.event, *info.stream);
+   RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
       _evalContextCPU.set(node, {info.buffer->hostReadPtr(), nOut});
    }
-#endif // ROOFIT_CUDA
 }
 
 /// Decides which nodes are assigned to the GPU in a CUDA fit.

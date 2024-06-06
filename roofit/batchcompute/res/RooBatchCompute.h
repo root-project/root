@@ -171,6 +171,16 @@ public:
    virtual std::string architectureName() const = 0;
 
    virtual std::unique_ptr<AbsBufferManager> createBufferManager() const = 0;
+
+   virtual RooFit::Detail::CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const = 0;
+   virtual RooFit::Detail::CudaInterface::CudaStream *newCudaStream() const = 0;
+   virtual void deleteCudaEvent(RooFit::Detail::CudaInterface::CudaEvent *) const = 0;
+   virtual void deleteCudaStream(RooFit::Detail::CudaInterface::CudaStream *) const = 0;
+   virtual void
+   cudaEventRecord(RooFit::Detail::CudaInterface::CudaEvent *, RooFit::Detail::CudaInterface::CudaStream *) const = 0;
+   virtual void cudaStreamWaitForEvent(RooFit::Detail::CudaInterface::CudaStream *,
+                                       RooFit::Detail::CudaInterface::CudaEvent *) const = 0;
+   virtual bool cudaStreamIsActive(RooFit::Detail::CudaInterface::CudaStream *) const = 0;
 };
 
 /**
