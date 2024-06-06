@@ -304,11 +304,14 @@ public:
          throw std::runtime_error("ScalarBufferContainer can only be of size 1");
    }
 
-   double const *cpuReadPtr() const { return &_val; }
-   double const *gpuReadPtr() const { return &_val; }
+   double const *hostReadPtr() const { return &_val; }
+   double const *deviceReadPtr() const { return &_val; }
 
-   double *cpuWritePtr() { return &_val; }
-   double *gpuWritePtr() { return &_val; }
+   double *hostWritePtr() { return &_val; }
+   double *deviceWritePtr() { return &_val; }
+
+   void assignFromHost(std::span<const double> input) { _val = input[0]; }
+   void assignFromDevice(std::span<const double>) { throw std::bad_function_call(); }
 
 private:
    double _val;
@@ -318,19 +321,22 @@ class CPUBufferContainer {
 public:
    CPUBufferContainer(std::size_t size) : _vec(size) {}
 
-   double const *cpuReadPtr() const { return _vec.data(); }
-   double const *gpuReadPtr() const
+   double const *hostReadPtr() const { return _vec.data(); }
+   double const *deviceReadPtr() const
    {
       throw std::bad_function_call();
       return nullptr;
    }
 
-   double *cpuWritePtr() { return _vec.data(); }
-   double *gpuWritePtr()
+   double *hostWritePtr() { return _vec.data(); }
+   double *deviceWritePtr()
    {
       throw std::bad_function_call();
       return nullptr;
    }
+
+   void assignFromHost(std::span<const double> input) { _vec.assign(input.begin(), input.end()); }
+   void assignFromDevice(std::span<const double>) { throw std::bad_function_call(); }
 
 private:
    std::vector<double> _vec;
@@ -353,11 +359,14 @@ public:
 
    ~BufferImpl() override { _queue.emplace(std::move(_vec)); }
 
-   double const *cpuReadPtr() const override { return _vec->cpuReadPtr(); }
-   double const *gpuReadPtr() const override { return _vec->gpuReadPtr(); }
+   double const *hostReadPtr() const override { return _vec->hostReadPtr(); }
+   double const *deviceReadPtr() const override { return _vec->deviceReadPtr(); }
 
-   double *cpuWritePtr() override { return _vec->cpuWritePtr(); }
-   double *gpuWritePtr() override { return _vec->gpuWritePtr(); }
+   double *hostWritePtr() override { return _vec->hostWritePtr(); }
+   double *deviceWritePtr() override { return _vec->deviceWritePtr(); }
+
+   void assignFromHost(std::span<const double> input) override { _vec->assignFromHost(input); }
+   void assignFromDevice(std::span<const double> input) override { _vec->assignFromDevice(input); }
 
    Container &vec() { return *_vec; }
 
