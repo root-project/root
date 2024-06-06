@@ -1063,6 +1063,40 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
+{
+   constexpr size_t locatorSize = sizeof(std::uint64_t);
+   size_t nChunks = 1; // we start with the first chunk
+   size_t nbytesLocators = 0;
+   {
+      size_t restOfBytes = nbytes;
+      // Allocate all additional chunks
+      do {
+         ++nChunks;
+         nbytesLocators += locatorSize;
+         restOfBytes -= maxChunkSize;
+      } while (restOfBytes >= maxChunkSize);
+
+      // If there is no room in the first chunk to store the remaining bytes + the locators,
+      // we need to allocate another chunk.
+      if (maxChunkSize - nbytesLocators < restOfBytes) {
+         ++nChunks;
+         nbytesLocators += locatorSize;
+      }
+
+      // Verify we have allocated enough room
+      assert(nChunks * maxChunkSize - nbytesLocators >= nbytes);
+   }
+   assert(nChunks > 1);
+   // We don't support having more locators than what fits in one chunk.
+   // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks
+   // than we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GiB we can fit
+   // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PiB.
+   assert(nbytesLocators <= maxChunkSize);
+
+   return nChunks;
+}
+
 ROOT::Experimental::Internal::RMiniFileReader::RMiniFileReader(ROOT::Internal::RRawFile *rawFile) : fRawFile(rawFile) {}
 
 ROOT::Experimental::RNTuple ROOT::Experimental::Internal::RMiniFileReader::CreateAnchor(
@@ -1208,9 +1242,46 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
                        ntuple.fNBytesFooter, ntuple.fLenFooter, ntuple.fMaxKeySize);
 }
 
-void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
+void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset,
+                                                               std::uint64_t maxBlobSize)
 {
-   auto nread = fRawFile->ReadAt(buffer, nbytes, offset);
+   size_t nread;
+   if (maxBlobSize == 0 || nbytes <= maxBlobSize) {
+      // Fast path: read single blob
+      nread = fRawFile->ReadAt(buffer, nbytes, offset);
+   } else {
+      // Read chunked blob. See RNTupleFileWriter::WriteBlob() for details.
+      size_t nChunks = ComputeNumChunks(nbytes, maxBlobSize);
+      size_t nbytesLocators = (nChunks - 1) * sizeof(std::uint64_t);
+      size_t nbytesFirstChunk = maxBlobSize - nbytesLocators;
+      char *bufCur = reinterpret_cast<char *>(buffer);
+
+      // Read first chunk
+      nread = fRawFile->ReadAt(bufCur, nbytesFirstChunk, offset);
+      R__ASSERT(nread == nbytesFirstChunk);
+      bufCur += nread;
+
+      auto locators = std::make_unique<std::uint64_t[]>(nChunks - 1);
+      auto locatorBytesRead = fRawFile->ReadAt(locators.get(), nbytesLocators, offset + nbytesFirstChunk);
+      R__ASSERT(locatorBytesRead == nbytesLocators);
+
+      size_t remainingBytes = nbytes - nbytesFirstChunk;
+      std::uint64_t *curLocator = &locators[0];
+
+      do {
+         std::uint64_t chunkOffset = *curLocator++;
+         size_t bytesToRead = std::min(maxBlobSize, remainingBytes);
+         // Ensure we don't read outside of the buffer
+         R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<char *>(buffer)) <= nbytes - bytesToRead);
+         nread += fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
+         R__ASSERT(nread <= nbytes);
+
+         bufCur += bytesToRead;
+
+         assert(remainingBytes >= bytesToRead);
+         remainingBytes -= bytesToRead;
+      } while (remainingBytes > 0);
+   }
    R__ASSERT(nread == nbytes);
 }
 
@@ -1314,16 +1385,19 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RFileProper::WriteKey(const voi
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name) : fNTupleName(name)
+ROOT::Experimental::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize)
+   : fNTupleName(name)
 {
    fFileSimple.fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
+   fNTupleAnchor.fMaxKeySize = maxKeySize;
 }
 
 ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
 ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupleName, std::string_view path,
-                                                          int defaultCompression, EContainerFormat containerFormat)
+                                                          int defaultCompression, EContainerFormat containerFormat,
+                                                          std::uint64_t maxKeySize)
 {
    std::string fileName(path);
    size_t idxDirSep = fileName.find_last_of("\\/");
@@ -1337,7 +1411,7 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
 #endif
    R__ASSERT(fileStream);
 
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileSimple.fFile = fileStream;
    writer->fFileName = fileName;
 
@@ -1354,9 +1428,10 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Recreate(std::string_view ntupl
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleFileWriter>
-ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TFile &file)
+ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleName, TFile &file,
+                                                        std::uint64_t maxKeySize)
 {
-   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName));
+   auto writer = std::unique_ptr<RNTupleFileWriter>(new RNTupleFileWriter(ntupleName, maxKeySize));
    writer->fFileProper.fFile = &file;
    return writer;
 }
@@ -1414,35 +1489,28 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    };
 
    std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
-   // std::uint64_t maxKeySize = 50 * 1024 * 1024; // a mere 50 MB, just to test
+   R__ASSERT(maxKeySize > 0);
 
    if (nbytes < maxKeySize) {
       // Fast path: only write 1 key.
       return writeKey(data, nbytes, len);
    }
 
-   // Writing a key bigger than the max allowed size. In this case we split the payload
-   // into multiple keys, reserving the end of the first key payload for pointers to the
-   // next ones. E.g. if a key needs to be split into 3 chunks, the first chunk will have
-   // the format:
-   //  +--------------------+
-   //  |                    |
-   //  |        Data        |
-   //  |--------------------|
-   //  | pointer to chunk 2 |
-   //  | pointer to chunk 3 |
-   //  +--------------------+
-   //
-   int nChunks = nbytes / maxKeySize + ((nbytes % maxKeySize) != 0);
-   assert(nChunks > 1);
-
-   size_t nbytesLocators = nChunks * sizeof(std::uint64_t);
-   // TODO(giacomo): should we handle the case where nbytesLocators > maxKeySize?
-   // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks than
-   // we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GB we can fit
-   // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PB.
-   R__ASSERT(nbytesLocators <= maxKeySize);
-
+   /**
+    * Writing a key bigger than the max allowed size. In this case we split the payload
+    * into multiple keys, reserving the end of the first key payload for pointers to the
+    * next ones. E.g. if a key needs to be split into 3 chunks, the first chunk will have
+    * the format:
+    *  +--------------------+
+    *  |                    |
+    *  |        Data        |
+    *  |--------------------|
+    *  | pointer to chunk 2 |
+    *  | pointer to chunk 3 |
+    *  +--------------------+
+    */
+   size_t nChunks = ComputeNumChunks(nbytes, maxKeySize);
+   size_t nbytesLocators = (nChunks - 1) * sizeof(std::uint64_t);
    size_t nbytesFirstChunk = maxKeySize - nbytesLocators;
    // Write first chunk.
    // Note that the last bytes we write here will be overridden later by the other chunks'
@@ -1452,7 +1520,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    data = reinterpret_cast<const char *>(data) + nbytesFirstChunk;
    size_t remainingBytes = nbytes - nbytesFirstChunk;
    std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
- 
+
    do {
       size_t bytesWritten = std::min(remainingBytes, maxKeySize);
       std::uint64_t offset = writeKey(data, bytesWritten, bytesWritten);
@@ -1463,7 +1531,6 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
       else
          fFileProper.Write(&offset, sizeof(offset), patchOffset);
 
-      std::cout << "Written offset " << std::hex << offset << " at offset " << patchOffset << "\n";
       patchOffset += sizeof(offset);
 
       assert(remainingBytes >= bytesWritten);
@@ -1479,7 +1546,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::ReserveBlob(size_
 {
    // ReserveBlob cannot be used to reserve a multi-key blob
    R__ASSERT(nbytes < fNTupleAnchor.GetMaxKeySize());
-   
+
    std::uint64_t offset;
    if (fFileSimple) {
       if (fIsBare) {

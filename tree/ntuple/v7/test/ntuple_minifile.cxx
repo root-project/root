@@ -2,6 +2,8 @@
 #include <TKey.h>
 #include <TTree.h>
 
+using EContainerFormat = RNTupleFileWriter::EContainerFormat;
+
 namespace {
 bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
@@ -25,8 +27,8 @@ TEST(MiniFile, Raw)
 {
    FileRaii fileGuard("test_ntuple_minifile_raw.ntuple");
 
-   auto writer =
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kBare);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kBare,
+                                             RNTupleWriteOptions::kDefaultMaxKeySize);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -54,8 +56,8 @@ TEST(MiniFile, Stream)
 {
    FileRaii fileGuard("test_ntuple_minifile_stream.root");
 
-   auto writer =
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
+                                             RNTupleWriteOptions::kDefaultMaxKeySize);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -89,7 +91,7 @@ TEST(MiniFile, Proper)
    FileRaii fileGuard("test_ntuple_minifile_proper.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header = 'h';
    char footer = 'f';
@@ -118,8 +120,8 @@ TEST(MiniFile, SimpleKeys)
 {
    FileRaii fileGuard("test_ntuple_minifile_simple_keys.root");
 
-   auto writer =
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
+                                             RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -224,7 +226,7 @@ TEST(MiniFile, ProperKeys)
    FileRaii fileGuard("test_ntuple_minifile_proper_keys.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer = RNTupleFileWriter::Append("MyNTuple", *file);
+   auto writer = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char blob1 = '1';
    auto offBlob1 = writer->WriteBlob(&blob1, 1, 1);
@@ -333,7 +335,7 @@ TEST(MiniFile, LongString)
       "store in a TFile header. For longer strings, a length of 255 is special and means that the first length byte is "
       "followed by an integer length.";
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE", LongString));
-   auto writer = RNTupleFileWriter::Append("ntuple", *file);
+   auto writer = RNTupleFileWriter::Append("ntuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header = 'h';
    char footer = 'f';
@@ -353,8 +355,8 @@ TEST(MiniFile, Multi)
    FileRaii fileGuard("test_ntuple_minifile_multi.root");
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
-   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file);
-   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file);
+   auto writer1 = RNTupleFileWriter::Append("FirstNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   auto writer2 = RNTupleFileWriter::Append("SecondNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
 
    char header1 = 'h';
    char footer1 = 'f';
@@ -398,13 +400,14 @@ TEST(MiniFile, Multi)
 TEST(MiniFile, Failures)
 {
    // TODO(jblomer): failures should be exceptions
-   EXPECT_DEATH(
-      RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, RNTupleFileWriter::EContainerFormat::kTFile), ".*");
+   EXPECT_DEATH(RNTupleFileWriter::Recreate("MyNTuple", "/can/not/open", 0, EContainerFormat::kTFile,
+                                            RNTupleWriteOptions::kDefaultMaxKeySize),
+                ".*");
 
    FileRaii fileGuard("test_ntuple_minifile_failures.root");
 
-   auto writer =
-      RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+   auto writer = RNTupleFileWriter::Recreate("MyNTuple", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
+                                             RNTupleWriteOptions::kDefaultMaxKeySize);
    char header = 'h';
    char footer = 'f';
    char blob = 'b';
@@ -462,13 +465,32 @@ TEST(MiniFile, DifferentTKeys)
 TEST(MiniFile, LargeKey)
 {
    FileRaii fileGuard("test_ntuple_minifile_large_key.root");
-   fileGuard.PreserveFile();
 
-   auto writer =
-      RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile);
+   const auto dataSize = RNTupleWriteOptions::kDefaultMaxKeySize * 2;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
 
-   const auto dataSize = RNTuple{}.GetMaxKeySize() * 2;
-   auto data = std::make_unique<char[]>(dataSize);
-   memset(data.get(), 0x99, dataSize);
-   writer->WriteBlob(data.get(), dataSize, dataSize);
+   {
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
+                                                RNTupleWriteOptions::kDefaultMaxKeySize);
+      memset(data.get(), 0x99, dataSize);
+      data[42] = 0x42;
+      data[dataSize - 42] = 0x84;
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      memset(data.get(), 0, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      reader.ReadBuffer(data.get(), dataSize, blobOffset, RNTupleWriteOptions::kDefaultMaxKeySize);
+
+      EXPECT_EQ(data[0], 0x99);
+      EXPECT_EQ(data[dataSize / 2], 0x99);
+      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
+      EXPECT_EQ(data[dataSize - 1], 0x99);
+      EXPECT_EQ(data[42], 0x42);
+      EXPECT_EQ(data[dataSize - 42], 0x84);
+   }
 }

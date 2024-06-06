@@ -41,6 +41,8 @@ public:
       kDefault,
    };
 
+   static constexpr std::uint64_t kDefaultMaxKeySize = 0x4000'0000; // 1 GB
+
 protected:
    int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
    /// Approximation of the target compressed cluster size
@@ -66,6 +68,7 @@ protected:
    bool fHasSmallClusters = false;
    /// If set, checksums will be calculated and written for every page.
    bool fEnablePageChecksums = true;
+   std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
 
 public:
    /// A maximum size of 512MB still allows for a vector of bool to be stored in a small cluster.  This is the
@@ -106,6 +109,9 @@ public:
 
    bool GetEnablePageChecksums() const { return fEnablePageChecksums; }
    void SetEnablePageChecksums(bool val) { fEnablePageChecksums = val; }
+
+   std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
+   void SetMaxKeySize(std::uint64_t val) { fMaxKeySize = val; }
 };
 
 } // namespace Experimental
