@@ -543,17 +543,6 @@ inline double chebychevIntegral(double const *coeffs, unsigned int nCoeffs, doub
    return halfrange * sum;
 }
 
-// Clad does not like std::max and std::min so redefined here for simplicity.
-inline double max(double x, double y)
-{
-   return x >= y ? x : y;
-}
-
-inline double min(double x, double y)
-{
-   return x <= y ? x : y;
-}
-
 // The last param should be of type bool but it is not as that causes some issues with Cling for some reason...
 inline double
 poissonIntegral(int code, double mu, double x, double integrandMin, double integrandMax, unsigned int protectNegative)
@@ -565,7 +554,7 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
    if (code == 1) {
       // Implement integral over x as summation. Add special handling in case
       // range boundaries are not on integer values of x
-      integrandMin = max(0, integrandMin);
+      integrandMin = std::max(0., integrandMin);
 
       if (integrandMax < 0. || integrandMax < integrandMin) {
          return 0;
@@ -574,13 +563,13 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
       // If the limits are more than many standard deviations away from the mean,
       // we might as well return the integral of the full Poisson distribution to
       // save computing time.
-      if (integrandMin < max(mu - delta, 0.0) && integrandMax > mu + delta) {
+      if (integrandMin < std::max(mu - delta, 0.0) && integrandMax > mu + delta) {
          return 1.;
       }
 
       // The range as integers. ixMin is included, ixMax outside.
       const unsigned int ixMin = integrandMin;
-      const unsigned int ixMax = min(integrandMax + 1, (double)std::numeric_limits<unsigned int>::max());
+      const unsigned int ixMax = std::min(integrandMax + 1, (double)std::numeric_limits<unsigned int>::max());
 
       // Sum from 0 to just before the bin outside of the range.
       if (ixMin == 0) {
