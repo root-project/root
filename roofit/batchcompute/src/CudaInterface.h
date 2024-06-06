@@ -10,14 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_Detail_CudaInterface_h
-#define RooFit_Detail_CudaInterface_h
+#ifndef CudaInterface_h
+#define CudaInterface_h
 
 #include <cstddef>
 #include <memory>
 
-namespace RooFit {
-namespace Detail {
+namespace RooBatchCompute {
+
 /*
  * C++ interface around CUDA functionality.
  *
@@ -218,7 +218,6 @@ template <class T>
 using PinnedHostArray = Array<T, PinnedHostMemory>;
 
 } // namespace CudaInterface
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooBatchCompute
 
 #endif

@@ -22,15 +22,6 @@
 #include <memory>
 #include <string>
 
-namespace RooFit {
-namespace Detail {
-namespace CudaInterface {
-class CudaEvent;
-class CudaStream;
-} // namespace CudaInterface
-} // namespace Detail
-} // namespace RooFit
-
 /**
  * Namespace for dispatching RooFit computations to various backends.
  *
@@ -44,6 +35,11 @@ class CudaStream;
  * available on a specific platform.
  */
 namespace RooBatchCompute {
+
+namespace CudaInterface {
+class CudaEvent;
+class CudaStream;
+} // namespace CudaInterface
 
 typedef std::span<const std::span<const double>> VarSpan;
 typedef std::span<double> ArgSpan;
@@ -59,11 +55,11 @@ int initCUDA();
 class Config {
 public:
    bool useCuda() const { return _cudaStream != nullptr; }
-   void setCudaStream(RooFit::Detail::CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
-   RooFit::Detail::CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
+   void setCudaStream(CudaInterface::CudaStream *cudaStream) { _cudaStream = cudaStream; }
+   CudaInterface::CudaStream *cudaStream() const { return _cudaStream; }
 
 private:
-   RooFit::Detail::CudaInterface::CudaStream *_cudaStream = nullptr;
+   CudaInterface::CudaStream *_cudaStream = nullptr;
 };
 
 enum class Architecture { AVX512, AVX2, AVX, SSE4, GENERIC, CUDA };
@@ -140,7 +136,7 @@ public:
    virtual std::unique_ptr<AbsBuffer> makeCpuBuffer(std::size_t size) = 0;
    virtual std::unique_ptr<AbsBuffer> makeGpuBuffer(std::size_t size) = 0;
    virtual std::unique_ptr<AbsBuffer>
-   makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr) = 0;
+   makePinnedBuffer(std::size_t size, CudaInterface::CudaStream *stream = nullptr) = 0;
 };
 
 /**
@@ -177,15 +173,13 @@ public:
 
    virtual std::unique_ptr<AbsBufferManager> createBufferManager() const = 0;
 
-   virtual RooFit::Detail::CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const = 0;
-   virtual RooFit::Detail::CudaInterface::CudaStream *newCudaStream() const = 0;
-   virtual void deleteCudaEvent(RooFit::Detail::CudaInterface::CudaEvent *) const = 0;
-   virtual void deleteCudaStream(RooFit::Detail::CudaInterface::CudaStream *) const = 0;
-   virtual void
-   cudaEventRecord(RooFit::Detail::CudaInterface::CudaEvent *, RooFit::Detail::CudaInterface::CudaStream *) const = 0;
-   virtual void cudaStreamWaitForEvent(RooFit::Detail::CudaInterface::CudaStream *,
-                                       RooFit::Detail::CudaInterface::CudaEvent *) const = 0;
-   virtual bool cudaStreamIsActive(RooFit::Detail::CudaInterface::CudaStream *) const = 0;
+   virtual CudaInterface::CudaEvent *newCudaEvent(bool forTiming) const = 0;
+   virtual CudaInterface::CudaStream *newCudaStream() const = 0;
+   virtual void deleteCudaEvent(CudaInterface::CudaEvent *) const = 0;
+   virtual void deleteCudaStream(CudaInterface::CudaStream *) const = 0;
+   virtual void cudaEventRecord(CudaInterface::CudaEvent *, CudaInterface::CudaStream *) const = 0;
+   virtual void cudaStreamWaitForEvent(CudaInterface::CudaStream *, CudaInterface::CudaEvent *) const = 0;
+   virtual bool cudaStreamIsActive(CudaInterface::CudaStream *) const = 0;
 };
 
 /**

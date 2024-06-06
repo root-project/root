@@ -119,8 +119,8 @@ struct NodeInfo {
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
 
-   RooFit::Detail::CudaInterface::CudaEvent *event = nullptr;
-   RooFit::Detail::CudaInterface::CudaStream *stream = nullptr;
+   RooBatchCompute::CudaInterface::CudaEvent *event = nullptr;
+   RooBatchCompute::CudaInterface::CudaStream *stream = nullptr;
 
    /// Check the servers of a node that has been computed and release its
    /// resources if they are no longer needed.
