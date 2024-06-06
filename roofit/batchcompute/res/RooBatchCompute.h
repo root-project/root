@@ -15,8 +15,6 @@
 
 #include <ROOT/RSpan.hxx>
 
-#include <RConfig.h>
-
 #include <DllImport.h> //for R__EXTERN, needed for windows
 
 #include <cstddef>
