@@ -28,8 +28,6 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include <queue>
 #include <vector>
 
-namespace CudaInterface = RooFit::Detail::CudaInterface;
-
 namespace RooBatchCompute {
 namespace CUDA {
 
@@ -109,7 +107,7 @@ public:
    void compute(RooBatchCompute::Config const &cfg, Computer computer, std::span<double> output, VarSpan vars,
                 ArgSpan extraArgs) override
    {
-      using namespace RooFit::Detail::CudaInterface;
+      using namespace CudaInterface;
 
       std::size_t nEvents = output.size();
 
@@ -525,8 +523,7 @@ public:
    {
       return std::make_unique<GPUBuffer>(size, _queuesMaps->gpuBufferQueuesMap[size]);
    }
-   std::unique_ptr<AbsBuffer>
-   makePinnedBuffer(std::size_t size, RooFit::Detail::CudaInterface::CudaStream *stream = nullptr) override
+   std::unique_ptr<AbsBuffer> makePinnedBuffer(std::size_t size, CudaInterface::CudaStream *stream = nullptr) override
    {
       auto out = std::make_unique<PinnedBuffer>(size, _queuesMaps->pinnedBufferQueuesMap[size]);
       out->vec().setCudaStream(stream);

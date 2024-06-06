@@ -26,8 +26,7 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
    }
 }
 
-namespace RooFit {
-namespace Detail {
+namespace RooBatchCompute {
 namespace CudaInterface {
 
 DeviceMemory::DeviceMemory(std::size_t n, std::size_t typeSize) : _size{n}
@@ -180,5 +179,4 @@ void copyDeviceToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStre
 /// \endcond
 
 } // namespace CudaInterface
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooBatchCompute
