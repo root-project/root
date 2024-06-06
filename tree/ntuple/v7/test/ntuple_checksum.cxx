@@ -147,3 +147,40 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    auto viewPx = reader->GetView<float>("px");
    EXPECT_FLOAT_EQ(1.0, viewPx(0));
 }
+
+TEST(RNTupleChecksum, Merge)
+{
+   FileRaii fileGuard1("test_ntuple_checksum_merge1.root");
+   FileRaii fileGuard2("test_ntuple_checksum_merge2.root");
+
+   RNTupleWriteOptions options;
+   options.SetCompression(0);
+
+   CreateCorruptedFile(fileGuard1.GetPath());
+
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrPx = model->MakeField<float>("px", 3.0);
+      auto ptrPy = model->MakeField<float>("py", 4.0);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      writer->Fill();
+   }
+
+   FileRaii fileGuard3("test_ntuple_checksum_merge_out.root");
+   std::vector<std::unique_ptr<RPageSource>> sources;
+   sources.push_back(RPageSource::Create("ntpl", fileGuard1.GetPath()));
+   sources.push_back(RPageSource::Create("ntpl", fileGuard2.GetPath()));
+   std::vector<RPageSource *> sourcePtrs;
+   for (const auto &s : sources) {
+      sourcePtrs.push_back(s.get());
+   }
+
+   auto destination = std::make_unique<RPageSinkFile>("ntpl", fileGuard3.GetPath(), options);
+   RNTupleMerger merger;
+   try {
+      merger.Merge(sourcePtrs, *destination);
+      FAIL() << "merging should fail due to checksum error";
+   } catch (const RException &e) {
+      EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
+   }
+}
