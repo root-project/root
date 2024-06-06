@@ -361,6 +361,7 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
           # Special builds
           - image: alma9
+            is_special: true
             property: march_native
             overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
 
@@ -453,7 +454,7 @@ jobs:
               "
 
       - name: Workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
+        if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.image }}
@@ -497,7 +498,7 @@ jobs:
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
         with:
-          name: Binaries ${{ matrix.image }}
+          name: Binaries ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
