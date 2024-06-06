@@ -111,6 +111,7 @@ using RPrintSchemaVisitor = ROOT::Experimental::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;
 template <class T>
 using RResult = ROOT::Experimental::RResult<T>;
+using EContainerFormat = RNTupleFileWriter::EContainerFormat;
 
 /**
  * An RAII wrapper around an open temporary file on disk. It cleans up the guarded file when the wrapper object
