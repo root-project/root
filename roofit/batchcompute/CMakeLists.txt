@@ -2,7 +2,6 @@
 
 ROOT_LINKER_LIBRARY(RooBatchCompute
     src/Initialisation.cxx
-    src/Buffers.cxx
   DEPENDENCIES
     Core
     MathCore
@@ -30,8 +29,11 @@ endif()
 ############################################################################################################################################
 # Instantiations of the shared objects which provide the actual computation functions.
 
+set(shared_object_sources src/RooBatchCompute.cxx src/ComputeFunctions.cxx)
+set(shared_object_sources_cu src/RooBatchCompute.cu src/ComputeFunctions.cu)
+
 # Generic implementation for CPUs that don't support vector instruction sets.
-ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
+ROOT_LINKER_LIBRARY(RooBatchCompute_GENERIC ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
 target_compile_options(RooBatchCompute_GENERIC  PRIVATE ${common-flags} -DRF_ARCH=GENERIC)
 
 # Windows platform and ICC compiler need special code and testing, thus the feature has not been implemented yet for these.
@@ -39,9 +41,9 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
 
   target_compile_options(RooBatchCompute PRIVATE -DR__RF_ARCHITECTURE_SPECIFIC_LIBS)
 
-  ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_SSE4.1  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX     ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_AVX2    ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
 
   # Flags -fno-signaling-nans, -fno-trapping-math and -O3 are necessary to enable autovectorization (especially for GCC).
   set(common-flags $<$<CXX_COMPILER_ID:GNU>:-fno-signaling-nans>)
@@ -54,13 +56,13 @@ if (ROOT_PLATFORM MATCHES "linux|macosx" AND CMAKE_SYSTEM_PROCESSOR MATCHES x86_
   # AVX512 is only supported in gcc 6+
   # We focus on AVX512 capable processors that support at least the skylake-avx512 instruction sets.
   if(NOT (CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 6)
-    ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  src/RooBatchCompute.cxx src/ComputeFunctions.cxx TYPE SHARED DEPENDENCIES RooBatchCompute)
+    ROOT_LINKER_LIBRARY(RooBatchCompute_AVX512  ${shared_object_sources} TYPE SHARED DEPENDENCIES RooBatchCompute)
     target_compile_options(RooBatchCompute_AVX512  PRIVATE ${common-flags} -march=skylake-avx512 -DRF_ARCH=AVX512)
   endif()
 
 endif() # vector versions of library
 
 if (cuda)
-  ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  src/RooBatchCompute.cu src/ComputeFunctions.cu TYPE SHARED DEPENDENCIES RooBatchCompute)
+  ROOT_LINKER_LIBRARY(RooBatchCompute_CUDA  ${shared_object_sources_cu} TYPE SHARED DEPENDENCIES RooBatchCompute)
   target_compile_options(RooBatchCompute_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
 endif()
