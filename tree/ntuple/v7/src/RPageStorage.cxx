@@ -49,15 +49,16 @@ void ROOT::Experimental::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled(
    RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, charBuf + GetDataSize());
 }
 
-void ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
 {
    if (!fHasChecksum)
-      return;
+      return RResult<void>::Success();
 
-   auto result = RNTupleSerializer::VerifyXxHash3(reinterpret_cast<unsigned char *>(fBuffer), GetDataSize());
-   if (!result) {
-      throw RException(R__FAIL("page checksum verification failed, data corruption detected"));
-   }
+   auto success = RNTupleSerializer::VerifyXxHash3(reinterpret_cast<unsigned char *>(fBuffer), GetDataSize());
+   if (!success)
+      return R__FAIL("page checksum verification failed, data corruption detected");
+   return RResult<void>::Success();
 }
 
 //------------------------------------------------------------------------------
@@ -361,7 +362,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
       return page;
    }
 
-   sealedPage.VerifyChecksumIfEnabled();
+   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 
    const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
    using Allocator_t = RPageAllocatorHeap;

@@ -357,7 +357,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
       memcpy(sealedPage.GetWritableBuffer(), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
 
-   sealedPage.VerifyChecksumIfEnabled();
+   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
 ROOT::Experimental::Internal::RPage

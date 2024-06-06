@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorage
 
 #include <ROOT/RCluster.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
@@ -122,7 +123,7 @@ public:
       void SetHasChecksum(bool hasChecksum) { fHasChecksum = hasChecksum; }
 
       void ChecksumIfEnabled();
-      void VerifyChecksumIfEnabled() const;
+      RResult<void> VerifyChecksumIfEnabled() const;
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
