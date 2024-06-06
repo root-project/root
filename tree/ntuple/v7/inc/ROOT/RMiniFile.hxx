@@ -57,6 +57,11 @@ private:
    ROOT::Internal::RRawFile *fRawFile = nullptr;
    /// Indicates whether the file is a TFile container or an RNTuple bare file
    bool fIsBare = false;
+   /// If `fMaxBlobSize > 0 ` and ReadBuffer attempts to read `nbytes > maxBlobSize`, it will assume the
+   /// blob being read is chunked and read all the chunks into the buffer. This is symmetrical to
+   /// what happens in `RNTupleFileWriter::WriteBlob()`.
+   std::uint64_t fMaxBlobSize = 0;
+
    /// Used when the file container turns out to be a bare file
    RResult<RNTuple> GetNTupleBare(std::string_view ntupleName);
    /// Used when the file turns out to be a TFile container
@@ -74,10 +79,11 @@ public:
    /// Extracts header and footer location for the RNTuple identified by ntupleName
    RResult<RNTuple> GetNTuple(std::string_view ntupleName);
    /// Reads a given byte range from the file into the provided memory buffer.
-   /// If `maxBlobSize > 0 ` and `nbytes > maxBlobSize`, this function will assume the
-   /// blob being read is chunked and read all the chunks into the buffer. This is symmetrical to
-   /// what happens in `RNTupleFileWriter::WriteBlob()`.
-   void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset, std::uint64_t maxBlobSize = 0);
+   /// If `nbytes > fMaxBlobSize` it will perform chunked read from multiple blobs,
+   /// whose addresses are listed at the end of the first chunk.
+   void ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset);
+
+   std::uint64_t GetMaxBlobSize() const { return fMaxBlobSize; }
 };
 
 // clang-format off

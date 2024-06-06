@@ -25,6 +25,17 @@
 namespace ROOT {
 namespace Experimental {
 
+class RNTupleWriteOptions;
+
+namespace Internal {
+
+class RNTupleWriteOptionsManip final {
+public:
+   static void SetMaxKeySize(RNTupleWriteOptions &options, std::uint64_t maxKeySize);
+};
+
+} // namespace Internal
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleWriteOptions
@@ -41,7 +52,11 @@ public:
       kDefault,
    };
 
-   static constexpr std::uint64_t kDefaultMaxKeySize = 0x4000'0000; // 1 GB
+   static constexpr std::uint64_t kDefaultMaxKeySize = 0x4000'0000; // 1 GiB
+
+   // clang-format off
+   friend Internal::RNTupleWriteOptionsManip;
+   // clang-format on
 
 protected:
    int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
@@ -68,6 +83,8 @@ protected:
    bool fHasSmallClusters = false;
    /// If set, checksums will be calculated and written for every page.
    bool fEnablePageChecksums = true;
+   /// Specifies the max size of a payload storeable into a single TKey. When writing an RNTuple to a ROOT file,
+   /// any payload whose size exceeds this will be split into multiple keys.
    std::uint64_t fMaxKeySize = kDefaultMaxKeySize;
 
 public:
@@ -111,8 +128,14 @@ public:
    void SetEnablePageChecksums(bool val) { fEnablePageChecksums = val; }
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }
-   void SetMaxKeySize(std::uint64_t val) { fMaxKeySize = val; }
 };
+
+namespace Internal {
+inline void RNTupleWriteOptionsManip::SetMaxKeySize(RNTupleWriteOptions &options, std::uint64_t maxKeySize)
+{
+   options.fMaxKeySize = maxKeySize;
+}
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT

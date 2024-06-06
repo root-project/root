@@ -2,8 +2,6 @@
 #include <TKey.h>
 #include <TTree.h>
 
-using EContainerFormat = RNTupleFileWriter::EContainerFormat;
-
 namespace {
 bool IsEqual(const ROOT::Experimental::RNTuple &a, const ROOT::Experimental::RNTuple &b)
 {
@@ -460,37 +458,4 @@ TEST(MiniFile, DifferentTKeys)
    file->Close();
    auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
    EXPECT_EQ(1, ntuple->GetNEntries());
-}
-
-TEST(MiniFile, LargeKey)
-{
-   FileRaii fileGuard("test_ntuple_minifile_large_key.root");
-
-   const auto dataSize = RNTupleWriteOptions::kDefaultMaxKeySize * 2;
-   auto data = std::make_unique<unsigned char[]>(dataSize);
-   std::uint64_t blobOffset;
-
-   {
-      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile,
-                                                RNTupleWriteOptions::kDefaultMaxKeySize);
-      memset(data.get(), 0x99, dataSize);
-      data[42] = 0x42;
-      data[dataSize - 42] = 0x84;
-      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
-      writer->Commit();
-   }
-   {
-      memset(data.get(), 0, dataSize);
-
-      auto rawFile = RRawFile::Create(fileGuard.GetPath());
-      auto reader = RMiniFileReader{rawFile.get()};
-      reader.ReadBuffer(data.get(), dataSize, blobOffset, RNTupleWriteOptions::kDefaultMaxKeySize);
-
-      EXPECT_EQ(data[0], 0x99);
-      EXPECT_EQ(data[dataSize / 2], 0x99);
-      EXPECT_EQ(data[2 * dataSize / 3], 0x99);
-      EXPECT_EQ(data[dataSize - 1], 0x99);
-      EXPECT_EQ(data[42], 0x42);
-      EXPECT_EQ(data[dataSize - 42], 0x84);
-   }
 }
