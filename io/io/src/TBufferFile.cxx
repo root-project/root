@@ -1948,6 +1948,8 @@ void TBufferFile::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
 
 void TBufferFile::WriteFastArray(const Bool_t *b, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(UChar_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -1974,6 +1976,8 @@ void TBufferFile::WriteFastArray(const Bool_t *b, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Char_t *c, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Char_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -1995,6 +1999,8 @@ void TBufferFile::WriteFastArray(const Char_t *c, Long64_t n)
 
 void TBufferFile::WriteFastArrayString(const Char_t *c, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Char_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2023,6 +2029,8 @@ void TBufferFile::WriteFastArrayString(const Char_t *c, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Short_t *h, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Short_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2054,7 +2062,8 @@ void TBufferFile::WriteFastArray(const Short_t *h, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Int_t *ii, Long64_t n)
 {
-   
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = 4;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2086,6 +2095,8 @@ void TBufferFile::WriteFastArray(const Int_t *ii, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Long_t *ll, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = 8;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2108,6 +2119,8 @@ void TBufferFile::WriteFastArray(const Long_t *ll, Long64_t n)
 
 void TBufferFile::WriteFastArray(const ULong_t *ll, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = 8;
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2128,6 +2141,8 @@ void TBufferFile::WriteFastArray(const ULong_t *ll, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Long64_t *ll, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Long64_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2154,6 +2169,8 @@ void TBufferFile::WriteFastArray(const Long64_t *ll, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2185,6 +2202,8 @@ void TBufferFile::WriteFastArray(const Float_t *f, Long64_t n)
 
 void TBufferFile::WriteFastArray(const Double_t *d, Long64_t n)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Double_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2212,6 +2231,8 @@ void TBufferFile::WriteFastArray(const Double_t *d, Long64_t n)
 
 void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerElement *ele)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
@@ -2270,6 +2291,8 @@ void TBufferFile::WriteFastArrayFloat16(const Float_t *f, Long64_t n, TStreamerE
 
 void TBufferFile::WriteFastArrayDouble32(const Double_t *d, Long64_t n, TStreamerElement *ele)
 {
+   if (n == 0) return;
+
    constexpr Int_t dataWidth = static_cast<Int_t>(sizeof(Float_t));
    const Int_t maxElements = (std::numeric_limits<Int_t>::max() - Length())/dataWidth;
    if (n < 0 || n > maxElements)
