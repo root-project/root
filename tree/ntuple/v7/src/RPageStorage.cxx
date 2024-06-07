@@ -356,8 +356,9 @@ ROOT::Experimental::Internal::RPageStorage::RSealedPage
 ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element,
                                                   int compressionSetting)
 {
-   R__ASSERT(fCompressor);
-   return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
+   if (fSealPageBuffer.size() < page.GetNBytes())
+      fSealPageBuffer.resize(page.GetNBytes());
+   return SealPage(page, element, compressionSetting, fSealPageBuffer.data());
 }
 
 void ROOT::Experimental::Internal::RPageSink::CommitDataset()

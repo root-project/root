@@ -204,6 +204,7 @@ private:
    /// Flag if sink was initialized
    bool fIsInitialized = false;
    std::vector<Callback_t> fOnDatasetCommitCallbacks;
+   std::vector<unsigned char> fSealPageBuffer; ///< Used as destination buffer in the simple SealPage overload
 
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
