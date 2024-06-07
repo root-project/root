@@ -1236,8 +1236,8 @@ TEST(VecOps, InvariantMass)
    RVec<double> phi1 =  {0.0, 0.0, 0.0,  -0.5, -2.4};
 
    RVec<double> mass2 = {40,  40,  40,  40,  30};
-   RVec<double> pt2 =   {0,   5,   5,   10,  2};
-   RVec<double> eta2 =  {0.0, 0.0, 0.5, 0.4, 1.2};
+   RVec<double> pt2 = {1, 5, 5, 10, 2};
+   RVec<double> eta2 = {0.1, 0.0, 0.5, 0.4, 1.2};
    RVec<double> phi2 =  {0.0, 0.0, 0.0, 0.5, 2.4};
 
    // Compute invariant mass of two particle system using both collections
@@ -1280,7 +1280,7 @@ TEST(VecOps, InvariantMass)
    // Check that calling with different argument types works and yields the
    // expected return types and values
    RVec<float> pt1f =   {0.f, 5.f, 5.f, 10.f, 10.f};
-   RVec<float> eta2f =  {0.f, 0.f, 0.5f, 0.4f, 1.2f};
+   RVec<float> eta2f = {0.1f, 0.f, 0.5f, 0.4f, 1.2f};
    const auto invMassF = InvariantMasses(pt1f, eta1, phi1, mass1, pt2, eta2f, phi2, mass2);
    EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>)) << "InvariantMasses should return double if one of the arguments is double";
    for (size_t i = 0; i < invMass.size(); ++i) {
@@ -1322,9 +1322,9 @@ TEST(VecOps, InvariantMass)
    RVec<float> px1f = {0.f, 5.f, 5.f, 10.f, 10.f};
    RVec<float> py2f = {0.f, 0.f, 0.5f, 0.4f, 1.2f};
    const auto invMassF_XYXM = InvariantMasses_PxPyPzM(px1f, py1, pz1, mass1, px2, py2f, pz2, mass2);
-   EXPECT_TRUE((std::is_same_v<decltype(invMassF), const RVec<double>>))
+   EXPECT_TRUE((std::is_same_v<decltype(invMassF_XYXM), const RVec<double>>))
       << "InvariantMasses should return double if one of the arguments is double";
-   for (size_t i = 0; i < invMass.size(); ++i) {
+   for (size_t i = 0; i < invMassF_XYXM.size(); ++i) {
       // We use the full double result here as reference and allow for some
       // jitter introduced by the floating point promotion that happens along
       // the way (in deterministic but different places depending on the types
