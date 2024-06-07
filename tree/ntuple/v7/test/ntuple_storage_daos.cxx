@@ -298,5 +298,22 @@ TEST_F(RPageStorageDaos, Checksum)
    auto viewPy = reader->GetView<float>("py");
    EXPECT_THROW(viewPx(0), RException);
    EXPECT_FLOAT_EQ(2.0, viewPy(0));
+
+   DescriptorId_t pxColId;
+   DescriptorId_t clusterId;
+   auto pageSource = RPageSource::Create("ntpl", daosUri);
+   pageSource->Attach();
+   {
+      auto descGuard = pageSource->GetSharedDescriptorGuard();
+      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
+      clusterId = descGuard->FindClusterId(pxColId, 0);
+   }
+   RClusterIndex index{clusterId, 0};
+
+   RPageStorage::RSealedPage sealedPage;
+   constexpr std::size_t bufSize = 12;
+   unsigned char buffer[bufSize];
+   sealedPage.SetBuffer(buffer);
+   EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
 }
 #endif
