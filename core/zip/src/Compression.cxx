@@ -35,7 +35,7 @@ namespace ROOT {
     return algo * 100 + compressionLevel;
   }
 
-  const char *RCompressionSetting::AlgorithmToString(RCompressionSetting::EAlgorithm algorithm)
+  std::string RCompressionSetting::AlgorithmToString(RCompressionSetting::EAlgorithm algorithm)
   {
      switch (algorithm) {
      case EAlgorithm::kZLIB: return "zlib";

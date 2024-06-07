@@ -99,7 +99,7 @@ struct RCompressionSetting {
       kUndefined
    };
 
-   static const char *AlgorithmToString(EAlgorithm algorithm);
+   static std::string AlgorithmToString(EAlgorithm algorithm);
 };
 
 // clang-format off
