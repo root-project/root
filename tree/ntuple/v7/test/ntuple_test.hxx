@@ -137,4 +137,15 @@ public:
    void PreserveFile() { fPreserveFile = true; }
 };
 
+#ifdef R__USE_IMT
+struct IMTRAII {
+   IMTRAII() { ROOT::EnableImplicitMT(); }
+   ~IMTRAII() { ROOT::DisableImplicitMT(); }
+};
+#endif
+
+/// Creates an uncompressed RNTuple called "ntpl" with two float fields, px and py, with a single entry.
+/// The page of px has a wrong checksum. The function is backend agnostic (file, DAOS, ...).
+void CreateCorruptedRNTuple(const std::string &uri);
+
 #endif
