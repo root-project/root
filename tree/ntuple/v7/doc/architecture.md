@@ -374,6 +374,18 @@ If the buffered sink is used (default), the pages of a cluster are buffered unti
 On committing the cluster, all pages are sealed and sent to a _persistent sink_ in one go (vector write).
 Pages are also reordered to ensure locality of pages of the same column.
 
+#### Late model extension
+For fields added to the RNTupleModel after the RNTuple schema has been created (i.e., through `RNTupleWriter::CreateModelUpdater()`), the following steps are taken:
+
+  1. On calling `RUpdater::BeginUpdate()`, all `REntry` instances belonging to the underlying RNTupleModel are invalidated.
+  2. After adding the desired additional fields, calling `RUpdater::CommitUpdate()` will add the relevant fields to the footer's [schema extension record frame](./specifications.md#schema-extensions-record-frame).
+      1. The principal columns of top-level fields and record subfields will have a non-zero first element index.
+         These columns are referred to as "deferred columns".
+         In particular, columns in a subfield tree of collections or variants are _not_ stored as deferred columns (see next point).
+      2. All other columns belonging to the added (sub)fields will be written as usual.
+  3. `RNTuple(Writer|Model)::CreateEntry()` or `RNTupleModel::CreateBareEntry()` must be used to create an `REntry` matching the new model.
+  4. Writing continues as described in steps 2-5 above.
+
 ### Reading Case
 The reverse process is performed on reading (e.g. `RNTupleReader::LoadEntry()`, `RNTupleView` call operator).
 
@@ -388,6 +400,11 @@ For the file backend, it additionally coalesces close read requests and uses uri
 The page source can be restricted to a certain entry range.
 This allows for optimizing the page lists that are being read.
 Additionally, it allows for optimizing the cluster pool to not read-ahead beyond the limits.
+
+#### Late model extension
+Reading an RNTuple with an extended model is transparent -- i.e., no additional interface calls are required.
+Internally, columns that were created as part of late model extension will have synthesized zero-initialized column ranges for the clusters that were already written before the model was extended.
+In addition, pages made up of 0x00 bytes are synthesized for deferred columns in the clusters that were already (partially) filled before the model was extended.
 
 Storage Backends
 ----------------
