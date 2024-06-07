@@ -274,4 +274,19 @@ TEST_F(RPageStorageDaos, CagedPages)
       EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
    }
 }
+
+TEST_F(RPageStorageDaos, Checksum)
+{
+   IMTRAII _;
+
+   std::string daosUri = RegisterLabel("ntuple-test-checksum");
+   CreateCorruptedRNTuple(daosUri);
+
+   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   auto viewPx = reader->GetView<float>("px");
+   auto viewPy = reader->GetView<float>("py");
+   EXPECT_THROW(viewPy(0), RException); // we run under IMT, even the valid column should fail
+}
 #endif
