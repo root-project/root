@@ -199,29 +199,23 @@ set(compression_default "zlib" CACHE STRING "" FORCE)
 
 get_filename_component(ROOT_LIBRARY_DIR "${ROOTSYS}/lib" ABSOLUTE)
 
+set(ref_suffix ".ref")
+
 # Detect bitness.
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(64BIT 1)
+  if(MSVC)
+    set(ref_suffix "_win64.ref")
+  endif()
   message("-- Check for bitness: Found 64 bit architecture.")
 elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
   set(32BIT 1)
+  if(MSVC)
+    set(ref_suffix "_win32.ref")
+  endif()
   message("-- Check for bitness: Found 32 bit architecture.")
 else()
   message(FATAL_ERROR "-- Check for bitness: no support for ${CMAKE_SIZEOF_VOID_P}*8 bit processors.")
-endif()
-
-if (MSVC)
-  if("${CMAKE_GENERATOR}" MATCHES "(Win64|IA64)")
-    set(64BIT 1)
-    set(ref_suffix "_win64.ref")
-    message(STATUS "-- Check for generator architecture: Found 64 bit architecture.")
-  else()
-    set(32BIT 1)
-    set(ref_suffix "_win32.ref")
-    message(STATUS "-- Check for generator architecture: Found 32 bit architecture.")
-  endif()
-else()
-  set(ref_suffix ".ref")
 endif()
 
 # Setup environment.
