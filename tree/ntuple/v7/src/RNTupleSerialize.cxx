@@ -1752,7 +1752,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
 
       bytes = outerFrame + outerFrameSize;
 
-      clusterBuilders[i].AddDeferredColumnRanges(desc);
+      clusterBuilders[i].AddExtendedColumnRanges(desc);
       clusters.emplace_back(clusterBuilders[i].MoveDescriptor().Unwrap());
    } // loop over clusters
    desc.AddClusterGroupDetails(clusterGroupId, clusters);

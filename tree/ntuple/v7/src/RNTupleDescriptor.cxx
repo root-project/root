@@ -572,7 +572,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescript
 }
 
 ROOT::Experimental::Internal::RClusterDescriptorBuilder &
-ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNTupleDescriptor &desc)
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges(const RNTupleDescriptor &desc)
 {
    /// Carries out a depth-first traversal of a field subtree rooted at `rootFieldId`.  For each field, `visitField` is
    /// called passing the field ID and the number of overall repetitions, taking into account the repetitions of each
@@ -586,7 +586,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddDeferredColumnRanges
       }
    };
 
-   // Deferred columns can only be part of the header extension
+   // Extended columns can only be part of the header extension
    auto xHeader = desc.GetHeaderExtension();
    if (!xHeader)
       return *this;

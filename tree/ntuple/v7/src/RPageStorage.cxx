@@ -449,8 +449,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
       // We set the first element index in the current cluster to the first element that is part of a materialized page
-      // (i.e., that is part of a page list). For deferred columns, however, the column range is fixed up as needed by
-      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` on read back.
+      // (i.e., that is part of a page list). For columns created during late model extension, however, the column range
+      // is fixed up as needed by `RClusterDescriptorBuilder::AddExtendedColumnRanges()` on read back.
       columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
