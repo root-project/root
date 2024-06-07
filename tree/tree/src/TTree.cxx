@@ -5753,7 +5753,10 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
          } else {
             if ( t->LoadTreeFriend(entry,this) >= 0 ) {
                nb = t->GetEntry(t->GetReadEntry(),getall);
-            } else nb = 0;
+            } else {
+               Error("GetEntry", "Entry %lld not found in friend tree '%s'", entry, t->GetName());
+               nb = 0;
+            }
          }
          if (nb < 0) return nb;
          nbytes += nb;
