@@ -416,8 +416,8 @@ TEST(RNTuple, ModelExtensionComplex)
          ntuple->Fill();
       }
 
-      // Force the serialization of a page list which will not know about the deferred columns coming later.
-      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` should thus make up page ranges for the missing columns
+      // Force the serialization of a page list which will not know about the extended columns coming later.
+      // `RClusterDescriptorBuilder::AddExtendedColumnRanges()` should thus make up page ranges for the missing columns
       ntuple->CommitCluster(true /* commitClusterGroup */);
 
       modelUpdater->BeginUpdate();
