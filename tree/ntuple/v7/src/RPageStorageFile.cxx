@@ -343,6 +343,7 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
 
    auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    if (pageInfo.fHasChecksum) {
+      assert(pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero);
       bytesOnStorage += kNBytesPageChecksum;
       sealedPage.SetHasChecksum(true);
    }
