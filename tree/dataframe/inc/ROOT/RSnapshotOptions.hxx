@@ -26,8 +26,13 @@ struct RSnapshotOptions {
    RSnapshotOptions(RSnapshotOptions &&) = default;
    RSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel, bool lazy,
                     bool overwriteIfExists = false)
-      : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
-        fSplitLevel(splitLevel), fLazy(lazy), fOverwriteIfExists(overwriteIfExists)
+      : fMode(mode),
+        fCompressionAlgorithm(comprAlgo),
+        fCompressionLevel{comprLevel},
+        fAutoFlush(autoFlush),
+        fSplitLevel(splitLevel),
+        fLazy(lazy),
+        fOverwriteIfExists(overwriteIfExists)
    {
    }
    std::string fMode = "RECREATE";             ///< Mode of creation of output file
@@ -38,7 +43,7 @@ struct RSnapshotOptions {
    bool fLazy = false;                         ///< Do not start the event loop when Snapshot is called
    bool fOverwriteIfExists = false; ///< If fMode is "UPDATE", overwrite object in output file if it already exists
 };
-} // ns RDF
-} // ns ROOT
+} // namespace RDF
+} // namespace ROOT
 
 #endif
