@@ -584,24 +584,39 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
-   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
-      throw ROOT::Experimental::RException(
-         R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
+   auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
+   if (pageInfo.fHasChecksum) {
+      assert(pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero);
+      bytesOnStorage += kNBytesPageChecksum;
+      sealedPage.SetHasChecksum(true);
    }
-
-   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.SetBufferSize(bytesOnStorage);
    sealedPage.SetNElements(pageInfo.fNElements);
    if (!sealedPage.GetBuffer())
       return;
-   if (pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero) {
+
+   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+      memcpy(sealedPage.GetWritableBuffer(), RPage::GetPageZeroBuffer(), bytesOnStorage);
+      return;
+   }
+
+   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
+      const auto [position, offset] = DecodeDaosPagePosition(pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>());
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, position);
+      fDaosContainer->ReadSingleAkey(sealedPage.GetWritableBuffer(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
+                                     daosKey.fAkey);
+      const auto bufSize = offset + bytesOnStorage;
+      auto cageBuffer = std::make_unique<unsigned char []>(bufSize);
+      fDaosContainer->ReadSingleAkey(cageBuffer.get(), bufSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
+      memcpy(sealedPage.GetWritableBuffer(), cageBuffer.get() + offset, bytesOnStorage);
+   } else {
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, physicalColumnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(sealedPage.GetWritableBuffer(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
-   } else {
-      memcpy(sealedPage.GetWritableBuffer(), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
+
+   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
 }
 
 ROOT::Experimental::Internal::RPage
