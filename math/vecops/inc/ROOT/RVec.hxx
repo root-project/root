@@ -3055,9 +3055,28 @@ Common_t InvariantMasses_PxPyPzM(
 
       // Numerically stable computation of Invariant Masses
       const auto p1_sq = x1 * x1 + y1 * y1 + z1 * z1;
-      const auto m1_sq =  mass1 * mass1;
-
       const auto p2_sq = x2 * x2 + y2 * y2 + z2 * z2;
+
+      if (p1_sq <= 0 && p2_sq <= 0)
+         return (mass1 + mass2);
+      if (p1_sq <= 0) {
+         auto mm = mass1 + std::sqrt(mass2*mass2 + p2_sq);
+         auto m2 = mm*mm - p2_sq; 
+         if (m2 >= 0)
+            return std::sqrt( m2 );
+         else
+            return std::sqrt( -m2 );
+      }
+      if (p2_sq <= 0) {
+         auto mm = mass2 + std::sqrt(mass1*mass1 + p1_sq);
+         auto m2 = mm*mm - p1_sq; 
+         if (m2 >= 0)
+            return std::sqrt( m2 );
+         else
+            return std::sqrt( -m2 );
+      }
+
+      const auto m1_sq =  mass1 * mass1;
       const auto m2_sq =  mass2 * mass2;
 
       const auto r1 = m1_sq / p1_sq;
@@ -3075,7 +3094,7 @@ Common_t InvariantMasses_PxPyPzM(
       const auto z = 2 * std::sqrt(p1_sq * p2_sq);
 
    // Return invariant mass with (+, -, -, -) metric
-   return m1_sq + m2_sq + y * z;
+   return std::sqrt(m1_sq + m2_sq + y * z);
 }
 
 /// Return the invariant mass of two particles given the collections of the quantities
