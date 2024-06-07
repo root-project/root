@@ -726,8 +726,8 @@ std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xl
 
   // look for variable in the DataHist, and if found, return the binning
   std::string varName = dynamic_cast<TObject*>(lvarg)->GetName();
-  auto& vars = _dataSet->getVariables();
-  auto& binnings = _dataSet->getBinnings();
+  auto& vars = _dataSet.getVariables();
+  auto& binnings = _dataSet.getBinnings();
   for(size_t i=0; i < vars.size(); i++ ) {
     if(varName == vars.at(i)->GetName()) {
       // found the variable, return its binning
