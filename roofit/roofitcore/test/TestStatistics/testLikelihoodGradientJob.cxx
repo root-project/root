@@ -81,16 +81,27 @@ int main(int argc, char **argv)
    return RUN_ALL_TESTS();
 }
 
-class LikelihoodGradientJobTest : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t, bool>> {};
+class LikelihoodGradientJobTest : public ::testing::TestWithParam<std::tuple<std::size_t, std::size_t, bool>> {
+   void SetUp() override
+   {
+      NWorkers = std::get<0>(GetParam());
+      seed = std::get<1>(GetParam());
+      offsetting = std::get<2>(GetParam());
+
+      RooRandom::randomGenerator()->SetSeed(seed);
+   }
+
+   void TearDown() override { RooMinimizer::cleanup(); }
+
+protected:
+   std::size_t NWorkers = 0;
+   std::size_t seed = 0;
+   bool offsetting = false;
+};
 
 TEST_P(LikelihoodGradientJobTest, Gaussian1D)
 {
    // do a minimization, but now using GradMinimizer and its MP version
-
-   // parameters
-   std::size_t NWorkers = std::get<0>(GetParam());
-   std::size_t seed = std::get<1>(GetParam());
-   bool offsetting = std::get<2>(GetParam());
 
    // in the 1D Gaussian tests, we suppress the positive definiteness
    // warnings coming from Minuit2 with offsetting; they are errors both
@@ -99,8 +110,6 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1D)
    if (offsetting) {
       checkDiag.requiredDiag(kError, "Minuit2", "VariableMetricBuilder Initial matrix not pos.def.");
    }
-
-   RooRandom::randomGenerator()->SetSeed(seed);
 
    RooWorkspace w = RooWorkspace();
 
@@ -208,14 +217,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
 {
    // do a minimization, but now using GradMinimizer and its MP version
 
-   // parameters
-   std::size_t NWorkers = std::get<0>(GetParam());
-   std::size_t seed = std::get<1>(GetParam());
-   bool offsetting = std::get<2>(GetParam());
-
    unsigned int N = 4;
-
-   RooRandom::randomGenerator()->SetSeed(seed);
 
    RooWorkspace w = RooWorkspace();
 
@@ -500,11 +502,6 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
 {
    // do a minimization, but now using GradMinimizer and its MP version
 
-   // parameters
-   std::size_t NWorkers = std::get<0>(GetParam());
-   std::size_t seed = std::get<1>(GetParam());
-   bool offsetting = std::get<2>(GetParam());
-
    // in the 1D Gaussian tests, we suppress the positive definiteness
    // warnings coming from Minuit2 with offsetting; they are errors both
    // in serial RooFit and in the MultiProcess-enabled back-end
@@ -512,8 +509,6 @@ TEST_P(LikelihoodGradientJobTest, Gaussian1DAlsoWithLikelihoodJob)
    if (offsetting) {
       checkDiag.requiredDiag(kError, "Minuit2", "VariableMetricBuilder Initial matrix not pos.def.");
    }
-
-   RooRandom::randomGenerator()->SetSeed(seed);
 
    RooWorkspace w = RooWorkspace();
 
