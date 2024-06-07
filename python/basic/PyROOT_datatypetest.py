@@ -56,8 +56,8 @@ class TestClassDATATYPES:
     def test02_instance_data_read_access(self):
         """Read access to instance public data and verify values"""
 
-        import cppyy
-        CppyyTestData = cppyy.gbl.CppyyTestData
+        import ROOT
+        CppyyTestData = ROOT.CppyyTestData
 
         c = CppyyTestData()
         assert isinstance(c, CppyyTestData)
@@ -152,8 +152,8 @@ class TestClassDATATYPES:
     def test03_instance_data_write_access(self):
         """Write access to instance public data and verify values"""
 
-        import cppyy
-        CppyyTestData = cppyy.gbl.CppyyTestData
+        import ROOT
+        CppyyTestData = ROOT.CppyyTestData
 
         c = CppyyTestData()
         assert isinstance(c, CppyyTestData)
@@ -334,8 +334,8 @@ class TestClassDATATYPES:
     def test05_class_read_access(self):
         """Read access to class public data"""
 
-        import cppyy
-        CppyyTestData = cppyy.gbl.CppyyTestData
+        import ROOT
+        CppyyTestData = ROOT.CppyyTestData
 
         c = CppyyTestData()
         assert isinstance(c, CppyyTestData)
@@ -394,8 +394,8 @@ class TestClassDATATYPES:
     def test06_class_data_write_access(self):
         """Write access to class public data"""
 
-        import cppyy
-        CppyyTestData = cppyy.gbl.CppyyTestData
+        import ROOT
+        CppyyTestData = ROOT.CppyyTestData
 
         c = CppyyTestData()
         assert isinstance(c, CppyyTestData)
@@ -525,8 +525,8 @@ class TestClassDATATYPES:
         """Access to a global builtin types"""
 
         # basic test with cross-check
-        import cppyy
-        gbl = cppyy.gbl
+        import ROOT
+        gbl = ROOT
 
         assert gbl.g_int == gbl.get_global_int()
 
