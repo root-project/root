@@ -36,7 +36,7 @@ struct CustomStruct {
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;
-   std::byte b{0};
+   std::byte b{(std::byte)0};
 
    bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
