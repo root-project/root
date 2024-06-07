@@ -191,16 +191,13 @@ def plot(sig, bkg, data, x_label, filename):
     events overlay the measured data.
     """
     # Canvas and general style options
-    ROOT.gStyle.SetOptStat(0)
     ROOT.gStyle.SetTextFont(42)
     d = ROOT.TCanvas("", "", 800, 700)
-    # Make sure the canvas stays in the list of canvases after the macro execution
-    ROOT.SetOwnership(d, False)
     d.SetLeftMargin(0.15)
 
     # Get signal and background histograms and stack them to show Higgs signal
     # on top of the background process
-    h_bkg = bkg
+    h_bkg = bkg.Clone()
     h_cmb = sig.Clone()
 
     h_cmb.Add(h_bkg)
@@ -212,13 +209,15 @@ def plot(sig, bkg, data, x_label, filename):
     h_cmb.SetLineColor(ROOT.kRed)
     h_cmb.SetLineWidth(2)
     h_cmb.SetMaximum(18)
+    h_cmb.SetStats(False)
+
     h_bkg.SetLineWidth(2)
     h_bkg.SetFillStyle(1001)
     h_bkg.SetLineColor(ROOT.kBlack)
     h_bkg.SetFillColor(ROOT.kAzure - 9)
 
     # Get histogram of data points
-    h_data = data
+    h_data = data.Clone()
     h_data.SetLineWidth(1)
     h_data.SetMarkerStyle(20)
     h_data.SetMarkerSize(1.0)
@@ -226,16 +225,16 @@ def plot(sig, bkg, data, x_label, filename):
     h_data.SetLineColor(ROOT.kBlack)
 
     # Draw histograms
-    h_cmb.DrawCopy("HIST")
-    h_bkg.DrawCopy("HIST SAME")
-    h_data.DrawCopy("PE1 SAME")
+    h_cmb.Draw("HIST")
+    h_bkg.Draw("HIST SAME")
+    h_data.Draw("PE1 SAME")
 
     # Add legend
     legend = ROOT.TLegend(0.62, 0.70, 0.82, 0.88)
     legend.SetFillColor(0)
     legend.SetBorderSize(0)
     legend.SetTextSize(0.03)
-    legend.AddEntry(h_data, "Data", "PE1")
+    legend.AddEntry(h_data, "Data", "pe")
     legend.AddEntry(h_bkg, "ZZ", "f")
     legend.AddEntry(h_cmb, "m_{H} = 125 GeV", "f")
     legend.Draw()
@@ -250,6 +249,13 @@ def plot(sig, bkg, data, x_label, filename):
 
     # Save plot
     d.SaveAs(filename)
+
+    # Make sure canvas and objects remains existing after the macro execution
+    ROOT.SetOwnership(d, False)
+    ROOT.SetOwnership(h_cmb, False)
+    ROOT.SetOwnership(h_data, False)
+    ROOT.SetOwnership(h_bkg, False)
+    ROOT.SetOwnership(legend, False)
 
 
 def df103_NanoAODHiggsAnalysis():
