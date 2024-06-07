@@ -35,7 +35,45 @@
 using namespace CPyCppyy;
 
 namespace PyROOT {
+
 PyObject *gRootModule = 0;
+
+PyObject *RegisterConverters(PyObject * /*self*/, PyObject * /*args*/)
+{
+   CPyCppyy::RegisterConverterAlias("Long64_t", "long long");
+   CPyCppyy::RegisterConverterAlias("Long64_t ptr", "long long ptr");
+   CPyCppyy::RegisterConverterAlias("Long64_t&", "long long&");
+   CPyCppyy::RegisterConverterAlias("const Long64_t&", "const long long&");
+   CPyCppyy::RegisterConverterAlias("ULong64_t", "unsigned long long");
+   CPyCppyy::RegisterConverterAlias("ULong64_t ptr", "unsigned long long ptr");
+   CPyCppyy::RegisterConverterAlias("ULong64_t&", "unsigned long long&");
+   CPyCppyy::RegisterConverterAlias("const ULong64_t&", "const unsigned long long&");
+   CPyCppyy::RegisterConverterAlias("Float16_t", "float");
+   CPyCppyy::RegisterConverterAlias("const Float16_t&", "const float&");
+   CPyCppyy::RegisterConverterAlias("Double32_t", "double");
+   CPyCppyy::RegisterConverterAlias("Double32_t&", "double&");
+   CPyCppyy::RegisterConverterAlias("const Double32_t&", "const double&");
+
+   Py_RETURN_NONE;
+}
+
+PyObject *RegisterExecutors(PyObject * /*self*/, PyObject * /*args*/)
+{
+   CPyCppyy::RegisterExecutorAlias("const Double32_t&", "const double&");
+   CPyCppyy::RegisterExecutorAlias("Long64_t", "long long");
+   CPyCppyy::RegisterExecutorAlias("Long64_t&", "long long&");
+   CPyCppyy::RegisterExecutorAlias("Long64_t ptr", "long long ptr");
+   CPyCppyy::RegisterExecutorAlias("ULong64_t", "unsigned long long");
+   CPyCppyy::RegisterExecutorAlias("ULong64_t&", "unsigned long long&");
+   CPyCppyy::RegisterExecutorAlias("ULong64_t ptr", "unsigned long long ptr");
+   CPyCppyy::RegisterExecutorAlias("Float16_t", "float");
+   CPyCppyy::RegisterExecutorAlias("Float16_t&", "float&");
+   CPyCppyy::RegisterExecutorAlias("Double32_t", "double");
+   CPyCppyy::RegisterExecutorAlias("Double32_t&", "double&");
+
+   Py_RETURN_NONE;
+}
+
 }
 
 // Methods offered by the interface
@@ -78,6 +116,10 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Get stderr JupyROOTExecutorHandler"},
    {(char *)"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
     (char *)"Destruct JupyROOTExecutorHandler"},
+   {(char *)"RegisterConverters", (PyCFunction)PyROOT::RegisterConverters, METH_NOARGS,
+    (char *)"Registor custom PyROOT converters"},
+   {(char *)"RegisterExecutors", (PyCFunction)PyROOT::RegisterExecutors, METH_NOARGS,
+    (char *)"Register custom PyROOT executors"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
