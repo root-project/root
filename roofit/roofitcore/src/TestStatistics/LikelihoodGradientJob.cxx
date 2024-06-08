@@ -128,12 +128,13 @@ void LikelihoodGradientJob::update_workers_state()
    if (shared_offset_.offsets() != offsets_previous_) {
       zmq::message_t offsets_message(shared_offset_.offsets().begin(), shared_offset_.offsets().end());
       get_manager()->messenger().publish_from_master_to_workers(
-         id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message), std::move(minuit_internal_x_message),
-         std::move(offsets_message));
+         id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message),
+         std::move(minuit_internal_x_message), std::move(offsets_message));
       offsets_previous_ = shared_offset_.offsets();
    } else {
-      get_manager()->messenger().publish_from_master_to_workers(
-         id_, state_id_, isCalculating_, maxFCN, fcnOffset, std::move(gradient_message), std::move(minuit_internal_x_message));
+      get_manager()->messenger().publish_from_master_to_workers(id_, state_id_, isCalculating_, maxFCN, fcnOffset,
+                                                                std::move(gradient_message),
+                                                                std::move(minuit_internal_x_message));
    }
 }
 
