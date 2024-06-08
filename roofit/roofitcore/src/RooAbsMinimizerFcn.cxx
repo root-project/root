@@ -76,10 +76,17 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *conte
 }
 
 RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
-   : _context(other._context), _maxFCN(other._maxFCN), _funcOffset(other._funcOffset), _numBadNLL(other._numBadNLL),
-     _evalCounter(other._evalCounter), _nDim(other._nDim), _optConst(other._optConst),
-     _floatParamList(new RooArgList(*other._floatParamList)), _constParamList(new RooArgList(*other._constParamList)),
-     _initFloatParamList(std::make_unique<RooArgList>()), _initConstParamList(std::make_unique<RooArgList>()),
+   : _context(other._context),
+     _maxFCN(other._maxFCN),
+     _funcOffset(other._funcOffset),
+     _numBadNLL(other._numBadNLL),
+     _evalCounter(other._evalCounter),
+     _nDim(other._nDim),
+     _optConst(other._optConst),
+     _floatParamList(new RooArgList(*other._floatParamList)),
+     _constParamList(new RooArgList(*other._constParamList)),
+     _initFloatParamList(std::make_unique<RooArgList>()),
+     _initConstParamList(std::make_unique<RooArgList>()),
      _logfile(other._logfile)
 {
    other._initFloatParamList->snapshot(*_initFloatParamList, false);
