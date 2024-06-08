@@ -307,7 +307,8 @@ void RooMinimizer::determineStatus(bool fitterReturnValue)
 
    // RooFit-based additional failed state information:
    if (evalCounter() <= _fcn->GetNumInvalidNLL()) {
-      coutE(Minimization) << "RooMinimizer: all function calls during minimization gave invalid NLL values!" << std::endl;
+      coutE(Minimization) << "RooMinimizer: all function calls during minimization gave invalid NLL values!"
+                          << std::endl;
    }
 }
 
@@ -770,8 +771,7 @@ void RooMinimizer::addParamsToProcessTimer()
    }
    RooFit::MultiProcess::ProcessTimer::add_metadata(parameter_names);
 #else
-   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing "
-                       << "is not enabled." << std::endl;
+   coutI(Minimization) << "Not adding parameters to processtimer because multiprocessing is not enabled." << std::endl;
 #endif
 }
 

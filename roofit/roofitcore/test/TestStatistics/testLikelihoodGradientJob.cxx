@@ -602,8 +602,10 @@ class LikelihoodGradientJobErrorTest
 
       // we want to split only over components so we can test component-offsets precisely
       // (event-offsets give more variation)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = 1; // just one events task (i.e. don't split over events)
-      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = 1000000; // assuming components < 1000000: each component = 1 separate task
+      RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
+         1; // just one events task (i.e. don't split over events)
+      RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+         1000000; // assuming components < 1000000: each component = 1 separate task
    }
 
    void TearDown() override
@@ -657,7 +659,7 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    m0.setStrategy(0);
    m0.setPrintLevel(-1);
    m0.setVerbose(false);
-//   m0.setPrintEvalErrors(200);
+   //   m0.setPrintEvalErrors(200);
 
    m0.minimize("Minuit2", "migrad");
 
@@ -675,7 +677,7 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
    cfg.enableParallelDescent = parallelLikelihood;
-//   cfg.printEvalErrors = 200;
+   //   cfg.printEvalErrors = 200;
    RooMinimizer m1(*likelihoodAbsReal, cfg);
    m1.setStrategy(0);
    m1.setPrintLevel(-1);
@@ -722,7 +724,7 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    RooMinimizer minim(*nll);
    minim.setPrintLevel(-1);
    minim.setVerbose(false);
-//   minim.setPrintEvalErrors(200);
+   //   minim.setPrintEvalErrors(200);
    minim.migrad();
    minim.hesse();
    std::unique_ptr<RooFitResult> fitResult{minim.save()};
@@ -738,7 +740,7 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
    cfg.enableParallelDescent = parallelLikelihood;
-//   cfg.printEvalErrors = 200;
+   //   cfg.printEvalErrors = 200;
 
    RooMinimizer minim_mp(*nll_mp, cfg);
    minim_mp.setPrintLevel(-1);
@@ -891,7 +893,7 @@ TEST_P(LikelihoodGradientJobBinnedErrorTest, TriggerMuLEZero)
    RooMinimizer::Config cfg;
    cfg.parallelize = NWorkers;
    cfg.enableParallelDescent = parallelLikelihood;
-//   cfg.printEvalErrors = 200;
+   //   cfg.printEvalErrors = 200;
    RooMinimizer m1(*likelihoodAbsReal, cfg);
 
    double nll1BeforeFit = likelihoodAbsReal->getVal();
@@ -939,36 +941,35 @@ INSTANTIATE_TEST_SUITE_P(LikelihoodGradientJob, LikelihoodGradientJobBinnedError
 
 TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
 {
-   const char* fname = "/Users/pbos/projects/roofit-ssi/benchmark_roofit/data/workspaces/HZy_split.root";
-   const char* dataset_name = "combData";
+   const char *fname = "/Users/pbos/projects/roofit-ssi/benchmark_roofit/data/workspaces/HZy_split.root";
+   const char *dataset_name = "combData";
 
    TFile *f = TFile::Open(fname);
 
-   RooWorkspace* w = (RooWorkspace*)f->Get("combWS");
+   RooWorkspace *w = (RooWorkspace *)f->Get("combWS");
 
    // Fixes for known features, binned likelihood optimization
    for (RooAbsArg *arg : w->components()) {
       if (arg->IsA() == RooRealSumPdf::Class()) {
          arg->setAttribute("BinnedLikelihood");
-         std::cout << "Activating binned likelihood attribute for "
-                   << arg->GetName() << std::endl;
+         std::cout << "Activating binned likelihood attribute for " << arg->GetName() << std::endl;
       }
    }
 
-   RooAbsData* data = w->data(dataset_name);
+   RooAbsData *data = w->data(dataset_name);
    auto mc = dynamic_cast<RooFit::ModelConfig *>(w->genobj("ModelConfig"));
    auto global_observables = mc->GetGlobalObservables();
    auto nuisance_parameters = mc->GetNuisanceParameters();
    auto pdf = w->pdf(mc->GetPdf()->GetName());
 
-   std::unique_ptr<RooAbsReal> nll_modularL{pdf->createNLL(
-      *data, RooFit::Constrain(*nuisance_parameters),
-      RooFit::GlobalObservables(*global_observables), RooFit::ModularL(true))};
+   std::unique_ptr<RooAbsReal> nll_modularL{pdf->createNLL(*data, RooFit::Constrain(*nuisance_parameters),
+                                                           RooFit::GlobalObservables(*global_observables),
+                                                           RooFit::ModularL(true))};
 
-   std::unique_ptr<RooAbsReal> nll_vanilla{pdf->createNLL(
-      *data, RooFit::Constrain(*nuisance_parameters),
-      RooFit::GlobalObservables(*global_observables), RooFit::EvalBackend::Legacy()
-      /*, RooFit::Offset(true)*/)};
+   std::unique_ptr<RooAbsReal> nll_vanilla{pdf->createNLL(*data, RooFit::Constrain(*nuisance_parameters),
+                                                          RooFit::GlobalObservables(*global_observables),
+                                                          RooFit::EvalBackend::Legacy()
+                                                          /*, RooFit::Offset(true)*/)};
 
    double vanilla_val = nll_vanilla->getVal();
    double modular_val = nll_modularL->getVal();
@@ -979,8 +980,10 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
    // set up minimizers
    RooMinimizer m_vanilla(*nll_vanilla);
    // we want to split only over components so we can test component-offsets
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = 1; // just one events task (i.e. don't split over events)
-   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = 1000000; // assuming components < 1000000: each component = 1 separate task
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
+      1; // just one events task (i.e. don't split over events)
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+      1000000; // assuming components < 1000000: each component = 1 separate task
    RooMinimizer::Config cfg;
    cfg.parallelize = 1;
    cfg.enableParallelDescent = false;
@@ -989,16 +992,20 @@ TEST(MinuitFcnGrad, DISABLED_CompareToRooMinimizerFcn)
 
    // now use these minimizers to build the corresponding external RooAbsMinimizerFcns
    auto nll_real = dynamic_cast<RooFit::TestStatistics::RooRealL *>(nll_modularL.get());
-   RooFit::TestStatistics::MinuitFcnGrad modularL_fcn(nll_real->getRooAbsL(), &m_modularL,
-                                                      m_modularL.fitter()->Config().ParamsSettings(),
-                                                      cfg.enableParallelDescent ? RooFit::TestStatistics::LikelihoodMode::multiprocess : RooFit::TestStatistics::LikelihoodMode::serial,
-                                                      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
+   RooFit::TestStatistics::MinuitFcnGrad modularL_fcn(
+      nll_real->getRooAbsL(), &m_modularL, m_modularL.fitter()->Config().ParamsSettings(),
+      cfg.enableParallelDescent ? RooFit::TestStatistics::LikelihoodMode::multiprocess
+                                : RooFit::TestStatistics::LikelihoodMode::serial,
+      RooFit::TestStatistics::LikelihoodGradientMode::multiprocess);
    RooMinimizerFcn vanilla_fcn(nll_vanilla.get(), &m_vanilla);
 
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()), modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
+             modularL_fcn(modularL_fcn.getParameterValues().data()));
    // let's also check with absolutely certain same parameter values, both of them
-   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()), modularL_fcn(vanilla_fcn.getParameterValues().data()));
-   EXPECT_EQ(vanilla_fcn(modularL_fcn.getParameterValues().data()), modularL_fcn(modularL_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(vanilla_fcn.getParameterValues().data()),
+             modularL_fcn(vanilla_fcn.getParameterValues().data()));
+   EXPECT_EQ(vanilla_fcn(modularL_fcn.getParameterValues().data()),
+             modularL_fcn(modularL_fcn.getParameterValues().data()));
 
    // reset static variables to automatic
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
