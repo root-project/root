@@ -124,6 +124,10 @@ else()
   if(osid MATCHES ubuntu)
     string(REGEX REPLACE "([0-9]+[.][0-9]+)[.].*" "\\1" osvers "${osvers}")
   endif()
+  # "debian gnu/linux12" => "debian12"
+  if(osid MATCHES debian)
+    string(REPLACE " gnu/linux" "" osid "${osid}")
+  endif()
   set(OS_NAME_VERSION Linux-${osid}${osvers}-${arch})
 endif()
 
