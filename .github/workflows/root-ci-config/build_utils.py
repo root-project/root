@@ -5,6 +5,8 @@ import os
 import subprocess
 import sys
 import textwrap
+import datetime
+import time
 from functools import wraps
 from http import HTTPStatus
 from typing import Callable, Dict
@@ -13,6 +15,12 @@ from collections import namedtuple
 from openstack.connection import Connection
 from requests import get
 
+class SimpleTimer:
+    def __init__(self):
+        self._start_time = time.perf_counter()
+    def get_elapsed_time(self):
+        elapsed_time = time.perf_counter() - self._start_time
+        return str(datetime.timedelta(seconds = elapsed_time))[:-5]
 
 def github_log_group(title: str):
     """ decorator that places function's stdout/stderr output in a
@@ -22,12 +30,15 @@ def github_log_group(title: str):
         def wrapper(*args, **kwargs):
             print(f"\n::group::{title}\n")
 
+            timer = SimpleTimer()
+
             try:
                 result = func(*args, **kwargs)
             except Exception as exc:
                 print("\n::endgroup::\n")
                 raise exc
 
+            print(f'\n** Elapsed time for group "{title}" {timer.get_elapsed_time()}\n')
             print("\n::endgroup::\n")
 
             return result
