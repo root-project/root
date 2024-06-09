@@ -696,6 +696,54 @@ inline double bernsteinIntegral(double xlo, double xhi, double xmin, double xmax
    return norm * (xmax - xmin);
 }
 
+inline double smoothStepFunc(double x, double smoothRegion)
+{
+   if (std::abs(x) >= smoothRegion)
+      return x > 0 ? +1 : -1;
+   double xnorm = x / smoothRegion;
+   double xnorm2 = xnorm * xnorm;
+   return 0.125 * xnorm * (xnorm2 * (3. * xnorm2 - 10.) + 15);
+}
+
+template <int NBins>
+double
+fastVerticalInterpHistPdf2(int binIdx, int nCoefs, double const *coefs, double const *nominal, double const *binWidth,
+                           double const *morphsSum, double const *morphsDiff, double smoothRegion)
+{
+   double out[NBins];
+
+   for (int iBin = 0; iBin < NBins; ++iBin) {
+      out[iBin] = nominal[iBin];
+   }
+
+   double normSum = 0.0;
+
+   for (int iBin = 0; iBin < NBins; ++iBin) {
+      // apply all morphs one by one
+      for (int iCoef = 0; iCoef < nCoefs; ++iCoef) {
+         double const *sum = morphsSum + iCoef * NBins;
+         double const *diff = morphsDiff + iCoef * NBins;
+         double x = coefs[iCoef];
+         double a = 0.5 * x;
+         double b = smoothStepFunc(x, smoothRegion);
+
+         out[iBin] += a * (diff[iBin] + b * sum[iBin]);
+      }
+
+      out[iBin] = std::max(1e-9, out[iBin]);
+      normSum += out[iBin] * binWidth[iBin];
+   }
+
+   if (normSum > 0.0) {
+      double normSumInv = 1. / normSum;
+      for (int iBin = 0; iBin < NBins; ++iBin) {
+         out[iBin] *= normSumInv;
+      }
+   }
+
+   return out[binIdx];
+}
+
 } // namespace MathFuncs
 
 } // namespace Detail
