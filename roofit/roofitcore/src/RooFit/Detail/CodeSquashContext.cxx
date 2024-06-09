@@ -220,6 +220,10 @@ void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueT
 /// @return Name of the array that stores the input list in the squashed code.
 std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 {
+   if (in.empty()) {
+      return "nullptr";
+   }
+
    auto it = listNames.find(in.uniqueId().value());
    if (it != listNames.end())
       return it->second;
