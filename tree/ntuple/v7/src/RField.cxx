@@ -1238,7 +1238,7 @@ ROOT::Experimental::RCardinalityField::As64Bit() const
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<char>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kChar}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kChar}}, {});
    return representations;
 }
 
@@ -1263,7 +1263,7 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::byte>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kByte}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kByte}}, {});
    return representations;
 }
 
@@ -1394,8 +1394,12 @@ void ROOT::Experimental::RField<float>::SetHalfPrecision()
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<double>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitReal64}, {EColumnType::kReal64}, {EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
+   static RColumnRepresentations representations({{EColumnType::kSplitReal64},
+                                                  {EColumnType::kReal64},
+                                                  {EColumnType::kSplitReal32},
+                                                  {EColumnType::kReal32},
+                                                  {EColumnType::kReal16}},
+                                                 {});
    return representations;
 }
 
@@ -3347,7 +3351,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
 const ROOT::Experimental::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVariantField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSwitch}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSwitch}}, {});
    return representations;
 }
 
