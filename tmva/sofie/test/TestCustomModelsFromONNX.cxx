@@ -36,6 +36,9 @@
 #include "Shape_FromONNX.hxx"
 #include "input_models/references/Shape.ref.hxx"
 
+#include "Constant_FromONNX.hxx"
+#include "input_models/references/Constant.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -500,6 +503,30 @@ TEST(ONNX, Elu)
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
    }
+   
+TEST(ONNX, Constant)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input (none for Constant Op)
+   // std::vector<float> input({
+   //    1,2,3,4
+   // });
+
+   TMVA_SOFIE_Constant::Session s("Constant_FromONNX.dat");
+
+   auto output = s.infer();
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Constant_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Constant_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
 
    TEST(ONNX, EyeLike)
    {
@@ -2694,4 +2721,3 @@ TEST(ONNX, RangeInt) {
       EXPECT_EQ(output[i], correct[i]);
    }
 }
-
