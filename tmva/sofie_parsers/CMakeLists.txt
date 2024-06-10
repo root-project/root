@@ -60,6 +60,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseMatMul.cxx
     src/ParseComparision.cxx
     src/ParseEyeLike.cxx
+    src/ParseConstant.cxx
     ${PROTO_SRCS}
   LIBRARIES PUBLIC
     protobuf::libprotobuf
