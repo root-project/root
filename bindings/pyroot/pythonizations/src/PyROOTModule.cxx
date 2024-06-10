@@ -48,8 +48,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Cast the void* returned by TClass::DynamicCast to the right type"},
    {(char *)"AddTObjectEqNePyz", (PyCFunction)PyROOT::AddTObjectEqNePyz, METH_VARARGS,
     (char *)"Add equality and inequality comparison operators to TObject"},
-   {(char *)"SetBranchAddressPyz", (PyCFunction)PyROOT::SetBranchAddressPyz, METH_VARARGS,
-    (char *)"Fully enable the use of TTree::SetBranchAddress from Python"},
    {(char *)"BranchPyz", (PyCFunction)PyROOT::BranchPyz, METH_VARARGS,
     (char *)"Fully enable the use of TTree::Branch from Python"},
    {(char *)"AddPrettyPrintingPyz", (PyCFunction)PyROOT::AddPrettyPrintingPyz, METH_VARARGS,

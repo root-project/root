@@ -22,7 +22,6 @@ PyObject *AddPrettyPrintingPyz(PyObject *self, PyObject *args);
 
 PyObject *GetBranchAttr(PyObject *self, PyObject *args);
 PyObject *BranchPyz(PyObject *self, PyObject *args);
-PyObject *SetBranchAddressPyz(PyObject *self, PyObject *args);
 
 PyObject *AddTClassDynamicCastPyz(PyObject *self, PyObject *args);
 
