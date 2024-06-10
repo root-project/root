@@ -35,6 +35,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Pool.hxx
    TMVA/ROperator_Concat.hxx
    TMVA/ROperator_Identity.hxx
+   TMVA/ROperator_Constant.hxx
    TMVA/ROperator_Softmax.hxx
    TMVA/ROperator_Reduce.hxx
    TMVA/ROperator_Shape.hxx
