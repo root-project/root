@@ -92,29 +92,52 @@ TEST(Packing, Bitfield)
 
 TEST(Packing, HalfPrecisionFloat)
 {
-   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element;
-   element.Pack(nullptr, nullptr, 0);
-   element.Unpack(nullptr, nullptr, 0);
+   ROOT::Experimental::Internal::RColumnElement<float, ROOT::Experimental::EColumnType::kReal16> element32_16;
+   ROOT::Experimental::Internal::RColumnElement<double, ROOT::Experimental::EColumnType::kReal16> element64_16;
+   element32_16.Pack(nullptr, nullptr, 0);
+   element32_16.Unpack(nullptr, nullptr, 0);
+   element64_16.Pack(nullptr, nullptr, 0);
+   element64_16.Unpack(nullptr, nullptr, 0);
 
-   float in = 3.14;
+   float fin = 3.14;
    unsigned char buf[2] = {0, 0};
-   element.Pack(buf, &in, 1);
+   element32_16.Pack(buf, &fin, 1);
    // Expected bit representation: 0b01000010 01001000
    EXPECT_EQ(0x48, buf[0]);
    EXPECT_EQ(0x42, buf[1]);
-   float out = 0.;
-   element.Unpack(&out, buf, 1);
-   EXPECT_FLOAT_EQ(3.140625, out);
+   float fout = 0.;
+   element32_16.Unpack(&fout, buf, 1);
+   EXPECT_FLOAT_EQ(3.140625, fout);
 
-   float in4[] = {0.1, 0.2, 0.3, 0.4};
-   std::uint64_t b4;
-   element.Pack(&b4, &in4, 4);
-   float out4[] = {0., 0., 0., 0.};
-   element.Unpack(&out4, &b4, 4);
-   EXPECT_FLOAT_EQ(0.099975586, out4[0]);
-   EXPECT_FLOAT_EQ(0.199951171, out4[1]);
-   EXPECT_FLOAT_EQ(0.300048828, out4[2]);
-   EXPECT_FLOAT_EQ(0.399902343, out4[3]);
+   buf[0] = buf[1] = 0;
+   double din = 3.14;
+   element64_16.Pack(buf, &din, 1);
+   // Expected bit representation: 0b01000010 01001000
+   EXPECT_EQ(0x48, buf[0]);
+   EXPECT_EQ(0x42, buf[1]);
+   double dout = 0.;
+   element64_16.Unpack(&dout, buf, 1);
+   EXPECT_FLOAT_EQ(3.140625, dout);
+
+   float fin4[] = {0.1, 0.2, 0.3, 0.4};
+   std::uint64_t b4 = 0;
+   element32_16.Pack(&b4, &fin4, 4);
+   float fout4[] = {0., 0., 0., 0.};
+   element32_16.Unpack(&fout4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, fout4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, fout4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, fout4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, fout4[3]);
+
+   double din4[] = {0.1, 0.2, 0.3, 0.4};
+   b4 = 0;
+   element64_16.Pack(&b4, &din4, 4);
+   double dout4[] = {0., 0., 0., 0.};
+   element64_16.Unpack(&dout4, &b4, 4);
+   EXPECT_FLOAT_EQ(0.099975586, dout4[0]);
+   EXPECT_FLOAT_EQ(0.199951171, dout4[1]);
+   EXPECT_FLOAT_EQ(0.300048828, dout4[2]);
+   EXPECT_FLOAT_EQ(0.399902343, dout4[3]);
 }
 
 TEST(Packing, RColumnSwitch)
