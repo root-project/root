@@ -648,6 +648,39 @@ public:
    }
 };
 
+template <>
+class RColumnElement<double, EColumnType::kReal16> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(double);
+   static constexpr std::size_t kBitsOnStorage = 16;
+   RColumnElement() : RColumnElementBase(kSize, kBitsOnStorage) {}
+   bool IsMappable() const final { return kIsMappable; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+      double *doubleArray = reinterpret_cast<double *>(src);
+      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(dst);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         uint16Array[i] = FloatToHalf(static_cast<float>(doubleArray[i]));
+         ByteSwapIfNecessary(uint16Array[i]);
+      }
+   }
+
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+      double *doubleArray = reinterpret_cast<double *>(dst);
+      std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
+
+      for (std::size_t i = 0; i < count; ++i) {
+         std::uint16_t val = uint16Array[i];
+         ByteSwapIfNecessary(val);
+         doubleArray[i] = static_cast<double>(HalfToFloat(val));
+      }
+   }
+};
+
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
