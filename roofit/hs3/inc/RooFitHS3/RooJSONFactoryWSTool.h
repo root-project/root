@@ -181,11 +181,7 @@ public:
 
    void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
 
-   RooFit::Detail::JSONNode &createAdHoc(const std::string &toplevel, const std::string &name);
-   RooAbsReal *importTransformed(const std::string &name, const std::string &tag, const std::string &operation_name,
-                                 const std::string &formula);
-   std::string exportTransformed(const RooAbsReal *original, const std::string &tag, const std::string &operation_name,
-                                 const std::string &formula);
+   std::string exportTransformed(const RooAbsReal *original, const std::string &suffix, const std::string &formula);
 
    void setAttribute(const std::string &obj, const std::string &attrib);
    bool hasAttribute(const std::string &obj, const std::string &attrib);

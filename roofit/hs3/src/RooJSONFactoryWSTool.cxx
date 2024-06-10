@@ -956,55 +956,15 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
-RooAbsReal *RooJSONFactoryWSTool::importTransformed(const std::string &name, const std::string &tag,
-                                                    const std::string &operation_name, const std::string &formula)
+std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &suffix,
+                                                    const std::string &formula)
 {
-   RooAbsReal *transformed = nullptr;
-   const std::string tagname = "autogen_transform_" + tag;
-   if (this->hasAttribute(name, tagname)) {
-      const std::string &original = this->getStringAttribute(name, tagname + "_original");
-      transformed = this->workspace()->function(original);
-      if (transformed)
-         return transformed;
-   }
-   const std::string newname = name + "_" + tag + "_" + operation_name;
-   transformed = this->workspace()->function(newname);
-   if (!transformed) {
-      auto *original = this->workspace()->arg(name);
-      if (!original) {
-         error("unable to import transformed of '" + name + "', original not present.");
-      }
-      RooArgSet components{*original};
-      const std::string &expression = TString::Format(formula.c_str(), name.c_str()).Data();
-      transformed = &wsEmplace<RooFormulaVar>(newname, expression.c_str(), components);
-      transformed->setAttribute(tagname.c_str());
-   }
-   return transformed;
-}
-
-std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &tag,
-                                                    const std::string &operation_name, const std::string &formula)
-{
-   const std::string tagname = "autogen_transform_" + tag;
-   if (original->getAttribute(tagname.c_str())) {
-      if (const RooFormulaVar *trafo = dynamic_cast<const RooFormulaVar *>(original)) {
-         return trafo->dependents().first()->GetName();
-      }
-   }
-
-   std::string newname = std::string(original->GetName()) + "_" + tag + "_" + operation_name;
-   auto &trafo_node = this->createAdHoc("functions", newname);
+   std::string newname = std::string(original->GetName()) + suffix;
+   RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
    trafo_node["type"] << "generic_function";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
-   this->setAttribute(newname, tagname);
-   this->setStringAttribute(newname, tagname + "_original", original->GetName());
+   this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;
-}
-
-RooFit::Detail::JSONNode &RooJSONFactoryWSTool::createAdHoc(const std::string &toplevel, const std::string &name)
-{
-   auto &collectionNode = (*_rootnodeOutput)[toplevel];
-   return appendNamedChild(collectionNode, name);
 }
 
 /**
@@ -1167,11 +1127,17 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
  */
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
+   std::string name(RooJSONFactoryWSTool::name(p));
+
+   // If this node if marked to be skipped by RooFit, exit
+   if (hasAttribute(name, "roofit_skip")) {
+      return;
+   }
+
    auto const &importers = RooFit::JSONIO::importers();
    auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
-   std::string name(RooJSONFactoryWSTool::name(p));
    if (!::isValidName(name)) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() function name '" << name << "' is not valid!" << std::endl;
