@@ -35,22 +35,23 @@ ClassImp(THStack);
     \ingroup Histograms
 The Histogram stack class
 
-A THStack is a collection of TH1 or TH2 histograms.
-Using THStack::Draw() the histogram collection is drawn in one go according
-to the drawing option.
+A THStack is a collection of TH1 or TH2 histograms. By using THStack::Draw(), the entire
+histogram collection is drawn at once according to the specified drawing option.
 
-THStack::Add() allows to add a new histogram to the list.
-The THStack does not own the objects in the list.
+THStack::Add() allows adding a new histogram to the list. Note that the THStack does not
+take ownership of the objects in the list.
 
 \anchor HS00
 ### Stack painting
 
-By default, histograms are shown stacked.
-  - the first histogram is paint
-  - then the sum of the first and second, etc
+By default, histograms are shown stacked:
+  - the first histogram is painted
+  - then the sum of the first and second histograms is painted, and so on
 
-The axis ranges are computed automatically along the X and Y axis in
-order to show the complete histogram collection.
+The axis ranges are computed automatically along the X and Y axes to display the complete
+histogram collection.
+
+Warning: Histogram bins with negative content may produce wrong plots.
 
 ### Stack's drawing options
 
@@ -140,7 +141,7 @@ THStack::THStack(const char *name, const char *title)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates a new THStack from a TH2 or TH3
+/// Creates a new THStack from a TH2 or TH3.
 /// It is filled with the 1D histograms from GetProjectionX or GetProjectionY
 /// for each bin of the histogram. It illustrates the differences and total
 /// sum along an axis.
@@ -156,7 +157,7 @@ THStack::THStack(const char *name, const char *title)
 /// - title: fTitle is set to title if given, otherwise to histo's title
 ///          with ", stack of <axis> projections" appended.
 /// - firstbin, lastbin:
-///          for each bin within [firstbin,lastbin] a stack entry is created.
+///          For each bin within [firstbin,lastbin] a stack entry is created.
 ///          See TH2::ProjectionX/Y for use overflow bins.
 ///          Defaults to "all bins but under- / overflow"
 /// - firstbin2, lastbin2:
@@ -317,7 +318,7 @@ THStack::THStack(TH1* hist, Option_t *axis /*="x"*/,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// THStack destructor
+/// THStack destructor.
 
 THStack::~THStack()
 {
@@ -358,7 +359,7 @@ THStack::THStack(const THStack &hstack) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// add a new histogram to the list
+/// Add a new histogram to the list.
 /// Only 1-d and 2-d histograms currently supported.
 /// A drawing option may be specified
 
@@ -384,8 +385,8 @@ void THStack::Browse(TBrowser *b)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  build sum of all histograms
-///  Build a separate list fStack containing the running sum of all histograms
+/// Build the sum of all histograms.
+/// Build a separate list fStack containing the running sum of all histograms
 
 void THStack::BuildStack()
 {
@@ -400,6 +401,9 @@ void THStack::BuildStack()
    fStack->Add(h);
    for (Int_t i=1;i<nhists;i++) {
       h = (TH1*)fHists->At(i)->Clone();
+      if (h->GetMinimum() < 0.) {
+         Warning("BuildStack","Histograms with a negative minimum may produce wrong plots");
+      }
       h->Add((TH1*)fStack->At(i-1));
       fStack->AddAt(h,i);
    }
@@ -407,8 +411,7 @@ void THStack::BuildStack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Compute distance from point px,py to each graph
-///
+/// Compute distance from point px, py to each graph.
 
 Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -441,10 +444,10 @@ Int_t THStack::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this multihist with its current attributes.
+/// Draw this stack with its current attributes.
 ///
-///   Options to draw histograms  are described in THistPainter::Paint
-/// By default (if option "nostack" is not specified), histograms will be paint
+/// Options to draw histograms  are described in THistPainter::Paint
+/// By default (if the option "nostack" is not specified), histograms will be painted
 /// stacked on top of each other.
 
 void THStack::Draw(Option_t *option)
@@ -464,10 +467,10 @@ void THStack::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///    Returns a pointer to the histogram used to draw the axis
-///    Takes into account the two following cases.
-///       1- option 'A' was specified in THStack::Draw. Return fHistogram
-///       2- user had called TPad::DrawFrame. return pointer to hframe histogram
+/// Returns a pointer to the histogram used to draw the axis.
+/// Takes into account the two following cases:
+///   1- option 'A' was specified in THStack::Draw. Return fHistogram
+///   2- user had called TPad::DrawFrame. return pointer to hframe histogram
 ///
 /// IMPORTANT NOTES
 /// - You must call Draw before calling this function. The returned histogram
@@ -489,8 +492,8 @@ TH1 *THStack::GetHistogram() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  returns the maximum of all added histograms smaller than maxval.
-///  returns the maximum of all histograms, smaller than maxval, if option "nostack".
+/// Returns the maximum of all added histograms smaller than maxval.
+/// Returns the maximum of all histograms, smaller than maxval, if option "nostack".
 
 Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
@@ -538,8 +541,8 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Returns the minimum of all added histograms larger than minval.
-///  Returns the minimum of all histograms, larger than minval, if option "nostack".
+/// Returns the minimum of all added histograms larger than minval.
+/// Returns the minimum of all histograms, larger than minval, if option "nostack".
 
 Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
@@ -592,7 +595,7 @@ Int_t THStack::GetNhists() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return pointer to Stack. Build it if not yet done
+/// Return pointer to Stack. Build it if not yet done.
 
 TObjArray *THStack::GetStack()
 {
@@ -601,7 +604,7 @@ TObjArray *THStack::GetStack()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get x axis of the histogram used to draw the stack.
+/// Get the x-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -614,7 +617,7 @@ TAxis *THStack::GetXaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get y axis of the histogram used to draw the stack.
+/// Get the y-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -627,7 +630,7 @@ TAxis *THStack::GetYaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get z axis of the histogram used to draw the stack.
+/// Get the z-axis of the histogram used to draw the stack.
 ///
 /// IMPORTANT NOTE
 ///  You must call Draw before calling this function. The returned histogram
@@ -643,7 +646,7 @@ TAxis *THStack::GetZaxis() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List histograms in the stack
+/// List histograms in the stack.
 
 void THStack::ls(Option_t *option) const
 {
@@ -679,7 +682,7 @@ Long64_t THStack::Merge(TCollection* li, TFileMergeInfo * /* info */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// invalidate sum of histograms
+/// Note: this method invalidates the sum of histograms.
 
 void THStack::Modified()
 {
@@ -700,7 +703,7 @@ void THStack::Paint(Option_t *chopt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create all additional objects and stack (if specified)
+/// Create all additional objects and stack (if specified).
 
 void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
 {
@@ -995,7 +998,7 @@ void THStack::Print(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recursively remove object from the list of histograms
+/// Recursively remove the object `obj` from the list of histograms.
 
 void THStack::RecursiveRemove(TObject *obj)
 {
@@ -1005,7 +1008,7 @@ void THStack::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Save primitive as a C++ statement(s) on output stream out
+/// Save primitive as a C++ statement(s) on output stream out.
 
 void THStack::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
@@ -1074,7 +1077,7 @@ void THStack::SetMinimum(Double_t minimum)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get iterator over internal hists list.
+/// Get an iterator over internal hists list.
 TIter THStack::begin() const
 {
    return TIter(fHists);
