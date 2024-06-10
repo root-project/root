@@ -202,69 +202,6 @@ PyObject *PyROOT::GetBranchAttr(PyObject * /*self*/, PyObject *args)
 }
 
 ////////////////////////////////////////////////////////////////////////////
-/// \brief Add pythonization for TTree::SetBranchAddress.
-/// \param[in] self Always null, since this is a module function.
-/// \param[in] args Pointer to a Python tuple object containing the arguments
-/// received from Python.
-///
-/// Modify the behaviour of SetBranchAddress so that proxy references can be passed
-/// as arguments from the Python side, more precisely in cases where the C++
-/// implementation of the method expects the address of a pointer.
-///
-/// For example:
-/// ~~~{.py}
-/// v = ROOT.std.vector('int')()
-/// t.SetBranchAddress("my_vector_branch", v)
-/// ~~~
-PyObject *PyROOT::SetBranchAddressPyz(PyObject * /* self */, PyObject *args)
-{
-   PyObject *treeObj = nullptr, *name = nullptr, *address = nullptr;
-
-   int argc = PyTuple_GET_SIZE(args);
-
-   // Look for the (const char*, void*) overload
-   auto argParseStr = "OUO:SetBranchAddress";
-   if (argc == 3 && PyArg_ParseTuple(args, argParseStr, &treeObj, &name, &address)) {
-
-      auto tree = (TTree *)GetTClass(treeObj)->DynamicCast(TTree::Class(), CPyCppyy::Instance_AsVoidPtr(treeObj));
-
-      if (!tree) {
-         PyErr_SetString(PyExc_TypeError,
-                         "TTree::SetBranchAddress must be called with a TTree instance as first argument");
-         return nullptr;
-      }
-
-      auto branchName = PyUnicode_AsUTF8(name);
-      auto branch = tree->GetBranch(branchName);
-      if (!branch) {
-         PyErr_SetString(PyExc_TypeError, "TTree::SetBranchAddress must be called with a valid branch name");
-         return nullptr;
-      }
-
-      bool isLeafList = branch->IsA() == TBranch::Class();
-
-      void *buf = 0;
-      if (CPyCppyy::Instance_Check(address)) {
-         ((CPPInstance *)address)->GetDatamemberCache(); // force creation of cache
-
-         if (((CPPInstance *)address)->fFlags & CPPInstance::kIsReference || isLeafList)
-            buf = CPyCppyy::Instance_AsVoidPtr(address);
-         else
-            buf = (void *)&(((CPPInstance *)address)->GetObjectRaw());
-      } else
-         Utility::GetBuffer(address, '*', 1, buf, false);
-
-      if (buf != nullptr) {
-         auto res = tree->SetBranchAddress(PyUnicode_AsUTF8(name), buf);
-         return PyInt_FromLong(res);
-      }
-   }
-
-   // Not the overload we wanted to pythonize, return None
-   Py_RETURN_NONE;
-}
-
-////////////////////////////////////////////////////////////////////////////
 /// Try to match the arguments of TTree::Branch to the following overload:
 /// - ( const char*, void*, const char*, Int_t = 32000 )
 /// If the match succeeds, invoke Branch on the C++ tree with the right
