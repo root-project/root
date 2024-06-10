@@ -62,31 +62,31 @@ The current (class version 5) **ROOT::Experimental::RNTuple** object has the fol
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |        Version Minor          |         Version Patch         |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                         Seek Header                           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                        Nbytes Header                          +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                         Len Header                            +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                         Seek Footer                           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                        Nbytes Footer                          +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                         Len Footer                            +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                                                               | 
+|                                                               |
 +                        Max Key Size                           +
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -768,24 +768,32 @@ e.g. `std::vector<MyEvent>` or `std::vector<std::vector<float>>`.
 
 ### Fundamental Types
 
-The following fundamental types are stored as `leaf` fields with a single column each:
+The following fundamental types are stored as `leaf` fields with a single column each.
+Type can potentially be stored in multiple possible column types.
+The possible combinations are marked as `W` in the following table
+Additionally, some types allow for reading from certain column types but not to write into them.
+Such cases are marked as `R` in the table.
 
-| C++ Type                         | Default RNTuple Column | Alternative Encoding  |
------------------------------------|------------------------|-----------------------|
-| bool                             | Bit                    |                       |
-| char                             | Char                   |                       |
-| int8_t                           | Int8                   |                       |
-| uint_8_t, unsigned char          | UInt8                  |                       |
-| int16_t                          | SplitInt16             | Int16                 |
-| uint16_t                         | SplitUInt16            | UInt16                |
-| uint32_t                         | SplitUInt32            | UInt32                |
-| int32_t                          | SplitInt32             | Int32                 |
-| uint64_t                         | SplitUInt64            | UInt64                |
-| int64_t                          | SplitInt64             | Int64                 |
-| float                            | SplitReal32            | Real32                |
-| double                           | SplitReal64            | Real64                |
+|               |                                                  Fundamental C++ Type                                                   ||
+| Column Type   | bool | std::byte | char | int8_t | uint8_t | in16_t | uin16_t | int32_t | uint32_t | int64_t | uint64_t | float | double |
+|---------------|:----:|:---------:|:----:|:------:|:-------:|:------:|:-------:|:-------:|:--------:|:-------:|:--------:|:-----:|:------:|
+| Bit           |  W*  |           |      |        |         |        |         |         |          |         |          |       |        |
+| Byte          |      |     W*    |      |        |         |        |         |         |          |         |          |       |        |
+| Char          |      |           |  W*  |        |         |        |         |         |          |         |          |       |        |
+| Int8          |      |           |      |   W*   |    R    |        |         |         |          |         |          |       |        |
+| UInt8         |      |           |      |   R    |    W*   |        |         |         |          |         |          |       |        |
+| (Split)Int16  |      |           |      |        |         |   W*   |    R    |         |          |         |          |       |        |
+| (Split)UInt16 |      |           |      |        |         |   R    |    W*   |         |          |         |          |       |        |
+| (Split)Int32  |      |           |      |        |         |        |         |    W*   |    R     |    R    |          |       |        |
+| (Split)UInt32 |      |           |      |        |         |        |         |    R    |    W*    |    R    |          |       |        |
+| (Split)Int64  |      |           |      |        |         |        |         |         |          |    W*   |    R     |       |        |
+| (Split)UInt64 |      |           |      |        |         |        |         |         |          |    R    |    W*    |       |        |
+| Real16        |      |           |      |        |         |        |         |         |          |         |          |   W   |   W    |
+| (Split)Real32 |      |           |      |        |         |        |         |         |          |         |          |   W*  |   W    |
+| (Split)Real64 |      |           |      |        |         |        |         |         |          |         |          |       |   W*   |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
+The default column for serialization is denoted with an asterix.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
 ### Low-precision Floating Points
