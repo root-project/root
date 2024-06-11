@@ -38,10 +38,6 @@ from ._pythonization import _register_pythonizations
 
 _register_pythonizations()
 
-# Register custom converters and executors
-libROOTPythonizations.RegisterConverters()
-libROOTPythonizations.RegisterExecutors()
-
 # Check if we are in the IPython shell
 import builtins
 
