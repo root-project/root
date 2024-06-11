@@ -131,8 +131,6 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    std::string GetLabel() final { return "RNTupleDS"; }
 
-   bool SetEntry(unsigned int slot, ULong64_t entry) final;
-
    void Initialize() final;
    void InitSlot(unsigned int slot, ULong64_t firstEntry) final;
    void FinalizeSlot(unsigned int slot) final;
@@ -140,6 +138,9 @@ public:
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &) final;
+
+   // Old API, unused
+   bool SetEntry(unsigned int, ULong64_t) final { return true; }
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
