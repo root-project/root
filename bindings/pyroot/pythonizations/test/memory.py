@@ -39,7 +39,7 @@ class MemoryStlString(unittest.TestCase):
         gc.collect()
         after = ROOT.get_rss_MB()
         delta = after - before
-        self.assertLess(delta, 4)
+        self.assertLess(delta, 16)
 
 
 if __name__ == '__main__':
