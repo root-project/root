@@ -544,7 +544,8 @@ g_logv (const gchar   *log_domain,
 #endif
 # if defined (_MSC_VER) && defined (_DEBUG)
 	      /* let's see the call stack ... */
-	      __asm int 3
+	      /* __asm int 3 */
+	      __debugbreak();
 # endif
 	      abort ();
 #endif /* !G_ENABLE_DEBUG || !SIGTRAP */

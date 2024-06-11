@@ -13,7 +13,7 @@ if(NOT WIN32)
   set(CFITSIO_C_FLAGS -fPIC)
 endif()
 
-if(WIN32)
+if(WIN32 AND NOT CMAKE_GENERATOR MATCHES Ninja)
   if(winrtdebug)
     set(CFITSIO_BUILD_COMMAND_FLAGS "--config Debug")
   else()

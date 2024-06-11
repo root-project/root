@@ -2872,6 +2872,12 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
          mode = kDebug;
       }
    }
+#if defined(_MSC_VER) && !defined(NDEBUG)
+   // if ROOT is build in debug mode, ACLiC must also build in debug mode
+   // for compatibility reasons
+   if (!(mode & kDebug))
+      mode |= kDebug;
+#endif
    UInt_t verboseLevel = verbose ? 7 : gDebug;
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (opt && strchr(opt,'-')!=nullptr);
 
@@ -3713,14 +3719,23 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    cmd.ReplaceAll("$BuildDir","\"$BuildDir\"");
    cmd.ReplaceAll("$BuildDir",build_loc);
    TString optdebFlags;
+#ifdef WIN32
+   if (mode & kDebug)
+      optdebFlags = fFlagsDebug + " ";
+   else if (mode & kOpt)
+      optdebFlags += fFlagsOpt;
+   cmd.ReplaceAll("$Opt", optdebFlags);
+   R__FixLink(cmd);
+   cmd.ReplaceAll("-std=", "-std:");
+   if (mode & kDebug) {
+      cmd.ReplaceAll(" && link ", "&& link /DEBUG ");
+   }
+#else
    if (mode & kDebug)
       optdebFlags = fFlagsDebug + " ";
    if (mode & kOpt)
       optdebFlags += fFlagsOpt;
    cmd.ReplaceAll("$Opt", optdebFlags);
-#ifdef WIN32
-   R__FixLink(cmd);
-   cmd.ReplaceAll("-std=", "-std:");
 #endif
 
    TString testcmd = fMakeExe;
