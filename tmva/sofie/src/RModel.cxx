@@ -262,24 +262,37 @@ void RModel::Initialize(int batchSize, bool verbose) {
    // loop on inputs and see if shape can be  full specified
    // if the batch size is provided it can be used to specify the full shape
    // Add the full specified tensors in fReadyInputTensors collection
-   for (auto &input : fInputTensorInfos) {
+   auto originalInputTensorInfos = fInputTensorInfos; // need to copy because we may delete elements
+   for (auto &input : originalInputTensorInfos) {
+      if (verbose) std::cout << "looking at the tensor " << input.first << std::endl;
       // if a batch size is provided convert batch size
       // assume is parametrized as "bs" or "batch_size"
       if (batchSize > 0) {
          // std::vector<Dim> shape;
          // shape.reserve(input.second.shape.size());
-         for (auto &d : input.second.shape) {
-            if (d.isParam && (d.param == "bs" || d.param == "batch_size")) {
-               d = Dim{static_cast<size_t>(batchSize)};
+         // assume first parameter is teh batch size
+         if (!input.second.shape.empty()) {
+            auto & d0 = input.second.shape[0];
+            if (d0.isParam) {
+               if (verbose) std::cout << "Fix the batch size to " << batchSize << std::endl;
+               d0 = Dim{static_cast<size_t>(batchSize)};
+            }
+            else {  // look for cases that a bs or bath_size is specified in tensor shape
+               for (auto &d : input.second.shape) {
+                  if (d.isParam && (d.param == "bs" || d.param == "batch_size")) {
+                     d = Dim{static_cast<size_t>(batchSize)};
+                     if (verbose) std::cout << "Input shape has bs or batch_size as names. Fix the batch size to " << batchSize << std::endl;
+                  }
+               }
             }
          }
       }
       auto shape = ConvertShapeToInt(input.second.shape);
       if (!shape.empty()) {
-         // add to the ready input tensor informations
-         AddInputTensorInfo(input.first, input.second.type, shape);
-         // remove from the tensor info
+         // remove from the tensor info old dynamic shape
          fInputTensorInfos.erase(input.first);
+         // add to the ready input tensor information the new fixed shape
+         AddInputTensorInfo(input.first, input.second.type, shape);
       }
       // store the parameters of the input tensors
       else {
@@ -633,7 +646,7 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
         fGC += "   std::ifstream f;\n";
         fGC += "   f.open(filename);\n";
         fGC += "   if (!f.is_open()) {\n";
-        fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file for input weights\");\n";
+        fGC += "      throw std::runtime_error(\"tmva-sofie failed to open file \" + filename + \" for input weights\");\n";
         fGC += "   }\n";
 
         if(fIsGNNComponent) {
@@ -769,7 +782,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
         }
         if (!f.is_open())
             throw
-            std::runtime_error("tmva-sofie failed to open file for tensor weight data");
+            std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");
         for (auto& i: fInitializedTensors) {
             if (i.second.type() == ETensorType::FLOAT) {
                 size_t length = 1;
