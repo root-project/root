@@ -454,12 +454,6 @@ RNTupleDS::GetColumnReaders(unsigned int slot, std::string_view name, const std:
    return reader;
 }
 
-bool RNTupleDS::SetEntry(unsigned int, ULong64_t)
-{
-   // Old API, unsused
-   return true;
-}
-
 void RNTupleDS::PrepareNextRanges()
 {
    assert(fNextRanges.empty());
