@@ -194,13 +194,13 @@ class ROOTFacade(types.ModuleType):
             "Double32_t&": "double&",
         }
 
-        cppyy.include("CPyCppyy/API.h")
+        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
 
         for name, target in converter_aliases.items():
-            cppyy.gbl.CPyCppyy.RegisterConverterAlias(name, target)
+            CPyCppyyRegisterConverterAlias(name, target)
 
         for name, target in executor_aliases.items():
-            cppyy.gbl.CPyCppyy.RegisterExecutorAlias(name, target)
+            CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
