@@ -2,8 +2,13 @@
 
 ## Changes in dev
 1. Let use custom time zone for time display, support '&utc' and '&cet' in URL parameters
-2. Fix - hide empty title on the canvas
-3. Fix - properly handle zooming in THStack histogram
+2. Support gStyle.fLegendFillStyle
+3. Fix - hide empty title on the canvas
+4. Fix - properly handle zooming in THStack histogram
+5. Fix - properly save zoomed ranges in drawingJSON()
+6. Fix - always show all ticks for labeled axis
+7. Fix - draw TProfile2D bins content as text, not entrie
+8. Fix - interactive zooming on log color palette
 
 
 ## Changes in 7.7.1

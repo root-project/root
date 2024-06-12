@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '5/06/2024',
+version_date = '11/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -409,6 +409,7 @@ gStyle = {
    fLegendFont: 42,
    fLegendTextSize: 0,
    fLegendFillColor: 0,
+   fLegendFillStyle: 1001,
    fHatchesLineWidth: 1,
    fHatchesSpacing: 1,
    fCandleWhiskerRange: 1.0,
@@ -1130,7 +1131,8 @@ function create(typename, target) {
          create(clTPave, obj);
          create(clTAttText, obj);
          extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create(clTList), fName: clTPave,
-                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
+                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize,
+                       fFillColor: gStyle.fLegendFillColor, fFillStyle: gStyle.fLegendFillStyle });
          break;
       case clTPaletteAxis:
          create(clTPave, obj);
