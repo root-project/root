@@ -9251,6 +9251,7 @@ void TCling::MethodArgInfo_Delete(MethodArgInfo_t* marginfo) const
 
 MethodArgInfo_t* TCling::MethodArgInfo_Factory() const
 {
+   // TODO: Why do we need the lock here? The constructor only initializes data members
    R__LOCKGUARD(gInterpreterMutex);
    return (MethodArgInfo_t*) new TClingMethodArgInfo(GetInterpreterImpl());
 }
@@ -9259,6 +9260,7 @@ MethodArgInfo_t* TCling::MethodArgInfo_Factory() const
 
 MethodArgInfo_t* TCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
 {
+   // TODO: Why do we need the lock here? The constructor only initializes data members
    R__LOCKGUARD(gInterpreterMutex);
    return (MethodArgInfo_t*) new TClingMethodArgInfo(GetInterpreterImpl(), (TClingMethodInfo*)minfo);
 }
@@ -9267,6 +9269,9 @@ MethodArgInfo_t* TCling::MethodArgInfo_Factory(MethodInfo_t *minfo) const
 
 MethodArgInfo_t* TCling::MethodArgInfo_FactoryCopy(MethodArgInfo_t* marginfo) const
 {
+   // TODO: Why we need a lock here? It was moved from TFunction::Update so it
+   // must be serving some purpose
+   R__LOCKGUARD(gInterpreterMutex);
    return (MethodArgInfo_t*)
           new TClingMethodArgInfo(*(TClingMethodArgInfo*)marginfo);
 }
@@ -9284,6 +9289,7 @@ bool TCling::MethodArgInfo_IsValid(MethodArgInfo_t* marginfo) const
 int TCling::MethodArgInfo_Next(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // The next call locks the interpreter mutex.
    return info->Next();
 }
 
@@ -9300,6 +9306,7 @@ Long_t TCling::MethodArgInfo_Property(MethodArgInfo_t* marginfo) const
 const char* TCling::MethodArgInfo_DefaultValue(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // The next call locks the interpreter mutex.
    return info->DefaultValue();
 }
 
@@ -9308,6 +9315,7 @@ const char* TCling::MethodArgInfo_DefaultValue(MethodArgInfo_t* marginfo) const
 const char* TCling::MethodArgInfo_Name(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // The next call locks the interpreter mutex.
    return info->Name();
 }
 
@@ -9316,6 +9324,7 @@ const char* TCling::MethodArgInfo_Name(MethodArgInfo_t* marginfo) const
 const char* TCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // The next call locks the interpreter mutex.
    return info->TypeName();
 }
 
@@ -9324,6 +9333,8 @@ const char* TCling::MethodArgInfo_TypeName(MethodArgInfo_t* marginfo) const
 std::string TCling::MethodArgInfo_TypeNormalizedName(MethodArgInfo_t* marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // Type() uses thread-local storage.
+   // NormalizedName locks the interpreter mutex.
    return info->Type()->NormalizedName(*fNormalizedCtxt);
 }
 
@@ -9332,6 +9343,7 @@ std::string TCling::MethodArgInfo_TypeNormalizedName(MethodArgInfo_t* marginfo) 
 TypeInfo_t* TCling::MethodArgInfo_TypeInfo(MethodArgInfo_t *marginfo) const
 {
    TClingMethodArgInfo* info = (TClingMethodArgInfo*) marginfo;
+   // The next call uses thread-local storage only.
    return (TypeInfo_t*) info->Type();
 }
 
