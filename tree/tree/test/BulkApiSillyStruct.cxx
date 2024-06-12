@@ -25,18 +25,18 @@ public:
 protected:
    void SetUp() override
    {
-      TFile *hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree silly-struct benchmark");
-      hfile->SetCompressionLevel(0); // No compression at all.
+      TFile hfile{fFileName.c_str(), "RECREATE", "TTree silly-struct benchmark"};
+      hfile.SetCompressionLevel(0); // No compression at all.
 
-      TTree *tree = new TTree("T", "A ROOT tree of silly-struct branches.");
-      tree->SetBit(TTree::kOnlyFlushAtCluster);
-      tree->SetAutoFlush(fClusterSize);
+      TTree tree{"T", "A ROOT tree of silly-struct branches."};
+      tree.SetBit(TTree::kOnlyFlushAtCluster);
+      tree.SetAutoFlush(fClusterSize);
       ROOT::TIOFeatures features;
       features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
-      tree->SetIOFeatures(features);
+      tree.SetIOFeatures(features);
 
       SillyStruct ss;
-      TBranch *branch = tree->Branch("myEvent", &ss, 32000, 99);
+      TBranch *branch = tree.Branch("myEvent", &ss, 32000, 99);
       branch->SetAutoDelete(false);
 
       Int_t nb = 0;
@@ -44,15 +44,13 @@ protected:
          ss.i = ev;
          ss.f = ev;
          ss.d = ev;
-         nb += tree->Fill();
-      } 
+         nb += tree.Fill();
+      }
 
-      hfile = tree->GetCurrentFile();
-      hfile->Write();
-      tree->Print();
+      auto *curfile = tree.GetCurrentFile();
+      curfile->Write();
+      tree.Print();
       printf("Successful write of all events, nb = %d.\n", nb);
-
-      delete hfile;
    }
 };
 
