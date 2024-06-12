@@ -333,10 +333,11 @@ class JSRootMenu {
      * @param {Array} values - array of string entries used as list for selection
      * @param {String|Number} value - currently elected value, either name or index
      * @param {Function} set_func - function called when item selected, either name or index depending from value parameter
+     * @param {String} [title] - optional title for menu items
      * @protected */
-   addSelectMenu(name, values, value, set_func) {
+   addSelectMenu(name, values, value, set_func, title) {
       const use_number = (typeof value === 'number');
-      this.add('sub:' + name);
+      this.add('sub:' + name, undefined, undefined, title);
       for (let n = 0; n < values.length; ++n)
          this.addchk(use_number ? (n === value) : (values[n] === value), values[n], use_number ? n : values[n], res => set_func(use_number ? Number.parseInt(res) : res));
       this.add('endsub:');
@@ -497,7 +498,8 @@ class JSRootMenu {
      * @private */
    addAttributesMenu(painter, preffix) {
       const is_frame = painter === painter.getFramePainter(),
-            pp = is_frame ? painter.getPadPainter() : null;
+            pp = is_frame ? painter.getPadPainter() : null,
+            redraw_arg = !preffix && !is_frame ? 'attribute' : true;
       if (!preffix) preffix = '';
 
       if (painter.lineatt?.used) {
@@ -506,19 +508,19 @@ class JSRootMenu {
             painter.lineatt.change(undefined, arg);
             changeObjectMember(painter, 'fLineWidth', arg);
             if (pp) changeObjectMember(pp, 'fFrameLineWidth', arg);
-            painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`);
+            painter.interactiveRedraw(redraw_arg, `exec:SetLineWidth(${arg})`);
          });
          this.addColorMenu('color', painter.lineatt.color, arg => {
             painter.lineatt.change(arg);
             changeObjectMember(painter, 'fLineColor', arg, true);
             if (pp) changeObjectMember(pp, 'fFrameLineColor', arg, true);
-            painter.interactiveRedraw(true, getColorExec(arg, 'SetLineColor'));
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetLineColor'));
          });
          this.addLineStyleMenu('style', painter.lineatt.style, id => {
             painter.lineatt.change(undefined, undefined, id);
             changeObjectMember(painter, 'fLineStyle', id);
             if (pp) changeObjectMember(pp, 'fFrameLineStyle', id);
-            painter.interactiveRedraw(true, `exec:SetLineStyle(${id})`);
+            painter.interactiveRedraw(redraw_arg, `exec:SetLineStyle(${id})`);
          });
          this.add('endsub:');
 
@@ -544,13 +546,13 @@ class JSRootMenu {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
             changeObjectMember(painter, 'fFillColor', arg, true);
             if (pp) changeObjectMember(pp, 'fFrameFillColor', arg, true);
-            painter.interactiveRedraw(true, getColorExec(arg, 'SetFillColor'));
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetFillColor'));
          }, painter.fillatt.kind);
          this.addFillStyleMenu('style', painter.fillatt.pattern, painter.fillatt.colorindx, painter, id => {
             painter.fillatt.change(undefined, id, painter.getCanvSvg());
             changeObjectMember(painter, 'fFillStyle', id);
             if (pp) changeObjectMember(pp, 'fFrameFillStyle', id);
-            painter.interactiveRedraw(true, `exec:SetFillStyle(${id})`);
+            painter.interactiveRedraw(redraw_arg, `exec:SetFillStyle(${id})`);
          });
          this.add('endsub:');
       }
@@ -560,12 +562,12 @@ class JSRootMenu {
          this.addColorMenu('color', painter.markeratt.color, arg => {
             changeObjectMember(painter, 'fMarkerColor', arg, true);
             painter.markeratt.change(arg);
-            painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor'));
+            painter.interactiveRedraw(redraw_arg, getColorExec(arg, 'SetMarkerColor'));
          });
          this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size, arg => {
             changeObjectMember(painter, 'fMarkerSize', arg);
             painter.markeratt.change(undefined, undefined, arg);
-            painter.interactiveRedraw(true, `exec:SetMarkerSize(${arg})`);
+            painter.interactiveRedraw(redraw_arg, `exec:SetMarkerSize(${arg})`);
          });
 
          this.add('sub:style');
@@ -576,7 +578,7 @@ class JSRootMenu {
                 svg = `<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><path stroke='black' fill='${clone.fill?'black':'none'}' d='${clone.create(40, 8)}'></path></svg>`;
 
             this.addchk(painter.markeratt.style === supported[n], svg, supported[n],
-               arg => { painter.markeratt.change(undefined, parseInt(arg)); painter.interactiveRedraw(true, `exec:SetMarkerStyle(${arg})`); });
+               arg => { painter.markeratt.change(undefined, parseInt(arg)); painter.interactiveRedraw(redraw_arg, `exec:SetMarkerStyle(${arg})`); });
          }
          this.add('endsub:');
          this.add('endsub:');
@@ -750,13 +752,18 @@ class JSRootMenu {
       this.add('endsub:');
 
       this.add('sub:Drawing');
-      this.addSelectMenu('Optimize', ['None', 'Smart', 'Always'], settings.OptimizeDraw, value => { settings.OptimizeDraw = value; });
+      this.addSelectMenu('Optimize', ['None', 'Smart', 'Always'], settings.OptimizeDraw, value => { settings.OptimizeDraw = value; }, 'Histogram drawing optimization');
+      this.add('sub:SmallPad', undefined, undefined, 'Minimal pad size drawn normally');
+      this.add(`width ${settings.SmallPad?.width ?? 0}px`, () => this.input('Small pad width', settings.SmallPad?.width, 'int', 1, 1000).then(val => { settings.SmallPad.width = val; }));
+      this.add(`height ${settings.SmallPad?.height ?? 0}px`, () => this.input('Small pad height', settings.SmallPad?.height, 'int', 1, 800).then(val => { settings.SmallPad.height = val; }));
+      this.add('disable', () => { settings.SmallPad = { width: 0, height: 0 }; }, 'disable small pad drawing optimization');
+      this.add('default', () => { settings.SmallPad = { width: 150, height: 100 }; }, 'Set to default 150x100 dimension');
+      this.add('endsub:');
       this.addPaletteMenu(settings.Palette, pal => { settings.Palette = pal; });
       this.addchk(settings.AutoStat, 'Auto stat box', flag => { settings.AutoStat = flag; });
       this.addSelectMenu('Latex', ['Off', 'Symbols', 'Normal', 'MathJax', 'Force MathJax'], settings.Latex, value => { settings.Latex = value; });
       this.addSelectMenu('3D rendering', ['Default', 'WebGL', 'Image'], settings.Render3D, value => { settings.Render3D = value; });
       this.addSelectMenu('WebGL embeding', ['Default', 'Overlay', 'Embed'], settings.Embed3D, value => { settings.Embed3D = value; });
-
       this.add('endsub:');
 
       this.add('sub:Geometry');
@@ -863,6 +870,7 @@ class JSRootMenu {
 
       this.add('sub:Legend');
       this.addColorMenu('Fill color', gStyle.fLegendFillColor, col => { gStyle.fLegendFillColor = col; });
+      this.addFillStyleMenu('Fill style', gStyle.fLegendFillStyle, gStyle.fLegendFillColor, null, id => { gStyle.fLegendFillStyle = id; });
       this.addSizeMenu('Border size', 0, 10, 1, gStyle.fLegendBorderSize, sz => { gStyle.fLegendBorderSize = sz; });
       this.addFontMenu('Font', gStyle.fLegendFont, fnt => { gStyle.fLegendFont = fnt; });
       this.addSizeMenu('Text size', 0, 0.1, 0.01, gStyle.fLegendTextSize, v => { gStyle.fLegendTextSize = v; }, 'legend text size, when 0 - auto adjustment is used');

@@ -892,13 +892,17 @@ class RFramePainter extends RObjectPainter {
       return this.interactiveRedraw('pad', 'zoom' + r_x + r_y + r_z).then(() => true);
    }
 
-   /** @summary Provide zooming of single axis
-     * @desc One can specify names like x/y/z but also second axis x2 or y2 */
-   async zoomSingle(name, vmin, vmax) {
+   /** @summary Zooming of single axis
+     * @param {String} name - axis name like x/y/z but also second axis x2 or y2
+     * @param {Number} vmin - axis minimal value, 0 for unzoom
+     * @param {Number} vmax - axis maximal value, 0 for unzoom
+     * @param {Boolean} [interactive] - if change was perfromed interactively
+     * @protected */
+   async zoomSingle(name, vmin, vmax, interactive) {
       const names = ['x', 'y', 'z', 'x2', 'y2'], indx = names.indexOf(name);
 
       // disable zooming when axis conversion is enabled
-      if (this.projection || !this[name+'_handle'] || (indx < 0))
+      if (this.projection || (!this[`${name}_handle`] && (name !== 'z')) || (indx < 0))
          return false;
 
       let zoom_v = (vmin !== vmax), unzoom_v = false;
@@ -950,6 +954,9 @@ class RFramePainter extends RObjectPainter {
 
       if (!changed) return false;
 
+      if (interactive)
+         this.zoomChangedInteractive(name, interactive);
+
       if (this.v7NormalMode())
          this.v7SubmitRequest('zoom', { _typename: `${nsREX}RFrame::RZoomRequest`, ranges: req });
 
@@ -967,15 +974,16 @@ class RFramePainter extends RObjectPainter {
       if (dox === 'all')
          return this.unzoom('x2').then(() => this.unzoom('y2')).then(() => this.unzoom('xyz'));
 
-      if ((dox === 'x2') || (dox === 'y2')) {
-         return this.zoomSingle(dox, 0, 0).then(changed => {
-            if (changed) this.zoomChangedInteractive(dox, 'unzoom');
-            return changed;
-         });
-      }
+      if ((dox === 'x2') || (dox === 'y2'))
+         return this.zoomSingle(dox, 0, 0, 'unzoom');
 
-      if (typeof dox === 'undefined') dox = doy = doz = true; else
-      if (isStr(dox)) { doz = dox.indexOf('z') >= 0; doy = dox.indexOf('y') >= 0; dox = dox.indexOf('x') >= 0; }
+      if (typeof dox === 'undefined')
+         dox = doy = doz = true;
+      else if (isStr(dox)) {
+         doz = dox.indexOf('z') >= 0;
+         doy = dox.indexOf('y') >= 0;
+         dox = dox.indexOf('x') >= 0;
+      }
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                        doy ? 0 : undefined, doy ? 0 : undefined,
