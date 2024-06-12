@@ -400,6 +400,55 @@ TPad::~TPad()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add an object to list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+///
+/// ~~~{.cpp}
+/// auto c1 = new TCanvas("c1","Canvas with subpoads", 600, 600);
+/// c1->Divide(2,2);
+///
+/// for (Int_t n = 1; n <= 4; ++n) {
+///    auto h1 = new TH1I(TString::Format("hist_%d",n), "Random hist", 100, -5, 5);
+///    h1->FillRandom("gaus", 2000 + n*1000);
+///    c1->GetPad(n)->Add(h1);
+/// }
+/// ~~~
+
+void TPad::Add(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   fPrimitives->Add(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add an object as first in list of primitives with speicified draw option
+/// When \par modified set to kTRUE (default) pad will be marked as modified
+/// Let avoid usage of gPad when drawing object(s) in canvas or in subpads.
+
+void TPad::AddFirst(TObject *obj, Option_t *opt, Bool_t modified)
+{
+   if (!obj)
+      return;
+
+   if (!fPrimitives)
+      fPrimitives = new TList;
+
+   fPrimitives->AddFirst(obj, opt);
+
+   if (modified)
+      Modified();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add a new TExec object to the list of Execs.
 ///
 /// When an event occurs in the pad (mouse click, etc) the list of C++ commands
@@ -5342,6 +5391,21 @@ void TPad::RecursiveRemove(TObject *obj)
    Int_t nold = fPrimitives->GetSize();
    fPrimitives->RecursiveRemove(obj);
    if (nold != fPrimitives->GetSize()) fModified = kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove object from list of primitives
+/// When \par modified set to kTRUE (default) pad will be marked as modified - if object really removed
+/// Returns result of GetListOfPrimitives()->Remove(obj) or nullptr if list of primitives not exists
+
+TObject *TPad::Remove(TObject *obj, Bool_t modified)
+{
+   TObject *res = nullptr;
+   if (fPrimitives)
+      res = fPrimitives->Remove(obj);
+   if (res && modified)
+      Modified();
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
