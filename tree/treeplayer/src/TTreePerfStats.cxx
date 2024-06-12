@@ -258,7 +258,7 @@ void TTreePerfStats::Draw(Option_t *option)
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
       //the following statement is necessary in case one attempts to draw
       //a temporary histogram already in the current pad
-      if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+      if (TestBit(kCanDelete)) gPad->Remove(this);
    } else {
       gROOT->MakeDefCanvas();
    }

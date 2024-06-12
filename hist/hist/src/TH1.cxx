@@ -3090,7 +3090,7 @@ void TH1::Draw(Option_t *option)
       } else {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         if (TestBit(kCanDelete)) gPad->Remove(this);
          gPad->Clear();
       }
       gPad->IncrementPaletteColor(1, opt1);
