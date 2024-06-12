@@ -8,8 +8,6 @@ import cppyy
 
 import cppyy.ll
 
-from libROOTPythonizations import gROOT
-
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
 
@@ -34,17 +32,15 @@ class _gROOTWrapper(object):
     before checking if batch mode is on in _finalSetup
     """
 
-    def __init__(self, facade):
-        self.__dict__["_facade"] = facade
-        self.__dict__["_gROOT"] = gROOT
-
     def __getattr__(self, name):
-        if name != "SetBatch" and self._facade.__dict__["gROOT"] != self._gROOT:
-            self._facade._finalSetup()
-        return getattr(self._gROOT, name)
+        if name != "SetBatch":
+            import ROOT
+
+            ROOT._finalSetup()
+        return getattr(cppyy.gbl.gROOT, name)
 
     def __setattr__(self, name, value):
-        return setattr(self._gROOT, name, value)
+        return setattr(cppyy.gbl.gROOT, name, value)
 
 
 def _create_rdf_experimental_distributed_module(parent):
@@ -92,7 +88,7 @@ class ROOTFacade(types.ModuleType):
         self.__loader__ = module.__loader__
 
         # Inject gROOT global
-        self.gROOT = _gROOTWrapper(self)
+        self.gROOT = _gROOTWrapper()
 
         # Expose some functionality from CPyCppyy extension module
         self._cppyy_exports = [
@@ -158,7 +154,7 @@ class ROOTFacade(types.ModuleType):
         elif hasattr(cppyy.gbl.ROOT, name):
             return getattr(cppyy.gbl.ROOT, name)
         else:
-            res = gROOT.FindObject(name)
+            res = cppyy.gbl.gROOT.FindObject(name)
             if res:
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
@@ -203,12 +199,12 @@ class ROOTFacade(types.ModuleType):
             CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
-        # Prevent this method from being re-entered through the gROOT wrapper
-        self.__dict__["gROOT"] = gROOT
+        # Now we don't need the gROOT wrapper anymore
+        del self.gROOT
 
         # Setup interactive usage from Python
         self.__dict__["app"] = PyROOTApplication(self.PyConfig, self._is_ipython)
-        if not self.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
+        if not cppyy.gbl.gROOT.IsBatch() and self.PyConfig.StartGUIThread:
             self.app.init_graphics()
 
         # Set memory policy to kUseHeuristics.
@@ -309,7 +305,7 @@ class ROOTFacade(types.ModuleType):
     # Inject version as __version__ property in ROOT module
     @property
     def __version__(self):
-        return self.gROOT.GetVersion()
+        return cppyy.gbl.gROOT.GetVersion()
 
     # Overload VecOps namespace
     # The property gets the C++ namespace, adds the pythonizations and
@@ -387,7 +383,7 @@ class ROOTFacade(types.ModuleType):
         from ._pythonization import _tmva
 
         ns = self._fallback_getattr("TMVA")
-        hasRDF = "dataframe" in gROOT.GetConfigFeatures()
+        hasRDF = "dataframe" in cppyy.gbl.gROOT.GetConfigFeatures()
         if hasRDF:
             try:
                 from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
