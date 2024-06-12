@@ -362,10 +362,6 @@ jobs:
           # Special builds
           - image: alma9
             is_special: true
-            property: march_native
-            overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
-          - image: alma9
-            is_special: true
             property: modules_off
             overrides: ["runtime_cxxmodules=Off"]
 
