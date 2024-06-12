@@ -45,7 +45,9 @@ namespace PyKeras{
 /// Parser function for translatng Keras .h5 model into a RModel object.
 /// Accepts the file location of a Keras model and returns the
 /// equivalent RModel object.
-RModel Parse(std::string filename);
+/// One can specify as option a batch size that can be used when the input Keras model
+/// has not a defined input batch size : e.g. for input = (input_dim,)
+RModel Parse(std::string filename, int batch_size = -1);
 
 }//PyKeras
 }//SOFIE

@@ -24,6 +24,7 @@ void GenerateModels() {
 TEST(RModelParser_Keras, SEQUENTIAL)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+   // input is 8 x batch size that is fixed to be 4
    std::vector<float> inputSequential = { 0.12107884, 0.89718615, 0.89123899, 0.32197549,
                              0.17891638, 0.83555135, 0.98680066, 0.14496809,
                              0.07255503, 0.55386989, 0.6628149 , 0.29843291,
@@ -38,7 +39,7 @@ TEST(RModelParser_Keras, SEQUENTIAL)
     if (gSystem->AccessPathName("KerasModelSequential.h5",kFileExists))
         GenerateModels();
 
-    TMVA::Experimental:: RSofieReader r("KerasModelSequential.h5");
+    TMVA::Experimental:: RSofieReader r("KerasModelSequential.h5",{{4,8}});
     std::vector<float> outputSequential = r.Compute(inputSequential);
 
 
