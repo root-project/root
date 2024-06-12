@@ -32,11 +32,35 @@
 
 #include "IOHandler.cxx"
 
-using namespace CPyCppyy;
-
 namespace PyROOT {
-PyObject *gRootModule = 0;
+
+PyObject *gRootModule = nullptr;
+
+PyObject *RegisterConverterAlias(PyObject * /*self*/, PyObject *args)
+{
+   PyObject *name = nullptr;
+   PyObject *target = nullptr;
+
+   PyArg_ParseTuple(args, "UU:RegisterConverterAlias", &name, &target);
+
+   CPyCppyy::RegisterConverterAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
+
+   Py_RETURN_NONE;
 }
+
+PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
+{
+   PyObject *name = nullptr;
+   PyObject *target = nullptr;
+
+   PyArg_ParseTuple(args, "UU:RegisterExecutorAlias", &name, &target);
+
+   CPyCppyy::RegisterExecutorAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
+
+   Py_RETURN_NONE;
+}
+
+} // namespace PyROOT
 
 // Methods offered by the interface
 static PyMethodDef gPyROOTMethods[] = {
@@ -78,11 +102,17 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Get stderr JupyROOTExecutorHandler"},
    {(char *)"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
     (char *)"Destruct JupyROOTExecutorHandler"},
+   {(char *)"CPyCppyyRegisterConverterAlias", (PyCFunction)PyROOT::RegisterConverterAlias, METH_VARARGS,
+    (char *)"Register a custom converter that is a reference to an existing converter"},
+   {(char *)"CPyCppyyRegisterExecutorAlias", (PyCFunction)PyROOT::RegisterExecutorAlias, METH_VARARGS,
+    (char *)"Register a custom executor that is a reference to an existing executor"},
    {NULL, NULL, 0, NULL}};
 
 struct module_state {
    PyObject *error;
 };
+
+using namespace CPyCppyy;
 
 #define GETSTATE(m) ((struct module_state *)PyModule_GetState(m))
 
