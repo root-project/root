@@ -61,9 +61,9 @@ constexpr Long64_t BulkApiSillyStructTest::fEventCount;
 
 TEST_F(BulkApiSillyStructTest, stdReadStruct)
 {
-   auto hfile  = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
 
-   TTreeReader myReader("T", hfile);
+   TTreeReader myReader("T", hfile.get());
    TTreeReaderValue<SillyStruct>  ss(myReader, "myEvent");
 
    int    evI = 0;
@@ -77,14 +77,13 @@ TEST_F(BulkApiSillyStructTest, stdReadStruct)
       evF++;
       evD++;
    }
-   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
 {
-   auto hfile  = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
 
-   TTreeReader myReader("T", hfile);
+   TTreeReader myReader("T", hfile.get());
    TTreeReaderValue<float>        myF(myReader, "f");
    TTreeReaderValue<int>          myI(myReader, "i");
    TTreeReaderValue<double>       myD(myReader, "d");
@@ -100,7 +99,6 @@ TEST_F(BulkApiSillyStructTest, stdReadSplitBranch)
       evF++;
       evD++;
    }
-   delete hfile;
 }
 
 TEST_F(BulkApiSillyStructTest, fastRead)
@@ -108,7 +106,7 @@ TEST_F(BulkApiSillyStructTest, fastRead)
    TBufferFile bufF(TBuffer::kWrite, 10000);
    TBufferFile bufI(TBuffer::kWrite, 10000);
    TBufferFile bufD(TBuffer::kWrite, 10000);
-   auto hfile  = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
    auto tree = dynamic_cast<TTree*>(hfile->Get("T"));
    ASSERT_TRUE(tree);
    TBranch *branchF = tree->GetBranch("f");
