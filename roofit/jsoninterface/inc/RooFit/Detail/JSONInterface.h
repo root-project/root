@@ -37,10 +37,6 @@ public:
          virtual bool equal(const Impl &other) const = 0;
       };
 
-   private:
-      std::unique_ptr<Impl> it;
-
-   public:
       child_iterator_t(std::unique_ptr<Impl> impl) : it(std::move(impl)) {}
       child_iterator_t(const child_iterator_t &other) : it(std::move(other.it->clone())) {}
 
@@ -65,6 +61,9 @@ public:
       {
          return lhs.it->equal(*rhs.it);
       }
+
+   private:
+      std::unique_ptr<Impl> it;
    };
 
    using child_iterator = child_iterator_t<JSONNode>;
