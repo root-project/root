@@ -1099,10 +1099,10 @@ void TPad::Close(Option_t *)
 
       // remove from the mother's list of primitives
       if (fMother) {
-         if (fMother->GetListOfPrimitives())
-            fMother->GetListOfPrimitives()->Remove(this);
+         fMother->Remove(this, kFALSE); // do not produce modified
 
-         if (gPad == this) fMother->cd();
+         if (gPad == this)
+            fMother->cd();
       }
       if (fCanvas) {
          if (fCanvas->GetPadSave() == this)
@@ -1368,7 +1368,7 @@ void TPad::Draw(Option_t *option)
    if (!fPrimitives) fPrimitives = new TList;
    if (gPad != this) {
       if (fMother && !ROOT::Detail::HasBeenDeleted(fMother))
-            if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Remove(this);
+            fMother->Remove(this, kFALSE);
       TPad *oldMother = fMother;
       fCanvas = gPad->GetCanvas();
       //
@@ -1384,7 +1384,7 @@ void TPad::Draw(Option_t *option)
    }
 
    if (gPad->IsRetained() && gPad != this && fMother)
-      if (fMother->GetListOfPrimitives()) fMother->GetListOfPrimitives()->Add(this, option);
+      fMother->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4771,17 +4771,19 @@ TPad *TPad::Pick(Int_t px, Int_t py, TObjLink *&pickobj)
 
 void TPad::Pop()
 {
-   if (!fMother) return;
-   if (ROOT::Detail::HasBeenDeleted(fMother)) return;
-   if (!fPrimitives) fPrimitives = new TList;
-   if (this == fMother->GetListOfPrimitives()->Last()) return;
+   if (!fMother || ROOT::Detail::HasBeenDeleted(fMother) || !fMother->GetListOfPrimitives())
+      return;
+   if (!fPrimitives)
+      fPrimitives = new TList;
+   if (this == fMother->GetListOfPrimitives()->Last())
+      return;
 
    TListIter next(fMother->GetListOfPrimitives());
    while (auto obj = next())
       if (obj == this) {
          TString opt = next.GetOption();
-         fMother->GetListOfPrimitives()->Remove(this);
-         fMother->GetListOfPrimitives()->AddLast(this, opt.Data());
+         fMother->Remove(this, kFALSE); // do not issue modified
+         fMother->Add(this, opt.Data());
          return;
       }
 }

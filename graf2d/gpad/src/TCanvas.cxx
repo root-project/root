@@ -960,8 +960,7 @@ TObject *TCanvas::DrawClonePad()
    TIter next(GetListOfPrimitives());
    while (auto obj = next()) {
       pad->cd();
-      auto clone = obj->Clone();
-      pad->GetListOfPrimitives()->Add(clone, next.GetOption());
+      pad->Add(obj->Clone(), next.GetOption(), kFALSE); // do not issue modified for each object
    }
    pad->ResizePad();
    pad->Modified();
