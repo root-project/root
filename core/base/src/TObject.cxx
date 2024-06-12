@@ -183,13 +183,14 @@ void TObject::AddToTObjectTable(TObject *op)
 
 void TObject::AppendPad(Option_t *option)
 {
-   if (!gPad) {
+   if (!gPad)
       gROOT->MakeDefCanvas();
-   }
-   if (!gPad->IsEditable()) return;
+
+   if (!gPad->IsEditable())
+      return;
+
    SetBit(kMustCleanup);
-   gPad->GetListOfPrimitives()->Add(this,option);
-   gPad->Modified(kTRUE);
+   gPad->Add(this, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,8 +312,7 @@ TObject *TObject::DrawClone(Option_t *option) const
       option = GetDrawOption();
 
    if (pad) {
-      pad->GetListOfPrimitives()->Add(newobj, option);
-      pad->Modified(kTRUE);
+      pad->Add(newobj, option);
       pad->Update();
    } else {
       newobj->Draw(option);
@@ -615,17 +615,18 @@ void TObject::Paint(Option_t *)
 
 void TObject::Pop()
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->GetListOfPrimitives())
+      return;
 
-   if (this == gPad->GetListOfPrimitives()->Last()) return;
+   if (this == gPad->GetListOfPrimitives()->Last())
+      return;
 
    TListIter next(gPad->GetListOfPrimitives());
    while (auto obj = next())
       if (obj == this) {
          TString opt = next.GetOption();
-         gPad->GetListOfPrimitives()->Remove((TObject*)this);
-         gPad->GetListOfPrimitives()->AddLast(this, opt.Data());
-         gPad->Modified();
+         gPad->Remove(this, kFALSE); // do not issue modified by remove
+         gPad->Add(this, opt.Data());
          return;
       }
 }
