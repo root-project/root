@@ -2008,9 +2008,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             while (auto o = next())
                if (obj == o) {
                   TString opt = next.GetOption();
-                  pad->GetListOfPrimitives()->Remove(obj);
-                  pad->GetListOfPrimitives()->AddLast(obj, opt.Data());
-                  pad->Modified();
+                  pad->Remove(obj, kFALSE);
+                  pad->Add(obj, opt.Data());
                   break;
                }
          }
