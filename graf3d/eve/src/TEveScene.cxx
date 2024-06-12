@@ -47,7 +47,7 @@ TEveScene::TEveScene(const char* n, const char* t) :
    fHierarchical (kFALSE)
 {
    fPad = new TEvePad;
-   fPad->GetListOfPrimitives()->Add(this);
+   fPad->Add(this);
    fGLScene = new TGLScenePad(fPad);
    fGLScene->SetName(n);
    fGLScene->SetAutoDestruct(kFALSE);
@@ -66,7 +66,7 @@ TEveScene::TEveScene(TGLScenePad* gl_scene, const char* n, const char* t) :
    fHierarchical (kFALSE)
 {
    fPad = new TEvePad;
-   fPad->GetListOfPrimitives()->Add(this);
+   fPad->Add(this);
    fGLScene->SetPad(fPad);
    fGLScene->SetName(n);
    fGLScene->SetAutoDestruct(kFALSE);

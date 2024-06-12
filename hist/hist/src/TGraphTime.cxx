@@ -151,9 +151,9 @@ void TGraphTime::Paint(Option_t *option)
    for (Int_t s=0;s<fNsteps;s++) {
       list = (TList*)fSteps->UncheckedAt(s);
       if (list) {
-         gPad->GetListOfPrimitives()->Remove(frame);
+         gPad->Remove(frame);
          gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->GetListOfPrimitives()->Add(frame);
+         if (frame) gPad->Add(frame);
          lnk = list->FirstLink();
          while(lnk) {
             TObject *obj = lnk->GetObject();
@@ -180,9 +180,9 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
    for (Int_t s=0;s<fNsteps;s++) {
       list = (TList*)fSteps->UncheckedAt(s);
       if (list) {
-         gPad->GetListOfPrimitives()->Remove(frame);
+         gPad->Remove(frame);
          gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->GetListOfPrimitives()->Add(frame);
+         if (frame) gPad->Add(frame);
          lnk = list->FirstLink();
          while(lnk) {
             TObject *obj = lnk->GetObject();
