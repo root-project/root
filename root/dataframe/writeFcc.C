@@ -35,5 +35,5 @@ void writeFcc()
     .Snapshot<colType>("t",
                        "fccMockup.root",
                        {"electrons"},
-                       {"RECREATE", ROOT::kLZ4, 4, 0, 0, false}); // non split!
+                       {"RECREATE", ROOT::RCompressionSetting::EAlgorithm::kLZ4, 4, 0, 0, false}); // non split!
 }
