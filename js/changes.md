@@ -3,6 +3,9 @@
 ## Changes in 7.7.x
 1. Fix - hide empty title on the canvas
 2. Fix - properly handle zooming in THStack histogram
+3. Fix - always use 0 as minimum in THStack drawings
+4. Fix - always show all ticks for labeled axis
+5. Fix - draw TProfile2D bins content as text, not entries
 
 
 ## Changes in 7.7.1

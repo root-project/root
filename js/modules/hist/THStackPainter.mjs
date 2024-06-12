@@ -157,7 +157,7 @@ class THStackPainter extends ObjectPainter {
                kmax = 1 + 0.2*Math.log10(max / min);
          min *= kmin;
          max *= kmax;
-      } else if ((min > 0) && (min < 0.05*max))
+      } else if ((min < 0.9*max) && (min !== stack.fMinimum))
          min = 0;
 
       if ((stack.fMaximum !== kNoZoom) && this.options.nostack)
