@@ -791,12 +791,15 @@ std::unique_ptr<ROperator> MakeKerasIdentity(PyObject* fLayer)
 /// For adding the Output Tensor infos, only the names of the model's output
 /// tensors are extracted and are then passed into `AddOutputTensorNameList()`.
 ///
+/// Provide optionally a batch size that can be used to overwrite the one given by the
+/// model. If a batch size is not given 1 is used if the model does not provide a batch size
+///
 /// Example Usage:
 /// ~~~ {.cpp}
 /// using TMVA::Experimental::SOFIE;
 /// RModel model = PyKeras::Parse("trained_model_dense.h5");
 /// ~~~
-RModel Parse(std::string filename){
+RModel Parse(std::string filename, int batch_size){
 
    char sep = '/';
    #ifdef _WIN32
@@ -966,8 +969,11 @@ RModel Parse(std::string filename){
          // Getting the shape vector from the Tuple object
          std::vector<size_t>fInputShape = GetDataFromTuple(fPInputShapes);
          if (static_cast<int>(fInputShape[0]) <= 0){
-            fInputShape[0] = 1;
-            std::cout << "Model has not a defined batch size, assume is 1 - input shape : "
+            fInputShape[0] = std::max(batch_size,1);
+            std::cout << "Model has not a defined batch size ";
+            if (batch_size <=0) std::cout << " assume is 1 ";
+            else std::cout << " use given value of " << batch_size;
+            std::cout << " - input shape for tensor " << fInputName << " : "
                       << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
          }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
@@ -995,8 +1001,11 @@ RModel Parse(std::string filename){
 
          std::vector<size_t>fInputShape = GetDataFromTuple(fInputShapeTuple);
          if (static_cast<int>(fInputShape[0]) <= 0){
-            fInputShape[0] = 1;
-            std::cout << "Model has not a defined batch size, assume is 1 - input shape for tensor "
+            fInputShape[0] = std::max(batch_size,1);
+            std::cout << "Model has not a defined batch size ";
+            if (batch_size <=0) std::cout << " assume is 1 ";
+            else std::cout << " use given value of " << batch_size;
+            std::cout << " - input shape for tensor "
                       << fInputName << " : " << TMVA::Experimental::SOFIE::ConvertShapeToString(fInputShape) << std::endl;
          }
          rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
