@@ -72,13 +72,13 @@ constexpr Long64_t BulkApiVariableTest::fEventCount;
 
 TEST_F(BulkApiVariableTest, stdRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 
    printf("Using standard read APIs.\n");
 
-   TTreeReader myReader("T", hfile);
+   TTreeReader myReader("T", hfile.get());
    TTreeReaderArray<float> myF(myReader, "f");
    TTreeReaderArray<double> myD(myReader, "d");
    TTreeReaderValue<int> myI(myReader, "myLen");
@@ -126,8 +126,7 @@ TEST_F(BulkApiVariableTest, stdRead)
       }
       ev++;
    }
-   ASSERT_EQ(ev, events+1);
-   delete hfile;
+   ASSERT_EQ(ev, events + 1);
 
    sw.Stop();
    printf("TTreeReader: Successful read of all events.\n");
@@ -136,7 +135,7 @@ TEST_F(BulkApiVariableTest, stdRead)
 
 TEST_F(BulkApiVariableTest, serializedRead)
 {
-   auto hfile = TFile::Open(fFileName.c_str());
+   std::unique_ptr<TFile> hfile{TFile::Open(fFileName.c_str())};
    printf("Starting read of file %s.\n", fFileName.c_str());
    TStopwatch sw;
 
