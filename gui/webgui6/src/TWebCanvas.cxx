@@ -2114,12 +2114,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
-   if (CheckCanvasModified()) {
-      // configure selected pad that method like TPad::WaitPrimitive() can correctly work
-      // can be removed again once WaitPrimitive implemented differently
-      if (gPad && (gPad->GetCanvas() == Canvas()))
-         gROOT->SetSelectedPad(gPad);
-   }
+   CheckCanvasModified();
 
    CheckDataToSend();
 
