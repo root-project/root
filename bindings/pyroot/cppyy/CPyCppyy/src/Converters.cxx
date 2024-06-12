@@ -3289,6 +3289,23 @@ bool CPyCppyy::RegisterConverter(const std::string& name, cf_t fac)
 
 //----------------------------------------------------------------------------
 CPYCPPYY_EXPORT
+bool CPyCppyy::RegisterConverterAlias(const std::string& name, const std::string& target)
+{
+// register a custom converter that is a reference to an existing converter
+    auto f = gConvFactories.find(name);
+    if (f != gConvFactories.end())
+        return false;
+
+    auto t = gConvFactories.find(target);
+    if (t == gConvFactories.end())
+        return false;
+
+    gConvFactories[name] = t->second;
+    return true;
+}
+
+//----------------------------------------------------------------------------
+CPYCPPYY_EXPORT
 bool CPyCppyy::UnregisterConverter(const std::string& name)
 {
 // remove a custom converter
@@ -3453,19 +3470,6 @@ public:
         gf["const " CCOMPLEX_D "&"] =       gf["const std::complex<double>&"];
         gf[CCOMPLEX_F " ptr"] =             gf["std::complex<float> ptr"];
         gf[CCOMPLEX_D " ptr"] =             gf["std::complex<double> ptr"];
-        gf["Long64_t"] =                    gf["long long"];
-        gf["Long64_t ptr"] =                gf["long long ptr"];
-        gf["Long64_t&"] =                   gf["long long&"];
-        gf["const Long64_t&"] =             gf["const long long&"];
-        gf["ULong64_t"] =                   gf["unsigned long long"];
-        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
-        gf["ULong64_t&"] =                  gf["unsigned long long&"];
-        gf["const ULong64_t&"] =            gf["const unsigned long long&"];
-        gf["Float16_t"] =                   gf["float"];
-        gf["const Float16_t&"] =            gf["const float&"];
-        gf["Double32_t"] =                  gf["double"];
-        gf["Double32_t&"] =                 gf["double&"];
-        gf["const Double32_t&"] =           gf["const double&"];
 
     // factories for special cases
         gf["TString"] =                     (cf_t)+[](cdims_t) { return new TStringConverter{}; };
