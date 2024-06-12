@@ -35,14 +35,6 @@ struct RSnapshotOptions {
         fOverwriteIfExists(overwriteIfExists)
    {
    }
-   [[deprecated("Use the overload accepting a ROOT::RCompressionSetting::EAlgorithm for the `comprAlgo` parameter "
-                "instead")]] RSnapshotOptions(std::string_view mode, Int_t comprAlgo, int comprLevel, int autoFlush,
-                                              int splitLevel, bool lazy, bool overwriteIfExists = false)
-      : RSnapshotOptions(mode, static_cast<ECAlgo>(comprAlgo), comprLevel, autoFlush, splitLevel, lazy,
-
-                         overwriteIfExists)
-   {
-   }
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
    ECAlgo fCompressionAlgorithm =
       ROOT::RCompressionSetting::EAlgorithm::kZLIB; ///< Compression algorithm of output file
