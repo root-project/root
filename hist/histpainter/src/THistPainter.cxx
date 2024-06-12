@@ -6785,7 +6785,7 @@ void THistPainter::PaintFrame()
    if (Hoption.Lego || Hoption.Surf || Hoption.Tri ||
        Hoption.Contour == 14 || Hoption.Error >= 100) {
       TObject *frame = gPad->FindObject("TFrame");
-      if (frame) gPad->GetListOfPrimitives()->Remove(frame);
+      if (frame) gPad->Remove(frame);
       return;
    }
 

@@ -459,7 +459,7 @@ void THStack::Draw(Option_t *option)
       if (!opt.Contains("same")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         if (TestBit(kCanDelete)) gPad->Remove(this);
          gPad->Clear();
       }
    }
