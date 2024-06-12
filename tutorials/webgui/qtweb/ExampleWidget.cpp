@@ -251,10 +251,10 @@ void ExampleWidget::DrawGeometryInCanvas()
    auto canv = fxTCanvasWidget->getCanvas();
    canv->Clear();
 
-   canv->GetListOfPrimitives()->Add(geom,"");
+   canv->Add(geom);
 
    // create a first PolyMarker3D
-   TPolyMarker3D *pm = new TPolyMarker3D(21);
+   auto pm = new TPolyMarker3D(21);
 
    for (int n=0;n<21;n++)
       pm->SetPoint(n, -120 + n*10, -20, 25);
@@ -264,9 +264,9 @@ void ExampleWidget::DrawGeometryInCanvas()
    pm->SetMarkerColor(4);
    pm->SetMarkerStyle(2);
 
-   canv->GetListOfPrimitives()->Add(pm,"");
+   canv->Add(pm);
 
-   TPolyLine3D *pl = new TPolyLine3D(5);
+   auto pl = new TPolyLine3D(5);
 
    // set points
    pl->SetPoint(0, -120, -20, -30);
@@ -278,9 +278,8 @@ void ExampleWidget::DrawGeometryInCanvas()
    pl->SetLineWidth(3);
    pl->SetLineColor(2);
 
-   canv->GetListOfPrimitives()->Add(pl,"");
+   canv->Add(pl);
 
-   canv->Modified();
    canv->Update();
 }
 

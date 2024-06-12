@@ -20,7 +20,7 @@ public:
       if (!hist)
          return false;
 
-      pad->GetListOfPrimitives()->Add(hist, opt.c_str());
+      pad->Add(hist, opt.c_str());
 
       return true;
    }
