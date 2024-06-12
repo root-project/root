@@ -100,6 +100,16 @@ using RooFit::Detail::JSONTree;
 
 namespace {
 
+std::vector<std::string> valsToStringVec(JSONNode const &node)
+{
+   std::vector<std::string> out;
+   out.reserve(node.num_children());
+   for (JSONNode const &elem : node.children()) {
+      out.push_back(elem.val());
+   }
+   return out;
+}
+
 /**
  * @brief Check if the number of components in CombinedData matches the number of categories in the RooSimultaneous PDF.
  *
@@ -587,16 +597,13 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    auto *mc = static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
-   std::vector<std::string> nllDistNames;
    std::vector<std::string> nllDataNames;
 
    auto *nllNode = RooJSONFactoryWSTool::findNamedChild(likelihoodsNode, analysisNode["likelihood"].val());
    if (!nllNode) {
       throw std::runtime_error("likelihood node not found!");
    }
-   for (auto &nameNode : (*nllNode)["distributions"].children()) {
-      nllDistNames.push_back(nameNode.val());
-   }
+   std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
       RooAbsArg *extConstraint = workspace.arg(nameNode.val());
@@ -699,17 +706,11 @@ void combinePdfs(const JSONNode &rootnode, RooWorkspace &ws)
       // parse the information
       std::string combinedName = info.key();
       std::string indexCatName = info["index_cat"].val();
-      std::vector<std::string> labels;
+      std::vector<std::string> labels = valsToStringVec(info["labels"]);
       std::vector<int> indices;
-      std::vector<std::string> pdfNames;
+      std::vector<std::string> pdfNames = valsToStringVec(info["distributions"]);
       for (auto &n : info["indices"].children()) {
          indices.push_back(n.val_int());
-      }
-      for (auto &n : info["labels"].children()) {
-         labels.push_back(n.val());
-      }
-      for (auto &n : info["distributions"].children()) {
-         pdfNames.push_back(n.val());
       }
 
       RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
@@ -739,13 +740,10 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       // parse the information
       std::string combinedName = info.key();
       std::string indexCatName = info["index_cat"].val();
-      std::vector<std::string> labels;
+      std::vector<std::string> labels = valsToStringVec(info["labels"]);
       std::vector<int> indices;
       for (auto &n : info["indices"].children()) {
          indices.push_back(n.val_int());
-      }
-      for (auto &n : info["labels"].children()) {
-         labels.push_back(n.val());
       }
       if (indices.size() != labels.size()) {
          RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
