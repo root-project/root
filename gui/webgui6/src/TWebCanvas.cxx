@@ -51,6 +51,7 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TTimer.h"
+#include "TThread.h"
 
 #include <cstdio>
 #include <cstring>
@@ -138,6 +139,13 @@ static std::vector<WebFont_t> gWebFonts;
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly)
    : TCanvasImp(c, name, x, y, width, height)
 {
+   // Workaround for multi-threaded environment
+   // Ensure main thread id picked when canvas implementation is created -
+   // otherwise it may be assigned in other thread and screw-up gPad access.
+   // Workaround may not work if main thread id was wrongly initialized before
+   // This resolves issue https://github.com/root-project/root/issues/15498
+   TThread::SelfId();
+
    fTimer = new TWebCanvasTimer(*this);
 
    fReadOnly = readonly;
