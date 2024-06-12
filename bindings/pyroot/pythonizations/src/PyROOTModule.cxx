@@ -11,8 +11,8 @@
 
 // Bindings
 #include "PyROOTPythonize.h"
-#include "PyROOTWrapper.h"
 #include "RPyROOTApplication.h"
+#include "TMemoryRegulator.h"
 
 // Cppyy
 #include "CPyCppyy/API.h"
@@ -57,6 +57,34 @@ PyObject *RegisterExecutorAlias(PyObject * /*self*/, PyObject *args)
 
    CPyCppyy::RegisterExecutorAlias(PyUnicode_AsUTF8(name), PyUnicode_AsUTF8(target));
 
+   Py_RETURN_NONE;
+}
+
+RegulatorCleanup &GetRegulatorCleanup()
+{
+   // The object is thread-local because it can happen that we call into
+   // C++ code (from the PyROOT CPython extension, from CPyCppyy or from cling)
+   // from different Python threads. A notable example is within a distributed
+   // RDataFrame application running on Dask.
+   thread_local PyROOT::RegulatorCleanup m;
+   return m;
+}
+
+void Init()
+{
+   // Initialize and acquire the GIL to allow for threading in ROOT
+#if PY_VERSION_HEX < 0x03090000
+   PyEval_InitThreads();
+#endif
+
+   // Memory management
+   gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
+}
+
+PyObject *ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
+{
+   // Delete all memory-regulated objects
+   GetRegulatorCleanup().CallClearProxiedObjects();
    Py_RETURN_NONE;
 }
 
@@ -112,8 +140,6 @@ struct module_state {
    PyObject *error;
 };
 
-using namespace CPyCppyy;
-
 #define GETSTATE(m) ((struct module_state *)PyModule_GetState(m))
 
 static int rootmodule_traverse(PyObject *m, visitproc visit, void *arg)
@@ -136,11 +162,9 @@ static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,       "libROOTPyth
 
 extern "C" PyObject *PyInit_libROOTPythonizations()
 {
-   using namespace PyROOT;
-
    // setup PyROOT
-   gRootModule = PyModule_Create(&moduledef);
-   if (!gRootModule)
+   PyROOT::gRootModule = PyModule_Create(&moduledef);
+   if (!PyROOT::gRootModule)
       return nullptr;
 
    // keep gRootModule, but do not increase its reference count even as it is borrowed,
@@ -150,11 +174,11 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
    PyROOT::Init();
 
    // signal policy: don't abort interpreter in interactive mode
-   CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
+   CPyCppyy::CallContext::SetGlobalSignalPolicy(!gROOT->IsBatch());
 
    // inject ROOT namespace for convenience
-   PyModule_AddObject(gRootModule, (char *)"ROOT", CreateScopeProxy("ROOT"));
+   PyModule_AddObject(PyROOT::gRootModule, (char *)"ROOT", CPyCppyy::CreateScopeProxy("ROOT"));
 
-   Py_INCREF(gRootModule);
-   return gRootModule;
+   Py_INCREF(PyROOT::gRootModule);
+   return PyROOT::gRootModule;
 }
