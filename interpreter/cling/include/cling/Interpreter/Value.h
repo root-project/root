@@ -263,11 +263,7 @@ namespace cling {
 #ifndef NDEBUG
 #define _STRINGIFY(x) #x
 #define STRINGIFY(x) _STRINGIFY(x)
-    // FIXME: Uncomment and debug the various type mismatches.
-    //#define ASSERT_TYPE_MISMATCH(name) AssertTypeMismatch(STRINGIFY(name))
-    #define ASSERT_TYPE_MISMATCH(name)
-#undef STRINGIFY
-#undef _STRINGIFY
+    #define ASSERT_TYPE_MISMATCH(name) AssertTypeMismatch(STRINGIFY(name))
 #else
     #define ASSERT_TYPE_MISMATCH(name)
 #endif // NDEBUG
@@ -284,6 +280,8 @@ namespace cling {
   CLING_VALUE_BUILTIN_TYPES
 
 #undef X
+#undef STRINGIFY
+#undef _STRINGIFY
 
     /// \brief Get the value with cast.
     //
