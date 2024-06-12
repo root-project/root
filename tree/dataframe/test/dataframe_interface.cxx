@@ -626,11 +626,13 @@ TEST(RDataFrameInterface, JittedExprWithMultipleReturns)
 
 TEST(RDataFrameInterface, JittedExprWithManyVars)
 {
-   std::string expr = "x + x + x + x";
-   for (int i = 0; i < 10; ++i) {
-      expr = expr + '+' + expr;
-   }
-   expr = expr + ">0";
+   // Build expression "x + x + ... + x > 0"
+   // With 100 occurences of 'x'
+   std::string expr{"x"};
+   for (int i = 0; i < 99; ++i)
+      expr += " + x";
+   expr += " > 0";
+
    const auto counts = ROOT::RDataFrame(1)
                           .Define("x", [] { return 1; })
                           .Filter(expr)
