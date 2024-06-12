@@ -17,7 +17,6 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
-#include <RooLegacyExpPoly.h>
 #include <RooExponential.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
@@ -25,6 +24,7 @@
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
@@ -35,10 +35,10 @@
 #include <RooTFnBinding.h>
 #include <RooWorkspace.h>
 
-#include "JSONIOUtils.h"
-
 #include <TF1.h>
 #include <TH1.h>
+
+#include "JSONIOUtils.h"
 
 #include "static_execute.h"
 
@@ -519,14 +519,15 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       TString expression(pdf->expression());
+      std::vector<std::pair<RooAbsArg *, std::size_t>> paramsWithIndex;
+      paramsWithIndex.reserve(pdf->nParameters());
       for (size_t i = 0; i < pdf->nParameters(); ++i) {
-         RooAbsArg *par = pdf->getParameter(i);
-         std::stringstream ss_1;
-         ss_1 << "x[" << i << "]";
-         std::stringstream ss_2;
-         ss_2 << "@" << i << "";
-         expression.ReplaceAll(ss_1.str().c_str(), par->GetName());
-         expression.ReplaceAll(ss_2.str().c_str(), par->GetName());
+         paramsWithIndex.emplace_back(pdf->getParameter(i), i);
+      }
+      std::sort(paramsWithIndex.begin(), paramsWithIndex.end());
+      for (auto [par, idx] : paramsWithIndex) {
+         expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
+         expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();
       return true;
