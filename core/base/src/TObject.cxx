@@ -189,7 +189,6 @@ void TObject::AppendPad(Option_t *option)
    if (!gPad->IsEditable())
       return;
 
-   SetBit(kMustCleanup);
    gPad->Add(this, option);
 }
 
