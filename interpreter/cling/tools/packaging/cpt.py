@@ -980,8 +980,8 @@ def tarball_deb():
 
 
 def debianize():
-    SIGNING_USER = exec_subprocess_check_output('gpg --fingerprint | grep uid | sed s/"uid *"//g',
-                                                CLING_SRC_DIR).strip()
+    SIGNING_USER = exec_subprocess_check_output('sh -c "gpg --fingerprint | grep uid | sed \'s/uid *//g\'"',
+                                                 CLING_SRC_DIR).strip()
 
     box_draw("Set up the debian directory")
     print("Create directory: debian")
@@ -1030,10 +1030,8 @@ exit 0
     f = open(os.path.join(prefix, 'debian', 'cling.install'), 'w')
     template = '''
 bin/* /usr/bin
-docs/* /usr/share/doc
 include/* /usr/include
 lib/* /usr/lib
-share/* /usr/share
 '''
     f.write(template.strip())
     f.close()
@@ -1150,10 +1148,11 @@ cling (%s-1) unstable; urgency=low
 ''' % (VERSION, VERSION)
     f.write(template.lstrip())
     f.close()
-
+    
+    STABLE_FLAG = ''
     if '~dev' in VERSION:
         TAG = str(float(VERSION[:VERSION.find('~')]) - 0.1)
-        template = exec_subprocess_check_output('git log v' + TAG + '...HEAD --format="  * %s" | fmt -s', CLING_SRC_DIR)
+        template = exec_subprocess_check_output('sh -c "git log v' + TAG + '...HEAD --format=\'  * %s\' | fmt -s"', CLING_SRC_DIR)
 
         f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
         f.write(template)
@@ -1172,14 +1171,14 @@ cling (%s-1) unstable; urgency=low
 
     while TAG != '0.1':
         CMP = TAG
-        TAG = str(float(TAG) - 0.1)
+        TAG = str(round(float(TAG) - 0.1, 1))
         if STABLE_FLAG != '1':
             f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
             f.write('cling (' + TAG + '-1) unstable; urgency=low\n')
             f.close()
             STABLE_FLAG = '1'
-            template = exec_subprocess_check_output('git log v' + CMP + '...v' + TAG + '--format="  * %s" | fmt -s',
-                                                    CLING_SRC_DIR)
+            template = exec_subprocess_check_output('sh -c "git log v' + CMP + '...v' + TAG + ' --format=\'  * %s\' | fmt -s"',
+                                                     CLING_SRC_DIR)
 
             f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
             f.write(template)
@@ -1197,11 +1196,11 @@ cling (%s-1) unstable; urgency=low
     template = exec_subprocess_check_output('git log v0.1 --format="  * %s%n -- %an <%ae>  %cD%n"', CLING_SRC_DIR)
 
     f = open(os.path.join(prefix, 'debian', 'changelog'), 'a+')
-    f.write(template.encode('utf-8'))
+    f.write(template)
     f.close()
 
     box_draw("Run debuild to create Debian package")
-    exec_subprocess_call('debuild', prefix)
+    exec_subprocess_call('debuild -us -uc', prefix)
 
 
 ###############################################################################
@@ -2045,20 +2044,17 @@ if not os.path.isdir(TMP_PREFIX):
     os.makedirs(TMP_PREFIX)
 
 if args['with_llvm_binary'] and args['with_llvm_url']:
-    raise Exception("Cannot specify flags" +
-                    " --with-llvm-binary and --with-llvm-url together")
+    raise Exception("Cannot specify flags --with-llvm-binary and --with-llvm-url together")
 elif args['with_llvm_binary'] is False and args['with_llvm_url']:
     LLVM_GIT_URL = args['with_llvm_url']
 else:
     LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
-
-if args['with_llvm_binary'] and args['with_llvm_tar']:
-    raise Exception("Cannot specify flags " +
-                    "--with-binary-llvm and --with-llvm-tar together")
+    
+if args['with_binary_llvm'] and args['with_llvm_tar']:
+    raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-tar together")
 
 if args['with_llvm_tar'] and args['with_llvm_url']:
-    raise Exception("Cannot specify flags " +
-                    "--with-llvm-tar and --with-llvm-url together")
+    raise Exception("Cannot specify flags --with-llvm-tar and --with-llvm-url together")
 
 if args['tarball_tag'] and args['tarball_tag_build']:
     raise Exception('You cannot specify both the tarball_tag and tarball_tag_build flags')
@@ -2089,8 +2085,7 @@ if args['check_requirements']:
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
         install_line = ""
-        prerequisite = ['git', 'cmake', 'gcc', 'g++',
-                        'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
+        prerequisite = ['git', 'cmake', 'gcc', 'g++', 'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
         if args["with_llvm_binary"] or args["with_llvm_tar"]:
             prerequisite.extend(['subversion'])
         if args["with_llvm_binary"] and not args["with_llvm_tar"]:
@@ -2144,12 +2139,10 @@ if args['check_requirements']:
 
     elif OS == 'Windows':
         check_win('git')
-        # Check Windows registry for keys that
-        # prove an MS Visual Studio 14.0 installation
+        # Check Windows registry for keys that prove an MS Visual Studio 14.0 installation
         check_win('msvc')
         print('''
-Refer to the documentation of CPT for information
-on setting up your Windows environment.
+Refer to the documentation of CPT for information on setting up your Windows environment.
 [tools/packaging/README.md]
 ''')
     elif DIST == 'Fedora' or DIST == 'Scientific Linux CERN SLC':
@@ -2232,8 +2225,7 @@ on setting up your Windows environment.
                              shell=True,
                              stdin=subprocess.PIPE,
                              stdout=None,
-                             stderr=subprocess.STDOUT).communicate('yes'.
-                                                                   encode('utf-8'))
+                             stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
 
 if args["with_llvm_tar"] or args["with_llvm_binary"]:
     download_llvm_binary()
@@ -2243,8 +2235,7 @@ if bool(args['current_dev']) or bool(args['current_dev_build']):
     travis_fold_start("git-clone")
     current_packaging_mode = args['current_dev'] if args['current_dev'] else args['current_dev_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
+        "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
         'utf-8')
 
     if args['with_llvm_binary']:
@@ -2284,19 +2275,28 @@ if bool(args['current_dev']) or bool(args['current_dev_build']):
     travis_fold_end("git-clone")
 
     revision = set_version()
+
+    progress_dir = exec_subprocess_check_output('find . -name ProgressBar.py', srcdir)
+    if progress_dir[-1:] == "\n":
+                progress_dir = progress_dir[:-1]
+    with open(os.path.join(srcdir, progress_dir), 'r+') as file:
+        file.write("from importlib import reload")
+        newline=[]
+        for word in file.readlines():        
+            newline.append(word.replace("sys.setdefaultencoding('utf8')","# sys.setdefaultencoding('utf8')"))  
+        for line in newline:
+            file.writelines(line)
+
     if args['current_dev'] == 'tar':
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' +
-                                 platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                     + platform.machine().lower() + '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-'
-                                     + platform.machine().lower() + '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2376,8 +2376,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
     assert tag[0] == "v"
     assert CLING_BRANCH == None
     llvm_revision = urlopen(
-        'https://raw.githubusercontent.com/root-project/' +
-        'cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
+        'https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
     ).readline().strip().decode('utf-8')
 
     args["with_llvm_binary"] = True
@@ -2399,18 +2398,13 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
         set_version()
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' +
-                                 platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                     + platform.machine().lower() +
-                                     '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-'
-                                     + platform.machine().lower() +
-                                     '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2472,8 +2466,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
 
     elif stable_packaging_mode == 'pkg':
         set_version()
-        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2486,8 +2479,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
 if args['tarball_tag'] or args['tarball_tag_build']:
     tar_tag_cond = args['tarball_tag'] if args['tarball_tag'] else args['tarball_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'tarball_tag']).readline().strip().decode(
         'utf-8')
     if args["with_llvm_binary"]:
@@ -2504,16 +2496,13 @@ if args['tarball_tag'] or args['tarball_tag_build']:
 
     if OS == 'Windows':
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-win-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                 + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
 
     install_prefix()
     if not args['no_test']:
@@ -2527,8 +2516,7 @@ if args['tarball_tag'] or args['tarball_tag_build']:
 if args['deb_tag'] or args['deb_tag_build']:
     deb_tag_cond = args['deb_tag'] if args['deb_tag'] else args['deb_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'deb_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2548,8 +2536,7 @@ if args['deb_tag'] or args['deb_tag_build']:
 if args['rpm_tag'] or args['rpm_tag_build']:
     rpm_tag_cond = args['rpm_tag'] if args['rpm_tag'] else args['rpm_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project" +
-        "/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'rpm_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2569,8 +2556,7 @@ if args['rpm_tag'] or args['rpm_tag_build']:
 if args['nsis_tag'] or args['nsis_tag_build']:
     nsis_tag_build = args['nsis_tag'] if args['nsis_tag'] else args['nsis_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'nsis_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2591,8 +2577,7 @@ if args['nsis_tag'] or args['nsis_tag_build']:
 if args['dmg_tag'] or args['dmg_tag_build']:
     dmg_tag_cond = args['dmg_tag'] if args['dmg_tag'] else args['dmg_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project" +
-        "/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'dmg_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2612,8 +2597,7 @@ if args['dmg_tag'] or args['dmg_tag_build']:
 
 if args['create_dev_env']:
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/master/LastKnownGoodLLVMSVNRevision.txt"
+        "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt"
     ).readline().strip().decode('utf-8')
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
@@ -2622,23 +2606,19 @@ if args['create_dev_env']:
     set_version()
     if OS == 'Windows':
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-win-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                 + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
     install_prefix()
     if not args['no_test']:
         test_cling()
 
 if args['make_proper']:
-    # This is an internal option in CPT,
-    # meant to be integrated into Cling's build system.
+    # This is an internal option in CPT, meant to be integrated into Cling's build system.
     with open(os.path.join(LLVM_OBJ_ROOT, 'config.log'), 'r') as log:
         for line in log:
             if re.match('^LLVM_PREFIX=', line):
