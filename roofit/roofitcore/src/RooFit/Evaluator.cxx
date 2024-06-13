@@ -332,7 +332,9 @@ void Evaluator::updateOutputSizes()
 Evaluator::~Evaluator()
 {
    for (auto &info : _nodes) {
-      info.absArg->resetDataToken();
+      if(!info.isVariable) {
+         info.absArg->resetDataToken();
+      }
    }
 }
 
