@@ -17,11 +17,11 @@
 #ifndef ROOT_RZip
 #define ROOT_RZip
 
-extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int len);
+extern "C" unsigned long R__crc32(unsigned long crc, const unsigned char *buf, unsigned int len);
 
 extern "C" unsigned long R__memcompress(char *tgt, unsigned long tgtsize, char *src, unsigned long srcsize);
 
-extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep, 
+extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep,
                                         ROOT::RCompressionSetting::EAlgorithm::EValues algorithm);
 
 /**
@@ -29,7 +29,7 @@ extern "C" void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, in
  * R__zipMultipleAlgorithm instead.
  */
 extern "C" void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
-               R__DEPRECATED(6, 34, "use R__zipMultipleAlgorithm instead");
+   R__DEPRECATED(6, 34, "use R__zipMultipleAlgorithm instead");
 
 extern "C" void R__unzip(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
