@@ -194,8 +194,6 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
             gPad->Print(TString::Format("%s+", filename));
          else
             gPad->Print(TString::Format("%s+", GetName()));
-         if (fSleepTime > 0)
-            gSystem->Sleep(fSleepTime);
       }
    }
 }
