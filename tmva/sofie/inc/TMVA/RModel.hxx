@@ -97,10 +97,10 @@ public:
    void GenerateIntermediateTensorInfo();
    void GenerateDynamicTensorInfo();
    void GenerateOutput();
-   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0);
-   void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0)
+   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, long pos = 0, bool verbose = false);
+   void Generate(Options options = Options::kDefault, int batchSize = -1, int pos = 0, bool verbose = false)
    {
-      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos);
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, pos, verbose);
    }
 
    const std::vector<std::string> &GetInputTensorNames() const { return fInputTensorNames; }

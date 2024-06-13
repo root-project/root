@@ -341,7 +341,8 @@ void RModel::GenerateInitializedTensorInfo() {
             for (auto & dim: i.second.shape()) {
                 length *= dim;
             }
-            if (!fUseWeightFile) {
+            // in case we are not using weight files or for tensor created from Constant operator
+            if (!fUseWeightFile || i.second.IsConstantTensor() ) {
                 fGC += "float tensor_" + i.first + "[" + std::to_string(length) + "] = {";
                 float const *data = i.second.data<float>();
                 std::stringstream floats;
@@ -539,7 +540,7 @@ void RModel::GenerateOutput() {
    fGC += "}\n";
 }
 
-void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos) {
+void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, long pos, bool verbose) {
     // session flag is used in operator initialize
     if (static_cast<std::underlying_type_t<Options>>(Options::kNoSession) & options) {
         fUseSession = false;
@@ -563,7 +564,7 @@ void RModel::Generate(std::underlying_type_t<Options> options, int batchSize, lo
     if (static_cast<std::underlying_type_t<Options>>(Options::kGNNComponent) & options)
         fIsGNNComponent = true;
 
-    Initialize(batchSize);
+    Initialize(batchSize, verbose);
     std::string hgname;
     if(!fIsGNNComponent) {
         fGC.clear();
@@ -658,6 +659,8 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
 
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
+             // skip Constant tensors
+            if (i.second.IsConstantTensor()) continue;
             if (i.second.type() == ETensorType::FLOAT) {
                 size_t length = 1;
                 length = ConvertShapeToLength(i.second.shape());
@@ -748,6 +751,8 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
         auto outputDir = outputFile->mkdir(dirName.c_str());
 
         for (const auto& item : fInitializedTensors) {
+            // skip Constant tensors
+            if (item.second.IsConstantTensor()) continue;
             std::string tensorName = "tensor_" + item.first;
             size_t length = 1;
             length = ConvertShapeToLength(item.second.shape());
@@ -784,6 +789,8 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
             throw
             std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");
         for (auto& i: fInitializedTensors) {
+             // skip Constant tensors
+            if (i.second.IsConstantTensor()) continue;
             if (i.second.type() == ETensorType::FLOAT) {
                 size_t length = 1;
                 for (auto &dim : i.second.shape()) {
@@ -810,7 +817,7 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
 void RModel::PrintRequiredInputTensors() {
     std::cout << "Model requires following inputs:\n";
     for (auto& inputInfo: fInputTensorInfos) {
-        std::cout << "Parameterised Tensor name: " << inputInfo.first << "\t";
+        std::cout << "Parametraised Tensor name: " << inputInfo.first << "\t";
         std::cout << "type: " << ConvertTypeToString(inputInfo.second.type) << "\t";
         std::cout << "shape: [";
         for (size_t i = 0; i < inputInfo.second.shape.size(); i++) {
@@ -847,7 +854,9 @@ void RModel::PrintInitializedTensors() {
             std::cout << it.second.shape()[i];
             if (i < it.second.shape().size() - 1) std::cout << ",";
         }
-        std::cout << "]" << std::endl;
+        std::cout << "]";
+        if (it.second.IsConstantTensor()) std::cout << " (Constant)";
+        std::cout << std::endl;
     }
     std::cout << "\n";
 }
