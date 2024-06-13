@@ -289,6 +289,7 @@ if(asan)
   endforeach()
   #add_link_options() not available in our CMake version:
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ASAN_EXTRA_SHARED_LINKER_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ASAN_EXTRA_EXE_LINKER_FLAGS}")
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
