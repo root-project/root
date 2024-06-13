@@ -12,8 +12,8 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
    std::string input_name;
    auto ninputs = nodeproto.input_size();
    bool isConstantOfShape = false;
-   // case of ConstantOfShape
-   if (ninputs > 0) {  
+   // case of ConstantOfShape (Constant has zero inputs)
+   if (ninputs > 0) {
       input_name = nodeproto.input(0);
       isConstantOfShape = true;
       if (!parser.IsRegisteredTensorType(input_name)) {
@@ -29,7 +29,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
    ETensorType output_type = ETensorType::FLOAT;
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
       std::string attribute_name = nodeproto.attribute(i).name();
-      
+
       // tensor input
       if (attribute_name == "value") {
          const onnx::TensorProto & t = nodeproto.attribute(i).t();
