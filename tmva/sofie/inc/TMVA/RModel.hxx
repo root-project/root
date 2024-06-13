@@ -60,6 +60,9 @@ public:
    }
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
                              std::shared_ptr<void> data);
+   void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
+                             std::shared_ptr<void> data);
+
 
    template <typename T>
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, T *raw_data)
