@@ -73,7 +73,8 @@ TGraphTime::~TGraphTime()
 {
    if (!fSteps) return;
    fSteps->Delete();
-   delete fSteps; fSteps=nullptr;
+   delete fSteps;
+   fSteps = nullptr;
 }
 
 
@@ -106,7 +107,8 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
       fNsteps = 100;
       fSteps = new TObjArray(fNsteps+1);
    }
-   if (slot < 0 || slot >= fNsteps) return -1;
+   if (slot < 0 || slot >= fNsteps)
+      return -1;
    TList *list = (TList*)fSteps->UncheckedAt(slot);
    if (!list) {
       list = new TList();
@@ -131,37 +133,38 @@ void TGraphTime::Draw(Option_t *option)
    }
    if (fFrame) {
       fFrame->SetTitle(GetTitle());
-      fFrame->Draw();
+      gPad->Add(fFrame);
    }
-   Paint(option);
 
+   Paint(option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all objects added to each time step
 
-void TGraphTime::Paint(Option_t *option)
+void TGraphTime::Paint(Option_t *)
 {
-   TString opt = option;
-   opt.ToLower();
-   TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = nullptr;
-   TObjLink *lnk;
+   if (!gPad) {
+      Error("Paint", "Not possible to Paint without gPad");
+      return;
+   }
 
-   for (Int_t s=0;s<fNsteps;s++) {
-      list = (TList*)fSteps->UncheckedAt(s);
+   auto frame = gPad->GetPrimitive("frame");
+
+   for (Int_t s = 0; s < fNsteps; s++) {
+      auto list = static_cast<TList *>(fSteps->UncheckedAt(s));
       if (list) {
          gPad->Remove(frame);
          gPad->GetListOfPrimitives()->Clear();
          if (frame) gPad->Add(frame);
-         lnk = list->FirstLink();
+         auto lnk = list->FirstLink();
          while(lnk) {
-            TObject *obj = lnk->GetObject();
-            obj->Draw(lnk->GetAddOption());
+            gPad->Add(lnk->GetObject(), lnk->GetAddOption());
             lnk = lnk->Next();
          }
          gPad->Update();
-         if (fSleepTime > 0) gSystem->Sleep(fSleepTime);
+         if (fSleepTime > 0)
+            gSystem->Sleep(fSleepTime);
       }
    }
 }
@@ -173,27 +176,33 @@ void TGraphTime::Paint(Option_t *option)
 
 void TGraphTime::SaveAnimatedGif(const char *filename) const
 {
-   TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = nullptr;
-   TObjLink *lnk;
+   if (!gPad) {
+      Error("SaveAnimatedGif", "Not possible to create animated GIF without gPad");
+      return;
+   }
 
-   for (Int_t s=0;s<fNsteps;s++) {
-      list = (TList*)fSteps->UncheckedAt(s);
+   if (gPad->IsWeb()) {
+      Error("SaveAnimatedGif", "Not possible to created animated GIF with web canvas");
+      return;
+   }
+
+   auto frame = gPad->GetPrimitive("frame");
+
+   TString farg = TString::Format("%s+", filename && *filename ? filename : GetName());
+
+   for (Int_t s = 0; s < fNsteps; s++) {
+      auto list = static_cast<TList *>(fSteps->UncheckedAt(s));
       if (list) {
          gPad->Remove(frame);
          gPad->GetListOfPrimitives()->Clear();
          if (frame) gPad->Add(frame);
-         lnk = list->FirstLink();
+         auto lnk = list->FirstLink();
          while(lnk) {
-            TObject *obj = lnk->GetObject();
-            obj->Draw(lnk->GetAddOption());
+            gPad->Add(lnk->GetObject(), lnk->GetAddOption());
             lnk = lnk->Next();
          }
          gPad->Update();
-         if (filename && strlen(filename) > 0)
-            gPad->Print(TString::Format("%s+", filename));
-         else
-            gPad->Print(TString::Format("%s+", GetName()));
+         gPad->Print(farg.Data());
       }
    }
 }
