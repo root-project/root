@@ -56,34 +56,47 @@ public:
          fShape = std::vector<size_t> ();
          if (fValues.size() != 1)
             throw std::runtime_error("TMVA SOFIE ConstantOfShape Op value Tensor has invalid size " + std::to_string(fValues.size()));
+
+         // in case of constant of shape output is an intermediate tensor
+         // the values are set in the Generate function, since the output tensor shape is an input
+         // and can be known only at run time
+         model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
+         return;
       }
-       // in case of standard constant the shape is provided as input
-       if (ConvertShapeToLength(fShape) != fValues.size())
+      // case of constant operator
+      // in case of standard constant the shape is provided as input
+      if (ConvertShapeToLength(fShape) != fValues.size())
          throw std::runtime_error("TMVA SOFIE Constant Op has invalid shape : " + ConvertShapeToString(fShape) +
                                  " with " + std::to_string(fValues.size()) + " values");
 
-      model.AddIntermediateTensor(fNY, ConvertStringToType(fAttrType), fShape);
+      // we need to create an initialized tensor of type constant to flag to not save it in a weight file
+      // but keep its initialization in the generated code
+      size_t length = ConvertShapeToLength(fShape);
+      std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
+      std::memcpy(data.get(), (void*) fValues.data(), length * sizeof(T));
+      model.AddInitializedTensor(fNY, ConvertStringToType(fAttrType), fShape, data);
    }
 
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
-      if (!fIsConstantOfShape && fShape.empty()) {
-         throw std::runtime_error("TMVA SOFIE Constant called to Generate without being initialized first");
-      }
+      // if (!fIsConstantOfShape && fShape.empty()) {
+      //    throw std::runtime_error("TMVA SOFIE Constant called to Generate without being initialized first");
+      // }
       std::stringstream out;
       if (fIsConstantOfShape)
          out << "\n//------ ConstantOfShape\n";
-      else
-         out << "\n//------ Constant\n";
+      // else
+      //    out << "\n//------ Constant\n";
 
       if (!fIsConstantOfShape) {
-         out << SP << "fTensor_" << fNY << " = {";
-         for (size_t i = 0; i < fValues.size(); i++) {
-            out << fValues[i];
-            if (i < fValues.size()-1) out << ", ";
-            if  (i > 0 && i %10 == 0) out << "\n";
-         }
-         out << SP << "};\n";
+         // code is generated in RModel initialization
+         // out << SP << "fTensor_" << fNY << " = {";
+         // for (size_t i = 0; i < fValues.size(); i++) {
+         //    out << fValues[i];
+         //    if (i < fValues.size()-1) out << ", ";
+         //    if  (i > 0 && i %10 == 0) out << "\n";
+         // }
+         // out << SP << "};\n";
       }
       // in case of Constant of Shape shape is given by input. fValues could be empty and all
       // vector is initialiazed with zero values
