@@ -39,6 +39,8 @@ protected:
    TObjArray         *fSteps;     ///< Array of TLists for each time step
    TH1               *fFrame;     ///< TH1 object used for the pad range
 
+   Bool_t DrawStep(Int_t nstep) const;
+
 public:
 
    TGraphTime();
@@ -46,12 +48,12 @@ public:
    TGraphTime(const TGraphTime &gr);
    ~TGraphTime() override;
 
-   virtual Int_t   Add(const TObject *obj, Int_t slot, Option_t *option="");
-   void    Draw(Option_t *chopt="") override;
-   TObjArray      *GetSteps() const {return fSteps;}
-   void    Paint(Option_t *chopt="") override;
-   virtual void    SaveAnimatedGif(const char *filename="") const;
-   virtual void    SetSleepTime(Int_t stime=0) {fSleepTime = stime;}
+   virtual Int_t Add(const TObject *obj, Int_t slot, Option_t *option = "");
+   void Draw(Option_t *chopt = "") override;
+   TObjArray *GetSteps() const { return fSteps; }
+   void Paint(Option_t *chopt = "") override;
+   virtual void SaveAnimatedGif(const char *filename = "") const;
+   virtual void SetSleepTime(Int_t stime = 0) { fSleepTime = stime; }
 
    ClassDefOverride(TGraphTime,1)  //An array of objects evolving with time
 };
