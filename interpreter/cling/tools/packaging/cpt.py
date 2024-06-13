@@ -244,8 +244,8 @@ def fetch_llvm(llvm_revision):
 def llvm_flag_setter(llvm_dir, llvm_config_path):
     flags = "-DLLVM_BINARY_DIR={0} -DLLVM_CONFIG={1} -DLLVM_LIBRARY_DIR={2} -DLLVM_MAIN_INCLUDE_DIR={3} -DLLVM_TABLEGEN_EXE={4} \
                   -DLLVM_TOOLS_BINARY_DIR={5} -DLLVM_TOOL_CLING_BUILD=ON".format(llvm_dir, llvm_config_path,
-                                                                                 os.path.join(llvm_dir, 'lib'), os.path.join(llvm_dir, 'include'), os.path.join(llvm_dir, 'bin', 'llvm-tblgen'),
-                                                                                 os.path.join(llvm_dir, 'bin'))
+                                                                                 os.path.join(srcdir, 'lib'), os.path.join(srcdir, 'include'), os.path.join(srcdir, 'bin', 'llvm-tblgen'),
+                                                                                 os.path.join(srcdir, 'bin'))
     if args['with_verbose_output']:
         flags += " -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON"
     return flags
@@ -263,11 +263,10 @@ def download_llvm_binary():
         subprocess.call(
             "sudo -H {0} -m pip install lit".format(sys.executable), shell=True
             )
-        llvm_config_path = exec_subprocess_check_output("which llvm-config-{0}".format(llvm_vers), workdir)
+        llvm_config_path = exec_subprocess_check_output("find . -name llvm-config", workdir)
         if llvm_config_path != '' and tar_required is False:
-            llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
-            if llvm_config_path[-1:] == "\n":
-                llvm_config_path = llvm_config_path[:-1]
+            llvm_dir = os.path.join(srcdir, "bin")
+            llvm_config_path = os.path.join(llvm_dir, "llvm-config")
             llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
         else:
             tar_required = True
@@ -285,14 +284,23 @@ def download_llvm_binary():
         raise Exception("Building clang using LLVM binary not possible. Please invoke cpt without --with-llvm-binary and --with-llvm-tar flags")
     if tar_required:
         if DIST == 'Ubuntu':
-            llvm_dir = os.path.join("/usr", "lib", "llvm-"+llvm_vers)
+            llvm_dir = os.path.join(srcdir, "bin")
+            llvm_config_path = os.path.join(llvm_dir, "llvm-config")
         elif DIST == 'MacOSX':
             llvm_dir = os.path.join("/opt", "local", "libexec", "llvm-"+llvm_vers)
         llvm_flags = llvm_flag_setter(llvm_dir, llvm_config_path)
-        if DIST == "Ubuntu" and REV == '16.04' and is_os_64bit():
-            download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz'
+        if DIST == "Ubuntu" and REV == '20.04' and is_os_64bit():
+            download_link = 'https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz'
             wget(url=download_link, out_dir=workdir)
-            extract_tar(srcdir, 'clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-16.04.tar.xz')
+            extract_tar(srcdir, 'clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz')
+        elif DIST == "Ubuntu" and REV == '18.04' and is_os_64bit():
+            download_link = 'https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.1/clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz'
+            wget(url=download_link, out_dir=workdir)
+            extract_tar(srcdir, 'clang+llvm-13.0.1-x86_64-linux-gnu-ubuntu-18.04.tar.xz')
+        elif DIST == "Ubuntu" and REV == '16.04' and is_os_64bit():
+            download_link = 'https://github.com/llvm/llvm-project/releases/download/llvmorg-13.0.0/clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz'
+            wget(url=download_link, out_dir=workdir)
+            extract_tar(srcdir, 'clang+llvm-13.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz')
         elif DIST == "Ubuntu" and REV == '14.04' and is_os_64bit():
             download_link = 'http://releases.llvm.org/5.0.2/clang+llvm-5.0.2-x86_64-linux-gnu-ubuntu-14.04.tar.xz'
             wget(url=download_link, out_dir=workdir)
@@ -2045,20 +2053,17 @@ if not os.path.isdir(TMP_PREFIX):
     os.makedirs(TMP_PREFIX)
 
 if args['with_llvm_binary'] and args['with_llvm_url']:
-    raise Exception("Cannot specify flags" +
-                    " --with-llvm-binary and --with-llvm-url together")
+    raise Exception("Cannot specify flags --with-llvm-binary and --with-llvm-url together")
 elif args['with_llvm_binary'] is False and args['with_llvm_url']:
     LLVM_GIT_URL = args['with_llvm_url']
 else:
     LLVM_GIT_URL = "http://root.cern.ch/git/llvm.git"
-
-if args['with_llvm_binary'] and args['with_llvm_tar']:
-    raise Exception("Cannot specify flags " +
-                    "--with-binary-llvm and --with-llvm-tar together")
+    
+if args['with_binary_llvm'] and args['with_llvm_tar']:
+    raise Exception("Cannot specify flags --with-binary-llvm and --with-llvm-tar together")
 
 if args['with_llvm_tar'] and args['with_llvm_url']:
-    raise Exception("Cannot specify flags " +
-                    "--with-llvm-tar and --with-llvm-url together")
+    raise Exception("Cannot specify flags --with-llvm-tar and --with-llvm-url together")
 
 if args['tarball_tag'] and args['tarball_tag_build']:
     raise Exception('You cannot specify both the tarball_tag and tarball_tag_build flags')
@@ -2089,8 +2094,7 @@ if args['check_requirements']:
     box_draw('Check availability of required softwares')
     if DIST == 'Ubuntu':
         install_line = ""
-        prerequisite = ['git', 'cmake', 'gcc', 'g++',
-                        'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
+        prerequisite = ['git', 'cmake', 'gcc', 'g++', 'debhelper', 'devscripts', 'gnupg', 'zlib1g-dev']
         if args["with_llvm_binary"] or args["with_llvm_tar"]:
             prerequisite.extend(['subversion'])
         if args["with_llvm_binary"] and not args["with_llvm_tar"]:
@@ -2144,12 +2148,10 @@ if args['check_requirements']:
 
     elif OS == 'Windows':
         check_win('git')
-        # Check Windows registry for keys that
-        # prove an MS Visual Studio 14.0 installation
+        # Check Windows registry for keys that prove an MS Visual Studio 14.0 installation
         check_win('msvc')
         print('''
-Refer to the documentation of CPT for information
-on setting up your Windows environment.
+Refer to the documentation of CPT for information on setting up your Windows environment.
 [tools/packaging/README.md]
 ''')
     elif DIST == 'Fedora' or DIST == 'Scientific Linux CERN SLC':
@@ -2232,8 +2234,7 @@ on setting up your Windows environment.
                              shell=True,
                              stdin=subprocess.PIPE,
                              stdout=None,
-                             stderr=subprocess.STDOUT).communicate('yes'.
-                                                                   encode('utf-8'))
+                             stderr=subprocess.STDOUT).communicate('yes'.encode('utf-8'))
 
 if args["with_llvm_tar"] or args["with_llvm_binary"]:
     download_llvm_binary()
@@ -2243,8 +2244,7 @@ if bool(args['current_dev']) or bool(args['current_dev_build']):
     travis_fold_start("git-clone")
     current_packaging_mode = args['current_dev'] if args['current_dev'] else args['current_dev_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
+        "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt").readline().strip().decode(
         'utf-8')
 
     if args['with_llvm_binary']:
@@ -2287,16 +2287,13 @@ if bool(args['current_dev']) or bool(args['current_dev_build']):
     if args['current_dev'] == 'tar':
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' +
-                                 platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                     + platform.machine().lower() + '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-'
-                                     + platform.machine().lower() + '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2376,8 +2373,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
     assert tag[0] == "v"
     assert CLING_BRANCH == None
     llvm_revision = urlopen(
-        'https://raw.githubusercontent.com/root-project/' +
-        'cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
+        'https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt' % tag
     ).readline().strip().decode('utf-8')
 
     args["with_llvm_binary"] = True
@@ -2399,18 +2395,13 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
         set_version()
         if OS == 'Windows':
             get_win_dep()
-            compile(os.path.join(workdir, 'cling-win-' +
-                                 platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
         else:
             if DIST == 'Scientific Linux CERN SLC':
-                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                     + platform.machine().lower() +
-                                     '-' + VERSION))
+                compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
             else:
                 compile(os.path.join(workdir,
-                                     'cling-' + DIST + '-' + REV + '-'
-                                     + platform.machine().lower() +
-                                     '-' + VERSION))
+                                     'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2472,8 +2463,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
 
     elif stable_packaging_mode == 'pkg':
         set_version()
-        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         install_prefix()
         if not args['no_test']:
             if args['with_llvm_binary']:
@@ -2486,8 +2476,7 @@ if bool(args['last_stable']) or bool(args['last_stable_build']):
 if args['tarball_tag'] or args['tarball_tag_build']:
     tar_tag_cond = args['tarball_tag'] if args['tarball_tag'] else args['tarball_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'tarball_tag']).readline().strip().decode(
         'utf-8')
     if args["with_llvm_binary"]:
@@ -2504,16 +2493,13 @@ if args['tarball_tag'] or args['tarball_tag_build']:
 
     if OS == 'Windows':
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-win-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                 + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
 
     install_prefix()
     if not args['no_test']:
@@ -2527,8 +2513,7 @@ if args['tarball_tag'] or args['tarball_tag_build']:
 if args['deb_tag'] or args['deb_tag_build']:
     deb_tag_cond = args['deb_tag'] if args['deb_tag'] else args['deb_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'deb_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2548,8 +2533,7 @@ if args['deb_tag'] or args['deb_tag_build']:
 if args['rpm_tag'] or args['rpm_tag_build']:
     rpm_tag_cond = args['rpm_tag'] if args['rpm_tag'] else args['rpm_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project" +
-        "/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'rpm_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2569,8 +2553,7 @@ if args['rpm_tag'] or args['rpm_tag_build']:
 if args['nsis_tag'] or args['nsis_tag_build']:
     nsis_tag_build = args['nsis_tag'] if args['nsis_tag'] else args['nsis_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'nsis_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2591,8 +2574,7 @@ if args['nsis_tag'] or args['nsis_tag_build']:
 if args['dmg_tag'] or args['dmg_tag_build']:
     dmg_tag_cond = args['dmg_tag'] if args['dmg_tag'] else args['dmg_tag_build']
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project" +
-        "/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
+        "https://raw.githubusercontent.com/root-project/cling/%s/LastKnownGoodLLVMSVNRevision.txt" % args[
             'dmg_tag']).readline().strip().decode(
         'utf-8')
     fetch_llvm(llvm_revision)
@@ -2612,8 +2594,7 @@ if args['dmg_tag'] or args['dmg_tag_build']:
 
 if args['create_dev_env']:
     llvm_revision = urlopen(
-        "https://raw.githubusercontent.com/root-project/" +
-        "cling/master/LastKnownGoodLLVMSVNRevision.txt"
+        "https://raw.githubusercontent.com/root-project/cling/master/LastKnownGoodLLVMSVNRevision.txt"
     ).readline().strip().decode('utf-8')
     fetch_llvm(llvm_revision)
     fetch_clang(llvm_revision)
@@ -2622,23 +2603,19 @@ if args['create_dev_env']:
     set_version()
     if OS == 'Windows':
         get_win_dep()
-        compile(os.path.join(workdir, 'cling-win-'
-                             + platform.machine().lower() + '-' + VERSION))
+        compile(os.path.join(workdir, 'cling-win-' + platform.machine().lower() + '-' + VERSION))
     else:
         if DIST == 'Scientific Linux CERN SLC':
-            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-'
-                                 + platform.machine().lower() + '-' + VERSION))
+            compile(os.path.join(workdir, 'cling-SLC-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
         else:
             compile(
-                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-'
-                             + platform.machine().lower() + '-' + VERSION))
+                os.path.join(workdir, 'cling-' + DIST + '-' + REV + '-' + platform.machine().lower() + '-' + VERSION))
     install_prefix()
     if not args['no_test']:
         test_cling()
 
 if args['make_proper']:
-    # This is an internal option in CPT,
-    # meant to be integrated into Cling's build system.
+    # This is an internal option in CPT, meant to be integrated into Cling's build system.
     with open(os.path.join(LLVM_OBJ_ROOT, 'config.log'), 'r') as log:
         for line in log:
             if re.match('^LLVM_PREFIX=', line):
