@@ -45,7 +45,7 @@ interpreter/cling/tools/packaging @vgvassilev
 /tutorials/sql/ @linev
 
 # Projects that span over several code modules:
-/bindings/r/ @omazapa
+/bindings/r/ @dpiparo
 /core/imt/ @dpiparo
 /core/multiproc/ @dpiparo
 /graf2d/cocoa/ @couet
