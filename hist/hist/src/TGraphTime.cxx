@@ -13,6 +13,7 @@
 #include "TVirtualPad.h"
 #include "TH1.h"
 #include "TROOT.h"
+#include "TTimer.h"
 #include "TObjArray.h"
 #include "TSystem.h"
 
@@ -63,10 +64,13 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
 
 TGraphTime::~TGraphTime()
 {
-   if (!fSteps) return;
-   fSteps->Delete();
-   delete fSteps;
-   fSteps = nullptr;
+   Animate(kFALSE);
+
+   if (fSteps) {
+      fSteps->Delete();
+      delete fSteps;
+      fSteps = nullptr;
+   }
 }
 
 
@@ -118,6 +122,11 @@ void TGraphTime::Animate(Bool_t enable)
 {
    if (!enable) {
       fAnimateCnt = -1;
+      if (fAnimateTimer) {
+         fAnimateTimer->Stop();
+         delete fAnimateTimer;
+         fAnimateTimer = nullptr;
+      }
       return;
    }
 
@@ -131,9 +140,13 @@ void TGraphTime::Animate(Bool_t enable)
       fFrame->SetTitle(GetTitle());
 
    fAnimateCnt = 0;
+   if (!fAnimateTimer) {
+      fAnimateTimer = new TTimer(this, fSleepTime > 0 ? fSleepTime : 1);
+      fAnimateTimer->Start();
+   }
+
    Notify();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this TGraphTime.
@@ -191,18 +204,16 @@ Bool_t TGraphTime::DrawStep(Int_t nstep) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Method used for implementing animation of TGraphTime
 
-Bool_t TGraphTime::Notify()
+Bool_t TGraphTime::HandleTimer(TTimer *)
 {
    if ((fAnimateCnt < 0) || !fSteps || !gPad)
-      return kFALSE;
+      return kTRUE;
 
    if (fAnimateCnt > fSteps->GetLast())
       fAnimateCnt = 0;
 
    if (DrawStep(fAnimateCnt++))
       gPad->Update();
-
-   TTimer::SingleShot(fSleepTime > 0 ? fSleepTime : 1, ClassName(), this, "Notify()");
 
    return kTRUE;
 }
