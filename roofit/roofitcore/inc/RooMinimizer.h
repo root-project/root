@@ -184,6 +184,8 @@ private:
    void initMinimizerFirstPart();
    void initMinimizerFcnDependentPart(double defaultErrorLevel);
 
+   void determineStatus(bool fitterReturnValue);
+
    int _status = -99;
    bool _profileStart = false;
    bool _loggingToDataSet = false;
