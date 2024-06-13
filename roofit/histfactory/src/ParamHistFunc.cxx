@@ -718,31 +718,29 @@ std::list<double>* ParamHistFunc::plotSamplingHint(RooAbsRealLValue& obs, double
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<double>* ParamHistFunc::binBoundaries(RooAbsRealLValue& obs, double xlo,
-                    double xhi) const
+std::list<double> *ParamHistFunc::binBoundaries(RooAbsRealLValue &obs, double xlo, double xhi) const
 {
-  // copied and edited from RooHistFunc
-  RooAbsLValue* lvarg = &obs;
+   // copied and edited from RooHistFunc
+   RooAbsLValue *lvarg = &obs;
 
-  // look for variable in the DataHist, and if found, return the binning
-  std::string varName = dynamic_cast<TObject*>(lvarg)->GetName();
-  auto& vars = _dataSet.getVariables();
-  auto& binnings = _dataSet.getBinnings();
-  for(size_t i=0; i < vars.size(); i++ ) {
-    if(varName == vars.at(i)->GetName()) {
-      // found the variable, return its binning
-      const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
-      double* boundaries = binnings.at(i)->array();
-      std::list<double>* hint = new std::list<double> ;
-      for (Int_t i=0 ; i<binnings.at(i)->numBoundaries() ; i++) {
-        if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-          hint->push_back(boundaries[i]) ;
-        }
+   // look for variable in the DataHist, and if found, return the binning
+   std::string varName = dynamic_cast<TObject *>(lvarg)->GetName();
+   RooArgSet const &vars = *_dataSet.get();
+   auto &binnings = _dataSet.getBinnings();
+   for (size_t i = 0; i < vars.size(); i++) {
+      if (varName == vars[i]->GetName()) {
+         // found the variable, return its binning
+         const RooAbsBinning *binning = lvarg->getBinningPtr(nullptr);
+         double *boundaries = binnings.at(i)->array();
+         std::list<double> *hint = new std::list<double>;
+         for (Int_t i = 0; i < binnings.at(i)->numBoundaries(); i++) {
+            if (boundaries[i] >= xlo && boundaries[i] <= xhi) {
+               hint->push_back(boundaries[i]);
+            }
+         }
+         return hint;
       }
-      return hint ;
-    }
-  }
-  // variable not found, return null
-  return nullptr;
-  
+   }
+   // variable not found, return null
+   return nullptr;
 }
