@@ -29,7 +29,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = true;
+const bool writeJsonFiles = false;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -39,10 +39,33 @@ int validate(RooWorkspace &ws1, std::string const &argName, bool exact = true)
 {
    RooWorkspace ws2;
 
+   const std::string json1 = RooJSONFactoryWSTool{ws1}.exportJSONtoString();
+   RooJSONFactoryWSTool{ws2}.importJSONfromString(json1);
+
+   // Export the re-imported workspace back to JSON, and compare the first JSON
+   // with the second one. They should be identical.
+   const std::string json2 = RooJSONFactoryWSTool{ws2}.exportJSONtoString();
+   EXPECT_EQ(json2, json1) << argName;
+
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{ws1}.exportJSON(argName + ".json");
+      RooJSONFactoryWSTool{ws1}.exportJSON(argName + "_1.json");
+      RooJSONFactoryWSTool{ws2}.exportJSON(argName + "_2.json");
    }
-   RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
+
+   // It would be nice to do a similar closure check for the original and for
+   // the re-imported workspace. However, there is no way to compare workspaces
+   // for equality. But we can still check that the objects in the workspace
+   // have at least the same name.
+   RooArgSet comps1 = ws1.components();
+   RooArgSet comps2 = ws2.components();
+   EXPECT_EQ(comps2.size(), comps1.size());
+
+   comps1.sort();
+   comps2.sort();
+
+   for (std::size_t i = 0; i < comps1.size(); ++i) {
+      EXPECT_STREQ(comps1[i]->GetName(), comps2[i]->GetName());
+   }
 
    RooRealVar &x1 = *ws1.var("x");
    RooRealVar &x2 = *ws2.var("x");

@@ -606,8 +606,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
-      RooAbsArg *extConstraint = workspace.arg(nameNode.val());
-      if (extConstraint) {
+      if (RooAbsArg *extConstraint = workspace.arg(nameNode.val())) {
          extConstraints.add(*extConstraint);
       }
    }
@@ -989,9 +988,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.
-      for (RooAbsArg *s : func.servers()) {
-         this->exportObject(*s, exportedObjectNames);
-      }
+      exportObjects(func.servers(), exportedObjectNames);
 
       std::vector<std::string> channelNames;
       for (auto const &item : simPdf->indexCat()) {
@@ -1040,13 +1037,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             continue;
          }
          if (exp->autoExportDependants()) {
-            for (RooAbsArg *s : func.servers()) {
-               this->exportObject(*s, exportedObjectNames);
-            }
+            exportObjects(func.servers(), exportedObjectNames);
          } else {
-            for (RooAbsArg const *s : _serversToExport) {
-               this->exportObject(*s, exportedObjectNames);
-            }
+            exportObjects(_serversToExport, exportedObjectNames);
          }
          return;
       }
@@ -1758,9 +1751,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    sortByName(allpdfs);
    std::set<std::string> exportedObjectNames;
-   for (RooAbsPdf *p : allpdfs) {
-      this->exportObject(*p, exportedObjectNames);
-   }
+   exportObjects(allpdfs, exportedObjectNames);
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {
