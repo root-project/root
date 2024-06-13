@@ -74,7 +74,7 @@ public:
       size_t length = ConvertShapeToLength(fShape);
       std::shared_ptr<void> data(malloc(length * sizeof(T)), free);
       std::memcpy(data.get(), (void*) fValues.data(), length * sizeof(T));
-      model.AddInitializedTensor(fNY, ConvertStringToType(fAttrType), fShape, data);
+      model.AddConstantTensor(fNY, ConvertStringToType(fAttrType), fShape, data);
    }
 
    std::string Generate(std::string OpName){
