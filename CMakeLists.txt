@@ -797,3 +797,8 @@ ROOT_SHOW_ENABLED_OPTIONS()
 
 #---Packaging-------------------------------------------------------------------------------------
 include(RootCPack)
+
+#---Documentation---------------------------------------------------------------------------------
+if(docu AND NOT WIN32)
+  add_subdirectory(documentation/doxygen)
+endif()

@@ -33,7 +33,7 @@ while read notebook dependencies; do
       cmd=$(grep $dependency $inputFile)
       if [ -n "$cmd" ]; then
         echo "Running $cmd as depedency of $notebook"
-        ${Python3_EXECUTABLE:-python3} $cmd  && sed -i'.back' "\#${dependency}#d" $inputFile
+        ${PYTHON_EXECUTABLE} $cmd  && sed -i'.back' "\#${dependency}#d" $inputFile
       fi
     done
   fi
@@ -60,7 +60,8 @@ tmva/TMVARegressionApplication.C   tmva/TMVARegression.C
 EOF
 
 # Run rest in parallel
-xargs -L 1 -P ${nJobs:-1} ${Python3_EXECUTABLE:-python3} < $inputFile
+xargs -L 1 -P ${nJobs:-1} ${PYTHON_EXECUTABLE} < $inputFile
 
-rm ${inputFile}.back
+[ -e ${inputFile}.back ] && rm ${inputFile}.back
 
+exit 0
