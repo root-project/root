@@ -732,9 +732,9 @@ std::list<double> *ParamHistFunc::binBoundaries(RooAbsRealLValue &obs, double xl
          // found the variable, return its binning
          double *boundaries = binnings.at(i)->array();
          std::list<double> *hint = new std::list<double>;
-         for (Int_t i = 0; i < binnings.at(i)->numBoundaries(); i++) {
-            if (boundaries[i] >= xlo && boundaries[i] <= xhi) {
-               hint->push_back(boundaries[i]);
+         for (int j = 0; j < binnings.at(i)->numBoundaries(); j++) {
+            if (boundaries[j] >= xlo && boundaries[j] <= xhi) {
+               hint->push_back(boundaries[j]);
             }
          }
          return hint;
