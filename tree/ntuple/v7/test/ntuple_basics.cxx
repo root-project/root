@@ -314,9 +314,60 @@ TEST(RNTuple, ClusterEntries)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), opt);
       for (int i = 0; i < 100; i++) {
          ntuple->Fill();
-         if (i && ((i % 5) == 0))
+         if (((i + 1) % 5) == 0)
             ntuple->CommitCluster();
       }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
+
+TEST(RNTuple, ClusterEntriesAuto)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries_auto.root");
+   auto model = RNTupleModel::Create();
+   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+   {
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetApproxZippedClusterSize(5 * sizeof(float));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      for (int i = 0; i < 100; i++) {
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   // 100 entries / 5 entries per cluster
+   EXPECT_EQ(20, ntuple->GetDescriptor().GetNClusters());
+}
+
+TEST(RNTuple, ClusterEntriesAutoStatus)
+{
+   FileRaii fileGuard("test_ntuple_cluster_entries_auto_status.root");
+   {
+      auto model = RNTupleModel::CreateBare();
+      auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+
+      int CommitClusterCalled = 0;
+      RNTupleFillStatus status;
+
+      RNTupleWriteOptions options;
+      options.SetCompression(0);
+      options.SetApproxZippedClusterSize(5 * sizeof(float));
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath(), options);
+      auto entry = ntuple->CreateEntry();
+      for (int i = 0; i < 100; i++) {
+         ntuple->FillNoCommit(*entry, status);
+         if (status.ShouldCommitCluster()) {
+            ntuple->CommitCluster();
+            CommitClusterCalled++;
+         }
+      }
+      EXPECT_EQ(20, CommitClusterCalled);
    }
 
    auto ntuple = RNTupleReader::Open("ntuple", fileGuard.GetPath());

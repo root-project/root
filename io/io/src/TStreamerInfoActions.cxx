@@ -356,7 +356,7 @@ namespace TStreamerInfoActions
           && config->fInfo->GetStreamMemberWise()
           && cl->CanSplit()
           && !(strspn(config->fCompInfo->fElem->GetTitle(),"||") == 2)
-          && !(vClass->TestBit(TClass::kHasCustomStreamerMember)) ) {
+          && !(vClass->HasCustomStreamerMember()) ) {
          // Let's save the collection member-wise.
 
          UInt_t pos = buf.WriteVersionMemberWise(config->fInfo->IsA(),kTRUE);
@@ -3063,7 +3063,7 @@ void TStreamerInfo::Compile()
    if (!ndata) {
       // This may be the case for empty classes (e.g., TAtt3D).
       // We still need to properly set the size of emulated classes (i.e. add the virtual table)
-      if (fClass->TestBit(TClass::kIsEmulation) && fNVirtualInfoLoc!=0) {
+      if (fClass->GetState() == TClass::kEmulated && fNVirtualInfoLoc!=0) {
          fSize = sizeof(TStreamerInfo*);
       }
       fComp = new TCompInfo[1];

@@ -19,6 +19,7 @@
 #include <ROOT/RConfig.hxx> // for R__unlikely
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -81,10 +82,11 @@ private:
 public:
    ~RNTupleFillContext();
 
-   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
-   /// context's own model.
-   /// \return The number of uncompressed bytes written.
-   std::size_t Fill(REntry &entry)
+   /// Fill an entry into this context, but don't commit the cluster. The calling code must pass an RNTupleFillStatus
+   /// and check RNTupleFillStatus::ShouldCommitCluster.
+   ///
+   /// This method will perform a light check whether the entry comes from the context's own model.
+   void FillNoCommit(REntry &entry, RNTupleFillStatus &status)
    {
       if (R__unlikely(entry.GetModelId() != fModel->GetModelId()))
          throw RException(R__FAIL("mismatch between entry and model"));
@@ -92,9 +94,23 @@ public:
       const std::size_t bytesWritten = entry.Append();
       fUnzippedClusterSize += bytesWritten;
       fNEntries++;
-      if ((fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst))
+
+      status.fNEntriesSinceLastCommit = fNEntries - fLastCommitted;
+      status.fUnzippedClusterSize = fUnzippedClusterSize;
+      status.fLastEntrySize = bytesWritten;
+      status.fShouldCommitCluster =
+         (fUnzippedClusterSize >= fMaxUnzippedClusterSize) || (fUnzippedClusterSize >= fUnzippedClusterSizeEst);
+   }
+   /// Fill an entry into this context.  This method will perform a light check whether the entry comes from the
+   /// context's own model.
+   /// \return The number of uncompressed bytes written.
+   std::size_t Fill(REntry &entry)
+   {
+      RNTupleFillStatus status;
+      FillNoCommit(entry, status);
+      if (status.ShouldCommitCluster())
          CommitCluster();
-      return bytesWritten;
+      return status.GetLastEntrySize();
    }
    /// Ensure that the data from the so far seen Fill calls has been written to storage
    void CommitCluster();

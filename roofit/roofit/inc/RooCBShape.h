@@ -32,11 +32,15 @@ public:
   TObject* clone(const char* newname) const override { return new RooCBShape(*this,newname); }
 
   Int_t getAnalyticalIntegral( RooArgSet& allVars,  RooArgSet& analVars, const char* rangeName=nullptr ) const override;
-  double analyticalIntegral( Int_t code, const char* rangeName=nullptr ) const override;
+  double analyticalIntegral(Int_t, const char *rangeName = nullptr) const override;
 
   // Optimized accept/reject generator support
   Int_t getMaxVal(const RooArgSet& vars) const override ;
   double maxVal(Int_t code) const override ;
+
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
 

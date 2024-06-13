@@ -8,6 +8,7 @@
 #include <ROOT/RMiniFile.hxx>
 #include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
+#include <ROOT/RNTupleFillStatus.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
@@ -36,11 +37,6 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef TYPED_TEST_SUITE
-#define TYPED_TEST_SUITE TYPED_TEST_CASE
-#endif
-
 #include "CustomStruct.hxx"
 
 #include <array>
@@ -59,6 +55,7 @@
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
 using DescriptorId_t = ROOT::Experimental::DescriptorId_t;
 using EColumnType = ROOT::Experimental::EColumnType;
+using ROOT::Experimental::EExtraTypeInfoIds;
 using ENTupleStructure = ROOT::Experimental::ENTupleStructure;
 using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
@@ -66,6 +63,7 @@ using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::Internal::RClusterDescriptorBuilder;
 using RClusterGroupDescriptorBuilder = ROOT::Experimental::Internal::RClusterGroupDescriptorBuilder;
 using RColumnDescriptorBuilder = ROOT::Experimental::Internal::RColumnDescriptorBuilder;
+using ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::Internal::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
@@ -82,6 +80,7 @@ using RNTupleCalcPerf = ROOT::Experimental::Detail::RNTupleCalcPerf;
 using RNTupleCompressor = ROOT::Experimental::Internal::RNTupleCompressor;
 using RNTupleDecompressor = ROOT::Experimental::Internal::RNTupleDecompressor;
 using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
+using RNTupleFillStatus = ROOT::Experimental::RNTupleFillStatus;
 using RNTupleDescriptorBuilder = ROOT::Experimental::Internal::RNTupleDescriptorBuilder;
 using RNTupleFileWriter = ROOT::Experimental::Internal::RNTupleFileWriter;
 using RNTupleParallelWriter = ROOT::Experimental::RNTupleParallelWriter;
@@ -120,12 +119,22 @@ using RResult = ROOT::Experimental::RResult<T>;
 class FileRaii {
 private:
    std::string fPath;
+   bool fPreserveFile = false;
+
 public:
-   explicit FileRaii(const std::string &path) : fPath(path) { }
-   FileRaii(const FileRaii&) = delete;
-   FileRaii& operator=(const FileRaii&) = delete;
-   ~FileRaii() { std::remove(fPath.c_str()); }
+   explicit FileRaii(const std::string &path) : fPath(path) {}
+   FileRaii(const FileRaii &) = delete;
+   FileRaii &operator=(const FileRaii &) = delete;
+   ~FileRaii()
+   {
+      if (!fPreserveFile)
+         std::remove(fPath.c_str());
+   }
    std::string GetPath() const { return fPath; }
+
+   // Useful if you want to keep a test file after the test has finished running
+   // for debugging purposes. Should only be used locally and never pushed.
+   void PreserveFile() { fPreserveFile = true; }
 };
 
 #endif

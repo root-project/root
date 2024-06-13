@@ -27,11 +27,16 @@
 unsigned int ROOT::RDF::RInterfaceBase::GetNFiles()
 {
    // TTree/TChain as input
-   const auto tree = fLoopManager->GetTree();
-
-   if (tree) {
-      const auto files = ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree);
-      return files.size();
+   if (const auto *tree = fLoopManager->GetTree()) {
+      if (!dynamic_cast<const TChain *>(tree) && !tree->GetCurrentFile()) {
+         // in-memory TTree
+         return 0;
+      }
+      return ROOT::Internal::TreeUtils::GetFileNamesFromTree(*tree).size();
+   }
+   // Datasource as input
+   if (fDataSource) {
+      return fDataSource->GetNFiles();
    }
    return 0;
 }
@@ -119,13 +124,15 @@ std::string ROOT::RDF::RInterfaceBase::DescribeDataset() const
 }
 
 ROOT::RDF::RInterfaceBase::RInterfaceBase(std::shared_ptr<RDFDetail::RLoopManager> lm)
-   : fLoopManager(lm.get()), fDataSource(lm->GetDataSource()), fColRegister(std::move(lm))
+   : fLoopManager(lm), fDataSource(lm->GetDataSource()), fColRegister(lm.get())
 {
    AddDefaultColumns();
 }
 
 ROOT::RDF::RInterfaceBase::RInterfaceBase(RDFDetail::RLoopManager &lm, const RDFInternal::RColumnRegister &colRegister)
-   : fLoopManager(&lm), fDataSource(lm.GetDataSource()), fColRegister(colRegister)
+   : fLoopManager(std::shared_ptr<ROOT::Detail::RDF::RLoopManager>{&lm, [](ROOT::Detail::RDF::RLoopManager *) {}}),
+     fDataSource(lm.GetDataSource()),
+     fColRegister(colRegister)
 {
 }
 
@@ -152,7 +159,7 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
          allColumns.emplace(colName);
    };
 
-   auto definedColumns = fColRegister.GetNames();
+   auto definedColumns = fColRegister.GenerateColumnNames();
 
    std::for_each(definedColumns.begin(), definedColumns.end(), addIfNotInternal);
 
@@ -189,13 +196,13 @@ ROOT::RDF::ColumnNames_t ROOT::RDF::RInterfaceBase::GetColumnNames()
 ///
 std::string ROOT::RDF::RInterfaceBase::GetColumnType(std::string_view column)
 {
-   const auto col = fColRegister.ResolveAlias(std::string(column));
+   const auto col = fColRegister.ResolveAlias(column);
 
    RDFDetail::RDefineBase *define = fColRegister.GetDefine(col);
 
    const bool convertVector2RVec = true;
-   return RDFInternal::ColumnName2ColumnTypeName(col, fLoopManager->GetTree(), fLoopManager->GetDataSource(), define,
-                                                 convertVector2RVec);
+   return RDFInternal::ColumnName2ColumnTypeName(std::string(col), fLoopManager->GetTree(),
+                                                 fLoopManager->GetDataSource(), define, convertVector2RVec);
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -281,7 +288,7 @@ ROOT::RDF::RDFDescription ROOT::RDF::RInterfaceBase::Describe()
    }
    // Use the string returned from DescribeDataset() as the 'brief' description
    // Use the converted to string stringstream ss as the 'full' description
-   return RDFDescription(DescribeDataset(), ss.str());
+   return RDFDescription(DescribeDataset(), ss.str(), GetNFiles());
 }
 
 /// \brief Returns the names of the defined columns.

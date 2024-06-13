@@ -229,6 +229,10 @@ def RDataFrameAsNumpy(df, columns=None, exclude=None, lazy=False):
     result_ptrs = {}
     for column in columns:
         column_type = df.GetColumnType(column)
+        # bool columns should be taken as unsigned chars, because NumPy stores
+        # bools in bytes - different from the std::vector<bool> returned by the
+        # action, which might do some space optimization
+        column_type = "unsigned char" if column_type == "bool" else column_type
         result_ptrs[column] = df.Take[column_type](column)
 
     result = AsNumpyResult(result_ptrs, columns)
@@ -456,13 +460,13 @@ def _make_name_rvec_pair(key, value):
     return ROOT.std.pair["std::string", type(pyvec)](key, ROOT.std.move(pyvec))
 
 
-# For refernces to keep alive the NumPy arrays that are read by
+# For references to keep alive the NumPy arrays that are read by
 # MakeNumpyDataFrame.
 _numpy_data = {}
 
 
 def _MakeNumpyDataFrame(np_dict):
-    """
+    r"""
     Make an RDataFrame from a dictionary of numpy arrays
 
     \param[in] self Always null, since this is a module function.

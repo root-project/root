@@ -1,7 +1,7 @@
 // @(#)root/mathmore:$Id$
 // Authors: L. Moneta, A. Zsenei   08/2005
 
-#ifdef __CINT__
+#ifdef __CLING__
 
 
 #pragma link C++ namespace ROOT::Math::Roots;

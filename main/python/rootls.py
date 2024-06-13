@@ -16,6 +16,7 @@ description = "Display ROOT files contents in the terminal."
 ONE_HELP = "Print content in one column"
 LONG_PRINT_HELP = "Use a long listing format."
 TREE_PRINT_HELP = "Print tree recursively and use a long listing format."
+RECURSIVE_PRINT_HELP = "Traverse file recursively entering any TDirectory."
 
 EPILOG = """Examples:
 - rootls example.root
@@ -41,25 +42,37 @@ EPILOG = """Examples:
 
 - rootls -t example.root
   Display contents of the ROOT file 'example.root', use a long listing format and print trees recursively.
+
+- rootls -r example.root
+  Display contents of the ROOT file 'example.root', traversing recursively any TDirectory.
 """
 
-def get_argparse():
-	parser = cmdLineUtils.getParserFile(description, EPILOG)
-	parser.prog = 'rootls'
 
-	parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action= "store_true")
-	parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action= "store_true")
-	parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action= "store_true")
-	return parser
+def get_argparse():
+    parser = cmdLineUtils.getParserFile(description, EPILOG)
+    parser.prog = "rootls"
+
+    parser.add_argument("-1", "--oneColumn", help=ONE_HELP, action="store_true")
+    parser.add_argument("-l", "--longListing", help=LONG_PRINT_HELP, action="store_true")
+    parser.add_argument("-t", "--treeListing", help=TREE_PRINT_HELP, action="store_true")
+    parser.add_argument("-r", "--recursiveListing", help=RECURSIVE_PRINT_HELP, action="store_true")
+    return parser
 
 
 def execute():
-	parser = get_argparse()
-	# Put arguments in shape
-	sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
+    parser = get_argparse()
+    # Put arguments in shape
+    sourceList, optDict = cmdLineUtils.getSourceListOptDict(parser)
 
-	# Process rootLs
-	return cmdLineUtils.rootLs(sourceList, oneColumn=optDict["oneColumn"], \
-							longListing=optDict["longListing"], treeListing=optDict["treeListing"])
+    # Process rootLs
+    return cmdLineUtils.rootLs(
+        sourceList,
+        oneColumn=optDict["oneColumn"],
+        longListing=optDict["longListing"],
+        treeListing=optDict["treeListing"],
+        recursiveListing=optDict["recursiveListing"],
+    )
+
+
 if __name__ == "__main__":
-	sys.exit(execute())
+    sys.exit(execute())

@@ -614,6 +614,22 @@ for el in df.Take[int]("x"):
     print(f"Element: {el}")
 ~~~
 
+### Actions and readers
+
+An action that needs values for its computations will request it from a reader, e.g. a column created via `Define` or
+available from the input dataset. The action will request values from each column of the list of input columns (either
+inferred or specified by the user), in order. For example:
+
+~~~{.cpp}
+ROOT::RDataFrame df{1};
+auto df1 = df.Define("x", []{ return 11; });
+auto df2 = df1.Define("y", []{ return 22; });
+auto graph = df2.Graph<int, int>("x","y");
+~~~
+
+The `Graph` action is going to request first the value from column "x", then that of column "y". Specifically, the order
+of execution of the operations of nodes in this branch of the computation graph is guaranteed to be top to bottom.
+
 \anchor distrdf
 ## Distributed execution
 
@@ -1664,6 +1680,17 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
+}
+
+RDataFrame::~RDataFrame()
+{
+   // If any node of the computation graph associated with this RDataFrame
+   // declared code to jit, we need to make sure the compilation actually
+   // happens. For example, a jitted Define could have been booked but
+   // if the computation graph is not actually run then the code of the
+   // Define node is not jitted. This in turn would cause memory leaks.
+   // See https://github.com/root-project/root/issues/15399
+   fLoopManager->Jit();
 }
 
 namespace RDF {

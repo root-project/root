@@ -51,18 +51,14 @@ else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
 endif()
 
-#---Enable CUDA ---
-if(cuda)
-  check_language(CUDA)
-  if (CMAKE_CUDA_COMPILER)
-    enable_language(CUDA)
-    if(NOT DEFINED CMAKE_CUDA_STANDARD)
-      set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
-    endif()
-  else()
-      message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH, or disable CUDA features in ROOT with -Dcuda=OFF")
+#---Enable CUDA if found on the system---
+check_language(CUDA)
+if (CMAKE_CUDA_COMPILER)
+  enable_language(CUDA)
+  if(NOT DEFINED CMAKE_CUDA_STANDARD)
+    set(CMAKE_CUDA_STANDARD ${CMAKE_CXX_STANDARD})
   endif()
-endif(cuda)
+endif()
 
 #----Test if clang setup works----------------------------------------------------------------------
 if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")

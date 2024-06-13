@@ -502,7 +502,7 @@ void TMatrixT<Element>::Allocate(Int_t no_rows, Int_t no_cols, Int_t row_lwb, In
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Create a matrix C such that C = A + B.
+/// General matrix summation. Replace this matrix with C such that C = A + B.
 
 template <class Element>
 void TMatrixT<Element>::Plus(const TMatrixT<Element> &a, const TMatrixT<Element> &b)
@@ -536,7 +536,7 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a, const TMatrixT<Element>
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Create a matrix C such that C = A + B.
+/// General matrix summation. Replace this matrix with C such that C = A + B.
 
 template <class Element>
 void TMatrixT<Element>::Plus(const TMatrixT<Element> &a, const TMatrixTSym<Element> &b)
@@ -570,7 +570,7 @@ void TMatrixT<Element>::Plus(const TMatrixT<Element> &a, const TMatrixTSym<Eleme
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Create a matrix C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 
 template <class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixT<Element> &b)
@@ -604,7 +604,7 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixT<Element
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix summation. Create a matrix C such that C = A - B.
+/// General matrix subtraction. Replace this matrix with C such that C = A - B.
 
 template <class Element>
 void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixTSym<Element> &b)
@@ -638,7 +638,7 @@ void TMatrixT<Element>::Minus(const TMatrixT<Element> &a, const TMatrixTSym<Elem
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Create a matrix C such that C = A * B.
+/// General matrix multiplication. Replace this matrix with C such that C = A * B.
 
 template <class Element>
 void TMatrixT<Element>::Mult(const TMatrixT<Element> &a, const TMatrixT<Element> &b)
@@ -687,7 +687,7 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a, const TMatrixT<Element>
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix multiplication, with A symmetric and B general.
-/// Create a matrix C such that C = A * B.
+/// Replace this matrix with C such that C = A * B.
 
 template <class Element>
 void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a, const TMatrixT<Element> &b)
@@ -739,7 +739,7 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a, const TMatrixT<Eleme
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix multiplication, with A general and B symmetric.
-/// Create a matrix C such that C = A * B.
+/// Replace this matrix with C such that C = A * B.
 
 template <class Element>
 void TMatrixT<Element>::Mult(const TMatrixT<Element> &a, const TMatrixTSym<Element> &b)
@@ -791,7 +791,7 @@ void TMatrixT<Element>::Mult(const TMatrixT<Element> &a, const TMatrixTSym<Eleme
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix multiplication, with A symmetric and B symmetric.
 /// (Actually copied for the moment routine for B general)
-/// Create a matrix C such that C = A * B.
+/// Replace this matrix with C such that C = A * B.
 
 template <class Element>
 void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a, const TMatrixTSym<Element> &b)
@@ -841,7 +841,7 @@ void TMatrixT<Element>::Mult(const TMatrixTSym<Element> &a, const TMatrixTSym<El
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a matrix C such that C = A' * B. In other words,
+/// Replace this matrix with C such that C = A' * B. In other words,
 /// c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
 template <class Element>
@@ -891,7 +891,7 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a, const TMatrixT<Element
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create a matrix C such that C = A' * B. In other words,
+/// Replace this matrix with C such that C = A' * B. In other words,
 /// c[i,j] = SUM{ a[k,i] * b[k,j] }.
 
 template <class Element>
@@ -941,7 +941,7 @@ void TMatrixT<Element>::TMult(const TMatrixT<Element> &a, const TMatrixTSym<Elem
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// General matrix multiplication. Create a matrix C such that C = A * B^T.
+/// General matrix multiplication. Replace this matrix with C such that C = A * B^T.
 
 template <class Element>
 void TMatrixT<Element>::MultT(const TMatrixT<Element> &a, const TMatrixT<Element> &b)
@@ -993,7 +993,7 @@ void TMatrixT<Element>::MultT(const TMatrixT<Element> &a, const TMatrixT<Element
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Matrix multiplication, with A symmetric and B general.
-/// Create a matrix C such that C = A * B^T.
+/// Replace this matrix with C such that C = A * B^T.
 
 template <class Element>
 void TMatrixT<Element>::MultT(const TMatrixTSym<Element> &a, const TMatrixT<Element> &b)

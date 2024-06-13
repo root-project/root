@@ -22,10 +22,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitXRooFit
         RooFit
         RooFitHS3
         RooStats
+        FitPanel
         DEPENDENCIES
         Gui
         Ged
         RooFitCore
+        FitPanel
         LINKDEF
         inc/LinkDef.h
         )

@@ -1,4 +1,5 @@
 
+
 name: 'ROOT CI'
 
 on:
@@ -80,10 +81,10 @@ concurrency:
 jobs:
   build-macos:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
-    # can be skipped if the tag [skip-ci] is written in the title.
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
 
     permissions:
       contents: read
@@ -96,11 +97,9 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - platform: mac12
-            arch: X64
           - platform: mac13   
             arch: ARM64
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "builtin_zlib=ON"]
           - platform: mac14
             arch: ARM64
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
@@ -121,7 +120,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.platform }}.txt'
@@ -214,10 +213,10 @@ jobs:
 
   build-windows:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
-    # can be skipped if the tag [skip-ci] is written in the title.
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
 
     permissions:
       contents: read
@@ -329,10 +328,10 @@ jobs:
 
   build-linux:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
-    # can be skipped if the tag [skip-ci] is written in the title.
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
 
     permissions:
       contents: read
@@ -348,8 +347,6 @@ jobs:
         include:
           - image: fedora39
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
-          - image: fedora38
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20", "CMAKE_BUILD_TYPE=Debug"]
           - image: alma8
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: alma9
@@ -358,15 +355,22 @@ jobs:
             overrides: ["LLVM_ENABLE_ASSERTIONS=On"]
           - image: ubuntu22
             overrides: ["imt=Off", "LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
-          - image: ubuntu2310
+          - image: ubuntu2404
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_BUILD_TYPE=Debug"]
+          - image: debian125
             overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_CXX_STANDARD=20"]
+          # Special builds
+          - image: alma9
+            is_special: true
+            property: modules_off
+            overrides: ["runtime_cxxmodules=Off"]
 
     runs-on:
       - self-hosted
       - linux
       - x64
 
-    name: ${{ matrix.image }} ${{ join( matrix.overrides, ', ' ) }}
+    name: ${{ matrix.image }} ${{ matrix.property }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # ALSO UPDATE BELOW!
@@ -402,7 +406,7 @@ jobs:
               '
 
       - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && matrix.overrides != NaN }}
+        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'
@@ -450,7 +454,7 @@ jobs:
               "
 
       - name: Workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
+        if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
                     --platform       ${{ matrix.image }}
@@ -494,16 +498,16 @@ jobs:
         if:   ${{ !cancelled() && (inputs.binaries || github.event_name == 'schedule' || startsWith(github.ref, 'refs/tags/')) }}
         uses: actions/upload-artifact@v3
         with:
-          name: Binaries ${{ matrix.image }}
+          name: Binaries ${{ matrix.image }} ${{ matrix.property }}
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
   event_file:
     # For any event that is not a PR, the CI will always run. In PRs, the CI
-    # can be skipped if the tag [skip-ci] is written in the title.
+    # can be skipped if the tag [skip-ci] or [skip ci] is written in the title.
     if: |
         (github.repository_owner == 'root-project' && github.event_name != 'pull_request') ||
-        (github.event_name == 'pull_request' && !contains(github.event.pull_request.title, '[skip-ci]'))
+        (github.event_name == 'pull_request' && !(contains(github.event.pull_request.title, '[skip-ci]') || contains(github.event.pull_request.title, '[skip ci]')))
 
     name: "Upload Event Payload"
     runs-on: ubuntu-latest

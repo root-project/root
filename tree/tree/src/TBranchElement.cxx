@@ -365,10 +365,10 @@ void TBranchElement::Init(TTree *tree, TBranch *parent,const char* bname, TStrea
          bool canSelfReference = CanSelfReference(fBranchClass);
          if (fBranchClass.GetClass()->IsTObject()) {
             if (canSelfReference) SetBit(kBranchObject);
-            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = (!fBranchClass.GetClass()->GetCollectionProxy() && fBranchClass.GetClass()->HasCustomStreamerMember());
          } else {
             if (canSelfReference) SetBit(kBranchAny);
-            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+            hasCustomStreamer = !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
          }
          if (hasCustomStreamer) {
             fType = -1;
@@ -2560,11 +2560,9 @@ TVirtualCollectionProxy* TBranchElement::GetCollectionProxy()
 
          if (fID < 0) {
             cl = new TClass(fBranchClass.GetClassName(), fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          } else {
             cl = new TClass(className, fClassVersion);
-            cl->SetBit(TClass::kIsEmulation);
             className = cl->GetName();
          }
       }
@@ -5734,7 +5732,7 @@ void TBranchElement::SetReadLeavesPtr()
       fReadLeaves = (ReadLeaves_t)&TBranchElement::ReadLeavesCustomStreamer;
    } else if (fType == 0 && fID == -1) {
       // top-level branch.
-      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->TestBit(TClass::kHasCustomStreamerMember));
+      bool hasCustomStreamer = fBranchClass.GetClass() && !fBranchClass.GetClass()->GetCollectionProxy() && (fBranchClass.GetClass()->GetStreamer() != nullptr || fBranchClass.GetClass()->HasCustomStreamerMember());
       if (hasCustomStreamer) {
          // We are in the case where the object did *not* have a custom
          // Streamer when the TTree was written but now *does* have a custom

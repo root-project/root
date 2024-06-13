@@ -5,11 +5,11 @@ import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, is
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond, clTLegend, clTPaletteAxis,
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTF3, clTH3,
-         clTProfile, clTProfile2D, clTProfile3D,
+         clTProfile, clTProfile2D, clTProfile3D, clTFrame,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
-         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, atob_func } from './core.mjs';
-import { clTStreamerInfoList } from './io.mjs';
+         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, kInspect, nsREX, nsSVG, atob_func } from './core.mjs';
+import { clTStreamerInfoList, kBaseClass } from './io.mjs';
 import { clTBranchFunc } from './tree.mjs';
 import { BasePainter, compressSVG, svgToImage, _loadJSDOM } from './base/BasePainter.mjs';
 import { ObjectPainter, cleanup, drawRawText, getElementCanvPainter, getElementMainPainter } from './base/ObjectPainter.mjs';
@@ -43,7 +43,7 @@ drawFuncs = { lst: [
    { name: clTPad, icon: 'img_canvas', func: TPadPainter.draw, opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: fPrimitives, noappend: true },
    { name: 'TSlider', icon: 'img_canvas', func: TPadPainter.draw },
    { name: clTButton, icon: 'img_canvas', func: TPadPainter.draw },
-   { name: 'TFrame', icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
+   { name: clTFrame, icon: 'img_frame', draw: () => import_canvas().then(h => h.drawTFrame) },
    { name: clTPave, icon: 'img_pavetext', class: () => import('./hist/TPavePainter.mjs').then(h => h.TPavePainter) },
    { name: clTPaveText, sameas: clTPave },
    { name: clTPavesText, sameas: clTPave },
@@ -509,7 +509,7 @@ function addStreamerInfosForPainter(lst) {
 
    function checkBaseClasses(si, lvl) {
       const element = si.fElements?.arr[0];
-      if ((element?.fTypeName !== 'BASE') || (lvl > 4))
+      if ((element?.fTypeName !== kBaseClass) || (lvl > 4))
          return null;
       // exclude very basic classes
       if (basics.indexOf(element.fName) >= 0)
@@ -577,8 +577,8 @@ async function makeImage(args) {
       args.height = 800;
 
    if (args.use_canvas_size && (args.object?._typename === clTCanvas) && args.object.fCw && args.object.fCh) {
-      args.width = args.object?.fCw;
-      args.height = args.object?.fCh;
+      args.width = args.object.fCw;
+      args.height = args.object.fCh;
    }
 
    async function build(main) {
@@ -613,7 +613,7 @@ async function makeImage(args) {
          }
 
          main.select('svg')
-             .attr('xmlns', 'http://www.w3.org/2000/svg')
+             .attr('xmlns', nsSVG)
              .attr('width', args.width)
              .attr('height', args.height)
              .attr('style', null).attr('class', null).attr('x', null).attr('y', null);

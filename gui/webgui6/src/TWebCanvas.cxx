@@ -51,6 +51,7 @@
 #include "TVirtualX.h"
 #include "TMath.h"
 #include "TTimer.h"
+#include "TThread.h"
 
 #include <cstdio>
 #include <cstring>
@@ -104,7 +105,7 @@ Following settings parameters can be useful for TWebCanvas:
      WebGui.FullCanvas:       1     read-only mode (0), full-functional canvas (1) (default - 1)
      WebGui.StyleDelivery:    1     provide gStyle object to JSROOT client (default - 1)
      WebGui.PaletteDelivery:  1     provide color palette to JSROOT client (default - 1)
-     WebGui.TF1UseSave:       0     used saved values for function drawing (1) or calculate function on the client side (0) (default - 0)
+     WebGui.TF1UseSave:       1     used saved values for function drawing: 0 - off, 1 - if client fail to evaluate function, 2 - always (default - 1)
 
 TWebCanvas is used by default in interactive ROOT session. To use web-based canvas in batch mode for image
 generation, one should explicitly specify `--web` option when starting ROOT:
@@ -138,13 +139,20 @@ static std::vector<WebFont_t> gWebFonts;
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly)
    : TCanvasImp(c, name, x, y, width, height)
 {
+   // Workaround for multi-threaded environment
+   // Ensure main thread id picked when canvas implementation is created -
+   // otherwise it may be assigned in other thread and screw-up gPad access.
+   // Workaround may not work if main thread id was wrongly initialized before
+   // This resolves issue https://github.com/root-project/root/issues/15498
+   TThread::SelfId();
+
    fTimer = new TWebCanvasTimer(*this);
 
    fReadOnly = readonly;
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
-   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1) > 0;
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 1);
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
 
    fWebConn.emplace_back(0); // add special connection which only used to perform updates
@@ -545,6 +553,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TVirtualPad::TContext ctxt(pad, kFALSE);
          hs->BuildPrimitives(iter.GetOption());
          has_histo = true;
+         need_frame = true;
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
          if (opt.Contains("A")) {
@@ -554,6 +563,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             has_histo = true;
             if (strlen(obj->GetTitle()) > 0)
                need_title = obj->GetTitle();
+            need_frame = true;
          }
       } else if (obj->InheritsFrom(TFrame::Class())) {
          if (!frame)
@@ -638,12 +648,20 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    };
 
    auto check_save_tf1 = [&](TObject *fobj, bool ignore_nodraw = false) {
-      if (!paddata.IsBatchMode() && !fTF1UseSave)
+      if (!paddata.IsBatchMode() && (fTF1UseSave <= 0))
          return;
       if (!ignore_nodraw && fobj->TestBit(TF1::kNotDraw))
          return;
 
       auto f1 = static_cast<TF1 *>(fobj);
+      // check if TF1 can be used
+      if (!f1->IsValid())
+         return;
+
+      // in default case save buffer used as is
+      if ((fTF1UseSave == 1) && f1->HasSave())
+         return;
+
       f1->Save(0, 0, 0, 0, 0, 0);
    };
 
@@ -845,6 +863,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = false;
+      } else if (obj->InheritsFrom(THStack::Class())) {
+         flush_master();
+
+         THStack *hs = static_cast<THStack *>(obj);
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         first_obj = hs->GetNhists() > 0; // real drawing only if there are histograms
       } else if (obj->InheritsFrom(TScatter::Class())) {
          flush_master();
 
@@ -880,8 +906,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          TString f1opt = iter.GetOption();
 
          check_save_tf1(obj, true);
-         // if (fTF1UseSave)
-         //   f1opt.Append(";force_saved");
+         if (fTF1UseSave > 1)
+            f1opt.Append(";force_saved");
+         else if (fTF1UseSave == 1)
+            f1opt.Append(";prefer_saved");
 
          if (first_obj) {
             auto hist = f1->GetHistogram();
@@ -1427,24 +1455,25 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             hist_holder = nullptr;
 
          Bool_t no_entries = hist->GetEntries();
+         Bool_t is_stack = hist_holder && (hist_holder->IsA() == THStack::Class());
 
          Double_t hmin = 0., hmax = 0.;
 
          if (r.zx1 == r.zx2)
-            hist->GetXaxis()->SetRange(0,0);
+            hist->GetXaxis()->SetRange(0, 0);
          else
             hist->GetXaxis()->SetRangeUser(r.zx1, r.zx2);
 
          if (hist->GetDimension() == 1) {
             hmin = r.zy1;
             hmax = r.zy2;
-            if ((hmin == hmax) && !no_entries) {
+            if ((hmin == hmax) && !no_entries && !is_stack) {
                // if there are no zooming on Y and histogram has no entries, hmin/hmax should be set to full range
                hmin = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy1) : r.uy1;
                hmax = pad->fLogy ? TMath::Power(pad->fLogy < 2 ? 10 : pad->fLogy, r.uy2) : r.uy2;
             }
          } else if (r.zy1 == r.zy2) {
-            hist->GetYaxis()->SetRange(0., 0.);
+            hist->GetYaxis()->SetRange(0, 0);
          } else {
             hist->GetYaxis()->SetRangeUser(r.zy1, r.zy2);
          }
@@ -1459,7 +1488,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             }
          } else if (hist->GetDimension() == 3) {
             if (r.zz1 == r.zz2) {
-               hist->GetZaxis()->SetRange(0., 0.);
+               hist->GetZaxis()->SetRange(0, 0);
             } else {
               hist->GetZaxis()->SetRangeUser(r.zz1, r.zz2);
             }
@@ -1468,7 +1497,14 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hmin == hmax)
             hmin = hmax = -1111;
 
-         if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
+         if (is_stack) {
+            TString opt = objlnk->GetOption();
+            if (!opt.Contains("nostack", TString::kIgnoreCase) && !opt.Contains("lego", TString::kIgnoreCase)) {
+               hist->SetMinimum(hmin);
+               hist->SetMaximum(hmax);
+               hist->SetBit(TH1::kIsZoomed, hmin != hmax);
+            }
+         } else if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
             hist->SetMinimum(hmin);
             hist->SetMaximum(hmax);
          } else {
@@ -1883,7 +1919,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          std::stringstream exec;
          exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj
               << ")->" << buf << ";";
-         if (gDebug > 1)
+         if (gDebug > 0)
             Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.str().c_str());
 
          auto res = gROOT->ProcessLine(exec.str().c_str());
@@ -1972,9 +2008,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             while (auto o = next())
                if (obj == o) {
                   TString opt = next.GetOption();
-                  pad->GetListOfPrimitives()->Remove(obj);
-                  pad->GetListOfPrimitives()->AddLast(obj, opt.Data());
-                  pad->Modified();
+                  pad->Remove(obj, kFALSE);
+                  pad->Add(obj, opt.Data());
                   break;
                }
          }
@@ -2078,12 +2113,7 @@ UInt_t TWebCanvas::GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h)
 
 Bool_t TWebCanvas::PerformUpdate(Bool_t async)
 {
-   if (CheckCanvasModified()) {
-      // configure selected pad that method like TPad::WaitPrimitive() can correctly work
-      // can be removed again once WaitPrimitive implemented differently
-      if (gPad && (gPad->GetCanvas() == Canvas()))
-         gROOT->SetSelectedPad(gPad);
-   }
+   CheckCanvasModified();
 
    CheckDataToSend();
 
@@ -2326,7 +2356,8 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
          std::stringstream exec;
          exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase
                       << (size_t)obj << ")->" << item.opt << ";";
-         Info("ProcessObjectOptions", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+         if (gDebug > 0)
+            Info("ProcessObjectOptions", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
          gROOT->ProcessLine(exec.str().c_str());
       } else {
          Error("ProcessObjectOptions", "Fail to execute %s for object %p %s", item.opt.c_str(), obj, obj ? obj->ClassName() : "---");
@@ -2341,7 +2372,7 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
       auto pos = item.opt.find(";;use_"); // special coding of extra options
       if (pos != std::string::npos) item.opt.resize(pos);
 
-      if (gDebug > 1)
+      if (gDebug > 0)
          Info("ProcessObjectOptions", "Set draw option %s for object %s %s", item.opt.c_str(),
                obj->ClassName(), obj->GetName());
 
@@ -2393,11 +2424,9 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
          }
       }
    } else if (item.fcust.compare(0,9,"func_fail") == 0) {
-      if (!fTF1UseSave) {
-         fTF1UseSave = kTRUE;
+      if (fTF1UseSave <= 0) {
+         fTF1UseSave = 1;
          modified = true;
-      } else {
-         Error("ProcessObjectOptions", "Client fails to calculate function %s cl %s but it should not try!", obj ? obj->GetName() : "---", obj ? obj->ClassName() : "---");
       }
    }
 
@@ -2499,7 +2528,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = getHistogram(gr);
             else if (mg)
                obj = getHistogram(mg);
-            else if (hs)
+            else if (hs && (hs->GetNhists() > 0))
                obj = getHistogram(hs);
             else if (scatter)
                obj = getHistogram(scatter);

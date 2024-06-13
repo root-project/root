@@ -384,6 +384,7 @@ public:
    virtual void     SetContent(const Double_t *content);
    virtual void     SetContour(Int_t nlevels, const Double_t *levels = nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
+   virtual void     SetColors(Color_t linecolor = -1, Color_t markercolor = -1, Color_t fillcolor = -1);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);
    virtual void     SetDirectory(TDirectory *dir);
@@ -630,7 +631,12 @@ public:
    TH1F& operator=(const TH1F &h1);
    ~TH1F() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w.
+   /// \warning The value of w is cast to `Float_t` before being added.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           { fArray[bin] += Float_t (w); }
    void     Copy(TObject &hnew) const override;
@@ -673,7 +679,11 @@ public:
    TH1D& operator=(const TH1D &h1);
    ~TH1D() override;
 
+   /// Increment bin content by 1.
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin) override {++fArray[bin];}
+   /// Increment bin content by a weight w
+   /// Passing an out-of-range bin leads to undefined behavior
    void     AddBinContent(Int_t bin, Double_t w) override
                           {fArray[bin] += Double_t (w);}
    void     Copy(TObject &hnew) const override;

@@ -28,6 +28,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace Experimental {
@@ -65,18 +66,25 @@ private:
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
    std::vector<RFieldBase::RValue> fValues;
+   /// For fast lookup of token IDs given a top-level field name
+   std::unordered_map<std::string, std::size_t> fFieldName2Token;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   void AddValue(RFieldBase::RValue &&value) { fValues.emplace_back(std::move(value)); }
+   void AddValue(RFieldBase::RValue &&value)
+   {
+      fFieldName2Token[value.GetField().GetFieldName()] = fValues.size();
+      fValues.emplace_back(std::move(value));
+   }
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template <typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T> &field, ArgsT &&...args)
    {
+      fFieldName2Token[field.GetFieldName()] = fValues.size();
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
       fValues.emplace_back(field.BindValue(ptr));
       return ptr;
@@ -130,13 +138,11 @@ public:
    /// The ordinal of the top-level field fieldName; can be used in other methods to address the corresponding value
    RFieldToken GetToken(std::string_view fieldName) const
    {
-      auto it = std::find_if(fValues.begin(), fValues.end(),
-         [&fieldName] (const RFieldBase::RValue &value) { return value.GetField().GetFieldName() == fieldName; });
-
-      if ( it == fValues.end() ) {
+      auto it = fFieldName2Token.find(std::string(fieldName));
+      if (it == fFieldName2Token.end()) {
          throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
       }
-      return RFieldToken(std::distance(fValues.begin(), it), fModelId);
+      return RFieldToken(it->second, fModelId);
    }
 
    void EmplaceNewValue(RFieldToken token)

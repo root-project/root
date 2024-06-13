@@ -1166,6 +1166,135 @@ TYPED_TEST(UniquePtr, Basics)
    EXPECT_EQ(nullptr, pArray->get());
 }
 
+TEST(RNTuple, Optional)
+{
+   using CharArray3_t = std::array<char, 3>;
+   using CharArray4_t = std::array<char, 4>;
+   using Variant_t = std::variant<int, float>;
+   using Map_t = std::map<int, CustomStruct>;
+
+   EXPECT_EQ(sizeof(std::optional<char>), RField<std::optional<char>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<char>), RField<std::optional<char>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CharArray3_t>), RField<std::optional<CharArray3_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CharArray3_t>), RField<std::optional<CharArray3_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CharArray4_t>), RField<std::optional<CharArray4_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CharArray4_t>), RField<std::optional<CharArray4_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<float>), RField<std::optional<float>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<float>), RField<std::optional<float>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<double>), RField<std::optional<double>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<double>), RField<std::optional<double>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<CustomStruct>), RField<std::optional<CustomStruct>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<CustomStruct>), RField<std::optional<CustomStruct>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<Variant_t>), RField<std::optional<Variant_t>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<std::string>), RField<std::optional<std::string>>("f").GetAlignment());
+   EXPECT_EQ(sizeof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetValueSize());
+   EXPECT_EQ(alignof(std::optional<Map_t>), RField<std::optional<Map_t>>("f").GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_optional.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto pOptChar = model->MakeField<std::optional<char>>("oc");
+      auto pOptCharArr3 = model->MakeField<std::optional<CharArray3_t>>("oca3");
+      auto pOptCharArr4 = model->MakeField<std::optional<CharArray4_t>>("oca4");
+      auto pOptInt16 = model->MakeField<std::optional<std::int16_t>>("oi");
+      auto pOptFloat = model->MakeField<std::optional<float>>("of");
+      auto pOptDouble = model->MakeField<std::optional<double>>("od");
+      auto pOptVariant = model->MakeField<std::optional<Variant_t>>("ov");
+      auto pOptString = model->MakeField<std::optional<std::string>>("os");
+      auto pOptMap = model->MakeField<std::optional<Map_t>>("om");
+      model->AddField(RFieldBase::Create("ocs", "std::optional<CustomStruct>").Unwrap());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      const auto &defaultEntry = writer->GetModel().GetDefaultEntry();
+      auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+      writer->Fill();
+      *pOptChar = 'x';
+      *pOptCharArr3 = {'1', '2', '3'};
+      *pOptCharArr4 = {'1', '2', '3', '4'};
+      *pOptInt16 = 137;
+      *pOptFloat = 1.0;
+      *pOptDouble = 2.0;
+      *pOptVariant = float(3.0);
+      *pOptString = "xyz";
+      *pOptMap = {{137, CustomStruct()}};
+      *pOptCustomStruct = CustomStruct();
+      writer->Fill();
+      pOptChar->reset();
+      pOptCharArr3->reset();
+      pOptCharArr4->reset();
+      pOptInt16->reset();
+      pOptFloat->reset();
+      pOptDouble->reset();
+      pOptVariant->reset();
+      pOptString->reset();
+      pOptMap->reset();
+      pOptCustomStruct->reset();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(3u, reader->GetNEntries());
+
+   const auto &defaultEntry = reader->GetModel().GetDefaultEntry();
+   auto pOptChar = defaultEntry.GetPtr<std::optional<char>>("oc");
+   auto pOptCharArr3 = defaultEntry.GetPtr<std::optional<CharArray3_t>>("oca3");
+   auto pOptCharArr4 = defaultEntry.GetPtr<std::optional<CharArray4_t>>("oca4");
+   auto pOptInt16 = defaultEntry.GetPtr<std::optional<std::int16_t>>("oi");
+   auto pOptFloat = defaultEntry.GetPtr<std::optional<float>>("of");
+   auto pOptDouble = defaultEntry.GetPtr<std::optional<double>>("od");
+   auto pOptVariant = defaultEntry.GetPtr<std::optional<Variant_t>>("ov");
+   auto pOptString = defaultEntry.GetPtr<std::optional<std::string>>("os");
+   auto pOptMap = defaultEntry.GetPtr<std::optional<Map_t>>("om");
+   auto pOptCustomStruct = defaultEntry.GetPtr<std::optional<CustomStruct>>("ocs");
+
+   reader->LoadEntry(0);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptVariant);
+   EXPECT_FALSE(*pOptString);
+   EXPECT_FALSE(*pOptMap);
+   EXPECT_FALSE(*pOptCustomStruct);
+
+   reader->LoadEntry(1);
+
+   EXPECT_EQ('x', *pOptChar);
+   CharArray3_t expCharArr3{'1', '2', '3'};
+   EXPECT_EQ(expCharArr3, *pOptCharArr3);
+   CharArray4_t expCharArr4{'1', '2', '3', '4'};
+   EXPECT_EQ(expCharArr4, *pOptCharArr4);
+   EXPECT_EQ(137, *pOptInt16);
+   EXPECT_FLOAT_EQ(1.0, pOptFloat->value());
+   EXPECT_DOUBLE_EQ(2.0, pOptDouble->value());
+   EXPECT_FLOAT_EQ(3.0, std::get<1>(pOptVariant->value()));
+   EXPECT_STREQ("xyz", pOptString->value().c_str());
+   EXPECT_EQ(1u, pOptMap->value().size());
+   EXPECT_EQ(CustomStruct(), pOptMap->value().at(137));
+   EXPECT_EQ(CustomStruct(), *pOptCustomStruct);
+
+   reader->LoadEntry(2);
+
+   EXPECT_FALSE(*pOptChar);
+   EXPECT_FALSE(*pOptCharArr3);
+   EXPECT_FALSE(*pOptCharArr4);
+   EXPECT_FALSE(*pOptInt16);
+   EXPECT_FALSE(*pOptFloat);
+   EXPECT_FALSE(*pOptDouble);
+   EXPECT_FALSE(*pOptVariant);
+   EXPECT_FALSE(*pOptString);
+   EXPECT_FALSE(*pOptMap);
+   EXPECT_FALSE(*pOptCustomStruct);
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {

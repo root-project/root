@@ -1,10 +1,12 @@
 import { gStyle, settings, constants, browser, internals, BIT,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
-         isObject, isFunc, isStr,
-         clTObjArray, clTPaveText, clTColor, clTPad, clTStyle, clTLegend, clTHStack, clTMultiGraph, clTLegendEntry } from '../core.mjs';
+         isObject, isFunc, isStr, clTObjArray, clTPaveText, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
+         clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
-import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors, getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
-import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, convertDate, svgToImage } from '../base/BasePainter.mjs';
+import { ColorPalette, adoptRootColors, getColorPalette, getGrayColors, extendRootColors,
+         getRGBfromTColor, decodeWebCanvasColors } from '../base/colors.mjs';
+import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate,
+         getTDatime, convertDate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { addCustomFont } from '../base/FontHandler.mjs';
@@ -418,7 +420,7 @@ class TPadPainter extends ObjectPainter {
     * @private */
    getAutoColor(numprimitives) {
       if (!numprimitives)
-         numprimitives = this._num_primitives || 5;
+         numprimitives = (this._num_primitives || 5) - (this._num_specials || 0);
       if (numprimitives < 2) numprimitives = 2;
 
       let indx = this._auto_color ?? 0;
@@ -591,7 +593,7 @@ class TPadPainter extends ObjectPainter {
          this.setTopPainter(); // assign canvas as top painter of that element
 
          if (is_batch)
-            svg.attr('xmlns', 'http://www.w3.org/2000/svg');
+            svg.attr('xmlns', nsSVG);
          else if (!this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
 
@@ -730,7 +732,7 @@ class TPadPainter extends ObjectPainter {
       }
       if (((gStyle.fOptDate === 2) || (gStyle.fOptDate === 3)) && fitem?._file) {
          info.selectChild('.canvas_date')
-             .text(convertDate(gStyle.fOptDate === 2 ? fitem._file.fDatimeC.getDate() : fitem._file.fDatimeM.getDate()));
+             .text(convertDate(getTDatime(gStyle.fOptDate === 2 ? fitem._file.fDatimeC : fitem._file.fDatimeM)));
       }
    }
 
@@ -1004,14 +1006,16 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Check if special objects appears in primitives
      * @desc it could be list of colors or palette */
-   checkSpecialsInPrimitives(can) {
+   checkSpecialsInPrimitives(can, count_specials) {
       const lst = can?.fPrimitives;
+      if (count_specials)
+         this._num_specials = 0;
       if (!lst) return;
       for (let i = 0; i < lst.arr?.length; ++i) {
          if (this.checkSpecial(lst.arr[i])) {
-            lst.arr.splice(i, 1);
-            lst.opt.splice(i, 1);
-            i--;
+            lst.arr[i].$special = true; // mark object as special one, do not use in drawing
+            if (count_specials)
+               this._num_specials++;
          }
       }
    }
@@ -1126,7 +1130,7 @@ class TPadPainter extends ObjectPainter {
 
       const obj = this.pad.fPrimitives.arr[indx];
 
-      if (!obj || ((indx > 0) && (obj._typename === 'TFrame') && this.getFramePainter()))
+      if (!obj || obj.$special || ((indx > 0) && (obj._typename === clTFrame) && this.getFramePainter()))
          return this.drawPrimitives(indx+1);
 
       // use of Promise should avoid large call-stack depth when many primitives are drawn
@@ -1232,8 +1236,8 @@ class TPadPainter extends ObjectPainter {
          menu.add('Save to gStyle', () => {
             if (!this.pad) return;
             this.fillatt?.saveToStyle(this.iscan ? 'fCanvasColor' : 'fPadColor');
-            gStyle.fPadGridX = this.pad.fGridX;
-            gStyle.fPadGridY = this.pad.fGridX;
+            gStyle.fPadGridX = this.pad.fGridx;
+            gStyle.fPadGridY = this.pad.fGridy;
             gStyle.fPadTickX = this.pad.fTickx;
             gStyle.fPadTickY = this.pad.fTicky;
             gStyle.fOptLogx = this.pad.fLogx;
@@ -1283,6 +1287,13 @@ class TPadPainter extends ObjectPainter {
          this.fillContextMenu(menu);
          return this.fillObjectExecMenu(menu, '');
       }).then(menu => menu.show());
+   }
+
+   /** @summary Redraw TLegend object
+    * @descr Used when object attributes are changed to ensure that legend is up to date
+    * @private */
+   async redrawLegend() {
+      return this.findPainterFor(null, '', clTLegend)?.redraw();
    }
 
    /** @summary Redraw pad means redraw ourself
@@ -1438,6 +1449,8 @@ class TPadPainter extends ObjectPainter {
 
       let isany = false, p = 0;
       for (let n = 0; n < obj.fPrimitives.arr?.length; ++n) {
+         if (obj.fPrimitives.arr[n].$special)
+            continue;
          while (p < this.painters.length) {
             const op = this.painters[p++];
             if (!op._primitive) continue;
@@ -1466,7 +1479,7 @@ class TPadPainter extends ObjectPainter {
       for (let k = 0; k < this.painters.length; ++k) {
          const painter = this.painters[k],
                obj = painter.getObject();
-         if (!obj || obj.fName === 'title' || obj.fName === 'stats' || painter.draw_content === false ||
+         if (!obj || obj.fName === kTitle || obj.fName === 'stats' || painter.draw_content === false ||
               obj._typename === clTLegend || obj._typename === clTHStack || obj._typename === clTMultiGraph)
             continue;
 
@@ -1645,7 +1658,8 @@ class TPadPainter extends ObjectPainter {
          return this.drawNextSnap(lst, indx); // call next
       }
 
-      const snapid = snap.fObjectID;
+      const snapid = snap.fObjectID,
+            is_frame = (snap.fKind === webSnapIds.kObject) && (snap.fSnapshot?._typename === clTFrame);
       let cnt = (this._snaps_map[snapid] || 0) + 1,
           objpainter = null;
 
@@ -1654,8 +1668,18 @@ class TPadPainter extends ObjectPainter {
       // first appropriate painter for the object
       // if same object drawn twice, two painters will exists
       for (let k = 0; k < this.painters.length; ++k) {
-         if (this.painters[k].snapid === snapid)
-            if (--cnt === 0) { objpainter = this.painters[k]; break; }
+         const subp = this.painters[k];
+         if (subp.snapid === snapid) {
+            if (--cnt === 0) {
+               objpainter = subp;
+               break;
+            }
+         } else if (is_frame && !subp.snapid && (subp === this.getFramePainter())) {
+            // workaround for the case when frame created afterwards by server
+            subp.snapid = snapid;
+            objpainter = subp;
+            break;
+         }
       }
 
       if (objpainter) {
@@ -1846,8 +1870,8 @@ class TPadPainter extends ObjectPainter {
       // check if frame or title was recreated, we could reassign handlers for them directly
       // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
       if (!snap.fWithoutPrimitives) {
-         matchPrimitive(this.painters, snap.fPrimitives, 'TFrame');
-         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, 'title');
+         matchPrimitive(this.painters, snap.fPrimitives, clTFrame);
+         matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, kTitle);
       }
 
       let isanyfound = false, isanyremove = false;

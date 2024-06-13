@@ -414,9 +414,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let idxBuff = eve_el.render_data.idxBuff;
          // let bin =  idxBuff[idx*2 + 1];
          let val = eve_el.render_data.nrmBuff[idx];
-         let caloData =  this.top_obj.scene.mgr.GetElement(eve_el.dataId);
          let slice = idxBuff[idx*2];
-         let sname = caloData.sliceInfos[slice].name;
+         let sname = "Slice " + slice;
 
          let vbuff =  eve_el.render_data.vtxBuff;
          let p = idx*12;
@@ -1300,6 +1299,11 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
             mat.color = RcCol(boxset.fMainColor);
          }
 
+         if (boxset.fMainTransparency) {
+            mat.transparent = true;
+            mat.opacity = (100 - boxset.fMainTransparency) / 100.0;
+            mat.depthWrite = false;
+         }
          let mesh = new RC.Mesh(body, mat);
          this.RcPickable(boxset, mesh, false, boxset.fSecondarySelect ? BoxSetControl : EveElemControl);
 
@@ -1453,7 +1457,8 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let mop = 1 - egs.fMainTransparency/100;
 
          let mat = this.RcFancyMaterial(fcol, mop);
-         mat.side = RC.FRONT_AND_BACK_SIDE;
+         // mat.side = RC.FRONT_AND_BACK_SIDE;
+         mat.side = RC.FRONT_SIDE;
          mat.shininess = 50;
          mat.normalFlat = true;
 
@@ -1481,7 +1486,7 @@ sap.ui.define(['rootui5/eve7/lib/EveManager'], function (EveManager)
          let material = this.RcFlatMaterial(fcol, mop);
          material.side = RC.FRONT_AND_BACK_SIDE;
 
-         let line_mat = this.RcLineMaterial(fcol, mop);
+         let line_mat = this.RcLineMaterial(fcol);
 
          let meshes = [];
          for (let ib_pos = 0; ib_pos < ib_len;)

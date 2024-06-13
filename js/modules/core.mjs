@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/03/2024',
+version_date = '11/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -34,9 +34,11 @@ if (_src && isStr(_src)) {
    const pos = _src.indexOf('modules/core.mjs');
    if (pos >= 0) {
       source_dir = _src.slice(0, pos);
-      console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
+      if (!nodejs)
+         console.log(`Set jsroot source_dir to ${source_dir}, ${version}`);
    } else {
-      console.log(`jsroot bundle, ${version}`);
+      if (!nodejs)
+         console.log(`jsroot bundle, ${version}`);
       internals.ignore_v6 = true;
    }
 }
@@ -291,7 +293,7 @@ settings = {
    StripAxisLabels: true,
    /** @summary Draw TF1 by default as curve or line */
    FuncAsCurve: false,
-   /** @summary Time zone used for date/time display of file time */
+   /** @summary Time zone used for date/time display, local by default, can be 'UTC' or 'Europe/Berlin' or any other valid value */
    TimeZone: '',
    /** @summary Page URL which will be used to show item in new tab, jsroot main dir used by default */
    NewTabUrl: '',
@@ -407,6 +409,7 @@ gStyle = {
    fLegendFont: 42,
    fLegendTextSize: 0,
    fLegendFillColor: 0,
+   fLegendFillStyle: 1001,
    fHatchesLineWidth: 1,
    fHatchesSpacing: 1,
    fCandleWhiskerRange: 1.0,
@@ -1041,13 +1044,13 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
-      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
+      clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTFrame = 'TFrame', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
       clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF2 = 'TF2', clTF3 = 'TF3', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D', clTProfile3D = 'TProfile3D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
-      nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect';
+      nsREX = 'ROOT::Experimental::', nsSVG = 'http://www.w3.org/2000/svg',
+      kNoZoom = -1111, kNoStats = BIT(9), kInspect = 'inspect', kTitle = 'title';
 
 
 /** @summary Create some ROOT classes
@@ -1128,7 +1131,8 @@ function create(typename, target) {
          create(clTPave, obj);
          create(clTAttText, obj);
          extend(obj, { fColumnSeparation: 0, fEntrySeparation: 0.1, fMargin: 0.25, fNColumns: 1, fPrimitives: create(clTList), fName: clTPave,
-                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize, fFillColor: gStyle.fLegendFillColor });
+                       fBorderSize: gStyle.fLegendBorderSize, fTextFont: gStyle.fLegendFont, fTextSize: gStyle.fLegendTextSize,
+                       fFillColor: gStyle.fLegendFillColor, fFillStyle: gStyle.fLegendFillStyle });
          break;
       case clTPaletteAxis:
          create(clTPave, obj);
@@ -1515,7 +1519,10 @@ function getMethods(typename, obj) {
       m.AddText = function(txt) {
          const line = create(clTLatex);
          line.fTitle = txt;
-         line.fTextAlign = this.fTextAlign;
+         line.fTextAlign = 0;
+         line.fTextColor = 0;
+         line.fTextFont = 0;
+         line.fTextSize = 0;
          this.fLines.Add(line);
       };
       m.Clear = function() {
@@ -1871,12 +1878,12 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTPaveClass, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
-         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
+         clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTFrame, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTF3,
          clTProfile, clTProfile2D, clTProfile3D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats, kInspect,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, nsSVG, kNoZoom, kNoStats, kInspect, kTitle,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, setHistogramTitle, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

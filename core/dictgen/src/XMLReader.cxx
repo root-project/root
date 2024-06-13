@@ -940,6 +940,36 @@ bool XMLReader::Parse(const std::string &fileName, SelectionRules& out)
                     }
                   }
 
+                  // request RNTuple split mode
+                  if (tagKind == kClass && csr && "rntupleSplit" == iAttrName) {
+                     if (iAttrValue == "true") {
+                        if (csr->RequestedRNTupleSplitMode() == -1) {
+                           ROOT::TMetaUtils::Error(
+                              nullptr,
+                              "XML at line %s: class attribute 'rntupleSplit' must be either 'true' or 'false', "
+                              "not both\n",
+                              lineNumCharp, iAttrValue.c_str());
+                        } else {
+                           csr->SetRequestedRNTupleSplitMode(1);
+                        }
+                     } else if (iAttrValue == "false") {
+                        if (csr->RequestedRNTupleSplitMode() == 1) {
+                           ROOT::TMetaUtils::Error(
+                              nullptr,
+                              "XML at line %s: class attribute 'rntupleSplit' must be either 'true' or 'false', "
+                              "not both\n",
+                              lineNumCharp, iAttrValue.c_str());
+                        } else {
+                           csr->SetRequestedRNTupleSplitMode(-1);
+                        }
+                     } else {
+                        ROOT::TMetaUtils::Error(
+                           nullptr,
+                           "XML at line %s: class attribute 'rntupleSplit' must be 'true' or 'false' (it was %s)\n",
+                           lineNumCharp, iAttrValue.c_str());
+                     }
+                  }
+
                   // request no input operator
                   if (tagKind == kClass && csr && "noInputOperator" == iAttrName){
                     if (iAttrValue == "true") {

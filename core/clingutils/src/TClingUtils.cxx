@@ -374,6 +374,7 @@ std::string AnnotatedRecordDecl::BuildDemangledTypeInfo(const clang::RecordDecl 
 /// There is no requested type name.
 /// Still let's normalized the actual name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
                                          bool rStreamerInfo,
@@ -381,10 +382,18 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestedVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestedVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestedVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    TMetaUtils::GetNormalizedName(fNormalizedName, decl->getASTContext().getTypeDeclType(decl), interpreter,normCtxt);
    fDemangledTypeInfo = BuildDemangledTypeInfo(decl, fNormalizedName);
@@ -393,6 +402,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::Type *requestedType,
                                          const clang::RecordDecl *decl,
@@ -403,10 +413,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -423,6 +442,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested type name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::Type *requestedType,
                                          const clang::RecordDecl *decl,
@@ -432,10 +452,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer),
-   fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // For comparison purposes.
    TClassEdit::TSplitType splitname1(requestName,(TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd));
@@ -448,6 +477,7 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the requested name.
 
+// clang-format off
 AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          const clang::RecordDecl *decl,
                                          const char *requestName,
@@ -456,9 +486,19 @@ AnnotatedRecordDecl::AnnotatedRecordDecl(long index,
                                          bool rRequestNoInputOperator,
                                          bool rRequestOnlyTClass,
                                          int rRequestVersionNumber,
+                                         int rRequestedRNTupleSplitMode,
                                          const cling::Interpreter &interpreter,
-                                         const TNormalizedCtxt &normCtxt) :
-   fRuleIndex(index), fDecl(decl), fRequestedName(""), fRequestStreamerInfo(rStreamerInfo), fRequestNoStreamer(rNoStreamer), fRequestNoInputOperator(rRequestNoInputOperator), fRequestOnlyTClass(rRequestOnlyTClass), fRequestedVersionNumber(rRequestVersionNumber)
+                                         const TNormalizedCtxt &normCtxt)
+   : fRuleIndex(index),
+     fDecl(decl),
+     fRequestedName(""),
+     fRequestStreamerInfo(rStreamerInfo),
+     fRequestNoStreamer(rNoStreamer),
+     fRequestNoInputOperator(rRequestNoInputOperator),
+     fRequestOnlyTClass(rRequestOnlyTClass),
+     fRequestedVersionNumber(rRequestVersionNumber),
+     fRequestedRNTupleSplitMode(rRequestedRNTupleSplitMode)
+// clang-format on
 {
    // const clang::ClassTemplateSpecializationDecl *tmplt_specialization = llvm::dyn_cast<clang::ClassTemplateSpecializationDecl> (decl);
    // if (tmplt_specialization) {
@@ -3223,7 +3263,7 @@ llvm::StringRef ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(const cling::I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
+/// Return (in the argument 'output') a valid name of the C++ symbol/type (pass as 'input')
 /// that can be used in C++ as a variable name.
 
 void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
@@ -3251,6 +3291,12 @@ void ROOT::TMetaUtils::GetCppName(std::string &out, const char *in)
          case ')': repl = "cP"; break;
          case '[': repl = "oB"; break;
          case ']': repl = "cB"; break;
+         case '{': repl = "lB"; break;
+         case '}': repl = "rB"; break;
+         case ';': repl = "sC"; break;
+         case '#': repl = "hS"; break;
+         case '?': repl = "qM"; break;
+         case '`': repl = "bT"; break;
          case '!': repl = "nO"; break;
          case ',': repl = "cO"; break;
          case '$': repl = "dA"; break;
@@ -4361,6 +4407,44 @@ const clang::Type *ROOT::TMetaUtils::GetUnderlyingType(clang::QualType type)
       rawtype = rawtype->getBaseElementTypeUnsafe ();
    }
    return rawtype;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the DeclContext is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsCtxtReacheable(const clang::DeclContext &ctxt)
+{
+   if (ctxt.isNamespace() || ctxt.isTranslationUnit())
+      return true;
+   else if(const auto parentdecl = llvm::dyn_cast<clang::CXXRecordDecl>(&ctxt))
+      return ROOT::TMetaUtils::IsDeclReacheable(*parentdecl);
+   else
+      // For example "extern C" context.
+      return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if the decl is representing an entity reacheable from the
+/// global namespace
+
+bool ROOT::TMetaUtils::IsDeclReacheable(const clang::Decl &decl)
+{
+   const clang::DeclContext *ctxt = decl.getDeclContext();
+   switch (decl.getAccess()) {
+      case clang::AS_public:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      case clang::AS_protected:
+         return false;
+      case clang::AS_private:
+         return false;
+      case clang::AS_none:
+         return !ctxt || IsCtxtReacheable(*ctxt);
+      default:
+         // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
+         return false;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

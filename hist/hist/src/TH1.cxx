@@ -109,23 +109,23 @@ ROOT supports the following histogram types:
       - TH1C : histograms with one byte per channel.   Maximum bin content = 127
       - TH1S : histograms with one short per channel.  Maximum bin content = 32767
       - TH1I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
-      - TH1L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
-      - TH1F : histograms with one float per channel.  Maximum precision 7 digits
-      - TH1D : histograms with one double per channel. Maximum precision 14 digits
+      - TH1L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
+      - TH1F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
+      - TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
   - 2-D histograms:
       - TH2C : histograms with one byte per channel.   Maximum bin content = 127
       - TH2S : histograms with one short per channel.  Maximum bin content = 32767
       - TH2I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
-      - TH2L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
-      - TH2F : histograms with one float per channel.  Maximum precision 7 digits
-      - TH2D : histograms with one double per channel. Maximum precision 14 digits
+      - TH2L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
+      - TH2F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
+      - TH2D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
   - 3-D histograms:
       - TH3C : histograms with one byte per channel.   Maximum bin content = 127
       - TH3S : histograms with one short per channel.  Maximum bin content = 32767
       - TH3I : histograms with one int per channel.    Maximum bin content = INT_MAX (\ref intmax "*")
-      - TH3L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "*")
-      - TH3F : histograms with one float per channel.  Maximum precision 7 digits
-      - TH3D : histograms with one double per channel. Maximum precision 14 digits
+      - TH3L : histograms with one long64 per channel. Maximum bin content = LLONG_MAX (\ref llongmax "**")
+      - TH3F : histograms with one float per channel.  Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax "***")
+      - TH3D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax "****")
   - Profile histograms: See classes  TProfile, TProfile2D and TProfile3D.
       Profile histograms are used to display the mean value of Y and its standard deviation
       for each bin in X. Profile histograms are in many cases an elegant
@@ -136,8 +136,10 @@ ROOT supports the following histogram types:
       histogram with much better precision than by a scatter-plot.
 
 <sup>
-\anchor intmax (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
-\anchor llongmax (*) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)
+\anchor intmax (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor llongmax (**) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor floatmax (***) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
+\anchor doublemax (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
 </sup>
 
 The inheritance hierarchy looks as follows:
@@ -3088,7 +3090,7 @@ void TH1::Draw(Option_t *option)
       } else {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
-         if (TestBit(kCanDelete)) gPad->GetListOfPrimitives()->Remove(this);
+         if (TestBit(kCanDelete)) gPad->Remove(this);
          gPad->Clear();
       }
       gPad->IncrementPaletteColor(1, opt1);
@@ -4451,6 +4453,29 @@ Double_t TH1::GetEffectiveEntries() const
    this->GetStats(s);// s[1] sum of squares of weights, s[0] sum of weights
    return (s[1] ? s[0]*s[0]/s[1] : TMath::Abs(s[0]) );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Shortcut to set the three histogram colors with a single call.
+///
+/// By default: linecolor = markercolor = fillcolor = -1
+/// If a color is < 0 this method does not change the corresponding color if positive or null it set the color.
+///
+/// For instance:
+/// ~~~ {.cpp}
+/// h->SetColors(kRed, kRed);
+/// ~~~
+/// will set the line color and the marker color to red.
+
+void TH1::SetColors(Color_t linecolor, Color_t markercolor, Color_t fillcolor)
+{
+   if (linecolor >= 0)
+      SetLineColor(linecolor);
+   if (markercolor >= 0)
+      SetMarkerColor(markercolor);
+   if (fillcolor >= 0)
+      SetFillColor(fillcolor);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set highlight (enable/disable) mode for the histogram
@@ -9510,6 +9535,7 @@ void TH1C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1C::AddBinContent(Int_t bin, Double_t w)
@@ -9694,7 +9720,8 @@ void TH1S::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w
+/// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1S::AddBinContent(Int_t bin, Double_t w)
@@ -9881,6 +9908,7 @@ void TH1I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w
+/// \warning The value of w is cast to `Long64_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1I::AddBinContent(Int_t bin, Double_t w)
@@ -10067,7 +10095,8 @@ void TH1L::AddBinContent(Int_t bin)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment bin content by w
+/// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH1L::AddBinContent(Int_t bin, Double_t w)
@@ -10174,7 +10203,7 @@ TH1L operator/(const TH1L &h1, const TH1L &h2)
 
 //______________________________________________________________________________
 //                     TH1F methods
-// TH1F : histograms with one float per channel.  Maximum precision 7 digits
+// TH1F : histograms with one float per channel. Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
 ClassImp(TH1F);
@@ -10355,7 +10384,7 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 
 //______________________________________________________________________________
 //                     TH1D methods
-// TH1D : histograms with one double per channel. Maximum precision 14 digits
+// TH1D : histograms with one double per channel. Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
 ClassImp(TH1D);

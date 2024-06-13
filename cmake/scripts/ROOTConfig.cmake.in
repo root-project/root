@@ -74,7 +74,7 @@ set(ROOT_CXX_STANDARD @CMAKE_CXX_STANDARD@)
 @ROOT_CMAKE_DIR_SETUP@
 
 # Python version used to build ROOT
-set(ROOT_PYTHON_VERSION @PYTHON_VERSION_STRING@)
+set(ROOT_PYTHON_VERSION @Python3_VERSION@)
 
 #----------------------------------------------------------------------------
 # Include RootMacros.cmake to get ROOT's CMake macros
@@ -145,6 +145,8 @@ endif()
 # Now set them to ROOT_LIBRARIES
 set(ROOT_LIBRARIES)
 if(MSVC)
+  set(SAVED_FIND_LIBRARY_PREFIXES ${CMAKE_FIND_LIBRARY_PREFIXES})
+  set(SAVED_FIND_LIBRARY_SUFFIXES ${CMAKE_FIND_LIBRARY_SUFFIXES})
   set(CMAKE_FIND_LIBRARY_PREFIXES "lib")
   set(CMAKE_FIND_LIBRARY_SUFFIXES ".lib" ".dll")
 endif()
@@ -158,6 +160,10 @@ foreach(_cpt Core Imt RIO Net Hist Graf Graf3d Gpad ROOTDataFrame Tree TreePlaye
 endforeach()
 if(ROOT_LIBRARIES)
   list(REMOVE_DUPLICATES ROOT_LIBRARIES)
+endif()
+if(MSVC)
+  set(CMAKE_FIND_LIBRARY_PREFIXES ${SAVED_FIND_LIBRARY_PREFIXES})
+  set(CMAKE_FIND_LIBRARY_SUFFIXES ${SAVED_FIND_LIBRARY_SUFFIXES})
 endif()
 
 #----------------------------------------------------------------------------

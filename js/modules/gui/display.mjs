@@ -1,5 +1,5 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings, isObject, isFunc, isStr } from '../core.mjs';
+import { browser, internals, toJSON, settings, isObject, isFunc, isStr, nsSVG } from '../core.mjs';
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
@@ -512,9 +512,8 @@ class GridDisplay extends MDIDisplay {
          return this.getGridFrame();
 
       let found = super.getActiveFrame();
-      if (found) return found;
-
-      this.forEachFrame(frame => { if (!found) found = frame; });
+      if (!found)
+         this.forEachFrame(frame => { if (!found) found = frame; });
 
       return found;
    }
@@ -948,6 +947,7 @@ class FlexibleDisplay extends MDIDisplay {
          .style('box-shadow', '1px 1px 2px 2px #aaa')
          .property('state', 'normal')
          .select('.jsroot_flex_header')
+         .on('contextmenu', evnt => mdi.showContextMenu(evnt, true))
          .on('click', function() { mdi.activateFrame(d3_select(this.parentNode).select('.jsroot_flex_draw').node()); })
          .selectAll('button')
          .data([{ n: '&#x2715;', t: 'close' }, { n: '&#x2594;', t: 'maximize' }, { n: '&#x2581;', t: 'minimize' }])
@@ -1098,9 +1098,13 @@ class FlexibleDisplay extends MDIDisplay {
    }
 
    /** @summary context menu */
-   showContextMenu(evnt) {
-      // handle context menu only for MDI area
-      if ((evnt.target.getAttribute('class') !== 'jsroot_flex_top') || (this.numDraw() === 0)) return;
+   showContextMenu(evnt, is_header) {
+      // no context menu for no windows
+      if (this.numDraw() === 0)
+         return;
+      // handle context menu only for MDI area or for window header
+      if (!is_header && evnt.target.getAttribute('class') !== 'jsroot_flex_top')
+         return;
 
       evnt.preventDefault();
 
@@ -1202,7 +1206,7 @@ class BatchDisplay extends MDIDisplay {
       if (!frame) return;
       const main = d3_select(frame);
       main.select('svg')
-          .attr('xmlns', 'http://www.w3.org/2000/svg')
+          .attr('xmlns', nsSVG)
           .attr('width', this.width)
           .attr('height', this.height)
           .attr('title', null).attr('style', null).attr('class', null).attr('x', null).attr('y', null);

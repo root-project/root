@@ -580,7 +580,7 @@ public:
          RSwitchElement element{srcArray[i].GetIndex(), srcArray[i].GetTag()};
 #if R__LITTLE_ENDIAN == 0
          element.fIndex = RByteSwap<8>::bswap(element.fIndex);
-         element.fTag = RByteSwap<8>::bswap(element.fTag);
+         element.fTag = RByteSwap<4>::bswap(element.fTag);
 #endif
          memcpy(dstArray + i * 12, &element, 12);
       }
@@ -595,7 +595,7 @@ public:
          memcpy(&element, srcArray + i * 12, 12);
 #if R__LITTLE_ENDIAN == 0
          element.fIndex = RByteSwap<8>::bswap(element.fIndex);
-         element.fTag = RByteSwap<8>::bswap(element.fTag);
+         element.fTag = RByteSwap<4>::bswap(element.fTag);
 #endif
          dstArray[i] = ROOT::Experimental::RColumnSwitch(ClusterSize_t{element.fIndex}, element.fTag);
       }
@@ -641,8 +641,9 @@ public:
       std::uint16_t *uint16Array = reinterpret_cast<std::uint16_t *>(src);
 
       for (std::size_t i = 0; i < count; ++i) {
-         ByteSwapIfNecessary(floatArray[i]);
-         floatArray[i] = HalfToFloat(uint16Array[i]);
+         std::uint16_t val = uint16Array[i];
+         ByteSwapIfNecessary(val);
+         floatArray[i] = HalfToFloat(val);
       }
    }
 };

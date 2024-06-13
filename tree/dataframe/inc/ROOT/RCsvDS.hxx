@@ -83,6 +83,7 @@ public:
           std::unordered_map<std::string, char> &&colTypes = {});
    void Finalize() final;
    ~RCsvDS();
+   std::size_t GetNFiles() const final { return 1; }
    const std::vector<std::string> &GetColumnNames() const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    std::string GetTypeName(std::string_view colName) const final;

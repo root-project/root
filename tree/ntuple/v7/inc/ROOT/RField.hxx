@@ -19,6 +19,7 @@
 #include <ROOT/RColumn.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RColumnElement.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 #include <string_view>
@@ -39,6 +40,7 @@
 #include <map>
 #include <memory>
 #include <new>
+#include <optional>
 #include <set>
 #include <string>
 #include <tuple>
@@ -46,10 +48,13 @@
 #include <typeinfo>
 #include <variant>
 #include <vector>
+#include <unordered_map>
 #include <utility>
 
 class TClass;
 class TEnum;
+class TObject;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 
@@ -412,12 +417,13 @@ protected:
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
    virtual const RColumnRepresentations &GetColumnRepresentations() const;
-   /// Creates the backing columns corresponsing to the field type for writing
-   virtual void GenerateColumnsImpl() = 0;
-   /// Creates the backing columns corresponsing to the field type for reading.
-   /// The method should to check, using the page source and fOnDiskId, if the column types match
-   /// and throw if they don't.
-   virtual void GenerateColumnsImpl(const RNTupleDescriptor &desc) = 0;
+   /// Implementations in derived classes should create the backing columns corresponsing to the field type for
+   /// writing. The default implementation does not attach any columns to the field.
+   virtual void GenerateColumnsImpl() {}
+   /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
+   /// The default implementation does not attach any columns to the field. The method should check, using the page
+   /// source and fOnDiskId, if the column types match and throw if they don't.
+   virtual void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) {}
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
    const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
@@ -521,12 +527,19 @@ protected:
 
    // Perform housekeeping tasks for global to cluster-local index translation
    virtual void CommitClusterImpl() {}
+   // The field can indicate that it needs to register extra type information in the on-disk schema.
+   // In this case, a callback from the page sink to the field will be registered on connect, so that the
+   // extra type information can be collected when the dataset gets committed.
+   virtual bool HasExtraTypeInfo() const { return false; }
+   // The page sink's callback when the data set gets committed will call this method to get the field's extra
+   // type information. This has to happen at the end of writing because the type information may change depending
+   // on the data that's written, e.g. for polymorphic types in the unsplit field.
+   virtual RExtraTypeInfoDescriptor GetExtraTypeInfo() const { return RExtraTypeInfoDescriptor(); }
 
    /// Add a new subfield to the list of nested fields
    void Attach(std::unique_ptr<RFieldBase> child);
 
-   /// Called by `ConnectPageSource()` only once connected; derived classes may override this
-   /// as appropriate
+   /// Called by `ConnectPageSource()` once connected; derived classes may override this as appropriate
    virtual void OnConnectPageSource() {}
 
    /// Factory method to resurrect a field from the stored on-disk type information.  This overload takes an already
@@ -716,8 +729,6 @@ public:
 class RFieldZero final : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    void ConstructValue(void *) const final {}
 
 public:
@@ -739,8 +750,6 @@ protected:
    {
       return std::make_unique<RInvalidField>(newName, GetTypeName(), fError);
    }
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    void ConstructValue(void *) const final {}
 
 public:
@@ -792,8 +801,6 @@ private:
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RClassDeleter>(fClass); }
@@ -816,6 +823,58 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
+/// The field for a class in unsplit mode, which is using ROOT standard streaming
+class RUnsplitField final : public RFieldBase {
+private:
+   class RUnsplitDeleter : public RDeleter {
+   private:
+      TClass *fClass;
+
+   public:
+      explicit RUnsplitDeleter(TClass *cl) : fClass(cl) {}
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   TClass *fClass = nullptr;
+   Internal::RNTupleSerializer::StreamerInfoMap_t fStreamerInfos; ///< streamer info records seen during writing
+   ClusterSize_t fIndex; ///< number of bytes written in the current cluster
+
+private:
+   // Note that className may be different from classp->GetName(), e.g. through different canonicalization of RNTuple
+   // vs. TClass. Also, classp may be nullptr for types unsupported by the ROOT I/O.
+   RUnsplitField(std::string_view fieldName, std::string_view className, TClass *classp);
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RUnsplitDeleter>(fClass); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void CommitClusterImpl() final { fIndex = 0; }
+
+   bool HasExtraTypeInfo() const final { return true; }
+   // Returns the list of seen streamer infos
+   RExtraTypeInfoDescriptor GetExtraTypeInfo() const final;
+
+public:
+   RUnsplitField(std::string_view fieldName, std::string_view className, std::string_view typeAlias = "");
+   RUnsplitField(RUnsplitField &&other) = default;
+   RUnsplitField &operator=(RUnsplitField &&other) = default;
+   ~RUnsplitField() override = default;
+
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 /// The field for an unscoped or scoped enum with dictionary
 class REnumField : public RFieldBase {
 private:
@@ -824,8 +883,6 @@ private:
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
 
    void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
 
@@ -1021,9 +1078,6 @@ protected:
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
 
@@ -1203,9 +1257,6 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final;
 
@@ -1244,7 +1295,7 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    void GenerateColumnsImpl() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
+   using RFieldBase::GenerateColumnsImpl;
 
    void ConstructValue(void *where) const final;
    /// Returns an RRVecField::RRVecDeleter
@@ -1313,14 +1364,22 @@ public:
 /// The generic field for std::variant types
 class RVariantField : public RFieldBase {
 private:
+   // Most compilers support at least 255 variants (256 - 1 value for the empty variant).
+   // Some compilers switch to a two-byte tag field already with 254 variants.
+   // MSVC only supports 163 variants in older versions, 250 in newer ones. It switches to a 2 byte
+   // tag as of 128 variants (at least in debug mode), so for simplicity we set the limit to 125 variants.
+   static constexpr std::size_t kMaxVariants = 125;
+
    class RVariantDeleter : public RDeleter {
    private:
       std::size_t fTagOffset;
+      std::size_t fVariantOffset;
       std::vector<std::unique_ptr<RDeleter>> fItemDeleters;
 
    public:
-      RVariantDeleter(std::size_t tagOffset, std::vector<std::unique_ptr<RDeleter>> &itemDeleters)
-         : fTagOffset(tagOffset), fItemDeleters(std::move(itemDeleters))
+      RVariantDeleter(std::size_t tagOffset, std::size_t variantOffset,
+                      std::vector<std::unique_ptr<RDeleter>> &itemDeleters)
+         : fTagOffset(tagOffset), fVariantOffset(variantOffset), fItemDeleters(std::move(itemDeleters))
       {
       }
       void operator()(void *objPtr, bool dtorOnly) final;
@@ -1330,12 +1389,17 @@ private:
    size_t fMaxAlignment = 1;
    /// In the std::variant memory layout, at which byte number is the index stored
    size_t fTagOffset = 0;
+   /// In the std::variant memory layout, the actual union of types may start at an offset > 0
+   size_t fVariantOffset = 0;
    std::vector<ClusterSize_t::ValueType> fNWritten;
 
    static std::string GetTypeList(const std::vector<RFieldBase *> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
-   static std::uint32_t GetTag(const void *variantPtr, std::size_t tagOffset);
-   static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint32_t tag);
+   /// The implementation supports two memory layouts that are in use: a trailing unsigned byte, zero-indexed,
+   /// having the exception caused empty state encoded by the max tag value,
+   /// or a trailing unsigned int instead of a char.
+   static std::uint8_t GetTag(const void *variantPtr, std::size_t tagOffset);
+   static void SetTag(void *variantPtr, std::size_t tagOffset, std::uint8_t tag);
 
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
@@ -1360,7 +1424,7 @@ public:
    ~RVariantField() override = default;
 
    size_t GetValueSize() const final;
-   size_t GetAlignment() const final { return fMaxAlignment; }
+   size_t GetAlignment() const final;
 };
 
 /// The generic field for a std::set<Type> and std::unordered_set<Type>
@@ -1473,11 +1537,47 @@ public:
    size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
 
+class ROptionalField : public RNullableField {
+   class ROptionalDeleter : public RDeleter {
+   private:
+      std::unique_ptr<RDeleter> fItemDeleter;
+
+   public:
+      explicit ROptionalDeleter(std::unique_ptr<RDeleter> itemDeleter) : fItemDeleter(std::move(itemDeleter)) {}
+      void operator()(void *objPtr, bool dtorOnly) final;
+   };
+
+   std::unique_ptr<RDeleter> fItemDeleter;
+
+   /// Given a pointer to an std::optional<T> in `optionalPtr`, extract a pointer to the value T* and a pointer
+   /// to the engagement boolean. Assumes that an std::optional<T> is stored as
+   /// `struct { T t; bool engagement; };`
+   std::pair<const void *, const bool *> GetValueAndEngagementPtrs(const void *optionalPtr) const;
+   std::pair<void *, bool *> GetValueAndEngagementPtrs(void *optionalPtr) const;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ConstructValue(void *where) const final;
+   std::unique_ptr<RDeleter> GetDeleter() const final;
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+public:
+   ROptionalField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<RFieldBase> itemField);
+   ROptionalField(ROptionalField &&other) = default;
+   ROptionalField &operator=(ROptionalField &&other) = default;
+   ~ROptionalField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+};
+
 class RAtomicField : public RFieldBase {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
-   void GenerateColumnsImpl() final {}
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
 
    void ConstructValue(void *where) const final { CallConstructValueOn(*fSubFields[0], where); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return GetDeleterOf(*fSubFields[0]); }
@@ -2424,6 +2524,39 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+/// TObject requires special handling of the fBits and fUniqueID members
+template <>
+class RField<TObject> final : public RFieldBase {
+   static std::size_t GetOffsetOfMember(const char *name);
+   static std::size_t GetOffsetUniqueID() { return GetOffsetOfMember("fUniqueID"); }
+   static std::size_t GetOffsetBits() { return GetOffsetOfMember("fBits"); }
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
+
+   void ConstructValue(void *where) const override;
+   std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<TObject>>(); }
+
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+
+   void OnConnectPageSource() final;
+
+public:
+   static std::string TypeName() { return "TObject"; }
+
+   RField(std::string_view fieldName);
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::vector<RValue> SplitValue(const RValue &value) const final;
+   size_t GetValueSize() const final;
+   size_t GetAlignment() const final;
+   std::uint32_t GetTypeVersion() const final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 template <typename ItemT, std::size_t N>
 class RField<std::array<ItemT, N>> : public RArrayField {
    using ContainerT = typename std::array<ItemT, N>;
@@ -2831,6 +2964,16 @@ class RField<std::unique_ptr<ItemT>> final : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
    explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+};
+
+template <typename ItemT>
+class RField<std::optional<ItemT>> final : public ROptionalField {
+public:
+   static std::string TypeName() { return "std::optional<" + RField<ItemT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : ROptionalField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;

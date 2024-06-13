@@ -13,6 +13,12 @@
 \file TFile.cxx
 \class TFile
 \ingroup IO
+\brief A ROOT file is an on-disk file, usually with extension .root, that stores objects in a file-system-like logical structure, possibly including subdirectory hierarchies.
+\sa \ref IO
+\sa \ref rootio (or `io/doc/TFile` folder in your codebase)
+
+<details>
+<summary>ROOT file data format specification</summary>
 
 A ROOT file is composed of a header, followed by consecutive data records
 (`TKey` instances) with a well defined format.
@@ -21,6 +27,7 @@ The first data record starts at byte fBEGIN (currently set to kBEGIN).
 Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
 it is a large file (> 2 GB) and the offsets will be 8 bytes long and
 fUnits will be set to 8:
+
 Byte Range      | Record Name | Description
 ----------------|-------------|------------
 1->4            | "root"      | Root file identifier
@@ -69,7 +76,10 @@ Byte Range      | Member Name | Description
 Begin_Macro
 ../../../tutorials/io/file.C
 End_Macro
+
 The structure of a directory is shown in TDirectoryFile::TDirectoryFile
+
+</details>
 */
 
 #include <ROOT/RConfig.hxx>
@@ -599,7 +609,7 @@ TFile::~TFile()
 ///
 /// TFile implementations providing asynchronous open functionality need to
 /// override this method to run the appropriate checks before calling this
-/// standard initialization part. See TXNetFile::Init for an example.
+/// standard initialization part. See TNetXNGFile::Init for an example.
 
 void TFile::Init(Bool_t create)
 {
@@ -888,9 +898,16 @@ void TFile::Init(Bool_t create)
          } else if (fVersion != gROOT->GetVersionInt() && fVersion > 30000) {
             // Don't complain about missing streamer info for empty files.
             if (fKeys->GetSize()) {
-               Warning("Init","no StreamerInfo found in %s therefore preventing schema evolution when reading this file."
-                              " The file was produced with version %d.%02d/%02d of ROOT.",
-                              GetName(),  fVersion / 10000, (fVersion / 100) % (100), fVersion  % 100);
+               // #14068: we take into account the different way of expressing the version
+               const auto separator = fVersion < 63200 ? "/" : ".";
+               const auto thisVersion = gROOT->GetVersionInt();
+               const auto msg = "no StreamerInfo found in %s therefore preventing schema evolution when reading this file. "
+                                "The file was produced with ROOT version %d.%02d%s%02d, "
+                                "while the current version is %d.%02d.%02d";
+               Warning("Init", msg,
+                       GetName(),
+                       fVersion / 10000, (fVersion / 100) % (100), separator, fVersion  % 100,
+                       thisVersion / 10000, (thisVersion / 100) % (100), thisVersion  % 100);
             }
          }
       }
@@ -4268,8 +4285,9 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
                   f = (TFile*) h->ExecPlugin(4, name.Data(), option, ftitle, compress);
             } else {
                // Just try to open it locally but via TFile::Open, so that we pick-up the correct
-               // plug-in in the case file name contains information about a special backend (e.g.
-               f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
+               // plug-in in the case file name contains information about a special backend (e.g.)
+               if (strcmp(name, urlname.GetFileAndOptions()) != 0)
+                  f = TFile::Open(urlname.GetFileAndOptions(), option, ftitle, compress);
             }
          }
       }
@@ -4277,7 +4295,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
       if (f && f->IsZombie()) {
          TString newUrl = f->GetNewUrl();
          delete f;
-         if( newUrl.Length() && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
+         if( newUrl.Length() && (newUrl != name) && gEnv->GetValue("TFile.CrossProtocolRedirects", 1) )
             f = TFile::Open( newUrl, option, ftitle, compress );
          else
             f = nullptr;
@@ -4323,7 +4341,7 @@ TFile *TFile::Open(const char *url, Option_t *options, const char *ftitle,
 ///     TFile::Open(const char *, ...)
 ///
 /// To be effective, the underlying TFile implementation must be able to
-/// support asynchronous open functionality. Currently, only TXNetFile
+/// support asynchronous open functionality. Currently, only TNetXNGFile
 /// supports it. If the functionality is not implemented, this call acts
 /// transparently by returning an handle with the arguments for the
 /// standard synchronous open run by TFile::Open(TFileOpenHandle *).
@@ -4380,7 +4398,7 @@ TFileOpenHandle *TFile::AsyncOpen(const char *url, Option_t *option,
       if (type == kNet) {
          // Network files
          if ((h = gROOT->GetPluginManager()->FindHandler("TFile", name)) &&
-            (!strcmp(h->GetClass(),"TXNetFile") || !strcmp(h->GetClass(),"TNetXNGFile"))
+            !strcmp(h->GetClass(),"TNetXNGFile")
             && h->LoadPlugin() == 0) {
             f = (TFile*) h->ExecPlugin(6, name.Data(), option, ftitle, compress, netopt, kTRUE);
             notfound = kFALSE;

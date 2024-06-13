@@ -12,7 +12,7 @@ void libs(TString classname)
    int i = classname.Index("_3");
    if (i>0) classname.Remove(i,classname.Length()-i);
 
-   libname = gInterpreter->GetClassSharedLibs(classname.Data());
+   libname = gInterpreter->GetClassSharedLibs(classname.Data(),false);
    if (!libname)
       return;
 

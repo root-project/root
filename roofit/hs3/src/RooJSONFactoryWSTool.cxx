@@ -41,7 +41,7 @@
 #include <stdexcept>
 
 /** \class RooJSONFactoryWSTool
-\ingroup roofit
+\ingroup roofit_dev_docs_hs3
 
 When using \ref Roofitmain, statistical models can be conveniently handled and
 stored as a RooWorkspace. However, for the sake of interoperability
@@ -1109,7 +1109,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
                 << " 3: you are reading a file with export keys - call RooFit::JSONIO::printExportKeys() to "
                    "see what is available\n"
                 << " 2 & 1: you might need to write a serialization definition yourself. check "
-                   "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
+                   "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to "
                    "see how to do this!\n";
       return;
    }
@@ -1243,7 +1243,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
                "RooFit::JSONIO::printFactoryExpressions() "
                "to see what is available\n"
             << " 2 & 1: you might need to write a deserialization definition yourself. check "
-               "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
+               "https://root.cern/doc/master/group__roofit__dev__docs__hs3.html to see "
                "how to do this!"
             << std::endl;
          RooJSONFactoryWSTool::error(ss.str());

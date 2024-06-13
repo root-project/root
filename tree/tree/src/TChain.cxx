@@ -367,6 +367,28 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
    TString basename, treename, query, suffix;
    ParseTreeFilename(name, basename, treename, query, suffix);
 
+   // Special case: ? used for query string AND as wildcard in the filename.
+   // In this case, everything after the first ? is parsed as query/suffix
+   // string in ParseTreeFilename. We assume that everything until the last
+   // occurence of .root should be part of the basename so we remove it
+   // from the suffix and add it back to the basename.
+   // See: https://github.com/root-project/root/issues/10239
+   static const char *dotr = ".root";
+   static Ssiz_t dotrl = strlen(dotr);
+   // Find the last one
+   Ssiz_t lastDotrIdx = kNPOS;
+   Ssiz_t dotrIdx = suffix.Index(dotr);
+   while (dotrIdx != kNPOS) {
+      lastDotrIdx = dotrIdx;
+      dotrIdx = suffix.Index(dotr, dotrIdx + 1);
+   }
+   if (lastDotrIdx != kNPOS) {
+      // Add the part up until '.root' to the basename for globbing
+      basename.Append(suffix, lastDotrIdx + dotrl);
+      // Remove the part up until '.root' from the suffix
+      suffix.Replace(0, lastDotrIdx + dotrl, "");
+   }
+
    // case with one single file
    if (!basename.MaybeWildcard()) {
       return AddFile(name, nentries);
@@ -433,9 +455,13 @@ Int_t TChain::Add(const char *name, Long64_t nentries /* = TTree::kMaxEntries */
 ///
 /// B. If nentries > 0, the file is not opened, and nentries is assumed
 ///    to be the number of entries in the file. In this case, no check
-///    is made that the file exists nor that the tree exists in the file.
+///    is made that the file exists nor that the tree exists in the file,
+///    nor that the real TTree entries match with the input argument.
 ///    This second mode is interesting in case the number of entries in
 ///    the file is already stored in a run database for example.
+///    \warning If you pass `nentries` > `tree_entries`, this may lead to silent
+///    data corruption in your analysis or undefined behavior in your program.
+///    Use the other options if unsure.
 ///
 /// C. If nentries == TTree::kMaxEntries (default), the file is not opened.
 ///    The number of entries in each file will be read only when the file
@@ -1340,6 +1366,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // (the friends of the chain will be updated in the
       // next loop).
       fTree->LoadTree(treeReadEntry);
+
       if (fFriends) {
          // The current tree has not changed but some of its friends might.
          //
@@ -1523,6 +1550,10 @@ Long64_t TChain::LoadTree(Long64_t entry)
          returnCode = -4;
       } else if (!fGlobalRegistration) {
          fTree->ResetBit(kMustCleanup);
+      }
+      // Propagate the IMT settings
+      if (fTree) {
+         fTree->SetImplicitMT(fIMTEnabled);
       }
    }
 

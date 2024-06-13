@@ -526,6 +526,29 @@ TFitResultPtr THnBase::Fit(TF1 *f ,Option_t *option ,Option_t *goption)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief THnBase::GetBinCenter
+/// \param idx an array of bin index in each dimension.
+/// \return vector of bin centers in each dimension; empty in case of error.
+/// \note Throws error if size is different from nDimensions.
+/// \sa GetAxis(dim)::GetBinCenter(idx) as an alternative
+std::vector<Double_t> THnBase::GetBinCenter(const std::vector<Int_t> &idx) const
+{
+   if (idx.size() != static_cast<decltype(idx.size())>(fNdimensions)) {
+      Error("THnBase::GetBinCenter",
+            "Mismatched number of dimensions %d with bin index vector size %zu, returning an empty vector.",
+            fNdimensions, idx.size());
+      return {};
+   }
+   std::vector<Double_t> centers(fNdimensions);
+   std::generate(centers.begin(), centers.end(), [i = 0, &idx, this]() mutable {
+      auto bincenter = GetAxis(i)->GetBinCenter(idx[i]);
+      i++;
+      return bincenter;
+   });
+   return centers;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Generate an n-dimensional random tuple based on the histogrammed
 /// distribution. If subBinRandom, the returned tuple will be additionally
 /// randomly distributed within the randomized bin, using a flat
@@ -664,13 +687,13 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    Int_t* bins  = new Int_t[ndim];
    Long64_t myLinBin = 0;
 
-   THnIter iter(this, kTRUE /*use axis range*/);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(true /*use axis range*/)};
 
-   while ((myLinBin = iter.Next()) >= 0) {
+   while ((myLinBin = iter->Next()) >= 0) {
       Double_t v = GetBinContent(myLinBin);
 
       for (Int_t d = 0; d < ndim; ++d) {
-         bins[d] = iter.GetCoord(dim[d]);
+         bins[d] = iter->GetCoord(dim[d]);
          if (!keepTargetAxis && GetAxis(dim[d])->TestBit(TAxis::kAxisRange)) {
             Int_t binOffset = GetAxis(dim[d])->GetFirst();
             // Don't subtract even more if underflow is alreday included:
@@ -715,7 +738,7 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
    if (wantNDim) {
       hn->SetEntries(fEntries);
    } else {
-      if (!iter.HaveSkippedBin()) {
+      if (!iter->HaveSkippedBin()) {
          hist->SetEntries(fEntries);
       } else {
          // re-compute the entries
@@ -755,8 +778,8 @@ void THnBase::Scale(Double_t c)
    // Scale the contents & errors
    Bool_t haveErrors = GetCalculateErrors();
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next()) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next()) >= 0) {
       // Get the content of the bin from the current histogram
       Double_t v = GetBinContent(i);
       SetBinContent(i, c * v);
@@ -795,9 +818,9 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
    Reserve(numTargetBins);
 
    Long64_t i = 0;
-   THnIter iter(h);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{h->CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the second histogram
       Double_t v = h->GetBinContent(i);
 
@@ -922,9 +945,9 @@ void THnBase::Multiply(const THnBase* h)
    // Now multiply the contents: in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the current histogram
       Double_t v1 = GetBinContent(i);
       // Now look at the bin with the same coordinates in h
@@ -963,9 +986,9 @@ void THnBase::Multiply(TF1* f, Double_t c)
    if (wantErrors) Sumw2();
 
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t value = GetBinContent(i);
 
       // Get the bin coordinates given an index array
@@ -1016,9 +1039,9 @@ void THnBase::Divide(const THnBase *h)
    // Now divide the contents: also in this case we have the intersection of the sets of bins
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the first histogram
       Double_t v1 = GetBinContent(i);
       // Now look at the bin with the same coordinates in h
@@ -1085,9 +1108,9 @@ void THnBase::Divide(const THnBase *h1, const THnBase *h2, Double_t c1, Double_t
    Bool_t didWarn = kFALSE;
 
    Long64_t i = 0;
-   THnIter iter(h1);
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{h1->CreateIter(false)};
    // Add to this whatever is found inside the other histogram
-   while ((i = iter.Next(coord)) >= 0) {
+   while ((i = iter->Next(coord)) >= 0) {
       // Get the content of the bin from the first histogram
       Double_t v1 = h1->GetBinContent(i);
       // Now look at the bin with the same coordinates in h2
@@ -1272,8 +1295,8 @@ THnBase* THnBase::RebinBase(const Int_t* group) const
    Int_t* coord = new Int_t[fNdimensions];
 
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next(coord)) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t v = GetBinContent(i);
       for (Int_t d = 0; d < ndim; ++d) {
          bins[d] = TMath::CeilNint( (double) coord[d]/group[d] );
@@ -1313,6 +1336,24 @@ void THnBase::ResetBase(Option_t * /*option = ""*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Compute integral (sum of counts) of histogram in all dimensions
+/// \param respectAxisRange if false, count all bins including under/overflows,
+///                         if true, restrict sum to the user-set axis range
+/// \sa Projection(0)::Integral() as alternative
+/// \note this function is different from ComputeIntegral, that is a normalized
+/// cumulative sum
+Double_t THnBase::Integral(Bool_t respectAxisRange) const
+{
+   Long64_t myLinBin = 0;
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(respectAxisRange)};
+   Double_t sum = 0.;
+   while ((myLinBin = iter->Next()) >= 0) {
+      sum += GetBinContent(myLinBin);
+   }
+   return sum;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 ///  Compute integral (normalized cumulative sum of bins) w/o under/overflows
 ///  The result is stored in fIntegral and used by the GetRandom functions.
 ///  This function is automatically called by GetRandom when the fIntegral
@@ -1342,8 +1383,8 @@ Double_t THnBase::ComputeIntegral()
    // fill integral array with contents of regular bins (non over/underflow)
    Int_t* coord = new Int_t[fNdimensions];
    Long64_t i = 0;
-   THnIter iter(this);
-   while ((i = iter.Next(coord)) >= 0) {
+   std::unique_ptr<ROOT::Internal::THnBaseBinIter> iter{CreateIter(false)};
+   while ((i = iter->Next(coord)) >= 0) {
       Double_t v = GetBinContent(i);
 
       // check whether the bin is regular

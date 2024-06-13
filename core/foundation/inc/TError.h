@@ -32,6 +32,7 @@
 
 #include <DllImport.h> // for R__EXTERN
 #include "RtypesCore.h"
+#include <ROOT/RConfig.hxx>
 
 #include <cstdarg>
 #include <functional>
@@ -115,13 +116,25 @@ extern void Obsolete(const char *function, const char *asOfVers, const char *rem
 R__EXTERN const char *kAssertMsg;
 R__EXTERN const char *kCheckMsg;
 
-#define R__ASSERT(e)                                                     \
-   do {                                                                  \
-      if (!(e)) ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
+/*! Checks condition `e` and reports a fatal error if it's false.
+ * \warning
+ *   - this check is NOT stripped in release mode, so it should not be used for hot paths.
+ *     For those cases, prefer a regular `assert()`;
+ *   - depending on `gErrorIgnoreLevel`, this might not terminate the program, \see ::Fatal.
+ */
+#define R__ASSERT(e)                                              \
+   do {                                                           \
+      if (R__unlikely(!(e)))                                      \
+         ::Fatal("", kAssertMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
-#define R__CHECK(e)                                                       \
-   do {                                                                   \
-      if (!(e)) ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
+
+/*! Checks condition `e` and reports a warning message if it's false.
+ * \warning this check is NOT stripped in release mode, so it should not be used for hot paths.
+ */
+#define R__CHECK(e)                                                \
+   do {                                                            \
+      if (R__unlikely(!(e)))                                       \
+         ::Warning("", kCheckMsg, _QUOTE_(e), __LINE__, __FILE__); \
    } while (false)
 
 R__EXTERN Int_t  gErrorIgnoreLevel;

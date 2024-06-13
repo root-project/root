@@ -132,8 +132,8 @@ sap.ui.define([
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
          if (eveView.BlackBg)
          {
-            this.fgCol =  new RC.Color(0,0,0);
-            this.bgCol = new RC.Color(1,1,1);
+            this.bgCol =  new RC.Color(0,0,0);
+            this.fgCol = new RC.Color(1,1,1);
          }
          else
          {
@@ -141,8 +141,8 @@ sap.ui.define([
             this.fgCol = new RC.Color(0,0,0);
          }
 
-
-         this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
+         // always use black clear color except in tone map
+         this.renderer.clearColor = "#00000000";
          this.scene = new RC.Scene();
 
          this.lights = new RC.Group;
@@ -472,7 +472,6 @@ sap.ui.define([
          if (eveView.AxesType > 0)
             this.makeAxis();
 
-       this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
          this.request_render();
       }
 
@@ -632,8 +631,11 @@ sap.ui.define([
          this.rqt.render_main_and_blend_outline();
 
          if (this.rqt.queue.used_fail_count == 0) {
+            // AMT: All render passess are drawn with the black bg
+            //      except of the tone map render pass    
+            this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
             this.rqt.render_tone_map_to_screen();
-            // this.rqt.render_final_to_screen();
+            this.renderer.clearColor = "#00000000";
          }
 
          this.rqt.render_end();

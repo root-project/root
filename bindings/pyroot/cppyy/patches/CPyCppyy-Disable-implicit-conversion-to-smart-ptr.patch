@@ -1,0 +1,49 @@
+From 72df898c30db57c43d4cd3136435f36876596c6a Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Thu, 4 Apr 2024 02:07:22 +0200
+Subject: [PATCH] [CPyCppyy] Disable automatic conversion of regular to smart
+ pointers
+
+The automatic conversion of ordinary obejcts to smart pointers is
+disabled for PyROOT because it can cause trouble with overload
+resolution. If a function has overloads for both ordinary objects and
+smart pointers, then the implicit conversion to smart pointers can
+result in the smart pointer overload being hit, even though there would
+be an overload for the regular object. Since PyROOT didn't have this
+feature before 6.32 anyway, disabling it was the safest option.
+
+Closes #15117.
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index 4ac294745ca..830e504ba12 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -2834,6 +2834,14 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
+         return true;
+     }
+ 
++// The automatic conversion of ordinary obejcts to smart pointers is disabled
++// for PyROOT because it can cause trouble with overload resolution. If a
++// function has overloads for both ordinary objects and smart pointers, then
++// the implicit conversion to smart pointers can result in the smart pointer
++// overload being hit, even though there would be an overload for the regular
++// object. Since PyROOT didn't have this feature before 6.32 anyway, disabling
++// it was the safest option.
++#if 0
+ // for the case where we have an ordinary object to convert
+     if (!pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
+     // create the relevant smart pointer and make the pyobject "smart"
+@@ -2852,6 +2860,7 @@ bool CPyCppyy::SmartPtrConverter::SetArg(
+ 
+         return true;
+     }
++#endif
+ 
+ // final option, try mapping pointer types held (TODO: do not allow for non-const ref)
+     if (pyobj->IsSmart() && Cppyy::IsSubtype(oisa, fUnderlyingType)) {
+-- 
+2.44.0
+

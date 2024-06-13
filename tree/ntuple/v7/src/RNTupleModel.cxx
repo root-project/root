@@ -33,6 +33,30 @@ std::uint64_t GetNewModelId()
 }
 } // anonymous namespace
 
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right,
+                                          std::string_view rightFieldPrefix)
+{
+   if (!left.IsFrozen() || !right.IsFrozen())
+      throw RException(R__FAIL("invalid attempt to merge unfrozen models"));
+
+   auto newModel = left.Clone();
+   newModel->Unfreeze();
+
+   if (!rightFieldPrefix.empty()) {
+      newModel->MakeCollection(std::string(rightFieldPrefix), right.Clone());
+   } else {
+      for (const auto &f : right.GetFieldZero().GetSubFields()) {
+         newModel->AddField(f->Clone(f->GetFieldName()));
+      }
+   }
+
+   newModel->Freeze();
+   return newModel;
+}
+
+//------------------------------------------------------------------------------
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFieldBase *target,
                                                                        const FieldMap_t &fieldMap)
@@ -43,7 +67,7 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const RFi
       ((source->GetStructure() == ENTupleStructure::kCollection) && dynamic_cast<const RCardinalityField *>(target));
    if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
-   if (source->GetStructure() == ENTupleStructure::kLeaf) {
+   if ((source->GetStructure() == ENTupleStructure::kLeaf) || (source->GetStructure() == ENTupleStructure::kUnsplit)) {
       if (target->GetTypeName() != source->GetTypeName())
          return R__FAIL("field mapping type mismatch: " + source->GetFieldName() + " --> " + target->GetFieldName());
    }
@@ -437,4 +461,38 @@ void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view descripti
 {
    EnsureNotFrozen();
    fDescription = std::string(description);
+}
+
+std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNTupleWriteOptions &options) const
+{
+   std::size_t bytes = 0;
+
+   // First estimate the write pages per column. Do not bother with computing the number of elements first, just take
+   // the value as set in the options.
+   std::size_t pageBufferPerColumn = options.GetApproxUnzippedPageSize();
+   if (options.GetUseTailPageOptimization()) {
+      // For tail page optimization, RColumn::ConnectPageSink allocates two pages that are larger by 50% to accomodate
+      // merging a small tail page.
+      pageBufferPerColumn *= 3;
+   }
+
+   std::size_t nColumns = 0;
+   for (auto &&field : *fFieldZero) {
+      nColumns += field.GetColumnRepresentative().size();
+   }
+   bytes += nColumns * pageBufferPerColumn;
+
+   // If using buffered writing with RPageSinkBuf, we keep at least the compressed pages in memory.
+   if (options.GetUseBufferedWrite()) {
+      // Use the target cluster size as an estimate for all compressed pages combined.
+      bytes += options.GetApproxZippedClusterSize();
+      int compression = options.GetCompression();
+      if (compression != 0 && options.GetUseImplicitMT() == RNTupleWriteOptions::EImplicitMT::kDefault) {
+         // With IMT, compression happens asynchronously which means that the uncompressed pages also stay around. Use a
+         // compression factor of 2x as a very rough estimate.
+         bytes += 2 * options.GetApproxZippedClusterSize();
+      }
+   }
+
+   return bytes;
 }

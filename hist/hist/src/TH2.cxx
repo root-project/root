@@ -50,12 +50,20 @@ ClassImp(TH2);
 /** \class TH2
  Service class for 2-D histogram classes
 
-- TH2C a 2-D histogram with one byte per cell (char)
-- TH2S a 2-D histogram with two bytes per cell (short integer)
-- TH2I a 2-D histogram with four bytes per cell (32 bit integer)
-- TH2L a 2-D histogram with eight bytes per cell (64 bit integer)
-- TH2F a 2-D histogram with four bytes per cell (float)
-- TH2D a 2-D histogram with eight bytes per cell (double)
+- TH2C a 2-D histogram with one byte per cell (char). Maximum bin content = 127
+- TH2S a 2-D histogram with two bytes per cell (short integer). Maximum bin content = 32767
+- TH2I a 2-D histogram with four bytes per cell (32 bit integer). Maximum bin content = INT_MAX (\ref intmax2 "*")
+- TH2L a 2-D histogram with eight bytes per cell (64 bit integer). Maximum bin content = LLONG_MAX (\ref llongmax2 "**")
+- TH2F a 2-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216 (\ref floatmax2 "***")
+- TH2D a 2-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992 (\ref doublemax2 "****")
+
+<sup>
+\anchor intmax2 (*) INT_MAX = 2147483647 is the [maximum value for a variable of type int.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor llongmax2 (**) LLONG_MAX = 9223372036854775807 is the [maximum value for a variable of type long64.](https://docs.microsoft.com/en-us/cpp/c-language/cpp-integer-limits)<br>
+\anchor floatmax2 (***) 2^24 = 16777216 is the [maximum integer that can be properly represented by a float32 with 23-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)<br>
+\anchor doublemax2 (****) 2^53 = 9007199254740992 is the [maximum integer that can be properly represented by a double64 with 52-bit mantissa.](https://stackoverflow.com/a/3793950/7471760)
+</sup>
+
 */
 
 
@@ -223,6 +231,41 @@ TH2::~TH2()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 2D bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Int_t)
+{
+   AbstractMethod("AddBinContent");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Increment 2D bin content by a weight w.
+/// Passing an out-of-range bin leads to undefined behavior
+
+void TH2::AddBinContent(Int_t, Int_t, Double_t)
+{
+   AbstractMethod("AddBinContent");
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
@@ -2922,6 +2965,7 @@ void TH2C::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2C::AddBinContent(Int_t bin, Double_t w)
@@ -3185,6 +3229,7 @@ void TH2S::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Int_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2S::AddBinContent(Int_t bin, Double_t w)
@@ -3448,6 +3493,7 @@ void TH2I::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
 /// Passing an out-of-range bin leads to undefined behavior
 
 void TH2I::AddBinContent(Int_t bin, Double_t w)
@@ -3666,6 +3712,7 @@ TH2L::TH2L(const TH2L &h2l) : TH2(), TArrayL64()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by 1.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin)
 {
@@ -3675,6 +3722,8 @@ void TH2L::AddBinContent(Int_t bin)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Increment bin content by w.
+/// \warning The value of w is cast to `Long64_t` before being added.
+/// Passing an out-of-range bin leads to undefined behavior
 
 void TH2L::AddBinContent(Int_t bin, Double_t w)
 {
@@ -3789,7 +3838,7 @@ TH2L operator/(TH2L &h1, TH2L &h2)
 
 //______________________________________________________________________________
 //                     TH2F methods
-//  TH2F a 2-D histogram with four bytes per cell (float)
+//  TH2F a 2-D histogram with four bytes per cell (float). Maximum precision 7 digits, maximum integer bin content = +/-16777216
 //______________________________________________________________________________
 
 ClassImp(TH2F);
@@ -4061,7 +4110,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 
 //______________________________________________________________________________
 //                     TH2D methods
-//  TH2D a 2-D histogram with eight bytes per cell (double)
+//  TH2D a 2-D histogram with eight bytes per cell (double). Maximum precision 14 digits, maximum integer bin content = +/-9007199254740992
 //______________________________________________________________________________
 
 ClassImp(TH2D);

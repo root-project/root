@@ -384,6 +384,13 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
                             const std::string &colName)
 {
+   bool explicitlySupported = false;
+   // We want to explicitly support the reading of bools as unsigned char, as
+   // this is quite common to circumvent the std::vector<bool> specialization.
+   if (TypeID2TypeName(colType) == "bool" && TypeID2TypeName(requestedType) == "unsigned char") {
+      explicitlySupported = true;
+   }
+
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
    const auto diffTypes = (0 != std::strcmp(colType.name(), requestedType.name()));
@@ -392,7 +399,7 @@ void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info 
       return colTClass && colTClass->InheritsFrom(TClass::GetClass(requestedType));
    };
 
-   if (diffTypes && !inheritedType()) {
+   if (!explicitlySupported && diffTypes && !inheritedType()) {
       const auto tName = TypeID2TypeName(requestedType);
       const auto colTypeName = TypeID2TypeName(colType);
       std::string errMsg = "RDataFrame: type mismatch: column \"" + colName + "\" is being used as ";
@@ -419,6 +426,22 @@ bool IsStrInVec(const std::string &str, const std::vector<std::string> &vec)
    return std::find(vec.cbegin(), vec.cend(), str) != vec.cend();
 }
 
+auto RStringCache::Insert(const std::string &string) -> decltype(fStrings)::const_iterator
+{
+   {
+      std::shared_lock l{fMutex};
+      if (auto it = fStrings.find(string); it != fStrings.end())
+         return it;
+   }
+
+   // TODO: Would be nicer to use a lock upgrade strategy a-la TVirtualRWMutex
+   // but that is unfortunately not usable outside the already available ROOT mutexes
+   std::unique_lock l{fMutex};
+   if (auto it = fStrings.find(string); it != fStrings.end())
+      return it;
+
+   return fStrings.insert(string).first;
+}
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

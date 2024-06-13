@@ -132,7 +132,7 @@ TEST_F(TClingTests, GetClassSharedLibs)
 {
    // Shortens the invocation.
    auto GetLibs = [](const char *cls) -> std::string {
-      if (const char *val = gInterpreter->GetClassSharedLibs(cls))
+      if (const char *val = gInterpreter->GetClassSharedLibs(cls,false))
          return val;
       return "";
    };

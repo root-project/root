@@ -2,8 +2,8 @@
 #include "TInterpreter.h"
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 
+#include <climits>
 #include <type_traits>
 
 TEST(TEnum, UnderlyingType)
@@ -40,6 +40,9 @@ enum class ECull: unsigned long long { kOne };
 enum class ECsll: signed long long { kOne };
 
 enum class ECcl: short;
+
+enum class ECtsll : Long64_t { kEtsllOne };
+enum class ECtss : int16_t { kEtsllOne };
 )CODE"
 			);
 
@@ -63,6 +66,9 @@ enum class ECcl: short;
    EXPECT_EQ(TEnum::GetEnum("Eull")->GetUnderlyingType(), kULong64_t);
    EXPECT_EQ(TEnum::GetEnum("Esll")->GetUnderlyingType(), kLong64_t);
    EXPECT_EQ(TEnum::GetEnum("Ecl")->GetUnderlyingType(), kShort_t);
+
+   EXPECT_EQ(TEnum::GetEnum("ECtsll")->GetUnderlyingType(), kLong64_t);
+   EXPECT_EQ(TEnum::GetEnum("ECtss")->GetUnderlyingType(), kShort_t);
 }
 
 

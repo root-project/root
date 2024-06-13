@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleReadOptions.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
@@ -177,6 +178,9 @@ inheriting from RPagePersistentSink.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+public:
+   using Callback_t = std::function<void(RPageSink &)>;
+
 protected:
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
@@ -196,6 +200,11 @@ protected:
    static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
                                bool allowAlias = true);
 
+private:
+   /// Flag if sink was initialized
+   bool fIsInitialized = false;
+   std::vector<Callback_t> fOnDatasetCommitCallbacks;
+
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
@@ -211,13 +220,36 @@ public:
 
    void DropColumn(ColumnHandle_t /*columnHandle*/) final {}
 
+   bool IsInitialized() const { return fIsInitialized; }
+
+   /// Return the RNTupleDescriptor being constructed.
+   virtual const RNTupleDescriptor &GetDescriptor() const = 0;
+
    /// Physically creates the storage container to hold the ntuple (e.g., a keys a TFile or an S3 bucket)
    /// Init() associates column handles to the columns referenced by the model
-   virtual void Init(RNTupleModel &model) = 0;
+   void Init(RNTupleModel &model)
+   {
+      if (fIsInitialized) {
+         throw RException(R__FAIL("already initialized"));
+      }
+      fIsInitialized = true;
+      InitImpl(model);
+   }
+
+protected:
+   virtual void InitImpl(RNTupleModel &model) = 0;
+   virtual void CommitDatasetImpl() = 0;
+
+public:
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Init(RNTupleModel &)`.
    /// `firstEntry` specifies the global index for the first stored element in the added columns.
    virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) = 0;
+   /// Adds an extra type information record to schema. The extra type information will be written to the
+   /// extension header. The information in the record will be merged with the existing information, e.g.
+   /// duplicate streamer info records will be removed. This method is called by the "on commit dataset" callback
+   /// registered by specific fields (e.g., unsplit field) and during merging.
+   virtual void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) = 0;
 
    /// Write a page to the storage. The column must have been added before.
    virtual void CommitPage(ColumnHandle_t columnHandle, const RPage &page) = 0;
@@ -231,8 +263,11 @@ public:
    /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
    /// CommitClusterGroup (or the beginning of writing).
    virtual void CommitClusterGroup() = 0;
-   /// Finalize the current cluster and the entrire data set.
-   virtual void CommitDataset() = 0;
+
+   /// The registered callback is executed at the beginning of CommitDataset();
+   void RegisterOnCommitDatasetCallback(Callback_t callback) { fOnDatasetCommitCallbacks.emplace_back(callback); }
+   /// Run the registered callbacks and finalize the current cluster and the entrire data set.
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
@@ -288,6 +323,9 @@ private:
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
    /// Keeps track of the written pages in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
+
+   /// Union of the streamer info records that are sent from unsplit fields to the sink before committing the dataset.
+   RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
 
 protected:
    Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
@@ -346,16 +384,22 @@ public:
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
 
+   const RNTupleDescriptor &GetDescriptor() const final { return fDescriptorBuilder.GetDescriptor(); }
+
    /// Updates the descriptor and calls InitImpl() that handles the backend-specific details (file, DAOS, etc.)
-   void Init(RNTupleModel &model) final;
+   void InitImpl(RNTupleModel &model) final;
    void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
+   void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo) final;
+
+   /// Initialize sink based on an existing descriptor and fill into the descriptor builder.
+   void InitFromDescriptor(const RNTupleDescriptor &descriptor);
 
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page) final;
    void CommitSealedPage(DescriptorId_t physicalColumnId, const RPageStorage::RSealedPage &sealedPage) final;
    void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitCluster(NTupleSize_t nEntries) final;
    void CommitClusterGroup() final;
-   void CommitDataset() final;
+   void CommitDatasetImpl() final;
 }; // class RPagePersistentSink
 
 // clang-format off

@@ -1,4 +1,4 @@
-import { BIT, settings, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
+import { BIT, settings, browser, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
@@ -763,23 +763,71 @@ class TCanvasPainter extends TPadPainter {
    /** @summary produce JSON for TCanvas, which can be used to display canvas once again */
    produceJSON() {
       const canv = this.getObject(),
-            fill0 = (canv.fFillStyle === 0);
+            fill0 = (canv.fFillStyle === 0),
+            axes = [], hists = [];
 
       if (fill0) canv.fFillStyle = 1001;
+
+      // write selected range into TAxis properties
+      this.forEachPainterInPad(pp => {
+         const main = pp.getMainPainter(),
+               fp = pp.getFramePainter();
+         if (!isFunc(main?.getHisto) || !isFunc(main?.getDimension)) return;
+
+         const hist = main.getHisto(),
+               ndim = main.getDimension();
+         if (!hist?.fXaxis) return;
+
+         const setAxisRange = (name, axis) => {
+            if (fp?.zoomChangedInteractive(name)) {
+               axes.push({ axis, f: axis.fFirst, l: axis.fLast, b: axis.fBits });
+               axis.fFirst = main.getSelectIndex(name, 'left', 1);
+               axis.fLast = main.getSelectIndex(name, 'right');
+               const has_range = (axis.fFirst > 0) || (axis.fLast < axis.fNbins);
+               if (has_range !== axis.TestBit(EAxisBits.kAxisRange))
+                  axis.InvertBit(EAxisBits.kAxisRange);
+            }
+         };
+
+         setAxisRange('x', hist.fXaxis);
+         if (ndim > 1) setAxisRange('y', hist.fYaxis);
+         if (ndim > 2) setAxisRange('z', hist.fZaxis);
+         if ((ndim === 2) && fp?.zoomChangedInteractive('z')) {
+            hists.push({ hist, min: hist.fMinimum, max: hist.fMaximum });
+            hist.fMinimum = fp.zoom_zmin ?? fp.zmin;
+            hist.fMaximum = fp.zoom_zmax ?? fp.zmax;
+         }
+      }, 'pads');
 
       if (!this.normal_canvas) {
          // fill list of primitives from painters
          this.forEachPainterInPad(p => {
-            if (p.isSecondary()) return; // ignore all secondary painters
+            // ignore all secondary painters
+            if (p.isSecondary())
+               return;
             const subobj = p.getObject();
             if (subobj?._typename)
                canv.fPrimitives.Add(subobj, p.getDrawOpt());
          }, 'objects');
       }
 
+      // const fp = this.getFramePainter();
+      // fp?.setRootPadRange(this.getRootPad());
+
       const res = toJSON(canv);
 
       if (fill0) canv.fFillStyle = 0;
+
+      axes.forEach(e => {
+         e.axis.fFirst = e.f;
+         e.axis.fLast = e.l;
+         e.axis.fBits = e.b;
+      });
+
+      hists.forEach(e => {
+         e.hist.fMinimum = e.min;
+         e.hist.fMaximum = e.max;
+      });
 
       if (!this.normal_canvas)
          canv.fPrimitives.Clear();
@@ -792,6 +840,12 @@ class TCanvasPainter extends TPadPainter {
       if (!fullW || !fullH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
+      // workaround for qt5-based display where inner window size is used
+      if (browser.qt5 && fullW > 100 && fullH > 60) {
+         fullW -= 3;
+         fullH -= 30;
+      }
+
       this._websocket?.resizeWindow(fullW, fullH);
    }
 
@@ -801,7 +855,7 @@ class TCanvasPainter extends TPadPainter {
       if (nocanvas) can = create(clTCanvas);
 
       const painter = new TCanvasPainter(dom, can);
-      painter.checkSpecialsInPrimitives(can);
+      painter.checkSpecialsInPrimitives(can, true);
 
       if (!nocanvas && can.fCw && can.fCh && !painter.isBatchMode()) {
          const rect0 = painter.selectDom().node().getBoundingClientRect();

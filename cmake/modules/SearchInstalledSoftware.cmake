@@ -38,6 +38,9 @@ if(cocoa)
   if(APPLE)
     set(x11 OFF CACHE BOOL "Disabled because cocoa requested (${x11_description})" FORCE)
     set(builtin_freetype ON CACHE BOOL "Enabled because needed for Cocoa graphics (${builtin_freetype_description})" FORCE)
+    if(NOT opengl)
+      message(FATAL_ERROR "Option \"cocoa=ON\" requires \"opengl=ON\"!")
+    endif()
   else()
     message(STATUS "Cocoa option can only be enabled on MacOSX platform")
     set(cocoa OFF CACHE BOOL "Disabled because only available on MacOSX (${cocoa_description})" FORCE)
@@ -181,13 +184,16 @@ if(NOT builtin_pcre)
   foreach(suffix FOUND INCLUDE_DIR PCRE_LIBRARY)
     unset(PCRE_${suffix} CACHE)
   endforeach()
-  if(fail-on-missing)
-    find_package(PCRE REQUIRED)
-  else()
-    find_package(PCRE)
-    if(NOT PCRE_FOUND)
-      message(STATUS "PCRE not found. Switching on builtin_pcre option")
-      set(builtin_pcre ON CACHE BOOL "Enabled because PCRE not found (${builtin_pcre_description})" FORCE)
+  find_package(PCRE2)
+  if(NOT PCRE2_FOUND)
+    if(fail-on-missing)
+      find_package(PCRE REQUIRED)
+    else()
+      find_package(PCRE)
+      if(NOT PCRE_FOUND)
+        message(STATUS "PCRE not found. Switching on builtin_pcre option")
+        set(builtin_pcre ON CACHE BOOL "Enabled because PCRE not found (${builtin_pcre_description})" FORCE)
+      endif()
     endif()
   endif()
 endif()
@@ -406,23 +412,8 @@ if(asimage)
   if(JPEG_FOUND)
     set(ASEXTRA_LIBRARIES ${ASEXTRA_LIBRARIES} ${JPEG_LIBRARIES})
   endif()
-endif()
 
-#---Check for AfterImage---------------------------------------------------------------
-if(asimage AND NOT builtin_afterimage)
-  message(STATUS "Looking for AfterImage")
-  if(fail-on-missing)
-    find_package(AfterImage REQUIRED)
-  else()
-    find_package(AfterImage)
-    if(NOT AFTERIMAGE_FOUND)
-      message(STATUS "AfterImage not found. Switching on builtin_afterimage option")
-      set(builtin_afterimage ON CACHE BOOL "Enabled because asimage requested and AfterImage not found (${builtin_afterimage_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-if(builtin_afterimage)
+  #---AfterImage---------------------------------------------------------------
   set(AFTERIMAGE_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libAfterImage${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
@@ -443,11 +434,15 @@ if(builtin_afterimage)
     )
     set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
-    message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
       set(_jpeginclude --with-jpeg-includes=${JPEG_INCLUDE_DIR})
     else()
       set(_jpeginclude --with-builtin-jpeg)
+    endif()
+    if(GIF_FOUND)
+       set(_gifinclude  --with-gif --with-gif-includes=${GIF_INCLUDE_DIR} --without-builtin-gif)
+    else()
+       set(_gifinclude)
     endif()
     if(PNG_FOUND)
       set(_pnginclude  --with-png-includes=${PNG_INCLUDE_DIR})
@@ -461,6 +456,7 @@ if(builtin_afterimage)
     endif()
     if(cocoa)
       set(_jpeginclude --without-x --with-builtin-jpeg)
+      set(_gifinclude  --with-builtin-ungif)
       set(_pnginclude  --with-builtin-png)
       set(_tiffinclude --with-tiff=no)
     endif()
@@ -471,6 +467,9 @@ if(builtin_afterimage)
     if(CMAKE_OSX_SYSROOT)
       set(_after_cflags "${_after_cflags} -isysroot ${CMAKE_OSX_SYSROOT}")
     endif()
+    if(builtin_zlib)
+      set(_after_cflags "${_after_cflags} -I${ZLIB_INCLUDE_DIR}")
+    endif()
     ExternalProject_Add(
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
@@ -479,7 +478,7 @@ if(builtin_afterimage)
                         --libdir=<INSTALL_DIR>/lib
                         --with-ttf ${_ttf_include} --with-afterbase=no
                         --without-svg --disable-glx ${_after_mmx}
-                        --with-builtin-ungif  --with-jpeg ${_jpeginclude}
+                        ${_gifinclude} --with-jpeg ${_jpeginclude}
                         --with-png ${_pnginclude} ${_tiffinclude}
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
@@ -555,6 +554,23 @@ if(mathmore OR builtin_gsl)
   endif()
 endif()
 
+#---Check for Python installation-------------------------------------------------------
+
+message(STATUS "Looking for Python")
+
+# On macOS, prefer user-provided Pythons.
+set(Python3_FIND_FRAMEWORK LAST)
+
+# Even if we don't build PyROOT, one still need python executable to run some scripts
+list(APPEND python_components Interpreter)
+if(pyroot OR tmva-pymva)
+  list(APPEND python_components Development)
+endif()
+if(tmva-pymva)
+  list(APPEND python_components NumPy)
+endif()
+find_package(Python3 3.8 COMPONENTS ${python_components})
+
 #---Check for OpenGL installation-------------------------------------------------------
 if(opengl)
   message(STATUS "Looking for OpenGL")
@@ -562,6 +578,8 @@ if(opengl)
   if(NOT OPENGL_FOUND OR NOT OPENGL_GLU_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "OpenGL package (with GLU) not found and opengl option required")
+    elseif(cocoa)
+      message(FATAL_ERROR "OpenGL package (with GLU) not found and opengl option required for \"cocoa=ON\"")
     else()
       message(STATUS "OpenGL (with GLU) not found. Switching off opengl option")
       set(opengl OFF CACHE BOOL "Disabled because OpenGL (with GLU) not found (${opengl_description})" FORCE)
@@ -662,9 +680,9 @@ if(ssl AND NOT builtin_openssl)
   else()
     find_package(OpenSSL)
     if(NOT OPENSSL_FOUND)
-      if(WIN32) # builtin OpenSSL does not work on Windows
+      if(NOT APPLE) # builtin OpenSSL is only supported on macOS
         message(STATUS "Switching OFF 'ssl' option.")
-        set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version does not work on Windows (${ssl_description})" FORCE)
+        set(ssl OFF CACHE BOOL "Disabled because OpenSSL not found and builtin version only works on macOS (${ssl_description})" FORCE)
       else()
         if(NO_CONNECTION)
           if(fail-on-missing)
@@ -768,20 +786,6 @@ if(sqlite)
   endif()
 endif()
 
-#---Check for Pythia6-------------------------------------------------------------------
-if(pythia6)
-  message(STATUS "Looking for Pythia6")
-  find_package(Pythia6 QUIET)
-  if(NOT PYTHIA6_FOUND AND NOT pythia6_nolink)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Pythia6 libraries not found and they are required (pythia6 option enabled)")
-    else()
-      message(STATUS "Pythia6 not found. Switching off pythia6 option")
-      set(pythia6 OFF CACHE BOOL "Disabled because Pythia6 not found (${pythia6_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Pythia8-------------------------------------------------------------------
 if(pythia8)
   message(STATUS "Looking for Pythia8")
@@ -854,56 +858,9 @@ if(fitsio OR builtin_cfitsio)
     endif()
   endif()
   if(builtin_cfitsio)
-    set(cfitsio_version 3.450)
-    string(REPLACE "." "" cfitsio_version_no_dots ${cfitsio_version})
-    message(STATUS "Downloading and building CFITSIO version ${cfitsio_version}")
-    set(CFITSIO_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}cfitsio${CMAKE_STATIC_LIBRARY_SUFFIX})
-    if(WIN32)
-      if(winrtdebug)
-        set(cfitsiobuild "Debug")
-      else()
-        set(cfitsiobuild "Release")
-      endif()
-      ExternalProject_Add(
-        CFITSIO
-        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfit3450.zip
-        URL_HASH SHA256=1d13073967654a48d47535ff33392656f252511ddf29059d7c7dc3ce8f2a1041
-        INSTALL_DIR ${CMAKE_BINARY_DIR}
-        CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-        BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${cfitsiobuild}
-        INSTALL_COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.dll <INSTALL_DIR>/bin
-                COMMAND ${CMAKE_COMMAND} -E copy ${cfitsiobuild}/cfitsio.lib <INSTALL_DIR>/lib
-        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
-        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
-        TIMEOUT 600
-      )
-      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
-      install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "cfitsio*.dll")
-    else()
-      ExternalProject_Add(
-        CFITSIO
-        # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
-        URL_HASH SHA256=bf6012dbe668ecb22c399c4b7b2814557ee282c74a7d5dc704eb17c30d9fb92e
-        INSTALL_DIR ${CMAKE_BINARY_DIR}
-        CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
-        LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
-        BUILD_IN_SOURCE 1
-        BUILD_BYPRODUCTS ${CFITSIO_LIBRARIES}
-        TIMEOUT 600
-      )
-      # We need to know which CURL_LIBRARIES were used in CFITSIO ExternalProject build
-      # and which ${CURL_LIBRARIES} should be used after for linking in ROOT together with CFITSIO.
-      # (curl is not strictly required in CFITSIO CMakeList.txt).
-      find_package(CURL)
-      if(CURL_FOUND)
-        set(CFITSIO_LIBRARIES ${CFITSIO_LIBRARIES} ${CURL_LIBRARIES})
-      endif()
-      set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-    endif()
+    add_library(CFITSIO::CFITSIO STATIC IMPORTED GLOBAL)
+    add_subdirectory(builtins/cfitsio)
     set(fitsio ON CACHE BOOL "Enabled because builtin_cfitsio requested (${fitsio_description})" FORCE)
-    set(CFITSIO_TARGET CFITSIO)
   else()
     message(STATUS "Looking for CFITSIO")
     if(fail-on-missing)
@@ -929,25 +886,18 @@ if(shadowpw)
   endif()
 endif()
 
-#---Monalisa support----------------------------------------------------------------
-if(monalisa)
-  if(fail-on-missing)
-    find_package(Monalisa REQUIRED)
-  else()
-    find_package(Monalisa)
-    if(NOT MONALISA_FOUND)
-      message(STATUS "Monalisa not found. Set variable MONALISA_DIR to point to your Monalisa installation")
-      message(STATUS "For the time being switching OFF 'monalisa' option")
-      set(monalisa OFF CACHE BOOL "Disabled because Monalisa not found (${monalisa_description})" FORCE)
-    endif()
-  endif()
-endif()
-
-#---Check for Xrootd support---------------------------------------------------------
+#---Configure Xrootd support---------------------------------------------------------
 
 foreach(suffix FOUND INCLUDE_DIR INCLUDE_DIRS LIBRARY LIBRARIES)
   unset(XROOTD_${suffix} CACHE)
 endforeach()
+
+if(xrootd OR builtin_xrootd)
+  # This is the target that ROOT will use, irrespective of whether XRootD is a builtin or in the system.
+  # All targets should only link to ROOT::XRootD. Refrain from using XRootD variables.
+  add_library(XRootD INTERFACE IMPORTED GLOBAL)
+  add_library(ROOT::XRootD ALIAS XRootD)
+endif()
 
 if(xrootd AND NOT builtin_xrootd)
   message(STATUS "Looking for XROOTD")
@@ -957,6 +907,9 @@ if(xrootd AND NOT builtin_xrootd)
       message(FATAL_ERROR "XROOTD not found. Set environment variable XRDSYS to point to your XROOTD installation, "
                           "or include the installation of XROOTD in the CMAKE_PREFIX_PATH. "
                           "Alternatively, you can also enable the option 'builtin_xrootd' to build XROOTD internally")
+    elseif(NO_CONNECTION)
+      message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
+        " option or the 'fail-on-missing' to automatically disable options requiring internet access")
     else()
       message(STATUS "XROOTD not found, enabling 'builtin_xrootd' option")
       set(builtin_xrootd ON CACHE BOOL "Enabled because xrootd is enabled, but external xrootd was not found (${xrootd_description})" FORCE)
@@ -964,19 +917,30 @@ if(xrootd AND NOT builtin_xrootd)
   endif()
 endif()
 
-if(builtin_xrootd AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling 'builtin_xrootd' option")
-    set(builtin_xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-    set(xrootd OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
-endif()
 if(builtin_xrootd)
-  list(APPEND ROOT_BUILTINS XROOTD)
+  if(NO_CONNECTION)
+    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'builtin_xrootd'"
+      " option or the 'fail-on-missing' to automatically disable options requiring internet access")
+  endif()
+  list(APPEND ROOT_BUILTINS BUILTIN_XROOTD)
   add_subdirectory(builtins/xrootd)
   set(xrootd ON CACHE BOOL "Enabled because builtin_xrootd requested (${xrootd_description})" FORCE)
+endif()
+
+# Finalise the XRootD target configuration
+if(TARGET XRootD)
+
+  # The XROOTD_INCLUDE_DIRS provided by XRootD is actually a list with two
+  # paths, like:
+  #   <xrootd_include_dir>;<xrootd_include_dir>/private
+  # We don't need the private headers, and we have to exclude this path from
+  # the build configuration if we don't want it to fail on systems were the
+  # private headers are not installed (most linux distributions).
+  list(GET XROOTD_INCLUDE_DIRS 0 XROOTD_INCLUDE_DIR_PRIMARY)
+
+  target_include_directories(XRootD SYSTEM INTERFACE "$<BUILD_INTERFACE:${XROOTD_INCLUDE_DIR_PRIMARY}>")
+  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_CLIENT_LIBRARIES}>)
+  target_link_libraries(XRootD INTERFACE $<BUILD_INTERFACE:${XROOTD_UTILS_LIBRARIES}>)
 endif()
 
 #---check if netxng can be built-------------------------------
@@ -1679,11 +1643,11 @@ if(tmva)
     find_package(CUDAToolkit REQUIRED)
   endif()
   if(tmva-pymva)
-    if(fail-on-missing AND (NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)))
+    if(fail-on-missing AND (NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND))
       message(FATAL_ERROR "TMVA: numpy python package or Python development package not found and tmva-pymva component required"
-                          " (python executable: ${PYTHON_EXECUTABLE})")
-    elseif(NOT NUMPY_FOUND OR (NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND))
-      message(STATUS "TMVA: Numpy or Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off tmva-pymva option")
+                          " (python executable: ${Python3_EXECUTABLE})")
+    elseif(NOT Python3_NumPy_FOUND OR NOT Python3_Development_FOUND)
+      message(STATUS "TMVA: Numpy or Python development package not found for python ${Python3_EXECUTABLE}. Switching off tmva-pymva option")
       set(tmva-pymva OFF CACHE BOOL "Disabled because Numpy or Python development package were not found (${tmva-pymva_description})" FORCE)
     endif()
   endif()
@@ -1704,22 +1668,17 @@ endif(tmva)
 #---Check for PyROOT---------------------------------------------------------------------
 if(pyroot)
 
-  if(NOT PYTHONLIBS_FOUND AND NOT Python3_Development_FOUND)
+  if(NOT Python3_Development_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "PyROOT: Python development package not found and pyroot component required"
-                          " (python executable: ${PYTHON_EXECUTABLE})")
+                          " (python executable: ${Python3_EXECUTABLE})")
     else()
-      message(STATUS "PyROOT: Python development package not found for python ${PYTHON_EXECUTABLE}. Switching off pyroot option")
-      set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${PYTHON_EXECUTABLE}" FORCE)
+      message(STATUS "PyROOT: Python development package not found for python ${Python3_EXECUTABLE}. Switching off pyroot option")
+      set(pyroot OFF CACHE BOOL "Disabled because Python development package was not found for ${Python3_EXECUTABLE}" FORCE)
     endif()
   endif()
 
-  if(Python3_Development_FOUND)
-    if(PYTHON_VERSION_STRING VERSION_LESS 3.8)
-      message(FATAL_ERROR "PyROOT: minimum Python version required is 3.8. The current Python version is ${PYTHON_VERSION_STRING}")
-    endif()
-    message(STATUS "PyROOT: development package found. Building for version ${PYTHON_VERSION_STRING}")
-  endif()
+  message(STATUS "PyROOT: development package found. Building for version ${Python3_VERSION}")
 
 endif()
 
@@ -1984,8 +1943,8 @@ if(webgui)
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.2.tar.gz
-    URL_HASH SHA256=a02bafaf2fa84977f70622370be6b37c36dcf4811cd20ffddad2e686220a1e85
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.4.tar.gz
+    URL_HASH SHA256=c3bb07c0b4a87d7532036c0b8e1a526a2fcd564c4659f075e4ce2c5b564cb516
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""
@@ -2040,38 +1999,12 @@ endif()
 # Needed to run tests of the distributed RDataFrame module that use pyspark.
 # The functionality has been tested with pyspark 2.4 and above.
 if(test_distrdf_pyspark)
-  message(STATUS "Looking for PySpark")
-
-  if(fail-on-missing)
-    find_package(PySpark 2.4 REQUIRED)
-  else()
-
-    find_package(PySpark 2.4)
-    if(NOT PySpark_FOUND)
-      message(STATUS "Switching OFF 'test_distrdf_pyspark' option")
-      set(test_distrdf_pyspark OFF CACHE BOOL "Disabled because PySpark not found" FORCE)
-    endif()
-
-  endif()
-
+  find_package(PySpark 2.4 REQUIRED)
 endif()
 
 #------------------------------------------------------------------------------------
 # Check if the dask package is installed on the system.
 # Needed to run tests of the distributed RDataFrame module that use dask.
 if(test_distrdf_dask)
-  message(STATUS "Looking for Dask")
-
-  if(fail-on-missing)
-    find_package(Dask 2022.08.1 REQUIRED)
-  else()
-
-    find_package(Dask 2022.08.1)
-    if(NOT Dask_FOUND)
-      message(STATUS "Switching OFF 'test_distrdf_dask' option")
-      set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)
-    endif()
-
-  endif()
-
+  find_package(Dask 2022.08.1 REQUIRED)
 endif()

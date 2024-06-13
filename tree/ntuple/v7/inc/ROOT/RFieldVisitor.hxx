@@ -50,6 +50,8 @@ public:
    virtual void VisitBitsetField(const RBitsetField &field) { VisitField(field); }
    virtual void VisitBoolField(const RField<bool> &field) { VisitField(field); }
    virtual void VisitClassField(const RClassField &field) { VisitField(field); }
+   virtual void VisitTObjectField(const RField<TObject> &field) { VisitField(field); }
+   virtual void VisitUnsplitField(const RUnsplitField &field) { VisitField(field); }
    virtual void VisitProxiedCollectionField(const RProxiedCollectionField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
@@ -189,6 +191,7 @@ private:
    void PrintIndent();
    void PrintName(const RFieldBase &field);
    void PrintCollection(const RFieldBase &field);
+   void PrintRecord(const RFieldBase &field);
 
 public:
    RPrintValueVisitor(RFieldBase::RValue value, std::ostream &output, unsigned int level = 0,
@@ -218,6 +221,8 @@ public:
    void VisitArrayField(const RArrayField &field) final;
    void VisitArrayAsRVecField(const RArrayAsRVecField &field) final;
    void VisitClassField(const RClassField &field) final;
+   void VisitTObjectField(const RField<TObject> &field) final;
+   void VisitUnsplitField(const RUnsplitField &field) final;
    void VisitRecordField(const RRecordField &field) final;
    void VisitProxiedCollectionField(const RProxiedCollectionField &field) final;
    void VisitVectorField(const RVectorField &field) final;

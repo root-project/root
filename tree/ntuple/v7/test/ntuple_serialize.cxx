@@ -1,5 +1,8 @@
 #include "ntuple_test.hxx"
 
+#include <Byteswap.h>
+#include <TVirtualStreamerInfo.h>
+
 TEST(RNTuple, SerializeInt)
 {
    std::int32_t value;
@@ -99,6 +102,32 @@ TEST(RNTuple, SerializeFieldStructure)
    }
 }
 
+TEST(RNTuple, SerializeExtraTypeInfoId)
+{
+   EExtraTypeInfoIds id{EExtraTypeInfoIds::kInvalid};
+
+   unsigned char buffer[4];
+
+   try {
+      RNTupleSerializer::SerializeExtraTypeInfoId(id, buffer);
+      FAIL() << "unexpected field structure value should throw";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("unexpected extra type info"));
+   }
+
+   RNTupleSerializer::SerializeUInt32(5000, buffer);
+   // unexpected on-disk ID should set the output value to "invalid"
+   id = EExtraTypeInfoIds::kStreamerInfo;
+   RNTupleSerializer::DeserializeExtraTypeInfoId(buffer, id).Unwrap();
+   EXPECT_EQ(EExtraTypeInfoIds::kInvalid, id);
+
+   for (int i = 0; i < static_cast<int>(EExtraTypeInfoIds::kInvalid); ++i) {
+      RNTupleSerializer::SerializeExtraTypeInfoId(static_cast<EExtraTypeInfoIds>(i), buffer);
+      RNTupleSerializer::DeserializeExtraTypeInfoId(buffer, id);
+      EXPECT_EQ(i, static_cast<int>(id));
+   }
+}
+
 TEST(RNTuple, SerializeEnvelope)
 {
    try {
@@ -113,6 +142,10 @@ TEST(RNTuple, SerializeEnvelope)
       std::uint64_t payload = 0;
       std::uint64_t xxhash3 = 0;
    } testEnvelope;
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(testEnvelope.typeAndSize);
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    testEnvelope.xxhash3 = 0;
@@ -122,7 +155,12 @@ TEST(RNTuple, SerializeEnvelope)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("XxHash-3"));
    }
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    try {
@@ -131,7 +169,12 @@ TEST(RNTuple, SerializeEnvelope)
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope type mismatch"));
    }
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
 
    EXPECT_EQ(8u, RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16));
    try {
@@ -141,7 +184,12 @@ TEST(RNTuple, SerializeEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("envelope buffer size too small"));
    }
 
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize -= uint64_t(9) << 40;
+#else
    testEnvelope.typeAndSize -= 9 << 16;
+#endif
    try {
       RNTupleSerializer::DeserializeEnvelope(&testEnvelope, sizeof(testEnvelope), 137).Unwrap();
       FAIL() << "too small envelope buffer should throw";
@@ -149,7 +197,12 @@ TEST(RNTuple, SerializeEnvelope)
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid envelope, too short"));
    }
 
+#ifndef R__BYTESWAP
+   // big endian
+   testEnvelope.typeAndSize = RByteSwap<8>::bswap(137);
+#else
    testEnvelope.typeAndSize = 137;
+#endif
    std::uint64_t xxhash3_write;
    RNTupleSerializer::SerializeEnvelopePostscript(reinterpret_cast<unsigned char *>(&testEnvelope), 16, xxhash3_write);
    std::uint64_t xxhash3_read;
@@ -352,7 +405,12 @@ TEST(RNTuple, SerializeLocator)
    EXPECT_EQ(1337U, locator.GetPosition<RNTupleLocatorObject64>().fLocation);
 
    std::int32_t *head = reinterpret_cast<std::int32_t *>(buffer);
+#ifndef R__BYTESWAP
+   // on big endian system
+   *head = *head | 0x3;
+#else
    *head = (0x3 << 24) | *head;
+#endif
    try {
       RNTupleSerializer::DeserializeLocator(buffer, 16, locator).Unwrap();
       FAIL() << "unsupported locator type should throw";
@@ -536,6 +594,11 @@ TEST(RNTuple, SerializeHeader)
    builder.AddColumn(100, 23, 24, RColumnModel(EColumnType::kReal32, false), 0);
    builder.AddColumn(17, 17, 137, RColumnModel(EColumnType::kIndex32, true), 0);
    builder.AddColumn(40, 40, 137, RColumnModel(EColumnType::kByte, true), 1);
+   builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
+                               .ContentId(EExtraTypeInfoIds::kStreamerInfo)
+                               .Content("xyz")
+                               .MoveDescriptor()
+                               .Unwrap());
 
    auto desc = builder.MoveDescriptor();
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc);
@@ -551,6 +614,13 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_TRUE(desc.GetColumnDescriptor(colId).IsAliasColumn());
    auto ptFieldId = desc.FindFieldId("pt");
    EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
+   EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
 }
 
 
@@ -717,6 +787,11 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .Unwrap());
    builder.AddFieldLink(0, 46);
    builder.AddColumn(20, 18, 46, RColumnModel(EColumnType::kReal32, true), 0);
+   builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
+                               .ContentId(EExtraTypeInfoIds::kStreamerInfo)
+                               .Content("xyz")
+                               .MoveDescriptor()
+                               .Unwrap());
 
    // Make sure late-added fields and the corresponding columns get an on-disk ID
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
@@ -759,4 +834,26 @@ TEST(RNTuple, SerializeFooterXHeader)
       counter++;
    }
    EXPECT_EQ(2U, counter);
+
+   EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
+   const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
+   EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionFrom());
+   EXPECT_EQ(0u, extraTypeInfoDesc.GetTypeVersionTo());
+   EXPECT_TRUE(extraTypeInfoDesc.GetTypeName().empty());
+   EXPECT_STREQ("xyz", extraTypeInfoDesc.GetContent().c_str());
+}
+
+TEST(RNTuple, SerializeStreamerInfos)
+{
+   RNTupleSerializer::StreamerInfoMap_t infos;
+   auto content = RNTupleSerializer::SerializeStreamerInfos(infos);
+   EXPECT_TRUE(RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap().empty());
+
+   auto streamerInfo = RNTuple::Class()->GetStreamerInfo();
+   infos[streamerInfo->GetNumber()] = streamerInfo;
+   content = RNTupleSerializer::SerializeStreamerInfos(infos);
+   auto result = RNTupleSerializer::DeserializeStreamerInfos(content).Unwrap();
+   EXPECT_EQ(1u, result.size());
+   EXPECT_STREQ("ROOT::Experimental::RNTuple", std::string(result.begin()->second->GetName()).c_str());
 }

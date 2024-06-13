@@ -68,9 +68,6 @@
 #include "RZip.h"
 
 const Int_t kTitleMax = 32000;
-#if 0
-const Int_t kMAXFILEBUFFER = 262144;
-#endif
 
 #if !defined(_MSC_VER) || (_MSC_VER>1300)
 const ULong64_t kPidOffsetMask = 0xffffffffffffULL;
@@ -265,6 +262,8 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
          else               bufmax = kMAXZIPBUF;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
+            delete[] fBuffer;
+            bufcur = nullptr;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
@@ -356,6 +355,8 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
          else               bufmax = kMAXZIPBUF;
          R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
+            delete[] fBuffer;
+            bufcur = nullptr;
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
             fBufferRef->SetBufferOffset(0);
@@ -1277,19 +1278,11 @@ Bool_t TKey::ReadFile()
 
    Int_t nsize = fNbytes;
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i = 0; i < nsize; i += kMAXFILEBUFFER) {
-      int nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->ReadBuffer(fBuffer+i,nb);
-   }
-#else
    if( f->ReadBuffer(fBuffer,nsize) )
    {
       Error("ReadFile", "Failed to read data.");
       return kFALSE;
    }
-#endif
    if (gDebug) {
       std::cout << "TKey Reading "<<nsize<< " bytes at address "<<fSeekKey<<std::endl;
    }
@@ -1327,19 +1320,24 @@ void TKey::Reset()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the size in bytes of the key header structure.
 ///
-/// An explaination about the nbytes (Int_t nbytes) variable used in the
+/// An explanation about the nbytes (Int_t nbytes) variable used in the
 /// function. The size of fSeekKey and fSeekPdir is 8 instead of 4 if version is
 /// greater than 1000.
-/// | Component         | Sizeof |
-/// |-------------------|--------|
-/// | fNbytes           | 4      |
-/// | sizeof(Version_t) | 2      |
-/// | fObjlen           | 4      |
-/// | fKeylen           | 2      |
-/// | fCycle            | 2      |
-/// | fSeekKey          | 4 or 8 |
-/// | fSeekPdir         | 4 or 8 |
-/// | **TOTAL**         |   22   |
+/// | Component         | Sizeof     |
+/// |-------------------|------------|
+/// | fNbytes           | 4          |
+/// | sizeof(Version_t) | 2          |
+/// | fObjlen           | 4          |
+/// | fDatime           | 4          |
+/// | fKeylen           | 2          |
+/// | fCycle            | 2          |
+/// | fSeekKey          | 4 or 8     |
+/// | fSeekPdir         | 4 or 8     |
+/// | **FIXED TOTAL**   | 26 or 34   |
+/// | fClassName        | 1+ bytes   |
+/// | fName             | 1+ bytes   |
+/// | fTitle            | 1+ bytes   |
+/// | **TOTAL**         | 29+ or 37+ |
 
 Int_t TKey::Sizeof() const
 {
@@ -1470,16 +1468,7 @@ Int_t TKey::WriteFile(Int_t cycle, TFile* f)
 
    if (fLeft > 0) nsize += sizeof(Int_t);
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-      Int_t nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->WriteBuffer(buffer,nb);
-      buffer += nb;
-   }
-#else
    Bool_t result = f->WriteBuffer(buffer,nsize);
-#endif
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {
@@ -1506,16 +1495,7 @@ Int_t TKey::WriteFileKeepBuffer(TFile *f)
 
    if (fLeft > 0) nsize += sizeof(Int_t);
    f->Seek(fSeekKey);
-#if 0
-   for (Int_t i=0;i<nsize;i+=kMAXFILEBUFFER) {
-      Int_t nb = kMAXFILEBUFFER;
-      if (i+nb > nsize) nb = nsize - i;
-      f->WriteBuffer(buffer,nb);
-      buffer += nb;
-   }
-#else
    Bool_t result = f->WriteBuffer(buffer,nsize);
-#endif
    //f->Flush(); Flushing takes too much time.
    //            Let user flush the file when they want.
    if (gDebug) {

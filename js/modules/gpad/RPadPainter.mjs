@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, internals, addMethods,
-         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, nsREX } from '../core.mjs';
+         isPromise, getPromise, postponePromise, isBatchMode, isObject, isFunc, isStr, clTPad, clTFrame, nsREX } from '../core.mjs';
 import { ColorPalette, addColor, getRootColors } from '../base/colors.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
@@ -777,6 +777,12 @@ class RPadPainter extends RObjectPainter {
       }).then(menu => menu.show());
    }
 
+   /** @summary Redraw legend object
+    * @descr Used when object attributes are changed to ensure that legend is up to date
+    * @private */
+   async redrawLegend() {
+   }
+
    /** @summary Redraw pad means redraw ourself
      * @return {Promise} when redrawing ready */
    async redrawPad(reason) {
@@ -1089,7 +1095,7 @@ class RPadPainter extends RObjectPainter {
          }
 
          if (!this.getFramePainter()) {
-            return this.drawObject(this.getDom(), { _typename: 'TFrame', $dummy: true }, '')
+            return this.drawObject(this.getDom(), { _typename: clTFrame, $dummy: true }, '')
                        .then(() => this.drawNextSnap(lst, indx-1));
          } // call same object again
 

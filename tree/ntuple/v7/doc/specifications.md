@@ -1,10 +1,10 @@
-# RNTuple Reference Specifications 0.2.0.0
+# RNTuple Reference Specifications 0.2.3.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
 ## Versioning Notes
 
-The RNTuple binary format vesion is inspired by semantic versioning.
+The RNTuple binary format version is inspired by semantic versioning.
 It uses the following scheme: EPOCH.MAJOR.MINOR.PATCH
 
 _Epoch_: an increment of the epoch indicates backwards-incompatible changes.
@@ -49,6 +49,58 @@ The only relevant means of finding objects is the locator information, consistin
 Every embedding must define an **anchor** that contains the format version supported by the writer,
 and envelope links (location, compressed and uncompressed size) of the header and footer envelopes.
 For the ROOT file embedding, the **ROOT::Experimental::RNTuple** object acts as an anchor.
+
+### Anchor schema
+
+The current (class version 5) **ROOT::Experimental::RNTuple** object has the following schema:
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Version Epoch          |         Version Major         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|        Version Minor          |         Version Patch         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Seek Header                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Nbytes Header                          +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Len Header                            +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Seek Footer                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Nbytes Footer                          +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                         Len Footer                            +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               | 
++                        Max Key Size                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+```
+
+When serialized to disk, a 64 bit checksum is appended to the anchor, calculated as the XXH3 hash of
+all the (serialized) fields of the anchor object.
+
+Note that, since the anchor is serialized as a "classic" TFile key, all integers in the anchor, as well
+as the checksum, are encoded in **big-endian**, unlike the RNTuple payload which is encoded in little-endian.
+
+The anchor may evolve in future versions only by appending new fields to the existing schema, but
+fields will not be removed, renamed or reordered.
 
 
 ## Compression Block
@@ -338,13 +390,13 @@ The flags field can have one of the following bits set
 
 The structural role of the field can have on of the following values
 
-| Value    | Structural role                                          |
-|----------|----------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                            |
-| 0x01     | The field is the mother of a collection (e.g., a vector) |
-| 0x02     | The field is the mother of a record (e.g., a struct)     |
-| 0x03     | The field is the mother of a variant (e.g., a union)     |
-| 0x04     | The field is a reference (pointer), TODO                 |
+| Value    | Structural role                                                          |
+|----------|--------------------------------------------------------------------------|
+| 0x00     | Leaf field in the schema tree                                            |
+| 0x01     | The field is the mother of a collection (e.g., a vector)                 |
+| 0x02     | The field is the mother of a record (e.g., a struct)                     |
+| 0x03     | The field is the mother of a variant                                     |
+| 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
 
 
 #### Column Description
@@ -467,11 +519,11 @@ The type information record frame has the following contents
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++                       Content Identifier                      +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                        Type Version From                      |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         Type Version To                       |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-+                       Content Identifier                      +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
@@ -484,8 +536,13 @@ The following kinds of content are supported:
 
 | Content identifier  | Meaning of content                                  |
 |---------------------|-----------------------------------------------------|
-| 0x01                | String: C++ definition of the type                  |
+| 0x00                | Serialized ROOT streamer info; see notes            |
 
+The serialized ROOT streamer info is not bound to a specific type.
+It is the combined streamer information from all the unsplit fields.
+Writers set version from/to to zero and use an empty type name.
+Readers should ignore the type-specific information.
+The format of the content is a ROOT streamed TList of TStreamerInfo objects.
 
 ### Footer Envelope
 
@@ -778,6 +835,8 @@ Variants are stored in $n+1$ fields:
 
 The dispatch tag ranges from 1 to $n$.
 A value of 0 indicates that the variant is in the invalid state, i.e., it does not hold any of the valid alternatives.
+Variants must not have more than 125 subfields.
+This follows common compiler implementation limits.
 
 #### std::pair<T1, T2>
 
@@ -874,6 +933,13 @@ If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in th
 
 The `SizeT` template parameter defines the in-memory integer type of the collection size.
 The valid types are `std::uint32_t` and `std::uint64_t`.
+
+### Unsplit types
+
+A field with the structural role 0x05 ("unsplit") represents an object serialized by the ROOT streamer in unsplit mode.
+It can have any type supported by TClass (even types that are not available in the native RNTuple type system).
+The first (principal) column is of type [Split]Index[32|64].
+The second column is of type Byte.
 
 ## Limits
 

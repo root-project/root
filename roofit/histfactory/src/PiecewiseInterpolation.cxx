@@ -20,7 +20,7 @@
 
 #include "RooStats/HistFactory/PiecewiseInterpolation.h"
 
-#include "RooFit/Detail/EvaluateFuncs.h"
+#include <RooFit/Detail/MathFuncs.h>
 
 #include "Riostream.h"
 #include "TBuffer.h"
@@ -33,6 +33,8 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
+#include "RooDataHist.h"
+#include "RooHistFunc.h"
 
 #include <exception>
 #include <cmath>
@@ -41,8 +43,6 @@
 using std::endl, std::cout;
 
 ClassImp(PiecewiseInterpolation);
-
-using RooFit::Detail::EvaluateFuncs::flexibleInterp;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -62,7 +62,6 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 /// \param lowSet  Set of down variations.
 /// \param highSet Set of up variations.
 /// \param paramSet Parameters that control the interpolation.
-/// \param takeOwnership If true, the PiecewiseInterpolation object will take ownership of the arguments in the low, high and parameter sets.
 PiecewiseInterpolation::PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal &nominal,
                                                const RooArgList &lowSet, const RooArgList &highSet,
                                                const RooArgList &paramSet)
@@ -168,7 +167,8 @@ double PiecewiseInterpolation::evaluate() const
       coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << param->GetName()
                  << " with unknown interpolation code" << icode << endl ;
     }
-    sum += flexibleInterp(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
+    using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+    sum += flexibleInterpSingle(icode, low->getVal(), high->getVal(), 1.0, nominal, param->getVal(), sum);
   }
 
   if(_positiveDefinite && (sum<0)){
@@ -186,7 +186,7 @@ double PiecewiseInterpolation::evaluate() const
 
 void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   unsigned int n = _interpCode.size();
+   std::size_t n = _interpCode.size();
 
    std::string resName = "total_" + ctx.getTmpVarName();
    for (std::size_t i = 0; i < n; ++i) {
@@ -200,10 +200,48 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
                                << endl;
       }
    }
-   std::string funcCall;
-   funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolationEvaluate", _interpCode[0], _lowSet,
-                            _highSet, _nominal, _paramSet, n);
-   std::string code = "double " + resName + " = " + funcCall + ";\n";
+
+   // The PiecewiseInterpolation class is used in the context of HistFactory
+   // models, where is is always used the same way: all RooAbsReals in _lowSet,
+   // _histSet, and also nominal are 1D RooHistFuncs with with same structure.
+   //
+   // Therefore, we can make a big optimization: we get the bin index only once
+   // here in the generated code for PiecewiseInterpolation. Then, we also
+   // rearrange the histogram data in such a way that we can always pass the
+   // same arrays to the free function that implements the interpolation, just
+   // with a dynamic offset calculated from the bin index.
+   RooDataHist const &nomHist = dynamic_cast<RooHistFunc const &>(*_nominal).dataHist();
+   int nBins = nomHist.numEntries();
+   std::vector<double> valsNominal;
+   std::vector<double> valsLow;
+   std::vector<double> valsHigh;
+   for (int i = 0; i < nBins; ++i) {
+      valsNominal.push_back(nomHist.weight(i));
+   }
+   for (int i = 0; i < nBins; ++i) {
+      for (std::size_t iParam = 0; iParam < n; ++iParam) {
+         valsLow.push_back(dynamic_cast<RooHistFunc const &>(_lowSet[iParam]).dataHist().weight(i));
+         valsHigh.push_back(dynamic_cast<RooHistFunc const &>(_highSet[iParam]).dataHist().weight(i));
+      }
+   }
+   std::string idxName =
+      nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables());
+   std::string valsNominalStr = ctx.buildArg(valsNominal);
+   std::string valsLowStr = ctx.buildArg(valsLow);
+   std::string valsHighStr = ctx.buildArg(valsHigh);
+   std::string nStr = std::to_string(n);
+   std::string code;
+
+   std::string lowName = ctx.getTmpVarName();
+   std::string highName = ctx.getTmpVarName();
+   std::string nominalName = ctx.getTmpVarName();
+   code += "double * " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
+
+   std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", _interpCode[0], _paramSet, n,
+                                        lowName, highName, 1.0, nominalName, 0.0);
+   code += "double " + resName + " = " + funcCall + ";\n";
 
    if (_positiveDefinite)
       code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
@@ -238,7 +276,8 @@ void PiecewiseInterpolation::doEval(RooFit::EvalContext & ctx) const
     }
 
     for (unsigned int j=0; j < nominal.size(); ++j) {
-       sum[j] += flexibleInterp(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
+       using RooFit::Detail::MathFuncs::flexibleInterpSingle;
+       sum[j] += flexibleInterpSingle(icode, low[j], high[j], 1.0, nominal[j], param, sum[j]);
     }
   }
 

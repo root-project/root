@@ -21,15 +21,21 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
 
+#include <Rtypes.h>
+
 #include <cstdint>
 #include <map>
 #include <string>
+#include <unordered_map>
 #include <vector>
+
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 namespace Experimental {
 
 enum class EColumnType;
+enum class EExtraTypeInfoIds;
 class RClusterDescriptor;
 class RNTupleDescriptor;
 
@@ -66,6 +72,10 @@ public:
    static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
+
+   // In the page sink and the unsplit field, the seen streamer infos are stored in a map
+   // with the unique streamer info number being the key.
+   using StreamerInfoMap_t = std::unordered_map<Int_t, TVirtualStreamerInfo *>;
 
    struct REnvelopeLink {
       std::uint64_t fLength = 0;
@@ -195,10 +205,14 @@ public:
 
    /// While we could just interpret the enums as ints, we make the translation explicit
    /// in order to avoid accidentally changing the on-disk numbers when adjusting the enum classes.
-   static std::uint16_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
-   static std::uint16_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
-   static RResult<std::uint16_t> DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
-   static RResult<std::uint16_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
+   static std::uint32_t SerializeFieldStructure(ROOT::Experimental::ENTupleStructure structure, void *buffer);
+   static std::uint32_t SerializeColumnType(ROOT::Experimental::EColumnType type, void *buffer);
+   static std::uint32_t SerializeExtraTypeInfoId(ROOT::Experimental::EExtraTypeInfoIds id, void *buffer);
+   static RResult<std::uint32_t>
+   DeserializeFieldStructure(const void *buffer, ROOT::Experimental::ENTupleStructure &structure);
+   static RResult<std::uint32_t> DeserializeColumnType(const void *buffer, ROOT::Experimental::EColumnType &type);
+   static RResult<std::uint32_t>
+   DeserializeExtraTypeInfoId(const void *buffer, ROOT::Experimental::EExtraTypeInfoIds &id);
 
    static std::uint32_t SerializeEnvelopePreamble(std::uint16_t envelopeType, void *buffer);
    static std::uint32_t SerializeEnvelopePostscript(unsigned char *envelope, std::uint64_t size);
@@ -256,6 +270,10 @@ public:
    // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageList(const void *buffer, std::uint64_t bufSize, DescriptorId_t clusterGroupId,
                                             RNTupleDescriptor &desc);
+
+   // Helper functions to (de-)serialize the streamer info type extra information
+   static std::string SerializeStreamerInfos(const StreamerInfoMap_t &infos);
+   static RResult<StreamerInfoMap_t> DeserializeStreamerInfos(const std::string &extraTypeInfoContent);
 }; // class RNTupleSerializer
 
 } // namespace Internal

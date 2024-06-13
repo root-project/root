@@ -4,12 +4,11 @@ import sys
 import os
 from functools import partial
 
-import libcppyy as cppyy_backend
-from cppyy import gbl as gbl_namespace
-from cppyy import cppdef, include
-from libROOTPythonizations import gROOT
-from cppyy.gbl import gSystem
+import cppyy
+
 import cppyy.ll
+
+from libROOTPythonizations import gROOT
 
 from ._application import PyROOTApplication
 from ._numbadeclare import _NumbaDeclareDecorator
@@ -107,7 +106,7 @@ class ROOTFacade(types.ModuleType):
             "SetOwnership",
         ]
         for name in self._cppyy_exports:
-            setattr(self, name, getattr(cppyy_backend, name))
+            setattr(self, name, getattr(cppyy._backend, name))
         # For backwards compatibility
         self.MakeNullPointer = partial(self.bind_object, 0)
         self.BindObject = self.bind_object
@@ -154,15 +153,54 @@ class ROOTFacade(types.ModuleType):
         # e.g. ROOT.ROOT.Math as ROOT.Math
 
         # Note that hasattr caches the lookup for getattr
-        if hasattr(gbl_namespace, name):
-            return getattr(gbl_namespace, name)
-        elif hasattr(gbl_namespace.ROOT, name):
-            return getattr(gbl_namespace.ROOT, name)
+        if hasattr(cppyy.gbl, name):
+            return getattr(cppyy.gbl, name)
+        elif hasattr(cppyy.gbl.ROOT, name):
+            return getattr(cppyy.gbl.ROOT, name)
         else:
             res = gROOT.FindObject(name)
             if res:
                 return res
         raise AttributeError("Failed to get attribute {} from ROOT".format(name))
+
+    def _register_converters_and_executors(self):
+
+        converter_aliases = {
+            "Long64_t": "long long",
+            "Long64_t ptr": "long long ptr",
+            "Long64_t&": "long long&",
+            "const Long64_t&": "const long long&",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "ULong64_t&": "unsigned long long&",
+            "const ULong64_t&": "const unsigned long long&",
+            "Float16_t": "float",
+            "const Float16_t&": "const float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+            "const Double32_t&": "const double&",
+        }
+
+        executor_aliases = {
+            "Long64_t": "long long",
+            "Long64_t&": "long long&",
+            "Long64_t ptr": "long long ptr",
+            "ULong64_t": "unsigned long long",
+            "ULong64_t&": "unsigned long long&",
+            "ULong64_t ptr": "unsigned long long ptr",
+            "Float16_t": "float",
+            "Float16_t&": "float&",
+            "Double32_t": "double",
+            "Double32_t&": "double&",
+        }
+
+        from libROOTPythonizations import CPyCppyyRegisterConverterAlias, CPyCppyyRegisterExecutorAlias
+
+        for name, target in converter_aliases.items():
+            CPyCppyyRegisterConverterAlias(name, target)
+
+        for name, target in executor_aliases.items():
+            CPyCppyyRegisterExecutorAlias(name, target)
 
     def _finalSetup(self):
         # Prevent this method from being re-entered through the gROOT wrapper
@@ -180,7 +218,10 @@ class ROOTFacade(types.ModuleType):
 
         # Redirect lookups to cppyy's global namespace
         self.__class__.__getattr__ = self._fallback_getattr
-        self.__class__.__setattr__ = lambda self, name, val: setattr(gbl_namespace, name, val)
+        self.__class__.__setattr__ = lambda self, name, val: setattr(cppyy.gbl, name, val)
+
+        # Register custom converters and executors
+        self._register_converters_and_executors()
 
         # Run rootlogon if exists
         self._run_rootlogon()
@@ -290,6 +331,7 @@ class ROOTFacade(types.ModuleType):
     # Overload RDF namespace
     @property
     def RDF(self):
+        self._finalSetup()
         ns = self._fallback_getattr("RDF")
         try:
             from ._pythonization._rdataframe import _MakeNumpyDataFrame
@@ -312,6 +354,7 @@ class ROOTFacade(types.ModuleType):
                 for key in df.columns:
                     np_dict[key] = df[key].to_numpy()
                 return _MakeNumpyDataFrame(np_dict)
+
             ns.FromPandas = MakePandasDataFrame
 
             try:
@@ -347,10 +390,11 @@ class ROOTFacade(types.ModuleType):
         hasRDF = "dataframe" in gROOT.GetConfigFeatures()
         if hasRDF:
             try:
-                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor
+                from ._pythonization._tmva import inject_rbatchgenerator, _AsRTensor, SaveXGBoost
 
                 inject_rbatchgenerator(ns)
                 ns.Experimental.AsRTensor = _AsRTensor
+                ns.Experimental.SaveXGBoost = SaveXGBoost
             except:
                 raise Exception("Failed to pythonize the namespace TMVA")
         del type(self).TMVA
@@ -359,7 +403,7 @@ class ROOTFacade(types.ModuleType):
     # Create and overload Numba namespace
     @property
     def Numba(self):
-        cppdef("namespace Numba {}")
+        cppyy.cppdef("namespace Numba {}")
         ns = self._fallback_getattr("Numba")
         ns.Declare = staticmethod(_NumbaDeclareDecorator)
         del type(self).Numba
@@ -380,7 +424,7 @@ class ROOTFacade(types.ModuleType):
     # Get TPyDispatcher for programming GUI callbacks
     @property
     def TPyDispatcher(self):
-        include("ROOT/TPyDispatcher.h")
-        tpd = gbl_namespace.TPyDispatcher
+        cppyy.include("ROOT/TPyDispatcher.h")
+        tpd = cppyy.gbl.TPyDispatcher
         type(self).TPyDispatcher = tpd
         return tpd

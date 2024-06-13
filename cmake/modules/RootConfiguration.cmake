@@ -194,11 +194,6 @@ else()
 endif()
 
 set(buildnetxng ${value${netxng}})
-if(netxng)
-  set(useoldnetx no)
-else()
-  set(useoldnetx yes)
-endif()
 
 set(builddcap ${value${dcap}})
 set(dcaplibdir ${DCAP_LIBRARY_DIR})
@@ -221,7 +216,6 @@ set(arrowlib ${ARROW_LIBRARY})
 set(arrowincdir ${ARROW_INCLUDE_DIR})
 
 set(buildasimage ${value${asimage}})
-set(builtinafterimage ${builtin_afterimage})
 set(asextralib ${ASEXTRA_LIBRARIES})
 set(asextralibdir)
 set(asjpegincdir ${JPEG_INCLUDE_DIR})
@@ -232,10 +226,6 @@ set(asimageincdir)
 set(asimagelib)
 set(asimagelibdir)
 
-set(buildpythia6 ${value${pythia6}})
-set(pythia6libdir ${PYTHIA6_LIBRARY_DIR})
-set(pythia6lib ${PYTHIA6_LIBRARY})
-set(pythia6cppflags)
 set(buildpythia8 ${value${pythia8}})
 set(pythia8libdir ${PYTHIA8_LIBRARY_DIR})
 set(pythia8lib ${PYTHIA8_LIBRARY})
@@ -258,9 +248,9 @@ set(gvizincdir ${GVIZ_INCLUDE_DIR})
 set(gvizcflags)
 
 set(buildpython ${value${pyroot}})
-set(pythonlibdir ${PYTHON_LIBRARY_DIR})
-set(pythonlib ${PYTHON_LIBRARIES})
-set(pythonincdir ${PYTHON_INCLUDE_DIRS})
+set(pythonlibdir ${Python3_LIBRARY_DIR})
+set(pythonlib ${Python3_LIBRARIES})
+set(pythonincdir ${Python3_INCLUDE_DIRS})
 set(pythonlibflags)
 
 set(buildxml ${value${xml}})
@@ -277,11 +267,6 @@ set(xrdversion)
 
 set(alloclib)
 set(alloclibdir)
-
-set(buildmonalisa ${value${monalisa}})
-set(monalisalibdir ${MONALISA_LIBRARY_DIR})
-set(monalisalib ${MONALISA_LIBRARY})
-set(monalisaincdir ${MONALISA_INCLUDE_DIR})
 
 set(ssllib ${OPENSSL_LIBRARIES})
 set(ssllibdir)
@@ -559,8 +544,8 @@ get_filename_component(altcxx ${CMAKE_CXX_COMPILER} NAME)
 get_filename_component(altf77 "${CMAKE_Fortran_COMPILER}" NAME)
 get_filename_component(altld ${CMAKE_CXX_COMPILER} NAME)
 
-set(pythonvers ${PYTHON_VERSION_STRING})
-set(python${PYTHON_VERSION_MAJOR}vers ${PYTHON_VERSION_STRING})
+set(pythonvers ${Python3_VERSION})
+set(python${Python3_VERSION_MAJOR}vers ${Python3_VERSION})
 
 #---RConfigure.h---------------------------------------------------------------------------------------------
 try_compile(has__cplusplus "${CMAKE_BINARY_DIR}" SOURCES "${CMAKE_SOURCE_DIR}/config/__cplusplus.cxx"
@@ -749,9 +734,6 @@ configure_file(${CMAKE_SOURCE_DIR}/config/setxrd.sh ${CMAKE_RUNTIME_OUTPUT_DIREC
 configure_file(${CMAKE_SOURCE_DIR}/config/proofserv.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/proofserv @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/roots.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/roots @ONLY NEWLINE_STYLE UNIX)
 configure_file(${CMAKE_SOURCE_DIR}/config/rootssh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rootssh @ONLY NEWLINE_STYLE UNIX)
-if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
-  configure_file(${CMAKE_SOURCE_DIR}/config/xproofd.in ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd @ONLY NEWLINE_STYLE UNIX)
-endif()
 if(WIN32)
   set(thisrootbat ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.bat)
   set(thisrootps1 ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/thisroot.ps1)
@@ -801,14 +783,6 @@ install(FILES ${CMAKE_BINARY_DIR}/installtree/root-config
                           GROUP_EXECUTE GROUP_READ
                           WORLD_EXECUTE WORLD_READ
               DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-if(xproofd AND xrootd AND ssl AND XROOTD_NOMAIN)
-   install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/xproofd
-                 PERMISSIONS OWNER_EXECUTE OWNER_WRITE OWNER_READ
-                             GROUP_EXECUTE GROUP_READ
-                             WORLD_EXECUTE WORLD_READ
-                 DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif()
 
 install(FILES ${CMAKE_BINARY_DIR}/ginclude/RConfigOptions.h
               ${CMAKE_BINARY_DIR}/ginclude/compiledata.h

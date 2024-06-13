@@ -105,7 +105,10 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussian1D)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll->getVal();
 
@@ -122,7 +125,10 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll->getVal();
 
@@ -140,7 +146,10 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll->getVal();
 
@@ -166,7 +175,10 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, BinnedManualNLL)
    RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll_manual.getVal();
 
@@ -214,7 +226,10 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll->getVal();
 
@@ -261,7 +276,10 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.GlobalObservables(*w.var("alpha_bkg_obs")).build();
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -288,7 +306,10 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -319,7 +340,10 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
    nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    auto nll0 = nll->getVal();
 
@@ -389,7 +413,10 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
    likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
                    .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
                    .build();
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
@@ -406,7 +433,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    // the multiprocess test statistics classes were designed to give values
    // that are bit-by-bit identical with the old test statistics based on
    // RooAbsTestStatistic.
-   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_A"))),
                                                     RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))),
                                                     RooFit::Offset(true), RooFit::EvalBackend::Legacy())};
 
@@ -415,10 +442,13 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
-                   .ConstrainedParameters(*w.var("alpha_bkg_obs_A"))
+                   .ConstrainedParameters(*w.var("alpha_bkg_A"))
                    .GlobalObservables(*w.var("alpha_bkg_obs_B"))
                    .build();
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
    nll_ts->enableOffsetting(true);
 
    nll_ts->evaluate();
@@ -427,10 +457,15 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    // value. RooRealL will also give the non-offset value, so that can be directly compared to the RooNLLVar::getVal
    // result (the nll0 vs nll2 comparison below). To compare to the raw RooAbsL/Wrapper value nll1, however, we need to
    // manually add the offset.
-   ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult() + nll_ts->offset();
+   ROOT::Math::KahanSum<double> nll1 = nll_ts->getResult();
+   ROOT::Math::KahanSum<double> nll_ts_offset;
+   for (auto &offset_comp : offset.offsets()) {
+      nll1 += offset_comp;
+      nll_ts_offset += offset_comp;
+   }
 
-   EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
-   EXPECT_FALSE(nll_ts->offset().Sum() == 0);
+   EXPECT_EQ(nll0, nll1.Sum());
+   EXPECT_FALSE(nll_ts_offset.Sum() == 0);
 
    // also check against RooRealL value
    RooFit::TestStatistics::RooRealL nll_real("real_nll", "RooRealL version", likelihood);
@@ -438,7 +473,7 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
    auto nll2 = nll_real.getVal();
 
    EXPECT_EQ(nll0, nll2);
-   EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
+   EXPECT_EQ(nll1.Sum(), nll2);
 }
 #endif // ROOFIT_LEGACY_EVAL_BACKEND
 
@@ -452,7 +487,10 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.EvalBackend(backend).build();
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   // dummy offsets (normally they are shared with other objects):
+   SharedOffset offset;
+   auto nll_ts =
+      LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags, offset);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();

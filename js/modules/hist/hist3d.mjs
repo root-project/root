@@ -1,9 +1,10 @@
-import { constants, isFunc, isStr, getDocument } from '../core.mjs';
+import { constants, isFunc, isStr, getDocument, isNodeJs } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { REVISION, DoubleSide, Object3D, Color, Vector2, Vector3, Matrix4, Line3,
          BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
-         TextGeometry, Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+         Plane, Scene, PerspectiveCamera, OrthographicCamera, DirectionalLight, ShapeUtils } from '../three.mjs';
+import { TextGeometry } from '../three_addons.mjs';
 import { assign3DHandler, disposeThreejsObject, createOrbitControl,
          createLineSegments, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind,
@@ -547,7 +548,7 @@ function create3DScene(render3d, x3dscale, y3dscale, orthographic) {
       this.first_render_tm = 0;
       this.enable_highlight = false;
 
-      if (!this.isBatchMode() && this.webgl)
+      if (!this.isBatchMode() && this.webgl && !isNodeJs())
          create3DControl(this);
 
       return this;

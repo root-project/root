@@ -26,7 +26,7 @@ endif()
 
 ROOT_ADD_GTEST(dataframe_splitcoll_arrayview dataframe_splitcoll_arrayview.cxx LIBRARIES ROOTDataFrame)
 target_include_directories(dataframe_splitcoll_arrayview PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader)
+ROOT_GENERATE_DICTIONARY(TwoFloatsDict ${CMAKE_CURRENT_SOURCE_DIR}/TwoFloats.h MODULE dataframe_splitcoll_arrayview LINKDEF TwoFloatsLinkDef.h OPTIONS -inlineInputHeader DEPENDENCIES RIO)
 
 ROOT_ADD_GTEST(dataframe_redefine dataframe_redefine.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_definepersample dataframe_definepersample.cxx LIBRARIES ROOTDataFrame)
@@ -60,6 +60,7 @@ ROOT_ADD_GTEST(dataframe_entrylist dataframe_entrylist.cxx LIBRARIES ROOTDataFra
 ROOT_ADD_GTEST(dataframe_merge_results dataframe_merge_results.cxx LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_samplecallback dataframe_samplecallback.cxx CounterHelper.h LIBRARIES ROOTDataFrame)
 ROOT_ADD_GTEST(dataframe_vary dataframe_vary.cxx LIBRARIES ROOTDataFrame)
+ROOT_ADD_GTEST(dataframe_compgraph dataframe_compgraph.cxx LIBRARIES ROOTDataFrame)
 
 #### TESTS FOR DIFFERENT DATASOURCES ####
 if(MSVC AND MSVC_VERSION GREATER_EQUAL 1925 AND MSVC_VERSION LESS 1929 OR CMAKE_CXX_STANDARD LESS 17)

@@ -8,7 +8,7 @@ add_subdirectory(tmva)
 add_subdirectory(tmvagui)
 
 # Build pyMVA. Allows users to call python mva's from c++ ROOT/TMVA.
-if(tmva-pymva AND NUMPY_FOUND)
+if(tmva-pymva)
    add_subdirectory(pymva)
 endif()
 

@@ -2,7 +2,7 @@ import { gStyle, BIT, settings, create, createHistogram, setHistogramTitle, isFu
          clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, clTPad, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
-import { ObjectPainter } from '../base/ObjectPainter.mjs';
+import { ObjectPainter, kAxisNormal } from '../base/ObjectPainter.mjs';
 import { FunctionsHandler } from './THistPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { kBlack, kWhite } from '../base/colors.mjs';
@@ -135,7 +135,7 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
-      const res = this.options, _a = 'AXIS;FORCE_TITLE;';
+      const res = this.options;
       let d = new DrawOptions(opt), hopt = '';
 
       PadDrawOptions.forEach(name => { if (d.check(name)) hopt += ';' + name; });
@@ -158,7 +158,7 @@ class TGraphPainter extends ObjectPainter {
       if (d.check('PMC') && !res._pmc)
          res._pmc = 2;
 
-      if (d.check('A')) res.Axis = d.check('I') ? 'A;' : _a; // I means invisible axis
+      if (d.check('A')) res.Axis = d.check('I') ? 'A;' : ' '; // I means invisible axis
       if (d.check('X+')) { res.Axis += 'X+'; res.second_x = has_main; }
       if (d.check('Y+')) { res.Axis += 'Y+'; res.second_y = has_main; }
       if (d.check('RX')) res.Axis += 'RX';
@@ -208,9 +208,8 @@ class TGraphPainter extends ObjectPainter {
          // either graph drawn directly or
          // graph is first object in list of primitives
          const pad = this.getPadPainter()?.getRootPad(true);
-         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = _a;
-      } else if (res.Axis.indexOf('A') < 0)
-         res.Axis = _a + res.Axis;
+         if (!pad || (pad?.fPrimitives?.arr[0] === this.getObject())) res.Axis = ' ';
+      }
 
       res.Axis += hopt;
 
@@ -342,12 +341,12 @@ class TGraphPainter extends ObjectPainter {
 
       setHistogramTitle(histo, this.getObject().fTitle);
 
-      if (set_x) {
+      if (set_x && !histo.fXaxis.fLabels) {
          histo.fXaxis.fXmin = uxmin;
          histo.fXaxis.fXmax = uxmax;
       }
 
-      if (set_y) {
+      if (set_y && !histo.fYaxis.fLabels) {
          histo.fYaxis.fXmin = Math.min(minimum0, minimum);
          histo.fYaxis.fXmax = Math.max(maximum0, maximum);
          histo.fMinimum = minimum;
@@ -433,13 +432,13 @@ class TGraphPainter extends ObjectPainter {
          lines.push('x = ' + funcs.axisAsText('x', d.x), 'y = ' + funcs.axisAsText('y', d.y));
          if (gme)
             lines.push('error x = -' + funcs.axisAsText('x', gme.fExL[d.indx]) + '/+' + funcs.axisAsText('x', gme.fExH[d.indx]));
-         else if (this.options.Errors && (funcs.x_handle.kind === 'normal') && (d.exlow || d.exhigh))
+         else if (this.options.Errors && (funcs.x_handle.kind === kAxisNormal) && (d.exlow || d.exhigh))
             lines.push('error x = -' + funcs.axisAsText('x', d.exlow) + '/+' + funcs.axisAsText('x', d.exhigh));
 
          if (gme) {
             for (let ny = 0; ny < gme.fNYErrors; ++ny)
                lines.push(`error y${ny} = -${funcs.axisAsText('y', gme.fEyL[ny][d.indx])}/+${funcs.axisAsText('y', gme.fEyH[ny][d.indx])}`);
-         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === 'normal') && (d.eylow || d.eyhigh))
+         } else if ((this.options.Errors || (this.options.EF > 0)) && (funcs.y_handle.kind === kAxisNormal) && (d.eylow || d.eyhigh))
             lines.push('error y = -' + funcs.axisAsText('y', d.eylow) + '/+' + funcs.axisAsText('y', d.eyhigh));
       }
       return lines;
@@ -546,11 +545,14 @@ class TGraphPainter extends ObjectPainter {
          }
 
          // build upper part (in reverse direction)
-         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true });
-
-         draw_g.append('svg:path')
+         const path2 = buildSvgCurve(bins2, { line: options.EF < 2, cmd: 'L', qubic: true }),
+            area = draw_g.append('svg:path')
                .attr('d', path1 + path2 + 'Z')
                .call(fillatt.func);
+
+         // Let behaves as ROOT - see JIRA ROOT-8131
+         if (fillatt.empty() && fillatt.colorindx)
+            area.style('stroke', this.getColor(fillatt.colorindx));
          if (main_block)
             this.draw_kind = 'lines';
       }

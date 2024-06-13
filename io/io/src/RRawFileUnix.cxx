@@ -27,7 +27,6 @@
 #include <vector>
 
 #include <fcntl.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -35,10 +34,7 @@ namespace {
 constexpr int kDefaultBlockSize = 4096; // If fstat() does not provide a block size hint, use this value instead
 } // anonymous namespace
 
-ROOT::Internal::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options)
-   : RRawFile(url, options), fFileDes(-1)
-{
-}
+ROOT::Internal::RRawFileUnix::RRawFileUnix(std::string_view url, ROptions options) : RRawFile(url, options) {}
 
 ROOT::Internal::RRawFileUnix::~RRawFileUnix()
 {
@@ -49,10 +45,6 @@ ROOT::Internal::RRawFileUnix::~RRawFileUnix()
 std::unique_ptr<ROOT::Internal::RRawFile> ROOT::Internal::RRawFileUnix::Clone() const
 {
    return std::make_unique<RRawFileUnix>(fUrl, fOptions);
-}
-
-int ROOT::Internal::RRawFileUnix::GetFeatures() const {
-   return kFeatureHasSize | kFeatureHasMmap;
 }
 
 std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
@@ -69,18 +61,6 @@ std::uint64_t ROOT::Internal::RRawFileUnix::GetSizeImpl()
    return info.st_size;
 }
 
-void *ROOT::Internal::RRawFileUnix::MapImpl(size_t nbytes, std::uint64_t offset, std::uint64_t &mapdOffset)
-{
-   static std::uint64_t szPageBitmap = sysconf(_SC_PAGESIZE) - 1;
-   mapdOffset = offset & ~szPageBitmap;
-   nbytes += offset & szPageBitmap;
-
-   void *result = mmap(nullptr, nbytes, PROT_READ, MAP_PRIVATE, fFileDes, mapdOffset);
-   if (result == MAP_FAILED)
-      throw std::runtime_error(std::string("Cannot perform memory mapping: ") + strerror(errno));
-   return result;
-}
-
 void ROOT::Internal::RRawFileUnix::OpenImpl()
 {
 #ifdef R__SEEK64
@@ -92,7 +72,7 @@ void ROOT::Internal::RRawFileUnix::OpenImpl()
       throw std::runtime_error("Cannot open '" + fUrl + "', error: " + std::string(strerror(errno)));
    }
 
-   if (fOptions.fBlockSize >= 0)
+   if (fOptions.fBlockSize != ROptions::kUseDefaultBlockSize)
       return;
 
 #ifdef R__SEEK64
@@ -169,11 +149,4 @@ size_t ROOT::Internal::RRawFileUnix::ReadAtImpl(void *buffer, size_t nbytes, std
       offset += res;
    }
    return total_bytes;
-}
-
-void ROOT::Internal::RRawFileUnix::UnmapImpl(void *region, size_t nbytes)
-{
-   int rv = munmap(region, nbytes);
-   if (rv != 0)
-      throw std::runtime_error(std::string("Cannot remove memory mapping: ") + strerror(errno));
 }

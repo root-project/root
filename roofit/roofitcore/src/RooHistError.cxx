@@ -261,7 +261,7 @@ bool RooHistError::getInterval(const RooAbsFunc *Qu, const RooAbsFunc *Ql, doubl
   assert(nullptr != Qu || nullptr != Ql);
 
   // convert number of sigma into a confidence level
-  double beta= TMath::Erf(nSigma/sqrt(2.));
+  double beta= std::erf(nSigma/sqrt(2.));
   double alpha= 0.5*(1-beta);
 
   // Does the central interval contain the point estimate?

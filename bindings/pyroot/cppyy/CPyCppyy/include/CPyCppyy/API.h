@@ -132,6 +132,9 @@ CPYCPPYY_EXTERN void DestroyConverter(Converter* p);
 typedef Converter* (*ConverterFactory_t)(cdims_t);
 CPYCPPYY_EXTERN bool RegisterConverter(const std::string& name, ConverterFactory_t);
 
+// register a custom converter that is a reference to an existing converter
+CPYCPPYY_EXTERN bool RegisterConverterAlias(const std::string& name, const std::string& target);
+
 // remove a custom converter
 CPYCPPYY_EXTERN bool UnregisterConverter(const std::string& name);
 
@@ -158,6 +161,9 @@ CPYCPPYY_EXTERN void DestroyConverter(Converter* p);
 // register a custom executor
 typedef Executor* (*ExecutorFactory_t)(cdims_t);
 CPYCPPYY_EXTERN bool RegisterExecutor(const std::string& name, ExecutorFactory_t);
+
+// register a custom executor that is a reference to an existing converter
+CPYCPPYY_EXTERN bool RegisterExecutorAlias(const std::string& name, const std::string& target);
 
 // remove a custom executor
 CPYCPPYY_EXTERN bool UnregisterExecutor(const std::string& name);

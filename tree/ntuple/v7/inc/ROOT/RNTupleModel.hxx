@@ -36,6 +36,7 @@ namespace Experimental {
 class RNTupleCollectionWriter;
 class RNTupleModel;
 class RNTupleWriter;
+class RNTupleWriteOptions;
 
 namespace Internal {
 class RPageSinkBuf;
@@ -62,6 +63,14 @@ struct RNTupleModelChangeset {
    bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
 };
 
+/// Merge two RNTuple models. The resulting model will take the description from the left-hand model.
+/// When `rightFieldPrefix` is specified, the right-hand model will be stored in an untyped sub-collection, identified
+/// by the prefix. This way, a field from the right-hand model is represented as `<prefix>.<fieldname>`.
+/// When no prefix is specified, the fields from the right-hand model get added directly to the resulting model.
+///
+/// Note that both models must be frozen before merging.
+std::unique_ptr<RNTupleModel>
+MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix = "");
 } // namespace Internal
 
 // clang-format off
@@ -80,6 +89,9 @@ added and modified.  Once the schema is finalized, the model gets frozen.  Only 
 */
 // clang-format on
 class RNTupleModel {
+   friend std::unique_ptr<RNTupleModel>
+   Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix);
+
 public:
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
    struct NameWithDescription_t {
@@ -325,6 +337,13 @@ public:
 
    std::string GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
+
+   /// Estimate the memory usage for this model during writing
+   ///
+   /// This will return an estimate in bytes for the internal page and compression buffers. The value should be
+   /// understood per sequential RNTupleWriter or per RNTupleFillContext created for a RNTupleParallelWriter
+   /// constructed with this model.
+   std::size_t EstimateWriteMemoryUsage(const RNTupleWriteOptions &options = RNTupleWriteOptions()) const;
 };
 
 } // namespace Experimental

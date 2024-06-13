@@ -111,10 +111,13 @@ class ObjectPainter extends BasePainter {
      * @protected */
    matchObjectType(arg) {
       const clname = this.getClassName();
-      if (!arg || !clname) return false;
-      if (isStr(arg)) return arg === clname;
-      if (isStr(arg._typename)) return arg._typename === clname;
-      return clname.match(arg);
+      if (!arg || !clname)
+         return false;
+      if (isStr(arg))
+         return arg === clname;
+      if (isStr(arg._typename))
+         return arg._typename === clname;
+      return !!clname.match(arg);
    }
 
    /** @summary Change item name
@@ -154,11 +157,14 @@ class ObjectPainter extends BasePainter {
          if (!this.options_store || pp?._interactively_changed)
             changed = true;
          else {
-            for (const k in this.options) {
-               if (this.options[k] !== this.options_store[k])
-                  changed = true;
+            for (const k in this.options_store) {
+               if (this.options[k] !== this.options_store[k]) {
+                  if ((k[0] !== '_') && (k[0] !== '$') && (k[0].toLowerCase() !== k[0]))
+                     changed = true;
                }
+            }
          }
+
          if (changed && isFunc(this.options.asString))
             return this.options.asString(this.isMainPainter(), ignore_pad ? null : pp?.getRootPad());
       }
@@ -764,6 +770,9 @@ class ObjectPainter extends BasePainter {
          res = this.redraw(reason);
 
       return getPromise(res).then(() => {
+         if (arg === 'attribute')
+            return this.getPadPainter()?.redrawLegend();
+      }).then(() => {
          // inform GED that something changes
          const canp = this.getCanvPainter();
 
@@ -1674,9 +1683,9 @@ const EAxisBits = {
    kIsInteger: BIT(22),
    kMoreLogLabels: BIT(23),
    kOppositeTitle: BIT(32) // atrificial bit, not possible to set in ROOT
-};
+}, kAxisLabels = 'labels', kAxisNormal = 'normal', kAxisFunc = 'func', kAxisTime = 'time';
 
 
 export { getElementCanvPainter, getElementMainPainter, drawingJSON,
          selectActivePad, getActivePad, cleanup, resize,
-         ObjectPainter, drawRawText, EAxisBits };
+         ObjectPainter, drawRawText, EAxisBits, kAxisLabels, kAxisNormal, kAxisFunc, kAxisTime };

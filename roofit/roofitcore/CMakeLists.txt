@@ -15,10 +15,6 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(cuda)
-  list(APPEND EXTRA_LIBRARIES RooFitCuda)
-endif()
-
 if(roofit_legacy_eval_backend)
   set(LegacyEvalBackendHeaders
     RooAbsOptTestStatistic.h
@@ -129,10 +125,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFirstMoment.h
     RooFit.h
     RooFit/Config.h
-    RooFit/Detail/AnalyticalIntegrals.h
     RooFit/Detail/BatchModeDataHelpers.h
     RooFit/Detail/CodeSquashContext.h
-    RooFit/Detail/EvaluateFuncs.h
+    RooFit/Detail/MathFuncs.h
     RooFit/Detail/NormalizationHelpers.h
     RooFit/EvalContext.h
     RooFit/Evaluator.h
@@ -147,6 +142,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooSumL.h
     RooFit/TestStatistics/RooUnbinnedL.h
     RooFit/TestStatistics/buildLikelihood.h
+    RooFit/TestStatistics/SharedOffset.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
     RooFitLegacy/RooTreeData.h
@@ -250,7 +246,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
     src/Initialisation.cxx
@@ -455,6 +450,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooSumL.cxx
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
+    src/TestStatistics/SharedOffset.cxx
     ${LegacyEvalBackendSources}
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
@@ -501,7 +497,7 @@ endif()
 # RooFit has to include them to build the documentation.
 target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
-target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

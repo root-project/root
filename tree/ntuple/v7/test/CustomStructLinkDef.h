@@ -1,8 +1,4 @@
-#ifdef __CINT__
-
-#pragma link off all globals;
-#pragma link off all classes;
-#pragma link off all functions;
+#ifdef __CLING__
 
 #pragma link C++ enum CustomEnum;
 #pragma link C++ enum CustomEnumInt8;
@@ -72,6 +68,7 @@
    "StructWithIORules" target = "c" code = "{ c = onfile.a + onfile.b; }"
 
 #pragma link C++ class Cyclic + ;
+#pragma link C++ class CyclicCollectionProxy + ;
 #pragma link C++ class Unsupported + ;
 
 #pragma link C++ class BaseA + ;
@@ -81,5 +78,10 @@
 #pragma link C++ class DuplicateBaseB + ;
 #pragma link C++ class DuplicateBaseC + ;
 #pragma link C++ class DuplicateBaseD + ;
+
+#pragma link C++ class Left + ;
+#pragma link C++ class DerivedFromLeftAndTObject+;
+
+#pragma link C++ class ThrowForVariant + ;
 
 #endif

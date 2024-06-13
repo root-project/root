@@ -67,9 +67,9 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    RooRealVar x("x", "", 0, 1);
    RooRealVar rnd("rnd", "", 0, 1);
-   RooThresholdCategory catThr("cat", "", rnd, "v2", 2);
-   catThr.addThreshold(1. / 3, "v0", 0);
-   catThr.addThreshold(2. / 3, "v1", 1);
+   RooThresholdCategory catThreshold("cat", "", rnd, "v2", 2);
+   catThreshold.addThreshold(1. / 3, "v0", 0);
+   catThreshold.addThreshold(2. / 3, "v1", 1);
 
    RooRealVar m0("m0", "", 0.5, 0, 1);
    RooRealVar m1("m1", "", 0.5, 0, 1);
@@ -79,7 +79,7 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
    RooProdPdf pdf("pdf", "", RooArgSet(g0, rndPdf));
 
    std::unique_ptr<RooDataSet> ds{pdf.generate(RooArgSet(x, rnd), RooFit::Name("ds"), RooFit::NumEvents(100))};
-   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThr));
+   auto cat = dynamic_cast<RooCategory *>(ds->addColumn(catThreshold));
 
    RooSimultaneous sim("sim", "", *cat);
    sim.addPdf(g0, "v0");
@@ -370,4 +370,40 @@ TEST(RooSimultaneous, NestedSimPdfGenContext)
    EXPECT_EQ(catIndex(data2->get(0), "c2"), catIndex(proto.get(0), "c2"));
    EXPECT_EQ(catIndex(data2->get(1), "c1"), catIndex(proto.get(1), "c1"));
    EXPECT_EQ(catIndex(data2->get(1), "c2"), catIndex(proto.get(1), "c2"));
+}
+
+/// Make sure that putting a conditional RooProdPdf in a RooSimultaneous
+/// doesn't result in a messed up computation graph with unnecessary integrals.
+/// Covers GitHub issue #15751.
+TEST(RooSimultaneous, ConditionalProdPdf)
+{
+   RooRealVar x{"x", "x", 0, 1};
+   RooRealVar y{"y", "y", 0, 1};
+
+   RooGenericPdf pdfx{"pdfx", "1.0 + x - x", {x}};
+   RooGenericPdf pdfxy{"pdfxy", "1.0 + x - x + y - y", {x, y}};
+
+   RooProdPdf pdf{"pdf", "pdf", pdfx, RooFit::Conditional(pdfxy, y)};
+
+   RooArgSet normSet{x, y};
+
+   RooCategory cat{"cat", "cat", {{"0", 0}}};
+   RooSimultaneous simPdf{"simPdf", "simPdf", {{"0", &pdf}}, cat};
+
+   auto countGraphNodes = [](RooAbsArg &arg) {
+      RooArgList nodes;
+      arg.treeNodeServerList(&nodes);
+      return nodes.size();
+   };
+
+   RooFit::Detail::CompileContext ctx{normSet};
+   RooFit::Detail::CompileContext ctxSim{normSet};
+
+   std::unique_ptr<RooAbsPdf> compiled{static_cast<RooAbsPdf *>(pdf.compileForNormSet(normSet, ctx).release())};
+   std::unique_ptr<RooAbsPdf> compiledSim{
+      static_cast<RooAbsPdf *>(simPdf.compileForNormSet(normSet, ctxSim).release())};
+
+   // We expect only two more nodes in the computation graph: one for the
+   // RooSimultaneous, and one for the RooCategory.
+   EXPECT_EQ(countGraphNodes(*compiledSim), countGraphNodes(*compiled) + 2);
 }

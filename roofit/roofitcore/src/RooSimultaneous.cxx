@@ -1166,6 +1166,18 @@ RooArgSet const& RooSimultaneous::flattenedCatList() const
 
 namespace {
 
+void markObs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
+{
+   for (RooAbsArg *server : arg->servers()) {
+      if (server->isFundamental() && normSet.find(*server)) {
+         markObs(server, prefix, normSet);
+         server->setAttribute("__obs__");
+      } else if (!server->isFundamental()) {
+         markObs(server, prefix, normSet);
+      }
+   }
+}
+
 void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &normSet)
 {
    if (!arg->getStringAttribute("__prefix__")) {
@@ -1175,7 +1187,6 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
    for (RooAbsArg *server : arg->servers()) {
       if (server->isFundamental() && normSet.find(*server)) {
          prefixArgs(server, prefix, normSet);
-         server->setAttribute("__obs__");
       } else if (!server->isFundamental()) {
          prefixArgs(server, prefix, normSet);
       }
@@ -1204,7 +1215,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       auto pdfClone = RooHelpers::cloneTreeWithSameParameters(static_cast<RooAbsPdf const &>(proxy->arg()), &normSet);
 
-      prefixArgs(pdfClone.get(), prefix, normSet);
+      markObs(pdfClone.get(), prefix, normSet);
 
       std::unique_ptr<RooArgSet> pdfNormSet(
          static_cast<RooArgSet *>(std::unique_ptr<RooArgSet>(pdfClone->getVariables())->selectByAttrib("__obs__", true)));
@@ -1216,6 +1227,15 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
       RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
       pdfContext.setLikelihoodMode(ctx.likelihoodMode());
       auto *pdfFinal = pdfContext.compile(*pdfClone, *newSimPdf, *pdfNormSet);
+
+      // We can only prefix the observables after everything related the
+      // compiling of the compute graph for the normalization set is done. This
+      // is because of a subtlety in conditional RooProdPdfs, which stores the
+      // normalization sets for the individual pdfs in RooArgSets that are
+      // disconnected from the computation graph, so we have no control over
+      // them. An alternative would be to use recursive server re-direction,
+      // but this has more performance overhead.
+      prefixArgs(pdfFinal, prefix, normSet);
 
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 

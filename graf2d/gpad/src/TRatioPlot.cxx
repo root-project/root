@@ -792,7 +792,7 @@ void TRatioPlot::CreateGridlines()
    while (fGridlines.size() < fGridlinePositions.size()) {
       TLine *newline = new TLine(0, 0, 0, 0);
       newline->SetLineStyle(2);
-      fLowerPad->GetListOfPrimitives()->Add(newline);
+      fLowerPad->Add(newline);
       fGridlines.emplace_back(newline);
    }
 
@@ -1111,22 +1111,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxis) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxis);
+      fTopPad->Add(fUpperGXaxis);
    }
 
    if (!fUpperGYaxis) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S");
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxis);
+      fTopPad->Add(fUpperGYaxis);
    }
 
    if (!fLowerGXaxis) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxis);
+      fTopPad->Add(fLowerGXaxis);
    }
 
    if (!fLowerGYaxis) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S");
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxis);
+      fTopPad->Add(fLowerGYaxis);
    }
 
    // Create the axes on the other sides of the graphs
@@ -1134,22 +1134,22 @@ void TRatioPlot::CreateVisualAxes()
 
    if (!fUpperGXaxisMirror && axistop) {
       fUpperGXaxisMirror = static_cast<TGaxis *>(fUpperGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGXaxisMirror);
+      fTopPad->Add(fUpperGXaxisMirror);
    }
 
    if (!fLowerGXaxisMirror && axistop) {
       fLowerGXaxisMirror = static_cast<TGaxis *>(fLowerGXaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGXaxisMirror);
+      fTopPad->Add(fLowerGXaxisMirror);
    }
 
    if (!fUpperGYaxisMirror && axisright) {
       fUpperGYaxisMirror = static_cast<TGaxis *>(fUpperGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fUpperGYaxisMirror);
+      fTopPad->Add(fUpperGYaxisMirror);
    }
 
    if (!fLowerGYaxisMirror && axisright) {
       fLowerGYaxisMirror = static_cast<TGaxis *>(fLowerGYaxis->Clone());
-      fTopPad->GetListOfPrimitives()->Add(fLowerGYaxisMirror);
+      fTopPad->Add(fLowerGYaxisMirror);
    }
 
    UpdateVisualAxes();

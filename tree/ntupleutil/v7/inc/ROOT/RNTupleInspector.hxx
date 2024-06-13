@@ -1,4 +1,4 @@
-/// \file ROOT/RNTuplerInspector.hxx
+/// \file ROOT/RNTupleInspector.hxx
 /// \ingroup NTuple ROOT7
 /// \author Florine de Geus <florine.de.geus@cern.ch>
 /// \date 2023-01-09

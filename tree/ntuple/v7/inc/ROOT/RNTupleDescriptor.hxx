@@ -53,6 +53,7 @@ class RColumnDescriptorBuilder;
 class RColumnGroupDescriptorBuilder;
 class RClusterDescriptorBuilder;
 class RClusterGroupDescriptorBuilder;
+class RExtraTypeInfoDescriptorBuilder;
 class RFieldDescriptorBuilder;
 class RNTupleDescriptorBuilder;
 } // namespace Internal
@@ -91,6 +92,8 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
+   /// The ordered list of columns attached to this field
+   std::vector<DescriptorId_t> fLogicalColumnIds;
 
 public:
    RFieldDescriptor() = default;
@@ -117,6 +120,7 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
+   const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
 };
 
 
@@ -222,13 +226,13 @@ public:
    /// The window of element indexes of a particular column in a particular cluster
    struct RColumnRange {
       DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-      /// A 64bit element index
+      /// The global index of the first column element in the cluster
       NTupleSize_t fFirstElementIndex = kInvalidNTupleIndex;
       /// The number of column elements in the cluster
       ClusterSize_t fNElements = kInvalidClusterIndex;
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
-      std::int64_t fCompressionSettings = 0;
+      int fCompressionSettings = kUnknownCompressionSettings;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
@@ -393,6 +397,50 @@ public:
    bool HasClusterDetails() const { return !fClusterIds.empty(); }
 };
 
+/// Used in RExtraTypeInfoDescriptor
+enum class EExtraTypeInfoIds { kInvalid, kStreamerInfo };
+
+// clang-format off
+/**
+\class ROOT::Experimental::RExtraTypeInfoDescriptor
+\ingroup NTuple
+\brief Field specific extra type information from the header / extenstion header
+
+Currently only used by unsplit fields to store RNTuple-wide list of streamer info records.
+*/
+// clang-format on
+class RExtraTypeInfoDescriptor {
+   friend class Internal::RExtraTypeInfoDescriptorBuilder;
+
+private:
+   /// Specifies the meaning of the extra information
+   EExtraTypeInfoIds fContentId = EExtraTypeInfoIds::kInvalid;
+   /// Extra type information restricted to a certain version range of the type
+   std::uint32_t fTypeVersionFrom = 0;
+   std::uint32_t fTypeVersionTo = 0;
+   /// The type name the extra information refers to; empty for RNTuple-wide extra information
+   std::string fTypeName;
+   /// The content format depends on the content ID and may be binary
+   std::string fContent;
+
+public:
+   RExtraTypeInfoDescriptor() = default;
+   RExtraTypeInfoDescriptor(const RExtraTypeInfoDescriptor &other) = delete;
+   RExtraTypeInfoDescriptor &operator=(const RExtraTypeInfoDescriptor &other) = delete;
+   RExtraTypeInfoDescriptor(RExtraTypeInfoDescriptor &&other) = default;
+   RExtraTypeInfoDescriptor &operator=(RExtraTypeInfoDescriptor &&other) = default;
+
+   bool operator==(const RExtraTypeInfoDescriptor &other) const;
+
+   RExtraTypeInfoDescriptor Clone() const;
+
+   EExtraTypeInfoIds GetContentId() const { return fContentId; }
+   std::uint32_t GetTypeVersionFrom() const { return fTypeVersionFrom; }
+   std::uint32_t GetTypeVersionTo() const { return fTypeVersionTo; }
+   std::string GetTypeName() const { return fTypeName; }
+   std::string GetContent() const { return fContent; }
+};
+
 // clang-format off
 /**
 \class ROOT::Experimental::RNTupleDescriptor
@@ -433,6 +481,8 @@ private:
    std::uint64_t fNClusters = 0;        ///< Updated by the descriptor builder when the cluster groups are added
    std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
 
+   DescriptorId_t fFieldZeroId = kInvalidDescriptorId; ///< Set by the descriptor builder
+
    /**
     * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
     * active the page locations.  During the lifetime of the descriptor, page location information for clusters
@@ -449,6 +499,7 @@ private:
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+   std::vector<RExtraTypeInfoDescriptor> fExtraTypeInfoDescriptors;
    std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
 public:
@@ -688,6 +739,54 @@ public:
       RIterator end() { return RIterator(fNTuple, fNTuple.GetNActiveClusters()); }
    };
 
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleDescriptor::RExtraTypeInfoDescriptorIterable
+   \ingroup NTuple
+   \brief Used to loop over all the extra type info record of an ntuple (in unspecified order)
+   */
+   // clang-format on
+   class RExtraTypeInfoDescriptorIterable {
+   private:
+      /// The associated NTuple for this range.
+      const RNTupleDescriptor &fNTuple;
+
+   public:
+      class RIterator {
+      private:
+         /// The enclosing range's NTuple.
+         const RNTupleDescriptor &fNTuple;
+         std::size_t fIndex = 0;
+
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = RExtraTypeInfoDescriptor;
+         using difference_type = std::ptrdiff_t;
+         using pointer = RExtraTypeInfoDescriptor *;
+         using reference = const RExtraTypeInfoDescriptor &;
+
+         RIterator(const RNTupleDescriptor &ntuple, std::size_t index) : fNTuple(ntuple), fIndex(index) {}
+         iterator operator++()
+         {
+            ++fIndex;
+            return *this;
+         }
+         reference operator*()
+         {
+            auto it = fNTuple.fExtraTypeInfoDescriptors.begin();
+            std::advance(it, fIndex);
+            return *it;
+         }
+         bool operator!=(const iterator &rh) const { return fIndex != rh.fIndex; }
+         bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
+      };
+
+      RExtraTypeInfoDescriptorIterable(const RNTupleDescriptor &ntuple) : fNTuple(ntuple) {}
+      RIterator begin() { return RIterator(fNTuple, 0); }
+      RIterator end() { return RIterator(fNTuple, fNTuple.GetNExtraTypeInfos()); }
+   };
+
    RNTupleDescriptor() = default;
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
@@ -761,6 +860,8 @@ public:
       return RClusterDescriptorIterable(*this);
    }
 
+   RExtraTypeInfoDescriptorIterable GetExtraTypeInfoIterable() const { return RExtraTypeInfoDescriptorIterable(*this); }
+
    std::string GetName() const { return fName; }
    std::string GetDescription() const { return fDescription; }
 
@@ -770,13 +871,14 @@ public:
    std::size_t GetNClusterGroups() const { return fClusterGroupDescriptors.size(); }
    std::size_t GetNClusters() const { return fNClusters; }
    std::size_t GetNActiveClusters() const { return fClusterDescriptors.size(); }
+   std::size_t GetNExtraTypeInfos() const { return fExtraTypeInfoDescriptors.size(); }
 
    /// We know the number of entries from adding the cluster summaries
    NTupleSize_t GetNEntries() const { return fNEntries; }
    NTupleSize_t GetNElements(DescriptorId_t physicalColumnId) const;
 
    /// Returns the logical parent of all top-level NTuple data fields.
-   DescriptorId_t GetFieldZeroId() const;
+   DescriptorId_t GetFieldZeroId() const { return fFieldZeroId; }
    const RFieldDescriptor &GetFieldZero() const { return GetFieldDescriptor(GetFieldZeroId()); }
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
@@ -980,10 +1082,10 @@ public:
    RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
                                    std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
 
-   /// Add column and page ranges for deferred columns missing in this cluster.  The locator type for the synthesized
-   /// page ranges is `kTypePageZero`.  All the page sources must be able to populate the 'zero' page from such locator.
-   /// Any call to `CommitColumnRange()` should happen before calling this function.
-   RClusterDescriptorBuilder &AddDeferredColumnRanges(const RNTupleDescriptor &desc);
+   /// Add column and page ranges for columns created during late model extension missing in this cluster.  The locator
+   /// type for the synthesized page ranges is `kTypePageZero`.  All the page sources must be able to populate the
+   /// 'zero' page from such locator. Any call to `CommitColumnRange()` should happen before calling this function.
+   RClusterDescriptorBuilder &AddExtendedColumnRanges(const RNTupleDescriptor &desc);
 
    /// Move out the full cluster descriptor including page locations
    RResult<RClusterDescriptor> MoveDescriptor();
@@ -1070,6 +1172,49 @@ public:
 
 // clang-format off
 /**
+\class ROOT::Experimental::Internal::RExtraTypeInfoDescriptorBuilder
+\ingroup NTuple
+\brief A helper class for piece-wise construction of an RExtraTypeInfoDescriptor
+*/
+// clang-format on
+class RExtraTypeInfoDescriptorBuilder {
+private:
+   RExtraTypeInfoDescriptor fExtraTypeInfo;
+
+public:
+   RExtraTypeInfoDescriptorBuilder() = default;
+
+   RExtraTypeInfoDescriptorBuilder &ContentId(EExtraTypeInfoIds contentId)
+   {
+      fExtraTypeInfo.fContentId = contentId;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeVersionFrom(std::uint32_t typeVersionFrom)
+   {
+      fExtraTypeInfo.fTypeVersionFrom = typeVersionFrom;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeVersionTo(std::uint32_t typeVersionTo)
+   {
+      fExtraTypeInfo.fTypeVersionTo = typeVersionTo;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &TypeName(const std::string &typeName)
+   {
+      fExtraTypeInfo.fTypeName = typeName;
+      return *this;
+   }
+   RExtraTypeInfoDescriptorBuilder &Content(const std::string &content)
+   {
+      fExtraTypeInfo.fContent = content;
+      return *this;
+   }
+
+   RResult<RExtraTypeInfoDescriptor> MoveDescriptor();
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Internal::RNTupleDescriptorBuilder
 \ingroup NTuple
 \brief A helper class for piece-wise construction of an RNTupleDescriptor
@@ -1081,6 +1226,9 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
+   // Called by AddColumn() to populate the fLogicalFieldIds member of the field descriptor
+   RResult<void> AttachColumn(DescriptorId_t fieldId, const RColumnDescriptor &columnDesc);
+
 public:
    /// Checks whether invariants hold:
    /// * NTuple name is valid
@@ -1100,12 +1248,16 @@ public:
    void AddField(const RFieldDescriptor& fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
-   void AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
-                  const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
+   // For both AddColumn() methods, the field has to be already available. For fields with multiple columns,
+   // the columns need to be added in order of the column index
+   RResult<void> AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
+                           const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);
    RResult<void> AddCluster(RClusterDescriptor &&clusterDesc);
+
+   RResult<void> AddExtraTypeInfo(RExtraTypeInfoDescriptor &&extraTypeInfoDesc);
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();

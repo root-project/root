@@ -62,6 +62,12 @@ TEST(RCsvDS, EmptyFile)
    EXPECT_THROW(RCsvDS(fileName2, false), std::runtime_error);
 }
 
+TEST(RCsvDS, NFiles)
+{
+   RCsvDS tds(fileName1, false);
+   EXPECT_EQ(1, tds.GetNFiles());
+}
+
 TEST(RCsvDS, EntryRanges)
 {
    RCsvDS tds(fileName0);

@@ -360,6 +360,13 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
    return SealPage(page, element, compressionSetting, fCompressor->GetZipBuffer());
 }
 
+void ROOT::Experimental::Internal::RPageSink::CommitDataset()
+{
+   for (const auto &cb : fOnDatasetCommitCallbacks)
+      cb(*this);
+   CommitDatasetImpl();
+}
+
 //------------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSink>
@@ -442,8 +449,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
       // We set the first element index in the current cluster to the first element that is part of a materialized page
-      // (i.e., that is part of a page list). For deferred columns, however, the column range is fixed up as needed by
-      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` on read back.
+      // (i.e., that is part of a page list). For columns created during late model extension, however, the column range
+      // is fixed up as needed by `RClusterDescriptorBuilder::AddExtendedColumnRanges()` on read back.
       columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
@@ -459,7 +466,16 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::Init(RNTupleModel &model)
+void ROOT::Experimental::Internal::RPagePersistentSink::UpdateExtraTypeInfo(
+   const RExtraTypeInfoDescriptor &extraTypeInfo)
+{
+   if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
+      throw RException(R__FAIL("ROOT bug: unexpected type extra info in UpdateExtraTypeInfo()"));
+
+   fStreamerInfos.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
+}
+
+void ROOT::Experimental::Internal::RPagePersistentSink::InitImpl(RNTupleModel &model)
 {
    fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
@@ -482,6 +498,41 @@ void ROOT::Experimental::Internal::RPagePersistentSink::Init(RNTupleModel &model
    InitImpl(buffer.get(), fSerializationContext.GetHeaderSize());
 
    fDescriptorBuilder.BeginHeaderExtension();
+}
+
+void ROOT::Experimental::Internal::RPagePersistentSink::InitFromDescriptor(const RNTupleDescriptor &descriptor)
+{
+   {
+      auto model = descriptor.CreateModel();
+      Init(*model.get());
+   }
+
+   auto clusterId = descriptor.FindClusterId(0, 0);
+
+   while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
+      auto &cluster = descriptor.GetClusterDescriptor(clusterId);
+      auto nEntries = cluster.GetNEntries();
+
+      RClusterDescriptorBuilder clusterBuilder;
+      clusterBuilder.ClusterId(fDescriptorBuilder.GetDescriptor().GetNActiveClusters())
+         .FirstEntryIndex(fPrevClusterNEntries)
+         .NEntries(nEntries);
+
+      for (unsigned int i = 0; i < fOpenColumnRanges.size(); ++i) {
+         R__ASSERT(fOpenColumnRanges[i].fPhysicalColumnId == i);
+         const auto &columnRange = cluster.GetColumnRange(i);
+         R__ASSERT(columnRange.fPhysicalColumnId == i);
+         const auto &pageRange = cluster.GetPageRange(i);
+         R__ASSERT(pageRange.fPhysicalColumnId == i);
+         clusterBuilder.CommitColumnRange(i, fOpenColumnRanges[i].fFirstElementIndex, columnRange.fCompressionSettings,
+                                          pageRange);
+         fOpenColumnRanges[i].fFirstElementIndex += columnRange.fNElements;
+      }
+      fDescriptorBuilder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+      fPrevClusterNEntries += nEntries;
+
+      clusterId = descriptor.FindNextClusterId(clusterId);
+   }
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -597,8 +648,15 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitClusterGroup()
    fNextClusterInGroup = nClusters;
 }
 
-void ROOT::Experimental::Internal::RPagePersistentSink::CommitDataset()
+void ROOT::Experimental::Internal::RPagePersistentSink::CommitDatasetImpl()
 {
+   if (!fStreamerInfos.empty()) {
+      RExtraTypeInfoDescriptorBuilder extraInfoBuilder;
+      extraInfoBuilder.ContentId(EExtraTypeInfoIds::kStreamerInfo)
+         .Content(RNTupleSerializer::SerializeStreamerInfos(fStreamerInfos));
+      fDescriptorBuilder.AddExtraTypeInfo(extraInfoBuilder.MoveDescriptor().Unwrap());
+   }
+
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 
    auto szFooter = RNTupleSerializer::SerializeFooter(nullptr, descriptor, fSerializationContext);

@@ -72,7 +72,6 @@
 #   define R__UNIX
 #   define ANSICPP
 #   define R__SEEK64
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define NEED_STRCASECMP
 #endif
 
@@ -112,7 +111,6 @@
 #   define NEED_SIGJMP
 #   if __SUNPRO_CC > 0x420
 #      define R__SOLARIS_CC50
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if __SUNPRO_CC >= 0x420
 #      define R__SUNCCBUG        /* to work around a compiler bug */
@@ -295,7 +293,6 @@
 #   define R__UNIX
 #   if defined(__xlC__) || defined(__xlc__)
 #      define ANSICPP
-#      define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   endif
 #   if defined(__ppc64__)
 #      define R__B64      /* enable when 64 bit machine */
@@ -328,17 +325,6 @@
 #ifdef __GNUC__
 #   define R__GNU
 #   define ANSICPP
-#   if __GNUC__ >= 3 || __GNUC_MINOR__ >= 90    /* egcs 1.0.3 */
-#      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   endif
-#   if __GNUC__ >= 3 || ( __GNUC__ == 2 && __GNUC_MINOR__ >= 95)
-#         define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
-#   endif
-#   if defined(__ia64__) &&  __GNUC__ < 3       /* gcc 2.9x (MINOR is 9!) */
-#      define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#      define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   endif
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
@@ -347,13 +333,11 @@
 #   endif
 #endif
 
-#if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
-   // At least on 10.11, the compiler defines but the c++ library does not provide the size operator delete.
-   // See for example https://llvm.org/bugs/show_bug.cgi?id=22951 or
-   // https://github.com/gperftools/gperftools/issues/794.
-#elif !defined(__GNUC__)
-#   define R__SIZEDDELETE
-#elif __GNUC__ > 4
+#if defined(__GLIBCXX__) && !defined(__cpp_sized_deallocation)
+   // Sized global deallocation functions in libstc++ are only enabled if
+   // __cpp_sized_deallocation is defined, which Clang only does if explicitly
+   // passed -fsized-deallocation.
+#else
 #   define R__SIZEDDELETE
 #endif
 
@@ -367,23 +351,17 @@
 
 #ifdef __INTEL_COMPILER
 #   define R__INTEL_COMPILER
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   define ANSICPP
 #endif
 
 #ifdef __HP_aCC
 #   define R__ACC
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if __HP_aCC <= 015000
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
 #      define R__GLOBALSTL       /* STL in global name space */
 #error "ROOT requires proper support for C++17 or higher"
 #   else
-#      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__TMPLTSTREAM     /* std::iostream implemented with templates */
 #   endif
 #   ifndef _INCLUDE_LONGLONG
@@ -433,9 +411,6 @@
 #     define NEED_SNPRINTF
 #   endif
 #   define ANSICPP
-#   define R__VECNEWDELETE    /* supports overloading of new[] and delete[] */
-#   define R__PLACEMENTDELETE /* supports overloading placement delete */
-#   define R__PLACEMENTINLINE /* placement new/delete is inline in <new> */
 #   if _MSC_VER >= 1400
 #     define DONTNEED_VSNPRINTF
 #   endif
@@ -502,7 +477,7 @@
 
 /* USE AS `R__DEPRECATED(6,34, "Not threadsafe; use TFoo::Bar().")`
    To be removed by 6.34 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,0)
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,33,2)
 # define _R__DEPRECATED_634(REASON) _R__DEPRECATED_LATER(REASON)
 #else
 # define _R__DEPRECATED_634(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)

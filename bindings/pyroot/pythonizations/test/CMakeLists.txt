@@ -14,11 +14,6 @@ endif()
 # Test ROOT module
 ROOT_ADD_PYUNITTEST(pyroot_root_module root_module.py)
 
-# Test versions of Python dependencies
-if(NOT MSVC)
-    ROOT_ADD_PYUNITTEST(pyroot_dependency_versions dependency_versions.py)
-endif()
-
 # @pythonization decorator
 ROOT_ADD_PYUNITTEST(pyroot_pyz_decorator pythonization_decorator.py)
 
@@ -125,7 +120,7 @@ endif()
 
 # SOFIE-GNN pythonizations
 if (tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND (PYTHON_VERSION_STRING VERSION_GREATER_EQUAL 3.8))
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         find_python_module(sonnet QUIET)
         find_python_module(graph_nets QUIET)
         if (PY_SONNET_FOUND AND PY_GRAPH_NETS_FOUND)
@@ -196,3 +191,6 @@ endif()
 
 # TComplex pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_tcomplex tcomplex_operators.py)
+
+# Tests with memory usage
+ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)

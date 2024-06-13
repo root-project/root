@@ -49,8 +49,15 @@ void ROOT::Experimental::Internal::RColumn::ConnectPageSink(DescriptorId_t field
    if (fApproxNElementsPerPage < 2)
       throw RException(R__FAIL("page size too small for writing"));
    // We now have 0 < fApproxNElementsPerPage / 2 < fApproxNElementsPerPage
-   fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
-   fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+
+   if (pageSink.GetWriteOptions().GetUseTailPageOptimization()) {
+      // Allocate two pages that are larger by 50% to accomodate merging a small tail page.
+      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+      fWritePage[1] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage + fApproxNElementsPerPage / 2);
+   } else {
+      // Allocate only a single page; small tail pages will not be merged.
+      fWritePage[0] = fPageSink->ReservePage(fHandleSink, fApproxNElementsPerPage);
+   }
 }
 
 void ROOT::Experimental::Internal::RColumn::ConnectPageSource(DescriptorId_t fieldId, RPageSource &pageSource)
@@ -72,8 +79,9 @@ void ROOT::Experimental::Internal::RColumn::Flush()
       return;
 
    if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) && !fWritePage[otherIdx].IsEmpty()) {
-      // Small tail page: merge with previously used page; we know that there is enough space in the shadow page
+      // Small tail page: merge with previously used page
       auto &thisPage = fWritePage[fWritePageIdx];
+      R__ASSERT(fWritePage[otherIdx].GetMaxElements() >= fWritePage[otherIdx].GetNElements() + thisPage.GetNElements());
       void *dst = fWritePage[otherIdx].GrowUnchecked(thisPage.GetNElements());
       memcpy(dst, thisPage.GetBuffer(), thisPage.GetNBytes());
       thisPage.Reset(0);

@@ -484,7 +484,7 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
       fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
       fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless=new --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' &");
    }
-   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' &");
+   fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' >/dev/null 2>/dev/null &");
 #endif
 }
 
@@ -682,6 +682,40 @@ std::string RWebDisplayHandle::FirefoxCreator::MakeProfile(std::string &exec, bo
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Check if http server required for display
+/// \param args - defines where and how to display web window
+
+bool RWebDisplayHandle::NeedHttpServer(const RWebDisplayArgs &args)
+{
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kOff) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kQt5) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kLocal))
+      return false;
+
+   if (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)) {
+
+#ifdef WITH_QT6WEB
+      auto &qt6 = FindCreator("qt6", "libROOTQt6WebDisplay");
+      if (qt6 && qt6->IsActive())
+         return false;
+#endif
+#ifdef WITH_QT5WEB
+      auto &qt5 = FindCreator("qt5", "libROOTQt5WebDisplay");
+      if (qt5 && qt5->IsActive())
+         return false;
+#endif
+#ifdef WITH_CEFWEB
+      auto &cef = FindCreator("cef", "libROOTCefDisplay");
+      if (cef && cef->IsActive())
+         return false;
+#endif
+   }
+
+   return true;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Create web display
 /// \param args - defines where and how to display web window
 /// Returns RWebDisplayHandle, which holds information of running browser application
@@ -701,18 +735,34 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       return handle ? true : false;
    };
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
-      if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
+   bool handleAsLocal = (args.GetBrowserKind() == RWebDisplayArgs::kLocal) ||
+                        (!args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kOn)),
+        has_qt5web = false, has_qt6web = false, has_cefweb = false;
+
+#ifdef WITH_QT5WEB
+   has_qt5web = true;
+#endif
+
+#ifdef WITH_QT6WEB
+   has_qt6web = true;
+#endif
+
+#ifdef WITH_CEFWEB
+   has_cefweb = true;
+#endif
+
+   if ((handleAsLocal && has_qt6web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
+      if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
+   if ((handleAsLocal && has_qt5web) || (args.GetBrowserKind() == RWebDisplayArgs::kQt5)) {
       if (try_creator(FindCreator("qt5", "libROOTQt5WebDisplay")))
          return handle;
    }
 
-   if ((args.GetBrowserKind() == RWebDisplayArgs::kLocal) || (args.GetBrowserKind() == RWebDisplayArgs::kQt6)) {
-      if (try_creator(FindCreator("qt6", "libROOTQt6WebDisplay")))
+   if ((handleAsLocal && has_cefweb) || (args.GetBrowserKind() == RWebDisplayArgs::kCEF)) {
+      if (try_creator(FindCreator("cef", "libROOTCefDisplay")))
          return handle;
    }
 
@@ -721,8 +771,8 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
       return handle;
    }
 
-   bool handleAsNative = (args.GetBrowserKind() == RWebDisplayArgs::kNative) ||
-                         (args.IsHeadless() && (args.GetBrowserKind() == RWebDisplayArgs::kDefault));
+   bool handleAsNative =
+      (args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kOn);
 
 #ifdef _MSC_VER
    if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
@@ -741,7 +791,8 @@ std::unique_ptr<RWebDisplayHandle> RWebDisplayHandle::Display(const RWebDisplayA
          return handle;
    }
 
-   if (handleAsNative || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
+   if ((args.GetBrowserKind() == RWebDisplayArgs::kNative) || (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ||
+       (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge)) {
       // R__LOG_ERROR(WebGUILog()) << "Neither Chrome nor Firefox browser cannot be started to provide display";
       return handle;
    }

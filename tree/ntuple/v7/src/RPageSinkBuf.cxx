@@ -81,7 +81,12 @@ void ROOT::Experimental::Internal::RPageSinkBuf::ConnectFields(const std::vector
    fBufferedColumns.resize(fNColumns);
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::Init(RNTupleModel &model)
+const ROOT::Experimental::RNTupleDescriptor &ROOT::Experimental::Internal::RPageSinkBuf::GetDescriptor() const
+{
+   return fInnerSink->GetDescriptor();
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::InitImpl(RNTupleModel &model)
 {
    ConnectFields(model.GetFieldZero().GetSubFields(), 0U);
 
@@ -122,6 +127,13 @@ void ROOT::Experimental::Internal::RPageSinkBuf::UpdateSchema(const RNTupleModel
                   std::back_inserter(innerChangeset.fAddedProjectedFields), cloneAddProjectedField);
    fInnerModel->Freeze();
    fInnerSink->UpdateSchema(innerChangeset, firstEntry);
+}
+
+void ROOT::Experimental::Internal::RPageSinkBuf::UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &extraTypeInfo)
+{
+   RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
+   Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);
+   fInnerSink->UpdateExtraTypeInfo(extraTypeInfo);
 }
 
 void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
@@ -205,7 +217,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitClusterGroup()
    fInnerSink->CommitClusterGroup();
 }
 
-void ROOT::Experimental::Internal::RPageSinkBuf::CommitDataset()
+void ROOT::Experimental::Internal::RPageSinkBuf::CommitDatasetImpl()
 {
    RPageSink::RSinkGuard g(fInnerSink->GetSinkGuard());
    Detail::RNTuplePlainTimer timer(fCounters->fTimeWallCriticalSection, fCounters->fTimeCpuCriticalSection);

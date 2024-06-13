@@ -323,7 +323,7 @@ void THttpServer::SetWSOnly(Bool_t on)
 ///
 /// One could map some system folder to the server like
 ///
-///     serv->AddLocation("mydir/","/home/user/specials");
+///     serv->AddLocation("mydir/", "/home/user/specials");
 ///
 /// Than files from this directory could be addressed via server like `http://localhost:8080/mydir/myfile.root`
 
@@ -343,8 +343,8 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
 ///
 /// One could specify address like:
 ///
-/// * https://root.cern/js/7.1.0/
-/// * http://jsroot.gsi.de/7.1.0/
+/// * https://root.cern/js/7.6.0/
+/// * https://jsroot.gsi.de/7.6.0/
 ///
 /// This allows to get new JSROOT features with old server,
 /// reduce load on THttpServer instance, also startup time can be improved
@@ -686,8 +686,6 @@ Bool_t THttpServer::SubmitHttp(std::shared_ptr<THttpCallArg> arg, Bool_t can_run
       arg->NotifyCondition();
       return kTRUE;
    }
-
-   printf("Calling SubmitHttp\n");
 
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);

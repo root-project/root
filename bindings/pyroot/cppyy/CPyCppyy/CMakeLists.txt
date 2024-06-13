@@ -55,7 +55,7 @@ add_library(${libname} SHARED ${headers} ${sources})
 # Set the suffix to '.so' and the prefix to 'lib'
 set_target_properties(${libname} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES})
 if(MSVC)
-  target_link_libraries(${libname} PUBLIC cppyy_backend ${PYTHON_LIBRARIES})
+  target_link_libraries(${libname} PUBLIC cppyy_backend Python3::Python)
   set_target_properties(${libname} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set_target_properties(${libname} PROPERTIES PREFIX "lib")
   set_target_properties(${libname} PROPERTIES SUFFIX ".pyd")
@@ -82,14 +82,14 @@ endif()
 # (see https://github.com/python/cpython/blob/3.8/Include/cpython/object.h#L260).
 # Note that Python 3.8 is the lowers Python version that is still supported by
 # ROOT, so this compile option can be completely removed soon.
-if(NOT MSVC AND PYTHON_VERSION_STRING VERSION_LESS 3.9)
+if(NOT MSVC AND Python3_VERSION VERSION_LESS 3.9)
   target_compile_options(${libname} PRIVATE -Wno-missing-field-initializers)
 endif()
 
 target_compile_definitions(${libname} PRIVATE NO_CPPYY_LEGACY_NAMESPACE)
 
 target_include_directories(${libname}
-    SYSTEM PUBLIC ${PYTHON_INCLUDE_DIRS})
+    SYSTEM PUBLIC ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PRIVATE

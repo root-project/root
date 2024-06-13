@@ -22,6 +22,8 @@
 #include <functional>
 #include <memory>
 #include <new> // std::hardware_destructive_interference_size
+#include <unordered_set>
+#include <shared_mutex>
 #include <string>
 #include <type_traits> // std::decay, std::false_type
 #include <vector>
@@ -275,6 +277,46 @@ std::vector<T> Union(const std::vector<T> &v1, const std::vector<T> &v2)
    return res;
 }
 
+/**
+ * \brief A Thread-safe cache for strings.
+ *
+ * This is used to generically store strings that are created in the computation
+ * graph machinery, for example when adding a new node.
+ */
+class RStringCache {
+   std::unordered_set<std::string> fStrings{};
+   std::shared_mutex fMutex{};
+
+public:
+   /**
+    * \brief Inserts the input string in the cache and returns an iterator to the cached string.
+    *
+    * The function implements the following strategy for thread-safety:
+    * 1. Take a shared lock and early return if the string is already in the cache.
+    * 2. Release the shared lock and take an exclusive lock.
+    * 3. Check again if another thread filled the cache meanwhile. If so, return the cached value.
+    * 4. Insert the new value in the cache and return.
+    */
+   auto Insert(const std::string &string) -> decltype(fStrings)::const_iterator;
+};
+
+/**
+ * \brief Struct to wrap the call to a function with a guaranteed order of
+ *        execution of its arguments.
+ * \tparam F Type of the callable.
+ * \tparam Args Variadic types of the arguments to the callable.
+ *
+ * The execution order is guaranteed by calling the function in the constructor
+ * thus enabling the exploitation of the list-initialization sequenced-before
+ * feature (See rule 9 at https://en.cppreference.com/w/cpp/language/eval_order).
+ */
+struct CallGuaranteedOrder {
+   template <typename F, typename... Args>
+   CallGuaranteedOrder(F &&f, Args &&...args)
+   {
+      f(std::forward<Args>(args)...);
+   }
+};
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

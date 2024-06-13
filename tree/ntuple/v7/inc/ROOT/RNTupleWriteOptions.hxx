@@ -50,10 +50,16 @@ protected:
    std::size_t fMaxUnzippedClusterSize = 512 * 1024 * 1024;
    /// Should be just large enough so that the compression ratio does not benefit much more from larger pages.
    /// Unless the cluster is too small to contain a sufficiently large page, pages are
-   /// fApproxUnzippedPageSize in size and tail pages (the last page in a cluster) is between
-   /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
+   /// fApproxUnzippedPageSize in size. If tail page optimization is enabled, the last page in a cluster is
+   /// between fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
+   /// Whether to optimize tail pages to avoid an undersized last page per cluster (see above). Increases the
+   /// required memory by a factor 3x.
+   bool fUseTailPageOptimization = true;
+   /// Whether to use buffered writing (with RPageSinkBuf). This buffers compressed pages in memory, reorders them
+   /// to keep pages of the same column adjacent, and coalesces the writes when committing a cluster.
    bool fUseBufferedWrite = true;
+   /// Whether to use implicit multi-threading to compress pages. Only has an effect if buffered writing is turned on.
    EImplicitMT fUseImplicitMT = EImplicitMT::kDefault;
    /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
    /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
@@ -83,6 +89,9 @@ public:
 
    std::size_t GetApproxUnzippedPageSize() const { return fApproxUnzippedPageSize; }
    void SetApproxUnzippedPageSize(std::size_t val);
+
+   bool GetUseTailPageOptimization() const { return fUseTailPageOptimization; }
+   void SetUseTailPageOptimization(bool val) { fUseTailPageOptimization = val; }
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }

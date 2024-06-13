@@ -4,19 +4,6 @@
 
 #include "gtest/gtest.h"
 
-// Backward compatibility for gtest version < 1.10.0
-#ifndef TYPED_TEST_SUITE_P
-#define TYPED_TEST_SUITE_P TYPED_TEST_CASE_P
-#endif
-// Backward compatibility for gtest version < 1.10.0
-#ifndef REGISTER_TYPED_TEST_SUITE_P
-#define REGISTER_TYPED_TEST_SUITE_P REGISTER_TYPED_TEST_CASE_P
-#endif
-// Backward compatibility for gtest version < 1.10.0
-#ifndef INSTANTIATE_TYPED_TEST_SUITE_P
-#define INSTANTIATE_TYPED_TEST_SUITE_P INSTANTIATE_TYPED_TEST_CASE_P
-#endif
-
 #include "StatFunction.h"
 #include "TestHelper.h"
 #include "VectorTest.h"
@@ -92,7 +79,7 @@ TYPED_TEST_P(GenVectorTest, TestGenVectors)
    scale = this->fDim * 20;
    if (this->fDim == 3 && this->V2Name() == "RhoEtaPhiVector") scale *= 12; // for problem with RhoEtaPhi
    if (this->fDim == 4 && ( this->V2Name() == "PtEtaPhiMVector"  || this->V2Name() == "PxPyPzMVector")) {
-#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__) || defined(__s390x__))
+#if (defined(__arm__) || defined(__arm64__) || defined(__aarch64__) || defined(__s390x__) || defined(__FMA__))
       scale *= 1.E7;
 #else
       scale *= 10;

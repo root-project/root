@@ -9,6 +9,14 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+ * \defgroup treeplayer TreePlayer Library
+ * \brief It contains utilities to plot data stored in a TTree.
+ * \sa Tree package documentation
+ * \sa Chapter about Trees and Selectors in the Users Guide
+ * \sa ROOT examples in tutorials and test directories: Event application, benchmarks
+ */
+
 /** \class TTreePlayer
 
 Implement some of the functionality of the class TTree requiring access to
@@ -673,6 +681,8 @@ static TString R__GetBranchPointerName(TLeaf *leaf, bool replace = true)
          if (*bname == ':') *bname='_';
          if (*bname == '<') *bname='_';
          if (*bname == '>') *bname='_';
+         if (*bname == '#') *bname='_';
+         if (*bname == '@') *bname='_';
          bname++;
       }
    }
@@ -2346,17 +2356,23 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loop on Tree and print entries passing selection. If varexp is 0 (or "")
-/// then print only first 8 columns. If varexp = "*" print all columns.
-/// Otherwise a columns selection can be made using "var1:var2:var3".
-/// The function returns the number of entries passing the selection.
+/// \brief Loop on Tree and print entries passing selection. Interactive 
+/// pagination break is on by default.
+/// \param varexp If varexp is 0 (or "") then print only first 8 columns.
+/// If varexp = "*" print all columns. Otherwise a columns selection can
+/// be made using "var1:var2:var3".
+/// \param selection a text formula selecting which entries to scan
+/// \param firstentry first entry to scan
+/// \param nentries total number of entries to scan (starting from firstentry). Defaults to all entries.
+/// \return The function returns the number of entries passing the selection.
 ///
-/// By default 50 rows are shown and you are asked for `<CR>`
-/// to see the next 50 rows.
-///
-/// You can change the default number of rows to be shown before `<CR>`
-/// via  mytree->SetScanField(maxrows) where maxrows is 50 by default.
-/// if maxrows is set to 0 all rows of the Tree are shown.
+/// By default 50 lines are shown and you are asked for `<CR>` or `q`
+/// to see the next 50 lines. Depending on the Tree structure, one entry might
+/// be printed across several lines, distinguished by the `Instance` column.
+/// You can change the default number of lines to be shown before `<CR>` or `q`
+/// via  mytree->SetScanField(maxlines) where maxlines is 50 by default.
+/// If maxlines is set to 0 all entries of the Tree are shown, and you are
+/// not prompted to press `<CR>` or `q` to end the loop.
 ///
 /// This option is interesting when dumping the contents of a Tree to
 /// an ascii file, eg from the command line.
@@ -2395,7 +2411,7 @@ void TTreePlayer::RecursiveRemove(TObject *obj)
 /// all the formulas will be synchronized with the selection criterion
 /// (see TTreePlayer::DrawSelect for more information).
 ///
-/// The options string can contains the following parameters:
+/// \param option The options string can contains the following parameters:
 ///
 /// -  lenmax=dd
 ///       Where 'dd' is the maximum number of elements per array that should

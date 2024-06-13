@@ -68,6 +68,12 @@ list(APPEND PYROOT_EXTRA_HEADERS
      inc/TPyDispatcher.h)
 
 set(py_sources
+  ROOT/JsMVA/DataLoader.py
+  ROOT/JsMVA/Factory.py
+  ROOT/JsMVA/JPyInterface.py
+  ROOT/JsMVA/JsMVAMagic.py
+  ROOT/JsMVA/OutputTransformer.py
+  ROOT/JsMVA/__init__.py
   ROOT/_application.py
   ROOT/_asan.py
   ROOT/_facade.py
@@ -112,7 +118,6 @@ set(cpp_sources
     src/TMemoryRegulator.cxx
     src/TObjectPyz.cxx
     src/TTreePyz.cxx
-    src/PyzCppHelpers.cxx
     src/CPPInstancePyz.cxx
     src/TPyDispatcher.cxx
     inc/TPyDispatcher.h
@@ -161,7 +166,7 @@ else()
 endif()
 
 target_include_directories(${libname}
-    SYSTEM PRIVATE ${PYTHON_INCLUDE_DIRS})
+    SYSTEM PRIVATE ${Python3_INCLUDE_DIRS})
 
 target_include_directories(${libname}
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>)
@@ -175,10 +180,10 @@ endif()
 # Compile .py files
 foreach(py_source ${py_sources})
   add_custom_command(TARGET ${libname}
-                      COMMAND ${PYTHON_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
-                      COMMAND ${PYTHON_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -m py_compile ${localruntimedir}/${py_source}
+                      COMMAND ${Python3_EXECUTABLE} -O -m py_compile ${localruntimedir}/${py_source}
                       DEPENDS ${localruntimedir}/${py_source}
-                      COMMENT "Compiling PyROOT source ${py_source} for Python ${PYTHON_VERSION_STRING}")
+                      COMMENT "Compiling PyROOT source ${py_source} for Python ${Python3_VERSION}")
 endforeach()
 
 # Create meta-target PyROOT3 (INTERFACE library)

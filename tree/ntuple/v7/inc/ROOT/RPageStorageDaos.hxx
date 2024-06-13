@@ -122,6 +122,7 @@ private:
    uint32_t fCageSizeLimit{};
 
 protected:
+   using RPagePersistentSink::InitImpl;
    void InitImpl(unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator
@@ -129,6 +130,7 @@ protected:
    std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitClusterImpl() final;
    RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   using RPagePersistentSink::CommitDatasetImpl;
    void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);

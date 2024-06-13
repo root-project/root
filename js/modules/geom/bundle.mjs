@@ -1,5 +1,5 @@
-// Only build function to create three.mjs model
+// Only build function to create three.js model
 
-export { version, parse } from '../core.mjs';
+export { version, parse, settings, httpRequest } from '../core.mjs';
 export { openFile } from '../io.mjs';
-export { build } from './TGeoPainter.mjs';
+export { build, produceRenderOrder } from './TGeoPainter.mjs';

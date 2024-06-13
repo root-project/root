@@ -53,8 +53,6 @@ namespace Math {
 /**
    wrapper to a multi-dim function without  derivatives for multi roots
    algorithm
-
-   @ingroup MultiRoots
 */
 class GSLMultiRootFunctionWrapper {
 

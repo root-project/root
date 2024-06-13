@@ -109,8 +109,11 @@ void ROOT::Experimental::Internal::RClusterPool::ExecReadClusters()
             }
             if (discard) {
                clusters[i].reset();
+               // clusters[i] is now nullptr; also return this via the promise.
+               readItems[i].fPromise.set_value(nullptr);
+            } else {
+               readItems[i].fPromise.set_value(std::move(clusters[i]));
             }
-            readItems[i].fPromise.set_value(std::move(clusters[i]));
          }
          readItems.erase(readItems.begin(), readItems.begin() + clusters.size());
       }
@@ -278,6 +281,9 @@ ROOT::Experimental::Internal::RClusterPool::GetCluster(DescriptorId_t clusterId,
             continue;
          }
 
+         // Noop unless the page source has a task scheduler
+         fPageSource.UnzipCluster(cptr.get());
+
          // We either put a fresh cluster into a free slot or we merge the cluster with an existing one
          auto existingCluster = FindInPool(cptr->GetId());
          if (existingCluster) {
@@ -374,9 +380,13 @@ ROOT::Experimental::Internal::RClusterPool::WaitFor(DescriptorId_t clusterId,
       }
 
       auto cptr = itr->fFuture.get();
+      // We were blocked waiting for the cluster, so assume that nobody discarded it.
+      R__ASSERT(cptr != nullptr);
+
+      // Noop unless the page source has a task scheduler
+      fPageSource.UnzipCluster(cptr.get());
+
       if (result) {
-         // Noop unless the page source has a task scheduler
-         fPageSource.UnzipCluster(cptr.get());
          result->Adopt(std::move(*cptr));
       } else {
          auto idxFreeSlot = FindFreeSlot();

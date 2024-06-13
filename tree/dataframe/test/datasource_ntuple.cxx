@@ -85,6 +85,12 @@ TEST_F(RNTupleDSTest, ColTypeNames)
    EXPECT_STREQ("ROOT::VecOps::RVec<std::int32_t>", ds.GetTypeName("rvec").c_str());
 }
 
+TEST_F(RNTupleDSTest, NFiles)
+{
+   RNTupleDS ds(fNtplName, fFileName);
+
+   EXPECT_EQ(1, ds.GetNFiles());
+}
 
 TEST_F(RNTupleDSTest, CardinalityColumn)
 {
@@ -211,6 +217,7 @@ static void ChainTest(const std::string &name, const std::string &fname)
 
    auto df3 = ROOT::RDataFrame(std::make_unique<RNTupleDS>(
       "chain", std::vector<std::string>{guardFile1.GetPath(), guardFile2.GetPath(), guardFile3.GetPath()}));
+   EXPECT_EQ(3, df3.Describe().GetNFiles());
    auto sumElectronPt =
       df3.Aggregate([](float &acc, const Electron &e) { acc += e.pt; }, [](float a, float b) { return a + b; }, "e");
    EXPECT_FLOAT_EQ(6.0, sumElectronPt.GetValue());

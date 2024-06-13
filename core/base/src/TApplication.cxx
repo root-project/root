@@ -376,7 +376,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
          Terminate(0);
       } else if (!strcmp(argv[i], "-a")) {
-         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.");
+         fprintf(stderr, "ROOT splash screen is not visible with root.exe, use root instead.\n");
          Terminate(0);
       } else if (!strcmp(argv[i], "-b")) {
          MakeBatch();
@@ -1243,7 +1243,8 @@ void TApplication::Help(const char *line)
       Printf(" ==============================================================================");
       Printf("   .L <filename>[flags]: load the given file with optional flags like\n"
              "                         + to compile or ++ to force recompile.\n"
-             "                         Type .? TSystem::CompileMacro for a list of all flags.");
+             "                         Type .? TSystem::CompileMacro for a list of all flags.\n"
+             "                         <filename> can also be a shared library; skip flags.");
       Printf("   .(x|X) <filename>[flags](args) :\n"
              "                         same as .L <filename>[flags] and runs then a function\n"
              "                         with signature: ret_type filename(args).");
