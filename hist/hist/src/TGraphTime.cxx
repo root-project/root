@@ -31,14 +31,6 @@ see example of use in $ROOTSYS/tutorials/graphs/gtime.C
 
 TGraphTime::TGraphTime(): TNamed()
 {
-   fSleepTime = 0;
-   fNsteps    = 0;
-   fXmin      = 0;
-   fXmax      = 1;
-   fYmin      = 0;
-   fYmax      = 1;
-   fSteps     = nullptr;
-   fFrame     = nullptr;
 }
 
 
@@ -49,7 +41,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
       :TNamed()
 {
    if (nsteps <= 0) {
-      Warning("TGraphTime", "Number of steps %d changed to 100",nsteps);
+      Warning("TGraphTime", "Number of steps %d changed to 100", nsteps);
       nsteps = 100;
    }
    fSleepTime = 0;
@@ -59,7 +51,7 @@ TGraphTime::TGraphTime(Int_t nsteps, Double_t xmin, Double_t ymin, Double_t xmax
    fYmin      = ymin;
    fYmax      = ymax;
    fSteps     = new TObjArray(nsteps+1);
-   fFrame     = new TH1D("frame","",100,fXmin,fXmax);
+   fFrame = new TH1D("frame", "", 100, fXmin, fXmax);
    fFrame->SetMinimum(ymin);
    fFrame->SetMaximum(ymax);
    fFrame->SetStats(false);
@@ -84,13 +76,13 @@ TGraphTime::~TGraphTime()
 TGraphTime::TGraphTime(const TGraphTime &gtime) : TNamed(gtime)
 {
    fSleepTime = gtime.fSleepTime;
-   fNsteps    = gtime.fNsteps;
-   fXmin      = gtime.fXmin;
-   fXmax      = gtime.fXmax;
-   fYmin      = gtime.fYmin;
-   fYmax      = gtime.fYmax;
-   fSteps     = new TObjArray(fNsteps+1);
-   fFrame     = new TH1D("frame","",100,fXmin,fXmax);
+   fNsteps = gtime.fNsteps;
+   fXmin = gtime.fXmin;
+   fXmax = gtime.fXmax;
+   fYmin = gtime.fYmin;
+   fYmax = gtime.fYmax;
+   fSteps = new TObjArray(fNsteps + 1);
+   fFrame = new TH1D("frame", "", 100, fXmin, fXmax);
    fFrame->SetMinimum(fYmin);
    fFrame->SetMaximum(fYmax);
    fFrame->SetStats(false);
@@ -118,6 +110,30 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
    return slot;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Start animation of TGraphTime.
+/// Triggers drawing of steps - but does not block macro execution which will continues
+
+void TGraphTime::Animate(Bool_t enable)
+{
+   if (!enable) {
+      fAnimateCnt = -1;
+      return;
+   }
+
+   if (!gPad) {
+      gROOT->MakeDefCanvas();
+      gPad->SetFillColor(41);
+      gPad->SetFrameFillColor(19);
+      gPad->SetGrid();
+   }
+   if (fFrame)
+      fFrame->SetTitle(GetTitle());
+
+   fAnimateCnt = 0;
+   Notify();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this TGraphTime.
@@ -142,6 +158,7 @@ void TGraphTime::Draw(Option_t *)
       }
    }
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw single step
@@ -172,12 +189,33 @@ Bool_t TGraphTime::DrawStep(Int_t nstep) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Method used for implementing animation of TGraphTime
+
+Bool_t TGraphTime::Notify()
+{
+   if ((fAnimateCnt < 0) || !fSteps || !gPad)
+      return kFALSE;
+
+   if (fAnimateCnt > fSteps->GetLast())
+      fAnimateCnt = 0;
+
+   if (DrawStep(fAnimateCnt++))
+      gPad->Update();
+
+   TTimer::SingleShot(fSleepTime > 0 ? fSleepTime : 1, ClassName(), this, "Notify()");
+
+   return kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint all objects added to each time step
 
 void TGraphTime::Paint(Option_t *)
 {
    Error("Paint", "Not implemented, use Draw() instead");
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save this object to filename as an animated gif file

@@ -29,15 +29,15 @@ class TObjArray;
 class TGraphTime : public TNamed {
 
 protected:
-
-   Int_t              fSleepTime; ///< Time (msec) to wait between time steps
-   Int_t              fNsteps;    ///< Number of time steps
-   Double_t           fXmin;      ///< Minimum for X axis
-   Double_t           fXmax;      ///< Maximum for X axis
-   Double_t           fYmin;      ///< Minimum for Y axis
-   Double_t           fYmax;      ///< Maximum for Y axis
-   TObjArray         *fSteps;     ///< Array of TLists for each time step
-   TH1               *fFrame;     ///< TH1 object used for the pad range
+   Int_t fSleepTime = 0;        ///< Time (msec) to wait between time steps
+   Int_t fNsteps = 0;           ///< Number of time steps
+   Double_t fXmin = 0.;         ///< Minimum for X axis
+   Double_t fXmax = 0.;         ///< Maximum for X axis
+   Double_t fYmin = 0.;         ///< Minimum for Y axis
+   Double_t fYmax = 0.;         ///< Maximum for Y axis
+   TObjArray *fSteps = nullptr; ///< Array of TLists for each time step
+   TH1 *fFrame = nullptr;       ///< TH1 object used for the pad range
+   Int_t fAnimateCnt = -1;      ///<! counter used in Animate() method
 
    Bool_t DrawStep(Int_t nstep) const;
 
@@ -49,8 +49,10 @@ public:
    ~TGraphTime() override;
 
    virtual Int_t Add(const TObject *obj, Int_t slot, Option_t *option = "");
+   void Animate(Bool_t enable = kTRUE);
    void Draw(Option_t *chopt = "") override;
    TObjArray *GetSteps() const { return fSteps; }
+   Bool_t Notify() override;
    void Paint(Option_t *chopt = "") override;
    virtual void SaveAnimatedGif(const char *filename = "") const;
    virtual void SetSleepTime(Int_t stime = 0) { fSleepTime = stime; }

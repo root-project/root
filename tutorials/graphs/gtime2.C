@@ -52,7 +52,11 @@ void gtime2(Int_t nsteps = 200, Int_t np = 5000)
 
    g->Draw();
 
+   // store object as animated gif
    // g->SaveAnimatedGif("gtime2.gif");
+
+   // start animation, can be stopped with g->Animate(kFALSE);
+   // g->Animate();
 }
 
 
