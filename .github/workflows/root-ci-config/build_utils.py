@@ -8,7 +8,9 @@ import textwrap
 import datetime
 import time
 from functools import wraps
+from hashlib import sha1
 from http import HTTPStatus
+from shutil import which
 from typing import Callable, Dict
 from collections import namedtuple
 
@@ -205,6 +207,22 @@ def cmake_options_from_dict(config: Dict[str, str]) -> str:
 
     return ' '.join(output)
 
+def calc_options_hash(options: str) -> str:
+    """Calculate the hash of the options string. If "march=native" is in the
+    list of options, make the preprocessor defines resulting from it part of
+    the hash.
+    """
+    options_and_defines = options
+    if ('march=native' in options):
+        print_info(f"A march=native build was detected.")
+        compiler_name = 'c++' if which('c++') else 'clang++'
+        command = f'echo | {compiler_name} -dM -E - -march=native'
+        sp_result = subprocess.run([command], shell=True, capture_output=True, text=True)
+        if 0 != sp_result.returncode:
+            die(msg=f'Error while determining march=native flags: "{sp_result.stderr}"')
+        print_info(f"The following are the preprocessor defines created by {compiler_name}:\n{sp_result.stdout}")
+        options_and_defines += sp_result.stdout
+    return sha1(options_and_defines.encode('utf-8')).hexdigest()
 
 def upload_file(connection: Connection, container: str, dest_object: str, src_file: str) -> None:
     print(f"Attempting to upload {src_file} to {dest_object}")
