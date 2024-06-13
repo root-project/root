@@ -194,6 +194,20 @@ private:
 
    void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
 
+   // To export multiple objects sorted alphabetically
+   template <class T>
+   void exportObjects(T const &args, std::set<std::string> &exportedObjectNames)
+   {
+      RooArgSet argSet;
+      for (RooAbsArg const *arg : args) {
+         argSet.add(*arg);
+      }
+      argSet.sort();
+      for (RooAbsArg *arg : argSet) {
+         exportObject(*arg, exportedObjectNames);
+      }
+   }
+
    void exportData(RooAbsData const &data);
    RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
