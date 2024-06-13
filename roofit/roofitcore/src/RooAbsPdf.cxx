@@ -2580,16 +2580,29 @@ RooArgSet* RooAbsPdf::getAllConstraints(const RooArgSet& observables, RooArgSet&
 {
   RooArgSet* ret = new RooArgSet("AllConstraints") ;
 
+  RooArgSet allcPars;
   std::unique_ptr<RooArgSet> comps(getComponents());
   for (const auto arg : *comps) {
     auto pdf = dynamic_cast<const RooAbsPdf*>(arg) ;
     if (pdf && !ret->find(pdf->GetName())) {
+      RooArgSet cPars(constrainedParams); // start with full set of params every time
       std::unique_ptr<RooArgSet> compRet(
-              pdf->getConstraints(observables,constrainedParams,stripDisconnected,removeConstraintsFromPdf));
+              pdf->getConstraints(observables,cPars,stripDisconnected,removeConstraintsFromPdf));
       if (compRet) {
+        // if stripping disconnected, cPars has now been reduced to just the params that had a constraint term
+        // add these to the list of params to keep
+        if (stripDisconnected) { 
+            allcPars.add(cPars,true);
+        }
         ret->add(*compRet,false) ;
       }
     }
+  }
+
+  if (stripDisconnected) {  
+      // finally, replace constrainedParams with all cPars from components
+      constrainedParams.removeAll();
+      constrainedParams.add(allcPars);
   }
 
   return ret ;
