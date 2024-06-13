@@ -1,5 +1,3 @@
-
-
 name: 'ROOT CI'
 
 on:
@@ -364,6 +362,10 @@ jobs:
             is_special: true
             property: modules_off
             overrides: ["runtime_cxxmodules=Off"]
+          - image: alma9
+            is_special: true
+            property: march_native
+            overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
 
     runs-on:
       - self-hosted
@@ -405,8 +407,8 @@ jobs:
                ls -la
               '
 
-      - name: Apply option overrides from matrix for this job for non-release builds
-        if: ${{ github.event_name != 'schedule' && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
+      - name: Apply option overrides from matrix for this job for all builds except non-special nightlies and releases
+        if: ${{ ( github.event_name != 'schedule' || matrix.is_special) && github.event_name != 'workflow_dispatch' && matrix.overrides != NaN }}
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt'

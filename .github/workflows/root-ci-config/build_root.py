@@ -21,7 +21,6 @@ import shutil
 import subprocess
 import sys
 import tarfile
-from hashlib import sha1
 
 import openstack
 
@@ -29,6 +28,7 @@ from build_utils import (
     die,
     github_log_group,
     load_config,
+    calc_options_hash,
     subprocess_with_log,
     subprocess_with_capture,
     upload_file
@@ -83,10 +83,10 @@ def main():
         if args.architecture == 'x86':
             options = "-AWin32 " + options
 
-    # The sha1 of the build option string is used to find existing artifacts
+    # The hash of the build option string is used to find existing artifacts
     # with matching build options on s3 storage.
-    option_hash = sha1(options.encode('utf-8')).hexdigest()
-    obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{option_hash}'
+    options_hash = calc_options_hash(options)
+    obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in args.repository:
