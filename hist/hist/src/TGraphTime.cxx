@@ -123,7 +123,7 @@ Int_t TGraphTime::Add(const TObject *obj, Int_t slot, Option_t *option)
 /// Draw this TGraphTime.
 /// for each time step the list of objects added to this step are drawn.
 
-void TGraphTime::Draw(Option_t *option)
+void TGraphTime::Draw(Option_t *)
 {
    if (!gPad) {
       gROOT->MakeDefCanvas();
@@ -131,12 +131,16 @@ void TGraphTime::Draw(Option_t *option)
       gPad->SetFrameFillColor(19);
       gPad->SetGrid();
    }
-   if (fFrame) {
+   if (fFrame)
       fFrame->SetTitle(GetTitle());
-      gPad->Add(fFrame);
-   }
 
-   Paint(option);
+   for (Int_t s = 0; s < fNsteps; s++) {
+      if (DrawStep(s)) {
+         gPad->Update();
+         if (fSleepTime > 0)
+            gSystem->Sleep(fSleepTime);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,18 +176,7 @@ Bool_t TGraphTime::DrawStep(Int_t nstep) const
 
 void TGraphTime::Paint(Option_t *)
 {
-   if (!gPad) {
-      Error("Paint", "Not possible to Paint without gPad");
-      return;
-   }
-
-   for (Int_t s = 0; s < fNsteps; s++) {
-      if (DrawStep(s)) {
-         gPad->Update();
-         if (fSleepTime > 0)
-            gSystem->Sleep(fSleepTime);
-      }
-   }
+   Error("Paint", "Not implemented, use Draw() instead");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,16 +192,14 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
    }
 
    if (gPad->IsWeb()) {
-      Error("SaveAnimatedGif", "Not possible to created animated GIF with web canvas");
+      Error("SaveAnimatedGif", "Not possible to create animated GIF with web canvas");
       return;
    }
 
    TString farg = TString::Format("%s+", filename && *filename ? filename : GetName());
 
    for (Int_t s = 0; s < fNsteps; s++) {
-      if (DrawStep(s)) {
-         gPad->Update();
+      if (DrawStep(s))
          gPad->Print(farg.Data());
-      }
    }
 }
