@@ -140,6 +140,34 @@ void TGraphTime::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Draw single step
+
+Bool_t TGraphTime::DrawStep(Int_t nstep) const
+{
+   if (!fSteps)
+      return kFALSE;
+
+   auto list = static_cast<TList *>(fSteps->UncheckedAt(nstep));
+   if (!list)
+      return kFALSE;
+
+   if (fFrame)
+      gPad->Remove(fFrame);
+   gPad->GetListOfPrimitives()->Clear();
+   if (fFrame)
+      gPad->Add(fFrame);
+
+   auto lnk = list->FirstLink();
+   while(lnk) {
+      gPad->Add(lnk->GetObject(), lnk->GetAddOption());
+      lnk = lnk->Next();
+   }
+
+   return kTRUE;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Paint all objects added to each time step
 
 void TGraphTime::Paint(Option_t *)
@@ -149,19 +177,8 @@ void TGraphTime::Paint(Option_t *)
       return;
    }
 
-   auto frame = gPad->GetPrimitive("frame");
-
    for (Int_t s = 0; s < fNsteps; s++) {
-      auto list = static_cast<TList *>(fSteps->UncheckedAt(s));
-      if (list) {
-         gPad->Remove(frame);
-         gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->Add(frame);
-         auto lnk = list->FirstLink();
-         while(lnk) {
-            gPad->Add(lnk->GetObject(), lnk->GetAddOption());
-            lnk = lnk->Next();
-         }
+      if (DrawStep(s)) {
          gPad->Update();
          if (fSleepTime > 0)
             gSystem->Sleep(fSleepTime);
@@ -186,21 +203,10 @@ void TGraphTime::SaveAnimatedGif(const char *filename) const
       return;
    }
 
-   auto frame = gPad->GetPrimitive("frame");
-
    TString farg = TString::Format("%s+", filename && *filename ? filename : GetName());
 
    for (Int_t s = 0; s < fNsteps; s++) {
-      auto list = static_cast<TList *>(fSteps->UncheckedAt(s));
-      if (list) {
-         gPad->Remove(frame);
-         gPad->GetListOfPrimitives()->Clear();
-         if (frame) gPad->Add(frame);
-         auto lnk = list->FirstLink();
-         while(lnk) {
-            gPad->Add(lnk->GetObject(), lnk->GetAddOption());
-            lnk = lnk->Next();
-         }
+      if (DrawStep(s)) {
          gPad->Update();
          gPad->Print(farg.Data());
       }
