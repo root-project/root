@@ -70,6 +70,22 @@ RegulatorCleanup &GetRegulatorCleanup()
    return m;
 }
 
+struct CleanupRAII {
+   ~CleanupRAII()
+   {
+      // Make sure all the objects regulated by PyROOT are deleted and their
+      // Python proxies are properly nonified.
+      GetRegulatorCleanup().CallClearProxiedObjects();
+
+      // Hard teardown: run part of the gROOT shutdown sequence. Running it here
+      // ensures that it is done before any ROOT libraries are off-loaded, with
+      // unspecified order of static object destruction.
+      if (true /*PyConfig.ShutDown*/) {
+         gROOT->EndOfProcessCleanups();
+      }
+   }
+};
+
 void Init()
 {
    // Initialize and acquire the GIL to allow for threading in ROOT
@@ -79,13 +95,6 @@ void Init()
 
    // Memory management
    gROOT->GetListOfCleanups()->Add(&GetRegulatorCleanup());
-}
-
-PyObject *ClearProxiedObjects(PyObject * /* self */, PyObject * /* args */)
-{
-   // Delete all memory-regulated objects
-   GetRegulatorCleanup().CallClearProxiedObjects();
-   Py_RETURN_NONE;
 }
 
 } // namespace PyROOT
@@ -110,8 +119,6 @@ static PyMethodDef gPyROOTMethods[] = {
     (char *)"Install an input hook to process GUI events"},
    {(char *)"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     (char *)"Deserialize a pickled object"},
-   {(char *)"ClearProxiedObjects", (PyCFunction)PyROOT::ClearProxiedObjects, METH_NOARGS,
-    (char *)"Clear proxied objects regulated by PyROOT"},
    {(char *)"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, (char *)"Create JupyROOTExecutor"},
    {(char *)"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, (char *)"Create JupyROOTDeclarer"},
    {(char *)"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
@@ -178,6 +185,9 @@ extern "C" PyObject *PyInit_libROOTPythonizations()
 
    // inject ROOT namespace for convenience
    PyModule_AddObject(PyROOT::gRootModule, (char *)"ROOT", CPyCppyy::CreateScopeProxy("ROOT"));
+
+   // activate the cleanup function
+   static PyROOT::CleanupRAII cleanupRAII;
 
    Py_INCREF(PyROOT::gRootModule);
    return PyROOT::gRootModule;
