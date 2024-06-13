@@ -423,6 +423,8 @@ void TPad::Add(TObject *obj, Option_t *opt, Bool_t modified)
    if (!fPrimitives)
       fPrimitives = new TList;
 
+   obj->SetBit(kMustCleanup);
+
    fPrimitives->Add(obj, opt);
 
    if (modified)
@@ -441,6 +443,8 @@ void TPad::AddFirst(TObject *obj, Option_t *opt, Bool_t modified)
 
    if (!fPrimitives)
       fPrimitives = new TList;
+
+   obj->SetBit(kMustCleanup);
 
    fPrimitives->AddFirst(obj, opt);
 
