@@ -725,12 +725,11 @@ std::list<double> *ParamHistFunc::binBoundaries(RooAbsRealLValue &obs, double xl
 
    // look for variable in the DataHist, and if found, return the binning
    std::string varName = dynamic_cast<TObject *>(lvarg)->GetName();
-   RooArgSet const &vars = *_dataSet.get();
+   RooArgSet const &vars = *_dataSet.get(); // guaranteed to be in the same order as the binnings vector
    auto &binnings = _dataSet.getBinnings();
    for (size_t i = 0; i < vars.size(); i++) {
       if (varName == vars[i]->GetName()) {
          // found the variable, return its binning
-         const RooAbsBinning *binning = lvarg->getBinningPtr(nullptr);
          double *boundaries = binnings.at(i)->array();
          std::list<double> *hint = new std::list<double>;
          for (Int_t i = 0; i < binnings.at(i)->numBoundaries(); i++) {
