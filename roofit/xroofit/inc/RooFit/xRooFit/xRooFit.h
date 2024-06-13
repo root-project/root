@@ -52,7 +52,7 @@ class TCanvas;
 
 #include <memory>
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNLLVar;
 
@@ -231,7 +231,7 @@ public:
                             const xRooFit::Asymptotics::PLLType &pllType = xRooFit::Asymptotics::Unknown);
 };
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE
 
 #include "xRooHypoSpace.h"
 #include "xRooNLLVar.h"
