@@ -1,5 +1,7 @@
 #include "ntuple_test.hxx"
 
+#include <TVirtualStreamerInfo.h>
+
 TEST(RFieldDescriptorBuilder, MakeDescriptorErrors)
 {
    // minimum requirements for making a field descriptor from scratch
@@ -545,4 +547,58 @@ TEST(RNTupleDescriptor, Clone)
    const auto &desc = ntuple->GetDescriptor();
    auto clone = desc.Clone();
    EXPECT_EQ(desc, *clone);
+}
+
+TEST(RNTupleDescriptor, BuildStreamerInfos)
+{
+   auto fnBuildStreamerInfosOf = [](const RFieldBase &field) -> RNTupleSerializer::StreamerInfoMap_t {
+      RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetNTuple("test", "");
+      descBuilder.AddField(
+         RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+      auto fieldBuilder = RFieldDescriptorBuilder::FromField(field);
+      descBuilder.AddField(fieldBuilder.FieldId(1).MakeDescriptor().Unwrap());
+      descBuilder.AddFieldLink(0, 1);
+      int i = 2;
+      // In this test, we only support leaf fields or fields with only direct sub fields
+      for (const auto &subField : field.GetSubFields()) {
+         fieldBuilder = RFieldDescriptorBuilder::FromField(*subField);
+         descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
+         descBuilder.AddFieldLink(1, i);
+         i++;
+      }
+      return descBuilder.BuildStreamerInfos();
+   };
+
+   RNTupleSerializer::StreamerInfoMap_t streamerInfoMap;
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "float").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::vector<float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::pair<float, float>").Unwrap());
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(ROOT::Experimental::RRecordField("f", {}));
+   EXPECT_TRUE(streamerInfoMap.empty());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "CustomStruct").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::vector<CustomStruct>").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "DerivedA").Unwrap());
+   EXPECT_EQ(2u, streamerInfoMap.size());
+   std::vector<std::string> typeNames;
+   for (const auto &[_, si] : streamerInfoMap) {
+      typeNames.emplace_back(si->GetName());
+   }
+   std::sort(typeNames.begin(), typeNames.end());
+   EXPECT_STREQ("CustomStruct", typeNames[0].c_str());
+   EXPECT_STREQ("DerivedA", typeNames[1].c_str());
 }
