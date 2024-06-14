@@ -110,7 +110,7 @@ struct RCompressionSetting {
 };
 
 // clang-format off
-enum R__DEPRECATED(6, 34, "Use RCompressionSetting instead") ECompressionAlgorithm {
+enum R__DEPRECATED(6, 34, "Use RCompressionSetting::EAlgorithm instead") ECompressionAlgorithm {
    kUseGlobalCompressionSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
    kUseGlobalSetting = static_cast<int>(RCompressionSetting::EAlgorithm::kUseGlobal),
    kZLIB = static_cast<int>(RCompressionSetting::EAlgorithm::kZLIB),
