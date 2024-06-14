@@ -481,8 +481,8 @@ GlobalCtorDtorScraper::operator()(ThreadSafeModule TSM,
     std::vector<std::pair<Function *, unsigned>> Inits;
     for (auto E : getConstructors(M))
       Inits.push_back(std::make_pair(E.Func, E.Priority));
-    llvm::sort(Inits, [](const std::pair<Function *, unsigned> &LHS,
-                         const std::pair<Function *, unsigned> &RHS) {
+    llvm::stable_sort(Inits, [](const std::pair<Function *, unsigned> &LHS,
+                                const std::pair<Function *, unsigned> &RHS) {
       return LHS.second < RHS.second;
     });
     auto *EntryBlock = BasicBlock::Create(Ctx, "entry", InitFunc);
