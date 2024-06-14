@@ -5,7 +5,7 @@
 
 #include <memory>
 
-static void testZipBufferSizes(ROOT::RCompressionSetting::EAlgorithm::EValues compressionAlgorithm)
+static void testZipBufferSizes(ROOT::RCompressionSetting::EAlgorithm compressionAlgorithm)
 {
    static constexpr size_t BufferSize = 256;
    static constexpr size_t MaxBytes = 128;

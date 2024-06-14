@@ -2760,14 +2760,14 @@ void TBranch::SetBufferAddress(TBuffer* buf)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set compression algorithm.
 
-void TBranch::SetCompressionAlgorithm(Int_t algorithm)
+void TBranch::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   Int_t algo = static_cast<Int_t>(algorithm);
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompress = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
-      fCompress = 100 * algorithm + level;
+      fCompress = 100 * algo + level;
    }
 
    Int_t nb = fBranches.GetEntriesFast();
@@ -2775,6 +2775,14 @@ void TBranch::SetCompressionAlgorithm(Int_t algorithm)
       TBranch *branch = (TBranch*)fBranches.UncheckedAt(i);
       branch->SetCompressionAlgorithm(algorithm);
    }
+}
+
+void TBranch::SetCompressionAlgorithm(Int_t algorithm)
+{
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2788,7 +2796,8 @@ void TBranch::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+         algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 

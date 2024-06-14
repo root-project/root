@@ -42,7 +42,7 @@ public:
    };
 
 protected:
-   int fCompression{RCompressionSetting::EDefaults::kUseGeneralPurpose};
+   int fCompression{static_cast<int>(RCompressionSetting::EDefaults::kUseGeneralPurpose)};
    /// Approximation of the target compressed cluster size
    std::size_t fApproxZippedClusterSize = 50 * 1000 * 1000;
    /// Memory limit for committing a cluster: with very high compression ratio, we need a limit
@@ -76,7 +76,8 @@ public:
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
-   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel)
+   void SetCompression(RCompressionSetting::EDefaults val) { SetCompression(static_cast<int>(val)); }
+   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel)
    {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }

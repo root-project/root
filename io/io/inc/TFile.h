@@ -175,7 +175,7 @@ private:
 
    static  void        CpProgress(Long64_t bytesread, Long64_t size, TStopwatch &watch);
    static  TFile      *OpenFromCache(const char *name, Option_t * = "",
-                                     const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                                     const char *ftitle = "", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                                      Int_t netopt = 0);
 
 public:
@@ -202,7 +202,7 @@ public:
    enum EFileType { kDefault = 0, kLocal = 1, kNet = 2, kWeb = 3, kFile = 4, kMerge = 5 };
 
    TFile();
-   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TFile(const char *fname, Option_t *option="", const char *ftitle="", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TFile() override;
 
            void        Close(Option_t *option="") override; // *MENU*
@@ -281,9 +281,11 @@ public:
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetCacheRead(TFileCacheRead *cache, TObject *tree = nullptr, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
-   virtual void        SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
-   virtual void        SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
-   virtual void        SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   virtual void        SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                          R__DEPRECATED(6, 34, "Pass a ROOT::RCompressionSetting::EAlgorithm instead of an int");
+   virtual void        SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   virtual void        SetCompressionLevel(Int_t level = (Int_t)ROOT::RCompressionSetting::ELevel::kUseMin);
+   virtual void        SetCompressionSettings(Int_t settings = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    virtual void        SetEND(Long64_t last) { fEND = last; }
    virtual void        SetOffset(Long64_t offset, ERelativeTo pos = kBeg);
    virtual void        SetOption(Option_t *option=">") { fOption = option; }
@@ -301,10 +303,10 @@ public:
 
    static TFileOpenHandle
                       *AsyncOpen(const char *name, Option_t *option = "",
-                                 const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                                 const char *ftitle = "", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                                  Int_t netopt = 0);
    static TFile       *Open(const char *name, Option_t *option = "",
-                            const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
+                            const char *ftitle = "", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault,
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
@@ -361,7 +363,7 @@ private:
    Int_t    fNetOpt{0};      ///< Network options
    TFile   *fFile{nullptr};  ///< TFile instance of the file being opened
 
-   TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress(ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault),
+   TFileOpenHandle(TFile *f) : TNamed("",""), fOpt(""), fCompress((Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault),
                                fNetOpt(0), fFile(f) { }
    TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
                    Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),

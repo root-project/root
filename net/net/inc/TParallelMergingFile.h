@@ -46,7 +46,7 @@ private:
    TMessage fMessage;
 
 public:
-   TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TParallelMergingFile(const char *filename, Option_t *option = "", const char *ftitle = "", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    ~TParallelMergingFile();
 
    void   Close(Option_t *option="") override;

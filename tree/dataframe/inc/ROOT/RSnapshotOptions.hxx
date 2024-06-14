@@ -11,6 +11,7 @@
 #ifndef ROOT_RSNAPSHOTOPTIONS
 #define ROOT_RSNAPSHOTOPTIONS
 
+#include "ROOT/RConfig.hxx"
 #include <Compression.h>
 #include <string_view>
 #include <string>
@@ -20,7 +21,8 @@ namespace ROOT {
 namespace RDF {
 /// A collection of options to steer the creation of the dataset on file
 struct RSnapshotOptions {
-   using ECAlgo = ROOT::RCompressionSetting::EAlgorithm::EValues;
+   using ECAlgo = ROOT::RCompressionSetting::EAlgorithm;
+
    RSnapshotOptions() = default;
    RSnapshotOptions(const RSnapshotOptions &) = default;
    RSnapshotOptions(RSnapshotOptions &&) = default;
@@ -35,6 +37,15 @@ struct RSnapshotOptions {
         fOverwriteIfExists(overwriteIfExists)
    {
    }
+
+   R__DEPRECATED(6, 34, "Use the overload accepting a ROOT::RCompressionSetting::EAlgorithm for the `comprAlgo` parameter instead")
+   RSnapshotOptions(std::string_view mode, Int_t comprAlgo, int comprLevel, int autoFlush,
+                                              int splitLevel, bool lazy, bool overwriteIfExists = false)
+      : RSnapshotOptions(mode, static_cast<ECAlgo>(comprAlgo), comprLevel, autoFlush, splitLevel, lazy,
+                         overwriteIfExists)
+   {
+   }
+
    std::string fMode = "RECREATE"; ///< Mode of creation of output file
    ECAlgo fCompressionAlgorithm =
       ROOT::RCompressionSetting::EAlgorithm::kZLIB; ///< Compression algorithm of output file

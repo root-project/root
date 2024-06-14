@@ -57,7 +57,8 @@ ClassImp(TBufferSQL2);
 
 TBufferSQL2::TBufferSQL2()
    : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
+     fCompressLevel(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)),
+     fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
 }
@@ -69,7 +70,8 @@ TBufferSQL2::TBufferSQL2()
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
    : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(nullptr), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
+     fCompressLevel(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)),
+     fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(nullptr), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
    fSQL = file;

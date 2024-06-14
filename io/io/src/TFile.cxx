@@ -199,7 +199,7 @@ AddPseudoGlobals() {
 ////////////////////////////////////////////////////////////////////////////////
 /// File default Constructor.
 
-TFile::TFile() : TDirectoryFile(), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+TFile::TFile() : TDirectoryFile(), fCompress((Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
 {
    fCacheReadMap    = new TMap();
    SetBit(kBinaryFile, kTRUE);
@@ -2303,15 +2303,23 @@ void TFile::Seek(Long64_t offset, ERelativeTo pos)
 /// See comments for function SetCompressionSettings
 ///
 
-void TFile::SetCompressionAlgorithm(Int_t algorithm)
+void TFile::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   Int_t algo = static_cast<Int_t>(algorithm);
    if (fCompress < 0) {
-      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompress = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
-      fCompress = 100 * algorithm + level;
+      fCompress = 100 * algo + level;
    }
+}
+
+void TFile::SetCompressionAlgorithm(Int_t algorithm)
+{
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2326,7 +2334,8 @@ void TFile::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+         algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 }

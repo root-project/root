@@ -223,9 +223,11 @@ protected:
    Int_t GetCompressionAlgorithm() const;
    Int_t GetCompressionLevel() const;
    Int_t GetCompressionSettings() const;
-   void SetCompressionAlgorithm(Int_t algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
-   void SetCompressionLevel(Int_t level = ROOT::RCompressionSetting::ELevel::kUseMin);
-   void SetCompressionSettings(Int_t settings = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   void  SetCompressionAlgorithm(Int_t algorithm = (Int_t)ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                          R__DEPRECATED(6, 34, "Pass a ROOT::RCompressionSetting::EAlgorithm instead of an int");
+   void SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm = ROOT::RCompressionSetting::EAlgorithm::kUseGlobal);
+   void SetCompressionLevel(Int_t level = (Int_t)ROOT::RCompressionSetting::ELevel::kUseMin);
+   void SetCompressionSettings(Int_t settings = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
    void SetXML(TXMLEngine *xml) { fXML = xml; }
 
    void XmlWriteBlock(XMLNodePointer_t node);

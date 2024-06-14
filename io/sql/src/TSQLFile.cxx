@@ -325,7 +325,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
    fVersion = gROOT->GetVersionInt(); // ROOT version in integer format
    fUnits = 4;
    fOption = option;
-   SetCompressionLevel(ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault % 100);
+   SetCompressionLevel(static_cast<Int_t>(ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault) % 100);
    fWritten = 0;
    fSumBuffer = 0;
    fSum2Buffer = 0;

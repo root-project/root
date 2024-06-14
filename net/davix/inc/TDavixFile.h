@@ -97,7 +97,7 @@ public:
     ///
     /// Several parameters can be used if separated with whitespace
 
-   TDavixFile(const char* url, Option_t *option="", const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
+   TDavixFile(const char* url, Option_t *option="", const char *ftitle="", Int_t compress = (Int_t)ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
    ~TDavixFile();
 

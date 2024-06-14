@@ -1213,9 +1213,9 @@ Int_t TBasket::WriteBuffer()
    Int_t cxlevel = fBranch->GetCompressionLevel();
    if (cxlevel == ROOT::RCompressionSetting::ELevel::kInherit)
       cxlevel = file->GetCompressionLevel();
-   ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fBranch->GetCompressionAlgorithm());
+   ROOT::RCompressionSetting::EAlgorithm cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm>(fBranch->GetCompressionAlgorithm());
    if (cxAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kInherit)
-      cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(file->GetCompressionAlgorithm());
+      cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm>(file->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap

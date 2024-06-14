@@ -53,7 +53,7 @@ ClassImp(TUDPSocket);
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
-         : TNamed(addr.GetHostName(), service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(addr.GetHostName(), service), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -99,7 +99,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
-         : TNamed(addr.GetHostName(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(addr.GetHostName(), ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -142,7 +142,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(const char *host, const char *service)
-         : TNamed(host, service), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(host, service), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -187,7 +187,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(const char *url, Int_t port)
-         : TNamed(TUrl(url).GetHost(), ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+         : TNamed(TUrl(url).GetHost(), ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -230,7 +230,7 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
 /// closed on program termination.
 
 TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
-                                               fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                                               fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -261,7 +261,7 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, ""),
 /// Create a socket. The socket will adopt previously opened TCP socket with
 /// descriptor desc.
 
-TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -291,7 +291,7 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", ""), fCompress(ROOT::RCompressio
 /// this method to adopt e.g. a socket created via socketpair().
 
 TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, ""),
-                                                           fCompress(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal)
+                                                           fCompress(static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUseGlobal))
 {
    R__ASSERT(gROOT);
    R__ASSERT(gSystem);
@@ -1013,16 +1013,23 @@ Int_t TUDPSocket::GetErrorCode() const
 ////////////////////////////////////////////////////////////////////////////////
 /// See comments for function SetCompressionSettings
 
-void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
+void TUDPSocket::SetCompressionAlgorithm(ROOT::RCompressionSetting::EAlgorithm algorithm)
 {
-   if (algorithm < 0 || algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+   Int_t algo = static_cast<Int_t>(algorithm);
    if (fCompress < 0) {
-      // if the level is not defined yet use 4 as a default (with ZLIB was 1)
-      fCompress = 100 * algorithm + ROOT::RCompressionSetting::ELevel::kUseMin;
+      fCompress = 100 * algo + static_cast<Int_t>(ROOT::RCompressionSetting::ELevel::kUseMin);
    } else {
       int level = fCompress % 100;
-      fCompress = 100 * algorithm + level;
+      fCompress = 100 * algo + level;
    }
+}
+
+void TUDPSocket::SetCompressionAlgorithm(Int_t algorithm)
+{
+   if (algorithm < 0 || algorithm >= static_cast<Int_t>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+      algorithm = 0;
+
+   SetCompressionAlgorithm(static_cast<ROOT::RCompressionSetting::EAlgorithm>(algorithm));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1037,7 +1044,8 @@ void TUDPSocket::SetCompressionLevel(Int_t level)
       fCompress = level;
    } else {
       int algorithm = fCompress / 100;
-      if (algorithm >= ROOT::RCompressionSetting::EAlgorithm::kUndefined) algorithm = 0;
+      if (algorithm >= static_cast<int>(ROOT::RCompressionSetting::EAlgorithm::kUndefined))
+         algorithm = 0;
       fCompress = 100 * algorithm + level;
    }
 }
