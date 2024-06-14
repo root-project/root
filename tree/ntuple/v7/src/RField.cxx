@@ -89,14 +89,16 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"uint32_t",     "std::uint32_t"},
 
    // FIXME: Long_t and ULong_t are 32-bit on 64-bit Windows.
-   {"Long_t",        "std::int64_t"},
-   {"Long64_t",      "std::int64_t"},
-   {"int64_t",       "std::int64_t"},
-   {"long",          "std::int64_t"},
-   {"ULong_t",       "std::uint64_t"},
-   {"ULong64_t",     "std::uint64_t"},
-   {"unsigned long", "std::uint64_t"},
-   {"uint64_t",      "std::uint64_t"}
+   {"Long_t",             "std::int64_t"},
+   {"Long64_t",           "std::int64_t"},
+   {"int64_t",            "std::int64_t"},
+   {"long",               "std::int64_t"},
+   {"long long",          "std::int64_t"},
+   {"ULong_t",            "std::uint64_t"},
+   {"ULong64_t",          "std::uint64_t"},
+   {"unsigned long",      "std::uint64_t"},
+   {"unsigned long long", "std::uint64_t"},
+   {"uint64_t",           "std::uint64_t"}
 };
 
 /// Used in CreateField() in order to get the comma-separated list of template types
@@ -675,6 +677,10 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
    } else if (canonicalType == "std::int64_t") {
       result = std::make_unique<RField<std::int64_t>>(fieldName);
    } else if (canonicalType == "std::uint64_t") {
+      result = std::make_unique<RField<std::uint64_t>>(fieldName);
+   } else if (canonicalType == "long long") {
+      result = std::make_unique<RField<std::int64_t>>(fieldName);
+   } else if (canonicalType == "unsigned long long") {
       result = std::make_unique<RField<std::uint64_t>>(fieldName);
    } else if (canonicalType == "float") {
       result = std::make_unique<RField<float>>(fieldName);
@@ -1584,6 +1590,65 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 {
    visitor.VisitInt64Field(*this);
 }
+
+//------------------------------------------------------------------------------
+
+#ifdef R__LINUX
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<unsigned long long>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt64}, {EColumnType::kUInt64}},
+                                                 {{EColumnType::kSplitInt64}, {EColumnType::kInt64}});
+   return representations;
+}
+
+void ROOT::Experimental::RField<unsigned long long>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<unsigned long long>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RField<unsigned long long>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<unsigned long long>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+void ROOT::Experimental::RField<unsigned long long>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitUInt64Field(*this);
+}
+
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<long long>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}},
+                                                 {{EColumnType::kSplitUInt64},
+                                                  {EColumnType::kUInt64},
+                                                  {EColumnType::kInt32},
+                                                  {EColumnType::kSplitInt32},
+                                                  {EColumnType::kUInt32},
+                                                  {EColumnType::kSplitUInt32}});
+   return representations;
+}
+
+void ROOT::Experimental::RField<long long>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<long long>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RField<long long>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<long long>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+void ROOT::Experimental::RField<long long>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitInt64Field(*this);
+}
+#endif
 
 //------------------------------------------------------------------------------
 

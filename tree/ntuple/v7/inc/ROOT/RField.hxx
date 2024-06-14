@@ -2487,6 +2487,86 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+#ifdef R__LINUX
+template <>
+class RField<long long> final : public RFieldBase {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void ConstructValue(void *where) const final { new (where) int64_t(0); }
+
+public:
+   static std::string TypeName() { return "std::int64_t"; }
+   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::int64_t *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<std::int64_t>(globalIndex); }
+   std::int64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int64_t>(clusterIndex); }
+   std::int64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::int64_t>(globalIndex, nItems);
+   }
+   std::int64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::int64_t>(clusterIndex, nItems);
+   }
+
+   size_t GetValueSize() const final { return sizeof(std::int64_t); }
+   size_t GetAlignment() const final { return alignof(std::int64_t); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+template <>
+class RField<unsigned long long> final : public RFieldBase {
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
+
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void ConstructValue(void *where) const final { new (where) uint64_t(0); }
+
+public:
+   static std::string TypeName() { return "std::uint64_t"; }
+   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   std::uint64_t *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<std::uint64_t>(globalIndex); }
+   std::uint64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint64_t>(clusterIndex); }
+   std::uint64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::uint64_t>(globalIndex, nItems);
+   }
+   std::uint64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
+      return fPrincipalColumn->MapV<std::uint64_t>(clusterIndex, nItems);
+   }
+
+   size_t GetValueSize() const final { return sizeof(std::uint64_t); }
+   size_t GetAlignment() const final { return alignof(std::uint64_t); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+#endif
+
 template <>
 class RField<std::string> final : public RFieldBase {
 private:

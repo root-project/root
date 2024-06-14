@@ -250,6 +250,15 @@ void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RField<std::i
    fOutput << fValue.GetRef<std::int64_t>();
 }
 
+#ifdef R__LINUX
+void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RField<long long> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << fValue.GetRef<std::int64_t>();
+}
+#endif
+
 void ROOT::Experimental::RPrintValueVisitor::VisitStringField(const RField<std::string> &field)
 {
    PrintIndent();
@@ -286,6 +295,15 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::
    PrintName(field);
    fOutput << fValue.GetRef<std::uint64_t>();
 }
+
+#ifdef R__LINUX
+void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<unsigned long long> &field)
+{
+   PrintIndent();
+   PrintName(field);
+   fOutput << fValue.GetRef<std::uint64_t>();
+}
+#endif
 
 void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RCardinalityField &field)
 {
