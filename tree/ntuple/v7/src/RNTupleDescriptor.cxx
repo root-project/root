@@ -24,14 +24,15 @@
 
 #include <RZip.h>
 #include <TError.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <algorithm>
 #include <cstdint>
 #include <deque>
+#include <functional>
 #include <iostream>
 #include <set>
 #include <utility>
-
 
 bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
@@ -103,6 +104,22 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
    return field;
 }
 
+bool ROOT::Experimental::RFieldDescriptor::IsCustomClass() const
+{
+   if (fStructure != ENTupleStructure::kRecord)
+      return false;
+
+   // Skip untyped structs
+   if (fTypeName.empty())
+      return false;
+
+   if (fTypeName.compare(0, 10, "std::pair<") == 0)
+      return false;
+   if (fTypeName.compare(0, 11, "std::tuple<") == 0)
+      return false;
+
+   return true;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -974,4 +991,43 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddExtraTypeInfo(RExtraT
    }
    fDescriptor.fExtraTypeInfoDescriptors.emplace_back(std::move(extraTypeInfoDesc));
    return RResult<void>::Success();
+}
+
+ROOT::Experimental::Internal::RNTupleSerializer::StreamerInfoMap_t
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() const
+{
+   RNTupleSerializer::StreamerInfoMap_t streamerInfoMap;
+   const auto &desc = GetDescriptor();
+
+   std::function<void(const RFieldDescriptor &)> fnWalkFieldTree;
+   fnWalkFieldTree = [&desc, &streamerInfoMap, &fnWalkFieldTree](const RFieldDescriptor &fieldDesc) {
+      if (fieldDesc.IsCustomClass()) {
+         // Add streamer info for this class to streamerInfoMap
+         auto cl = TClass::GetClass(fieldDesc.GetTypeName().c_str());
+         if (!cl) {
+            throw RException(R__FAIL(std::string("cannot get TClass for ") + fieldDesc.GetTypeName()));
+         }
+         auto streamerInfo = cl->GetStreamerInfo(fieldDesc.GetTypeVersion());
+         if (!streamerInfo) {
+            throw RException(R__FAIL(std::string("cannot get streamerInfo for ") + fieldDesc.GetTypeName()));
+         }
+         streamerInfoMap[streamerInfo->GetNumber()] = streamerInfo;
+      }
+
+      // Recursively traverse sub fields
+      for (const auto &subFieldDesc : desc.GetFieldIterable(fieldDesc)) {
+         fnWalkFieldTree(subFieldDesc);
+      }
+   };
+
+   fnWalkFieldTree(desc.GetFieldZero());
+
+   // Add the streamer info records from unsplit fields
+   for (const auto &extraTypeInfo : desc.GetExtraTypeInfoIterable()) {
+      if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
+         continue;
+      streamerInfoMap.merge(RNTupleSerializer::DeserializeStreamerInfos(extraTypeInfo.GetContent()).Unwrap());
+   }
+
+   return streamerInfoMap;
 }
