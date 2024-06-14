@@ -681,7 +681,6 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
              // skip Constant tensors
-            std::cout << "initisalized tensor " << i.first << std::endl;
             if (i.second.IsConstantTensor()) continue;
             if (i.second.type() == ETensorType::FLOAT) {
                 size_t length = 1;
@@ -814,11 +813,10 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
             throw
             std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");
         for (auto& i: fInitializedTensors) {
-            std::cout << "looking at tensor " << i.first << std::endl;
              // skip Constant tensors
             //if (i.second.IsConstantTensor()) continue;
             if (i.second.IsConstantTensor()) {
-               std::cout << "skip constant tensor " << i.first << std::endl;
+               //std::cout << "skip constant tensor " << i.first << std::endl;
                continue;
             }
             size_t length = ConvertShapeToLength(i.second.shape());
