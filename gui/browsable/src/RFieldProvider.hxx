@@ -154,10 +154,16 @@ class RFieldProvider : public RProvider {
       void VisitInt16Field(const RField<std::int16_t> &field) final { FillHistogram(field); }
       void VisitInt32Field(const RField<std::int32_t> &field) final { FillHistogram(field); }
       void VisitInt64Field(const RField<std::int64_t> &field) final { FillHistogram(field); }
+#if !kIsSameInt64LongLongInt
+      void VisitInt64Field(const RField<long long int> &field) final { FillHistogram(field); }
+#endif
       void VisitStringField(const RField<std::string> &field) final { FillStringHistogram(field); }
       void VisitUInt16Field(const RField<std::uint16_t> &field) final { FillHistogram(field); }
       void VisitUInt32Field(const RField<std::uint32_t> &field) final { FillHistogram(field); }
       void VisitUInt64Field(const RField<std::uint64_t> &field) final { FillHistogram(field); }
+#if !kIsSameInt64LongLongInt
+      void VisitUInt64Field(const RField<unsigned long long int> &field) final { FillHistogram(field); }
+#endif
       void VisitUInt8Field(const RField<std::uint8_t> &field) final { FillHistogram(field); }
       void VisitCardinalityField(const ROOT::Experimental::RCardinalityField &field) final
       {

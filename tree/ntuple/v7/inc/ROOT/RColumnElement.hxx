@@ -524,6 +524,22 @@ public:
    RColumnElement() : RColumnElementBase(kSize) {}
 };
 
+#if !kIsSameInt64LongLongInt
+template <>
+class RColumnElement<long long int, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::int64_t);
+   RColumnElement() : RColumnElementBase(kSize) {}
+};
+
+template <>
+class RColumnElement<unsigned long long int, EColumnType::kUnknown> : public RColumnElementBase {
+public:
+   static constexpr std::size_t kSize = sizeof(std::uint64_t);
+   RColumnElement() : RColumnElementBase(kSize) {}
+};
+#endif
+
 template <>
 class RColumnElement<float, EColumnType::kUnknown> : public RColumnElementBase {
 public:

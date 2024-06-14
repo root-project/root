@@ -29,6 +29,47 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, LongLong)
+{
+   auto fldLong64 = RFieldBase::Create("fldLong64", "Long64_t").Unwrap();
+   auto fldLongLong = RField<long long int>("fldLL");
+   auto fldInt64 = RField<std::int64_t>("fldInt64");
+   EXPECT_EQ(sizeof(Long64_t), fldLong64->GetValueSize());
+   EXPECT_EQ(fldLong64->GetValueSize(), fldLongLong.GetValueSize());
+   EXPECT_EQ(fldInt64.GetValueSize(), fldLongLong.GetValueSize());
+   EXPECT_EQ(fldLong64->GetTypeName(), fldLongLong.GetTypeName());
+   EXPECT_EQ(fldInt64.GetTypeName(), fldLongLong.GetTypeName());
+
+   auto fldULong64 = RFieldBase::Create("fldULong64", "ULong64_t").Unwrap();
+   auto fldULongLong = RField<unsigned long long int>("fldULL");
+   auto fldUInt64 = RField<std::uint64_t>("fldUInt64");
+   EXPECT_EQ(sizeof(ULong64_t), fldULong64->GetValueSize());
+   EXPECT_EQ(fldULong64->GetValueSize(), fldULongLong.GetValueSize());
+   EXPECT_EQ(fldUInt64.GetValueSize(), fldLongLong.GetValueSize());
+   EXPECT_EQ(fldULong64->GetTypeName(), fldULongLong.GetTypeName());
+   EXPECT_EQ(fldUInt64.GetTypeName(), fldULongLong.GetTypeName());
+
+   FileRaii fileGuard("test_ntuple_enum_basics.root");
+   {
+      auto model = RNTupleModel::Create();
+      model->MakeField<long long int>("ll", std::numeric_limits<long long int>::max());
+      model->MakeField<unsigned long long int>("ull", std::numeric_limits<unsigned long long int>::max());
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto viewLongLong = reader->GetView<long long int>("ll");
+   auto viewULongLong = reader->GetView<unsigned long long int>("ull");
+   EXPECT_EQ(std::numeric_limits<long long int>::max(), viewLongLong(0));
+   EXPECT_EQ(std::numeric_limits<unsigned long long int>::max(), viewULongLong(0));
+   reader->LoadEntry(0);
+   auto ptrLongLong = reader->GetModel().GetDefaultEntry().GetPtr<long long int>("ll");
+   auto ptrULongLong = reader->GetModel().GetDefaultEntry().GetPtr<unsigned long long int>("ull");
+   EXPECT_EQ(std::numeric_limits<long long int>::max(), *ptrLongLong);
+   EXPECT_EQ(std::numeric_limits<unsigned long long int>::max(), *ptrULongLong);
+}
+
 TEST(RNTuple, EnumBasics)
 {
    // Needs fix of TEnum

@@ -65,6 +65,11 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
 constexpr int kUnknownCompressionSettings = -1;
 
+/// On some platforms (macOS and Windows), `(unsigned) long long int` and `std::(u)int64_t` are equivalent types, but
+/// not on others (Linux). We use kIsSameInt64LongLongInt as a directive to determine whether a separate field for
+/// `(unsigned) long long int` should be defined.
+constexpr bool kIsSameInt64LongLongInt = std::is_same_v<std::int64_t, long long int>;
+
 /// Helper types to present an offset column as array of collection sizes.
 /// See RField<RNTupleCardinality<SizeT>> for details.
 template <typename SizeT>
