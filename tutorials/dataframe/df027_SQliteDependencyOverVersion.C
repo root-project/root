@@ -38,23 +38,23 @@ void df027_SQliteDependencyOverVersion ()
    auto h618 = rdf.Filter([](const std::string &v){ return 0 == v.find("6.18");}, {"Version"})
                   .Histo1D({"h618", "Download time for version 6.18", 64, minTime, maxTime}, {"datime"});
 
-   auto histoList = {h614, h616, h618};
+   auto customize_histo = [](TH1D &histo) {
+      auto *xaxis = histo.GetXaxis();
+      xaxis->SetTimeDisplay(1);
+      xaxis->SetLabelSize(0.02);
+      xaxis->SetNdivisions(512, kFALSE);
+      xaxis->SetTimeFormat("%Y-%m-%d%F1970-00-00 00:00:00");
+      histo.SetStats(kFALSE);
+   };
 
-   std::vector<TObject*> drawHistos;
+   customize_histo(*h614);
+   customize_histo(*h616);
+   customize_histo(*h618);
 
-   for (auto histo : histoList) {
-      histo->GetXaxis()->SetTimeDisplay(1);
-      histo->GetXaxis()->SetLabelSize(0.02);
-      histo->GetXaxis()->SetNdivisions(512, kFALSE);
-      histo->GetXaxis()->SetTimeFormat("%Y-%m-%d%F1970-00-00 00:00:00");
-      histo->SetStats(kFALSE);
-
-      drawHistos.emplace_back(histo->Clone());
-   }
+   std::vector drawables{h614->Clone(), h616->Clone(), h618->Clone()};
 
    auto c1 = new TCanvas("c1","Download time", 800, 1500);
-   c1->Divide(1, drawHistos.size());
-   for (unsigned n = 0; n < drawHistos.size(); ++n)
-      c1->GetPad(n+1)->Add(drawHistos[n]);
-
+   c1->Divide(1, drawables.size());
+   for (unsigned n = 0; n < drawables.size(); ++n)
+      c1->GetPad(n + 1)->Add(drawables[n]);
 }
