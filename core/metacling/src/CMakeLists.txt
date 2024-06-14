@@ -18,6 +18,9 @@ else()
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -fno-rtti)
 endif()
 
+# This directory contains files that include llvm, which can give warnings.
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+
 ROOT_OBJECT_LIBRARY(MetaCling
   rootclingTCling.cxx
   TCling.cxx

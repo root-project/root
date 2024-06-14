@@ -20,6 +20,8 @@ target_include_directories(Core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>
 )
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error")
+
 ROOT_OBJECT_LIBRARY(ClingUtils
   src/RStl.cxx
   src/TClingUtils.cxx
