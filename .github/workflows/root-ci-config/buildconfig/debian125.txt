@@ -1,2 +1,2 @@
 pythia8=OFF
-ccache=On
+ccache=ON
