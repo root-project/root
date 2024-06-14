@@ -40,8 +40,6 @@ void df027_SQliteDependencyOverVersion ()
 
    auto histoList = {h614, h616, h618};
 
-   std::cout << "Be aware that rdf.Filter() execution takes ~30s" << std::endl;
-
    std::vector<TObject*> drawHistos;
 
    for (auto histo : histoList) {
