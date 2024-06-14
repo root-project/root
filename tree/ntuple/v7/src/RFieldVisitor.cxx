@@ -236,11 +236,11 @@ void ROOT::Experimental::RPrintValueVisitor::VisitInt16Field(const RField<std::i
    fOutput << fValue.GetRef<std::int16_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitIntField(const RField<int> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitInt32Field(const RField<std::int32_t> &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << fValue.GetRef<int>();
+   fOutput << fValue.GetRef<std::int32_t>();
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitInt64Field(const RField<std::int64_t> &field)
