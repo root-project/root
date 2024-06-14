@@ -366,6 +366,12 @@ jobs:
             is_special: true
             property: march_native
             overrides: ["CMAKE_CXX_FLAGS=-march=native", "CMAKE_C_FLAGS=-march=native"]
+          # Long builds
+          - image: alma9
+            is_special: true
+            is_long: true
+            property: ASAN
+            overrides: ["CMAKE_BUILD_TYPE=Debug", "asan=On", tmva-sofie=Off]
 
     runs-on:
       - self-hosted
@@ -437,7 +443,7 @@ jobs:
           build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
-        if: github.event_name == 'pull_request'
+        if: ${{ github.event_name == 'pull_request' && !matrix.is_long }}
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
@@ -479,7 +485,7 @@ jobs:
               "
 
       - name: Update build cache after push to release branch
-        if:   github.event_name == 'push'
+        if:   ${{ github.event_name == 'push' && !matrix.is_long }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
