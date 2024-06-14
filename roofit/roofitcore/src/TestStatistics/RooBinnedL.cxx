@@ -118,7 +118,8 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
       if (mu <= 0 && N > 0) {
 
          // Catch error condition: data present where zero events are predicted
-         RooAbsReal::logEvalError(nullptr, GetName().c_str(), Form("Observed %f events in bin %zu with zero event yield", N, i));
+         RooAbsReal::logEvalError(nullptr, GetName().c_str(),
+                                  TString::Format("Observed %f events in bin %zu with zero event yield", N, i));
 
       } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
 
