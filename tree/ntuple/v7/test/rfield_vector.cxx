@@ -428,3 +428,39 @@ TEST(RNTuple, ComplexRVec)
    }
    EXPECT_EQ(10111u, ComplexStruct::GetNCallDestructor());
 }
+
+TEST(RNTuple, VectorOfString)
+{
+   FileRaii fileGuard("test_ntuple_vector_of_string.root");
+
+   auto model = RNTupleModel::Create();
+   auto ptrVecOfStr = model->MakeField<std::vector<std::string>>("f");
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   ptrVecOfStr->emplace_back("abc");
+   ptrVecOfStr->emplace_back("");
+   ptrVecOfStr->emplace_back("de");
+   ptrVecOfStr->emplace_back(std::string(1024, 'x'));
+   writer->Fill();
+   writer->CommitCluster();
+   ptrVecOfStr->clear();
+   writer->Fill();
+   writer->CommitCluster();
+   ptrVecOfStr->emplace_back("xyz");
+   writer->Fill();
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ptrVecOfStr = reader->GetModel().GetDefaultEntry().GetPtr<std::vector<std::string>>("f");
+   EXPECT_EQ(3u, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(4u, ptrVecOfStr->size());
+   EXPECT_STREQ("abc", ptrVecOfStr->at(0).c_str());
+   EXPECT_STREQ("de", ptrVecOfStr->at(2).c_str());
+   EXPECT_EQ(std::string(1024, 'x'), ptrVecOfStr->at(3));
+   EXPECT_TRUE(ptrVecOfStr->at(1).empty());
+   reader->LoadEntry(1);
+   EXPECT_TRUE(ptrVecOfStr->empty());
+   reader->LoadEntry(2);
+   EXPECT_EQ(1u, ptrVecOfStr->size());
+   EXPECT_STREQ("xyz", ptrVecOfStr->at(0).c_str());
+}
