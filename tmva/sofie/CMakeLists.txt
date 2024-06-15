@@ -49,6 +49,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/ROperator_Comparision.hxx
    TMVA/ROperator_EyeLike.hxx
    TMVA/ROperator_Range.hxx
+   TMVA/ROperator_TopK.hxx
    TMVA/SOFIE_common.hxx
    TMVA/SOFIEHelpers.hxx
 
