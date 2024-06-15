@@ -44,7 +44,7 @@ class TStyle;
 #include "TQObject.h"
 #include "TMatrixDSym.h"
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNode;
 class xRooNLLVar;
@@ -507,6 +507,6 @@ namespace cling {
 std::string printValue(const xRooNode *val);
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE
 
 #endif // include guard

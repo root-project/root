@@ -52,7 +52,7 @@ class HypoTestResult;
 class HypoTestInverterResult;
 } // namespace RooStats
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 class xRooNode;
 
@@ -424,13 +424,13 @@ public:
    RooAbsData *data() const; // returns the data hidden inside the NLLVar if there is some
    const RooAbsCollection *globs() const { return fGlobs.get(); }
 
-   // NLL = nllTerm + constraintTerm
-   // nllTerm = sum( entryVals ) + extendedTerm + simTerm [+ binnedDataTerm if activated binnedL option]
+   // NLL = mainTerm + constraintTerm
+   // mainTerm = sum( entryVals ) + extendedTerm + simTerm [+ binnedDataTerm if activated binnedL option]
    // this is what it should be, at least
 
    // total nll should be all these values + constraint term + extended term + simTerm [+binnedDataTerm if activated
    // binnedL option]
-   RooNLLVar *nllTerm() const;
+   RooNLLVar *mainTerm() const;
    RooConstraintSum *constraintTerm() const;
 
    double getEntryVal(size_t entry) const; // get the Nll value for a specific entry
@@ -442,8 +442,10 @@ public:
    double ndof() const;
    double saturatedVal() const;
    double saturatedConstraintTerm() const;
-   double saturatedNllTerm() const;
+   double saturatedMainTerm() const;
    double pgof() const; // a goodness-of-fit pvalue based on profile likelihood of a saturated model
+   double mainTermPgof() const;
+   double mainTermNdof() const;
 
    std::set<std::string> binnedChannels() const;
 
@@ -477,6 +479,6 @@ std::string printValue(const xRooNLLVar::xValueWithError *val);
 std::string printValue(const std::map<std::string, xRooNLLVar::xValueWithError> *m);
 } // namespace cling
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE
 
 #endif // include guard
