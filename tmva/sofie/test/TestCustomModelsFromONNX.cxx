@@ -39,6 +39,12 @@
 #include "Constant_FromONNX.hxx"
 #include "input_models/references/Constant.ref.hxx"
 
+#include "TopK_FromONNX.hxx"
+#include "input_models/references/TopK.ref.hxx"
+
+#include "ComplexTopK_FromONNX.hxx"
+#include "input_models/references/ComplexTopK.ref.hxx"
+
 #include "LinearWithLeakyRelu_FromONNX.hxx"
 #include "input_models/references/LinearWithLeakyRelu.ref.hxx"
 
@@ -525,6 +531,82 @@ TEST(ONNX, Constant)
    }
 }
 
+TEST(ONNX, ComplexTopK)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({9.0000, 8.0000, 4.5000, 1.7000, 2.9000, 3.2000, 4.0000, 2.6000, 7.4000,
+        3.5000, 5.6000, 7.1000, 9.8000, 1.1000, 3.3000, 6.2000, 8.4000, 0.7000,
+        2.2000, 3.3000, 4.4000, 5.5000, 6.6000, 7.7000, 8.8000, 9.9000, 1.0000,
+        1.0000, 2.0000, 3.0000, 4.0000, 5.0000, 6.0000, 7.0000, 8.0000, 9.0000,
+        9.0000, 8.0000, 7.0000, 6.0000, 5.0000, 4.0000, 3.0000, 2.0000, 1.0000,
+        5.0000, 4.0000, 3.0000, 2.0000, 1.0000, 6.0000, 7.0000, 8.0000, 9.0000});
+   TMVA_SOFIE_ComplexTopK::Session s("ComplexTopK_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
+   std::vector<float> values = output[0];
+   std::vector<float> indexes = output[1];
+
+   // Checking output size..................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+   std::cout<<values.size()<<" "<<sizeof(ComplexTopK_ExpectedOutput::values) / sizeof(float)<<std::endl;
+
+   EXPECT_EQ(values.size(), sizeof(ComplexTopK_ExpectedOutput::values) / sizeof(float));
+
+float *correct_values = ComplexTopK_ExpectedOutput::values;
+
+// Checking every output value, one by one
+for (size_t i = 0; i < output.size(); ++i) {
+    std::cout << "Output[" << i << "]: " << values[i] << ", Correct[" << i << "]: " << correct_values[i] << std::endl;
+    EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
+}
+
+
+// Checking output size
+EXPECT_EQ(indexes.size(), sizeof(ComplexTopK_ExpectedOutput::indexes) / sizeof(float));
+
+float *correct_indexes = ComplexTopK_ExpectedOutput::indexes;
+
+// Checking every output value, one by one
+for (size_t i = 0; i < output.size(); ++i) {
+    std::cout << "Indexes[" << i << "]: " << indexes[i] << ", Correct[" << i << "]: " << correct_indexes[i] << std::endl;
+    EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
+}
+
+}
+TEST(ONNX, TopK)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard all-ones input
+   std::vector<float> input({9.0, 8.0, 4.5, 1.7, 2.9, 3.2, 4, 2.6, 7.});
+   TMVA_SOFIE_TopK::Session s("TopK_FromONNX.dat");
+   std::vector<std::vector<float>> output = s.infer(input.data());
+   std::vector<float> values = output[0];
+   std::vector<float> indexes = output[1];
+
+   // Checking output size
+   std::cout<<values.size()<<" "<<sizeof(TopK_ExpectedOutput::values) / sizeof(float)<<std::endl;
+   EXPECT_EQ(values.size(), sizeof(TopK_ExpectedOutput::values) / sizeof(float));
+
+   float *correct_values = TopK_ExpectedOutput::values;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      std::cout << "Output[" << i << "]: " << values[i] << ", Correct[" << i << "]: " << correct_values[i] << std::endl;
+      EXPECT_LE(std::abs(values[i] - correct_values[i]), TOLERANCE);
+   }
+
+   // Checking output size
+   EXPECT_EQ(indexes.size(), sizeof(TopK_ExpectedOutput::indexes) / sizeof(float));
+
+   float *correct_indexes= TopK_ExpectedOutput::indexes;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      std::cout << "Indexes[" << i << "]: " << indexes[i] << ", Correct[" << i << "]: " << correct_indexes[i] << std::endl;
+      EXPECT_LE(std::abs(indexes[i] - correct_indexes[i]), TOLERANCE);
+   }
+}
    TEST(ONNX, EyeLike)
    {
       constexpr float TOLERANCE = DEFAULT_TOLERANCE;
