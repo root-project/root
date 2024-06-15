@@ -2486,7 +2486,27 @@ ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
 {
    auto typedValue = static_cast<const std::vector<char> *>(from);
-   R__ASSERT((typedValue->size() % fItemSize) == 0);
+   // TODO(jblomer): for the following error condition, we print very detailed information before aborting.
+   // This is used to debug writing of CMS MiniAODs and can reverted back to an assert once the error is understood.
+   if ((typedValue->size() % fItemSize) != 0) {
+      std::string errMsg{"(typedValue->size() % fItemSize) != 0 in RVectorField::AppendImpl\n"};
+      errMsg += "Field name: " + GetQualifiedFieldName() + "\n";
+      errMsg += "Type name: " + GetTypeName() + "\n";
+      errMsg += "Type alias: " + GetTypeAlias() + "\n";
+      errMsg += "fItemSize: " + std::to_string(fItemSize);
+      errMsg += "   typedValue->size(): " + std::to_string(typedValue->size());
+      errMsg += "   fNWritten: " + std::to_string(fNWritten) + "\n";
+      errMsg += "Item type: " + fSubFields[0]->GetTypeName() + "\n";
+      errMsg += "Item alias: " + fSubFields[0]->GetTypeAlias() + "\n";
+      errMsg += "Item field traits: " + std::to_string(fSubFields[0]->GetTraits()) + "\n";
+      errMsg += "Item field size: " + std::to_string(fSubFields[0]->GetValueSize()) + "\n";
+      errMsg += "Item field alignment: " + std::to_string(fSubFields[0]->GetAlignment()) + "\n";
+      errMsg += "Item field type: " + std::string(typeid(*fSubFields[0]).name());
+      errMsg += "   demangled: " + ROOT::Internal::GetDemangledTypeName(typeid(*fSubFields[0])) + "\n";
+      errMsg += "*from type: " + std::string(typeid(*typedValue).name());
+      errMsg += "   demangled: " + ROOT::Internal::GetDemangledTypeName(typeid(*typedValue)) + "\n";
+      ::Fatal("", kAssertMsg, errMsg.c_str(), __LINE__, __FILE__);
+   }
    std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
 
