@@ -75,7 +75,7 @@ Many more features are available in the xRooBrowser, and further documentation a
    reinterpret_cast<TGPopupMenu *>( \
       *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(b) + b->Class()->GetDataMemberOffset(#m)))
 
-BEGIN_XROOFIT_NAMESPACE;
+BEGIN_XROOFIT_NAMESPACE
 
 xRooBrowser::xRooBrowser(xRooNode *o) : TBrowser("RooBrowser", o, "RooFit Browser"), fTopNode(o)
 {
@@ -194,4 +194,4 @@ xRooNode *xRooBrowser::GetSelected()
    return dynamic_cast<xRooNode *>(TBrowser::GetSelected());
 }
 
-END_XROOFIT_NAMESPACE;
+END_XROOFIT_NAMESPACE
