@@ -30,7 +30,7 @@
 //    n - is a number of array elements to be copied and byteswapped.   //
 //        (It is not the number of bytes!)                              //
 //                                                                      //
-// Note: It is note safe to call these routines with n == 0.            //
+// Note: It is not safe to call these routines with n == 0.             //
 //                                                                      //
 // For arrays of short type (2 bytes in size) use bswapcpy16().         //
 // For arrays of of 4-byte types (int, float) use bswapcpy32().         //
