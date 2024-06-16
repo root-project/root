@@ -33,9 +33,10 @@ protected:
    TString   fTitle;           //object title
 
 public:
-   TNamed(): fName(), fTitle() { }
+   TNamed() {} // NOLINT: Can not use `= default` because of `TObject::kIsOnHeap` detection, see related discussion at
+               // https://github.com/root-project/root/pull/4320
    TNamed(const char *name, const char *title) : fName(name), fTitle(title) { }
-   TNamed(const TString &name, const TString &title) : fName(name), fTitle(title) { }
+   TNamed(TString name, TString title) : fName(std::move(name)), fTitle(std::move(title)) {}
    TNamed(const TNamed &named);
    TNamed& operator=(const TNamed& rhs);
    virtual ~TNamed();
