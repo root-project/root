@@ -668,22 +668,31 @@ void addNormFactor(RooRealVar const *par, Sample &sample, RooWorkspace *ws)
       sample.normfactors.emplace_back(*par);
 }
 
+namespace {
+  bool verbose = true;
+}
+
 bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
                           JSONNode &elem)
 {
    RooWorkspace *ws = tool->workspace();
    RooArgSet customModifiers;
 
-   if (!sumpdf)
-      return false;
-
+   if (!sumpdf){
+     if(verbose){
+       std::cout << pdfname << " is not a sumpdf" << std::endl;
+     }
+     return false;
+   }  
+   
    std::string channelName = pdfname;
    erasePrefix(channelName, "model_");
    eraseSuffix(channelName, "_model");
 
    for (RooAbsArg *sample : sumpdf->funcList()) {
       if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
-         return false;
+	if(verbose) std::cout << "sample " << sample->GetName() << " is no RooProduct or RooRealSumPdf in " << pdfname << std::endl;	
+	return false;
       }
    }
 
@@ -1015,8 +1024,14 @@ public:
    {
       RooRealSumPdf *sumpdf = nullptr;
       for (RooAbsArg *v : prodpdf->pdfList()) {
-         sumpdf = dynamic_cast<RooRealSumPdf *>(v);
+	auto thispdf = dynamic_cast<RooRealSumPdf *>(v);
+	if(thispdf){
+	  if(!sumpdf) sumpdf = thispdf;
+	  else return false;
+	}
       }
+      if(!sumpdf) return false;
+      
       return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override
