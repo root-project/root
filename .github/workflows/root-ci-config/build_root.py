@@ -83,9 +83,12 @@ def main():
         if args.architecture == 'x86':
             options = "-AWin32 " + options
 
-    # The hash of the build option string is used to find existing artifacts
-    # with matching build options on s3 storage.
-    options_hash = calc_options_hash(options)
+    # The hash of the name of the image (if any) and build option string is 
+    # used to find existing artifacts with matching build options on s3 storage.
+    options_for_hash = options
+    if args.image:
+        options_for_hash += args.image
+    options_hash = calc_options_hash(options_for_hash)
     obj_prefix = f'{args.platform}/{args.base_ref}/{args.buildtype}/{options_hash}'
 
     # Make testing of CI in forks not impact artifacts
