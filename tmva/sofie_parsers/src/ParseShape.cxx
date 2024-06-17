@@ -7,11 +7,8 @@ namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseShape = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
-   ETensorType input_type = ETensorType::UNDEFINED;
    auto input_name = nodeproto.input(0);
-   if (parser.IsRegisteredTensorType(input_name)) {
-      input_type = parser.GetTensorType(input_name);
-   } else {
+   if (!parser.IsRegisteredTensorType(input_name)) {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser Shape op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
@@ -31,8 +28,9 @@ ParserFuncSignature ParseShape = [](RModelParser_ONNX &parser, const onnx::NodeP
 
    op.reset(new ROperator_Shape(attr_start, attr_end, input_name, output_name));
 
+   // output of Shpe is always an int64 tensor
    if (!parser.IsRegisteredTensorType(output_name)) {
-      parser.RegisterTensorType(output_name, input_type);
+      parser.RegisterTensorType(output_name, ETensorType::INT64);
    }
 
    return op;
