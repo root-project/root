@@ -27,19 +27,27 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
 
    std::string output_name = nodeproto.output(0);
    ETensorType output_type = ETensorType::FLOAT;
-   for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
-      std::string attribute_name = nodeproto.attribute(i).name();
-
+   std::vector<std::size_t> shape;   // output shape (use in case of constant operator)
+   // it should be ony one attribute (Constant or 1 or 0 COnstant of Shape)
+   if (nodeproto.attribute_size() > 1)
+      throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant or ConstantOfShape and attribute size is larger than 1");
+   if (nodeproto.attribute_size() > 0) {
+      std::string attribute_name = nodeproto.attribute(0).name();
       // tensor input
       if (attribute_name == "value") {
-         const onnx::TensorProto & t = nodeproto.attribute(i).t();
+         const onnx::TensorProto & t = nodeproto.attribute(0).t();
          output_type = static_cast<ETensorType>(t.data_type());
          //std::cout << "found attribute value with type " << ConvertTypeToString(output_type) << "\n";
-         std::vector<std::size_t> shape;
+
          std::size_t length = 1;
          for (int j = 0; j < t.dims_size(); j++) {
             shape.push_back(t.dims(j));
             length *= t.dims(j);
+         }
+         if (isConstantOfShape) {
+            // value tensor should be one-element tensor
+            if (length != 1)
+               throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape has invalid tensor size " + std::to_string(length));
          }
          switch(output_type) {
             // need to use raw_data() to get the tensor values
@@ -62,29 +70,51 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
            throw std::runtime_error("Data type in Constant op attribute " + ConvertTypeToString(output_type) +
                                        " is not supported!\n");
          }
-         break;
       }
       else {
          // neither constant nor ConstantOfShape
-         if (!isConstantOfShape)
-            throw std::runtime_error("Attribute " + attribute_name +  " in Constant op  is not yet supported!\n");
-         // case of ConstantOfShape
-         else {
-            // if attribute is not there use by default float type with zero values
-            std::vector<float> values(1);
-            std::vector<size_t> shape(1,1);
-            op.reset(new ROperator_Constant<float>("float",values,shape, input_name, output_name));
+         if (!isConstantOfShape) {
+            // case of ConstantOfShape
+            if (attribute_name == "value_float") {
+               std::vector<float> values(1);
+               values[0] = nodeproto.attribute(0).f();
+               shape.push_back(1);
+               op.reset(new ROperator_Constant<float>("float",values, shape, input_name, output_name));
+            }
+            if (attribute_name == "value_floats") {
+               auto values = std::vector<float>({nodeproto.attribute(0).floats().begin(), nodeproto.attribute(0).floats().end()});
+               shape.push_back(values.size());
+               op.reset(new ROperator_Constant<float>("float",values, shape, input_name, output_name));
+            }
+            else if (attribute_name == "value_int") {
+               std::vector<int64_t> values(1);
+               values[0] = nodeproto.attribute(0).i();
+               shape.push_back(1);
+               op.reset(new ROperator_Constant<int64_t>("int64_t",values, shape, input_name, output_name));
+            }
+            else if (attribute_name == "value_ints") {
+               auto values = std::vector<int64_t>({nodeproto.attribute(0).ints().begin(), nodeproto.attribute(0).ints().end()});
+               shape.push_back(values.size());
+               op.reset(new ROperator_Constant<int64_t>("int64_t",values, shape, input_name, output_name));
+            } else {
+               throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant op: not yet supporting attribute " + attribute_name);
+            }
+         } else {
+            throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape op: parsed invalid attribute " + attribute_name);
          }
       }
 
-      // other cases of Constant operator not required currently
-      // else if (attribute_name == "value_int")
-      //    attr_type = std::to_string( static_cast<int64_t>(nodeproto.attribute(i).i()) );
+   // case when there is no attribute
+   }  else {
+      // case of Constant of Shape : if attribute is not there use by default float type with zero values
+      if (isConstantOfShape) {
+         std::vector<float> values(1);
+         std::vector<size_t> shape(1,1);
+         op.reset(new ROperator_Constant<float>("float",values,shape, input_name, output_name));
+      } else {
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant has no attribute");
+      }
    }
-
-
-   //op.reset(new ROperator_Constant(attr_type, nodeproto.input(0), output_name));
-
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, output_type);
