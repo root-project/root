@@ -178,8 +178,8 @@ if(NOT xrootd)
                   dataframe/df105_WBosonAnalysis.py
                   dataframe/df106_HiggsToFourLeptons.py
                   dataframe/df107_SingleTopAnalysis.py
-                  v7/df104.py
-                  v7/df105.py
+                  rcanvas/df104.py
+                  rcanvas/df105.py
                   )
 endif()
 
