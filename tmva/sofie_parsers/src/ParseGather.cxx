@@ -35,14 +35,7 @@ ParserFuncSignature ParseGather = [](RModelParser_ONNX &parser, const onnx::Node
       attr_axis = nodeproto.attribute(0).i();
    }
 
-   switch (input_type) {
-   case ETensorType::FLOAT:
-         op.reset(new ROperator_Gather<float>(attr_axis, input_name, indices_name, nodeproto.output(0)));
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Gather does not yet support input type " +
-                               ConvertTypeToString(input_type));
-   }
+   op.reset(new ROperator_Gather(attr_axis, input_name, indices_name, nodeproto.output(0)));
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);

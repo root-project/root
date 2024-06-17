@@ -12,7 +12,6 @@ namespace Experimental{
 namespace SOFIE{
 
 
-template <typename T>
 class ROperator_Cast final : public ROperator
 {
 

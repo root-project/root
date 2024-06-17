@@ -666,7 +666,7 @@ std::unique_ptr<ROperator> MakeKerasReshape(PyObject* fLayer)
       std::string fNameOutput    = PyStringAsString(PyList_GetItem(fOutputs,0));
       std::string fNameShape     = fLayerName + "ReshapeAxes";
       std::unique_ptr<ROperator> op;
-      op.reset(new ROperator_Reshape<float>(fOpMode, /*allow zero*/0, fNameData, fNameShape, fNameOutput));
+      op.reset(new ROperator_Reshape(fOpMode, /*allow zero*/0, fNameData, fNameShape, fNameOutput));
       return op;
 }
 

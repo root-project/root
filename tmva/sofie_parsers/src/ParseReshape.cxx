@@ -47,17 +47,14 @@ ParserFuncSignature ParseReshape = [](RModelParser_ONNX &parser, const onnx::Nod
    }
 
    std::string output_name = nodeproto.output(0);
-   switch (input_type) {
-   case ETensorType::FLOAT:
-      if (attr_axes.empty())
-         op.reset(new ROperator_Reshape<float>(opMode, attr_value, input_name, shape_name, output_name));
-      else // for old Squeeze and Unsqueeze
-         op.reset(new ROperator_Reshape<float>(opMode, attr_axes, input_name, output_name));
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+
+   if (attr_axes.empty())
+      op.reset(new ROperator_Reshape(opMode, attr_value, input_name, shape_name, output_name));
+   else // for old Squeeze and Unsqueeze
+      op.reset(new ROperator_Reshape(opMode, attr_axes, input_name, output_name));
+
+   //   throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Reshape does not yet support input type " +
+   //                            ConvertTypeToString(input_type));
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
