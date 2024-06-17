@@ -120,6 +120,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    // Others
    RegisterOperator("BatchNormalization", ParseBatchNormalization);
    RegisterOperator("Constant", ParseConstant);
+   RegisterOperator("ConstantOfShape", ParseConstant);
    RegisterOperator("Cast", ParseCast);
    RegisterOperator("Concat", ParseConcat);
    RegisterOperator("Conv", ParseConv);
