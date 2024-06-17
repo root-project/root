@@ -245,6 +245,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitClusterGroupImpl(unsigned cha
 void ROOT::Experimental::Internal::RPageSinkFile::CommitDatasetImpl(unsigned char *serializedFooter,
                                                                     std::uint32_t length)
 {
+   fWriter->UpdateStreamerInfos(fDescriptorBuilder.BuildStreamerInfos());
    auto bufFooterZip = std::make_unique<unsigned char[]>(length);
    auto szFooterZip = fCompressor->Zip(serializedFooter, length, GetWriteOptions().GetCompression(),
                                        RNTupleCompressor::MakeMemCopyWriter(bufFooterZip.get()));
