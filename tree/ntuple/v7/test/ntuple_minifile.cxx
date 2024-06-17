@@ -665,9 +665,11 @@ TEST(MiniFile, SchemaInfo)
    FileRaii fileGuardProper("test_ntuple_minifile_schema_info_proper.root");
    FileRaii fileGuardSimple("test_ntuple_minifile_schema_info_simple.root");
 
-   std::vector<TVirtualStreamerInfo *> streamerInfos;
-   streamerInfos.emplace_back(TClass::GetClass("TVector2")->GetStreamerInfo());
-   streamerInfos.emplace_back(TClass::GetClass("TVector3")->GetStreamerInfo());
+   RNTupleSerializer::StreamerInfoMap_t streamerInfos;
+   auto infoTVector2 = TClass::GetClass("TVector2")->GetStreamerInfo();
+   auto infoTVector3 = TClass::GetClass("TVector3")->GetStreamerInfo();
+   streamerInfos[infoTVector2->GetNumber()] = infoTVector2;
+   streamerInfos[infoTVector3->GetNumber()] = infoTVector3;
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
    auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
@@ -681,21 +683,22 @@ TEST(MiniFile, SchemaInfo)
    writerSimple->UpdateStreamerInfos(streamerInfos);
    writerSimple->Commit();
 
+   std::vector<TVirtualStreamerInfo *> vecInfos;
    for (const auto &path : {fileGuardProper.GetPath(), fileGuardSimple.GetPath()}) {
       file = std::make_unique<TFile>(path.c_str());
 
-      streamerInfos.clear();
-      for (auto si : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
-         streamerInfos.emplace_back(si);
+      vecInfos.clear();
+      for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
+         vecInfos.emplace_back(info);
       }
 
       auto fnComp = [](TVirtualStreamerInfo *a, TVirtualStreamerInfo *b) {
          return strcmp(a->GetName(), b->GetName()) < 0;
       };
-      std::sort(streamerInfos.begin(), streamerInfos.end(), fnComp);
-      ASSERT_EQ(3u, streamerInfos.size());
-      EXPECT_STREQ("ROOT::Experimental::RNTuple", streamerInfos[0]->GetName());
-      EXPECT_STREQ("TVector2", streamerInfos[1]->GetName());
-      EXPECT_STREQ("TVector3", streamerInfos[2]->GetName());
+      std::sort(vecInfos.begin(), vecInfos.end(), fnComp);
+      ASSERT_EQ(3u, vecInfos.size());
+      EXPECT_STREQ("ROOT::Experimental::RNTuple", vecInfos[0]->GetName());
+      EXPECT_STREQ("TVector2", vecInfos[1]->GetName());
+      EXPECT_STREQ("TVector3", vecInfos[2]->GetName());
    }
 }

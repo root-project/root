@@ -1167,11 +1167,9 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(
-   std::span<TVirtualStreamerInfo *> streamerInfos)
+   const RNTupleSerializer::StreamerInfoMap_t &streamerInfos)
 {
-   for (auto si : streamerInfos) {
-      fStreamerInfoMap[si->GetNumber()] = si;
-   }
+   fStreamerInfoMap.insert(streamerInfos.cbegin(), streamerInfos.cend());
 }
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
