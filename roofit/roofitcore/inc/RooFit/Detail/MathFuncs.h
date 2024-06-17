@@ -744,6 +744,39 @@ fastVerticalInterpHistPdf2(int binIdx, int nCoefs, double const *coefs, double c
    return out[binIdx];
 }
 
+inline double logKappaForX(double theta, double logKappaLow, double logKappaHigh)
+{
+   double logKappa = 0.0;
+
+   if (std::abs(theta) >= 0.5) {
+      logKappa = theta >= 0 ? logKappaHigh : -logKappaLow;
+   } else {
+      // interpolate between log(kappaHigh) and -log(kappaLow)
+      //    logKappa(x) = avg + halfdiff * h(2x)
+      // where h(x) is the 3th order polynomial
+      //    h(x) = (3 x^5 - 10 x^3 + 15 x)/8;
+      // chosen so that h(x) satisfies the following:
+      //      h (+/-1) = +/-1
+      //      h'(+/-1) = 0
+      //      h"(+/-1) = 0
+      double logKhi = logKappaHigh;
+      double logKlo = -logKappaLow;
+      double avg = 0.5 * (logKhi + logKlo);
+      double halfdiff = 0.5 * (logKhi - logKlo);
+      double twox = theta + theta;
+      double twox2 = twox * twox;
+      double alpha = 0.125 * twox * (twox2 * (3 * twox2 - 10.) + 15.);
+      logKappa = avg + alpha * halfdiff;
+   }
+
+   return logKappa;
+}
+
+inline double asymPow(double theta, double kappaLow, double kappaHigh)
+{
+   return std::exp(logKappaForX(theta, std::log(kappaLow), std::log(kappaHigh)) * theta);
+}
+
 } // namespace MathFuncs
 
 } // namespace Detail
