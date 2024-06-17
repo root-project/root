@@ -16,7 +16,6 @@
  namespace Experimental{
  namespace SOFIE{
 
-     template <typename T>
      class ROperator_Concat final : public ROperator
      {
      private:
