@@ -48,28 +48,28 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
 
    std::unique_ptr<ROperator> op;
    std::string output_name = nodeproto.output(0);
-   switch (input_type) {
-   case ETensorType::FLOAT:
+   //switch (input_type) {
+   //case ETensorType::FLOAT:
       if (axisTensorNames.size() > 0) {
          // for version >= 10
          if (axis_type == ETensorType::INT32)
-            op.reset(new ROperator_Slice<float, int32_t>(input_name, axisTensorNames, output_name));
+            op.reset(new ROperator_Slice<int32_t>(input_name, axisTensorNames, output_name));
          else if (axis_type == ETensorType::INT64)
-            op.reset(new ROperator_Slice<float, int64_t>(input_name, axisTensorNames, output_name));
+            op.reset(new ROperator_Slice<int64_t>(input_name, axisTensorNames, output_name));
          else
             throw std::runtime_error(
                "TMVA::SOFIE - Unsupported - Operator Slice has invalid input type for input axis descriptors " +
                std::to_string(static_cast<int>(axis_type)));
       } else if (attr_starts.size() > 0 && attr_ends.size() > 0) {
-         op.reset(new ROperator_Slice<float, int64_t>(input_name, attr_starts, attr_ends, attr_axes, output_name));
+         op.reset(new ROperator_Slice<int64_t>(input_name, attr_starts, attr_ends, attr_axes, output_name));
       } else {
          throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice has invalid attribues");
       }
-      break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+      //break;
+   //default:
+   //   throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice does not yet support input type " +
+   //                            std::to_string(static_cast<int>(input_type)));
+   //}
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);

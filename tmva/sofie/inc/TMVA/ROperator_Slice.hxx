@@ -15,7 +15,7 @@ namespace SOFIE{
 
 // slice operator
 
-template <typename T, typename IType>
+template <typename IType>
 class ROperator_Slice final : public ROperator
 {
 
@@ -25,10 +25,10 @@ private:
    std::string fNOutput;      // output data name
    std::vector<std::string> fNames;       // tensor names for meta(axis) information
    std::vector<size_t> fShapeInput;     // input shape data
-   std::vector<size_t> fShapeOutput;   // output shape data 
+   std::vector<size_t> fShapeOutput;   // output shape data
    // saved Start/End.Steps are corrected from initial ONNX for negative/default values
    // and are available for each axis
-   std::vector<size_t> fStart;         // starting values of slices 
+   std::vector<size_t> fStart;         // starting values of slices
    std::vector<size_t> fEnd;           // End values of slices
    std::vector<size_t> fSteps;         // step values of slices
 
@@ -41,7 +41,7 @@ public:
 
    // ctor for versions >= 10
    ROperator_Slice(std::string nameData, std::vector<std::string> names, std::string nameOutput)
-      : fNData(UTILITY::Clean_name(nameData)), 
+      : fNData(UTILITY::Clean_name(nameData)),
       fNOutput(UTILITY::Clean_name(nameOutput))
    {
     fNames.resize(4);
@@ -49,7 +49,7 @@ public:
         fNames[i] = UTILITY::Clean_name(names[i]);
     }
 
-    if (names.size() == 3) { 
+    if (names.size() == 3) {
       if (names[2] != "axes") { //steps provided instead of axis
          fNames[3] = fNames[2];
          fNames[2] = "";
@@ -61,15 +61,15 @@ public:
    }
    // ctor for versions < 10
    ROperator_Slice(std::string nameData, std::vector<IType> starts, std::vector<IType> ends, std::vector<IType> axes, std::string nameOutput)
-      : fNData(UTILITY::Clean_name(nameData)), 
+      : fNData(UTILITY::Clean_name(nameData)),
       fNOutput(UTILITY::Clean_name(nameOutput))
    {
      fAttributes.push_back(starts);
      fAttributes.push_back(ends);
-     fAttributes.push_back(axes); 
+     fAttributes.push_back(axes);
     }
 
-   // output type is same as input 
+   // output type is same as input
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       auto ret = std::vector<ETensorType>(1, input[0]);
       return ret;
@@ -77,7 +77,7 @@ public:
 
    // output shape
    std::vector<std::vector<size_t>> ShapeInference(std::vector<std::vector<size_t>> input){
-      auto & input_shape = input[0]; 
+      auto & input_shape = input[0];
        // assume dimension of output shape is SAME AS INPUT !
       std::vector<std::vector<size_t>> ret(1, input_shape);
       auto & output_shape = ret[0];
@@ -101,7 +101,7 @@ public:
       if (fNames.size() > 0) {
       // loop on the extra 2 or 3 or 4 inputs
       for (size_t i = 0; i < fNames.size(); ++i) {
-        if (!fNames[i].empty()) { 
+        if (!fNames[i].empty()) {
          // std::cout << " i " << i << " getting data for tensor " << fNames[i] << std::endl;
          auto dptr = model.GetInitializedTensorData(fNames[i]);
          auto tensor = static_cast<IType *>(dptr.get());
@@ -130,7 +130,7 @@ public:
           }
       }
       size_t dim = fShapeInput.size();
-      
+
       fSteps = std::vector<size_t>(dim, 1);
       fStart = std::vector<size_t>(dim, 0);
       fEnd = fShapeInput;
@@ -139,10 +139,10 @@ public:
       auto iend = itensors[1];
       auto iaxes = itensors[2];
       auto isteps  = itensors[3];
-      
+
       // make tensor axis
       // if iaxes.size is =0 tensor axis is missing and use defaults
-      if (iaxes.size() > 0) {  
+      if (iaxes.size() > 0) {
         for (size_t i = 0; i < iaxes.size(); i++) {
             // negative axes - they count from the back
             if (iaxes[i] < 0) iaxes[i] = dim + iaxes[i];
@@ -160,7 +160,7 @@ public:
             if (ie > static_cast<IType>(imax))
                ie = imax;
             fEnd[jaxis] = ie;
-         
+
             if (isteps.size() > 0) {
                if (isteps[i] < 0) {
                   // to be done
@@ -169,9 +169,9 @@ public:
                fSteps[jaxis] = isteps[i];
                assert(fSteps[jaxis] > 0 && fSteps[jaxis] < fShapeInput[jaxis]);
             }
-        }      
+        }
       }
-      
+
       fShapeOutput = ShapeInference({fShapeInput})[0];
       model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
    }
@@ -186,7 +186,7 @@ public:
       //std::string opName = "Slice";
 
       out << SP << "///------- Slice operator\n" << std::endl;
-      // loop on the dimensions depending no the orders 
+      // loop on the dimensions depending no the orders
       size_t ndim = fShapeInput.size();
       std::vector<size_t> strides(ndim,1);
       for (int i = int(ndim-2); i >=0 ; i--) {
@@ -196,8 +196,8 @@ public:
       out << SP << "size_t iOut = 0;\n";
       std::string MSP = SP;
       for (size_t idim = 0; idim < ndim; idim++) {
-        out << MSP << "for (size_t i" << idim << " = " << fStart[idim] <<  "; i" << idim << " < " << fEnd[idim] 
-            << "; i" << idim << "+= " << fSteps[idim] << ") {\n"; 
+        out << MSP << "for (size_t i" << idim << " = " << fStart[idim] <<  "; i" << idim << " < " << fEnd[idim]
+            << "; i" << idim << "+= " << fSteps[idim] << ") {\n";
         MSP += SP;
         if (idim < ndim-1) out << MSP << "size_t stride" << idim << " = " << strides[idim] << "*i" << idim << ";\n";
       }
@@ -210,7 +210,7 @@ public:
           MSP = MSP.replace(0,SP.length(),"");
           out << MSP << "}\n";
       }
-      
+
       return out.str();
    }
 

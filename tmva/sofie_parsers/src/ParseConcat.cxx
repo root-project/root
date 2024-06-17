@@ -37,12 +37,14 @@ ParserFuncSignature ParseConcat = [](RModelParser_ONNX &parser, const onnx::Node
       else if (attribute_name == "new_axis") // this is for ConcatFromSequence (that is equivalent to np.stack)
          attr_new_axis = nodeproto.attribute(i).i();
    }
-   switch (input_type) {
-   case ETensorType::FLOAT: op.reset(new ROperator_Concat<float>(inputs, attr_axis, attr_new_axis, output_name)); break;
-   default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " +
-                               std::to_string(static_cast<int>(input_type)));
-   }
+   //switch (input_type) {
+   //case ETensorType::FLOAT:
+   op.reset(new ROperator_Concat(inputs, attr_axis, attr_new_axis, output_name));
+   //break;
+   //default:
+   //   throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Concat does not yet support input type " +
+   //                            std::to_string(static_cast<int>(input_type)));
+  // }
 
    if (!parser.IsRegisteredTensorType(output_name)) {
       parser.RegisterTensorType(output_name, input_type);
