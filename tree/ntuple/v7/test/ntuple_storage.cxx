@@ -1,6 +1,7 @@
 #include "ntuple_test.hxx"
 #include <TRandom3.h>
 #include <TMemFile.h>
+#include <TVirtualStreamerInfo.h>
 
 #ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
@@ -8,6 +9,8 @@
 
 #include <ROOT/RPageNullSink.hxx>
 using ROOT::Experimental::Internal::RPageNullSink;
+
+#include <cstring>
 
 namespace {
 /// An RPageSink that keeps counters of (vector) commit of (sealed) pages; used to test RPageSinkBuf
@@ -716,4 +719,21 @@ TEST(RPageNullSink, Basics)
    *wrPt = 42.0;
    ntuple->Fill();
    EXPECT_EQ(ntuple->GetNEntries(), 1);
+}
+
+TEST(RPageSinkFile, StreamerInfo)
+{
+   FileRaii fileGuard("test_ntuple_page_sink_file_streamer_info.ntuple");
+
+   auto model = RNTupleModel::Create();
+   model->MakeField<CustomStruct>("f");
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer.reset();
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
+      if (strcmp(info->GetName(), "CustomStruct") == 0)
+         return;
+   }
+   FAIL() << "streamer info for CustomStruct not found! ";
 }
