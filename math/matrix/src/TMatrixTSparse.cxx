@@ -114,7 +114,9 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Space is allocated for row/column indices and data. Sparse row/column index
-/// structure together with data is coming from the arrays, row, col and data, resp .
+/// structure together with data is coming from the arrays, row, col and data, resp.
+/// Here row, col and data are arrays of length nr (number of nonzero elements), i.e.
+/// the matrix is stored in COO (coordinate) format.
 
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
