@@ -16,18 +16,18 @@
 #include "Rtypes.h"
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
-
-#include "ROOT/RMiniFile.hxx"
-
+#include <ROOT/RMiniFile.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleWriteOptions.hxx>
 
 #include <Byteswap.h>
+#include <TBufferFile.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
+#include <TVirtualStreamerInfo.h>
 
 #include <xxhash.h>
 
@@ -1504,6 +1504,8 @@ ROOT::Experimental::Internal::RNTupleFileWriter::RNTupleFileWriter(std::string_v
 {
    fFileSimple.fControlBlock = std::make_unique<ROOT::Experimental::Internal::RTFileControlBlock>();
    fNTupleAnchor.fMaxKeySize = maxKeySize;
+   auto infoRNTuple = RNTuple::Class()->GetStreamerInfo();
+   fStreamerInfoMap[infoRNTuple->GetNumber()] = infoRNTuple;
 }
 
 ROOT::Experimental::Internal::RNTupleFileWriter::~RNTupleFileWriter() {}
@@ -1567,11 +1569,26 @@ ROOT::Experimental::Internal::RNTupleFileWriter::Append(std::string_view ntupleN
    return writer;
 }
 
+void ROOT::Experimental::Internal::RNTupleFileWriter::UpdateStreamerInfos(
+   std::span<TVirtualStreamerInfo *> streamerInfos)
+{
+   for (auto si : streamerInfos) {
+      fStreamerInfoMap[si->GetNumber()] = si;
+   }
+}
+
 void ROOT::Experimental::Internal::RNTupleFileWriter::Commit()
 {
    if (fFileProper) {
       // Easy case, the ROOT file header and the RNTuple streaming is taken care of by TFile
       fFileProper.fFile->WriteObject(&fNTupleAnchor, fNTupleName.c_str());
+
+      // Make sure the streamer info records used in the RNTuple are written to the file
+      TBufferFile buf(TBuffer::kWrite);
+      buf.SetParent(fFileProper.fFile);
+      for (auto [_, info] : fStreamerInfoMap)
+         buf.TagStreamerInfo(info);
+
       fFileProper.fFile->Write();
       return;
    }
@@ -1744,33 +1761,45 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteBareFileSkeleton(int 
 
 void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
 {
+   // The streamer info record is a TList of TStreamerInfo object.  We cannot use
+   // RNTupleSerializer::SerializeStreamerInfos because that uses TBufferIO::WriteObject.
+   // This would prepend the streamed TList with self-decription information.
+   // The streamer info record is just the streamed TList.
+
+   TList streamerInfoList;
+   for (auto [_, info] : fStreamerInfoMap) {
+      streamerInfoList.Add(info);
+   }
+
+   // We will stream the list with a TBufferFile. When reading the streamer info records back,
+   // the read buffer includes the key and the streamed list.  Therefore, we need to start streaming
+   // with an offset of the key length.  Otherwise, the offset for referencing duplicate objects in the
+   // buffer will point to the wrong places.
+
+   // Figure out key length
    RTFString strTList{"TList"};
    RTFString strStreamerInfo{"StreamerInfo"};
    RTFString strStreamerTitle{"Doubly linked list"};
-
    fFileSimple.fControlBlock->fHeader.SetSeekInfo(fFileSimple.fKeyOffset);
-   RTFKey keyStreamerInfo(fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100, strTList, strStreamerInfo,
-                          strStreamerTitle, 0);
-   RTFStreamerInfoList streamerInfo;
-   auto classTagOffset = keyStreamerInfo.fKeyLen + offsetof(struct RTFStreamerInfoList, fStreamerInfo) +
-                         offsetof(struct RTFStreamerInfoObject, fStreamers) +
-                         offsetof(struct RTFStreamerVersionEpoch, fNewClassTag) + 2;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerVersionMajor.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerVersionMinor.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerVersionPatch.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekHeader.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesHeader.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerLenHeader.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerSeekFooter.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerNBytesFooter.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerLenFooter.fClassTag = 0x80000000 | classTagOffset;
-   streamerInfo.fStreamerInfo.fStreamers.fStreamerMaxKeySize.fClassTag = 0x80000000 | classTagOffset;
+   auto keyLen =
+      RTFKey(fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100, strTList, strStreamerInfo, strStreamerTitle, 0)
+         .fKeyLen;
+
+   TBufferFile buffer(TBuffer::kWrite, keyLen + 1);
+   buffer.SetBufferOffset(keyLen);
+   streamerInfoList.Streamer(buffer);
+   assert(buffer.Length() > keyLen);
+   const auto bufPayload = buffer.Buffer() + keyLen;
+   const auto lenPayload = buffer.Length() - keyLen;
+
    RNTupleCompressor compressor;
-   auto szStreamerInfo = compressor.Zip(&streamerInfo, streamerInfo.GetSize(), 1);
-   fFileSimple.WriteKey(compressor.GetZipBuffer(), szStreamerInfo, streamerInfo.GetSize(),
+   auto zipStreamerInfos = std::make_unique<unsigned char[]>(lenPayload);
+   auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, 1, zipStreamerInfos.get());
+
+   fFileSimple.WriteKey(zipStreamerInfos.get(), szZipStreamerInfos, lenPayload,
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100, "TList", "StreamerInfo",
                         "Doubly linked list");
-   fFileSimple.fControlBlock->fHeader.SetNbytesInfo(fFileSimple.fFilePos -
+   fFileSimple.fControlBlock->fHeader.SetNbytesInfo(fFileSimple.fKeyOffset -
                                                     fFileSimple.fControlBlock->fHeader.GetSeekInfo());
 }
 
