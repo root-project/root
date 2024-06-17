@@ -14,7 +14,6 @@ namespace SOFIE{
 
 enum ReshapeOpMode { Reshape, Flatten, Squeeze, Unsqueeze };
 
-template <typename T>
 class ROperator_Reshape final : public ROperator
 {
 
