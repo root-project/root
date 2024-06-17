@@ -152,6 +152,7 @@ private:
    unsigned fConnLimit{1};                          ///<! number of allowed active connections
    std::string fConnToken;                          ///<! value of "token" URL parameter which should be provided for connecting window
    bool fNativeOnlyConn{false};                     ///<! only native connection are allowed, created by Show() method
+   bool fUseCurrentDir{false};                      ///<! if window can access local files via currentdir/ path of http server
    unsigned fMaxQueueLength{10};                    ///<! maximal number of queue entries
    WebWindowConnectCallback_t fConnCallback;        ///<! callback for connect event
    WebWindowDataCallback_t fDataCallback;           ///<! main callback when data over channel 1 is arrived
@@ -317,6 +318,14 @@ public:
    /////////////////////////////////////////////////////////////////////////
    /// returns true if authentication string is required
    bool IsRequireAuthKey() const { return fRequireAuthKey; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// Configure if window can access local files via currentdir/ path of http server
+   void SetUseCurrentDir(bool on = true) { fUseCurrentDir = on; }
+
+   /////////////////////////////////////////////////////////////////////////
+   /// returns true if window can access local files via currentdir/ path of http server
+   bool IsUseCurrentDir() const { return fUseCurrentDir; }
 
    void SetClientVersion(const std::string &vers);
 

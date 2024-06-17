@@ -141,6 +141,8 @@ void RWebWindow::SetPanelName(const std::string &name)
 
    fPanelName = name;
    SetDefaultPage("file:rootui5sys/panel/panel.html");
+   if (fPanelName.find("localapp.") == 0)
+      SetUseCurrentDir(true);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
