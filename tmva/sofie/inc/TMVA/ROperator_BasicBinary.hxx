@@ -46,6 +46,33 @@ struct BinaryOperatorTrait<T, Pow> {
    static std::string Op(const std::string & t1, const std::string t2) { return "std::pow(" + t1 + "," + t2 + ")"; }
 };
 
+template <typename T>
+struct TensorType {};
+template<>
+struct TensorType<float> {
+   static const std::string Name() { return "float"; }
+};
+template<>
+struct TensorType<double> {
+   static const std::string Name() { return "double"; }
+};
+template<>
+struct TensorType<int64_t> {
+   static const std::string Name() { return "int64_t"; }
+};
+template<>
+struct TensorType<int32_t> {
+   static const std::string Name() { return "int32_t"; }
+};
+template<>
+struct TensorType<uint32_t> {
+   static const std::string Name() { return "uint32_t"; }
+};
+template<>
+struct TensorType<uint64_t> {
+   static const std::string Name() { return "uint64_t"; }
+};
+
 template<typename T, EBasicBinaryOperator Op>
 class ROperator_BasicBinary final : public ROperator{
 private:
@@ -98,8 +125,8 @@ public:
             if (model.IsInitializedTensor(fNA)) {
                auto data = model.GetInitializedTensorData(fNA);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeA, fShapeY),
-                  std::default_delete<float[]>());
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeA, fShapeY),
+                  std::default_delete<T[]>());
                // Update the data and the shape of A
                model.UpdateInitializedTensor(fNA, model.GetTensorType(fNA), fShapeY, broadcastedData);
                fShapeA = fShapeY;
@@ -114,8 +141,8 @@ public:
             if (model.IsInitializedTensor(fNB)) {
                auto data = model.GetInitializedTensorData(fNB);
                std::shared_ptr<void> broadcastedData(
-                  UTILITY::UnidirectionalBroadcast<float>(static_cast<float *>(data.get()), fShapeB, fShapeY),
-                  std::default_delete<float[]>());
+                  UTILITY::UnidirectionalBroadcast<T>(static_cast<T *>(data.get()), fShapeB, fShapeY),
+                  std::default_delete<T[]>());
                // Update the data and the shape of B
                model.UpdateInitializedTensor(fNB, model.GetTensorType(fNB), fShapeY, broadcastedData);
                fShapeB = fShapeY;
@@ -145,11 +172,12 @@ public:
       std::stringstream out;
       out << SP << "\n//------ " << BinaryOperatorTrait<T,Op>::Name() << "\n";
       size_t length = ConvertShapeToLength(fShapeY);
+      std::string typeName = TensorType<T>::Name();
       // Broadcast A if it's uninitialized
       if (!fNBroadcadstedA.empty()) {
          out << SP << "// Broadcasting uninitialized tensor " << fNA << "\n";
          out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << typeName << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNA << ", " << ConvertShapeToString(fShapeA) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcadstedA << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
@@ -158,7 +186,7 @@ public:
       if (!fNBroadcadstedB.empty()) {
          out << SP << "// Broadcasting uninitialized tensor " << fNB << "\n";
          out << SP << "{\n";
-         out << SP << SP << "float* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<float>(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
+         out << SP << SP << typeName << "* data = TMVA::Experimental::SOFIE::UTILITY::UnidirectionalBroadcast<" << typeName << ">(tensor_" << fNB << ", " << ConvertShapeToString(fShapeB) << ", " << ConvertShapeToString(fShapeY) << ");\n";
          out << SP << SP << "std::copy(data, data + " << length << ", tensor_" << fNBroadcadstedB << ");\n";
          out << SP << SP << "delete[] data;\n";
          out << SP << "}\n";
