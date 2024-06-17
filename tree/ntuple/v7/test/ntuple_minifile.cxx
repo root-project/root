@@ -1,6 +1,11 @@
 #include "ntuple_test.hxx"
 #include <TKey.h>
 #include <TTree.h>
+#include <TVector2.h>
+#include <TVector3.h>
+#include <TVirtualStreamerInfo.h>
+
+#include <cstring>
 
 using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 
@@ -653,4 +658,44 @@ TEST(MiniFile, DifferentTKeys)
    file->Close();
    auto ntuple = RNTupleReader::Open("Events", fileGuard.GetPath());
    EXPECT_EQ(1, ntuple->GetNEntries());
+}
+
+TEST(MiniFile, SchemaInfo)
+{
+   FileRaii fileGuardProper("test_ntuple_minifile_schema_info_proper.root");
+   FileRaii fileGuardSimple("test_ntuple_minifile_schema_info_simple.root");
+
+   std::vector<TVirtualStreamerInfo *> streamerInfos;
+   streamerInfos.emplace_back(TClass::GetClass("TVector2")->GetStreamerInfo());
+   streamerInfos.emplace_back(TClass::GetClass("TVector3")->GetStreamerInfo());
+
+   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
+   auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+   writerProper->UpdateStreamerInfos(streamerInfos);
+   writerProper->Commit();
+   file->Close();
+
+   auto writerSimple =
+      RNTupleFileWriter::Recreate("ntpl", fileGuardSimple.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile,
+                                  RNTupleWriteOptions::kDefaultMaxKeySize);
+   writerSimple->UpdateStreamerInfos(streamerInfos);
+   writerSimple->Commit();
+
+   for (const auto &path : {fileGuardProper.GetPath(), fileGuardSimple.GetPath()}) {
+      file = std::make_unique<TFile>(path.c_str());
+
+      streamerInfos.clear();
+      for (auto si : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
+         streamerInfos.emplace_back(si);
+      }
+
+      auto fnComp = [](TVirtualStreamerInfo *a, TVirtualStreamerInfo *b) {
+         return strcmp(a->GetName(), b->GetName()) < 0;
+      };
+      std::sort(streamerInfos.begin(), streamerInfos.end(), fnComp);
+      ASSERT_EQ(3u, streamerInfos.size());
+      EXPECT_STREQ("ROOT::Experimental::RNTuple", streamerInfos[0]->GetName());
+      EXPECT_STREQ("TVector2", streamerInfos[1]->GetName());
+      EXPECT_STREQ("TVector3", streamerInfos[2]->GetName());
+   }
 }

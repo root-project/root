@@ -18,6 +18,8 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RSpan.hxx>
 #include <string_view>
 
 #include <cstdint>
@@ -28,6 +30,7 @@
 class TCollection;
 class TFile;
 class TFileMergeInfo;
+class TVirtualStreamerInfo;
 
 namespace ROOT {
 
@@ -172,6 +175,9 @@ private:
    std::string fFileName;
    /// Header and footer location of the ntuple, written on Commit()
    RNTuple fNTupleAnchor;
+   /// Set of streamer info records that should be written to the file.
+   /// The RNTuple class description is always present.
+   RNTupleSerializer::StreamerInfoMap_t fStreamerInfoMap;
 
    explicit RNTupleFileWriter(std::string_view name, std::uint64_t maxKeySize);
 
@@ -220,6 +226,8 @@ public:
    /// Write into a reserved record; the caller is responsible for making sure that the written byte range is in the
    /// previously reserved key.
    void WriteIntoReservedBlob(const void *buffer, size_t nbytes, std::int64_t offset);
+   /// Ensures that the pass streamer info is written to the file
+   void UpdateStreamerInfos(std::span<TVirtualStreamerInfo *> streamerInfos);
    /// Writes the RNTuple key to the file so that the header and footer keys can be found
    void Commit();
 };
