@@ -3437,6 +3437,14 @@ public:
         gf["std::complex<float> ptr"] =     (cf_t)+[](cdims_t d) { return new ComplexFArrayConverter{d}; };
         gf["std::complex<double> ptr"] =    (cf_t)+[](cdims_t d) { return new ComplexDArrayConverter{d}; };
         gf["void*"] =                       (cf_t)+[](cdims_t d) { return new VoidArrayConverter{(bool)d}; };
+    // converters for ROOT fixed-width integer types are important for
+    // "long long" support for the cppyy inside ROOT (see https://github.com/root-project/root/issues/15872)
+        gf["Long64_t"] =                    gf["long long"];
+        gf["Long64_t&"] =                   gf["long long&"];
+        gf["Long64_t ptr"] =                gf["long long ptr"];
+        gf["ULong64_t"] =                   gf["unsigned long long"];
+        gf["ULong64_t&"] =                  gf["unsigned long long&"];
+        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
 
     // aliases
         gf["signed char"] =                 gf["char"];

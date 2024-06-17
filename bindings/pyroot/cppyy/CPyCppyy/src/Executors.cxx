@@ -1017,6 +1017,14 @@ public:
         gf["long long&"] =                  (ef_t)+[](cdims_t) { return new LongLongRefExecutor{}; };
         gf["unsigned long long"] =          (ef_t)+[](cdims_t) { static ULongLongExecutor e{};     return &e; };
         gf["unsigned long long&"] =         (ef_t)+[](cdims_t) { return new ULongLongRefExecutor{}; };
+    // executors for ROOT fixed-width integer types are important for
+    // "long long" support for the cppyy inside ROOT (see https://github.com/root-project/root/issues/15872)
+        gf["Long64_t"] =                    gf["long long"];
+        gf["Long64_t&"] =                   gf["long long&"];
+        gf["Long64_t ptr"] =                gf["long long ptr"];
+        gf["ULong64_t"] =                   gf["unsigned long long"];
+        gf["ULong64_t&"] =                  gf["unsigned long long&"];
+        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
 
         gf["float"] =                       (ef_t)+[](cdims_t) { static FloatExecutor e{};      return &e; };
         gf["float&"] =                      (ef_t)+[](cdims_t) { return new FloatRefExecutor{}; };

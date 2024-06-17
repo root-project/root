@@ -1,0 +1,55 @@
+From 429e35c3d451aac32a38acc4edbc0d9e169e0718 Mon Sep 17 00:00:00 2001
+From: Jonas Rembser <jonas.rembser@cern.ch>
+Date: Mon, 17 Jun 2024 18:06:07 +0200
+Subject: [PATCH] [CPyCppyy] Add custom converters and executors for
+ `std::(u)int64_t`
+
+Converters and executors for 64-bit fixed-width integer types are
+important for "long long" support for the cppyy inside ROOT (see
+https://github.com/root-project/root/issues/15872).
+---
+ bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx | 8 ++++++++
+ bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx  | 8 ++++++++
+ 2 files changed, 16 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+index 1083c924522..db503f09f89 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Converters.cxx
+@@ -3437,6 +3437,14 @@ public:
+         gf["std::complex<float> ptr"] =     (cf_t)+[](cdims_t d) { return new ComplexFArrayConverter{d}; };
+         gf["std::complex<double> ptr"] =    (cf_t)+[](cdims_t d) { return new ComplexDArrayConverter{d}; };
+         gf["void*"] =                       (cf_t)+[](cdims_t d) { return new VoidArrayConverter{(bool)d}; };
++    // converters for 64-bit fixed-width integer types are important for
++    // "long long" support for the cppyy inside ROOT (see https://github.com/root-project/root/issues/15872)
++        gf["Long64_t"] =                    gf["long long"];
++        gf["Long64_t&"] =                   gf["long long&"];
++        gf["Long64_t ptr"] =                gf["long long ptr"];
++        gf["ULong64_t"] =                   gf["unsigned long long"];
++        gf["ULong64_t&"] =                  gf["unsigned long long&"];
++        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
+ 
+     // aliases
+         gf["signed char"] =                 gf["char"];
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+index f3240b6f723..6e148de6b3d 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
++++ b/bindings/pyroot/cppyy/CPyCppyy/src/Executors.cxx
+@@ -1017,6 +1017,14 @@ public:
+         gf["long long&"] =                  (ef_t)+[](cdims_t) { return new LongLongRefExecutor{}; };
+         gf["unsigned long long"] =          (ef_t)+[](cdims_t) { static ULongLongExecutor e{};     return &e; };
+         gf["unsigned long long&"] =         (ef_t)+[](cdims_t) { return new ULongLongRefExecutor{}; };
++    // executors for ROOT fixed-width integer types are important for
++    // "long long" support for the cppyy inside ROOT (see https://github.com/root-project/root/issues/15872)
++        gf["Long64_t"] =                    gf["long long"];
++        gf["Long64_t&"] =                   gf["long long&"];
++        gf["Long64_t ptr"] =                gf["long long ptr"];
++        gf["ULong64_t"] =                   gf["unsigned long long"];
++        gf["ULong64_t&"] =                  gf["unsigned long long&"];
++        gf["ULong64_t ptr"] =               gf["unsigned long long ptr"];
+ 
+         gf["float"] =                       (ef_t)+[](cdims_t) { static FloatExecutor e{};      return &e; };
+         gf["float&"] =                      (ef_t)+[](cdims_t) { return new FloatRefExecutor{}; };
+-- 
+2.45.2
+
