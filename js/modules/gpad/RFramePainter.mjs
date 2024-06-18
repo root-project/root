@@ -780,13 +780,18 @@ class RFramePainter extends RObjectPainter {
    /** @summary function can be used for zooming into specified range
      * @desc if both limits for each axis 0 (like xmin === xmax === 0), axis will be unzoomed
      * @return {Promise} with boolean flag if zoom operation was performed */
-   async zoom(xmin, xmax, ymin, ymax, zmin, zmax) {
+   async zoom(xmin, xmax, ymin, ymax, zmin, zmax, interactive) {
       // disable zooming when axis conversion is enabled
-      if (this.projection) return false;
+      if (this.projection)
+         return false;
 
-      if (xmin === 'x') { xmin = xmax; xmax = ymin; ymin = undefined; } else
-      if (xmin === 'y') { ymax = ymin; ymin = xmax; xmin = xmax = undefined; } else
-      if (xmin === 'z') { zmin = xmax; zmax = ymin; xmin = xmax = ymin = undefined; }
+      if (xmin === 'x') {
+         xmin = xmax; xmax = ymin; interactive = ymax; ymin = ymax = undefined;
+      } else if (xmin === 'y') {
+         interactive = ymax; ymax = ymin; ymin = xmax; xmin = xmax = undefined;
+      } else if (xmin === 'z') {
+         interactive = ymax; zmin = xmax; zmax = ymin; xmin = xmax = ymin = ymax = undefined;
+      }
 
       let zoom_x = (xmin !== xmax), zoom_y = (ymin !== ymax), zoom_z = (zmin !== zmax),
           unzoom_x = false, unzoom_y = false, unzoom_z = false;
@@ -799,7 +804,6 @@ class RFramePainter extends RObjectPainter {
       } else
          unzoom_x = (xmin === xmax) && (xmin === 0);
 
-
       if (zoom_y) {
          let cnt = 0;
          if (ymin <= this.ymin) { ymin = this.ymin; cnt++; }
@@ -807,7 +811,6 @@ class RFramePainter extends RObjectPainter {
          if (cnt === 2) { zoom_y = false; unzoom_y = true; }
       } else
          unzoom_y = (ymin === ymax) && (ymin === 0);
-
 
       if (zoom_z) {
          let cnt = 0;
@@ -818,15 +821,12 @@ class RFramePainter extends RObjectPainter {
       } else
          unzoom_z = (zmin === zmax) && (zmin === 0);
 
-
       let changed = false, r_x = '', r_y = '', r_z = '', is_any_check = false;
       const req = {
-            _typename: `${nsREX}RFrame::RUserRanges`,
-            values: [0, 0, 0, 0, 0, 0],
-            flags: [false, false, false, false, false, false]
-      },
-
-      checkZooming = (painter, force) => {
+         _typename: `${nsREX}RFrame::RUserRanges`,
+         values: [0, 0, 0, 0, 0, 0],
+         flags: [false, false, false, false, false, false]
+      }, checkZooming = (painter, force) => {
          if (!force && !isFunc(painter.canZoomInside)) return;
 
          is_any_check = true;
@@ -838,6 +838,8 @@ class RFramePainter extends RObjectPainter {
             zoom_x = false;
             req.values[0] = xmin; req.values[1] = xmax;
             req.flags[0] = req.flags[1] = true;
+            if (interactive)
+               this.zoomChangedInteractive('x', interactive);
          }
          if (zoom_y && (force || painter.canZoomInside('y', ymin, ymax))) {
             this.zoom_ymin = ymin;
@@ -846,6 +848,8 @@ class RFramePainter extends RObjectPainter {
             zoom_y = false;
             req.values[2] = ymin; req.values[3] = ymax;
             req.flags[2] = req.flags[3] = true;
+            if (interactive)
+               this.zoomChangedInteractive('y', interactive);
          }
          if (zoom_z && (force || painter.canZoomInside('z', zmin, zmax))) {
             this.zoom_zmin = zmin;
@@ -854,6 +858,8 @@ class RFramePainter extends RObjectPainter {
             zoom_z = false;
             req.values[4] = zmin; req.values[5] = zmax;
             req.flags[4] = req.flags[5] = true;
+            if (interactive)
+               this.zoomChangedInteractive('z', interactive);
          }
       };
 
@@ -871,20 +877,27 @@ class RFramePainter extends RObjectPainter {
             if (this.zoom_xmin !== this.zoom_xmax) { changed = true; r_x = '0'; }
             this.zoom_xmin = this.zoom_xmax = 0;
             req.values[0] = req.values[1] = -1;
+            if (interactive)
+               this.zoomChangedInteractive('x', interactive);
          }
          if (unzoom_y) {
             if (this.zoom_ymin !== this.zoom_ymax) { changed = true; r_y = '1'; }
             this.zoom_ymin = this.zoom_ymax = 0;
             req.values[2] = req.values[3] = -1;
+            if (interactive)
+               this.zoomChangedInteractive('y', interactive);
          }
          if (unzoom_z) {
             if (this.zoom_zmin !== this.zoom_zmax) { changed = true; r_z = '2'; }
             this.zoom_zmin = this.zoom_zmax = 0;
             req.values[4] = req.values[5] = -1;
+            if (interactive)
+               this.zoomChangedInteractive('z', interactive);
          }
       }
 
-      if (!changed) return false;
+      if (!changed)
+         return false;
 
       if (this.v7NormalMode())
          this.v7SubmitRequest('zoom', { _typename: `${nsREX}RFrame::RZoomRequest`, ranges: req });
@@ -929,8 +942,8 @@ class RFramePainter extends RObjectPainter {
          is_any_check = true;
 
          if (zoom_v && (force || painter.canZoomInside(name[0], vmin, vmax))) {
-            this['zoom_' + name + 'min'] = vmin;
-            this['zoom_' + name + 'max'] = vmax;
+            this[`zoom_${name}min`] = vmin;
+            this[`zoom_${name}max`] = vmax;
             changed = true;
             zoom_v = false;
             req.values[indx*2] = vmin; req.values[indx*2+1] = vmax;
@@ -963,6 +976,11 @@ class RFramePainter extends RObjectPainter {
       return this.interactiveRedraw('pad', `zoom${indx}`).then(() => true);
    }
 
+   /** @summary Unzoom single axis */
+   async unzoomSingle(name, interactive) {
+      return this.zoomSingle(name, 0, 0, typeof interactive === 'undefined' ? 'unzoom' : interactive);
+   }
+
    /** @summary Checks if specified axis zoomed */
    isAxisZoomed(axis) {
       return this[`zoom_${axis}min`] !== this[`zoom_${axis}max`];
@@ -975,7 +993,7 @@ class RFramePainter extends RObjectPainter {
          return this.unzoom('x2').then(() => this.unzoom('y2')).then(() => this.unzoom('xyz'));
 
       if ((dox === 'x2') || (dox === 'y2'))
-         return this.zoomSingle(dox, 0, 0, 'unzoom');
+         return this.unzoomSingle(dox);
 
       if (typeof dox === 'undefined')
          dox = doy = doz = true;
@@ -987,13 +1005,8 @@ class RFramePainter extends RObjectPainter {
 
       return this.zoom(dox ? 0 : undefined, dox ? 0 : undefined,
                        doy ? 0 : undefined, doy ? 0 : undefined,
-                       doz ? 0 : undefined, doz ? 0 : undefined).then(changed => {
-         if (changed && dox) this.zoomChangedInteractive('x', 'unzoom');
-         if (changed && doy) this.zoomChangedInteractive('y', 'unzoom');
-         if (changed && doz) this.zoomChangedInteractive('z', 'unzoom');
-
-         return changed;
-      });
+                       doz ? 0 : undefined, doz ? 0 : undefined,
+                       'unzoom');
    }
 
    /** @summary Mark/check if zoom for specific axis was changed interactively
@@ -1043,23 +1056,21 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu, kind /* , obj */) {
-      // when fill and show context menu, remove all zooming
-
       if (kind === 'pal') kind = 'z';
 
       if ((kind === 'x') || (kind === 'y') || (kind === 'x2') || (kind === 'y2')) {
          const handle = this[kind+'_handle'];
          if (!handle) return false;
-         menu.add('header: ' + kind.toUpperCase() + ' axis');
+         menu.header(kind.toUpperCase() + ' axis');
          return handle.fillAxisContextMenu(menu, kind);
       }
 
       const alone = menu.size() === 0;
 
       if (alone)
-         menu.add('header:Frame');
+         menu.header('Frame');
       else
-         menu.add('separator');
+         menu.separator();
 
       if (this.zoom_xmin !== this.zoom_xmax)
          menu.add('Unzoom X', () => this.unzoom('x'));
@@ -1073,7 +1084,7 @@ class RFramePainter extends RObjectPainter {
          menu.add('Unzoom Y2', () => this.unzoom('y2'));
       menu.add('Unzoom all', () => this.unzoom('all'));
 
-      menu.add('separator');
+      menu.separator();
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -1086,28 +1097,28 @@ class RFramePainter extends RObjectPainter {
       if (this.y_handle && !this.y2_handle)
          menu.addchk(this.y_handle.draw_swapside, 'Swap y', flag => this.changeFrameAttr('swapY', flag));
       if (this.x_handle && !this.x2_handle) {
-         menu.add('sub:Ticks x');
+         menu.sub('Ticks x');
          menu.addchk(this.x_handle.draw_ticks === 0, 'off', () => this.changeFrameAttr('ticksX', 0));
          menu.addchk(this.x_handle.draw_ticks === 1, 'normal', () => this.changeFrameAttr('ticksX', 1));
          menu.addchk(this.x_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksX', 2));
          menu.addchk(this.x_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksX', 3));
-         menu.add('endsub:');
+         menu.endsub();
        }
       if (this.y_handle && !this.y2_handle) {
-         menu.add('sub:Ticks y');
+         menu.sub('Ticks y');
          menu.addchk(this.y_handle.draw_ticks === 0, 'off', () => this.changeFrameAttr('ticksY', 0));
          menu.addchk(this.y_handle.draw_ticks === 1, 'normal', () => this.changeFrameAttr('ticksY', 1));
          menu.addchk(this.y_handle.draw_ticks === 2, 'ticks on both sides', () => this.changeFrameAttr('ticksY', 2));
          menu.addchk(this.y_handle.draw_ticks === 3, 'labels on both sides', () => this.changeFrameAttr('ticksY', 3));
-         menu.add('endsub:');
+         menu.endsub();
        }
 
       menu.addAttributesMenu(this, alone ? '' : 'Frame ');
-      menu.add('separator');
+      menu.separator();
 
-      menu.add('sub:Save as');
+      menu.sub('Save as');
       ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`frame.${fmt}`, () => this.getPadPainter().saveAs(fmt, 'frame', `frame.${fmt}`)));
-      menu.add('endsub:');
+      menu.endsub();
 
       return true;
    }
