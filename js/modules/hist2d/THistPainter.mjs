@@ -42,7 +42,8 @@ class THistDrawOptions {
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               need_fillcol: false,
-              minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
+              minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null,
+              IgnoreMainScale: false, IgnorePalette: false });
    }
 
    isCartesian() { return this.System === kCARTESIAN; }
@@ -106,6 +107,9 @@ class THistDrawOptions {
       d.check('USE_PAD_TITLE');
       d.check('USE_PAD_PALETTE');
       d.check('USE_PAD_STATS');
+
+      if (d.check('IGNORE_PALETTE'))
+         this.IgnorePalette = true;
 
       if (d.check('PAL', true))
          this.Palette = d.partAsInt();
@@ -1089,7 +1093,7 @@ class THistPainter extends ObjectPainter {
          histo.fSumw2 = obj.fSumw2;
 
          if (!o.ominimum) o.minimum = histo.fMinimum;
-         if (!o.omaximum) o.omaximum = histo.fMaximum;
+         if (!o.omaximum) o.maximum = histo.fMaximum;
 
          if (this.getDimension() === 1)
             o.decodeSumw2(histo);
@@ -1607,7 +1611,7 @@ class THistPainter extends ObjectPainter {
          if ((this.options.minimum === kNoZoom) && (this.options.maximum === kNoZoom)) return false;
          if (!this.draw_content) return false; // if not drawing content, not change min/max
          this.options.minimum = this.options.maximum = kNoZoom;
-         this.scanContent(true); // to reset ymin/ymax
+         this.scanContent(); // to reset ymin/ymax
          return true;
       };
 
@@ -1723,14 +1727,14 @@ class THistPainter extends ObjectPainter {
          if (this.getDimension() === 1)
             menu.add('User range X', () => this.changeUserRange(menu, 'X'));
           else {
-            menu.add('sub:User ranges');
+            menu.sub('User ranges');
             menu.add('X', () => this.changeUserRange(menu, 'X'));
             menu.add('Y', () => this.changeUserRange(menu, 'Y'));
             if (this.getDimension() > 2)
                menu.add('Z', () => this.changeUserRange(menu, 'Z'));
             else
                menu.add('Values', () => this.changeValuesRange(menu));
-            menu.add('endsub:');
+            menu.endsub();
          }
 
          if (isFunc(this.fillHistContextMenu))
@@ -1741,7 +1745,7 @@ class THistPainter extends ObjectPainter {
          // menu for 3D drawings
 
          if (menu.size() > 0)
-            menu.add('separator');
+            menu.separator();
 
          const main = this.getMainPainter() || this;
 
@@ -2012,6 +2016,10 @@ class THistPainter extends ObjectPainter {
    /** @summary draw color palette
      * @return {Promise} when done */
    async drawColorPalette(enabled, postpone_draw, can_move) {
+      // in special cases like scatter palette drawing is ignored
+      if (this.options.IgnorePalette)
+         return null;
+
       // only when create new palette, one could change frame size
       const mp = this.getMainPainter(),
             pp = this.getPadPainter();
