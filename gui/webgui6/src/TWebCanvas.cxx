@@ -1406,6 +1406,11 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          }
       }
 
+      if (r.phi || r.theta) {
+         pad->fPhi = r.phi;
+         pad->fTheta = r.theta;
+      }
+
       // copy of code from TPad::ResizePad()
 
       Double_t pxlow   = r.xlow * r.cw;
