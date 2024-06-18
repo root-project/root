@@ -1006,14 +1006,21 @@ TEST(RPageSinkFile, StreamerInfo)
    FileRaii fileGuard("test_ntuple_page_sink_file_streamer_info.ntuple");
 
    auto model = RNTupleModel::Create();
-   model->MakeField<CustomStruct>("f");
+   model->MakeField<CustomStruct>("f1");
+   model->AddField(std::make_unique<ROOT::Experimental::RUnsplitField>("f2", "StructWithArrays"));
    auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+   writer->Fill(); // need one entry to trigger streamer info record for unsplit field
    writer.reset();
 
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
+   bool found[2] = {false, false};
    for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
       if (strcmp(info->GetName(), "CustomStruct") == 0)
+         found[0] = true;
+      if (strcmp(info->GetName(), "StructWithArrays") == 0)
+         found[1] = true;
+      if (found[0] && found[1])
          return;
    }
-   FAIL() << "streamer info for CustomStruct not found! ";
+   FAIL() << "not all streamer infos found! ";
 }
