@@ -166,6 +166,8 @@ protected:
 
    void ProcessLinesForObject(TObject *obj, const std::string &lines);
 
+   void SetWindowGeometry(const std::vector<int> &arr);
+
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
    ~TWebCanvas() override;
