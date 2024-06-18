@@ -1343,13 +1343,8 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          AssignStatusBits(r.bits);
          Canvas()->fCw = r.cw;
          Canvas()->fCh = r.ch;
-         if (r.w.size() == 4) {
-            fWindowGeometry = r.w;
-            Canvas()->fWindowTopX = fWindowGeometry[0];
-            Canvas()->fWindowTopY = fWindowGeometry[1];
-            Canvas()->fWindowWidth = fWindowGeometry[2];
-            Canvas()->fWindowHeight = fWindowGeometry[3];
-         }
+         if (r.w.size() == 4)
+            SetWindowGeometry(r.w);
       }
 
       // only if get OPTIONS message from client allow to change gPad
@@ -1992,11 +1987,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Canvas()->fCh = arr->at(5);
          fFixedSize = arr->at(6) > 0;
          arr->resize(4);
-         fWindowGeometry = *arr;
-         Canvas()->fWindowTopX = fWindowGeometry[0];
-         Canvas()->fWindowTopY = fWindowGeometry[1];
-         Canvas()->fWindowWidth = fWindowGeometry[2];
-         Canvas()->fWindowHeight = fWindowGeometry[3];
+         SetWindowGeometry(*arr);
       }
    } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
@@ -2085,6 +2076,22 @@ Bool_t TWebCanvas::CheckCanvasModified(bool force_modified)
    return is_any_modified;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window geometry as array with coordinates and dimensions
+
+void TWebCanvas::SetWindowGeometry(const std::vector<int> &arr)
+{
+   fWindowGeometry = arr;
+   Canvas()->fWindowTopX = arr[0];
+   Canvas()->fWindowTopY = arr[1];
+   Canvas()->fWindowWidth = arr[2];
+   Canvas()->fWindowHeight = arr[3];
+   if (fWindow) {
+      // position is unreliable and cannot be used
+      // fWindow->SetPosition(arr[0], arr[1]);
+      fWindow->SetGeometry(arr[2], arr[3]);
+   }
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Returns window geometry including borders and menus
