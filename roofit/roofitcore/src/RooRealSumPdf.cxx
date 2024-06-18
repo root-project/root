@@ -255,9 +255,7 @@ void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
   std::size_t nEvents = output.size();
 
   // Do running sum of coef/func pairs, calculate lastCoef.
-  for (unsigned int j = 0; j < nEvents; ++j) {
-    output[j] = 0.0;
-  }
+  std::fill(output.begin(), output.end(), 0.);
 
   double sumCoeff = 0.;
   for (unsigned int i = 0; i < _funcList.size(); ++i) {
@@ -296,7 +294,7 @@ void RooRealSumPdf::doEval(RooFit::EvalContext & ctx) const
   // Introduce floor if so requested
   if (_doFloor || _doFloorGlobal) {
     for (unsigned int j = 0; j < nEvents; ++j) {
-      output[j] += std::max(0., output[j]);
+      output[j] = std::max(0., output[j]);
     }
   }
 }

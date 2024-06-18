@@ -100,6 +100,16 @@ using RooFit::Detail::JSONTree;
 
 namespace {
 
+std::vector<std::string> valsToStringVec(JSONNode const &node)
+{
+   std::vector<std::string> out;
+   out.reserve(node.num_children());
+   for (JSONNode const &elem : node.children()) {
+      out.push_back(elem.val());
+   }
+   return out;
+}
+
 /**
  * @brief Check if the number of components in CombinedData matches the number of categories in the RooSimultaneous PDF.
  *
@@ -587,20 +597,16 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    auto *mc = static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
    mc->SetWS(workspace);
 
-   std::vector<std::string> nllDistNames;
    std::vector<std::string> nllDataNames;
 
    auto *nllNode = RooJSONFactoryWSTool::findNamedChild(likelihoodsNode, analysisNode["likelihood"].val());
    if (!nllNode) {
       throw std::runtime_error("likelihood node not found!");
    }
-   for (auto &nameNode : (*nllNode)["distributions"].children()) {
-      nllDistNames.push_back(nameNode.val());
-   }
+   std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
-      RooAbsArg *extConstraint = workspace.arg(nameNode.val());
-      if (extConstraint) {
+      if (RooAbsArg *extConstraint = workspace.arg(nameNode.val())) {
          extConstraints.add(*extConstraint);
       }
    }
@@ -699,17 +705,11 @@ void combinePdfs(const JSONNode &rootnode, RooWorkspace &ws)
       // parse the information
       std::string combinedName = info.key();
       std::string indexCatName = info["index_cat"].val();
-      std::vector<std::string> labels;
+      std::vector<std::string> labels = valsToStringVec(info["labels"]);
       std::vector<int> indices;
-      std::vector<std::string> pdfNames;
+      std::vector<std::string> pdfNames = valsToStringVec(info["distributions"]);
       for (auto &n : info["indices"].children()) {
          indices.push_back(n.val_int());
-      }
-      for (auto &n : info["labels"].children()) {
-         labels.push_back(n.val());
-      }
-      for (auto &n : info["distributions"].children()) {
-         pdfNames.push_back(n.val());
       }
 
       RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
@@ -739,13 +739,10 @@ void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAb
       // parse the information
       std::string combinedName = info.key();
       std::string indexCatName = info["index_cat"].val();
-      std::vector<std::string> labels;
+      std::vector<std::string> labels = valsToStringVec(info["labels"]);
       std::vector<int> indices;
       for (auto &n : info["indices"].children()) {
          indices.push_back(n.val_int());
-      }
-      for (auto &n : info["labels"].children()) {
-         labels.push_back(n.val());
       }
       if (indices.size() != labels.size()) {
          RooJSONFactoryWSTool::error("mismatch in number of indices and labels!");
@@ -956,55 +953,15 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
-RooAbsReal *RooJSONFactoryWSTool::importTransformed(const std::string &name, const std::string &tag,
-                                                    const std::string &operation_name, const std::string &formula)
+std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &suffix,
+                                                    const std::string &formula)
 {
-   RooAbsReal *transformed = nullptr;
-   const std::string tagname = "autogen_transform_" + tag;
-   if (this->hasAttribute(name, tagname)) {
-      const std::string &original = this->getStringAttribute(name, tagname + "_original");
-      transformed = this->workspace()->function(original);
-      if (transformed)
-         return transformed;
-   }
-   const std::string newname = name + "_" + tag + "_" + operation_name;
-   transformed = this->workspace()->function(newname);
-   if (!transformed) {
-      auto *original = this->workspace()->arg(name);
-      if (!original) {
-         error("unable to import transformed of '" + name + "', original not present.");
-      }
-      RooArgSet components{*original};
-      const std::string &expression = TString::Format(formula.c_str(), name.c_str()).Data();
-      transformed = &wsEmplace<RooFormulaVar>(newname, expression.c_str(), components);
-      transformed->setAttribute(tagname.c_str());
-   }
-   return transformed;
-}
-
-std::string RooJSONFactoryWSTool::exportTransformed(const RooAbsReal *original, const std::string &tag,
-                                                    const std::string &operation_name, const std::string &formula)
-{
-   const std::string tagname = "autogen_transform_" + tag;
-   if (original->getAttribute(tagname.c_str())) {
-      if (const RooFormulaVar *trafo = dynamic_cast<const RooFormulaVar *>(original)) {
-         return trafo->dependents().first()->GetName();
-      }
-   }
-
-   std::string newname = std::string(original->GetName()) + "_" + tag + "_" + operation_name;
-   auto &trafo_node = this->createAdHoc("functions", newname);
+   std::string newname = std::string(original->GetName()) + suffix;
+   RooFit::Detail::JSONNode &trafo_node = appendNamedChild((*_rootnodeOutput)["functions"], newname);
    trafo_node["type"] << "generic_function";
    trafo_node["expression"] << TString::Format(formula.c_str(), original->GetName()).Data();
-   this->setAttribute(newname, tagname);
-   this->setStringAttribute(newname, tagname + "_original", original->GetName());
+   this->setAttribute(newname, "roofit_skip"); // this function should not be imported back in
    return newname;
-}
-
-RooFit::Detail::JSONNode &RooJSONFactoryWSTool::createAdHoc(const std::string &toplevel, const std::string &name)
-{
-   auto &collectionNode = (*_rootnodeOutput)[toplevel];
-   return appendNamedChild(collectionNode, name);
 }
 
 /**
@@ -1031,9 +988,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.
-      for (RooAbsArg *s : func.servers()) {
-         this->exportObject(*s, exportedObjectNames);
-      }
+      exportObjects(func.servers(), exportedObjectNames);
 
       std::vector<std::string> channelNames;
       for (auto const &item : simPdf->indexCat()) {
@@ -1082,13 +1037,9 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
             continue;
          }
          if (exp->autoExportDependants()) {
-            for (RooAbsArg *s : func.servers()) {
-               this->exportObject(*s, exportedObjectNames);
-            }
+            exportObjects(func.servers(), exportedObjectNames);
          } else {
-            for (RooAbsArg const *s : _serversToExport) {
-               this->exportObject(*s, exportedObjectNames);
-            }
+            exportObjects(_serversToExport, exportedObjectNames);
          }
          return;
       }
@@ -1167,11 +1118,17 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
  */
 void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDependants)
 {
+   std::string name(RooJSONFactoryWSTool::name(p));
+
+   // If this node if marked to be skipped by RooFit, exit
+   if (hasAttribute(name, "roofit_skip")) {
+      return;
+   }
+
    auto const &importers = RooFit::JSONIO::importers();
    auto const &factoryExpressions = RooFit::JSONIO::importExpressions();
 
    // some preparations: what type of function are we dealing with here?
-   std::string name(RooJSONFactoryWSTool::name(p));
    if (!::isValidName(name)) {
       std::stringstream ss;
       ss << "RooJSONFactoryWSTool() function name '" << name << "' is not valid!" << std::endl;
@@ -1794,9 +1751,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    sortByName(allpdfs);
    std::set<std::string> exportedObjectNames;
-   for (RooAbsPdf *p : allpdfs) {
-      this->exportObject(*p, exportedObjectNames);
-   }
+   exportObjects(allpdfs, exportedObjectNames);
 
    // export attributes of all objects
    for (RooAbsArg *arg : _workspace.components()) {

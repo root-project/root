@@ -103,10 +103,12 @@ if (clad)
   else()
     set(CLING_PLUGIN_LINK_LIBS -Wl,--whole-archive cladPlugin cladDifferentiator -Wl,--no-whole-archive)
   endif()
-  # Link our clad libraries to clang. If users use the clang from ROOT they will
-  # also be able to use clad out of the box.
-  add_dependencies(clang clad)
-  target_link_libraries(clang PUBLIC ${CLING_PLUGIN_LINK_LIBS})
+  if(TARGET clang)
+    # Link our clad libraries to clang. If users use the clang from ROOT they will
+    # also be able to use clad out of the box.
+    add_dependencies(clang clad)
+    target_link_libraries(clang PUBLIC ${CLING_PLUGIN_LINK_LIBS})
+  endif()
 endif()
 
 ROOT_LINKER_LIBRARY(Cling
@@ -191,7 +193,7 @@ if(MSVC)
       ??1LifetimeHandler@internal@runtime@cling@@QAE@XZ
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
     )
-    if(MSVC_VERSION GREATER_EQUAL 1938)
+    if(MSVC_VERSION GREATER_EQUAL 1938 AND MSVC_VERSION LESS 1940)
       set(cling_exports ${cling_exports}
         ??$__std_find_trivial@$$CBDD@@YAPBDPBD0D@Z
         ??$__std_find_trivial@DD@@YAPADPAD0D@Z

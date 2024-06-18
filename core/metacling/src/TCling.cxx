@@ -2716,6 +2716,15 @@ void TCling::InspectMembers(TMemberInspector& insp, const void* obj,
       return;
    }
 
+   if (TClassEdit::IsUniquePtr(cl->GetName())) {
+      // Ignore error caused by the inside of std::unique_ptr
+      // This is needed solely because of rootclingIO's IsUnsupportedUniquePointer
+      // which checks the number of elements in the GetListOfRealData.
+      // If this usage is removed, this can be replaced with a return statement.
+      // See https://github.com/root-project/root/issues/13574
+      isTransient = true;
+   }
+
    const char* cobj = (const char*) obj; // for ptr arithmetics
 
    // Treat the case of std::complex in a special manner. We want to enforce
@@ -3944,7 +3953,7 @@ static ETupleOrdering IsTupleAscending()
    }
 }
 
-static std::string AlternateTuple(const char *classname, const cling::LookupHelper& lh)
+static std::string AlternateTuple(const char *classname, const cling::LookupHelper& lh, Bool_t silent)
 {
    TClassEdit::TSplitType tupleContent(classname);
    std::string alternateName = "TEmulatedTuple";
@@ -3954,6 +3963,26 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    if (lh.findScope(fullname, cling::LookupHelper::NoDiagnostics,
                     /*resultType*/nullptr, /* intantiateTemplate= */ false))
       return fullname;
+
+   {
+      // Check if we can produce the tuple
+      auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
+      auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
+      auto deleter = [](TypeInfo_t *type) {
+         gInterpreter->TypeInfo_Delete(type);
+      };
+      std::unique_ptr<TypeInfo_t, decltype(deleter)> type{ gInterpreter->TypeInfo_Factory(), deleter };
+      while (iter != theEnd) {
+         gInterpreter->TypeInfo_Init(type.get(), iter->c_str());
+         if (gInterpreter->TypeInfo_Property(type.get()) & kIsNotReacheable) {
+            if (!silent)
+               Error("Load","Could not declare alternate type for %s since %s (or one of its context) is private or protected",
+                     classname, iter->c_str());
+            return "";
+         }
+         ++iter;
+      }
+   }
 
    std::string guard_name;
    ROOT::TMetaUtils::GetCppName(guard_name,alternateName.c_str());
@@ -3972,7 +4001,7 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    switch(IsTupleAscending()) {
       case ETupleOrdering::kAscending: {
          unsigned int nMember = 0;
-         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple)
+         auto iter = tupleContent.fElements.begin() + 1; // Skip the template name (tuple).
          auto theEnd = tupleContent.fElements.end() - 1; // skip the 'stars'.
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
@@ -3983,8 +4012,8 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
       }
       case ETupleOrdering::kDescending: {
          unsigned int nMember = tupleContent.fElements.size() - 3;
-         auto iter = tupleContent.fElements.rbegin() + 1; // Skip the template name (tuple)
-         auto theEnd = tupleContent.fElements.rend() - 1; // skip the 'stars'.
+         auto iter = tupleContent.fElements.rbegin() + 1; // skip the 'stars'.
+         auto theEnd = tupleContent.fElements.rend() - 1; // Skip the template name (tuple).
          while (iter != theEnd) {
             alternateTuple << "   " << *iter << " _" << nMember << ";\n";
             ++iter;
@@ -4002,7 +4031,10 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
    alternateTuple << "};\n";
    alternateTuple << "}}\n";
    alternateTuple << "#endif\n";
-   if (!gCling->Declare(alternateTuple.str().c_str())) {
+   if (!gCling->Declare(alternateTuple.str().c_str()))
+   {
+      // Declare is not silent (yet?), so add an explicit error message
+      // to indicate the consequence of the syntax errors.
       Error("Load","Could not declare %s",alternateName.c_str());
       return "";
    }
@@ -4015,7 +4047,7 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
 /// If 'reload' is true, (attempt to) generate a new ClassInfo even if we
 /// already have one.
 
-void TCling::SetClassInfo(TClass* cl, Bool_t reload)
+void TCling::SetClassInfo(TClass* cl, Bool_t reload, Bool_t silent)
 {
    // We are shutting down, there is no point in reloading, it only triggers
    // redundant deserializations.
@@ -4062,7 +4094,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
       if (!reload)
-         name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
+         name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper(), silent);
       if (reload || name.empty()) {
          // We could not generate the alternate
          SetWithoutClassInfoState(cl);
@@ -8862,6 +8894,7 @@ Long_t TCling::FuncTempInfo_Property(FuncTempInfo_t *ft_info) const
          break;
       default:
          // IMPOSSIBLE
+         assert(false && "Unexpected value for the access property value in Clang");
          break;
    }
 

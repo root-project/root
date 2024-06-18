@@ -137,6 +137,7 @@ class THistDrawOptions {
          this.ohmax = false;
          delete this.hmax;
       }
+      this.ignore_min_max = d.check('IGNORE_MIN_MAX');
 
       // let configure histogram titles - only for debug purposes
       if (d.check('HTITLE:', true)) histo.fTitle = decodeURIComponent(d.part.toLowerCase());
@@ -442,7 +443,8 @@ class THistDrawOptions {
          if (hdim === 1) {
             this.Zero = false; // do not draw empty bins with errors
             if (this.Hist === 1) this.Hist = false;
-            if (Number.isInteger(parseInt(d.part[0]))) this.ErrorKind = parseInt(d.part[0]);
+            if (Number.isInteger(parseInt(d.part[0])))
+               this.ErrorKind = parseInt(d.part[0]);
             if ((this.ErrorKind === 3) || (this.ErrorKind === 4)) this.need_fillcol = true;
             if (this.ErrorKind === 0) this.Zero = true; // enable drawing of empty bins
             if (d.part.indexOf('X0') >= 0) this.errorX = 0;
@@ -508,16 +510,25 @@ class THistDrawOptions {
             res = (this.BaseLine === false) ? 'B' : 'B1';
           else if (this.Mark)
             res = this.Zero ? 'P0' : 'P'; // here invert logic with 0
-          else if (this.Error) {
-            res = 'E';
-            if (this.ErrorKind >= 0) res += this.ErrorKind;
-         } else if (this.Line) {
+          else if (this.Line) {
             res += 'L';
             if (this.Fill) res += 'F';
          } else if (this.Off)
             res = '][';
 
-         if (this.Cjust) res += ' CJUST';
+         if (this.Error) {
+            res += 'E';
+            if (this.ErrorKind >= 0)
+               res += this.ErrorKind;
+            if (this.errorX === 0)
+               res += 'X0';
+         }
+
+         if (this.Cjust)
+            res += ' CJUST';
+
+         if (this.Hist === true)
+            res += 'HIST';
 
          if (this.Text) {
             res += 'TEXT';
@@ -794,7 +805,7 @@ class FunctionsHandler {
 const kUserContour = BIT(10), // user specified contour levels
 //      kCanRebin    = BIT(11), // can rebin axis
 //      kLogX        = BIT(15), // X-axis in log scale
-//      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
+      kIsZoomed = BIT(16), // bit set when zooming on Y axis
       kNoTitle = BIT(17); // don't draw the histogram title
 //      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
@@ -1018,12 +1029,17 @@ class THistPainter extends ObjectPainter {
          // one could have THStack or TMultiGraph object
          // The only that could be done is update of content
 
-         // check only stats bit, later other settings can be monitored
          const statpainter = pp?.findPainterFor(this.findStat());
+
+         // copy histogram bits
          if (histo.TestBit(kNoStats) !== obj.TestBit(kNoStats)) {
-            histo.fBits = obj.fBits;
-            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats);
+            histo.InvertBit(kNoStats);
+            // here check only stats bit
+            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats) && !this.options.NoStat; // && (!this.options.Same || this.options.ForceStat)
          }
+
+         if (histo.TestBit(kIsZoomed) !== obj.TestBit(kIsZoomed))
+            histo.InvertBit(kIsZoomed);
 
          // special treatment for webcanvas - also name can be changed
          if (this.snapid !== undefined) {
@@ -1070,6 +1086,9 @@ class THistPainter extends ObjectPainter {
          histo.fMinimum = obj.fMinimum;
          histo.fMaximum = obj.fMaximum;
          histo.fSumw2 = obj.fSumw2;
+
+         if (!o.ominimum) o.minimum = histo.fMinimum;
+         if (!o.omaximum) o.omaximum = histo.fMaximum;
 
          if (this.getDimension() === 1)
             o.decodeSumw2(histo);
@@ -1499,7 +1518,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
       if (func._typename === clTPaveStats)
-          return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat);
+          return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat); // && (!this.options.Same || this.options.ForceStat))
 
        if ((func._typename === clTF1) || (func._typename === clTF2))
           return this.options.AllFunc || !func.TestBit(BIT(9)); // TF1::kNotDraw

@@ -1,5 +1,19 @@
 # JSROOT changelog
 
+## Changes in 7.7.x
+1. Fix - hide empty title on the canvas
+2. Fix - properly handle zooming in THStack histogram
+3. Fix - always use 0 as minimum in THStack drawings
+4. Fix - always show all ticks for labeled axis
+5. Fix - draw TProfile2D bins content as text, not entries
+
+
+## Changes in 7.7.1
+1. Fix - properly select TF1 range after zooming
+2. Fix - TH1 y-range selection
+3. Fix - add 'gl' and svg2pdf-related packages to dependencies in package.json
+
+
 ## Changes in 7.7.0
 1. Let plot current time, file creation or modification time with `&optdate=[1,2,3]` URL parameters
 2. Let plot file name, full file name or item name with `&optfile=[1,2,3]` URL parameters

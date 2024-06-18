@@ -111,7 +111,7 @@ class TH1Painter extends THistPainter {
 
       let set_zoom = false;
 
-      if (this.draw_content || (this.isMainPainter() && (this.options.Axis > 0) && !this.options.ohmin && !this.options.ohmax && histo.fMinimum === kNoZoom && histo.fMaximum === kNoZoom)) {
+      if (this.draw_content || (this.isMainPainter() && (this.options.Axis > 0) && !this.options.ohmin && !this.options.ohmax && (histo.fMinimum === kNoZoom) && (histo.fMaximum === kNoZoom))) {
          if (hmin >= hmax) {
             if (hmin === 0) {
                this.ymin = 0; this.ymax = 1;
@@ -132,20 +132,24 @@ class TH1Painter extends THistPainter {
       }
 
       // final adjustment like in THistPainter.cxx line 7309
-      if (!this._exact_y_range && !pad_logy) {
+      if (!this._exact_y_range && !this._set_y_range && !pad_logy) {
          if ((this.options.BaseLine !== false) && (this.ymin >= 0))
             this.ymin = 0;
          else {
             const positive = (this.ymin >= 0);
-            this.ymin -= gStyle.fHistTopMargin*(this.ymax-this.ymin);
+            this.ymin -= gStyle.fHistTopMargin*(this.ymax - this.ymin);
             if (positive && (this.ymin < 0))
                this.ymin = 0;
          }
-         this.ymax += gStyle.fHistTopMargin*(this.ymax-this.ymin);
+         this.ymax += gStyle.fHistTopMargin*(this.ymax - this.ymin);
       }
 
-      hmin = this.options.minimum;
-      hmax = this.options.maximum;
+      if (this.options.ignore_min_max)
+         hmin = hmax = kNoZoom;
+      else {
+         hmin = this.options.minimum;
+         hmax = this.options.maximum;
+      }
 
       if ((hmin === hmax) && (hmin !== kNoZoom)) {
          if (hmin < 0) {
@@ -156,17 +160,25 @@ class TH1Painter extends THistPainter {
          }
       }
 
-      if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
+      this._set_y_range = false;
+
+      if (this.options.ohmin && this.options.ohmax && !this.draw_content) {
+         // case of hstack drawing - histogram range used for zooming, but only for stack
+         set_zoom = !this.options.ignore_min_max;
+      } else if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
          this.ymin = hmin;
          this.ymax = hmax;
+         this._set_y_range = true;
       } else {
          if (hmin !== kNoZoom) {
+            this._set_y_range = true;
             if (hmin < this.ymin)
                this.ymin = hmin;
              set_zoom = true;
          }
          if (hmax !== kNoZoom) {
+            this._set_y_range = true;
             if (hmax > this.ymax)
                this.ymax = hmax;
             set_zoom = true;

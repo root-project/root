@@ -15,10 +15,6 @@ if(roofit_multiprocess)
   list(APPEND EXTRA_DEPENDENCIES Minuit2)
 endif()
 
-if(cuda)
-  list(APPEND EXTRA_LIBRARIES RooFitCuda)
-endif()
-
 if(roofit_legacy_eval_backend)
   set(LegacyEvalBackendHeaders
     RooAbsOptTestStatistic.h
@@ -250,7 +246,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     ${LegacyEvalBackendHeaders}
   SOURCES
     src/BatchModeDataHelpers.cxx
-    src/Buffers.cxx
     src/ConstraintHelpers.cxx
     src/FitHelpers.cxx
     src/Initialisation.cxx
@@ -502,7 +497,7 @@ endif()
 # RooFit has to include them to build the documentation.
 target_compile_definitions(RooFitCore PUBLIC ROOFIT_BUILDS_ITSELF)
 
-target_include_directories(RooFitCore INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
+target_include_directories(RooFitCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/res>)
 
 # For recent clang, this can facilitate auto-vectorisation.
 # In RooFit, the errno side effect is not needed, anyway:

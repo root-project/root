@@ -737,3 +737,34 @@ More than 200 items were addressed for this release. The full list is:
 * [[ROOT-10958](https://its.cern.ch/jira/browse/ROOT-10958)] - jupyter notebook does not render geometries with new pyroot
 * [[ROOT-10977](https://its.cern.ch/jira/browse/ROOT-10977)] - Exit code 0 with failing C++ notebook in nbconvert
 * [[ROOT-11006](https://its.cern.ch/jira/browse/ROOT-11006)] - [TTreeReader] Crash when reading array branch
+
+## Release 6.32.02
+
+Published on June 18, 2024
+
+### Items addressed in this release
+
+* [[#7236](https://github.com/root-project/root/issues/7236)] - Memory leak in TFile::WriteObjectAny, depending on data type
+* [[#10075](https://github.com/root-project/root/issues/10075)] - Difficult to configure Xrootd to use non-builtin openssl
+* [[#14051](https://github.com/root-project/root/issues/14051)] - [web graphics] Web graphics resizes canvas despite canvas size definition in the macro
+* [[#15321](https://github.com/root-project/root/issues/15321)] - [MSVC] Root is failed with error G694476FC: static_assert failed "Unexpected size"
+* [[#15405](https://github.com/root-project/root/issues/15405)] - [RF] ExternalConstraints documentation incorrect for RooMCStudy
+* [[#15430](https://github.com/root-project/root/issues/15430)] - Test failures with Python 3.13
+* [[#15473](https://github.com/root-project/root/issues/15473)] - Segmentation fault when building with the mold linker
+* [[#15498](https://github.com/root-project/root/issues/15498)] - gPad is not consistent in pyROOT with web canvas
+* [[#15511](https://github.com/root-project/root/issues/15511)] - Possible memory corruption in cling
+* [[#15579](https://github.com/root-project/root/issues/15579)] - Performance regression (slowdown) in ALICE event generation
+* [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
+* [[#15688](https://github.com/root-project/root/issues/15688)] - [PyROOT] TProfile2D::Fill ambiguities preventing use of some signatures in pyROOT
+* [[#15690](https://github.com/root-project/root/issues/15690)] - [RF] SegFault in RooBernstein::fillBuffer
+* [[#15694](https://github.com/root-project/root/issues/15694)] - [RF] New RooFit EvalBackend returning incorrect result for binned likelihoods
+* [[#15703](https://github.com/root-project/root/issues/15703)] - Leaking memory though strings in PyROOT
+* [[#15727](https://github.com/root-project/root/issues/15727)] - Windows CMake project cannot find_library() after integrating with ROOT.
+* [[#15751](https://github.com/root-project/root/issues/15751)] - [RF] Using a conditional RooProdPdf in a multi-channel fit spawns too many integrals with new CPU evaluation backend
+* [[#15791](https://github.com/root-project/root/issues/15791)] - JS ROOT does not draw tprofile2d correctly with "TEXT" draw option
+* [[#15799](https://github.com/root-project/root/issues/15799)] - pyunittests-pyroot-pyz-ttree-setbranchaddress segfaults with Python 3.13
+* [[ROOT-7412](https://its.cern.ch/jira/browse/ROOT-7412)] - Strange results looking for nested types
+* [[ROOT-8439](https://its.cern.ch/jira/browse/ROOT-8439)] - PyROOT does not treat exceptions properly in overloaded methods
+* [[ROOT-9307](https://its.cern.ch/jira/browse/ROOT-9307)] - TPad::GetListOfPrimitives() double deletion error in TList::Clear()
+
+## HEAD of the v6-32-00-patches branch

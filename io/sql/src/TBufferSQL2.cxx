@@ -1381,7 +1381,7 @@ R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Long64_t arrsize, Bool_
    if (arrsize < 0 || arrsize > maxElements)
    {
       Fatal("SqlWriteArray", "Not enough space left in the buffer (1GB limit). %lld elements is greater than the max left of %d", arrsize, maxElements);
-      return; // In case the user re-routes the error handler to not die when Fatal is called)
+      return; // In case the user re-routes the error handler to not die when Fatal is called
    }
    if (!withsize && (arrsize <= 0))
       return;

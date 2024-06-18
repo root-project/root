@@ -1,4 +1,4 @@
-import { createHistogram, setHistogramTitle, kNoStats, settings, clTF3, clTH2F, isStr } from '../core.mjs';
+import { createHistogram, setHistogramTitle, kNoStats, settings, clTF3, clTH2F } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../base/func.mjs';
 import { produceTAxisLogScale, scanTF1Options } from '../hist/TF1Painter.mjs';
@@ -82,21 +82,33 @@ class TF3Painter extends TH2Painter {
             gr = fp?.getGrFuncs(this.second_x, this.second_y);
       let xmin = func.fXmin, xmax = func.fXmax,
           ymin = func.fYmin, ymax = func.fYmax,
-          zmin = func.fZmin, zmax = func.fZmax;
+          zmin = func.fZmin, zmax = func.fZmax,
+          npx = Math.max(func.fNpx, 20),
+          npy = Math.max(func.fNpy, 20),
+          npz = Math.max(func.fNpz, 20);
 
-     if (gr?.zoom_xmin !== gr?.zoom_xmax) {
-         xmin = Math.min(xmin, gr.zoom_xmin);
-         xmax = Math.max(xmax, gr.zoom_xmax);
+      if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         const dx = (xmax - xmin) / npx;
+         if ((xmin < gr.zoom_xmin) && (gr.zoom_xmin < xmax))
+            xmin = Math.max(xmin, gr.zoom_xmin - dx);
+         if ((xmin < gr.zoom_xmax) && (gr.zoom_xmax < xmax))
+            xmax = Math.min(xmax, gr.zoom_xmax + dx);
       }
 
-     if (gr?.zoom_ymin !== gr?.zoom_ymax) {
-         ymin = Math.min(ymin, gr.zoom_ymin);
-         ymax = Math.max(ymax, gr.zoom_ymax);
+      if (gr?.zoom_ymin !== gr?.zoom_ymax) {
+         const dy = (ymax - ymin) / npy;
+         if ((ymin < gr.zoom_ymin) && (gr.zoom_ymin < ymax))
+            ymin = Math.max(ymin, gr.zoom_ymin - dy);
+         if ((ymin < gr.zoom_ymax) && (gr.zoom_ymax < ymax))
+            ymax = Math.min(ymax, gr.zoom_ymax + dy);
       }
 
-     if (gr?.zoom_zmin !== gr?.zoom_zmax) {
-         zmin = Math.min(zmin, gr.zoom_zmin);
-         zmax = Math.max(zmax, gr.zoom_zmax);
+      if (gr?.zoom_zmin !== gr?.zoom_zmax) {
+         // no need for dz here - TH2 is not binned over Z axis
+         if ((zmin < gr.zoom_zmin) && (gr.zoom_zmin < zmax))
+            zmin = gr.zoom_zmin;
+         if ((zmin < gr.zoom_zmax) && (gr.zoom_zmax < zmax))
+            zmax = gr.zoom_zmax;
       }
 
       const ensureBins = (nx, ny) => {
@@ -120,9 +132,6 @@ class TF3Painter extends TH2Painter {
       delete this._fail_eval;
 
       if (!this._use_saved_points) {
-         const npx = Math.max(func.fNpx, 20),
-               npy = Math.max(func.fNpy, 20),
-               npz = Math.max(func.fNpz, 20);
          let iserror = false;
 
          if (!func.evalPar && !proivdeEvalPar(func))
@@ -170,12 +179,12 @@ class TF3Painter extends TH2Painter {
          xmin = func.fSave[nsave]; xmax = func.fSave[nsave+1];
          ymin = func.fSave[nsave+2]; ymax = func.fSave[nsave+3];
          zmin = func.fSave[nsave+4]; zmax = func.fSave[nsave+5];
-         const npx = Math.round(func.fSave[nsave+6]),
-               npy = Math.round(func.fSave[nsave+7]),
-               npz = Math.round(func.fSave[nsave+8]),
-               // dx = (xmax - xmin) / npx,
-               // dy = (ymax - ymin) / npy,
-               dz = (zmax - zmin) / npz;
+         npx = Math.round(func.fSave[nsave+6]);
+         npy = Math.round(func.fSave[nsave+7]);
+         npz = Math.round(func.fSave[nsave+8]);
+         // dx = (xmax - xmin) / npx,
+         // dy = (ymax - ymin) / npy,
+         const dz = (zmax - zmin) / npz;
 
          ensureBins(npx + 1, npy + 1);
 

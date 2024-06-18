@@ -10,7 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/Detail/CudaInterface.h>
+#include "CudaInterface.h"
 
 #include <stdexcept>
 #include <sstream>
@@ -26,8 +26,7 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
    }
 }
 
-namespace RooFit {
-namespace Detail {
+namespace RooBatchCompute {
 namespace CudaInterface {
 
 DeviceMemory::DeviceMemory(std::size_t n, std::size_t typeSize) : _size{n}
@@ -169,8 +168,15 @@ void copyDeviceToHostImpl(const void *src, void *dest, size_t nBytes, CudaStream
       ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToHost));
 }
 
+void copyDeviceToDeviceImpl(const void *src, void *dest, size_t nBytes, CudaStream *stream)
+{
+   if (stream)
+      ERRCHECK(cudaMemcpyAsync(dest, src, nBytes, cudaMemcpyDeviceToDevice, *stream));
+   else
+      ERRCHECK(cudaMemcpy(dest, src, nBytes, cudaMemcpyDeviceToDevice));
+}
+
 /// \endcond
 
 } // namespace CudaInterface
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooBatchCompute

@@ -10,14 +10,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef RooFit_Detail_CudaInterface_h
-#define RooFit_Detail_CudaInterface_h
+#ifndef CudaInterface_h
+#define CudaInterface_h
 
 #include <cstddef>
 #include <memory>
 
-namespace RooFit {
-namespace Detail {
+namespace RooBatchCompute {
+
 /*
  * C++ interface around CUDA functionality.
  *
@@ -42,7 +42,7 @@ struct Deleter {
  */
 class CudaEvent {
 public:
-   CudaEvent(bool /*forTiming*/);
+   CudaEvent(bool forTiming);
 
 // When compiling with NVCC, we allow setting and getting the actual CUDA objects from the wrapper.
 #ifdef __CUDACC__
@@ -77,6 +77,7 @@ float cudaEventElapsedTime(CudaEvent &, CudaEvent &);
 /// \cond ROOFIT_INTERNAL
 void copyHostToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);
 void copyDeviceToHostImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);
+void copyDeviceToDeviceImpl(const void *src, void *dest, std::size_t n, CudaStream * = nullptr);
 /// \endcond
 
 /**
@@ -105,6 +106,20 @@ template <class T>
 void copyDeviceToHost(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
 {
    copyDeviceToHostImpl(src, dest, sizeof(T) * n);
+}
+
+/**
+ * Copies data from the CUDA device to the CUDA device.
+ *
+ * @param[in] src             Pointer to the source memory on the device.
+ * @param[in] dest            Pointer to the destination memory on the device.
+ * @param[in] nBytes          Number of bytes to copy.
+ * @param[in] stream          CudaStream for asynchronous memory transfer (optional).
+ */
+template <class T>
+void copyDeviceToDevice(const T *src, T *dest, std::size_t n, CudaStream * = nullptr)
+{
+   copyDeviceToDeviceImpl(src, dest, sizeof(T) * n);
 }
 
 /// \cond ROOFIT_INTERNAL
@@ -138,7 +153,6 @@ private:
    std::size_t _size = 0;
 };
 /// \endcond
-
 
 /**
  * @class Array
@@ -204,7 +218,6 @@ template <class T>
 using PinnedHostArray = Array<T, PinnedHostMemory>;
 
 } // namespace CudaInterface
-} // namespace Detail
-} // namespace RooFit
+} // namespace RooBatchCompute
 
 #endif

@@ -17,7 +17,6 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
-#include <RooLegacyExpPoly.h>
 #include <RooExponential.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
@@ -25,6 +24,7 @@
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
+#include <RooLegacyExpPoly.h>
 #include <RooLognormal.h>
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
@@ -37,6 +37,8 @@
 
 #include <TF1.h>
 #include <TH1.h>
+
+#include "JSONIOUtils.h"
 
 #include "static_execute.h"
 
@@ -237,12 +239,18 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooAbsReal *mu = tool->requestArg<RooAbsReal>(p, "mu");
-      RooAbsReal *sigma = tool->requestArg<RooAbsReal>(p, "sigma");
 
-      // TODO: check if the pdf was originally exported by ROOT, in which case
-      // it can be imported back without using the standard parametrization.
-      tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, true);
+      // Same mechanism to undo the parameter transformation as in the
+      // RooExponentialFactory (see comments in that class for more info).
+      const std::string muName = p["mu"].val();
+      const std::string sigmaName = p["sigma"].val();
+      const bool isTransformed = endsWith(muName, "_lognormal_log");
+      const std::string suffixToRemove = isTransformed ? "_lognormal_log" : "";
+      RooAbsReal *mu = tool->request<RooAbsReal>(removeSuffix(muName, suffixToRemove), name);
+      RooAbsReal *sigma = tool->request<RooAbsReal>(removeSuffix(sigmaName, suffixToRemove), name);
+
+      tool->wsEmplace<RooLognormal>(name, *x, *mu, *sigma, !isTransformed);
+
       return true;
    }
 };
@@ -253,11 +261,45 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
-      RooAbsReal *c = tool->requestArg<RooAbsReal>(p, "c");
 
-      // TODO: check if the pdf was originally exported by ROOT, in which case
-      // it can be imported back without using the standard parametrization.
-      tool->wsEmplace<RooExponential>(name, *x, *c, true);
+      // If the parameter name ends with the "_exponential_inverted" suffix,
+      // this means that it was exported from a RooFit object where the
+      // parameter first needed to be transformed on export to match the HS3
+      // specification. But when re-importing such a parameter, we can simply
+      // skip the transformation and use the original RooFit parameter without
+      // the suffix.
+      //
+      // A concrete example: take the following RooFit pdf in the factory language:
+      //
+      //    "Exponential::exponential_1(x[0, 10], c[-0.1])"
+      //
+      //  It defines en exponential exp(c * x). However, in HS3 the exponential
+      //  is defined as exp(-c * x), to RooFit would export these dictionaries
+      //  to the JSON:
+      //
+      //  {
+      //      "name": "exponential_1",             // HS3 exponential_dist with transformed parameter
+      //      "type": "exponential_dist",
+      //      "x": "x",
+      //      "c": "c_exponential_inverted"
+      //  },
+      //  {
+      //      "name": "c_exponential_inverted",    // transformation function created on-the-fly on export
+      //      "type": "generic_function",
+      //      "expression": "-c"
+      //  }
+      //
+      //  On import, we can directly take the non-transformed parameter, which is
+      //  we check for the suffix and optionally remove it from the requested
+      //  name next:
+
+      const std::string constParamName = p["c"].val();
+      const bool isInverted = endsWith(constParamName, "_exponential_inverted");
+      const std::string suffixToRemove = isInverted ? "_exponential_inverted" : "";
+      RooAbsReal *c = tool->request<RooAbsReal>(removeSuffix(constParamName, suffixToRemove), name);
+
+      tool->wsEmplace<RooExponential>(name, *x, *c, !isInverted);
+
       return true;
    }
 };
@@ -477,14 +519,15 @@ public:
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
       TString expression(pdf->expression());
+      std::vector<std::pair<RooAbsArg *, std::size_t>> paramsWithIndex;
+      paramsWithIndex.reserve(pdf->nParameters());
       for (size_t i = 0; i < pdf->nParameters(); ++i) {
-         RooAbsArg *par = pdf->getParameter(i);
-         std::stringstream ss_1;
-         ss_1 << "x[" << i << "]";
-         std::stringstream ss_2;
-         ss_2 << "@" << i << "";
-         expression.ReplaceAll(ss_1.str().c_str(), par->GetName());
-         expression.ReplaceAll(ss_2.str().c_str(), par->GetName());
+         paramsWithIndex.emplace_back(pdf->getParameter(i), i);
+      }
+      std::sort(paramsWithIndex.begin(), paramsWithIndex.end());
+      for (auto [par, idx] : paramsWithIndex) {
+         expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
+         expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();
       return true;
@@ -562,12 +605,12 @@ public:
       auto &m0 = pdf->getMedian();
       auto &k = pdf->getShapeK();
 
-      if(pdf->useStandardParametrization()) {
+      if (pdf->useStandardParametrization()) {
          elem["mu"] << m0.GetName();
          elem["sigma"] << k.GetName();
       } else {
-         elem["mu"] << tool->exportTransformed(&m0, "lognormal", "log", "log(%s)");
-         elem["sigma"] << tool->exportTransformed(&k, "lognormal", "log", "log(%s)");
+         elem["mu"] << tool->exportTransformed(&m0, "_lognormal_log", "log(%s)");
+         elem["sigma"] << tool->exportTransformed(&k, "_lognormal_log", "log(%s)");
       }
 
       return true;
@@ -586,7 +629,7 @@ public:
       if (pdf->negateCoefficient()) {
          elem["c"] << c.GetName();
       } else {
-         elem["c"] << tool->exportTransformed(&c, "exponential", "inverted", "-%s");
+         elem["c"] << tool->exportTransformed(&c, "_exponential_inverted", "-%s");
       }
 
       return true;
