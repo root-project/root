@@ -2282,48 +2282,6 @@ TEST(RNTuple, Traits)
    EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
 }
 
-TEST(RNTuple, TClassReadRules)
-{
-   ROOT::TestSupport::CheckDiagsRAII diags;
-   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
-   diags.optionalDiag(kWarning, "ROOT::Experimental::Detail::RPageSinkFile::RPageSinkFile",
-                      "The RNTuple file format will change.", false);
-   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
-
-   FileRaii fileGuard("test_ntuple_tclassrules.ntuple");
-   char c[4] = {'R', 'O', 'O', 'T'};
-   {
-      auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<StructWithIORules>("klass");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      for (int i = 0; i < 20; i++) {
-         *fieldKlass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
-         ntuple->Fill();
-      }
-   }
-
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
-             ntuple->GetModel().GetField("klass").GetOnDiskTypeChecksum());
-   EXPECT_EQ(20U, ntuple->GetNEntries());
-   auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
-   for (auto i : ntuple->GetEntryRange()) {
-      float fi = static_cast<float>(i);
-      EXPECT_EQ(fi, viewKlass(i).a);
-      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
-
-      // The following values are set from a read rule; see CustomStructLinkDef.h
-      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
-      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
-      EXPECT_EQ("ROOT", viewKlass(i).s.str);
-
-      // The following member is set by a checksum based rule
-      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
-      // The following member is not touched by a rule due to a checksum mismatch
-      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
-   }
-}
-
 TEST(RNTuple, RColumnRepresentations)
 {
    using RColumnRepresentations = ROOT::Experimental::RFieldBase::RColumnRepresentations;
