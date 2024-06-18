@@ -722,10 +722,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Fill pad context menu
      * @private */
    fillContextMenu(menu) {
-      if (this.iscan)
-         menu.add('header: RCanvas');
-      else
-         menu.add('header: RPad');
+      menu.header(this.iscan ? 'RCanvas' : 'RPad');
 
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
@@ -738,7 +735,7 @@ class RPadPainter extends RObjectPainter {
          }
       }
 
-      menu.add('separator');
+      menu.separator();
 
       if (isFunc(this.hasMenuBar) && isFunc(this.actiavteMenuBar))
          menu.addchk(this.hasMenuBar(), 'Menu bar', flag => this.actiavteMenuBar(flag));
@@ -752,9 +749,9 @@ class RPadPainter extends RObjectPainter {
          menu.addchk((this.enlargeMain('state') === 'on'), 'Enlarge ' + (this.iscan ? 'canvas' : 'pad'), () => this.enlargePad());
 
       const fname = this.this_pad_name || (this.iscan ? 'canvas' : 'pad');
-      menu.add('sub:Save as');
+      menu.sub('Save as');
       ['svg', 'png', 'jpeg', 'pdf', 'webp'].forEach(fmt => menu.add(`${fname}.${fmt}`, () => this.saveAs(fmt, this.iscan, `${fname}.${fmt}`)));
-      menu.add('endsub:');
+      menu.endsub();
 
       return true;
    }
@@ -1445,7 +1442,7 @@ class RPadPainter extends RObjectPainter {
          if (closeMenu()) return;
 
          return createMenu(evnt, this).then(menu => {
-            menu.add('header:Menus');
+            menu.header('Menus');
 
             if (this.iscan)
                menu.add('Canvas', 'pad', this.itemContextMenu);
@@ -1465,7 +1462,7 @@ class RPadPainter extends RObjectPainter {
             }
 
             if (this.painters?.length) {
-               menu.add('separator');
+               menu.separator();
                const shown = [];
                this.painters.forEach((pp, indx) => {
                   const obj = pp?.getObject();

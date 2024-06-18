@@ -842,7 +842,7 @@ class ObjectPainter extends BasePainter {
       if (p > 0) cl = cl.slice(p+2);
       const title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
 
-      menu.add(`header:${title}`);
+      menu.header(title);
 
       const size0 = menu.size();
 
@@ -1361,7 +1361,7 @@ class ObjectPainter extends BasePainter {
 
          if (menu.exec_items?.length) {
             if (_menu.size() > 0)
-               _menu.add('separator');
+               _menu.separator();
 
             let lastclname;
 
@@ -1371,7 +1371,7 @@ class ObjectPainter extends BasePainter {
                item.$menu = menu;
 
                if (item.fClassName && lastclname && (lastclname !== item.fClassName)) {
-                  _menu.add('endsub:');
+                  _menu.endsub();
                   lastclname = '';
                }
                if (lastclname !== item.fClassName) {
@@ -1379,7 +1379,7 @@ class ObjectPainter extends BasePainter {
                   const p = lastclname.lastIndexOf('::'),
                         shortname = (p > 0) ? lastclname.slice(p+2) : lastclname;
 
-                  _menu.add('sub:' + shortname.replace(/[<>]/g, '_'));
+                  _menu.sub(shortname.replace(/[<>]/g, '_'));
                }
 
                if ((item.fChecked === undefined) || (item.fChecked < 0))
@@ -1388,7 +1388,7 @@ class ObjectPainter extends BasePainter {
                   _menu.addchk(item.fChecked, item.fName, n, DoExecMenu);
             }
 
-            if (lastclname) _menu.add('endsub:');
+            if (lastclname) _menu.endsub();
          }
 
          _resolveFunc(_menu);

@@ -1123,7 +1123,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu) {
-      menu.add('header: Draw options');
+      menu.header('Draw options');
 
       menu.addchk(this.ctrl.update_browser, 'Browser update', () => {
          this.ctrl.update_browser = !this.ctrl.update_browser;
@@ -1131,11 +1131,11 @@ class TGeoPainter extends ObjectPainter {
       });
       menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlGui('toggle'));
 
-      menu.add('sub:Show axes', () => this.setAxesDraw('toggle'));
+      menu.sub('Show axes', () => this.setAxesDraw('toggle'));
       menu.addchk(this.ctrl._axis === 0, 'off', 0, arg => this.setAxesDraw(parseInt(arg)));
       menu.addchk(this.ctrl._axis === 1, 'side', 1, arg => this.setAxesDraw(parseInt(arg)));
       menu.addchk(this.ctrl._axis === 2, 'center', 2, arg => this.setAxesDraw(parseInt(arg)));
-      menu.add('endsub:');
+      menu.endsub();
 
       if (this.geo_manager)
          menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
@@ -1145,7 +1145,7 @@ class TGeoPainter extends ObjectPainter {
       if (!this.getCanvPainter())
          menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
-      menu.add('sub:Highlight');
+      menu.sub('Highlight');
 
       menu.addchk(!this.ctrl.highlight, 'Off', () => {
          this.ctrl.highlight = false;
@@ -1162,16 +1162,16 @@ class TGeoPainter extends ObjectPainter {
          this.changedHighlight();
       });
 
-      menu.add('separator');
+      menu.separator();
 
       menu.addchk(this.ctrl.highlight_scene, 'Scene', flag => {
          this.ctrl.highlight_scene = flag;
          this.changedHighlight();
       });
 
-      menu.add('endsub:');
+      menu.endsub();
 
-      menu.add('sub:Camera');
+      menu.sub('Camera');
       menu.add('Reset position', () => this.focusCamera());
       if (!this.ctrl.project)
           menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
@@ -1187,25 +1187,25 @@ class TGeoPainter extends ObjectPainter {
             });
          }
 
-         menu.add('sub:Kind');
+         menu.sub('Kind');
          this.ctrl.cameraKindItems.forEach(item =>
             menu.addchk(this.ctrl.camera_kind === item.value, item.name, item.value, arg => {
                this.ctrl.camera_kind = arg;
                this.changeCamera();
             }));
-         menu.add('endsub:');
+         menu.endsub();
 
          if (this.isOrthoCamera()) {
-            menu.add('sub:Overlay');
+            menu.sub('Overlay');
             this.ctrl.cameraOverlayItems.forEach(item =>
                menu.addchk(this.ctrl.camera_overlay === item.value, item.name, item.value, arg => {
                   this.ctrl.camera_overlay = arg;
                   this.changeCamera();
                }));
-            menu.add('endsub:');
+            menu.endsub();
          }
       }
-      menu.add('endsub:');
+      menu.endsub();
 
       menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
@@ -1768,7 +1768,7 @@ class TGeoPainter extends ObjectPainter {
           else {
             const many = (numnodes + numitems) > 1;
 
-            if (many) menu.add('header:' + ((numitems > 0) ? 'Items' : 'Nodes'));
+            if (many) menu.header((numitems > 0) ? 'Items' : 'Nodes');
 
             for (let n = 0; n < intersects.length; ++n) {
                const obj = intersects[n].object,
@@ -1825,7 +1825,7 @@ class TGeoPainter extends ObjectPainter {
                      menu.painter.render3D();
                   }, 'Hide this physical node');
 
-                  if (many) menu.add('endsub:');
+                  if (many) menu.endsub();
 
                   continue;
                }
@@ -1892,7 +1892,7 @@ class TGeoPainter extends ObjectPainter {
                   }
                }
 
-               if (many) menu.add('endsub:');
+               if (many) menu.endsub();
             }
          }
          menu.show();
@@ -5502,7 +5502,7 @@ function provideMenu(menu, item, hpainter) {
 
    if (!vol && !iseve) return false;
 
-   menu.add('separator');
+   menu.separator();
 
    const scanEveVisible = (obj, arg, skip_this) => {
       if (!arg) arg = { visible: 0, hidden: 0 };
@@ -5579,12 +5579,12 @@ function provideMenu(menu, item, hpainter) {
             findItemWithPainter(item, 'testGeomChanges');
          };
 
-         menu.add('sub:Physical vis', 'Physical node visibility - only for this instance');
+         menu.sub('Physical vis', 'Physical node visibility - only for this instance');
          menu.addchk(phys_vis?.visible, 'on', 'on', changePhysVis, 'Enable visibility of phys node');
          menu.addchk(phys_vis && !phys_vis.visible, 'off', 'off', changePhysVis, 'Disable visibility of physical node');
          menu.add('reset', 'clear', changePhysVis, 'Reset custom visibility of physical node');
          menu.add('reset all', 'clearall', changePhysVis, 'Reset all custom settings for all nodes');
-         menu.add('endsub:');
+         menu.endsub();
       }
 
       menu.addchk(is_visible, 'Logical vis',

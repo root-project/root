@@ -1119,7 +1119,7 @@ class FlexibleDisplay extends MDIDisplay {
       arr.sort((f1, f2) => (d3_select(f1).property('frame_cnt') < d3_select(f2).property('frame_cnt') ? -1 : 1));
 
       createMenu(evnt, this).then(menu => {
-         menu.add('header:Flex');
+         menu.header('Flex');
          menu.add('Cascade', () => this.sortFrames('cascade'), 'Cascade frames');
          menu.add('Tile', () => this.sortFrames('tile'), 'Tile all frames');
          if (nummin < arr.length)
@@ -1127,7 +1127,7 @@ class FlexibleDisplay extends MDIDisplay {
          if (nummin > 0)
             menu.add('Show all', () => this.showAll(), 'Restore minimized frames');
          menu.add('Close all', () => this.closeAllFrames());
-         menu.add('separator');
+         menu.separator();
 
          arr.forEach((f, i) => menu.addchk((f===active), ((this.getFrameState(f) === 'min') ? '[min] ' : '') + d3_select(f).attr('frame_title'), i,
                       arg => {

@@ -380,9 +380,9 @@ class RHistStatsPainter extends RPavePainter {
          const obj = this.getObject(),
              action = this.changeMask.bind(this);
 
-         menu.add('header: StatBox');
+         menu.header('Stat Box');
 
-         for (let n=0; n<obj.fEntries.length; ++n)
+         for (let n = 0; n < obj.fEntries.length; ++n)
             menu.addchk((obj.fShowMask & (1<<n)), obj.fEntries[n], n, action);
 
          return this.fillObjectExecMenu(menu);

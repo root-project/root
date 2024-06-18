@@ -325,7 +325,7 @@ class TGraphPainter extends ObjectPainter {
       let histo = this.getHistogram();
 
       if (!histo) {
-         histo = this._need_2dhist ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
+         histo = this._is_scatter ? createHistogram(clTH2I, 30, 30) : createHistogram(clTH1I, 100);
          histo.fName = graph.fName + '_h';
          histo.fBits |= kNoStats;
          this._own_histogram = true;
@@ -349,8 +349,10 @@ class TGraphPainter extends ObjectPainter {
       if (set_y && !histo.fYaxis.fLabels) {
          histo.fYaxis.fXmin = Math.min(minimum0, minimum);
          histo.fYaxis.fXmax = Math.max(maximum0, maximum);
-         histo.fMinimum = minimum;
-         histo.fMaximum = maximum;
+         if (!this._is_scatter) {
+            histo.fMinimum = minimum;
+            histo.fMaximum = maximum;
+         }
       }
 
       return histo;
@@ -1396,7 +1398,7 @@ class TGraphPainter extends ObjectPainter {
       return false;
    }
 
-   /** @summary Update object members
+   /** @summary Update TGraph object members
      * @private */
    _updateMembers(graph, obj) {
       graph.fBits = obj.fBits;
@@ -1423,6 +1425,8 @@ class TGraphPainter extends ObjectPainter {
          graph.fMarkerColor = obj.fMarkerColor;
       graph.fMarkerSize = obj.fMarkerSize;
       graph.fMarkerStyle = obj.fMarkerStyle;
+
+      return obj.fFunctions;
    }
 
    /** @summary Update TGraph object */
@@ -1432,7 +1436,7 @@ class TGraphPainter extends ObjectPainter {
       if (opt && (opt !== this.options.original))
          this.decodeOptions(opt);
 
-      this._updateMembers(this.getObject(), obj);
+      const new_funcs = this._updateMembers(this.getObject(), obj);
 
       this.createBins();
 
@@ -1448,7 +1452,7 @@ class TGraphPainter extends ObjectPainter {
          }
       }
 
-      this._funcHandler = new FunctionsHandler(this, this.getPadPainter(), obj.fFunctions);
+      this._funcHandler = new FunctionsHandler(this, this.getPadPainter(), new_funcs);
 
       return true;
    }
@@ -1457,10 +1461,19 @@ class TGraphPainter extends ObjectPainter {
      * @desc allow to zoom TGraph only when at least one point in the range */
    canZoomInside(axis, min, max) {
       const gr = this.getGraph();
-      if (!gr || (axis !== (this.options.pos3d ? 'y' : 'x'))) return false;
+      if (!gr || ((axis !== 'x') && (axis !== 'y')))
+         return false;
 
-      for (let n = 0; n < gr.fNpoints; ++n)
-         if ((min < gr.fX[n]) && (gr.fX[n] < max)) return true;
+      let arr = gr.fX;
+      if (this._is_scatter)
+         arr = (axis === 'x') ? gr.fX : gr.fY;
+      else if (axis !== (this.options.pos3d ? 'y' : 'x'))
+         return false;
+
+      for (let n = 0; n < gr.fNpoints; ++n) {
+         if ((min < arr[n]) && (arr[n] < max))
+            return true;
+      }
 
       return false;
    }

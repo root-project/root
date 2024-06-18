@@ -21,11 +21,12 @@ class TH1Painter extends TH1Painter2D {
       let pr = Promise.resolve(true);
 
       if (reason === 'resize') {
-         if (is_main && main.resize3D()) main.render3D();
+         if (is_main && main.resize3D())
+            main.render3D();
       } else {
          this.createHistDrawAttributes(true);
 
-         this.scanContent(true); // may be required for axis drawings
+         this.scanContent(reason === 'zoom'); // may be required for axis drawings
 
          if (is_main) {
             assignFrame3DMethods(main);
