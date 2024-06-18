@@ -209,3 +209,37 @@ TEST(RTNuple, TObjectDerived)
    EXPECT_FLOAT_EQ(1.0, ptrMultiple->x);
    EXPECT_EQ(137u, ptrMultiple->GetUniqueID());
 }
+
+TEST(RNTuple, TClassReadRules)
+{
+   ROOT::TestSupport::CheckDiagsRAII diags;
+   diags.requiredDiag(kWarning, "[ROOT.NTuple]", "ignoring I/O customization rule with non-transient member: a", false);
+   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "The RNTuple file format will change.", false);
+   diags.optionalDiag(kWarning, "[ROOT.NTuple]", "Pre-release format version: RC 2", false);
+
+   FileRaii fileGuard("test_ntuple_tclassrules.root");
+   char c[4] = {'R', 'O', 'O', 'T'};
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrClass = model->MakeField<StructWithIORules>("class");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      for (int i = 0; i < 5; i++) {
+         *ptrClass = StructWithIORules{/*a=*/static_cast<float>(i), /*chars=*/c};
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(5U, reader->GetNEntries());
+   auto viewKlass = reader->GetView<StructWithIORules>("class");
+   for (auto i : reader->GetEntryRange()) {
+      float fi = static_cast<float>(i);
+      EXPECT_EQ(fi, viewKlass(i).a);
+      EXPECT_TRUE(0 == memcmp(c, viewKlass(i).s.chars, sizeof(c)));
+
+      // The following values are set from a read rule; see CustomStructLinkDef.h
+      EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
+      EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
+      EXPECT_STREQ("ROOT", viewKlass(i).s.str.c_str());
+   }
+}
