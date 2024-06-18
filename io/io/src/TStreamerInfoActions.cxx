@@ -429,7 +429,7 @@ namespace TStreamerInfoActions
          TClass *oldClass = aElement->GetClassPointer();
          if( vers < 9 && newClass && newClass!=oldClass ) {
             Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-                  vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
+                  vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass->GetName() );
             return 0;
          }
 
@@ -439,13 +439,13 @@ namespace TStreamerInfoActions
          }
 
          TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : nullptr);
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = (oldClass ? oldClass->GetCollectionProxy() : nullptr);
          TStreamerInfo *subinfo = nullptr;
 
          if( newProxy ) {
             // coverity[dereference] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
             subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
-         } else {
+         } else if ( oldProxy ) {
             subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
             newProxy = oldProxy;
          }
@@ -1130,7 +1130,7 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = oldClass ? oldClass->GetCollectionProxy() : nullptr;
          if (!oldProxy) {
             // Missing information, broken file ... give up
             return;
@@ -1164,7 +1164,7 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = oldClass ? oldClass->GetCollectionProxy() : nullptr;
          if (!oldProxy) {
             // Missing information, broken file ... give up
             return;
@@ -1196,7 +1196,7 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = oldClass ? oldClass->GetCollectionProxy() : nullptr;
          if (!oldProxy) {
             // Missing information, broken file ... give up
             return;
@@ -1236,7 +1236,7 @@ namespace TStreamerInfoActions
 
          TClass *oldClass = config->fOldClass;
 
-         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TVirtualCollectionProxy *oldProxy = oldClass ? oldClass->GetCollectionProxy() : nullptr;
          if (!oldProxy) {
             // Missing information, broken file ... give up
             return;
@@ -1276,8 +1276,8 @@ namespace TStreamerInfoActions
 
       if( vers < 8 ) {
          Error( "ReadSTLMemberWiseChangedClass", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
-      } else {
+               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass ? newClass->GetName() : "null" );
+      } else if (newClass && oldClass){
 
          Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
 
@@ -1320,8 +1320,8 @@ namespace TStreamerInfoActions
 
       if( vers < 8 ) {
          Error( "ReadSTLMemberWiseChangedClass", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
-      } else {
+               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass ? newClass->GetName() : "null" );
+      } else if (newClass && oldClass) {
 
          Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
 
@@ -3343,7 +3343,7 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
                if (newClass && newClass != oldClass) {
                   if (element->GetStreamer()) {
                      readSequence->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-                  } else {
+                  } else if (oldClass) {
                      if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
                         readSequence->AddAction(ReadSTL<ReadSTLMemberWiseChangedClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
                      } else {
@@ -3366,7 +3366,7 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
                } else {
                   if (element->GetStreamer()) {
                      readSequence->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-                  } else {
+                  } else if (oldClass) {
                      if (oldClass->GetCollectionProxy() == 0 || oldClass->GetCollectionProxy()->GetValueClass() || oldClass->GetCollectionProxy()->HasPointers() ) {
                         readSequence->AddAction(ReadSTL<ReadSTLMemberWiseSameClass,ReadSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
                      } else {
