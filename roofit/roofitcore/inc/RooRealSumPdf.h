@@ -109,8 +109,8 @@ private:
                          bool doFloor,
                          bool & hasWarnedBefore);
 
-  static void translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass, RooArgList const &funcList,
-                            RooArgList const &coefList);
+  static std::string translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
+                                   RooArgList const &funcList, RooArgList const &coefList, bool normalize=false);
 
   static bool checkObservables(RooAbsReal const &caller, RooArgSet const *nset, RooArgList const &funcList,
                                RooArgList const &coefList);
