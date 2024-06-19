@@ -175,20 +175,19 @@ const AxisPainterMethods = {
    /** @summary Provide label for exponential form */
    formatExp(base, order, value) {
       let res = '';
+      const sbase = Math.abs(base - Math.E) < 0.001 ? 'e' : base.toString();
       if (value) {
          value = Math.round(value/Math.pow(base, order));
-         if ((value !== 0) && (value !== 1)) res = value.toString() + (settings.Latex ? '#times' : 'x');
+         if (settings.StripAxisLabels) {
+            if (order === 0)
+               return value.toString();
+            else if ((order === 1) && (value === 1))
+               return sbase;
+         }
+         if (value !== 1)
+            res = value.toString() + (settings.Latex ? '#times' : 'x');
       }
-      if (Math.abs(base - Math.E) < 0.001)
-         res += 'e';
-      else
-         res += base.toString();
-      if (settings.StripAxisLabels) {
-         if (order === 0)
-            return '1';
-         else if (order === 1)
-            return res;
-      }
+      res += sbase;
       if (settings.Latex > constants.Latex.Symbols)
          return res + `^{${order}}`;
       const superscript_symbols = {

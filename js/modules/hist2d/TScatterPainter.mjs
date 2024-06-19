@@ -24,7 +24,7 @@ class TScatterPainter extends TGraphPainter {
     * @private */
    async drawAxisHisto() {
       const histo = this.createHistogram();
-      return TH2Painter.draw(this.getDom(), histo, this.options.Axis);
+      return TH2Painter.draw(this.getDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
    }
 
   /** @summary Provide palette, create if necessary
@@ -47,7 +47,8 @@ class TScatterPainter extends TGraphPainter {
       return pal;
    }
 
-   /** @summary Update TScatter members */
+   /** @summary Update TScatter members
+    * @private */
    _updateMembers(scatter, obj) {
       scatter.fBits = obj.fBits;
       scatter.fTitle = obj.fTitle;
@@ -57,7 +58,7 @@ class TScatterPainter extends TGraphPainter {
       scatter.fMargin = obj.fMargin;
       scatter.fMinMarkerSize = obj.fMinMarkerSize;
       scatter.fMaxMarkerSize = obj.fMaxMarkerSize;
-      super._updateMembers(scatter.fGraph, obj.fGraph);
+      return super._updateMembers(scatter.fGraph, obj.fGraph);
    }
 
    /** @summary Actual drawing of TScatter */
