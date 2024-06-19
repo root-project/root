@@ -16,7 +16,7 @@ ParserFuncSignature ParseShape = [](RModelParser_ONNX &parser, const onnx::NodeP
    std::unique_ptr<ROperator> op;
    std::string output_name = nodeproto.output(0);
    int attr_start = 0;
-   int attr_end = -1;
+   int attr_end = INT_MAX;  // cannot use 0 or -1 as default
 
    for (int_t i = 0; i < nodeproto.attribute_size(); i++) {
       std::string attribute_name = nodeproto.attribute(i).name();
