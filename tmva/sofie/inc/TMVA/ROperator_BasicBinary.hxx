@@ -132,7 +132,7 @@ public:
                fShapeA = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting A
-               fNBroadcadstedA = "Broadcasted" + fNA;
+               fNBroadcadstedA = "Broadcasted" + fNA + "to" + fNY;
                model.AddIntermediateTensor(fNBroadcadstedA, model.GetTensorType(fNA), fShapeY);
             }
          }
@@ -148,7 +148,7 @@ public:
                fShapeB = fShapeY;
             } else {
                // Add an intermediate tensor for broadcasting B
-               fNBroadcadstedB = "Broadcasted" + fNB;
+               fNBroadcadstedB = "Broadcasted" + fNB + "to" + fNY;
                model.AddIntermediateTensor(fNBroadcadstedB, model.GetTensorType(fNB), fShapeY);
             }
          }
