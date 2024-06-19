@@ -1218,6 +1218,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    }
 
    TMatrixTBase<Element>::DoubleLexSort(nr,row,col,data);
+   nr = ReduceSparseMatrix(row, col, data);
 
    Int_t nr_nonzeros = 0;
    const Element *ep        = data;
@@ -1262,6 +1263,34 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    }
 
    return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Sum matrix entries corresponding to the same matrix element (i,j). The reduced
+/// extries remain dangling. It is assumed
+/// that the arrays row, col and data are sorted with DoubleLexSort.
+/// Note that the input arrays are not passed as const since they will be modified !
+template <class Element>
+Int_t TMatrixTSparse<Element>::ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data)
+{
+
+   Int_t nz = nr;
+   Int_t i = 0;
+
+   while (i < nz) {
+      if ((row[i] == row[i + 1]) && (col[i] == col[i + 1])) {
+         data[i] += data[i + 1];
+         for (Int_t j = i + 1; j < nz; j++) {
+            data[j] = data[j + 1];
+            row[j] = row[j + 1];
+            col[j] = col[j + 1];
+         }
+         nz--;
+      }
+      i++;
+   }
+
+   return nz;
 }
 
 template <class Element>
@@ -1331,6 +1360,7 @@ TMatrixTSparse<Element>::SetMatrixArray(Int_t nr, Int_t nrows, Int_t ncols, Int_
    }
 
    TMatrixTBase<Element>::DoubleLexSort(nr, row, col, data);
+   nr = ReduceSparseMatrix(nr, row, col, data);
 
    Int_t nr_nonzeros = 0;
    const Element *ep = data;
