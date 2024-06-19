@@ -283,6 +283,9 @@
 #include "RangeInt_FromONNX.hxx"
 #include "input_models/references/RangeInt.ref.hxx"
 
+#include "Tile_FromONNX.hxx"
+#include "input_models/references/Tile.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -2695,3 +2698,26 @@ TEST(ONNX, RangeInt) {
    }
 }
 
+TEST(ONNX, Tile) {
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+    // Preparing the standard input
+    std::vector<float> input_data({1.0, 2.0, 3.0});
+    std::vector<int> repetitions({2});
+    TMVA_SOFIE_Tile::Session s("Tile_FromONNX.dat");
+
+    std::vector<float> output = s.infer(input.data(), repetitions.data());
+
+    // Define the expected output based on the tile operation applied to the input data
+    std::vector<float> expected_output({1.0, 2.0, 3.0, 1.0, 2.0, 3.0});
+
+    // Checking output size
+    EXPECT_EQ(output.size(), expected_output.size());
+
+    float* correct = expected_output.data();
+
+    // Checking every output value, one by one
+    for (size_t i = 0; i < output.size(); ++i) {
+        EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+    }
+}
