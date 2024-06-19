@@ -74,12 +74,12 @@ public:
    void UpdateExtraTypeInfo(const RExtraTypeInfoDescriptor &) final {}
 
    void CommitPage(ColumnHandle_t, const RPage &page) final { fNBytesCurrentCluster += page.GetNBytes(); }
-   void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final { fNBytesCurrentCluster += page.fSize; }
+   void CommitSealedPage(DescriptorId_t, const RSealedPage &page) final { fNBytesCurrentCluster += page.GetSize(); }
    void CommitSealedPageV(std::span<RSealedPageGroup> ranges) final
    {
       for (auto &range : ranges) {
          for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-            fNBytesCurrentCluster += sealedPageIt->fSize;
+            fNBytesCurrentCluster += sealedPageIt->GetSize();
          }
       }
    }

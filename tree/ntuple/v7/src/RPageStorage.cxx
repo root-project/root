@@ -190,7 +190,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
             auto newPage = UnsealPage(sealedPage, *element, columnId);
-            fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.fNElements);
+            fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(
@@ -332,32 +332,32 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
 {
    // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
    // large enough to hold `sealedPage.fNElements`
-   if (sealedPage.fBuffer == RPage::GetPageZeroBuffer()) {
+   if (sealedPage.GetBuffer() == RPage::GetPageZeroBuffer()) {
       auto page = RPage::MakePageZero(physicalColumnId, element.GetSize());
-      page.GrowUnchecked(sealedPage.fNElements);
+      page.GrowUnchecked(sealedPage.GetNElements());
       return page;
    }
 
-   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
+   const auto bytesPacked = element.GetPackedSize(sealedPage.GetNElements());
    using Allocator_t = RPageAllocatorHeap;
-   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
-   if (sealedPage.fSize != bytesPacked) {
-      fDecompressor->Unzip(sealedPage.fBuffer, sealedPage.fSize, bytesPacked, page.GetBuffer());
+   auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+   if (sealedPage.GetSize() != bytesPacked) {
+      fDecompressor->Unzip(sealedPage.GetBuffer(), sealedPage.GetSize(), bytesPacked, page.GetBuffer());
    } else {
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
-      memcpy(page.GetBuffer(), sealedPage.fBuffer, bytesPacked);
+      memcpy(page.GetBuffer(), sealedPage.GetBuffer(), bytesPacked);
    }
 
    if (!element.IsMappable()) {
-      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
-      element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.fNElements);
+      auto tmp = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
+      element.Unpack(tmp.GetBuffer(), page.GetBuffer(), sealedPage.GetNElements());
       Allocator_t::DeletePage(page);
       page = tmp;
    }
 
-   page.GrowUnchecked(sealedPage.fNElements);
+   page.GrowUnchecked(sealedPage.GetNElements());
    return page;
 }
 
@@ -595,10 +595,10 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(DescriptorId_t physicalColumnId,
                                                                          const RPageStorage::RSealedPage &sealedPage)
 {
-   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.fNElements;
+   fOpenColumnRanges.at(physicalColumnId).fNElements += sealedPage.GetNElements();
 
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-   pageInfo.fNElements = sealedPage.fNElements;
+   pageInfo.fNElements = sealedPage.GetNElements();
    pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
    fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
 }
@@ -623,10 +623,10 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
 
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->fNElements;
+         fOpenColumnRanges.at(range.fPhysicalColumnId).fNElements += sealedPageIt->GetNElements();
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
-         pageInfo.fNElements = sealedPageIt->fNElements;
+         pageInfo.fNElements = sealedPageIt->GetNElements();
          pageInfo.fLocator = locators[i++];
          fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }

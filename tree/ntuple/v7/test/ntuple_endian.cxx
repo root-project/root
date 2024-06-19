@@ -118,8 +118,8 @@ TEST(RColumnElementEndian, ByteCopy)
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
-   EXPECT_EQ(
-      0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
+                       "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
@@ -144,8 +144,8 @@ TEST(RColumnElementEndian, Cast)
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
-   EXPECT_EQ(
-      0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
+                       "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
@@ -171,8 +171,8 @@ TEST(RColumnElementEndian, Split)
    page1.GrowUnchecked(2);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
-   EXPECT_EQ(
-      0, memcmp(sink1.GetPages()[0].fBuffer, "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
+                       "\x07\x0f\x06\x0e\x05\x0d\x04\x0c\x03\x0b\x02\x0a\x01\x09\x00\x08", 16));
 
    RPageSourceMock source1(sink1.GetPages(), splitElement);
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
@@ -199,8 +199,8 @@ TEST(RColumnElementEndian, DeltaSplit)
    page1.GrowUnchecked(4);
    sink1.CommitPage(RPageStorage::ColumnHandle_t{}, page1);
 
-   EXPECT_EQ(
-      0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));
+   EXPECT_EQ(0, memcmp(sink1.GetPages()[0].GetBuffer(),
+                       "\x03\x04\x04\x04\x02\x04\x04\x04\x01\x04\x04\x04\x00\x04\x04\x04", 16));
 
    RPageSourceMock source1(sink1.GetPages(), element);
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});

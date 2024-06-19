@@ -234,8 +234,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
                // The way LoadSealedPage works might require a double call
                // See the implementation. Here we do this in any case...
-               auto buffer = std::make_unique<unsigned char[]>(sealedPage.fSize);
-               sealedPage.fBuffer = buffer.get();
+               auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetSize());
+               sealedPage.SetBuffer(buffer.get());
                source->LoadSealedPage(columnId, clusterIndex, sealedPage);
 
                buffers.push_back(std::move(buffer));

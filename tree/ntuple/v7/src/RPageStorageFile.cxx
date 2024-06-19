@@ -87,15 +87,15 @@ ROOT::Experimental::Internal::RPageSinkFile::WriteSealedPage(const RPageStorage:
    std::uint64_t offsetData;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-      offsetData = fWriter->WriteBlob(sealedPage.fBuffer, sealedPage.fSize, bytesPacked);
+      offsetData = fWriter->WriteBlob(sealedPage.GetBuffer(), sealedPage.GetSize(), bytesPacked);
    }
 
    RNTupleLocator result;
    result.fPosition = offsetData;
-   result.fBytesOnStorage = sealedPage.fSize;
+   result.fBytesOnStorage = sealedPage.GetSize();
    fCounters->fNPageCommitted.Inc();
-   fCounters->fSzWritePayload.Add(sealedPage.fSize);
-   fNBytesCurrentCluster += sealedPage.fSize;
+   fCounters->fSzWritePayload.Add(sealedPage.GetSize());
+   fNBytesCurrentCluster += sealedPage.GetSize();
    return result;
 }
 
@@ -119,7 +119,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
 {
    const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
       fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetModel().GetType());
-   const auto bytesPacked = (bitsOnStorage * sealedPage.fNElements + 7) / 8;
+   const auto bytesPacked = (bitsOnStorage * sealedPage.GetNElements() + 7) / 8;
 
    return WriteSealedPage(sealedPage, bytesPacked);
 }
@@ -137,8 +137,8 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         size += sealedPageIt->fSize;
-         bytesPacked += (bitsOnStorage * sealedPageIt->fNElements + 7) / 8;
+         size += sealedPageIt->GetSize();
+         bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
    }
    if (size >= std::numeric_limits<std::int32_t>::max() || bytesPacked >= std::numeric_limits<std::int32_t>::max()) {
@@ -155,12 +155,12 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
    for (auto &range : ranges) {
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         fWriter->WriteIntoReservedBlob(sealedPageIt->fBuffer, sealedPageIt->fSize, offset);
+         fWriter->WriteIntoReservedBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetSize(), offset);
          RNTupleLocator locator;
          locator.fPosition = offset;
-         locator.fBytesOnStorage = sealedPageIt->fSize;
+         locator.fBytesOnStorage = sealedPageIt->GetSize();
          locators.push_back(locator);
-         offset += sealedPageIt->fSize;
+         offset += sealedPageIt->GetSize();
       }
    }
 
@@ -363,15 +363,15 @@ void ROOT::Experimental::Internal::RPageSourceFile::LoadSealedPage(DescriptorId_
    }
 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
-   sealedPage.fSize = bytesOnStorage;
-   sealedPage.fNElements = pageInfo.fNElements;
-   if (!sealedPage.fBuffer)
+   sealedPage.SetSize(bytesOnStorage);
+   sealedPage.SetNElements(pageInfo.fNElements);
+   if (!sealedPage.GetBuffer())
       return;
    if (pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero) {
-      fReader.ReadBuffer(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage,
+      fReader.ReadBuffer(const_cast<void *>(sealedPage.GetBuffer()), bytesOnStorage,
                          pageInfo.fLocator.GetPosition<std::uint64_t>());
    } else {
-      memcpy(const_cast<void *>(sealedPage.fBuffer), RPage::GetPageZeroBuffer(), bytesOnStorage);
+      memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
 }
 
