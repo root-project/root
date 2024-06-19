@@ -156,6 +156,40 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Space is allocated for row/column indices and data. Sparsity pattern is given by
+/// column indices and row pointers from arrays col and rowptr, resp, while matrix
+/// entries come from the array data. Arrays col and data are assumed to have length
+/// nr (number of nonzero elements), while array rowptr has length (n+1), where
+/// n=row_upb-row_lwb+1 is the number of rows.
+
+template <class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr,
+                                        Int_t *rowptr, Int_t *col, Element *data)
+{
+   const Int_t icolmin = TMath::LocMin(nr, col);
+   const Int_t icolmax = TMath::LocMax(nr, col);
+   Int_t n = row_upb - row_lwb + 1;
+   Int_t nr = rowptr[n];
+
+   if (col[icolmin] < col_lwb || col[icolmax] > col_upb) {
+      Error("TMatrixTSparse", "Inconsistency between column index and its range");
+      if (col[icolmin] < col_lwb) {
+         Info("TMatrixTSparse", "column index lower bound adjusted to %d", col[icolmin]);
+         col_lwb = col[icolmin];
+      }
+      if (col[icolmax] > col_upb) {
+         Info("TMatrixTSparse", "column index upper bound adjusted to %d", col[icolmax]);
+         col_upb = col[icolmax];
+      }
+   }
+
+   Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr);
+   memcpy(fElements, data, this->fNelems * sizeof(Element));
+   memcpy(fRowIndex, rowptr, this->fNrowIndex * sizeof(Int_t));
+   memcpy(fColIndex, col, this->fNelems * sizeof(Int_t));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(const TMatrixTSparse<Element> &another) : TMatrixTBase<Element>(another)
