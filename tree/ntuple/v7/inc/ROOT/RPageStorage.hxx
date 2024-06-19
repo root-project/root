@@ -84,16 +84,27 @@ public:
    /// RSealedPage does _not_ own the buffer it is pointing to in order to not interfere with the memory management
    /// of concrete page sink and page source implementations.
    struct RSealedPage {
+   private:
       const void *fBuffer = nullptr;
       std::uint32_t fSize = 0;
       std::uint32_t fNElements = 0;
 
+   public:
       RSealedPage() = default;
       RSealedPage(const void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
       RSealedPage(const RSealedPage &other) = default;
       RSealedPage &operator=(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
       RSealedPage& operator =(RSealedPage &&other) = default;
+
+      const void *GetBuffer() const { return fBuffer; }
+      void SetBuffer(const void *buffer) { fBuffer = buffer; }
+
+      std::uint32_t GetSize() const { return fSize; }
+      void SetSize(std::uint32_t size) { fSize = size; }
+
+      std::uint32_t GetNElements() const { return fNElements; }
+      void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;

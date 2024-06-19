@@ -306,51 +306,51 @@ TEST(Packing, OnDiskEncoding)
 
    source->LoadSealedPage(fnGetColumnId("int16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt16[] = {0x02, 0x05, 0x00, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt16, sizeof(expInt16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt16, sizeof(expInt16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("int32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt32[] = {0x06, 0x0d, 0x04, 0x0c, 0x02, 0x0a, 0x00, 0x08};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt32, sizeof(expInt32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt32, sizeof(expInt32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("int64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expInt64[] = {0x0e, 0x1d, 0x0c, 0x1c, 0x0a, 0x1a, 0x08, 0x18,
                                0x06, 0x16, 0x04, 0x14, 0x02, 0x12, 0x00, 0x10};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expInt64, sizeof(expInt64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expInt64, sizeof(expInt64)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt16[] = {0x01, 0x02, 0x00, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt16, sizeof(expUInt16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt16, sizeof(expUInt16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt32[] = {0x03, 0x07, 0x02, 0x06, 0x01, 0x05, 0x00, 0x04};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt32, sizeof(expUInt32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt32, sizeof(expUInt32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("uint64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expUInt64[] = {0x07, 0x0f, 0x06, 0x0e, 0x05, 0x0d, 0x04, 0x0c,
                                 0x03, 0x0b, 0x02, 0x0a, 0x01, 0x09, 0x00, 0x08};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expUInt64, sizeof(expUInt64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expUInt64, sizeof(expUInt64)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float"), RClusterIndex(0, 0), sealedPage);
    unsigned char expFloat[] = {0x01, 0xff, 0x00, 0xff, 0x80, 0x7f, 0x3f, 0x3f};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat, sizeof(expFloat)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expFloat, sizeof(expFloat)), 0);
 
    source->LoadSealedPage(fnGetColumnId("float16"), RClusterIndex(0, 0), sealedPage);
    unsigned char expFloat16[] = {0x00, 0x3c, 0x66, 0x2e};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expFloat16, sizeof(expFloat16)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expFloat16, sizeof(expFloat16)), 0);
 
    source->LoadSealedPage(fnGetColumnId("double"), RClusterIndex(0, 0), sealedPage);
    unsigned char expDouble[] = {0x01, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff,
                                 0x00, 0xff, 0x00, 0xff, 0xf0, 0xef, 0x3f, 0x7f};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expDouble, sizeof(expDouble)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expDouble, sizeof(expDouble)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index32"), RClusterIndex(0, 0), sealedPage);
    unsigned char expIndex32[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex32, sizeof(expIndex32)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex32, sizeof(expIndex32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index64"), RClusterIndex(0, 0), sealedPage);
    unsigned char expIndex64[] = {0x00, 0x0D, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00,
                                  0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
-   EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex64, sizeof(expIndex64)), 0);
+   EXPECT_EQ(memcmp(sealedPage.GetBuffer(), expIndex64, sizeof(expIndex64)), 0);
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(EColumnType::kIndex64, reader->GetModel().GetField("str").GetColumnRepresentative()[0]);
