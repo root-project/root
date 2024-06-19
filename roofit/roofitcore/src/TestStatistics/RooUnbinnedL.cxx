@@ -192,6 +192,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    // expensive than that, we tolerate the additional cost...
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
+   auto numEvalErrorsBefore = RooAbsReal::numEvalErrors();
 
    // Do not reevaluate likelihood if parameters nor event range have changed
    if (!paramTracker_->hasChanged(true) && events == lastSection_ &&
@@ -228,8 +229,12 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
       pdf_->wireAllCaches();
    }
 
-   cachedResult_ = result;
-   lastSection_ = events;
+   if ((RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CollectErrors ||
+        RooAbsReal::evalErrorLoggingMode() == RooAbsReal::CountErrors) &&
+       numEvalErrorsBefore == RooAbsReal::numEvalErrors()) {
+      cachedResult_ = result;
+      lastSection_ = events;
+   }
    return result;
 }
 
