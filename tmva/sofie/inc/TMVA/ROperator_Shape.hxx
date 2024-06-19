@@ -20,8 +20,8 @@ class ROperator_Shape final : public ROperator
 private:
 
    /* Attributes*/
-   int fStart = 0;
-   int fEnd = -1;
+   int fStart = 0;  // default is beginning
+   int fEnd = 0; // default is input length (all input tensor shape included)
    std::string fNX;
    std::string fNY;
    std::vector<size_t> fShape;
@@ -48,10 +48,24 @@ public:
       }
       fShape = model.GetTensorShape(fNX);
       size_t length = ConvertShapeToLength(fShape);
+      fStart = std::max(fStart,(int) -length);
+      fStart = std::min(fStart,(int) length);
       if (fStart < 0) fStart += length;
+      fEnd = std::max(fEnd,(int) -length);
+      fEnd = std::min(fEnd, (int) length);
       if (fEnd < 0) fEnd += length;
-      fOutput_shape = { size_t(fEnd - fStart) + 1};
-      model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
+      if (fEnd > fStart)
+         fOutput_shape = { size_t(fEnd - fStart) };
+      // in case input tensor is not a dynamic tensor we should register the output as a Constant tensor since we know
+      // its content
+      if (!model.IsDynamicTensor(fNX) && !fOutput_shape.empty()) {
+         std::shared_ptr<void> data(malloc(length * sizeof(int64_t)), free);
+         auto shape_values = std::vector<int64_t>(fShape.begin()+fStart, fShape.begin() + fEnd );
+         std::memcpy(data.get(), (void*) shape_values.data(), length * sizeof(int64_t));
+         model.AddConstantTensor(fNY, ETensorType::INT64, fOutput_shape, data);
+      }
+      else
+         model.AddIntermediateTensor(fNY, ETensorType::INT64, fOutput_shape);
    }
 
    std::string Generate(std::string OpName){
