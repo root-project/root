@@ -734,15 +734,31 @@ This release offers a few minor bug fixes. On macOS, it also adapts ROOT for the
 * [[#14793](https://github.com/root-project/root/issues/14793)] - 6.26 cannot read file written with 6.30.4
 * [[#14964](https://github.com/root-project/root/issues/14964)] - ROOT-HEAD fails with "cling interactive line includer >>>: fatal error: module file '[snip]/Vc.pcm' not found: module file not found"
 
-## HEAD of the v6-30-00-patches branch
+## Release 6.30.08
 
-The next patch release removes the `RooPower` and `RooExpPoly` classes from this release branch.
+Published on June 19, 2024
+
+### Issues addressed in this release
+
+Issues addressed in this patch
+
+* [[#11353](https://github.com/root-project/root/issues/11353)] - Compiled program with libNew.so crash
+* [[#13511](https://github.com/root-project/root/issues/13511)] - TMapFile can't work
+* [[#14767](https://github.com/root-project/root/issues/14767)] - rootn.exe instant crash on startup
+* [[#15090](https://github.com/root-project/root/issues/15090)] - TClass::GetClassInfo() is not thread safe
+* [[#15406](https://github.com/root-project/root/issues/15406)] - TEnum::GetEnum does not seem to see 'through' using statements.
+* [[#15460](https://github.com/root-project/root/issues/15460)] - TEnum::GetEnum("B")->GetUnderlyingType() does not following typedefs
+* [[#15590](https://github.com/root-project/root/issues/15590)] - Infinite recursion in TFile::Open
+* [[#15621](https://github.com/root-project/root/issues/15621)] - Buffer overflow in TBranch::Init
+* [[#15686](https://github.com/root-project/root/issues/15686)] - JITted code changes the execution order of computation graph nodes
+* [[#15511](https://github.com/root-project/root/issues/15511)] - Possible memory corruption in cling
+
+The `RooPower` and `RooExpPoly` classes are removed from this release branch.
 It is an unfortunate but unavoidable change: different classes with the same name were used in the CMS collaboration since at least the Higgs discovery.
 This name collision caused massive problems in backwards compatibility and was blocking CMS from picking up ROOT 6.30 for statistical analysis.
 These classes were only introduced with ROOT 6.28.00 and were not widely advertised, so you should not be affected by this removal.
 If you were using one of these classes, please copy the sources from a previous ROOT tag in your analysis as a temporary solution, and report this unsupported usecase by opening a GitHub issue.
-Based on the feedback to this patch release, the `RooPower` and `RooExpPoly` classes will either be removed or renamed in the upcoming ROOT 6.32.
 
-These changes will be part of a future 6.30.08.
+## HEAD of the v6-30-00-patches branch
 
 - None so far.
