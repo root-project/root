@@ -71,26 +71,35 @@ namespace SOFIE{
       std::vector<std::vector<U>> DoShapeInference(const std::vector<std::vector<U>> & input){
          if (input.size() > 3) throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only need 2 or 3 input tensor");
          for (auto& i: input){
-            if (i.size() > 2){
-               throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with 2 dimensions");
-            }
+            //if (i.size() > 2){
+            //   throw std::runtime_error("TMVA SOFIE Gemm Op Shape Inference only accept input tensor with 2 dimensions");
+           // }
          }
          std::vector<std::vector<U>> ret;
          if (input.size() == 3){
             ret.push_back(input[2]);   //shape of C is shape of Y
             return ret;
          }
-         std::vector<U> s_a(input[0]);
-         std::vector<U> s_b(input[1]);
+         int ioffset = input[0].size()-2;  // in case of tensors with dim > 2
+
+         std::vector<U> s_a(input[0].begin() + ioffset, input[0].begin() + ioffset + 2);
+         std::vector<U> s_b(input[1].begin() + ioffset, input[1].begin() + ioffset + 2);
          if (fAttrTransA){
             std::reverse(s_a.begin(), s_a.end());
          }
          if (fAttrTransB){
             std::reverse(s_b.begin(), s_b.end());
          }
-         std::vector<U> s_y(2);
-         s_y[0] = s_a[0];
-         s_y[1] = s_b[1];
+         std::vector<U> s_y;
+         s_y.reserve(input[0].size());
+         if (input[0].size() > 2 && input[1].size() == input[0].size()) {
+            // in case of dim > 2 first dimensions are equal to input ones
+            for (size_t i = 0; i < input[0].size()-2; i++)
+               s_y.push_back(input[0][i]);
+         }
+
+         s_y.push_back(s_a[0]);
+         s_y.push_back(s_b[1]);
          ret.push_back(s_y);
          return ret;
       }
@@ -135,12 +144,17 @@ namespace SOFIE{
             auto shapeB_int = model.GetTensorShape(fNB);
             fShapeB = ConvertShapeToDim(shapeB_int);
          }
-         if (fShapeA.size() != 2)
-            throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
-                                       " is not of 2 dimensions: A " +  ConvertDynamicShapeToString(fShapeA));
-         if (fShapeB.size() != 2)
-               throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB +
-                                       " is not of 2 dimensions: B " +  ConvertDynamicShapeToString(fShapeB));
+         // assume if not shape is 2 that extra values are 1.
+         // we need to implement MatMul case where we stack matrices (see numpy.matmul)
+         //if (fShapeA.size() != 2)
+         //   throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNA +
+         //                              " is not of 2 dimensions: A " +  ConvertDynamicShapeToString(fShapeA));
+         //if (fShapeB.size() != 2)
+         //      throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensor" + fNB +
+         //                              " is not of 2 dimensions: B " +  ConvertDynamicShapeToString(fShapeB));
+         if (fShapeA.size() != fShapeB.size())
+              throw std::runtime_error("TMVA SOFIE Gemm Op Input Tensors have not compatible shapes. A " +
+               ConvertDynamicShapeToString(fShapeA) + " B " + ConvertDynamicShapeToString(fShapeB) );
 
          fShapeY = DynamicShapeInference({fShapeA, fShapeB})[0];
          std::vector<size_t> shapeY;
