@@ -272,7 +272,20 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
    }
 
 void RModel::Initialize(int batchSize, bool verbose) {
+   std::map<std::string, size_t> inputParams;
+   if (batchSize > 0) {
+      inputParams["batch_size"] = batchSize;
+      inputParams["bs"] = batchSize;
+   }
+   Initialize(inputParams, verbose);
+}
+void RModel::Initialize(const std::map<std::string, size_t> & inputParams, bool verbose) {
 
+   if (fIsInitialized) {
+      if (verbose)
+         std::cout << "Model is already initialized  - skip initialization " << std::endl;
+      return;
+   }
    fIntermediateTensorInfos.clear();
    fDynamicTensorInfos.clear();
 
@@ -282,34 +295,29 @@ void RModel::Initialize(int batchSize, bool verbose) {
    auto originalInputTensorInfos = fInputTensorInfos; // need to copy because we may delete elements
    for (auto &input : originalInputTensorInfos) {
       if (verbose) std::cout << "looking at the tensor " << input.first << std::endl;
-      // if a batch size is provided convert batch size
-      // assume is parameterised as "bs" or "batch_size"
-      if (batchSize > 0) {
-         // std::vector<Dim> shape;
-         // shape.reserve(input.second.shape.size());
-         // assume first parameter is teh batch size
-         if (!input.second.shape.empty()) {
-            auto & d0 = input.second.shape[0];
-            if (d0.isParam) {
-               if (verbose) std::cout << "Fix the batch size to " << batchSize << std::endl;
-               d0 = Dim{static_cast<size_t>(batchSize)};
-            }
-            else {  // look for cases that a bs or bath_size is specified in tensor shape
-               for (auto &d : input.second.shape) {
-                  if (d.isParam && (d.param == "bs" || d.param == "batch_size")) {
-                     d = Dim{static_cast<size_t>(batchSize)};
-                     if (verbose) std::cout << "Input shape has bs or batch_size as names. Fix the batch size to " << batchSize << std::endl;
-                  }
+      // if a parameter (e.g. batch_size) is specified use for converting parametric shape in defined one
+       if (!inputParams.empty()) {
+         for (auto &d : input.second.shape) {
+            if (d.isParam) {
+               auto itr = inputParams.find(d.param);
+               if (itr != inputParams.end()) {
+                  d = Dim{ itr->second };
+                  if (verbose)
+                     std::cout << "Tensor: " << input.first << " - fix parametric shape " << itr->first << " to " << itr->second << std::endl;
                }
             }
          }
       }
+      // see if shape now is fully defined
       auto shape = ConvertShapeToInt(input.second.shape);
       if (!shape.empty()) {
-         // remove from the tensor info old dynamic shape
+         // case shape is defined (not parametric) we add the tensor in the fReadyInputTensorInfos map and
+         // we remove the tensor from the fInputTensorInfo where th eold parametric shape was stored
          fInputTensorInfos.erase(input.first);
          // add to the ready input tensor information the new fixed shape
          AddInputTensorInfo(input.first, input.second.type, shape);
+         // check consistency
+         assert( fReadyInputTensorInfos.size() + fInputTensorInfos.size() == fInputTensorNames.size());
       }
       // store the parameters of the input tensors
       else {
@@ -349,6 +357,7 @@ void RModel::Initialize(int batchSize, bool verbose) {
       op->Initialize(*this);
       i++;
    }
+   fIsInitialized = true;
 }
 
 void RModel::GenerateInitializedTensorInfo() {

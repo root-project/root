@@ -12,8 +12,9 @@ namespace SOFIE {
 class RModel final : public RModel_Base {
 
 private:
+   bool fIsInitialized = false;
    std::unordered_map<std::string, InputTensorInfo>
-      fInputTensorInfos; // input tensors where shape is not defined or other graph inputs?
+      fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos; // input tensors where shape is full defined
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
@@ -100,6 +101,7 @@ public:
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
    void Initialize(int batchSize = -1, bool verbose = false);
+   void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
    void GenerateInitializedTensorInfo();
    void GenerateIntermediateTensorInfo();
    void GenerateDynamicTensorInfo();
