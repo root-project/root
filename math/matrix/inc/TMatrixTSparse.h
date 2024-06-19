@@ -77,6 +77,7 @@ public:
    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Int_t nr_nonzeros,
                   Int_t *row, Int_t *col,Element *data);
+   TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t *rowptr, Int_t *col, Element *data);
    TMatrixTSparse(const TMatrixTSparse<Element> &another);
    TMatrixTSparse(const TMatrixT<Element>       &another);
 
