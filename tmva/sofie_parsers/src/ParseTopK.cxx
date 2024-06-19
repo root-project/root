@@ -16,17 +16,11 @@ ParserFuncSignature ParseTopK = [](RModelParser_ONNX &parser, const onnx::NodePr
       throw std::runtime_error("TMVA::SOFIE ONNX Parser TopK op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
-   ETensorType k_type = ETensorType::UNDEFINED;
    std::string k_name = nodeproto.input(1);
-   if (parser.IsRegisteredTensorType(k_name)) {
-      k_type = parser.GetTensorType(k_name);
-   } else {
+   if (!parser.IsRegisteredTensorType(k_name)) {
       throw std::runtime_error("TMVA::SOFIE ONNX Parser TopK op has input tensor " + k_name +
                                " but its type is not yet registered");
    }
-
-   // std::vector<int> kElem;
-   // kElem.push_back(std::stoi(k));
 
    std::unique_ptr<ROperator> op;
 
@@ -47,10 +41,11 @@ ParserFuncSignature ParseTopK = [](RModelParser_ONNX &parser, const onnx::NodePr
    }
    op.reset(new ROperator_TopK<float>(attr_axis, attr_largest, attr_sorted, k_name, input_name, outputVal_name, outputInd_name));
 
-   for(const auto& output_name:{outputVal_name,outputInd_name}){
-      if (!parser.IsRegisteredTensorType(output_name)) {
-         parser.RegisterTensorType(output_name, input_type);
-      }
+   if (!parser.IsRegisteredTensorType(outputVal_name)) {
+      parser.RegisterTensorType(outputVal_name, input_type);
+   }
+   if (!parser.IsRegisteredTensorType(outputInd_name)) {
+      parser.RegisterTensorType(outputInd_name, ETensorType::INT64);
    }
 
    return op;
