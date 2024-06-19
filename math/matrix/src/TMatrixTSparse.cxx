@@ -163,13 +163,16 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
 /// n=row_upb-row_lwb+1 is the number of rows.
 
 template <class Element>
-TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr,
-                                        Int_t *rowptr, Int_t *col, Element *data)
+TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t *rowptr,
+                                        Int_t *col, Element *data)
 {
-   const Int_t icolmin = TMath::LocMin(nr, col);
-   const Int_t icolmax = TMath::LocMax(nr, col);
    Int_t n = row_upb - row_lwb + 1;
    Int_t nr = rowptr[n];
+   if (n <= 0 || nr <= 0) {
+      Error("TMatrixTSparse", "Inconsistency in row indices");
+   }
+   const Int_t icolmin = TMath::LocMin(nr, col);
+   const Int_t icolmax = TMath::LocMax(nr, col);
 
    if (col[icolmin] < col_lwb || col[icolmax] > col_upb) {
       Error("TMatrixTSparse", "Inconsistency between column index and its range");
@@ -1252,7 +1255,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
    }
 
    TMatrixTBase<Element>::DoubleLexSort(nr,row,col,data);
-   nr = ReduceSparseMatrix(row, col, data);
+   nr = ReduceSparseMatrix(nr, row, col, data);
 
    Int_t nr_nonzeros = 0;
    const Element *ep        = data;
