@@ -584,23 +584,32 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPage(DescriptorId_
       pageInfo = clusterDescriptor.GetPageRange(physicalColumnId).Find(clusterIndex.GetIndex());
    }
 
-   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
-      throw ROOT::Experimental::RException(
-         R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
-   }
-
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.SetSize(bytesOnStorage);
    sealedPage.SetNElements(pageInfo.fNElements);
    if (!sealedPage.GetBuffer())
       return;
-   if (pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero) {
+
+   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+      memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), bytesOnStorage);
+      return;
+   }
+
+   if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
+      // Suboptimal but hard to do differently: we load the full cage up to and including the requested page.
+      // In practice, individual LoadSealedPage calls are rare and usually full clusters are buffered.
+      // The support for extracting individual pages from a cage makes testing easier, however.
+      const auto [position, offset] = DecodeDaosPagePosition(pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>());
+      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, position);
+      const auto bufSize = offset + bytesOnStorage;
+      auto cageHeadBuffer = std::make_unique<unsigned char[]>(bufSize);
+      fDaosContainer->ReadSingleAkey(cageHeadBuffer.get(), bufSize, daosKey.fOid, daosKey.fDkey, daosKey.fAkey);
+      memcpy(const_cast<void *>(sealedPage.GetBuffer()), cageHeadBuffer.get() + offset, bytesOnStorage);
+   } else {
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, physicalColumnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.GetBuffer()), bytesOnStorage, daosKey.fOid,
                                      daosKey.fDkey, daosKey.fAkey);
-   } else {
-      memcpy(const_cast<void *>(sealedPage.GetBuffer()), RPage::GetPageZeroBuffer(), bytesOnStorage);
    }
 }
 
