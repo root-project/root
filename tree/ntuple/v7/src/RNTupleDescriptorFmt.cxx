@@ -33,13 +33,9 @@ struct ClusterInfo {
    std::uint32_t fBytesOnStorage = 0;
    std::uint32_t fBytesInMemory = 0;
 
-   bool operator ==(const ClusterInfo &other) const {
-      return fFirstEntry == other.fFirstEntry;
-   }
+   bool operator==(const ClusterInfo &other) const { return fFirstEntry == other.fFirstEntry; }
 
-   bool operator <(const ClusterInfo &other) const {
-      return fFirstEntry < other.fFirstEntry;
-   }
+   bool operator<(const ClusterInfo &other) const { return fFirstEntry < other.fFirstEntry; }
 };
 
 struct ColumnInfo {
@@ -55,15 +51,16 @@ struct ColumnInfo {
    std::string fFieldName;
    std::string fFieldDescription;
 
-   bool operator <(const ColumnInfo &other) const {
+   bool operator<(const ColumnInfo &other) const
+   {
       if (fFieldName == other.fFieldName)
          return fLocalOrder < other.fLocalOrder;
       return fFieldName < other.fFieldName;
    }
 };
 
-std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
-   const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+std::string
+GetFieldName(ROOT::Experimental::DescriptorId_t fieldId, const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fieldId);
    if (fieldDesc.GetParentId() == ROOT::Experimental::kInvalidDescriptorId)
@@ -72,7 +69,7 @@ std::string GetFieldName(ROOT::Experimental::DescriptorId_t fieldId,
 }
 
 std::string GetFieldDescription(ROOT::Experimental::DescriptorId_t fFieldId,
-   const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
+                                const ROOT::Experimental::RNTupleDescriptor &ntupleDesc)
 {
    const auto &fieldDesc = ntupleDesc.GetFieldDescriptor(fFieldId);
    return fieldDesc.GetFieldDescription();
@@ -85,6 +82,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    std::vector<ColumnInfo> columns;
    std::vector<ClusterInfo> clusters;
    std::unordered_map<DescriptorId_t, unsigned int> cluster2Idx;
+   clusters.reserve(fClusterDescriptors.size());
    for (const auto &cluster : fClusterDescriptors) {
       ClusterInfo info;
       info.fFirstEntry = cluster.second.GetFirstEntryIndex();
@@ -138,44 +136,46 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
    }
    auto headerSize = GetOnDiskHeaderSize();
    auto footerSize = GetOnDiskFooterSize();
-   output << "============================================================" << std::endl;
-   output << "NTUPLE:      " << GetName() << std::endl;
-   output << "Compression: " << compression << std::endl;
-   output << "------------------------------------------------------------" << std::endl;
-   output << "  # Entries:        " << GetNEntries() << std::endl;
-   output << "  # Fields:         " << GetNFields() << std::endl;
-   output << "  # Columns:        " << GetNPhysicalColumns() << std::endl;
-   output << "  # Alias Columns:  " << GetNLogicalColumns() - GetNPhysicalColumns() << std::endl;
-   output << "  # Pages:          " << nPages << std::endl;
-   output << "  # Clusters:       " << GetNClusters() << std::endl;
-   output << "  Size on storage:  " << bytesOnStorage << " B" << std::endl;
+   output << "============================================================\n";
+   output << "NTUPLE:      " << GetName() << "\n";
+   output << "Compression: " << compression << "\n";
+   output << "------------------------------------------------------------\n";
+   output << "  # Entries:        " << GetNEntries() << "\n";
+   output << "  # Fields:         " << GetNFields() << "\n";
+   output << "  # Columns:        " << GetNPhysicalColumns() << "\n";
+   output << "  # Alias Columns:  " << GetNLogicalColumns() - GetNPhysicalColumns() << "\n";
+   output << "  # Pages:          " << nPages << "\n";
+   output << "  # Clusters:       " << GetNClusters() << "\n";
+   output << "  Size on storage:  " << bytesOnStorage << " B"
+          << "\n";
    output << "  Compression rate: " << std::fixed << std::setprecision(2)
-                                    << float(bytesInMemory) / float(bytesOnStorage) << std::endl;
-   output << "  Header size:      " << headerSize << " B" << std::endl;
-   output << "  Footer size:      " << footerSize << " B" << std::endl;
+          << float(bytesInMemory) / float(bytesOnStorage) << "\n";
+   output << "  Header size:      " << headerSize << " B"
+          << "\n";
+   output << "  Footer size:      " << footerSize << " B"
+          << "\n";
    output << "  Meta-data / data: " << std::fixed << std::setprecision(3)
-                                    << float(headerSize + footerSize) / float(bytesOnStorage) << std::endl;
-   output << "------------------------------------------------------------" << std::endl;
-   output << "CLUSTER DETAILS" << std::endl;
+          << float(headerSize + footerSize) / float(bytesOnStorage) << "\n";
+   output << "------------------------------------------------------------\n";
+   output << "CLUSTER DETAILS\n";
    output << "------------------------------------------------------------" << std::endl;
 
    std::sort(clusters.begin(), clusters.end());
    for (unsigned int i = 0; i < clusters.size(); ++i) {
-      output << "  # " << std::setw(5) << i
-             << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
-             << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << std::endl;
+      output << "  # " << std::setw(5) << i << "   Entry range:     [" << clusters[i].fFirstEntry << ".."
+             << clusters[i].fFirstEntry + clusters[i].fNEntries - 1 << "]  --  " << clusters[i].fNEntries << "\n";
       output << "         "
-             << "   # Pages:         " << clusters[i].fNPages << std::endl;
+             << "   # Pages:         " << clusters[i].fNPages << "\n";
       output << "         "
-             << "   Size on storage: " << clusters[i].fBytesOnStorage << " B" << std::endl;
+             << "   Size on storage: " << clusters[i].fBytesOnStorage << " B\n";
       output << "         "
              << "   Compression:     " << std::fixed << std::setprecision(2)
              << float(clusters[i].fBytesInMemory) / float(float(clusters[i].fBytesOnStorage)) << std::endl;
    }
 
-   output << "------------------------------------------------------------" << std::endl;
-   output << "COLUMN DETAILS" << std::endl;
-   output << "------------------------------------------------------------" << std::endl;
+   output << "------------------------------------------------------------\n";
+   output << "COLUMN DETAILS\n";
+   output << "------------------------------------------------------------\n";
    for (auto &col : columns) {
       col.fFieldName = GetFieldName(col.fFieldId, *this).substr(1);
       col.fFieldDescription = GetFieldDescription(col.fFieldId, *this);
@@ -189,16 +189,16 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       std::string id = std::string("{id:") + std::to_string(col.fLogicalColumnId) + "}";
       if (col.fLogicalColumnId != col.fPhysicalColumnId)
          id += " --alias--> " + std::to_string(col.fPhysicalColumnId);
-      output << nameAndType << std::setw(60 - nameAndType.length()) << id << std::endl;
+      output << nameAndType << std::setw(60 - nameAndType.length()) << id << "\n";
       if (!col.fFieldDescription.empty())
-         output << "    Description:         " << col.fFieldDescription << std::endl;
-      output << "    # Elements:          " << col.fNElements << std::endl;
-      output << "    # Pages:             " << col.fNPages << std::endl;
-      output << "    Avg elements / page: " << avgElementsPerPage << std::endl;
-      output << "    Avg page size:       " << avgPageSize << " B" << std::endl;
-      output << "    Size on storage:     " << col.fBytesOnStorage << " B" << std::endl;
+         output << "    Description:         " << col.fFieldDescription << "\n";
+      output << "    # Elements:          " << col.fNElements << "\n";
+      output << "    # Pages:             " << col.fNPages << "\n";
+      output << "    Avg elements / page: " << avgElementsPerPage << "\n";
+      output << "    Avg page size:       " << avgPageSize << " B\n";
+      output << "    Size on storage:     " << col.fBytesOnStorage << " B\n";
       output << "    Compression:         " << std::fixed << std::setprecision(2)
-             << float(col.fElementSize * col.fNElements) / float(col.fBytesOnStorage) << std::endl;
+             << float(col.fElementSize * col.fNElements) / float(col.fBytesOnStorage) << "\n";
       output << "............................................................" << std::endl;
    }
 }

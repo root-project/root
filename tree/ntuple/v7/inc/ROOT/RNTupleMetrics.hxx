@@ -64,9 +64,9 @@ public:
    virtual ~RNTuplePerfCounter();
    void Enable() { fIsEnabled = true; }
    bool IsEnabled() const { return fIsEnabled; }
-   std::string GetName() const { return fName; }
-   std::string GetDescription() const { return fDescription; }
-   std::string GetUnit() const { return fUnit; }
+   const std::string &GetName() const { return fName; }
+   const std::string &GetDescription() const { return fDescription; }
+   const std::string &GetUnit() const { return fUnit; }
 
    virtual std::int64_t GetValueAsInt() const = 0;
    virtual std::string GetValueAsString() const = 0;
