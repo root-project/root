@@ -1147,7 +1147,8 @@ public:
    /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  const ColumnNames_t &columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
+                                                 const RSnapshotOptions &options = RSnapshotOptions(),
+                                                 const bool vector2rvec = true)
    {
       // like columnList but with `#var` columns removed
       auto colListNoPoundSizes = RDFInternal::FilterArraySizeColNames(columnList, "Snapshot");
@@ -1183,7 +1184,7 @@ public:
 
       auto resPtr = CreateAction<RDFInternal::ActionTags::Snapshot, RDFDetail::RInferredType>(
          colListNoAliasesWithSizeBranches, newRDF, snapHelperArgs, fProxiedPtr,
-         colListNoAliasesWithSizeBranches.size());
+         colListNoAliasesWithSizeBranches.size(), vector2rvec);
 
       if (!options.fLazy)
          *resPtr;
@@ -1205,7 +1206,8 @@ public:
    /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::string_view columnNameRegexp = "",
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
+                                                 const RSnapshotOptions &options = RSnapshotOptions(),
+                                                 const bool vector2rvec = true)
    {
       const auto definedColumns = fColRegister.GenerateColumnNames();
       auto *tree = fLoopManager->GetTree();
@@ -1226,7 +1228,7 @@ public:
       RDFInternal::RemoveDuplicates(columnNames);
 
       const auto selectedColumns = RDFInternal::ConvertRegexToColumns(columnNames, columnNameRegexp, "Snapshot");
-      return Snapshot(treename, filename, selectedColumns, options);
+      return Snapshot(treename, filename, selectedColumns, options, vector2rvec);
    }
    // clang-format on
 
@@ -1245,10 +1247,11 @@ public:
    /// See above for a more complete description and example usages.
    RResultPtr<RInterface<RLoopManager>> Snapshot(std::string_view treename, std::string_view filename,
                                                  std::initializer_list<std::string> columnList,
-                                                 const RSnapshotOptions &options = RSnapshotOptions())
+                                                 const RSnapshotOptions &options = RSnapshotOptions(),
+                                                 const bool vector2rvec = true)
    {
       ColumnNames_t selectedColumns(columnList);
-      return Snapshot(treename, filename, selectedColumns, options);
+      return Snapshot(treename, filename, selectedColumns, options, vector2rvec);
    }
    // clang-format on
 
