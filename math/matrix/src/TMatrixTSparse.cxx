@@ -52,33 +52,40 @@
  taken with regard to performance. In the constructor, always the
  shape of the matrix has to be specified in some form . Data can be
  entered through the following methods :
- 1. constructor
+ 1. constructor from COO matrix format
 ~~~
     TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
                    Int_t col_upb,Int_t nr_nonzeros,
                    Int_t *row, Int_t *col,Element *data);
 ~~~
     It uses SetMatrixArray(..), see below
- 2. copy constructors
- 3. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
+ 2. constructor from Harwell-Boeing (CSR) matrix format
+~~~
+    TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t dol_lwb,
+                   Int_t col_upb,
+                   Int_t *rowptr, Int_t *col,Element *data);
+~~~
+    It copies input arrays into matrix .
+ 3. copy constructors
+ 4. SetMatrixArray(Int_t nr,Int_t *irow,Int_t *icol,Element *data)
     where it is expected that the irow,icol and data array contain
     nr entries . Only the entries with non-zero data[i] value are
     inserted. Be aware that the input data array will be modified
     inside the routine for doing the necessary sorting of indices !
- 4. SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *irow,
+ 5. SetMatrixArray(Int_t nr,Int_t nrows,Int_t ncols,Int_t *irow,
     Int_t *icol,Element *data) where it is expected that the irow,
     icol and data array contain nr entries . It allows to reshape
     the matrix according to nrows and ncols. Only the entries with
     non-zero data[i] value are inserted. Be aware that the input
     data array will be modified inside the routine for doing the
     necessary sorting of indices !
- 5. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
+ 6. TMatrixTSparse a(n,m); for(....) { a(i,j) = ....
     This is a very flexible method but expensive :
     - if no entry for slot (i,j) is found in the sparse index table
       it will be entered, which involves some memory management !
     - before invoking this method in a loop it is smart to first
       set the index table through a call to SetSparseIndex(..)
- 5. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
+ 7. SetSub(Int_t row_lwb,Int_t col_lwb,const TMatrixTBase &source)
     the matrix to be inserted at position (row_lwb,col_lwb) can be
     both dense or sparse .
 
