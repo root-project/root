@@ -277,6 +277,12 @@ The usage of `TRef` in the `TFoamCell` class has ben replaced with array indices
 
 In previous releases, the default minimizer type that RooFit used was hardcoded to be the original `Minuit`, while RooStats used the default minimizer specified by `ROOT::Math::MinimizerOptions::DefaultMinimizerType()`. Now it is possible to centrally define the global minimizer for all RooFit libraries via `ROOT::Math::MinimizerOptions::SetDefaultMinimizer()`, or alternatively in the `.rootrc` file by adding for example `Root.Fitter: Minuit2` to select Minuit2.
 
+### Error out when setting out-of-range variable value instead of silent clipping
+
+In previous versions, if you set the value of a variable with `RooRealVar::setVal()`, the value was silently clippend when it was outside the variable range.
+This silent mutation of data can be dangerous.
+With ROOT 6.28, an exception will be thrown instead.
+If you know what you are doing and want to restore the old clipping behavior, you can do so with `RooRealVar::enableSilentClipping()`, but this is not recommended.
 
 ### Code modernization by using `std::string` in RooFit interfaces
 

@@ -55,8 +55,9 @@ public:
   std::size_t valueResetCounter() const { return _valueResetCounter; }
   void setVal(double value) override;
   void setVal(double value, const char* rangeName) override;
+  static void enableSilentClipping(bool flag=true);
   inline double getError() const { return _error>=0?_error:0. ; }
-  inline bool hasError(bool allowZero=true) const { return allowZero ? (_error>=0) : (_error>0) ; }
+  inline Bool_t hasError(Bool_t allowZero=kTRUE) const { return allowZero ? (_error>=0) : (_error>0) ; }
   inline void setError(double value) { _error= value ; }
   inline void removeError() { _error = -1 ; }
   inline double getAsymErrorLo() const { return _asymErrLo<=0?_asymErrLo:0. ; }
@@ -169,6 +170,8 @@ public:
   std::shared_ptr<RooRealVarSharedProperties> _sharedProp; ///<! Shared binnings associated with this instance
 
   std::size_t _valueResetCounter = 0; ///<! How many times the value of this variable was reset
+
+  static bool& isSilentClippingEnabled();
 
   ClassDefOverride(RooRealVar,10); // Real-valued variable
 };
