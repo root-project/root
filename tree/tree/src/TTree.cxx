@@ -3311,7 +3311,7 @@ void TTree::CopyAddresses(TTree* tree, bool undo)
          TBranch* br = tree->GetBranch(branch->GetName());
          tree->ResetBranchAddress(br);
       } else {
-         char* addr = branch->GetAddress();
+         void* addr = branch->GetAddress();
          if (!addr) {
             if (branch->IsA() == TBranch::Class()) {
                // If the branch was created using a leaflist, the branch itself may not have
