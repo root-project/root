@@ -82,7 +82,7 @@ function(SET_ROOT_VERSION)
     if (${GIT_DESCRIBE_ALL} MATCHES "^tags/")
       string(REGEX REPLACE "^tags/" "" GIT_DESCRIBE_ALWAYS ${GIT_DESCRIBE_ALL})
     else()
-      message(WARNING "GIT_DESCRIBE_ALL is `${GIT_DESCRIBE_ALL}`·with a format unexpected for tags. Not setting the commit.")
+      message(WARNING "GIT_DESCRIBE_ALL is `${GIT_DESCRIBE_ALL}` with a format unexpected for tags. Not setting the commit.")
     endif()
   endif()
 
