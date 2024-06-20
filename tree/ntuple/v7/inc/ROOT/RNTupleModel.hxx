@@ -335,7 +335,7 @@ public:
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
    const RFieldBase &GetField(std::string_view fieldName) const;
 
-   std::string GetDescription() const { return fDescription; }
+   const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
 
    /// Estimate the memory usage for this model during writing
