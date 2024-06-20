@@ -121,6 +121,7 @@ ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabl
 ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules (deprecated)")
 ROOT_BUILD_OPTION(daos OFF "Enable RNTuple support for Intel DAOS")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
+ROOT_BUILD_OPTION(docu OFF "Build the HTML based ROOT documentation (requires Doxygen, and does not work on Windows)")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
 ROOT_BUILD_OPTION(test_distrdf_dask OFF "Enable distributed RDataFrame tests that use dask")
 ROOT_BUILD_OPTION(davix ON "Enable support for Davix (HTTP/WebDAV access)")

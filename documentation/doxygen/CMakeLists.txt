@@ -1,0 +1,412 @@
+project(ROOT_documentation)
+
+#set(CMAKE_VERBOSE_MAKEFILE ON) # set to ON for debugging; or rather use --verbose when calling cmake
+cmake_minimum_required(VERSION 3.10)
+if(CMAKE_VERSION VERSION_LESS 3.21)
+    get_directory_property(hasParent PARENT_DIRECTORY)
+    if(hasParent)
+        set(builtin_docu ON)
+    else()
+        set(builtin_docu OFF)
+    endif()
+else()
+    if(PROJECT_IS_TOP_LEVEL)
+      set(builtin_docu OFF)
+    else()
+      set(builtin_docu ON)
+    endif()
+endif()
+
+if(builtin_docu)
+  message(STATUS "ROOT HTML documentation will be built with doxygen as a step of the ROOT build.")
+  # TODO: https://stackoverflow.com/questions/16408060/how-do-i-add-a-dependency-on-a-script-to-a-target-in-cmake
+else()
+  message(STATUS "ROOT HTML documentation will be built with doxygen as a standalone, with an external ROOT required.")
+  # A typical way is:
+  # cd /tmp/ && mkdir builddocu && cd builddocu  cmake -B./ -S/opt/root_src/documentation/doxygen/ -DDOCU_INPUT="./mainpage.md;../../core" -DDOCU_LOCATION=/tmp/docoutput -DDOCU_THREADS=8 -DDOCU_LOGFILE=/tmp/warnings.txt -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator
+endif()
+
+if(DEFINED ROOTSYS)
+    set (ROOT_DIR ${ROOTSYS} CACHE STRING "ROOT build directory")
+else()
+    set (ROOT_DIR /opt/root/ CACHE STRING "ROOT build directory")
+endif()
+set (PYTHONPATH ${ROOT_DIR}/lib CACHE STRING "PYTHONPATH")
+find_package(ROOT 6.32 CONFIG REQUIRED)
+
+# Consider building Doxygen >1.9.3 and with Clang enabled (download as precompiled binary from GitHub):
+# cmake ../ -DCMAKE_PREFIX_PATH=/opt/clang+llvm-16.0.4-x86_64-linux-gnu-ubuntu-22.04/lib/cmake/llvm/ -Duse_libclang=ON -Dstatic_libclang=ON -DCMAKE_INSTALL_PREFIX=../install
+if(NOT DOXYGEN_EXECUTABLE)
+    set(DOXYGEN_EXECUTABLE "doxygen")
+endif()
+set(DOXYGEN_EXECUTABLE ${DOXYGEN_EXECUTABLE} CACHE STRING "Path to custom doxygen executable") # Use e.g. -DDOXYGEN_EXECUTABLE=/opt/doxygen/build/bin/doxygen for a local built doxygen. Leave empty for system-wide doxygen.
+#list(APPEND CMAKE_MODULE_PATH "/opt/doxygen") # Uncomment this if you have a custom installation of Doxygen in /opt/
+find_package(Doxygen 1.9.4 REQUIRED dot) # OPTIONAL_COMPONENTS dot
+find_package(Python3 COMPONENTS Interpreter)
+# TODO: should we remove output directory beforehand to ensure a clean rebuild?
+
+if(builtin_docu)
+    set(ROOT_CXX_COMPILER ${CMAKE_CXX_COMPILER})
+    if(GIT_DESCRIBE_ALL)
+        set (ROOT_GIT_VERSION ${GIT_DESCRIBE_ALL})
+    else()
+        math(EXPR ROOT_PATCH_VERSION_ODD ${ROOT_PATCH_VERSION}%2)
+        if(${ROOT_PATCH_VERSION} EQUAL 0) # A release.
+            math(EXPR ROOT_MINOR_VERSION_ODD ${ROOT_MINOR_VERSION}%2)
+            if(${ROOT_MINOR_VERSION_ODD} EQUAL 1)
+                set (ROOT_GIT_VERSION "heads/master")
+            else() # Production release / patch release.
+                set (ROOT_GIT_VERSION "heads/v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-patches")
+            endif()
+        else()
+            set (ROOT_GIT_VERSION "heads/master")
+        endif()
+    endif()
+    set(ROOT_root_CMD ${ROOT_BINDIR}/root.exe)
+else()
+    execute_process(COMMAND ${ROOT_root_CMD}-config --cxx OUTPUT_VARIABLE ROOT_CXX_COMPILER OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${ROOT_root_CMD} -l -b -q -e gROOT->GetGitBranch\(\) OUTPUT_VARIABLE ROOT_GIT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
+    STRING(REGEX REPLACE "^\n\\(const char \\*\\) " "" ROOT_GIT_VERSION ${ROOT_GIT_VERSION})
+endif()
+execute_process(COMMAND find ../../ -type d -name dictpch -prune -o -type d -name inc OUTPUT_VARIABLE ROOT_INC_FOLDERS OUTPUT_STRIP_TRAILING_WHITESPACE WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+string(REPLACE "\n" ";" ROOT_INC_FOLDERS ${ROOT_INC_FOLDERS})
+list(APPEND ROOT_INC_FOLDERS ../../interpreter/llvm/src/tools/clang/include)#different pattern
+#message(${ROOT_INC_FOLDERS})
+
+#execute_process(COMMAND ${ROOT_root_CMD}-config --has-roofit OUTPUT_VARIABLE HAS_ROOFIT OUTPUT_STRIP_TRAILING_WHITESPACE)
+#https://stackoverflow.com/questions/34393562/ternary-operator-in-cmakes-generator-expressions
+
+set (DOCU_QHG_LOCATION qhelpgenerator CACHE STRING "Path to qhelpgenerator")
+#Pass instead -DDOCU_QHG_LOCATION=/usr/lib/x86_64-linux-gnu/qt4/bin/qhelpgenerator if qt4dev-tools or qt5/ if qt5-assistant
+#Pass instead -DDOCU_QHG_LOCATION=/opt/Qt/5.15.2/gcc_64/bin/qhelpgenerator e.g. if custom installation
+set (DOCU_LOCATION $ENV{HOME}/rootdoc CACHE STRING "Documentation output directory")
+#Pass instead e.g. -DDOCU_LOCATION=/tmp/rootdoc if system-wide installation
+set (DOCU_THREADS 0 CACHE STRING "Number of threads for building the documentation (use 0 for maximum threads, N for specific number)")
+set (DOCU_LOGFILE "" CACHE STRING "File where to write warnings to (leave empty for printing into console)")
+
+if(COMMAND ${DOCU_QHG_LOCATION})
+    message(STATUS "Doxygen QCH file will be built with ${DOCU_QHG_LOCATION}")
+else()
+    message(WARNING "Doxygen QCH file cannot be generated, no valid qhelpgenerator was found")
+endif()
+
+# TODO run -x_noenv to see what's missing
+set (DOCU_INPUT
+  ./mainpage.md
+  ../../core/
+  ../../geom/
+  ../../graf2d
+  ../../graf3d
+  ../../gui/
+  ../../hist/
+  ../../html/
+  ../../io/
+  ../../main/
+  ../../math/
+  ../../montecarlo/
+  ../../net/
+  ../../proof/
+  ../../tmva/
+  ../../roofit/
+  ../../tree/
+  ../../sql/
+  ../../tutorials/
+  ../../bindings/
+  ${DOCU_LOCATION}/pyzdoc/
+
+  #~ ../../core/base/
+  #~ ../../core/dictgen/
+  #~ ../../core/cont/
+  #~ ../../core/foundation/
+  #~ ../../core/gui/
+  #~ ../../core/macosx/
+  #~ ../../core/meta/
+  #~ ../../core/metacling/
+  #~ ../../core/clingutils/
+  #~ ../../core/multiproc/
+  #~ ../../core/rint/
+  #~ ../../core/testsupport/
+  #~ ../../core/thread/
+  #~ ../../core/unix/
+  #~ ../../core/winnt/
+  #~ ../../core/imt/
+  #~ ../../core/zip/inc/Compression.h
+  #~ ../../geom/
+  #~ ../../graf2d/asimage/
+  #~ ../../graf2d/cocoa/
+  #~ ../../graf2d/fitsio/
+  #~ ../../graf2d/gpad/
+  #~ ../../graf2d/gpadv7/
+  #~ ../../graf2d/graf/
+  #~ ../../graf2d/gviz/
+  #~ ../../graf2d/postscript/
+  #~ ../../graf2d/quartz/
+  #~ ../../graf2d/win32gdk/
+  #~ ../../graf2d/x11/
+  #~ ../../graf2d/x11ttf/
+  #~ ../../graf3d/eve/
+  #~ ../../graf3d/eve7/
+  #~ ../../graf3d/g3d/
+  #~ ../../graf3d/gl/
+  #~ ../../graf3d/gviz3d/
+  #~ ../../gui/
+  #~ ../../hist/
+  #~ ../../html/
+  #~ ../../io/doc/TFile
+  #~ ../../io/dcache/
+  #~ ../../io/io/
+  #~ ../../io/sql/
+  #~ ../../io/xml/
+  #~ ../../io/xmlparser/
+  #~ ../../main/src/hadd.cxx
+  #~ ../../math/
+  #~ ../../montecarlo/
+  #~ ../../net/auth/
+  #~ ../../net/davix/
+  #~ ../../net/doc/
+  #~ ../../net/http/
+  #~ ../../net/httpsniff/
+  #~ ../../net/net/
+  #~ ../../net/netxng/
+  #~ ../../proof/
+  #~ ../../tmva/
+  #~ ../../roofit/
+  #~ ../../tree/
+  #~ ../../sql/
+  #~ ../../tutorials/
+  #~ ../../bindings/tpython/
+  #~ ../../bindings/pyroot/
+  #~ ../../bindings/r/
+
+  CACHE STRING "Doxyfile input files or folders")
+
+add_custom_target(Preparation
+  COMMAND rm -f cleanNamespaces?* # TODO move to clean target
+  COMMAND rm -f tutorialWorklist?* # TODO move to clean target
+  COMMAND rm -rf ${CMAKE_CURRENT_BINARY_DIR}/images # TODO move to clean target
+
+  COMMAND mkdir -p ${DOCU_LOCATION}/macros ${CMAKE_CURRENT_BINARY_DIR}/images ${DOCU_LOCATION}/notebooks
+
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/libs.C ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.C ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeimage.py ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/MakeTCanvasJS.C ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/MakeRCanvasJS.C ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeCollaborationDiagrams.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/makeNotebooks.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpage.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyClassWebpages.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/modifyNamespacesWebpage.sh ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/filter.cxx ./
+  COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/converttonotebook.py ./
+
+  COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/images/* ${CMAKE_CURRENT_BINARY_DIR}/images/
+  COMMAND tar xfz ${CMAKE_CURRENT_SOURCE_DIR}/mathjax.tar.gz -C ${DOCU_LOCATION}/
+  COMMAND scp -p -r ${CMAKE_CURRENT_SOURCE_DIR}/../../js ${DOCU_LOCATION}/
+
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/makehtmlfooter.sh > ${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html
+
+  COMMAND ${ROOT_CXX_COMPILER} -DROOT_COMMAND=\\\"${ROOT_root_CMD}\\\" -DDOXYGEN_OUTPUT_DIRECTORY=\\\"${DOCU_LOCATION}\\\" -DDOXYGEN_SOURCE_DIRECTORY=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../\\\" -DPYTHON_EXECUTABLE=\\\"${Python3_EXECUTABLE}\\\" -DPYSPARK_PYTHON=\\\"${Python3_EXECUTABLE}\\\" -DPYTHONPATH=\\\"${PYTHONPATH}\\\" -DLD_LIBRARY_PATH=\\\"${LD_LIBRARY_PATH}:${ROOT_DIR}/lib\\\" -DCMAKE_BUILD_DIRECTORY=\\\"${CMAKE_CURRENT_BINARY_DIR}\\\" -o filter filter.cxx -std=c++${CMAKE_CXX_STANDARD} -O2
+
+  # Precompile here to prevent later multithreading issues
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L libs.C+O'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L makeimage.C+O'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeTCanvasJS.C+O'
+  COMMAND ${CMAKE_COMMAND} -E env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${ROOT_DIR}/lib ${ROOT_root_CMD} -l -b -q -e '.L MakeRCanvasJS.C+O' # TODO these 4 commands are printing a weird 'Welcome to the ROOT tutorials' message
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+if(builtin_docu)
+    add_dependencies(Preparation hsimple)
+endif()
+set(DOCU_PYZDOC ON CACHE BOOL "Integrate Python docstrings into Doxygen documentation") # Disable for quicker builds
+if(DOCU_PYZDOC)
+set(PYZ_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bindings/pyroot/pythonizations/python/ROOT/_pythonization")
+add_custom_target(PreparationPyz
+    COMMAND mkdir -p ${DOCU_LOCATION}/pyzdoc
+    COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/extract_docstrings.py ./
+    COMMAND scp ${CMAKE_CURRENT_SOURCE_DIR}/print_roofit_pyz_doctrings.py ./
+    COMMAND ${Python3_EXECUTABLE} extract_docstrings.py ${PYZ_DIR} ${DOCU_LOCATION}/pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
+    COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python3_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
+)
+if(builtin_docu)
+    add_dependencies(PreparationPyz hsimple)
+endif()
+endif()
+set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
+set(DOXYGEN_PROJECT_NAME           "ROOT")
+set(DOXYGEN_PROJECT_NUMBER         "${ROOT_GIT_VERSION}")
+set(DOXYGEN_PROJECT_BRIEF          "Reference Guide")
+set(DOXYGEN_PROJECT_LOGO           "rootlogo.gif")
+set(DOXYGEN_ALWAYS_DETAILED_SEC    YES)
+set(DOXYGEN_JAVADOC_AUTOBRIEF      YES)
+set(DOXYGEN_QT_AUTOBRIEF           YES)
+set(DOXYGEN_TAB_SIZE               3)
+set(DOXYGEN_ALIASES                "legacy{1}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution.</div>\\endhtmlonly" "legacy{2}=\\htmlonly<div class=\\\"legacybox\\\"><h2>Legacy Code</h2> \\1 is a legacy interface: it is not recommended to use it in new code: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \\1 might still be a valid solution. \\2</div>\\endhtmlonly"
+)
+set(DOXYGEN_EXTENSION_MAPPING      h=C++ icc=C++ def=C++ pyzdoc=C++ cu=C++ cuh=C++)
+set(DOXYGEN_TOC_INCLUDE_HEADINGS   3)
+set(DOXYGEN_BUILTIN_STL_SUPPORT    YES)
+set(DOXYGEN_LOOKUP_CACHE_SIZE      4)
+set(DOXYGEN_EXTRACT_ALL            YES)
+set(DOXYGEN_EXTRACT_PRIVATE        YES)
+set(DOXYGEN_EXTRACT_STATIC         YES)
+#set(DOXYGEN_EXTRACT_ANON_NSPACES   YES)
+set(DOXYGEN_HIDE_IN_BODY_DOCS      YES)
+set(DOXYGEN_CASE_SENSE_NAMES       YES) # default value is system dependent, so need to set this !
+set(DOXYGEN_WARN_NO_PARAMDOC       NO) # If you set this to yes for finding all missing documentation, you need to set EXTRACT_ALL to false, see https://github.com/doxygen/doxygen/issues/880
+set(DOXYGEN_SORT_BRIEF_DOCS        YES)
+set(DOXYGEN_SORT_MEMBERS_CTORS_1ST YES)
+set(DOXYGEN_GENERATE_TODOLIST      NO)
+set(DOXYGEN_GENERATE_BUGLIST       NO)
+set(DOXYGEN_LAYOUT_FILE            DoxygenLayout.xml)
+set(DOXYGEN_WARN_LOGFILE           ${DOCU_LOGFILE})
+set(DOXYGEN_WARN_LINE_FORMAT       "$file:$line")
+set(DOXYGEN_FILE_PATTERNS          *.c *.C *.cc *.cpp *.cxx *.def *.dox *.f *.h *.hh *.hpp *.hxx *.icc *.inc *.inl *.js *.m *.md *.mm *.py *.pyzdoc)
+set(DOXYGEN_RECURSIVE YES)
+set(DOXYGEN_EXCLUDE_PATTERNS       */G__*
+                                   */test/*
+                                   */src/unuran-*
+                                   */libAfterImage/*
+                                   */doc/v6*
+                                   */doc/v5*
+                                   */win32gdk/gdk/*
+                                   */bindings/pyroot/*.py
+                                   *gl2ps*
+                                   *CsgOps*
+                                   LinkDef*.h
+                                   launcher.py
+                                   */io/io/res/*
+                                   */src/lexertk.hpp
+                                   *.xml
+                                   *.dtd
+                                   */tutorials/webgui/qt5web/*
+                                   */math/mathcore/src/CDT*
+                                   )
+#set(DOXYGEN_EXCLUDE_SYMBOLS        std
+                                   #cling*)
+set(DOXYGEN_EXAMPLE_PATH           "${DOCU_LOCATION}/macros")
+set(DOXYGEN_IMAGE_PATH             "${CMAKE_CURRENT_BINARY_DIR}/images") # From here they will be auto-copied to DOCU_LOCATION/html, but only when running doxygen for a second time. See https://github.com/root-project/root/pull/11614. So we add Copying target so solve this.
+set(DOXYGEN_INPUT_FILTER           "${CMAKE_CURRENT_BINARY_DIR}/filter")
+set(DOXYGEN_SOURCE_BROWSER         YES)
+set(DOXYGEN_STRIP_CODE_COMMENTS    NO)
+set(DOXYGEN_IGNORE_PREFIX          T)
+set(DOXYGEN_HTML_HEADER            "htmlheader.html")
+set(DOXYGEN_HTML_FOOTER            "${CMAKE_CURRENT_BINARY_DIR}/htmlfooter.html")
+set(DOXYGEN_HTML_EXTRA_STYLESHEET  "ROOT.css")
+set(DOXYGEN_HTML_EXTRA_FILES       "rootlogo_s.gif"
+                                   "notebook.gif")
+set(DOXYGEN_HTML_TIMESTAMP         YES)
+set(DOXYGEN_GENERATE_QHP           YES)
+set(DOXYGEN_QCH_FILE               "ROOT.qch")
+set(DOXYGEN_QHP_NAMESPACE          cern.ch.ROOT)
+set(DOXYGEN_QHG_LOCATION           "${DOCU_QHG_LOCATION}")
+set(DOXYGEN_QHP_VIRTUAL_FOLDER     "rootdoc")
+set(DOXYGEN_DISABLE_INDEX          YES)
+set(DOXYGEN_GENERATE_TREEVIEW      YES)
+set(DOXYGEN_USE_MATHJAX            YES)
+set(DOXYGEN_MATHJAX_RELPATH        ../mathjax)
+set(DOXYGEN_MATHJAX_VERSION        MathJax_3)
+set(DOXYGEN_GENERATE_LATEX         NO)
+#set(DOXYGEN_LATEX_CMD_NAME        latex)
+set(DOXYGEN_MACRO_EXPANSION        YES)
+set(DOXYGEN_SKIP_FUNCTION_MACROS   NO)
+#set(DOXYGEN_EXPAND_ONLY_PREDEF    YES)
+#set(DOXYGEN_SEARCH_INCLUDES       NO)
+set(DOXYGEN_PREDEFINED             "R__CLING_PTRCHECK" "R__USE_IMT" "__attribute__(x)=" "__declspec(x)=" "__pragma(x)=")
+#"ClassDef(x,y)=" "ClassImp(x)=" "ClassImpQ(x)=" "templateClassImp(x)=" "NamespaceImp(x)=" "R__SUGGEST_ALTERNATIVE(x)="
+set(DOXYGEN_INCLUDE_PATH           "${ROOT_INC_FOLDERS}")
+set(DOXYGEN_STRIP_FROM_PATH        "${DOCU_LOCATION}" "../../")
+set(DOXYGEN_STRIP_FROM_INC_PATH    "${ROOT_INC_FOLDERS}")
+set(DOXYGEN_GENERATE_TAGFILE       "${DOCU_LOCATION}/html/ROOT.tag")
+set(DOXYGEN_HIDE_UNDOC_RELATIONS   NO)
+set(DOXYGEN_HAVE_DOT               YES) # set to NO for getting faster results when debugging
+set(DOXYGEN_DOT_MULTI_TARGETS      YES)
+set(DOXYGEN_DOT_NUM_THREADS        ${DOCU_THREADS})
+set(DOXYGEN_NUM_PROC_THREADS       ${DOCU_THREADS})
+set(DOXYGEN_GROUP_GRAPHS           NO)
+set(DOXYGEN_DOT_IMAGE_FORMAT       svg)
+set(DOXYGEN_INTERACTIVE_SVG        YES)
+set(DOXYGEN_DOT_GRAPH_MAX_NODES    200)
+#set(DOXYGEN_ENABLED_SECTIONS       HIDDEN_SYMBOLS) # uncomment this to also show in the HTML the internal documentation inteded only for ROOT developers
+#set(DOXYGEN_CLANG_ASSISTED_PARSING YES)
+
+#TODO: if(NOT GRAPHVIZ_FOUND) set(gvizveto...)
+
+doxygen_add_docs(dox ALL
+  ${DOCU_INPUT}
+  #ALLOW_DUPLICATE_CUSTOM_TARGETS
+  #USE_STAMP_FILE
+  COMMENT "Generating doxygen documentation for ${PROJECT_NAME}"
+)
+add_dependencies(dox Preparation)
+if(DOCU_PYZDOC)
+add_dependencies(dox PreparationPyz)
+endif()
+
+#~ # install generated files
+#~ install(
+  #~ DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  #~ TYPE DOC
+  #~ OPTIONAL # because available only after "make doc"
+#~ )
+
+add_custom_target(CollaborationDiagrams ALL
+    COMMAND find . -name 'cleanNamespaces?*.sh' -exec cat {} + > cleanNamespaces.sh
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash cleanNamespaces.sh  # TODO -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env ROOTSYS=${ROOTSYS} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash makeCollaborationDiagrams.sh  # TODO -j${DOCU_THREADS}
+    COMMAND ${CMAKE_COMMAND} -E env CMAKE_CURRENT_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR} DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" ROOT_CMD=${ROOT_root_CMD} bash modifyClassWebpages.sh -j${DOCU_THREADS}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_dependencies(CollaborationDiagrams dox)
+
+set(DOCU_TUTORIALS ON CACHE BOOL "Integrate tutorials in Doxygen documentation") # Disable for quicker builds
+if(DOCU_TUTORIALS)
+add_custom_target(Tutorials ALL
+    COMMAND find . -name 'tutorialWorklist_root?*' -exec cat {} + > tutorialWorklist_root
+    COMMAND find . -name 'tutorialWorklist_py?*' -exec cat {} + > tutorialWorklist_py
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" xargs -L 1 -P ${DOCU_THREADS} ${ROOT_root_CMD} -l -q < tutorialWorklist_root
+)
+add_dependencies(Tutorials dox)
+
+add_custom_target(Notebooks ALL
+    COMMAND scp -p ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.xml ${CMAKE_CURRENT_SOURCE_DIR}/../../tutorials/unfold/*.dtd ${DOCU_LOCATION}/notebooks
+    COMMAND ${CMAKE_COMMAND} -E env DOXYGEN_OUTPUT_DIRECTORY="${DOCU_LOCATION}" PYTHONPATH=${PYTHONPATH} PYTHON_EXECUTABLE=${Python3_EXECUTABLE} ROOT_CMD=${ROOT_root_CMD} ROOTSYS=${ROOTSYS} JUPYTER_PATH=${ROOTSYS}/etc/notebook JUPYTER_CONFIG_DIR=${ROOTSYS}/etc/notebook bash ./makeNotebooks.sh tutorialWorklist_py -j${DOCU_THREADS}
+    # pip3 install metakernel is needed to avoid issues in the conversion
+    COMMAND rm -f ${DOCU_LOCATION}/notebooks/*.root
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+add_dependencies(Notebooks Tutorials)
+endif()
+# TODO what about parallelNotebooks.sh
+
+add_custom_target(Copying ALL # This is a hack as alternative to https://github.com/root-project/root/pull/11614
+    COMMAND scp -p ${CMAKE_CURRENT_BINARY_DIR}/images/* ${DOCU_LOCATION}/html/
+)
+add_dependencies(Copying dox)
+if(DOCU_TUTORIALS)
+add_dependencies(Copying Notebooks)
+endif()
+
+if(COMMAND ${DOCU_QHG_LOCATION})
+add_custom_target(Zipping ALL
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.tag
+    COMMAND gzip -f ${DOCU_LOCATION}/html/ROOT.qch
+)
+add_dependencies(Zipping dox)
+endif()
+
+set_property(
+  TARGET dox
+  APPEND
+  PROPERTY ADDITIONAL_CLEAN_FILES Doxyfile.dox filter htmlfooter.html tutorialWorklist_py tutorialWorklist_root cleanNamespaces.sh
+)
+
+#TODO cleaning:
+#rm cleanNamespaces?* tutorialWorklist_py?* tutorialWorklist_root*
+#rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
+#rm -rf tmva* data* result* config* test* Roo* My* Freq*
+#rm -f MDF.C pca.C
+#rm -f greek.gif hsumanim.gif mathsymb.gif parallelcoordtrans.gif
+#rm -f ${DOCU_LOCATION}/notebooks/*.root
+#rm -rf ${DOCU_LOCATION}
+#unset(DOXYGEN_EXECUTABLE CACHE)
