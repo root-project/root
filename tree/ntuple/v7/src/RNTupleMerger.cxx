@@ -27,7 +27,8 @@
 #include <deque>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
-{
+// IMPORTANT: this function must not throw, as it is used in exception-unsafe code (TFileMerger).
+try {
    // Check the inputs
    if (!inputs || inputs->GetEntries() < 3 || !mergeInfo)
       return -1;
@@ -94,6 +95,9 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo 
    *this = *outFile->Get<RNTuple>(ntupleName.c_str());
 
    return 0;
+} catch (const RException &ex) {
+   Error("RNTuple::Merge", "Exception thrown while merging: %s", ex.what());
+   return -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
