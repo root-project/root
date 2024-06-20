@@ -607,6 +607,12 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    if (!nllNode) {
       throw std::runtime_error("likelihood node not found!");
    }
+   if (!nllNode->has_child("distributions")) {
+      throw std::runtime_error("likelihood node has no distributions attached!");
+   }
+   if (!nllNode->has_child("data")) {
+      throw std::runtime_error("likelihood node has no data attached!");
+   }
    std::vector<std::string> nllDistNames = valsToStringVec((*nllNode)["distributions"]);
    RooArgSet extConstraints;
    for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
@@ -2058,7 +2064,6 @@ void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
    if (auto paramPointsNode = n.find("parameter_points")) {
       for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
-
          if (!::isValidName(name)) {
             std::stringstream ss;
             ss << "RooJSONFactoryWSTool() node name '" << name << "' is not valid!" << std::endl;
