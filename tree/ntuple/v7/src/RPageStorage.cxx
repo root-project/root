@@ -373,19 +373,19 @@ ROOT::Experimental::Internal::RPageSink::~RPageSink() {}
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
 ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 {
-   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage.GetBuffer());
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage->GetBuffer());
    bool isAdoptedBuffer = true;
-   auto packedBytes = config.fPage.GetNBytes();
+   auto packedBytes = config.fPage->GetNBytes();
 
-   if (!config.fElement.IsMappable()) {
-      packedBytes = config.fElement.GetPackedSize(config.fPage.GetNElements());
+   if (!config.fElement->IsMappable()) {
+      packedBytes = config.fElement->GetPackedSize(config.fPage->GetNElements());
       pageBuf = new unsigned char[packedBytes];
       isAdoptedBuffer = false;
-      config.fElement.Pack(pageBuf, config.fPage.GetBuffer(), config.fPage.GetNElements());
+      config.fElement->Pack(pageBuf, config.fPage->GetBuffer(), config.fPage->GetNElements());
    }
    auto zippedBytes = packedBytes;
 
-   if ((config.fCompressionSetting != 0) || !config.fElement.IsMappable() || !config.fAllowAlias) {
+   if ((config.fCompressionSetting != 0) || !config.fElement->IsMappable() || !config.fAllowAlias) {
       zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, config.fCompressionSetting, config.fBuffer);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
@@ -395,7 +395,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), config.fPage.GetNElements()};
+   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), config.fPage->GetNElements()};
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
@@ -404,8 +404,11 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
    if (fSealPageBuffer.size() < page.GetNBytes())
       fSealPageBuffer.resize(page.GetNBytes());
 
-   RSealPageConfig config{page, element};
+   RSealPageConfig config;
+   config.fPage = &page;
+   config.fElement = &element;
    config.fCompressionSetting = GetWriteOptions().GetCompression();
+   config.fAllowAlias = true;
    config.fBuffer = fSealPageBuffer.data();
 
    return SealPage(config);
