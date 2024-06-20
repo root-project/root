@@ -45,6 +45,15 @@ FunctionMinimum MnApplication::operator()(unsigned int maxfcn, double toler)
    const FCNBase &fcn = Fcnbase();
    assert(!fUseGrad || dynamic_cast<const FCNGradientBase *>(&fcn) != nullptr);
 
+   if (npar == 0) {
+      double fval = fcn(fState.Params());
+      print.Info("Function has zero parameters - returning current function value - ",fval);
+      // create a valid Minuit-Parameter object with just the function value
+      MinimumParameters mparams(fval, MinimumParameters::MnValid);
+      MinimumState mstate(mparams, 0., 1 );
+      return FunctionMinimum( MinimumSeed(mstate, fState.Trafo()), fcn.Up());
+   }
+
    FunctionMinimum min =
       fUseGrad ? Minimizer().Minimize(static_cast<const FCNGradientBase &>(fcn), fState, fStrategy, maxfcn, toler)
                : Minimizer().Minimize(fcn, fState, fStrategy, maxfcn, toler);
