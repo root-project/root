@@ -194,6 +194,20 @@ public:
    using Callback_t = std::function<void(RPageSink &)>;
 
 protected:
+   /// Input for the SealPage() method
+   struct RSealPageConfig {
+      const RPage &fPage;                 ///< input page to be sealed
+      const RColumnElementBase &fElement; ///< Corresponds to the page's elements, used for size calculation etc.
+      int fCompressionSetting = 0;        ///< Compression algorithm and level to apply
+      /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
+      /// if the page is mappable and should not be compressed
+      bool fAllowAlias = true;
+      /// Location for sealed output. The memory buffer has to be large enough.
+      void *fBuffer = nullptr;
+
+      RSealPageConfig(const RPage &page, const RColumnElementBase &element) : fPage(page), fElement(element) {}
+   };
+
    std::unique_ptr<RNTupleWriteOptions> fOptions;
 
    /// Helper to zip pages and header/footer; includes a 16MB (kMAXZIPBUF) zip buffer.
@@ -208,9 +222,8 @@ protected:
    /// Usage of this method requires construction of fCompressor.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
 
-   /// Seal a page using the provided buffer.
-   static RSealedPage SealPage(const RPage &page, const RColumnElementBase &element, int compressionSetting, void *buf,
-                               bool allowAlias = true);
+   /// Seal a page using the provided info.
+   static RSealedPage SealPage(const RSealPageConfig &config);
 
 private:
    /// Flag if sink was initialized

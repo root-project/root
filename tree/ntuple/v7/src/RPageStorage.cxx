@@ -371,32 +371,31 @@ ROOT::Experimental::Internal::RPageSink::RPageSink(std::string_view name, const 
 ROOT::Experimental::Internal::RPageSink::~RPageSink() {}
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
-ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element,
-                                                  int compressionSetting, void *buf, bool allowAlias)
+ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 {
-   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(page.GetBuffer());
+   unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage.GetBuffer());
    bool isAdoptedBuffer = true;
-   auto packedBytes = page.GetNBytes();
+   auto packedBytes = config.fPage.GetNBytes();
 
-   if (!element.IsMappable()) {
-      packedBytes = element.GetPackedSize(page.GetNElements());
+   if (!config.fElement.IsMappable()) {
+      packedBytes = config.fElement.GetPackedSize(config.fPage.GetNElements());
       pageBuf = new unsigned char[packedBytes];
       isAdoptedBuffer = false;
-      element.Pack(pageBuf, page.GetBuffer(), page.GetNElements());
+      config.fElement.Pack(pageBuf, config.fPage.GetBuffer(), config.fPage.GetNElements());
    }
    auto zippedBytes = packedBytes;
 
-   if ((compressionSetting != 0) || !element.IsMappable() || !allowAlias) {
-      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, compressionSetting, buf);
+   if ((config.fCompressionSetting != 0) || !config.fElement.IsMappable() || !config.fAllowAlias) {
+      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, config.fCompressionSetting, config.fBuffer);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
-      pageBuf = reinterpret_cast<unsigned char *>(buf);
+      pageBuf = reinterpret_cast<unsigned char *>(config.fBuffer);
       isAdoptedBuffer = true;
    }
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), page.GetNElements()};
+   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), config.fPage.GetNElements()};
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
@@ -404,7 +403,12 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColu
 {
    if (fSealPageBuffer.size() < page.GetNBytes())
       fSealPageBuffer.resize(page.GetNBytes());
-   return SealPage(page, element, GetWriteOptions().GetCompression(), fSealPageBuffer.data());
+
+   RSealPageConfig config{page, element};
+   config.fCompressionSetting = GetWriteOptions().GetCompression();
+   config.fBuffer = fSealPageBuffer.data();
+
+   return SealPage(config);
 }
 
 void ROOT::Experimental::Internal::RPageSink::CommitDataset()
