@@ -33,7 +33,7 @@ define MkDir
 	+@[ -d $1 ] || mkdir -p $1
 endef
 
-all: filter folders mathjax js images doxygen replaceCollaborationDiagrams notebooks rootWork
+all: filter folders mathjax js images doxygen replaceCollaborationDiagrams
 
 filter:
 	`root-config --cxx` -o filter filter.cxx -std=c++14 -O2
@@ -63,7 +63,6 @@ doxygen: filter pyzdoc
 	./makehtmlfooter.sh > htmlfooter.html
 	./makeinput.sh
 	doxygen
-	bash ./CleanNamespaces.sh
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
