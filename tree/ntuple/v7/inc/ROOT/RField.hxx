@@ -674,11 +674,11 @@ public:
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
-   std::string GetFieldName() const { return fName; }
+   const std::string &GetFieldName() const { return fName; }
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
-   std::string GetTypeName() const { return fType; }
-   std::string GetTypeAlias() const { return fTypeAlias; }
+   const std::string &GetTypeName() const { return fType; }
+   const std::string &GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
@@ -687,7 +687,7 @@ public:
    std::vector<const RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
    /// Get the field's description
-   std::string GetDescription() const { return fDescription; }
+   const std::string &GetDescription() const { return fDescription; }
    void SetDescription(std::string_view description);
    EState GetState() const { return fState; }
 
@@ -758,7 +758,7 @@ public:
    {
    }
 
-   std::string GetError() const { return fError; }
+   const std::string &GetError() const { return fError; }
 
    size_t GetValueSize() const final { return 0; }
    size_t GetAlignment() const final { return 0; }

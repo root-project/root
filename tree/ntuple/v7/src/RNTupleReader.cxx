@@ -128,7 +128,7 @@ const ROOT::Experimental::RNTupleModel &ROOT::Experimental::RNTupleReader::GetMo
    return *fModel;
 }
 
-void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::ostream &output) const
 {
    // TODO(lesimon): In a later version, these variables may be defined by the user or the ideal width may be read out
    // from the terminal.
@@ -155,12 +155,12 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       output << " NTUPLE ";
       for (int i = 0; i < (width / 2 - 4); ++i)
          output << frameSymbol;
-      output << std::endl;
+      output << "\n";
       // FitString defined in RFieldVisitor.cxx
       output << frameSymbol << " N-Tuple : " << RNTupleFormatter::FitString(name, width - 13) << frameSymbol
-             << std::endl; // prints line with name of ntuple
+             << "\n"; // prints line with name of ntuple
       output << frameSymbol << " Entries : " << RNTupleFormatter::FitString(std::to_string(GetNEntries()), width - 13)
-             << frameSymbol << std::endl; // prints line with number of entries
+             << frameSymbol << "\n"; // prints line with number of entries
 
       // Traverses through all fields to gather information needed for printing.
       RPrepareVisitor prepVisitor;
@@ -177,7 +177,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
 
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
-      output << std::endl;
+      output << "\n";
       fullModel->GetFieldZero().AcceptVisitor(printVisitor);
       for (int i = 0; i < width; ++i)
          output << frameSymbol;
