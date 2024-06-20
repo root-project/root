@@ -849,7 +849,7 @@ BookVariationJit(const std::vector<std::string> &colNames, std::string_view vari
 std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail::RNodeBase> *prevNode,
                            const std::type_info &helperArgType, const std::type_info &at, void *helperArgOnHeap,
                            TTree *tree, const unsigned int nSlots, const RColumnRegister &colRegister, RDataSource *ds,
-                           std::weak_ptr<RJittedAction> *jittedActionOnHeap)
+                           std::weak_ptr<RJittedAction> *jittedActionOnHeap, const bool vector2rvec)
 {
    // retrieve type of action as a string
    auto actionTypeClass = TClass::GetClass(at);
@@ -874,7 +874,7 @@ std::string JitBuildAction(const ColumnNames_t &cols, std::shared_ptr<RDFDetail:
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::RDF::CallBuildAction<" << actionTypeName;
    const auto columnTypeNames =
-      GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, /*vector2rvec=*/true);
+      GetValidatedArgTypes(cols, colRegister, tree, ds, actionTypeNameBase, vector2rvec);
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
    // on Windows, to prefix the hexadecimal value of a pointer with '0x',
