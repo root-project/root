@@ -152,7 +152,9 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
 
    if (!fTaskScheduler) {
       // Seal the page right now, avoiding the allocation and copy, but making sure that the page buffer is not aliased.
-      RSealPageConfig config(page, element);
+      RSealPageConfig config;
+      config.fPage = &page;
+      config.fElement = &element;
       config.fCompressionSetting = GetWriteOptions().GetCompression();
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
@@ -171,7 +173,9 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
    fTaskScheduler->AddTask([this, &zipItem, &sealedPage, &element] {
-      RSealPageConfig config(zipItem.fPage, element);
+      RSealPageConfig config;
+      config.fPage = &zipItem.fPage;
+      config.fElement = &element;
       config.fCompressionSetting = GetWriteOptions().GetCompression();
       config.fAllowAlias = true;
       config.fBuffer = zipItem.fBuf.get();

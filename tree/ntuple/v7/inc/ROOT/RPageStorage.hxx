@@ -194,18 +194,16 @@ public:
    using Callback_t = std::function<void(RPageSink &)>;
 
 protected:
-   /// Input for the SealPage() method
+   /// Parameters for the SealPage() method
    struct RSealPageConfig {
-      const RPage &fPage;                 ///< input page to be sealed
-      const RColumnElementBase &fElement; ///< Corresponds to the page's elements, used for size calculation etc.
-      int fCompressionSetting = 0;        ///< Compression algorithm and level to apply
+      const RPage *fPage = nullptr;                 ///< Input page to be sealed
+      const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
+      int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
       /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
       /// if the page is mappable and should not be compressed
-      bool fAllowAlias = true;
+      bool fAllowAlias = false;
       /// Location for sealed output. The memory buffer has to be large enough.
       void *fBuffer = nullptr;
-
-      RSealPageConfig(const RPage &page, const RColumnElementBase &element) : fPage(page), fElement(element) {}
    };
 
    std::unique_ptr<RNTupleWriteOptions> fOptions;
