@@ -43,7 +43,7 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
    if (n == 0) {
       MinimumState st(MinimumParameters(MnAlgebraicVector{0}, MnAlgebraicVector{0}, mfcn(x)), 0.0,
                       mfcn.NumOfCalls());
-      return FunctionMinimum(seed, {st}, mfcn.Up());
+      return FunctionMinimum(seed, {&st, 1}, mfcn.Up());
    }
 
    const double wg = 1. / double(n);
@@ -227,15 +227,15 @@ FunctionMinimum SimplexBuilder::Minimum(const MnFcn &mfcn, const GradientCalcula
    if (mfcn.NumOfCalls() > maxfcn) {
       print.Warn("Simplex did not converge, #fcn calls exhausted");
 
-      return FunctionMinimum(seed, {st}, mfcn.Up(), FunctionMinimum::MnReachedCallLimit);
+      return FunctionMinimum(seed, {&st, 1}, mfcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
    if (simplex.Edm() > minedm) {
       print.Warn("Simplex did not converge, edm > minedm");
 
-      return FunctionMinimum(seed, {st}, mfcn.Up(), FunctionMinimum::MnAboveMaxEdm);
+      return FunctionMinimum(seed, {&st, 1}, mfcn.Up(), FunctionMinimum::MnAboveMaxEdm);
    }
 
-   return FunctionMinimum(seed, {st}, mfcn.Up());
+   return FunctionMinimum(seed, {&st, 1}, mfcn.Up());
 }
 
 } // namespace Minuit2

@@ -411,7 +411,7 @@ const double *TrueMinimum(const ROOT::Math::IMultiGenFunction &func)
    return nullptr;
 }
 
-void printMinimum(const std::vector<double> &x)
+void printMinimum(std::span<const double> x)
 {
    std::cout << "Minimum X values\n";
    std::cout << "\t";
@@ -456,7 +456,7 @@ int DoADMinimization(const std::string & formula, const double *x0, const double
       func.SetParameters(x);
       func.GradientPar(nullptr,g);
    };
-   auto hessFcn = [&](const std::vector<double> &x, double *h) {
+   auto hessFcn = [&](std::span<const double> x, double *h) {
       for (int i = 0; i < ndim*ndim; i++)
          h[i] = 0;
       func.SetParameters(x.data());

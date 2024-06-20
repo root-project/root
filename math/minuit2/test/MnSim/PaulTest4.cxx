@@ -46,14 +46,16 @@ private:
 class PowerLawChi2FCN : public FCNBase {
 
 public:
-   PowerLawChi2FCN(const std::vector<double> &meas, const std::vector<double> &pos, const std::vector<double> &mvar)
-      : fMeasurements(meas), fPositions(pos), fMVariances(mvar)
+   PowerLawChi2FCN(std::span<const double> meas, std::span<const double> pos, std::span<const double> mvar)
+      : fMeasurements(meas.begin(), meas.end()),
+        fPositions(pos.begin(), pos.end()),
+        fMVariances(mvar.begin(), mvar.end())
    {
    }
 
    ~PowerLawChi2FCN() override {}
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::span<const double> par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);
@@ -77,14 +79,14 @@ private:
 class PowerLawLogLikeFCN : public FCNBase {
 
 public:
-   PowerLawLogLikeFCN(const std::vector<double> &meas, const std::vector<double> &pos)
-      : fMeasurements(meas), fPositions(pos)
+   PowerLawLogLikeFCN(std::span<const double> meas, std::span<const double> pos)
+      : fMeasurements(meas.begin(), meas.end()), fPositions(pos.begin(), pos.end())
    {
    }
 
    ~PowerLawLogLikeFCN() override {}
 
-   double operator()(const std::vector<double> &par) const override
+   double operator()(std::span<const double> par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);
