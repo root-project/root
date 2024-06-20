@@ -785,9 +785,9 @@ Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
 C++ standard:      ${CMAKE_CXX_STANDARD}
 Compiler flags:
  - C:                         ${CMAKE_C_FLAGS}
- - C (built type specific):   ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C (build type specific):   ${CMAKE_C_FLAGS_${_BUILD_TYPE_UPPER}}
  - C++:                       ${CMAKE_CXX_FLAGS}
- - C++ (built type specific): ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
+ - C++ (build type specific): ${CMAKE_CXX_FLAGS_${_BUILD_TYPE_UPPER}}
 Linker flags:
  - Executable:     ${CMAKE_EXE_LINKER_FLAGS}
  - Module:         ${CMAKE_MODULE_LINKER_FLAGS}
