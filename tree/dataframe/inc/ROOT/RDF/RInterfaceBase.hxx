@@ -172,7 +172,8 @@ protected:
              std::enable_if_t<RDFInternal::RNeedJitting<ColTypes...>::value, int> = 0>
    RResultPtr<ActionResultType> CreateAction(const ColumnNames_t &columns, const std::shared_ptr<ActionResultType> &r,
                                              const std::shared_ptr<HelperArgType> &helperArg,
-                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int nColumns = -1)
+                                             const std::shared_ptr<RDFNode> &proxiedPtr, const int nColumns = -1,
+                                             const bool vector2rvec = true)
    {
       auto realNColumns = (nColumns > -1 ? nColumns : sizeof...(ColTypes));
 
@@ -190,7 +191,8 @@ protected:
 
       auto toJit =
          RDFInternal::JitBuildAction(validColumnNames, upcastNodeOnHeap, typeid(HelperArgType), typeid(ActionTag),
-                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap);
+                                     helperArgOnHeap, tree, nSlots, fColRegister, fDataSource, jittedActionOnHeap,
+                                     vector2rvec);
       fLoopManager->ToJitExec(toJit);
       return MakeResultPtr(r, *fLoopManager, std::move(jittedAction));
    }
