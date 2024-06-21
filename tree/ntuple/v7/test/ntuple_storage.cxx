@@ -831,6 +831,10 @@ TEST(RPageStorageFile, MultiKeyBlob_TooManyChunks)
 {
    // Try writing more than the max possible number of chunks for a split key and verify it fails
 
+   // Death tests must run single-threaded:
+   // https://github.com/google/googletest/blob/main/docs/advanced.md#death-tests-and-threads
+   GTEST_FLAG_SET(death_test_style, "threadsafe");
+
    FileRaii fileGuard("test_ntuple_storage_multi_key_blob_small_key.root");
 
    const auto kMaxKeySize = 128;
