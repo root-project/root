@@ -1060,7 +1060,7 @@ RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet
       std::unique_ptr<RooDataSet> tmp{pdftmp->generate(globtmp,1)};
 
       // Transfer values to output placeholder
-      globClone.assign(*tmp->get(0)) ;
+      if (tmp->get(0)) globClone.assign(*tmp->get(0)) ;
     }
     data->add(globClone) ;
   }
