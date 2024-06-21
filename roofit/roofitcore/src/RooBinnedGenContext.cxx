@@ -183,7 +183,7 @@ RooDataSet *RooBinnedGenContext::generate(double nEvt, bool /*skipInit*/, bool e
       _hist->get(ibinRand) ;
       double ranY = RooRandom::randomGenerator()->Uniform(histMax) ;
 
-      if (ranY<_hist->weight()) {
+      if (ranY<_hist->weight() && size_t(ibinRand) < histOut.size()) {
    if (wgt==1) {
      histOut[ibinRand]++ ;
    } else {
