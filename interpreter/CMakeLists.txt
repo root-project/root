@@ -1,3 +1,6 @@
+# Do not depend on CMake scripts from the rest of the ROOT build
+set(CMAKE_MODULE_PATH "")
+
 #--- Check if we need to build llvm and clang ------------------------------------------------------
 if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
