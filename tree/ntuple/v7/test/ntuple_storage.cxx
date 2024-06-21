@@ -760,6 +760,40 @@ TEST(RPageStorageFile, MultiKeyBlob)
    }
 }
 
+TEST(RPageStorageFile, MultiKeyBlob_ExactlyMax)
+{
+   // Write a payload that's exactly `maxKeySize` long and verify it doesn't split the key.
+   
+   FileRaii fileGuard("test_ntuple_storage_multi_key_exact.root");
+
+   const auto kMaxKeySize = 100 * 1024; // 100 KiB
+   const auto dataSize = kMaxKeySize;
+   auto data = std::make_unique<unsigned char[]>(dataSize);
+   std::uint64_t blobOffset;
+
+   {
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      memset(data.get(), 0, dataSize);
+      blobOffset = writer->WriteBlob(data.get(), dataSize, dataSize);
+      writer->Commit();
+   }
+   {
+      // Fill read buffer with sentinel data (they should be overwritten by zeroes)
+      memset(data.get(), 0x99, dataSize);
+
+      auto rawFile = RRawFile::Create(fileGuard.GetPath());
+      auto reader = RMiniFileReader{rawFile.get()};
+      // Force reader to read the max key size
+      (void)reader.GetNTuple("ntpl");
+      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+
+      // If we didn't split the key, we expect to find all zeroes at the end of `data`.
+      // Otherwise we will have some non-zero bytes, since it will host the next chunk offset.
+      uint64_t lastU64 = *reinterpret_cast<uint64_t *>(&data[dataSize - sizeof(uint64_t)]);
+      EXPECT_EQ(lastU64, 0);
+   }
+}
+
 TEST(RPageStorageFile, MultiKeyBlob_SmallKey)
 {
    FileRaii fileGuard("test_ntuple_storage_multi_key_blob_small_key.root");

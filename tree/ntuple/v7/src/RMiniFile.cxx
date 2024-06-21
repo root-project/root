@@ -1060,36 +1060,28 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+// Computes how many chunks do we need to fit `nbytes` of payload, considering that the
+// first chunk also needs to house the offsets of the other chunks and no chunk can
+// be bigger than `maxChunkSize`. When saved to a TFile, each chunk is part of a separate TKey.
 static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
 {
-   constexpr size_t locatorSize = sizeof(std::uint64_t);
-   size_t nChunks = 1; // we start with the first chunk
-   size_t nbytesLocators = 0;
-   {
-      size_t restOfBytes = nbytes;
-      // Allocate all additional chunks
-      do {
-         ++nChunks;
-         nbytesLocators += locatorSize;
-         restOfBytes -= maxChunkSize;
-      } while (restOfBytes >= maxChunkSize);
+   constexpr size_t kChunkOffsetSize = sizeof(std::uint64_t);
 
-      // If there is no room in the first chunk to store the remaining bytes + the locators,
-      // we need to allocate another chunk.
-      if (maxChunkSize - nbytesLocators < restOfBytes) {
-         ++nChunks;
-         nbytesLocators += locatorSize;
-      }
-
-      // Verify we have allocated enough room
-      assert(nChunks * maxChunkSize - nbytesLocators >= nbytes);
+   size_t nChunks = (nbytes + maxChunkSize - 1) / maxChunkSize;
+   size_t nbytesTail = nbytes % maxChunkSize;
+   size_t nbytesExtra = (nbytesTail > 0) * (maxChunkSize - nbytesTail);
+   size_t nbytesChunkOffsets = nChunks * kChunkOffsetSize;
+   if (nbytesChunkOffsets > nbytesExtra) {
+      ++nChunks;
+      nbytesChunkOffsets += kChunkOffsetSize;
    }
+
    assert(nChunks > 1);
-   // We don't support having more locators than what fits in one chunk.
+   // We don't support having more chunkOffsets than what fits in one chunk.
    // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks
    // than we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GiB we can fit
    // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PiB.
-   assert(nbytesLocators <= maxChunkSize);
+   assert(nbytesChunkOffsets <= maxChunkSize);
 
    return nChunks;
 }
@@ -1492,7 +1484,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
    R__ASSERT(maxKeySize > 0);
 
-   if (nbytes < maxKeySize) {
+   if (nbytes <= maxKeySize) {
       // Fast path: only write 1 key.
       return writeKey(data, nbytes, len);
    }
