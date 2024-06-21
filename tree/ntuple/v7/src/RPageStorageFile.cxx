@@ -27,11 +27,11 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RRawFileTFile.hxx>
+#include <ROOT/RNTupleUtil.hxx>
 
 #include <RVersion.h>
 #include <TError.h>
 #include <TFile.h>
-#include "ROOT/RNTupleUtil.hxx"
 
 #include <algorithm>
 #include <cstdio>
@@ -624,8 +624,6 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
 std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>>
 ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::RKey> clusterKeys)
 {
-   std::uint64_t maxBlobSize = fReader.GetMaxBlobSize();
-
    fCounters->fNClusterLoaded.Add(clusterKeys.size());
 
    std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
@@ -638,7 +636,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
    auto nReqs = readRequests.size();
    auto readvLimits = fFile->GetReadVLimits();
    // We never want to do vectorized reads of split blobs, so we limit our single size to maxBlobSize.
-   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, maxBlobSize);
+   readvLimits.fMaxSingleSize = std::min<size_t>(readvLimits.fMaxSingleSize, fReader.GetMaxBlobSize());
 
    int iReq = 0;
    while (nReqs > 0) {
