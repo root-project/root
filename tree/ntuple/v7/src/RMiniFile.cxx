@@ -1520,7 +1520,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
    std::uint64_t chunkOffsetIdx = 0;
 
    do {
-      const size_t bytesNextChunk= std::min<size_t>(remainingBytes, maxKeySize);
+      const size_t bytesNextChunk = std::min<size_t>(remainingBytes, maxKeySize);
       const std::uint64_t offset = writeKey(data, bytesNextChunk, bytesNextChunk);
 
       RNTupleSerializer::SerializeUInt64(offset, &chunkOffsetsToWrite[chunkOffsetIdx]);
