@@ -1637,7 +1637,7 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    //histogram pointer has by default the histogram name.
    //however, in case histogram has no directory, it is safer to add a incremental suffix
    static Int_t hcounter = 0;
-   TString histName = GetName();
+   TString histName = gInterpreter->MapCppName(GetName());
    if (!fDirectory) {
       hcounter++;
       histName += "__";
@@ -1645,8 +1645,8 @@ void TProfile::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    const char *hname = histName.Data();
 
-   out<<hname<<" = new "<<ClassName()<<"("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote
-   <<","<<GetXaxis()->GetNbins();
+   out << hname << " = new " << ClassName() << "(" << quote << hname << quote << "," << quote << GetTitle() << quote
+       << "," << GetXaxis()->GetNbins();
    if (nonEqiX)
       out << ", xAxis";
    else
