@@ -373,6 +373,10 @@ ROOT::Experimental::Internal::RPageSink::~RPageSink() {}
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
 ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 {
+   assert(config.fPage);
+   assert(config.fElement);
+   assert(config.fBuffer);
+
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage->GetBuffer());
    bool isAdoptedBuffer = true;
    auto packedBytes = config.fPage->GetNBytes();
