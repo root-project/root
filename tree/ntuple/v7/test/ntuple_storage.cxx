@@ -1,14 +1,15 @@
 #include "ntuple_test.hxx"
-#include <TRandom3.h>
-#include <TMemFile.h>
-#include "ROOT/RNTupleWriteOptions.hxx"
-#include <limits>
 
+#include <ROOT/RPageNullSink.hxx>
+#include <ROOT/RNTupleWriteOptions.hxx>
 #ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
 #endif
 
-#include <ROOT/RPageNullSink.hxx>
+#include <TRandom3.h>
+#include <TMemFile.h>
+
+#include <limits>
 
 using ROOT::Experimental::Internal::RNTupleWriteOptionsManip;
 using ROOT::Experimental::Internal::RPageNullSink;
@@ -726,10 +727,7 @@ TEST(RPageStorageFile, MultiKeyBlob)
 {
    FileRaii fileGuard("test_ntuple_storage_multi_key_blob.root");
 
-   // NOTE: this test fails on windows if we try to allocate more than 1GiB.
-   // To avoid that, we use a kMaxKeySize of 511MiB so we never try to allocate (or seek)
-   // for amounts greater or equal to 1GiB.
-   const auto kMaxKeySize = 0x1fffffff;
+   const auto kMaxKeySize = 10 * 1024 * 1024; // 10 MiB
    const auto dataSize = kMaxKeySize * 2;
    auto data = std::make_unique<unsigned char[]>(dataSize);
    std::uint64_t blobOffset;
@@ -763,7 +761,7 @@ TEST(RPageStorageFile, MultiKeyBlob)
 TEST(RPageStorageFile, MultiKeyBlob_ExactlyMax)
 {
    // Write a payload that's exactly `maxKeySize` long and verify it doesn't split the key.
-   
+
    FileRaii fileGuard("test_ntuple_storage_multi_key_exact.root");
 
    const auto kMaxKeySize = 100 * 1024; // 100 KiB
@@ -829,6 +827,33 @@ TEST(RPageStorageFile, MultiKeyBlob_SmallKey)
    }
 }
 
+TEST(RPageStorageFile, MultiKeyBlob_TooManyChunks)
+{
+   // Try writing more than the max possible number of chunks for a split key and verify it fails
+
+   FileRaii fileGuard("test_ntuple_storage_multi_key_blob_small_key.root");
+
+   const auto kMaxKeySize = 128;
+
+   {
+      const auto kOkayDataSize = 1024;
+      const auto data = std::make_unique<unsigned char[]>(kOkayDataSize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      memset(data.get(), 0x99, kOkayDataSize);
+      writer->WriteBlob(data.get(), kOkayDataSize, kOkayDataSize);
+      writer->Commit();
+   }
+
+   {
+      const auto kTooBigDataSize = 5000;
+      const auto data = std::make_unique<unsigned char[]>(kTooBigDataSize);
+      auto writer = RNTupleFileWriter::Recreate("ntpl", fileGuard.GetPath(), 0, EContainerFormat::kTFile, kMaxKeySize);
+      memset(data.get(), 0x99, kTooBigDataSize);
+      EXPECT_DEATH(writer->WriteBlob(data.get(), kTooBigDataSize, kTooBigDataSize), "");
+      writer->Commit();
+   }
+}
+
 template <int... N>
 static void GenerateLotsOfFields(RNTupleModel &model, int firstIdx, std::integer_sequence<int, N...>)
 {
@@ -843,14 +868,12 @@ TEST(RPageStorageFile, MultiKeyBlob_Header)
    FileRaii fileGuardUcmp("test_ntuple_storage_multi_key_blob_header_ucmp.root");
 
    constexpr auto kMaxKeySize = 1024;
-   constexpr auto kNFields = 256;
+   constexpr auto kNFields = 1024;
 
    auto modelComp = RNTupleModel::Create();
    // NOTE: must call this multiple times not to exceed the max fold expansion limit
-   GenerateLotsOfFields(*modelComp, 0 * kNFields, std::make_integer_sequence<int, kNFields>{});
-   GenerateLotsOfFields(*modelComp, 1 * kNFields, std::make_integer_sequence<int, kNFields>{});
-   GenerateLotsOfFields(*modelComp, 2 * kNFields, std::make_integer_sequence<int, kNFields>{});
-   GenerateLotsOfFields(*modelComp, 3 * kNFields, std::make_integer_sequence<int, kNFields>{});
+   for (int i = 0; i < 4; ++i)
+      GenerateLotsOfFields(*modelComp, i * kNFields / 4, std::make_integer_sequence<int, kNFields / 4>{});
    auto modelUcmp = modelComp->Clone();
 
    auto optionsComp = RNTupleWriteOptions{};
@@ -869,7 +892,11 @@ TEST(RPageStorageFile, MultiKeyBlob_Header)
    {
       auto ntupleComp = RNTupleReader::Open("myNTuple", fileGuardComp.GetPath());
       auto ntupleUcmp = RNTupleReader::Open("myNTuple", fileGuardUcmp.GetPath());
-      for (int i = 0; i < 4 * kNFields; ++i) {
+
+      EXPECT_GE(ntupleComp->GetDescriptor().GetOnDiskHeaderSize(), kMaxKeySize);
+      EXPECT_GE(ntupleUcmp->GetDescriptor().GetOnDiskHeaderSize(), kMaxKeySize);
+
+      for (int i = 0; i < kNFields; ++i) {
          ntupleComp->GetModel().GetField(std::to_string(i));
          ntupleUcmp->GetModel().GetField(std::to_string(i));
       }
@@ -932,8 +959,8 @@ TEST(RPageStorageFile, MultiKeyBlob_Pages)
          double expectC = rnd.Rndm() * std::numeric_limits<double>::max();
          double valU = *fU;
          double expectU = rnd.Rndm() * std::numeric_limits<double>::max();
-         EXPECT_EQ(valC, expectC);
-         EXPECT_EQ(valU, expectU);
+         EXPECT_DOUBLE_EQ(valC, expectC);
+         EXPECT_DOUBLE_EQ(valU, expectU);
       }
    }
 }
@@ -991,8 +1018,8 @@ TEST(RPageStorageFile, MultiKeyBlob_PageList)
          double expectC = rnd.Rndm() * std::numeric_limits<double>::max();
          double valU = *fU;
          double expectU = rnd.Rndm() * std::numeric_limits<double>::max();
-         EXPECT_EQ(valC, expectC);
-         EXPECT_EQ(valU, expectU);
+         EXPECT_DOUBLE_EQ(valC, expectC);
+         EXPECT_DOUBLE_EQ(valU, expectU);
       }
    }
 }
@@ -1053,8 +1080,8 @@ TEST(RPageStorageFile, MultiKeyBlob_Footer)
          double expectC = rnd.Rndm() * std::numeric_limits<double>::max();
          double valU = *fU;
          double expectU = rnd.Rndm() * std::numeric_limits<double>::max();
-         EXPECT_EQ(valC, expectC);
-         EXPECT_EQ(valU, expectU);
+         EXPECT_DOUBLE_EQ(valC, expectC);
+         EXPECT_DOUBLE_EQ(valU, expectU);
       }
    }
 }

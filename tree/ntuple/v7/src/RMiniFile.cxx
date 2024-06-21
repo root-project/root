@@ -21,6 +21,7 @@
 
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RNTupleZip.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 
 #include <Byteswap.h>
 #include <TError.h>
@@ -1081,7 +1082,7 @@ static size_t ComputeNumChunks(size_t nbytes, size_t maxChunkSize)
    // For a reasonable-sized maxKeySize it looks very unlikely that we can have more chunks
    // than we can fit in the first `maxKeySize` bytes. E.g. for maxKeySize = 1GiB we can fit
    // 134217728 chunk offsets, making our multi-key blob's capacity exactly 128 PiB.
-   assert(nbytesChunkOffsets <= maxChunkSize);
+   R__ASSERT(nbytesChunkOffsets <= maxChunkSize);
 
    return nChunks;
 }
@@ -1238,41 +1239,43 @@ ROOT::Experimental::Internal::RMiniFileReader::GetNTupleBare(std::string_view nt
 
 void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, size_t nbytes, std::uint64_t offset)
 {
-   std::uint64_t maxBlobSize = fMaxBlobSize;
    size_t nread;
-   if (maxBlobSize == 0 || nbytes <= maxBlobSize) {
+   if (fMaxBlobSize == 0 || nbytes <= fMaxBlobSize) {
       // Fast path: read single blob
       nread = fRawFile->ReadAt(buffer, nbytes, offset);
    } else {
       // Read chunked blob. See RNTupleFileWriter::WriteBlob() for details.
-      size_t nChunks = ComputeNumChunks(nbytes, maxBlobSize);
-      size_t nbytesLocators = (nChunks - 1) * sizeof(std::uint64_t);
-      size_t nbytesFirstChunk = maxBlobSize - nbytesLocators;
-      char *bufCur = reinterpret_cast<char *>(buffer);
+      const size_t nChunks = ComputeNumChunks(nbytes, fMaxBlobSize);
+      const size_t nbytesChunkOffsets = (nChunks - 1) * sizeof(std::uint64_t);
+      const size_t nbytesFirstChunk = fMaxBlobSize - nbytesChunkOffsets;
+      uint8_t *bufCur = reinterpret_cast<uint8_t *>(buffer);
 
       // Read first chunk
       nread = fRawFile->ReadAt(bufCur, nbytesFirstChunk, offset);
       R__ASSERT(nread == nbytesFirstChunk);
       bufCur += nread;
 
-      auto locators = std::make_unique<std::uint64_t[]>(nChunks - 1);
-      auto locatorBytesRead = fRawFile->ReadAt(locators.get(), nbytesLocators, offset + nbytesFirstChunk);
-      R__ASSERT(locatorBytesRead == nbytesLocators);
+      const auto chunkOffsets = std::make_unique<std::uint64_t[]>(nChunks - 1);
+      auto chunkOffsetBytesRead = fRawFile->ReadAt(chunkOffsets.get(), nbytesChunkOffsets, offset + nbytesFirstChunk);
+      R__ASSERT(chunkOffsetBytesRead == nbytesChunkOffsets);
 
       size_t remainingBytes = nbytes - nbytesFirstChunk;
-      std::uint64_t *curLocator = &locators[0];
+      std::uint64_t *curChunkOffset = &chunkOffsets[0];
 
       do {
-         std::uint64_t chunkOffset = *curLocator++;
-         size_t bytesToRead = std::min<size_t>(maxBlobSize, remainingBytes);
+         std::uint64_t chunkOffset;
+         RNTupleSerializer::DeserializeUInt64(curChunkOffset, chunkOffset);
+         ++curChunkOffset;
+
+         const size_t bytesToRead = std::min<size_t>(fMaxBlobSize, remainingBytes);
          // Ensure we don't read outside of the buffer
-         R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<char *>(buffer)) <= nbytes - bytesToRead);
-         nread += fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
-         R__ASSERT(nread <= nbytes);
+         R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
 
+         chunkOffsetBytesRead = fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
+         R__ASSERT(chunkOffsetBytesRead == bytesToRead);
+
+         nread += chunkOffsetBytesRead;
          bufCur += bytesToRead;
-
-         assert(remainingBytes >= bytesToRead);
          remainingBytes -= bytesToRead;
       } while (remainingBytes > 0);
    }
@@ -1481,7 +1484,7 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
       return offset;
    };
 
-   std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
+   const std::uint64_t maxKeySize = fNTupleAnchor.fMaxKeySize;
    R__ASSERT(maxKeySize > 0);
 
    if (nbytes <= maxKeySize) {
@@ -1502,35 +1505,38 @@ std::uint64_t ROOT::Experimental::Internal::RNTupleFileWriter::WriteBlob(const v
     *  | pointer to chunk 3 |
     *  +--------------------+
     */
-   size_t nChunks = ComputeNumChunks(nbytes, maxKeySize);
-   size_t nbytesLocators = (nChunks - 1) * sizeof(std::uint64_t);
-   size_t nbytesFirstChunk = maxKeySize - nbytesLocators;
+   const size_t nChunks = ComputeNumChunks(nbytes, maxKeySize);
+   const size_t nbytesChunkOffsets = (nChunks - 1) * sizeof(std::uint64_t);
+   const size_t nbytesFirstChunk = maxKeySize - nbytesChunkOffsets;
    // Write first chunk.
    // Note that the last bytes we write here will be overridden later by the other chunks'
    // offsets, and we're gonna write those bytes again in the following chunk.
-   std::uint64_t firstOffset = writeKey(data, maxKeySize, maxKeySize);
+   const std::uint64_t firstOffset = writeKey(data, maxKeySize, maxKeySize);
 
-   data = reinterpret_cast<const char *>(data) + nbytesFirstChunk;
+   data = reinterpret_cast<const uint8_t *>(data) + nbytesFirstChunk;
    size_t remainingBytes = nbytes - nbytesFirstChunk;
-   std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
+
+   const auto chunkOffsetsToWrite = std::make_unique<std::uint64_t[]>(nbytesChunkOffsets);
+   std::uint64_t chunkOffsetIdx = 0;
 
    do {
-      size_t bytesWritten = std::min<size_t>(remainingBytes, maxKeySize);
-      std::uint64_t offset = writeKey(data, bytesWritten, bytesWritten);
+      const size_t bytesNextChunk= std::min<size_t>(remainingBytes, maxKeySize);
+      const std::uint64_t offset = writeKey(data, bytesNextChunk, bytesNextChunk);
 
-      // patch the chunk offset into the first chunk
-      if (fFileSimple)
-         fFileSimple.Write(&offset, sizeof(offset), patchOffset);
-      else
-         fFileProper.Write(&offset, sizeof(offset), patchOffset);
+      RNTupleSerializer::SerializeUInt64(offset, &chunkOffsetsToWrite[chunkOffsetIdx]);
+      ++chunkOffsetIdx;
 
-      patchOffset += sizeof(offset);
-
-      assert(remainingBytes >= bytesWritten);
-      remainingBytes -= bytesWritten;
-      data = reinterpret_cast<const char *>(data) + bytesWritten;
+      remainingBytes -= bytesNextChunk;
+      data = reinterpret_cast<const uint8_t *>(data) + bytesNextChunk;
 
    } while (remainingBytes > 0);
+
+   // patch the chunk offset into the first chunk
+   const std::uint64_t patchOffset = firstOffset + nbytesFirstChunk;
+   if (fFileSimple)
+      fFileSimple.Write(chunkOffsetsToWrite.get(), nbytesChunkOffsets, patchOffset);
+   else
+      fFileProper.Write(chunkOffsetsToWrite.get(), nbytesChunkOffsets, patchOffset);
 
    return firstOffset;
 }
