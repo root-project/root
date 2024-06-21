@@ -3028,6 +3028,9 @@ TGeoVolume *TGeoVolumeAssembly::CloneVolume() const
    vol->SetNumber(fNumber);
    vol->SetNtotal(fNtotal);
    vol->SetTitle(GetTitle());
+   // copy extensions
+   vol->SetUserExtension(fUserExtension);
+   vol->SetFWExtension(fFWExtension);
    return vol;
 }
 
