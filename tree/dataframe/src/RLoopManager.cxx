@@ -738,8 +738,15 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-   const std::string &id = fname + '/' + treename;
-   fSampleInfos[slot] = fSampleMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fSampleMap[id]);
+   // If the tree is stored in a subdirectory, treename will be the full path to it starting with the root directory '/'
+   const std::string &id = fname + (treename.rfind('/', 0) == 0 ? "" : "/") + treename;
+   if (fSampleMap.empty()) {
+      fSampleInfos[slot] = RSampleInfo(id, range);
+   } else {
+      if (fSampleMap.find(id) == fSampleMap.end())
+         throw std::runtime_error("Full sample identifier '" + id + "' cannot be found in the available samples.");
+      fSampleInfos[slot] = RSampleInfo(id, range, fSampleMap[id]);
+   }
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
