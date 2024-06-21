@@ -777,6 +777,27 @@ inline double asymPow(double theta, double kappaLow, double kappaHigh)
    return std::exp(logKappaForX(theta, std::log(kappaLow), std::log(kappaHigh)) * theta);
 }
 
+inline double processNormalization(double nominalValue, std::size_t nThetas, std::size_t nAsymmThetas,
+                                   std::size_t nOtherFactors, double const *thetas, double const *logKappas,
+                                   double const *asymmThetas, double const *asymmLogKappasLow,
+                                   double const *asymmLogKappasHigh, double const *otherFactors)
+{
+   double logVal = 0.0;
+   for (std::size_t i = 0; i < nThetas; i++) {
+      logVal += thetas[i] * logKappas[i];
+   }
+   for (std::size_t i = 0; i < nAsymmThetas; i++) {
+      double x = asymmThetas[i];
+      logVal += x * logKappaForX(x, asymmLogKappasLow[i], asymmLogKappasHigh[i]);
+   }
+   double norm = nominalValue;
+   norm *= std::exp(logVal);
+   for (std::size_t i = 0; i < nOtherFactors; i++) {
+      norm *= otherFactors[i];
+   }
+   return norm;
+}
+
 } // namespace MathFuncs
 
 } // namespace Detail
