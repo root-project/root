@@ -29,6 +29,7 @@
 #include <string_view>
 
 #include <atomic>
+#include <cassert>
 #include <cstddef>
 #include <deque>
 #include <functional>
@@ -69,6 +70,9 @@ an ntuple.  Concrete implementations can use a TFile, a raw file, an object stor
 // clang-format on
 class RPageStorage {
 public:
+   /// The page checksum is a 64bit xxhash3
+   static constexpr std::size_t kNBytesPageChecksum = sizeof(std::uint64_t);
+
    /// The interface of a task scheduler to schedule page (de)compression tasks
    class RTaskScheduler {
    public:
@@ -86,12 +90,16 @@ public:
    struct RSealedPage {
    private:
       const void *fBuffer = nullptr;
-      std::uint32_t fSize = 0;
+      std::uint32_t fBufferSize = 0; ///< Size of the page payload and the trailing checksum (if available)
       std::uint32_t fNElements = 0;
+      bool fHasChecksum = false; ///< If set, the last 8 bytes of the buffer are the xxhash of the rest of the buffer
 
    public:
       RSealedPage() = default;
-      RSealedPage(const void *b, std::uint32_t s, std::uint32_t n) : fBuffer(b), fSize(s), fNElements(n) {}
+      RSealedPage(const void *buffer, std::uint32_t bufferSize, std::uint32_t nElements, bool hasChecksum = false)
+         : fBuffer(buffer), fBufferSize(bufferSize), fNElements(nElements), fHasChecksum(hasChecksum)
+      {
+      }
       RSealedPage(const RSealedPage &other) = default;
       RSealedPage &operator=(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
@@ -100,8 +108,13 @@ public:
       const void *GetBuffer() const { return fBuffer; }
       void SetBuffer(const void *buffer) { fBuffer = buffer; }
 
-      std::uint32_t GetSize() const { return fSize; }
-      void SetSize(std::uint32_t size) { fSize = size; }
+      std::uint32_t GetDataSize() const
+      {
+         assert(fBufferSize >= fHasChecksum * kNBytesPageChecksum);
+         return fBufferSize - fHasChecksum * kNBytesPageChecksum;
+      }
+      std::uint32_t GetBufferSize() const { return fBufferSize; }
+      void SetBufferSize(std::uint32_t bufferSize) { fBufferSize = bufferSize; }
 
       std::uint32_t GetNElements() const { return fNElements; }
       void SetNElements(std::uint32_t nElements) { fNElements = nElements; }
