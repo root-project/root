@@ -285,7 +285,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       RPageStorage::RSealedPage sealedPage;
       pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
       EXPECT_GT(sealedPage.GetNElements(), 0);
-      auto pageBuf = std::make_unique<unsigned char[]>(sealedPage.GetSize());
+      auto pageBuf = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(pageBuf.get());
       pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
 
