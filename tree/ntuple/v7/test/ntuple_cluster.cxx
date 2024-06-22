@@ -54,6 +54,7 @@ public:
  */
 class RPageSourceMock : public RPageSource {
 protected:
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
 
 public:
