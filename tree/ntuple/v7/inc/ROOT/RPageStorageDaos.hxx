@@ -179,6 +179,7 @@ private:
                                  ClusterSize_t::ValueType idxInCluster);
 
 protected:
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
 
 public:

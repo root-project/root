@@ -17,6 +17,7 @@
 #define ROOT7_RPageStorageFile
 
 #include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/RPageStorage.hxx>
@@ -26,6 +27,7 @@
 #include <array>
 #include <cstdio>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -111,6 +113,22 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
+   /// Holds the uncompressed header and footer
+   struct RStructureBuffer {
+      std::unique_ptr<unsigned char[]> fBuffer; ///< single buffer for both header and footer
+      void *fPtrHeader = nullptr;               ///< either nullptr or points into fBuffer
+      void *fPtrFooter = nullptr;               ///< either nullptr or points into fBuffer
+
+      /// Called at the end of Attach(), i.e. when the header and footer are processed
+      void Reset()
+      {
+         RStructureBuffer empty;
+         std::swap(empty, *this);
+      }
+   };
+
+   /// Either provided by CreateFromAnchor, or read from the ROOT file given the ntuple name
+   std::optional<RNTuple> fAnchor;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
    /// An RRawFile is used to request the necessary byte ranges from a local or a remote file
@@ -121,9 +139,8 @@ private:
    RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
-
-   /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
-   void InitDescriptor(const RNTuple &anchor);
+   /// Populated by LoadStructureImpl(), reset at the end of Attach()
+   RStructureBuffer fStructureBuffer;
 
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
 
@@ -139,6 +156,7 @@ private:
       std::vector<ROOT::Internal::RRawFile::RIOVec> &readRequests);
 
 protected:
+   void LoadStructureImpl() final;
    RNTupleDescriptor AttachImpl() final;
 
 public:

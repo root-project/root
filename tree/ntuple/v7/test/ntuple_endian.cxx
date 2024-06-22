@@ -83,6 +83,7 @@ protected:
    const RColumnElementBase &fElement;
    const std::vector<RPageStorage::RSealedPage> &fPages;
 
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
 
 public:

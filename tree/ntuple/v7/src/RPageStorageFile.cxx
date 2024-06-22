@@ -243,53 +243,6 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
 {
 }
 
-void ROOT::Experimental::Internal::RPageSourceFile::InitDescriptor(const RNTuple &anchor)
-{
-   // TOOD(jblomer): can the epoch check be factored out across anchors?
-   if (anchor.GetVersionEpoch() != RNTuple::kVersionEpoch) {
-      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(anchor.GetVersionEpoch())));
-   }
-   if (anchor.GetVersionEpoch() == 0) {
-      static std::once_flag once;
-      std::call_once(once, [&anchor]() {
-         R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << anchor.GetVersionMajor();
-      });
-   }
-
-   fDescriptorBuilder.SetOnDiskHeaderSize(anchor.GetNBytesHeader());
-   fDescriptorBuilder.AddToOnDiskFooterSize(anchor.GetNBytesFooter());
-
-   const auto bufSize =
-      anchor.GetNBytesHeader() + anchor.GetNBytesFooter() + std::max(anchor.GetLenHeader(), anchor.GetLenFooter());
-   auto buffer = std::make_unique<unsigned char[]>(bufSize);
-   auto headerBuf = buffer.get();
-   auto footerBuf = headerBuf + anchor.GetNBytesHeader();
-   auto unzipBuf = footerBuf + anchor.GetNBytesFooter();
-
-   auto readvLimits = fFile->GetReadVLimits();
-   if ((readvLimits.fMaxReqs < 2) ||
-       (std::max(anchor.GetNBytesHeader(), anchor.GetNBytesFooter()) > readvLimits.fMaxSingleSize) ||
-       (anchor.GetNBytesHeader() + anchor.GetNBytesFooter() > readvLimits.fMaxTotalSize)) {
-      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      fReader.ReadBuffer(headerBuf, anchor.GetNBytesHeader(), anchor.GetSeekHeader());
-      fReader.ReadBuffer(footerBuf, anchor.GetNBytesFooter(), anchor.GetSeekFooter());
-      fCounters->fNRead.Add(2);
-   } else {
-      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
-      ROOT::Internal::RRawFile::RIOVec readRequests[2] = {
-         {headerBuf, anchor.GetSeekHeader(), anchor.GetNBytesHeader(), 0},
-         {footerBuf, anchor.GetSeekFooter(), anchor.GetNBytesFooter(), 0}};
-      fFile->ReadV(readRequests, 2);
-      fCounters->fNReadV.Inc();
-   }
-
-   fDecompressor->Unzip(headerBuf, anchor.GetNBytesHeader(), anchor.GetLenHeader(), unzipBuf);
-   RNTupleSerializer::DeserializeHeader(unzipBuf, anchor.GetLenHeader(), fDescriptorBuilder);
-
-   fDecompressor->Unzip(footerBuf, anchor.GetNBytesFooter(), anchor.GetLenFooter(), unzipBuf);
-   RNTupleSerializer::DeserializeFooter(unzipBuf, anchor.GetLenFooter(), fDescriptorBuilder);
-}
-
 std::unique_ptr<ROOT::Experimental::Internal::RPageSourceFile>
 ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &anchor,
                                                                 const RNTupleReadOptions &options)
@@ -313,21 +266,68 @@ ROOT::Experimental::Internal::RPageSourceFile::CreateFromAnchor(const RNTuple &a
    }
 
    auto pageSource = std::make_unique<RPageSourceFile>("", std::move(rawFile), options);
-   pageSource->InitDescriptor(anchor);
+   pageSource->fAnchor = anchor;
    pageSource->fNTupleName = pageSource->fDescriptorBuilder.GetDescriptor().GetName();
    return pageSource;
 }
 
 ROOT::Experimental::Internal::RPageSourceFile::~RPageSourceFile() = default;
 
-ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceFile::AttachImpl()
+void ROOT::Experimental::Internal::RPageSourceFile::LoadStructureImpl()
 {
    // If we constructed the page source with (ntuple name, path), we need to find the anchor first.
-   // Otherwise, the page source was created by OpenFromAnchor() and the header and footer are already processed.
-   if (fDescriptorBuilder.GetDescriptor().GetOnDiskHeaderSize() == 0) {
-      auto anchor = fReader.GetNTuple(fNTupleName).Unwrap();
-      InitDescriptor(anchor);
+   // Otherwise, the page source was created by OpenFromAnchor()
+   if (!fAnchor)
+      fAnchor = fReader.GetNTuple(fNTupleName).Unwrap();
+
+   // TOOD(jblomer): can the epoch check be factored out across anchors?
+   if (fAnchor->GetVersionEpoch() != RNTuple::kVersionEpoch) {
+      throw RException(R__FAIL("unsupported RNTuple epoch version: " + std::to_string(fAnchor->GetVersionEpoch())));
    }
+   if (fAnchor->GetVersionEpoch() == 0) {
+      static std::once_flag once;
+      std::call_once(once, [this]() {
+         R__LOG_WARNING(NTupleLog()) << "Pre-release format version: RC " << fAnchor->GetVersionMajor();
+      });
+   }
+
+   fDescriptorBuilder.SetOnDiskHeaderSize(fAnchor->GetNBytesHeader());
+   fDescriptorBuilder.AddToOnDiskFooterSize(fAnchor->GetNBytesFooter());
+
+   // Reserve enough space for the compressed and the uncompressed header/footer (see AttachImpl)
+   const auto bufSize = fAnchor->GetNBytesHeader() + fAnchor->GetNBytesFooter() +
+                        std::max(fAnchor->GetLenHeader(), fAnchor->GetLenFooter());
+   fStructureBuffer.fBuffer = std::make_unique<unsigned char[]>(bufSize);
+   fStructureBuffer.fPtrHeader = fStructureBuffer.fBuffer.get();
+   fStructureBuffer.fPtrFooter = fStructureBuffer.fBuffer.get() + fAnchor->GetNBytesHeader();
+
+   auto readvLimits = fFile->GetReadVLimits();
+   if ((readvLimits.fMaxReqs < 2) ||
+       (std::max(fAnchor->GetNBytesHeader(), fAnchor->GetNBytesFooter()) > readvLimits.fMaxSingleSize) ||
+       (fAnchor->GetNBytesHeader() + fAnchor->GetNBytesFooter() > readvLimits.fMaxTotalSize)) {
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+      fReader.ReadBuffer(fStructureBuffer.fPtrHeader, fAnchor->GetNBytesHeader(), fAnchor->GetSeekHeader());
+      fReader.ReadBuffer(fStructureBuffer.fPtrFooter, fAnchor->GetNBytesFooter(), fAnchor->GetSeekFooter());
+      fCounters->fNRead.Add(2);
+   } else {
+      Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
+      ROOT::Internal::RRawFile::RIOVec readRequests[2] = {
+         {fStructureBuffer.fPtrHeader, fAnchor->GetSeekHeader(), fAnchor->GetNBytesHeader(), 0},
+         {fStructureBuffer.fPtrFooter, fAnchor->GetSeekFooter(), fAnchor->GetNBytesFooter(), 0}};
+      fFile->ReadV(readRequests, 2);
+      fCounters->fNReadV.Inc();
+   }
+}
+
+ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceFile::AttachImpl()
+{
+   auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor->GetNBytesFooter();
+
+   fDecompressor->Unzip(fStructureBuffer.fPtrHeader, fAnchor->GetNBytesHeader(), fAnchor->GetLenHeader(), unzipBuf);
+   RNTupleSerializer::DeserializeHeader(unzipBuf, fAnchor->GetLenHeader(), fDescriptorBuilder);
+
+   fDecompressor->Unzip(fStructureBuffer.fPtrFooter, fAnchor->GetNBytesFooter(), fAnchor->GetLenFooter(), unzipBuf);
+   RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor->GetLenFooter(), fDescriptorBuilder);
 
    auto desc = fDescriptorBuilder.MoveDescriptor();
 
