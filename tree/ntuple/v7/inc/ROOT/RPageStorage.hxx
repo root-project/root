@@ -494,6 +494,8 @@ private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
    REntryRange fEntryRange; ///< Used by the cluster pool to prevent reading beyond the given range
+   bool fHasStructure = false; ///< Set to true once LoadStructure() is called
+   bool fIsAttached = false;   ///< Set to true once Attach() is called
 
 protected:
    /// Default I/O performance counters that get registered in fMetrics
@@ -543,6 +545,8 @@ protected:
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
 
+   virtual void LoadStructureImpl() = 0;
+   /// LoadStructureImpl() has been called before AttachImpl() is called
    virtual RNTupleDescriptor AttachImpl() = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
@@ -596,8 +600,13 @@ public:
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
-   /// Open the physical storage container for the tree
-   void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
+   /// Loads header and footer without decompressing or deserializing them. This can be used to asynchronously open
+   /// a file in the background. The method is idempotent and it is called as a first step in Attach().
+   /// Pages sources may or may not make use of splitting loading and processing meta-data.
+   /// Therefore, LoadStructure() may do nothing and defer loading the meta-data to Attach().
+   void LoadStructure();
+   /// Open the physical storage container and deserialize header and footer
+   void Attach();
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);

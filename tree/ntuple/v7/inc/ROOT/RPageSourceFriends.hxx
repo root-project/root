@@ -84,6 +84,7 @@ private:
                         DescriptorId_t virtualParent, const std::string &virtualName);
 
 protected:
+   void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
 
 public:

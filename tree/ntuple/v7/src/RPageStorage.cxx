@@ -140,6 +140,21 @@ void ROOT::Experimental::Internal::RPageSource::SetEntryRange(const REntryRange 
    fEntryRange = range;
 }
 
+void ROOT::Experimental::Internal::RPageSource::LoadStructure()
+{
+   if (!fHasStructure)
+      LoadStructureImpl();
+   fHasStructure = true;
+}
+
+void ROOT::Experimental::Internal::RPageSource::Attach()
+{
+   LoadStructure();
+   if (!fIsAttached)
+      GetExclDescriptorGuard().MoveIn(AttachImpl());
+   fIsAttached = true;
+}
+
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNEntries()
 {
    return GetSharedDescriptorGuard()->GetNEntries();
