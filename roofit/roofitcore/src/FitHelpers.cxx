@@ -775,7 +775,7 @@ std::unique_ptr<RooAbsReal> createNLL(RooAbsPdf &pdf, RooAbsData &data, const Ro
          bool createGradient = evalBackend == RooFit::EvalBackend::Value::Codegen;
          auto simPdf = dynamic_cast<RooSimultaneous const *>(pdfClone.get());
          nllWrapper = std::make_unique<RooFit::Experimental::RooFuncWrapper>("nll_func_wrapper", "nll_func_wrapper",
-                                                                             *nll, &data, simPdf, true);
+                                                                             *nll, &data, simPdf, createGradient);
          if (createGradient)
             static_cast<Experimental::RooFuncWrapper &>(*nllWrapper).createGradient();
       } else {
