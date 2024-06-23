@@ -204,24 +204,6 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
 
 void RooGenericPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   // If the number of elements to sum is less than 3, just build a sum expression.
-   // Otherwise build a loop to sum over the values.
-   unsigned int eleSize = _actualVars.size();
-   std::string className = GetName();
-   std::string varName = "elements" + className;
-   std::string sumName = "sum" + className;
-   std::string code;
-   std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
-   int idx = 0;
-   for (RooAbsArg *it : _actualVars) {
-      decl += ctx.getResult(*it) + ",";
-      ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
-      idx++;
-   }
-   decl.back() = '}';
-   code += decl + ";\n";
-
-   ctx.addResult(this, (_formula->getTFormula()->GetUniqueFuncName() + "(" + varName + ")").Data());
-   ctx.addToCodeBody(this, code);
+   getVal(); // to trigger the creation of the TFormula
+   ctx.addResult(this, ctx.buildCall(_formula->getTFormula()->GetUniqueFuncName().Data(), _actualVars));
 }
-
