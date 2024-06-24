@@ -9,6 +9,7 @@
 #include <RooCategory.h>
 #include <RooConstVar.h>
 #include <RooExponential.h>
+#include <RooGenericPdf.h>
 #include <RooGaussian.h>
 #include <RooGlobalFunc.h>
 #include <RooHelpers.h>
@@ -18,6 +19,7 @@
 #include <RooMultiVarGaussian.h>
 #include <RooPoisson.h>
 #include <RooProdPdf.h>
+#include <RooRealIntegral.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
@@ -29,7 +31,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = true;
+const bool writeJsonFiles = false;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -349,6 +351,30 @@ TEST(RooFitHS3, RooPowerSum)
 {
    int status = 0;
    status = validate({"PowerSum::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooRealIntegral)
+{
+   int status = 0;
+
+   RooRealVar v1("v1", "v1", 0.6, 0., 1.);
+   RooRealVar v2("v2", "v2", 1.0, 0., 2.);
+   RooGenericPdf formula{"formula", "2 * x[0] * x[1]", {v1, v2}};
+   RooArgSet funcNormSet{v1, v2};
+   RooRealIntegral integ{"integ", "integ", formula, v2};
+   RooRealIntegral integWithNormSet{"integ_with_norm_set", "integ_with_norm_set", formula, v2, &funcNormSet};
+
+   RooRealVar x("x", "x", -8, 8);
+   RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
+
+   RooGaussian pdfContainingIntegralA("pdf_containing_integral_a", "pdf_containing_integral_a", x, integ, sigma);
+   status = validate(pdfContainingIntegralA);
+   EXPECT_EQ(status, 0);
+
+   RooGaussian pdfContainingIntegralB("pdf_containing_integral_b", "pdf_containing_integral_b", x, integWithNormSet,
+                                      sigma);
+   status = validate(pdfContainingIntegralB);
    EXPECT_EQ(status, 0);
 }
 

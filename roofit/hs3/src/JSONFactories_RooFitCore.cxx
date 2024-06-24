@@ -34,6 +34,7 @@
 #include <RooRealVar.h>
 #include <RooTFnBinding.h>
 #include <RooWorkspace.h>
+#include <RooRealIntegral.h>
 
 #include <TF1.h>
 #include <TH1.h>
@@ -229,6 +230,24 @@ public:
       RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
       RooAbsReal *mean = tool->requestArg<RooAbsReal>(p, "mean");
       tool->wsEmplace<RooPoisson>(name, *x, *mean, !p["integer"].val_bool());
+      return true;
+   }
+};
+
+class RooRealIntegralFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importArg(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      RooAbsReal *func = tool->requestArg<RooAbsReal>(p, "integrand");
+      auto vars = tool->requestArgList<RooAbsReal>(p, "variables");
+      RooArgSet normSet;
+      RooArgSet const *normSetPtr = nullptr;
+      if (p.has_child("normalization")) {
+         normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
+         normSetPtr = &normSet;
+      }
+      tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr);
       return true;
    }
 };
@@ -671,6 +690,22 @@ public:
    }
 };
 
+class RooRealIntegralStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *integral = static_cast<const RooRealIntegral *>(func);
+      elem["type"] << key();
+      elem["integrand"] << integral->integrand().GetName();
+      RooJSONFactoryWSTool::fillSeq(elem["variables"], integral->intVars());
+      if (RooArgSet const *funcNormSet = integral->funcNormSet()) {
+         RooJSONFactoryWSTool::fillSeq(elem["normalization"], *funcNormSet);
+      }
+      return true;
+   }
+};
+
 #define DEFINE_EXPORTER_KEY(class_name, name)    \
    std::string const &class_name::key() const    \
    {                                             \
@@ -696,6 +731,7 @@ DEFINE_EXPORTER_KEY(RooPolynomialStreamer, "polynomial_dist");
 DEFINE_EXPORTER_KEY(RooRealSumFuncStreamer, "weighted_sum");
 DEFINE_EXPORTER_KEY(RooRealSumPdfStreamer, "weighted_sum_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
+DEFINE_EXPORTER_KEY(RooRealIntegralStreamer, "integral");
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // instantiate all importers and exporters
@@ -719,6 +755,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooPolynomialFactory>("polynomial_dist", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
+   registerImporter<RooRealIntegralFactory>("integral", false);
 
    registerExporter<RooAddPdfStreamer>(RooAddPdf::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
@@ -736,6 +773,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);
+   registerExporter<RooRealIntegralStreamer>(RooRealIntegral::Class(), false);
 });
 
 } // namespace
