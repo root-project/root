@@ -91,6 +91,7 @@ TEST(RNTuple, RandomAccess)
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
+      options.SetEnablePageChecksums(false);
       options.SetApproxZippedClusterSize(nEvents * sizeof(std::int32_t) / 10);
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
       for (unsigned int i = 0; i < nEvents; ++i)

@@ -217,6 +217,9 @@ protected:
       const RPage *fPage = nullptr;                 ///< Input page to be sealed
       const RColumnElementBase *fElement = nullptr; ///< Corresponds to the page's elements, for size calculation etc.
       int fCompressionSetting = 0;                  ///< Compression algorithm and level to apply
+      /// Adds a 8 byte little-endian xxhash3 checksum to the page payload. The buffer has to be large enough to
+      /// to store the additional 8 bytes.
+      bool fWriteChecksum = true;
       /// If false, the output buffer must not point to the input page buffer, which would otherwise be an option
       /// if the page is mappable and should not be compressed
       bool fAllowAlias = false;
@@ -232,8 +235,8 @@ protected:
    std::unique_ptr<RNTupleCompressor> fCompressor;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
-   /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
-   /// point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
+   /// compressionSetting is 0 (uncompressed) and the page is mappable and not checksummed, the returned sealed page
+   /// will point directly to the input page buffer.  Otherwise, the sealed page references an internal buffer
    /// of fCompressor.  Thus, the buffer pointed to by the RSealedPage should never be freed.
    /// Usage of this method requires construction of fCompressor.
    RSealedPage SealPage(const RPage &page, const RColumnElementBase &element);
