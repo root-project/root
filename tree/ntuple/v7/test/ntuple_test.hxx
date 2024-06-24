@@ -144,4 +144,8 @@ struct IMTRAII {
 };
 #endif
 
+/// Creates an uncompressed RNTuple called "ntpl" with two float fields, px and py, with a single entry.
+/// The page of px has a wrong checksum. The function is backend agnostic (file, DAOS, ...).
+void CreateCorruptedRNTuple(const std::string &uri);
+
 #endif
