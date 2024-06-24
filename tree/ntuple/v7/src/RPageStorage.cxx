@@ -50,6 +50,18 @@ void ROOT::Experimental::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled(
    RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, checksumBuf);
 }
 
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled() const
+{
+   if (!fHasChecksum)
+      return RResult<void>::Success();
+
+   auto success = RNTupleSerializer::VerifyXxHash3(reinterpret_cast<const unsigned char *>(fBuffer), GetDataSize());
+   if (!success)
+      return R__FAIL("page checksum verification failed, data corruption detected");
+   return RResult<void>::Success();
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
