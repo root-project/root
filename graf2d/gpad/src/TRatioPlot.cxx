@@ -24,6 +24,7 @@
 #include "TVirtualFitter.h"
 #include "TFitResult.h"
 #include "THStack.h"
+#include "TStyle.h"
 
 /** \class TRatioPlot
     \ingroup gpad
@@ -100,9 +101,7 @@ is responsible for the range, which enables you to modify the range.
 ////////////////////////////////////////////////////////////////////////////////
 /// TRatioPlot default constructor
 
-TRatioPlot::TRatioPlot()
-{
-}
+TRatioPlot::TRatioPlot() : fLeftMargin(gStyle->GetPadLeftMargin()), fRightMargin(gStyle->GetPadRightMargin()) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
@@ -184,7 +183,7 @@ void TRatioPlot::Init(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 Second histogram
 /// \param option Steers the error calculation, as well as ratio / difference
 
-TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
+TRatioPlot::TRatioPlot(TH1 *h1, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!h1 || !h2) {
       Warning("TRatioPlot", "Need two histograms.");
@@ -213,7 +212,7 @@ TRatioPlot::TRatioPlot(TH1* h1, TH1* h2, Option_t *option)
 /// \param h2 The other histogram
 /// \param option Steers the calculation of the lower plot
 
-TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
+TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option) : TRatioPlot()
 {
    if (!st || !h2) {
       Warning("TRatioPlot", "Need a histogram and a stack");
@@ -248,9 +247,9 @@ TRatioPlot::TRatioPlot(THStack *st, TH1 *h2, Option_t *option)
 /// \param option Steers the error calculation
 /// \param fitres Explicit fit result to be used for calculation. Uses last fit if left empty
 
-TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres)
-   : fH1(h1)
+TRatioPlot::TRatioPlot(TH1 *h1, Option_t *option, TFitResult *fitres) : TRatioPlot()
 {
+   fH1 = h1;
    if (!fH1) {
       Warning("TRatioPlot", "Need a histogram.");
       return;
