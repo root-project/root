@@ -65,6 +65,7 @@ public:
    RPageSinkMock(const RColumnElementBase &elt)
       : RPageSink("test", ROOT::Experimental::RNTupleWriteOptions()), fElement(elt)
    {
+      fOptions->SetEnablePageChecksums(false);
       fCompressor = std::make_unique<ROOT::Experimental::Internal::RNTupleCompressor>();
    }
    void CommitPage(ColumnHandle_t /*columnHandle*/, const RPage &page) final
