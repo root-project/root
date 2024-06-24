@@ -137,4 +137,11 @@ public:
    void PreserveFile() { fPreserveFile = true; }
 };
 
+#ifdef R__USE_IMT
+struct IMTRAII {
+   IMTRAII() { ROOT::EnableImplicitMT(); }
+   ~IMTRAII() { ROOT::DisableImplicitMT(); }
+};
+#endif
+
 #endif
