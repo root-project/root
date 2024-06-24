@@ -115,13 +115,6 @@
             "x"
         ]
     },
-    "integral": {
-        "class": "RooRealIntegral",
-	"arguments" : [
-	    "integrand",
-	    "variables"
-	]
-    },
     "crystalball_doublesided_dist": {
         "class": "RooCrystalBall",
 	"arguments": [

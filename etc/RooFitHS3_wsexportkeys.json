@@ -5,17 +5,6 @@
             "set": "summands"
         }
     },
-    "RooRealIntegral": {
-        "type": "integral",
-        "proxies": {
-            "func": "integrand",	    
-            "sumList": "variables",
-            "anaList": "variables",	    
-            "intList": "variables",
-            "jacList": "jacobian",
-            "facList": "variables"
-        }
-    },
     "RooArgusBG": {
         "type": "ARGUS_dist",
         "proxies": {
