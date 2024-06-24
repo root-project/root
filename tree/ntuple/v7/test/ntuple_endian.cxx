@@ -96,7 +96,7 @@ public:
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
-      return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId);
+      return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId).Unwrap();
    }
    RPage PopulatePage(ColumnHandle_t, ROOT::Experimental::RClusterIndex) final { return RPage(); }
    void ReleasePage(RPage &) final {}

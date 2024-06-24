@@ -16,6 +16,7 @@
 #ifndef ROOT7_RPageStorage
 #define ROOT7_RPageStorage
 
+#include <ROOT/RError.hxx>
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
@@ -655,7 +656,8 @@ public:
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
    /// Usage of this method requires construction of fDecompressor. Memory is allocated via
    /// `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned pages.
-   RPage UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
+   RResult<RPage>
+   UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 
    /// Populates all the pages of the given cluster ids and columns; it is possible that some columns do not
    /// contain any pages.  The page source may load more columns than the minimal necessary set from `columns`.

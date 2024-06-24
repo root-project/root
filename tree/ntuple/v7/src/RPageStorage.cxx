@@ -216,7 +216,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
 
          auto taskFunc = [this, columnId, clusterId, firstInPage, sealedPage, element = allElements.back().get(),
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto newPage = UnsealPage(sealedPage, *element, columnId);
+            auto newPage = UnsealPage(sealedPage, *element, columnId).Unwrap();
             fCounters->fSzUnzip.Add(element->GetSize() * sealedPage.GetNElements());
 
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
@@ -353,7 +353,7 @@ void ROOT::Experimental::Internal::RPageSource::EnableDefaultMetrics(const std::
          })});
 }
 
-ROOT::Experimental::Internal::RPage
+ROOT::Experimental::RResult<ROOT::Experimental::Internal::RPage>
 ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element,
                                                       DescriptorId_t physicalColumnId)
 {

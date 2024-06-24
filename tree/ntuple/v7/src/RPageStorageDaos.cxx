@@ -671,7 +671,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHan
    RPage newPage;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      newPage = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element, columnId);
+      newPage = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element, columnId).Unwrap();
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 
