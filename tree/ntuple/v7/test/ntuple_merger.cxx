@@ -52,13 +52,13 @@ TEST(RPageStorage, ReadSealedPages)
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
-   ASSERT_EQ(4U, sealedPage.GetBufferSize());
+   ASSERT_EQ(12U, sealedPage.GetBufferSize());
    auto buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
    sealedPage.SetBuffer(buffer.get());
    source.LoadSealedPage(columnId, index, sealedPage);
    ASSERT_EQ(1U, sealedPage.GetNElements());
    ASSERT_EQ(4U, sealedPage.GetDataSize());
-   ASSERT_EQ(4U, sealedPage.GetBufferSize());
+   ASSERT_EQ(12U, sealedPage.GetBufferSize());
    EXPECT_EQ(42, ReadRawInt(sealedPage.GetBuffer()));
 
    // Check second, big cluster
@@ -69,10 +69,12 @@ TEST(RPageStorage, ReadSealedPages)
    EXPECT_GT(pageRange.fPageInfos.size(), 1U);
    std::uint32_t firstElementInPage = 0;
    for (const auto &pi : pageRange.fPageInfos) {
-      buffer = std::make_unique<unsigned char[]>(pi.fLocator.fBytesOnStorage);
+      sealedPage.SetBuffer(nullptr);
+      source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
+      buffer = std::make_unique<unsigned char[]>(sealedPage.GetBufferSize());
       sealedPage.SetBuffer(buffer.get());
       source.LoadSealedPage(columnId, RClusterIndex(clusterId, firstElementInPage), sealedPage);
-      ASSERT_GE(sealedPage.GetBufferSize(), 4U);
+      ASSERT_GE(sealedPage.GetBufferSize(), 12U);
       ASSERT_GE(sealedPage.GetDataSize(), 4U);
       EXPECT_EQ(firstElementInPage, ReadRawInt(sealedPage.GetBuffer()));
       firstElementInPage += pi.fNElements;
