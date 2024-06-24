@@ -214,9 +214,7 @@ Gui.TooltipForegroundColor:  black
 Gui.MimeTypeFile:            $(HOME)/.root.mimes
 # If above does not exists defaults to this:
 #Gui.MimeTypeFile:            @etcdir@/root.mimes
-# Type of tree viewer: TTreeViewer or RTreeViewer
-TreeViewer.Name:             TTreeViewer
-# Type of Browser: TRootBrowser or TRootBrowserLite or ROOT::RWebBrowserImp
+# Type of Browser: TRootBrowser or TRootBrowserLite
 Browser.Name:                @root_browser_class@
 # Browser Options (plugins)
 # F: File browser E: Text Editor H: HTML browser
@@ -234,6 +232,9 @@ Browser.AutoThumbnail:       yes
 Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
+
+# Type of tree viewer: TTreeViewer or RTreeViewer
+TreeViewer.Name:             @root_treeviewer_class@
 
 # THttpServer specific settings
 # location of JavaScript ROOT sources

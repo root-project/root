@@ -521,8 +521,10 @@ endif()
 
 if(webgui)
    set(root_canvas_class "TWebCanvas")
+   set(root_treeviewer_class "RTreeViewer")
 else()
    set(root_canvas_class "TRootCanvas")
+   set(root_treeviewer_class "TTreeViewer")
 endif()
 
 if(root7 AND webgui)
