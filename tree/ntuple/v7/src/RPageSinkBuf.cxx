@@ -146,7 +146,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
    auto &zipItem = fBufferedColumns.at(colId).BufferPage(columnHandle);
-   zipItem.AllocateSealedPageBuf(page.GetNBytes());
+   zipItem.AllocateSealedPageBuf(page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum);
    R__ASSERT(zipItem.fBuf);
    auto &sealedPage = fBufferedColumns.at(colId).RegisterSealedPage();
 
@@ -156,6 +156,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fPage = &page;
       config.fElement = &element;
       config.fCompressionSetting = GetWriteOptions().GetCompression();
+      config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       config.fAllowAlias = false;
       config.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(config);
@@ -177,6 +178,7 @@ void ROOT::Experimental::Internal::RPageSinkBuf::CommitPage(ColumnHandle_t colum
       config.fPage = &zipItem.fPage;
       config.fElement = &element;
       config.fCompressionSetting = GetWriteOptions().GetCompression();
+      config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
       config.fAllowAlias = true;
       config.fBuffer = zipItem.fBuf.get();
       sealedPage = SealPage(config);

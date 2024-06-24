@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
@@ -405,18 +406,20 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 
    unsigned char *pageBuf = reinterpret_cast<unsigned char *>(config.fPage->GetBuffer());
    bool isAdoptedBuffer = true;
-   auto packedBytes = config.fPage->GetNBytes();
+   auto nBytesPacked = config.fPage->GetNBytes();
+   auto nBytesChecksum = config.fWriteChecksum * kNBytesPageChecksum;
 
    if (!config.fElement->IsMappable()) {
-      packedBytes = config.fElement->GetPackedSize(config.fPage->GetNElements());
-      pageBuf = new unsigned char[packedBytes];
+      nBytesPacked = config.fElement->GetPackedSize(config.fPage->GetNElements());
+      pageBuf = new unsigned char[nBytesPacked + nBytesChecksum];
       isAdoptedBuffer = false;
       config.fElement->Pack(pageBuf, config.fPage->GetBuffer(), config.fPage->GetNElements());
    }
-   auto zippedBytes = packedBytes;
+   auto nBytesZipped = nBytesPacked;
 
-   if ((config.fCompressionSetting != 0) || !config.fElement->IsMappable() || !config.fAllowAlias) {
-      zippedBytes = RNTupleCompressor::Zip(pageBuf, packedBytes, config.fCompressionSetting, config.fBuffer);
+   if ((config.fCompressionSetting != 0) || !config.fElement->IsMappable() || !config.fAllowAlias ||
+       config.fWriteChecksum) {
+      nBytesZipped = RNTupleCompressor::Zip(pageBuf, nBytesPacked, config.fCompressionSetting, config.fBuffer);
       if (!isAdoptedBuffer)
          delete[] pageBuf;
       pageBuf = reinterpret_cast<unsigned char *>(config.fBuffer);
@@ -425,19 +428,25 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 
    R__ASSERT(isAdoptedBuffer);
 
-   return RSealedPage{pageBuf, static_cast<std::uint32_t>(zippedBytes), config.fPage->GetNElements()};
+   RSealedPage sealedPage{pageBuf, static_cast<std::uint32_t>(nBytesZipped + nBytesChecksum),
+                          config.fPage->GetNElements(), config.fWriteChecksum};
+   sealedPage.ChecksumIfEnabled();
+
+   return sealedPage;
 }
 
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
 ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element)
 {
-   if (fSealPageBuffer.size() < page.GetNBytes())
-      fSealPageBuffer.resize(page.GetNBytes());
+   const auto nBytes = page.GetNBytes() + GetWriteOptions().GetCompression() * kNBytesPageChecksum;
+   if (fSealPageBuffer.size() < nBytes)
+      fSealPageBuffer.resize(nBytes);
 
    RSealPageConfig config;
    config.fPage = &page;
    config.fElement = &element;
    config.fCompressionSetting = GetWriteOptions().GetCompression();
+   config.fWriteChecksum = GetWriteOptions().GetEnablePageChecksums();
    config.fAllowAlias = true;
    config.fBuffer = fSealPageBuffer.data();
 
@@ -626,6 +635,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitPage(ColumnHandle_
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = page.GetNElements();
    pageInfo.fLocator = CommitPageImpl(columnHandle, page);
+   pageInfo.fHasChecksum = GetWriteOptions().GetEnablePageChecksums();
    fOpenPageRanges.at(columnHandle.fPhysicalId).fPageInfos.emplace_back(pageInfo);
 }
 
@@ -637,6 +647,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(Descrip
    RClusterDescriptor::RPageRange::RPageInfo pageInfo;
    pageInfo.fNElements = sealedPage.GetNElements();
    pageInfo.fLocator = CommitSealedPageImpl(physicalColumnId, sealedPage);
+   pageInfo.fHasChecksum = sealedPage.GetHasChecksum();
    fOpenPageRanges.at(physicalColumnId).fPageInfos.emplace_back(pageInfo);
 }
 
@@ -665,6 +676,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
          pageInfo.fNElements = sealedPageIt->GetNElements();
          pageInfo.fLocator = locators[i++];
+         pageInfo.fHasChecksum = sealedPageIt->GetHasChecksum();
          fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }
    }
