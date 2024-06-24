@@ -38,6 +38,17 @@ ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) 
 
 ROOT::Experimental::Internal::RPageStorage::~RPageStorage() {}
 
+void ROOT::Experimental::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled()
+{
+   if (!fHasChecksum)
+      return;
+
+   auto charBuf = reinterpret_cast<const unsigned char *>(fBuffer);
+   auto checksumBuf = const_cast<unsigned char *>(charBuf) + GetDataSize();
+   std::uint64_t xxhash3;
+   RNTupleSerializer::SerializeXxHash3(charBuf, GetDataSize(), xxhash3, checksumBuf);
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
