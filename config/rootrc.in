@@ -236,6 +236,9 @@ Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 # Type of tree viewer: TTreeViewer or RTreeViewer
 TreeViewer.Name:             @root_treeviewer_class@
 
+# Type of geometry painter: root or web
+GeomPainter.Name:            @root_geompainter_type@
+
 # THttpServer specific settings
 # location of JavaScript ROOT sources
 #HttpServ.JSRootPath:        @jsrootdir@
