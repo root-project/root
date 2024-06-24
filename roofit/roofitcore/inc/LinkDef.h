@@ -1,4 +1,4 @@
-#ifdef __CINT__
+#ifdef __CLING__
 
 //Old LinkDef1.h
 #pragma link off all globals;
