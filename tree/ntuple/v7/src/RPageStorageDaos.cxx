@@ -627,10 +627,6 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHan
 
    const auto element = columnHandle.fColumn->GetElement();
    const auto elementSize = element->GetSize();
-   const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
-
-   const void *sealedPageBuffer = nullptr; // points either to directReadBuffer or to a read-only page in the cluster
-   std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
 
    if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
       auto pageZero = RPage::MakePageZero(columnId, elementSize);
@@ -641,21 +637,27 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHan
       return pageZero;
    }
 
+   RSealedPage sealedPage;
+   sealedPage.SetNElements(pageInfo.fNElements);
+   sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
+   sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum);
+   std::unique_ptr<unsigned char[]> directReadBuffer; // only used if cluster pool is turned off
+
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       if (pageInfo.fLocator.fReserved & EDaosLocatorFlags::kCagedPage) {
          throw ROOT::Experimental::RException(
             R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
 
-      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bytesOnStorage]);
+      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[sealedPage.GetBufferSize()]);
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
-      fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
+      fDaosContainer->ReadSingleAkey(directReadBuffer.get(), sealedPage.GetBufferSize(), daosKey.fOid, daosKey.fDkey,
                                      daosKey.fAkey);
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
-      fCounters->fSzReadPayload.Add(bytesOnStorage);
-      sealedPageBuffer = directReadBuffer.get();
+      fCounters->fSzReadPayload.Add(sealedPage.GetBufferSize());
+      sealedPage.SetBuffer(directReadBuffer.get());
    } else {
       if (!fCurrentCluster || (fCurrentCluster->GetId() != clusterId) || !fCurrentCluster->ContainsColumn(columnId))
          fCurrentCluster = fClusterPool->GetCluster(clusterId, fActivePhysicalColumns.ToColumnSet());
@@ -667,14 +669,14 @@ ROOT::Experimental::Internal::RPageSourceDaos::PopulatePageFromCluster(ColumnHan
 
       ROnDiskPage::Key key(columnId, pageInfo.fPageNo);
       auto onDiskPage = fCurrentCluster->GetOnDiskPage(key);
-      R__ASSERT(onDiskPage && (bytesOnStorage == onDiskPage->GetSize()));
-      sealedPageBuffer = onDiskPage->GetAddress();
+      R__ASSERT(onDiskPage && (sealedPage.GetBufferSize() == onDiskPage->GetSize()));
+      sealedPage.SetBuffer(onDiskPage->GetAddress());
    }
 
    RPage newPage;
    {
       Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      newPage = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element, columnId).Unwrap();
+      newPage = UnsealPage(sealedPage, *element, columnId).Unwrap();
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 
@@ -805,7 +807,7 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
             assert(cageIndex == s.fPosition);
             // Register the on disk pages in a page map
             ROnDiskPage::Key key(s.fColumnId, s.fPageNo);
-            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fDataSize));
+            pageMap->Register(key, ROnDiskPage(cageBuffer + s.fCageOffset, s.fBufferSize));
             cageSz += s.fBufferSize;
          }
 
