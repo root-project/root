@@ -79,6 +79,9 @@ public:
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  inline RooArgSet const* funcNormSet() const { return _funcNormSet.get(); }
+
 protected:
 
   mutable bool _valid = false;
@@ -106,7 +109,7 @@ protected:
   // Internal function to get the normalization set for the integrated
   // function. By default, we will take the normalization set from the function
   // proxy, but _funcNormSet will be used if it is set.
-  inline RooArgSet const* funcNormSet() const {
+  inline RooArgSet const* actualFuncNormSet() const {
     return _funcNormSet ? _funcNormSet.get() : _function.nset();
   }
 
