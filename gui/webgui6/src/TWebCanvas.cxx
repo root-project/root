@@ -1498,12 +1498,9 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
             hmin = hmax = -1111;
 
          if (is_stack) {
-            TString opt = objlnk->GetOption();
-            if (!opt.Contains("nostack", TString::kIgnoreCase) && !opt.Contains("lego", TString::kIgnoreCase)) {
-               hist->SetMinimum(hmin);
-               hist->SetMaximum(hmax);
-               hist->SetBit(TH1::kIsZoomed, hmin != hmax);
-            }
+            hist->SetMinimum(hmin);
+            hist->SetMaximum(hmax);
+            hist->SetBit(TH1::kIsZoomed, hmin != hmax);
          } else if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
             hist->SetMinimum(hmin);
             hist->SetMaximum(hmax);
