@@ -32,4 +32,14 @@ void scatter()
    scatter->SetMarkerStyle(20);
    scatter->SetTitle("Scatter plot;X;Y");
    scatter->Draw("A");
+
+   // The next snippet is only needed if you want to change the colorbar title
+   canvas->Modified();
+   canvas->Update();
+   TPaletteAxis *palette = (TPaletteAxis*)scat->GetGraph()->GetListOfFunctions()->FindObject("palette");
+   palette->SetX1NDC(0.86);
+   palette->SetX2NDC(0.90);
+   palette->SetTitle("Palette Title");
+   canvas->Modified();
+   canvas->Update();
 }
