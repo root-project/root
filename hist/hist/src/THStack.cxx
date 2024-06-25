@@ -499,41 +499,43 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 {
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themax = -std::numeric_limits<Double_t>::max(), c1, e1;
+   Bool_t lerr = opt.Contains("e");
+   Double_t themax = -std::numeric_limits<Double_t>::max();
    if (!fHists) return 0;
    Int_t nhists = fHists->GetSize();
-   TH1 *h;
-   Int_t first,last;
+
+   auto check_error = [&themax](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         themax = TMath::Max(themax, c1 + e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
-      if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                              fHistogram->GetXaxis()->GetLast());
+      auto h = (TH1 *)fStack->At(nhists - 1);
+      if (fHistogram)
+         h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                 fHistogram->GetXaxis()->GetLast());
       themax = h->GetMaximum(maxval);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         if (fHistogram) h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
-                                                 fHistogram->GetXaxis()->GetLast());
-         them = h->GetMaximum(maxval);
-         if (fHistogram) h->GetXaxis()->SetRange(0,0);
-         if (them > themax) themax = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-            e1     = h->GetBinError(j);
-            c1     = h->GetBinContent(j);
-            themax = TMath::Max(themax,c1+e1);
-         }
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(fHistogram->GetXaxis()->GetFirst(),
+                                    fHistogram->GetXaxis()->GetLast());
+         Double_t them = h->GetMaximum(maxval);
+         if (them > themax)
+            themax = them;
+         if (lerr)
+            check_error(h);
+         if (fHistogram)
+            h->GetXaxis()->SetRange(0,0);
       }
    }
 
@@ -546,41 +548,44 @@ Double_t THStack::GetMaximum(Option_t *option, Double_t maxval)
 
 Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
+   if (!fHists) return 0;
+
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE, logy = gPad ? gPad->GetLogy() : kFALSE;
-   if (opt.Contains("e")) lerr = kTRUE;
-   Double_t them = 0, themin = std::numeric_limits<Double_t>::max(), c1, e1;
-   if (!fHists) return 0;
+   Bool_t lerr = opt.Contains("e");
+   Bool_t logy = gPad ? gPad->GetLogy() : kFALSE;
+   Double_t themin = std::numeric_limits<Double_t>::max();
    Int_t nhists = fHists->GetSize();
-   Int_t first,last;
-   TH1 *h;
+
+   auto check_error = [logy, &themin](TH1 *h) {
+      Int_t first = h->GetXaxis()->GetFirst();
+      Int_t last  = h->GetXaxis()->GetLast();
+      for (Int_t j = first; j <= last; j++) {
+         Double_t e1 = h->GetBinError(j);
+         Double_t c1 = h->GetBinContent(j);
+         if (!logy || (c1 - e1 > 0))
+            themin = TMath::Min(themin, c1 - e1);
+      }
+   };
 
    if (!opt.Contains("nostack")) {
       BuildStack();
-      h = (TH1*)fStack->At(nhists-1);
+      auto h = (TH1*)fStack->At(nhists-1);
       themin = h->GetMinimum(minval);
+      if (themin <= 0 && logy)
+         themin = h->GetMinimum(0);
+      if (lerr)
+         check_error(h);
    } else {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         them = h->GetMinimum(minval);
+      for (Int_t i = 0; i < nhists; i++) {
+         auto h = (TH1 *)fHists->At(i);
+         Double_t them = h->GetMinimum(minval);
          if (them <= 0 && logy)
             them = h->GetMinimum(0);
-         if (them < themin) themin = them;
-      }
-   }
-
-   if (lerr) {
-      for (Int_t i=0;i<nhists;i++) {
-         h = (TH1*)fHists->At(i);
-         first = h->GetXaxis()->GetFirst();
-         last  = h->GetXaxis()->GetLast();
-         for (Int_t j=first; j<=last;j++) {
-             e1     = h->GetBinError(j);
-             c1     = h->GetBinContent(j);
-             if (!logy || (c1 - e1 > 0))
-                themin = TMath::Min(themin, c1 - e1);
-         }
+         if (them < themin)
+            themin = them;
+         if (lerr)
+            check_error(h);
       }
    }
 
