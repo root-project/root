@@ -184,19 +184,36 @@ class RPadPainter extends RObjectPainter {
      * @desc also secondary primitives will be removed
      * @return new index to continue loop or -111 if main painter removed
      * @private */
-   removePrimitive(indx) {
-      const prim = this.painters[indx], arr = [];
-      let resindx = indx;
-      for (let k = this.painters.length-1; k >= 0; --k) {
-         if ((k === indx) || this.painters[k].isSecondary(prim)) {
-            arr.push(this.painters[k]);
-            this.painters.splice(k, 1);
-            if (k <= indx) resindx--;
+   removePrimitive(arg, clean_only_secondary) {
+      let indx = -1, prim = null;
+      if (Number.isInteger(arg)) {
+         indx = arg; prim = this.painters[indx];
+      } else {
+         indx = this.painters.indexOf(arg); prim = arg;
+      }
+      if (indx < 0)
+         return indx;
+
+      const arr = [];
+      let resindx = indx - 1; // object removed itself
+      arr.push(prim);
+      this.painters.splice(indx, 1);
+
+      let len0 = 0;
+      while (len0 < arr.length) {
+         for (let k = this.painters.length-1; k >= 0; --k) {
+            if (this.painters[k].isSecondary(arr[len0])) {
+               arr.push(this.painters[k]);
+               this.painters.splice(k, 1);
+               if (k <= indx) resindx--;
+            }
          }
+         len0++;
       }
 
       arr.forEach(painter => {
-         painter.cleanup();
+         if ((painter !== prim) || !clean_only_secondary)
+            painter.cleanup();
          if (this.main_painter_ref === painter) {
             delete this.main_painter_ref;
             resindx = -111;
@@ -365,7 +382,6 @@ class RPadPainter extends RObjectPainter {
          svg = render_to.append('svg')
              .attr('class', 'jsroot root_canvas')
              .property('pad_painter', this) // this is custom property
-             .property('current_pad', '') // this is custom property
              .property('redraw_by_resize', false); // could be enabled to force redraw by each resize
 
          this.setTopPainter(); // assign canvas as top painter of that element
@@ -683,7 +699,7 @@ class RPadPainter extends RObjectPainter {
       }
 
       // handle used to invoke callback only when necessary
-      return this.drawObject(this.getDom(), this.pad.fPrimitives[indx], '').then(op => {
+      return this.drawObject(this, this.pad.fPrimitives[indx], '').then(op => {
          // mark painter as belonging to primitives
          if (isObject(op))
             op._primitive = true;
@@ -1035,10 +1051,9 @@ class RPadPainter extends RObjectPainter {
 
       if (snap._typename === `${nsREX}RPadDisplayItem`) { // subpad
          const subpad = snap, // not subpad, but just attributes
-
-          padpainter = new RPadPainter(this.getDom(), subpad, false);
+               padpainter = new RPadPainter(this, subpad, false);
          padpainter.decodeOptions('');
-         padpainter.addToPadPrimitives(this.this_pad_name); // only set parent pad name
+         padpainter.addToPadPrimitives();
          padpainter.assignSnapId(snap.fObjectID);
          padpainter.rstyle = snap.fStyle;
 
@@ -1047,12 +1062,8 @@ class RPadPainter extends RObjectPainter {
          if (snap.fPrimitives && snap.fPrimitives.length > 0)
             padpainter.addPadButtons();
 
-         // we select current pad, where all drawing is performed
-         const prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
-
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
             padpainter.addPadInteractive();
-            padpainter.selectCurrentPad(prev_name);
             return this.drawNextSnap(lst, indx);
          });
       }
@@ -1092,7 +1103,7 @@ class RPadPainter extends RObjectPainter {
          }
 
          if (!this.getFramePainter()) {
-            return this.drawObject(this.getDom(), { _typename: clTFrame, $dummy: true }, '')
+            return this.drawObject(this, { _typename: clTFrame, $dummy: true }, '')
                        .then(() => this.drawNextSnap(lst, indx-1));
          } // call same object again
 
@@ -1100,7 +1111,7 @@ class RPadPainter extends RObjectPainter {
       }
 
       // TODO - fDrawable is v7, fObject from v6, maybe use same data member?
-      return this.drawObject(this.getDom(), snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
+      return this.drawObject(this, snap.fDrawable || snap.fObject || snap, snap.fOption || '').then(objpainter => {
          this.addObjectPainter(objpainter, lst, indx);
          return this.drawNextSnap(lst, indx);
       });
@@ -1234,12 +1245,8 @@ class RPadPainter extends RObjectPainter {
          this.addPadButtons(true);
       }
 
-      const prev_name = this.selectCurrentPad(this.this_pad_name);
-
       return this.drawNextSnap(snap.fPrimitives).then(() => {
          this.addPadInteractive();
-         this.selectCurrentPad(prev_name);
-
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
          return this;
@@ -1628,16 +1635,12 @@ class RPadPainter extends RObjectPainter {
          painter.this_pad_name = '';
          painter.setTopPainter();
       } else
-         painter.addToPadPrimitives(painter.pad_name); // must be here due to pad painter
-
+         painter.addToPadPrimitives(); // must be here due to pad painter
 
       painter.createPadSvg();
 
       if (painter.matchObjectType(clTPad) && (!painter.has_canvas || painter.hasObjectsToDraw()))
          painter.addPadButtons();
-
-      // we select current pad, where all drawing is performed
-      const prev_name = painter.has_canvas ? painter.selectCurrentPad(painter.this_pad_name) : undefined;
 
       selectActivePad({ pp: painter, active: false });
 
@@ -1645,8 +1648,6 @@ class RPadPainter extends RObjectPainter {
       return painter.drawPrimitives().then(() => {
          painter.addPadInteractive();
          painter.showPadButtons();
-         // we restore previous pad name
-         painter.selectCurrentPad(prev_name);
          return painter;
       });
    }

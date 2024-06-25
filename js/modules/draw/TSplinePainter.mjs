@@ -99,6 +99,8 @@ class TSplinePainter extends ObjectPainter {
       histo.fXaxis.fXmax = xmax;
       histo.fYaxis.fXmin = ymin;
       histo.fYaxis.fXmax = ymax;
+      histo.fMinimum = ymin;
+      histo.fMaximum = ymax;
 
       return histo;
    }
@@ -198,8 +200,8 @@ class TSplinePainter extends ObjectPainter {
 
       if (this.options.Line || this.options.Curve) {
          const npx = Math.max(10, spline.fNpx), bins = []; // index of current knot
-         let xmin = Math.max(pmain.scale_xmin, spline.fXmin),
-             xmax = Math.min(pmain.scale_xmax, spline.fXmax),
+         let xmin = Math.max(funcs.scale_xmin, spline.fXmin),
+             xmax = Math.min(funcs.scale_xmax, spline.fXmax),
              indx = this.findX(xmin);
 
          if (pmain.logx) {

@@ -872,7 +872,7 @@ class TCanvasPainter extends TPadPainter {
       painter.addPadButtons();
 
       if (nocanvas && opt.indexOf('noframe') < 0)
-         directDrawTFrame(dom, null);
+         directDrawTFrame(painter, null);
 
       // select global reference - required for keys handling
       selectActivePad({ pp: painter, active: true });
@@ -903,7 +903,7 @@ async function ensureTCanvas(painter, frame_kind) {
 
    return promise.then(() => {
       if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
-         directDrawTFrame(painter.getDom(), null, frame_kind);
+         directDrawTFrame(painter.getPadPainter(), null, frame_kind);
 
       painter.addToPadPrimitives();
       return painter;

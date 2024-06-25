@@ -1,4 +1,4 @@
-import { gStyle, settings, clTF1, kNoZoom, kInspect, isFunc } from '../core.mjs';
+import { gStyle, settings, clTF1, clTProfile, kNoZoom, kInspect, isFunc } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -14,6 +14,23 @@ const PadDrawOptions = ['LOGXY', 'LOGX', 'LOGY', 'LOGZ', 'LOGV', 'LOG', 'LOG2X',
  */
 
 class TH1Painter extends THistPainter {
+
+   /** @summary Returns histogram
+     * @desc Also assigns custom getBinContent method for TProfile if PROJX options specified */
+   getHisto() {
+      const histo = super.getHisto();
+      if (histo?._typename === clTProfile) {
+         if (!histo.$getBinContent)
+            histo.$getBinContent = histo.getBinContent;
+         switch (this.options?.ProfileProj) {
+            case 'B': histo.getBinContent = histo.getBinEntries; break;
+            case 'C=E': histo.getBinContent = histo.getBinError; break;
+            case 'W': histo.getBinContent = function(i) { return this.$getBinContent(i) * this.getBinEntries(i); }; break;
+            default: histo.getBinContent = histo.$getBinContent; break;
+         }
+      }
+      return histo;
+   }
 
    /** @summary Convert TH1K into normal binned histogram */
    convertTH1K() {
@@ -131,12 +148,8 @@ class TH1Painter extends THistPainter {
          }
       }
 
-      if (this.options.ignore_min_max)
-         hmin = hmax = kNoZoom;
-      else {
-         hmin = this.options.minimum;
-         hmax = this.options.maximum;
-      }
+      hmin = this.options.minimum;
+      hmax = this.options.maximum;
 
       if ((hmin === hmax) && (hmin !== kNoZoom)) {
          if (hmin < 0) {
@@ -150,10 +163,19 @@ class TH1Painter extends THistPainter {
       let fix_min = false, fix_max = false;
 
       if (this.options.ohmin && this.options.ohmax && !this.draw_content) {
-         // case of hstack drawing - histogram range used for zooming, but only for stack
-         set_zoom = !this.options.ignore_min_max;
+         // case of hstack drawing, zooming allowed only when flag is provided
+
+         if (this.options.zoom_min_max) {
+            if ((hmin !== kNoZoom) && (hmin <= this.ymin))
+               hmin = kNoZoom;
+            if ((hmax !== kNoZoom) && (hmax >= this.ymax))
+               hmax = kNoZoom;
+            set_zoom = true;
+         } else
+            hmin = hmax = kNoZoom;
       } else if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
+         // offten appears with TF1 painter where Y range is not set properly
          this.ymin = hmin;
          this.ymax = hmax;
          fix_min = fix_max = true;
@@ -192,7 +214,7 @@ class TH1Painter extends THistPainter {
       // fMinimum/fMaximum values is a way how ROOT handles Y scale zooming for TH1
 
       if (!when_axis_changed) {
-         if (set_zoom) {
+         if (set_zoom && ((hmin !== kNoZoom) || (hmax !== kNoZoom))) {
             this.zoom_ymin = (hmin === kNoZoom) ? this.ymin : hmin;
             this.zoom_ymax = (hmax === kNoZoom) ? this.ymax : hmax;
          } else {
@@ -231,7 +253,6 @@ class TH1Painter extends THistPainter {
             stat_sumwy2 += histo.fSumw2[i + 1];
          } else
             w = histo.getBinContent(i + 1);
-
 
          if ((xmax === null) || (w > wmax)) {
             xmax = xx;
