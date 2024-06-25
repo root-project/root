@@ -223,7 +223,10 @@ add_custom_target(Preparation
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 if(builtin_docu)
-    add_dependencies(Preparation hsimple)
+    add_dependencies(Preparation onepcm)
+    if(runtime_cxxmodules)
+      add_dependencies(Preparation modules_idx)
+    endif()
 endif()
 set(DOCU_PYZDOC ON CACHE BOOL "Integrate Python docstrings into Doxygen documentation") # Disable for quicker builds
 if(DOCU_PYZDOC)
@@ -236,7 +239,10 @@ add_custom_target(PreparationPyz
     COMMAND ${CMAKE_COMMAND} -E env PYTHONPATH=${PYTHONPATH} ${Python3_EXECUTABLE} print_roofit_pyz_doctrings.py > ${DOCU_LOCATION}/pyzdoc/_roofit.pyzdoc # TODO use -j${DOCU_THREADS} to parallelize, or DOCU_INPUT filter
 )
 if(builtin_docu)
-    add_dependencies(PreparationPyz hsimple)
+    add_dependencies(PreparationPyz onepcm)
+    if(runtime_cxxmodules)
+      add_dependencies(Preparation modules_idx)
+    endif()
 endif()
 endif()
 set(DOXYGEN_OUTPUT_DIRECTORY       "${DOCU_LOCATION}")
