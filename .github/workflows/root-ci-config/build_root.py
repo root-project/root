@@ -84,12 +84,9 @@ def main():
         if args.architecture == 'x86':
             options = "-AWin32 " + options
 
-    # The hash of the name of the image (if any) and build option string is 
-    # used to find existing artifacts with matching build options on s3 storage.
-    options_for_hash = options
-    if args.image:
-        options_for_hash += args.image
-    options_hash = calc_options_hash(options_for_hash)
+    # The hash of the build option string is used to find existing artifacts
+    # with matching build options on s3 storage.
+    options_hash = calc_options_hash(options)
 
     # Differentiate between macos versions: it's possible to have the same label
     # for different macos versions, especially different minor versions.
