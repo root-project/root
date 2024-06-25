@@ -547,13 +547,15 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
       if (obj->InheritsFrom(THStack::Class())) {
          // workaround for THStack, create extra components before sending to client
-         auto hs = static_cast<THStack *>(obj);
-         if (strlen(obj->GetTitle()) > 0)
-            need_title = obj->GetTitle();
-         TVirtualPad::TContext ctxt(pad, kFALSE);
-         hs->BuildPrimitives(iter.GetOption());
-         has_histo = true;
-         need_frame = true;
+         if (!opt.Contains("PADS") && !opt.Contains("SAME")) {
+            auto hs = static_cast<THStack *>(obj);
+            if (strlen(obj->GetTitle()) > 0)
+               need_title = obj->GetTitle();
+            TVirtualPad::TContext ctxt(pad, kFALSE);
+            hs->BuildPrimitives(iter.GetOption());
+            has_histo = true;
+            need_frame = true;
+         }
       } else if (obj->InheritsFrom(TMultiGraph::Class())) {
          // workaround for TMultiGraph
          if (opt.Contains("A")) {
