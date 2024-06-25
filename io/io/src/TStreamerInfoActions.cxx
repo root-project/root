@@ -428,8 +428,8 @@ namespace TStreamerInfoActions
          TClass *newClass = aElement->GetNewClass();
          TClass *oldClass = aElement->GetClassPointer();
          if( vers < 9 && newClass && newClass!=oldClass ) {
-            Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-                  vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass->GetName() );
+            Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s%s into a %s.",
+                  vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : aElement->GetTypeName(), oldClass ? "" : " (could not find the corresponding TClass)", newClass->GetName() );
             return 0;
          }
 
@@ -1276,7 +1276,7 @@ namespace TStreamerInfoActions
 
       if( vers < 8 ) {
          Error( "ReadSTLMemberWiseChangedClass", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass ? newClass->GetName() : "null" );
+               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "(could not find the origin TClass)", newClass ? newClass->GetName() : "(could not find the destination TClass)" );
       } else if (newClass && oldClass){
 
          Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
@@ -1320,7 +1320,7 @@ namespace TStreamerInfoActions
 
       if( vers < 8 ) {
          Error( "ReadSTLMemberWiseChangedClass", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
-               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "null", newClass ? newClass->GetName() : "null" );
+               vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass ? oldClass->GetName() : "(could not find the origin TClass)", newClass ? newClass->GetName() : "(could not find the destination TClass)" );
       } else if (newClass && oldClass) {
 
          Version_t vClVersion = buf.ReadVersionForMemberWise( oldClass->GetCollectionProxy()->GetValueClass() );
