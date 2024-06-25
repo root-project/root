@@ -68420,6 +68420,10 @@ class TPadPainter extends ObjectPainter {
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
     * @return true if any painter was removed */
    cleanPrimitives(selector) {
+      // remove all primitives
+      if (selector === true)
+         selector = () => true;
+
       if (!isFunc(selector))
          return false;
 
@@ -69231,7 +69235,18 @@ class TPadPainter extends ObjectPainter {
    /** @summary Divide pad on subpads
      * @return {Promise} when finished
      * @private */
-   async divide(nx, ny) {
+   async divide(nx, ny, use_existing) {
+      if (nx && !ny && use_existing) {
+         for (let k = 0; k < nx; ++k) {
+            if (!this.getSubPadPainter(k+1)) {
+               use_existing = false;
+               break;
+            }
+         }
+         if (use_existing)
+            return this;
+      }
+
       this.cleanPrimitives(isPadPainter);
       if (!this.pad.fPrimitives)
          this.pad.fPrimitives = create$1(clTList);
@@ -111135,6 +111150,8 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
          if (!subpad_painter)
             return this;
 
+         subpad_painter.cleanPrimitives(true);
+
          return this.drawHist(subpad_painter, hist, hopt).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
@@ -111382,7 +111399,7 @@ let THStackPainter$2 = class THStackPainter extends ObjectPainter {
       if (this.options.pads) {
          pr = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(this.options.nhist);
+            return pad_painter.divide(this.options.nhist, 0, true);
          });
       } else {
          if (!this.options.nostack)
@@ -114950,6 +114967,8 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
          if (!subpad_painter)
             return this;
 
+         subpad_painter.cleanPrimitives(true);
+
          return this.drawGraph(subpad_painter, gr, draw_opt, pos3d).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
@@ -115008,7 +115027,7 @@ let TMultiGraphPainter$2 = class TMultiGraphPainter extends ObjectPainter {
       if (this._pads) {
          promise = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(mgraph.fGraphs.arr.length);
+            return pad_painter.divide(mgraph.fGraphs.arr.length, 0, true);
          });
       } else if (d.check('A') || !this.getMainPainter()) {
          const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));
@@ -119697,7 +119716,12 @@ class RPadPainter extends RObjectPainter {
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
     * @private */
    cleanPrimitives(selector) {
-      if (!isFunc(selector)) return;
+      // remove all primitives
+      if (selector === true)
+         selector = () => true;
+
+      if (!isFunc(selector))
+         return;
 
       for (let k = this.painters.length-1; k >= 0; --k) {
          if (selector(this.painters[k])) {
@@ -119705,6 +119729,12 @@ class RPadPainter extends RObjectPainter {
             this.painters.splice(k, 1);
          }
       }
+   }
+
+   /** @summary Divide pad on sub-pads */
+   async divide(/* nx, ny, use_existing */) {
+      console.warn('RPadPainter.divide not implemented');
+      return this;
    }
 
    /** @summary Removes and cleanup specified primitive

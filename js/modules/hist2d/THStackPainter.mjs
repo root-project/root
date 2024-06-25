@@ -213,6 +213,8 @@ class THStackPainter extends ObjectPainter {
          if (!subpad_painter)
             return this;
 
+         subpad_painter.cleanPrimitives(true);
+
          return this.drawHist(subpad_painter, hist, hopt).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
@@ -460,7 +462,7 @@ class THStackPainter extends ObjectPainter {
       if (this.options.pads) {
          pr = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(this.options.nhist);
+            return pad_painter.divide(this.options.nhist, 0, true);
          });
       } else {
          if (!this.options.nostack)

@@ -374,6 +374,10 @@ class TPadPainter extends ObjectPainter {
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
     * @return true if any painter was removed */
    cleanPrimitives(selector) {
+      // remove all primitives
+      if (selector === true)
+         selector = () => true;
+
       if (!isFunc(selector))
          return false;
 
@@ -1185,7 +1189,18 @@ class TPadPainter extends ObjectPainter {
    /** @summary Divide pad on subpads
      * @return {Promise} when finished
      * @private */
-   async divide(nx, ny) {
+   async divide(nx, ny, use_existing) {
+      if (nx && !ny && use_existing) {
+         for (let k = 0; k < nx; ++k) {
+            if (!this.getSubPadPainter(k+1)) {
+               use_existing = false;
+               break;
+            }
+         }
+         if (use_existing)
+            return this;
+      }
+
       this.cleanPrimitives(isPadPainter);
       if (!this.pad.fPrimitives)
          this.pad.fPrimitives = create(clTList);

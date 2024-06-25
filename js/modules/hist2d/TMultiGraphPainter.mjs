@@ -259,6 +259,8 @@ class TMultiGraphPainter extends ObjectPainter {
          if (!subpad_painter)
             return this;
 
+         subpad_painter.cleanPrimitives(true);
+
          return this.drawGraph(subpad_painter, gr, draw_opt, pos3d).then(subp => {
             if (subp) {
                subp.setSecondaryId(this, subid);
@@ -317,7 +319,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (this._pads) {
          promise = ensureTCanvas(this, false).then(() => {
             pad_painter = this.getPadPainter();
-            return pad_painter.divide(mgraph.fGraphs.arr.length);
+            return pad_painter.divide(mgraph.fGraphs.arr.length, 0, true);
          });
       } else if (d.check('A') || !this.getMainPainter()) {
          const histo = this.scanGraphsRange(mgraph.fGraphs, mgraph.fHistogram, this.getPadPainter()?.getRootPad(true));
