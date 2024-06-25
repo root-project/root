@@ -36,7 +36,7 @@ void scatter()
    // The next snippet is only needed if you want to change the colorbar title
    canvas->Modified();
    canvas->Update();
-   TPaletteAxis *palette = (TPaletteAxis*)scat->GetGraph()->GetListOfFunctions()->FindObject("palette");
+   TPaletteAxis *palette = (TPaletteAxis*)scatter->GetGraph()->GetListOfFunctions()->FindObject("palette");
    palette->SetX1NDC(0.86);
    palette->SetX2NDC(0.90);
    palette->SetTitle("Palette Title");
