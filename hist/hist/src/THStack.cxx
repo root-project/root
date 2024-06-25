@@ -456,7 +456,7 @@ void THStack::Draw(Option_t *option)
    opt.ToLower();
    if (gPad) {
       if (!gPad->IsEditable()) gROOT->MakeDefCanvas();
-      if (!opt.Contains("same")) {
+      if (!opt.Contains("same") && !opt.Contains("pads")) {
          //the following statement is necessary in case one attempts to draw
          //a temporary histogram already in the current pad
          if (TestBit(kCanDelete)) gPad->Remove(this);
@@ -755,13 +755,17 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
       opt.ReplaceAll("noclear","");
    }
    if (opt.Contains("pads")) {
+      if (!paint)
+         return;
+
       Int_t npads = fHists->GetSize();
       TVirtualPad *padsav = gPad;
       //if pad is not already divided into subpads, divide it
       Int_t nps = 0;
       TIter nextp(padsav->GetListOfPrimitives());
       while (auto obj = nextp()) {
-         if (obj->InheritsFrom(TVirtualPad::Class())) nps++;
+         if (obj->InheritsFrom(TVirtualPad::Class()))
+            nps++;
       }
       if (nps < npads) {
          padsav->Clear();
@@ -770,17 +774,18 @@ void THStack::BuildAndPaint(Option_t *choptin, Bool_t paint)
          Int_t ny = nx;
          if (((nx*ny)-nx) >= npads) ny--;
          padsav->Divide(nx,ny);
-
-         Int_t i = 0;
-         auto lnk = fHists->FirstLink();
-         while (lnk) {
-            i++;
-            padsav->cd(i);
-            lnk->GetObject()->Draw(lnk->GetOption());
-            lnk = lnk->Next();
-         }
-         padsav->cd();
       }
+
+      Int_t i = 1;
+      auto lnk = fHists->FirstLink();
+      while (lnk) {
+         auto subpad = padsav->GetPad(i++);
+         if (!subpad) break;
+         subpad->Clear();
+         subpad->Add(lnk->GetObject(), lnk->GetOption());
+         lnk = lnk->Next();
+      }
+      padsav->cd();
       return;
    }
 
