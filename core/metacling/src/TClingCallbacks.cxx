@@ -853,6 +853,13 @@ bool TClingCallbacks::tryResolveAtRuntimeInternal(LookupResult &R, Scope *S) {
       return false;
    }
 
+   // FIX-8367
+   // Do not try to resolve if/switch/while/for statement, if already annotated
+   // for(i=0;i<0;); was failing due to multiple addDecls for the same variable.
+   if (auto annot = Wrapper->getAttr<AnnotateAttr>())
+      if (annot->getAnnotation().equals("__ResolveAtRuntime") && S->isControlScope())
+         return false;
+
    VarDecl* Result = VarDecl::Create(C, TU, Loc, Loc, II, C.DependentTy,
                                      /*TypeSourceInfo*/nullptr, SC_None);
 
