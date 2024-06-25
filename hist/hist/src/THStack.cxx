@@ -548,7 +548,7 @@ Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
 {
    TString opt = option;
    opt.ToLower();
-   Bool_t lerr = kFALSE;
+   Bool_t lerr = kFALSE, logy = gPad ? gPad->GetLogy() : kFALSE;
    if (opt.Contains("e")) lerr = kTRUE;
    Double_t them = 0, themin = std::numeric_limits<Double_t>::max(), c1, e1;
    if (!fHists) return 0;
@@ -564,7 +564,8 @@ Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
       for (Int_t i=0;i<nhists;i++) {
          h = (TH1*)fHists->At(i);
          them = h->GetMinimum(minval);
-         if (them <= 0 && gPad && gPad->GetLogy()) them = h->GetMinimum(0);
+         if (them <= 0 && logy)
+            them = h->GetMinimum(0);
          if (them < themin) themin = them;
       }
    }
@@ -577,7 +578,8 @@ Double_t THStack::GetMinimum(Option_t *option, Double_t minval)
          for (Int_t j=first; j<=last;j++) {
              e1     = h->GetBinError(j);
              c1     = h->GetBinContent(j);
-             themin = TMath::Min(themin,c1-e1);
+             if (!logy || (c1 - e1 > 0))
+                themin = TMath::Min(themin, c1 - e1);
          }
       }
    }
