@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/06/2024',
+version_date = '25/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -236,7 +236,7 @@ settings = {
    /** @summary Automatically create stats box, default on */
    AutoStat: true,
    /** @summary Default frame position in NFC
-     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead */
+     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead, to be removed in v8 */
    FrameNDC: {},
    /** @summary size of pad, where many features will be deactivated like text draw or zooming  */
    SmallPad: { width: 150, height: 100 },
@@ -1717,6 +1717,9 @@ function getMethods(typename, obj) {
             if (this.fBinEntries[bin] < 1e-300) return 0;
             if (!this.fArray) return 0;
             return this.fArray[bin]/this.fBinEntries[bin];
+         };
+         m.getBinEntries = function(bin) {
+            return (bin < 0) || (bin >= this.fNcells) ? 0 : this.fBinEntries[bin];
          };
       }
       m.getBinEffectiveEntries = function(bin) {

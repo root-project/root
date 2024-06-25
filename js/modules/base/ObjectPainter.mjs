@@ -19,14 +19,21 @@ import { getRootColors } from './colors.mjs';
 class ObjectPainter extends BasePainter {
 
    /** @summary constructor
-     * @param {object|string} dom - dom element or identifier
+     * @param {object|string} dom - dom element or identifier or pad painter
      * @param {object} obj - object to draw
      * @param {string} [opt] - object draw options */
    constructor(dom, obj, opt) {
+      let pp = null;
+      if (isFunc(dom?.forEachPainterInPad) && (dom?.this_pad_name !== undefined)) {
+         pp = dom;
+         dom = pp.getDom();
+      }
+
       super(dom);
+
       // this.draw_g = undefined; // container for all drawn objects
       // this._main_painter = undefined;  // main painter in the correspondent pad
-      this.pad_name = dom ? this.selectCurrentPad() : ''; // name of pad where object is drawn
+      this.pad_name = pp?.this_pad_name ?? ''; // name of pad where object is drawn
       this.assignObject(obj);
       if (isStr(opt))
          this.options = { original: opt };
@@ -44,9 +51,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Assigns pad name where element will be drawn
      * @desc Should happend before first draw of element is performed, only for special use case
      * @param {string} [pad_name] - on which subpad element should be draw, if not specified - use current
-     * @protected */
+     * @protected
+     * @deprecated to be removed in v8 */
    setPadName(pad_name) {
-      this.pad_name = isStr(pad_name) ? pad_name : this.selectCurrentPad();
+      // console.warn('setPadName is deprecated, to be removed in v8');
+      this.pad_name = isStr(pad_name) ? pad_name : '';
    }
 
    /** @summary Returns pad name where object is drawn */
@@ -143,6 +152,13 @@ class ObjectPainter extends BasePainter {
       if (pp >= 0) original = original.slice(0, pp);
       this.options.original = original;
       this.options_store = Object.assign({}, this.options);
+   }
+
+   /** @summary Return dom argument for object drawing
+    * @desc Can be used to draw other objects on same pad / same dom element
+    * @protected */
+   getDrawDom() {
+      return this.getPadPainter() || this.getDom();
    }
 
    /** @summary Return actual draw options as string
@@ -398,6 +414,19 @@ class ObjectPainter extends BasePainter {
       return !isObject(main) ? true : this._main_painter_id === main.getUniqueId(true);
    }
 
+   /** @summary Return primary object
+     * @private */
+   getPrimary() {
+      let res = null;
+      if (this.isSecondary()) {
+         this.forEachPainter(p => {
+            if (this.isSecondary(p))
+               res = p;
+         });
+      }
+      return res;
+   }
+
    /** @summary Provides identifier on server for requested sublement */
    getSnapId(subelem) {
       if (!this.snapid)
@@ -425,13 +454,11 @@ class ObjectPainter extends BasePainter {
    /** @summary Method selects current pad name
      * @param {string} [new_name] - when specified, new current pad name will be configured
      * @return {string} previous selected pad or actual pad when new_name not specified
-     * @private */
-   selectCurrentPad(new_name) {
-      const svg = this.getCanvSvg();
-      if (svg.empty()) return '';
-      const curr = svg.property('current_pad');
-      if (new_name !== undefined) svg.property('current_pad', new_name);
-      return curr;
+     * @private
+     * @deprecated to be removed in v8 */
+   selectCurrentPad() {
+      console.warn('selectCurrentPad is deprecated, will be removed in v8');
+      return '';
    }
 
    /** @summary returns pad painter
@@ -600,32 +627,30 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Add painter to pad list of painters
-     * @param {string} [pad_name] - optional pad name where painter should be add
-     * @desc Normally one should use {@link ensureTCanvas} to add painter to pad list of primitives
+     * @desc Normally called from {@link ensureTCanvas} function when new painter is created
      * @protected */
-   addToPadPrimitives(pad_name) {
-      if (pad_name !== undefined) this.setPadName(pad_name);
-      const pp = this.getPadPainter(pad_name); // important - pad_name must be here, otherwise PadPainter class confuses itself
+   addToPadPrimitives() {
+      const pp = this.getPadPainter();
 
-      if (!pp || (pp === this)) return false;
+      if (!pp || (pp === this))
+         return null;
 
       if (pp.painters.indexOf(this) < 0)
          pp.painters.push(this);
 
-      if (!this.rstyle && pp.next_rstyle)
-         this.rstyle = pp.next_rstyle;
-
-      return true;
+      return pp;
    }
 
    /** @summary Remove painter from pad list of painters
      * @protected */
    removeFromPadPrimitives() {
       const pp = this.getPadPainter();
-      if (!pp || (pp === this)) return false;
+      if (!pp || (pp === this))
+         return false;
 
       const k = pp.painters.indexOf(this);
-      if (k >= 0) pp.painters.splice(k, 1);
+      if (k >= 0)
+         pp.painters.splice(k, 1);
       return true;
    }
 

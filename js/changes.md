@@ -5,14 +5,26 @@
 2. Support gStyle.fLegendFillStyle
 3. Let change histogram min/max values via context menu
 4. Support Z-scale zooming with TScatter
-5. Fix - hide empty title on the canvas
-6. Fix - properly handle zooming in THStack histogram
-7. Fix - properly save zoomed ranges in drawingJSON()
-8. Fix - always show all ticks for labeled axis
-9. Fix - draw TProfile2D bins content as text, not entrie
-10. Fix - interactive zooming on log color palette
-11. Fix - keyboard handling while input dialog active
-12. Fix - log axis labels formating with kMoreLogLabels option
+5. TProfile and TProfile2D projections https://github.com/root-project/root/issues/15851
+6. Draw total histogram from TEfficiency when draw option starts with 'b'
+7. Let redraw TEfficiency, THStack and TMultiGraph with different draw options via hist context menu
+8. Support 'pads' draw options for TMultiGraph, support context menu for it
+9. Internals - do not select pad (aka gPad) for objects drawing, always use assigned pad painter
+10. Fix - properly save zoomed ranges in drawingJSON()
+11. Fix - properly redraw TMultuGraph
+
+
+## Changes in 7.7.2
+1. Fix - hide empty title on the canvas
+2. Fix - properly handle zooming in THStack histogram
+3. Fix - always use 0 as minimum in THStack drawings
+4. Fix - always show all ticks for labeled axis
+5. Fix - draw TProfile2D bins content as text, not entries
+6. Fix - interactive zooming on log color palette
+7. Fix - keyboard handling while input dialog active
+8. Fix - legend entry with not configured fill attributes
+9. Fix - prevent that color palette exceed graphical range
+10. Fix - exponential log axis labels with kMoreLogLabels bit set
 
 
 ## Changes in 7.7.1

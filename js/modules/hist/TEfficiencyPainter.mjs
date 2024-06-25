@@ -1,8 +1,9 @@
 import { BIT, create, createHistogram, isStr, clTH1, clTH2, clTH2F, kNoStats } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TGraphPainter, clTGraphAsymmErrors } from '../hist2d/TGraphPainter.mjs';
-import { TF1Painter } from '../hist/TF1Painter.mjs';
-import { TH2Painter } from '../hist2d/TH2Painter.mjs';
+import { TF1Painter } from './TF1Painter.mjs';
+import { TH1Painter } from './TH1Painter.mjs';
+import { TH2Painter } from './TH2Painter.mjs';
 import { getTEfficiencyBoundaryFunc } from '../base/math.mjs';
 
 
@@ -169,7 +170,54 @@ class TEfficiencyPainter extends ObjectPainter {
       if (!eff?.fFunctions || (indx >= eff.fFunctions.arr.length))
          return this;
 
-       return TF1Painter.draw(this.getDom(), eff.fFunctions.arr[indx], eff.fFunctions.opt[indx]).then(() => this.drawFunction(indx+1));
+      return TF1Painter.draw(this.getPadPainter(), eff.fFunctions.arr[indx], eff.fFunctions.opt[indx])
+                        .then(funcp => {
+                           funcp?.setSecondaryId(this, `func_${indx}`);
+                           return this.drawFunction(indx + 1);
+                        });
+   }
+
+   /** @summary Fill context menu */
+   fillContextMenuItems(menu) {
+      menu.addRedrawMenu(this);
+   }
+
+   /** @summary Fully redraw efficiency with new draw options */
+   async redrawWith(opt, skip_cleanup) {
+      if (!skip_cleanup)
+         this.getPadPainter()?.removePrimitive(this, true);
+
+      if (!opt || !isStr(opt)) opt = '';
+      opt = opt.toLowerCase();
+
+      let promise, draw_total = false;
+
+      const eff = this.getObject(),
+            dom = this.getDrawDom();
+
+      if (opt[0] === 'b') {
+         draw_total = true;
+         promise = (this.ndim === 1 ? TH1Painter : TH2Painter).draw(dom, eff.fTotalHistogram, opt.slice(1));
+      } else if (this.ndim === 1) {
+         if (!opt) opt = 'ap';
+         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0)) opt += 'a';
+         if (opt.indexOf('p') < 0) opt += 'p';
+
+         const gr = this.createGraph(eff);
+         this.fillGraph(gr, opt);
+         promise = TGraphPainter.draw(dom, gr, opt);
+      } else {
+         if (!opt) opt = 'col';
+         const hist = this.createHisto(eff);
+         this.fillHisto(hist, opt);
+         promise = TH2Painter.draw(dom, hist, opt);
+      }
+
+      return promise.then(subp => {
+         subp?.setSecondaryId(this, 'eff');
+         this.addToPadPrimitives();
+         return draw_total ? this : this.drawFunction(0);
+      });
    }
 
    /** @summary Draw TEfficiency object */
@@ -177,43 +225,18 @@ class TEfficiencyPainter extends ObjectPainter {
       if (!eff || !eff.fTotalHistogram)
          return null;
 
-      if (!opt || !isStr(opt)) opt = '';
-      opt = opt.toLowerCase();
+      const painter = new TEfficiencyPainter(dom, eff);
 
-      let ndim = 0;
       if (eff.fTotalHistogram._typename.indexOf(clTH1) === 0)
-         ndim = 1;
+         painter.ndim = 1;
       else if (eff.fTotalHistogram._typename.indexOf(clTH2) === 0)
-         ndim = 2;
+         painter.ndim = 2;
       else
          return null;
 
-      const painter = new TEfficiencyPainter(dom, eff);
-      painter.ndim = ndim;
-
       painter.fBoundary = getTEfficiencyBoundaryFunc(eff.fStatisticOption, eff.TestBit(kIsBayesian));
 
-      let promise;
-
-      if (ndim === 1) {
-         if (!opt) opt = 'ap';
-         if ((opt.indexOf('same') < 0) && (opt.indexOf('a') < 0)) opt += 'a';
-         if (opt.indexOf('p') < 0) opt += 'p';
-
-         const gr = painter.createGraph(eff);
-         painter.fillGraph(gr, opt);
-         promise = TGraphPainter.draw(dom, gr, opt);
-      } else {
-         if (!opt) opt = 'col';
-         const hist = painter.createHisto(eff);
-         painter.fillHisto(hist, opt);
-         promise = TH2Painter.draw(dom, hist, opt);
-      }
-
-      return promise.then(() => {
-         painter.addToPadPrimitives();
-         return painter.drawFunction(0);
-      });
+      return painter.redrawWith(opt, true);
    }
 
 } // class TEfficiencyPainter

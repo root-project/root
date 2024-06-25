@@ -375,12 +375,9 @@ class TASImagePainter extends ObjectPainter {
          return pal_painter.drawPave('');
       }
 
-      const prev_name = this.selectCurrentPad(this.getPadName());
-
-      return TPavePainter.draw(this.getDom(), this.draw_palette).then(p => {
+      return TPavePainter.draw(this.getPadPainter(), this.draw_palette).then(p => {
          pal_painter = p;
 
-         this.selectCurrentPad(prev_name);
          // mark painter as secondary - not in list of TCanvas primitives
          pal_painter.setSecondary(this);
 

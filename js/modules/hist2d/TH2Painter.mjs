@@ -533,7 +533,6 @@ class TH2Painter extends THistPainter {
    constructor(dom, histo) {
       super(dom, histo);
       this.wheel_zoomy = true;
-      this._show_empty_bins = false;
    }
 
    /** @summary cleanup painter */
@@ -541,6 +540,23 @@ class TH2Painter extends THistPainter {
       delete this.tt_handle;
 
       super.cleanup();
+   }
+
+   /** @summary Returns histogram
+    * @desc Also assigns custom getBinContent method for TProfile2D if PROJXY options specified */
+   getHisto() {
+      const histo = super.getHisto();
+      if (histo?._typename === clTProfile2D) {
+         if (!histo.$getBinContent)
+            histo.$getBinContent = histo.getBinContent;
+         switch (this.options?.Profile2DProj) {
+            case 'B': histo.getBinContent = histo.getBinEntries; break;
+            case 'C=E': histo.getBinContent = function(i, j) { return this.getBinError(this.getBin(i, j)); }; break;
+            case 'W': histo.getBinContent = function(i, j) { return this.$getBinContent(i, j) * this.getBinEntries(i, j); }; break;
+            default: histo.getBinContent = histo.$getBinContent; break;
+         }
+      }
+      return histo;
    }
 
    /** @summary Toggle projection */
@@ -590,7 +606,7 @@ class TH2Painter extends THistPainter {
       this.projection_widthY = widthY;
       this.is_projection = ''; // avoid projection handling until area is created
 
-      this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
+      return this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
    }
 
    /** @summary Redraw projection */
@@ -746,8 +762,12 @@ class TH2Painter extends THistPainter {
       menu.addDrawMenu('Draw with', opts, arg => {
          if (arg.indexOf(kInspect) === 0)
             return this.showInspector(arg);
+         const oldProject = this.options.Project;
          this.decodeOptions(arg);
-         this.interactiveRedraw('pad', 'drawopt');
+         if ((oldProject === this.options.Project) || this.mode3d)
+            this.interactiveRedraw('pad', 'drawopt');
+         else
+            this.toggleProjection(this.options.Project);
       });
 
       if (this.options.Color || this.options.Contour || this.options.Hist || this.options.Surf || this.options.Lego === 12 || this.options.Lego === 14)
@@ -918,7 +938,7 @@ class TH2Painter extends THistPainter {
             this.options.Line = 1;
          }
       } else
-         this.draw_content = is_content;
+         this.draw_content = is_content || this.options.ShowEmpty;
    }
 
    /** @summary Count TH2 histogram statistic
@@ -1167,7 +1187,7 @@ class TH2Painter extends THistPainter {
             cntr = this.getContour(),
             palette = this.getHistPalette(),
             entries = [],
-            show_empty = this._show_empty_bins,
+            show_empty = this.options.ShowEmpty,
             can_merge_x = (handle.xbar2 === 1) && (handle.xbar1 === 0),
             can_merge_y = (handle.ybar2 === 1) && (handle.ybar1 === 0);
 
@@ -1723,7 +1743,7 @@ class TH2Painter extends THistPainter {
          const binw = handle.grx[i+1] - handle.grx[i];
          for (let j = handle.j1; j < handle.j2; ++j) {
             const binz = histo.getBinContent(i+1, j+1);
-            if ((binz === 0) && !this._show_empty_bins) continue;
+            if ((binz === 0) && !this.options.ShowEmpty) continue;
 
             if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(i + 0.5),
                      histo.fYaxis.GetBinCoord(j + 0.5))) continue;
@@ -1860,7 +1880,7 @@ class TH2Painter extends THistPainter {
          const logmax = Math.log(absmax);
          if (absmin > 0)
             logmin = Math.log(absmin);
-         else if ((main.minposbin>=1) && (main.minposbin<100))
+         else if ((main.minposbin >= 1) && (main.minposbin < 100))
             logmin = Math.log(0.7);
          else
             logmin = (main.minposbin > 0) ? Math.log(0.7*main.minposbin) : logmax - 10;
@@ -3112,10 +3132,10 @@ class TH2Painter extends THistPainter {
           else if (!match)
             colindx = null;
           else if (h.hide_only_zeros)
-            colindx = (binz === 0) && !this._show_empty_bins ? null : 0;
+            colindx = (binz === 0) && !this.options.ShowEmpty ? null : 0;
           else {
             colindx = this.getContour().getPaletteIndex(this.getHistPalette(), binz);
-            if ((colindx === null) && (binz === 0) && this._show_empty_bins) colindx = 0;
+            if ((colindx === null) && (binz === 0) && this.options.ShowEmpty) colindx = 0;
          }
       }
 

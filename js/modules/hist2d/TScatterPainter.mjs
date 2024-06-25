@@ -24,7 +24,7 @@ class TScatterPainter extends TGraphPainter {
     * @private */
    async drawAxisHisto() {
       const histo = this.createHistogram();
-      return TH2Painter.draw(this.getDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
+      return TH2Painter.draw(this.getDrawDom(), histo, this.options.Axis + ';IGNORE_PALETTE');
    }
 
   /** @summary Provide palette, create if necessary

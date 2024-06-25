@@ -253,7 +253,7 @@ class RFramePainter extends RObjectPainter {
       this.logx = this.v7EvalAttr('x_log', 0);
       this.logy = this.v7EvalAttr('y_log', 0);
 
-      const w = this.getFrameWidth(), h = this.getFrameHeight();
+      const w = this.getFrameWidth(), h = this.getFrameHeight(), pp = this.getPadPainter();
 
       this.scales_ndim = opts.ndim;
 
@@ -295,8 +295,7 @@ class RFramePainter extends RObjectPainter {
       if (xaxis?._typename !== clTAxis) xaxis = create(clTAxis);
       if (yaxis?._typename !== clTAxis) yaxis = create(clTAxis);
 
-      this.x_handle = new TAxisPainter(this.getDom(), xaxis, true);
-      this.x_handle.setPadName(this.getPadName());
+      this.x_handle = new TAxisPainter(pp, xaxis, true);
       this.x_handle.optionUnlab = this.v7EvalAttr('x_labels_hide', false);
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
@@ -308,8 +307,7 @@ class RFramePainter extends RObjectPainter {
 
       this.x_handle.assignFrameMembers(this, 'x');
 
-      this.y_handle = new TAxisPainter(this.getDom(), yaxis, true);
-      this.y_handle.setPadName(this.getPadName());
+      this.y_handle = new TAxisPainter(pp, yaxis, true);
       this.y_handle.optionUnlab = this.v7EvalAttr('y_labels_hide', false);
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
@@ -342,7 +340,7 @@ class RFramePainter extends RObjectPainter {
       if (this.v7EvalAttr('swapX', false)) sidex = -1;
       if (this.v7EvalAttr('swapY', false)) sidey = -1;
 
-      const w = this.getFrameWidth(), h = this.getFrameHeight();
+      const w = this.getFrameWidth(), h = this.getFrameHeight(), pp = this.getPadPainter();
 
       if (!this.v6axes) {
          // this is partially same as v6 createXY method
@@ -369,20 +367,17 @@ class RFramePainter extends RObjectPainter {
 
          this.recalculateRange(0);
 
-         this.x_handle = new RAxisPainter(this.getDom(), this, this.xaxis, 'x_');
-         this.x_handle.setPadName(this.getPadName());
+         this.x_handle = new RAxisPainter(pp, this, this.xaxis, 'x_');
          this.x_handle.snapid = this.snapid;
          this.x_handle.draw_swapside = (sidex < 0);
          this.x_handle.draw_ticks = ticksx;
 
-         this.y_handle = new RAxisPainter(this.getDom(), this, this.yaxis, 'y_');
-         this.y_handle.setPadName(this.getPadName());
+         this.y_handle = new RAxisPainter(pp, this, this.yaxis, 'y_');
          this.y_handle.snapid = this.snapid;
          this.y_handle.draw_swapside = (sidey < 0);
          this.y_handle.draw_ticks = ticksy;
 
-         this.z_handle = new RAxisPainter(this.getDom(), this, this.zaxis, 'z_');
-         this.z_handle.setPadName(this.getPadName());
+         this.z_handle = new RAxisPainter(pp, this, this.zaxis, 'z_');
          this.z_handle.snapid = this.snapid;
 
          this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, false, [0, w], w, { reverse: false });
@@ -454,6 +449,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw secondary configuread axes */
    drawAxes2(second_x, second_y) {
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
+            pp = this.getPadPainter(),
             layer = this.getFrameSvg().selectChild('.axis_layer');
       let pr1, pr2;
 
@@ -465,8 +461,7 @@ class RFramePainter extends RObjectPainter {
            this.scale_x2min = this.x2min;
            this.scale_x2max = this.x2max;
          }
-         this.x2_handle = new RAxisPainter(this.getDom(), this, this.x2axis, 'x2_');
-         this.x2_handle.setPadName(this.getPadName());
+         this.x2_handle = new RAxisPainter(pp, this, this.x2axis, 'x2_');
          this.x2_handle.snapid = this.snapid;
 
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, false, [0, w], w, { reverse: false });
@@ -484,8 +479,7 @@ class RFramePainter extends RObjectPainter {
             this.scale_y2max = this.y2max;
          }
 
-         this.y2_handle = new RAxisPainter(this.getDom(), this, this.y2axis, 'y2_');
-         this.y2_handle.setPadName(this.getPadName());
+         this.y2_handle = new RAxisPainter(pp, this, this.y2axis, 'y2_');
          this.y2_handle.snapid = this.snapid;
 
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, true, [h, 0], -h, { reverse: false });
@@ -1007,6 +1001,16 @@ class RFramePainter extends RObjectPainter {
                        doy ? 0 : undefined, doy ? 0 : undefined,
                        doz ? 0 : undefined, doz ? 0 : undefined,
                        'unzoom');
+   }
+
+   /** @summary Reset all zoom attributes
+    * @private */
+   resetZoom() {
+      ['x', 'y', 'z', 'x2', 'y2'].forEach(n => {
+         this[`zoom_${n}min`] = undefined;
+         this[`zoom_${n}max`] = undefined;
+         this[`zoom_changed_${n}`] = undefined;
+      });
    }
 
    /** @summary Mark/check if zoom for specific axis was changed interactively

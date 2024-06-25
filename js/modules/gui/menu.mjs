@@ -124,28 +124,43 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub)
-         this.sub('' + top_name, opts[0], call_back, title);
+      const used = {};
 
-      for (let i = 1; i < opts.length; ++i) {
-         let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
-             group = i+1;
+      if (!without_sub)
+         this.sub(top_name, opts[0], call_back, title);
+
+      if ((opts.indexOf('') >= 0) && (!without_sub || opts[0]))
+         this.add(this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;', '', call_back);
+
+      for (let i = 0; i < opts.length; ++i) {
+         let name = opts[i];
+         if (!name || used[name])
+            continue;
+         used[name] = true;
+
+         const group = [];
          if (opts.length > 5) {
-            // check if there are similar options, which can be grouped once again
-            while ((group < opts.length) && (opts[group].indexOf(name) === 0)) group++;
+            // check if there are similar options, which can be grouped again
+            for (let i2 = i + 1; i2 < opts.length; ++i2) {
+               if (opts[i2] && !used[opts[i2]] && (opts[i2].indexOf(name) === 0))
+                  group.push(opts[i2]);
+               else if (name.length < 4)
+                  break;
+            }
          }
 
          if (without_sub)
             name = top_name + ' ' + name;
 
-         if (group >= i+2) {
-            this.sub('' + name, opts[i], call_back);
-            for (let k = i+1; k < group; ++k)
-               this.add(opts[k], opts[k], call_back);
+         if (group.length > 0) {
+            this.sub(name, opts[i], call_back);
+            group.forEach(sub => {
+               this.add(sub, sub, call_back);
+               used[sub] = true;
+            });
             this.endsub();
-            i = group - 1;
          } else if (name === kInspect) {
-            this.sub('' + name, opts[i], call_back, 'Inspect object content');
+            this.sub(name, opts[i], call_back, 'Inspect object content');
             for (let k = 0; k < 10; ++k)
                this.add(k.toString(), kInspect + k, call_back, `Inspect object and expand to level ${k}`);
             this.endsub();
@@ -159,6 +174,23 @@ class JSRootMenu {
          }, 'Enter draw option in dialog');
          this.endsub();
       }
+   }
+
+   /** @summary Add redraw menu for the painter
+     * @protected */
+   addRedrawMenu(painter) {
+      if (!painter || !isFunc(painter.redrawWith) || !isFunc(painter.getSupportedDrawOptions))
+         return false;
+
+      const opts = painter.getSupportedDrawOptions();
+
+      this.addDrawMenu(`Draw ${painter.getClassName()} with`, opts, arg => {
+         if ((arg.indexOf(kInspect) === 0) && isFunc(painter.showInspector))
+            return painter.showInspector(arg);
+
+         painter.redrawWith(arg);
+      });
+      return true;
    }
 
    /** @summary Add color selection menu entries

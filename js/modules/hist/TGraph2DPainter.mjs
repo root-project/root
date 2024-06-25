@@ -1318,11 +1318,22 @@ class TGraph2DPainter extends ObjectPainter {
       }
 
       return Promise.all(promises).then(() => {
-         if (this.options.Zscale && this.axes_draw) {
-            const pal = this.getMainPainter()?.findFunction(clTPaletteAxis),
-                  pal_painter = this.getPadPainter()?.findPainterFor(pal);
-            return pal_painter?.drawPave();
-         }
+         const main = this.getMainPainter(),
+               handle_palette = this.axes_draw || (main?.draw_content === false);
+         if (!handle_palette)
+            return;
+
+         const pal = main?.findFunction(clTPaletteAxis),
+               pal_painter = this.getPadPainter()?.findPainterFor(pal);
+         if (!pal_painter)
+            return;
+
+         pal_painter.Enabled = this.options.Zscale;
+
+         if (this.options.Zscale)
+            return pal_painter.drawPave();
+         else
+            pal_painter.removeG(); // completely remove drawing without need to redraw complete pad
       }).then(() => {
          fp.render3D(100);
          return this;

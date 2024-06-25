@@ -1925,8 +1925,7 @@ class TFramePainter extends ObjectPainter {
       // projection should be assigned
       this.recalculateRange(opts.Proj, orig_x, orig_y);
 
-      this.x_handle = new TAxisPainter(this.getDom(), this.xaxis, true);
-      this.x_handle.setPadName(this.getPadName());
+      this.x_handle = new TAxisPainter(pp, this.xaxis, true);
       this.x_handle.setHistPainter(opts.hist_painter, 'x');
 
       this.x_handle.configureAxis('xaxis', this.xmin, this.xmax, this.scale_xmin, this.scale_xmax, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
@@ -1939,8 +1938,7 @@ class TFramePainter extends ObjectPainter {
 
       this.x_handle.assignFrameMembers(this, 'x');
 
-      this.y_handle = new TAxisPainter(this.getDom(), this.yaxis, true);
-      this.y_handle.setPadName(this.getPadName());
+      this.y_handle = new TAxisPainter(pp, this.yaxis, true);
       this.y_handle.setHistPainter(opts.hist_painter, 'y');
 
       this.y_handle.configureAxis('yaxis', this.ymin, this.ymax, this.scale_ymin, this.scale_ymax, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
@@ -1969,8 +1967,7 @@ class TFramePainter extends ObjectPainter {
       this.logx2 = this.logy2 = 0;
 
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
-            pp = this.getPadPainter(),
-            pad = pp.getRootPad();
+            pp = this.getPadPainter(), pad = pp.getRootPad();
 
       if (opts.second_x) {
          this.scale_x2min = this.x2min;
@@ -2001,8 +1998,7 @@ class TFramePainter extends ObjectPainter {
       }
 
       if (opts.second_x) {
-         this.x2_handle = new TAxisPainter(this.getDom(), this.x2axis, true);
-         this.x2_handle.setPadName(this.getPadName());
+         this.x2_handle = new TAxisPainter(pp, this.x2axis, true);
          this.x2_handle.setHistPainter(opts.hist_painter, 'x');
 
          this.x2_handle.configureAxis('x2axis', this.x2min, this.x2max, this.scale_x2min, this.scale_x2max, this.swap_xy, this.swap_xy ? [0, h] : [0, w],
@@ -2016,8 +2012,7 @@ class TFramePainter extends ObjectPainter {
       }
 
       if (opts.second_y) {
-         this.y2_handle = new TAxisPainter(this.getDom(), this.y2axis, true);
-         this.y2_handle.setPadName(this.getPadName());
+         this.y2_handle = new TAxisPainter(pp, this.y2axis, true);
          this.y2_handle.setHistPainter(opts.hist_painter, 'y');
 
          this.y2_handle.configureAxis('y2axis', this.y2min, this.y2max, this.scale_y2min, this.scale_y2max, !this.swap_xy, this.swap_xy ? [0, w] : [0, h],
@@ -2964,6 +2959,16 @@ class TFramePainter extends ObjectPainter {
                        doy ? 0 : undefined, doy ? 0 : undefined,
                        doz ? 0 : undefined, doz ? 0 : undefined,
                        'unzoom');
+   }
+
+   /** @summary Reset all zoom attributes
+     * @private */
+   resetZoom() {
+      ['x', 'y', 'z', 'x2', 'y2'].forEach(n => {
+         this[`zoom_${n}min`] = undefined;
+         this[`zoom_${n}max`] = undefined;
+         this[`zoom_changed_${n}`] = undefined;
+      });
    }
 
    /** @summary Mark/check if zoom for specific axis was changed interactively
