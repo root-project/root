@@ -170,7 +170,12 @@ class RPadPainter extends RObjectPainter {
    /** @summary Cleanup primitives from pad - selector lets define which painters to remove
     * @private */
    cleanPrimitives(selector) {
-      if (!isFunc(selector)) return;
+      // remove all primitives
+      if (selector === true)
+         selector = () => true;
+
+      if (!isFunc(selector))
+         return;
 
       for (let k = this.painters.length-1; k >= 0; --k) {
          if (selector(this.painters[k])) {
@@ -178,6 +183,12 @@ class RPadPainter extends RObjectPainter {
             this.painters.splice(k, 1);
          }
       }
+   }
+
+   /** @summary Divide pad on sub-pads */
+   async divide(/* nx, ny, use_existing */) {
+      console.warn('RPadPainter.divide not implemented');
+      return this;
    }
 
    /** @summary Removes and cleanup specified primitive
