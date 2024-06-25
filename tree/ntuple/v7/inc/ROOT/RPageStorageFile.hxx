@@ -64,8 +64,7 @@ private:
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
-                                                std::size_t bytesPacked);
+   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage);
 
 protected:
    using RPagePersistentSink::InitImpl;
