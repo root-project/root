@@ -114,7 +114,7 @@ if(daos OR daos_mock)
     set(daos_test_pool ntuple-daos-test-pool)
   endif()
 
-  ROOT_ADD_GTEST(ntuple_storage_daos ntuple_storage_daos.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
+  ROOT_ADD_GTEST(ntuple_storage_daos ntuple_storage_daos.cxx ntuple_test.cxx LIBRARIES ROOTNTuple MathCore CustomStruct)
   target_compile_definitions(ntuple_storage_daos PRIVATE R__DAOS_TEST_POOL="${daos_test_pool}")
 
   if(daos_mock)
