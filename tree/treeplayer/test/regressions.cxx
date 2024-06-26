@@ -12,6 +12,8 @@
 #include "TLorentzVector.h"
 #include <Math/Vector3D.h>
 #include <ROOT/TestSupport.hxx>
+#include "ROOT/TTreeReaderValueFast.hxx"
+#include "TNtuple.h"
 
 #include "TTreePlayer.h"
 
@@ -338,6 +340,23 @@ TEST(TTreeReaderRegressions, XYZVectors)
    for (auto filename : {filename1, filename2}) {
       gSystem->Unlink(filename);
    }
+}
+
+// ROOT-8842 https://its.cern.ch/jira/browse/ROOT-8842
+TEST(TTreeReaderRegressions, ValueFastTuple)
+{
+   TNtuple tree("tuple", "ROOT-8842", "px:py:pz:energy");
+   for (auto i = 0; i < 1000000; ++i)
+      tree.Fill(i, i + 1, i + 2, i + 3);
+   ROOT::Experimental::TTreeReaderFast reader(&tree);
+   ROOT::Experimental::TTreeReaderValueFast<float> px(reader, "px");
+   ROOT::Experimental::TTreeReaderValueFast<float> py(reader, "py");
+   ROOT::Experimental::TTreeReaderValueFast<float> pz(reader, "pz");
+   double total = 0.0;
+   // reader.SetEntry(0); If I uncomment this, the crash disappears
+   for (auto it = reader.begin(); it != reader.end(); ++it)
+      total += sqrt((*px) * (*px) + (*py) * (*py) + (*pz) * (*pz));
+   EXPECT_NEAR(total, 866026269930.1345215, 100);
 }
 
 // https://github.com/root-project/root/issues/20226
