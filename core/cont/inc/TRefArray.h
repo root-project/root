@@ -180,10 +180,11 @@ inline TObject *TRefArray::At(Int_t at) const
    // Return the object at position i. Returns 0 if i is out of bounds.
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
+      TObject* obj = GetFromTable(j); // This properly returns 0 if the table is not available
+      if (obj) return obj;
       if (!fPID) return nullptr;
       if (!TProcessID::IsValid(fPID)) return nullptr;
-      TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (!obj) obj = GetFromTable(j);
+      obj = fPID->GetObjectWithID(fUIDs[j]);
       return obj;
    }
    BoundsOk("At", at);
