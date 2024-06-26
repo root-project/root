@@ -57,7 +57,7 @@ using ROOT::Experimental::RNTupleSourceSpec;
 
 std::vector<RNTupleSourceSpec> ntuples = {{"ntuple1", "ntuple1.root"}, {"ntuple2", "ntuple2.root"}};
 RNTupleProcessor processor(ntuples);
-auto ptrPt = processor.GetEntry().GetPtr<float>("pt");
+auto ptrPt = processor.GetPtr<float>("pt");
 
 for (const auto &entry : processor) {
    std::cout << "pt = " << *ptrPt << std::endl;
@@ -113,7 +113,11 @@ private:
       const RFieldBase &GetProtoField() const { return *fProtoField; }
       /// We need to disconnect the concrete fields before swapping the page sources
       void ResetConcreteField() { fConcreteField = nullptr; }
-      void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
+      RFieldBase &CreateConcreteField()
+      {
+         fConcreteField = fProtoField->Clone(fProtoField->GetFieldName());
+         return *fConcreteField;
+      }
       RFieldBase &GetConcreteField() const { return *fConcreteField; }
       const REntry::RFieldToken &GetToken() const { return fToken; }
    };
@@ -121,7 +125,7 @@ private:
    std::vector<RNTupleSourceSpec> fNTuples;
    std::unique_ptr<REntry> fEntry;
    std::unique_ptr<Internal::RPageSource> fPageSource;
-   std::vector<RFieldContext> fFieldContexts;
+   std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Connect an RNTuple for processing.
@@ -138,14 +142,27 @@ private:
    /// \brief Creates and connects concrete fields to the current page source, based on the proto-fields.
    void ConnectFields();
 
-public:
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a reference to the entry used by the processor.
+   /// \brief Add a field to be read by the processor.
    ///
-   /// \return A reference to the entry used by the processor.
-   ///
-   const REntry &GetEntry() const { return *fEntry; }
+   /// \param[in] fieldName The name of the field to activate.
+   void ActivateField(std::string_view fieldName);
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Check whether a field has been activated in the processor.
+   ///
+   /// \param[in] fieldName The name of the field to check.
+   ///
+   /// \return Whether the field with the given name is activated.
+   bool HasField(std::string_view fieldName) { return fFieldContexts.count(std::string(fieldName)) > 0; }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Load the values for the provided entry index.
+   ///
+   /// \param[in] idx The entry index.
+   void LoadEntry(NTupleSize_t idx) { fEntry->Read(idx); }
+
+public:
    // clang-format off
    /**
    \class ROOT::Experimental::RNTupleProcessor::RIterator
@@ -164,29 +181,40 @@ public:
       // clang-format on
       class RState {
          friend class RIterator;
+         friend class RNTupleProcessor;
 
       private:
-         const REntry &fEntry;
+         RNTupleProcessor &fProcessor;
          NTupleSize_t fGlobalEntryIndex;
          NTupleSize_t fLocalEntryIndex;
          /// Index of the currently open RNTuple in the chain of ntuples
          std::size_t fNTupleIndex;
 
+         void UpdateEntry() { fProcessor.LoadEntry(fLocalEntryIndex); }
+
       public:
-         RState(const REntry &entry, NTupleSize_t globalEntryIndex, NTupleSize_t localEntryIndex,
+         RState(RNTupleProcessor &processor, NTupleSize_t globalEntryIndex, NTupleSize_t localEntryIndex,
                 std::size_t ntupleIndex)
-            : fEntry(entry),
+            : fProcessor(processor),
               fGlobalEntryIndex(globalEntryIndex),
               fLocalEntryIndex(localEntryIndex),
               fNTupleIndex(ntupleIndex)
          {
          }
 
-         const REntry *operator->() const { return &fEntry; }
-         const REntry &GetEntry() const { return fEntry; }
          NTupleSize_t GetGlobalEntryIndex() const { return fGlobalEntryIndex; }
          NTupleSize_t GetLocalEntryIndex() const { return fLocalEntryIndex; }
          std::size_t GetNTupleIndex() const { return fNTupleIndex; }
+
+         template <typename T>
+         std::shared_ptr<T> GetPtr(std::string_view fieldName)
+         {
+            if (!fProcessor.HasField(fieldName)) {
+               fProcessor.ActivateField(fieldName);
+               UpdateEntry();
+            }
+            return fProcessor.GetPtr<T>(fieldName);
+         }
       };
 
    private:
@@ -199,10 +227,10 @@ public:
       using value_type = RState;
       using difference_type = std::ptrdiff_t;
       using pointer = RState *;
-      using reference = const RState &;
+      using reference = RState &;
 
       RIterator(RNTupleProcessor &processor, std::size_t ntupleIndex, NTupleSize_t globalEntryIndex)
-         : fProcessor(processor), fState(processor.GetEntry(), globalEntryIndex, 0, ntupleIndex)
+         : fProcessor(processor), fState(processor, globalEntryIndex, 0, ntupleIndex)
       {
       }
 
@@ -243,8 +271,14 @@ public:
 
       reference operator*()
       {
-         fProcessor.fEntry->Read(fState.fLocalEntryIndex);
+         fState.UpdateEntry();
          return fState;
+      }
+
+      pointer operator->()
+      {
+         fState.UpdateEntry();
+         return &fState;
       }
 
       bool operator!=(const iterator &rh) const { return fState.fGlobalEntryIndex != rh.fState.fGlobalEntryIndex; }
@@ -258,6 +292,30 @@ public:
    ///
    /// RNTuples are processed in the order in which they are specified.
    RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples);
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns the names of the fields currently actively being processed.
+   ///
+   /// \return A vector with the names of all currently active fields.
+   const std::vector<std::string> GetActiveFields() const;
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns a pointer to the object representing the provided field during processing.
+   ///
+   /// \param[in] fieldName the name of the field for which to get a pointer.
+   ///
+   /// \return A pointer to the object for the provided field.
+   ///
+   /// \warning If this method is called while iterating, the pointer won't hold an entry value until the *next*
+   /// iteration step. To ensure the pointer holds the correct entry value during iteration, use
+   /// RNTupleProcessor::RIterator::RState::GetPtr instead.
+   template <typename T>
+   std::shared_ptr<T> GetPtr(std::string_view fieldName)
+   {
+      if (!HasField(fieldName))
+         ActivateField(fieldName);
+      return fEntry->GetPtr<T>(fieldName);
+   }
 
    RIterator begin() { return RIterator(*this, 0, 0); }
    RIterator end() { return RIterator(*this, fNTuples.size(), kInvalidNTupleIndex); }
