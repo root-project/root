@@ -540,7 +540,7 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
 ////////////////////////////////////////////////////////////////////////////////
 /// General Sparse Matrix Multiplication (SpMM). This code is an adaptation of
 /// Eigen SpMM implementation. This product is conservative, meaning that it
-/// preserves the symbolic non zeros.
+/// preserves the symbolic non zeros. Given lhs, rhs, it computes rhs * lhs.
 
 template <class Element>
 void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs,
@@ -551,15 +551,15 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
       R__ASSERT(lhs.IsValid());
       R__ASSERT(rhs.IsValid());
 
-      if (lhs.GetNcols() != rhs.GetNrows() || lhs.GetColLwb() != rhs.GetRowLwb()) {
+      if (lhs.GetNrows() != rhs.GetNcols() || rhs.GetColLwb() != lhs.GetRowLwb()) {
          Error("conservative_sparse_sparse_product_impl", "lhs and rhs columns incompatible");
          return;
       }
    }
 
    // we fake the storage order.
-   Int_t rows = lhs.GetNrows();
-   Int_t cols = rhs.GetNcols();
+   Int_t rows = rhs.GetNrows();
+   Int_t cols = lhs.GetNcols();
 
    bool mask[rows];
    Element values[rows];
@@ -597,6 +597,9 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
    const Int_t nc = estimated_nnz_prod; // rows*cols;
 
    Allocate(lhs.GetNrows(), rhs.GetNcols(), lhs.GetRowLwb(), rhs.GetColLwb(), 1, nc);
+
+   if (nc == 0)
+      return;
 
    Int_t *resEval = this->GetRowIndexArray();
    Int_t *resCol = this->GetColIndexArray();
