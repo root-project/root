@@ -132,17 +132,15 @@ TPave &TPave::operator=(const TPave &src)
    return *this;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Convert pave coordinates from NDC to Pad coordinates.
 
-void TPave::ConvertNDCtoPad()
+void TPave::ConvertNDCto(TVirtualPad *pad)
 {
-   if (!gPad) return;
-   Double_t dpx  = gPad->GetX2() - gPad->GetX1();
-   Double_t dpy  = gPad->GetY2() - gPad->GetY1();
-   Double_t xp1  = gPad->GetX1();
-   Double_t yp1  = gPad->GetY1();
+   Double_t dpx  = pad->GetX2() - pad->GetX1();
+   Double_t dpy  = pad->GetY2() - pad->GetY1();
+   Double_t xp1  = pad->GetX1();
+   Double_t yp1  = pad->GetY1();
 
    // Check if pave initialisation has been done.
    // This operation cannot take place in the Pave constructor because
@@ -154,30 +152,43 @@ void TPave::ConvertNDCtoPad()
          fY1NDC = fY1;
          fX2NDC = fX2;
          fY2NDC = fY2;
-         fX1    = xp1 + fX1NDC*dpx;
-         fY1    = yp1 + fY1NDC*dpy;
-         fX2    = xp1 + fX2NDC*dpx;
-         fY2    = yp1 + fY2NDC*dpy;
+         fX1 = xp1 + fX1NDC * dpx;
+         fY1 = yp1 + fY1NDC * dpy;
+         fX2 = xp1 + fX2NDC * dpx;
+         fY2 = yp1 + fY2NDC * dpy;
       } else {
-         if (gPad->GetLogx()) {
-            if (fX1 > 0) fX1 = TMath::Log10(fX1);
-            if (fX2 > 0) fX2 = TMath::Log10(fX2);
+         if (pad->GetLogx()) {
+            if (fX1 > 0)
+               fX1 = TMath::Log10(fX1);
+            if (fX2 > 0)
+               fX2 = TMath::Log10(fX2);
          }
-         if (gPad->GetLogy()) {
-            if (fY1 > 0) fY1 = TMath::Log10(fY1);
-            if (fY2 > 0) fY2 = TMath::Log10(fY2);
+         if (pad->GetLogy()) {
+            if (fY1 > 0)
+               fY1 = TMath::Log10(fY1);
+            if (fY2 > 0)
+               fY2 = TMath::Log10(fY2);
          }
-         fX1NDC = (fX1-xp1)/dpx;
-         fY1NDC = (fY1-yp1)/dpy;
-         fX2NDC = (fX2-xp1)/dpx;
-         fY2NDC = (fY2-yp1)/dpy;
+         fX1NDC = (fX1 - xp1) / dpx;
+         fY1NDC = (fY1 - yp1) / dpy;
+         fX2NDC = (fX2 - xp1) / dpx;
+         fY2NDC = (fY2 - yp1) / dpy;
       }
    } else {
-      fX1    = xp1 + fX1NDC*dpx;
-      fY1    = yp1 + fY1NDC*dpy;
-      fX2    = xp1 + fX2NDC*dpx;
-      fY2    = yp1 + fY2NDC*dpy;
+      fX1 = xp1 + fX1NDC * dpx;
+      fY1 = yp1 + fY1NDC * dpy;
+      fX2 = xp1 + fX2NDC * dpx;
+      fY2 = yp1 + fY2NDC * dpy;
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert pave coordinates from NDC to gPad coordinates.
+
+void TPave::ConvertNDCtoPad()
+{
+   if (gPad)
+      ConvertNDCto(gPad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -283,7 +294,7 @@ void TPave::ls(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this pave with its current attributes.
+/// Paint this pave with its current attributes on pad
 ///
 ///  - option = "TR" Top and Right shadows are drawn.
 ///  - option = "TL" Top and Left shadows are drawn.
@@ -301,50 +312,60 @@ void TPave::ls(Option_t *) const
 /// via TPave::SetCornerRadius(rad) where rad is given in percent
 /// of the pave height (default value is 0.2).
 
-void TPave::Paint(Option_t *option)
+void TPave::PaintOn(TVirtualPad *pad, Option_t *option)
 {
    // Convert from NDC to pad coordinates
-   ConvertNDCtoPad();
+   ConvertNDCto(pad);
 
-   PaintPave(fX1, fY1, fX2, fY2, fBorderSize, option);
+   PaintPaveOn(pad, fX1, fY1, fX2, fY2, fBorderSize, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this pave with new coordinates.
 
-void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+void TPave::PaintPave(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
                       Int_t bordersize ,Option_t *option)
 {
-   if (!gPad) return;
-   Double_t x[7],y[7];
+   if (gPad)
+      PaintPaveOn(gPad, x1, y1, x2, y2, bordersize, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with new coordinates.
+
+void TPave::PaintPaveOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+                        Int_t bordersize ,Option_t *option)
+{
+   Double_t x[7], y[7];
    TString opt = option;
    opt.ToLower();
    // if pave drawn with the arc option, goes through dedicated function
    if (opt.Contains("arc")) {
-      PaintPaveArc(x1,y1,x2,y2,bordersize,option);
+      PaintPaveArcOn(pad, x1, y1, x2, y2, bordersize, option);
       return;
    }
 
    // normal rectangular pave
-   if (opt.Length() == 0) opt ="br";
+   if (opt.Length() == 0) opt = "br";
    Int_t fillstyle = GetFillStyle();
    Int_t fillcolor = GetFillColor();
    Int_t shadowcolor = GetShadowColor();
 
    // Draw first pave as a normal filled box
-   if (fBorderSize <= 0 && fillstyle <= 0) return;
-   TBox::PaintBox(x1,y1,x2,y2);
+   if (fBorderSize <= 0 && fillstyle <= 0)
+      return;
+   TBox::PaintBoxOn(pad, x1, y1, x2, y2);
    if (fBorderSize <= 0) return;
    if (fBorderSize == 1) {
-      gPad->PaintLine(x1,y1,x2,y1);
-      gPad->PaintLine(x2,y1,x2,y2);
-      gPad->PaintLine(x2,y2,x1,y2);
-      gPad->PaintLine(x1,y2,x1,y1);
+      pad->PaintLine(x1,y1,x2,y1);
+      pad->PaintLine(x2,y1,x2,y2);
+      pad->PaintLine(x2,y2,x1,y2);
+      pad->PaintLine(x1,y2,x1,y1);
       return;
    }
 
-   Double_t wy = gPad->PixeltoY(0) - gPad->PixeltoY(fBorderSize);
-   Double_t wx = gPad->PixeltoX(fBorderSize) - gPad->PixeltoX(0);
+   Double_t wy = pad->PixeltoY(0) - pad->PixeltoY(fBorderSize);
+   Double_t wx = pad->PixeltoX(fBorderSize) - pad->PixeltoX(0);
    Int_t mode = 0;
    //*-*- Draw the frame top right
    if (opt.Contains("t") && opt.Contains("r")) {
@@ -388,22 +409,22 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    }
    if (!mode) return;  // nop border mode option specified
    for (Int_t i=0;i<6;i++) {
-      if (x[i] < gPad->GetX1()) x[i] = gPad->GetX1();
-      if (x[i] > gPad->GetX2()) x[i] = gPad->GetX2();
-      if (y[i] < gPad->GetY1()) y[i] = gPad->GetY1();
-      if (y[i] > gPad->GetY2()) y[i] = gPad->GetY2();
+      if (x[i] < pad->GetX1()) x[i] = pad->GetX1();
+      if (x[i] > pad->GetX2()) x[i] = pad->GetX2();
+      if (y[i] < pad->GetY1()) y[i] = pad->GetY1();
+      if (y[i] > pad->GetY2()) y[i] = pad->GetY2();
    }
    x[6] = x[0];   y[6] = y[0];
    SetFillStyle(1001);
    SetFillColor(shadowcolor);
    TAttFill::Modify();
-   gPad->PaintFillArea(6,x,y);
+   pad->PaintFillArea(6,x,y);
    x[0] = x1;  y[0] = y1;
    x[1] = x1;  y[1] = y2;
    x[2] = x2;  y[2] = y2;
    x[3] = x2;  y[3] = y1;
    x[4] = x1;  y[4] = y1;
-   gPad->PaintPolyLine(5,x,y);
+   pad->PaintPolyLine(5,x,y);
    SetFillStyle(fillstyle);
    SetFillColor(fillcolor);
 }
@@ -412,9 +433,18 @@ void TPave::PaintPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 /// Draw this pave with rounded corners.
 
 void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
-                      Int_t, Option_t *option)
+                         Int_t bordersize, Option_t *option)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintPaveArcOn(gPad, x1, y1, x2, y2, bordersize, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pave with rounded corners.
+
+void TPave::PaintPaveArcOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2,
+                           Int_t, Option_t *option)
+{
    const Int_t kNPARC = 10;
    Double_t x[4*kNPARC+10],   y[4*kNPARC+10];
    Double_t px[4*kNPARC+10], py[4*kNPARC+10];
@@ -438,10 +468,10 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
          sina[i] = TMath::Sin(theta);
       }
    }
-   Int_t px1 = gPad->XtoAbsPixel(x1);
-   Int_t py1 = gPad->YtoAbsPixel(y1);
-   Int_t px2 = gPad->XtoAbsPixel(x2);
-   Int_t py2 = gPad->YtoAbsPixel(y2);
+   Int_t px1 = pad->XtoAbsPixel(x1);
+   Int_t py1 = pad->YtoAbsPixel(y1);
+   Int_t px2 = pad->XtoAbsPixel(x2);
+   Int_t py2 = pad->YtoAbsPixel(y2);
    // compute rounded corner radius
    Double_t rad = fCornerRadius;
    if (rad > 0 && rad < 0.5) rad = fCornerRadius;
@@ -487,12 +517,11 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    TAttLine::Modify();
    TAttFill::Modify();
    for (i=0;i<=np;i++) {
-      x[i] = gPad->AbsPixeltoX(Int_t(px[i]));
-      y[i] = gPad->AbsPixeltoY(Int_t(py[i]));
+      x[i] = pad->AbsPixeltoX(Int_t(px[i]));
+      y[i] = pad->AbsPixeltoY(Int_t(py[i]));
    }
-   gPad->PaintFillArea(np  , x, y);
-   gPad->PaintPolyLine(np+1, x, y);
-
+   pad->PaintFillArea(np  , x, y);
+   pad->PaintPolyLine(np+1, x, y);
 
    if (fBorderSize <= 0) return;
 
@@ -602,10 +631,10 @@ void TPave::PaintPaveArc(Double_t x1, Double_t y1, Double_t x2, Double_t y2,
    SetFillColor(shadowcolor);
    TAttFill::Modify();
    for (i=0;i<=np;i++) {
-      x[i] = gPad->AbsPixeltoX(Int_t(px[i]));
-      y[i] = gPad->AbsPixeltoY(Int_t(py[i]));
+      x[i] = pad->AbsPixeltoX(Int_t(px[i]));
+      y[i] = pad->AbsPixeltoY(Int_t(py[i]));
    }
-   gPad->PaintFillArea(np,x,y);
+   pad->PaintFillArea(np,x,y);
    SetFillStyle(fillstyle);
    SetFillColor(fillcolor);
 }
