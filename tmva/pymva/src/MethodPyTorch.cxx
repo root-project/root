@@ -51,7 +51,7 @@ MethodPyTorch::MethodPyTorch(DataSetInfo &theData, const TString &theWeightFile)
     : PyMethodBase(Types::kPyTorch, theData, theWeightFile) {
    fNumEpochs = 10;
    fBatchSize = 100;
-   
+
    fContinueTraining = false;
    fSaveBestOnly = true;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
@@ -60,6 +60,8 @@ MethodPyTorch::MethodPyTorch(DataSetInfo &theData, const TString &theWeightFile)
 
 
 MethodPyTorch::~MethodPyTorch() {
+   if (fPyVals != nullptr) Py_DECREF(fPyVals);
+   if (fPyOutput != nullptr) Py_DECREF(fPyOutput);
 }
 
 
@@ -200,7 +202,7 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       // run some python code provided by user for method initializations
       FILE* fp;
       fp = fopen(fUserCodeName, "r");
-      if (fp) { 
+      if (fp) {
          PyRun_SimpleFile(fp, fUserCodeName);
          fclose(fp);
       }
@@ -249,30 +251,55 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
                "Failed to load PyTorch model from file: "+filenameLoadModel);
    Log() << kINFO << "Loaded model from file: " << filenameLoadModel << Endl;
 
-
-   /*
-    * Init variables and weights
-    */
-
    // Get variables, classes and target numbers
    fNVars = GetNVariables();
-   if (GetAnalysisType() == Types::kClassification || GetAnalysisType() == Types::kMulticlass) fNOutputs = DataInfo().GetNClasses();
-   else if (GetAnalysisType() == Types::kRegression) fNOutputs = DataInfo().GetNTargets();
-   else Log() << kFATAL << "Selected analysis type is not implemented" << Endl;
+   if (GetAnalysisType() == Types::kClassification || GetAnalysisType() == Types::kMulticlass)
+      fNOutputs = DataInfo().GetNClasses();
+   else if (GetAnalysisType() == Types::kRegression)
+      fNOutputs = DataInfo().GetNTargets();
+   else
+      Log() << kFATAL << "Selected analysis type is not implemented" << Endl;
 
-   // Init evaluation (needed for getMvaValue)
-   fVals = new float[fNVars]; // holds values used for classification and regression
-   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
-   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals);
-   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+   if (fNVars == 0 || fNOutputs == 0) {
+       Log() << kERROR << "Model does not have a number of inputs or output. Setup failed" << Endl;
+       fModelIsSetup = false;
+   }
+   else {
+      // Mark the model as setup
+      fModelIsSetup = true;
+   }
+}
 
-   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
-   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
-   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)&fOutput[0]);
-   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+void MethodPyTorch::InitEvaluation(size_t nEvents)
+{
+   // initialize python arays used in the model evaluation (prediction)
+   size_t inputSize = fNVars*nEvents;
+   size_t outputSize = fNOutputs*nEvents;
 
-   // Mark the model as setup
-   fModelIsSetup = true;
+   // Init evaluation by allocating the array with the right size
+
+   if (inputSize > 0 && (fVals.size() != inputSize || fPyVals == nullptr)) {
+      fVals.resize(inputSize);
+      npy_intp dimsVals[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
+      if (fPyVals != nullptr) Py_DECREF(fPyVals);   // delete previous object
+      fPyVals = PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
+      if (!fPyVals)
+         Log() << kFATAL << "Failed to load data to Python array" << Endl;
+      PyDict_SetItemString(fLocalNS, "vals", fPyVals);
+   }
+
+   if (outputSize > 0 && ( fOutput.size() != outputSize || fPyOutput == nullptr)) {
+      fOutput.resize(outputSize); // holds classification probabilities or regression output
+      // allocation of Python output array is needed only for single event evaluation
+      if (nEvents == 1) {
+         npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+         if (fPyOutput != nullptr) Py_DECREF(fPyOutput);   // delete previous object
+         fPyOutput = PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
+         if (!fPyOutput)
+               Log() << kFATAL << "Failed to create output data Python array" << Endl;
+         PyDict_SetItemString(fLocalNS, "output", fPyOutput);
+      }
+   }
 }
 
 
@@ -302,7 +329,7 @@ void MethodPyTorch::Train() {
    if(!fModelIsSetup) Log() << kFATAL << "Model is not setup for training" << Endl;
 
    /*
-    * Load training data to numpy array. 
+    * Load training data to numpy array.
     * NOTE: These are later forced to be converted into torch tensors throught the training loop which may not be the ideal method.
     */
 
@@ -476,7 +503,7 @@ void MethodPyTorch::Train() {
                "Failed to train model");
 
 
-   // Note: PyTorch doesn't store training history data unlike Keras. A user can append and save the loss, 
+   // Note: PyTorch doesn't store training history data unlike Keras. A user can append and save the loss,
    // accuracy, other metrics etc to a file for later use.
 
    /*
@@ -518,6 +545,7 @@ Double_t MethodPyTorch::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
       // Setup the trained model
       SetupPyTorchModel(true);
    }
+   InitEvaluation(1);
 
    // Get signal probability (called mvaValue here)
    const TMVA::Event* e = GetEvent();
@@ -530,7 +558,7 @@ Double_t MethodPyTorch::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
 }
 
 
-std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
+std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t /* logProgress */) {
    // Check whether the model is setup
    // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
    if (!fModelIsSetup) {
@@ -544,27 +572,16 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
    if (firstEvt < 0) firstEvt = 0;
    nEvents = lastEvt-firstEvt;
 
-   // use timer
-   Timer timer( nEvents, GetName(), kTRUE );
+   InitEvaluation(nEvents);
 
-   if (logProgress)
-      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
-            << "Evaluation of " << GetMethodName() << " on "
-            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
-            << " sample (" << nEvents << " events)" << Endl;
-
-   float* data = new float[nEvents*fNVars];
+   assert (fVals.size() == fNVars*nEvents);
    for (UInt_t i=0; i<nEvents; i++) {
       Data()->SetCurrentEvent(i);
       const TMVA::Event *e = GetEvent();
       for (UInt_t j=0; j<fNVars; j++) {
-         data[j + i*fNVars] = e->GetValue(j);
+         fVals[j + i*fNVars] = e->GetValue(j);
       }
    }
-
-   npy_intp dimsData[2] = {(npy_intp)nEvents, (npy_intp)fNVars};
-   PyArrayObject* pDataMvaValues = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsData, NPY_FLOAT, (void*)data);
-   if (pDataMvaValues==0) Log() << "Failed to load data to Python array" << Endl;
 
 
    // Get prediction for all events
@@ -576,9 +593,8 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
 
 
    // Using PyTorch User Defined predict function for predictions
-   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, pDataMvaValues, NULL);      
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, fPyVals, NULL);
    if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
-   delete[] data;
 
    // Load predictions to double vector
    // NOTE: The signal probability is given at the output
@@ -588,11 +604,7 @@ std::vector<Double_t> MethodPyTorch::GetMvaValues(Long64_t firstEvt, Long64_t la
       mvaValues[i] = (double) predictionsData[i*fNOutputs + TMVA::Types::kSignal];
    }
 
-   if (logProgress) {
-      Log() << kINFO
-            << "Elapsed time for evaluation of " << nEvents <<  " events: "
-            << timer.GetElapsedTime() << "       " << Endl;
-   }
+   Py_DECREF(pPredictions);
 
    return mvaValues;
 }
@@ -604,6 +616,7 @@ std::vector<Float_t>& MethodPyTorch::GetRegressionValues() {
       // Setup the model and load weights
       SetupPyTorchModel(true);
    }
+   InitEvaluation(1);
 
    // Get regression values
    const TMVA::Event* e = GetEvent();
@@ -627,6 +640,61 @@ std::vector<Float_t>& MethodPyTorch::GetRegressionValues() {
    return fOutput;
 }
 
+std::vector<Float_t> MethodPyTorch::GetAllRegressionValues() {
+
+   if (!fModelIsSetup){
+      // Setup the model and load weights
+      SetupPyTorchModel(true);
+   }
+
+   auto nEvents = Data()->GetNEvents();
+   InitEvaluation(nEvents);
+
+
+   assert (fVals.size() == fNVars*nEvents);
+   assert (fOutput.size() == fNOutputs*nEvents);
+   for (UInt_t i=0; i<nEvents; i++) {
+      Data()->SetCurrentEvent(i);
+      const TMVA::Event *e = GetEvent();
+      for (UInt_t j=0; j<fNVars; j++) {
+         fVals[j + i*fNVars] = e->GetValue(j);
+      }
+   }
+
+   // Get prediction for all events
+   PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
+   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+
+   PyObject* pPredict = PyDict_GetItemString(fLocalNS, "predict");
+   if (pPredict==0) Log() << kFATAL << "Failed to get Python predict function" << Endl;
+
+   std::cout << " calling predict functon for regression \n";
+   // Using PyTorch User Defined predict function for predictions
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, fPyVals, NULL);
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+
+   // Load predictions to double vector
+   float* predictionsData = (float*) PyArray_DATA(pPredictions);
+
+   // need to loop on events since we use an inverse transformation to get final regression values
+   // this can be probably optimized
+   for (UInt_t ievt = 0; ievt < nEvents; ievt++) {
+      const TMVA::Event* e = GetEvent(ievt);
+      Event eTrans(*e);
+      for (UInt_t i = 0; i < fNOutputs; ++i) {
+         eTrans.SetTarget(i,predictionsData[ievt*fNOutputs + i]);
+      }
+      // apply the inverse transformation
+      const Event* eTrans2 = GetTransformationHandler().InverseTransform(&eTrans);
+      for (UInt_t i = 0; i < fNOutputs; ++i) {
+         fOutput[ievt*fNOutputs + i] = eTrans2->GetTarget(i);
+      }
+   }
+   Py_DECREF(pPredictions);
+
+   return fOutput;
+}
+
 std::vector<Float_t>& MethodPyTorch::GetMulticlassValues() {
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
@@ -634,12 +702,54 @@ std::vector<Float_t>& MethodPyTorch::GetMulticlassValues() {
       // Setup the model and load weights
       SetupPyTorchModel(true);
    }
+   InitEvaluation(1);
 
    // Get class probabilites
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
    PyRunString("for i,p in enumerate(predict(model, vals)): output[i]=p\n",
                "Failed to get predictions");
+
+   return fOutput;
+}
+
+std::vector<Float_t> MethodPyTorch::GetAllMulticlassValues() {
+   // Check whether the model is setup
+   if (!fModelIsSetup){
+      // Setup the model and load weights
+      SetupPyTorchModel(true);
+   }
+   auto nEvents = Data()->GetNEvents();
+   InitEvaluation(nEvents);
+
+   assert (fVals.size() == fNVars*nEvents);
+   assert (fOutput.size() == fNOutputs*nEvents);
+   for (UInt_t i=0; i<nEvents; i++) {
+      Data()->SetCurrentEvent(i);
+      const TMVA::Event *e = GetEvent();
+      for (UInt_t j=0; j<fNVars; j++) {
+         fVals[j + i*fNVars] = e->GetValue(j);
+      }
+   }
+
+   // Get prediction for all events
+   PyObject* pModel = PyDict_GetItemString(fLocalNS, "model");
+   if (pModel==0) Log() << kFATAL << "Failed to get model Python object" << Endl;
+
+   PyObject* pPredict = PyDict_GetItemString(fLocalNS, "predict");
+   if (pPredict==0) Log() << kFATAL << "Failed to get Python predict function" << Endl;
+
+
+   // Using PyTorch User Defined predict function for predictions
+   PyArrayObject* pPredictions = (PyArrayObject*) PyObject_CallFunctionObjArgs(pPredict, pModel, fPyVals, NULL);
+   if (pPredictions==0) Log() << kFATAL << "Failed to get predictions" << Endl;
+
+   // Load predictions to double vector
+   float* predictionsData = (float*) PyArray_DATA(pPredictions);
+
+   std::copy(predictionsData, predictionsData+nEvents*fNOutputs, fOutput.begin());
+
+   Py_DECREF(pPredictions);
 
    return fOutput;
 }
