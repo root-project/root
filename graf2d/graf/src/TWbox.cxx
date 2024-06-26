@@ -110,11 +110,11 @@ void TWbox::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this wbox with its current attributes.
+/// Paint this wbox with its current attributes on pad
 
-void TWbox::Paint(Option_t *)
+void TWbox::PaintOn(TVirtualPad *pad, Option_t *)
 {
-   PaintWbox(fX1, fY1, fX2, fY2, GetFillColor(), fBorderSize, fBorderMode);
+   PaintWboxOn(pad, fX1, fY1, fX2, fY2, GetFillColor(), fBorderSize, fBorderMode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,22 +123,40 @@ void TWbox::Paint(Option_t *)
 void TWbox::PaintWbox(Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
                       Color_t color, Short_t bordersize, Short_t bordermode)
 {
+   if (gPad)
+      PaintWboxOn(gPad, x1, y1, x2, y2, color, bordersize, bordermode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this wbox with new coordinates on the pad
+
+void TWbox::PaintWboxOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t  y2,
+                        Color_t color, Short_t bordersize, Short_t bordermode)
+{
    // Draw first wbox as a normal filled box
-   TBox::PaintBox(x1, y1, x2, y2);
+   TBox::PaintBoxOn(pad, x1, y1, x2, y2);
 
    // then paint 3d frame (depending on bordermode)
    if (!IsTransparent())
-      PaintFrame(x1, y1, x2, y2, color, bordersize, bordermode, kTRUE);
+      PaintFrameOn(pad, x1, y1, x2, y2, color, bordersize, bordermode, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a 3D frame around a box.
 
 void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
-                       Color_t color, Short_t bordersize, Short_t bordermode,
-                       Bool_t tops)
+                       Color_t color, Short_t bordersize, Short_t bordermode, Bool_t tops)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintFrameOn(gPad, x1, y1, x2, y2, color, bordersize, bordermode, tops);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint a 3D frame around a box on the pad
+
+void TWbox::PaintFrameOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+                         Color_t color, Short_t bordersize, Short_t bordermode, Bool_t tops)
+{
    if (bordermode == 0) return;
    if (bordersize <= 0) bordersize = 2;
 
@@ -146,14 +164,14 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    Double_t xl, xt, yl, yt;
 
    // Compute real left bottom & top right of the box in pixels
-   px1 = gPad->XtoPixel(x1);   py1 = gPad->YtoPixel(y1);
-   px2 = gPad->XtoPixel(x2);   py2 = gPad->YtoPixel(y2);
+   px1 = pad->XtoPixel(x1);   py1 = pad->YtoPixel(y1);
+   px2 = pad->XtoPixel(x2);   py2 = pad->YtoPixel(y2);
    if (px1 < px2) {pxl = px1; pxt = px2; xl = x1; xt = x2; }
    else           {pxl = px2; pxt = px1; xl = x2; xt = x1;}
    if (py1 > py2) {pyl = py1; pyt = py2; yl = y1; yt = y2;}
    else           {pyl = py2; pyt = py1; yl = y2; yt = y1;}
 
-   if (!gPad->IsBatch()) {
+   if (!pad->IsBatch()) {
       TPoint frame[7];
 
       // GetDarkColor() and GetLightColor() use GetFillColor()
@@ -197,7 +215,7 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
    // Double_t dx   = (xt - xl) *Double_t(bordersize)/Double_t(pxt - pxl);
    // Int_t border = gVirtualPS->XtoPS(xt) - gVirtualPS->XtoPS(xt-dx);
 
-   gPad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
+   pad->PaintBorderPS(xl, yl, xt, yt, bordermode, bordersize,
                          GetDarkColor(), GetLightColor());
 }
 
