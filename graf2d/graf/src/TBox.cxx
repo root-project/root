@@ -667,28 +667,35 @@ void TBox::ls(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint this box with its current attributes.
 
-void TBox::Paint(Option_t *option)
+void TBox::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   if(gPad) PaintBox(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2),option);
+   PaintBoxOn(pad, pad->XtoPad(fX1), pad->YtoPad(fY1), pad->XtoPad(fX2), pad->YtoPad(fY2), option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this box with new coordinates.
+/// Paint this box with new coordinates.
 
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintBoxOn(gPad, x1, y1, x2, y2, option);
+}
 
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this box with new coordinates on specified pad.
+
+void TBox::PaintBoxOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
+{
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
 
    if (option) {
       TString opt = option;
       opt.ToLower();
-      if (opt.Contains("l")) gPad->PaintBox(x1,y1,x2,y2,"l");
-      else                   gPad->PaintBox(x1,y1,x2,y2);
+      if (opt.Contains("l")) pad->PaintBox(x1,y1,x2,y2,"l");
+      else                   pad->PaintBox(x1,y1,x2,y2);
    } else {
-      gPad->PaintBox(x1,y1,x2,y2);
+      pad->PaintBox(x1,y1,x2,y2);
    }
 }
 
