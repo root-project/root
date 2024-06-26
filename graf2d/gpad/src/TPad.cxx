@@ -3578,6 +3578,55 @@ Double_t TPad::YtoPad(Double_t y) const
    return y;
 }
 
+/////////////////////////////////////////////////////////////
+/// Returns true if custom Paint exists (or can exists) in the object
+/// Use direct check with GCC
+/// For other compilers try to guess via dictionary
+/// Only classes with dictionary and Paint defined only in TObject will allow to use PaintOn
+
+bool isCustomPaint(TObject *obj)
+{
+   if (!obj)
+      return false;
+
+#if defined(__GNUC__)
+
+   // direct check of virtual method pointer, works only with GCC
+   #pragma GCC diagnostic push
+   #pragma GCC diagnostic ignored "-Wpmf-conversions"
+   return ((void *) (obj->*(&TObject::Paint)) != (void *) (&TObject::Paint));
+   #pragma GCC diagnostic pop
+
+#else
+   static std::map<const std::type_info*, bool> sMap;
+
+   const std::type_info &info = typeid(*obj);
+
+   auto iter = sMap.find(&info);
+   if (iter != sMap.end())
+      return iter->second;
+
+   auto cl = obj->IsA();
+
+   bool res = false;
+
+   if (cl->GetTypeInfo() != &info) {
+      // type_info does not match with class - dictionary not provided
+      // We have to suppose custom Paint() and have to call it
+      res = true;
+   } else {
+      auto m = cl->GetMethodAllAny("Paint");
+      // only classes with TObject::Paint will allow to use PaintOn
+      res = !m || (m->GetClass() != TObject::Class());
+   }
+
+   sMap[&info] = res;
+   if (gDebug > 0)
+      ::Info("isCustomPaint", "Use %s:%s for painting", info.name(), res ? "Paint()" : "PaintOn");
+   return res;
+#endif
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint all primitives in pad.
 
@@ -3622,7 +3671,11 @@ void TPad::Paint(Option_t * /*option*/)
             began3DScene = kTRUE;
          }
 
-         obj->Paint(lnk->GetOption());
+         // if custom Paint method exists in the object - it will be invoked
+         if (isCustomPaint(obj))
+            obj->Paint(lnk->GetOption());
+         else
+            obj->PaintOn(this, lnk->GetOption());
          lnk = lnk->Next();
       }
    }
@@ -3869,7 +3922,11 @@ void TPad::PaintModified()
                began3DScene = kTRUE;
             }
 
-            obj->Paint(lnk->GetOption());
+            // if custom Paint method exists in the object - it will be invoked
+            if (isCustomPaint(obj))
+               obj->Paint(lnk->GetOption());
+            else
+               obj->PaintOn(this, lnk->GetOption());
          }
          lnk = lnk->Next();
       }
