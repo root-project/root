@@ -503,15 +503,12 @@ TEST(ONNX, Elu)
          EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
       }
    }
-   
+
 TEST(ONNX, Constant)
 {
    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
 
    // Preparing the standard  input (none for Constant Op)
-   // std::vector<float> input({
-   //    1,2,3,4
-   // });
 
    TMVA_SOFIE_Constant::Session s("Constant_FromONNX.dat");
 

@@ -107,9 +107,6 @@ public:
       // find shape of Y and add it in the list of intermediate tensors
       fShapeY = ShapeInference({fShapeX})[0];
       model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
-
-      //std::cout << "Reduce operator - axis = " << fAttrAxes[0] << " shape x " << ConvertShapeToString(fShapeX)
-      //          << " output shape " << ConvertShapeToString(fShapeY) << std::endl;
    }
 
    std::string Generate(std::string OpName){
