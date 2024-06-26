@@ -65,6 +65,9 @@ protected:
    void AMinusB(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
    void AMinusB(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
+   void conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs, const TMatrixTSparse<Element> &rhs,
+                                                bool sortedInsertion = true);
+
    Int_t ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data);
 
 public:

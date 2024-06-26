@@ -123,7 +123,8 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lw
 /// Space is allocated for row/column indices and data. Sparse row/column index
 /// structure together with data is coming from the arrays, row, col and data, resp.
 /// Here row, col and data are arrays of length nr (number of nonzero elements), i.e.
-/// the matrix is stored in COO (coordinate) format.
+/// the matrix is stored in COO (coordinate) format. Note that the input arrays are
+/// not passed as const since they will be modified !
 
 template<class Element>
 TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,
@@ -264,7 +265,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
       case kAtA:
       {
          const TMatrixTSparse<Element> at(TMatrixTSparse<Element>::kTransposed,prototype);
-         AMultBt(at,at,1);
+         conservative_sparse_sparse_product_impl(prototype, at);
          break;
       }
 
@@ -534,6 +535,149 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
       if (icol < acoln || icol >= acoln+nr) continue;
        v[icol-acoln] = pData[index];
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// General Sparse Matrix Multiplication (SpMM). This code is an adaptation of
+/// Eigen SpMM implementation. This product is conservative, meaning that it
+/// preserves the symbolic non zeros.
+
+template <class Element>
+void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs,
+                                                                      const TMatrixTSparse<Element> &rhs,
+                                                                      bool sortedInsertion)
+{
+   if (gMatrixCheck) {
+      R__ASSERT(lhs.IsValid());
+      R__ASSERT(rhs.IsValid());
+
+      if (lhs.GetNcols() != rhs.GetNrows() || lhs.GetColLwb() != rhs.GetRowLwb()) {
+         Error("conservative_sparse_sparse_product_impl", "lhs and rhs columns incompatible");
+         return;
+      }
+   }
+
+   // we fake the storage order.
+   Int_t rows = lhs.GetNrows();
+   Int_t cols = rhs.GetNcols();
+
+   bool mask[rows];
+   Element values[rows];
+   Int_t indices[rows];
+
+   memset(mask, 0, sizeof(bool) * rows);
+   memset(values, 0, sizeof(Element) * rows);
+   memset(indices, 0, sizeof(Int_t) * rows);
+
+   const Int_t *pRowIndexlhs = lhs.GetRowIndexArray();
+   const Int_t *pRowIndexrhs = rhs.GetRowIndexArray();
+   const Int_t *lhsCol = lhs.GetColIndexArray();
+   const Int_t *rhsCol = rhs.GetColIndexArray();
+   const Element *lhsVal = lhs.GetMatrixArray();
+   const Element *rhsVal = rhs.GetMatrixArray();
+
+   // compute the number of non zero entries
+   Int_t estimated_nnz_prod = 0;
+   for (Int_t j = 0; j < cols; ++j) {
+      Int_t nnz = 0;
+      for (Int_t l = pRowIndexrhs[j]; l < pRowIndexrhs[j + 1]; ++l) {
+         Int_t k = *(rhsCol + l);
+         for (Int_t m = pRowIndexlhs[k]; m < pRowIndexlhs[k + 1]; ++m) {
+            Int_t i = *(lhsCol + m);
+            if (!mask[i]) {
+               mask[i] = true;
+               ++nnz;
+            }
+         }
+      }
+      estimated_nnz_prod += nnz;
+      std::memset(mask, false, sizeof(bool) * rows);
+   }
+
+   const Int_t nc = estimated_nnz_prod; // rows*cols;
+
+   Allocate(lhs.GetNrows(), rhs.GetNcols(), lhs.GetRowLwb(), rhs.GetColLwb(), 1, nc);
+
+   Int_t *resEval = this->GetRowIndexArray();
+   Int_t *resCol = this->GetColIndexArray();
+   Element *resVal = this->GetMatrixArray();
+
+   // we compute each column of the result, one after the other
+   for (Int_t j = 0; j < cols; ++j) {
+      Int_t nnz = 0;
+      for (Int_t l = pRowIndexrhs[j]; l < pRowIndexrhs[j + 1]; ++l) {
+         double y = *(rhsVal + l);
+         Int_t k = *(rhsCol + l);
+         for (Int_t m = pRowIndexlhs[k]; m < pRowIndexlhs[k + 1]; ++m) {
+            Int_t i = *(lhsCol + m);
+            double x = *(lhsVal + m);
+            if (!mask[i]) {
+               mask[i] = true;
+               values[i] = x * y;
+               indices[nnz] = i;
+               ++nnz;
+            } else
+               values[i] += x * y;
+         }
+      }
+      if (!sortedInsertion) {
+         // unordered insertion
+         Int_t startj = resEval[j];
+         for (Int_t k = 0; k < nnz; ++k) {
+            Int_t i = indices[k];
+            resCol[startj + k] = i;
+            resVal[startj + k] = values[i];
+            mask[i] = false;
+         }
+         resEval[j + 1] = resEval[j] + nnz;
+      } else {
+         // alternative ordered insertion code:
+         const Int_t t200 = rows / 11; // 11 == (log2(200)*1.39)
+         const Int_t t = (rows * 100) / 139;
+
+         // FIXME reserve nnz non zeros
+         // FIXME implement faster sorting algorithms for very small nnz
+         // if the result is sparse enough => use a quick sort
+         // otherwise => loop through the entire vector
+         // In order to avoid to perform an expensive log2 when the
+         // result is clearly very sparse we use a linear bound up to 200.
+         if ((nnz < 200 && nnz < t200) || nnz * TMath::Log2(int(nnz)) < t) {
+            if (nnz > 1)
+               std::sort(indices, indices + nnz);
+            resEval[j + 1] = resEval[j];
+            for (Int_t k = 0; k < nnz; ++k) {
+               Int_t i = indices[k];
+               // res.insertBackByOuterInner(j, i) = values[i];
+               //  eigen_assert(Index(m_outerIndex[j + 1]) == m_data.size() && "Invalid ordered insertion (invalid outer
+               //  index)"); eigen_assert((resEval[j + 1] - resEval[j] == 0 || m_data.index(m_data.size() - 1) < inner)
+               //  &&
+               //               "Invalid ordered insertion (invalid inner index)");
+               Int_t p = resEval[j + 1];
+               ++resEval[j + 1];
+               resCol[p] = i;
+               resVal[p] = values[i];
+               mask[i] = false;
+            }
+         } else {
+            // dense path
+            resEval[j + 1] = resEval[j];
+            for (Int_t i = 0; i < rows; ++i) {
+               if (mask[i]) {
+                  mask[i] = false;
+                  // res.insertBackByOuterInner(j, i) = values[i];
+                  Int_t p = resEval[j + 1];
+                  ++resEval[j + 1];
+                  resCol[p] = i;
+                  resVal[p] = values[i];
+               }
+            }
+         }
+      }
+   }
+
+   this->fNelems = resEval[rows];
+
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
