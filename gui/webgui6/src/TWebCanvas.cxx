@@ -870,6 +870,18 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          THStack *hs = static_cast<THStack *>(obj);
 
+         TString hopt = iter.GetOption();
+         hopt.ToLower();
+         if (!hopt.Contains("nostack") && !hopt.Contains("candle") && !hopt.Contains("violin") && !hopt.Contains("pads")) {
+            if (!IsReadOnly() && !fUsedObjs[hs]) {
+               hs->Modified();
+               fUsedObjs[hs] = true;
+            }
+            auto arr = hs->GetStack();
+            arr->SetName(hs->GetName()); // mark list
+            paddata.NewPrimitive(arr, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, arr);
+         }
+
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
 
          first_obj = hs->GetNhists() > 0; // real drawing only if there are histograms
@@ -996,6 +1008,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
       fAllPads[n]->fPrimitives = all_primitives[n];
    }
    fAllPads.clear();
+   fUsedObjs.clear();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
