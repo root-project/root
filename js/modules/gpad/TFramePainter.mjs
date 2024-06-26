@@ -2556,9 +2556,10 @@ class TFramePainter extends ObjectPainter {
      * @desc It could be appended to the histogram menus */
    fillContextMenu(menu, kind, obj) {
       const main = this.getMainPainter(true),
-          pp = this.getPadPainter(),
-          pad = pp?.getRootPad(true),
-          is_pal = kind === 'pal';
+            wrk = main?.$stack_hist ? main.getPrimary() : main,
+            pp = this.getPadPainter(),
+            pad = pp?.getRootPad(true),
+            is_pal = kind === 'pal';
 
       if (is_pal) kind = 'z';
 
@@ -2583,19 +2584,17 @@ class TFramePainter extends ObjectPainter {
             });
          });
          menu.add('Unzoom', () => this.unzoom(kind));
-         if (handle?.value_axis && main) {
+         if (handle?.value_axis && isFunc(wrk?.accessMM)) {
             menu.add('Minimum', () => {
-               menu.input(`Enter minimum value or ${kNoZoom} as default`, main.options.minimum, 'float').then(v => {
-                  main.options.minimum = v;
+               menu.input(`Enter minimum value or ${kNoZoom} as default`, wrk.accessMM(true), 'float').then(v => {
                   this[`zoom_${kind}min`] = this[`zoom_${kind}max`] = undefined;
-                  main.interactiveRedraw('pad', `exec:SetMinimum(${v})`);
+                  wrk.accessMM(true, v);
                });
             });
             menu.add('Maximum', () => {
-               menu.input(`Enter maximum value or ${kNoZoom} as default`, main.options.maximum, 'float').then(v => {
-                  main.options.maximum = v;
+               menu.input(`Enter maximum value or ${kNoZoom} as default`, wrk.accessMM(false), 'float').then(v => {
                   this[`zoom_${kind}min`] = this[`zoom_${kind}max`] = undefined;
-                  main.interactiveRedraw('pad', `exec:SetMaximum(${v})`);
+                  wrk.accessMM(false, v);
                });
             });
          }

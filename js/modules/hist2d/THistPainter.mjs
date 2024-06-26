@@ -1162,6 +1162,18 @@ class THistPainter extends ObjectPainter {
       return true;
    }
 
+   /** @summary Access or modify histogram min/max
+    * @private */
+   accessMM(ismin, v) {
+      const name = ismin ? 'minimum' : 'maximum';
+      if (v === undefined)
+         return this.options[name];
+
+      this.options[name] = v;
+
+      this.interactiveRedraw('pad', ismin ? `exec:SetMinimum(${v})` : `exec:SetMaximum(${v})`);
+   }
+
    /** @summary Extract axes bins and ranges
      * @desc here functions are defined to convert index to axis value and back
      * was introduced to support non-equidistant bins */

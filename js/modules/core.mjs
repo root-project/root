@@ -4,7 +4,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '25/06/2024',
+version_date = '26/06/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1074,6 +1074,9 @@ function create(typename, target) {
       case clTList:
       case clTHashList:
          extend(obj, { name: typename, arr: [], opt: [] });
+         break;
+      case clTObjArray:
+         extend(obj, { name: typename, arr: [] });
          break;
       case clTAttAxis:
          extend(obj, { fNdivisions: 510, fAxisColor: 1,
