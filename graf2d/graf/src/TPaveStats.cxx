@@ -320,12 +320,12 @@ void TPaveStats::SetStatFormat(const char *form)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint the pave stat.
+/// Paint the pave stat on the pad
 
-void TPaveStats::Paint(Option_t *option)
+void TPaveStats::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   TPave::ConvertNDCtoPad();
-   TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
+   TPave::ConvertNDCto(pad);
+   TPave::PaintPaveOn(pad, fX1, fY1, fX2, fY2, GetBorderSize(), option);
 
    if (!fLines) return;
    TString typolabel;
@@ -341,8 +341,8 @@ void TPaveStats::Paint(Option_t *option)
    Int_t print_name = fOptStat%10;
 
    // Evaluate text size as a function of the number of lines
-   Double_t y1       = gPad->GetY1();
-   Double_t y2       = gPad->GetY2();
+   Double_t y1       = pad->GetY1();
+   Double_t y2       = pad->GetY2();
    Float_t margin    = fMargin*dx;
    Double_t yspace   = dy/Double_t(nlines);
    Double_t textsave = textsize;
@@ -442,9 +442,9 @@ void TPaveStats::Paint(Option_t *option)
             Double_t yline2 = ytext-yspace/2.;
             Double_t xline1 = dx/3+x1ref;
             Double_t xline2 = 2*dx/3+x1ref;
-            gPad->PaintLine(x1ref,yline1,x2ref,yline1);
-            gPad->PaintLine(xline1,yline1,xline1,yline2);
-            gPad->PaintLine(xline2,yline1,xline2,yline2);
+            pad->PaintLine(x1ref,yline1,x2ref,yline1);
+            pad->PaintLine(xline1,yline1,xline1,yline2);
+            pad->PaintLine(xline2,yline1,xline2,yline2);
             st = strtok(sl, "|");
             Int_t theIndex = 0;
             while ( st ) {
@@ -468,7 +468,7 @@ void TPaveStats::Paint(Option_t *option)
             latex->PaintLatex(xtext,ytext,latex->GetTextAngle(),
                                           titlesize,
                                           sl);
-            gPad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
+            pad->PaintLine(x1ref,y2ref-yspace,x2ref,y2ref-yspace);
          }
          delete [] sl;
 
@@ -485,7 +485,7 @@ void TPaveStats::Paint(Option_t *option)
    // if a label create & paint a pavetext title
    if (fLabel.Length() > 0) {
       Double_t x1,x2;
-      dy = gPad->GetY2() - gPad->GetY1();
+      dy = pad->GetY2() - pad->GetY1();
       x1 = x1ref + 0.25*dx;
       x2 = x2ref - 0.25*dx;
       y1 = y2ref - 0.02*dy;

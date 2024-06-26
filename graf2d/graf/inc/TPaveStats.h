@@ -37,7 +37,7 @@ public:
    Int_t            GetOptFit() const;
    Int_t            GetOptStat() const;
    TObject         *GetParent() const override { return fParent; }
-   void             Paint(Option_t *option="") override;
+   void             PaintOn(TVirtualPad *pad, Option_t *option="") override;
    void             InsertText(const char *) override { }
    void             InsertLine() override { }
    void             ReadFile(const char *, Option_t *, Int_t, Int_t) override {}
