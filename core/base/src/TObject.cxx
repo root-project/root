@@ -603,9 +603,21 @@ Bool_t TObject::Notify()
 /// redrawn). While paint just draws the object without adding it to
 /// the pad display list.
 
-void TObject::Paint(Option_t *)
+void TObject::Paint(Option_t *opt)
 {
-   // AbstractMethod("Paint");
+   if (gPad)
+      PaintOn(gPad, opt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// This is new method for object painting.
+/// It provides pad where object should be painted as first argument
+/// One should provide implementation in derived classes.
+/// To add object to the pad or canvas, one should use TPad::Add() method.
+/// For backward compatibility old Paint() method is invoked when it still exists in derived class
+
+void TObject::PaintOn(TVirtualPad *, Option_t *)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////////////
