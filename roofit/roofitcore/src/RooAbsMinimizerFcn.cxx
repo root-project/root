@@ -83,8 +83,8 @@ RooAbsMinimizerFcn::RooAbsMinimizerFcn(const RooAbsMinimizerFcn &other)
      _evalCounter(other._evalCounter),
      _nDim(other._nDim),
      _optConst(other._optConst),
-     _floatParamList(new RooArgList(*other._floatParamList)),
-     _constParamList(new RooArgList(*other._constParamList)),
+     _floatParamList(std::make_unique<RooArgList>(*other._floatParamList)),
+     _constParamList(std::make_unique<RooArgList>(*other._constParamList)),
      _initFloatParamList(std::make_unique<RooArgList>()),
      _initConstParamList(std::make_unique<RooArgList>()),
      _logfile(other._logfile)

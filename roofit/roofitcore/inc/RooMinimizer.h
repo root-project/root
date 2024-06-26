@@ -39,13 +39,11 @@ class RooRealVar;
 class RooArgSet;
 class RooPlot;
 class RooDataSet;
-#ifdef ROOFIT_MULTIPROCESS
 namespace RooFit {
 namespace TestStatistics {
 class LikelihoodGradientJob;
 }
 } // namespace RooFit
-#endif // ROOFIT_MULTIPROCESS
 
 class RooMinimizer : public TObject {
 public:
@@ -163,9 +161,7 @@ public:
 private:
    friend class RooAbsMinimizerFcn;
    friend class RooMinimizerFcn;
-#ifdef ROOFIT_MULTIPROCESS
    friend class RooFit::TestStatistics::LikelihoodGradientJob;
-#endif // ROOFIT_MULTIPROCESS
 
    std::unique_ptr<RooAbsReal::EvalErrorContext> makeEvalErrorContext() const;
 
