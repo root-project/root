@@ -313,7 +313,8 @@ TEST_F(RPageStorageDaos, Checksum)
 
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");
-      EXPECT_THROW(viewPy(0), RException); // we run under IMT, even the valid column should fail
+      auto viewPz = reader->GetView<float>("pz");
+      EXPECT_THROW(viewPz(0), RException); // we run under IMT, even the valid column should fail
    }
 
    auto reader = RNTupleReader::Open("ntpl", daosUri);
@@ -321,16 +322,20 @@ TEST_F(RPageStorageDaos, Checksum)
 
    auto viewPx = reader->GetView<float>("px");
    auto viewPy = reader->GetView<float>("py");
+   auto viewPz = reader->GetView<float>("pz");
    EXPECT_THROW(viewPx(0), RException);
-   EXPECT_FLOAT_EQ(2.0, viewPy(0));
+   EXPECT_THROW(viewPy(0), RException);
+   EXPECT_FLOAT_EQ(3.0, viewPz(0));
 
    DescriptorId_t pxColId;
+   DescriptorId_t pyColId;
    DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", daosUri);
    pageSource->Attach();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
+      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
    RClusterIndex index{clusterId, 0};
@@ -340,5 +345,6 @@ TEST_F(RPageStorageDaos, Checksum)
    unsigned char buffer[bufSize];
    sealedPage.SetBuffer(buffer);
    EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), RException);
 }
 #endif

@@ -17,8 +17,10 @@ TEST(RNTupleChecksum, VerifyOnRead)
 
       auto viewPx = reader->GetView<float>("px");
       auto viewPy = reader->GetView<float>("py");
+      auto viewPz = reader->GetView<float>("pz");
       EXPECT_THROW(viewPx(0), RException);
-      EXPECT_FLOAT_EQ(2.0, viewPy(0));
+      EXPECT_THROW(viewPy(0), RException);
+      EXPECT_FLOAT_EQ(3.0, viewPz(0));
    }
 }
 
@@ -38,9 +40,10 @@ TEST(RNTupleChecksum, VerifyOnReadImt)
 
    auto viewPx = reader->GetView<float>("px");
    auto viewPy = reader->GetView<float>("py");
+   auto viewPz = reader->GetView<float>("pz");
    try {
-      viewPy(0);
-      FAIL() << "now even reading py should fail because pages are unsealed in parallel";
+      viewPz(0);
+      FAIL() << "now even reading pz should fail because pages are unsealed in parallel";
    } catch (const RException &e) {
       EXPECT_THAT(e.what(), testing::HasSubstr("page checksum"));
    }
@@ -56,6 +59,7 @@ TEST(RNTupleChecksum, VerifyOnLoad)
    RPageStorage::RSealedPage sealedPage;
    DescriptorId_t pxColId;
    DescriptorId_t pyColId;
+   DescriptorId_t pzColId;
    DescriptorId_t clusterId;
    auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
    pageSource->Attach();
@@ -63,19 +67,21 @@ TEST(RNTupleChecksum, VerifyOnLoad)
       auto descGuard = pageSource->GetSharedDescriptorGuard();
       pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
       pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0);
+      pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
    RClusterIndex index{clusterId, 0};
 
    constexpr std::size_t bufSize = 12;
-   pageSource->LoadSealedPage(pyColId, index, sealedPage);
+   pageSource->LoadSealedPage(pzColId, index, sealedPage);
    EXPECT_EQ(bufSize, sealedPage.GetBufferSize());
    unsigned char buffer[bufSize];
    sealedPage.SetBuffer(buffer);
    // no exception
-   pageSource->LoadSealedPage(pyColId, index, sealedPage);
+   pageSource->LoadSealedPage(pzColId, index, sealedPage);
 
    EXPECT_THROW(pageSource->LoadSealedPage(pxColId, index, sealedPage), RException);
+   EXPECT_THROW(pageSource->LoadSealedPage(pyColId, index, sealedPage), RException);
 }
 
 TEST(RNTupleChecksum, OmitPageChecksum)
@@ -124,8 +130,9 @@ TEST(RNTupleChecksum, Merge)
 
    {
       auto model = RNTupleModel::Create();
-      auto ptrPx = model->MakeField<float>("px", 3.0);
-      auto ptrPy = model->MakeField<float>("py", 4.0);
+      auto ptrPx = model->MakeField<float>("px", 4.0);
+      auto ptrPy = model->MakeField<float>("py", 5.0);
+      auto ptrPz = model->MakeField<float>("pz", 6.0);
       auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
       writer->Fill();
    }
