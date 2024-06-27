@@ -783,7 +783,7 @@ TEST(RPageStorageFile, MultiKeyBlob_ExactlyMax)
       auto reader = RMiniFileReader{rawFile.get()};
       // Force reader to read the max key size
       (void)reader.GetNTuple("ntpl");
-      reader.ReadBuffer(data.get(), dataSize, blobOffset);
+      rawFile->ReadAt(data.get(), dataSize, blobOffset);
 
       // If we didn't split the key, we expect to find all zeroes at the end of `data`.
       // Otherwise we will have some non-zero bytes, since it will host the next chunk offset.
@@ -831,9 +831,11 @@ TEST(RPageStorageFile, MultiKeyBlob_TooManyChunks)
 {
    // Try writing more than the max possible number of chunks for a split key and verify it fails
 
+#ifdef GTEST_FLAG_SET
    // Death tests must run single-threaded:
    // https://github.com/google/googletest/blob/main/docs/advanced.md#death-tests-and-threads
    GTEST_FLAG_SET(death_test_style, "threadsafe");
+#endif
 
    FileRaii fileGuard("test_ntuple_storage_multi_key_blob_small_key.root");
 

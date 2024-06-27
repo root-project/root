@@ -24,8 +24,6 @@
 #include <ROOT/RPagePool.hxx>
 #include <ROOT/RPageSinkBuf.hxx>
 #include <ROOT/RPageStorageFile.hxx>
-#include <memory>
-#include <string_view>
 #ifdef R__ENABLE_DAOS
 # include <ROOT/RPageStorageDaos.hxx>
 #endif
@@ -35,6 +33,9 @@
 
 #include <atomic>
 #include <utility>
+#include <memory>
+#include <string_view>
+#include <cassert>
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
 
