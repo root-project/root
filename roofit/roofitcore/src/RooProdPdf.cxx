@@ -2369,6 +2369,15 @@ public:
       _prodPdf->doEvalImpl(this, *_cache, ctx);
    }
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override
+   {
+      if (_cache->_isRearranged) {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::ratio", *_cache->_rearrangedNum, *_cache->_rearrangedDen));
+      } else {
+         ctx.addResult(this, ctx.buildCall("RooFit::Detail::MathFuncs::product", _cache->_partList, _cache->_partList.size()));
+      }
+   }
+
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
    double expectedEvents(const RooArgSet * /*nset*/) const override { return _prodPdf->expectedEvents(&_normSet); }
    std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
