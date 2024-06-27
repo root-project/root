@@ -176,8 +176,12 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_
 {
    Int_t n = row_upb - row_lwb + 1;
    Int_t nr = rowptr[n];
-   if (n <= 0 || nr <= 0) {
+   if (n <= 0 || nr < 0) {
       Error("TMatrixTSparse", "Inconsistency in row indices");
+   }
+   if (nr == 0) {
+      Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr);
+      return;
    }
    const Int_t icolmin = TMath::LocMin(nr, col);
    const Int_t icolmax = TMath::LocMax(nr, col);
@@ -198,6 +202,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_
    memcpy(fElements, data, this->fNelems * sizeof(Element));
    memcpy(fRowIndex, rowptr, this->fNrowIndex * sizeof(Int_t));
    memcpy(fColIndex, col, this->fNelems * sizeof(Int_t));
+   return;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
