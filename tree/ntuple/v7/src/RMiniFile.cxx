@@ -1251,13 +1251,16 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
       uint8_t *bufCur = reinterpret_cast<uint8_t *>(buffer);
 
       // Read first chunk
-      nread = fRawFile->ReadAt(bufCur, nbytesFirstChunk, offset);
-      R__ASSERT(nread == nbytesFirstChunk);
-      bufCur += nread;
+      nread = fRawFile->ReadAt(bufCur, fMaxBlobSize, offset);
+      R__ASSERT(nread == fMaxBlobSize);
+      // NOTE: we read the entire chunk in `bufCur`, but we only advance the pointer by `nbytesFirstChunk`,
+      // since the last part of `bufCur` will later be overwritten by the next chunk's payload.
+      // We do this to avoid a second ReadAt to read in the chunk offsets.
+      bufCur += nbytesFirstChunk;
+      nread -= nbytesChunkOffsets;
 
       const auto chunkOffsets = std::make_unique<std::uint64_t[]>(nChunks - 1);
-      auto chunkOffsetBytesRead = fRawFile->ReadAt(chunkOffsets.get(), nbytesChunkOffsets, offset + nbytesFirstChunk);
-      R__ASSERT(chunkOffsetBytesRead == nbytesChunkOffsets);
+      memcpy(chunkOffsets.get(), bufCur, nbytesChunkOffsets);
 
       size_t remainingBytes = nbytes - nbytesFirstChunk;
       std::uint64_t *curChunkOffset = &chunkOffsets[0];
@@ -1271,10 +1274,10 @@ void ROOT::Experimental::Internal::RMiniFileReader::ReadBuffer(void *buffer, siz
          // Ensure we don't read outside of the buffer
          R__ASSERT(static_cast<size_t>(bufCur - reinterpret_cast<uint8_t *>(buffer)) <= nbytes - bytesToRead);
 
-         chunkOffsetBytesRead = fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
-         R__ASSERT(chunkOffsetBytesRead == bytesToRead);
+         auto nbytesRead = fRawFile->ReadAt(bufCur, bytesToRead, chunkOffset);
+         R__ASSERT(nbytesRead == bytesToRead);
 
-         nread += chunkOffsetBytesRead;
+         nread += bytesToRead;
          bufCur += bytesToRead;
          remainingBytes -= bytesToRead;
       } while (remainingBytes > 0);
