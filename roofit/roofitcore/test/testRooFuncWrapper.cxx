@@ -239,6 +239,10 @@ TEST_P(FactoryTest, NLLFit)
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Cpu());
    std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, RooFit::EvalBackend::Codegen());
 
+   // We don't use the RooFit::Evaluator for the nominal likelihood. Like this,
+   // we make sure to validate also the NLL values of the generated code.
+   static_cast<RooFit::Experimental::RooFuncWrapper &>(*nllFunc).disableEvaluator();
+
    double tol = _params._fitResultTolerance;
 
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), tol);
@@ -585,8 +589,7 @@ FactoryTestParams param13{"RooFormulaVar",
                           /*randomizeParameters=*/false};
 
 // Test for the uniform pdf. Since it doesn't depend on any parameters, we need
-// to add it with some other model like a Gaussian to get a meaningful model to
-// fit.
+// to add it to some other model like a Gaussian to get a meaningful fit model.
 FactoryTestParams param14{"Uniform",
                           [](RooWorkspace &ws) {
                              ws.factory("Gaussian::sig(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");

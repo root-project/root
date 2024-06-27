@@ -32,9 +32,9 @@ namespace Experimental {
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &obj, const RooAbsData *data,
                                RooSimultaneous const *simPdf, bool useEvaluator)
-   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
+   : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}, _useEvaluator{useEvaluator}
 {
-   if (useEvaluator) {
+   if (_useEvaluator) {
       _absReal = std::make_unique<RooEvaluatorWrapper>(obj, const_cast<RooAbsData *>(data), false, "", simPdf, false);
    }
 
@@ -194,7 +194,7 @@ void RooFuncWrapper::updateGradientVarBuffer() const
 
 double RooFuncWrapper::evaluate() const
 {
-   if (_absReal)
+   if (_useEvaluator)
       return _absReal->getVal();
    updateGradientVarBuffer();
 
