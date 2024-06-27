@@ -334,15 +334,17 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 
    auto desc = fDescriptorBuilder.MoveDescriptor();
 
+   std::vector<unsigned char> buffer;
    for (const auto &cgDesc : desc.GetClusterGroupIterable()) {
-      auto buffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLength());
-      auto zipBuffer = std::make_unique<unsigned char[]>(cgDesc.GetPageListLocator().fBytesOnStorage);
-      fReader.ReadBuffer(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+      buffer.resize(
+         std::max<size_t>(buffer.size(), cgDesc.GetPageListLength() + cgDesc.GetPageListLocator().fBytesOnStorage));
+      auto *zipBuffer = buffer.data() + cgDesc.GetPageListLength();
+      fReader.ReadBuffer(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage,
                          cgDesc.GetPageListLocator().GetPosition<std::uint64_t>());
-      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.get());
+      fDecompressor->Unzip(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                           buffer.data());
 
-      RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
+      RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
 
    // For the page reads, we rely on the I/O scheduler to define the read requests
@@ -548,6 +550,8 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    // memory consumption, device block size.
    float maxOverhead = 0.25 * float(activeSize);
    std::vector<std::size_t> gaps;
+   if (onDiskPages.size())
+      gaps.reserve(onDiskPages.size() - 1);
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
       gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
    }
@@ -629,6 +633,7 @@ ROOT::Experimental::Internal::RPageSourceFile::LoadClusters(std::span<RCluster::
    std::vector<std::unique_ptr<ROOT::Experimental::Internal::RCluster>> clusters;
    std::vector<ROOT::Internal::RRawFile::RIOVec> readRequests;
 
+   clusters.reserve(clusterKeys.size());
    for (auto key : clusterKeys) {
       clusters.emplace_back(PrepareSingleCluster(key, readRequests));
    }
