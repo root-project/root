@@ -76,6 +76,10 @@ public:
       AddInitializedTensor(tensor_name, type, shape, data);
    }
 
+   // set a flag to indicate tensor does not need to be written in a weight file
+   // (e.g. shape tensors used as input to define a shape (in Reshape))
+   void SetNotWritableInitializedTensor(const std::string & tensor_name);
+
    // Check if a tensor is initialized
    bool IsInitializedTensor(const std::string &name) const;
    bool IsDynamicTensor(const std::string &name) const;
