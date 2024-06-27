@@ -100,7 +100,7 @@ public:
    void setVerbose(bool flag = true) { _cfg.verbose = flag; }
    bool setLogFile(const char *logf = nullptr);
 
-   int migrad();
+   int migrad(bool seedingOnly);
    int hesse();
    int minos();
    int minos(const RooArgSet &minosParamList);

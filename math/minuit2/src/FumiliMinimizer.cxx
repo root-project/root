@@ -32,7 +32,7 @@ namespace Minuit2 {
 // for Fumili implement Minimize here because need downcast
 
 FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParameterState &st,
-                                          const MnStrategy &strategy, unsigned int maxfcn, double toler) const
+                                          const MnStrategy &strategy, unsigned int maxfcn, double toler, bool seedingOnly) const
 {
    // Minimize using Fumili. Create seed and Fumili gradient calculator.
    // The FCNBase passed must be a FumiliFCNBase type otherwise method will fail !
