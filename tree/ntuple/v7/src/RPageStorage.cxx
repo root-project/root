@@ -471,7 +471,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 ROOT::Experimental::Internal::RPageStorage::RSealedPage
 ROOT::Experimental::Internal::RPageSink::SealPage(const RPage &page, const RColumnElementBase &element)
 {
-   const auto nBytes = page.GetNBytes() + GetWriteOptions().GetCompression() * kNBytesPageChecksum;
+   const auto nBytes = page.GetNBytes() + GetWriteOptions().GetEnablePageChecksums() * kNBytesPageChecksum;
    if (fSealPageBuffer.size() < nBytes)
       fSealPageBuffer.resize(nBytes);
 
