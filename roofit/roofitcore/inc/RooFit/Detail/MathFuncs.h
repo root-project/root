@@ -90,6 +90,15 @@ inline double gaussian(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
+inline double product(double const *factors, std::size_t nFactors)
+{
+   double out = 1.0;
+   for (std::size_t i = 0; i < nFactors; ++i) {
+      out *= factors[i];
+   }
+   return out;
+}
+
 // RooRatio evaluate function.
 inline double ratio(double numerator, double denominator)
 {
