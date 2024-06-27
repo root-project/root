@@ -64,7 +64,9 @@ private:
    std::uint64_t fNBytesCurrentCluster = 0;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage);
+   /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
+   /// key. It is not strictly necessary to write and read the sealed page.
+   RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
 
 protected:
    using RPagePersistentSink::InitImpl;
