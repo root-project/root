@@ -92,7 +92,7 @@ PyTypeObject InstanceArrayIter_Type = {
     sizeof(ia_iterobject),        // tp_basicsize
     0,
     (destructor)PyObject_GC_Del,  // tp_dealloc
-    0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0,
     &ia_as_mapping,               // tp_as_mapping
     0, 0, 0, 0, 0, 0,
     Py_TPFLAGS_DEFAULT |

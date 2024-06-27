@@ -182,6 +182,39 @@ bool CPyCppyy::Instance_CheckExact(PyObject* pyobject)
 }
 
 //-----------------------------------------------------------------------------
+bool CPyCppyy::Sequence_Check(PyObject* pyobject)
+{
+// Extends on PySequence_Check() to determine whether an object can be iterated
+// over (technically, all objects can b/c of C++ pointer arithmetic, hence this
+// check isn't 100% accurate, but neither is PySequence_Check()).
+
+// Note: simply having the iterator protocol does not constitute a sequence, bc
+// PySequence_GetItem() would fail.
+
+// default to PySequence_Check() if called with a non-C++ object
+    if (!CPPInstance_Check(pyobject))
+        return (bool)PySequence_Check(pyobject);
+
+// all C++ objects should have sq_item defined, but a user-derived class may
+// have deleted it, in which case this is not a sequence
+    PyTypeObject* t = Py_TYPE(pyobject);
+    if (!t->tp_as_sequence || !t->tp_as_sequence->sq_item)
+        return false;
+
+// if this is the default getitem, it is only a sequence if it's an array type
+    if (t->tp_as_sequence->sq_item == CPPInstance_Type.tp_as_sequence->sq_item) {
+        if (((CPPInstance*)pyobject)->fFlags & CPPInstance::kIsArray)
+            return true;
+        return false;
+    }
+
+// TODO: could additionally verify whether __len__ is supported and/or whether
+// operator()[] takes an int argument type
+
+    return true;
+}
+
+//-----------------------------------------------------------------------------
 bool CPyCppyy::Instance_IsLively(PyObject* pyobject)
 {
 // Test whether the given instance can safely return to C++

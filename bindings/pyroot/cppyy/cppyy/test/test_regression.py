@@ -1289,3 +1289,49 @@ class TestREGRESSION:
 
         obj.smethod("one", "two")
         obj.smethod("one")        # used to fail with vectorcall
+
+    def test44_heuristic_mem_policy(self):
+        """Ownership of arguments with heuristic memory policy"""
+
+        import cppyy
+
+        cppyy.cppdef("""\
+        namespace MemTester {
+           void CallRef( std::string&) {}
+           void CallConstRef( const std::string&) {}
+           void CallPtr( std::string*) {}
+           void CallConstPtr( const std::string*) {}
+        };
+        """)
+
+        try:
+            # The scope with the heuristic memory policy is in a try-except-finally block
+            # to ensure the memory policy is always reset.
+            old_memory_policy = cppyy._backend.SetMemoryPolicy(cppyy._backend.kMemoryHeuristics)
+
+            # Validate the intended behavior for different argument types:
+            #   const ref : caller keeps ownership
+            #   const ptr : caller keeps ownership
+            #   ref       : caller keeps ownership
+            #   ptr       : caller passed ownership to callee
+
+            # The actual type doesn't matter
+            args = [cppyy.gbl.std.string() for i in range(4)]
+
+            cppyy.gbl.MemTester.CallConstRef(args[0])
+            assert args[0].__python_owns__
+
+            cppyy.gbl.MemTester.CallConstPtr(args[1])
+            assert args[1].__python_owns__
+
+            cppyy.gbl.MemTester.CallRef(args[2])
+            assert args[2].__python_owns__
+
+            cppyy.gbl.MemTester.CallPtr(args[3])
+            assert not args[3].__python_owns__
+            # Let's give back the ownership to Python here so there is no leak
+            cppyy._backend.SetOwnership(args[3], True)
+        except:
+            raise # rethrow the exception
+        finally:
+            cppyy._backend.SetMemoryPolicy(old_memory_policy)
