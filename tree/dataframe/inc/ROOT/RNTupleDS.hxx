@@ -22,9 +22,12 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <string_view>
 
+#include <condition_variable>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <thread>
 #include <vector>
 #include <unordered_map>
 
@@ -53,16 +56,25 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
       ULong64_t fLastEntry = 0;
    };
 
-   /// The first source is used to extract the schema and build the prototype fields. The page source
-   /// is used to extract a clone of the descriptor to fPrincipalDescriptor. Afterwards it is moved
-   /// into the first REntryRangeDS.
-   std::unique_ptr<Internal::RPageSource> fPrincipalSource;
    /// A clone of the first pages source's descriptor.
    std::unique_ptr<RNTupleDescriptor> fPrincipalDescriptor;
 
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
    std::vector<std::string> fFileNames;
+   /// Files are opened in the background in batches of size `fNSlots` and kept in the staging area.
+   /// Page sources in the staging area already executed `LoadStructure()`, i.e. they should have a compressed
+   /// buffer of the meta-data available. The page sources in the vector correspond to `fFileNames`.
+   /// Concretely:
+   ///   1. We open the first file on construction to extract the page source and then moved it in the staging area.
+   ///   2. On `Initialize()`, we start the I/O background thread, which in turn opens the first batch of files.
+   ///   3. At the beginning of `GetEntryRanges()`, we
+   ///      a) wait for the I/O thread to finish,
+   ///      b) call `PrepareNextRanges()` in the main thread to move the page sources from the staging area
+   ///         into `fNextRanges`; this will also call `Attach()` on the page sources (i.e., deserialize the meta-data),
+   ///      c) and trigger staging of the next batch of files in the I/O background thread.
+   ///   4. On `Finalize()`, the I/O background thread is stopped.
+   std::vector<std::unique_ptr<ROOT::Experimental::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
 
    /// We prepare a prototype field for every column. If a column reader is actually requested
@@ -89,6 +101,19 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// onto slots.  In the InitSlot method, the column readers use this map to find the correct range to connect to.
    std::unordered_map<ULong64_t, std::size_t> fFirstEntry2RangeIdx;
 
+   /// The background thread that runs StageNextSources()
+   std::thread fThreadStaging;
+   /// Protects the shared state between the main thread and the I/O thread
+   std::mutex fMutexStaging;
+   /// Signal for the state information of fIsReadyForStaging and fHasNextSources
+   std::condition_variable fCvStaging;
+   /// Is true when the staging thread should start working
+   bool fIsReadyForStaging = false;
+   /// Is true when the staging thread has populated the next batch of files to fStagingArea
+   bool fHasNextSources = false;
+   /// Is true when the I/O thread should quit
+   bool fStagingThreadShouldTerminate = false;
+
    /// \brief Holds useful information about fields added to the RNTupleDS
    struct RFieldInfo {
       DescriptorId_t fFieldId;
@@ -109,7 +134,12 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    void AddField(const RNTupleDescriptor &desc, std::string_view colName, DescriptorId_t fieldId,
                  std::vector<RFieldInfo> fieldInfos);
 
-   /// Populates fNextRanges with the next set of entry ranges. Opens files from the chain as necessary
+   /// The main function of the fThreadStaging background thread
+   void ExecStaging();
+   /// Starting from `fNextFileIndex`, opens the next `fNSlots` files. Calls `LoadStructure()` on the opened files.
+   /// The very first file is already available from the constructor.
+   void StageNextSources();
+   /// Populates fNextRanges with the next set of entry ranges. Moves files from the staging area as necessary
    /// and aligns ranges with cluster boundaries for scheduling the tail of files.
    /// Upon return, the fNextRanges list is ordered.  It has usually fNSlots elements; fewer if there
    /// is not enough work to give at least one cluster to every slot.
