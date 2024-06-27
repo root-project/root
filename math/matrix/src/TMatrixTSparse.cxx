@@ -680,11 +680,11 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
             }
          }
       }
-
-      this->fNelems = pRowIndex[rows];
-
-      return;
    }
+   this->fNelems = pRowIndex[rows];
+
+   return;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// General matrix multiplication. Replace this matrix with C such that C = A * B'.
@@ -1357,7 +1357,7 @@ TMatrixTBase<Element> &TMatrixTSparse<Element>::SetMatrixArray(Int_t nr,Int_t *r
 /// that the arrays row, col and data are sorted with DoubleLexSort.
 /// Note that the input arrays are not passed as const since they will be modified !
 template <class Element>
-Int_t TMatrixTSparse<Element>::ReduceSparseMatrix(Int_t nr, Int_t * row, Int_t * col, Element * data)
+Int_t TMatrixTSparse<Element>::ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data)
 {
 
    Int_t nz = nr;
