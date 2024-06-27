@@ -138,7 +138,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-         size += sealedPageIt->GetSize();
+         size += sealedPageIt->GetBufferSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
    }
