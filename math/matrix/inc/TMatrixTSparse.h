@@ -46,14 +46,19 @@ protected:
 
   // Elementary constructors
    void AMultB (const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
-                const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
+      conservative_sparse_sparse_product_impl(b, a, constr);
+   }
    void AMultB (const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0) {
                 const TMatrixTSparse<Element> bsp = b;
                 const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,bsp); AMultBt(a,bt,constr); }
    void AMultB (const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0) {
                 const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed,b); AMultBt(a,bt,constr); }
 
-   void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
+   void AMultBt(const TMatrixTSparse<Element> &a, const TMatrixTSparse<Element> &b, Int_t constr = 0)
+   {
+      const TMatrixTSparse<Element> bt(TMatrixTSparse::kTransposed, b);
+      conservative_sparse_sparse_product_impl(bt, a, constr);
+   }
    void AMultBt(const TMatrixTSparse<Element> &a,const TMatrixT<Element>       &b,Int_t constr=0);
    void AMultBt(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
@@ -66,7 +71,7 @@ protected:
    void AMinusB(const TMatrixT<Element>       &a,const TMatrixTSparse<Element> &b,Int_t constr=0);
 
    void conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs, const TMatrixTSparse<Element> &rhs,
-                                                bool sortedInsertion = true);
+                                                Int_t constr = 0, bool sortedInsertion = true);
 
    Int_t ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *col, Element *data);
 
