@@ -263,6 +263,14 @@ std::shared_ptr<void> RModel::GetInitializedTensorData(std::string tensor_name) 
     }
 }
 
+void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
+      auto t = fInitializedTensors.find(tensor_name);
+      if (t == fInitializedTensors.end()) {
+         throw std::runtime_error("TMVA-SOFIE: initialized tensor " + tensor_name + " not found when trying to get its info");
+      }
+      t->second.SetNotWritable();
+   }
+
 void RModel::Initialize(int batchSize, bool verbose) {
 
    fIntermediateTensorInfos.clear();
@@ -680,12 +688,12 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
 
         // loop on tensors and parse the file
         for (auto& i: fInitializedTensors) {
-             // skip Constant tensors
-            if (i.second.IsConstantTensor()) continue;
+            // skip Constant and shape tensors
+            if (!i.second.IsWeightTensor()) continue;
+            std::string tensor_name = "tensor_" + i.first;
             if (i.second.type() == ETensorType::FLOAT) {
                 size_t length = 1;
                 length = ConvertShapeToLength(i.second.shape());
-                std::string tensor_name = "tensor_" + i.first;
                 std::string slength = std::to_string(length);
                 fGC += "   f >> tensor_name >> length;\n";
                 fGC += "   if (tensor_name != \"" + tensor_name + "\" ) {\n";
@@ -703,6 +711,8 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
                 fGC += "   if (f.fail()) {\n";
                 fGC += "      throw std::runtime_error(\"TMVA-SOFIE failed to read the values for tensor " + tensor_name + "\");\n";
                 fGC += "   }\n";
+            } else {
+               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a file");
             }
         }
         fGC += "   f.close();\n";
@@ -722,17 +732,21 @@ void RModel::ReadInitializedTensorsFromFile(long pos) {
         fGC += "   }\n";
 
         for (auto &i : fInitializedTensors) {
+            // skip Constant and shape tensors
+            if (!i.second.IsWeightTensor()) continue;
             fGC += "  {\n";
             std::string tensor_name = "tensor_" + i.first;
             if (i.second.type() == ETensorType::FLOAT) {
-                fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(\"";
-                fGC += dirName + "/" + tensor_name + "\"));\n";
+               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<float>*>(rootFile->Get(\"";
+               fGC += dirName + "/" + tensor_name + "\"));\n";
             } else if (i.second.type() == ETensorType::DOUBLE) {
-                fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(\"";
-                fGC += dirName + + "/" + tensor_name + "\"));\n";
+               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<double>*>(rootFile->Get(\"";
+               fGC += dirName + + "/" + tensor_name + "\"));\n";
             } else if (i.second.type() == ETensorType::INT64) {
-                fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
-                fGC += dirName + "/" + tensor_name + "\"));\n";
+               fGC += "      fTensor_" + i.first + " = *reinterpret_cast<std::vector<int64_t>*>(rootFile->Get(\"";
+               fGC += dirName + "/" + tensor_name + "\"));\n";
+            } else {
+               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be read from a ROOT file");
             }
             fGC += "  }\n";
         }
@@ -775,25 +789,29 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
         auto outputDir = outputFile->mkdir(dirName.c_str());
 
         for (const auto& item : fInitializedTensors) {
-            // skip Constant tensors
-            if (item.second.IsConstantTensor()) continue;
+            // skip Constant tensors and tensors which are not writable (e.g. shape tensors)
+            if (!item.second.IsWeightTensor()) continue;
             std::string tensorName = "tensor_" + item.first;
             size_t length = 1;
             length = ConvertShapeToLength(item.second.shape());
             if(item.second.type() == ETensorType::FLOAT) {
-                const float* data = item.second.data<float>();
+               const float* data = item.second.data<float>();
                 std::vector<float> tensorDataVector(data, data + length);
-                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
+               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<float>", tensorName.c_str());
             }
             else if(item.second.type() == ETensorType::DOUBLE) {
-                const double* data = item.second.data<double>();
-                std::vector<double> tensorDataVector(data, data + length);
-                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
+               const double* data = item.second.data<double>();
+               std::vector<double> tensorDataVector(data, data + length);
+               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<double>", tensorName.c_str());
             }
             else if(item.second.type() == ETensorType::INT64) {
-                const int64_t* data = item.second.data<int64_t>();
-                std::vector<int64_t> tensorDataVector(data, data + length);
-                outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
+               const int64_t* data = item.second.data<int64_t>();
+               std::vector<int64_t> tensorDataVector(data, data + length);
+               outputDir->WriteObjectAny(&tensorDataVector, "std::vector<int64_t>", tensorName.c_str());
+            }
+            else {
+               std::runtime_error("tmva-sofie tensor " + tensorName + " with type " + ConvertTypeToString(item.second.type()) +
+                                  " cannot be written to a ROOT file");
             }
         }
         outputFile->Write(filename.c_str());
@@ -813,10 +831,8 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
             throw
             std::runtime_error("tmva-sofie failed to open file " + filename + " for tensor weight data");
         for (auto& i: fInitializedTensors) {
-             // skip Constant tensors
-            //if (i.second.IsConstantTensor()) continue;
-            if (i.second.IsConstantTensor()) {
-               //std::cout << "skip constant tensor " << i.first << std::endl;
+             // skip Constant tensors and not writable tensors (e.g. shape tensors)
+            if (!i.second.IsWeightTensor()) {
                continue;
             }
             size_t length = ConvertShapeToLength(i.second.shape());
@@ -831,6 +847,9 @@ long RModel::WriteInitializedTensorsToFile(std::string filename) {
                   f << std::setprecision(std::numeric_limits<float>::max_digits10) << value;
                   f <<  ( (idx < length-1) ? " " : "\n" );
                }
+            }
+            else {
+               std::runtime_error("tmva-sofie tensor " + tensor_name + " with type " + ConvertTypeToString(i.second.type()) + " cannot be written to a file");
             }
             if (f.fail())
                std::runtime_error("tmva-sofie failed to write tensor data to file for  " + tensor_name);
@@ -885,6 +904,7 @@ void RModel::PrintInitializedTensors() {
         }
         std::cout << "]";
         if (it.second.IsConstantTensor()) std::cout << " (Constant)";
+        else if (!it.second.IsWeightTensor()) std::cout << " (Not Writable)";
         std::cout << std::endl;
     }
     std::cout << "\n";

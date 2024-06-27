@@ -57,6 +57,8 @@ public:
             std::runtime_error("TMVA::SOFIE - Tensor " + fNIndices + " is not initialized.");
       }
       int64_t* indicesData = static_cast<int64_t*>(model.GetInitializedTensorData(fNIndices).get());
+      //flag index tensor as not writable
+      model.SetNotWritableInitializedTensor(fNIndices);
       fShapeIndices = model.GetTensorShape(fNIndices);
       size_t q = fShapeIndices.size();
       // Axis in range [0, r) where r=rank(X)
