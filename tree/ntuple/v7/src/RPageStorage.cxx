@@ -444,7 +444,7 @@ ROOT::Experimental::Internal::RPageSink::SealPage(const RSealPageConfig &config)
 
    if (!config.fElement->IsMappable()) {
       nBytesPacked = config.fElement->GetPackedSize(config.fPage->GetNElements());
-      pageBuf = new unsigned char[nBytesPacked + nBytesChecksum];
+      pageBuf = new unsigned char[nBytesPacked];
       isAdoptedBuffer = false;
       config.fElement->Pack(pageBuf, config.fPage->GetBuffer(), config.fPage->GetNElements());
    }
