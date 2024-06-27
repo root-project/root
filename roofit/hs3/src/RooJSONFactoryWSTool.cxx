@@ -1088,7 +1088,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
       if (k->second.empty())
          continue;
 
-      if (auto l = dynamic_cast<RooListProxy *>(p)) {
+      if (auto l = dynamic_cast<RooAbsCollection *>(p)) {
          fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooArgProxy *>(p)) {
