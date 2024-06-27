@@ -371,8 +371,13 @@
             HFNAME(NCHTOP)='Global memory  - '//CHDIR
          ENDIF
       ENDIF
-  10  CHMAIL='//'//CHTOP(NCHTOP)
+  10  print*, "In HROPEN CHMAIL = ", CHMAIL
+      print*, "In HROPEN NCHTOP = ", NCHTOP
+      print*, "In HROPEN CHTOP(NCHTOP) = ", CHTOP(NCHTOP)
+      CHMAIL='//'//CHTOP(NCHTOP)
+      print*, "In HROPEN CHMAIL = ", CHMAIL
       CALL HCDIR(CHMAIL,' ')
+
   99  RETURN
       END
 
