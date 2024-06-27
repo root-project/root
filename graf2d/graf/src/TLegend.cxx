@@ -556,17 +556,17 @@ void TLegend::InsertEntry( const char* objectName, const char* label, Option_t* 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this legend with its current attributes.
+/// Paint this legend with its current attributes on the pad
 
-void TLegend::Paint( Option_t* option )
+void TLegend::PaintOn(TVirtualPad *pad, Option_t *option)
 {
    // The legend need to be placed automatically in some empty space
    if (fX1 == fX2 && fY1 == fY2) {
-      if (gPad && gPad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
+      if (pad->PlaceBox(this, fX1, fY1, fX1, fY1)) {
          fY2 = fY2 + fY1;
          fX2 = fX2 + fX1;
       } else {
-         Warning("Paint", "Legend too large to be automatically placed; a default position is used");
+         Warning("PaintOn", "Legend too large to be automatically placed; a default position is used");
          fX1 = 0.5;
          fY1 = 0.67;
          fX2 = 0.88;
@@ -575,9 +575,9 @@ void TLegend::Paint( Option_t* option )
    }
 
    // Paint the Legend
-   TPave::ConvertNDCtoPad();
-   TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
-   PaintPrimitives();
+   TPave::ConvertNDCto(pad);
+   TPave::PaintPaveOn(pad, fX1, fY1, fX2, fY2, GetBorderSize(), option);
+   PaintPrimitivesOn(pad);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -606,16 +606,25 @@ Int_t TLegend::GetNRows() const
 void TLegend::SetNColumns(Int_t nColumns)
 {
    if(nColumns < 1) {
-      Warning("TLegend::SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
+      Warning("SetNColumns", "illegal value nColumns = %d; keeping fNColumns = %d", nColumns, fNColumns);
       return;
    }
    fNColumns = nColumns;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint the entries (list of primitives) for this legend.
+/// Paint the entries (list of primitives) for this legend
 
 void TLegend::PaintPrimitives()
+{
+   if (gPad)
+      PaintPrimitivesOn(gPad);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint the entries (list of primitives) for this legend on the pad
+
+void TLegend::PaintPrimitivesOn(TVirtualPad *pad)
 {
    Int_t nRows = GetNRows();
    if ( nRows == 0 ) return;
@@ -681,7 +690,7 @@ void TLegend::PaintPrimitives()
          if ( tmpMaxWidth > maxentrywidth) maxentrywidth = tmpMaxWidth;
       }
       // make sure all labels fit in the allotted space
-      Double_t tmpsize_h = maxentryheight /(gPad->GetY2() - gPad->GetY1());
+      Double_t tmpsize_h = maxentryheight /(pad->GetY2() - pad->GetY1());
       textsize = TMath::Min( textsize, tmpsize_h );
       Double_t tmpsize_w = textsize*(fX2-fX1)*(1.0-fMargin)/maxentrywidth;
       if(fNColumns > 1) tmpsize_w = textsize*(fX2-fX1)*(1.0-fMargin-fColumnSeparation)/maxentrywidth;
@@ -778,7 +787,7 @@ void TLegend::PaintPrimitives()
       // to ensure a better spacing between lines.
       if (valign == 2) {
          Float_t tsizepad = textsize;
-         if (tfont%10 == 3) tsizepad = (gPad->AbsPixeltoY(0) - gPad->AbsPixeltoY(textsize))/(gPad->GetY2() - gPad->GetY1());
+         if (tfont%10 == 3) tsizepad = (pad->AbsPixeltoY(0) - pad->AbsPixeltoY(textsize))/(pad->GetY2() - pad->GetY1());
          if (yspace2 < tsizepad) {
             entry->SetTextAlign(10*halign+1);
             y = ytext - (1. - fEntrySeparation)* yspace2/2.;
@@ -851,10 +860,10 @@ void TLegend::PaintPrimitives()
          xf[3] = xf[0];
          yf[3] = yf[2];
          for (Int_t i=0;i<4;i++) {
-            xf[i] = gPad->GetX1() + xf[i]*(gPad->GetX2()-gPad->GetX1());
-            yf[i] = gPad->GetY1() + yf[i]*(gPad->GetY2()-gPad->GetY1());
+            xf[i] = pad->GetX1() + xf[i]*(pad->GetX2()-pad->GetX1());
+            yf[i] = pad->GetY1() + yf[i]*(pad->GetY2()-pad->GetY1());
          }
-         gPad->PaintFillArea(4,xf,yf);
+         pad->PaintFillArea(4,xf,yf);
       }
 
       // Get Polymarker size
@@ -904,10 +913,10 @@ void TLegend::PaintPrimitives()
             Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             for (Int_t i=0;i<3;i++) {
-            xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
-            ye1[i] = gPad->GetY1() + ye1[i]*(gPad->GetY2()-gPad->GetY1());
-            xe2[i] = gPad->GetX1() + xe2[i]*(gPad->GetX2()-gPad->GetX1());
-            ye2[i] = gPad->GetY1() + ye2[i]*(gPad->GetY2()-gPad->GetY1());
+            xe1[i] = pad->GetX1() + xe1[i]*(pad->GetX2()-pad->GetX1());
+            ye1[i] = pad->GetY1() + ye1[i]*(pad->GetY2()-pad->GetY1());
+            xe2[i] = pad->GetX1() + xe2[i]*(pad->GetX2()-pad->GetX1());
+            ye2[i] = pad->GetY1() + ye2[i]*(pad->GetY2()-pad->GetY1());
             }
             int lc = entry->GetLineColor();
             int lw = entry->GetLineWidth();
@@ -945,22 +954,22 @@ void TLegend::PaintPrimitives()
          entry->TAttLine::Copy(entryline);
          // if the entry is filled, then surround the box with the line instead
          if ( opt.Contains("f") && !opt.Contains("l")) {
-            entryline.PaintLineNDC( xsym - boxw, ysym + yspace*0.35,
-                                    xsym + boxw, ysym + yspace*0.35);
-            entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                    xsym + boxw, ysym - yspace*0.35);
-            entryline.PaintLineNDC( xsym + boxw, ysym - yspace*0.35,
-                                    xsym + boxw, ysym + yspace*0.35);
-            entryline.PaintLineNDC( xsym - boxw, ysym - yspace*0.35,
-                                    xsym - boxw, ysym + yspace*0.35);
+            entryline.PaintLineNDCOn(pad, xsym - boxw, ysym + yspace*0.35,
+                                          xsym + boxw, ysym + yspace*0.35);
+            entryline.PaintLineNDCOn(pad, xsym - boxw, ysym - yspace*0.35,
+                                          xsym + boxw, ysym - yspace*0.35);
+            entryline.PaintLineNDCOn(pad, xsym + boxw, ysym - yspace*0.35,
+                                          xsym + boxw, ysym + yspace*0.35);
+            entryline.PaintLineNDCOn(pad, xsym - boxw, ysym - yspace*0.35,
+                                          xsym - boxw, ysym + yspace*0.35);
          } else {
             entryline.Paint();
             if (opt.Contains("e")) {
                if ( !opt.Contains("p")) {
-                  entryline.PaintLineNDC( xsym, ysym - yspace*arrow_shift,
-                                          xsym, ysym + yspace*arrow_shift);
+                  entryline.PaintLineNDCOn(pad, xsym, ysym - yspace*arrow_shift,
+                                                xsym, ysym + yspace*arrow_shift);
                } else {
-                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+                  Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(pad->PixeltoY(0) - pad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
                   TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
                   entryline1.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(entryline1);
@@ -988,7 +997,7 @@ void TLegend::PaintPrimitives()
             entry->TAttLine::Copy(entryline);
             entryline.Paint();
          } else {
-            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(gPad->PixeltoY(0) - gPad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
+            Double_t sy  = (fY2NDC-fY1NDC)*((0.5*(pad->PixeltoY(0) - pad->PixeltoY(Int_t(symbolsize*8.))))/(fY2-fY1));
             TLine entryline1(xsym, ysym + sy, xsym, ysym + yspace*arrow_shift);
             entryline1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entryline1);
