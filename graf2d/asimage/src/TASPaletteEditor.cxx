@@ -938,12 +938,12 @@ TASPaletteEditor::LimitLine::LimitLine(Coord_t x, Coord_t y1, Coord_t y2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint the limit lines.
 
-void TASPaletteEditor::LimitLine::Paint(Option_t *option)
+void TASPaletteEditor::LimitLine::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   fY1 = gPad->GetUymin();
-   fY2 = gPad->GetUymax();
+   fY1 = pad->GetUymin();
+   fY2 = pad->GetUymax();
 
-   TLine::Paint(option);
+   TLine::PaintOn(pad, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
