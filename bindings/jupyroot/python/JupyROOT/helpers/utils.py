@@ -483,6 +483,7 @@ class NotebookDrawer(object):
         self.drawableObject = theObject
         self.isRCanvas = False
         self.isCanvas = False
+        self.drawableId = str(ROOT.AddressOf(theObject)[0])
         if hasattr(self.drawableObject,"ResolveSharedPtrs"):
             self.isRCanvas = True
         else:
@@ -576,7 +577,7 @@ class NotebookDrawer(object):
 
     def _getDrawId(self):
         if self.isCanvas:
-            return self.drawableObject.GetName()
+            return self.drawableObject.GetName() + self.drawableId
         if self.isRCanvas:
             return self.drawableObject.GetUID()
         # all other objects do not support update and can be ignored
