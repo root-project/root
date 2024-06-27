@@ -29,7 +29,6 @@
 #include <RooMinimizer.h>
 #include <RooPoisson.h>
 #include <RooPolynomial.h>
-#include <RooProduct.h>
 #include <RooRealSumPdf.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
