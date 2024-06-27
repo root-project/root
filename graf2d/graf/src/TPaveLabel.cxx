@@ -106,14 +106,14 @@ TPaveLabel *TPaveLabel::DrawPaveLabel(Double_t x1, Double_t y1, Double_t x2, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this pavelabel with its current attributes.
+/// Paint this pavelabel with its current attributes on the pad
 
-void TPaveLabel::Paint(Option_t *option)
+void TPaveLabel::PaintOn(TVirtualPad *pad, Option_t *option)
 {
    // Convert from NDC to pad coordinates
-   TPave::ConvertNDCtoPad();
+   TPave::ConvertNDCto(pad);
 
-   PaintPaveLabel(fX1, fY1, fX2, fY2, GetLabel(), option && strlen(option) ? option : GetOption());
+   PaintPaveLabelOn(pad, fX1, fY1, fX2, fY2, GetLabel(), option && strlen(option) ? option : GetOption());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,11 +122,20 @@ void TPaveLabel::Paint(Option_t *option)
 void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                       const char *label ,Option_t *option)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintPaveLabelOn(gPad, x1, y1, x2, y2, label, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this pavelabel with new coordinates.
+
+void TPaveLabel::PaintPaveLabelOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
+                      const char *label ,Option_t *option)
+{
    Int_t nch = label ? strlen(label) : 0;
 
    // Draw the pave
-   TPave::PaintPave(x1,y1,x2,y2,GetBorderSize(),option);
+   TPave::PaintPaveOn(pad, x1, y1, x2, y2, GetBorderSize(), option);
 
    Float_t nspecials = 0;
    for (Int_t i=0;i<nch;i++) {
@@ -143,8 +152,8 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    if (nch <= 0) return;
 
    // Draw label
-   Double_t wh   = (Double_t)gPad->XtoPixel(gPad->GetX2());
-   Double_t hh   = (Double_t)gPad->YtoPixel(gPad->GetY1());
+   Double_t wh   = (Double_t)pad->XtoPixel(pad->GetX2());
+   Double_t hh   = (Double_t)pad->YtoPixel(pad->GetY1());
    if (wh==0||hh==0) return;
    Double_t labelsize, textsize = GetTextSize();
    Int_t automat = 0;
@@ -153,7 +162,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
    } else {
       if (TMath::Abs(textsize -0.99) < 0.001) automat = 1;
       if (textsize == 0)   { textsize = 0.99; automat = 1;}
-      Int_t ypixel      = TMath::Abs(gPad->YtoPixel(y1) - gPad->YtoPixel(y2));
+      Int_t ypixel      = TMath::Abs(pad->YtoPixel(y1) - pad->YtoPixel(y2));
       labelsize = textsize*ypixel/hh;
       if (wh < hh) labelsize *= hh/wh;
    }
@@ -168,7 +177,7 @@ void TPaveLabel::PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2, Double_t  
       latex.GetTextExtent(w,h,GetTitle());
       if (!w) return;
       labelsize = h/hh;
-      Double_t wxlabel   = TMath::Abs(gPad->XtoPixel(x2) - gPad->XtoPixel(x1));
+      Double_t wxlabel   = TMath::Abs(pad->XtoPixel(x2) - pad->XtoPixel(x1));
       latex.GetTextExtent(w1,h,GetTitle());
       while (w > 0.99*wxlabel) {
          labelsize *= 0.99*wxlabel/w;

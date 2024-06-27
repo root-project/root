@@ -35,9 +35,11 @@ public:
                                      const char *label, Option_t *option="");
    const char         *GetLabel() const {return fLabel.Data();}
    const char         *GetTitle() const override {return fLabel.Data();}
-   void                Paint(Option_t *option="") override;
+   void                PaintOn(TVirtualPad *pad, Option_t *option="") override;
    virtual void        PaintPaveLabel(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                                       const char *label, Option_t *option="");
+   virtual void        PaintPaveLabelOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                                        const char *label, Option_t *option="");
    void                SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void        SetLabel(const char *label) {fLabel = label;} // *MENU*
 
