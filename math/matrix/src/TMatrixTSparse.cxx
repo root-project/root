@@ -270,7 +270,7 @@ TMatrixTSparse<Element>::TMatrixTSparse(EMatrixCreatorsOp1 op,const TMatrixTSpar
       case kAtA:
       {
          const TMatrixTSparse<Element> at(TMatrixTSparse<Element>::kTransposed,prototype);
-         conservative_sparse_sparse_product_impl(prototype, at, 1);
+         AMultB(at, prototype, 1);
          break;
       }
 
