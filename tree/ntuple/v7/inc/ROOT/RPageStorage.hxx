@@ -648,11 +648,11 @@ public:
    /// Another version of PopulatePage that allows to specify cluster-relative indexes
    virtual RPage PopulatePage(ColumnHandle_t columnHandle, RClusterIndex clusterIndex) = 0;
 
-   /// Read the packed and compressed bytes of a page into the memory buffer provided by selaedPage. The sealed page
-   /// can be used subsequently in a call to RPageSink::CommitSealedPage.
-   /// The fSize and fNElements member of the sealedPage parameters are always set. If sealedPage.fBuffer is nullptr,
+   /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
+   /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
+   /// The `fSize` and `fNElements` member of the sealedPage parameters are always set. If `sealedPage.fBuffer` is `nullptr`,
    /// no data will be copied but the returned size information can be used by the caller to allocate a large enough
-   /// buffer and call LoadSealedPage again.
+   /// buffer and call `LoadSealedPage` again.
    virtual void
    LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
 

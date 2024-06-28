@@ -24,6 +24,8 @@
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
+#include "ROOT/RNTupleSerialize.hxx"
+#include "ROOT/RNTupleZip.hxx"
 
 #include <deque>
 
@@ -89,7 +91,8 @@ try {
 
    // Now merge
    Internal::RNTupleMerger merger;
-   merger.Merge(sourcePtrs, *destination);
+   Internal::RNTupleMergeOptions options;
+   merger.Merge(sourcePtrs, *destination, options);
 
    // Provide the caller with a merged anchor object (even though we've already
    // written it).
@@ -165,7 +168,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vecto
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination)
+void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *> sources, RPageSink &destination,
+                                                        const RNTupleMergeOptions &options)
 {
    std::vector<RColumnInfo> columns;
    RCluster::ColumnSet_t columnSet;
@@ -175,6 +179,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
    }
 
    std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
+   RNTupleDecompressor decompressor;
+   std::vector<unsigned char> zipBuffer;
 
    // Append the sources to the destination one-by-one
    for (const auto &source : sources) {
@@ -232,10 +238,23 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                continue;
             }
 
+            const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
+            auto colElement = RColumnElementBase::Generate(columnDesc.GetModel().GetType());
+
             // Now get the pages for this column in this cluster
             const auto &pages = clusterDesc.GetPageRange(columnId);
 
             RPageStorage::SealedPageSequence_t sealedPages;
+
+            const auto colRangeCompressionSettings = cluster.GetColumnRange(columnId).fCompressionSettings;
+            const bool needsCompressionChange =
+               options.fCompressionSettings != -1 && colRangeCompressionSettings != options.fCompressionSettings;
+
+            std::vector<std::unique_ptr<unsigned char[]>> sealedPageBuffers;
+            // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
+            // bother reserving memory for them.
+            if (colRangeCompressionSettings != 0)
+               sealedPageBuffers.reserve(pages.fPageInfos.size());
 
             std::uint64_t pageNo = 0;
             sealedPageGroups.reserve(sealedPageGroups.size() + pages.fPageInfos.size());
@@ -251,6 +270,38 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                sealedPage.SetBuffer(onDiskPage->GetAddress());
                sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
                R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+
+               // Change compression if needed
+               if (needsCompressionChange) {
+                  // Step 1: prepare the source data.
+                  // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was already
+                  // uncompressed.
+                  const auto uncompressedSize = colElement->GetSize() * sealedPage.GetNElements();
+                  zipBuffer.resize(std::max<size_t>(uncompressedSize, zipBuffer.size()));
+                  RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetBufferSize(), uncompressedSize,
+                                             zipBuffer.data());
+
+                  // Step 2: prepare the destination buffer.
+                  if (uncompressedSize != sealedPage.GetBufferSize()) {
+                     // source column range is compressed
+                     R__ASSERT(colRangeCompressionSettings != 0);
+
+                     // We need to reallocate sealedPage's buffer because we are going to recompress the data
+                     // with a different algorithm/level. Since we don't know a priori how big that'll be, the
+                     // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed data.
+                     R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
+                     const auto &newBuf = sealedPageBuffers.emplace_back(new unsigned char[uncompressedSize]);
+                     sealedPage.SetBuffer(newBuf.get());
+                  } else {
+                     // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big enough.
+                     R__ASSERT(colRangeCompressionSettings == 0);
+                  }
+
+                  const auto newNBytes =
+                     RNTupleCompressor::Zip(zipBuffer.data(), uncompressedSize, options.fCompressionSettings,
+                                            const_cast<void *>(sealedPage.GetBuffer()));
+                  sealedPage.SetBufferSize(newNBytes);
+               }
 
                sealedPages.push_back(std::move(sealedPage));
 
