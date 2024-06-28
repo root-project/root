@@ -181,12 +181,11 @@ private:
 protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
+   /// The cloned page source creates a new connection to the pool/container.
+   std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
    RPageSourceDaos(std::string_view ntupleName, std::string_view uri, const RNTupleReadOptions &options);
-   /// The cloned page source creates a new connection to the pool/container.
-   /// The meta-data (header and footer) is reread and parsed by the clone.
-   std::unique_ptr<RPageSource> Clone() const final;
    ~RPageSourceDaos() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;

@@ -499,7 +499,8 @@ void ROOT::Experimental::Internal::RPageSourceFile::ReleasePage(RPage &page)
    fPagePool->ReturnPage(page);
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceFile::Clone() const
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
+ROOT::Experimental::Internal::RPageSourceFile::CloneImpl() const
 {
    auto clone = new RPageSourceFile(fNTupleName, fOptions);
    clone->fFile = fFile->Clone();
