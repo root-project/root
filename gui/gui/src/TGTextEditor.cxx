@@ -175,9 +175,6 @@
 #include "TRootHelpDialog.h"
 #include "HelpText.h"
 #include "TVirtualX.h"
-#ifdef WIN32
-#include "TWin32SplashThread.h"
-#endif
 
 const char *ed_filetypes[] = {
    "ROOT Macros",  "*.C",
@@ -841,20 +838,11 @@ void TGTextEditor::InterruptMacro()
 
 void TGTextEditor::About()
 {
-#ifdef R__UNIX
-   TString rootx = TROOT::GetBinDir() + "/root -a &";
-   gSystem->Exec(rootx);
-#else
-#ifdef WIN32
-   new TWin32SplashThread(kTRUE);
-#else
    char str[32];
    sprintf(str, "About ROOT %s...", gROOT->GetVersion());
    TRootHelpDialog *hd = new TRootHelpDialog(this, str, 600, 400);
    hd->SetText(gHelpAbout);
    hd->Popup();
-#endif
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

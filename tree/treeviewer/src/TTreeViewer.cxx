@@ -226,10 +226,6 @@ or :
 #include "strlcpy.h"
 #include "snprintf.h"
 
-#ifdef WIN32
-#include "TWin32SplashThread.h"
-#endif
-
 // drawing options
 static const char* gOptgen[16] =
 {
@@ -2058,20 +2054,11 @@ bool TTreeViewer::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2
                      break;
                   case kHelpAbout:
                      {
-#ifdef R__UNIX
-                        TString rootx = TROOT::GetBinDir() + "/root -a &";
-                        gSystem->Exec(rootx);
-#else
-#ifdef WIN32
-                        new TWin32SplashThread(true);
-#else
                         char str[32];
                         snprintf(str,32, "About ROOT %s...", gROOT->GetVersion());
                         hd = new TRootHelpDialog(this, str, 600, 400);
                         hd->SetText(gHelpAbout);
                         hd->Popup();
-#endif
-#endif
                      }
                      break;
                   case kHelpAboutTV:

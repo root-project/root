@@ -186,9 +186,7 @@
 #include "TRint.h"
 #include "TProcessID.h"
 #include "Getline.h"
-#ifdef WIN32
-#include "TWin32SplashThread.h"
-#endif
+
 #include <string>
 
 const char *ed_filetypes[] = {
@@ -1267,20 +1265,11 @@ void TGRootIDE::InterruptMacro()
 
 void TGRootIDE::About()
 {
-#ifdef R__UNIX
-   TString rootx = TROOT::GetBinDir() + "/root -a &";
-   gSystem->Exec(rootx);
-#else
-#ifdef WIN32
-   new TWin32SplashThread(kTRUE);
-#else
    char str[32];
    sprintf(str, "About ROOT %s...", gROOT->GetVersion());
    TRootHelpDialog *hd = new TRootHelpDialog(this, str, 600, 400);
    hd->SetText(gHelpAbout);
    hd->Popup();
-#endif
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

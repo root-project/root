@@ -51,7 +51,6 @@ by Olivier Couet (package X11INT).
 #include "KeySymbols.h"
 #include "TWinNTSystem.h"
 #include "TGWin32VirtualXProxy.h"
-#include "TWin32SplashThread.h"
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
@@ -914,13 +913,6 @@ void TGWin32::CloseDisplay()
    }
 
    TGWin32ProxyBase::fgMainThreadId = 0;
-
-   // terminate ROOT logo splash thread
-   TWin32SplashThread *delSplash = gSplash;
-   if (gSplash) {
-      gSplash = 0;
-      delete delSplash;
-   }
 
    if (fWindows) TStorage::Dealloc(fWindows);
    fWindows = 0;
