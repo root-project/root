@@ -159,6 +159,8 @@ private:
 protected:
    void LoadStructureImpl() final;
    RNTupleDescriptor AttachImpl() final;
+   /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
+   std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
    RPageSourceFile(std::string_view ntupleName, std::string_view path, const RNTupleReadOptions &options);
@@ -168,9 +170,6 @@ public:
    /// Requires the RNTuple object to be streamed from a file.
    static std::unique_ptr<RPageSourceFile>
    CreateFromAnchor(const RNTuple &anchor, const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// The cloned page source creates a new raw file and reader and opens its own file descriptor to the data.
-   /// The meta-data (header and footer) is reread and parsed by the clone.
-   std::unique_ptr<RPageSource> Clone() const final;
 
    RPageSourceFile(const RPageSourceFile&) = delete;
    RPageSourceFile& operator=(const RPageSourceFile&) = delete;

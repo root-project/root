@@ -744,7 +744,8 @@ void ROOT::Experimental::Internal::RPageSourceDaos::ReleasePage(RPage &page)
    fPagePool->ReturnPage(page);
 }
 
-std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::Clone() const
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
+ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
    auto clone = new RPageSourceDaos(fNTupleName, fURI, fOptions);
    return std::unique_ptr<RPageSourceDaos>(clone);

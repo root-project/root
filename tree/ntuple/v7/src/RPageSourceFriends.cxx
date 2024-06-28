@@ -117,13 +117,15 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::RPageSource>
-ROOT::Experimental::Internal::RPageSourceFriends::Clone() const
+ROOT::Experimental::Internal::RPageSourceFriends::CloneImpl() const
 {
    std::vector<std::unique_ptr<RPageSource>> cloneSources;
    cloneSources.reserve(fSources.size());
    for (const auto &f : fSources)
       cloneSources.emplace_back(f->Clone());
-   return std::make_unique<RPageSourceFriends>(fNTupleName, cloneSources);
+   auto clone = std::make_unique<RPageSourceFriends>(fNTupleName, cloneSources);
+   clone->fIdBiMap = fIdBiMap;
+   return clone;
 }
 
 ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t

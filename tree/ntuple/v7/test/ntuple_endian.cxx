@@ -86,13 +86,13 @@ protected:
 
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final { return RNTupleDescriptor(); }
+   std::unique_ptr<RPageSource> CloneImpl() const final { return nullptr; }
 
 public:
    RPageSourceMock(const std::vector<RPageStorage::RSealedPage> &pages, const RColumnElementBase &elt)
       : RPageSource("test", ROOT::Experimental::RNTupleReadOptions()), fElement(elt), fPages(pages)
    {
    }
-   std::unique_ptr<RPageSource> Clone() const final { return nullptr; }
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {

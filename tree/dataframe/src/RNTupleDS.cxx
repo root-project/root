@@ -574,7 +574,6 @@ void RNTupleDS::PrepareNextRanges()
             range.fSource = std::move(source);
          } else {
             range.fSource = source->Clone();
-            range.fSource->Attach();
          }
          range.fSource->SetEntryRange({start, end - start});
          range.fFirstEntry = start;
