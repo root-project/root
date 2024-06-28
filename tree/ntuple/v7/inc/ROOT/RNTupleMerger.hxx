@@ -16,6 +16,7 @@
 #ifndef ROOT7_RNTupleMerger
 #define ROOT7_RNTupleMerger
 
+#include "Compression.h"
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -29,6 +30,13 @@
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
+
+struct RNTupleMergeOptions {
+   /// If `fCompressionSettings == -1` (the default), the merger will not change the compression
+   /// of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
+   /// compression algorithm and level.
+   int fCompressionSettings = -1;
+};
 
 // clang-format off
 /**
@@ -74,7 +82,8 @@ private:
 
 public:
    /// Merge a given set of sources into the destination
-   void Merge(std::span<RPageSource *> sources, RPageSink &destination);
+   void Merge(std::span<RPageSource *> sources, RPageSink &destination,
+              const RNTupleMergeOptions &options = RNTupleMergeOptions());
 
 }; // end of class RNTupleMerger
 
