@@ -125,6 +125,8 @@ public:
 
       void ChecksumIfEnabled();
       RResult<void> VerifyChecksumIfEnabled() const;
+      /// Returns a failure if the sealed page has no checksum
+      RResult<std::uint64_t> GetChecksum() const;
    };
 
    using SealedPageSequence_t = std::deque<RSealedPage>;
