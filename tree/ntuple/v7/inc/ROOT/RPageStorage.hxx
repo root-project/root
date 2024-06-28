@@ -405,9 +405,12 @@ protected:
    /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
    /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
    /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The mask allows to skip writing out certain pages. The vector has the size of all the pages.
+   /// For every `false` value in the mask, the corresponding locator is skipped (missing) in the output vector.
    /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
    /// optimized implementation though.
-   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
+   virtual std::vector<RNTupleLocator>
+   CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl() = 0;
    /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
