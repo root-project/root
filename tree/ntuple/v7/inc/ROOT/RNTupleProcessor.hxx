@@ -130,9 +130,7 @@ private:
    NTupleSize_t ConnectNTuple(const RNTupleSourceSpec &ntuple);
 
    /////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates and connects concrete fields to the current page source, based on the proto-fields.
-   void ConnectFields();
-
+   /// \brief Creates and connects a concrete field to the current page source, based on its proto-field.
    void ConnectField(std::string_view fieldName);
 
    /////////////////////////////////////////////////////////////////////////////
