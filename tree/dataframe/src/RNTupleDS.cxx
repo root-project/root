@@ -480,7 +480,7 @@ void RNTupleDS::StageNextSources()
    for (auto i = fNextFileIndex; (i < nFiles) && ((i - fNextFileIndex) < fNSlots); ++i) {
       if (fStagingArea[i]) {
          // The first file is already open and was used to read the schema
-         assert(i == fNextFileIndex == 0);
+         assert(i == 0);
       } else {
          fStagingArea[i] = CreatePageSource(fNTupleName, fFileNames[i]);
          fStagingArea[i]->LoadStructure();
