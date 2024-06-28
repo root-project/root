@@ -711,20 +711,40 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(Descrip
 
 std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
-   std::span<RPageStorage::RSealedPageGroup> ranges)
+   std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask)
 {
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   locators.reserve(mask.size());
+   std::size_t i = 0;
    for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
-         locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (mask[i++])
+            locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+      }
    }
+   locators.shrink_to_fit();
    return locators;
 }
 
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
    std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   auto locators = CommitSealedPageVImpl(ranges);
+   std::vector<bool> mask;
+   for (auto &range : ranges) {
+      const auto rangeSize = std::distance(range.fFirst, range.fLast);
+      mask.reserve(mask.size() + rangeSize);
+      locatorIndexes.reserve(locatorIndexes.size() + rangeSize);
+
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         // TODO(jblomer): filter duplicate pages
+         mask.emplace_back(true);
+      }
+
+      mask.shrink_to_fit();
+      locatorIndexes.shrink_to_fit();
+   }
+
+   auto locators = CommitSealedPageVImpl(ranges, mask);
    unsigned i = 0;
 
    for (auto &range : ranges) {
