@@ -125,9 +125,10 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
+                                                                   const std::vector<bool> &mask)
 {
-   size_t size = 0, bytesPacked = 0;
+   size_t size = 0, bytesPacked = 0, iPage = 0;
    for (auto &range : ranges) {
       if (range.fFirst == range.fLast) {
          // Skip empty ranges, they might not have a physical column ID!
@@ -136,7 +137,9 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
 
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt, ++iPage) {
+         if (!mask[iPage])
+            continue;
          size += sealedPageIt->GetBufferSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
@@ -144,7 +147,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    if (size >= std::numeric_limits<std::int32_t>::max() || bytesPacked >= std::numeric_limits<std::int32_t>::max()) {
       // Cannot fit it into one key, fall back to one key per page.
       // TODO: Remove once there is support for large keys.
-      return RPagePersistentSink::CommitSealedPageVImpl(ranges);
+      return RPagePersistentSink::CommitSealedPageVImpl(ranges, mask);
    }
 
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
@@ -153,8 +156,13 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
 
    // Now write the individual pages and record their locators.
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   locators.reserve(iPage);
+   iPage = 0;
    for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt, ++iPage) {
+         if (!mask[iPage])
+            continue;
+
          fWriter->WriteIntoReservedBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetBufferSize(), offset);
          RNTupleLocator locator;
          locator.fPosition = offset;
