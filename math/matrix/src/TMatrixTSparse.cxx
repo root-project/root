@@ -113,10 +113,10 @@ TMatrixTSparse<Element>::TMatrixTSparse(Int_t no_rows,Int_t no_cols)
 /// Space is allocated for row/column indices and data, but the sparse structure
 /// information has still to be set !
 
-template<class Element>
-TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb)
+template <class Element>
+TMatrixTSparse<Element>::TMatrixTSparse(Int_t row_lwb, Int_t row_upb, Int_t col_lwb, Int_t col_upb, Int_t nr_nonzeros)
 {
-   Allocate(row_upb-row_lwb+1,col_upb-col_lwb+1,row_lwb,col_lwb,1);
+   Allocate(row_upb - row_lwb + 1, col_upb - col_lwb + 1, row_lwb, col_lwb, 1, nr_nonzeros);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
