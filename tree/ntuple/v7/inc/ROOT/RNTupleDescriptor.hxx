@@ -597,6 +597,7 @@ public:
 
       RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
       RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
+      size_t    count() { return fColumns.size(); }
    };
 
    // clang-format off
