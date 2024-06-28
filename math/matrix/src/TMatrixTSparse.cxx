@@ -1363,15 +1363,17 @@ Int_t TMatrixTSparse<Element>::ReduceSparseMatrix(Int_t nr, Int_t *row, Int_t *c
    Int_t nz = nr;
    Int_t i = 0;
 
-   while (i < nz) {
+   while (i < nz - 1) {
       if ((row[i] == row[i + 1]) && (col[i] == col[i + 1])) {
+         // sum values corresponding to same element
          data[i] += data[i + 1];
+         // shift vectors row and col to the left by one index
+         nz--;
          for (Int_t j = i + 1; j < nz; j++) {
             data[j] = data[j + 1];
             row[j] = row[j + 1];
             col[j] = col[j + 1];
          }
-         nz--;
       }
       i++;
    }
