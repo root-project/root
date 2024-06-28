@@ -478,6 +478,9 @@ void RNTupleDS::StageNextSources()
 {
    const auto nFiles = fFileNames.empty() ? 1 : fFileNames.size();
    for (auto i = fNextFileIndex; (i < nFiles) && ((i - fNextFileIndex) < fNSlots); ++i) {
+      if (fStagingThreadShouldTerminate)
+         return;
+
       if (fStagingArea[i]) {
          // The first file is already open and was used to read the schema
          assert(i == 0);
