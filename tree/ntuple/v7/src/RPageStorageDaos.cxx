@@ -364,14 +364,12 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
+                                                                   const std::vector<bool> &mask)
 {
    RDaosContainer::MultiObjectRWOperation_t writeRequests;
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
-   int64_t nPages =
-      std::accumulate(ranges.begin(), ranges.end(), 0, [](int64_t c, const RPageStorage::RSealedPageGroup &r) {
-         return c + std::distance(r.fFirst, r.fLast);
-      });
+   auto nPages = mask.size();
    locators.reserve(nPages);
 
    const uint32_t maxCageSz = fCageSizeLimit;
@@ -392,7 +390,6 @@ ROOT::Experimental::Internal::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPa
       positionIndex = useCaging ? fPageId.fetch_add(1) : fPageId.load();
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
-
          const RPageStorage::RSealedPage &s = *sealedPageIt;
 
          if (positionOffset + s.GetBufferSize() > maxCageSz) {
