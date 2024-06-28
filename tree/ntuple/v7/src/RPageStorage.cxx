@@ -180,6 +180,17 @@ void ROOT::Experimental::Internal::RPageSource::Attach()
    fIsAttached = true;
 }
 
+std::unique_ptr<ROOT::Experimental::Internal::RPageSource> ROOT::Experimental::Internal::RPageSource::Clone() const
+{
+   auto clone = CloneImpl();
+   if (fIsAttached) {
+      clone->GetExclDescriptorGuard().MoveIn(std::move(*GetSharedDescriptorGuard()->Clone()));
+      clone->fHasStructure = true;
+      clone->fIsAttached = true;
+   }
+   return clone;
+}
+
 ROOT::Experimental::NTupleSize_t ROOT::Experimental::Internal::RPageSource::GetNEntries()
 {
    return GetSharedDescriptorGuard()->GetNEntries();

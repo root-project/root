@@ -571,6 +571,8 @@ protected:
    virtual void LoadStructureImpl() = 0;
    /// LoadStructureImpl() has been called before AttachImpl() is called
    virtual RNTupleDescriptor AttachImpl() = 0;
+   /// Returns a new, unattached page source for the same data set
+   virtual std::unique_ptr<RPageSource> CloneImpl() const = 0;
    // Only called if a task scheduler is set. No-op be default.
    virtual void UnzipClusterImpl(RCluster *cluster);
 
@@ -602,8 +604,10 @@ public:
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   /// Open the same storage multiple time, e.g. for reading in multiple threads
-   virtual std::unique_ptr<RPageSource> Clone() const = 0;
+   /// Open the same storage multiple time, e.g. for reading in multiple threads.
+   /// If the source is already attached, the clone will be attached, too. The clone will use, however,
+   /// it's own connection to the underlying storage (e.g., file descriptor, XRootD handle, etc.)
+   std::unique_ptr<RPageSource> Clone() const;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }

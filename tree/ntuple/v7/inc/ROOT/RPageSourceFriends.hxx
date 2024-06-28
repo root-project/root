@@ -86,11 +86,10 @@ private:
 protected:
    void LoadStructureImpl() final {}
    RNTupleDescriptor AttachImpl() final;
+   std::unique_ptr<RPageSource> CloneImpl() const final;
 
 public:
    RPageSourceFriends(std::string_view ntupleName, std::span<std::unique_ptr<RPageSource>> sources);
-
-   std::unique_ptr<RPageSource> Clone() const final;
    ~RPageSourceFriends() final;
 
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) final;
