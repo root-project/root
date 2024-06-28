@@ -58,7 +58,7 @@ public:
    EImplicitMT GetUseImplicitMT() const { return fUseImplicitMT; }
    void SetUseImplicitMT(EImplicitMT val) { fUseImplicitMT = val; }
 
-   bool AreMetricsEnabled() const { return fEnableMetrics; }
+   bool HasMetricsEnabled() const { return fEnableMetrics; }
    void SetMetricsEnabled(bool enable) { fEnableMetrics = enable; }
 };
 

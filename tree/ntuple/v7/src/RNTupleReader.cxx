@@ -68,7 +68,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
       throw RException(R__FAIL("model has projected fields, which is incompatible with providing a read model"));
    }
    fModel->Freeze();
-   InitPageSource(options.AreMetricsEnabled());
+   InitPageSource(options.HasMetricsEnabled());
    ConnectModel(*fModel);
 }
 
@@ -76,7 +76,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(std::unique_ptr<ROOT::Experimen
                                                  const RNTupleReadOptions &options)
    : fSource(std::move(source)), fModel(nullptr), fMetrics("RNTupleReader")
 {
-   InitPageSource(options.AreMetricsEnabled());
+   InitPageSource(options.HasMetricsEnabled());
 }
 
 ROOT::Experimental::RNTupleReader::~RNTupleReader() = default;
