@@ -590,23 +590,6 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
 {
    std::vector<std::pair<ULong64_t, ULong64_t>> ranges;
 
-   {
-      std::unique_lock lock(fMutexStaging);
-      fCvStaging.wait(lock, [this] { return fHasNextSources; });
-   }
-   PrepareNextRanges();
-
-   if (fNextRanges.empty())
-      return ranges;
-   assert(fNextRanges.size() <= fNSlots);
-
-   {
-      std::lock_guard _(fMutexStaging);
-      fIsReadyForStaging = true;
-      fHasNextSources = false;
-   }
-   fCvStaging.notify_one();
-
    // We need to distinguish between single threaded and multi-threaded runs.
    // In single threaded mode, InitSlot is only called once and column readers have to be rewired
    // to new page sources of the chain in GetEntryRanges. In multi-threaded mode, on the other hand,
@@ -619,8 +602,34 @@ std::vector<std::pair<ULong64_t, ULong64_t>> RNTupleDS::GetEntryRanges()
       }
    }
 
-   fCurrentRanges.clear();
-   std::swap(fCurrentRanges, fNextRanges);
+   // If we have fewer files than slots and we run multiple event loops, we can reuse fCurrentRanges and don't need
+   // to worry about loading the fNextRanges. I.e., in this case we don't enter the if block.
+   if (fCurrentRanges.empty() || (fSeenEntries > 0)) {
+      // Otherwise, i.e. start of the first event loop or in the middle of the event loop, prepare the next ranges
+      // and swap with the current ones.
+      {
+         std::unique_lock lock(fMutexStaging);
+         fCvStaging.wait(lock, [this] { return fHasNextSources; });
+      }
+      PrepareNextRanges();
+      if (fNextRanges.empty()) {
+         // No more data
+         return ranges;
+      }
+
+      assert(fNextRanges.size() <= fNSlots);
+
+      fCurrentRanges.clear();
+      std::swap(fCurrentRanges, fNextRanges);
+   }
+
+   // Stage next batch of files for the next call to GetEntryRanges()
+   {
+      std::lock_guard _(fMutexStaging);
+      fIsReadyForStaging = true;
+      fHasNextSources = false;
+   }
+   fCvStaging.notify_one();
 
    // Create ranges for the RDF loop manager from the list of REntryRangeDS records.
    // The entry ranges that are relative to the page source in REntryRangeDS are translated into absolute
@@ -693,17 +702,19 @@ void RNTupleDS::Initialize()
    fNextFileIndex = 0;
    fIsReadyForStaging = fHasNextSources = fStagingThreadShouldTerminate = false;
    fThreadStaging = std::thread(&RNTupleDS::ExecStaging, this);
-   if (!fCurrentRanges.empty() && (fFileNames.size() <= fNSlots)) {
-      assert(fNextRanges.empty());
-      std::swap(fCurrentRanges, fNextRanges);
-      fNextFileIndex = std::max(fFileNames.size(), std::size_t(1));
-      fHasNextSources = true;
-   } else {
+   assert(fNextRanges.empty());
+
+   if (fCurrentRanges.empty() || (fFileNames.size() > fNSlots)) {
+      // First event loop or large number of files: start the staging process.
       {
          std::lock_guard _(fMutexStaging);
          fIsReadyForStaging = true;
       }
       fCvStaging.notify_one();
+   } else {
+      // Otherwise, we will reuse fCurrentRanges. Make sure that staging and preparing next ranges will be a noop
+      // (already at the end of the list of files).
+      fNextFileIndex = std::max(fFileNames.size(), std::size_t(1));
    }
 }
 
