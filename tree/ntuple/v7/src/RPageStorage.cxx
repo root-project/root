@@ -64,6 +64,18 @@ ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled
    return RResult<void>::Success();
 }
 
+ROOT::Experimental::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageStorage::RSealedPage::GetChecksum() const
+{
+   if (!fHasChecksum)
+      return R__FAIL("invalid attempt to extract non-existing page checksum");
+
+   assert(fBufferSize >= kNBytesPageChecksum);
+   std::uint64_t checksum;
+   RNTupleSerializer::DeserializeUInt64(
+      reinterpret_cast<const unsigned char *>(fBuffer) + fBufferSize - kNBytesPageChecksum, checksum);
+   return checksum;
+}
+
 //------------------------------------------------------------------------------
 
 void ROOT::Experimental::Internal::RPageSource::RActivePhysicalColumns::Insert(DescriptorId_t physicalColumnID)
