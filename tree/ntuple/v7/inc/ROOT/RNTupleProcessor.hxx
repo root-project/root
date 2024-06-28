@@ -16,13 +16,10 @@
 #ifndef ROOT7_RNTupleProcessor
 #define ROOT7_RNTupleProcessor
 
-#include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
+#include <ROOT/RField.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
-#include <ROOT/RNTupleModel.hxx>
-#include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
-#include <ROOT/RSpan.hxx>
 
 #include <memory>
 #include <string>
@@ -101,14 +98,10 @@ private:
    private:
       std::unique_ptr<RFieldBase> fProtoField;
       std::unique_ptr<RFieldBase> fConcreteField;
-      REntry::RFieldToken fToken;
-      std::shared_ptr<void> fValuePtr;
+      std::unique_ptr<RFieldBase::RValue> fValue;
 
    public:
-      RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token)
-         : fProtoField(std::move(protoField)), fToken(token)
-      {
-      }
+      RFieldContext(std::unique_ptr<RFieldBase> protoField) : fProtoField(std::move(protoField)) {}
 
       const RFieldBase &GetProtoField() const { return *fProtoField; }
       /// We need to disconnect the concrete fields before swapping the page sources
@@ -119,11 +112,9 @@ private:
          return *fConcreteField;
       }
       RFieldBase &GetConcreteField() const { return *fConcreteField; }
-      const REntry::RFieldToken &GetToken() const { return fToken; }
    };
 
    std::vector<RNTupleSourceSpec> fNTuples;
-   std::unique_ptr<REntry> fEntry;
    std::unique_ptr<Internal::RPageSource> fPageSource;
    std::unordered_map<std::string, RFieldContext> fFieldContexts;
 
@@ -141,6 +132,8 @@ private:
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Creates and connects concrete fields to the current page source, based on the proto-fields.
    void ConnectFields();
+
+   void ConnectField(std::string_view fieldName);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Add a field to be read by the processor.
@@ -160,7 +153,12 @@ private:
    /// \brief Load the values for the provided entry index.
    ///
    /// \param[in] idx The entry index.
-   void LoadEntry(NTupleSize_t idx) { fEntry->Read(idx); }
+   void LoadEntry(NTupleSize_t idx)
+   {
+      for (auto &[_, fieldContext] : fFieldContexts) {
+         fieldContext.fValue->Read(idx);
+      }
+   }
 
 public:
    // clang-format off
@@ -314,7 +312,7 @@ public:
    {
       if (!HasField(fieldName))
          ActivateField(fieldName);
-      return fEntry->GetPtr<T>(fieldName);
+      return fFieldContexts.at(std::string(fieldName)).fValue->GetPtr<T>();
    }
 
    RIterator begin() { return RIterator(*this, 0, 0); }

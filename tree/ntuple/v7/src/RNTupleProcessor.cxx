@@ -40,16 +40,13 @@ void ROOT::Experimental::Internal::RNTupleProcessor::ConnectFields()
       }
 
       auto &concreteField = fieldContext.CreateConcreteField();
-      fieldContext.GetConcreteField().SetOnDiskId(desc->FindFieldId(fieldName));
-      Internal::CallConnectPageSourceOnField(concreteField, *fPageSource);
+      concreteField.SetOnDiskId(desc->FindFieldId(fieldName));
+      auto fieldPtr = fieldContext.fValue->GetPtr<void>();
+      auto newValue = std::make_unique<RFieldBase::RValue>(concreteField.CreateValue());
+      fieldContext.fValue.swap(newValue);
+      fieldContext.fValue->Bind(fieldPtr);
 
-      if (fieldContext.fValuePtr) {
-         fEntry->UpdateValue(fieldContext.GetToken(), concreteField.BindValue(fieldContext.fValuePtr));
-      } else {
-         auto value = concreteField.CreateValue();
-         fieldContext.fValuePtr = value.GetPtr<void>();
-         fEntry->UpdateValue(fieldContext.GetToken(), value);
-      }
+      Internal::CallConnectPageSourceOnField(concreteField, *fPageSource);
    }
 }
 
@@ -65,15 +62,14 @@ void ROOT::Experimental::Internal::RNTupleProcessor::ActivateField(std::string_v
                                fieldDesc.GetTypeName() + "\""));
    }
    auto protoField = fieldOrException.Unwrap();
-   fEntry->AddValue(protoField->CreateValue());
 
-   RFieldContext fieldContext(std::move(protoField), fEntry->GetToken(fieldDesc.GetFieldName()));
-   fieldContext.fValuePtr = fEntry->GetPtr<void>(fieldContext.GetToken());
+   RFieldContext fieldContext(std::move(protoField));
 
    auto &concreteField = fieldContext.CreateConcreteField();
    concreteField.SetOnDiskId(fieldId);
+   auto value = std::make_unique<RFieldBase::RValue>(concreteField.CreateValue());
+   fieldContext.fValue.swap(value);
    Internal::CallConnectPageSourceOnField(concreteField, *fPageSource);
-   fEntry->UpdateValue(fieldContext.GetToken(), concreteField.BindValue(fieldContext.fValuePtr));
 
    fFieldContexts.emplace(fieldName, std::move(fieldContext));
 }
@@ -90,8 +86,6 @@ ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vect
    if (fPageSource->GetNEntries() == 0) {
       throw RException(R__FAIL("first RNTuple does not contain any entries"));
    }
-
-   fEntry = std::unique_ptr<REntry>(new REntry());
 }
 
 const std::vector<std::string> ROOT::Experimental::Internal::RNTupleProcessor::GetActiveFields() const
