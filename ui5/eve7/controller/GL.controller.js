@@ -168,9 +168,10 @@ sap.ui.define([
       //==============================================================================
 
       /** returns container for 3d objects */
-      getSceneContainer: function(scene_name)
+      getSceneContainer: function(scene)
       {
-         let parent = this.viewer.get_top_scene();
+         let parent = scene.IsOverlay ? this.viewer.get_overlay_scene() : this.viewer.get_top_scene();
+         let scene_name = "scene" + scene.id;
 
          for (let k = 0; k < parent.children.length; ++k)
          {
