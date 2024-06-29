@@ -517,6 +517,13 @@ struct Limits {
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t Mean(Iterator first, Iterator last, WeightIterator wfirst);
 
+   template <typename T>
+   T *MovMedian(const Long64_t n, T *a, const Long64_t k, Double_t *w = nullptr, Long64_t *work = nullptr);
+   template <typename T>
+   T *MovMean(const Long64_t n, T *a, const Long64_t k, Double_t *w = nullptr);
+   template <typename T>
+   Double_t Mode(const Long64_t n, T *a);
+
    template <typename T> Double_t GeomMean(Long64_t n, const T *a);
    template <typename Iterator> Double_t GeomMean(Iterator first, Iterator last);
 
@@ -1083,7 +1090,7 @@ Double_t TMath::Mean(Iterator first, Iterator last, WeightIterator w)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns the weighted mean of an array a with length n.
+/// Returns the weighted mean of an array with a length n.
 
 template <typename T>
 Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
@@ -1093,6 +1100,220 @@ Double_t TMath::Mean(Long64_t n, const T *a, const Double_t *w)
    } else {
       return TMath::Mean(a, a+n);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the moving mean of an array.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a     array
+/// \param[in]  k     window size
+/// \param[in] *w     weight of the array values
+///
+/// The mean values will be calculated over the window value
+/// for each entry a[i] of the array. The function will return
+/// weighted moving mean if the weight argument is provided.
+
+template <typename T>
+class Moving {
+public:
+   T *a0;
+   Double_t *w0;
+   Long64_t *work0;
+   Long64_t k0;
+   Long64_t n0;
+
+   virtual Double_t GetValue(const Long64_t n, T *a, Double_t *w = nullptr, Long64_t *work = nullptr) = 0;
+   virtual ~Moving(){};
+
+   Moving(const Long64_t n, T *a, const Long64_t k, Double_t *w = nullptr, Long64_t *work = nullptr)
+   {
+      n0 = n;
+      a0 = a;
+      k0 = k;
+      w0 = w;
+      work0 = work;
+   }
+
+   template <typename U>
+   void SplitArray(const U *v, U *v1, Long64_t first, const Long64_t last)
+   {
+      Long64_t i = 0;
+
+      while (first <= last) {
+         v1[i] = v[first];
+         i++;
+         first++;
+      }
+   }
+
+   Double_t GetMoving(const Long64_t n, const Long64_t first, const Long64_t last, Moving *sp)
+   {
+      Double_t result;
+      T *a1 = new T[n + 1];
+      SplitArray(a0, a1, first, last);
+
+      if (w0 != nullptr) {
+         Double_t *w1 = new Double_t[n + 1];
+         SplitArray(w0, w1, first, last);
+
+         if (work0 != nullptr) {
+            Long64_t *wrk1 = new Long64_t[n + 1];
+            SplitArray(work0, wrk1, first, last);
+            result = sp->GetValue(n, a1, w1, wrk1);
+            delete[] wrk1;
+         } else {
+            result = sp->GetValue(n, a1, w1);
+         }
+         delete[] w1;
+      } else {
+         result = sp->GetValue(n, a1);
+      }
+      delete[] a1;
+      return result;
+   }
+
+   T *GetResult(Moving *sp)
+   {
+      Long64_t kl = k0 / 2;
+      Long64_t kr = (k0 % 2) ? k0 / 2 : k0 / 2 - 1;
+      T *mov = new T[n0 + 1];
+
+      for (Long64_t i = 0; i != n0; i++) {
+         kl = (i < k0 / 2 and i > 0) ? i : k0 / 2;
+         if (i + kr > n0 - 1) {
+            kr--;
+         }
+
+         if (i == 0) {
+            if (k0 > 2) {
+               mov[i] = sp->GetMoving(kr + 1, 0, kr + 1, sp);
+            } else {
+               mov[i] = sp->GetMoving(1, 0, 1, sp);
+            }
+         } else if (i == n0 - 1) {
+            mov[i] = sp->GetMoving(kl + 1, i - kl, i, sp);
+         } else {
+            mov[i] = sp->GetMoving(kl + kr + 1, i - kl, i + kr, sp);
+         }
+      }
+      return mov;
+   }
+};
+
+template <typename T>
+class MovingMean : public Moving<T> {
+public:
+   MovingMean(const Long64_t n, T *a, const Long64_t k, Double_t *w) : Moving<T>(n, a, k, w) {}
+
+   Double_t GetValue(const Long64_t n, T *a, Double_t *w = nullptr, Long64_t *work = nullptr)
+   {
+      (void)work;
+      Double_t mean = TMath::Mean(n, a, w);
+      return mean;
+   }
+};
+
+template <typename T>
+T *TMath::MovMean(const Long64_t n, T *a, const Long64_t k, Double_t *w)
+{
+   if (!a) {
+      Fatal("MovMean", "the array is empty");
+   }
+   if (n <= 1) {
+      Fatal("MovMean", "the length of the array must be >1");
+   }
+   if (k > n) {
+      Fatal("MovMean", "the window length k is larger than the length of the array");
+   }
+   if (k == 1) {
+      Fatal("MovMean", "the window length k must be >1");
+   }
+
+   MovingMean<T> *movmean = new MovingMean(n, a, k, w);
+   T *result = movmean->GetResult(movmean);
+   delete movmean;
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the moving median of an array.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a     array
+/// \param[in]  k     window size
+/// \param[in] *w     weight of the array values
+/// \param[in] *work     work
+///
+/// The median values will be calculated over the window
+/// value for each entry a[i] of the array. The function will
+/// return weighted moving median if the weight argument
+/// is provided.
+
+template <typename T>
+class MovingMedian : public Moving<T> {
+public:
+   MovingMedian(const Long64_t n, T *a, const Long64_t k, Double_t *w, Long64_t *work) : Moving<T>(n, a, k, w, work) {}
+
+   Double_t GetValue(const Long64_t n, T *a, Double_t *w, Long64_t *work)
+   {
+      Double_t median = TMath::Median(n, a, w, work);
+      return median;
+   }
+};
+
+template <typename T>
+T *TMath::MovMedian(const Long64_t n, T *a, const Long64_t k, Double_t *w, Long64_t *work)
+{
+   if (!a) {
+      Fatal("MovMedian", "the array is empty");
+   }
+   if (n <= 1) {
+      Fatal("MovMedian", "the length of the array must be >1");
+   }
+   if (k > n) {
+      Fatal("MovMedian", "the window length k is larger than the length of the array");
+   }
+   if (k == 1) {
+      Fatal("MovMedian", "the window length k must be >1");
+   }
+
+   MovingMedian<T> *movmedian = new MovingMedian(n, a, k, w, work);
+   T *result = movmedian->GetResult(movmedian);
+   delete movmedian;
+   return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the mode of an array. If there are an equal amount of
+/// different values, the smallest value will be returned.
+///
+/// \param[in] n     number of array elements
+/// \param[in] *a     array
+
+template <typename T>
+Double_t TMath::Mode(const Long64_t n, T *a)
+{
+   if (!a) {
+      Fatal("Mode", "the array is empty");
+   }
+   if (n < 1) {
+      Fatal("Mode", "the length of the array must be >0");
+   }
+
+   Long64_t N1 = 0;
+   Long64_t N2 = 0;
+   Double_t mode = 0;
+   std::sort(a, a + n);
+
+   for (Long64_t i = 0; i < n; i++) {
+      N2 = std::count(a, a + n, a[i]);
+      if (N2 > N1 && mode != a[i]) {
+         mode = a[i];
+      }
+      N1 = N2;
+   }
+   return mode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
