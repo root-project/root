@@ -217,6 +217,35 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
 }
 
+TEST_F(RPageStorageDaos, DisabledSamePageMerging)
+{
+   std::string daosUri = RegisterLabel("ntuple-test-disabled-same-page-merging");
+   auto model = RNTupleModel::Create();
+   model->MakeField<float>("px", 1.0);
+   model->MakeField<float>("py", 1.0);
+   RNTupleWriteOptionsDaos options;
+   options.SetEnablePageChecksums(true);
+   auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", daosUri, options);
+   writer->Fill();
+   writer.reset();
+
+   auto reader = RNTupleReader::Open("ntpl", daosUri);
+   EXPECT_EQ(1u, reader->GetNEntries());
+
+   const auto &desc = reader->GetDescriptor();
+   const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0);
+   const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0);
+   const auto clusterId = desc.FindClusterId(pxColId, 0);
+   const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+   EXPECT_FALSE(clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==
+                clusterDesc.GetPageRange(pyColId).Find(0).fLocator.fPosition);
+
+   auto viewPx = reader->GetView<float>("px");
+   auto viewPy = reader->GetView<float>("py");
+   EXPECT_FLOAT_EQ(1.0, viewPx(0));
+   EXPECT_FLOAT_EQ(1.0, viewPy(0));
+}
+
 #ifdef R__USE_IMT
 // This feature depends on RPageSinkBuf and the ability to issue a single `CommitSealedPageV()` call; thus, disable if
 // ROOT was built with `-Dimt=OFF`
