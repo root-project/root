@@ -548,7 +548,11 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    if (onDiskPages.size())
       gaps.reserve(onDiskPages.size() - 1);
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
-      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
+      std::int64_t g =
+         static_cast<int64_t>(onDiskPages[i].fOffset) - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset);
+      gaps.emplace_back(std::max(g, std::int64_t(0)));
+      // If the pages overlap, substract the overlapped bytes from `activeSize`
+      activeSize += std::min(g, std::int64_t(0));
    }
    std::sort(gaps.begin(), gaps.end());
    std::size_t gapCut = 0;
@@ -575,14 +579,15 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    std::size_t szOverhead = 0;
    for (auto &s : onDiskPages) {
       R__ASSERT(s.fSize > 0);
-      auto readUpTo = req.fOffset + req.fSize;
-      R__ASSERT(s.fOffset >= readUpTo);
-      auto overhead = s.fOffset - readUpTo;
-      szPayload += s.fSize;
+      const std::int64_t readUpTo = req.fOffset + req.fSize;
+      // Note: byte ranges of pages may overlap
+      const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));
+      const std::uint64_t extent = std::max(static_cast<std::int64_t>(s.fOffset + s.fSize) - readUpTo, std::int64_t(0));
+      szPayload += extent;
       if (overhead <= gapCut) {
          szOverhead += overhead;
-         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
-         req.fSize += overhead + s.fSize;
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + s.fOffset - req.fOffset;
+         req.fSize += extent;
          continue;
       }
 
