@@ -376,6 +376,12 @@ private:
    RNTupleSerializer::StreamerInfoMap_t fStreamerInfos;
 
 protected:
+   /// Set of optional features supported by the persistent sink
+   struct RFeatures {
+      bool fCanMergePages = false;
+   };
+
+   RFeatures fFeatures;
    Internal::RNTupleDescriptorBuilder fDescriptorBuilder;
 
    /// Default I/O performance counters that get registered in fMetrics
