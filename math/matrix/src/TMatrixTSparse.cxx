@@ -563,12 +563,14 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
    }
 
    // we fake the storage order.
-   Int_t rows = rhs.GetNrows();
-   Int_t cols = lhs.GetNcols();
+   Int_t rows = lhs.GetNcols();
+   Int_t cols = rhs.GetNrows();
+   Int_t rowsLwb = lhs.GetColLwb();
+   Int_t colsLwb = rhs.GetRowLwb();
 
-   bool mask[rows];
-   Element values[rows];
-   Int_t indices[rows];
+   bool *mask = new bool[rows];
+   Element *values = new Element[rows];
+   Int_t *indices = new Int_t[rows];
 
    memset(mask, 0, sizeof(bool) * rows);
    memset(values, 0, sizeof(Element) * rows);
@@ -602,7 +604,7 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
 
       const Int_t nc = estimated_nnz_prod; // rows*cols;
 
-      Allocate(rows, cols, lhs.GetRowLwb(), rhs.GetColLwb(), 1, nc);
+      Allocate(cols, rows, colsLwb, rowsLwb, 1, nc);
 
       if (nc == 0)
          return;
@@ -630,56 +632,28 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
                values[i] += x * y;
          }
       }
-      if (!sortedInsertion) {
-         // unordered insertion
-         Int_t startj = pRowIndex[j];
-         for (Int_t k = 0; k < nnz; ++k) {
-            Int_t i = indices[k];
-            pColIndex[startj + k] = i;
-            pData[startj + k] = values[i];
+      pRowIndex[j + 1] = pRowIndex[j];
+      for (Int_t i = 0; i < rows; ++i) {
+         if (mask[i]) {
             mask[i] = false;
-         }
-         pRowIndex[j + 1] = pRowIndex[j] + nnz;
-      } else {
-         // alternative ordered insertion code:
-         const Int_t t200 = rows / 11; // 11 == (log2(200)*1.39)
-         const Int_t t = (rows * 100) / 139;
-
-         // FIXME reserve nnz non zeros
-         // FIXME implement faster sorting algorithms for very small nnz
-         // if the result is sparse enough => use a quick sort
-         // otherwise => loop through the entire vector
-         // In order to avoid to perform an expensive log2 when the
-         // result is clearly very sparse we use a linear bound up to 200.
-         if ((nnz < 200 && nnz < t200) || nnz * TMath::Log2(int(nnz)) < t) {
-            if (nnz > 1)
-               std::sort(indices, indices + nnz);
-            pRowIndex[j + 1] = pRowIndex[j];
-            for (Int_t k = 0; k < nnz; ++k) {
-               Int_t i = indices[k];
-               Int_t p = pRowIndex[j + 1];
-               ++pRowIndex[j + 1];
-               pColIndex[p] = i;
-               pData[p] = values[i];
-               mask[i] = false;
-            }
-         } else {
-            // dense path
-            pRowIndex[j + 1] = pRowIndex[j];
-            for (Int_t i = 0; i < rows; ++i) {
-               if (mask[i]) {
-                  mask[i] = false;
-                  // res.insertBackByOuterInner(j, i) = values[i];
-                  Int_t p = pRowIndex[j + 1];
-                  ++pRowIndex[j + 1];
-                  pColIndex[p] = i;
-                  pData[p] = values[i];
-               }
-            }
+            Int_t p = pRowIndex[j + 1];
+            ++pRowIndex[j + 1];
+            pColIndex[p] = i;
+            pData[p] = values[i];
          }
       }
    }
-   this->fNelems = pRowIndex[rows];
+
+   if (gMatrixCheck) {
+      if (this->fNelems != pRowIndex[cols]) {
+         Error("conservative_sparse_sparse_product_impl", "non zeros numbers do not match");
+         return;
+      }
+   }
+
+   delete[] mask;
+   delete[] values;
+   delete[] indices;
 
    return;
 }
