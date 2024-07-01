@@ -369,7 +369,7 @@ jobs:
           - image: alma9-clang
             is_special: true
             property: clang
-            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++"]
+            overrides: ["LLVM_ENABLE_ASSERTIONS=On", "CMAKE_C_COMPILER=clang", "CMAKE_CXX_COMPILER=clang++", "libcxx=ON"]
 
     runs-on:
       - self-hosted
