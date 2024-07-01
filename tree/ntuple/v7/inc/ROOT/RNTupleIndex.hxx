@@ -48,10 +48,10 @@ struct RIndexValue {
 // clang-format on
 class RNTupleIndex {
    friend std::unique_ptr<RNTupleIndex>
-   CreateRNTupleIndex(std::vector<std::string_view> fieldNames, RPageSource &pageSource);
+   CreateRNTupleIndex(const std::vector<std::string_view> &fieldNames, RPageSource &pageSource);
 
 private:
-   std::vector<std::unique_ptr<RFieldBase>> fFields;
+   const std::vector<std::unique_ptr<RFieldBase>> fFields;
    std::unordered_map<RIndexValue, std::vector<NTupleSize_t>, RIndexValue> fIndex;
 
    /////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ private:
    /// \param[in] The page source of the RNTuple to build the index for.
    ///
    /// \note The page source is assumed be attached already.
-   RNTupleIndex(std::vector<std::unique_ptr<RFieldBase>> fields, RPageSource &pageSource);
+   RNTupleIndex(std::vector<std::unique_ptr<RFieldBase>> &fields, RPageSource &pageSource);
 
 public:
    RNTupleIndex(const RNTupleIndex &other) = delete;
@@ -71,7 +71,7 @@ public:
 
    std::size_t GetNElems() const { return fIndex.size(); }
 
-   void Add(std::vector<void *> valuePtrs, NTupleSize_t entry);
+   void Add(const std::vector<void *> &valuePtrs, NTupleSize_t entry);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the entry number containing the given index value.
@@ -82,7 +82,7 @@ public:
    ///
    /// Note that in case multiple entries corresponding to the provided index value exist, the first occurrence is
    /// returned. Use RNTupleIndex::GetEntryIndices to get all entries.
-   NTupleSize_t GetEntryIndex(std::vector<void *> valuePtrs) const;
+   NTupleSize_t GetEntryIndex(const std::vector<void *> &valuePtrs) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get the entry number containing the given index value.
@@ -105,7 +105,7 @@ public:
    ///
    /// \param[in] value The indexed value
    /// \return The entry numbers containing the specified index value. When no entries exists, return an empty vector.
-   std::vector<NTupleSize_t> GetEntryIndices(std::vector<void *> valuePtrs) const;
+   std::vector<NTupleSize_t> GetEntryIndices(const std::vector<void *> &valuePtrs) const;
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Get all entry numbers for the given index.
@@ -132,7 +132,8 @@ public:
 ///
 /// \return A pointer to the newly-created index.
 ///
-std::unique_ptr<RNTupleIndex> CreateRNTupleIndex(std::vector<std::string_view> fieldNames, RPageSource &pageSource);
+std::unique_ptr<RNTupleIndex>
+CreateRNTupleIndex(const std::vector<std::string_view> &fieldNames, RPageSource &pageSource);
 
 } // namespace Internal
 } // namespace Experimental

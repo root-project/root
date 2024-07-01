@@ -15,7 +15,7 @@
 
 #include <ROOT/RNTupleIndex.hxx>
 
-ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(std::vector<std::unique_ptr<RFieldBase>> fields,
+ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(std::vector<std::unique_ptr<RFieldBase>> &fields,
                                                          RPageSource &pageSource)
    : fFields(std::move(fields))
 {
@@ -34,7 +34,7 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(std::vector<std::unique
    }
 }
 
-void ROOT::Experimental::Internal::RNTupleIndex::Add(std::vector<void *> valuePtrs, NTupleSize_t entry)
+void ROOT::Experimental::Internal::RNTupleIndex::Add(const std::vector<void *> &valuePtrs, NTupleSize_t entry)
 {
    RIndexValue indexValue;
    for (unsigned i = 0; i < fFields.size(); ++i) {
@@ -44,7 +44,7 @@ void ROOT::Experimental::Internal::RNTupleIndex::Add(std::vector<void *> valuePt
 }
 
 ROOT::Experimental::NTupleSize_t
-ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndex(std::vector<void *> valuePtrs) const
+ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndex(const std::vector<void *> &valuePtrs) const
 {
    auto entryIndices = GetEntryIndices(valuePtrs);
    if (entryIndices.empty())
@@ -53,7 +53,7 @@ ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndex(std::vector<void *> va
 }
 
 std::vector<ROOT::Experimental::NTupleSize_t>
-ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndices(std::vector<void *> valuePtrs) const
+ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndices(const std::vector<void *> &valuePtrs) const
 {
    RIndexValue indexValue;
    for (unsigned i = 0; i < fFields.size(); ++i) {
@@ -69,7 +69,8 @@ ROOT::Experimental::Internal::RNTupleIndex::GetEntryIndices(std::vector<void *> 
 //------------------------------------------------------------------------------
 
 std::unique_ptr<ROOT::Experimental::Internal::RNTupleIndex>
-ROOT::Experimental::Internal::CreateRNTupleIndex(std::vector<std::string_view> fieldNames, RPageSource &pageSource)
+ROOT::Experimental::Internal::CreateRNTupleIndex(const std::vector<std::string_view> &fieldNames,
+                                                 RPageSource &pageSource)
 {
    pageSource.Attach();
    auto desc = pageSource.GetSharedDescriptorGuard();
@@ -94,5 +95,5 @@ ROOT::Experimental::Internal::CreateRNTupleIndex(std::vector<std::string_view> f
       fields.push_back(std::move(field));
    }
 
-   return std::unique_ptr<RNTupleIndex>(new RNTupleIndex(std::move(fields), pageSource));
+   return std::unique_ptr<RNTupleIndex>(new RNTupleIndex(fields, pageSource));
 }
