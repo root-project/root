@@ -384,13 +384,14 @@ void TLine::ls(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this line with its current attributes.
+/// Paint this line with its current attributes on provided pad
 
-void TLine::Paint(Option_t *)
+void TLine::PaintOn(TVirtualPad *pad, Option_t *)
 {
-   if (!gPad) return;
-   if (TestBit(kLineNDC)) PaintLineNDC(fX1,fY1,fX2,fY2);
-   else                   PaintLine(gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
+   if (TestBit(kLineNDC))
+      PaintLineNDCOn(pad, fX1, fY1, fX2, fY2);
+   else
+      PaintLineOn(pad, pad->XtoPad(fX1), pad->YtoPad(fY1), pad->XtoPad(fX2), pad->YtoPad(fY2));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -398,9 +399,17 @@ void TLine::Paint(Option_t *)
 
 void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintLineOn(gPad, x1, y1, x2, y2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this line with new coordinates on the pad
+
+void TLine::PaintLineOn(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2)
+{
    TAttLine::Modify();  //Change line attributes only if necessary
-   gPad->PaintLine(x1,y1,x2,y2);
+   pad->PaintLine(x1,y1,x2,y2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -408,9 +417,17 @@ void TLine::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TLine::PaintLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t v2)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintLineNDCOn(gPad, u1, v1, u2, v2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Draw this line with new coordinates in NDC on pad
+
+void TLine::PaintLineNDCOn(TVirtualPad *pad, Double_t u1, Double_t v1, Double_t u2, Double_t v2)
+{
    TAttLine::Modify();  //Change line attributes only if necessary
-   gPad->PaintLineNDC(u1,v1,u2,v2);
+   pad->PaintLineNDC(u1,v1,u2,v2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

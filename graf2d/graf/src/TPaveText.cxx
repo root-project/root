@@ -414,20 +414,28 @@ void TPaveText::InsertText(const char *text)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this pavetext with its current attributes.
+/// Paint this pavetext with its current attributes on provided pad
 
-void TPaveText::Paint(Option_t *option)
+void TPaveText::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   // Draw the pave
-   TPave::ConvertNDCtoPad();
-   TPave::PaintPave(fX1,fY1,fX2,fY2,GetBorderSize(),option);
-   PaintPrimitives(kPaveText);
+   TPave::ConvertNDCto(pad);
+   TPave::PaintPaveOn(pad, fX1,fY1,fX2,fY2,GetBorderSize(),option);
+   PaintPrimitivesOn(pad, kPaveText);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint list of primitives in this pavetext.
 
 void TPaveText::PaintPrimitives(Int_t mode)
+{
+   if (gPad)
+      PaintPrimitivesOn(gPad, mode);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint list of primitives in this pavetext on the pad
+
+void TPaveText::PaintPrimitivesOn(TVirtualPad *pad, Int_t mode)
 {
    if (!fLines) return;
    Double_t dx = fX2 - fX1;
@@ -439,8 +447,8 @@ void TPaveText::PaintPrimitives(Int_t mode)
    // Evaluate text size as a function of the number of lines
 
    Double_t x1,y1,x2,y2;
-   y1       = gPad->GetY1();
-   y2       = gPad->GetY2();
+   y1       = pad->GetY1();
+   y2       = pad->GetY2();
    Float_t margin  = fMargin*dx;
    Double_t yspace = dy/Double_t(nlines);
    Double_t textsave = textsize;
@@ -496,7 +504,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
          lineb = (TBox*)line;
          x1 = lineb->GetX1();
          if (x1) x1 = fX1 + x1*dx;
-         else    x1 = fX1 + gPad->PixeltoX(1) - gPad->PixeltoX(0);
+         else    x1 = fX1 + pad->PixeltoX(1) - pad->PixeltoX(0);
          x2 = lineb->GetX2();
          if (x2) x2 = fX1 + x2*dx;
          else    x2 = fX2;
@@ -573,7 +581,7 @@ void TPaveText::PaintPrimitives(Int_t mode)
 
    // if a label create & paint a pavetext title
    if (fLabel.Length() > 0) {
-      dy = gPad->GetY2() - gPad->GetY1();
+      dy = pad->GetY2() - pad->GetY1();
       x1 = fX1 + 0.25*dx;
       x2 = fX2 - 0.25*dx;
       y1 = fY2 - 0.02*dy;
