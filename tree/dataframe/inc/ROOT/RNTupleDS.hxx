@@ -62,17 +62,21 @@ class RNTupleDS final : public ROOT::RDF::RDataSource {
    /// The data source may be constructed with an ntuple name and a list of files
    std::string fNTupleName;
    std::vector<std::string> fFileNames;
-   /// Files are opened in the background in batches of size `fNSlots` and kept in the staging area.
-   /// Page sources in the staging area already executed `LoadStructure()`, i.e. they should have a compressed
-   /// buffer of the meta-data available. The page sources in the vector correspond to `fFileNames`.
+   /// The staging area is relevant for chains of files, i.e. when fFileNames is not empty. In this case,
+   /// files are opened in the background in batches of size `fNSlots` and kept in the staging area.
+   /// The first file (chains or no chains) is always opened on construction in order to process the schema.
+   /// For all subsequent files, the corresponding page sources in the staging area only executed `LoadStructure()`,
+   /// i.e. they should have a compressed buffer of the meta-data available.
    /// Concretely:
-   ///   1. We open the first file on construction to extract the page source and then moved it in the staging area.
+   ///   1. We open the first file on construction to read the schema and then move the corresponding page source
+   ///      in the staging area.
    ///   2. On `Initialize()`, we start the I/O background thread, which in turn opens the first batch of files.
    ///   3. At the beginning of `GetEntryRanges()`, we
    ///      a) wait for the I/O thread to finish,
    ///      b) call `PrepareNextRanges()` in the main thread to move the page sources from the staging area
    ///         into `fNextRanges`; this will also call `Attach()` on the page sources (i.e., deserialize the meta-data),
-   ///      c) and trigger staging of the next batch of files in the I/O background thread.
+   ///         and
+   ///      c) trigger staging of the next batch of files in the I/O background thread.
    ///   4. On `Finalize()`, the I/O background thread is stopped.
    std::vector<std::unique_ptr<ROOT::Experimental::Internal::RPageSource>> fStagingArea;
    std::size_t fNextFileIndex = 0; ///< Index into fFileNames to the next file to process
