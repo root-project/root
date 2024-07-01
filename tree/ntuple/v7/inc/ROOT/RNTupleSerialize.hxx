@@ -74,8 +74,8 @@ public:
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
    // In the page sink and the unsplit field, the seen streamer infos are stored in a map
-   // with the unique streamer info number being the key.
-   using StreamerInfoMap_t = std::unordered_map<Int_t, TVirtualStreamerInfo *>;
+   // with the unique streamer info number being the key. Sorted by unique number.
+   using StreamerInfoMap_t = std::map<Int_t, TVirtualStreamerInfo *>;
 
    struct REnvelopeLink {
       std::uint64_t fLength = 0;

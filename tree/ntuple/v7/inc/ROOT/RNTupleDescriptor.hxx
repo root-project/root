@@ -121,6 +121,11 @@ public:
    DescriptorId_t GetParentId() const { return fParentId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
+
+   /// Tells if the field describes a user-defined class with a dictionary.
+   /// The dictionary does not need to be available for this method.
+   /// For unsplit fields, the method returns false independent of their content.
+   bool IsCustomClass() const;
 };
 
 
@@ -1267,6 +1272,9 @@ public:
    /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
    /// annotated as begin part of the header extension.
    void BeginHeaderExtension();
+
+   /// Get the streamer info records for custom classes. Currently requires the corresponding dictionaires to be loaded.
+   RNTupleSerializer::StreamerInfoMap_t BuildStreamerInfos() const;
 };
 
 } // namespace Internal
