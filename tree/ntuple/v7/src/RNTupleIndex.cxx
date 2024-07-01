@@ -20,12 +20,14 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(std::vector<std::unique
    : fFields(std::move(fields))
 {
    std::vector<RFieldBase::RValue> fieldValues;
+   fieldValues.reserve(fields.size());
    for (const auto &field : fFields) {
       fieldValues.emplace_back(field->CreateValue());
    }
 
    for (std::uint64_t i = 0; i < pageSource.GetNEntries(); ++i) {
       std::vector<void *> ptrs;
+      ptrs.reserve(fieldValues.size());
       for (auto &fieldValue : fieldValues) {
          fieldValue.Read(i);
          ptrs.push_back(fieldValue.GetPtr<void>().get());
@@ -76,6 +78,7 @@ ROOT::Experimental::Internal::CreateRNTupleIndex(const std::vector<std::string_v
    auto desc = pageSource.GetSharedDescriptorGuard();
 
    std::vector<std::unique_ptr<RFieldBase>> fields;
+   fields.reserve(fieldNames.size());
 
    for (const auto &fieldName : fieldNames) {
       auto fieldId = desc->FindFieldId(fieldName);

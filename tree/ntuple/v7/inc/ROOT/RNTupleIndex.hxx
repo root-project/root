@@ -95,6 +95,7 @@ public:
          throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
+      valuePtrs.reserve(sizeof...(Ts));
       ([&] { valuePtrs.push_back(&values); }(), ...);
 
       return GetEntryIndex(valuePtrs);
@@ -118,6 +119,7 @@ public:
          throw RException(R__FAIL("number of value pointers must match number of indexed fields"));
 
       std::vector<void *> valuePtrs;
+      valuePtrs.reserve(sizeof...(Ts));
       ([&] { valuePtrs.push_back(&values); }(), ...);
 
       return GetEntryIndices(valuePtrs);
