@@ -250,6 +250,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage +
                                         pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum);
                sealedPage.SetBuffer(onDiskPage->GetAddress());
+               sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
                R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
                sealedPages.push_back(std::move(sealedPage));
