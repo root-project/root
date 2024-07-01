@@ -687,6 +687,9 @@ Every inner item (that describes a page) has the following structure:
 ```
 
 Followed by a locator for the page.
+Note that locators for byte ranges in a file do not need to reference pairwise distinct byte ranges.
+For instance, identical pages can point to the same page range.
+
 _C(hecksum)_: If set, an XxHash-3 64bit checksum of the compressed page data is stored just after the page.
 This bit should be interpreted as the sign bit of the number of elements, i.e. negative values indicate pages with checksums.
 Note that the page size stored in the locator does _not_ include the checksum.
