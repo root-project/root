@@ -19,6 +19,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <sstream>
 
 class RooSimultaneous;
 
@@ -48,10 +49,6 @@ public:
 
    std::size_t getNumParams() const { return _params.size(); }
 
-   void dumpCode();
-
-   void dumpGradient();
-
    /// No constant term optimization is possible in code-generation mode.
    void constOptimizeTestStatistic(ConstOpCode /*opcode*/, bool /*doAlsoTrackingOpt*/) override {}
 
@@ -61,13 +58,16 @@ public:
 
    void disableEvaluator() { _useEvaluator = false; }
 
+   void writeDebugMacro(std::string const&) const;
+
+   std::string declareFunction(std::string const &funcBody);
+
+   std::string buildCode(RooAbsReal const &head);
+
 protected:
    double evaluate() const override;
 
 private:
-   std::string buildCode(RooAbsReal const &head);
-
-   static std::string declareFunction(std::string const &funcBody);
 
    void updateGradientVarBuffer() const;
 
@@ -97,6 +97,7 @@ private:
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
    std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    std::vector<double> _xlArr;
+   std::stringstream _allCode;
 };
 
 } // namespace Experimental

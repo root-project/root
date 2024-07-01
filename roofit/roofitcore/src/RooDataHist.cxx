@@ -992,32 +992,28 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
   return calcTreeIndex(coord, fast);
 }
 
-std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
-                                                      bool correctForBinSize) const
+std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Detail::CodeSquashContext &ctx,
+                                                      bool correctForBinSize, std::string const &idxName) const
 {
-   if (_arrSize == 1)
-      return std::to_string(_wgt[0]) + (correctForBinSize ? " / " + std::to_string(_binv[0]) : "");
-   std::string weightName = +"_HW" + RooFit::Detail::makeValidVarName(klass->GetName());
-
-   std::string arrayDecl = "double " + weightName + "[" + std::to_string(_arrSize) + "] = {";
-   for (Int_t i = 0; i < _arrSize; i++) {
-      arrayDecl += " " + std::to_string(_wgt[i]) + (correctForBinSize ? " / " + std::to_string(_binv[i]) : "") + ",";
+   std::vector<double> vals(_arrSize);
+   if (correctForBinSize) {
+      for (std::size_t i = 0; i < vals.size(); ++i) {
+         vals[i] = _wgt[i] / _binv[i];
+      }
+   } else {
+      for (std::size_t i = 0; i < vals.size(); ++i) {
+         vals[i] = _wgt[i];
+      }
    }
-   arrayDecl.back() = ' ';
-   arrayDecl += "};\n";
-
-   ctx.addToCodeBody(arrayDecl, true);
-
-   return weightName;
+   return "*(" + ctx.buildArg(vals) + " + " + idxName + ")";
 }
 
-std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const * /*klass*/, RooFit::Detail::CodeSquashContext &ctx,
                                                          const RooAbsCollection &coords, bool reverse) const
 {
    assert(coords.size() == _vars.size());
 
-   std::string idxName = "idx_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(klass, "unsigned int " + idxName + " = 0;\n");
+   std::string code;
    int idxMult = 1;
 
    for (std::size_t i = 0; i < _vars.size(); ++i) {
@@ -1040,14 +1036,22 @@ std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const *klass,
 
       std::string const &bin = ctx.buildCall("RooFit::Detail::MathFuncs::getUniformBinning", binning->lowBound(),
                                              binning->highBound(), *theVar, binning->numBins());
-      ctx.addToCodeBody(klass, idxName + " += " + std::to_string(idxMult) + " * " + bin + ";\n");
+      code += " + " + std::to_string(idxMult) + " * " + bin;
+
+      //std::string valStr = ctx.getResult(*theVar);
+      //std::string numBinsStr = std::to_string(binning->numBins());
+      //std::string lowStr = std::to_string(binning->lowBound());
+      //std::string highStr = std::to_string(binning->highBound());
+      //code += " + " + std::to_string(idxMult) + " * (" + valStr + " >= " + highStr + " ? " + numBinsStr +
+              //" - 1 : int(std::abs((" + valStr + " - " + lowStr + ") * " + numBinsStr + " / (" + highStr + " - (" + lowStr +
+              //")))))";
 
       // Use RooAbsLValue here because it also generalized to categories, which
       // is useful in the future. dynamic_cast because it's a cross-cast.
       idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
    }
 
-   return idxName;
+   return "(" + code + ")";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

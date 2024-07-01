@@ -224,8 +224,7 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
          valsHigh.push_back(dynamic_cast<RooHistFunc const &>(_highSet[iParam]).dataHist().weight(i));
       }
    }
-   std::string idxName =
-      nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables());
+   std::string idxName = ctx.getTmpVarName();
    std::string valsNominalStr = ctx.buildArg(valsNominal);
    std::string valsLowStr = ctx.buildArg(valsLow);
    std::string valsHighStr = ctx.buildArg(valsHigh);
@@ -235,8 +234,9 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
    std::string lowName = ctx.getTmpVarName();
    std::string highName = ctx.getTmpVarName();
    std::string nominalName = ctx.getTmpVarName();
-   code += "double * " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
-   code += "double * " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "unsigned int " + idxName + " = " + nomHist.calculateTreeIndexForCodeSquash(this, ctx, dynamic_cast<RooHistFunc const &>(*_nominal).variables()) + ";\n";
+   code += "double const* " + lowName + " = " + valsLowStr + " + " + nStr + " * " + idxName + ";\n";
+   code += "double const* " + highName + " = " + valsHighStr + " + " + nStr + " * " + idxName + ";\n";
    code += "double " + nominalName + " = *(" + valsNominalStr + " + " + idxName + ");\n";
 
    std::string funcCall = ctx.buildCall("RooFit::Detail::MathFuncs::flexibleInterp", _interpCode[0], _paramSet, n,
