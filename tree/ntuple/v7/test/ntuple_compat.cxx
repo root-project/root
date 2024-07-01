@@ -206,7 +206,7 @@ TEST(RNTupleCompat, NTupleV4)
 
    FileRaii fileGuard("test_ntuple_compat_ntuplev4.root");
    {
-      FILE *f = fopen(fileGuard.GetPath().c_str(), "w+");
+      FILE *f = fopen(fileGuard.GetPath().c_str(), "wb+");
       auto written = fwrite(kNtupleV4Bin, 1, sizeof(kNtupleV4Bin) - 1, f);
       EXPECT_EQ(written, sizeof(kNtupleV4Bin) - 1);
       fclose(f);
