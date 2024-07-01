@@ -53,6 +53,7 @@ ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntup
    });
    fCompressor = std::make_unique<RNTupleCompressor>();
    EnableDefaultMetrics("RPageSinkFile");
+   fFeatures.fCanMergePages = true;
 }
 
 ROOT::Experimental::Internal::RPageSinkFile::RPageSinkFile(std::string_view ntupleName, std::string_view path,
@@ -124,9 +125,10 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
 }
 
 std::vector<ROOT::Experimental::RNTupleLocator>
-ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
+ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges,
+                                                                   const std::vector<bool> &mask)
 {
-   size_t size = 0, bytesPacked = 0;
+   size_t size = 0, bytesPacked = 0, iPage = 0;
    for (auto &range : ranges) {
       if (range.fFirst == range.fLast) {
          // Skip empty ranges, they might not have a physical column ID!
@@ -135,7 +137,9 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
 
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt, ++iPage) {
+         if (!mask[iPage])
+            continue;
          size += sealedPageIt->GetBufferSize();
          bytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
       }
@@ -143,7 +147,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
    if (size >= std::numeric_limits<std::int32_t>::max() || bytesPacked >= std::numeric_limits<std::int32_t>::max()) {
       // Cannot fit it into one key, fall back to one key per page.
       // TODO: Remove once there is support for large keys.
-      return RPagePersistentSink::CommitSealedPageVImpl(ranges);
+      return RPagePersistentSink::CommitSealedPageVImpl(ranges, mask);
    }
 
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
@@ -152,8 +156,13 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
 
    // Now write the individual pages and record their locators.
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   locators.reserve(iPage);
+   iPage = 0;
    for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt, ++iPage) {
+         if (!mask[iPage])
+            continue;
+
          fWriter->WriteIntoReservedBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetBufferSize(), offset);
          RNTupleLocator locator;
          locator.fPosition = offset;
@@ -549,7 +558,11 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    if (onDiskPages.size())
       gaps.reserve(onDiskPages.size() - 1);
    for (unsigned i = 1; i < onDiskPages.size(); ++i) {
-      gaps.emplace_back(onDiskPages[i].fOffset - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset));
+      std::int64_t g =
+         static_cast<int64_t>(onDiskPages[i].fOffset) - (onDiskPages[i - 1].fSize + onDiskPages[i - 1].fOffset);
+      gaps.emplace_back(std::max(g, std::int64_t(0)));
+      // If the pages overlap, substract the overlapped bytes from `activeSize`
+      activeSize += std::min(g, std::int64_t(0));
    }
    std::sort(gaps.begin(), gaps.end());
    std::size_t gapCut = 0;
@@ -576,14 +589,15 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    std::size_t szOverhead = 0;
    for (auto &s : onDiskPages) {
       R__ASSERT(s.fSize > 0);
-      auto readUpTo = req.fOffset + req.fSize;
-      R__ASSERT(s.fOffset >= readUpTo);
-      auto overhead = s.fOffset - readUpTo;
-      szPayload += s.fSize;
+      const std::int64_t readUpTo = req.fOffset + req.fSize;
+      // Note: byte ranges of pages may overlap
+      const std::uint64_t overhead = std::max(static_cast<std::int64_t>(s.fOffset) - readUpTo, std::int64_t(0));
+      const std::uint64_t extent = std::max(static_cast<std::int64_t>(s.fOffset + s.fSize) - readUpTo, std::int64_t(0));
+      szPayload += extent;
       if (overhead <= gapCut) {
          szOverhead += overhead;
-         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + req.fSize + overhead;
-         req.fSize += overhead + s.fSize;
+         s.fBufPos = reinterpret_cast<intptr_t>(req.fBuffer) + s.fOffset - req.fOffset;
+         req.fSize += extent;
          continue;
       }
 

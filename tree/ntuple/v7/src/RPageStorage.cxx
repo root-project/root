@@ -34,6 +34,7 @@
 #include <TError.h>
 
 #include <atomic>
+#include <unordered_map>
 #include <utility>
 
 ROOT::Experimental::Internal::RPageStorage::RPageStorage(std::string_view name) : fMetrics(""), fNTupleName(name) {}
@@ -61,6 +62,18 @@ ROOT::Experimental::Internal::RPageStorage::RSealedPage::VerifyChecksumIfEnabled
    if (!success)
       return R__FAIL("page checksum verification failed, data corruption detected");
    return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<std::uint64_t> ROOT::Experimental::Internal::RPageStorage::RSealedPage::GetChecksum() const
+{
+   if (!fHasChecksum)
+      return R__FAIL("invalid attempt to extract non-existing page checksum");
+
+   assert(fBufferSize >= kNBytesPageChecksum);
+   std::uint64_t checksum;
+   RNTupleSerializer::DeserializeUInt64(
+      reinterpret_cast<const unsigned char *>(fBuffer) + fBufferSize - kNBytesPageChecksum, checksum);
+   return checksum;
 }
 
 //------------------------------------------------------------------------------
@@ -697,12 +710,16 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPage(Descrip
 
 std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
-   std::span<RPageStorage::RSealedPageGroup> ranges)
+   std::span<RPageStorage::RSealedPageGroup> ranges, const std::vector<bool> &mask)
 {
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
+   locators.reserve(mask.size());
+   std::size_t i = 0;
    for (auto &range : ranges) {
-      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt)
-         locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (mask[i++])
+            locators.push_back(CommitSealedPageImpl(range.fPhysicalColumnId, *sealedPageIt));
+      }
    }
    return locators;
 }
@@ -710,7 +727,49 @@ ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageVImpl(
 void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
    std::span<RPageStorage::RSealedPageGroup> ranges)
 {
-   auto locators = CommitSealedPageVImpl(ranges);
+   /// Used in the `originalPages` map
+   struct RSealedPageLink {
+      const RSealedPage *fSealedPage = nullptr; ///< Points to the first occurrence of a page with a specific checksum
+      std::size_t fLocatorIdx = 0;              ///< The index in the locator vector returned by CommitSealedPageVImpl()
+   };
+
+   std::vector<bool> mask;
+   // For every sealed page, stores the corresponding index in the locator vector returned by CommitSealedPageVImpl()
+   std::vector<std::size_t> locatorIndexes;
+   // Maps page checksums to the first sealed page with that checksum
+   std::unordered_map<std::uint64_t, RSealedPageLink> originalPages;
+   std::size_t iLocator = 0;
+   for (auto &range : ranges) {
+      for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         if (!fFeatures.fCanMergePages || !sealedPageIt->GetHasChecksum()) {
+            mask.emplace_back(true);
+            locatorIndexes.emplace_back(iLocator++);
+            continue;
+         }
+
+         const auto chk = sealedPageIt->GetChecksum().Unwrap();
+         auto itr = originalPages.find(chk);
+         if (itr == originalPages.end()) {
+            originalPages.insert({chk, {&(*sealedPageIt), iLocator}});
+            mask.emplace_back(true);
+            locatorIndexes.emplace_back(iLocator++);
+            continue;
+         }
+
+         const auto p = itr->second.fSealedPage;
+         if (sealedPageIt->GetDataSize() != p->GetDataSize() ||
+             memcmp(sealedPageIt->GetBuffer(), p->GetBuffer(), p->GetDataSize())) {
+            mask.emplace_back(true);
+            locatorIndexes.emplace_back(iLocator++);
+            continue;
+         }
+
+         mask.emplace_back(false);
+         locatorIndexes.emplace_back(itr->second.fLocatorIdx);
+      }
+   }
+
+   auto locators = CommitSealedPageVImpl(ranges, mask);
    unsigned i = 0;
 
    for (auto &range : ranges) {
@@ -719,7 +778,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::CommitSealedPageV(
 
          RClusterDescriptor::RPageRange::RPageInfo pageInfo;
          pageInfo.fNElements = sealedPageIt->GetNElements();
-         pageInfo.fLocator = locators[i++];
+         pageInfo.fLocator = locators[locatorIndexes[i++]];
          pageInfo.fHasChecksum = sealedPageIt->GetHasChecksum();
          fOpenPageRanges.at(range.fPhysicalColumnId).fPageInfos.emplace_back(pageInfo);
       }

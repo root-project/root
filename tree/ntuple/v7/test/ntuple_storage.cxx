@@ -434,6 +434,7 @@ TEST(RPageSinkBuf, Basics)
    FileRaii fileGuard("test_ntuple_sinkbuf_basics.root");
    {
       RNTupleWriteOptions options;
+      options.SetEnablePageChecksums(false); // disable same page merging
       options.SetUseBufferedWrite(true);
       TestModel bufModel;
       // PageSinkBuf wraps a concrete page source
@@ -716,4 +717,36 @@ TEST(RPageNullSink, Basics)
    *wrPt = 42.0;
    ntuple->Fill();
    EXPECT_EQ(ntuple->GetNEntries(), 1);
+}
+
+TEST(RPageSink, SamePageMerging)
+{
+   FileRaii fileGuard("test_same_page_merging.root");
+
+   for (auto enable : {true, false}) {
+      auto model = RNTupleModel::Create();
+      model->MakeField<float>("px", 1.0);
+      model->MakeField<float>("py", 1.0);
+      RNTupleWriteOptions options;
+      options.SetEnablePageChecksums(enable);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      writer->Fill();
+      writer.reset();
+
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      EXPECT_EQ(1u, reader->GetNEntries());
+
+      const auto &desc = reader->GetDescriptor();
+      const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0);
+      const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0);
+      const auto clusterId = desc.FindClusterId(pxColId, 0);
+      const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
+      EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==
+                           clusterDesc.GetPageRange(pyColId).Find(0).fLocator.fPosition);
+
+      auto viewPx = reader->GetView<float>("px");
+      auto viewPy = reader->GetView<float>("py");
+      EXPECT_FLOAT_EQ(1.0, viewPx(0));
+      EXPECT_FLOAT_EQ(1.0, viewPy(0));
+   }
 }
