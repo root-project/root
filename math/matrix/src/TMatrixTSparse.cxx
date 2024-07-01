@@ -546,13 +546,11 @@ void TMatrixTSparse<Element>::ExtractRow(Int_t rown, Int_t coln, Element *v,Int_
 /// General Sparse Matrix Multiplication (SpMM). This code is an adaptation of
 /// Eigen SpMM implementation. This product is conservative, meaning that it
 /// preserves the symbolic non zeros. Given lhs, rhs, it computes this = rhs * lhs.
-/// Note, result matrix is only allocated when constr=1. Columns indices are
-/// sorted only when sortedInsertion = 1.
+/// Note, result matrix is only allocated when constr=1.
 
 template <class Element>
 void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMatrixTSparse<Element> &lhs,
-                                                                      const TMatrixTSparse<Element> &rhs, Int_t constr,
-                                                                      bool sortedInsertion)
+                                                                      const TMatrixTSparse<Element> &rhs, Int_t constr)
 {
    if (gMatrixCheck) {
       R__ASSERT(lhs.IsValid());
