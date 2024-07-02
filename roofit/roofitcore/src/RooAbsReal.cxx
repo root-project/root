@@ -219,7 +219,13 @@ RooAbsReal::RooAbsReal(const RooAbsReal& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsReal::~RooAbsReal() {}
+RooAbsReal::~RooAbsReal()
+{
+   if (_treeReadBuffer) {
+      delete _treeReadBuffer;
+   }
+   _treeReadBuffer = nullptr;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3153,8 +3159,11 @@ void RooAbsReal::attachToTree(TTree& t, Int_t bufSize)
       coutI(DataHandling) << "RooAbsReal::attachToTree(" << GetName() << ") TTree " << typeDetails->first << " branch " << GetName()
                   << " will be converted to double precision." << std::endl ;
       setAttribute(typeDetails->second.first.c_str(), true);
-      _treeReadBuffer = typeDetails->second.second();
+      _treeReadBuffer = typeDetails->second.second().release();
     } else {
+      if (_treeReadBuffer) {
+         delete _treeReadBuffer;
+      }
       _treeReadBuffer = nullptr;
 
       if (!typeName.CompareTo("Double_t")) {
