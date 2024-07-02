@@ -2240,7 +2240,7 @@ Int_t TLatex::PaintLatex1(TVirtualPad *pad, Double_t x, Double_t y, Double_t ang
       TMathText tm;
       tm.SetTextAlign(GetTextAlign());
       tm.SetTextFont(GetTextFont());
-      tm.PaintMathText(x, y, angle, size, text1);
+      tm.PaintMathTextOn(pad, x, y, angle, size, text1);
       // If PDF, paint using TLatex
       if (gVirtualPS) {
          if (gVirtualPS->InheritsFrom("TPDF") ||
