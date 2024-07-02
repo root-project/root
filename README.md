@@ -10,8 +10,10 @@ without having to touch the bulk of the data. Included are histograming
 methods in an arbitrary number of dimensions, curve fitting, function
 evaluation, minimization, graphics and visualization classes to allow
 the easy setup of an analysis system that can query and process the data
-interactively or in batch mode, as well as a general parallel processing
-framework, PROOF, that can considerably speed up an analysis.
+interactively or in batch mode. ROOT's high-level analysis interface,
+RDataFrame, gives seamless access to the above features in a modern and
+flexible way. In addition, it provides transparent support for parallel and
+distributed execution, potentialy considerably speeding up analyses.
 
 Thanks to the built-in C++ interpreter cling, the command, the
 scripting and the programming language are all C++. The interpreter
