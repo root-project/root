@@ -20,39 +20,62 @@
 ROOT::Experimental::NTupleSize_t
 ROOT::Experimental::Internal::RNTupleProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
 {
-   for (auto &fieldContext : fFieldContexts) {
+   for (auto &[fieldName, fieldContext] : fFieldContexts) {
       fieldContext.ResetConcreteField();
    }
+
    fPageSource = Internal::RPageSource::Create(ntuple.fName, ntuple.fLocation);
    fPageSource->Attach();
-   ConnectFields();
+
+   for (auto &[fieldName, fieldContext] : fFieldContexts) {
+      ConnectField(fieldName);
+   }
+
    return fPageSource->GetNEntries();
 }
 
-void ROOT::Experimental::Internal::RNTupleProcessor::ConnectFields()
+void ROOT::Experimental::Internal::RNTupleProcessor::ConnectField(std::string_view fieldName)
 {
+   auto &fieldContext = fFieldContexts.at(std::string(fieldName));
    auto desc = fPageSource->GetSharedDescriptorGuard();
 
-   for (auto &fieldContext : fFieldContexts) {
-      auto fieldId = desc->FindFieldId(fieldContext.GetProtoField().GetFieldName());
-      if (fieldId == kInvalidDescriptorId) {
-         throw RException(
-            R__FAIL("field \"" + fieldContext.GetProtoField().GetFieldName() + "\" not found in current RNTuple"));
-      }
-
-      fieldContext.SetConcreteField();
-      fieldContext.GetConcreteField().SetOnDiskId(desc->FindFieldId(fieldContext.GetProtoField().GetFieldName()));
-      Internal::CallConnectPageSourceOnField(fieldContext.GetConcreteField(), *fPageSource);
-
-      if (fieldContext.fValuePtr) {
-         fEntry->UpdateValue(fieldContext.GetToken(),
-                             fieldContext.GetConcreteField().BindValue(fieldContext.fValuePtr));
-      } else {
-         auto value = fieldContext.GetConcreteField().CreateValue();
-         fieldContext.fValuePtr = value.GetPtr<void>();
-         fEntry->UpdateValue(fieldContext.GetToken(), value);
-      }
+   auto fieldId = desc->FindFieldId(fieldName);
+   if (fieldId == kInvalidDescriptorId) {
+      throw RException(R__FAIL("field \"" + std::string(fieldName) + "\" not found in current RNTuple"));
    }
+
+   auto &concreteField = fieldContext.CreateConcreteField();
+   concreteField.SetOnDiskId(desc->FindFieldId(fieldName));
+
+   auto newValue = std::make_unique<RFieldBase::RValue>(concreteField.CreateValue());
+   // True when the field was previously connected to another page source.
+   if (fieldContext.fValue) {
+      auto fieldPtr = fieldContext.fValue->GetPtr<void>();
+      fieldContext.fValue.swap(newValue);
+      fieldContext.fValue->Bind(fieldPtr);
+   } else {
+      fieldContext.fValue.swap(newValue);
+   }
+
+   Internal::CallConnectPageSourceOnField(concreteField, *fPageSource);
+}
+
+void ROOT::Experimental::Internal::RNTupleProcessor::ActivateField(std::string_view fieldName)
+{
+   auto desc = fPageSource->GetSharedDescriptorGuard();
+   auto fieldId = desc->FindFieldId(fieldName);
+   auto &fieldDesc = desc->GetFieldDescriptor(fieldId);
+
+   auto fieldOrException = RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
+   if (!fieldOrException) {
+      throw RException(R__FAIL("could not create field \"" + fieldDesc.GetFieldName() + "\" with type \"" +
+                               fieldDesc.GetTypeName() + "\""));
+   }
+   auto protoField = fieldOrException.Unwrap();
+
+   RFieldContext fieldContext(std::move(protoField));
+   fFieldContexts.emplace(fieldName, std::move(fieldContext));
+   ConnectField(fieldName);
 }
 
 ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples)
@@ -67,22 +90,13 @@ ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vect
    if (fPageSource->GetNEntries() == 0) {
       throw RException(R__FAIL("first RNTuple does not contain any entries"));
    }
+}
 
-   fEntry = std::unique_ptr<REntry>(new REntry());
-
-   auto desc = fPageSource->GetSharedDescriptorGuard();
-
-   for (const auto &fieldDesc : desc->GetTopLevelFields()) {
-      auto fieldOrException = RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
-      if (fieldOrException) {
-         auto field = fieldOrException.Unwrap();
-         fEntry->AddValue(field->CreateValue());
-         fFieldContexts.emplace_back(std::move(field), fEntry->GetToken(fieldDesc.GetFieldName()));
-      } else {
-         throw RException(R__FAIL("could not create field \"" + fieldDesc.GetFieldName() + "\" with type \"" +
-                                  fieldDesc.GetTypeName() + "\""));
-      }
-   }
-
-   ConnectFields();
+const std::vector<std::string> ROOT::Experimental::Internal::RNTupleProcessor::GetActiveFields() const
+{
+   std::vector<std::string> fieldNames;
+   fieldNames.reserve(fFieldContexts.size());
+   std::transform(fFieldContexts.cbegin(), fFieldContexts.cend(), std::back_inserter(fieldNames),
+                  [](auto &fldCtx) { return fldCtx.first; });
+   return fieldNames;
 }

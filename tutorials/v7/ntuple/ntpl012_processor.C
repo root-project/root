@@ -68,9 +68,10 @@ void Read(const std::vector<RNTupleSourceSpec> &ntuples)
    hPx.SetFillColor(48);
 
    RNTupleProcessor processor(ntuples);
-   auto ptrPx = processor.GetEntry().GetPtr<std::vector<float>>("vpx");
+   // Obtain a pointer to the field value before iteration start from the processor.
+   auto ptrPx = processor.GetPtr<std::vector<float>>("vpx");
 
-   for (const auto &entry : processor) {
+   for (auto &entry : processor) {
       // The RNTupleProcessor iterator provides some additional bookkeeping information. The local entry index pertains
       // only to the ntuple currently being processed, whereas the global entry index also considers the previously
       // processed ntuples.
@@ -79,7 +80,13 @@ void Read(const std::vector<RNTupleSourceSpec> &ntuples)
                    << " total entries processed so far)" << std::endl;
       }
 
-      // From the entry returned by the RNTupleProcessor iterator, we can get a pointer to the field we want to read.
+      // After processing has begun, pointers to field values not initialized previously can be obtained from the
+      // iterator.
+      if (*entry.GetPtr<std::uint64_t>("vn") == 7) {
+         continue;
+      }
+
+      // Read data from the pointer that was initialized before processing started.
       for (auto x : *ptrPx) {
          hPx.Fill(x);
       }
