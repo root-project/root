@@ -33,8 +33,7 @@ See our [release notes](docs/ReleaseNotes.md) to find what's new.
 
 
 ### Binaries
-Our nightly binary snapshots can be found
-[here](https://root.cern.ch/download/cling/).
+Our nightly binary snapshots are currently unavailable.
 
 
 ### Building from Source
@@ -49,6 +48,8 @@ mkdir cling-build && cd cling-build
 cmake -DLLVM_EXTERNAL_PROJECTS=cling -DLLVM_EXTERNAL_CLING_SOURCE_DIR=../cling/ -DLLVM_ENABLE_PROJECTS="clang" -DLLVM_TARGETS_TO_BUILD="host;NVPTX" -DCMAKE_BUILD_TYPE=Release ../llvm-project/llvm
 cmake --build . --target cling
 ```
+
+See also the instructions [on the webpage](https://root.cern/cling/cling_build_instructions/).
 
 Usage
 -----
