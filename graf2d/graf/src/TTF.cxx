@@ -127,6 +127,26 @@ Short_t TTF::CharToUnicode(UInt_t code)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Compute the trailing blanks width. It is use to compute the text width in GetTextExtent
+
+void TTF::ComputeTrailingBlanksWidth(Int_t n)
+{
+   if (n) {
+      FT_Face face = fgFace[fgCurFontIdx];
+      char space = ' ';
+      FT_UInt load_flags = FT_LOAD_DEFAULT;
+      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
+      FT_Load_Char(face, space, load_flags);
+
+      FT_GlyphSlot slot      = face->glyph;
+      FT_Pos advance_x       = slot->advance.x;
+      Int_t advance_x_pixels = advance_x >> 6;
+
+      fgTBlankW = advance_x_pixels*n;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get width (w) and height (h) when text is horizontal.
 
 void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
@@ -138,7 +158,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, char *text)
    LayoutGlyphs();
    Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + fgTBlankW;
+   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
 }
 
@@ -167,7 +187,7 @@ void TTF::GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *text)
    LayoutGlyphs();
    Int_t Xoff = 0; if (fgCBox.xMin < 0) Xoff = -fgCBox.xMin;
    Int_t Yoff = 0; if (fgCBox.yMin < 0) Yoff = -fgCBox.yMin;
-   w = fgCBox.xMax + Xoff + fgTBlankW;
+   w = fgCBox.xMax + Xoff + GetTrailingBlanksWidth();
    h = fgCBox.yMax + Yoff;
 }
 
@@ -272,21 +292,7 @@ void TTF::PrepareString(const char *string)
       p++;
    }
 
-   // compute the trailing blanks width. It is use to compute the text
-   // width in GetTextExtent
-   if (NbTBlank) {
-      FT_Face face = fgFace[fgCurFontIdx];
-      char space = ' ';
-      FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
-      FT_Load_Char(face, space, load_flags);
-
-      FT_GlyphSlot slot      = face->glyph;
-      FT_Pos advance_x       = slot->advance.x;
-      Int_t advance_x_pixels = advance_x >> 6;
-
-      fgTBlankW = advance_x_pixels*NbTBlank;
-   }
+   ComputeTrailingBlanksWidth(NbTBlank);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -317,14 +323,7 @@ void TTF::PrepareString(const wchar_t *string)
       p++;
    }
 
-   // compute the trailing blanks width. It is use to compute the text
-   // width in GetTextExtent
-   if (NbTBlank) {
-      FT_UInt load_flags = FT_LOAD_DEFAULT;
-      if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
-      if (FT_Load_Glyph(fgFace[fgCurFontIdx], 3, load_flags)) return;
-      fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
-   }
+   ComputeTrailingBlanksWidth(NbTBlank);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,63 +593,70 @@ void TTF::Version(Int_t &major, Int_t &minor, Int_t &patch)
 
 Bool_t TTF::GetHinting()
 {
-    return fgHinting;
+   return fgHinting;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetKerning()
 {
-    return fgKerning;
+   return fgKerning;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::GetSmoothing()
 {
-    return fgSmoothing;
+   return fgSmoothing;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TTF::IsInitialized()
 {
-    return fgInit;
+   return fgInit;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetWidth()
 {
-    return fgWidth;
+   return fgWidth;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetAscent()
 {
-    return fgAscent;
+   return fgAscent;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t  TTF::GetNumGlyphs()
 {
-    return fgNumGlyphs;
+   return fgNumGlyphs;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 FT_Matrix *TTF::GetRotMatrix()
 {
-    return fgRotMatrix;
+   return fgRotMatrix;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Int_t  TTF::GetTrailingBlanksWidth()
+{
+   return fgTBlankW;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 const FT_BBox &TTF::GetBox()
 {
-    return fgCBox;
+   return fgCBox;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

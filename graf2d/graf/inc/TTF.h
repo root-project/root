@@ -104,6 +104,7 @@ public:
 
    static void           Init();
    static void           Cleanup();
+   static void           ComputeTrailingBlanksWidth(Int_t n);
    static Int_t          GetAscent();
    static const FT_BBox &GetBox();
    static TTGlyph       *GetGlyphs();
@@ -112,6 +113,7 @@ public:
    static Int_t          GetNumGlyphs();
    static FT_Matrix     *GetRotMatrix();
    static Bool_t         GetSmoothing();
+   static Int_t          GetTrailingBlanksWidth();
    static Int_t          GetWidth();
    static void           SetHinting(Bool_t state);
    static void           SetKerning(Bool_t state);
