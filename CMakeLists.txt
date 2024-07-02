@@ -351,15 +351,11 @@ endif()
 file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/* ${jsroot_files} ${openui5_files})
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
-  # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
-  # target below will interfere.
-  if (NOT (artifact_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
-    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
-  endif()
+  add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+    COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+    DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+  list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
 endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
@@ -597,26 +593,6 @@ if(runtime_cxxmodules)
   add_dependencies(modules_idx ${modules_idx_deps})
   set_property(TARGET modules_idx PROPERTY modules_idx_file ${library_output_dir}/modules.idx)
   set_directory_properties(PROPERTIES ADDITIONAL_CLEAN_FILES "${library_output_dir}/modules.timestamp")
-endif()
-
-#---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
-add_dependencies(hsimple onepcm)
-if(WIN32)
-  set(hsimple_cmd COMMAND ${CMAKE_COMMAND} -E env PATH="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%"
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
-else()
-  set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
-                          ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
-endif()
-add_custom_command(OUTPUT tutorials/hsimple.root
-                   ${hsimple_cmd}
-                   WORKING_DIRECTORY tutorials
-                   DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
-install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-
-if(runtime_cxxmodules)
-  add_dependencies(hsimple modules_idx)
 endif()
 
 #---version--------------------------------------------------------------------------------------
