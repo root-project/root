@@ -275,10 +275,17 @@ void TTF::PrepareString(const char *string)
    // compute the trailing blanks width. It is use to compute the text
    // width in GetTextExtent
    if (NbTBlank) {
+      FT_Face face = fgFace[fgCurFontIdx];
+      char space = ' ';
       FT_UInt load_flags = FT_LOAD_DEFAULT;
       if (!fgHinting) load_flags |= FT_LOAD_NO_HINTING;
-      if (FT_Load_Glyph(fgFace[fgCurFontIdx], 3, load_flags)) return;
-      fgTBlankW = (Int_t)((fgFace[fgCurFontIdx]->glyph->advance.x)>>6)*NbTBlank;
+      FT_Load_Char(face, space, load_flags);
+
+      FT_GlyphSlot slot      = face->glyph;
+      FT_Pos advance_x       = slot->advance.x;
+      Int_t advance_x_pixels = advance_x >> 6;
+
+      fgTBlankW = advance_x_pixels*NbTBlank;
    }
 }
 
