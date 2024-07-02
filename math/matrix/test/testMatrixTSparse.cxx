@@ -61,3 +61,76 @@ TEST(testSparse, Transpose)
 
    EXPECT_EQ(m1, m2);
 }
+
+TEST(testSparse, AMultB)
+{
+   int n = 3;
+   int m = 4;
+   int nr = 4;
+   int mr = 4;
+   int nnz = 5;
+
+   Int_t lhsrows[] = {0, 1, 2, 2};
+   Int_t lhscols[] = {3, 2, 0, 3};
+   Double_t lhsdata[] = {1., -1., 3., 4.};
+   Int_t rhsrows[] = {1, 2, 3, 3};
+   Int_t rhscols[] = {1, 2, 0, 2};
+   Double_t rhsdata[] = {-2., 9., -2., 1.};
+   Int_t rows[] = {0, 0, 1, 2, 2};
+   Int_t cols[] = {0, 2, 2, 0, 2};
+   Double_t data[] = {-2., 1., -9., -8., 4.};
+
+   TMatrixDSparse lhs(0, n - 1, 0, m - 1, nr, lhsrows, lhscols, lhsdata);
+   TMatrixDSparse rhs(0, m - 1, 0, n - 1, mr, rhsrows, rhscols, rhsdata);
+   TMatrixDSparse m1(0, n - 1, 0, n - 1, nnz, rows, cols, data);
+   TMatrixDSparse m2(lhs, TMatrixDSparse::kMult, rhs);
+
+   EXPECT_EQ(m1, m2);
+}
+
+TEST(testSparse, AMultBt)
+{
+   int n = 3;
+   int m = 4;
+   int nr = 4;
+   int mr = 4;
+   int nnz = 5;
+
+   Int_t lhsrows[] = {0, 1, 2, 2};
+   Int_t lhscols[] = {3, 2, 0, 3};
+   Double_t lhsdata[] = {1., -1., 3., 4.};
+   Int_t rhsrows[] = {1, 2, 3, 3};
+   Int_t rhscols[] = {1, 2, 0, 2};
+   Double_t rhsdata[] = {-2., 9., -2., 1.};
+   Int_t rows[] = {0, 0, 1, 2, 2};
+   Int_t cols[] = {0, 2, 2, 0, 2};
+   Double_t data[] = {-2., 1., -9., -8., 4.};
+
+   TMatrixDSparse lhs(0, n - 1, 0, m - 1, nr, lhsrows, lhscols, lhsdata);
+   TMatrixDSparse rhs(0, n - 1, 0, m - 1, mr, rhscols, rhsrows, rhsdata);
+   TMatrixDSparse m1(0, n - 1, 0, n - 1, nnz, rows, cols, data);
+   TMatrixDSparse m2(lhs, TMatrixDSparse::kMultTranspose, rhs);
+
+   EXPECT_EQ(m1, m2);
+}
+
+TEST(testSparse, kAtA)
+{
+   int n = 3;
+   int m = 4;
+   int nr = 4;
+   int nnz = 5;
+
+   Int_t Arows[] = {0, 1, 2, 2};
+   Int_t Acols[] = {3, 2, 0, 3};
+   Double_t Adata[] = {1., -1., 3., 4.};
+   Int_t rows[] = {0, 0, 2, 3, 3};
+   Int_t cols[] = {0, 3, 2, 0, 3};
+   Double_t data[] = {9., 12, 1., 12., 17.};
+
+   TMatrixDSparse A(0, n - 1, 0, m - 1, nr, Arows, Acols, Adata);
+   TMatrixDSparse m1(0, m - 1, 0, m - 1, nnz, rows, cols, data);
+   TMatrixDSparse m2(TMatrixDSparse::kAtA, A);
+
+   EXPECT_EQ(m1, m2);
+}
