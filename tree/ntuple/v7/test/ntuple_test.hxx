@@ -9,6 +9,7 @@
 #include <ROOT/RNTupleCollectionWriter.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleFillStatus.hxx>
+#include <ROOT/RNTupleIndex.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>
