@@ -489,9 +489,9 @@ void TLatex::Copy(TObject &obj) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Analyse function.
 
-TLatex::TLatexFormSize TLatex::Anal1(const TextSpec_t &spec, const Char_t *t, Int_t length)
+TLatex::TLatexFormSize TLatex::Anal1(TVirtualPad *pad, const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
-   return Analyse(0, 0, spec, t, length);
+   return Analyse(pad, 0, 0, spec, t, length);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -521,7 +521,7 @@ TLatex::TLatexFormSize TLatex::Anal1(const TextSpec_t &spec, const Char_t *t, In
 ///  - `t` : chain to be analyzed
 ///  - `length` : number of chars in t.
 
-TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t, Int_t length)
+TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y, const TextSpec_t &spec, const Char_t *t, Int_t length)
 {
    const char *tab[] = { "alpha","beta","chi","delta","varepsilon","phi","gamma","eta","iota","varphi","kappa","lambda",
                 "mu","nu","omicron","pi","theta","rho","sigma","tau","upsilon","varomega","omega","xi","psi","zeta",
@@ -925,13 +925,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
    // analysis of operators found
    if (opCloseCurly>-1 && opCloseCurly<length-1) { // separator } found
       if(!fShow) {
-         fs1 = Anal1(spec,text,opCloseCurly+1);
-         fs2 = Anal1(spec,text+opCloseCurly+1,length-opCloseCurly-1);
+         fs1 = Anal1(pad, spec,text,opCloseCurly+1);
+         fs2 = Anal1(pad, spec,text+opCloseCurly+1,length-opCloseCurly-1);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+opCloseCurly+1,length-opCloseCurly-1);
-         Analyse(x,y,spec,text,opCloseCurly+1);
+         Analyse(pad, x+fs1.Width(),y,spec,text+opCloseCurly+1,length-opCloseCurly-1);
+         Analyse(pad, x,y,spec,text,opCloseCurly+1);
       }
       result = fs1+fs2;
    }
@@ -939,7 +939,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
    else if (opPower>-1 && opUnder>-1) { // ^ and _ found
       min = TMath::Min(opPower,opUnder);
       max = TMath::Max(opPower,opUnder);
-      Double_t xfpos = 0. ; //GetHeight()*spec.fSize/5.;
+      Double_t xfpos = 0. ; //GetHeightOf(pad)*spec.fSize/5.;
       Double_t prop=1, propU=1; // scale factor for #sum & #int
       switch (abovePlace) {
          case 1 :
@@ -961,9 +961,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
-         fs1 = Anal1(spec,text,ltext);
-         fs2 = Anal1(specNewSize,text+min+1,max-min-1);
-         fs3 = Anal1(specNewSize,text+max+1,length-max-1);
+         fs1 = Anal1(pad, spec,text,ltext);
+         fs2 = Anal1(pad, specNewSize,text+min+1,max-min-1);
+         fs3 = Anal1(pad, specNewSize,text+max+1,length-max-1);
          Savefs(&fs1);
          Savefs(&fs2);
          Savefs(&fs3);
@@ -981,8 +981,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                addH1 = fs1.Under()+fs2.Over()*(fFactorPos);
                addH2 = -fs1.Over()*(fFactorPos)-fs3.Under();
             }
-            Analyse(x+addW,y+addH2,specNewSize,text+max+1,length-max-1);
-            Analyse(x+addW,y+addH1,specNewSize,text+min+1,max-min-1);
+            Analyse(pad, x+addW,y+addH2,specNewSize,text+max+1,length-max-1);
+            Analyse(pad,x+addW,y+addH1,specNewSize,text+min+1,max-min-1);
          } else {
             Double_t addW1, addW2, addH1, addH2;
             Double_t m = TMath::Max(fs1.Width(),TMath::Max(fs2.Width(),fs3.Width()));
@@ -999,15 +999,15 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                addW2 = (m-fs3.Width())/2;
             }
 
-            Analyse(x+addW2,y+addH2,specNewSize,text+max+1,length-max-1);
-            Analyse(x+addW1,y+addH1,specNewSize,text+min+1,max-min-1);
+            Analyse(pad, x+addW2,y+addH2,specNewSize,text+max+1,length-max-1);
+            Analyse(pad, x+addW1,y+addH1,specNewSize,text+min+1,max-min-1);
          }
 
          if (min >= 2 && strncmp(&text[min-2],"{}",2)==0) {
             snprintf(&text[min-2],length-(min-2),"  ") ;
-            Analyse(x+pos,y,spec,text,min-1);
+            Analyse(pad, x+pos,y,spec,text,min-1);
          } else {
-            Analyse(x+pos,y,spec,text,min);
+            Analyse(pad, x+pos,y,spec,text,min);
          }
       }
 
@@ -1033,7 +1033,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
    }
    else if (opPower>-1) { // ^ found
       Double_t prop=1;
-      Double_t xfpos = 0. ; //GetHeight()*spec.fSize/5. ;
+      Double_t xfpos = 0. ; //GetHeightOf(pad)*spec.fSize/5. ;
       switch (abovePlace) {
          case 1 : //int
             prop = 1.75 ; break ;
@@ -1049,8 +1049,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
-         fs1 = Anal1(spec,text,ltext);
-         fs2 = Anal1(specNewSize,text+opPower+1,length-opPower-1);
+         fs1 = Anal1(pad, spec,text,ltext);
+         fs2 = Anal1(pad, specNewSize,text+opPower+1,length-opPower-1);
          Savefs(&fs1);
          Savefs(&fs2);
       } else {
@@ -1060,7 +1060,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          if (!abovePlace){
             Double_t over = fs1.Over();
             if (over <= 0) over = 1.5*fs2.Over();
-            Analyse(x+fs1.Width()+xfpos,y-over*fFactorPos-fs2.Under(),specNewSize,text+opPower+1,length-opPower-1);
+            Analyse(pad, x+fs1.Width()+xfpos,y-over*fFactorPos-fs2.Under(),specNewSize,text+opPower+1,length-opPower-1);
          } else {
             Int_t pos2=0;
             if (fs2.Width()>fs1.Width())
@@ -1068,13 +1068,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             else
                pos2=Int_t((fs1.Width()-fs2.Width())/2);
 
-            Analyse(x+pos2,y-fs1.Over()*prop-fs2.Under(),specNewSize,text+opPower+1,length-opPower-1);
+            Analyse(pad, x+pos2,y-fs1.Over()*prop-fs2.Under(),specNewSize,text+opPower+1,length-opPower-1);
          }
          if (opPower >= 2 && strncmp(&text[opPower-2],"{}",2)==0) {
             snprintf(&text[opPower-2],length-(opPower-2),"  ") ;
-            Analyse(x+pos,y,spec,text,opPower-1);
+            Analyse(pad, x+pos,y,spec,text,opPower-1);
          } else {
-            Analyse(x+pos,y,spec,text,opPower);
+            Analyse(pad, x+pos,y,spec,text,opPower);
          }
       }
 
@@ -1087,7 +1087,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
    }
    else if (opUnder>-1) { // _ found
       Double_t prop = .9; // scale factor for #sum & #frac
-      Double_t xfpos = 0.;//GetHeight()*spec.fSize/5. ;
+      Double_t xfpos = 0.;//GetHeightOf(pad)*spec.fSize/5. ;
       Double_t fpos = fFactorPos ;
       // When increasing prop, the lower indice position is lower
       if(!fShow) {
@@ -1098,8 +1098,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             snprintf(&text[ltext-2],length-(ltext-2),"I ") ;
             ltext-- ;
          }
-         fs1 = Anal1(spec,text,ltext);
-         fs2 = Anal1(specNewSize,text+opUnder+1,length-opUnder-1);
+         fs1 = Anal1(pad, spec,text,ltext);
+         fs2 = Anal1(pad, specNewSize,text+opUnder+1,length-opUnder-1);
          Savefs(&fs1);
          Savefs(&fs2);
       } else {
@@ -1107,7 +1107,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          fs1 = Readfs();
          Int_t pos = 0;
          if (!abovePlace)
-            Analyse(x+fs1.Width()+xfpos,y+fs1.Under()+fs2.Over()*fpos,specNewSize,text+opUnder+1,length-opUnder-1);
+            Analyse(pad, x+fs1.Width()+xfpos,y+fs1.Under()+fs2.Over()*fpos,specNewSize,text+opUnder+1,length-opUnder-1);
          else {
             Int_t pos2=0;
             if (fs2.Width()>fs1.Width())
@@ -1115,13 +1115,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             else
                pos2=Int_t((fs1.Width()-fs2.Width())/2);
 
-            Analyse(x+pos2,y+fs1.Under()*prop+fs2.Over(),specNewSize,text+opUnder+1,length-opUnder-1);
+            Analyse(pad, x+pos2,y+fs1.Under()*prop+fs2.Over(),specNewSize,text+opUnder+1,length-opUnder-1);
          }
          if (opUnder >= 2 && strncmp(&text[opUnder-2],"{}",2)==0) {
             snprintf(&text[opUnder-2],length-(opUnder-2),"  ") ;
-            Analyse(x+pos,y,spec,text,opUnder-1);
+            Analyse(pad, x+pos,y,spec,text,opUnder-1);
          } else {
-            Analyse(x+pos,y,spec,text,opUnder);
+            Analyse(pad, x+pos,y,spec,text,opUnder);
          }
       }
       if (!abovePlace)
@@ -1131,171 +1131,171 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Over(),fs1.Under()*prop+fs2.Height());
    }
    else if (opBox) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+4,length-4);
+         fs1 = Anal1(pad, spec,text+4,length-4);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+4,length-4);
-         Double_t adjust = GetHeight()*spec.fSize/20;
+         fs1 = Analyse(pad, x+square,y,spec,text+4,length-4);
+         Double_t adjust = GetHeightOf(pad)*spec.fSize/20;
          Double_t x1 = x+adjust ;
          Double_t x2 = x-adjust+square ;
          Double_t y1 = y;
          Double_t y2 = y-square+adjust;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x2,y1,x2,y2,spec);
-         DrawLine(x2,y2,x1,y2,spec);
-         DrawLine(x1,y2,x1,y1,spec);
+         DrawLine(pad, x1,y1,x2,y1,spec);
+         DrawLine(pad, x2,y1,x2,y2,spec);
+         DrawLine(pad, x2,y2,x1,y2,spec);
+         DrawLine(pad, x1,y2,x1,y1,spec);
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opOdot) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
+         fs1 = Anal1(pad, spec,text+5,length-5);
       } else {
-         fs1 = Analyse(x+1.3*square,y,spec,text+5,length-5);
-         Double_t adjust = GetHeight()*spec.fSize/20;
+         fs1 = Analyse(pad, x+1.3*square,y,spec,text+5,length-5);
+         Double_t adjust = GetHeightOf(pad)*spec.fSize/20;
          Double_t r1 = 0.62*square;
          Double_t y1 = y-0.3*square-adjust;
-         DrawCircle(x+0.6*square,y1,r1,spec) ;
-         DrawCircle(x+0.6*square,y1,r1/100,spec) ;
+         DrawCircle(pad, x+0.6*square,y1,r1,spec) ;
+         DrawCircle(pad, x+0.6*square,y1,r1/100,spec) ;
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opHbar) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
+         fs1 = Anal1(pad, spec,text+5,length-5);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         fs1 = Analyse(pad, x+square,y,spec,text+5,length-5);
          TText hbar;
          hbar.SetTextFont(12);
          hbar.SetTextColor(spec.fColor);
          hbar.SetTextSize(spec.fSize);
          hbar.SetTextAngle(fTextAngle);
          hbar.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          hbar.PaintText(xx,yy,"h");
-         DrawLine(x,y-0.8*square,x+0.75*square,y-square,spec);
+         DrawLine(pad, x,y-0.8*square,x+0.75*square,y-square,spec);
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opMinus) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+6,length-6);
+         fs1 = Anal1(pad, spec,text+6,length-6);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+6,length-6);
+         fs1 = Analyse(pad, x+square,y,spec,text+6,length-6);
          TText minus;
          minus.SetTextFont(122);
          minus.SetTextColor(spec.fColor);
          minus.SetTextSize(spec.fSize);
          minus.SetTextAngle(fTextAngle);
          minus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          minus.PaintText(xx,yy,"-");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opPlus) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
+         fs1 = Anal1(pad, spec,text+5,length-5);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+5,length-5);
+         fs1 = Analyse(pad, x+square,y,spec,text+5,length-5);
          TText plus;
          plus.SetTextFont(122);
          plus.SetTextColor(spec.fColor);
          plus.SetTextSize(spec.fSize);
          plus.SetTextAngle(fTextAngle);
          plus.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          plus.PaintText(xx,yy,"+");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opMp) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+3,length-3);
+         fs1 = Anal1(pad, spec,text+3,length-3);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+3,length-3);
+         fs1 = Analyse(pad, x+square,y,spec,text+3,length-3);
          TText mp;
          mp.SetTextFont(122);
          mp.SetTextColor(spec.fColor);
          mp.SetTextSize(spec.fSize);
          mp.SetTextAngle(fTextAngle+180);
          mp.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx = pad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
          mp.PaintText(xx,yy,"\261");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opPerp) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
+      Double_t square = GetHeightOf(pad)*spec.fSize/1.4;
       if (!fShow) {
-         fs1 = Anal1(spec,text+5,length-5);
+         fs1 = Anal1(pad, spec,text+5,length-5);
       } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+5,length-5);
+         fs1 = Analyse(pad, x+0.5*square,y,spec,text+5,length-5);
          Double_t x0 = x  + 0.50*square;
          Double_t x1 = x0 - 0.48*square;
          Double_t x2 = x0 + 0.48*square;
          Double_t y1 = y  + 0.6*square;
          Double_t y2 = y1 - 1.3*square;
-         DrawLine(x1,y1,x2,y1,spec);
-         DrawLine(x0,y1,x0,y2,spec);
+         DrawLine(pad, x1,y1,x2,y1,spec);
+         DrawLine(pad, x0,y1,x0,y2,spec);
       }
       result = fs1;
    }
    else if (opBackslash) {
-      Double_t square = GetHeight()*spec.fSize/2;
+      Double_t square = GetHeightOf(pad)*spec.fSize/2;
       if (!fShow) {
-         fs1 = Anal1(spec,text+10,length-10);
+         fs1 = Anal1(pad, spec,text+10,length-10);
       } else {
-         fs1 = Analyse(x+square,y,spec,text+10,length-10);
+         fs1 = Analyse(pad, x+square,y,spec,text+10,length-10);
          TText bs;
          bs.SetTextFont(GetTextFont());
          bs.SetTextColor(spec.fColor);
          bs.SetTextSize(spec.fSize);
          bs.SetTextAngle(fTextAngle);
          bs.SetTextAlign(11);
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
          bs.PaintText(xx,yy,"\\");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
    else if (opParallel) {
-      Double_t square = GetHeight()*spec.fSize/1.4;
+      Double_t square = GetHeightOf(pad)*spec.fSize/1.4;
       if (!fShow) {
-         fs1 = Anal1(spec,text+9,length-9);
+         fs1 = Anal1(pad, spec,text+9,length-9);
       } else {
-         fs1 = Analyse(x+0.5*square,y,spec,text+9,length-9);
+         fs1 = Analyse(pad, x+0.5*square,y,spec,text+9,length-9);
          Double_t x1 = x + 0.15*square;
          Double_t x2 = x + 0.45*square;
          Double_t y1 = y + 0.3*square;
          Double_t y2 = y1- 1.3*square;
-         DrawLine(x1,y1,x1,y2,spec);
-         DrawLine(x2,y1,x2,y2,spec);
+         DrawLine(pad, x1,y1,x1,y2,spec);
+         DrawLine(pad, x2,y1,x2,y2,spec);
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1308,13 +1308,13 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       if (opGreek == 52) letter = '\241'; //varUpsilon
       if (opGreek == 53) letter = '\316'; //epsilon
       if (!fShow) {
-         fs1 = Anal1(newSpec,&letter,1);
-         fs2 = Anal1(spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         fs1 = Anal1(pad, newSpec,&letter,1);
+         fs2 = Anal1(pad, spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
-         Analyse(x,y-yoffset,newSpec,&letter,1);
+         Analyse(pad, x+fs1.Width(),y,spec,text+strlen(tab[opGreek])+1,length-strlen(tab[opGreek])-1);
+         Analyse(pad, x,y-yoffset,newSpec,&letter,1);
       }
       fs1.AddOver(TLatexFormSize(0,yoffset,0)) ;
       result = fs1+fs2;
@@ -1348,49 +1348,49 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          newSpec.fSize = spec.fSize*propi;
       }
       if (!fShow) {
-         fs1 = Anal1(newSpec,&letter,1);
+         fs1 = Anal1(pad, newSpec,&letter,1);
          if (opSpec == 79 || opSpec == 66)
             fs1.Set(fs1.Width(),fs1.Over()*0.45,fs1.Over()*0.45);
 
-         fs2 = Anal1(spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
+         fs2 = Anal1(pad, spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
+         Analyse(pad, x+fs1.Width(),y,spec,text+strlen(tab2[opSpec])+1,length-strlen(tab2[opSpec])-1);
          if (opSpec!=66 && opSpec!=79)
-            Analyse(x,y,newSpec,&letter,1);
+            Analyse(pad, x,y,newSpec,&letter,1);
          else {
-               Analyse(x,y+fs1.Under()/2.,newSpec,&letter,1);
+               Analyse(pad, x,y+fs1.Under()/2.,newSpec,&letter,1);
          }
       }
       result = fs1+fs2;
    }
    else if (opAbove>-1) {
       if (!fShow) {
-         fs1 = Anal1(spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
+         fs1 = Anal1(pad, spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
-         Double_t sub = GetHeight()*spec.fSize/14;
+         Analyse(pad, x,y,spec,text+strlen(tab3[opAbove])+1,length-strlen(tab3[opAbove])-1);
+         Double_t sub = GetHeightOf(pad)*spec.fSize/14;
          switch(opAbove) {
          case 0: { // bar
             Double_t xx[2], yy[2];
             xx[0] = x; xx[1] = x + fs1.Width();
             yy[0] = yy[1] = y - sub - fs1.Over();
-            DrawPolyLine(2, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 2, xx, yy, spec, 0.03);
             break;
          }
          case 1: { // vec
             Double_t xx[3], yy[3],
-                     dd = GetHeight()*spec.fSize/8, // arrow size
+                     dd = GetHeightOf(pad)*spec.fSize/8, // arrow size
                      midy = y - sub - fs1.Over() - dd; // middle arrow line
             xx[0] = x; xx[1] = x + fs1.Width();
             yy[0] = yy[1] = midy;
-            DrawPolyLine(2, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 2, xx, yy, spec, 0.03);
             xx[1] = x + fs1.Width(); xx[0] = xx[2] = xx[1] - 2*dd;
             yy[0] = midy - dd; yy[1] = midy; yy[2] = midy + dd;
-            DrawPolyLine(3, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 3, xx, yy, spec, 0.03);
             break;
          }
          case 2: { // dot
@@ -1399,7 +1399,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                      midy = y - sub - fs1.Over() - dd;
             Double_t xx[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
                      yy[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
-            DrawPolyLine(5, xx, yy, spec, 10.);
+            DrawPolyLine(pad, 5, xx, yy, spec, 10.);
             break;
          }
          case 3: { // hat
@@ -1410,7 +1410,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             yy[0] = y - sub - fs1.Over();
             yy[1] = yy[0] - 2*sub;
             yy[2] = yy[0];
-            DrawPolyLine(3, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 3, xx, yy, spec, 0.03);
             break;
          }
          case 4: { // ddot
@@ -1419,11 +1419,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
                      midy = y - sub - fs1.Over() - dd;
             Double_t xx1[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
                      yy1[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
-            DrawPolyLine(5, xx1, yy1, spec, 10.);
+            DrawPolyLine(pad, 5, xx1, yy1, spec, 10.);
             midx = x + fs1.Width()/2 + 1.5*sub;
             Double_t xx2[5] = { midx - dd, midx - dd, midx + dd, midx + dd, midx - dd },
                      yy2[5] = { midy + dd, midy - dd, midy - dd, midy + dd, midy + dd };
-            DrawPolyLine(5, xx2, yy2, spec, 10.);
+            DrawPolyLine(pad, 5, xx2, yy2, spec, 10.);
             break;
          }
          case 5: { // acute
@@ -1431,7 +1431,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             xx[0] = x + fs1.Width()/2; xx[1] = xx[0] + 3*sub;
             yy[0] = y - sub - fs1.Over();
             yy[1] = yy[0] - 2.5*sub;
-            DrawPolyLine(2, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 2, xx, yy, spec, 0.03);
             break;
          }
          case 6: { // grave
@@ -1439,7 +1439,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             xx[0] = x + fs1.Width()/2 + sub; xx[1] = xx[0] - 2*sub;
             yy[0] = y - sub - fs1.Over();
             yy[1] = yy[0] - 2*sub;
-            DrawPolyLine(2, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 2, xx, yy, spec, 0.03);
             break;
          }
          case 7: { // check
@@ -1447,7 +1447,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             xx[1] = x+fs1.Width()/2; xx[0] = xx[1] - 2*sub; xx[2] = xx[1] + 2*sub;
             yy[1] = y - sub - fs1.Over();
             yy[0] = yy[2] = yy[1] - 2*sub;
-            DrawPolyLine(3, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 3, xx, yy, spec, 0.03);
             break;
          }
          case 8: { // tilde
@@ -1460,10 +1460,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
             Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
             Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-            Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-            Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-            Double_t xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-            Double_t yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+            Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+            Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
+            Double_t xx  = pad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+            Double_t yy  = pad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
             TText tilde;
             tilde.SetTextFont(fTextFont);
             tilde.SetTextColor(spec.fColor);
@@ -1474,8 +1474,8 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             if (saveps) {
                gVirtualPS = saveps;
                if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;
-               xx  = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
-               yy  = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
+               xx  = pad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y22-yOrigin)*sinang+xOrigin));
+               yy  = pad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y22-yOrigin)*cosang+yOrigin));
                gVirtualPS->SetTextAlign(22);
                gVirtualPS->Text(xx, yy, "~");
             }
@@ -1487,39 +1487,39 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             yy[0] = y - fs1.Over() - sub;
             xx[1] = x + 0.3*fs1.Width();
             yy[1] = yy[0] + fs1.Height() + 2*sub;
-            DrawPolyLine(2, xx, yy, spec, 0.03);
+            DrawPolyLine(pad, 2, xx, yy, spec, 0.03);
             break;
          }
          }
       }
       Double_t div = 3;
       if (opAbove==1) div=4;
-      result.Set(fs1.Width(),fs1.Over()+GetHeight()*spec.fSize/div,fs1.Under());
+      result.Set(fs1.Width(),fs1.Over()+GetHeightOf(pad)*spec.fSize/div,fs1.Under());
    }
    else if (opSquareBracket) { // operator #[]{arg}
-      Double_t l = GetHeight()*spec.fSize/4;
+      Double_t l = GetHeightOf(pad)*spec.fSize/4;
       Double_t l2 = l/2 ;
       if (!fShow) {
-         fs1 = Anal1(spec,text+3,length-3);
+         fs1 = Anal1(pad, spec,text+3,length-3);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x+l2+l,y,spec,text+3,length-3);
-         DrawLine(x+l2,y-fs1.Over(),x+l2,y+fs1.Under(),spec);
-         DrawLine(x+l2,y-fs1.Over(),x+l2+l,y-fs1.Over(),spec);
-         DrawLine(x+l2,y+fs1.Under(),x+l2+l,y+fs1.Under(),spec);
-         DrawLine(x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+2*l,y+fs1.Under(),spec);
-         DrawLine(x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+l,y-fs1.Over(),spec);
-         DrawLine(x+l2+fs1.Width()+2*l,y+fs1.Under(),x+l2+fs1.Width()+l,y+fs1.Under(),spec);
+         Analyse(pad, x+l2+l,y,spec,text+3,length-3);
+         DrawLine(pad, x+l2,y-fs1.Over(),x+l2,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2,y-fs1.Over(),x+l2+l,y-fs1.Over(),spec);
+         DrawLine(pad, x+l2,y+fs1.Under(),x+l2+l,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+2*l,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+l,y-fs1.Over(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+2*l,y+fs1.Under(),x+l2+fs1.Width()+l,y+fs1.Under(),spec);
       }
       result.Set(fs1.Width()+3*l,fs1.Over(),fs1.Under());
    }
    else if (opParen) {  // operator #(){arg}
-      Double_t l = GetHeight()*spec.fSize/4;
+      Double_t l = GetHeightOf(pad)*spec.fSize/4;
       Double_t radius2,radius1 , dw, l2 = l/2 ;
       Double_t angle = 35 ;
       if (!fShow) {
-         fs1 = Anal1(spec,text+3,length-3);
+         fs1 = Anal1(pad, spec,text+3,length-3);
          Savefs(&fs1);
          radius2 = fs1.Height() ;
          radius1 = radius2  * 2 / 3;
@@ -1532,34 +1532,34 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          Double_t x1 = x+l2+radius1 ;
          Double_t x2 = x+5*l2+2*dw+fs1.Width()-radius1 ;
          Double_t y1 = y - (fs1.Over() - fs1.Under())/2. ;
-         DrawParenthesis(x1,y1,radius1,radius2,180-angle,180+angle,spec) ;
-         DrawParenthesis(x2,y1,radius1,radius2,360-angle,360+angle,spec) ;
-         Analyse(x+3*l2+dw,y,spec,text+3,length-3);
+         DrawParenthesis(pad, x1,y1,radius1,radius2,180-angle,180+angle,spec) ;
+         DrawParenthesis(pad, x2,y1,radius1,radius2,360-angle,360+angle,spec) ;
+         Analyse(pad, x+3*l2+dw,y,spec,text+3,length-3);
       }
      // result = TLatexFormSize(fs1.Width()+3*l,fs1.Over(),fs1.Under());
       result.Set(fs1.Width()+3*l+2*dw,fs1.Over(),fs1.Under());
    }
    else if (opAbs) {  // operator #||{arg}
-      Double_t l = GetHeight()*spec.fSize/4;
+      Double_t l = GetHeightOf(pad)*spec.fSize/4;
       Double_t l2 = l/2 ;
       if (!fShow) {
-         fs1 = Anal1(spec,text+3,length-3);
+         fs1 = Anal1(pad, spec,text+3,length-3);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x+l2+l,y,spec,text+3,length-3);
-         DrawLine(x+l2,y-fs1.Over(),x+l2,y+fs1.Under(),spec);
-         DrawLine(x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+2*l,y+fs1.Under(),spec);
+         Analyse(pad, x+l2+l,y,spec,text+3,length-3);
+         DrawLine(pad, x+l2,y-fs1.Over(),x+l2,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+2*l,y-fs1.Over(),x+l2+fs1.Width()+2*l,y+fs1.Under(),spec);
       }
       result.Set(fs1.Width()+3*l,fs1.Over(),fs1.Under());
    }
    else if (opBigCurly) { // big curly bracket  #{}{arg}
-      Double_t l = GetHeight()*spec.fSize/4;
+      Double_t l = GetHeightOf(pad)*spec.fSize/4;
       Double_t l2 = l/2 ;
       Double_t l8 , ltip;
 
       if (!fShow) {
-         fs1 = Anal1(spec,text+3,length-3);
+         fs1 = Anal1(pad, spec,text+3,length-3);
          l8 = fs1.Height()/8 ;
          ltip = TMath::Min(l8,l) ;
          l = ltip ;
@@ -1570,28 +1570,28 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          l8 = fs1.Height()/8 ;
          ltip = TMath::Min(l8,l) ;
          l = ltip ;
-         Analyse(x+l+ltip+l2,y,spec,text+3,length-3);
+         Analyse(pad, x+l+ltip+l2,y,spec,text+3,length-3);
          // Draw open curly bracket
          // Vertical lines
-         DrawLine(x+l2+ltip,y-fs1.Over(),x+l2+ltip,y2-ltip,spec);
-         DrawLine(x+l2+ltip,y2+ltip,x+l2+ltip,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+ltip,y-fs1.Over(),x+l2+ltip,y2-ltip,spec);
+         DrawLine(pad, x+l2+ltip,y2+ltip,x+l2+ltip,y+fs1.Under(),spec);
          // top and bottom lines
-         DrawLine(x+l2+ltip,y-fs1.Over(),x+l2+ltip+l,y-fs1.Over(),spec);
-         DrawLine(x+l2+ltip,y+fs1.Under(),x+l2+ltip+l,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+ltip,y-fs1.Over(),x+l2+ltip+l,y-fs1.Over(),spec);
+         DrawLine(pad, x+l2+ltip,y+fs1.Under(),x+l2+ltip+l,y+fs1.Under(),spec);
          // < sign
-         DrawLine(x+l2,y2,x+l2+ltip,y2-ltip,spec);
-         DrawLine(x+l2,y2,x+l2+ltip,y2+ltip,spec);
+         DrawLine(pad, x+l2,y2,x+l2+ltip,y2-ltip,spec);
+         DrawLine(pad, x+l2,y2,x+l2+ltip,y2+ltip,spec);
 
          // Draw close curly bracket
          // vertical lines
-         DrawLine(x+l2+ltip+fs1.Width()+2*l,y-fs1.Over(),x+l2+ltip+fs1.Width()+2*l,y2-ltip,spec);
-         DrawLine(x+l2+ltip+fs1.Width()+2*l,y2+ltip,x+l2+ltip+fs1.Width()+2*l,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+ltip+fs1.Width()+2*l,y-fs1.Over(),x+l2+ltip+fs1.Width()+2*l,y2-ltip,spec);
+         DrawLine(pad, x+l2+ltip+fs1.Width()+2*l,y2+ltip,x+l2+ltip+fs1.Width()+2*l,y+fs1.Under(),spec);
          // Top and bottom lines
-         DrawLine(x+l2+fs1.Width()+l+ltip,y-fs1.Over(),x+l2+ltip+fs1.Width()+2*l,y-fs1.Over(),spec);
-         DrawLine(x+l2+fs1.Width()+l+ltip,y+fs1.Under(),x+l2+ltip+fs1.Width()+2*l,y+fs1.Under(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+l+ltip,y-fs1.Over(),x+l2+ltip+fs1.Width()+2*l,y-fs1.Over(),spec);
+         DrawLine(pad, x+l2+fs1.Width()+l+ltip,y+fs1.Under(),x+l2+ltip+fs1.Width()+2*l,y+fs1.Under(),spec);
          // > sign
-         DrawLine(x+l2+ltip+2*l+fs1.Width(),y2-ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
-         DrawLine(x+l2+ltip+2*l+fs1.Width(),y2+ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
+         DrawLine(pad, x+l2+ltip+2*l+fs1.Width(),y2-ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
+         DrawLine(pad, x+l2+ltip+2*l+fs1.Width(),y2+ltip,x+l2+2*l+2*ltip+fs1.Width(),y2,spec);
       }
       result.Set(fs1.Width()+3*l+2*ltip,fs1.Over(),fs1.Under()) ;;
    }
@@ -1602,10 +1602,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          delete[] text;
          return TLatexFormSize(0,0,0);
       }
-      Double_t height = GetHeight()*spec.fSize/8;
+      Double_t height = GetHeightOf(pad)*spec.fSize/8;
       if (!fShow) {
-         fs1 = Anal1(spec,text+opFrac+6,opCurlyCurly-opFrac-6);
-         fs2 = Anal1(spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
+         fs1 = Anal1(pad, spec,text+opFrac+6,opCurlyCurly-opFrac-6);
+         fs2 = Anal1(pad, spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
          Savefs(&fs1);
          Savefs(&fs2);
       } else {
@@ -1619,10 +1619,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             addW1 = 0;
             addW2 = (fs1.Width()-fs2.Width())/2;
          }
-         Analyse(x+addW2,y+fs2.Over()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // denominator
-         Analyse(x+addW1,y-fs1.Under()-3*height,spec,text+opFrac+6,opCurlyCurly-opFrac-6); //numerator
+         Analyse(pad, x+addW2,y+fs2.Over()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // denominator
+         Analyse(pad, x+addW1,y-fs1.Under()-3*height,spec,text+opFrac+6,opCurlyCurly-opFrac-6); //numerator
 
-         DrawLine(x,y-2*height,x+TMath::Max(fs1.Width(),fs2.Width()),y-2*height,spec);
+         DrawLine(pad, x,y-2*height,x+TMath::Max(fs1.Width(),fs2.Width()),y-2*height,spec);
       }
 
       result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
@@ -1635,17 +1635,17 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
          delete[] text;
          return TLatexFormSize(0,0,0);
       }
-      Double_t height = GetHeight()*spec.fSize/8;
+      Double_t height = GetHeightOf(pad)*spec.fSize/8;
       if (!fShow) {
-         fs1 = Anal1(spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11);
-         fs2 = Anal1(spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
+         fs1 = Anal1(pad, spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11);
+         fs2 = Anal1(pad, spec,text+opCurlyCurly+2,length-opCurlyCurly-3);
          Savefs(&fs1);
          Savefs(&fs2);
       } else {
          fs2 = Readfs();
          fs1 = Readfs();
-         Analyse(x,y+fs2.Over()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // second line
-         Analyse(x,y-fs1.Under()-3*height,spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11); //first line
+         Analyse(pad, x,y+fs2.Over()-height,spec,text+opCurlyCurly+2,length-opCurlyCurly-3);  // second line
+         Analyse(pad, x,y-fs1.Under()-3*height,spec,text+opSplitLine+11,opCurlyCurly-opSplitLine-11); //first line
       }
 
       result.Set(TMath::Max(fs1.Width(),fs2.Width()),fs1.Height()+3*height,fs2.Height()-height);
@@ -1655,40 +1655,40 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       if (!fShow) {
          if (opSquareCurly>-1) {
             // power nth  #sqrt[n]{arg}
-            fs1 = Anal1(specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6);
-            fs2 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
+            fs1 = Anal1(pad, specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6);
+            fs2 = Anal1(pad, spec,text+opSquareCurly+1,length-opSquareCurly-1);
             Savefs(&fs1);
             Savefs(&fs2);
-            result.Set(fs2.Width()+ GetHeight()*spec.fSize/10+TMath::Max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width()),
-                       fs2.Over()+fs1.Height()+GetHeight()*spec.fSize/4,fs2.Under());
+            result.Set(fs2.Width()+ GetHeightOf(pad)*spec.fSize/10+TMath::Max(GetHeightOf(pad)*spec.fSize/2,(Double_t)fs1.Width()),
+                       fs2.Over()+fs1.Height()+GetHeightOf(pad)*spec.fSize/4,fs2.Under());
          } else {
-            fs1 = Anal1(spec,text+opSqrt+5,length-opSqrt-5);
+            fs1 = Anal1(pad, spec,text+opSqrt+5,length-opSqrt-5);
             Savefs(&fs1);
-            result.Set(fs1.Width()+GetHeight()*spec.fSize/2,fs1.Over()+GetHeight()*spec.fSize/4,fs1.Under());
+            result.Set(fs1.Width()+GetHeightOf(pad)*spec.fSize/2,fs1.Over()+GetHeightOf(pad)*spec.fSize/4,fs1.Under());
          }
       } else {
          if (opSquareCurly>-1) { // ]{
             fs2 = Readfs();
             fs1 = Readfs();
-            Double_t pas = TMath::Max(GetHeight()*spec.fSize/2,(Double_t)fs1.Width());
-            Double_t pas2 = pas + GetHeight()*spec.fSize/10;
+            Double_t pas = TMath::Max(GetHeightOf(pad)*spec.fSize/2,(Double_t)fs1.Width());
+            Double_t pas2 = pas + GetHeightOf(pad)*spec.fSize/10;
             Double_t y1 = y-fs2.Over() ;
             Double_t y2 = y+fs2.Under() ;
-            Double_t y3 = y1-GetHeight()*spec.fSize/4;
-            Analyse(x+pas2,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
-            Analyse(x,y-fs2.Over()-fs1.Under(),specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6); // indice
-            DrawLine(x,y1,x+pas,y2,spec);
-            DrawLine(x+pas,y2,x+pas,y3,spec);
-            DrawLine(x+pas,y3,x+pas2+fs2.Width(),y3,spec);
+            Double_t y3 = y1-GetHeightOf(pad)*spec.fSize/4;
+            Analyse(pad, x+pas2,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+            Analyse(pad, x,y-fs2.Over()-fs1.Under(),specNewSize,text+opSqrt+6,opSquareCurly-opSqrt-6); // indice
+            DrawLine(pad, x,y1,x+pas,y2,spec);
+            DrawLine(pad, x+pas,y2,x+pas,y3,spec);
+            DrawLine(pad, x+pas,y3,x+pas2+fs2.Width(),y3,spec);
          } else {
             fs1 = Readfs();
-            Double_t x1 = x+GetHeight()*spec.fSize*2/5 ;
-            Double_t x2 = x+GetHeight()*spec.fSize/2+fs1.Width() ;
+            Double_t x1 = x+GetHeightOf(pad)*spec.fSize*2/5 ;
+            Double_t x2 = x+GetHeightOf(pad)*spec.fSize/2+fs1.Width() ;
             Double_t y1 = y-fs1.Over() ;
             Double_t y2 = y+fs1.Under() ;
-            Double_t y3 = y1-GetHeight()*spec.fSize/4;
+            Double_t y3 = y1-GetHeightOf(pad)*spec.fSize/4;
 
-            Analyse(x+GetHeight()*spec.fSize/2,y,spec,text+opSqrt+6,length-opSqrt-7);
+            Analyse(pad, x+GetHeightOf(pad)*spec.fSize/2,y,spec,text+opSqrt+6,length-opSqrt-7);
 
             Short_t lineW = GetLineWidth();
             SetLineWidth(1);
@@ -1696,10 +1696,10 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
             UInt_t a,d;
             GetTextAscentDescent(a, d, text);
             if (a>12) SetLineWidth(TMath::Max(2,(Int_t)(dx/2)));
-            DrawLine(x1-2*dx,y1,x1-dx,y2,spec);
+            DrawLine(pad, x1-2*dx,y1,x1-dx,y2,spec);
             if (a>12) SetLineWidth(TMath::Max(1,(Int_t)(dx/4)));
-            DrawLine(x1-dx,y2,x1,y3,spec);
-            DrawLine(x1,y3,x2,y3,spec);
+            DrawLine(pad, x1-dx,y2,x1,y3,spec);
+            DrawLine(pad, x1,y3,x2,y3,spec);
             SetLineWidth(lineW);
          }
       }
@@ -1724,9 +1724,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       }
       delete[] nb;
       if (!fShow) {
-         result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         result = Anal1(pad, newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       } else {
-         Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         Analyse(pad, x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
    else if (opFont>-1) { // \font found
@@ -1749,9 +1749,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       }
       delete[] nb;
       if (!fShow) {
-         result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         result = Anal1(pad, newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       } else {
-         Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         Analyse(pad, x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
    else if (opKern>-1) { // #kern found
@@ -1774,14 +1774,14 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       }
       delete[] dxc;
       if (!fShow) {
-         fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
+         fs1 = Anal1(pad, spec,text+opSquareCurly+1,length-opSquareCurly-1);
          Savefs(&fs1);
          Double_t ddx = dx * fs1.Width();
          result = TLatexFormSize(fs1.Width() + ddx, fs1.Over(), fs1.Under());
       } else {
          fs1 = Readfs();
          Double_t ddx = dx * fs1.Width();
-         Analyse(x + ddx,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+         Analyse(pad, x + ddx,y,spec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
    else if (opLower>-1) { // #lower found
@@ -1804,14 +1804,14 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       }
       delete[] dyc;
       if (!fShow) {
-         fs1 = Anal1(spec,text+opSquareCurly+1,length-opSquareCurly-1);
+         fs1 = Anal1(pad, spec,text+opSquareCurly+1,length-opSquareCurly-1);
          Savefs(&fs1);
          Double_t ddy = dy * (fs1.Over() + fs1.Under());
          result = TLatexFormSize(fs1.Width(), fs1.Over() + ddy, fs1.Under() + ddy);
       } else {
          fs1 = Readfs();
          Double_t ddy = dy * (fs1.Over() + fs1.Under());
-         Analyse(x,y + ddy,spec,text+opSquareCurly+1,length-opSquareCurly-1);
+         Analyse(pad, x,y + ddy,spec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
    else if (opScale>-1) { // \scale found
@@ -1835,9 +1835,9 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       newSpec.fSize *= spec.fSize;
       delete[] nb;
       if (!fShow) {
-         result = Anal1(newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         result = Anal1(pad, newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       } else {
-         Analyse(x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
+         Analyse(pad, x,y,newSpec,text+opSquareCurly+1,length-opSquareCurly-1);
       }
    }
    else if (opBf>-1) { // operator #bf{arg}
@@ -1847,22 +1847,22 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       if ((fontId >= 1) && (fontId <= (Int_t)(sizeof(lut)/sizeof(lut[0])))) fontId = lut[fontId-1];
       newSpec.fFont = fontId*10 + newSpec.fFont%10;
       if (!fShow) {
-         fs1 = Anal1(newSpec,text+3,length-3);
+         fs1 = Anal1(pad, newSpec,text+3,length-3);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x,y,newSpec,text+3,length-3);
+         Analyse(pad, x,y,newSpec,text+3,length-3);
       }
       result = fs1;
    }
    else if (opMbox>-1) { // dummy operator #mbox{arg}
       TextSpec_t newSpec = spec;
       if (!fShow) {
-         fs1 = Anal1(newSpec,text+5,length-5);
+         fs1 = Anal1(pad, newSpec,text+5,length-5);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x,y,newSpec,text+5,length-5);
+         Analyse(pad, x,y,newSpec,text+5,length-5);
       }
       result = fs1;
    }
@@ -1874,11 +1874,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
       newSpec.fFont = fontId*10 + newSpec.fFont%10;
       fItalic = !fItalic;
       if (!fShow) {
-         fs1 = Anal1(newSpec,text+3,length-3);
+         fs1 = Anal1(pad, newSpec,text+3,length-3);
          Savefs(&fs1);
       } else {
          fs1 = Readfs();
-         Analyse(x,y,newSpec,text+3,length-3);
+         Analyse(pad, x,y,newSpec,text+3,length-3);
       }
       fItalic = !fItalic;
       result = fs1;
@@ -1916,12 +1916,12 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, const TextSpec_t 
 
       if (fShow) {
          // paint the Latex sub-expression per sub-expression
-         Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-         Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+         Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+         Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
          Double_t angle   = kPI*spec.fAngle/180.;
-         Double_t xx = gPad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
-         Double_t yy = gPad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         gPad->PaintText(xx,yy,text);
+         Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
+         Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
+         pad->PaintText(xx,yy,text);
       } else {
          GetTextExtent(w,h,text);
          Double_t width = w;
@@ -1963,22 +1963,20 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
    return newtext;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a poly line in a Latex formula
 /// Is scale_width parameter >=1, fill area will be drawn
 /// Otherwise line width will be scaled proportional to current font size
 /// If not specified - default line width will be used
-void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
+void TLatex::DrawPolyLine(TVirtualPad *pad, Int_t npoints, Double_t *xx, Double_t *yy, const TextSpec_t &spec, Double_t scale_width)
 {
-   if (!gPad) return ;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
    for (Int_t n = 0; n < npoints; ++n) {
-      Double_t mx  = gPad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
-      Double_t my  = gPad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
+      Double_t mx  = pad->AbsPixeltoX(Int_t((xx[n]-xOrigin)*cosang+(yy[n]-yOrigin)*sinang+xOrigin));
+      Double_t my  = pad->AbsPixeltoY(Int_t((xx[n]-xOrigin)*-sinang+(yy[n]-yOrigin)*cosang+yOrigin));
       xx[n] = mx;
       yy[n] = my;
    }
@@ -1986,20 +1984,20 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
    if (scale_width >= 1.) {
       TAttFill fill(spec.fColor, 1001);
       fill.Modify();
-      gPad->PaintFillArea(npoints, xx, yy, "f");
+      pad->PaintFillArea(npoints, xx, yy, "f");
       return;
    }
 
    auto prevWidth = GetLineWidth();
    if (scale_width) {
-      Int_t lineWidth = TMath::Nint(GetHeight() * spec.fSize * scale_width);
+      Int_t lineWidth = TMath::Nint(GetHeightOf(pad) * spec.fSize * scale_width);
       SetLineWidth(lineWidth > prevWidth ? lineWidth : prevWidth);
    }
 
    SetLineColor(spec.fColor);
    TAttLine::Modify();
 
-   gPad->PaintPolyLine(npoints, xx, yy);
+   pad->PaintPolyLine(npoints, xx, yy);
    if (scale_width)
       SetLineWidth(prevWidth);
 }
@@ -2008,35 +2006,33 @@ void TLatex::DrawPolyLine(Int_t npoints, Double_t *xx, Double_t *yy, const TextS
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line in a Latex formula
 
-void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
+void TLatex::DrawLine(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t x2, Double_t y2, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
-   Double_t xx  = gPad->AbsPixeltoX(Int_t((x1-xOrigin)*cosang+(y1-yOrigin)*sinang+xOrigin));
-   Double_t yy  = gPad->AbsPixeltoY(Int_t((x1-xOrigin)*-sinang+(y1-yOrigin)*cosang+yOrigin));
+   Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
+   Double_t xx  = pad->AbsPixeltoX(Int_t((x1-xOrigin)*cosang+(y1-yOrigin)*sinang+xOrigin));
+   Double_t yy  = pad->AbsPixeltoY(Int_t((x1-xOrigin)*-sinang+(y1-yOrigin)*cosang+yOrigin));
 
-   Double_t xx2 = gPad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
-   Double_t yy2 = gPad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
+   Double_t xx2 = pad->AbsPixeltoX(Int_t((x2-xOrigin)*cosang+(y2-yOrigin)*sinang+xOrigin));
+   Double_t yy2 = pad->AbsPixeltoY(Int_t((x2-xOrigin)*-sinang+(y2-yOrigin)*cosang+yOrigin));
 
    SetLineColor(spec.fColor);
    TAttLine::Modify();
-   gPad->PaintLine(xx,yy,xx2,yy2);
+   pad->PaintLine(xx,yy,xx2,yy2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
-void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec)
+void TLatex::DrawCircle(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t r, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
 
    const Int_t np = 40;
    Double_t dphi = 2*kPI/np;
@@ -2050,25 +2046,24 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, const TextSpec_t &
       angle = Double_t(i)*dphi;
       dx    = r*TMath::Cos(angle) +x1 -xOrigin;
       dy    = r*TMath::Sin(angle) +y1 -yOrigin;
-      x[i]  = gPad->AbsPixeltoX(TMath::Nint( dx*cosang+ dy*sinang +xOrigin));
-      y[i]  = gPad->AbsPixeltoY(TMath::Nint(-dx*sinang+ dy*cosang +yOrigin));
+      x[i]  = pad->AbsPixeltoX(TMath::Nint( dx*cosang+ dy*sinang +xOrigin));
+      y[i]  = pad->AbsPixeltoY(TMath::Nint(-dx*sinang+ dy*cosang +yOrigin));
    }
-   gPad->PaintPolyLine(np+1,x,y);
+   pad->PaintPolyLine(np+1,x,y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw an arc of ellipse in a Latex formula (right or left parenthesis)
 
-void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
+void TLatex::DrawParenthesis(TVirtualPad *pad, Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                              Double_t  phimin, Double_t  phimax, const TextSpec_t &spec)
 {
-   if (!gPad) return ;
    if (r1 < 1) r1 = 1;
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
-   Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
-   Double_t yOrigin = (Double_t)gPad->YtoAbsPixel(fY);
+   Double_t xOrigin = (Double_t)pad->XtoAbsPixel(fX);
+   Double_t yOrigin = (Double_t)pad->YtoAbsPixel(fY);
 
    const Int_t np = 40;
    Double_t dphi = (phimax-phimin)*kPI/(180*np);
@@ -2082,38 +2077,49 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
       angle = phimin*kPI/180 + Double_t(i)*dphi;
       dx    = r1*TMath::Cos(angle) +x1 -xOrigin;
       dy    = r2*TMath::Sin(angle) +y1 -yOrigin;
-      x[i]  = gPad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +xOrigin));
-      y[i]  = gPad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +yOrigin));
+      x[i]  = pad->AbsPixeltoX(Int_t( dx*cosang+dy*sinang +xOrigin));
+      y[i]  = pad->AbsPixeltoY(Int_t(-dx*sinang+dy*cosang +yOrigin));
    }
-   gPad->PaintPolyLine(np+1,x,y);
+   pad->PaintPolyLine(np+1,x,y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint.
+/// Paint latex on the pad
 
-void TLatex::Paint(Option_t *)
+void TLatex::PaintOn(TVirtualPad *pad, Option_t *)
 {
-   if (!gPad) return ;
    Double_t xsave = fX;
    Double_t ysave = fY;
    if (TestBit(kTextNDC)) {
-      fX = gPad->GetX1() + xsave*(gPad->GetX2() - gPad->GetX1());
-      fY = gPad->GetY1() + ysave*(gPad->GetY2() - gPad->GetY1());
-      PaintLatex(fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
+      fX = pad->GetX1() + xsave*(pad->GetX2() - pad->GetX1());
+      fY = pad->GetY1() + ysave*(pad->GetY2() - pad->GetY1());
+      PaintLatexOn(pad, fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
    } else {
-      PaintLatex(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTextAngle(),GetTextSize(),GetTitle());
+      PaintLatexOn(pad, pad->XtoPad(fX), pad->YtoPad(fY),GetTextAngle(),GetTextSize(),GetTitle());
    }
    fX = xsave;
    fY = ysave;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Main drawing function
+/// Main latex painting function (old signature)
 ///
 /// Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
 ///          the TLatex data members.
 
 void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
+{
+   if (gPad)
+      PaintLatexOn(gPad, x, y, angle, size, text1);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Main latex painting function on the pad
+///
+/// Warning: Unlike most others "XYZ::PaintXYZ" methods, PaintLatex modifies
+///          the TLatex data members.
+
+void TLatex::PaintLatexOn(TVirtualPad *pad, Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
    if (size<=0 || strlen(text1) <= 0) return; // do not paint empty text or text with size <= 0
 
@@ -2188,30 +2194,29 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          }
          gVirtualPS->Text(x,y,t.Data());
       } else {
-         Bool_t saveb = gPad->IsBatch();
-         gPad->SetBatch(kTRUE);
-         if (!PaintLatex1( x, y, angle, size, text1)) {
+         Bool_t saveb = pad->IsBatch();
+         pad->SetBatch(kTRUE);
+         if (!PaintLatex1(pad, x, y, angle, size, text1)) {
             if (saveps) gVirtualPS = saveps;
             return;
          }
-         gPad->SetBatch(saveb);
+         pad->SetBatch(saveb);
       }
       gVirtualPS = nullptr;
    }
 
-   if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
+   if (!pad->IsBatch()) PaintLatex1(pad, x, y, angle, size, text1);
    if (saveps) gVirtualPS = saveps;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Drawing function
+/// Internal paint method
 
-Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
+Int_t TLatex::PaintLatex1(TVirtualPad *pad, Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   if (!gPad) return 0;
    TString newText = text1;
-   if( newText.Length() == 0) return 0;
-   newText.ReplaceAll("#hbox","#mbox");
+   if(newText.Length() == 0) return 0;
+   newText.ReplaceAll("#hbox", "#mbox");
 
    fError = nullptr;
    if (CheckLatexSyntax(newText)) {
@@ -2225,11 +2230,11 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    if (fTextFont%10 < 2) {
       if (gVirtualX) gVirtualX->SetTextAngle(angle);
       if (gVirtualPS) gVirtualPS->SetTextAngle(angle);
-      gPad->PaintText(x,y,text1);
+      pad->PaintText(x,y,text1);
       return 1;
    }
 
-   Bool_t saveb = gPad->IsBatch();
+   Bool_t saveb = pad->IsBatch();
    // Paint the text using TMathText if contains a "\"
    if (strstr(text1,"\\")) {
       TMathText tm;
@@ -2241,7 +2246,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
          if (gVirtualPS->InheritsFrom("TPDF") ||
              gVirtualPS->InheritsFrom("TSVG")) {
             newText.ReplaceAll("\\","#");
-            gPad->SetBatch(kTRUE);
+            pad->SetBatch(kTRUE);
          } else {
             return 1;
          }
@@ -2264,10 +2269,10 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Double_t ysave = fY;
    fX = x;
    fY = y;
-   x = gPad->XtoAbsPixel(x);
-   y = gPad->YtoAbsPixel(y);
+   x = pad->XtoAbsPixel(x);
+   y = pad->YtoAbsPixel(y);
    fShow = kFALSE ;
-   TLatexFormSize fs = FirstParse(angle,size,text);
+   TLatexFormSize fs = FirstParse(pad, angle,size,text);
 
    fOriginSize = size;
 
@@ -2300,10 +2305,10 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
          case 2: x -= fs.Width()/2  ; break;
          case 3: x -= fs.Width()    ; break;
       }
-      Analyse(x,y,newSpec,text,length);
+      Analyse(pad, x,y,newSpec,text,length);
    }
 
-   gPad->SetBatch(saveb);
+   pad->SetBatch(saveb);
    SetTextSize(saveSize);
    SetTextAngle(angle);
    SetTextFont(saveFont);
@@ -2520,7 +2525,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 ////////////////////////////////////////////////////////////////////////////////
 /// First parsing of the analyse sequence
 
-TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
+TLatex::TLatexFormSize TLatex::FirstParse(TVirtualPad *pad, Double_t angle, Double_t size, const Char_t *text)
 {
    fTabSize.reserve(100); // ensure 100 entries before memory reallocation required
    fShow       = kFALSE;
@@ -2538,7 +2543,7 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
 
-   TLatexFormSize fs = Anal1(spec,text,strlen(text));
+   TLatexFormSize fs = Anal1(pad, spec,text,strlen(text));
 
    SetTextSize(size);
    SetTextAngle(angle);
@@ -2555,13 +2560,17 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
 
 Double_t TLatex::GetHeight() const
 {
-   if (!gPad) return 0.;
-   Double_t w = gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
-   Double_t h = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
-   if (w < h)
-      return w;
-   else
-      return h;
+   return gPad ? GetHeightOf(gPad) : 0.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return height of specified pad in pixels
+
+Double_t TLatex::GetHeightOf(TVirtualPad *pad) const
+{
+   Double_t w = pad->GetAbsWNDC()*Double_t(pad->GetWw());
+   Double_t h = pad->GetAbsHNDC()*Double_t(pad->GetWh());
+   return (w < h) ? w : h;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2570,7 +2579,16 @@ Double_t TLatex::GetHeight() const
 
 Double_t TLatex::GetXsize()
 {
-   if (!gPad) return 0.;
+   return gPad ? GetXsizeOn(gPad) : 0.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along X in pad coordinates when the text precision
+/// is smaller than 3.
+
+Double_t TLatex::GetXsizeOn(TVirtualPad *pad)
+{
+
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
 
@@ -2590,10 +2608,10 @@ Double_t TLatex::GetXsize()
 
    const Char_t *text = newText.Data() ;
    Double_t angle_old = GetTextAngle();
-   TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
+   TLatexFormSize fs = FirstParse(pad, 0,GetTextSize(),text);
    SetTextAngle(angle_old);
    fTabSize.clear();
-   return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
+   return TMath::Abs(pad->AbsPixeltoX(Int_t(fs.Width())) - pad->AbsPixeltoX(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2601,7 +2619,15 @@ Double_t TLatex::GetXsize()
 
 void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 {
-   if (!gPad) return;
+   if (gPad)
+      GetBoundingBoxOn(gPad, w, h, angle);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return text size in pixels
+
+void TLatex::GetBoundingBoxOn(TVirtualPad *pad, UInt_t &w, UInt_t &h, Bool_t angle)
+{
    TString newText = GetTitle();
    if( newText.Length() == 0) return;
 
@@ -2624,11 +2650,11 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
       if (TestBit(kTextNDC)) {
-         ptx = gPad->UtoPixel(fX);
-         pty = gPad->VtoPixel(fY);
+         ptx = pad->UtoPixel(fX);
+         pty = pad->VtoPixel(fY);
       } else {
-         ptx = gPad->XtoAbsPixel(gPad->XtoPad(fX));
-         pty = gPad->YtoAbsPixel(gPad->YtoPad(fY));
+         ptx = pad->XtoAbsPixel(pad->XtoPad(fX));
+         pty = pad->YtoAbsPixel(pad->YtoPad(fY));
       }
       GetControlBox(ptx, pty, fTextAngle, cBoxX, cBoxY);
       Int_t x1 = cBoxX[0];
@@ -2645,7 +2671,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       h = y2-y1;
    } else {
       const Char_t *text = newText.Data() ;
-      TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
+      TLatexFormSize fs = FirstParse(pad, GetTextAngle(),GetTextSize(),text);
       fTabSize.clear();
       w = (UInt_t)fs.Width();
       h = (UInt_t)fs.Height();
@@ -2658,7 +2684,15 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 Double_t TLatex::GetYsize()
 {
-   if (!gPad) return 0.;
+   return gPad ? GetYsizeOn(gPad) : 0.;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return size of the formula along Y in pad coordinates when the text precision
+/// is smaller than 3.
+
+Double_t TLatex::GetYsizeOn(TVirtualPad *pad)
+{
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
 
@@ -2678,10 +2712,10 @@ Double_t TLatex::GetYsize()
 
    const Char_t *text = newText.Data();
    Double_t angsav = fTextAngle;
-   TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
+   TLatexFormSize fs = FirstParse(pad, 0,GetTextSize(),text);
    fTextAngle = angsav;
    fTabSize.clear();
-   return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
+   return TMath::Abs(pad->AbsPixeltoY(Int_t(fs.Height())) - pad->AbsPixeltoY(0));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
