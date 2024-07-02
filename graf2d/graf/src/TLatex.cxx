@@ -1179,7 +1179,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         hbar.PaintText(xx,yy,"h");
+         hbar.PaintTextOn(pad,xx,yy,"h");
          DrawLine(pad, x,y-0.8*square,x+0.75*square,y-square,spec);
       }
       result = fs1 + TLatexFormSize(square,square,0);
@@ -1201,7 +1201,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         minus.PaintText(xx,yy,"-");
+         minus.PaintTextOn(pad,xx,yy,"-");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1222,7 +1222,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         plus.PaintText(xx,yy,"+");
+         plus.PaintTextOn(pad,xx,yy,"+");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1243,7 +1243,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = pad->AbsPixeltoX(Int_t((x+square-xOrigin)*TMath::Cos(angle)+(y-1.25*square-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = pad->AbsPixeltoY(Int_t((x+square-xOrigin)*TMath::Sin(-angle)+(y-1.25*square-yOrigin)*TMath::Cos(angle)+yOrigin));
-         mp.PaintText(xx,yy,"\261");
+         mp.PaintTextOn(pad,xx,yy,"\261");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1280,7 +1280,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
          Double_t angle   = kPI*spec.fAngle/180.;
          Double_t xx = pad->AbsPixeltoX(Int_t((x-xOrigin)*TMath::Cos(angle)+(y-yOrigin)*TMath::Sin(angle)+xOrigin));
          Double_t yy = pad->AbsPixeltoY(Int_t((x-xOrigin)*TMath::Sin(-angle)+(y-yOrigin)*TMath::Cos(angle)+yOrigin));
-         bs.PaintText(xx,yy,"\\");
+         bs.PaintTextOn(pad,xx,yy,"\\");
       }
       result = fs1 + TLatexFormSize(square,square,0);
    }
@@ -1470,7 +1470,7 @@ TLatex::TLatexFormSize TLatex::Analyse(TVirtualPad *pad, Double_t x, Double_t y,
             tilde.SetTextSize(0.9*spec.fSize);
             tilde.SetTextAlign(22);
             tilde.SetTextAngle(fTextAngle);
-            tilde.PaintText(xx,yy,"~");
+            tilde.PaintTextOn(pad,xx,yy,"~");
             if (saveps) {
                gVirtualPS = saveps;
                if (!strstr(gVirtualPS->GetTitle(),"IMG")) y22 -= 4*sub;

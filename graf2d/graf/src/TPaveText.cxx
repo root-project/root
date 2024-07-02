@@ -536,7 +536,7 @@ void TPaveText::PaintPrimitivesOn(TVirtualPad *pad, Int_t mode)
             if (halign == 3) xtext = fX2 - margin;
          }
          if (yl > 0 && yl <1) ytext = fY1 + yl*dy;
-         linet->PaintText(xtext,ytext,linet->GetTitle());
+         linet->PaintTextOn(pad,xtext,ytext,linet->GetTitle());
          linet->SetTextAlign(talign);
          linet->SetTextColor(tcolor);
          linet->SetTextFont(tfont);
