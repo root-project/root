@@ -2296,7 +2296,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) int16_t(0); }
+   void ConstructValue(void *where) const final { new (where) uint16_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint16_t"; }
