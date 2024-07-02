@@ -182,7 +182,6 @@ public:
       // provides the symbol and create one MaterializationUnit per library to
       // actually load it if needed.
       std::unordered_map<std::string, llvm::orc::SymbolNameVector> found;
-      llvm::orc::SymbolNameSet missing;
 
       // TODO: Do we need to take gInterpreterMutex?
       // R__LOCKGUARD(gInterpreterMutex);
@@ -204,9 +203,7 @@ public:
          // is made available as argument to `CreateInterpreter`.
          assert(libName.find("/libCling.") == std::string::npos && "Must not autoload libCling!");
 
-         if (libName.empty())
-            missing.insert(name);
-         else
+         if (!libName.empty())
             found[libName].push_back(name);
       }
 
@@ -215,10 +212,6 @@ public:
          if (auto Err = JD.define(MU))
             return Err;
       }
-
-      if (!missing.empty())
-         return llvm::make_error<llvm::orc::SymbolsNotFound>(
-            JD.getExecutionSession().getSymbolStringPool(), std::move(missing));
 
       return llvm::Error::success();
    }
