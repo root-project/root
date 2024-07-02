@@ -25,9 +25,10 @@ ROOT::Experimental::Internal::RNTupleIndex::RNTupleIndex(std::vector<std::unique
       fieldValues.emplace_back(field->CreateValue());
    }
 
+   std::vector<void *> ptrs;
+   ptrs.reserve(fieldValues.size());
    for (std::uint64_t i = 0; i < pageSource.GetNEntries(); ++i) {
-      std::vector<void *> ptrs;
-      ptrs.reserve(fieldValues.size());
+      ptrs.clear();
       for (auto &fieldValue : fieldValues) {
          fieldValue.Read(i);
          ptrs.push_back(fieldValue.GetPtr<void>().get());
