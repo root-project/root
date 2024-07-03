@@ -128,6 +128,7 @@ Short_t TTF::CharToUnicode(UInt_t code)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the trailing blanks width. It is use to compute the text width in GetTextExtent
+/// `n` is the number of trailing blanks in a string.
 
 void TTF::ComputeTrailingBlanksWidth(Int_t n)
 {
