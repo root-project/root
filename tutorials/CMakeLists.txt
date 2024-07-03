@@ -894,3 +894,6 @@ if(ROOT_pyroot_FOUND)
 
   endforeach()
 endif()
+
+# Copy hsimple.root over to build directory as it may be needed by tutorials or other tests
+configure_file(hsimple.root ${CMAKE_BINARY_DIR}/tutorials/hsimple.root COPYONLY)
