@@ -131,6 +131,7 @@ Short_t TTF::CharToUnicode(UInt_t code)
 
 void TTF::ComputeTrailingBlanksWidth(Int_t n)
 {
+   fgTBlankW = 0;
    if (n) {
       FT_Face face = fgFace[fgCurFontIdx];
       char space = ' ';
@@ -142,7 +143,7 @@ void TTF::ComputeTrailingBlanksWidth(Int_t n)
       FT_Pos advance_x       = slot->advance.x;
       Int_t advance_x_pixels = advance_x >> 6;
 
-      fgTBlankW = advance_x_pixels*n;
+      fgTBlankW = advance_x_pixels * n;
    }
 }
 
@@ -274,7 +275,6 @@ void TTF::PrepareString(const char *string)
    UInt_t index;       // Unicode value
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgTBlankW   = 0;
    fgNumGlyphs = 0;
    while (*p) {
       index = CharToUnicode((FT_ULong)*p);
@@ -305,7 +305,6 @@ void TTF::PrepareString(const wchar_t *string)
    UInt_t index;       // Unicode value
    Int_t NbTBlank = 0; // number of trailing blanks
 
-   fgTBlankW   = 0;
    fgNumGlyphs = 0;
    while (*p) {
       index = FT_Get_Char_Index(fgFace[fgCurFontIdx], (FT_ULong)*p);
