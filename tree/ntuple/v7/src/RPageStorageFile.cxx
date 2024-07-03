@@ -125,7 +125,6 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
    return WriteSealedPage(sealedPage, bytesPacked);
 }
 
-
 void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBatch &batch,
                                                                      std::vector<RNTupleLocator> &locators)
 {
@@ -166,7 +165,6 @@ std::vector<ROOT::Experimental::RNTupleLocator>
 ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges)
 {
    const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
-   // const std::uint64_t maxKeySize = 0;
 
    CommittedBatch batch{};
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
@@ -588,15 +586,15 @@ ROOT::Experimental::Internal::RPageSourceFile::PrepareSingleCluster(
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
    auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-   PrepareLoadCluster(clusterKey, *pageZeroMap,
-                      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
-                          const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
-                         const auto &pageLocator = pageInfo.fLocator;
-                         const auto nBytes = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
-                         activeSize += nBytes;
-                         onDiskPages.push_back(
-                            {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
-                      });
+   PrepareLoadCluster(
+      clusterKey, *pageZeroMap,
+      [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+          const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+         const auto &pageLocator = pageInfo.fLocator;
+         const auto nBytes = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
+         activeSize += nBytes;
+         onDiskPages.push_back({physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), nBytes, 0});
+      });
 
    // Linearize the page requests by file offset
    std::sort(onDiskPages.begin(), onDiskPages.end(),
