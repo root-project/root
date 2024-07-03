@@ -1410,6 +1410,10 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    const auto bufPayload = buffer.Buffer() + keyLen;
    const auto lenPayload = buffer.Length() - keyLen;
 
+   if (rulesList.GetEntries() > 0) {
+      streamerInfoList.RemoveLast(); // remove the rulesList
+   }
+
    RNTupleCompressor compressor;
    auto zipStreamerInfos = std::make_unique<unsigned char[]>(lenPayload);
    auto szZipStreamerInfos = compressor.Zip(bufPayload, lenPayload, 1, zipStreamerInfos.get());
