@@ -247,7 +247,14 @@ public:
          normSet.add(tool->requestArgSet<RooAbsReal>(p, "normalization"));
          normSetPtr = &normSet;
       }
-      tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr);
+      std::string domain;
+      bool hasDomain = p.has_child("domain");
+      if (hasDomain) {
+         domain = p["domain"].val();
+      }
+      // todo: at some point, take care of integrator configurations
+      tool->wsEmplace<RooRealIntegral>(name, *func, vars, normSetPtr, static_cast<RooNumIntConfig *>(nullptr),
+                                       hasDomain ? domain.c_str() : nullptr);
       return true;
    }
 };
@@ -698,6 +705,9 @@ public:
       auto *integral = static_cast<const RooRealIntegral *>(func);
       elem["type"] << key();
       elem["integrand"] << integral->integrand().GetName();
+      if (integral->intRange()) {
+         elem["domain"] << integral->intRange();
+      }
       RooJSONFactoryWSTool::fillSeq(elem["variables"], integral->intVars());
       if (RooArgSet const *funcNormSet = integral->funcNormSet()) {
          RooJSONFactoryWSTool::fillSeq(elem["normalization"], *funcNormSet);
