@@ -58,6 +58,17 @@ The written file can be either in ROOT format or in RNTuple bare format.
 // clang-format on
 class RPageSinkFile : public RPagePersistentSink {
 private:
+   // A set of pages to be committed together in a vector write.
+   // Currently we assume they're all sequential (although they may span multiple ranges).
+   struct CommittedBatch {
+      using Iter = std::pair<std::span<RPageStorage::RSealedPageGroup>::iterator, SealedPageSequence_t::const_iterator>;
+
+      size_t fSize;
+      size_t fBytesPacked;
+      Iter fBegin;
+      Iter fEnd;
+   };
+
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    std::unique_ptr<RNTupleFileWriter> fWriter;
@@ -68,6 +79,8 @@ private:
    /// We pass bytesPacked so that TFile::ls() reports a reasonable value for the compression ratio of the corresponding
    /// key. It is not strictly necessary to write and read the sealed page.
    RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
+
+   void CommitBatchOfPages(CommittedBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
    using RPagePersistentSink::InitImpl;
