@@ -499,6 +499,10 @@ bool Minuit2Minimizer::Minimize()
 
    // add extra options if needed
    const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
+
+   int seedingOnly = 0;
+   minuit2Opt->GetIntValue("seeding_only", seedingOnly);
+
    if (!minuit2Opt) {
       minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
    }
@@ -553,10 +557,10 @@ bool Minuit2Minimizer::Minimize()
    if (gradFCN != nullptr) {
       // use gradient
       // SetPrintLevel(3);
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*gradFCN, fState, strategy, maxfcn, tol, seedingOnly);
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    } else {
-      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, strategy, maxfcn, tol);
+      ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*GetFCN(), fState, strategy, maxfcn, tol,seedingOnly);
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 

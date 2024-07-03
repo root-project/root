@@ -86,7 +86,7 @@ public:
    // for Fumili
 
    FunctionMinimum Minimize(const FCNBase &, const MnUserParameterState &, const MnStrategy &, unsigned int maxfcn = 0,
-                            double toler = 0.1) const override;
+                            double toler = 0.1, bool seedingOnly = false) const override;
 
    FunctionMinimum Minimize(const FCNGradientBase &, const MnUserParameterState &, const MnStrategy &,
                                     unsigned int maxfcn = 0, double toler = 0.1) const override;
