@@ -24,7 +24,6 @@ builtin_zstd=ON
 ccache=ON
 clad=OFF
 cocoa=ON
-fortran=OFF
 mysql=OFF
 pgsql=OFF
 pythia8=OFF
