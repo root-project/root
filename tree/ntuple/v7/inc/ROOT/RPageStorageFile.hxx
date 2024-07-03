@@ -80,6 +80,10 @@ private:
    /// key. It is not strictly necessary to write and read the sealed page.
    RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage, std::size_t bytesPacked);
 
+   /// Subroutine of CommitSealedPageVImpl, used to perform a vector write of the (multi-)range of pages
+   /// contained in `batch`. The locators for the written pages are appended to `locators`.
+   /// This procedure also updates some internal metrics of the page sink, hence it's not const.
+   /// `batch` gets reset to size 0 after the writing is done (but its begin and end are not updated).
    void CommitBatchOfPages(CommittedBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
