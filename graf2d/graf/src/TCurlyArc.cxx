@@ -126,7 +126,7 @@ Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
    // Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);
-   Double_t dist = TMath::Sqrt(Double_t((pxc-px)*(pxc-px)+(pyc-py)*(pyc-py)));
+   Double_t dist = TMath::Sqrt(Long64_t(pxc-px)*(pxc-px)+Long64_t(pyc-py)*(pyc-py));
    Double_t cosa = (px - pxc)/dist;
    Double_t sina = (pyc - py)/dist;
    Double_t phi  = TMath::ATan2(sina,cosa);
