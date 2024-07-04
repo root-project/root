@@ -194,6 +194,7 @@ class BaseBackend(ABC):
             **kwargs (dict): Keyword arguments used to execute the function.
         """
         cls.initialization = partial(fun, *args, **kwargs)
+        fun(*args, **kwargs)
 
     @abstractmethod
     def ProcessAndMerge(self, ranges: List[DataRange],
