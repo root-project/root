@@ -1376,7 +1376,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
       streamerInfoList.Add(info);
       TClass *clinfo = info->GetClass();
       if (clinfo && clinfo->GetSchemaRules() && (classesWithRules.count(clinfo) == 0)) {
-         for (auto rule : TRangeDynCast<ROOT::TSchemaRule>(clinfo->GetSchemaRules()->GetRules())) {
+         auto rules = reinterpret_cast<const TCollection *>(clinfo->GetSchemaRules()->GetRules());
+         for (auto rule : TRangeDynCast<ROOT::TSchemaRule>(rules)) {
             TObjString *obj = new TObjString();
             rule->AsString(obj->String());
             rulesList.Add(obj);
