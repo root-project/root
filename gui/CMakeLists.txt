@@ -29,9 +29,10 @@ if(webgui)
 
    add_subdirectory(webgui6)
 
+   add_subdirectory(browsable)
+   add_subdirectory(browserv7)
+
    if(root7)
-      add_subdirectory(browsable)
-      add_subdirectory(browserv7)
       add_subdirectory(canvaspainter)
       add_subdirectory(fitpanelv7)
    endif()
