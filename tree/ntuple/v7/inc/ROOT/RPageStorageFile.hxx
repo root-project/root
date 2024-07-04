@@ -60,13 +60,18 @@ class RPageSinkFile : public RPagePersistentSink {
 private:
    // A set of pages to be committed together in a vector write.
    // Currently we assume they're all sequential (although they may span multiple ranges).
-   struct CommittedBatch {
-      using Iter = std::pair<std::span<RPageStorage::RSealedPageGroup>::iterator, SealedPageSequence_t::const_iterator>;
+   struct CommitBatch {
+      using Iter_t =
+         std::pair<std::span<RPageStorage::RSealedPageGroup>::iterator, SealedPageSequence_t::const_iterator>;
 
+      /// Total size in bytes of the batch
       size_t fSize;
+      /// Total uncompressed size of the elements in the page batch
       size_t fBytesPacked;
-      Iter fBegin;
-      Iter fEnd;
+      /// Pair { group_iter, page_iter } marking the begin of the sequential multi-range of pages
+      Iter_t fBegin;
+      /// Pair { group_iter, page_iter } marking the end of the sequential multi-range of pages (exclusive)
+      Iter_t fEnd;
    };
 
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
@@ -84,7 +89,7 @@ private:
    /// contained in `batch`. The locators for the written pages are appended to `locators`.
    /// This procedure also updates some internal metrics of the page sink, hence it's not const.
    /// `batch` gets reset to size 0 after the writing is done (but its begin and end are not updated).
-   void CommitBatchOfPages(CommittedBatch &batch, std::vector<RNTupleLocator> &locators);
+   void CommitBatchOfPages(CommitBatch &batch, std::vector<RNTupleLocator> &locators);
 
 protected:
    using RPagePersistentSink::InitImpl;

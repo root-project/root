@@ -125,21 +125,39 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
    return WriteSealedPage(sealedPage, bytesPacked);
 }
 
-void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBatch &batch,
+void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommitBatch &batch,
                                                                      std::vector<RNTupleLocator> &locators)
 {
    Detail::RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
 
    std::uint64_t offset = fWriter->ReserveBlob(batch.fSize, batch.fBytesPacked);
 
-   auto rangeBegin = batch.fBegin.first;
-   auto rangeEnd = batch.fEnd.first;
-   auto firstPageBegin = batch.fBegin.second;
-   auto lastPageEnd = batch.fEnd.second;
+   const auto groupBegin = batch.fBegin.first;
+   const auto groupEnd = batch.fEnd.first;
+   const auto firstPageBegin = batch.fBegin.second;
+   const auto lastPageEnd = batch.fEnd.second;
+   const auto prevLocatorsSize = locators.size();
 
-   for (auto rangeIt = rangeBegin; rangeIt != rangeEnd; ++rangeIt) {
-      auto pageBegin = (rangeIt == rangeBegin) ? firstPageBegin : rangeIt->fFirst;
-      auto pageEnd = (std::next(rangeIt) == rangeEnd) ? lastPageEnd : rangeIt->fLast;
+   for (auto groupIt = groupBegin; groupIt != groupEnd; ++groupIt) {
+      // Brief explanation on the iteration logic:
+      // we are iterating over multiple consecutive ranges of SealedPageGroups, each containing a range of SealedPages.
+      // It looks like this:
+      //
+      // groupBegin                                                                                          groupEnd
+      // |   firstPageBegin                                                                          lastPageEnd    |
+      // |   |                                                                                       |              |
+      // v   v                                                                                       v              v
+      // +------------------+--------------------------------+-------------------------------------+----------------+
+      // |pg0|pg1|pg2|..|pgM|                                |                                     |                |
+      // |   |   |   |  |   |                                |                                     |                |
+      // |   | Group N  |   |          Group N + 1           |            Group N + 2              |   Group N + 3  |
+      // |   |   |   |  |   |                                |                                     |                |
+      // +------------------+--------------------------------+-------------------------------------+----------------+
+      //
+      // Therefore we iterate on all the pages of all groups except the first and the last, whereof we only iterate
+      // a sub-range of pages determined by `firstPageBegin` and `lastPageEnd` respectively.
+      auto pageBegin = (groupIt == groupBegin) ? firstPageBegin : groupIt->fFirst;
+      auto pageEnd = (std::next(groupIt) == groupEnd) ? lastPageEnd : groupIt->fLast;
 
       locators.reserve(locators.size() + std::distance(pageBegin, pageEnd));
 
@@ -153,7 +171,7 @@ void ROOT::Experimental::Internal::RPageSinkFile::CommitBatchOfPages(CommittedBa
       }
    }
 
-   fCounters->fNPageCommitted.Add(locators.size());
+   fCounters->fNPageCommitted.Add(locators.size() - prevLocatorsSize);
    fCounters->fSzWritePayload.Add(batch.fSize);
    fNBytesCurrentCluster += batch.fSize;
 
@@ -166,7 +184,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
 {
    const std::uint64_t maxKeySize = fOptions->GetMaxKeySize();
 
-   CommittedBatch batch{};
+   CommitBatch batch{};
    std::vector<ROOT::Experimental::RNTupleLocator> locators;
 
    for (auto rangeIt = ranges.begin(); rangeIt != ranges.end(); ++rangeIt) {
@@ -180,13 +198,15 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
          fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
+         const auto bytesPacked = (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
+
          if (batch.fSize > 0 && batch.fSize + sealedPageIt->GetBufferSize() > maxKeySize) {
             /**
              * Adding this page would exceed maxKeySize. Since we always want to write into a single key
              * with vectorized writes, we commit the current set of pages before proceeding.
              * NOTE: we do this *before* checking if sealedPageIt->GetBufferSize() > maxKeySize to guarantee that
              * we always flush the current batch before doing an individual WriteBlob. This way we
-             * preserve the assumption that a CommittedBatch always contain a sequential set of pages.
+             * preserve the assumption that a CommitBatch always contain a sequential set of pages.
              */
             batch.fEnd = std::make_pair(std::next(rangeIt), sealedPageIt);
             CommitBatchOfPages(batch, locators);
@@ -200,14 +220,14 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
             // already have committed the current batch before writing this page.
             assert(batch.fSize == 0);
 
-            std::uint64_t offset = fWriter->WriteBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetBufferSize(),
-                                                      (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8);
+            std::uint64_t offset =
+               fWriter->WriteBlob(sealedPageIt->GetBuffer(), sealedPageIt->GetBufferSize(), bytesPacked);
             RNTupleLocator locator;
             locator.fPosition = offset;
             locator.fBytesOnStorage = sealedPageIt->GetDataSize();
             locators.push_back(locator);
 
-            fCounters->fNPageCommitted.Add(locators.size());
+            fCounters->fNPageCommitted.Inc();
             fCounters->fSzWritePayload.Add(sealedPageIt->GetBufferSize());
             fNBytesCurrentCluster += sealedPageIt->GetBufferSize();
 
@@ -217,7 +237,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
                batch.fBegin = std::make_pair(rangeIt, sealedPageIt);
             }
             batch.fSize += sealedPageIt->GetBufferSize();
-            batch.fBytesPacked += (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;
+            batch.fBytesPacked += bytesPacked;
          }
       }
    }
