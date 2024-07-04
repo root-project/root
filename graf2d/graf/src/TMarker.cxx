@@ -168,6 +168,10 @@ void TMarker::DisplayMarkerLineWidths()
 ///
 ///  Compute the closest distance of approach from point px,py to this marker.
 ///  The distance is computed in pixels units.
+///  \return 0 if the distance <= markerRadius
+///          exact computed distance if dist in [markerRadius+1, markerRadius+2]
+///          999 if larger than markerRadius + 3
+///          9999 if no pad
 
 Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -180,7 +184,7 @@ Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
       pxm  = gPad->XtoAbsPixel(gPad->XtoPad(fX));
       pym  = gPad->YtoAbsPixel(gPad->YtoPad(fY));
    }
-   Int_t dist = (Int_t)TMath::Sqrt((px-pxm)*(px-pxm) + (py-pym)*(py-pym));
+   Int_t dist = static_cast<Int_t>(std::min<Long64_t>(INT_MAX, TMath::Sqrt(Long64_t(px-pxm)*(px-pxm) + Long64_t(py-pym)*(py-pym))));
 
    //marker size = 1 is about 8 pixels
    Int_t markerRadius = Int_t(4*fMarkerSize);
