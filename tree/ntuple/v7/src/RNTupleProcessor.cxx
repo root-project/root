@@ -41,21 +41,18 @@ void ROOT::Experimental::Internal::RNTupleProcessor::ConnectFields()
       }
 
       fieldContext.SetConcreteField();
-      fieldContext.GetConcreteField().SetOnDiskId(desc->FindFieldId(fieldContext.GetProtoField().GetFieldName()));
-      Internal::CallConnectPageSourceOnField(fieldContext.GetConcreteField(), *fPageSource);
+      fieldContext.fConcreteField->SetOnDiskId(desc->FindFieldId(fieldContext.GetProtoField().GetFieldName()));
+      Internal::CallConnectPageSourceOnField(*fieldContext.fConcreteField, *fPageSource);
 
-      if (fieldContext.fValuePtr) {
-         fEntry->UpdateValue(fieldContext.GetToken(),
-                             fieldContext.GetConcreteField().BindValue(fieldContext.fValuePtr));
-      } else {
-         auto value = fieldContext.GetConcreteField().CreateValue();
-         fieldContext.fValuePtr = value.GetPtr<void>();
-         fEntry->UpdateValue(fieldContext.GetToken(), value);
-      }
+      auto valuePtr = fEntry->GetPtr<void>(fieldContext.fToken);
+      auto value = fieldContext.fConcreteField->CreateValue();
+      value.Bind(valuePtr);
+      fEntry->UpdateValue(fieldContext.fToken, value);
    }
 }
 
-ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples)
+ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples,
+                                                                 std::unique_ptr<RNTupleModel> model)
    : fNTuples(ntuples)
 {
    if (fNTuples.empty())
@@ -68,20 +65,20 @@ ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vect
       throw RException(R__FAIL("first RNTuple does not contain any entries"));
    }
 
-   fEntry = std::unique_ptr<REntry>(new REntry());
+   if (!model)
+      model = fPageSource->GetSharedDescriptorGuard()->CreateModel();
 
-   auto desc = fPageSource->GetSharedDescriptorGuard();
+   model->Freeze();
+   fEntry = model->CreateEntry();
 
-   for (const auto &fieldDesc : desc->GetTopLevelFields()) {
-      auto fieldOrException = RFieldBase::Create(fieldDesc.GetFieldName(), fieldDesc.GetTypeName());
-      if (fieldOrException) {
-         auto field = fieldOrException.Unwrap();
-         fEntry->AddValue(field->CreateValue());
-         fFieldContexts.emplace_back(std::move(field), fEntry->GetToken(fieldDesc.GetFieldName()));
-      } else {
-         throw RException(R__FAIL("could not create field \"" + fieldDesc.GetFieldName() + "\" with type \"" +
-                                  fieldDesc.GetTypeName() + "\""));
-      }
+   // Use the value pointers from the model's in the entry managed by the processor. This way, the pointers returned by
+   // RNTupleModel::MakeField can be used in the processor loop to access the corresponding field values.
+   for (const auto &value : model->GetDefaultEntry()) {
+      auto &field = value.GetField();
+      auto token = fEntry->GetToken(field.GetFieldName());
+      auto valuePtr = value.GetPtr<void>();
+      fEntry->BindValue(token, valuePtr);
+      fFieldContexts.emplace_back(field.Clone(field.GetFieldName()), fEntry->GetToken(field.GetFieldName()));
    }
 
    ConnectFields();

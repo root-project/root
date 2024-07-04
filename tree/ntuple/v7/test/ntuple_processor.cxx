@@ -40,6 +40,34 @@ TEST(RNTupleProcessor, Basic)
    EXPECT_EQ(nEntries, 10);
 }
 
+TEST(RNTupleProcessor, BasicWithModel)
+{
+   FileRaii fileGuard("test_ntuple_processor_basic_with_model.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<float>("y");
+      auto fldZ = model->MakeField<float>("z");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 10; ++i) {
+         *fldX = static_cast<float>(i);
+         *fldY = static_cast<float>(i) * 2.f;
+         *fldZ = static_cast<float>(i) * 3.f;
+         ntuple->Fill();
+      }
+   }
+
+   auto model = RNTupleModel::Create();
+   auto fldY = model->MakeField<float>("y");
+
+   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
+
+   for (const auto &entry : RNTupleProcessor(ntuples, std::move(model))) {
+      EXPECT_EQ(static_cast<float>(entry.GetGlobalEntryIndex()) * 2.f, *fldY);
+   }
+}
+
 TEST(RNTupleProcessor, SimpleChain)
 {
    FileRaii fileGuard1("test_ntuple_processor_simple_chain1.root");
@@ -87,6 +115,53 @@ TEST(RNTupleProcessor, SimpleChain)
       ++nEntries;
    }
    EXPECT_EQ(nEntries, 8);
+}
+
+TEST(RNTupleProcessor, SimpleChainWithModel)
+{
+   FileRaii fileGuard1("test_ntuple_processor_simple_chain_with_model1.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x", 1.f);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      ntuple->Fill();
+   }
+   FileRaii fileGuard2("test_ntuple_processor_simple_chain_with_model2.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x", 2.f);
+      auto fldY = model->MakeField<int>("y", 404);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      ntuple->Fill();
+   }
+   FileRaii fileGuard3("test_ntuple_processor_simple_chain_with_model3.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x", 3.f);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard3.GetPath());
+      ntuple->Fill();
+   }
+
+   auto model = RNTupleModel::Create();
+   auto fldX = model->MakeField<float>("x");
+
+   std::vector<RNTupleSourceSpec> ntuples = {
+      {"ntuple", fileGuard1.GetPath()}, {"ntuple", fileGuard2.GetPath()}, {"ntuple", fileGuard3.GetPath()}};
+
+   RNTupleProcessor processor(ntuples, std::move(model));
+   auto entry = processor.begin();
+   *entry;
+   EXPECT_EQ(1.f, *fldX);
+   entry++;
+   EXPECT_EQ(2.f, *fldX);
+   try {
+      (*entry)->GetPtr<int>("y");
+      FAIL() << "fields not specified by the provided model shoud not be part of the entry";
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("invalid field name: y"));
+   }
+   ++entry;
+   EXPECT_EQ(3.f, *fldX);
 }
 
 TEST(RNTupleProcessor, EmptyNTuples)
@@ -162,7 +237,7 @@ TEST(RNTupleProcessor, EmptyNTuples)
 
 TEST(RNTupleProcessor, ChainUnalignedModels)
 {
-   FileRaii fileGuard1("test_ntuple_processor_simple_chain1.root");
+   FileRaii fileGuard1("test_ntuple_processor_chain_unaligned_models1.root");
    {
       auto model = RNTupleModel::Create();
       auto fldX = model->MakeField<float>("x", 0.);
@@ -170,7 +245,7 @@ TEST(RNTupleProcessor, ChainUnalignedModels)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
       ntuple->Fill();
    }
-   FileRaii fileGuard2("test_ntuple_processor_simple_chain2.root");
+   FileRaii fileGuard2("test_ntuple_processor_chain_unaligned_models2.root");
    {
       auto model = RNTupleModel::Create();
       auto fldX = model->MakeField<float>("x", 1.);
@@ -189,7 +264,7 @@ TEST(RNTupleProcessor, ChainUnalignedModels)
 
    try {
       entry++;
-      FAIL() << "trying to connect a new page source containing additional (unknown) fields is not supported";
+      FAIL() << "trying to connect a new page source which doesn't have all initial fields is not supported";
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("field \"y\" not found in current RNTuple"));
    }
