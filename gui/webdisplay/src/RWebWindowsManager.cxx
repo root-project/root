@@ -624,7 +624,7 @@ std::string RWebWindowsManager::GetUrl(RWebWindow &win, bool remote, std::string
 
    auto token = win.GetConnToken();
    if (!token.empty()) {
-      if (!qmark) addr.append("?");
+      addr.append(qmark ? "&" : "?");
       addr.append("token=");
       addr.append(token);
    }
