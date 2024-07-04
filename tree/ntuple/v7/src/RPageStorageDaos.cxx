@@ -153,7 +153,6 @@ struct RDaosContainerNTupleLocator {
    }
 
    int InitNTupleDescriptorBuilder(ROOT::Experimental::Internal::RDaosContainer &cont,
-                                   ROOT::Experimental::Internal::RNTupleDecompressor &decompressor,
                                    ROOT::Experimental::Internal::RNTupleDescriptorBuilder &builder)
    {
       std::unique_ptr<unsigned char[]> buffer, zipBuffer;
@@ -188,7 +187,8 @@ struct RDaosContainerNTupleLocator {
       if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesHeader, oidMetadata, kDistributionKeyDefault,
                                      kAttributeKeyHeader, kCidMetadata)))
          return err;
-      decompressor.Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader, buffer.get());
+      ROOT::Experimental::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesHeader, anchor.fLenHeader,
+                                                               buffer.get());
       ROOT::Experimental::Internal::RNTupleSerializer::DeserializeHeader(buffer.get(), anchor.fLenHeader, builder);
 
       builder.AddToOnDiskFooterSize(anchor.fNBytesFooter);
@@ -197,15 +197,15 @@ struct RDaosContainerNTupleLocator {
       if ((err = cont.ReadSingleAkey(zipBuffer.get(), anchor.fNBytesFooter, oidMetadata, kDistributionKeyDefault,
                                      kAttributeKeyFooter, kCidMetadata)))
          return err;
-      decompressor.Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter, buffer.get());
+      ROOT::Experimental::Internal::RNTupleDecompressor::Unzip(zipBuffer.get(), anchor.fNBytesFooter, anchor.fLenFooter,
+                                                               buffer.get());
       ROOT::Experimental::Internal::RNTupleSerializer::DeserializeFooter(buffer.get(), anchor.fLenFooter, builder);
 
       return 0;
    }
 
    static std::pair<RDaosContainerNTupleLocator, ROOT::Experimental::Internal::RNTupleDescriptorBuilder>
-   LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName,
-                ROOT::Experimental::Internal::RNTupleDecompressor &decompressor)
+   LocateNTuple(ROOT::Experimental::Internal::RDaosContainer &cont, const std::string &ntupleName)
    {
       auto result = std::make_pair(RDaosContainerNTupleLocator(ntupleName),
                                    ROOT::Experimental::Internal::RNTupleDescriptorBuilder());
@@ -213,7 +213,7 @@ struct RDaosContainerNTupleLocator {
       auto &loc = result.first;
       auto &builder = result.second;
 
-      if (int err = loc.InitNTupleDescriptorBuilder(cont, decompressor, builder); !err) {
+      if (int err = loc.InitNTupleDescriptorBuilder(cont, builder); !err) {
          if (ntupleName.empty() || ntupleName != builder.GetDescriptor().GetName()) {
             // Hash already taken by a differently-named ntuple.
             throw ROOT::Experimental::RException(
@@ -316,8 +316,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::InitImpl(unsigned char *serial
    fDaosContainer = std::make_unique<RDaosContainer>(pool, args.fContainerLabel, /*create =*/true);
    fDaosContainer->SetDefaultObjectClass(oclass);
 
-   RNTupleDecompressor decompressor;
-   auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, decompressor);
+   auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    fNTupleIndex = locator.GetIndex();
 
    auto zipBuffer = std::make_unique<unsigned char[]>(length);
@@ -521,7 +520,6 @@ ROOT::Experimental::Internal::RPageSourceDaos::RPageSourceDaos(std::string_view 
      fURI(uri),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
-   fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceDaos");
 
    auto args = ParseDaosURI(uri);
@@ -536,8 +534,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
    ROOT::Experimental::RNTupleDescriptor ntplDesc;
    std::unique_ptr<unsigned char[]> buffer, zipBuffer;
 
-   auto [locator, descBuilder] =
-      RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName, *fDecompressor);
+   auto [locator, descBuilder] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
    if (!locator.IsValid())
       throw ROOT::Experimental::RException(
          R__FAIL("Attach: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
@@ -558,8 +555,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceD
       fDaosContainer->ReadSingleAkey(
          zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, oidPageList, kDistributionKeyDefault,
          cgDesc.GetPageListLocator().GetPosition<RNTupleLocatorObject64>().fLocation, kCidMetadata);
-      fDecompressor->Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.get());
+      RNTupleDecompressor::Unzip(zipBuffer.get(), cgDesc.GetPageListLocator().fBytesOnStorage,
+                                 cgDesc.GetPageListLength(), buffer.get());
 
       RNTupleSerializer::DeserializePageList(buffer.get(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
@@ -777,22 +774,21 @@ ROOT::Experimental::Internal::RPageSourceDaos::LoadClusters(std::span<RCluster::
 
       unsigned clusterBufSz = 0, nPages = 0;
       auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
-      PrepareLoadCluster(clusterKey, *pageZeroMap,
-                         [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
-                             const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
-                            const auto &pageLocator = pageInfo.fLocator;
-                            uint32_t position, offset;
-                            std::tie(position, offset) =
-                               DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
-                            auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
-                            auto pageBufferSize =
-                               pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
+      PrepareLoadCluster(
+         clusterKey, *pageZeroMap,
+         [&](DescriptorId_t physicalColumnId, NTupleSize_t pageNo,
+             const RClusterDescriptor::RPageRange::RPageInfo &pageInfo) {
+            const auto &pageLocator = pageInfo.fLocator;
+            uint32_t position, offset;
+            std::tie(position, offset) = DecodeDaosPagePosition(pageLocator.GetPosition<RNTupleLocatorObject64>());
+            auto [itLoc, _] = onDiskPages.emplace(position, std::vector<RDaosSealedPageLocator>());
+            auto pageBufferSize = pageLocator.fBytesOnStorage + pageInfo.fHasChecksum * kNBytesPageChecksum;
 
-                            itLoc->second.push_back({clusterId, physicalColumnId, pageNo, position, offset,
-                                                     pageLocator.fBytesOnStorage, pageBufferSize});
-                            ++nPages;
-                            clusterBufSz += pageBufferSize;
-                         });
+            itLoc->second.push_back(
+               {clusterId, physicalColumnId, pageNo, position, offset, pageLocator.fBytesOnStorage, pageBufferSize});
+            ++nPages;
+            clusterBufSz += pageBufferSize;
+         });
 
       auto clusterBuffer = new unsigned char[clusterBufSz];
       auto pageMap = std::make_unique<ROnDiskPageMapHeap>(std::unique_ptr<unsigned char[]>(clusterBuffer));
