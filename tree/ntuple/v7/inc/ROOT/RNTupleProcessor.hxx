@@ -150,12 +150,12 @@ public:
    public:
       // clang-format off
       /**
-      \class ROOT::Experimental::RNTupleProcessor::RIterator::RState
+      \class ROOT::Experimental::RNTupleProcessor::RIterator::RProcessorState
       \ingroup NTuple
       \brief View on the RNTupleProcessor iterator state.
       */
       // clang-format on
-      class RState {
+      class RProcessorState {
          friend class RIterator;
 
       private:
@@ -166,8 +166,8 @@ public:
          std::size_t fNTupleIndex;
 
       public:
-         RState(const REntry &entry, NTupleSize_t globalEntryIndex, NTupleSize_t localEntryIndex,
-                std::size_t ntupleIndex)
+         RProcessorState(const REntry &entry, NTupleSize_t globalEntryIndex, NTupleSize_t localEntryIndex,
+                         std::size_t ntupleIndex)
             : fEntry(entry),
               fGlobalEntryIndex(globalEntryIndex),
               fLocalEntryIndex(localEntryIndex),
@@ -184,15 +184,15 @@ public:
 
    private:
       RNTupleProcessor &fProcessor;
-      RState fState;
+      RProcessorState fState;
 
    public:
       using iterator_category = std::forward_iterator_tag;
       using iterator = RIterator;
-      using value_type = RState;
+      using value_type = RProcessorState;
       using difference_type = std::ptrdiff_t;
-      using pointer = RState *;
-      using reference = const RState &;
+      using pointer = RProcessorState *;
+      using reference = const RProcessorState &;
 
       RIterator(RNTupleProcessor &processor, std::size_t ntupleIndex, NTupleSize_t globalEntryIndex)
          : fProcessor(processor), fState(processor.GetEntry(), globalEntryIndex, 0, ntupleIndex)
