@@ -58,3 +58,20 @@ class DeclareHeadersTest(unittest.TestCase):
         Utils.declare_headers(["test_headers/header4.hxx"])
         self.assertEqual(ROOT.b(1), True)
 
+
+class InitializationTest(unittest.TestCase):
+    """Check the initialize method"""
+
+    def test_initialization_runs_in_current_environment(self):
+        """
+        User initialization method should be executed on the current user
+        session, so actions applied by the user initialization function are
+        also visible in the current scenario.
+        """
+        def defineIntVariable(name, value):
+            import ROOT
+            ROOT.gInterpreter.ProcessLine("int %s = %s;" % (name, value))
+
+        varvalue = 2
+        DistRDF.initialize(defineIntVariable, "myInt", varvalue)
+        self.assertEqual(ROOT.myInt, varvalue)
