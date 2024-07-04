@@ -27,10 +27,10 @@ a validating parser.
 
 //RFC3986:
 // pchar = unreserved / pct-encoded / sub-delims / ":" / "@"
-const char* const kURI_pchar        = "(?:[[:alpha:][:digit:]-._~!$&'()*+,;=:@]|%[0-9A-Fa-f][0-9A-Fa-f])";
+const char* const kURI_pchar        = "(?:[[:alpha:][:digit:]\\-._~!$&'()*+,;=:@]|%[0-9A-Fa-f][0-9A-Fa-f])";
 
 //unreserved characters, see chapter 2.3
-const char* const kURI_unreserved   = "[[:alpha:][:digit:]-._~]";
+const char* const kURI_unreserved   = "[[:alpha:][:digit:]\\-._~]";
 
 // reserved characters, see chapter
 // reserved      = gen-delims / sub-delims
@@ -900,7 +900,7 @@ Bool_t TUri::IsPathAbsolute(const TString &string)
 Bool_t TUri::IsPathNoscheme(const TString &string)
 {
    return (TPRegexp(
-              TString("^(([[:alpha:][:digit:]-._~!$&'()*+,;=@]|%[0-9A-Fa-f][0-9A-Fa-f])+)(/") + TString(kURI_pchar) + "*)*$"
+              TString("^(([[:alpha:][:digit:]\\-._~!$&'()*+,;=@]|%[0-9A-Fa-f][0-9A-Fa-f])+)(/") + TString(kURI_pchar) + "*)*$"
            ).Match(string) > 0);
 }
 
@@ -950,7 +950,7 @@ Bool_t TUri::IsPort(const TString &string)
 Bool_t TUri::IsRegName(const TString &string)
 {
    return (TPRegexp(
-              "^([[:alpha:][:digit:]-._~!$&'()*+,;=]|%[0-9A-Fa-f][0-9A-Fa-f])*$").Match(string) > 0);
+              "^([[:alpha:][:digit:]\\-._~!$&'()*+,;=]|%[0-9A-Fa-f][0-9A-Fa-f])*$").Match(string) > 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
