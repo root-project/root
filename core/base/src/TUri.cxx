@@ -270,7 +270,7 @@ Bool_t TUri::SetScheme(const TString &scheme)
 Bool_t TUri::IsScheme(const TString &string)
 {
    return TPRegexp(
-             "^[[:alpha:]][[:alpha:][:digit:]+-.]*$"
+             "^[[:alpha:]][[:alpha:][:digit:]+\\-.]*$"
           ).Match(string);
 }
 
