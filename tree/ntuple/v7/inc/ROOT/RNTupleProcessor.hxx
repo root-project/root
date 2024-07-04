@@ -65,12 +65,11 @@ for (const auto &entry : processor) {
 ~~~
 
 An RNTupleProcessor is created by providing one or more RNTupleSourceSpecs, each of which contains the name and storage
-location of a single RNTuple. The RNTuples are subsequently processed in the order in which they were provided.
+location of a single RNTuple. The RNTuples are processed in the order in which they were provided.
 
-The default model of the RNTuple that is provided first will be used to construct the fields in the entry that will be
-filled in each iteration. This entry is owned by the RNTupleProcessor.
-If subsequently processed RNTuples contain additional fields, they will be ignored.
-Conversely, if a field that was present in the first RNTuple is not found in a subsequent one, an error will be thrown.
+The RNTupleProcessor constructor also (optionally) accepts an RNTupleModel, which determines which fields should be
+read. If no model is provided, a default model based on the descriptor of the first specified RNTuple will be used.
+If a field that was present in the first RNTuple is not found in a subsequent one, an error will be thrown.
 
 The object returned by the RNTupleProcessor iterator is a view on the current state of the processor, and provides
 access to the global entry index (i.e., the entry index taking into account all processed ntuples), local entry index
@@ -88,11 +87,8 @@ private:
 
    An RFieldContext contains two fields: a proto-field which is not connected to any page source but serves as the
    blueprint for this particular field, and a concrete field that is connected to the page source currently connected
-   to the RNTupleProcessor object for reading. When a new page source is connected, the concrete field gets reset by
-   cloning the proto-field and connecting it to the new page source.
-
-   Apart from the fields themselves, the RFieldContext object also manages the pointer to the value for this particular
-   field that's read by the processor.
+   to the RNTupleProcessor for reading. When a new page source is connected, the current concrete field gets reset. A
+   new concrete field that is connected to this new page source is subsequently created from the proto-field.
    */
    // clang-format on
    class RFieldContext {
@@ -102,7 +98,6 @@ private:
       std::unique_ptr<RFieldBase> fProtoField;
       std::unique_ptr<RFieldBase> fConcreteField;
       REntry::RFieldToken fToken;
-      std::shared_ptr<void> fValuePtr;
 
    public:
       RFieldContext(std::unique_ptr<RFieldBase> protoField, REntry::RFieldToken token)
@@ -112,10 +107,8 @@ private:
 
       const RFieldBase &GetProtoField() const { return *fProtoField; }
       /// We need to disconnect the concrete fields before swapping the page sources
-      void ResetConcreteField() { fConcreteField = nullptr; }
+      void ResetConcreteField() { fConcreteField.reset(); }
       void SetConcreteField() { fConcreteField = fProtoField->Clone(fProtoField->GetFieldName()); }
-      RFieldBase &GetConcreteField() const { return *fConcreteField; }
-      const REntry::RFieldToken &GetToken() const { return fToken; }
    };
 
    std::vector<RNTupleSourceSpec> fNTuples;
@@ -226,6 +219,7 @@ public:
 
             fState.fLocalEntryIndex = 0;
          }
+         fProcessor.fEntry->Read(fState.fLocalEntryIndex);
       }
 
       iterator operator++()
@@ -255,9 +249,12 @@ public:
    /// \brief Constructs a new RNTupleProcessor.
    ///
    /// \param[in] ntuples The source specification (name and storage location) for each RNTuple to process.
+   /// \param[in] model The model that specifies which fields should be read by the processor. The pointer returned by
+   /// RNTupleModel::MakeField can be used to access a field's value during the processor iteration. When no model is
+   /// specified, it is created from the descriptor of the first RNTuple specified in `ntuples`.
    ///
    /// RNTuples are processed in the order in which they are specified.
-   RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples);
+   RNTupleProcessor(const std::vector<RNTupleSourceSpec> &ntuples, std::unique_ptr<RNTupleModel> model = nullptr);
 
    RIterator begin() { return RIterator(*this, 0, 0); }
    RIterator end() { return RIterator(*this, fNTuples.size(), kInvalidNTupleIndex); }
