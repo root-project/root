@@ -1275,10 +1275,8 @@ public:
    void AddField(const RFieldDescriptor &fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
-   // For both AddColumn() methods, the field has to be already available. For fields with multiple columns,
+   // The field that the column belongs to has to be already available. For fields with multiple columns,
    // the columns need to be added in order of the column index
-   RResult<void> AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
-                           const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterGroup(RClusterGroupDescriptor &&clusterGroup);

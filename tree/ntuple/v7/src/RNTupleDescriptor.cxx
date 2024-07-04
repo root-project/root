@@ -765,6 +765,7 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::RFieldDescriptorBuilder(c
 {
    fField.fParentId = kInvalidDescriptorId;
    fField.fLinkIds = {};
+   fField.fLogicalColumnIds = {};
 }
 
 ROOT::Experimental::Internal::RFieldDescriptorBuilder
@@ -834,32 +835,6 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    }
    fDescriptor.fFieldDescriptors.at(linkId).fParentId = fieldId;
    fDescriptor.fFieldDescriptors.at(fieldId).fLinkIds.push_back(linkId);
-   return RResult<void>::Success();
-}
-
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
-                                                                  DescriptorId_t fieldId, const RColumnModel &model,
-                                                                  std::uint32_t index, std::uint64_t firstElementIdx)
-{
-   RColumnDescriptor c;
-   c.fLogicalColumnId = logicalId;
-   c.fPhysicalColumnId = physicalId;
-   c.fFieldId = fieldId;
-   c.fModel = model;
-   c.fIndex = index;
-   c.fFirstElementIndex = firstElementIdx;
-
-   auto res = AttachColumn(fieldId, c);
-   if (!res)
-      R__FORWARD_ERROR(res);
-
-   if (!c.IsAliasColumn())
-      fDescriptor.fNPhysicalColumns++;
-   if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/c.IsAliasColumn());
-   fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
-
    return RResult<void>::Success();
 }
 
