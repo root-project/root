@@ -590,10 +590,38 @@ TEST(RNTuple, SerializeHeader)
    builder.AddFieldLink(0, 24);
    builder.AddFieldLink(0, 137);
    builder.AddFieldLink(137, 13);
-   builder.AddColumn(23, 23, 42, RColumnModel(EColumnType::kReal32, false), 0);
-   builder.AddColumn(100, 23, 24, RColumnModel(EColumnType::kReal32, false), 0);
-   builder.AddColumn(17, 17, 137, RColumnModel(EColumnType::kIndex32, true), 0);
-   builder.AddColumn(40, 40, 137, RColumnModel(EColumnType::kByte, true), 1);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(23)
+                        .PhysicalColumnId(23)
+                        .FieldId(42)
+                        .Model(RColumnModel(EColumnType::kReal32, false))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(100)
+                        .PhysicalColumnId(23)
+                        .FieldId(24)
+                        .Model(RColumnModel(EColumnType::kReal32, false))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(17)
+                        .PhysicalColumnId(17)
+                        .FieldId(137)
+                        .Model(RColumnModel(EColumnType::kIndex32, true))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(40)
+                        .PhysicalColumnId(40)
+                        .FieldId(137)
+                        .Model(RColumnModel(EColumnType::kByte, true))
+                        .Index(1)
+                        .MakeDescriptor()
+                        .Unwrap());
    builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
                                .ContentId(EExtraTypeInfoIds::kStreamerInfo)
                                .Content("xyz")
@@ -641,7 +669,14 @@ TEST(RNTuple, SerializeFooter)
       .MakeDescriptor()
       .Unwrap());
    builder.AddFieldLink(0, 42);
-   builder.AddColumn(17, 17, 42, RColumnModel(EColumnType::kIndex32, true), 0);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(17)
+                        .PhysicalColumnId(17)
+                        .FieldId(42)
+                        .Model(RColumnModel(EColumnType::kIndex32, true))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
 
    ROOT::Experimental::RClusterDescriptor::RColumnRange columnRange;
    ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
@@ -754,7 +789,14 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 42);
-   builder.AddColumn(17, 17, 42, RColumnModel(EColumnType::kInt32, true), 0);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(17)
+                        .PhysicalColumnId(17)
+                        .FieldId(42)
+                        .Model(RColumnModel(EColumnType::kInt32, true))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
    EXPECT_GT(context.GetHeaderSize(), 0);
@@ -785,8 +827,24 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddFieldLink(0, 43);
    builder.AddFieldLink(43, 44);
    builder.AddFieldLink(0, 45);
-   builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0, /*firstElementIdx=*/4200);
-   builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0, /*firstElementIdx=*/10000);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(18)
+                        .PhysicalColumnId(18)
+                        .FieldId(44)
+                        .Model(RColumnModel(EColumnType::kReal32, true))
+                        .Index(0)
+                        .FirstElementIndex(4200)
+                        .MakeDescriptor()
+                        .Unwrap());
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(19)
+                        .PhysicalColumnId(19)
+                        .FieldId(45)
+                        .Model(RColumnModel(EColumnType::kInt64, true))
+                        .Index(0)
+                        .FirstElementIndex(10000)
+                        .MakeDescriptor()
+                        .Unwrap());
 
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(46)
@@ -796,7 +854,14 @@ TEST(RNTuple, SerializeFooterXHeader)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddFieldLink(0, 46);
-   builder.AddColumn(20, 18, 46, RColumnModel(EColumnType::kReal32, true), 0);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(20)
+                        .PhysicalColumnId(18)
+                        .FieldId(46)
+                        .Model(RColumnModel(EColumnType::kReal32, true))
+                        .Index(0)
+                        .MakeDescriptor()
+                        .Unwrap());
    builder.AddExtraTypeInfo(RExtraTypeInfoDescriptorBuilder()
                                .ContentId(EExtraTypeInfoIds::kStreamerInfo)
                                .Content("xyz")

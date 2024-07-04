@@ -541,8 +541,14 @@ ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
-   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex(),
-                                column.GetFirstElementIndex());
+   RColumnDescriptorBuilder columnBuilder;
+   columnBuilder.LogicalColumnId(columnId)
+      .PhysicalColumnId(columnId)
+      .FieldId(fieldId)
+      .Model(column.GetModel())
+      .Index(column.GetIndex())
+      .FirstElementIndex(column.GetFirstElementIndex());
+   fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
    return ColumnHandle_t{columnId, &column};
 }
 
@@ -565,7 +571,13 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
       auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
       for (const auto &source : descriptor.GetColumnIterable(sourceFieldId)) {
          auto targetId = descriptor.GetNLogicalColumns();
-         fDescriptorBuilder.AddColumn(targetId, source.GetLogicalId(), fieldId, source.GetModel(), source.GetIndex());
+         RColumnDescriptorBuilder columnBuilder;
+         columnBuilder.LogicalColumnId(targetId)
+            .PhysicalColumnId(source.GetLogicalId())
+            .FieldId(fieldId)
+            .Model(source.GetModel())
+            .Index(source.GetIndex());
+         fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
       }
    };
 
