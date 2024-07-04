@@ -101,7 +101,8 @@ public:
    static void SetLoopbackMode(bool on = true);
    static bool IsLoopbackMode();
 
-   static void SetUseSessionKey(bool on = false);
+   static void SetUseSessionKey(bool on = true);
+   static void SetUseConnectionKey(bool on = true);
 };
 
 } // namespace ROOT
