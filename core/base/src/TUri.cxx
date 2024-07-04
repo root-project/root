@@ -13,7 +13,7 @@
 \ingroup Base
 
 This class represents a RFC 3986 compatible URI.
-See http://rfc.net/rfc3986.html.
+\see https://doi.org/10.17487/RFC3986
 It provides member functions to set and return the different
 the different parts of an URI. The functionality is that of
 a validating parser.
