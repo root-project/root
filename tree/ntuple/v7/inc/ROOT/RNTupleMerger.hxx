@@ -63,13 +63,11 @@ private:
    void ValidateColumns(std::vector<RColumnInfo> &columns);
 
    /// Recursively add columns from a given field
-   void AddColumnsFromField(std::vector<RColumnInfo> &columns, RCluster::ColumnSet_t &columnsSet,
-                            const RNTupleDescriptor &desc, const RFieldDescriptor &fieldDesc,
-                            const std::string &prefix = "");
+   void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
+                            const RFieldDescriptor &fieldDesc, const std::string &prefix = "");
 
    /// Recursively collect all the columns for all the fields rooted at field zero
-   void CollectColumns(const RNTupleDescriptor &descriptor, std::vector<RColumnInfo> &columns,
-                       RCluster::ColumnSet_t &columnSet);
+   void CollectColumns(const RNTupleDescriptor &descriptor, std::vector<RColumnInfo> &columns);
 
    // Internal map that holds column name, type, and type id : output ID information
    std::unordered_map<std::string, DescriptorId_t> fOutputIdMap;
