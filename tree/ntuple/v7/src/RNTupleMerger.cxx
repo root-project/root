@@ -278,7 +278,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                                   // refs out
                                   &sealedPages, &sealedPageBuffers]() {
                   assert(pageNo < sealedPages.size());
-                  assert(pageNo < sealedPageBuffers.size());
+                  assert(sealedPageBuffers.size() == 0 || pageNo < sealedPageBuffers.size());
 
                   ROnDiskPage::Key key{columnId, pageNo};
                   auto onDiskPage = cluster->GetOnDiskPage(key);
