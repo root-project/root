@@ -14,7 +14,6 @@
  *************************************************************************/
 
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/REntry.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>

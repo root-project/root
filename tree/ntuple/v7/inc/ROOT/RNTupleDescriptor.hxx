@@ -17,7 +17,6 @@
 #ifndef ROOT7_RNTupleDescriptor
 #define ROOT7_RNTupleDescriptor
 
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
