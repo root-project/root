@@ -134,6 +134,7 @@ public:
       SealedPageSequence_t::const_iterator fFirst;
       SealedPageSequence_t::const_iterator fLast;
 
+      RSealedPageGroup() = default;
       RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
          : fPhysicalColumnId(d), fFirst(b), fLast(e)
       {
