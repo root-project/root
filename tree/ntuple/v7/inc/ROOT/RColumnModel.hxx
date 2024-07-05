@@ -75,27 +75,6 @@ enum class EColumnType {
    kMax,
 };
 
-// clang-format off
-/**
-\class ROOT::Experimental::RColumnModel
-\ingroup NTuple
-\brief Holds the static meta-data of an RNTuple column
-*/
-// clang-format on
-class RColumnModel {
-private:
-   EColumnType fType;
-
-public:
-   RColumnModel() : fType(EColumnType::kUnknown) {}
-   explicit RColumnModel(EColumnType type) : fType(type) {}
-
-   EColumnType GetType() const { return fType; }
-
-   bool operator==(const RColumnModel &other) const { return (fType == other.fType); }
-   bool operator!=(const RColumnModel &other) const { return !(other == *this); }
-};
-
 } // namespace Experimental
 } // namespace ROOT
 
