@@ -88,8 +88,16 @@ void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
    }
 }
 
+void Domains::ProductDomain::readVariable(RooRealVar const &var)
+{
+   readVariable(var.GetName(), var.getMin(), var.getMax());
+}
+
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
 {
+   if (RooNumber::isInfinite(min) && RooNumber::isInfinite(max))
+      return;
+
    auto &elem = _map[name];
 
    if (!RooNumber::isInfinite(min)) {
