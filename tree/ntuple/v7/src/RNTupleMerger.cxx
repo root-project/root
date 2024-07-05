@@ -13,6 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "TROOT.h"
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -21,11 +22,12 @@
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RClusterPool.hxx>
+#include <ROOT/RNTupleSerialize.hxx>
+#include <ROOT/RNTupleZip.hxx>
+#include <ROOT/TTaskGroup.hxx>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
-#include "ROOT/RNTupleSerialize.hxx"
-#include "ROOT/RNTupleZip.hxx"
 
 #include <deque>
 
@@ -92,6 +94,7 @@ try {
    // Now merge
    Internal::RNTupleMerger merger;
    Internal::RNTupleMergeOptions options;
+   // TODO: set MergeOptions depending on function input
    merger.Merge(sourcePtrs, *destination, options);
 
    // Provide the caller with a merged anchor object (even though we've already
@@ -179,8 +182,11 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
    }
 
    std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
-   RNTupleDecompressor decompressor;
-   std::vector<unsigned char> zipBuffer;
+   std::optional<TTaskGroup> taskGroup;
+#ifdef R__USE_IMT
+   if (ROOT::IsImplicitMTEnabled())
+      taskGroup = TTaskGroup();
+#endif
 
    // Append the sources to the destination one-by-one
    for (const auto &source : sources) {
@@ -228,6 +234,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          // invalidated.
          std::deque<RPageStorage::SealedPageSequence_t> sealedPagesV;
          std::vector<RPageStorage::RSealedPageGroup> sealedPageGroups;
+         std::vector<std::unique_ptr<unsigned char[]>> sealedPageBuffers;
 
          for (const auto &column : columns) {
 
@@ -239,76 +246,99 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             }
 
             const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
-            auto colElement = RColumnElementBase::Generate(columnDesc.GetModel().GetType());
+            const auto colElement = RColumnElementBase::Generate(columnDesc.GetModel().GetType());
 
             // Now get the pages for this column in this cluster
             const auto &pages = clusterDesc.GetPageRange(columnId);
 
             RPageStorage::SealedPageSequence_t sealedPages;
+            sealedPages.resize(pages.fPageInfos.size());
 
-            const auto colRangeCompressionSettings = cluster.GetColumnRange(columnId).fCompressionSettings;
+            const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
             const bool needsCompressionChange =
                options.fCompressionSettings != -1 && colRangeCompressionSettings != options.fCompressionSettings;
 
-            std::vector<std::unique_ptr<unsigned char[]>> sealedPageBuffers;
             // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
             // bother reserving memory for them.
+            size_t pageBufferBaseIdx = sealedPageBuffers.size();
             if (colRangeCompressionSettings != 0)
-               sealedPageBuffers.reserve(pages.fPageInfos.size());
+               sealedPageBuffers.resize(sealedPageBuffers.size() + pages.fPageInfos.size());
+
+            sealedPageGroups.reserve(sealedPageGroups.size() + pages.fPageInfos.size());
 
             std::uint64_t pageNo = 0;
-            sealedPageGroups.reserve(sealedPageGroups.size() + pages.fPageInfos.size());
+
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
-               ROnDiskPage::Key key{columnId, pageNo};
-               auto onDiskPage = cluster->GetOnDiskPage(key);
-               RPageStorage::RSealedPage sealedPage;
-               sealedPage.SetNElements(pageInfo.fNElements);
-               sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-               sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage +
-                                        pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum);
-               sealedPage.SetBuffer(onDiskPage->GetAddress());
-               sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
-               R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+               auto taskFunc = [ // values in
+                                  columnId, pageNo, cluster, needsCompressionChange, colRangeCompressionSettings,
+                                  pageBufferBaseIdx,
+                                  // const refs in
+                                  &colElement, &pageInfo, &options,
+                                  // refs out
+                                  &sealedPages, &sealedPageBuffers]() {
+                  assert(pageNo < sealedPages.size());
+                  assert(sealedPages.size() == sealedPageBuffers.size());
 
-               // Change compression if needed
-               if (needsCompressionChange) {
-                  // Step 1: prepare the source data.
-                  // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was already
-                  // uncompressed.
-                  const auto uncompressedSize = colElement->GetSize() * sealedPage.GetNElements();
-                  zipBuffer.resize(std::max<size_t>(uncompressedSize, zipBuffer.size()));
-                  RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetBufferSize(), uncompressedSize,
-                                             zipBuffer.data());
+                  ROnDiskPage::Key key{columnId, pageNo};
+                  auto onDiskPage = cluster->GetOnDiskPage(key);
 
-                  // Step 2: prepare the destination buffer.
-                  if (uncompressedSize != sealedPage.GetBufferSize()) {
-                     // source column range is compressed
-                     R__ASSERT(colRangeCompressionSettings != 0);
+                  RPageStorage::RSealedPage &sealedPage = sealedPages[pageNo];
+                  sealedPage.SetNElements(pageInfo.fNElements);
+                  sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
+                  sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage +
+                                           pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum);
+                  sealedPage.SetBuffer(onDiskPage->GetAddress());
+                  sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+                  R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
-                     // We need to reallocate sealedPage's buffer because we are going to recompress the data
-                     // with a different algorithm/level. Since we don't know a priori how big that'll be, the
-                     // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed data.
-                     R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
-                     const auto &newBuf = sealedPageBuffers.emplace_back(new unsigned char[uncompressedSize]);
-                     sealedPage.SetBuffer(newBuf.get());
-                  } else {
-                     // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big enough.
-                     R__ASSERT(colRangeCompressionSettings == 0);
+                  // Change compression if needed
+                  if (needsCompressionChange) {
+                     // Step 1: prepare the source data.
+                     // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was
+                     // already uncompressed.
+                     const auto uncompressedSize = colElement->GetSize() * sealedPage.GetNElements();
+                     auto zipBuffer = std::make_unique<unsigned char[]>(uncompressedSize);
+                     RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetBufferSize(), uncompressedSize,
+                                                zipBuffer.get());
+
+                     // Step 2: prepare the destination buffer.
+                     if (uncompressedSize != sealedPage.GetBufferSize()) {
+                        // source column range is compressed
+                        R__ASSERT(colRangeCompressionSettings != 0);
+
+                        // We need to reallocate sealedPage's buffer because we are going to recompress the data
+                        // with a different algorithm/level. Since we don't know a priori how big that'll be, the
+                        // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed
+                        // data.
+                        R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
+                        sealedPageBuffers[pageBufferBaseIdx + pageNo] =
+                           std::make_unique<unsigned char[]>(uncompressedSize);
+                        sealedPage.SetBuffer(sealedPageBuffers[pageNo].get());
+                     } else {
+                        // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big
+                        // enough.
+                        R__ASSERT(colRangeCompressionSettings == 0);
+                     }
+
+                     const auto newNBytes =
+                        RNTupleCompressor::Zip(zipBuffer.get(), uncompressedSize, options.fCompressionSettings,
+                                               const_cast<void *>(sealedPage.GetBuffer()));
+                     sealedPage.SetBufferSize(newNBytes);
                   }
+               };
 
-                  const auto newNBytes =
-                     RNTupleCompressor::Zip(zipBuffer.data(), uncompressedSize, options.fCompressionSettings,
-                                            const_cast<void *>(sealedPage.GetBuffer()));
-                  sealedPage.SetBufferSize(newNBytes);
-               }
-
-               sealedPages.push_back(std::move(sealedPage));
+               if (taskGroup)
+                  taskGroup->Run(taskFunc);
+               else
+                  taskFunc();
 
                ++pageNo;
 
             } // end of loop over pages
 
+            if (taskGroup)
+               taskGroup->Wait();
             sealedPagesV.push_back(std::move(sealedPages));
             sealedPageGroups.emplace_back(column.fColumnOutputId, sealedPagesV.back().cbegin(),
                                           sealedPagesV.back().cend());

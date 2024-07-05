@@ -42,7 +42,8 @@ struct RNTupleMergeOptions {
 /**
  * \class ROOT::Experimental::Internal::RNTupleMerger
  * \ingroup NTuple
- * \brief Given a set of RPageSources merge them into an RPageSink
+ * \brief Given a set of RPageSources merge them into an RPageSink, optionally changing their compression.
+ *        This can also be used to change the compression of a single RNTuple by just passing a single source.
  */
 // clang-format on
 class RNTupleMerger {
