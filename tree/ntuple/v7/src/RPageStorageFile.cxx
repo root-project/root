@@ -120,7 +120,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageImpl(DescriptorId_t
                                                                   const RPageStorage::RSealedPage &sealedPage)
 {
    const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetModel().GetType());
+      fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(physicalColumnId).GetType());
    const auto bytesPacked = (bitsOnStorage * sealedPage.GetNElements() + 7) / 8;
    return WriteSealedPage(sealedPage, bytesPacked);
 }
@@ -195,7 +195,7 @@ ROOT::Experimental::Internal::RPageSinkFile::CommitSealedPageVImpl(std::span<RPa
       }
 
       const auto bitsOnStorage = RColumnElementBase::GetBitsOnStorage(
-         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetModel().GetType());
+         fDescriptorBuilder.GetDescriptor().GetColumnDescriptor(range.fPhysicalColumnId).GetType());
 
       for (auto sealedPageIt = range.fFirst; sealedPageIt != range.fLast; ++sealedPageIt) {
          const auto bytesPacked = (bitsOnStorage * sealedPageIt->GetNElements() + 7) / 8;

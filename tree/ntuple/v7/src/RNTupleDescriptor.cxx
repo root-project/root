@@ -107,7 +107,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
-          fModel == other.fModel && fFieldId == other.fFieldId && fIndex == other.fIndex;
+          fType == other.fType && fFieldId == other.fFieldId && fIndex == other.fIndex;
 }
 
 
@@ -117,7 +117,7 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    RColumnDescriptor clone;
    clone.fLogicalColumnId = fLogicalColumnId;
    clone.fPhysicalColumnId = fPhysicalColumnId;
-   clone.fModel = fModel;
+   clone.fType = fType;
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
@@ -621,7 +621,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                if (c.IsDeferredColumn()) {
                   columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
                   columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
-                  const auto element = Internal::RColumnElementBase::Generate<void>(c.GetModel().GetType());
+                  const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
                   pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
                }
             }
@@ -755,7 +755,7 @@ ROOT::Experimental::Internal::RColumnDescriptorBuilder::MakeDescriptor() const
       return R__FAIL("invalid logical column id");
    if (fColumn.GetPhysicalId() == kInvalidDescriptorId)
       return R__FAIL("invalid physical column id");
-   if (fColumn.GetModel().GetType() == EColumnType::kUnknown)
+   if (fColumn.GetType() == EColumnType::kUnknown)
       return R__FAIL("invalid column model");
    if (fColumn.GetFieldId() == kInvalidDescriptorId)
       return R__FAIL("invalid field id, dangling column");
@@ -857,7 +857,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
          return R__FAIL("out of bounds column index");
    }
    if (columnDesc.IsAliasColumn()) {
-      if (columnDesc.GetModel() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetModel())
+      if (columnDesc.GetType() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetType())
          return R__FAIL("alias column type mismatch");
    }
    auto res = AttachColumn(fieldId, columnDesc);

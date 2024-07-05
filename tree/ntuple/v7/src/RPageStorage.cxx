@@ -230,7 +230,7 @@ void ROOT::Experimental::Internal::RPageSource::UnzipClusterImpl(RCluster *clust
    for (const auto columnId : columnsInCluster) {
       const auto &columnDesc = descriptorGuard->GetColumnDescriptor(columnId);
 
-      allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetModel().GetType()));
+      allElements.emplace_back(RColumnElementBase::Generate(columnDesc.GetType()));
 
       const auto &pageRange = clusterDescriptor.GetPageRange(columnId);
       std::uint64_t pageNo = 0;
@@ -545,7 +545,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
    columnBuilder.LogicalColumnId(columnId)
       .PhysicalColumnId(columnId)
       .FieldId(fieldId)
-      .Model(RColumnModel(column.GetType()))
+      .Type(column.GetType())
       .Index(column.GetIndex())
       .FirstElementIndex(column.GetFirstElementIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
@@ -575,7 +575,7 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
          columnBuilder.LogicalColumnId(targetId)
             .PhysicalColumnId(source.GetLogicalId())
             .FieldId(fieldId)
-            .Model(source.GetModel())
+            .Type(source.GetType())
             .Index(source.GetIndex());
          fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
       }

@@ -189,9 +189,8 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
          auto frame = pos;
          pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
 
-         auto type = c.GetModel().GetType();
-         pos += RNTupleSerializer::SerializeColumnType(type, *where);
-         pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
+         pos += RNTupleSerializer::SerializeColumnType(c.GetType(), *where);
+         pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(c.GetType()), *where);
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
          std::uint32_t flags = 0;
          const std::uint64_t firstElementIdx = c.GetFirstElementIndex();
@@ -249,7 +248,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
-   columnDesc.FieldId(fieldId).Model(ROOT::Experimental::RColumnModel(type)).FirstElementIndex(firstElementIdx);
+   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx);
 
    return frameSize;
 }
@@ -1291,7 +1290,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
 
       RColumnDescriptorBuilder columnBuilder;
       columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
-      columnBuilder.Model(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetModel());
+      columnBuilder.Type(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetType());
 
       std::uint32_t idx = 0;
       auto maxIdx = maxIndexes.find(fieldId);

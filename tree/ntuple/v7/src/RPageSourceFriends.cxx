@@ -55,7 +55,7 @@ void ROOT::Experimental::Internal::RPageSourceFriends::AddVirtualField(const RNT
       columnBuilder.LogicalColumnId(fNextId)
          .PhysicalColumnId(physicalId)
          .FieldId(virtualFieldId)
-         .Model(c.GetModel())
+         .Type(c.GetType())
          .Index(c.GetIndex());
       fBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap()).ThrowOnError();
       fIdBiMap.Insert({originIdx, c.GetLogicalId()}, fNextId);

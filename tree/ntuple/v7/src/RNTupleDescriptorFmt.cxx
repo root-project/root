@@ -103,7 +103,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements
-      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetModel().GetType())->GetSize();
+      auto elementSize = Internal::RColumnElementBase::Generate(column.second.GetType())->GetSize();
 
       ColumnInfo info;
       info.fPhysicalColumnId = column.second.GetPhysicalId();
@@ -111,7 +111,7 @@ void ROOT::Experimental::RNTupleDescriptor::PrintInfo(std::ostream &output) cons
       info.fFieldId = column.second.GetFieldId();
       info.fLocalOrder = column.second.GetIndex();
       info.fElementSize = elementSize;
-      info.fType = column.second.GetModel().GetType();
+      info.fType = column.second.GetType();
 
       for (const auto &cluster : fClusterDescriptors) {
          auto columnRange = cluster.second.GetColumnRange(column.second.GetPhysicalId());
