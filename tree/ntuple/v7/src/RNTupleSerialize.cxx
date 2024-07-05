@@ -15,7 +15,6 @@
  *************************************************************************/
 
 #include <ROOT/RColumnElement.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleSerialize.hxx>

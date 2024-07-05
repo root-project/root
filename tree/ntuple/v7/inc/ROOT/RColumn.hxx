@@ -18,7 +18,6 @@
 
 #include <ROOT/RConfig.hxx> // for R__likely
 #include <ROOT/RColumnElement.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPage.hxx>
 #include <ROOT/RPageStorage.hxx>

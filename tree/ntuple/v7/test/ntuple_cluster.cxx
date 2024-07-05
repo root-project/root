@@ -4,7 +4,6 @@
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RClusterPool.hxx>
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
