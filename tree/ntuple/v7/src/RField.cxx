@@ -1014,7 +1014,7 @@ ROOT::Experimental::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescrip
 
    ColumnRepresentation_t onDiskTypes;
    for (const auto &c : desc.GetColumnIterable(fOnDiskId)) {
-      onDiskTypes.emplace_back(c.GetModel().GetType());
+      onDiskTypes.emplace_back(c.GetType());
    }
    for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
       if (t == onDiskTypes)

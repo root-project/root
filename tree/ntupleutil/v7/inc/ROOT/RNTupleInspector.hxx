@@ -106,7 +106,7 @@ public:
       std::uint64_t GetUncompressedSize() const { return fElementSize * fNElements; }
       std::uint64_t GetElementSize() const { return fElementSize; }
       std::uint64_t GetNElements() const { return fNElements; }
-      EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
+      EColumnType GetType() const { return fColumnDescriptor.GetType(); }
    };
 
    /////////////////////////////////////////////////////////////////////////////

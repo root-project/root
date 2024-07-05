@@ -139,8 +139,8 @@ private:
    DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
    /// Usually identical to the logical column ID, except for alias columns where it references the shadowed column
    DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-   /// Contains the column type and whether it is sorted
-   RColumnModel fModel;
+   /// The on-disk column type
+   EColumnType fType;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
@@ -162,7 +162,7 @@ public:
 
    DescriptorId_t GetLogicalId() const { return fLogicalColumnId; }
    DescriptorId_t GetPhysicalId() const { return fPhysicalColumnId; }
-   RColumnModel GetModel() const { return fModel; }
+   EColumnType GetType() const { return fType; }
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
@@ -959,9 +959,9 @@ public:
       fColumn.fPhysicalColumnId = physicalColumnId;
       return *this;
    }
-   RColumnDescriptorBuilder &Model(const RColumnModel &model)
+   RColumnDescriptorBuilder &Type(EColumnType type)
    {
-      fColumn.fModel = model;
+      fColumn.fType = type;
       return *this;
    }
    RColumnDescriptorBuilder &FieldId(DescriptorId_t fieldId)
