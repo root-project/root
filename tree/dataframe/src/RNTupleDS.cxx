@@ -89,8 +89,7 @@ public:
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final
    {
       auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
-      fColumns.emplace_back(
-         ROOT::Experimental::Internal::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+      fColumns.emplace_back(ROOT::Experimental::Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0));
    }
 
    size_t GetValueSize() const final { return sizeof(std::size_t); }
