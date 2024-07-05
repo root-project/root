@@ -85,22 +85,14 @@ enum class EColumnType {
 class RColumnModel {
 private:
    EColumnType fType;
-   bool fIsSorted;
 
 public:
-   RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
-   explicit RColumnModel(EColumnType type)
-      : fType(type), fIsSorted(type == EColumnType::kIndex32 || type == EColumnType::kSplitIndex32)
-   {
-   }
-   RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
+   RColumnModel() : fType(EColumnType::kUnknown) {}
+   explicit RColumnModel(EColumnType type) : fType(type) {}
 
    EColumnType GetType() const { return fType; }
-   bool GetIsSorted() const { return fIsSorted; }
 
-   bool operator ==(const RColumnModel &other) const {
-      return (fType == other.fType) && (fIsSorted == other.fIsSorted);
-   }
+   bool operator==(const RColumnModel &other) const { return (fType == other.fType); }
    bool operator!=(const RColumnModel &other) const { return !(other == *this); }
 };
 

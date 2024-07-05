@@ -88,7 +88,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
                            .Unwrap());
    descBuilder.AddFieldLink(0, 1);
    descBuilder.AddFieldLink(0, 2);
-   RColumnModel colModel(EColumnType::kInt32, false);
+   RColumnModel colModel(EColumnType::kInt32);
    RColumnDescriptorBuilder colBuilder1;
    colBuilder1.LogicalColumnId(0).PhysicalColumnId(0).Model(colModel).FieldId(1).Index(0);
    descBuilder.AddColumn(colBuilder1.MakeDescriptor().Unwrap()).ThrowOnError();
@@ -118,7 +118,7 @@ TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
    }
 
    RColumnDescriptorBuilder colBuilder5;
-   RColumnModel falseModel(EColumnType::kInt64, false);
+   RColumnModel falseModel(EColumnType::kInt64);
    colBuilder5.LogicalColumnId(1).PhysicalColumnId(0).Model(falseModel).FieldId(2).Index(0);
    try {
       descBuilder.AddColumn(colBuilder5.MakeDescriptor().Unwrap()).ThrowOnError();
@@ -161,7 +161,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(0)
                             .PhysicalColumnId(0)
-                            .Model(RColumnModel{EColumnType::kInt32, false})
+                            .Model(RColumnModel{EColumnType::kInt32})
                             .FieldId(1)
                             .Index(0)
                             .MakeDescriptor()
@@ -188,7 +188,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(1)
                             .PhysicalColumnId(1)
-                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .Model(RColumnModel{EColumnType::kInt64})
                             .FieldId(3)
                             .Index(0)
                             .FirstElementIndex(1002)
@@ -206,7 +206,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(2)
                             .PhysicalColumnId(2)
-                            .Model(RColumnModel{EColumnType::kBit, false})
+                            .Model(RColumnModel{EColumnType::kBit})
                             .FieldId(4)
                             .Index(0)
                             .FirstElementIndex(1100)
@@ -223,7 +223,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    descBuilder.AddColumn(RColumnDescriptorBuilder()
                             .LogicalColumnId(3)
                             .PhysicalColumnId(1)
-                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .Model(RColumnModel{EColumnType::kInt64})
                             .FieldId(5)
                             .Index(0)
                             .MakeDescriptor()
