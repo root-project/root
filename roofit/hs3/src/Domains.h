@@ -44,9 +44,9 @@ public:
 
    void populate(RooWorkspace &ws) const;
 
-private:
    class ProductDomain {
    public:
+      void readVariable(const RooRealVar &);
       void readVariable(const char *name, double min, double max);
       void writeVariable(RooRealVar &) const;
 
