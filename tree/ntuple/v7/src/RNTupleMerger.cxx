@@ -132,11 +132,10 @@ void ROOT::Experimental::Internal::RNTupleMerger::ValidateColumns(
 
 ////////////////////////////////////////////////////////////////////////////////
 void ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTupleDescriptor &descriptor,
-                                                                 std::vector<RColumnInfo> &columns,
-                                                                 RCluster::ColumnSet_t &columnSet)
+                                                                 std::vector<RColumnInfo> &columns)
 {
    // Here we recursively find the columns and fill the RColumnInfo vector
-   AddColumnsFromField(columns, columnSet, descriptor, descriptor.GetFieldZero());
+   AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero());
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
    if (fOutputIdMap.empty()) {
@@ -148,7 +147,6 @@ void ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTupleDe
 
 ////////////////////////////////////////////////////////////////////////////////
 void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vector<RColumnInfo> &columns,
-                                                                      RCluster::ColumnSet_t &columnSet,
                                                                       const RNTupleDescriptor &desc,
                                                                       const RFieldDescriptor &fieldDesc,
                                                                       const std::string &prefix)
@@ -158,13 +156,11 @@ void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vecto
       const std::string typeAndVersion = field.GetTypeName() + "." + std::to_string(field.GetTypeVersion());
       auto columnIter = desc.GetColumnIterable(field);
       columns.reserve(columns.size() + columnIter.count());
-      columnSet.reserve(columns.size() + columnIter.count());
       for (const auto &column : columnIter) {
          columns.emplace_back(name + std::to_string(column.GetIndex()), typeAndVersion, column.GetPhysicalId(),
                               kInvalidDescriptorId);
-         columnSet.emplace(column.GetPhysicalId());
       }
-      AddColumnsFromField(columns, columnSet, desc, field, name);
+      AddColumnsFromField(columns, desc, field, name);
    }
 }
 
@@ -175,7 +171,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
    RCluster::ColumnSet_t columnSet;
 
    if (destination.IsInitialized()) {
-      CollectColumns(destination.GetDescriptor(), columns, columnSet);
+      CollectColumns(destination.GetDescriptor(), columns);
    }
 
    std::unique_ptr<RNTupleModel> model; // used to initialize the schema of the output RNTuple
@@ -192,7 +188,10 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       // Collect all the columns
       // The column name : output column id map is only built once
       columns.clear(), columnSet.clear();
-      CollectColumns(descriptor.GetRef(), columns, columnSet);
+      CollectColumns(descriptor.GetRef(), columns);
+      columnSet.reserve(columns.size());
+      for (const auto &column : columns)
+         columnSet.emplace(column.fColumnInputId);
 
       // Create sink from the input model if not initialized
       if (!destination.IsInitialized()) {
@@ -215,9 +214,9 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       auto clusterId = descriptor->FindClusterId(0, 0);
 
       while (clusterId != ROOT::Experimental::kInvalidDescriptorId) {
-         auto *clusterP = clusterPool.GetCluster(clusterId, columnSet);
-         assert(clusterP);
-         const auto &cluster = descriptor->GetClusterDescriptor(clusterId);
+         auto *cluster = clusterPool.GetCluster(clusterId, columnSet);
+         assert(cluster);
+         const auto &clusterDesc = descriptor->GetClusterDescriptor(clusterId);
 
          // We use a std::deque so that references to the contained SealedPageSequence_t, and its iterators, are never
          // invalidated.
@@ -229,12 +228,12 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             // See if this cluster contains this column
             // if not, there is nothing to read/do...
             auto columnId = column.fColumnInputId;
-            if (!cluster.ContainsColumn(columnId)) {
+            if (!clusterDesc.ContainsColumn(columnId)) {
                continue;
             }
 
             // Now get the pages for this column in this cluster
-            const auto &pages = cluster.GetPageRange(columnId);
+            const auto &pages = clusterDesc.GetPageRange(columnId);
 
             RPageStorage::SealedPageSequence_t sealedPages;
 
@@ -243,7 +242,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
                ROnDiskPage::Key key{columnId, pageNo};
-               auto onDiskPage = clusterP->GetOnDiskPage(key);
+               auto onDiskPage = cluster->GetOnDiskPage(key);
                RPageStorage::RSealedPage sealedPage;
                sealedPage.SetNElements(pageInfo.fNElements);
                sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
@@ -269,7 +268,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          destination.CommitSealedPageV(sealedPageGroups);
 
          // Commit the clusters
-         destination.CommitCluster(cluster.GetNEntries());
+         destination.CommitCluster(clusterDesc.GetNEntries());
 
          // Go to the next cluster
          clusterId = descriptor->FindNextClusterId(clusterId);
