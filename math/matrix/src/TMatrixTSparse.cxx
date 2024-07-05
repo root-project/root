@@ -568,13 +568,13 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
    Int_t rowsLwb = lhs.GetColLwb();
    Int_t colsLwb = rhs.GetRowLwb();
 
-   bool *mask = new bool[rows];
-   Element *values = new Element[rows];
-   Int_t *indices = new Int_t[rows];
+   auto mask = std::unique_ptr<bool[]>(new bool[rows]);
+   auto values = std::unique_ptr<Element[]>(new Element[rows]);
+   auto indices = std::unique_ptr<Int_t[]>(new Int_t[rows]);
 
-   memset(mask, 0, sizeof(bool) * rows);
-   memset(values, 0, sizeof(Element) * rows);
-   memset(indices, 0, sizeof(Int_t) * rows);
+   std::memset(mask.get(), false, sizeof(bool) * rows);
+   std::memset(values.get(), 0, sizeof(Element) * rows);
+   std::memset(indices.get(), 0, sizeof(Int_t) * rows);
 
    const Int_t *pRowIndexlhs = lhs.GetRowIndexArray();
    const Int_t *pRowIndexrhs = rhs.GetRowIndexArray();
@@ -599,7 +599,7 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
             }
          }
          estimated_nnz_prod += nnz;
-         std::memset(mask, false, sizeof(bool) * rows);
+         std::memset(mask.get(), false, sizeof(bool) * rows);
       }
 
       const Int_t nc = estimated_nnz_prod; // rows*cols;
@@ -650,10 +650,6 @@ void TMatrixTSparse<Element>::conservative_sparse_sparse_product_impl(const TMat
          return;
       }
    }
-
-   delete[] mask;
-   delete[] values;
-   delete[] indices;
 
    return;
 }
