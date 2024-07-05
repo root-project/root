@@ -779,23 +779,23 @@ The possible combinations are marked as `W` in the following table
 Additionally, some types allow for reading from certain column types but not to write into them.
 Such cases are marked as `R` in the table.
 
-|               |                                                  Fundamental C++ Type                                                   ||
-| Column Type   | bool | std::byte | char | int8_t | uint8_t | in16_t | uin16_t | int32_t | uint32_t | int64_t | uint64_t | float | double |
-|---------------|:----:|:---------:|:----:|:------:|:-------:|:------:|:-------:|:-------:|:--------:|:-------:|:--------:|:-----:|:------:|
-| Bit           |  W*  |           |      |        |         |        |         |         |          |         |          |       |        |
-| Byte          |      |     W*    |      |        |         |        |         |         |          |         |          |       |        |
-| Char          |      |           |  W*  |        |         |        |         |         |          |         |          |       |        |
-| Int8          |      |           |      |   W*   |    R    |        |         |         |          |         |          |       |        |
-| UInt8         |      |           |      |   R    |    W*   |        |         |         |          |         |          |       |        |
-| (Split)Int16  |      |           |      |        |         |   W*   |    R    |         |          |         |          |       |        |
-| (Split)UInt16 |      |           |      |        |         |   R    |    W*   |         |          |         |          |       |        |
-| (Split)Int32  |      |           |      |        |         |        |         |    W*   |    R     |    R    |          |       |        |
-| (Split)UInt32 |      |           |      |        |         |        |         |    R    |    W*    |    R    |          |       |        |
-| (Split)Int64  |      |           |      |        |         |        |         |         |          |    W*   |    R     |       |        |
-| (Split)UInt64 |      |           |      |        |         |        |         |         |          |    R    |    W*    |       |        |
-| Real16        |      |           |      |        |         |        |         |         |          |         |          |   W   |   W    |
-| (Split)Real32 |      |           |      |        |         |        |         |         |          |         |          |   W*  |   W    |
-| (Split)Real64 |      |           |      |        |         |        |         |         |          |         |          |       |   W*   |
+|               |                                                  Fundamental C++ Type                                                     ||
+| Column Type   | bool | std::byte | char | int8_t | uint8_t | int16_t | uint16_t | int32_t | uint32_t | int64_t | uint64_t | float | double |
+|---------------|:----:|:---------:|:----:|:------:|:-------:|:-------:|:--------:|:-------:|:--------:|:-------:|:--------:|:-----:|:------:|
+| Bit           |  W*  |           |      |        |         |         |          |         |          |         |          |       |        |
+| Byte          |      |     W*    |      |        |         |         |          |         |          |         |          |       |        |
+| Char          |      |           |  W*  |        |         |         |          |         |          |         |          |       |        |
+| Int8          |      |           |      |   W*   |    R    |         |          |         |          |         |          |       |        |
+| UInt8         |      |           |      |   R    |    W*   |         |          |         |          |         |          |       |        |
+| (Split)Int16  |      |           |      |        |         |    W*   |    R     |         |          |         |          |       |        |
+| (Split)UInt16 |      |           |      |        |         |    R    |    W*    |         |          |         |          |       |        |
+| (Split)Int32  |      |           |      |        |         |         |          |    W*   |    R     |    R    |          |       |        |
+| (Split)UInt32 |      |           |      |        |         |         |          |    R    |    W*    |    R    |          |       |        |
+| (Split)Int64  |      |           |      |        |         |         |          |         |          |    W*   |    R     |       |        |
+| (Split)UInt64 |      |           |      |        |         |         |          |         |          |    R    |    W*    |       |        |
+| Real16        |      |           |      |        |         |         |          |         |          |         |          |   W   |   W    |
+| (Split)Real32 |      |           |      |        |         |         |          |         |          |         |          |   W*  |   W    |
+| (Split)Real64 |      |           |      |        |         |         |          |         |          |         |          |       |   W*   |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 The default column for serialization is denoted with an asterix.
