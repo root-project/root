@@ -397,16 +397,22 @@ Longptr_t TClingDataMemberInfo::Offset()
    // clang there is misbehaviour in MangleContext::shouldMangleDeclName.
    // enum constants are essentially numbers and don't get addresses. However
    // ROOT expects the address to the enum constant initializer to be returned.
-   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D))
+   else if (const EnumConstantDecl *ECD = dyn_cast<EnumConstantDecl>(D)) {
       // The raw data is stored as a long long, so we need to find the 'long'
       // part.
+
+      // FIXME:
+      // The memory leak for `EnumConstantDecl` was fixed in LLVM commit 142f270
+      // We were relying on the leak to provide the address for EnumConstantDecl.
+      llvm::APSInt *x = new llvm::APSInt(ECD->getInitVal());
 #ifdef R__BYTESWAP
       // In this case at the beginning.
-      return reinterpret_cast<Longptr_t>(ECD->getInitVal().getRawData());
+      return reinterpret_cast<Longptr_t>(x->getRawData());
 #else
       // In this case in the second part.
-      return reinterpret_cast<Longptr_t>(((char*)ECD->getInitVal().getRawData())+sizeof(Longptr_t) );
+      return reinterpret_cast<Longptr_t>((char *)x->getRawData() + sizeof(Longptr_t));
 #endif
+   }
    return -1L;
 }
 
