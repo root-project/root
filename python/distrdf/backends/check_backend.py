@@ -121,8 +121,6 @@ class TestInitialization:
             RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
             df = RDataFrame(1, sparkcontext=connection)
 
-        # Run init method so that RDF can keep track of the defined column
-        init(123)
         df = df.Define("u", "userValue").Histo1D(
             ("name", "title", 1, 100, 130), "u")
         

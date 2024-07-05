@@ -93,9 +93,6 @@ class TestDefinePerSample:
         elif backend == "spark":
             RDataFrame = ROOT.RDF.Experimental.Distributed.Spark.RDataFrame
             df = RDataFrame(self.maintreename, self.filenames, sparkcontext=connection)
-
-        # Declare code locally so that the RDF can keep track of the defined column
-        declare_definepersample_code()
         df1 = df.DefinePerSample("sample_weight", "samples_weights(rdfslot_, rdfsampleinfo_)")\
                 .DefinePerSample("sample_name", "samples_names(rdfslot_, rdfsampleinfo_)")
 
