@@ -289,7 +289,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       sealedPage.SetBuffer(pageBuf.get());
       pageSource->LoadSealedPage(colId, RClusterIndex{clusterId, 0}, sealedPage);
 
-      auto colType = desc->GetColumnDescriptor(colId).GetModel().GetType();
+      auto colType = desc->GetColumnDescriptor(colId).GetType();
       auto elem = ROOT::Experimental::Internal::RColumnElementBase::Generate<std::uint32_t>(colType);
       auto page = pageSource->UnsealPage(sealedPage, *elem, colId).Unwrap();
       EXPECT_GT(page.GetNElements(), 0);
