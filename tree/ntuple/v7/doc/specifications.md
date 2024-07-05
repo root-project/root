@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.3.0
+# RNTuple Reference Specifications 0.2.4.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -480,9 +480,6 @@ The flags field can have one of the following bits set
 
 | Bit      | Meaning                                                      |
 |----------|--------------------------------------------------------------|
-| 0x01     | Elements in the column are sorted (monotonically increasing) |
-| 0x02     | Elements in the column are sorted (monotonically decreasing) |
-| 0x04     | Elements have only non-negative values                       |
 | 0x08     | Index of first element in the column is not zero             |
 
 If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
