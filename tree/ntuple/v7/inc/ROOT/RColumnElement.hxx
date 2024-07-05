@@ -16,7 +16,6 @@
 #ifndef ROOT7_RColumnElement
 #define ROOT7_RColumnElement
 
-#include <ROOT/RColumnModel.hxx>
 #include <ROOT/RConfig.hxx>
 #include <ROOT/RError.hxx>
 #include <ROOT/RFloat16.hxx>
