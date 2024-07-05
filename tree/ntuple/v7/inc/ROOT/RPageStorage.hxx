@@ -104,7 +104,7 @@ public:
       RSealedPage(const RSealedPage &other) = default;
       RSealedPage &operator=(const RSealedPage &other) = default;
       RSealedPage(RSealedPage &&other) = default;
-      RSealedPage& operator =(RSealedPage &&other) = default;
+      RSealedPage &operator=(RSealedPage &&other) = default;
 
       const void *GetBuffer() const { return fBuffer; }
       void SetBuffer(const void *buffer) { fBuffer = buffer; }
@@ -156,9 +156,9 @@ protected:
 public:
    explicit RPageStorage(std::string_view name);
    RPageStorage(const RPageStorage &other) = delete;
-   RPageStorage& operator =(const RPageStorage &other) = delete;
+   RPageStorage &operator=(const RPageStorage &other) = delete;
    RPageStorage(RPageStorage &&other) = default;
-   RPageStorage& operator =(RPageStorage &&other) = default;
+   RPageStorage &operator=(RPageStorage &&other) = default;
    virtual ~RPageStorage();
 
    /// Whether the concrete implementation is a sink or a source
@@ -256,10 +256,10 @@ private:
 public:
    RPageSink(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
-   RPageSink(const RPageSink&) = delete;
-   RPageSink& operator=(const RPageSink&) = delete;
-   RPageSink(RPageSink&&) = default;
-   RPageSink& operator=(RPageSink&&) = default;
+   RPageSink(const RPageSink &) = delete;
+   RPageSink &operator=(const RPageSink &) = delete;
+   RPageSink(RPageSink &&) = default;
+   RPageSink &operator=(RPageSink &&) = default;
    ~RPageSink() override;
 
    EPageStorageType GetType() final { return EPageStorageType::kSink; }
@@ -517,7 +517,7 @@ public:
 private:
    RNTupleDescriptor fDescriptor;
    mutable std::shared_mutex fDescriptorLock;
-   REntryRange fEntryRange; ///< Used by the cluster pool to prevent reading beyond the given range
+   REntryRange fEntryRange;    ///< Used by the cluster pool to prevent reading beyond the given range
    bool fHasStructure = false; ///< Set to true once LoadStructure() is called
    bool fIsAttached = false;   ///< Set to true once Attach() is called
 
@@ -597,8 +597,8 @@ protected:
 
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
-   RPageSource(const RPageSource&) = delete;
-   RPageSource& operator=(const RPageSource&) = delete;
+   RPageSource(const RPageSource &) = delete;
+   RPageSource &operator=(const RPageSource &) = delete;
    RPageSource(RPageSource &&) = delete;
    RPageSource &operator=(RPageSource &&) = delete;
    ~RPageSource() override;
@@ -651,9 +651,9 @@ public:
 
    /// Read the packed and compressed bytes of a page into the memory buffer provided by `sealedPage`. The sealed page
    /// can be used subsequently in a call to `RPageSink::CommitSealedPage`.
-   /// The `fSize` and `fNElements` member of the sealedPage parameters are always set. If `sealedPage.fBuffer` is `nullptr`,
-   /// no data will be copied but the returned size information can be used by the caller to allocate a large enough
-   /// buffer and call `LoadSealedPage` again.
+   /// The `fSize` and `fNElements` member of the sealedPage parameters are always set. If `sealedPage.fBuffer` is
+   /// `nullptr`, no data will be copied but the returned size information can be used by the caller to allocate a large
+   /// enough buffer and call `LoadSealedPage` again.
    virtual void
    LoadSealedPage(DescriptorId_t physicalColumnId, RClusterIndex clusterIndex, RSealedPage &sealedPage) = 0;
 
