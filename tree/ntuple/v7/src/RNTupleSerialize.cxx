@@ -194,12 +194,6 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(type), *where);
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
          std::uint32_t flags = 0;
-         // TODO(jblomer): add support for descending columns in the column model
-         if (c.GetModel().GetIsSorted())
-            flags |= RNTupleSerializer::kFlagSortAscColumn;
-         // TODO(jblomer): fix for unsigned integer types
-         if (type == ROOT::Experimental::EColumnType::kIndex32)
-            flags |= RNTupleSerializer::kFlagNonNegativeColumn;
          const std::uint64_t firstElementIdx = c.GetFirstElementIndex();
          if (firstElementIdx > 0)
             flags |= RNTupleSerializer::kFlagDeferredColumn;
@@ -255,8 +249,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
-   const bool isSorted = (flags & (RNTupleSerializer::kFlagSortAscColumn | RNTupleSerializer::kFlagSortDesColumn));
-   columnDesc.FieldId(fieldId).Model({type, isSorted}).FirstElementIndex(firstElementIdx);
+   columnDesc.FieldId(fieldId).Model(ROOT::Experimental::RColumnModel(type)).FirstElementIndex(firstElementIdx);
 
    return frameSize;
 }
