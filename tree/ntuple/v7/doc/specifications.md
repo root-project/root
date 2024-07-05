@@ -797,6 +797,10 @@ Possibly available `const` and `volatile` qualifiers of the C++ types are ignore
 The default column for serialization is denoted with an asterix.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
+#### (unsigned) long long int
+On certain platforms, `(unsigned) long long int` resolves to fixed-width `(u)int64_t`, but this is not always the case.
+For the on-disk representation of these types, however, it is assumed `(unsigned) long long int` is equivalent to `(u)int64_t`.
+
 ### Low-precision Floating Points
 
 The ROOT type `Double32_t` is stored on disk as a `double` field with a `SplitReal32` column representation.
