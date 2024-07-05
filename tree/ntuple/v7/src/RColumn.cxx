@@ -20,10 +20,7 @@
 
 #include <TError.h>
 
-ROOT::Experimental::Internal::RColumn::RColumn(const RColumnModel &model, std::uint32_t index)
-   : fModel(model), fIndex(index)
-{
-}
+ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t index) : fType(type), fIndex(index) {}
 
 ROOT::Experimental::Internal::RColumn::~RColumn()
 {
