@@ -545,7 +545,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
    columnBuilder.LogicalColumnId(columnId)
       .PhysicalColumnId(columnId)
       .FieldId(fieldId)
-      .Model(column.GetModel())
+      .Model(RColumnModel(column.GetType()))
       .Index(column.GetIndex())
       .FirstElementIndex(column.GetFirstElementIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
