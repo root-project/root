@@ -125,8 +125,8 @@ protected:
    TInterpreter    *fInterpreter;           ///< Command interpreter
    Bool_t          fBatch;                  ///< True if session without graphics
    TString         fWebDisplay;             ///< If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
-   Bool_t          fIsWebDisplay;           ///< True if session with graphics on web
-   Bool_t          fIsWebDisplayBatch;      ///< True if session with graphics on web and batch mode
+   Bool_t          fIsWebDisplay;           ///< True if session uses web widgets
+   Bool_t          fIsWebDisplayBatch;      ///< True if web widgets are not displayed
    Bool_t          fEditHistograms;         ///< True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;              ///< True if command executed from a popup menu
    Bool_t          fMustClean;              ///< True if object destructor scans canvases
@@ -315,8 +315,7 @@ public:
    void              ResetClassSaved();
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
-   /// Set the "Batch mode".  If the argument evaluates to `true`, the session does not use interactive graphics.
-   void              SetBatch(Bool_t batch = kTRUE) { fIsWebDisplayBatch = fBatch = batch; }
+   void              SetBatch(Bool_t batch = kTRUE);
    void              SetWebDisplay(const char *webdisplay = "");
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
