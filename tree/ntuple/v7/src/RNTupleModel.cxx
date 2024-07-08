@@ -194,7 +194,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<RField
 
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<RFieldBase> field,
-                                                              std::function<std::string(const std::string &)> mapping)
+                                                              FieldMappingFunc_t mapping)
 {
    auto fieldp = field.get();
    auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
@@ -309,8 +309,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<RFieldBase> fiel
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> field,
-                                                    std::function<std::string(const std::string &)> mapping)
+ROOT::Experimental::RNTupleModel::AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping)
 {
    EnsureNotFrozen();
    if (!field)
