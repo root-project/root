@@ -393,8 +393,7 @@ int main( int argc, char **argv )
             std::string line;
             while (indirect_file) {
                if( std::getline(indirect_file, line) && line.length() ) {
-                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE ||
-                      TFile(line.c_str()).IsZombie()) {
+                  if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
                      std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
                                << (argv[a] + 1) << std::endl;
                      if (!skip_errors)
@@ -406,7 +405,7 @@ int main( int argc, char **argv )
          }
       } else {
          const std::string line = argv[a];
-         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || TFile(line.c_str()).IsZombie()) {
+         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
             std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!skip_errors)
                return 1;
