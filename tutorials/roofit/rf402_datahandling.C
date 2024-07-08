@@ -78,29 +78,29 @@ void rf402_datahandling()
 
    // The reduce() function returns a new dataset which is a subset of the original
    cout << endl << ">> d1 has only columns x,c" << endl;
-   std::unique_ptr<RooAbsData> d1{d.reduce({x, c})};
+   std::unique_ptr<RooDataSet> d1{d.reduce({x, c})};
    d1->Print("v");
 
    cout << endl << ">> d2 has only column y" << endl;
-   std::unique_ptr<RooAbsData> d2{d.reduce({y})};
+   std::unique_ptr<RooDataSet> d2{d.reduce({y})};
    d2->Print("v");
 
    cout << endl << ">> d3 has only the points with y>5.17" << endl;
-   std::unique_ptr<RooAbsData> d3{d.reduce("y>5.17")};
+   std::unique_ptr<RooDataSet> d3{d.reduce("y>5.17")};
    d3->Print("v");
 
    cout << endl << ">> d4 has only columns x,c for data points with y>5.17" << endl;
-   std::unique_ptr<RooAbsData> d4{d.reduce({x, c}, "y>5.17")};
+   std::unique_ptr<RooDataSet> d4{d.reduce({x, c}, "y>5.17")};
    d4->Print("v");
 
    // The merge() function adds two data set column-wise
    cout << endl << ">> merge d2(y) with d1(x,c) to form d1(x,c,y)" << endl;
-   static_cast<RooDataSet&>(*d1).merge(&static_cast<RooDataSet&>(*d2));
+   d1->merge(d2.get());
    d1->Print("v");
 
    // The append() function adds two datasets row-wise
    cout << endl << ">> append data points of d3 to d1" << endl;
-   static_cast<RooDataSet&>(*d1).append(static_cast<RooDataSet&>(*d3));
+   d1->append(*d3);
    d1->Print("v");
 
    // O p e r a t i o n s   o n   b i n n e d   d a t a s e t s
