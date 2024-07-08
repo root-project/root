@@ -71,14 +71,19 @@ ROOT::Experimental::Internal::RNTupleProcessor::RNTupleProcessor(const std::vect
    model->Freeze();
    fEntry = model->CreateEntry();
 
-   // Use the value pointers from the model's in the entry managed by the processor. This way, the pointers returned by
-   // RNTupleModel::MakeField can be used in the processor loop to access the corresponding field values.
-   for (const auto &value : model->GetDefaultEntry()) {
+   for (const auto &value : *fEntry) {
       auto &field = value.GetField();
       auto token = fEntry->GetToken(field.GetFieldName());
-      auto valuePtr = value.GetPtr<void>();
-      fEntry->BindValue(token, valuePtr);
-      fFieldContexts.emplace_back(field.Clone(field.GetFieldName()), fEntry->GetToken(field.GetFieldName()));
+
+      // If the model has a default entry, use the value pointers from the entry in the entry managed by the
+      // processor. This way, the pointers returned by RNTupleModel::MakeField can be used in the processor loop to
+      // access the corresponding field values.
+      if (!model->IsBare()) {
+         auto valuePtr = model->GetDefaultEntry().GetPtr<void>(token);
+         fEntry->BindValue(token, valuePtr);
+      }
+
+      fFieldContexts.emplace_back(field.Clone(field.GetFieldName()), token);
    }
 
    ConnectFields();
