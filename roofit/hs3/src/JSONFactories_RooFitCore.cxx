@@ -551,8 +551,19 @@ public:
          paramsWithIndex.emplace_back(pdf->getParameter(i), i);
       }
       std::sort(paramsWithIndex.begin(), paramsWithIndex.end());
+      // If the tokens follow the "x[#]" convention, the square braces enclosing each number
+      // ensures that there is a unique mapping between the token and parameter name
       for (auto [par, idx] : paramsWithIndex) {
          expression.ReplaceAll(("x[" + std::to_string(idx) + "]").c_str(), par->GetName());
+      }
+      // If the tokens follow the "@#" convention, the numbers are not enclosed by braces.
+      // So there may be tokens with numbers whose lower place value forms a subset string of ones with a higher place value,
+      // e.g. "@1" is a subset of "@10".
+      // So the names of these parameters must be applied descending from the highest place value
+      // in order to ensure each parameter name is uniquely applied to its token.
+      for (auto it = paramsWithIndex.rbegin(); it != paramsWithIndex.rend(); ++it) {
+         RooAbsArg* par = it->first;
+         std::size_t idx = it->second;
          expression.ReplaceAll(("@" + std::to_string(idx)).c_str(), par->GetName());
       }
       elem["expression"] << expression.Data();
