@@ -32,32 +32,27 @@
 
       assignPadPainterDraw(RPadPainter);
 
-      let url = decodeUrl(),
-          is_batch = url.has("batch_mode"),
-          is_ui5 = !url.has("noopenui") && !is_batch;
+      const url = decodeUrl(),
+            is_batch = url.has('batch_mode'),
+            ui5 = !url.has('noopenui') && !is_batch;
 
       if (is_batch)
          setBatchMode(true);
 
       connectWebWindow({
-         ui5: is_ui5
+         ui5
       }).then(handle => {
          let painter = new RCanvasPainter(null, null);
          painter.online_canvas = true;
-         painter.use_openui = is_ui5;
+         painter.use_openui = ui5;
          painter.batch_mode = is_batch;
 
-         if (window) {
-            window.onbeforeunload = () => painter.closeWebsocket(true);
-            if (browser.qt5) window.onqt5unload = window.onbeforeunload;
-         }
-
-         if (is_ui5) {
+         if (ui5) {
             painter._window_handle = handle;
 
-            sap.ui.require(["sap/ui/core/ComponentContainer"], ComponentContainer => {
+            sap.ui.require(['sap/ui/core/ComponentContainer'], ComponentContainer => {
                new ComponentContainer({
-                  name: "rootui5.canv",
+                  name: 'rootui5.canv',
                   manifest: true,
                   async: true,
                   settings: {
@@ -65,12 +60,13 @@
                         canvas_painter: painter
                      }
                   },
-                  height: "100%"
-               }).placeAt("CanvasDiv")
+                  height: '100%'
+               }).placeAt('CanvasDiv')
             });
          } else {
-            painter.setDom("CanvasDiv"); // just assign id, nothing else is happens
+            painter.setDom('CanvasDiv'); // just assign id, nothing else is happens
             painter.useWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
+            handle.addReloadKeyHandler(); // in ui5 assigned at the end
          }
       });
 
