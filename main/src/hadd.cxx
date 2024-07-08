@@ -406,7 +406,7 @@ int main( int argc, char **argv )
          }
       } else {
          const std::string line = argv[a];
-         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || (!TString(line).EndsWith(".root"))) {
+         if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE || TFile(line.c_str()).IsZombie()) {
             std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
             if (!skip_errors)
                return 1;
