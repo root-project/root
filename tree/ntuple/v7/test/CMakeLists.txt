@@ -36,6 +36,7 @@ ROOT_GENERATE_DICTIONARY(RNTupleDescriptorDict ${CMAKE_CURRENT_SOURCE_DIR}/RNTup
                        DEPENDENCIES RIO CustomStruct)
 ROOT_ADD_GTEST(ntuple_endian ntuple_endian.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_friends ntuple_friends.cxx LIBRARIES ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_index ntuple_index.cxx LIBRARIES ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_merger ntuple_merger.cxx LIBRARIES ROOTNTuple CustomStruct ZLIB::ZLIB)
 ROOT_ADD_GTEST(ntuple_metrics ntuple_metrics.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_model ntuple_model.cxx LIBRARIES ROOTNTuple CustomStruct)
