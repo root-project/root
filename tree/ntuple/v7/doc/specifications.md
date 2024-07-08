@@ -818,7 +818,7 @@ and a value column `[1.0, 1.0, 2.0]`.
 #### std::string
 
 A string is stored as a single field with two columns.
-The first (principle) column is of type SplitIndex32.
+The first (principle) column is of type `(Split)Index[64|32]`.
 The second column is of type Char.
 
 #### std::vector\<T\> and ROOT::RVec\<T\>
