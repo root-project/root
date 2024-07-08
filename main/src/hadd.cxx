@@ -394,7 +394,7 @@ int main( int argc, char **argv )
             while (indirect_file) {
                if( std::getline(indirect_file, line) && line.length() ) {
                   if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE ||
-                      (!TString(line).EndsWith(".root"))) {
+                      TFile(line.c_str()).IsZombie()) {
                      std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
                                << (argv[a] + 1) << std::endl;
                      if (!skip_errors)
