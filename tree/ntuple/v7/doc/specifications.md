@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.4.0
+# RNTuple Reference Specifications 0.2.5.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -368,11 +368,46 @@ Every field record frame of the list of fields has the following contents
 
 The field version and type version are used for schema evolution.
 
-If `flags=0x0001` (_repetitive field_) is set, the field represents a fixed-size array.
-In this case, an additional 64bit integer follows immediately that specifies the size of the array.
+The structural role of the field can have on of the following values
+
+| Value    | Structural role                                                          |
+|----------|--------------------------------------------------------------------------|
+| 0x00     | Leaf field in the schema tree                                            |
+| 0x01     | The field is the mother of a collection (e.g., a vector)                 |
+| 0x02     | The field is the mother of a record (e.g., a struct)                     |
+| 0x03     | The field is the mother of a variant                                     |
+| 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
+
+The flags field can have one of the following bits set
+
+| Bit      | Meaning                                                                    |
+|----------|----------------------------------------------------------------------------|
+| 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
+| 0x02     | Projected field                                                            |
+
+If `flag=0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content
 (see Section "Mapping of C++ Types to Fields and Columns").
+
+If `flag=0x02` (_projected field_) is set,
+the field has been created as a virtual field from another, non-projected source field.
+If a projected field has attached columns,
+these columns are alias columns to physical columns attached to the source field.
+
+Depending on the flags, the following optional values follow:
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++               Array Size (if flag 0x01 is set)                +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++             Source Field ID (if flag 0x02 is set)             +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
 
 The block of integers is followed by a list of strings:
 
@@ -385,22 +420,6 @@ The order of fields matters: every field gets an implicit field ID
 which is equal the zero-based index of the field in the serialized list;
 subfields are ordered from smaller IDs to larger IDs.
 Top-level fields have their own field ID set as parent ID.
-
-The flags field can have one of the following bits set
-
-| Bit      | Meaning                                                                    |
-|----------|----------------------------------------------------------------------------|
-| 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
-
-The structural role of the field can have on of the following values
-
-| Value    | Structural role                                                          |
-|----------|--------------------------------------------------------------------------|
-| 0x00     | Leaf field in the schema tree                                            |
-| 0x01     | The field is the mother of a collection (e.g., a vector)                 |
-| 0x02     | The field is the mother of a record (e.g., a struct)                     |
-| 0x03     | The field is the mother of a variant                                     |
-| 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
 
 
 #### Column Description
