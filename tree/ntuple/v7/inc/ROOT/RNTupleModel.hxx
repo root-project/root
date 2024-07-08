@@ -93,6 +93,11 @@ class RNTupleModel {
    Internal::MergeModels(const RNTupleModel &left, const RNTupleModel &right, std::string_view rightFieldPrefix);
 
 public:
+   /// User provided function that describes the mapping of existing source fields to projected fields in terms
+   /// of fully qualified field names. The mapping function is called with the qualified field names of the provided
+   /// field and the subfields.  It should return the qualified field names used as a mapping source.
+   using FieldMappingFunc_t = std::function<std::string(const std::string &)>;
+
    /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
    struct NameWithDescription_t {
       NameWithDescription_t(const char *name) : fName(name) {}
@@ -185,8 +190,7 @@ public:
 
       void AddField(std::unique_ptr<RFieldBase> field);
 
-      RResult<void>
-      AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
+      RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
    };
 
 private:
@@ -299,11 +303,8 @@ public:
    /// Throws an exception if the field is null.
    void AddField(std::unique_ptr<RFieldBase> field);
 
-   /// Adds a top-level field based on existing fields. The mapping function is called with the qualified field names
-   /// of the provided field and the subfields.  It should return the qualified field names used as a mapping source.
-   /// Projected fields can only be used for models used to write data.
-   RResult<void>
-   AddProjectedField(std::unique_ptr<RFieldBase> field, std::function<std::string(const std::string &)> mapping);
+   /// Adds a top-level field based on existing fields.
+   RResult<void> AddProjectedField(std::unique_ptr<RFieldBase> field, FieldMappingFunc_t mapping);
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
