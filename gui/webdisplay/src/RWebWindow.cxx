@@ -1033,6 +1033,11 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
          }
+         if (!fMaster) {
+            conn->fNewKey = GenerateKey();
+            if(!conn->fNewKey.empty())
+               SubmitData(conn->fConnId, true, "NEW_KEY="s + conn->fNewKey, -1);
+         }
       } else if (cdata.compare(0, 8, "CLOSECH=") == 0) {
          int channel = std::stoi(cdata.substr(8));
          auto iter = conn->fEmbed.find(channel);
