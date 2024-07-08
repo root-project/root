@@ -222,7 +222,7 @@ void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
 
 void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
 {
-   if (!fDefaultEntry)
+   if (IsBare())
       throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
 }
 
