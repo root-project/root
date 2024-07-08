@@ -640,9 +640,9 @@ TEST_P(LikelihoodGradientJobErrorTest, ErrorHandling)
    RooAbsPdf *pdf = w.pdf("model");
    std::unique_ptr<RooAbsData> data;
    if (binned) {
-      data.reset(pdf->generateBinned(*w.var("m"), 10000));
+      data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("m"), 10000)};
    } else {
-      data.reset(pdf->generate(*w.var("m"), 10000));
+      data = std::unique_ptr<RooDataSet>{pdf->generate(*w.var("m"), 10000)};
    }
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data, RooFit::EvalBackend::Legacy())};
 
@@ -710,9 +710,9 @@ TEST_P(LikelihoodGradientJobErrorTest, FitSimpleLinear)
    RooGenericPdf pdf("pdf", "a1 + x", RooArgSet(x, a1));
    std::unique_ptr<RooAbsData> data;
    if (binned) {
-      data.reset(pdf.generateBinned(x, 1000));
+      data = std::unique_ptr<RooDataHist>{pdf.generateBinned(x, 1000)};
    } else {
-      data.reset(pdf.generate(x, 1000));
+      data = std::unique_ptr<RooDataSet>{pdf.generate(x, 1000)};
    }
    std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data, RooFit::EvalBackend::Legacy()));
 
