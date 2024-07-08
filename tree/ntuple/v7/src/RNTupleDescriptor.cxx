@@ -38,7 +38,8 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
    return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
           fFieldName == other.fFieldName && fFieldDescription == other.fFieldDescription &&
           fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
-          fStructure == other.fStructure && fParentId == other.fParentId && fLinkIds == other.fLinkIds &&
+          fStructure == other.fStructure && fParentId == other.fParentId &&
+          fProjectionSourceId == other.fProjectionSourceId && fLinkIds == other.fLinkIds &&
           fLogicalColumnIds == other.fLogicalColumnIds;
 }
 
@@ -56,6 +57,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    clone.fNRepetitions = fNRepetitions;
    clone.fStructure = fStructure;
    clone.fParentId = fParentId;
+   clone.fProjectionSourceId = fProjectionSourceId;
    clone.fLinkIds = fLinkIds;
    clone.fLogicalColumnIds = fLogicalColumnIds;
    return clone;
@@ -837,6 +839,35 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldLink(DescriptorI
    }
    fDescriptor.fFieldDescriptors.at(linkId).fParentId = fieldId;
    fDescriptor.fFieldDescriptors.at(fieldId).fLinkIds.push_back(linkId);
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddFieldProjection(DescriptorId_t sourceId,
+                                                                           DescriptorId_t targetId)
+{
+   auto fieldExists = RResult<void>::Success();
+   if (!(fieldExists = EnsureFieldExists(sourceId)))
+      return R__FORWARD_ERROR(fieldExists);
+   if (!(fieldExists = EnsureFieldExists(targetId)))
+      return R__FAIL("projected field with id '" + std::to_string(targetId) + "' doesn't exist in NTuple");
+
+   if (targetId == fDescriptor.GetFieldZeroId()) {
+      return R__FAIL("cannot make FieldZero a projected field");
+   }
+   if (sourceId == targetId) {
+      return R__FAIL("cannot make field '" + std::to_string(targetId) + "' a projection of itself");
+   }
+   if (fDescriptor.fFieldDescriptors.at(sourceId).IsProjectedField()) {
+      return R__FAIL("cannot make field '" + std::to_string(targetId) + "' a projection of an already projected field");
+   }
+   // fail if target field already has another valid projection source
+   auto &targetDesc = fDescriptor.fFieldDescriptors.at(targetId);
+   if (targetDesc.IsProjectedField() && targetDesc.GetProjectionSourceId() != sourceId) {
+      return R__FAIL("field '" + std::to_string(targetId) + "' has already a projection source ('" +
+                     std::to_string(targetDesc.GetProjectionSourceId()) + ")");
+   }
+   fDescriptor.fFieldDescriptors.at(targetId).fProjectionSourceId = sourceId;
    return RResult<void>::Success();
 }
 
