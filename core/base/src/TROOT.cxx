@@ -2796,9 +2796,9 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set batch mode for the ROOT
+/// Set batch mode for ROOT
 /// If the argument evaluates to `true`, the session does not use interactive graphics.
-/// If web graphics runs in server mode, web widgets still be available via URL
+/// If web graphics runs in server mode, the web widgets are still available via URL
 
 void TROOT::SetBatch(Bool_t batch)
 {
