@@ -41,7 +41,8 @@ namespace {
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
 
 std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDesc,
-                             ROOT::Experimental::DescriptorId_t onDiskParentId, void *buffer)
+                             ROOT::Experimental::DescriptorId_t onDiskParentId,
+                             ROOT::Experimental::DescriptorId_t onDiskProjectionSourceId, void *buffer)
 {
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
@@ -54,12 +55,21 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetTypeVersion(), *where);
    pos += RNTupleSerializer::SerializeUInt32(onDiskParentId, *where);
    pos += RNTupleSerializer::SerializeFieldStructure(fieldDesc.GetStructure(), *where);
-   if (fieldDesc.GetNRepetitions() > 0) {
-      pos += RNTupleSerializer::SerializeUInt16(RNTupleSerializer::kFlagRepetitiveField, *where);
+
+   std::uint16_t flags = 0;
+   if (fieldDesc.GetNRepetitions() > 0)
+      flags |= RNTupleSerializer::kFlagRepetitiveField;
+   if (fieldDesc.IsProjectedField())
+      flags |= RNTupleSerializer::kFlagProjectedField;
+   pos += RNTupleSerializer::SerializeUInt16(flags, *where);
+
+   if (flags & RNTupleSerializer::kFlagRepetitiveField) {
       pos += RNTupleSerializer::SerializeUInt64(fieldDesc.GetNRepetitions(), *where);
-   } else {
-      pos += RNTupleSerializer::SerializeUInt16(0, *where);
    }
+   if (flags & RNTupleSerializer::kFlagProjectedField) {
+      pos += RNTupleSerializer::SerializeUInt32(onDiskProjectionSourceId, *where);
+   }
+
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
@@ -83,6 +93,8 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
                                  std::size_t firstOnDiskId,
                                  const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
+   using ROOT::Experimental::kInvalidDescriptorId;
+
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
@@ -93,7 +105,9 @@ std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &de
       const auto &f = desc.GetFieldDescriptor(fieldId);
       auto onDiskParentId =
          (f.GetParentId() == fieldZeroId) ? onDiskFieldId : context.GetOnDiskFieldId(f.GetParentId());
-      pos += SerializeField(f, onDiskParentId, *where);
+      auto onDiskProjectionSourceId =
+         f.IsProjectedField() ? context.GetOnDiskFieldId(f.GetProjectionSourceId()) : kInvalidDescriptorId;
+      pos += SerializeField(f, onDiskParentId, onDiskProjectionSourceId, *where);
       ++onDiskFieldId;
    }
 
@@ -142,6 +156,14 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
       std::uint64_t nRepetitions;
       bytes += RNTupleSerializer::DeserializeUInt64(bytes, nRepetitions);
       fieldDesc.NRepetitions(nRepetitions);
+   }
+
+   if (flags & RNTupleSerializer::kFlagProjectedField) {
+      if (fnFrameSizeLeft() < sizeof(std::uint32_t))
+         return R__FAIL("field record frame too short");
+      std::uint32_t projectionSourceId;
+      bytes += RNTupleSerializer::DeserializeUInt32(bytes, projectionSourceId);
+      fieldDesc.ProjectionSourceId(projectionSourceId);
    }
 
    std::string fieldName;
@@ -1232,11 +1254,17 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
       if (!fieldDesc)
          return R__FORWARD_ERROR(fieldDesc);
-      auto parentId = fieldDesc.Inspect().GetParentId();
+      const auto parentId = fieldDesc.Inspect().GetParentId();
+      const auto projectionSourceId = fieldDesc.Inspect().GetProjectionSourceId();
       descBuilder.AddField(fieldDesc.Unwrap());
       auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
       if (!resVoid)
          return R__FORWARD_ERROR(resVoid);
+      if (projectionSourceId != kInvalidDescriptorId) {
+         resVoid = descBuilder.AddFieldProjection(projectionSourceId, fieldId);
+         if (!resVoid)
+            return R__FORWARD_ERROR(resVoid);
+      }
    }
    bytes = frame + frameSize;
 

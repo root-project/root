@@ -28,6 +28,12 @@ TEST(RNTupleProjection, Basics)
    }
 
    auto reader = RNTupleReader::Open("A", fileGuard.GetPath());
+   const auto &desc = reader->GetDescriptor();
+   const auto metFieldId = desc.FindFieldId("met");
+   const auto missingEFieldId = desc.FindFieldId("missingE");
+   EXPECT_FALSE(desc.GetFieldDescriptor(metFieldId).IsProjectedField());
+   EXPECT_TRUE(desc.GetFieldDescriptor(missingEFieldId).IsProjectedField());
+   EXPECT_EQ(metFieldId, desc.GetFieldDescriptor(missingEFieldId).GetProjectionSourceId());
    auto viewMissingE = reader->GetView<float>("missingE");
    auto viewAliasVec = reader->GetView<std::vector<float>>("aliasVec");
    auto viewVecSize = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint64_t>>("vecSize");
