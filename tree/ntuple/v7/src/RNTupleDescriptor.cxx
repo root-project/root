@@ -65,7 +65,9 @@ std::unique_ptr<ROOT::Experimental::RFieldBase>
 ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplDesc) const
 {
    if (GetStructure() == ENTupleStructure::kUnsplit) {
-      return std::make_unique<RUnsplitField>(GetFieldName(), GetTypeName());
+      auto unsplitField = std::make_unique<RUnsplitField>(GetFieldName(), GetTypeName());
+      unsplitField->SetOnDiskId(fFieldId);
+      return unsplitField;
    }
 
    if (GetTypeName().empty()) {
