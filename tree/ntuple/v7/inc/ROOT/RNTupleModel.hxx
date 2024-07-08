@@ -309,6 +309,7 @@ public:
    void Freeze();
    void Unfreeze();
    bool IsFrozen() const { return fIsFrozen; }
+   bool IsBare() const { return !fDefaultEntry; }
    std::uint64_t GetModelId() const { return fModelId; }
 
    /// Ingests a model for a sub collection and attaches it to the current model

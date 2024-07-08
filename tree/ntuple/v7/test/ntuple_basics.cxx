@@ -637,6 +637,7 @@ TEST(RNTuple, BareEntry)
 {
    auto m = RNTupleModel::CreateBare();
    auto f = m->MakeField<float>("pt");
+   EXPECT_TRUE(m->IsBare());
    EXPECT_FALSE(f);
 
    FileRaii fileGuard("test_ntuple_bare_entry.root");
@@ -830,6 +831,7 @@ TEST(RNTuple, RValue)
 TEST(REntry, Basics)
 {
    auto model = RNTupleModel::Create();
+   EXPECT_FALSE(model->IsBare());
    model->MakeField<float>("pt");
    model->Freeze();
 
