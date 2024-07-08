@@ -54,9 +54,11 @@ public:
    Bool_t               IsHorizontal();
    Bool_t               IsVertical();
    void                 ls(Option_t *option="") const override;
-   void                 Paint(Option_t *option="") override;
-   virtual void         PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
-   virtual void         PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t  v2);
+   void                 PaintOn(TVirtualPad *pad, Option_t *option="") override;
+   virtual void         PaintLine(Double_t x1, Double_t y1,Double_t x2, Double_t y2);
+   virtual void         PaintLineOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2, Double_t y2);
+   virtual void         PaintLineNDC(Double_t u1, Double_t v1,Double_t u2, Double_t v2);
+   virtual void         PaintLineNDCOn(TVirtualPad *pad, Double_t u1, Double_t v1,Double_t u2, Double_t v2);
    void                 Print(Option_t *option="") const override;
    void                 SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void         SetNDC(Bool_t isNDC=kTRUE);

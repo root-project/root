@@ -46,6 +46,7 @@ public:
 
    void           Copy(TObject &pave) const override;
    virtual void   ConvertNDCtoPad();
+   virtual void   ConvertNDCto(TVirtualPad *pad);
    Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
    void           Draw(Option_t *option="") override;
    virtual TPave *DrawPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
@@ -63,11 +64,15 @@ public:
    ULong_t        Hash() const override { return fName.Hash(); }
    Bool_t         IsSortable() const override { return kTRUE; }
    void           ls(Option_t *option="") const override;
-   void           Paint(Option_t *option="") override;
-   virtual void   PaintPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
-                            Int_t bordersize=4 ,Option_t *option="br");
+   void           PaintOn(TVirtualPad *pad, Option_t *option="") override;
+   virtual void   PaintPave(Double_t x1, Double_t y1, Double_t x2 ,Double_t y2,
+                            Int_t bordersize=4, Option_t *option="br");
+   virtual void   PaintPaveOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                              Int_t bordersize ,Option_t *option);
    virtual void   PaintPaveArc(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
                                Int_t bordersize=4 ,Option_t *option="br");
+   virtual void   PaintPaveArcOn(TVirtualPad *pad, Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
+                                 Int_t bordersize, Option_t *option);
    void           Print(Option_t *option="") const override;
    void           SavePrimitive(std::ostream &out, Option_t *option = "") override;
    /**

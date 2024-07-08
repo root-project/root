@@ -55,7 +55,8 @@ const Double_t kPI      = TMath::Pi();
 class TMathTextRenderer : public TText, public TAttFill,
                           public mathtext::math_text_renderer_t {
 private:
-   TMathText *_parent;
+   TMathText *_parent = nullptr;
+   TVirtualPad *_pad = nullptr;
    float _font_size;
    float _x0;
    float _y0;
@@ -155,17 +156,18 @@ public:
    {
    }
    inline void
-   set_parameter(const float x, const float y, const float size,
+   set_parameter(TVirtualPad *pad, const float x, const float y, const float size,
               const float angle_degree)
    {
-      _x0 = gPad->XtoAbsPixel(x);
-      _y0 = gPad->YtoAbsPixel(y);
+      _pad = pad;
+      _x0 = _pad->XtoAbsPixel(x);
+      _y0 = _pad->YtoAbsPixel(y);
       _pad_scale_x =
-         gPad->XtoPixel(gPad->GetX2()) -
-         gPad->XtoPixel(gPad->GetX1());
+         _pad->XtoPixel(_pad->GetX2()) -
+         _pad->XtoPixel(_pad->GetX1());
       _pad_scale_y =
-         gPad->YtoPixel(gPad->GetY1()) -
-         gPad->YtoPixel(gPad->GetY2());
+         _pad->YtoPixel(_pad->GetY1()) -
+         _pad->YtoPixel(_pad->GetY2());
       _pad_scale = std::min(_pad_scale_x, _pad_scale_y);
 
       _angle_degree = angle_degree;
@@ -188,10 +190,10 @@ public:
    transform_pad(double &xt, double &yt,
               const float x, const float y) const
    {
-      xt = gPad->AbsPixeltoX(Int_t(
+      xt = _pad->AbsPixeltoX(Int_t(
          x * _pad_pixel_transform[0] +
          y * _pad_pixel_transform[1] + _pad_pixel_transform[2]));
-      yt = gPad->AbsPixeltoY(Int_t(
+      yt = _pad->AbsPixeltoY(Int_t(
          x * _pad_pixel_transform[3] +
          y * _pad_pixel_transform[4] + _pad_pixel_transform[5]));
    }
@@ -217,7 +219,7 @@ public:
       transform_pad(xt[3], yt[3],
                  bounding_box_0.left(),
                  bounding_box_0.top());
-      gPad->PaintFillArea(4, xt, yt);
+      _pad->PaintFillArea(4, xt, yt);
    }
    inline void
    rectangle(const mathtext::bounding_box_t &/*bounding_box*/) override
@@ -321,7 +323,7 @@ public:
          double yt;
 
          transform_pad(xt, yt, x + advance, y);
-         gPad->PaintText(xt, yt, buf);
+         _pad->PaintText(xt, yt, buf);
          advance += b.advance();
          if (cyrillic_or_cjk) {
             SetTextFont((Font_t) root_face_number(family));
@@ -403,27 +405,28 @@ void TMathText::Copy(TObject &obj) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Render the text.
+/// Render the text on the pad
 
-void TMathText::Render(const Double_t x, const Double_t y, const Double_t size,
+void TMathText::Render(TVirtualPad *pad, const Double_t x, const Double_t y, const Double_t size,
                        const Double_t angle, const Char_t *t, const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
 
-   fRenderer->set_parameter(x, y, size, angle);
+   fRenderer->set_parameter(pad, x, y, size, angle);
    fRenderer->text(0, 0, math_text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the text bounding box.
+/// Get the text bounding box on the pad
 
-void TMathText::GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
+void TMathText::GetSize(TVirtualPad *pad,
+                        Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
                         const Double_t size, const Double_t angle, const Char_t *t,
                         const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
 
-   fRenderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(pad, 0, 0, size, angle);
 
    const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
    double x[4], y[4];
@@ -442,14 +445,15 @@ void TMathText::GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
 ////////////////////////////////////////////////////////////////////////////////
 /// Alignment.
 
-void TMathText::GetAlignPoint(Double_t &x0, Double_t &y0,
+void TMathText::GetAlignPoint(TVirtualPad *pad,
+                              Double_t &x0, Double_t &y0,
                               const Double_t size, const Double_t angle,
                               const Char_t *t, const Int_t /*length*/,
                               const Short_t align)
 {
    const mathtext::math_text_t math_text(t);
 
-   fRenderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(pad, 0, 0, size, angle);
 
    const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
    float x = 0, y = 0;
@@ -488,7 +492,7 @@ void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
    Double_t y1;
    Double_t size = GetTextSizePercent(GetTextSize());
 
-   GetSize(x0, y0, x1, y1, size, 0, text, length);
+   GetSize(gPad, x0, y0, x1, y1, size, 0, text, length);
    w = (UInt_t)(TMath::Abs(gPad->XtoAbsPixel(x1) - gPad->XtoAbsPixel(x0)));
    h = (UInt_t)(TMath::Abs(gPad->YtoAbsPixel(y0) - gPad->YtoAbsPixel(y1)));
 }
@@ -496,8 +500,9 @@ void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get X size.
 
-Double_t TMathText::GetXsize(void)
+Double_t TMathText::GetXsize()
 {
+   if (!gPad) return 0;
    const TString newText = GetTitle();
    const Int_t length    = newText.Length();
    const Char_t *text    = newText.Data();
@@ -509,7 +514,7 @@ Double_t TMathText::GetXsize(void)
    Double_t x1;
    Double_t y1;
 
-   GetSize(x0, y0, x1, y1, size, angle, text, length);
+   GetSize(gPad, x0, y0, x1, y1, size, angle, text, length);
 
    return TMath::Abs(x1 - x0);
 }
@@ -517,8 +522,10 @@ Double_t TMathText::GetXsize(void)
 ////////////////////////////////////////////////////////////////////////////////
 /// Get Y size.
 
-Double_t TMathText::GetYsize(void)
+Double_t TMathText::GetYsize()
 {
+   if (!gPad) return 0;
+
    const TString newText = GetTitle();
    const Int_t length    = newText.Length();
    const Char_t *text    = newText.Data();
@@ -530,7 +537,7 @@ Double_t TMathText::GetYsize(void)
    Double_t x1;
    Double_t y1;
 
-   GetSize(x0, y0, x1, y1, size, angle, text, length);
+   GetSize(gPad, x0, y0, x1, y1, size, angle, text, length);
 
    return TMath::Abs(y0 - y1);
 }
@@ -552,41 +559,50 @@ TMathText *TMathText::DrawMathText(Double_t x, Double_t y, const char *text)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint text.
+/// Paint text on the pad
 
-void TMathText::Paint(Option_t *)
+void TMathText::PaintOn(TVirtualPad *pad, Option_t *)
 {
-   if (!gPad) return;
    Double_t xsave = fX;
    Double_t ysave = fY;
 
    if (TestBit(kTextNDC)) {
-      fX = gPad->GetX1() + xsave * (gPad->GetX2() - gPad->GetX1());
-      fY = gPad->GetY1() + ysave * (gPad->GetY2() - gPad->GetY1());
-      PaintMathText(fX, fY, GetTextAngle(), GetTextSize(), GetTitle());
+      fX = pad->GetX1() + xsave * (pad->GetX2() - pad->GetX1());
+      fY = pad->GetY1() + ysave * (pad->GetY2() - pad->GetY1());
+      PaintMathTextOn(pad, fX, fY, GetTextAngle(), GetTextSize(), GetTitle());
    } else {
-      PaintMathText(gPad->XtoPad(fX), gPad->YtoPad(fY),
-                 GetTextAngle(), GetTextSize(), GetTitle());
+      PaintMathTextOn(pad, pad->XtoPad(fX), pad->YtoPad(fY),
+                      GetTextAngle(), GetTextSize(), GetTitle());
    }
    fX = xsave;
    fY = ysave;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint text (used by Paint()).
+/// Paint text
 
 void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
                               Double_t size, const Char_t *text1)
 {
-   if (!gPad) return;
+   if (gPad)
+      PaintMathTextOn(gPad, x, y, angle, size, text1);
+}
+
+
+/// Paint text (used by PaintOn()).
+
+void TMathText::PaintMathTextOn(TVirtualPad *pad,
+                                Double_t x, Double_t y, Double_t angle,
+                               Double_t size, const Char_t *text1)
+{
    Double_t saveSize = size;
    Int_t saveFont    = fTextFont;
    Short_t saveAlign = fTextAlign;
 
    TAttText::Modify();
    if (gVirtualPS) { // Initialise TMathTextRenderer
-      if (gPad->IsBatch()) {
-         if (gVirtualPS->InheritsFrom("TImageDump")) gPad->PaintText(0, 0, "");
+      if (pad->IsBatch()) {
+         if (gVirtualPS->InheritsFrom("TImageDump")) pad->PaintText(0, 0, "");
       }
    }
 
@@ -598,15 +614,15 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
       if (gVirtualPS) {
          gVirtualPS->SetTextAngle(angle);
       }
-      gPad->PaintText(x, y, text1);
+      pad->PaintText(x, y, text1);
       return;
    }
 
    if (fTextFont % 10 > 2) {
-      UInt_t w = TMath::Abs(gPad->XtoAbsPixel(gPad->GetX2()) -
-                       gPad->XtoAbsPixel(gPad->GetX1()));
-      UInt_t h = TMath::Abs(gPad->YtoAbsPixel(gPad->GetY2()) -
-                       gPad->YtoAbsPixel(gPad->GetY1()));
+      UInt_t w = TMath::Abs(pad->XtoAbsPixel(pad->GetX2()) -
+                       pad->XtoAbsPixel(pad->GetX1()));
+      UInt_t h = TMath::Abs(pad->YtoAbsPixel(pad->GetY2()) -
+                       pad->YtoAbsPixel(pad->GetY1()));
       size = size / std::min(w, h);
       SetTextFont(10 * (saveFont / 10) + 2);
    }
@@ -662,9 +678,9 @@ void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
    const Char_t *text = newText.Data();
    Double_t x0;
    Double_t y0;
-   GetAlignPoint(x0, y0, size, angle, text, length, fTextAlign);
+   GetAlignPoint(pad, x0, y0, size, angle, text, length, fTextAlign);
 
-   Render(x - x0, y - y0, size, angle, text, length);
+   Render(pad, x - x0, y - y0, size, angle, text, length);
 
    SetTextSize(saveSize);
    SetTextFont(saveFont);

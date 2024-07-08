@@ -83,11 +83,10 @@ void TPavesText::Draw(Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this pavestext with its current attributes.
+/// Paint this pavestext with its current attributes on the pad
 
-void TPavesText::Paint(Option_t *option)
+void TPavesText::PaintOn(TVirtualPad *pad, Option_t *option)
 {
-   if (!gPad) return;
    // Draw the fNpaves-1 stacked paves
    // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();
@@ -97,8 +96,8 @@ void TPavesText::Paint(Option_t *option)
    else                 signx =  1;
    if (strstr(opt,"b")) signy = -1;
    else                 signy =  1;
-   Double_t dx = 3*signx*(gPad->PixeltoX(bordersize) - gPad->PixeltoX(0));
-   Double_t dy = 3*signy*(gPad->PixeltoY(bordersize) - gPad->PixeltoY(0));
+   Double_t dx = 3*signx*(pad->PixeltoX(bordersize) - pad->PixeltoX(0));
+   Double_t dy = 3*signy*(pad->PixeltoY(bordersize) - pad->PixeltoY(0));
 
    TPave::ConvertNDCtoPad();
 
@@ -107,11 +106,11 @@ void TPavesText::Paint(Option_t *option)
       Double_t y1 = fY1 - dy*Double_t(ipave-1);
       Double_t x2 = fX2 + dx*Double_t(ipave-1);
       Double_t y2 = fY2 - dy*Double_t(ipave-1);
-      TPave::PaintPave(x1,y1,x2,y2,bordersize,option);
+      TPave::PaintPaveOn(pad, x1, y1, x2, y2, bordersize, option);
    }
 
    // Draw the top pavetext
-   TPaveText::Paint(option);
+   TPaveText::PaintOn(pad, option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
