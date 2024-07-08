@@ -565,10 +565,11 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
+      auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
+      fDescriptorBuilder.AddFieldProjection(sourceFieldId, fieldId);
       f.SetOnDiskId(fieldId);
-      auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
       for (const auto &source : descriptor.GetColumnIterable(sourceFieldId)) {
          auto targetId = descriptor.GetNLogicalColumns();
          RColumnDescriptorBuilder columnBuilder;

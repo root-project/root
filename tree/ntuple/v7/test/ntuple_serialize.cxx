@@ -572,6 +572,7 @@ TEST(RNTuple, SerializeHeader)
                        .FieldId(24)
                        .FieldName("ptAlias")
                        .Structure(ENTupleStructure::kLeaf)
+                       .ProjectionSourceId(42)
                        .MakeDescriptor()
                        .Unwrap());
    builder.AddField(RFieldDescriptorBuilder()
@@ -590,6 +591,7 @@ TEST(RNTuple, SerializeHeader)
    builder.AddFieldLink(0, 24);
    builder.AddFieldLink(0, 137);
    builder.AddFieldLink(137, 13);
+   builder.AddFieldProjection(42, 24);
    builder.AddColumn(RColumnDescriptorBuilder()
                         .LogicalColumnId(23)
                         .PhysicalColumnId(23)
@@ -642,6 +644,9 @@ TEST(RNTuple, SerializeHeader)
    EXPECT_TRUE(desc.GetColumnDescriptor(colId).IsAliasColumn());
    auto ptFieldId = desc.FindFieldId("pt");
    EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
+   EXPECT_TRUE(desc.GetFieldDescriptor(ptAliasFieldId).IsProjectedField());
+   EXPECT_EQ(ptFieldId, desc.GetFieldDescriptor(ptAliasFieldId).GetProjectionSourceId());
+   EXPECT_FALSE(desc.GetFieldDescriptor(ptFieldId).IsProjectedField());
    EXPECT_EQ(1u, desc.GetNExtraTypeInfos());
    const auto &extraTypeInfoDesc = *desc.GetExtraTypeInfoIterable().begin();
    EXPECT_EQ(EExtraTypeInfoIds::kStreamerInfo, extraTypeInfoDesc.GetContentId());

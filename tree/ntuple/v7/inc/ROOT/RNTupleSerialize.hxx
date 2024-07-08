@@ -65,6 +65,7 @@ public:
    static constexpr std::uint16_t kEnvelopeTypePageList = 0x03;
 
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
+   static constexpr std::uint16_t kFlagProjectedField = 0x02;
 
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
