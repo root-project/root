@@ -88,6 +88,8 @@ private:
    ENTupleStructure fStructure = ENTupleStructure::kInvalid;
    /// Establishes sub field relationships, such as classes and collections
    DescriptorId_t fParentId = kInvalidDescriptorId;
+   /// For projected fields, the source field ID
+   DescriptorId_t fProjectionSourceId = kInvalidDescriptorId;
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
@@ -118,8 +120,10 @@ public:
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
+   DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
+   bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
 
 // clang-format off
@@ -1037,6 +1041,11 @@ public:
       fField.fParentId = id;
       return *this;
    }
+   RFieldDescriptorBuilder &ProjectionSourceId(DescriptorId_t id)
+   {
+      fField.fProjectionSourceId = id;
+      return *this;
+   }
    RFieldDescriptorBuilder &FieldName(const std::string &fieldName)
    {
       fField.fFieldName = fieldName;
@@ -1274,6 +1283,7 @@ public:
 
    void AddField(const RFieldDescriptor &fieldDesc);
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
+   RResult<void> AddFieldProjection(DescriptorId_t sourceId, DescriptorId_t targetId);
 
    // The field that the column belongs to has to be already available. For fields with multiple columns,
    // the columns need to be added in order of the column index

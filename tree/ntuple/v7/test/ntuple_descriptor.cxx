@@ -67,6 +67,67 @@ TEST(RNTupleDescriptorBuilder, CatchBadLinks)
    }
 }
 
+TEST(RNTupleDescriptorBuilder, CatchBadProjections)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(1)
+                           .FieldName("field")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(2)
+                           .FieldName("projField")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(3)
+                           .FieldName("projField")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+
+   try {
+      descBuilder.AddFieldProjection(1, 4);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+   try {
+      descBuilder.AddFieldProjection(4, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("doesn't exist"));
+   }
+   try {
+      descBuilder.AddFieldProjection(1, 0);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("cannot make FieldZero a projected field"));
+   }
+   try {
+      descBuilder.AddFieldProjection(2, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("projection of itself"));
+   }
+
+   descBuilder.AddFieldProjection(1, 2);
+   try {
+      descBuilder.AddFieldProjection(2, 1);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("projection of an already projected field"));
+   }
+   try {
+      descBuilder.AddFieldProjection(3, 2);
+   } catch (const RException &err) {
+      EXPECT_THAT(err.what(), testing::HasSubstr("has already a projection source"));
+   }
+}
+
 TEST(RNTupleDescriptorBuilder, CatchBadColumnDescriptors)
 {
    RNTupleDescriptorBuilder descBuilder;
