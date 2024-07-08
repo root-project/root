@@ -40,7 +40,7 @@ TEST(RNTupleProcessor, Basic)
    EXPECT_EQ(nEntries, 10);
 }
 
-TEST(RNTupleProcessor, BasicWithModel)
+TEST(RNTupleProcessor, WithModel)
 {
    FileRaii fileGuard("test_ntuple_processor_basic_with_model.root");
    {
@@ -65,6 +65,33 @@ TEST(RNTupleProcessor, BasicWithModel)
 
    for (const auto &entry : RNTupleProcessor(ntuples, std::move(model))) {
       EXPECT_EQ(static_cast<float>(entry.GetGlobalEntryIndex()) * 2.f, *fldY);
+   }
+}
+
+TEST(RNTupleProcessor, WithBareModel)
+{
+   FileRaii fileGuard("test_ntuple_processor_basic_with_model.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto fldX = model->MakeField<float>("x");
+      auto fldY = model->MakeField<float>("y");
+      auto fldZ = model->MakeField<float>("z");
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      for (unsigned i = 0; i < 10; ++i) {
+         *fldX = static_cast<float>(i);
+         *fldY = static_cast<float>(i) * 2.f;
+         *fldZ = static_cast<float>(i) * 3.f;
+         ntuple->Fill();
+      }
+   }
+
+   auto model = RNTupleModel::CreateBare();
+   model->MakeField<float>("y");
+   std::vector<RNTupleSourceSpec> ntuples = {{"ntuple", fileGuard.GetPath()}};
+
+   for (const auto &entry : RNTupleProcessor(ntuples, std::move(model))) {
+      EXPECT_EQ(static_cast<float>(entry.GetGlobalEntryIndex()) * 2.f, *entry->GetPtr<float>("y"));
    }
 }
 
