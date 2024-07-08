@@ -746,11 +746,31 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       return false;
 
    if (arg.IsMethod("WS_CONNECT")) {
-
       TUrl url;
       url.SetOptions(arg.GetQuery());
+      std::string key, ntry;
+      key = url.GetValueFromOptions("key");
+      if(url.HasOption("ntry"))
+         ntry = url.GetValueFromOptions("ntry");
 
       std::lock_guard<std::mutex> grd(fConnMutex);
+
+      if (is_longpoll && !is_remote  && ntry == "1"s && (fConn.size() > 0) && !fConn[0]->fNewKey.empty() ) {
+         // special workaround for local displays
+         // they are not disconnected regularly when reload page
+         // therefore try to detect if new key is applied
+         if (key == HMAC(fConn[0]->fNewKey, ""s, "attempt_1", 9)) {
+            auto conn = std::move(fConn[0]);
+            fConn.erase(fConn.begin());
+            conn->fKeyUsed = 0;
+            conn->fKey = conn->fNewKey;
+            conn->fNewKey.clear();
+            conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+            conn->ResetData();
+            conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
+            fPendingConn.emplace_back(conn);
+         }
+      }
 
       // refuse connection when number of connections exceed limit
       if (fConnLimit && (fConn.size() >= fConnLimit))
@@ -767,15 +787,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       if (!IsRequireAuthKey())
          return true;
 
-      if(!url.HasOption("key")) {
+      if(key.empty()) {
          R__LOG_DEBUG(0, WebGUILog()) << "key parameter not provided in url";
          return false;
       }
-
-      std::string key, ntry;
-      key = url.GetValueFromOptions("key");
-      if(url.HasOption("ntry"))
-         ntry = url.GetValueFromOptions("ntry");
 
       for (auto &conn : fPendingConn)
          if (_CanTrustIn(conn, key, ntry, is_remote, true /* test_first_time */))
