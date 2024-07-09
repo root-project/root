@@ -89,6 +89,7 @@ using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 using RNTupleWriteOptionsDaos = ROOT::Experimental::RNTupleWriteOptionsDaos;
 using RNTupleMetrics = ROOT::Experimental::Detail::RNTupleMetrics;
 using RNTupleMerger = ROOT::Experimental::Internal::RNTupleMerger;
+using RNTupleMergeOptions = ROOT::Experimental::Internal::RNTupleMergeOptions;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
