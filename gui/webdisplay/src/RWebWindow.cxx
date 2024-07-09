@@ -756,21 +756,24 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       std::lock_guard<std::mutex> grd(fConnMutex);
 
-      if (is_longpoll && !is_remote  && ntry == "1"s && (fConn.size() > 0) && !fConn[0]->fNewKey.empty() ) {
-         // special workaround for local displays
-         // they are not disconnected regularly when reload page
+      if (is_longpoll && !is_remote  && ntry == "1"s) {
+         // special workaround for local displays like qt5/qt6
+         // they are not disconnected regularly when page reload is invoked
          // therefore try to detect if new key is applied
-         if (key == HMAC(fConn[0]->fNewKey, ""s, "attempt_1", 9)) {
-            auto conn = std::move(fConn[0]);
-            fConn.erase(fConn.begin());
-            conn->fKeyUsed = 0;
-            conn->fKey = conn->fNewKey;
-            conn->fNewKey.clear();
-            conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
-            conn->fWasFirst = true;
-            conn->ResetData();
-            conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
-            fPendingConn.emplace_back(conn);
+         for (unsigned indx = 0; indx < fConn.size(); indx++) {
+            if (!fConn[indx]->fNewKey.empty() && (key == HMAC(fConn[indx]->fNewKey, ""s, "attempt_1", 9))) {
+               auto conn = std::move(fConn[indx]);
+               fConn.erase(fConn.begin() + indx);
+               conn->fKeyUsed = 0;
+               conn->fKey = conn->fNewKey;
+               conn->fNewKey.clear();
+               conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+               conn->fWasFirst = indx == 0;
+               conn->ResetData();
+               conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
+               fPendingConn.emplace_back(conn);
+               break;
+            }
          }
       }
 
