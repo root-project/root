@@ -13,7 +13,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TROOT.h"
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
@@ -25,9 +24,12 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
 #include <ROOT/TTaskGroup.hxx>
+#include <TROOT.h>
+#include <TFileMergeInfo.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
+#include "ROOT/RPageStorage.hxx"
 
 #include <deque>
 
@@ -62,8 +64,14 @@ try {
       // pointer we just got.
    }
 
+   // The "fast" options is present if and only if we don't want to change compression.
+   const int compression =
+      mergeInfo->fOptions.Contains("fast") ? kUnknownCompressionSettings : outFile->GetCompressionSettings();
+
    RNTupleWriteOptions writeOpts;
    writeOpts.SetUseBufferedWrite(false);
+   if (compression != kUnknownCompressionSettings)
+      writeOpts.SetCompression(compression);
    auto destination = std::make_unique<Internal::RPageSinkFile>(ntupleName, *outFile, writeOpts);
 
    // If we already have an existing RNTuple, copy over its descriptor to support incremental merging
@@ -87,6 +95,7 @@ try {
    }
 
    // Interface conversion
+   sourcePtrs.reserve(sources.size());
    for (const auto &s : sources) {
       sourcePtrs.push_back(s.get());
    }
@@ -94,7 +103,7 @@ try {
    // Now merge
    Internal::RNTupleMerger merger;
    Internal::RNTupleMergeOptions options;
-   // TODO: set MergeOptions depending on function input
+   options.fCompressionSettings = compression;
    merger.Merge(sourcePtrs, *destination, options);
 
    // Provide the caller with a merged anchor object (even though we've already
@@ -254,6 +263,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             RPageStorage::SealedPageSequence_t sealedPages;
             sealedPages.resize(pages.fPageInfos.size());
 
+            // Each column range potentially has a distinct compression settings
             const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
             const bool needsCompressionChange = options.fCompressionSettings != kUnknownCompressionSettings &&
                                                 colRangeCompressionSettings != options.fCompressionSettings;
@@ -283,11 +293,11 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                   ROnDiskPage::Key key{columnId, pageIdx};
                   auto onDiskPage = cluster->GetOnDiskPage(key);
 
+                  const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
                   RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
                   sealedPage.SetNElements(pageInfo.fNElements);
                   sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-                  sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage +
-                                           pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum);
+                  sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
                   sealedPage.SetBuffer(onDiskPage->GetAddress());
                   sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
                   R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
@@ -297,34 +307,42 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                      // Step 1: prepare the source data.
                      // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was
                      // already uncompressed.
+                     // Note that the checksum, if present, is not zipped, so we only need to unzip
+                     // `sealedPage.GetDataSize()` bytes.
                      const auto uncompressedSize = colElement->GetSize() * sealedPage.GetNElements();
                      auto zipBuffer = std::make_unique<unsigned char[]>(uncompressedSize);
-                     RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetBufferSize(), uncompressedSize,
+                     RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), uncompressedSize,
                                                 zipBuffer.get());
 
                      // Step 2: prepare the destination buffer.
-                     if (uncompressedSize != sealedPage.GetBufferSize()) {
-                        // source column range is compressed
+                     if (uncompressedSize != sealedPage.GetDataSize()) {
+                        // source page is compressed
                         R__ASSERT(colRangeCompressionSettings != 0);
 
                         // We need to reallocate sealedPage's buffer because we are going to recompress the data
                         // with a different algorithm/level. Since we don't know a priori how big that'll be, the
                         // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed
                         // data.
-                        R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
+                        R__ASSERT(sealedPage.GetDataSize() < uncompressedSize);
                         auto &newBuf = sealedPageBuffers[pageBufferBaseIdx + pageIdx];
-                        newBuf = std::make_unique<unsigned char[]>(uncompressedSize);
+                        newBuf = std::make_unique<unsigned char[]>(uncompressedSize + checksumSize);
                         sealedPage.SetBuffer(newBuf.get());
                      } else {
-                        // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big
+                        // source page is uncompressed. We can reuse the sealedPage's buffer since it's big
                         // enough.
-                        R__ASSERT(colRangeCompressionSettings == 0);
+                        // Note that this does not necessarily mean that the column range's compressionSettings are 0,
+                        // as a page might have been stored uncompressed because it was not compressible with its
+                        // advertised compression settings.
                      }
 
                      const auto newNBytes =
                         RNTupleCompressor::Zip(zipBuffer.get(), uncompressedSize, options.fCompressionSettings,
                                                const_cast<void *>(sealedPage.GetBuffer()));
-                     sealedPage.SetBufferSize(newNBytes);
+                     sealedPage.SetBufferSize(newNBytes + checksumSize);
+                     if (pageInfo.fHasChecksum) {
+                        // Calculate new checksum (this must happen after setting the new buffer size!)
+                        sealedPage.ChecksumIfEnabled();
+                     }
                   }
                };
 
