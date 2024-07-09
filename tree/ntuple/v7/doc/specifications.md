@@ -368,29 +368,29 @@ Every field record frame of the list of fields has the following contents
 
 The field version and type version are used for schema evolution.
 
-The structural role of the field can have on of the following values
+The structural role of the field can have one of the following values:
 
 | Value    | Structural role                                                          |
 |----------|--------------------------------------------------------------------------|
 | 0x00     | Leaf field in the schema tree                                            |
-| 0x01     | The field is the mother of a collection (e.g., a vector)                 |
-| 0x02     | The field is the mother of a record (e.g., a struct)                     |
-| 0x03     | The field is the mother of a variant                                     |
+| 0x01     | The field is the parent of a collection (e.g., a vector)                 |
+| 0x02     | The field is the parent of a record (e.g., a struct)                     |
+| 0x03     | The field is the parent of a variant                                     |
 | 0x04     | The field represents an unsplit object serialized with the ROOT streamer |
 
-The flags field can have one of the following bits set
+The flags field can have one of the following bits set:
 
 | Bit      | Meaning                                                                    |
 |----------|----------------------------------------------------------------------------|
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
 
-If `flag=0x01` (_repetitive field_) is set, the field represents a fixed-size array.
+If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
 is expected to be found, representing the array content
 (see Section "Mapping of C++ Types to Fields and Columns").
 
-If `flag=0x02` (_projected field_) is set,
+If `flag==0x02` (_projected field_) is set,
 the field has been created as a virtual field from another, non-projected source field.
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
