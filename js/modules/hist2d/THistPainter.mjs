@@ -1987,9 +1987,10 @@ class THistPainter extends ObjectPainter {
             zmin = zmax - 1;
       }
 
-      if (fp && (fp.zoom_zmin !== fp.zoom_zmax)) {
-         zmin = fp.zoom_zmin;
-         zmax = fp.zoom_zmax;
+      if (fp?.zoomChangedInteractive('z')) {
+         const mod = (fp.zoom_zmin !== fp.zoom_zmax);
+         zmin = mod ? fp.zoom_zmin : gzmin;
+         zmax = mod ? fp.zoom_zmax : gzmax;
       }
 
       if (histo.fContour?.length > 1) {
@@ -2009,7 +2010,7 @@ class THistPainter extends ObjectPainter {
             fp.zoom_zmin = cntr.colzmin;
             fp.zoom_zmax = cntr.colzmax;
          } else
-            fp.zoom_zmin = fp.zoom_zmax = undefined;
+            fp.zoom_zmin = fp.zoom_zmax = 0;
       }
 
       return cntr;

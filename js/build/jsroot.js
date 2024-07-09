@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '26/06/2024',
+version_date = '9/07/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -74953,9 +74953,10 @@ class THistPainter extends ObjectPainter {
             zmin = zmax - 1;
       }
 
-      if (fp && (fp.zoom_zmin !== fp.zoom_zmax)) {
-         zmin = fp.zoom_zmin;
-         zmax = fp.zoom_zmax;
+      if (fp?.zoomChangedInteractive('z')) {
+         const mod = (fp.zoom_zmin !== fp.zoom_zmax);
+         zmin = mod ? fp.zoom_zmin : gzmin;
+         zmax = mod ? fp.zoom_zmax : gzmax;
       }
 
       if (histo.fContour?.length > 1) {
@@ -74975,7 +74976,7 @@ class THistPainter extends ObjectPainter {
             fp.zoom_zmin = cntr.colzmin;
             fp.zoom_zmax = cntr.colzmax;
          } else
-            fp.zoom_zmin = fp.zoom_zmax = undefined;
+            fp.zoom_zmin = fp.zoom_zmax = 0;
       }
 
       return cntr;
@@ -122083,14 +122084,16 @@ class WebWindowHandle {
      * @private */
    connect(href) {
       this.close();
-      if (!href && this.href) href = this.href;
+      if (!href && this.href)
+         href = this.href;
 
       let ntry = 0;
 
       const retry_open = first_time => {
          if (this.state !== 0) return;
 
-         if (!first_time) console.log(`try connect window again ${new Date().toString()}`);
+         if (!first_time)
+            console.log(`try connect window again ${new Date().toString()}`);
 
          if (this._websocket) {
             this._websocket.close();
@@ -122099,8 +122102,10 @@ class WebWindowHandle {
 
          if (!href) {
             href = window.location.href;
-            if (href && href.indexOf('#') > 0) href = href.slice(0, href.indexOf('#'));
-            if (href && href.lastIndexOf('/') > 0) href = href.slice(0, href.lastIndexOf('/') + 1);
+            if (href && href.indexOf('#') > 0)
+               href = href.slice(0, href.indexOf('#'));
+            if (href && href.lastIndexOf('/') > 0)
+               href = href.slice(0, href.lastIndexOf('/') + 1);
          }
          this.href = href;
          ntry++;
@@ -122117,8 +122122,8 @@ class WebWindowHandle {
             console.log(`configure protocol log ${path}`);
          } else if ((this.kind === 'websocket') && first_time) {
             path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            path += '?' + this.getConnArgs(ntry);
             console.log(`configure websocket ${path}`);
+            path += '?' + this.getConnArgs(ntry);
             this._websocket = new WebSocket(path);
          } else {
             path += 'root.longpoll';
@@ -122199,7 +122204,7 @@ class WebWindowHandle {
             if (this.key && sessionKey) {
                const client_hash = HMAC(this.key, msg.slice(i0+1));
                if (server_hash !== client_hash)
-                  return console.log(`Failure checking server md5 sum ${server_hash}`);
+                  return console.log(`Failure checking server HMAC sum ${server_hash}`);
             }
 
             if (seq_id <= this.recv_seq)
@@ -122212,21 +122217,15 @@ class WebWindowHandle {
             msg = msg.slice(i4 + 1);
 
             if (chid === 0) {
-               console.log(`GET chid=0 message ${msg}`);
+               // console.log(`GET chid=0 message ${msg}`);
                if (msg === 'CLOSE') {
                   this.close(true); // force closing of socket
                   this.invokeReceiver(true, 'onWebsocketClosed');
                } else if (msg.indexOf('NEW_KEY=') === 0) {
-                  const newkey = msg.slice(8);
-                  this.close(true);
-                  let href = (typeof document !== 'undefined') ? document.URL : null;
-                  if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
-                     const p = href.indexOf('?key=');
-                     if (p > 0) href = href.slice(0, p);
-                     window.history.replaceState(window.history.state, undefined, `${href}?key=${newkey}`);
-                  } else if (typeof sessionStorage !== 'undefined')
-                     sessionStorage.setItem('RWebWindow_Key', newkey);
-                  location.reload(true);
+                  this.new_key = msg.slice(8);
+                  this.storeKeyInUrl();
+                  if (this._ask_reload)
+                     this.askReload(true);
                }
             } else if (msg.slice(0, 10) === '$$binary$$') {
                this.next_binary = chid;
@@ -122265,13 +122264,20 @@ class WebWindowHandle {
       retry_open(true); // call for the first time
    }
 
-   /** @summary Send newkey request to application
-     * @desc If server creates newkey and response - webpage will be reaload
-     * After key generation done, connection will not be working any longer
-     * WARNING - only call when you know that you are doing
+   /** @summary Ask to reload web widget
+     * @desc If new key already exists - reload immediately
+     * Otherwise request server to generate new key - and then reload page
+     * WARNING - call only when knowing that you are doing
      * @private */
-   askReload() {
-      this.send('GENERATE_KEY', 0);
+   askReload(force) {
+      if (this.new_key || force) {
+         this.close(true);
+         if (typeof location !== 'undefined')
+            location.reload(true);
+      } else {
+         this._ask_reload = true;
+         this.send('GENERATE_KEY', 0);
+      }
    }
 
    /** @summary Instal Ctrl-R handler to realod web window
@@ -122279,7 +122285,12 @@ class WebWindowHandle {
      * WARNING - only call when you know that you are doing
      * @private */
    addReloadKeyHandler() {
-      if (this.kind === 'file') return;
+      if ((this.kind === 'file') || this._handling_reload)
+         return;
+
+      // this websocket will handle reload
+      // embed widgets should not call this method
+      this._handling_reload = true;
 
       window.addEventListener('keydown', evnt => {
          if (((evnt.key === 'R') || (evnt.key === 'r')) && evnt.ctrlKey) {
@@ -122290,6 +122301,33 @@ class WebWindowHandle {
           }
       });
    }
+
+   /** @summary Replace widget URL before reload or close of the page
+     * @private */
+   storeKeyInUrl() {
+      if (!this._handling_reload)
+         return;
+
+      let href = (typeof document !== 'undefined') ? document.URL : null;
+      if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+         let prefix = '&key=', p = href.indexOf(prefix);
+         if (p < 0) {
+            prefix = '?key=';
+            p = href.indexOf(prefix);
+         }
+         if (p > 0)
+            href = href.slice(0, p);
+         if (this.new_key)
+            href += prefix + this.new_key;
+         window.history.replaceState(window.history.state, undefined, href);
+      }
+      if (typeof sessionStorage !== 'undefined') {
+         sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
+         sessionStorage.setItem('RWebWindow_Key', this.new_key);
+      }
+   }
+
+
 
 } // class WebWindowHandle
 
