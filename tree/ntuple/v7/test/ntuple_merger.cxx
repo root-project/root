@@ -116,6 +116,7 @@ TEST(RNTupleMerger, MergeSymmetric)
 
    // Now merge the inputs
    FileRaii fileGuard3("test_ntuple_merge_out.root");
+   fileGuard3.PreserveFile();
    {
       // Gather the input sources
       std::vector<std::unique_ptr<RPageSource>> sources;
@@ -328,11 +329,14 @@ TEST(RNTupleMerger, MergeVector)
    // Write two test ntuples to be merged
    // These files are practically identical except that filed indices are interchanged
    FileRaii fileGuard1("test_ntuple_merge_in_1.root");
+   fileGuard1.PreserveFile();
    {
       auto model = RNTupleModel::Create();
       auto fieldFoo = model->MakeField<std::vector<int>>("foo");
       auto fieldBar = model->MakeField<std::vector<int>>("bar");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+      auto opts = RNTupleWriteOptions();
+      opts.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath(), opts);
       for (size_t i = 0; i < 10; ++i) {
          fieldFoo->clear();
          fieldBar->clear();
@@ -344,11 +348,14 @@ TEST(RNTupleMerger, MergeVector)
    }
 
    FileRaii fileGuard2("test_ntuple_merge_in_2.root");
+   fileGuard2.PreserveFile();
    {
       auto model = RNTupleModel::Create();
       auto fieldBar = model->MakeField<std::vector<int>>("bar");
       auto fieldFoo = model->MakeField<std::vector<int>>("foo");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+      auto opts = RNTupleWriteOptions();
+      opts.SetCompression(0);
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath(), opts);
       for (size_t i = 0; i < 10; ++i) {
          fieldFoo->clear();
          fieldBar->clear();
@@ -361,6 +368,7 @@ TEST(RNTupleMerger, MergeVector)
 
    // Now merge the inputs
    FileRaii fileGuard3("test_ntuple_merge_out.root");
+   fileGuard3.PreserveFile();
    {
       // Gather the input sources
       std::vector<std::unique_ptr<RPageSource>> sources;
@@ -372,7 +380,9 @@ TEST(RNTupleMerger, MergeVector)
       }
 
       // Create the output
-      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), RNTupleWriteOptions());
+      auto opts = RNTupleWriteOptions();
+      opts.SetCompression(0);
+      auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuard3.GetPath(), opts);
 
       // Now Merge the inputs
       RNTupleMerger merger;
