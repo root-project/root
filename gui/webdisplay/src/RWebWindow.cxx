@@ -611,9 +611,9 @@ void RWebWindow::RemoveKey(const std::string &key)
 
 std::string RWebWindow::GenerateKey() const
 {
-   auto key = RWebWindowsManager::GenerateKey(32);
+   auto key = RWebWindowsManager::GenerateKey(IsRequireAuthKey() ? 32 : 4);
 
-   R__ASSERT((!HasKey(key) && (key != fMgr->fSessionKey)) && "Fail to generate window connection key");
+   R__ASSERT((!IsRequireAuthKey() || (!HasKey(key) && (key != fMgr->fSessionKey))) && "Fail to generate window connection key");
 
    return key;
 }
