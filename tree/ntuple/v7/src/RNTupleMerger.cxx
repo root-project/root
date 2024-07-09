@@ -255,8 +255,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             sealedPages.resize(pages.fPageInfos.size());
 
             const auto colRangeCompressionSettings = clusterDesc.GetColumnRange(columnId).fCompressionSettings;
-            const bool needsCompressionChange =
-               options.fCompressionSettings != -1 && colRangeCompressionSettings != options.fCompressionSettings;
+            const bool needsCompressionChange = options.fCompressionSettings != kUnknownCompressionSettings &&
+                                                colRangeCompressionSettings != options.fCompressionSettings;
 
             // If the column range is already uncompressed we don't need to allocate any new buffer, so we don't
             // bother reserving memory for them.
@@ -266,24 +266,24 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
             sealedPageGroups.reserve(sealedPageGroups.size() + pages.fPageInfos.size());
 
-            std::uint64_t pageNo = 0;
+            std::uint64_t pageIdx = 0;
 
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
                auto taskFunc = [ // values in
-                                  columnId, pageNo, cluster, needsCompressionChange, colRangeCompressionSettings,
+                                  columnId, pageIdx, cluster, needsCompressionChange, colRangeCompressionSettings,
                                   pageBufferBaseIdx,
                                   // const refs in
                                   &colElement, &pageInfo, &options,
                                   // refs out
                                   &sealedPages, &sealedPageBuffers]() {
-                  assert(pageNo < sealedPages.size());
-                  assert(sealedPageBuffers.size() == 0 || pageNo < sealedPageBuffers.size());
+                  assert(pageIdx < sealedPages.size());
+                  assert(sealedPageBuffers.size() == 0 || pageIdx < sealedPageBuffers.size());
 
-                  ROnDiskPage::Key key{columnId, pageNo};
+                  ROnDiskPage::Key key{columnId, pageIdx};
                   auto onDiskPage = cluster->GetOnDiskPage(key);
 
-                  RPageStorage::RSealedPage &sealedPage = sealedPages[pageNo];
+                  RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
                   sealedPage.SetNElements(pageInfo.fNElements);
                   sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
                   sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage +
@@ -312,9 +312,9 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                         // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed
                         // data.
                         R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
-                        sealedPageBuffers[pageBufferBaseIdx + pageNo] =
+                        sealedPageBuffers[pageBufferBaseIdx + pageIdx] =
                            std::make_unique<unsigned char[]>(uncompressedSize);
-                        sealedPage.SetBuffer(sealedPageBuffers[pageNo].get());
+                        sealedPage.SetBuffer(sealedPageBuffers[pageIdx].get());
                      } else {
                         // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big
                         // enough.
@@ -333,7 +333,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                else
                   taskFunc();
 
-               ++pageNo;
+               ++pageIdx;
 
             } // end of loop over pages
 
