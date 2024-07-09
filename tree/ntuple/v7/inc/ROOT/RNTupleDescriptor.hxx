@@ -813,6 +813,14 @@ public:
       RIterator end() { return RIterator(fNTuple, fNTuple.GetNExtraTypeInfos()); }
    };
 
+   /// Modifiers passed to `CreateModel`
+   struct RCreateModelOptions {
+      RCreateModelOptions() {} // Work around compiler bug, see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88165
+      /// If set to true, projected fields will be reconstructed as such. This will prevent the model to be used
+      /// with an RNTupleReader, but it is useful, e.g., to accurately merge data.
+      bool fReconstructProjections = false;
+   };
+
    RNTupleDescriptor() = default;
    RNTupleDescriptor(const RNTupleDescriptor &other) = delete;
    RNTupleDescriptor &operator=(const RNTupleDescriptor &other) = delete;
@@ -928,7 +936,7 @@ public:
    void IncGeneration() { fGeneration++; }
 
    /// Re-create the C++ model from the stored meta-data
-   std::unique_ptr<RNTupleModel> CreateModel() const;
+   std::unique_ptr<RNTupleModel> CreateModel(const RCreateModelOptions &options = RCreateModelOptions()) const;
    void PrintInfo(std::ostream &output) const;
 };
 

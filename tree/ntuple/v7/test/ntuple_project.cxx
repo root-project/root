@@ -42,6 +42,21 @@ TEST(RNTupleProjection, Basics)
    EXPECT_FLOAT_EQ(1.0, viewAliasVec(0).at(0));
    EXPECT_FLOAT_EQ(2.0, viewAliasVec(0).at(1));
    EXPECT_EQ(2U, viewVecSize(0));
+
+   RNTupleDescriptor::RCreateModelOptions options;
+   options.fReconstructProjections = true;
+   auto reconstructedModel = reader->GetDescriptor().CreateModel(options);
+   auto itrFields = reconstructedModel->GetFieldZero().cbegin();
+   EXPECT_EQ("met", itrFields->GetQualifiedFieldName());
+   EXPECT_EQ("vec", (++itrFields)->GetQualifiedFieldName());
+   EXPECT_EQ("vec._0", (++itrFields)->GetQualifiedFieldName());
+   EXPECT_EQ(reconstructedModel->GetFieldZero().cend(), ++itrFields);
+   auto itrProjectedFields = reconstructedModel->GetProjectedFields().GetFieldZero()->cbegin();
+   EXPECT_EQ("missingE", itrProjectedFields->GetQualifiedFieldName());
+   EXPECT_EQ("aliasVec", (++itrProjectedFields)->GetQualifiedFieldName());
+   EXPECT_EQ("aliasVec._0", (++itrProjectedFields)->GetQualifiedFieldName());
+   EXPECT_EQ("vecSize", (++itrProjectedFields)->GetQualifiedFieldName());
+   EXPECT_EQ(reconstructedModel->GetProjectedFields().GetFieldZero()->cend(), ++itrProjectedFields);
 }
 
 TEST(RNTupleProjection, CatchInvalidMappings)
