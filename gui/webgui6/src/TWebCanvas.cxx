@@ -1155,7 +1155,10 @@ void TWebCanvas::ShowWebWindow(const ROOT::RWebDisplayArgs &args)
       fWindow->SetCallBacks(
          // connection
          [this](unsigned connid) {
-            fWebConn.emplace_back(connid);
+            if (fWindow->GetConnectionId(0) == connid)
+               fWebConn.emplace(fWebConn.begin() + 1, connid);
+            else
+               fWebConn.emplace_back(connid);
             CheckDataToSend(connid);
          },
          // data
