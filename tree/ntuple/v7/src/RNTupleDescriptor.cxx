@@ -482,13 +482,22 @@ ROOT::Experimental::RNTupleDescriptor::DropClusterGroupDetails(DescriptorId_t cl
    return RResult<void>::Success();
 }
 
-std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleDescriptor::CreateModel() const
+std::unique_ptr<ROOT::Experimental::RNTupleModel>
+ROOT::Experimental::RNTupleDescriptor::CreateModel(const RCreateModelOptions &options) const
 {
    auto fieldZero = std::make_unique<RFieldZero>();
    fieldZero->SetOnDiskId(GetFieldZeroId());
    auto model = RNTupleModel::Create(std::move(fieldZero));
-   for (const auto &topDesc : GetTopLevelFields())
-      model->AddField(topDesc.CreateField(*this));
+   for (const auto &topDesc : GetTopLevelFields()) {
+      auto field = topDesc.CreateField(*this);
+      if (options.fReconstructProjections && topDesc.IsProjectedField()) {
+         model->AddProjectedField(std::move(field), [this](const std::string &targetName) -> std::string {
+            return GetQualifiedFieldName(GetFieldDescriptor(FindFieldId(targetName)).GetProjectionSourceId());
+         });
+      } else {
+         model->AddField(std::move(field));
+      }
+   }
    model->Freeze();
    return model;
 }
