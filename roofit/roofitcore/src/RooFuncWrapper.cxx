@@ -144,7 +144,6 @@ void RooFuncWrapper::createGradient()
 {
    std::string gradName = _funcName + "_grad_0";
    std::string requestName = _funcName + "_req";
-   std::string wrapperName = _funcName + "_derivativeWrapper";
 
    // Calculate gradient
    declareToInterpreter("#include <Math/CladDerivator.h>\n");
@@ -164,17 +163,7 @@ void RooFuncWrapper::createGradient()
       throw std::runtime_error(errorMsg.str().c_str());
    }
 
-   // Build a wrapper over the derivative to hide clad specific types such as 'array_ref'.
-   // disable clang-format for making the following code unreadable.
-   // clang-format off
-   std::stringstream dWrapperStrm;
-   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double const* xlArr, double* out) {\n"
-                   "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
-                   "  " << gradName << "(params, obs, xlArr, cladOut);\n"
-                   "}";
-   // clang-format on
-   declareToInterpreter(dWrapperStrm.str());
-   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
+   _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((gradName + ";").c_str()));
    _hasGradient = true;
 }
 
