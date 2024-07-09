@@ -16,11 +16,11 @@
 #ifndef ROOT7_RNTupleMerger
 #define ROOT7_RNTupleMerger
 
-#include "Compression.h"
 #include <ROOT/RError.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorage.hxx>
+#include <Compression.h>
 
 #include <memory>
 #include <string>
