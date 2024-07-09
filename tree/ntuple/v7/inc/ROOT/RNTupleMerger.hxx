@@ -32,10 +32,10 @@ namespace Experimental {
 namespace Internal {
 
 struct RNTupleMergeOptions {
-   /// If `fCompressionSettings == -1` (the default), the merger will not change the compression
-   /// of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
+   /// If `fCompressionSettings == kUnknownCompressionSettings` (the default), the merger will not change the
+   /// compression of any of its sources (fast merging). Otherwise, all sources will be converted to the specified
    /// compression algorithm and level.
-   int fCompressionSettings = -1;
+   int fCompressionSettings = kUnknownCompressionSettings;
 };
 
 // clang-format off
