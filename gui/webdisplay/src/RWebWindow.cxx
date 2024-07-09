@@ -289,6 +289,7 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
             res = std::move(fConn[n]);
             fConn.erase(fConn.begin() + n);
             res->fActive = false;
+            res->fWasFirst = (n == 0);
             break;
          }
    }
@@ -766,6 +767,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             conn->fKey = conn->fNewKey;
             conn->fNewKey.clear();
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
+            conn->fWasFirst = true;
             conn->ResetData();
             conn->ResetStamps(); // reset stamps, after timeout connection wll be removed
             fPendingConn.emplace_back(conn);
@@ -834,7 +836,10 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
          // preserve key for longpoll or when with session key used for HMAC hash of messages
          // conn->fKey.clear();
          conn->ResetStamps();
-         fConn.emplace_back(conn);
+         if (conn->fWasFirst)
+            fConn.emplace(fConn.begin(), conn);
+         else
+            fConn.emplace_back(conn);
          return true;
       } else if (!IsRequireAuthKey() && (!fConnLimit || (fConn.size() < fConnLimit))) {
          fConn.emplace_back(std::make_shared<WebConn>(++fConnCnt, arg.GetWSId()));

@@ -69,6 +69,7 @@ private:
    struct WebConn {
       unsigned fConnId{0};                 ///<! connection id (unique inside the window)
       bool fHeadlessMode{false};           ///<! indicate if connection represent batch job
+      bool fWasFirst{false};               ///<! indicate if this was first connection, will be reinjected also on first place
       std::string fKey;                    ///<! key value supplied to the window (when exists)
       int fKeyUsed{0};                     ///<! key value used to verify connection
       std::string fNewKey;                 ///<! new key if connection request reload
