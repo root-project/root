@@ -312,9 +312,9 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                         // only safe bet is to allocate a buffer big enough to hold as many bytes as the uncompressed
                         // data.
                         R__ASSERT(sealedPage.GetBufferSize() < uncompressedSize);
-                        sealedPageBuffers[pageBufferBaseIdx + pageIdx] =
-                           std::make_unique<unsigned char[]>(uncompressedSize);
-                        sealedPage.SetBuffer(sealedPageBuffers[pageIdx].get());
+                        auto &newBuf = sealedPageBuffers[pageBufferBaseIdx + pageIdx];
+                        newBuf = std::make_unique<unsigned char[]>(uncompressedSize);
+                        sealedPage.SetBuffer(newBuf.get());
                      } else {
                         // source column range is uncompressed. We can reuse the sealedPage's buffer since it's big
                         // enough.
