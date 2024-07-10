@@ -246,7 +246,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             }
 
             const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
-            const auto colElement = RColumnElementBase::Generate(columnDesc.GetModel().GetType());
+            const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
 
             // Now get the pages for this column in this cluster
             const auto &pages = clusterDesc.GetPageRange(columnId);
