@@ -23,16 +23,22 @@
 // ROOT
 #include "Rtypes.h"
 
+#include <memory>
+
 // Python
 struct _object;
 typedef _object PyObject;
+
+namespace CPyCppyy {
+
+class PyResult;
+
+}
 
 class TPyReturn {
 public:
    TPyReturn();
    TPyReturn(PyObject *pyobject);
-   TPyReturn(const TPyReturn &);
-   TPyReturn &operator=(const TPyReturn &);
    virtual ~TPyReturn();
 
    // conversions to standard types, may fail if unconvertible
@@ -66,7 +72,7 @@ public:
    ClassDef(TPyReturn, 1) // Python morphing return object
 
 private:
-   PyObject *fPyObject; //! actual python object
+   std::unique_ptr<const CPyCppyy::PyResult> fPyResult; //! actual CPyCppyy result object
 };
 
 #endif

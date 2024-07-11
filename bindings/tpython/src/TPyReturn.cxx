@@ -43,62 +43,23 @@
 ClassImp(TPyReturn);
 
 //- constructors/destructor --------------------------------------------------
-TPyReturn::TPyReturn()
-{
-   // Construct a TPyReturn object from Py_None.
-   Py_INCREF(Py_None);
-   fPyObject = Py_None;
-}
+TPyReturn::TPyReturn() : fPyResult{new CPyCppyy::PyResult{}} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a TPyReturn from a python object. The python object may represent
 /// a ROOT object. Steals reference to given python object.
 
-TPyReturn::TPyReturn(PyObject *pyobject)
-{
-   if (!pyobject) {
-      Py_INCREF(Py_None);
-      fPyObject = Py_None;
-   } else
-      fPyObject = pyobject; // steals reference
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor. Applies python object reference counting.
-
-TPyReturn::TPyReturn(const TPyReturn &other)
-{
-   Py_INCREF(other.fPyObject);
-   fPyObject = other.fPyObject;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator. Applies python object reference counting.
-
-TPyReturn &TPyReturn::operator=(const TPyReturn &other)
-{
-   if (this != &other) {
-      Py_INCREF(other.fPyObject);
-      Py_DECREF(fPyObject);
-      fPyObject = other.fPyObject;
-   }
-
-   return *this;
-}
+TPyReturn::TPyReturn(PyObject *pyobject) : fPyResult{new CPyCppyy::PyResult{pyobject}} {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor. Reference counting for the held python object is in effect.
 
-TPyReturn::~TPyReturn()
-{
-   Py_DECREF(fPyObject);
-}
+TPyReturn::~TPyReturn() {}
 
 //- public members -----------------------------------------------------------
 TPyReturn::operator char *() const
 {
-   // Cast python return value to C-style string (may fail).
-   return (char *)((const char *)*this);
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,16 +67,7 @@ TPyReturn::operator char *() const
 
 TPyReturn::operator const char *() const
 {
-   if (fPyObject == Py_None) // for void returns
-      return 0;
-
-   const char *s = PyUnicode_AsUTF8(fPyObject);
-   if (PyErr_Occurred()) {
-      PyErr_Print();
-      return 0;
-   }
-
-   return s;
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -123,11 +75,7 @@ TPyReturn::operator const char *() const
 
 TPyReturn::operator Char_t() const
 {
-   std::string s = operator const char *();
-   if (s.size())
-      return s[0];
-
-   return '\0';
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,12 +83,7 @@ TPyReturn::operator Char_t() const
 
 TPyReturn::operator Long_t() const
 {
-   Long_t l = PyLong_AsLong(fPyObject);
-
-   if (PyErr_Occurred())
-      PyErr_Print();
-
-   return l;
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -148,12 +91,7 @@ TPyReturn::operator Long_t() const
 
 TPyReturn::operator ULong_t() const
 {
-   ULong_t ul = PyLong_AsUnsignedLong(fPyObject);
-
-   if (PyErr_Occurred())
-      PyErr_Print();
-
-   return ul;
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -161,12 +99,7 @@ TPyReturn::operator ULong_t() const
 
 TPyReturn::operator Double_t() const
 {
-   Double_t d = PyFloat_AsDouble(fPyObject);
-
-   if (PyErr_Occurred())
-      PyErr_Print();
-
-   return d;
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,10 +108,7 @@ TPyReturn::operator Double_t() const
 
 TPyReturn::operator void *() const
 {
-   if (fPyObject == Py_None)
-      return 0;
-
-   return static_cast<void *>(CPyCppyy::PyResult{fPyObject});
+   return *fPyResult;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -186,9 +116,5 @@ TPyReturn::operator void *() const
 
 TPyReturn::operator PyObject *() const
 {
-   if (fPyObject == Py_None)
-      return 0;
-
-   Py_INCREF(fPyObject);
-   return fPyObject;
+   return *fPyResult;
 }

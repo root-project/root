@@ -202,6 +202,10 @@ CPYCPPYY_EXTERN bool Overload_CheckExact(PyObject* pyobject);
 
 //- access to the python interpreter ----------------------------------------
 
+// Execute the give python script as if it were a macro, and create Cling
+// equivalents for any newly available python classes
+CPYCPPYY_EXTERN bool LoadMacro(const std::string& name);
+
 // import a python module, making its classes available to Cling
 CPYCPPYY_EXTERN bool Import(const std::string& name);
 
