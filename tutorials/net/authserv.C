@@ -27,7 +27,7 @@
 
 #include "TPServerSocket.h"
 
-int authserv(int po = 3000)
+void authserv(int po = 3000)
 {
 
    UChar_t oauth = kSrvAuth;
