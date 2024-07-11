@@ -1,13 +1,10 @@
+#include "Python.h"
+
+#include "TPyClassGenerator.h"
+
 // Bindings
 #include "CPyCppyy.h"
 #include "PyStrings.h"
-#include "TPyClassGenerator.h"
-#include "Utility.h"
-
-#include "CPyCppyy/PyResult.h"
-
-// TODO: not sure if any of this still makes sense ...
-#if 0
 
 // ROOT
 #include "TClass.h"
@@ -40,14 +37,29 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load )
    return GetClass( name, load, false );
 }
 
+namespace {
+
+bool doIncludes()
+{
+    bool includesDone = false;
+
+    if (!includesDone) {
+        bool okay = Cppyy::Compile(
+            "#include \"CPyCppyy/PyResult.h\"\n"
+            "#include \"CPyCppyy/TPyArg.h\"\n"
+        );
+        includesDone = okay;
+    }
+
+    return includesDone;
+}
+
+} // namespace
+
 //- public members -----------------------------------------------------------
 TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 {
 // Class generator to make python classes available to Cling
-
-// called if all other class generators failed, attempt to build from python class
-   if ( PyROOT::gDictLookupActive == true )
-      return 0;                              // call originated from python
 
    if ( ! load || ! name )
       return 0;
@@ -56,7 +68,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
    
 // first, check whether the name is of a module
    PyObject* modules = PySys_GetObject( const_cast<char*>("modules") );
-   PyObject* pyname = PyROOT_PyUnicode_FromString( name );
+   PyObject* pyname = PyUnicode_FromString( name );
    PyObject* keys = PyDict_Keys( modules );
    bool isModule = PySequence_Contains( keys, pyname );
    Py_DECREF( keys );
@@ -85,20 +97,19 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
       // TODO: refactor the code below with the class method code
          if ( PyCallable_Check( attr ) && \
-                 ! (PyClass_Check( attr ) || PyObject_HasAttr( attr, PyROOT::PyStrings::gBases )) ) {
-            std::string func_name = PyROOT_PyUnicode_AsString( key );
+                 ! (PyClass_Check( attr ) || PyObject_HasAttr( attr, CPyCppyy::PyStrings::gBases )) ) {
+            std::string func_name = PyUnicode_AsUTF8(key);
 
          // figure out number of variables required
             PyObject* func_code = PyObject_GetAttrString( attr, (char*)"func_code" );
-            PyObject* var_names =
-               func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
-            int nVars = var_names ? PyTuple_GET_SIZE( var_names ) : 0 /* TODO: probably large number, all default? */;
+            PyObject* var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : NULL;
+            int nVars = var_names ? PyTuple_GET_SIZE(var_names) : 0 /* TODO: probably large number, all default? */;
             if ( nVars < 0 ) nVars = 0;
             Py_XDECREF( var_names );
             Py_XDECREF( func_code );
 
-            nsCode  << " TPyReturn " << func_name << "(";
-            for ( int ivar = 0; ivar < nVars; ++ivar ) {
+            nsCode << " CPyCppyy::PyResult " << func_name << "(";
+            for (int ivar = 0; ivar < nVars; ++ivar) {
                 nsCode << "const TPyArg& a" << ivar;
                 if ( ivar != nVars-1 ) nsCode << ", ";
             }
@@ -110,7 +121,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
                nsCode << "  v.push_back(a" << ivar << ");\n";
 
          // call dispatch (method or class pointer hard-wired)
-            nsCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << (void*)attr << ", v)); }\n";
+            nsCode << "  return CPyCppyy::PyResult(TPyArg::CallMethod((PyObject*)" << std::showbase << (uintptr_t)attr << ", v)); }\n";
          }
 
          Py_DECREF( attr );
@@ -121,6 +132,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
       nsCode << " }";
 
+      doIncludes();
       if ( gInterpreter->LoadText( nsCode.str().c_str() ) ) {
           TClass* klass = new TClass( name, silent );
           TClass::AddClass( klass );
@@ -188,7 +200,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
    // collect only member functions (i.e. callable elements in __dict__)
       if ( PyCallable_Check( attr ) ) {
-         std::string mtName = PyROOT_PyUnicode_AsString( label );
+         std::string mtName = PyUnicode_AsUTF8( label );
 
          if ( mtName == "__del__" ) {
             hasDestructor = true;
@@ -225,10 +237,11 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
             hasConstructor = true;
             proxyCode << " " << clName << "(";
          } else // normal method
-            proxyCode << " TPyReturn " << mtName << "(";
-         for ( int ivar = 0; ivar < nVars; ++ivar ) {
-             proxyCode << "const TPyArg& a" << ivar;
-             if ( ivar != nVars-1 ) proxyCode << ", ";
+            proxyCode << " CPyCppyy::PyResult " << mtName << "(";
+         for (int ivar = 0; ivar < nVars; ++ivar) {
+            proxyCode << "const TPyArg& a" << ivar;
+            if (ivar != nVars - 1)
+               proxyCode << ", ";
          }
          proxyCode << ") {\n";
          proxyCode << "  std::vector<TPyArg> v; v.reserve(" << nVars+(isConstructor ? 0 : 1) << ");\n";
@@ -243,9 +256,9 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
       // call dispatch (method or class pointer hard-wired)
          if ( ! isConstructor )
-            proxyCode << "  return TPyReturn(TPyArg::CallMethod((PyObject*)" << (void*)attr << ", v))";
+            proxyCode << "  return CPyCppyy::PyResult(TPyArg::CallMethod((PyObject*)" << std::showbase << (uintptr_t)attr << ", v))";
          else
-            proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << ", v)";
+            proxyCode << "  TPyArg::CallConstructor(fPyObject, (PyObject*)" << std::showbase << (uintptr_t)pyclass << ", v)";
          proxyCode << ";\n }\n";
       }
 
@@ -255,7 +268,8 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
 // special case if no constructor or destructor
    if ( ! hasConstructor )
-      proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << (void*)pyclass << "); }\n";
+      proxyCode << " " << clName << "() {\n TPyArg::CallConstructor(fPyObject, (PyObject*)" << std::showbase << (uintptr_t)pyclass
+                << "); }\n";
 
    if ( ! hasDestructor )
       proxyCode << " ~" << clName << "() { TPyArg::CallDestructor(fPyObject); }\n";
@@ -273,6 +287,7 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
    Py_DECREF( pyclass );
 
 // body compilation
+   doIncludes();
    if ( ! gInterpreter->LoadText( proxyCode.str().c_str() ) )
       return nullptr;
 
@@ -298,4 +313,3 @@ TClass* TPyClassGenerator::GetClass( const std::type_info& typeinfo, bool load )
 {
    return GetClass( typeinfo.name(), load );
 }
-#endif

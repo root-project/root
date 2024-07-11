@@ -6,6 +6,5 @@
 
 #pragma link C++ class TPython;
 #pragma link C++ class TPyReturn;
-#pragma link C++ class TPyArg;
 
 #endif

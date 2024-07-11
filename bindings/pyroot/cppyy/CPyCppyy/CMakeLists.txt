@@ -11,6 +11,7 @@ set(headers
     include/CPyCppyy/CommonDefs.h
     include/CPyCppyy/PyException.h
     include/CPyCppyy/DispatchPtr.h
+    include/CPyCppyy/TPyArg.h
 )
 
 set(sources
@@ -39,6 +40,8 @@ set(sources
     src/ProxyWrappers.cxx
     src/PyStrings.cxx
     src/Pythonize.cxx
+    src/TPyArg.cxx
+    src/TPyClassGenerator.cxx
     src/TemplateProxy.cxx
     src/PyException.cxx
     src/PyResult.cxx

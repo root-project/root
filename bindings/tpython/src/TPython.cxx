@@ -14,7 +14,6 @@
 // included before any standard header
 #include "CPyCppyy/API.h"
 #include "TPython.h"
-#include "TPyClassGenerator.h"
 
 // ROOT
 #include "TROOT.h"
@@ -92,51 +91,6 @@
 ClassImp(TPython);
 static PyObject *gMainDict = 0;
 
-namespace {
-
-class CachedPyString {
-
-public:
-   CachedPyString(const char *name) : fObj{PyUnicode_FromString(name)} {}
-
-   CachedPyString(CachedPyString const&) = delete;
-   CachedPyString(CachedPyString &&) = delete;
-   CachedPyString& operator=(CachedPyString const&) = delete;
-   CachedPyString& operator=(CachedPyString &&) = delete;
-
-   ~CachedPyString() { Py_DECREF(fObj); }
-
-   PyObject *obj() { return fObj; }
-
-private:
-   PyObject *fObj = nullptr;
-};
-
-namespace PyStrings {
-PyObject *basesStr()
-{
-   static CachedPyString wrapper{"__bases__"};
-   return wrapper.obj();
-}
-PyObject *cppNameStr()
-{
-   static CachedPyString wrapper{"__cpp_name__"};
-   return wrapper.obj();
-}
-PyObject *moduleStr()
-{
-   static CachedPyString wrapper{"__module__"};
-   return wrapper.obj();
-}
-PyObject *nameStr()
-{
-   static CachedPyString wrapper{"__name__"};
-   return wrapper.obj();
-}
-} // namespace PyStrings
-
-} // namespace
-
 //- static public members ----------------------------------------------------
 /// Initialization method: setup the python interpreter and load the
 /// ROOT module.
@@ -146,66 +100,16 @@ Bool_t TPython::Initialize()
    if (isInitialized)
       return kTRUE;
 
-   if (!Py_IsInitialized()) {
-// this happens if Cling comes in first
-#if PY_VERSION_HEX < 0x03020000
-      PyEval_InitThreads();
-#endif
+   // to trgger the initialization of CPyCppyy, and therefore the
+   // initialization of Python
+   CPyCppyy::Instance_AsVoidPtr(nullptr);
 
-// set the command line arguments on python's sys.argv
-#if PY_VERSION_HEX < 0x03000000
-      char *argv[] = {const_cast<char *>("root")};
-#else
-      wchar_t *argv[] = {const_cast<wchar_t *>(L"root")};
-#endif
-      int argc = sizeof(argv) / sizeof(argv[0]);
-#if PY_VERSION_HEX < 0x030b0000
-      Py_Initialize();
-#else
-      PyStatus status;
-      PyConfig config;
-
-      PyConfig_InitPythonConfig(&config);
-
-      status = PyConfig_SetArgv(&config, argc, argv);
-      if (PyStatus_Exception(status)) {
-         PyConfig_Clear(&config);
-         std::cerr << "Error when setting command line arguments." << std::endl;
-         return kFALSE;
-      }
-
-      status = Py_InitializeFromConfig(&config);
-      if (PyStatus_Exception(status)) {
-         PyConfig_Clear(&config);
-         std::cerr << "Error when initializing Python." << std::endl;
-         return kFALSE;
-      }
-      PyConfig_Clear(&config);
-#endif
-#if PY_VERSION_HEX >= 0x03020000
-#if PY_VERSION_HEX < 0x03090000
-      PyEval_InitThreads();
-#endif
-#endif
-
-      // try again to see if the interpreter is initialized
-      if (!Py_IsInitialized()) {
-         // give up ...
-         std::cerr << "Error: python has not been intialized; returning." << std::endl;
-         return kFALSE;
-      }
-
-#if PY_VERSION_HEX < 0x030b0000
-      PySys_SetArgv(argc, argv);
-#endif
-
-      // force loading of the ROOT module
-      const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
-      if( ret != 0 )
-      {
-          std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
-          return kFALSE;
-      }
+   // force loading of the ROOT module
+   const int ret = PyRun_SimpleString(const_cast<char *>("import ROOT"));
+   if( ret != 0 )
+   {
+       std::cerr << "Error: import ROOT failed, check your PYTHONPATH environmental variable." << std::endl;
+       return kFALSE;
    }
 
    if (!gMainDict) {
@@ -213,9 +117,6 @@ Bool_t TPython::Initialize()
       gMainDict = PyModule_GetDict(PyImport_AddModule(const_cast<char *>("__main__")));
       Py_INCREF(gMainDict);
    }
-
-   // python side class construction, managed by ROOT
-   gROOT->AddClassGenerator(new TPyClassGenerator);
 
    // declare success ...
    isInitialized = kTRUE;
@@ -228,55 +129,7 @@ Bool_t TPython::Initialize()
 
 Bool_t TPython::Import(const char *mod_name)
 {
-   if (!CPyCppyy::Import(mod_name)) {
-      return false;
-   }
-
-   // force creation of the module as a namespace
-   TClass::GetClass(mod_name, kTRUE);
-
-   PyObject *modNameObj = PyUnicode_FromString(mod_name);
-   PyObject *mod = PyImport_GetModule(modNameObj);
-   PyObject *dct = PyModule_GetDict(mod);
-
-   // create Cling classes for all new python classes
-   PyObject *values = PyDict_Values(dct);
-   for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
-      PyObject *value = PyList_GET_ITEM(values, i);
-      Py_INCREF(value);
-
-      // collect classes
-      if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
-         // get full class name (including module)
-         PyObject *pyClName = PyObject_GetAttr(value, PyStrings::cppNameStr());
-         if (!pyClName) {
-            pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
-         }
-
-         if (PyErr_Occurred())
-            PyErr_Clear();
-
-         // build full, qualified name
-         std::string fullname = mod_name;
-         fullname += ".";
-         fullname += PyUnicode_AsUTF8(pyClName);
-
-         // force class creation (this will eventually call TPyClassGenerator)
-         TClass::GetClass(fullname.c_str(), kTRUE);
-
-         Py_XDECREF(pyClName);
-      }
-
-      Py_DECREF(value);
-   }
-
-   Py_DECREF(values);
-   Py_DECREF(mod);
-   Py_DECREF(modNameObj);
-
-   if (PyErr_Occurred())
-      return kFALSE;
-   return kTRUE;
+   return CPyCppyy::Import(mod_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -286,65 +139,7 @@ Bool_t TPython::Import(const char *mod_name)
 
 void TPython::LoadMacro(const char *name)
 {
-   // setup
-   if (!Initialize())
-      return;
-
-   // obtain a reference to look for new classes later
-   PyObject *old = PyDict_Values(gMainDict);
-
-// actual execution
-#if PY_VERSION_HEX < 0x03000000
-   Exec((std::string("execfile(\"") + name + "\")").c_str());
-#else
-   Exec((std::string("__pyroot_f = open(\"") + name + "\"); "
-                                                      "exec(__pyroot_f.read()); "
-                                                      "__pyroot_f.close(); del __pyroot_f")
-           .c_str());
-#endif
-
-   // obtain new __main__ contents
-   PyObject *current = PyDict_Values(gMainDict);
-
-   // create Cling classes for all new python classes
-   for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
-      PyObject *value = PyList_GET_ITEM(current, i);
-      Py_INCREF(value);
-
-      if (!PySequence_Contains(old, value)) {
-         // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::basesStr())) {
-            // get full class name (including module)
-            PyObject *pyModName = PyObject_GetAttr(value, PyStrings::moduleStr());
-            PyObject *pyClName = PyObject_GetAttr(value, PyStrings::nameStr());
-
-            if (PyErr_Occurred())
-               PyErr_Clear();
-
-            // need to check for both exact and derived (differences exist between older and newer
-            // versions of python ... bug?)
-            if ((pyModName && pyClName) &&
-                ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
-                 (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
-               // build full, qualified name
-               std::string fullname = PyUnicode_AsUTF8(pyModName);
-               fullname += '.';
-               fullname += PyUnicode_AsUTF8(pyClName);
-
-               // force class creation (this will eventually call TPyClassGenerator)
-               TClass::GetClass(fullname.c_str(), kTRUE);
-            }
-
-            Py_XDECREF(pyClName);
-            Py_XDECREF(pyModName);
-         }
-      }
-
-      Py_DECREF(value);
-   }
-
-   Py_DECREF(current);
-   Py_DECREF(old);
+   CPyCppyy::LoadMacro(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,7 +151,6 @@ void TPython::LoadMacro(const char *name)
 
 void TPython::ExecScript(const char *name, int argc, const char **argv)
 {
-
    // setup
    if (!Initialize())
       return;
@@ -379,21 +173,7 @@ void TPython::ExecScript(const char *name, int argc, const char **argv)
 
 Bool_t TPython::Exec(const char *cmd)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   // execute the command
-   PyObject *result = PyRun_String(const_cast<char *>(cmd), Py_file_input, gMainDict, gMainDict);
-
-   // test for error
-   if (result) {
-      Py_DECREF(result);
-      return kTRUE;
-   }
-
-   PyErr_Print();
-   return kFALSE;
+   return CPyCppyy::Exec(cmd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,49 +185,11 @@ Bool_t TPython::Exec(const char *cmd)
 
 const TPyReturn TPython::Eval(const char *expr)
 {
-   // setup
-   if (!Initialize())
-      return TPyReturn();
+   // to implicitly import ROOT
+   if(!Initialize())
+      return TPyReturn{};
 
-   // evaluate the expression
-   PyObject *result = PyRun_String(const_cast<char *>(expr), Py_eval_input, gMainDict, gMainDict);
-
-   // report errors as appropriate; return void
-   if (!result) {
-      PyErr_Print();
-      return TPyReturn();
-   }
-
-   // results that require no conversion
-   if (result == Py_None || CPyCppyy::Instance_Check(result) || PyBytes_Check(result) || PyFloat_Check(result) ||
-       PyLong_Check(result))
-      return TPyReturn(result);
-
-   // explicit conversion for python type required
-   PyObject *pyclass = PyObject_GetAttrString(result, const_cast<char*>("__class__"));
-   if (pyclass != 0) {
-      // retrieve class name and the module in which it resides
-      PyObject *name = PyObject_GetAttr(pyclass, PyStrings::nameStr());
-      PyObject *module = PyObject_GetAttr(pyclass, PyStrings::moduleStr());
-
-      // concat name
-      std::string qname = std::string(PyUnicode_AsUTF8(module)) + '.' + PyUnicode_AsUTF8(name);
-      Py_DECREF(module);
-      Py_DECREF(name);
-      Py_DECREF(pyclass);
-
-      // locate ROOT style class with this name
-      TClass *klass = TClass::GetClass(qname.c_str());
-
-      // construct general ROOT python object that pretends to be of class 'klass'
-      if (klass != 0)
-         return TPyReturn(result);
-   } else
-      PyErr_Clear();
-
-   // no conversion, return null pointer object
-   Py_DECREF(result);
-   return TPyReturn();
+   return TPyReturn{static_cast<PyObject *>(CPyCppyy::Eval(expr))};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -455,16 +197,15 @@ const TPyReturn TPython::Eval(const char *expr)
 
 Bool_t TPython::Bind(TObject *object, const char *label)
 {
-   // check given address and setup
-   if (!(object && Initialize()))
-      return kFALSE;
-
    // bind object in the main namespace
    TClass *klass = object->IsA();
    if (klass != 0) {
       PyObject *bound = CPyCppyy::Instance_FromVoidPtr((void *)object, klass->GetName());
 
       if (bound) {
+         // to initialize gMainDict
+         if(!Initialize())
+            return false;
          Bool_t bOk = PyDict_SetItemString(gMainDict, const_cast<char *>(label), bound) == 0;
          Py_DECREF(bound);
 
@@ -472,7 +213,7 @@ Bool_t TPython::Bind(TObject *object, const char *label)
       }
    }
 
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,13 +222,7 @@ Bool_t TPython::Bind(TObject *object, const char *label)
 
 void TPython::Prompt()
 {
-   // setup
-   if (!Initialize()) {
-      return;
-   }
-
-   // enter i/o interactive mode
-   PyRun_InteractiveLoop(stdin, const_cast<char *>("\0"));
+   CPyCppyy::Prompt();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -496,11 +231,6 @@ void TPython::Prompt()
 
 Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   // detailed walk through inheritance hierarchy
    return CPyCppyy::Instance_Check(pyobject);
 }
 
@@ -509,11 +239,6 @@ Bool_t TPython::CPPInstance_Check(PyObject *pyobject)
 
 Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   // direct pointer comparison of type member
    return CPyCppyy::Instance_CheckExact(pyobject);
 }
 
@@ -523,11 +248,6 @@ Bool_t TPython::CPPInstance_CheckExact(PyObject *pyobject)
 
 Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   // detailed walk through inheritance hierarchy
    return CPyCppyy::Overload_Check(pyobject);
 }
 
@@ -536,11 +256,6 @@ Bool_t TPython::CPPOverload_Check(PyObject *pyobject)
 
 Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
 {
-   // setup
-   if (!Initialize())
-      return kFALSE;
-
-   // direct pointer comparison of type member
    return CPyCppyy::Overload_CheckExact(pyobject);
 }
 
@@ -549,11 +264,6 @@ Bool_t TPython::CPPOverload_CheckExact(PyObject *pyobject)
 
 void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
 {
-   // setup
-   if (!Initialize())
-      return 0;
-
-   // get held object (may be null)
    return CPyCppyy::Instance_AsVoidPtr(pyobject);
 }
 
@@ -562,11 +272,5 @@ void *TPython::CPPInstance_AsVoidPtr(PyObject *pyobject)
 
 PyObject *TPython::CPPInstance_FromVoidPtr(void *addr, const char *classname, Bool_t python_owns)
 {
-   // setup
-   if (!Initialize())
-      return 0;
-
-   // perform cast (the call will check TClass and addr, and set python errors)
-   // give ownership, for ref-counting, to the python side, if so requested
    return CPyCppyy::Instance_FromVoidPtr(addr, classname, python_owns);
 }
