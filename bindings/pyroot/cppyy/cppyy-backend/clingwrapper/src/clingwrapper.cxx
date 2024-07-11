@@ -710,10 +710,11 @@ void Cppyy::Destruct(TCppType_t type, TCppObject_t instance)
         else {
             auto ib = sHasOperatorDelete.find(type);
             if (ib == sHasOperatorDelete.end()) {
-                sHasOperatorDelete[type] = (bool)cr->GetListOfAllPublicMethods()->FindObject("operator delete");
-                ib = sHasOperatorDelete.find(type);
+               TFunction *f = (TFunction *)cr->GetMethodAllAny("operator delete");
+               sHasOperatorDelete[type] = (bool)(f && (f->Property() & kIsPublic));
+               ib = sHasOperatorDelete.find(type);
             }
-            ib->second ? cr->Destructor((void*)instance) : free((void*)instance);
+            ib->second ? cr->Destructor((void *)instance) : ::operator delete((void *)instance);
         }
     }
 }
