@@ -1028,7 +1028,7 @@ function(ROOT_LINKER_LIBRARY library)
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                                  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     endif()
-    if(WIN32 AND ARG_TYPE STREQUAL SHARED)
+    if(WIN32)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
                     CONFIGURATIONS Debug RelWithDebInfo
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
