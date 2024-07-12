@@ -24,8 +24,11 @@ int merge_changeComp_check_output(int expectedCompression, const char *fnameOut,
    auto clusterIter = desc->GetClusterIterable();
    for (const auto &cluster : clusterIter) {
       const auto &cDesc = desc->GetClusterDescriptor(cluster.GetId());
-      if (cDesc.GetColumnRange(0).fCompressionSettings != expectedCompression)
+      int realCompression = cDesc.GetColumnRange(0).fCompressionSettings;
+      if (realCompression != expectedCompression) {
+         std::cerr << "Expected compression to be " << expectedCompression << " but it is " << realCompression << "\n";
          return 1;
+      }
    }
 
    gSystem->Unlink(fnameOut);
