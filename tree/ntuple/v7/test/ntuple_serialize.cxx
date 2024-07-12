@@ -755,7 +755,7 @@ TEST(RNTuple, SerializeFooter)
    const auto &clusterDesc = desc.GetClusterDescriptor(0);
    EXPECT_EQ(0, clusterDesc.GetFirstEntryIndex());
    EXPECT_EQ(100, clusterDesc.GetNEntries());
-   auto columnIds = clusterDesc.GetColumnIds();
+   const auto &columnIds = clusterDesc.GetColumnRanges();
    EXPECT_EQ(1u, columnIds.size());
    EXPECT_EQ(1u, columnIds.count(0));
    columnRange = clusterDesc.GetColumnRange(0);
