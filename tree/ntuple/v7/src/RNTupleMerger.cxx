@@ -20,6 +20,7 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RPageStorageFile.hxx>
+#include <ROOT/RPageStorage.hxx>
 #include <ROOT/RClusterPool.hxx>
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleZip.hxx>
@@ -29,7 +30,6 @@
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
-#include "ROOT/RPageStorage.hxx"
 
 #include <deque>
 
