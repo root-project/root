@@ -355,6 +355,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    }
 
    fModel->Freeze();
+   if (fFieldModifier) {
+      for (auto &field : fModel->GetFieldZero()) {
+         fFieldModifier->EditField(field);
+      }
+   }
+
    fEntry = fModel->CreateBareEntry();
    for (const auto &f : fImportFields) {
       if (f.fIsInUntypedCollection)

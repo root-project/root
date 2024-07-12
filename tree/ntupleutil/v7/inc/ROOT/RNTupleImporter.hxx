@@ -114,6 +114,14 @@ public:
       virtual void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
    };
 
+   /// Used to make adjustments to the fields of the output model
+   class RFieldModifier {
+   public:
+      virtual ~RFieldModifier() = default;
+      /// Will be called for every field of the frozen model before it is attached to the page sink
+      virtual void EditField(RFieldBase &field) = 0;
+   };
+
 private:
    struct RImportBranch {
       RImportBranch() = default;
@@ -228,6 +236,7 @@ private:
    /// No standard output, conversely if set to false, schema information and progress is printed.
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
+   std::unique_ptr<RFieldModifier> fFieldModifier;
 
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
@@ -271,6 +280,9 @@ public:
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }
+
+   /// Add custom method to adjust column representations
+   void SetFieldModifier(std::unique_ptr<RFieldModifier> modifier) { fFieldModifier = std::move(modifier); }
 
    /// Import works in two steps:
    /// 1. PrepareSchema() calls SetBranchAddress() on all the TTree branches and creates the corresponding RNTuple
