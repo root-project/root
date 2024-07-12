@@ -1418,8 +1418,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
       const auto &clusterDesc = desc.GetClusterDescriptor(context.GetMemClusterId(clusterId));
       // Get an ordered set of physical column ids
       std::set<DescriptorId_t> onDiskColumnIds;
-      for (auto column : clusterDesc.GetColumnIds())
-         onDiskColumnIds.insert(context.GetOnDiskColumnId(column));
+      for (const auto &column : clusterDesc.GetColumnRanges())
+         onDiskColumnIds.insert(context.GetOnDiskColumnId(column.first));
 
       auto outerFrame = pos;
       pos += SerializeListFramePreamble(onDiskColumnIds.size(), *where);

@@ -347,7 +347,7 @@ public:
    {
       return fColumnRanges.find(physicalId) != fColumnRanges.end();
    }
-   std::unordered_set<DescriptorId_t> GetColumnIds() const;
+   const std::unordered_map<DescriptorId_t, RColumnRange> &GetColumnRanges() const { return fColumnRanges; }
    std::uint64_t GetBytesOnStorage() const;
 };
 

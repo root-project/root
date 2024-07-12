@@ -189,15 +189,6 @@ bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor
           fNEntries == other.fNEntries && fColumnRanges == other.fColumnRanges && fPageRanges == other.fPageRanges;
 }
 
-
-std::unordered_set<ROOT::Experimental::DescriptorId_t> ROOT::Experimental::RClusterDescriptor::GetColumnIds() const
-{
-   std::unordered_set<DescriptorId_t> result;
-   for (const auto &x : fColumnRanges)
-      result.emplace(x.first);
-   return result;
-}
-
 std::uint64_t ROOT::Experimental::RClusterDescriptor::GetBytesOnStorage() const
 {
    std::uint64_t nbytes = 0;
