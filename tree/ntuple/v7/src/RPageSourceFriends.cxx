@@ -101,7 +101,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
       for (const auto &c : descriptorGuard->GetClusterIterable()) {
          RClusterDescriptorBuilder clusterBuilder;
          clusterBuilder.ClusterId(fNextId).FirstEntryIndex(c.GetFirstEntryIndex()).NEntries(c.GetNEntries());
-         for (const auto &[originColumnId, originColumnRange] : c.GetColumnRanges()) {
+         for (const auto &[originColumnId, originColumnRange] : c.GetColumnRangeIterable()) {
             DescriptorId_t virtualColumnId = fIdBiMap.GetVirtualId({i, originColumnId});
 
             auto pageRange = c.GetPageRange(originColumnId).Clone();
