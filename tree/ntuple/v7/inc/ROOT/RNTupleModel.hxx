@@ -331,8 +331,8 @@ public:
    REntry &GetDefaultEntry();
    const REntry &GetDefaultEntry() const;
 
-   /// Non-const access to the root field is used to commit clusters during writing
-   /// and to set the on-disk field IDs when connecting a model to a page source or sink.
+   /// Non-const access to the root field is used to commit clusters during writing,
+   /// and to make adjustments to the fields between freezing and connecting to a page sink.
    RFieldZero &GetFieldZero();
    const RFieldZero &GetFieldZero() const { return *fFieldZero; }
    const RFieldBase &GetField(std::string_view fieldName) const;
