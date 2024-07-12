@@ -125,6 +125,7 @@ public:
    void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
 
    bool GetEnablePageChecksums() const { return fEnablePageChecksums; }
+   /// Note that turning off page checksums will also turn off the same page merging optimization (see tuning.md)
    void SetEnablePageChecksums(bool val) { fEnablePageChecksums = val; }
 
    std::uint64_t GetMaxKeySize() const { return fMaxKeySize; }

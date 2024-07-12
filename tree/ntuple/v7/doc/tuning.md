@@ -86,3 +86,13 @@ The following alternative strategies were discussed:
     One might reduce the additional state and complexity by only applying the fine-grained estimator for collections.
     Such an estimator would react better to a sudden change in the amount of data written for collections / columns
     that have substentially different compression ratios.
+
+Page Checksums
+--------------
+
+By default, RNTuple appends xxhash-3 64bit checksums to every compressed page.
+Typically, checksums increase the data size in the region of a per mille.
+As a side effect, page checksums allow for efficient "same page merging":
+identical pages in the same cluster will be written only once.
+On typical datasets, same page merging saves a few percent.
+Conversely, turning off page checksums also disables the same page merging optimization.
