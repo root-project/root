@@ -324,6 +324,44 @@ private:
    std::unordered_map<DescriptorId_t, RPageRange> fPageRanges;
 
 public:
+   class RColumnRangeIterable {
+   private:
+      const RClusterDescriptor &fDesc;
+
+   public:
+      class RIterator {
+      private:
+         using Iter_t = std::unordered_map<DescriptorId_t, RColumnRange>::const_iterator;
+         /// The wrapped map iterator
+         Iter_t fIter;
+
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using value_type = std::pair<const DescriptorId_t, RColumnRange>;
+         using difference_type = std::ptrdiff_t;
+         using pointer = const std::pair<const DescriptorId_t, RColumnRange> *;
+         using reference = const std::pair<const DescriptorId_t, RColumnRange> &;
+
+         RIterator(Iter_t iter) : fIter(iter) {}
+         iterator operator++()
+         {
+            ++fIter;
+            return *this;
+         }
+         reference operator*() { return *fIter; }
+         pointer operator->() { return fIter.operator->(); }
+         bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
+         bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
+      };
+
+      explicit RColumnRangeIterable(const RClusterDescriptor &desc) : fDesc(desc) {}
+
+      RIterator begin() { return RIterator{fDesc.fColumnRanges.cbegin()}; }
+      RIterator end() { return fDesc.fColumnRanges.cend(); }
+      size_t count() { return fDesc.fColumnRanges.size(); }
+   };
+
    RClusterDescriptor() = default;
    RClusterDescriptor(const RClusterDescriptor &other) = delete;
    RClusterDescriptor &operator=(const RClusterDescriptor &other) = delete;
@@ -339,11 +377,12 @@ public:
    ClusterSize_t GetNEntries() const { return fNEntries; }
    const RColumnRange &GetColumnRange(DescriptorId_t physicalId) const { return fColumnRanges.at(physicalId); }
    const RPageRange &GetPageRange(DescriptorId_t physicalId) const { return fPageRanges.at(physicalId); }
+   /// Returns an iterator over pairs { columnId, columnRange }. The iteration order is unspecified.
+   RColumnRangeIterable GetColumnRangeIterable() const { return RColumnRangeIterable(*this); }
    bool ContainsColumn(DescriptorId_t physicalId) const
    {
       return fColumnRanges.find(physicalId) != fColumnRanges.end();
    }
-   const std::unordered_map<DescriptorId_t, RColumnRange> &GetColumnRanges() const { return fColumnRanges; }
    std::uint64_t GetBytesOnStorage() const;
 };
 
