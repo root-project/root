@@ -3972,8 +3972,12 @@ template<> inline LongDouble_t TTreeFormula::GetConstant(Int_t k) {
 }
 template<> inline Long64_t TTreeFormula::GetConstant(Int_t k) { return (Long64_t)GetConstant<LongDouble_t>(k); }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate this treeformula.
+////////////////////////////////////////////////////////////////////////////
+/// \brief Evaluate this treeformula
+/// \tparam T The type used to interpret the numbers then used for the operations
+/// \param instance iteration instance
+/// \param stringStackArg formula as string
+/// \return the result of the evaluation
 
 template<typename T>
 T TTreeFormula::EvalInstance(Int_t instance, const char *stringStackArg[])
