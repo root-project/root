@@ -103,6 +103,8 @@ public:
 
    static void SetUseSessionKey(bool on = true);
    static void SetUseConnectionKey(bool on = true);
+
+   static void AddServerLocation(const std::string &server_prefix, const std::string &files_path);
 };
 
 } // namespace ROOT

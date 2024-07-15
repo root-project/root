@@ -170,6 +170,37 @@ void RWebWindowsManager::SetUseConnectionKey(bool on)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Configure server location which can be used for loading of custom scripts or files
+/// When THttpServer instance of RWebWindowsManager will be created,
+/// THttpServer::AddLocation() method with correspondent arguments will be invoked.
+
+void RWebWindowsManager::AddServerLocation(const std::string &server_prefix, const std::string &files_path)
+{
+   TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
+   TString arg = server_prefix.c_str();
+   arg.Append(":");
+   auto p = cfg.Index(arg);
+   if (p != kNPOS) {
+      auto p2 = cfg.Index(";", p + arg.Length());
+      if (p2 == kNPOS) p2 = cfg.Length() - 1;
+      cfg.Remove(p, p2 - p + 1);
+   }
+   if (cfg.Length() > 0)
+      cfg.Append(";");
+   cfg.Append(arg);
+   cfg.Append(files_path.c_str());
+   gEnv->SetValue("WebGui.ServerLocations", cfg);
+
+   auto serv = Instance()->GetServer();
+   if (serv) {
+      arg = server_prefix.c_str();
+      if (!arg.EndsWith("/"))
+         arg.Append("/");
+      serv->AddLocation(arg.Data(), files_path.c_str());
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Static method to generate cryptographic key
 /// Parameter keylen defines length of cryptographic key in bytes
 /// Output string will be hex formatted and includes "-" separator after every 4 bytes
@@ -347,6 +378,13 @@ bool RWebWindowsManager::InformListener(const std::string &msg)
 ///
 ///      WebGui.FastCgiServer: https://your_apache_server.com/root_cgi_path
 ///
+/// For some custom applications one requires to load JavaScript modules or other files.
+/// For such applications one may require to load files from other locations which can be configured
+/// with AddServerLocation() method or directly via:
+///
+///      WebGui.ServerLocations: location1:/file/path/to/location1;location2:/file/path/to/location2
+
+
 
 bool RWebWindowsManager::CreateServer(bool with_http)
 {
@@ -395,6 +433,26 @@ bool RWebWindowsManager::CreateServer(bool with_http)
       }
 
       fServer->AddLocation("rootui5sys/", ui5dir.Data());
+
+      TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
+      auto arr = cfg.Tokenize(";");
+      if (arr) {
+         TIter next(arr);
+         while(auto obj = next()) {
+            TString arg = obj->GetName();
+
+            auto p = arg.First(":");
+            if (p == kNPOS) continue;
+
+            TString prefix = arg(0, p);
+            if (!prefix.EndsWith("/"))
+               prefix.Append("/");
+            TString path = arg(p+1, arg.Length() - p);
+            fServer->AddLocation(prefix.Data(), path.Data());
+         }
+         delete arr;
+      }
+
    }
 
    if (!with_http || fServer->IsAnyEngine())
