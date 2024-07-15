@@ -836,44 +836,89 @@ std::string THttpServer::BuildWSEntryPage()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Replaces all references like "jsrootsys/..."
+/// Replaces all references like "jsrootsys/..." or other pre-configured pathes
 ///
 /// Either using pre-configured JSROOT installation from web or
 /// redirect to jsrootsys from the main server path to benefit from browser caching
+/// Creates appropriate importmap instead of <!--jsroot_importmap--> placeholder
 
-void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
+void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const std::string &version)
 {
-   std::string repl;
+   const std::string place_holder = "<!--jsroot_importmap-->";
 
-   if (fJSROOT.Length() > 0) {
-      repl = "=\"";
-      repl.append(fJSROOT.Data());
-      if (repl.back() != '/')
-         repl.append("/");
-   } else {
-      Int_t cnt = 0;
-      if (arg->fPathName.Length() > 0) cnt++;
-      for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
-         if (arg->fPathName[n] == '/') {
-            if (arg->fPathName[n-1] != '/') {
-               cnt++; // normal slash in the middle, count it
-            } else {
-               cnt = 0; // double slash, do not touch such path
-               break;
-            }
-         }
+   auto p = arg->fContent.find(place_holder);
 
-      if (cnt > 0) {
-         repl = "=\"";
-         while (cnt-- >0) repl.append("../");
-         repl.append("jsrootsys/");
+   bool old_format = (p == std::string::npos);
+
+   if (old_format) {
+
+      if (!version.empty()) {
+         // replace link to JSROOT modules in import statements emulating new version for browser
+         std::string search = "from './jsrootsys/";
+         std::string replace = "from './" + version + "/jsrootsys/";
+         arg->ReplaceAllinContent(search, replace);
+         // replace link to ROOT ui5 modules in import statements emulating new version for browser
+         search = "from './rootui5sys/";
+         replace = "from './" + version + "/rootui5sys/";
+         arg->ReplaceAllinContent(search, replace);
+         // replace link on old JSRoot.core.js script - if still appears
+         search = "jsrootsys/scripts/JSRoot.core.";
+         replace = version + "/jsrootsys/scripts/JSRoot.core.";
+         arg->ReplaceAllinContent(search, replace, true);
+         arg->AddNoCacheHeader();
       }
+
+      std::string repl;
+
+      if (fJSROOT.Length() > 0) {
+         repl = "=\"";
+         repl.append(fJSROOT.Data());
+         if (repl.back() != '/')
+            repl.append("/");
+      } else {
+         Int_t cnt = 0;
+         if (arg->fPathName.Length() > 0) cnt++;
+         for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
+            if (arg->fPathName[n] == '/') {
+               if (arg->fPathName[n-1] != '/') {
+                  cnt++; // normal slash in the middle, count it
+               } else {
+                  cnt = 0; // double slash, do not touch such path
+                  break;
+               }
+            }
+
+         if (cnt > 0) {
+            repl = "=\"";
+            while (cnt-- >0) repl.append("../");
+            repl.append("jsrootsys/");
+         }
+      }
+
+      if (!repl.empty()) {
+         arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+         arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
+      }
+
+      return;
    }
 
-   if (!repl.empty()) {
-      arg->ReplaceAllinContent("=\"jsrootsys/", repl);
-      arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
-   }
+   // new functionality creating importmap
+
+   std::string new_content =
+      "<script type=\"importmap\">\n"
+      "   {\n"
+      "     \"imports\": {\n"
+      "        \"jsroot\": \"./jsrootsys/modules/main.mjs\",\n"
+      "        \"jsrootsys/\": \"./jsrootsys/\",\n"
+      "        \"rootu5sys/\": \"./rootui5sys/\"\n"
+      "     }\n"
+      "  }\n"
+      "</script>\n";
+
+   arg->fContent.erase(p, place_holder.length());
+
+   arg->fContent.insert(p, new_content);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -895,6 +940,8 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    }
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm") || (arg->fFileName == "default.htm")) {
+
+      std::string version;
 
       if (arg->fFileName == "default.htm") {
 
@@ -920,13 +967,15 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
                arg->fContent = ReadFileContent(resolve.Data());
             }
 
+            version = handler->GetCodeVersion();
+
             handler->VerifyDefaultPageContent(arg);
          }
       }
 
       if (arg->fContent.empty() && arg->fFileName.IsNull() && arg->fPathName.IsNull() && IsWSOnly()) {
          // Creating page with list of available widgets is disabled now for security reasons
-         // Later one can provide functionality back only if explicitely desired by the user
+         // Later one can provide functionality back only if explicitly desired by the user
          //  BuildWSEntryPage();
 
          arg->SetContent("refused");
@@ -946,7 +995,7 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
          arg->Set404();
       } else if (!arg->Is404()) {
 
-         ReplaceJSROOTLinks(arg);
+         ReplaceJSROOTLinks(arg, version);
 
          const char *hjsontag = "\"$$$h.json$$$\"";
 
