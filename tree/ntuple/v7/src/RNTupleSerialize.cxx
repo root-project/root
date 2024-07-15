@@ -226,11 +226,12 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
          pos += RNTupleSerializer::SerializeColumnType(c.GetType(), *where);
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(c.GetType()), *where);
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
-         std::uint32_t flags = 0;
+         std::uint16_t flags = 0;
          const std::uint64_t firstElementIdx = c.GetFirstElementIndex();
          if (firstElementIdx > 0)
             flags |= RNTupleSerializer::kFlagDeferredColumn;
-         pos += RNTupleSerializer::SerializeUInt32(flags, *where);
+         pos += RNTupleSerializer::SerializeUInt16(flags, *where);
+         pos += RNTupleSerializer::SerializeUInt16(c.GetRepresentationIndex(), *where);
          if (flags & RNTupleSerializer::kFlagDeferredColumn)
             pos += RNTupleSerializer::SerializeUInt64(firstElementIdx, *where);
 
@@ -259,7 +260,8 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    EColumnType type{EColumnType::kIndex32};
    std::uint16_t bitsOnStorage;
    std::uint32_t fieldId;
-   std::uint32_t flags;
+   std::uint16_t flags;
+   std::uint16_t representationIndex;
    std::uint64_t firstElementIdx = 0;
    if (fnFrameSizeLeft() < RNTupleSerializer::SerializeColumnType(type, nullptr) +
                            sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t))
@@ -272,7 +274,8 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    bytes += result.Unwrap();
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, bitsOnStorage);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
-   bytes += RNTupleSerializer::DeserializeUInt32(bytes, flags);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, flags);
+   bytes += RNTupleSerializer::DeserializeUInt16(bytes, representationIndex);
    if (flags & RNTupleSerializer::kFlagDeferredColumn) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("column record frame too short");
@@ -282,7 +285,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
-   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx);
+   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx).RepresentationIndex(representationIndex);
 
    return frameSize;
 }
@@ -1281,6 +1284,16 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    }
    bytes = frame + frameSize;
 
+   // As columns are added in order of representation index and column index, determine the column index
+   // for the currently deserialized column from the columns already added.
+   auto fnNextColumnIndex = [&descBuilder](DescriptorId_t fieldId, std::uint16_t representationIndex) -> std::uint32_t {
+      const auto &existingColumns = descBuilder.GetDescriptor().GetFieldDescriptor(fieldId).GetLogicalColumnIds();
+      if (existingColumns.empty())
+         return 0;
+      const auto &lastColumnDesc = descBuilder.GetDescriptor().GetColumnDescriptor(existingColumns.back());
+      return (representationIndex == lastColumnDesc.GetRepresentationIndex()) ? (lastColumnDesc.GetIndex() + 1) : 0;
+   };
+
    std::uint32_t nColumns;
    frame = bytes;
    result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nColumns);
@@ -1288,7 +1301,6 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
    const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
-   std::unordered_map<DescriptorId_t, std::uint32_t> maxIndexes;
    for (unsigned i = 0; i < nColumns; ++i) {
       std::uint32_t columnId = columnIdRangeBegin + i;
       RColumnDescriptorBuilder columnBuilder;
@@ -1297,14 +1309,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
          return R__FORWARD_ERROR(result);
       bytes += result.Unwrap();
 
-      std::uint32_t idx = 0;
-      const auto fieldId = columnBuilder.GetFieldId();
-      auto maxIdx = maxIndexes.find(fieldId);
-      if (maxIdx != maxIndexes.end())
-         idx = maxIdx->second + 1;
-      maxIndexes[fieldId] = idx;
-
-      auto columnDesc = columnBuilder.Index(idx).LogicalColumnId(columnId).PhysicalColumnId(columnId).MakeDescriptor();
+      columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
+      columnBuilder.LogicalColumnId(columnId);
+      columnBuilder.PhysicalColumnId(columnId);
+      auto columnDesc = columnBuilder.MakeDescriptor();
       if (!columnDesc)
          return R__FORWARD_ERROR(columnDesc);
       auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
@@ -1330,15 +1338,12 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
 
       RColumnDescriptorBuilder columnBuilder;
       columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
-      columnBuilder.Type(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetType());
+      const auto &physicalColumnDesc = descBuilder.GetDescriptor().GetColumnDescriptor(physicalId);
+      columnBuilder.Type(physicalColumnDesc.GetType());
+      columnBuilder.RepresentationIndex(physicalColumnDesc.GetRepresentationIndex());
+      columnBuilder.Index(fnNextColumnIndex(columnBuilder.GetFieldId(), columnBuilder.GetRepresentationIndex()));
 
-      std::uint32_t idx = 0;
-      auto maxIdx = maxIndexes.find(fieldId);
-      if (maxIdx != maxIndexes.end())
-         idx = maxIdx->second + 1;
-      maxIndexes[fieldId] = idx;
-
-      auto aliasColumnDesc = columnBuilder.Index(idx).MakeDescriptor();
+      auto aliasColumnDesc = columnBuilder.MakeDescriptor();
       if (!aliasColumnDesc)
          return R__FORWARD_ERROR(aliasColumnDesc);
       auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());
