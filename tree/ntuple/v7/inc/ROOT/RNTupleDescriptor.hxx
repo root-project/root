@@ -147,15 +147,18 @@ private:
    DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
    /// Usually identical to the logical column ID, except for alias columns where it references the shadowed column
    DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-   /// The on-disk column type
-   EColumnType fType;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
-   /// A field can be serialized into several columns, which are numbered from zero to $n$
-   std::uint32_t fIndex;
    /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
    /// than 0
    std::uint64_t fFirstElementIndex = 0U;
+   /// A field can be serialized into several columns, which are numbered from zero to $n$
+   std::uint32_t fIndex = 0;
+   /// A field may use multiple column representations, which are numbered from zero to $m$.
+   /// Every representation has the same number of columns.
+   std::uint16_t fRepresentationIndex = 0;
+   /// The on-disk column type
+   EColumnType fType = EColumnType::kUnknown;
 
 public:
    RColumnDescriptor() = default;
@@ -170,11 +173,12 @@ public:
 
    DescriptorId_t GetLogicalId() const { return fLogicalColumnId; }
    DescriptorId_t GetPhysicalId() const { return fPhysicalColumnId; }
-   EColumnType GetType() const { return fType; }
-   std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
-   bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
+   std::uint32_t GetIndex() const { return fIndex; }
+   std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
+   EColumnType GetType() const { return fType; }
+   bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
    bool IsDeferredColumn() const { return fFirstElementIndex > 0; }
 };
 
@@ -1032,7 +1036,13 @@ public:
       fColumn.fFirstElementIndex = firstElementIdx;
       return *this;
    }
+   RColumnDescriptorBuilder &RepresentationIndex(std::uint16_t representationIndex)
+   {
+      fColumn.fRepresentationIndex = representationIndex;
+      return *this;
+   }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
+   DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
    RResult<RColumnDescriptor> MakeDescriptor() const;

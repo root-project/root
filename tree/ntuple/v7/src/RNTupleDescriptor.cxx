@@ -110,7 +110,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 bool ROOT::Experimental::RColumnDescriptor::operator==(const RColumnDescriptor &other) const
 {
    return fLogicalColumnId == other.fLogicalColumnId && fPhysicalColumnId == other.fPhysicalColumnId &&
-          fType == other.fType && fFieldId == other.fFieldId && fIndex == other.fIndex;
+          fType == other.fType && fFieldId == other.fFieldId && fIndex == other.fIndex &&
+          fRepresentationIndex == other.fRepresentationIndex;
 }
 
 
@@ -124,6 +125,7 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
    clone.fFirstElementIndex = fFirstElementIndex;
+   clone.fRepresentationIndex = fRepresentationIndex;
    return clone;
 }
 

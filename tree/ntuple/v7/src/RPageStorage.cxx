@@ -560,6 +560,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
       .FieldId(fieldId)
       .Type(column.GetType())
       .Index(column.GetIndex())
+      .RepresentationIndex(column.GetRepresentationIndex())
       .FirstElementIndex(column.GetFirstElementIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
    return ColumnHandle_t{columnId, &column};
@@ -590,7 +591,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
             .PhysicalColumnId(source.GetLogicalId())
             .FieldId(fieldId)
             .Type(source.GetType())
-            .Index(source.GetIndex());
+            .Index(source.GetIndex())
+            .RepresentationIndex(source.GetRepresentationIndex());
          fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
       }
    };
