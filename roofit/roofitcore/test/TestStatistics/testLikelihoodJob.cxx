@@ -129,6 +129,10 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DSelectedParameterValues)
    // Bisecting the number of events to find the number at which the deviation starts occurring in the
    // likelihood result showed that event 9860 was the main culprit (which has index 9859)
 
+   // We also need to split over events precisely with 2 workers to trigger the deviation:
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = RooFit::MultiProcess::Config::getDefaultNWorkers();
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks = 1;
+
    RooRealVar *mu = w.var("mu");
    mu->setVal(-2.8991551193432676392);
 
@@ -146,6 +150,12 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1DSelectedParameterValues)
    EXPECT_NE(nll0, nll1.Sum());
    // they differ only a bit:
    EXPECT_DOUBLE_EQ(nll0, nll1.Sum());
+
+   // reset static variables to automatic
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks =
+      RooFit::MultiProcess::Config::LikelihoodJob::automaticNEventTasks;
+   RooFit::MultiProcess::Config::LikelihoodJob::defaultNComponentTasks =
+      RooFit::MultiProcess::Config::LikelihoodJob::automaticNComponentTasks;
 }
 
 TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
