@@ -35,6 +35,9 @@ protected:
       return IsDisabled() ? kFALSE : fWindow.ProcessBatchHolder(arg);
    }
 
+   std::string GetCodeVersion() override { return fWindow.GetClientVersion(); }
+
+
    void VerifyDefaultPageContent(std::shared_ptr<THttpCallArg> &arg) override
    {
       auto token = fWindow.GetConnToken();
@@ -43,7 +46,7 @@ protected:
          url.SetOptions(arg->GetQuery());
          // refuse connection which does not provide proper token
          if (!url.HasOption("token") || (token != url.GetValueFromOptions("token"))) {
-            // refuce loading of default web page without token
+            // refuse loading of default web page without token
             arg->SetContent("refused");
             arg->Set404();
             return;
@@ -55,7 +58,7 @@ protected:
          url.SetOptions(arg->GetQuery());
          TString key = url.GetValueFromOptions("key");
          if (key.IsNull() || !fWindow.HasKey(key.Data(), true)) {
-            // refuce loading of default web page without valid key
+            // refuse loading of default web page without valid key
             arg->SetContent("refused");
             arg->Set404();
             return;
