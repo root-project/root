@@ -342,10 +342,10 @@ public:
       public:
          using iterator_category = std::forward_iterator_tag;
          using iterator = RIterator;
-         using value_type = std::pair<const DescriptorId_t, RColumnRange>;
+         using value_type = RColumnRange;
          using difference_type = std::ptrdiff_t;
-         using pointer = const std::pair<const DescriptorId_t, RColumnRange> *;
-         using reference = const std::pair<const DescriptorId_t, RColumnRange> &;
+         using pointer = const RColumnRange *;
+         using reference = const RColumnRange &;
 
          RIterator(Iter_t iter) : fIter(iter) {}
          iterator operator++()
@@ -353,8 +353,8 @@ public:
             ++fIter;
             return *this;
          }
-         reference operator*() { return *fIter; }
-         pointer operator->() { return fIter.operator->(); }
+         reference operator*() { return fIter->second; }
+         pointer operator->() { return &fIter->second; }
          bool operator!=(const iterator &rh) const { return fIter != rh.fIter; }
          bool operator==(const iterator &rh) const { return fIter == rh.fIter; }
       };
