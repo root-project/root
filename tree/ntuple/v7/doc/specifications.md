@@ -438,13 +438,21 @@ Top-level fields have their own field ID set as parent ID.
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +                            Field ID                           +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Flags                             |
+|             Flags             |      Representation Index     |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
 The order of columns matter: every column gets an implicit column ID
 which is equal to the zero-based index of the column in the serialized list.
 Multiple columns attached to the same field should be attached from smaller to larger IDs.
+
+A field can have multiple alternative column representations.
+The representation index distinguishes the different representations.
+For any given cluster, only one of the representations is the primary representation.
+All the other, secondary representations are _suppressed_ in the cluster.
+The page list (see Section Page List Envelope) indicates suppressed columns through a negative element index.
+Columns need to be stored in order from smaller to larger representation indexes.
+The representation index is consecutive starting at zero.
 
 The column type and bits on storage integers can have one of the following values
 
@@ -503,9 +511,9 @@ Old readers can, however, figure out the number of elements stored in such unkno
 
 The flags field can have one of the following bits set
 
-| Bit      | Meaning                                                      |
-|----------|--------------------------------------------------------------|
-| 0x08     | Index of first element in the column is not zero             |
+| Bit      | Meaning                                                           |
+|----------|-------------------------------------------------------------------|
+| 0x08     | Deferred column: index of first element in the column is not zero |
 
 If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
 In this case, an additional 64bit integer containing the first element index follows the flags field.
@@ -513,6 +521,10 @@ Compliant implementations should yield synthetic data pages made up of 0x00 byte
 This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
 The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
 In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
+
+If the index of the first element is negative (sign bit set), the column is deferred _and_ suppressed.
+In this case, no (synthetic) pages exist up to and including the cluster of the first element index.
+See Section "Page List Envelope" for further information about suppressed columns.
 
 #### Alias columns
 
@@ -695,7 +707,9 @@ The order of items corresponds to the cluster IDs as defined by the cluster grou
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
 Every item of the outer list frame is an inner list frame
 whose items correspond to the pages of the column in the cluster.
-The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings (see Section "Basic Types").
+The inner list is followed by a 64bit signed integer element offset and,
+unless the column is suppressed, the 32bit compression settings
+See next Section on "Suppressed Columns" for additional details.
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
@@ -738,8 +752,8 @@ The hierarchical structure of the frames in the page list envelope is as follows
     |     |     |---- Page 1 description (inner item)
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
-    |     |---- Column 1 element offset (UInt64)
-    |     |---- Column 1 compression settings (UInt32)
+    |     |---- Column 1 element offset (Int64), negative if the column is suppressed
+    |     |---- Column 1 compression settings (UInt32), available only if the column is not suppressed
     |     |---- Column 2 page list frame
     |     | ...
     |
@@ -748,7 +762,29 @@ The hierarchical structure of the frames in the page list envelope is as follows
 
 In order to save space, the page descriptions (inner items) are _not_ in a record frame.
 If at a later point more information per page is needed,
-the page list envelope can be extended by addtional list and record frames.
+the page list envelope can be extended by additional list and record frames.
+
+#### Suppressed Columns
+
+If the element offset in the inner list frame is negative (sign bit set), the column is suppressed.
+Writers should write the value `uint64_t(-1)`, readers should check for a negative value.
+Suppressed columns always have an empty list of pages.
+Suppressed columns omit the compression settings in the inner list frame.
+
+Suppressed columns belong to a secondary column representation (see Section "Column Description")
+that is inactive in the current cluster.
+All secondary column representations have the same column cardinality than the primary column representation.
+That means that the number of columns and the absolute values of the element offsets
+of primary and secondary representations are identical.
+When reading a field of a certain entry, this assertion allows for searching the corresponding
+cluster and column element indexes using any of the column representations.
+It also means that readers need to get the element index offset and the number of elements of suppressed columns
+from the corresponding columns of the primary column representation.
+
+In every cluster, every field has exactly one primary column representation.
+All other representations must be suppressed.
+Note that the primary column representation can change from cluster to cluster.
+
 
 ### User Meta-data Envelope
 
@@ -990,7 +1026,7 @@ The limits refer to a single RNTuple and do not consider combinations/joins such
 | Limit                                          | Value                        | Reason / Comment                                       |
 |------------------------------------------------|------------------------------|--------------------------------------------------------|
 | Maximum volume                                 | 10 PB (theoretically more)   | Assuming 10k cluster groups of 10k clusters of 100MB   |
-| Maximum number of elements, entries            | 2^64                         | Using default (Split)Index64, otherwise 2^32           |
+| Maximum number of elements, entries            | 2^63                         | Using default (Split)Index64, otherwise 2^32           |
 | Maximum cluster & entry size                   | 8TB (depends on pagination)  | Assuming limit of 4B pages of 4kB each                 |
 | Maximum page size                              | 2B elements, 256MB-2GB       | #elements * element size, 2GB limit from locator       |
 | Maximum element size                           | 8kB                          | 16bit for number of bits per element                   |
