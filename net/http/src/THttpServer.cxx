@@ -850,7 +850,23 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
 
    bool old_format = (p == std::string::npos);
 
+   // count slashes to handler relative paths to jsroot
+   Int_t slash_cnt = 0;
+   if (arg->fPathName.Length() > 0)
+      slash_cnt++;
+   for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
+      if (arg->fPathName[n] == '/') {
+         if (arg->fPathName[n-1] != '/') {
+            slash_cnt++; // normal slash in the middle, count it
+         } else {
+            slash_cnt = 0; // double slash, do not touch such path
+            break;
+         }
+      }
+
+
    if (old_format) {
+      // old functionality
 
       if (!version.empty()) {
          // replace link to JSROOT modules in import statements emulating new version for browser
@@ -876,21 +892,9 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
          if (repl.back() != '/')
             repl.append("/");
       } else {
-         Int_t cnt = 0;
-         if (arg->fPathName.Length() > 0) cnt++;
-         for (Int_t n = 1; n < arg->fPathName.Length()-1; ++n)
-            if (arg->fPathName[n] == '/') {
-               if (arg->fPathName[n-1] != '/') {
-                  cnt++; // normal slash in the middle, count it
-               } else {
-                  cnt = 0; // double slash, do not touch such path
-                  break;
-               }
-            }
-
-         if (cnt > 0) {
+         if (slash_cnt > 0) {
             repl = "=\"";
-            while (cnt-- >0) repl.append("../");
+            while (slash_cnt-- > 0) repl.append("../");
             repl.append("jsrootsys/");
          }
       }
@@ -899,26 +903,50 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
          arg->ReplaceAllinContent("=\"jsrootsys/", repl);
          arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
       }
+   } else {
+      // new functionality creating importmap
 
-      return;
+      std::string path_prefix, jsroot_prefix;
+      if (slash_cnt > 0) {
+         path_prefix = "";
+         while (slash_cnt-- > 0)
+            path_prefix.append("../");
+      } else {
+         path_prefix = "./";
+      }
+
+      if (!version.empty())
+         path_prefix.append(version + "/");
+
+      if (fJSROOT.Length() > 0) {
+         jsroot_prefix = fJSROOT.Data();
+         if (jsroot_prefix.back() != '/')
+            jsroot_prefix.append("/");
+      } else {
+         jsroot_prefix = path_prefix + "jsrootsys/";
+      }
+
+      static std::map<std::string, std::string> modules = {
+         {"jsroot", "main.mjs"}, {"jsroot/core", "core.mjs"}, {"jsroot/io", "io.mjs"}, {"jsroot/tree", "tree.mjs"},
+         {"jsroot/draw", "draw.mjs"}, {"jsroot/geom", "geom.mjs"}, {"jsroot/gui", "gui.mjs"}, {"jsroot/webwindow", "webwindow.mjs"}
+      };
+
+      bool first = true;
+      TString importmap = "<script type=\"importmap\">\n{\n\"imports\": ";
+      for (auto &entry : modules) {
+         importmap.Append(TString::Format("%s\n\"%s\": \"%smodules/%s\"", first ? "{" : ",", entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
+         first = false;
+      }
+      importmap.Append(TString::Format(",\n    \"jsrootsys/\": \"%s\"", jsroot_prefix.c_str()));
+
+      for (auto &entry : fLocations)
+         importmap.Append(TString::Format(",\n        \"%s\": \"%s%s\"", entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
+      importmap.Append("\n     }\n   }\n </script>\n");
+
+      arg->fContent.erase(p, place_holder.length());
+
+      arg->fContent.insert(p, importmap.Data());
    }
-
-   // new functionality creating importmap
-
-   std::string new_content =
-      "<script type=\"importmap\">\n"
-      "   {\n"
-      "     \"imports\": {\n"
-      "        \"jsroot\": \"./jsrootsys/modules/main.mjs\",\n"
-      "        \"jsrootsys/\": \"./jsrootsys/\",\n"
-      "        \"rootu5sys/\": \"./rootui5sys/\"\n"
-      "     }\n"
-      "  }\n"
-      "</script>\n";
-
-   arg->fContent.erase(p, place_holder.length());
-
-   arg->fContent.insert(p, new_content);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
