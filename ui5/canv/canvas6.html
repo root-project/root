@@ -3,6 +3,7 @@
    <head>
       <meta charset="utf-8">
       <title>ROOT6 TCanvas</title>
+      <!--jsroot_importmap-->
    </head>
 
    <style>
@@ -25,10 +26,10 @@
 
    <script type='module'>
 
-      import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
-      import { decodeUrl, setBatchMode, browser } from './jsrootsys/modules/core.mjs';
-      import { TPadPainter, TCanvasPainter } from './jsrootsys/modules/gpad/TCanvasPainter.mjs';
-      import { assignPadPainterDraw } from './jsrootsys/modules/draw.mjs';
+      import { connectWebWindow } from 'jsroot/webwindow';
+      import { decodeUrl, setBatchMode, browser } from 'jsroot/core';
+      import { TPadPainter, TCanvasPainter } from 'jsrootsys/modules/gpad/TCanvasPainter.mjs';
+      import { assignPadPainterDraw } from 'jsroot/draw';
 
       assignPadPainterDraw(TPadPainter);
 
