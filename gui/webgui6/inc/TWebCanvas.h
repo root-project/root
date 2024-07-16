@@ -96,8 +96,6 @@ protected:
    Int_t fPaletteDelivery{1};      ///<! colors palette delivery 0:never, 1:once, 2:always, 3:per subpad
    Int_t fPrimitivesMerge{100};    ///<! number of PS primitives, which will be merged together
    Int_t fJsonComp{0};             ///<! compression factor for messages send to the client
-   std::string fCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
-   std::vector<std::string> fCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
    Bool_t fCanCreateObjects{kTRUE}; ///<! indicates if canvas allowed to create extra objects for interactive painting
    Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
    Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
@@ -115,6 +113,9 @@ protected:
    PadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    PadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
    ObjectSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
+
+   static std::string gCustomScripts;     ///<! custom JavaScript code or URL on JavaScript files to load before start drawing
+   static std::vector<std::string> gCustomClasses;  ///<! list of custom classes, which can be delivered as is to client
 
    void Lock() override {}
    void Unlock() override {}
@@ -236,15 +237,15 @@ public:
    void SetLongerPolling(Bool_t on) { fLongerPolling = on; }
    Bool_t GetLongerPolling() const { return fLongerPolling; }
 
-   void SetCustomScripts(const std::string &src);
-
-   void AddCustomClass(const std::string &clname, bool with_derived = false);
-   bool IsCustomClass(const TClass *cl) const;
-
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
    Bool_t IsFixedSize() const { return fFixedSize; }
+
+   static void SetCustomScripts(const std::string &src);
+
+   static void AddCustomClass(const std::string &clname, bool with_derived = false);
+   static bool IsCustomClass(const TClass *cl);
 
    static Font_t AddFont(const char *name, const char *ttffile, Int_t precision = 2);
 
