@@ -316,17 +316,79 @@ void CPyCppyy::ExecScript(const std::string& name, const std::vector<std::string
     }
 
 // create and set (add program name) the new command line
-#if PY_VERSION_HEX < 0x03000000
     int argc = args.size() + 1;
+#if PY_VERSION_HEX < 0x03000000
+// This is a legacy implementation for Python 2
     const char** argv = new const char*[argc];
     for (int i = 1; i < argc; ++i) argv[i] = args[i-1].c_str();
     argv[0] = Py_GetProgramName();
     PySys_SetArgv(argc, const_cast<char**>(argv));
     delete [] argv;
 #else
-// TODO: fix this to work like above ...
-    (void)args;
-#endif
+// This is a common code block for Python 3. We prefer using objects to
+// automatize memory management and not introduce even more preprocessor
+// branching for deletion at the end of the method.
+//
+// FUTURE IMPROVEMENT ONCE OLD PYTHON VERSIONS ARE NOT SUPPORTED BY CPPYY:
+// Right now we use C++ objects to automatize memory management. One could use
+// RAAI and the Python memory allocation API (PEP 445) once some old Python
+// version is deprecated in CPPYY. That new feature is available since version
+// 3.4 and the preprocessor branching to also support that would be so
+// complicated to make the code unreadable.
+   std::vector<std::wstring> argv2;
+   argv2.reserve(argc);
+   argv2.emplace_back(name.c_str(), &name[name.size()]);
+
+   for (int i = 1; i < argc; ++i) {
+      auto iarg = args[i - 1].c_str();
+      argv2.emplace_back(iarg, &iarg[strlen(iarg)]);
+   }
+
+#if PY_VERSION_HEX < 0x03080000
+// Before version 3.8, the code is one simple line
+   wchar_t *argv2_arr[argc];
+   for (int i = 0; i < argc; ++i) {
+      argv2_arr[i] = const_cast<wchar_t *>(argv2[i].c_str());
+   }
+   PySys_SetArgv(argc, argv2_arr);
+
+#else
+// Here we comply to "PEP 587 – Python Initialization Configuration" to avoid
+// deprecation warnings at compile time.
+   class PyConfigHelperRAAI {
+   public:
+      PyConfigHelperRAAI(const std::vector<std::wstring> &argv2)
+      {
+         PyConfig_InitPythonConfig(&fConfig);
+         fConfig.parse_argv = 1;
+         UpdateArgv(argv2);
+         InitFromConfig();
+      }
+      ~PyConfigHelperRAAI() { PyConfig_Clear(&fConfig); }
+
+   private:
+      void InitFromConfig() { Py_InitializeFromConfig(&fConfig); };
+      void UpdateArgv(const std::vector<std::wstring> &argv2)
+      {
+         auto WideStringListAppendHelper = [](PyWideStringList *wslist, const wchar_t *wcstr) {
+            PyStatus append_status = PyWideStringList_Append(wslist, wcstr);
+            if (PyStatus_IsError(append_status)) {
+               std::wcerr << "Error: could not append element " << wcstr << " to arglist - " << append_status.err_msg
+                          << std::endl;
+            }
+         };
+         WideStringListAppendHelper(&fConfig.argv, Py_GetProgramName());
+         for (const auto &iarg : argv2) {
+            WideStringListAppendHelper(&fConfig.argv, iarg.c_str());
+         }
+      }
+      PyConfig fConfig;
+   };
+
+   PyConfigHelperRAAI pych(argv2);
+
+#endif // of the else branch of PY_VERSION_HEX < 0x03080000
+#endif // of the else branch of PY_VERSION_HEX < 0x03000000
 
 // actual script execution
     PyObject* gbl = PyDict_Copy(gMainDict);
