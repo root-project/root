@@ -1444,18 +1444,24 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList(void *buffer,
       for (auto onDiskId : onDiskColumnIds) {
          auto memId = context.GetMemColumnId(onDiskId);
          const auto &columnRange = clusterDesc.GetColumnRange(memId);
-         const auto &pageRange = clusterDesc.GetPageRange(memId);
 
          auto innerFrame = pos;
-         pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
+         if (columnRange.fIsSuppressed) {
+            // Empty page range
+            pos += SerializeListFramePreamble(0, *where);
+            pos += SerializeInt64(kSuppressedColumnMarker, *where);
+         } else {
+            const auto &pageRange = clusterDesc.GetPageRange(memId);
+            pos += SerializeListFramePreamble(pageRange.fPageInfos.size(), *where);
 
-         for (const auto &pi : pageRange.fPageInfos) {
-            std::int32_t nElements = pi.fHasChecksum ? -static_cast<std::int32_t>(pi.fNElements) : pi.fNElements;
-            pos += SerializeUInt32(nElements, *where);
-            pos += SerializeLocator(pi.fLocator, *where);
+            for (const auto &pi : pageRange.fPageInfos) {
+               std::int32_t nElements = pi.fHasChecksum ? -static_cast<std::int32_t>(pi.fNElements) : pi.fNElements;
+               pos += SerializeUInt32(nElements, *where);
+               pos += SerializeLocator(pi.fLocator, *where);
+            }
+            pos += SerializeInt64(columnRange.fFirstElementIndex, *where);
+            pos += SerializeUInt32(columnRange.fCompressionSettings, *where);
          }
-         pos += SerializeUInt64(columnRange.fFirstElementIndex, *where);
-         pos += SerializeUInt32(columnRange.fCompressionSettings, *where);
 
          pos += SerializeFramePostscript(buffer ? innerFrame : nullptr, pos - innerFrame);
       }
@@ -1778,19 +1784,30 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializePageList(const void 
             bytes += result.Unwrap();
          }
 
-         if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t) + sizeof(std::uint64_t)))
+         if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::int64_t)))
             return R__FAIL("page list frame too short");
-         std::uint64_t columnOffset;
-         bytes += DeserializeUInt64(bytes, columnOffset);
-         std::uint32_t compressionSettings;
-         bytes += DeserializeUInt32(bytes, compressionSettings);
+         std::int64_t columnOffset;
+         bytes += DeserializeInt64(bytes, columnOffset);
+         if (columnOffset < 0) {
+            if (nPages > 0)
+               return R__FAIL("unexpected non-empty page list");
+            clusterBuilders[i].MarkSuppressedColumnRange(j);
+         } else {
+            if (fnInnerFrameSizeLeft() < static_cast<int>(sizeof(std::uint32_t)))
+               return R__FAIL("page list frame too short");
+            std::uint32_t compressionSettings;
+            bytes += DeserializeUInt32(bytes, compressionSettings);
+            clusterBuilders[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
+         }
 
-         clusterBuilders[i].CommitColumnRange(j, columnOffset, compressionSettings, pageRange);
          bytes = innerFrame + innerFrameSize;
       } // loop over columns
 
       bytes = outerFrame + outerFrameSize;
 
+      auto voidRes = clusterBuilders[i].CommitSuppressedColumnRanges(desc);
+      if (!voidRes)
+         return R__FORWARD_ERROR(voidRes);
       clusterBuilders[i].AddExtendedColumnRanges(desc);
       clusters.emplace_back(clusterBuilders[i].MoveDescriptor().Unwrap());
    } // loop over clusters
