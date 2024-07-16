@@ -1089,9 +1089,11 @@ void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
       << "   double eps = d / n;\n"
       << "   for (int i = 0; i < n; ++i) {\n"
       << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * i;\n"
-      << "      " << resName << " += " << " + " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
+      << "      double tmpA = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
+      << "      " << paramsName << "[" << intVarIdx << "] = " << intVar.getMin(intRange()) << " + eps * (i + 1);\n"
+      << "      double tmpB = " << ctx.buildCall(wrapper.funcName(), paramsName, nullptr, nullptr) << ";\n"
+      << "      " << resName << " += (tmpA + tmpB) * 0.5 * eps;\n"
       << "   }\n"
-      << "   " << resName << " *= " << " d / n;\n"
       << "}\n";
 
    ctx.addToGlobalScope(ss.str());
