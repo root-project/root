@@ -427,7 +427,7 @@ ROOT::Experimental::Internal::RPageSource::UnsealPage(const RSealedPage &sealedP
    using Allocator_t = RPageAllocatorHeap;
    auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.GetNElements());
    if (sealedPage.GetDataSize() != bytesPacked) {
-      fDecompressor->Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), bytesPacked, page.GetBuffer());
+      RNTupleDecompressor::Unzip(sealedPage.GetBuffer(), sealedPage.GetDataSize(), bytesPacked, page.GetBuffer());
    } else {
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
