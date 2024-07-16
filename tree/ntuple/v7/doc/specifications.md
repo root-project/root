@@ -444,8 +444,8 @@ The column type and bits on storage integers can have one of the following value
 
 | Type | Bits | Name         | Contents                                                                      |
 |------|------|--------------|-------------------------------------------------------------------------------|
-| 0x01 |   64 | Index64      | Mother columns of (nested) collections, counting is relative to the cluster   |
-| 0x02 |   32 | Index32      | Mother columns of (nested) collections, counting is relative to the cluster   |
+| 0x01 |   64 | Index64      | Parent columns of (nested) collections, counting is relative to the cluster   |
+| 0x02 |   32 | Index32      | Parent columns of (nested) collections, counting is relative to the cluster   |
 | 0x03 |   96 | Switch       | Tuple of a kIndex64 value followed by a 32 bits dispatch tag to a column ID   |
 | 0x04 |    8 | Byte         | An uninterpreted byte, e.g. part of a blob                                    |
 | 0x05 |    8 | Char         | ASCII character                                                               |
@@ -828,8 +828,8 @@ The field's type alias is set to `Double32_t`.
 ### STL Types and Collections
 
 The following STL and collection types are supported.
-Generally, collections have a mother column of type (Split)Index32 or (Split)Index64.
-The mother column stores the offsets of the next collection entries relative to the cluster.
+Generally, collections have a parent column of type (Split)Index32 or (Split)Index64.
+The parent column stores the offsets of the next collection entries relative to the cluster.
 For instance, an `std::vector<float>` with the values `{1.0}`, `{}`, `{1.0, 2.0}`
 for the first 3 entries results in an index column `[1, 1, 3]`
 and a value column `[1.0, 1.0, 2.0]`.
@@ -844,7 +844,7 @@ The second column is of type Char.
 
 STL vector and ROOT's RVec have identical on-disk representations.
 They are stored as two fields:
-  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
@@ -862,7 +862,7 @@ Note that T can itself be an array type, which includes support for multidimensi
 #### std::variant<T1, T2, ..., Tn>
 
 Variants are stored in $n+1$ fields:
-  - Variant mother field with one column of type Switch; the dispatch tag points to the principal column of the active type
+  - Variant parent field with one column of type Switch; the dispatch tag points to the principal column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
 
 The dispatch tag ranges from 1 to $n$.
@@ -872,12 +872,14 @@ This follows common compiler implementation limits.
 
 #### std::pair<T1, T2>
 
-A pair is stored using an empty mother field with two subfields, one of type `T1` and one of type `T2`. `T1` and `T2` must be types with RNTuple I/O support.
+A pair is stored using an empty parent field with two subfields, one of type `T1` and one of type `T2`.
+`T1` and `T2` must be types with RNTuple I/O support.
 The child fileds are named `_0` and `_1`.
 
 #### std::tuple<T1, T2, ..., Tn>
 
-A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
+A tuple is stored using an empty parent field with $n$ subfields of type `T1`, `T2`, ..., `Tn`.
+All types must have RNTuple I/O support.
 The child fields are named `_0`, `_1`, ...
 
 #### std::bitset\<N\>
@@ -890,10 +892,10 @@ Within the repetition blocks, bits are stored in little-endian order, i.e. the l
 
 A unique pointer and an optional type have the same on disk representation.
 They are represented as a collection of `T`s of zero or one elements.
-A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+A collection parent field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
 Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
 
-By default, the mother field has a principal column of type `(Split)Index[64|32]`.
+By default, the parent field has a principal column of type `(Split)Index[64|32]`.
 This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
 In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
@@ -902,24 +904,25 @@ In this second case, a default-constructed `T` (or, if applicable, a `T` constru
 
 While STL (unordered) sets by definition are associative containers (i.e., elements are referenced by their keys, which in the case for sets are equal to the values), on disk they are represented as indexed collections.
 This means that they have the same on-disk representation as `std::vector<T>`, using two fields:
-  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
 #### std::map\<K, V\> and std::unordered_map\<K, V\>
 
-An (unordered) map is stored using a collection mother field, whose principal column is of type `(Split)Index[64|32]` and a child field of type `std::pair<K, V>` named `_0`.
+An (unordered) map is stored using a collection parent field,
+whose principal column is of type `(Split)Index[64|32]` and a child field of type `std::pair<K, V>` named `_0`.
 
 ### std::atomic\<T\>
 
 Atomic types are stored as a leaf field with a single subfield named `_0`.
-The mother field has no attached columns.
+The parent field has no attached columns.
 The subfield corresponds to the the inner type `T`.
 
 ### User-defined enums
 
 User-defined enums are stored as a leaf field with a single subfield named `_0`.
-The mother field has no attached columns.
+The parent field has no attached columns.
 The subfield corresponds to the integer type the underlies the enum.
 Unscoped and scoped enums are supported as long as the enum has a dictionary.
 
@@ -940,7 +943,7 @@ User defined C++ classes are supported with the following limitations
     i.e. a field of class `A` cannot store class `B` that derives from `A`
   - Virtual inheritance is unsupported
 
-User classes are stored as a record mother field with no attached columns.
+User classes are stored as a record parent field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
 The field name of member subfields is identical to the C++ field name.
 The field name of base class subfields are numbered and preceeded by a colon (`:`), i.e. `:_0`, `:_1`, ...
@@ -951,7 +954,7 @@ User classes that specify a collection proxy behave as collections of a given va
 Associative collections are not currently supported.
 
 The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
-  - Collection mother field whose principal column is of type `(Split)Index[64|32]`.
+  - Collection parent field whose principal column is of type `(Split)Index[64|32]`.
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
