@@ -2513,10 +2513,70 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
+namespace Internal {
+// Map standard integer types to fixed width equivalents.
 template <typename T>
-class RField<T, typename std::enable_if<std::is_integral_v<T>>::type> final : public RIntegralField<T> {
+struct RIntegralTypeMap {
+   using type = T;
+};
+
+// RField<char> has its own specialization, we should not need a specialization of RIntegralTypeMap.
+template <>
+struct RIntegralTypeMap<unsigned char> {
+   static_assert(sizeof(unsigned char) == sizeof(std::uint8_t));
+   using type = std::uint8_t;
+};
+template <>
+struct RIntegralTypeMap<short> {
+   static_assert(sizeof(short) == sizeof(std::int16_t));
+   using type = std::int16_t;
+};
+template <>
+struct RIntegralTypeMap<unsigned short> {
+   static_assert(sizeof(unsigned short) == sizeof(std::uint16_t));
+   using type = std::uint16_t;
+};
+template <>
+struct RIntegralTypeMap<int> {
+   static_assert(sizeof(int) == sizeof(std::int32_t));
+   using type = std::int32_t;
+};
+template <>
+struct RIntegralTypeMap<unsigned int> {
+   static_assert(sizeof(unsigned int) == sizeof(std::uint32_t));
+   using type = std::uint32_t;
+};
+template <>
+struct RIntegralTypeMap<long> {
+   static_assert(sizeof(long) == sizeof(std::int32_t) || sizeof(long) == sizeof(std::int64_t));
+   using type = std::conditional_t<sizeof(long) == sizeof(std::int32_t), std::int32_t, std::int64_t>;
+};
+template <>
+struct RIntegralTypeMap<unsigned long> {
+   static_assert(sizeof(unsigned long) == sizeof(std::uint32_t) || sizeof(unsigned long) == sizeof(std::uint64_t));
+   using type = std::conditional_t<sizeof(unsigned long) == sizeof(std::uint32_t), std::uint32_t, std::uint64_t>;
+};
+template <>
+struct RIntegralTypeMap<long long> {
+   static_assert(sizeof(long long) == sizeof(std::int64_t));
+   using type = std::int64_t;
+};
+template <>
+struct RIntegralTypeMap<unsigned long long> {
+   static_assert(sizeof(unsigned long long) == sizeof(std::uint64_t));
+   using type = std::uint64_t;
+};
+} // namespace Internal
+
+template <typename T>
+class RField<T, typename std::enable_if<std::is_integral_v<T>>::type> final
+   : public RIntegralField<typename Internal::RIntegralTypeMap<T>::type> {
+   using MappedType = typename Internal::RIntegralTypeMap<T>::type;
+   static_assert(sizeof(T) == sizeof(MappedType), "invalid size of mapped type");
+   static_assert(std::is_signed_v<T> == std::is_signed_v<MappedType>, "invalid signedness of mapped type");
+
 public:
-   RField(std::string_view name) : RIntegralField<T>(name) {}
+   RField(std::string_view name) : RIntegralField<MappedType>(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
