@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>RWebWindow latency test</title>
+    <!--jsroot_importmap-->
   </head>
 
   <body>
@@ -15,11 +16,11 @@
 
   <script type="module">
 
-    import { connectWebWindow } from './jsrootsys/modules/webwindow.mjs';
+    import { connectWebWindow } from 'jsroot/webwindow';
 
-    import { redraw, cleanup } from './jsrootsys/modules/draw.mjs';
+    import { redraw, cleanup } from 'jsroot/draw';
 
-    import { createHistogram } from './jsrootsys/modules/core.mjs';
+    import { createHistogram } from 'jsroot/core';
 
     class PingPongHandler {
 
@@ -167,7 +168,8 @@
           for (let n = 0; n < nclients; ++n) {
              let sub_handler = new PingPongHandler(false, `out${n}`);
              sub_handler.cnt = 10000*(n+1);
-             connectWebWindow({ receiver: sub_handler, socket_kind: this.handle.kind });
+             // here also important - '( {' intentional to avoid automatic args extension
+             connectWebWindow( { receiver: sub_handler, socket_kind: this.handle.kind } );
              this.clients.push(sub_handler);
           }
        }
