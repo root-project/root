@@ -249,6 +249,10 @@ public:
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       int fCompressionSettings = kUnknownCompressionSettings;
+      /// Suppressed columns have an empty page range and unknown compression settings.
+      /// Their element index range, however, is aligned with the corresponding column of the
+      /// primary column representation (see Section "Suppressed Columns" in the specification)
+      bool fIsSuppressed = false;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
@@ -256,7 +260,8 @@ public:
       bool operator==(const RColumnRange &other) const
       {
          return fPhysicalColumnId == other.fPhysicalColumnId && fFirstElementIndex == other.fFirstElementIndex &&
-                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings;
+                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings &&
+                fIsSuppressed == other.fIsSuppressed;
       }
 
       bool Contains(NTupleSize_t index) const
@@ -1189,6 +1194,16 @@ public:
 
    RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
                                    std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
+
+   /// Books the given column ID as being suppressed in this cluster. The correct first element index and number of
+   /// elements need to be set by CommitSuppressedColumnRanges() once all the calls to CommitColumnRange() and
+   /// MarkSuppressedColumnRange() took place.
+   RResult<void> MarkSuppressedColumnRange(DescriptorId_t physicalId);
+
+   /// Sets the first element index and number of elements for all the suppressed column ranges.
+   /// The information is taken from the corresponding columns from the primary representation.
+   /// Needs to be called when all the columns (suppressed and regular) where added.
+   RResult<void> CommitSuppressedColumnRanges(const RNTupleDescriptor &desc);
 
    /// Add column and page ranges for columns created during late model extension missing in this cluster.  The locator
    /// type for the synthesized page ranges is `kTypePageZero`.  All the page sources must be able to populate the
