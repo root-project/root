@@ -223,22 +223,31 @@ double RooHistPdf::evaluate() const
 }
 
 void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
-                                      RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize)
+                                      RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize,
+                                      bool cdfBoundaries)
 {
-   if (intOrder != 0) {
+   if (intOrder != 0 && !(!cdfBoundaries && !correctForBinSize && intOrder == 1 && obs.size() == 1)) {
       ooccoutE(klass, InputArguments) << "RooHistPdf::weight(" << klass->GetName()
                                       << ") ERROR: Code Squashing currently only supports non-interpolation cases."
                                       << std::endl;
       return;
    }
 
+   if (intOrder == 1) {
+      RooAbsBinning const &binning = *dataHist->getBinnings()[0];
+      std::string weightArr = dataHist->declWeightArrayForCodeSquash(ctx, correctForBinSize);
+      ctx.addResult(klass, ctx.buildCall("RooFit::Detail::MathFuncs::interpolate1d", binning.lowBound(),
+                                         binning.highBound(), *obs[0], binning.numBins(), weightArr));
+      return;
+   }
    std::string const &offset = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
-   ctx.addResult(klass, dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize, offset));
+   std::string weightArr = dataHist->declWeightArrayForCodeSquash(ctx, correctForBinSize);
+   ctx.addResult(klass, "*(" + weightArr + " + " + offset + ")");
 }
 
 void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _pdfObsList, !_unitNorm);
+   rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _pdfObsList, !_unitNorm, _cdfBoundaries);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

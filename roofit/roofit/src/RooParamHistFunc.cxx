@@ -86,7 +86,8 @@ void RooParamHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
       // get weight[idx] * binv[idx]. Here we get the bin volume for the first element as we assume the distribution to
       // be binned uniformly.
       double binV = _dh.binVolume(0);
-      result += " * " + _dh.declWeightArrayForCodeSquash(this, ctx, false, idx) + " * " + std::to_string(binV);
+      std::string weightArr = _dh.declWeightArrayForCodeSquash(ctx, false);
+      result += " * *(" + weightArr + " + " + idx + ") * " + std::to_string(binV);
    }
    ctx.addResult(this, result);
 }
