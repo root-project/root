@@ -59,43 +59,37 @@
 namespace {
 
 const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
-   {"Bool_t",   "bool"},
-   {"Float_t",  "float"},
+   {"Bool_t", "bool"},
+   {"Float_t", "float"},
    {"Double_t", "double"},
-   {"string",   "std::string"},
+   {"string", "std::string"},
 
-   {"byte",          "std::byte"},
-   {"Char_t",        "char"},
-   {"int8_t",        "std::int8_t"},
-   {"UChar_t",       "std::uint8_t"},
-   {"unsigned char", "std::uint8_t"},
-   {"uint8_t",       "std::uint8_t"},
+   {"byte", "std::byte"},
+   {"Char_t", "char"},
+   {"int8_t", "std::int8_t"},
+   {"UChar_t", "unsigned char"},
+   {"uint8_t", "std::uint8_t"},
 
-   {"Short_t",        "std::int16_t"},
-   {"int16_t",        "std::int16_t"},
-   {"short",          "std::int16_t"},
-   {"UShort_t",       "std::uint16_t"},
-   {"unsigned short", "std::uint16_t"},
-   {"uint16_t",       "std::uint16_t"},
+   {"Short_t", "short"},
+   {"int16_t", "std::int16_t"},
+   {"UShort_t", "unsigned short"},
+   {"uint16_t", "std::uint16_t"},
 
-   {"Int_t",        "std::int32_t"},
-   {"int32_t",      "std::int32_t"},
-   {"int",          "std::int32_t"},
-   {"UInt_t",       "std::uint32_t"},
-   {"unsigned",     "std::uint32_t"},
-   {"unsigned int", "std::uint32_t"},
-   {"uint32_t",     "std::uint32_t"},
+   {"Int_t", "int"},
+   {"int32_t", "std::int32_t"},
+   {"UInt_t", "unsigned int"},
+   {"unsigned", "unsigned int"},
+   {"uint32_t", "std::uint32_t"},
 
-   // FIXME: Long_t and ULong_t are 32-bit on 64-bit Windows.
-   {"Long_t",        "std::int64_t"},
-   {"Long64_t",      "std::int64_t"},
-   {"int64_t",       "std::int64_t"},
-   {"long",          "std::int64_t"},
-   {"ULong_t",       "std::uint64_t"},
-   {"ULong64_t",     "std::uint64_t"},
-   {"unsigned long", "std::uint64_t"},
-   {"uint64_t",      "std::uint64_t"}
-};
+   // Long_t and ULong_t follow the platform's size of long and unsigned long: They are 64 bit on 64-bit Linux and
+   // macOS, but 32 bit on 32-bit platforms and Windows (regardless of pointer size).
+   {"Long_t", "long"},
+   {"ULong_t", "unsigned long"},
+
+   {"Long64_t", "long long"},
+   {"int64_t", "std::int64_t"},
+   {"ULong64_t", "unsigned long long"},
+   {"uint64_t", "std::uint64_t"}};
 
 /// Used in CreateField() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
@@ -167,10 +161,9 @@ std::string GetCanonicalTypeName(const std::string &typeName)
 }
 
 /// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
-/// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile`
-/// qualifiers are removed, integral types such as `unsigned int` or `long` are translated to fixed-length integer types
-/// (e.g. `std::uint32_t`), and `std::` is added to fully qualify known types in the `std` namespace.  The same happens
-/// to `ROOT::RVec` which is normalized to `ROOT::VecOps::RVec`.
+/// `const vector<T>` to `std::vector<T>`.  Specifically, `const` / `volatile` qualifiers are removed and `std::` is
+/// added to fully qualify known types in the `std` namespace.  The same happens to `ROOT::RVec` which is normalized to
+/// `ROOT::VecOps::RVec`.
 std::string GetNormalizedTypeName(const std::string &typeName)
 {
    std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
@@ -656,6 +649,24 @@ ROOT::Experimental::RFieldBase::Create(const std::string &fieldName, const std::
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (canonicalType == "char") {
       result = std::make_unique<RField<char>>(fieldName);
+   } else if (canonicalType == "unsigned char") {
+      result = std::make_unique<RField<unsigned char>>(fieldName);
+   } else if (canonicalType == "short") {
+      result = std::make_unique<RField<short>>(fieldName);
+   } else if (canonicalType == "unsigned short") {
+      result = std::make_unique<RField<unsigned short>>(fieldName);
+   } else if (canonicalType == "int") {
+      result = std::make_unique<RField<int>>(fieldName);
+   } else if (canonicalType == "unsigned int") {
+      result = std::make_unique<RField<unsigned int>>(fieldName);
+   } else if (canonicalType == "long") {
+      result = std::make_unique<RField<long>>(fieldName);
+   } else if (canonicalType == "unsigned long") {
+      result = std::make_unique<RField<unsigned long>>(fieldName);
+   } else if (canonicalType == "long long") {
+      result = std::make_unique<RField<long long>>(fieldName);
+   } else if (canonicalType == "unsigned long long") {
+      result = std::make_unique<RField<unsigned long long>>(fieldName);
    } else if (canonicalType == "std::byte") {
       result = std::make_unique<RField<std::byte>>(fieldName);
    } else if (canonicalType == "std::int8_t") {
