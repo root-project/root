@@ -67,7 +67,6 @@ const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
    {"byte",          "std::byte"},
    {"Char_t",        "char"},
    {"int8_t",        "std::int8_t"},
-   {"signed char",   "char"},
    {"UChar_t",       "std::uint8_t"},
    {"unsigned char", "std::uint8_t"},
    {"uint8_t",       "std::uint8_t"},
