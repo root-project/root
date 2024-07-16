@@ -91,18 +91,17 @@ private:
    ///
    ///    [new0, new1, new2, old0, old1, old2]
    ///
-   /// Returns the number of new columns.
-   size_t AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
-                              const RFieldDescriptor &fieldDesc, const std::string &prefix = "") const;
+   void AddColumnsFromField(std::vector<RColumnInfo> &columns, const RNTupleDescriptor &desc,
+                            const RFieldDescriptor &fieldDesc, size_t &nNewCols, const std::string &prefix = "") const;
 
-   /// Recursively collect all the columns for all the fields rooted at field zero
+   /// Recursively collect all the columns for all the fields rooted at field zero.
    /// Returns the number of new columns added.
    size_t CollectColumns(const RNTupleDescriptor &descriptor, RNTupleMergingMode mergingMode,
                          std::vector<RColumnInfo> &columns);
 
    /// Adds the new columns `newCols` to the destination's model `model`.
-   void ExtendOutputModel(RNTupleModel &model, std::span<RColumnInfo> newCols, int nDstEntries,
-                          const RNTupleDescriptor &descriptor, RPageSink &destination) const;
+   void ExtendOutputModel(std::span<RColumnInfo> newCols, int nDstEntries, const RNTupleDescriptor &descriptor,
+                          RNTupleModel &model, RPageSink &destination) const;
 
 public:
    /// Merge a given set of sources into the destination

@@ -32,6 +32,7 @@
 #include <TKey.h>
 
 #include <deque>
+#include <algorithm>
 
 Long64_t ROOT::Experimental::RNTuple::Merge(TCollection *inputs, TFileMergeInfo *mergeInfo)
 // IMPORTANT: this function must not throw, as it is used in exception-unsafe code (TFileMerger).
@@ -148,7 +149,8 @@ size_t ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTuple
 {
    // Here we recursively find the columns and fill the RColumnInfo vector
    columns.clear();
-   const auto nNewCols = AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero());
+   size_t nNewCols = 0;
+   AddColumnsFromField(columns, descriptor, descriptor.GetFieldZero(), nNewCols);
 
    // Then we either build the internal map (first source) or validate the columns against it (remaning sources)
    // In either case, we also assign the output ids here
@@ -183,12 +185,12 @@ size_t ROOT::Experimental::Internal::RNTupleMerger::CollectColumns(const RNTuple
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-size_t ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vector<RColumnInfo> &columns,
+void ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vector<RColumnInfo> &columns,
                                                                         const RNTupleDescriptor &desc,
                                                                         const RFieldDescriptor &fieldDesc,
+                                                                        size_t &nNewCols,
                                                                         const std::string &prefix) const
 {
-   size_t nNewCols = 0;
    for (const auto &field : desc.GetFieldIterable(fieldDesc)) {
       std::string name = prefix + field.GetFieldName() + ".";
       const std::string typeAndVersion = field.GetTypeName() + "." + std::to_string(field.GetTypeVersion());
@@ -208,16 +210,13 @@ size_t ROOT::Experimental::Internal::RNTupleMerger::AddColumnsFromField(std::vec
             ++nNewCols;
          }
       }
-      nNewCols += AddColumnsFromField(columns, desc, field, name);
+      AddColumnsFromField(columns, desc, field, nNewCols, name);
    }
-
-   return nNewCols;
 }
 
-void ROOT::Experimental::Internal::RNTupleMerger::ExtendOutputModel(RNTupleModel &model, std::span<RColumnInfo> newCols,
-                                                                    int nDstEntries,
+void ROOT::Experimental::Internal::RNTupleMerger::ExtendOutputModel(std::span<RColumnInfo> newCols, int nDstEntries,
                                                                     const RNTupleDescriptor &descriptor,
-                                                                    RPageSink &destination) const
+                                                                    RNTupleModel &model, RPageSink &destination) const
 {
    assert(newCols.size() > 0); // no point in calling this with 0 new cols
 
@@ -240,8 +239,10 @@ void ROOT::Experimental::Internal::RNTupleMerger::ExtendOutputModel(RNTupleModel
       const auto &fieldId = columnDesc.GetFieldId();
       const auto &fieldDesc = descriptor.GetFieldDescriptor(fieldId);
       auto field = fieldDesc.CreateField(descriptor);
-      // TODO(gparolini): handle projected fields
-      changeset.fAddedFields.emplace_back(field.get());
+      if (fieldDesc.IsProjectedField())
+         changeset.fAddedProjectedFields.emplace_back(field.get());
+      else
+         changeset.fAddedFields.emplace_back(field.get());
       changeset.fModel.AddField(std::move(field));
    }
    model.Freeze();
@@ -285,7 +286,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
       // of the destination model.
       if (options.fMergingMode == RNTupleMergingMode::kUnion && model && nNewCols > 0) {
          std::span<RColumnInfo> newCols{srcColumns.data(), nNewCols};
-         ExtendOutputModel(*model, srcColumns, nDstEntries, descriptor.GetRef(), destination);
+         ExtendOutputModel(srcColumns, nDstEntries, descriptor.GetRef(), *model, destination);
       }
 
       columnSet.clear();
@@ -299,14 +300,12 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          destination.Init(*model.get());
       }
 
-      for (const auto &extraTypeInfoDesc : descriptor->GetExtraTypeInfoIterable()) {
+      for (const auto &extraTypeInfoDesc : descriptor->GetExtraTypeInfoIterable())
          destination.UpdateExtraTypeInfo(extraTypeInfoDesc);
-      }
 
       // Make sure the source contains events to be merged
-      if (source->GetNEntries() == 0) {
+      if (source->GetNEntries() == 0)
          continue;
-      }
 
       // Now loop over all clusters in this file
       // descriptor->GetClusterIterable() doesn't guarantee any specific order...
@@ -325,18 +324,16 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
          std::vector<std::unique_ptr<unsigned char[]>> sealedPageBuffers;
 
          for (const auto &column : srcColumns) {
-
             assert(column.fColumnOutputId != (DescriptorId_t)-1);
 
             const auto columnId = column.fColumnInputId;
-            const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
 
             // See if this cluster contains this column
             // if not, there is nothing to read/do..
-            if (!clusterDesc.ContainsColumn(columnId)) {
+            if (!clusterDesc.ContainsColumn(columnId))
                continue;
-            }
 
+            const auto &columnDesc = descriptor->GetColumnDescriptor(columnId);
             const auto colElement = RColumnElementBase::Generate(columnDesc.GetType());
 
             // Now get the pages for this column in this cluster
@@ -356,9 +353,8 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             if (colRangeCompressionSettings != 0)
                sealedPageBuffers.resize(sealedPageBuffers.size() + pages.fPageInfos.size());
 
-            std::uint64_t pageIdx = 0;
-
             // Loop over the pages
+            std::uint64_t pageIdx = 0;
             for (const auto &pageInfo : pages.fPageInfos) {
                assert(pageIdx < sealedPages.size());
                assert(sealedPageBuffers.size() == 0 || pageIdx < sealedPageBuffers.size());
@@ -372,6 +368,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
                sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
                sealedPage.SetBuffer(onDiskPage->GetAddress());
+               // TODO(gparolini): more graceful error handling (skip the page?)
                sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
                R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
@@ -428,7 +425,7 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                      taskGroup->Run(taskFunc);
                   else
                      taskFunc();
-               }
+               } // end change compression if needed
 
                ++pageIdx;
 
@@ -454,11 +451,16 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
       } // end of loop over clusters
 
-      // Commit all clusters for this input
-      destination.CommitClusterGroup();
-
+      // TODO(gparolini): when we get serious about huge file support (>~ 100GB) we might want to check here
+      // the size of the running page list and commit a cluster group when it exceeds some threshold,
+      // which would prevent the page list from getting too large.
+      // However, as of today, we aren't really handling such huge files, and even relatively big ones
+      // such as the CMS dataset have a page list size of about only 2 MB.
+      // So currently we simply merge all cluster groups into one.
+      
    } // end of loop over sources
 
    // Commit the output
+   destination.CommitClusterGroup();
    destination.CommitDataset();
 }
