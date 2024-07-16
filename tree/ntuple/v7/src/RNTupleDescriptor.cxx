@@ -159,6 +159,7 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const
                                                                            std::size_t pageSize)
 {
    R__ASSERT(fPhysicalColumnId == columnRange.fPhysicalColumnId);
+   R__ASSERT(!columnRange.fIsSuppressed);
 
    const auto nElements = std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
                                           [](std::size_t n, const auto &PI) { return n + PI.fNElements; });
@@ -572,6 +573,27 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescript
    }
    fCluster.fPageRanges[physicalId] = pageRange.Clone();
    fCluster.fColumnRanges[physicalId] = columnRange;
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRange(DescriptorId_t physicalId)
+{
+   if (fCluster.fPageRanges.count(physicalId) > 0)
+      return R__FAIL("column ID conflict");
+
+   RClusterDescriptor::RColumnRange columnRange;
+   columnRange.fPhysicalColumnId = physicalId;
+   columnRange.fCompressionSettings = kUnknownCompressionSettings;
+   columnRange.fIsSuppressed = true;
+   fCluster.fColumnRanges[physicalId] = columnRange;
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RNTupleDescriptor &)
+{
+   // TODO(jblomer): implement
    return RResult<void>::Success();
 }
 
