@@ -61,16 +61,18 @@ public:
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitByteField(const RField<std::byte> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
-   virtual void VisitInt8Field(const RField<std::int8_t> &field) { VisitField(field); }
-   virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
-   virtual void VisitInt32Field(const RField<std::int32_t> &field) { VisitField(field); }
-   virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
+   // We have to accept RIntegralField here because there can be multiple basic types that map to the same fixed-width
+   // integer type; for example on 64-bit Unix systems, both long and long long map to std::int64_t.
+   virtual void VisitInt8Field(const RIntegralField<std::int8_t> &field) { VisitField(field); }
+   virtual void VisitInt16Field(const RIntegralField<std::int16_t> &field) { VisitField(field); }
+   virtual void VisitInt32Field(const RIntegralField<std::int32_t> &field) { VisitField(field); }
+   virtual void VisitInt64Field(const RIntegralField<std::int64_t> &field) { VisitField(field); }
    virtual void VisitNullableField(const RNullableField &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
-   virtual void VisitUInt16Field(const RField<std::uint16_t> &field) { VisitField(field); }
-   virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
-   virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }
-   virtual void VisitUInt8Field(const RField<std::uint8_t> &field) { VisitField(field); }
+   virtual void VisitUInt8Field(const RIntegralField<std::uint8_t> &field) { VisitField(field); }
+   virtual void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) { VisitField(field); }
+   virtual void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) { VisitField(field); }
+   virtual void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) { VisitField(field); }
    virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const RRVecField &field) { VisitField(field); }
@@ -207,15 +209,15 @@ public:
    void VisitFloatField(const RField<float> &field) final;
    void VisitByteField(const RField<std::byte> &field) final;
    void VisitCharField(const RField<char> &field) final;
-   void VisitInt8Field(const RField<std::int8_t> &field) final;
-   void VisitInt16Field(const RField<std::int16_t> &field) final;
-   void VisitInt32Field(const RField<std::int32_t> &field) final;
-   void VisitInt64Field(const RField<std::int64_t> &field) final;
+   void VisitInt8Field(const RIntegralField<std::int8_t> &field) final;
+   void VisitInt16Field(const RIntegralField<std::int16_t> &field) final;
+   void VisitInt32Field(const RIntegralField<std::int32_t> &field) final;
+   void VisitInt64Field(const RIntegralField<std::int64_t> &field) final;
    void VisitStringField(const RField<std::string> &field) final;
-   void VisitUInt8Field(const RField<std::uint8_t> &field) final;
-   void VisitUInt16Field(const RField<std::uint16_t> &field) final;
-   void VisitUInt32Field(const RField<std::uint32_t> &field) final;
-   void VisitUInt64Field(const RField<std::uint64_t> &field) final;
+   void VisitUInt8Field(const RIntegralField<std::uint8_t> &field) final;
+   void VisitUInt16Field(const RIntegralField<std::uint16_t> &field) final;
+   void VisitUInt32Field(const RIntegralField<std::uint32_t> &field) final;
+   void VisitUInt64Field(const RIntegralField<std::uint64_t> &field) final;
 
    void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
