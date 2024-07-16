@@ -50,7 +50,6 @@ namespace Internal {
 class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
-class RNTupleDecompressor;
 struct RNTupleModelChangeset;
 class RPagePool;
 
@@ -573,10 +572,6 @@ protected:
    /// The active columns are implicitly defined by the model fields or views
    RActivePhysicalColumns fActivePhysicalColumns;
 
-   /// Helper to unzip pages and header/footer; comprises a 16MB (`kMAXZIPBUF`) unzip buffer.
-   /// Not all page sources need a decompressor (e.g. virtual ones for chains and friends don't), thus we
-   /// leave it up to the derived class whether or not the decompressor gets constructed.
-   std::unique_ptr<RNTupleDecompressor> fDecompressor;
    /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
 
@@ -670,8 +665,8 @@ public:
    /// Helper for unstreaming a page. This is commonly used in derived, concrete page sources.  The implementation
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
-   /// Usage of this method requires construction of fDecompressor. Memory is allocated via
-   /// `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned pages.
+   /// Memory is allocated via `RPageAllocatorHeap`; use `RPageAllocatorHeap::DeletePage()` to deallocate returned
+   /// pages.
    RResult<RPage>
    UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 

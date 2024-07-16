@@ -276,7 +276,6 @@ ROOT::Experimental::Internal::RPageSourceFile::RPageSourceFile(std::string_view 
    : RPageSource(ntupleName, options),
      fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
-   fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceFile");
 }
 
@@ -379,10 +378,12 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
 {
    auto unzipBuf = reinterpret_cast<unsigned char *>(fStructureBuffer.fPtrFooter) + fAnchor->GetNBytesFooter();
 
-   fDecompressor->Unzip(fStructureBuffer.fPtrHeader, fAnchor->GetNBytesHeader(), fAnchor->GetLenHeader(), unzipBuf);
+   RNTupleDecompressor::Unzip(fStructureBuffer.fPtrHeader, fAnchor->GetNBytesHeader(), fAnchor->GetLenHeader(),
+                              unzipBuf);
    RNTupleSerializer::DeserializeHeader(unzipBuf, fAnchor->GetLenHeader(), fDescriptorBuilder);
 
-   fDecompressor->Unzip(fStructureBuffer.fPtrFooter, fAnchor->GetNBytesFooter(), fAnchor->GetLenFooter(), unzipBuf);
+   RNTupleDecompressor::Unzip(fStructureBuffer.fPtrFooter, fAnchor->GetNBytesFooter(), fAnchor->GetLenFooter(),
+                              unzipBuf);
    RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor->GetLenFooter(), fDescriptorBuilder);
 
    auto desc = fDescriptorBuilder.MoveDescriptor();
@@ -394,8 +395,8 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceF
       auto *zipBuffer = buffer.data() + cgDesc.GetPageListLength();
       fReader.ReadBuffer(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage,
                          cgDesc.GetPageListLocator().GetPosition<std::uint64_t>());
-      fDecompressor->Unzip(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
-                           buffer.data());
+      RNTupleDecompressor::Unzip(zipBuffer, cgDesc.GetPageListLocator().fBytesOnStorage, cgDesc.GetPageListLength(),
+                                 buffer.data());
 
       RNTupleSerializer::DeserializePageList(buffer.data(), cgDesc.GetPageListLength(), cgDesc.GetId(), desc);
    }
