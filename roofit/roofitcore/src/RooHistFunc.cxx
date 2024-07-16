@@ -192,7 +192,7 @@ double RooHistFunc::evaluate() const
 
 void RooHistFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false);
+   RooHistPdf::rooHistTranslateImpl(this, ctx, _intOrder, _dataHist, _depList, false, _cdfBoundaries);
 }
 
 void RooHistFunc::doEval(RooFit::EvalContext & ctx) const

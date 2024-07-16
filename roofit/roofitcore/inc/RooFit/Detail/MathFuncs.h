@@ -175,6 +175,26 @@ inline unsigned int getUniformBinning(double low, double high, double val, unsig
    return val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
 }
 
+inline double interpolate1d(double low, double high, double val, unsigned int numBins, double const* vals)
+{
+   double binWidth = (high - low) / numBins;
+   int idx = val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
+
+   // interpolation
+   double central = low + (idx + 0.5) * binWidth;
+   if (val > low + 0.5 * binWidth && val < high - 0.5 * binWidth) {
+      double slope;
+      if (val < central) {
+          slope = vals[idx] - vals[idx - 1];
+      } else {
+          slope = vals[idx + 1] - vals[idx];
+      }
+      return vals[idx] + slope * (val - central) / binWidth;
+   }
+
+   return vals[idx];
+}
+
 inline double poisson(double x, double par)
 {
    if (par < 0)
