@@ -67,10 +67,7 @@ public:
    static constexpr std::uint16_t kFlagRepetitiveField = 0x01;
    static constexpr std::uint16_t kFlagProjectedField = 0x02;
 
-   static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
-   static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
-   static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
-   static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
+   static constexpr std::uint32_t kFlagDeferredColumn = 0x08;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 
