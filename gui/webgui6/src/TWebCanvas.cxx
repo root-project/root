@@ -133,6 +133,9 @@ struct WebFont_t {
 
 static std::vector<WebFont_t> gWebFonts;
 
+std::string TWebCanvas::gCustomScripts = {};
+std::vector<std::string> TWebCanvas::gCustomClasses = {};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
@@ -317,13 +320,15 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Configures custom script for canvas.
-/// If started from "load:" or "assert:" prefix will be loaded with JSROOT.AssertPrerequisites function
-/// Script should implement custom user classes, which transferred as is to client
-/// In the script draw handler for appropriate classes would be assigned
+/// If started with "modules:" prefix, module(s) will be imported with `loadModules` function of JSROOT.
+/// If custom path was configured in RWebWindowsManager::AddServerLocation, it can be used in module paths.
+/// If started with "load:" prefix, code will be loaded with `loadScript` function of JSROOT (old, deprecated way)
+/// Script also can be a plain JavaScript code which imports JSROOT and provides draw function for custom classes
+/// See tutorials/webgui/custom_class demonstrating such example
 
 void TWebCanvas::SetCustomScripts(const std::string &src)
 {
-   fCustomScripts = src;
+   gCustomScripts = src;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,17 +337,17 @@ void TWebCanvas::SetCustomScripts(const std::string &src)
 void TWebCanvas::AddCustomClass(const std::string &clname, bool with_derived)
 {
    if (with_derived)
-      fCustomClasses.emplace_back("+"s + clname);
+      gCustomClasses.emplace_back("+"s + clname);
    else
-      fCustomClasses.emplace_back(clname);
+      gCustomClasses.emplace_back(clname);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Checks if class belongs to custom
 
-bool TWebCanvas::IsCustomClass(const TClass *cl) const
+bool TWebCanvas::IsCustomClass(const TClass *cl)
 {
-   for (auto &name : fCustomClasses) {
+   for (auto &name : gCustomClasses) {
       if (name[0] == '+') {
          if (cl->InheritsFrom(name.substr(1).c_str()))
             return true;
@@ -1083,7 +1088,7 @@ Bool_t TWebCanvas::CheckDataToSend(unsigned connid)
 
             // scripts send only when canvas drawn for the first time
             if (!conn.fSendVersion)
-               holder.SetScripts(fCustomScripts);
+               holder.SetScripts(gCustomScripts);
 
             holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
 
