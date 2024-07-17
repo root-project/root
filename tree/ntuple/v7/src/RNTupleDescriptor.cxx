@@ -59,6 +59,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    clone.fParentId = fParentId;
    clone.fProjectionSourceId = fProjectionSourceId;
    clone.fLinkIds = fLinkIds;
+   clone.fColumnCardinality = fColumnCardinality;
    clone.fLogicalColumnIds = fLogicalColumnIds;
    clone.fTypeChecksum = fTypeChecksum;
    return clone;
@@ -914,6 +915,8 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AttachColumn(DescriptorI
       logicalColumnIds.emplace_back(kInvalidDescriptorId);
    }
    logicalColumnIds.at(columnDesc.GetIndex()) = columnDesc.GetLogicalId();
+   itrFieldDesc->second.fColumnCardinality =
+      std::max(itrFieldDesc->second.fColumnCardinality, columnDesc.GetIndex() + 1);
 
    return RResult<void>::Success();
 }
