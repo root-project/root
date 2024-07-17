@@ -31,13 +31,8 @@ public:
   RooHypatia2(const RooHypatia2& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooHypatia2(*this,newname); }
 
-  /* Analytical integrals need testing.
-
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
-
-  */
-
 
 private:
   RooRealProxy _x;
