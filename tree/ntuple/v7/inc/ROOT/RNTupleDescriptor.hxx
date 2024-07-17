@@ -94,7 +94,11 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
-   /// The ordered list of columns attached to this field
+   /// The number of columns in the column representations of the field. The column cardinality helps to navigate the
+   /// list of logical column ids. For example, the second column of the third column representation is
+   /// fLogicalColumnIds[2 * fColumnCardinality + 1]
+   std::uint32_t fColumnCardinality = 0;
+   /// The ordered list of columns attached to this field: first by representation index then by column index.
    std::vector<DescriptorId_t> fLogicalColumnIds;
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
@@ -127,6 +131,7 @@ public:
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
+   std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
