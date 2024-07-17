@@ -14,6 +14,8 @@
 #include "TWebPadPainter.h"
 #include "TWebPS.h"
 #include "TWebMenuItem.h"
+#include "ROOT/RWebWindowsManager.hxx"
+#include "THttpServer.h"
 
 #include "TSystem.h"
 #include "TStyle.h"
@@ -324,12 +326,108 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
 /// If custom path was configured in RWebWindowsManager::AddServerLocation, it can be used in module paths.
 /// If started with "load:" prefix, code will be loaded with `loadScript` function of JSROOT (old, deprecated way)
 /// Script also can be a plain JavaScript code which imports JSROOT and provides draw function for custom classes
-/// See tutorials/webgui/custom_class demonstrating such example
+/// See tutorials/webgui/custom/custom.mjs demonstrating such example
 
 void TWebCanvas::SetCustomScripts(const std::string &src)
 {
    gCustomScripts = src;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns configured custom script
+
+const std::string &TWebCanvas::GetCustomScripts()
+{
+   return gCustomScripts;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////
+/// For batch mode special handling of scripts are required
+/// Headless browser not able to load modules from the file system
+/// Therefore custom web-canvas modules and scripts has to be loaded in advance and processed
+
+std::string TWebCanvas::ProcessCustomScripts(bool batch)
+{
+   if (!batch || gCustomScripts.empty() || (gCustomScripts.find("modules:") != 0))
+      return gCustomScripts;
+
+   auto loc = ROOT::RWebWindowsManager::GetServerLocations();
+
+   std::string content;
+
+   std::string modules_names = gCustomScripts.substr(8);
+
+   std::map<std::string, bool> mapped_funcs;
+
+   while (!modules_names.empty()) {
+      std::string modname;
+      auto p = modules_names.find(";");
+      if (p == std::string::npos) {
+         modname = modules_names;
+         modules_names.clear();
+      } else {
+         modname = modules_names.substr(0, p);
+         modules_names = modules_names.substr(p+1);
+      }
+
+      p = modname.find("/");
+      if ((p == std::string::npos) || modname.empty())
+         continue;
+
+      std::string pathname = modname.substr(0, p+1);
+      std::string filename = modname.substr(p+1);
+
+      auto fpath = loc[pathname];
+
+      if (fpath.empty())
+         continue;
+
+      auto cont = THttpServer::ReadFileContent(fpath + filename);
+      if (cont.empty())
+         continue;
+
+      // check that special mark is in the script
+      auto pmark = cont.find("$$jsroot_batch_conform$$");
+      if (pmark == std::string::npos)
+         continue;
+
+      // process line like this
+      // import { ObjectPainter, addMoveHandler, addDrawFunc, ensureTCanvas } from 'jsroot';
+
+      static const std::string str1 = "import {";
+      static const std::string str2 = "} from 'jsroot';";
+
+      auto p1 = cont.find(str1);
+      auto p2 = cont.find(str2, p1);
+      if ((p1 == std::string::npos) || (p2 == std::string::npos) || (p2 > pmark))
+         continue;
+
+      TString globs;
+
+      TString funcs = cont.substr(p1 + 8, p2 - p1 - 8).c_str();
+      auto arr = funcs.Tokenize(",");
+
+      TIter next(arr);
+      while (auto obj = next()) {
+         TString name = obj->GetName();
+         name = name.Strip(TString::kBoth);
+         if (!mapped_funcs[name.Data()]) {
+            globs.Append(TString::Format("globalThis.%s = JSROOT.%s;\n", name.Data(), name.Data()));
+            mapped_funcs[name.Data()] = true;
+         }
+      }
+      delete arr;
+
+      cont.erase(p1, p2 + str2.length() - p1);
+
+      cont.insert(p1, globs.Data());
+
+      content.append(cont);
+   }
+
+   return content;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 /// Assign custom class
@@ -1088,7 +1186,7 @@ Bool_t TWebCanvas::CheckDataToSend(unsigned connid)
 
             // scripts send only when canvas drawn for the first time
             if (!conn.fSendVersion)
-               holder.SetScripts(gCustomScripts);
+               holder.SetScripts(ProcessCustomScripts(false));
 
             holder.SetHighlightConnect(Canvas()->HasConnection("Highlighted(TVirtualPad*,TObject*,Int_t,Int_t)"));
 
@@ -2164,6 +2262,9 @@ void TWebCanvas::ForceUpdate()
 
    if (!fWindow) {
       TCanvasWebSnapshot holder(IsReadOnly(), false, true); // readonly, set ids, batchmode
+
+      holder.SetScripts(ProcessCustomScripts(true));
+
       CreatePadSnapshot(holder, Canvas(), 0, nullptr);
    } else {
       CheckDataToSend();
@@ -2253,6 +2354,8 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression, Bool_t 
 
       TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
+      holder.SetScripts(ProcessCustomScripts(batchmode));
+
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
       });
@@ -2282,6 +2385,8 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, c->GetWw(), c->GetWh(), kTRUE);
 
       TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
+
+      holder.SetScripts(ProcessCustomScripts(batchmode));
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
