@@ -1338,7 +1338,8 @@ private:
 public:
    /// Checks whether invariants hold:
    /// * NTuple name is valid
-   /// * Fields have valid parent and child ids
+   /// * Fields have valid parents
+   /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();

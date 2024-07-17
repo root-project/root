@@ -210,6 +210,7 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
 TEST(RFieldDescriptorBuilder, HeaderExtension)
 {
    RNTupleDescriptorBuilder descBuilder;
+   descBuilder.SetNTuple("ntpl", "");
    descBuilder.AddField(
       RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
    descBuilder.AddField(RFieldDescriptorBuilder()

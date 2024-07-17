@@ -51,6 +51,7 @@ public:
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions())
    {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetNTuple("ntpl", "");
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
