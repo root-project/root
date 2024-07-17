@@ -1150,8 +1150,12 @@ try_again:
    }
 
    // delete temporary HTML file
-   if (html_name.Length() > 0)
-      gSystem->Unlink(html_name.Data());
+   if (html_name.Length() > 0) {
+      if (gEnv->GetValue("WebGui.PreserveBatchFiles", -1) > 0)
+         ::Info("ProduceImages", "Preserve batch file %s", html_name.Data());
+      else
+         gSystem->Unlink(html_name.Data());
+   }
 
    if (!wait_file_name.IsNull() && gSystem->AccessPathName(wait_file_name.Data())) {
       R__LOG_ERROR(WebGUILog()) << "Fail to produce image " << fname;
@@ -1185,7 +1189,7 @@ try_again:
             std::ofstream ofs(fn);
             if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
                ofs << dumpcont.substr(p1, p2-p1+6);
-               ::Info("ProduceImage", "SVG file %s size %d bytes has been created", fn.c_str(), (int) (p2-p1+6));
+               ::Info("ProduceImages", "SVG file %s size %d bytes has been created", fn.c_str(), (int) (p2-p1+6));
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
                ofs << "Failure!!!\n" << dumpcont;
@@ -1210,7 +1214,7 @@ try_again:
                std::ofstream ofs(fn, std::ios::binary);
                ofs.write(binary.Data(), binary.Length());
 
-               ::Info("ProduceImage", "Image file %s size %d bytes has been created", fn.c_str(), (int) binary.Length());
+               ::Info("ProduceImages", "Image file %s size %d bytes has been created", fn.c_str(), (int) binary.Length());
             } else {
                R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
 
@@ -1219,7 +1223,7 @@ try_again:
          }
       }
    } else if (EndsWith(".pdf")) {
-      ::Info("ProduceImage", "PDF file %s with %d pages has been created", fname.c_str(), (int) jsons.size());
+      ::Info("ProduceImages", "PDF file %s with %d pages has been created", fname.c_str(), (int) jsons.size());
    }
 
    if (fnames.size() == 1)
