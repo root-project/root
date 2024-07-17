@@ -112,7 +112,7 @@ class FontHandler {
    /** @summary Set text angle (optional) */
    setAngle(angle) { this.angle = angle; }
 
-   /** @summary Allign angle to step raster, add optional offset */
+   /** @summary Align angle to step raster, add optional offset */
    roundAngle(step, offset) {
       this.angle = parseInt(this.angle || 0);
       if (!Number.isInteger(this.angle)) this.angle = 0;

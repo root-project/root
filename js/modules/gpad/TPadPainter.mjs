@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, browser, internals, BIT,
-         create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, postponePromise,
+         create, toJSON, isBatchMode, loadModules, loadScript, injectCode, isPromise, getPromise, postponePromise,
          isObject, isFunc, isStr, clTObjArray, clTPaveText, clTColor, clTPad, clTFrame, clTStyle, clTLegend,
          clTHStack, clTMultiGraph, clTLegendEntry, nsSVG, kTitle, clTList } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb } from '../d3.mjs';
@@ -338,7 +338,7 @@ class TPadPainter extends ObjectPainter {
       return false;
    }
 
-   /** @summary Returns frame coordiantes - also when frame is not drawn */
+   /** @summary Returns frame coordinates - also when frame is not drawn */
    getFrameRect() {
       const fp = this.getFramePainter();
       if (fp) return fp.getFrameRect();
@@ -443,7 +443,7 @@ class TPadPainter extends ObjectPainter {
          }
       });
 
-      // when main painter disappers because of special cleanup - also reset zooming
+      // when main painter disappears because of special cleanup - also reset zooming
       if (clean_only_secondary && get_main && !this.getMainPainter())
          this.getFramePainter()?.resetZoom();
 
@@ -489,7 +489,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary Call function for each painter in pad
      * @param {function} userfunc - function to call
-     * @param {string} kind - 'all' for all objects (default), 'pads' only pads and subpads, 'objects' only for object in current pad
+     * @param {string} kind - 'all' for all objects (default), 'pads' only pads and sub-pads, 'objects' only for object in current pad
      * @private */
    forEachPainterInPad(userfunc, kind) {
       if (!kind) kind = 'all';
@@ -605,7 +605,7 @@ class TPadPainter extends ObjectPainter {
 
       if (check_resize > 0) {
          if (this._fixed_size)
-            return check_resize > 1; // flag used to force re-drawing of all subpads
+            return check_resize > 1; // flag used to force re-drawing of all sub-pads
 
          svg = this.getCanvSvg();
          if (svg.empty())
@@ -1154,7 +1154,7 @@ class TPadPainter extends ObjectPainter {
          if (this.iscan)
             this._start_tm = new Date().getTime();
 
-         // set number of primitves
+         // set number of primitives
          this._num_primitives = this.pad?.fPrimitives?.arr?.length || 0;
 
          // sync to prevent immediate pad redraw during normal drawing sequence
@@ -1186,7 +1186,7 @@ class TPadPainter extends ObjectPainter {
       });
    }
 
-   /** @summary Divide pad on subpads
+   /** @summary Divide pad on sub-pads
      * @return {Promise} when finished
      * @private */
    async divide(nx, ny, use_existing) {
@@ -1268,22 +1268,31 @@ class TPadPainter extends ObjectPainter {
       menu.addchk(this.isTooltipAllowed(), 'Show tooltips', () => this.setTooltipAllowed('toggle'));
 
       if (!this._websocket) {
-         function SetPadField(arg) {
-            this.pad[arg.slice(1)] = parseInt(arg[0]);
+         const set_pad_field = arg => {
+            this.pad[arg.slice(1)] = Number.parseInt(arg[0]);
             this.interactiveRedraw('pad', arg.slice(1));
-         }
+         }, do_divide = arg => {
+            if (!arg || !isStr(arg))
+               return;
+            const arr = arg.split('x');
+            this.cleanPrimitives(true);
+            if (arr.length === 1)
+               this.divide(Number.parseInt(arr[0]));
+            if (arr.length === 2)
+               this.divide(Number.parseInt(arr[0]), Number.parseInt(arr[1]));
+         };
 
-         menu.addchk(this.pad?.fGridx, 'Grid x', (this.pad?.fGridx ? '0' : '1') + 'fGridx', SetPadField);
-         menu.addchk(this.pad?.fGridy, 'Grid y', (this.pad?.fGridy ? '0' : '1') + 'fGridy', SetPadField);
+         menu.addchk(this.pad?.fGridx, 'Grid x', (this.pad?.fGridx ? '0' : '1') + 'fGridx', set_pad_field);
+         menu.addchk(this.pad?.fGridy, 'Grid y', (this.pad?.fGridy ? '0' : '1') + 'fGridy', set_pad_field);
          menu.sub('Ticks x');
-         menu.addchk(this.pad?.fTickx === 0, 'normal', '0fTickx', SetPadField);
-         menu.addchk(this.pad?.fTickx === 1, 'ticks on both sides', '1fTickx', SetPadField);
-         menu.addchk(this.pad?.fTickx === 2, 'labels on both sides', '2fTickx', SetPadField);
+         menu.addchk(this.pad?.fTickx === 0, 'normal', '0fTickx', set_pad_field);
+         menu.addchk(this.pad?.fTickx === 1, 'ticks on both sides', '1fTickx', set_pad_field);
+         menu.addchk(this.pad?.fTickx === 2, 'labels on both sides', '2fTickx', set_pad_field);
          menu.endsub();
          menu.sub('Ticks y');
-         menu.addchk(this.pad?.fTicky === 0, 'normal', '0fTicky', SetPadField);
-         menu.addchk(this.pad?.fTicky === 1, 'ticks on both sides', '1fTicky', SetPadField);
-         menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', SetPadField);
+         menu.addchk(this.pad?.fTicky === 0, 'normal', '0fTicky', set_pad_field);
+         menu.addchk(this.pad?.fTicky === 1, 'ticks on both sides', '1fTicky', set_pad_field);
+         menu.addchk(this.pad?.fTicky === 2, 'labels on both sides', '2fTicky', set_pad_field);
          menu.endsub();
          menu.addchk(this.pad?.fEditable, 'Editable', flag => { this.pad.fEditable = flag; this.interactiveRedraw('pad'); });
          if (this.iscan)
@@ -1291,6 +1300,10 @@ class TPadPainter extends ObjectPainter {
 
          if (isFunc(this.drawObject))
             menu.add('Build legend', () => this.buildLegend());
+
+         menu.sub('Divide', () => menu.input('Input divide arg', '2x2').then(do_divide), 'Divide on sub-pads');
+         ['1x2', '2x1', '2x2', '2x3', '3x2', '3x3', '4x4', '0'].forEach(item => menu.add(item, item, do_divide));
+         menu.endsub();
 
          menu.addAttributesMenu(this);
          menu.add('Save to gStyle', () => {
@@ -1350,7 +1363,7 @@ class TPadPainter extends ObjectPainter {
    }
 
    /** @summary Redraw TLegend object
-    * @descr Used when object attributes are changed to ensure that legend is up to date
+    * @desc Used when object attributes are changed to ensure that legend is up to date
     * @private */
    async redrawLegend() {
       return this.findPainterFor(null, '', clTLegend)?.redraw();
@@ -1396,7 +1409,7 @@ class TPadPainter extends ObjectPainter {
 
    /** @summary redraw pad */
    redraw(reason) {
-      // intentially do not return Promise to let re-draw sub-pads in parallel
+      // intentionally do not return Promise to let re-draw sub-pads in parallel
       this.redrawPad(reason);
    }
 
@@ -1450,7 +1463,7 @@ class TPadPainter extends ObjectPainter {
                delete this._resize_tmout;
                if (isFunc(this.sendResized))
                   this.sendResized();
-            }, 1000); // long enough delay to prevent multiple occurence
+            }, 1000); // long enough delay to prevent multiple occurrence
          }
 
          // if canvas changed, redraw all its subitems.
@@ -1738,7 +1751,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (objpainter) {
-         if (snap.fKind === webSnapIds.kSubPad) // subpad
+         if (snap.fKind === webSnapIds.kSubPad) // sub-pad
             return objpainter.redrawPadSnap(snap).then(() => this.drawNextSnap(lst, indx));
 
          let promise;
@@ -1754,7 +1767,7 @@ class TPadPainter extends ObjectPainter {
          return getPromise(promise).then(() => this.drawNextSnap(lst, indx)); // call next
       }
 
-      if (snap.fKind === webSnapIds.kSubPad) { // subpad
+      if (snap.fKind === webSnapIds.kSubPad) { // sub-pad
          const subpad = snap.fSnapshot;
 
          subpad.fPrimitives = null; // clear primitives, they just because of I/O
@@ -1861,7 +1874,6 @@ class TPadPainter extends ObjectPainter {
          if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
-            // this.brlayout.toggleBrowserKind('float');
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
             registerForResize(this.brlayout);
          }
@@ -1879,14 +1891,16 @@ class TPadPainter extends ObjectPainter {
          let pr = Promise.resolve(true);
 
          if (isStr(snap.fScripts) && snap.fScripts) {
-            let src = '';
+            let src = '', m = null;
 
-            if (snap.fScripts.indexOf('load:') === 0)
+            if (snap.fScripts.indexOf('modules:') === 0)
+               m = snap.fScripts.slice(8).split(';');
+            else if (snap.fScripts.indexOf('load:') === 0)
                src = snap.fScripts.slice(5).split(';');
             else if (snap.fScripts.indexOf('assert:') === 0)
                src = snap.fScripts.slice(7);
 
-            pr = src ? loadScript(src) : injectCode(snap.fScripts);
+            pr = (m !== null) ? loadModules(m) : (src ? loadScript(src) : injectCode(snap.fScripts));
          }
 
          return pr.then(() => this.drawNextSnap(snap.fPrimitives));
@@ -1921,7 +1935,7 @@ class TPadPainter extends ObjectPainter {
       };
 
       // check if frame or title was recreated, we could reassign handlers for them directly
-      // while this is temporary objects, which can be recreated very often, try to catch such situation ourselfs
+      // while this is temporary objects, which can be recreated very often, try to catch such situation ourself
       if (!snap.fWithoutPrimitives) {
          matchPrimitive(this.painters, snap.fPrimitives, clTFrame);
          matchPrimitive(this.painters, snap.fPrimitives, clTPaveText, kTitle);
@@ -2199,7 +2213,17 @@ class TPadPainter extends ObjectPainter {
          if (!imgdata)
             return console.error(`Fail to produce image ${filename}`);
 
-         saveFile(filename, (kind !== 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
+         if ((browser.qt5 || browser.qt6 || browser.cef3) && this.snapid) {
+            console.warn(`sending file ${filename} to server`);
+            let res = imgdata;
+            if (kind !== 'svg') {
+               const separ = res.indexOf('base64,');
+               res = (separ > 0) ? res.slice(separ+7) : '';
+            }
+            if (res)
+              this.getCanvPainter()?.sendWebsocket(`SAVE:${filename}:${res}`);
+         } else
+            saveFile(filename, (kind !== 'svg') ? imgdata : 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(imgdata));
       });
    }
 
@@ -2214,7 +2238,7 @@ class TPadPainter extends ObjectPainter {
       return active_pp;
    }
 
-   /** @summary Prodce image for the pad
+   /** @summary Produce image for the pad
      * @return {Promise} with created image */
    async produceImage(full_canvas, file_format) {
       const use_frame = (full_canvas === 'frame'),
@@ -2245,7 +2269,7 @@ class TPadPainter extends ObjectPainter {
          const item = { prnt: pp.svg_this_pad() };
          items.push(item);
 
-         // remove buttons from each subpad
+         // remove buttons from each sub-pad
          const btns = pp.getLayerSvg('btns_layer', pp.this_pad_name);
          item.btns_node = btns.node();
          if (item.btns_node) {

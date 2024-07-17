@@ -22,7 +22,7 @@ class RH3Painter extends RHistPainter {
    getDimension() { return 3; }
 
    scanContent(when_axis_changed) {
-      // no need to rescan histogram while result does not depend from axis selection
+      // no need to re-scan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
 
       const histo = this.getHisto();
@@ -123,11 +123,7 @@ class RH3Painter extends RHistPainter {
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
           print_rms = Math.floor(dostat / 1000) % 10,
-          // print_under = Math.floor(dostat / 10000) % 10,
-          // print_over = Math.floor(dostat / 100000) % 10,
           print_integral = Math.floor(dostat / 1000000) % 10;
-          // print_skew = Math.floor(dostat / 10000000) % 10;
-          // print_kurt = Math.floor(dostat / 100000000) % 10;
 
       stat.clearStat();
 
@@ -499,7 +495,7 @@ class RH3Painter extends RHistPainter {
               // BufferGeometries that store geometry of all bins
               all_bins_buffgeom = new BufferGeometry();
 
-         // Create mesh from bin buffergeometry
+         // Create mesh from bin buffer geometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
@@ -638,7 +634,7 @@ class RH3Painter extends RHistPainter {
          }
       }
 
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1, kleft = k2, kright = k1;
 

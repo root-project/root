@@ -54,7 +54,6 @@ class LongPollSocket {
       if (kind === 'connect') {
          url += this.raw ? '?raw_connect' : '?txt_connect';
          if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         console.log(`longpoll connect ${url} raw = ${this.raw}`);
          this.connid = 'connect';
       } else if (kind === 'close') {
          if ((this.connid === null) || (this.connid === 'close')) return;
@@ -63,7 +62,7 @@ class LongPollSocket {
          this.connid = 'close';
          reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
       } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt5) console.error('No connection');
+         if (!browser.qt5 && !browser.qt6) console.error('No connection');
       } else {
          url += '?connection=' + this.connid;
          if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
@@ -94,12 +93,12 @@ class LongPollSocket {
             // raw mode - all kind of reply data packed into binary buffer
             // first 4 bytes header 'txt:' or 'bin:'
             // after the 'bin:' there is length of optional text argument like 'bin:14  :optional_text'
-            // and immedaitely after text binary data. Server sends binary data so, that offset should be multiple of 8
+            // and immediately after text binary data. Server sends binary data so, that offset should be multiple of 8
 
             const u8Arr = new Uint8Array(res);
             let str = '', i = 0, offset = u8Arr.length;
             if (offset < 4) {
-               if (!browser.qt5) console.error(`longpoll got short message in raw mode ${offset}`);
+               if (!browser.qt5 && !browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
                return this.handle.processRequest(null);
             }
 
@@ -226,7 +225,7 @@ class FileDumpSocket {
       this.nextOperation();
    }
 
-   /** @summary Emulate send - just cound operation */
+   /** @summary Emulate send - just count operation */
    send(/* str */) {
       if (this.protocol[this.cnt] === 'send') {
          this.cnt++;
@@ -296,7 +295,7 @@ class WebWindowHandle {
 
    /** @summary Set callbacks receiver.
      * @param {object} obj - object with receiver functions
-     * @param {function} obj.onWebsocketMsg - called when new data receieved from RWebWindow
+     * @param {function} obj.onWebsocketMsg - called when new data received from RWebWindow
      * @param {function} obj.onWebsocketOpened - called when connection established
      * @param {function} obj.onWebsocketClosed - called when connection closed
      * @param {function} obj.onWebsocketError - called when get error via the connection */
@@ -441,7 +440,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send only last message of specified kind during defined time interval.
-     * @desc Idea is to prvent sending multiple messages of similar kind and overload connection
+     * @desc Idea is to prevent sending multiple messages of similar kind and overload connection
      * Instead timeout is started after which only last specified message will be send
      * @private */
    sendLast(kind, tmout, msg) {
@@ -470,7 +469,7 @@ class WebWindowHandle {
    }
 
    /** @summary Send keep-alive message.
-     * @desc Only for internal use, only when used with websockets
+     * @desc Only for internal use, only when used with web sockets
      * @private */
    keepAlive() {
       delete this.timerid;
@@ -480,7 +479,7 @@ class WebWindowHandle {
    /** @summary Request server to resize window
      * @desc For local displays like CEF or qt5 only server can do this */
    resizeWindow(w, h) {
-      if (browser.qt5 || browser.cef3)
+      if (browser.qt5 || browser.qt6 || browser.cef3)
          this.send(`RESIZE=${w},${h}`, 0);
       else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
          window.resizeTo(w, h);
@@ -763,7 +762,7 @@ class WebWindowHandle {
       }
    }
 
-   /** @summary Instal Ctrl-R handler to realod web window
+   /** @summary Instal Ctrl-R handler to reload web window
      * @desc Instead of default window reload invokes {@link askReload} method
      * WARNING - only call when you know that you are doing
      * @private */
@@ -785,7 +784,7 @@ class WebWindowHandle {
       });
    }
 
-   /** @summary Replace widget URL before reload or close of the page
+   /** @summary Replace widget URL with new key
      * @private */
    storeKeyInUrl() {
       if (!this._handling_reload)
@@ -798,21 +797,18 @@ class WebWindowHandle {
             prefix = '?key=';
             p = href.indexOf(prefix);
          }
-         if (p > 0)
-            href = href.slice(0, p);
-         if (this.new_key)
-            href += prefix + this.new_key;
-         if (sessionKey)
-            href += `#${sessionKey}`;
-         window.history.replaceState(window.history.state, undefined, href);
+         if ((p > 0) && this.new_key) {
+            const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
+                  pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
+            href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
+            window.history.replaceState(window.history.state, undefined, href);
+         }
       }
       if (typeof sessionStorage !== 'undefined') {
          sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
          sessionStorage.setItem('RWebWindow_Key', this.new_key);
       }
    }
-
-
 
 } // class WebWindowHandle
 
@@ -867,6 +863,8 @@ async function connectWebWindow(arg) {
 
       if (arg.platform === 'qt5')
          browser.qt5 = true;
+      else if (arg.platform === 'qt6')
+         browser.qt6 = true;
       else if (arg.platform === 'cef3')
          browser.cef3 = true;
 
@@ -886,7 +884,7 @@ async function connectWebWindow(arg) {
    }
 
    if (!arg.socket_kind) {
-      if (browser.qt5)
+      if (browser.qt5 || browser.qt6)
          arg.socket_kind = 'rawlongpoll';
       else if (browser.cef3)
          arg.socket_kind = 'longpoll';
@@ -909,7 +907,7 @@ async function connectWebWindow(arg) {
 
       if (typeof window !== 'undefined') {
          window.onbeforeunload = () => handle.close(true);
-         if (browser.qt5) window.onqt5unload = window.onbeforeunload;
+         if (browser.qt5 || browser.qt6) window.onqt5unload = window.onbeforeunload;
       }
 
       if (arg.receiver) {

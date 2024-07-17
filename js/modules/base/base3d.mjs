@@ -10,7 +10,7 @@ import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
 
 
-/** @ummary Create three.js Font with Helvetica
+/** @summary Create three.js Font with Helvetica
   * @private */
 function createHelveticaFont() {
 // eslint-disable-next-line
@@ -27,7 +27,7 @@ const cssFontWeight='normal', ascender=1189, underlinePosition=-100, cssFontStyl
 // eslint-disable-next-line
 const HelveticerRegularFont = new createHelveticaFont();
 
-/** @ummary Create three.js Color instance, handles optional opacity
+/** @summary Create three.js Color instance, handles optional opacity
   * @private */
 function getMaterialArgs(color, args) {
    if (!args || !isObject(args)) args = {};
@@ -171,7 +171,7 @@ function createSVGRenderer(as_is, precision, doc) {
 }
 
 
-/** @ummary Define rendering kind which will be used for rendering of 3D elements
+/** @summary Define rendering kind which will be used for rendering of 3D elements
   * @param {value} [render3d] - preconfigured value, will be used if applicable
   * @param {value} [is_batch] - is batch mode is configured
   * @return {value} - rendering kind, see constants.Render3D

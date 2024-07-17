@@ -175,7 +175,7 @@ class TH1Painter extends THistPainter {
             hmin = hmax = kNoZoom;
       } else if ((hmin !== kNoZoom) && (hmax !== kNoZoom) && !this.draw_content &&
           ((this.ymin === this.ymax) || (this.ymin > hmin) || (this.ymax < hmax))) {
-         // offten appears with TF1 painter where Y range is not set properly
+         // often appears with TF1 painter where Y range is not set properly
          this.ymin = hmin;
          this.ymax = hmax;
          fix_min = fix_max = true;
@@ -1232,7 +1232,7 @@ class TH1Painter extends THistPainter {
       let min = histo.getBinContent(left + 1);
       for (let indx = left; indx < right; ++indx)
          min = Math.min(min, histo.getBinContent(indx+1));
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       while ((left < right) && (histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (histo.getBinContent(right) <= min)) --right;

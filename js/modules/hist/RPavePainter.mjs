@@ -328,7 +328,7 @@ class RHistStatsPainter extends RPavePainter {
          return main.fillStatistic(this, gStyle.fOptStat, gStyle.fOptFit);
       }
 
-      // show lines which are exists, maybe server request will be recieved later
+      // show lines which are exists, maybe server request will be received later
       return (this.stats_lines !== undefined);
    }
 

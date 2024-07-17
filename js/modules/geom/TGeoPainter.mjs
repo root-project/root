@@ -609,7 +609,7 @@ class TGeoPainter extends ObjectPainter {
       this.cleanup(true);
    }
 
-   /** @summary Function callled by framework when dark mode is changed
+   /** @summary Function called by framework when dark mode is changed
      * @private */
    changeDarkMode(mode) {
       if ((this.ctrl.background === '#000000') || (this.ctrl.background === '#ffffff'))
@@ -1372,7 +1372,7 @@ class TGeoPainter extends ObjectPainter {
          this.drawAxesAndOverlay();
    }
 
-   /** @summary Should be called when autorotate property changed */
+   /** @summary Should be called when auto rotate property changed */
    changedAutoRotate() {
       this.autorotate(2.5);
    }
@@ -1645,7 +1645,7 @@ class TGeoPainter extends ObjectPainter {
       }
    }
 
-   /** @summary show material docu */
+   /** @summary show material documentation from https://threejs.org  */
    showMaterialDocu() {
       const cfg = this.ctrl.getMaterialCfg();
       if (cfg?.name && typeof window !== 'undefined')
@@ -1904,7 +1904,7 @@ class TGeoPainter extends ObjectPainter {
       if (!intersects?.length)
          return intersects;
 
-      // check redirections
+      // check redirection
       for (let n = 0; n < intersects.length; ++n) {
          if (intersects[n].object.geo_highlight)
             intersects[n].object = intersects[n].object.geo_highlight;
@@ -2657,13 +2657,13 @@ class TGeoPainter extends ObjectPainter {
          if (enabled) plights.push(light);
       }
 
-      // keep light power of all soources constant
+      // keep light power of all sources constant
       plights.forEach(ll => { ll.power = p*4*Math.PI/plights.length; });
 
       if (need_render) this.render3D();
    }
 
-   /** @summary Returns true if orthogarphic camera is used */
+   /** @summary Returns true if orthographic camera is used */
    isOrthoCamera() {
       return this.ctrl.camera_kind.indexOf('ortho') === 0;
    }
@@ -2783,7 +2783,7 @@ class TGeoPainter extends ObjectPainter {
          this.createSpecialEffects();
 
          if (this._fit_main_area && !this._webgl) {
-            // create top-most SVG for geomtery drawings
+            // create top-most SVG for geometry drawings
             const doc = getDocument(),
                   svg = doc.createElementNS(nsSVG, 'svg');
             svg.setAttribute('width', w);
@@ -2942,7 +2942,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Place camera to default position,
      * @param arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
-     * @param keep_zoom - tries to keep zomming factor of the camera */
+     * @param keep_zoom - tries to keep zooming factor of the camera */
    adjustCameraPosition(arg, keep_zoom) {
       if (!this._toplevel || this.superimpose) return;
 
@@ -3131,7 +3131,7 @@ class TGeoPainter extends ObjectPainter {
             this._camera.left = m - szy * screen_ratio / 2;
             this._camera.right = m + szy * screen_ratio / 2;
          } else {
-            // screen heigher than actual geometry
+            // screen higher than actual geometry
             const m = (this._camera.top + this._camera.bottom) / 2;
             this._camera.top = m + szx / screen_ratio / 2;
             this._camera.bottom = m - szx / screen_ratio / 2;
@@ -3191,7 +3191,7 @@ class TGeoPainter extends ObjectPainter {
          this.focusCamera(this._clones.resolveStack(stack, true), false);
    }
 
-   /** @summary focus camera on speicifed position */
+   /** @summary focus camera on specified position */
    focusCamera(focus, autoClip) {
       if (this.ctrl.project || this.isOrthoCamera()) {
          this.adjustCameraPosition(true);
@@ -3282,7 +3282,7 @@ class TGeoPainter extends ObjectPainter {
    //   this._controls.update();
    }
 
-   /** @summary actiavte auto rotate */
+   /** @summary activate auto rotate */
    autorotate(speed) {
       const rotSpeed = (speed === undefined) ? 2.0 : speed;
       let last = new Date();
@@ -3312,7 +3312,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Drawing with 'count' option
-     * @desc Scans hieararchy and check for unique nodes
+     * @desc Scans hierarchy and check for unique nodes
      * @return {Promise} with object drawing ready */
    async drawCount(unqievis, clonetm) {
       const makeTime = tm => (this.isBatchMode() ? 'anytime' : tm.toString()) + ' ms',
@@ -3451,7 +3451,7 @@ class TGeoPainter extends ObjectPainter {
       return true;
    }
 
-   /** @summary manipulate visisbility of extra objects, used for HierarchyPainter
+   /** @summary manipulate visibility of extra objects, used for HierarchyPainter
      * @private */
    extraObjectVisible(hpainter, hitem, toggle) {
       if (!this._extraObjects) return;
@@ -3751,7 +3751,7 @@ class TGeoPainter extends ObjectPainter {
       return true;
    }
 
-   /** @summary Serach for specified node
+   /** @summary Search for specified node
      * @private */
    findNodeWithVolume(name, action, prnt, itemname, volumes) {
       let first_level = false, res = null;
@@ -4191,7 +4191,7 @@ class TGeoPainter extends ObjectPainter {
      * @param [measure] - when true, for the first time printout rendering time
      * @return {Promise} when tmout bigger than 0 is specified
      * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
-     * superimposed with each other. If tmeout <= 0, rendering performed immediately
+     * superimposed with each other. If tmout <= 0, rendering performed immediately
      * Several special values are used:
      *   -1    - force recheck of rendering order based on camera position */
    render3D(tmout, measure) {
@@ -4858,7 +4858,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Should be called when depth method is changed */
    changedDepthMethod(arg) {
-      // force recalculatiion of render order
+      // force recalculation of render order
       delete this._last_camera_position;
       if (arg !== 'norender')
          return this.render3D();

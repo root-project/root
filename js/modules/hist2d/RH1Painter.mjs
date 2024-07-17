@@ -899,7 +899,7 @@ class RH1Painter extends RHistPainter {
       let min = histo.getBinContent(left + 1);
       for (let indx = left; indx < right; ++indx)
          min = Math.min(min, histo.getBinContent(indx+1));
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       while ((left < right) && (histo.getBinContent(left+1) <= min)) ++left;
       while ((left < right) && (histo.getBinContent(right) <= min)) --right;
@@ -952,7 +952,7 @@ class RH1Painter extends RHistPainter {
       return this.draw2D(reason);
    }
 
-   /** @summary Readraw histogram */
+   /** @summary Redraw histogram */
    async redraw(reason) {
       return this.callDrawFunc(reason);
    }

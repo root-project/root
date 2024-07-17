@@ -358,7 +358,7 @@ class TGraphPainter extends ObjectPainter {
       return histo;
    }
 
-   /** @summary Check if user range can be unzommed
+   /** @summary Check if user range can be un-zommed
      * @desc Used when graph points covers larger range than provided histogram */
    unzoomUserRange(dox, doy /*, doz */) {
       const graph = this.getGraph();
@@ -447,7 +447,7 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Provide frame painter for graph
-     * @desc If not exists, emulate its behaviour */
+     * @desc If not exists, emulate its behavior */
    get_main() {
       let pmain = this.getFramePainter();
 

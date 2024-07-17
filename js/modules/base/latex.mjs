@@ -214,7 +214,7 @@ base_symbols_width = [453,535,661,973,955,1448,1242,324,593,596,778,1011,431,570
 // eslint-disable-next-line
 extra_symbols_width = {945:1002,946:996,967:917,948:953,949:834,966:1149,947:847,951:989,953:516,954:951,955:913,956:1003,957:862,959:967,960:1070,952:954,961:973,963:1017,964:797,965:944,982:1354,969:1359,958:803,968:1232,950:825,913:1194,914:1153,935:1162,916:1178,917:1086,934:1358,915:1016,919:1275,921:539,977:995,922:1189,923:1170,924:1523,925:1253,927:1281,928:1281,920:1285,929:1102,931:1041,932:1069,933:1135,962:848,937:1279,926:1092,936:1334,918:1067,978:1154,8730:986,8804:940,8260:476,8734:1453,402:811,9827:1170,9830:931,9829:1067,9824:965,8596:1768,8592:1761,8593:895,8594:1761,8595:895,710:695,177:955,8243:680,8805:947,215:995,8733:1124,8706:916,8226:626,247:977,8800:969,8801:1031,8776:976,8230:1552,175:883,8629:1454,8501:1095,8465:1002,8476:1490,8472:1493,8855:1417,8853:1417,8709:1205,8745:1276,8746:1404,8839:1426,8835:1426,8836:1426,8838:1426,8834:1426,8747:480,8712:1426,8713:1426,8736:1608,8711:1551,174:1339,169:1339,8482:1469,8719:1364,729:522,172:1033,8743:1383,8744:1383,8660:1768,8656:1496,8657:1447,8658:1496,8659:1447,8721:1182,9115:882,9144:1000,9117:882,8970:749,9127:1322,9128:1322,8491:1150,229:929,8704:1397,8707:1170,8901:524,183:519,10003:1477,732:692,295:984,9725:1780,9744:1581,8741:737,8869:1390,8857:1421};
 
-/** @ummary Calculate approximate labels width
+/** @summary Calculate approximate labels width
   * @private */
 function approximateLabelWidth(label, font, fsize) {
    const len = label.length,
@@ -383,7 +383,7 @@ function isPlainText(txt) {
    return !txt || ((txt.indexOf('#') < 0) && (txt.indexOf('{') < 0));
 }
 
-/** @ummary translate TLatex and draw inside provided g element
+/** @summary translate TLatex and draw inside provided g element
   * @desc use <text> together with normal <path> elements
   * @private */
 function parseLatex(node, arg, label, curr) {
@@ -590,7 +590,7 @@ function parseLatex(node, arg, label, curr) {
 
       if (!found) return true;
 
-      // remove preceeding block and tag itself
+      // remove preceding block and tag itself
       label = label.slice(best + found.name.length);
 
       nelements++;
@@ -957,7 +957,7 @@ function parseLatex(node, arg, label, curr) {
    return true;
 }
 
-/** @ummary translate TLatex and draw inside provided g element
+/** @summary translate TLatex and draw inside provided g element
   * @desc use <text> together with normal <path> elements
   * @private */
 function produceLatex(painter, node, arg) {
@@ -1282,7 +1282,7 @@ function translateMath(str, kind, color, painter) {
             str = str.replace(new RegExp(x, 'g'), '\\' + x.slice(1));
       }
 
-      // replace all #color[]{} occurances
+      // replace all #color[]{} occurrences
       let clean = '', first = true;
       while (str) {
          let p = str.indexOf('#color[');

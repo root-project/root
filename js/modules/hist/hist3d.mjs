@@ -371,7 +371,7 @@ function setCameraPosition(fp, first_time) {
          fp.camera.left = m - szy * screen_ratio / 2;
          fp.camera.right = m + szy * screen_ratio / 2;
       } else {
-         // screen heigher than actual geometry
+         // screen higher than actual geometry
          const m = (fp.camera.top + fp.camera.bottom) / 2;
          fp.camera.top = m + szx / screen_ratio / 2;
          fp.camera.bottom = m - szx / screen_ratio / 2;
@@ -625,7 +625,7 @@ function remove3DMeshes(painter) {
   * @param {number} tmout - specifies delay, after which actual rendering will be invoked
   * @desc Timeout used to avoid multiple rendering of the picture when several 3D drawings
   * superimposed with each other.
-  * If tmeout <= 0, rendering performed immediately
+  * If tmout <= 0, rendering performed immediately
   * If tmout === -1111, immediate rendering with SVG renderer is performed
   * @private */
 function render3D(tmout) {
@@ -712,7 +712,7 @@ function resize3D() {
    return true;
 }
 
-/** @summary Hilight bin in frame painter 3D drawing
+/** @summary Highlight bin in frame painter 3D drawing
   * @private */
 function highlightBin3D(tip, selfmesh) {
    const want_remove = !tip || (tip.x1 === undefined) || !this.enable_highlight;
@@ -856,7 +856,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    if (opts.use_y_for_z) {
       this.zmin = this.ymin; this.zmax = this.ymax;
       zmin = ymin; zmax = ymax; z_zoomed = y_zoomed;
-      // if (!z_zoomed && (this.hmin!==this.hmax)) { zmin = this.hmin; zmax = this.hmax; }
       ymin = 0; ymax = 1;
    }
 
@@ -1446,7 +1445,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 }
 
 
-/** @summary Converts 3D coordiante to the pad NDC
+/** @summary Converts 3D coordinate to the pad NDC
   * @private */
 function convert3DtoPadNDC(x, y, z) {
    x = this.x_handle.gr(x);
@@ -1525,14 +1524,17 @@ function drawBinsLego(painter, is_v7 = false) {
 
       if ((binz1 >= zmax) || (binz2 < zmin)) return false;
 
-      if (test_cutg && !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5),
-                 histo.fYaxis.GetBinCoord(jj + 0.5))) return false;
+      if (test_cutg &&
+         !test_cutg.IsInside(histo.fXaxis.GetBinCoord(ii + 0.5), histo.fYaxis.GetBinCoord(jj + 0.5)))
+         return false;
 
       reduced = (binz2 === zmin) || (binz1 >= binz2);
 
-      if (!reduced || (level > 0)) return true;
+      if (!reduced || (level > 0))
+         return true;
 
-      if (basehisto) return false; // do not draw empty bins on top of other bins
+      if (basehisto)
+         return false; // do not draw empty bins on top of other bins
 
       if (painter.options.Zero || (axis_zmin > 0)) return true;
 
@@ -1556,8 +1558,6 @@ function drawBinsLego(painter, is_v7 = false) {
          const cntr = painter.createContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
          levels = cntr.arr;
          palette = painter.getHistPalette();
-         // axis_zmin = levels[0];
-         // axis_zmax = levels[levels.length-1];
       }
    }
 
@@ -1659,7 +1659,7 @@ function drawBinsLego(painter, is_v7 = false) {
                if (k % 6 === 0) {
                   nn += 3;
                   if (notop && (k === indicies.length - 12)) {
-                     k += 6; nn += 3; // jump over notop indexes
+                     k += 6; nn += 3; // jump over no-top indexes
                   }
                }
             }
@@ -1788,7 +1788,7 @@ function drawBinsLego(painter, is_v7 = false) {
                vvv = reduced ? rvertices : vertices;
 
          if (uselineindx) {
-            // array of indicies for the lines, to avoid duplication of points
+            // array of indices for the lines, to avoid duplication of points
             for (k = 0; k < seg.length; ++k) {
                // intersect_index[ii] = bin_index;
                lindicies[ii++] = ll/3 + seg[k];
@@ -1978,8 +1978,6 @@ function drawBinsSurf3D(painter, is_v7 = false) {
    const histo = painter.getHisto(),
          main = painter.getFramePainter(),
          axis_zmin = main.z_handle.getScaleMin(),
-         // axis_zmax = main.z_handle.getScaleMax();
-         // first adjust ranges
          main_grz = !main.logz ? main.grz : value => (value < axis_zmin) ? -0.1 : main.grz(value),
          main_grz_min = 0, main_grz_max = 2*main.size_z3d;
 

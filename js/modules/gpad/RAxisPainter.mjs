@@ -68,7 +68,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Configure axis painter
      * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
-     * Therefore one should distinguish when caclulated coordinates used for axis drawing itself or for calculation of frame coordinates
+     * Therefore one should distinguish when calculated coordinates used for axis drawing itself or for calculation of frame coordinates
      * @private */
    configureAxis(name, min, max, smin, smax, vertical, frame_range, axis_range, opts) {
       if (!opts) opts = {};
@@ -324,7 +324,7 @@ class RAxisPainter extends RObjectPainter {
                lbls = []; indx = 0; totallen = 0;
             }
 
-            // for order === 0 we should virually remove '0.' and extra label on top
+            // for order === 0 we should virtually remove '0.' and extra label on top
             if (!order && (this.ndig < 4))
                totallen -= (handle.major.length * 2 + 3);
 
@@ -730,7 +730,7 @@ class RAxisPainter extends RObjectPainter {
       });
    }
 
-   /** @summary Add zomming rect to axis drawing */
+   /** @summary Add zooming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
       if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
          const sz = Math.max(lgaps[side], 10),
@@ -881,7 +881,7 @@ class RAxisPainter extends RObjectPainter {
    }
 
    /** @summary Assign handler, which is called when axis redraw by interactive changes
-     * @desc Used by palette painter to reassign iteractive handlers
+     * @desc Used by palette painter to reassign interactive handlers
      * @private */
    setAfterDrawHandler(handler) {
       this._afterDrawAgain = handler;

@@ -43,6 +43,20 @@ class TLinePainter extends ObjectPainter {
       this.submitCanvExec(exec + 'Notify();;');
    }
 
+   /** @summary Returns object ranges
+     * @desc Can be used for newly created canvas */
+   getUserRanges() {
+      const line = this.getObject(),
+            isndc = line.TestBit(kLineNDC);
+      if (isndc)
+         return null;
+      const minx = Math.min(line.fX1, line.fX2),
+            maxx = Math.max(line.fX1, line.fX2),
+            miny = Math.min(line.fY1, line.fY2),
+            maxy = Math.max(line.fY1, line.fY2);
+      return { minx, miny, maxx, maxy };
+   }
+
    /** @summary Calculate line coordinates */
    prepareDraw() {
       const line = this.getObject();

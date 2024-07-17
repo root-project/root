@@ -34,7 +34,7 @@ class JSRootMenu {
 
    async load() { return this; }
 
-   /** @summary Returns object with mouse event position when context menu was actiavted
+   /** @summary Returns object with mouse event position when context menu was activated
      * @desc Return object will have members 'clientX' and 'clientY' */
    getEventPosition() { return this.show_evnt; }
 
@@ -966,7 +966,7 @@ class JSRootMenu {
    }
 
    /** @summary Run modal dialog
-     * @return {Promise} with html element inside dialg
+     * @return {Promise} with html element inside dialog
      * @private */
    async runModal() {
       throw Error('runModal() must be reimplemented');
@@ -1526,7 +1526,7 @@ function createMenu(evnt, handler, menuname) {
    return menu.load();
 }
 
-/** @summary Close previousely created and shown JSROOT menu
+/** @summary Close previously created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
    const element = getDocument().getElementById(menuname || sDfltName);
@@ -1534,7 +1534,7 @@ function closeMenu(menuname) {
    return !!element;
 }
 
-/** @summary Returns true if menu or modual dialog present
+/** @summary Returns true if menu or modal dialog present
   * @private */
 function hasMenu(menuname) {
    const doc = getDocument();

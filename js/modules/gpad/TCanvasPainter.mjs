@@ -219,9 +219,7 @@ class TCanvasPainter extends TPadPainter {
      * @desc Function should be used only from the func which supposed to be replaced by ui5
      * @private */
    testUI5() {
-      if (!this.use_openui) return false;
-      console.warn('full ui5 should be used - not loaded yet? Please check!!');
-      return true;
+      return this.use_openui ?? false;
    }
 
    /** @summary Draw in side panel
@@ -324,13 +322,13 @@ class TCanvasPainter extends TPadPainter {
          this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
    }
 
-   /** @summary Hanler for websocket open event
+   /** @summary Handler for websocket open event
      * @private */
    onWebsocketOpened(/* handle */) {
-      // indicate that we are ready to recieve any following commands
+      // indicate that we are ready to receive any following commands
    }
 
-   /** @summary Hanler for websocket close event
+   /** @summary Handler for websocket close event
      * @private */
    onWebsocketClosed(/* handle */) {
       if (!this.embed_canvas)
@@ -361,7 +359,7 @@ class TCanvasPainter extends TPadPainter {
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
                 this.completeCanvasSnapDrawing();
-                let ranges = this.getWebPadOptions(); // all data, including subpads
+                let ranges = this.getWebPadOptions(); // all data, including sub-pads
                 if (ranges) ranges = ':' + ranges;
                 handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
                 this.confirmDraw();
@@ -841,7 +839,7 @@ class TCanvasPainter extends TPadPainter {
          return;
 
       // workaround for qt5-based display where inner window size is used
-      if (browser.qt5 && fullW > 100 && fullH > 60) {
+      if ((browser.qt5 || browser.qt6) && fullW > 100 && fullH > 60) {
          fullW -= 3;
          fullH -= 30;
       }
@@ -897,8 +895,23 @@ async function ensureTCanvas(painter, frame_kind) {
 
    // simple check - if canvas there, can use painter
    const noframe = (frame_kind === false) || (frame_kind === '3d') ? 'noframe' : '',
+         createCanv = () => {
+            if ((noframe !== 'noframe') || !isFunc(painter.getUserRanges))
+               return null;
+            const ranges = painter.getUserRanges();
+            if (!ranges)
+               return null;
+            const canv = create(clTCanvas),
+                  dx = (ranges.maxx - ranges.minx) || 1,
+                  dy = (ranges.maxy - ranges.miny) || 1;
+            canv.fX1 = ranges.minx - dx * 0.1;
+            canv.fX2 = ranges.maxx + dx * 0.1;
+            canv.fY1 = ranges.miny - dy * 0.1;
+            canv.fY2 = ranges.maxy + dy * 0.1;
+            return canv;
+         },
          promise = painter.getCanvSvg().empty()
-                   ? TCanvasPainter.draw(painter.getDom(), null, noframe)
+                   ? TCanvasPainter.draw(painter.getDom(), createCanv(), noframe)
                    : Promise.resolve(true);
 
    return promise.then(() => {

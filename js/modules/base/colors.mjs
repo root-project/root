@@ -72,7 +72,7 @@ function getRGBfromTColor(col) {
    return rgb;
 }
 
-/** @ummary Return list of grey colors for the original array
+/** @summary Return list of grey colors for the original array
   * @private */
 function getGrayColors(rgb_array) {
    const gray_colors = [];
@@ -128,7 +128,7 @@ function extendRootColors(jsarr, objarr, grayscale) {
    return grayscale ? getGrayColors(jsarr) : jsarr;
 }
 
-/** @ummary Set global list of colors.
+/** @summary Set global list of colors.
   * @desc Either TObjArray of TColor instances or just plain array with rgb() code.
   * List of colors typically stored together with TCanvas primitives
   * @private */

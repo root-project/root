@@ -570,7 +570,7 @@ function getColorId(col) {
    return { id, col };
 }
 
-/** @summary Produce exec string for WebCanas to set color value
+/** @summary Produce exec string for WebCanvas to set color value
   * @desc Color can be id or string, but should belong to list of known colors
   * For higher color numbers TColor::GetColor(r,g,b) will be invoked to ensure color is exists
   * @private */

@@ -75,7 +75,7 @@ class TGraphDelaunay {
    }
 
    ComputeZ(x, y) {
-      // Initialise the Delaunay algorithm if needed.
+      // Initialize the Delaunay algorithm if needed.
       // CreateTrianglesDataStructure computes fXoffset, fYoffset,
       // fXScaleFactor and fYScaleFactor;
       // needed in this function.
@@ -211,7 +211,7 @@ class TGraphDelaunay {
       // loop over all Delaunay triangles (including those constantly being
       // produced within the loop) and check to see if their 3 sides also
       // correspond to the sides of other Delaunay triangles, i.e. that they
-      // have all their neighbours.
+      // have all their neighbors.
       t1 = 1;
       while (t1 <= this.fNdt) {
          // get the three points that make up this triangle
@@ -246,7 +246,7 @@ class TGraphDelaunay {
             // forget about it
             if (s[0] && s[1] && s[2]) continue;
          }
-         // Looks like t1 is missing a neighbour on at least one side.
+         // Looks like t1 is missing a neighbor on at least one side.
          // For each side, take a point a little bit beyond it and calculate
          // the Delaunay triangle for that point, this should be the triangle
          // which shares the side.
@@ -354,7 +354,7 @@ class TGraphDelaunay {
       }
 
       //  n1 and n2 will represent the two points most separated by angle
-      //  from point e. Initially the angle between them will be <180 degs.
+      //  from point e. Initially the angle between them will be <180 degrees.
       //  But subsequent points will increase the n1-e-n2 angle. If it
       //  increases above 180 degrees then point e must be surrounded by
       //  points - it is not part of the hull.
@@ -420,7 +420,7 @@ class TGraphDelaunay {
                   if (dphi < 0) dphi += Math.PI*2;
                   if ((dphi - Math.PI)*(lastdphi - Math.PI) < 0) {
                      // The addition of point m means the angle n1-e-n2 has risen
-                     // above 180 degs, the point is in the hull.
+                     // above 180 degrees, the point is in the hull.
                      deTinhull = true;
                      return deTinhull;
                   }
@@ -478,7 +478,7 @@ class TGraphDelaunay {
           dx1, dx2, dx3, dy1, dy2, dy3, u, v;
       const dxz = [0, 0, 0], dyz = [0, 0, 0];
 
-      // initialise the Delaunay algorithm if needed
+      // initialize the Delaunay algorithm if needed
       this.Initialize();
 
       // create vectors needed for sorting
@@ -888,7 +888,7 @@ class TGraph2DPainter extends ObjectPainter {
 
       d.check('SAME');
       if (d.check('TRI1'))
-         res.Triangles = 11; // wireframe and colors
+         res.Triangles = 11; // wire-frame and colors
       else if (d.check('TRI2'))
          res.Triangles = 10; // only color triangles
       else if (d.check('TRIW'))
@@ -1128,7 +1128,7 @@ class TGraph2DPainter extends ObjectPainter {
       fp.remove3DMeshes(this);
 
       if (!this.options.isAny()) {
-         // no need to draw somthing if histogram content was drawn
+         // no need to draw smoothing if histogram content was drawn
          if (main.draw_content)
             return this;
          if ((graph.fMarkerSize === 1) && (graph.fMarkerStyle === 1))

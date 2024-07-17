@@ -22,7 +22,7 @@ class TH3Painter extends THistPainter {
 
    /** @summary Scan TH3 histogram content */
    scanContent(when_axis_changed) {
-      // no need to rescan histogram while result does not depend from axis selection
+      // no need to re-scan histogram while result does not depend from axis selection
       if (when_axis_changed && this.nbinsx && this.nbinsy && this.nbinsz) return;
 
       const histo = this.getHisto();
@@ -200,8 +200,6 @@ class TH3Painter extends THistPainter {
             print_skew = Math.floor(dostat / 10000000) % 10,
             print_kurt = Math.floor(dostat / 100000000) % 10,
             data = this.countStat(undefined, (print_skew > 0) || (print_kurt > 0));
-            // print_under = Math.floor(dostat / 10000) % 10,
-            // print_over = Math.floor(dostat / 100000) % 10;
 
       stat.clearPave();
 
@@ -646,7 +644,7 @@ class TH3Painter extends THistPainter {
          const nseq = cols_sequence[colindx],
                all_bins_buffgeom = new BufferGeometry(); // BufferGeometries that store geometry of all bins
 
-         // Create mesh from bin buffergeometry
+         // Create mesh from bin buffer geometry
          all_bins_buffgeom.setAttribute('position', new BufferAttribute(bin_verts[nseq], 3));
          all_bins_buffgeom.setAttribute('normal', new BufferAttribute(bin_norms[nseq], 3));
 
@@ -782,7 +780,7 @@ class TH3Painter extends THistPainter {
                min = Math.min(min, histo.getBinContent(i+1, j+1, k+1));
          }
       }
-      if (min > 0) return; // if all points positive, no chance for autoscale
+      if (min > 0) return; // if all points positive, no chance for auto-scale
 
       let ileft = i2, iright = i1, jleft = j2, jright = j1, kleft = k2, kright = k1;
 
