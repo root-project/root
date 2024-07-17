@@ -170,6 +170,8 @@ protected:
 
    void SetWindowGeometry(const std::vector<int> &arr);
 
+   static std::string ProcessCustomScripts(bool batch);
+
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
    ~TWebCanvas() override;
@@ -243,6 +245,7 @@ public:
    Bool_t IsFixedSize() const { return fFixedSize; }
 
    static void SetCustomScripts(const std::string &src);
+   static const std::string &GetCustomScripts();
 
    static void AddCustomClass(const std::string &clname, bool with_derived = false);
    static bool IsCustomClass(const TClass *cl);
