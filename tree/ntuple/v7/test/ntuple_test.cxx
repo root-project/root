@@ -21,9 +21,9 @@ void CreateCorruptedRNTuple(const std::string &uri)
    auto pageSource = RPageSource::Create("ntpl", uri);
    pageSource->Attach();
    auto descGuard = pageSource->GetSharedDescriptorGuard();
-   const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
-   const auto pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0);
-   const auto pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0);
+   const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
+   const auto pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
+   const auto pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0, 0);
    const auto clusterId = descGuard->FindClusterId(pxColId, 0);
    RClusterIndex index{clusterId, 0};
 

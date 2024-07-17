@@ -640,10 +640,10 @@ TEST(RNTuple, SerializeHeader)
 
    desc = builder.MoveDescriptor();
    auto ptAliasFieldId = desc.FindFieldId("ptAlias");
-   auto colId = desc.FindLogicalColumnId(ptAliasFieldId, 0);
+   auto colId = desc.FindLogicalColumnId(ptAliasFieldId, 0, 0);
    EXPECT_TRUE(desc.GetColumnDescriptor(colId).IsAliasColumn());
    auto ptFieldId = desc.FindFieldId("pt");
-   EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
+   EXPECT_EQ(desc.FindLogicalColumnId(ptFieldId, 0, 0), desc.GetColumnDescriptor(colId).GetPhysicalId());
    EXPECT_TRUE(desc.GetFieldDescriptor(ptAliasFieldId).IsProjectedField());
    EXPECT_EQ(ptFieldId, desc.GetFieldDescriptor(ptAliasFieldId).GetProjectionSourceId());
    EXPECT_FALSE(desc.GetFieldDescriptor(ptFieldId).IsProjectedField());

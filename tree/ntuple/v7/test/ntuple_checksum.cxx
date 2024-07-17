@@ -65,9 +65,9 @@ TEST(RNTupleChecksum, VerifyOnLoad)
    pageSource->Attach();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
-      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
-      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0);
-      pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0);
+      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
+      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
+      pzColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("pz"), 0, 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
    RClusterIndex index{clusterId, 0};
@@ -100,7 +100,7 @@ TEST(RNTupleChecksum, OmitPageChecksum)
    auto pageSource = RPageSource::Create("ntpl", fileGuard.GetPath());
    pageSource->Attach();
    auto descGuard = pageSource->GetSharedDescriptorGuard();
-   const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
+   const auto pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
    const auto clusterId = descGuard->FindClusterId(pxColId, 0);
    const auto &clusterDesc = descGuard->GetClusterDescriptor(clusterId);
    const auto pageInfo = clusterDesc.GetPageRange(pxColId).fPageInfos[0];

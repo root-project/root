@@ -306,20 +306,25 @@ ROOT::Experimental::RNTupleDescriptor::FindFieldId(std::string_view fieldName) c
 }
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const
+ROOT::Experimental::RNTupleDescriptor::FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex,
+                                                           std::uint16_t representationIndex) const
 {
    auto itr = fFieldDescriptors.find(fieldId);
    if (itr == fFieldDescriptors.cend())
       return kInvalidDescriptorId;
-   if (itr->second.GetLogicalColumnIds().size() <= columnIndex)
+   if (columnIndex >= itr->second.GetColumnCardinality())
       return kInvalidDescriptorId;
-   return itr->second.GetLogicalColumnIds().at(columnIndex);
+   const auto idx = representationIndex * itr->second.GetColumnCardinality() + columnIndex;
+   if (itr->second.GetLogicalColumnIds().size() <= idx)
+      return kInvalidDescriptorId;
+   return itr->second.GetLogicalColumnIds()[idx];
 }
 
 ROOT::Experimental::DescriptorId_t
-ROOT::Experimental::RNTupleDescriptor::FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const
+ROOT::Experimental::RNTupleDescriptor::FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex,
+                                                            std::uint16_t representationIndex) const
 {
-   auto logicalId = FindLogicalColumnId(fieldId, columnIndex);
+   auto logicalId = FindLogicalColumnId(fieldId, columnIndex, representationIndex);
    if (logicalId == kInvalidDescriptorId)
       return kInvalidDescriptorId;
    return GetColumnDescriptor(logicalId).GetPhysicalId();
@@ -872,17 +877,22 @@ ROOT::Experimental::RResult<void>
 ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&columnDesc)
 {
    const auto fieldId = columnDesc.GetFieldId();
-   const auto index = columnDesc.GetIndex();
+   const auto columnIndex = columnDesc.GetIndex();
+   const auto representationIndex = columnDesc.GetRepresentationIndex();
 
    auto fieldExists = EnsureFieldExists(fieldId);
    if (!fieldExists)
       return R__FORWARD_ERROR(fieldExists);
-   if (fDescriptor.FindLogicalColumnId(fieldId, index) != kInvalidDescriptorId) {
+   if (fDescriptor.FindLogicalColumnId(fieldId, columnIndex, representationIndex) != kInvalidDescriptorId) {
       return R__FAIL("column index clash");
    }
-   if (index > 0) {
-      if (fDescriptor.FindLogicalColumnId(fieldId, index - 1) == kInvalidDescriptorId)
+   if (columnIndex > 0) {
+      if (fDescriptor.FindLogicalColumnId(fieldId, columnIndex - 1, representationIndex) == kInvalidDescriptorId)
          return R__FAIL("out of bounds column index");
+   }
+   if (representationIndex > 0) {
+      if (fDescriptor.FindLogicalColumnId(fieldId, 0, representationIndex - 1) == kInvalidDescriptorId)
+         return R__FAIL("out of bounds representation index");
    }
    if (columnDesc.IsAliasColumn()) {
       if (columnDesc.GetType() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetType())

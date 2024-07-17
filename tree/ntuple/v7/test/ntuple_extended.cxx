@@ -297,7 +297,7 @@ TEST(RNTuple, LargePages)
 
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       const auto &desc = reader->GetDescriptor();
-      const auto rndColId = desc.FindPhysicalColumnId(desc.FindFieldId("rnd"), 0);
+      const auto rndColId = desc.FindPhysicalColumnId(desc.FindFieldId("rnd"), 0, 0);
       const auto &clusterDesc = desc.GetClusterDescriptor(desc.FindClusterId(rndColId, 0));
       EXPECT_GT(clusterDesc.GetPageRange(rndColId).Find(0).fLocator.fBytesOnStorage, kMAXZIPBUF);
 
@@ -327,7 +327,7 @@ TEST(RNTuple, SmallClusters)
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       auto desc = reader->GetDescriptor();
-      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
+      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0, 0);
       EXPECT_EQ(EColumnType::kSplitIndex64, desc->GetColumnDescriptor(colId).GetModel().GetType());
       reader->LoadEntry(0);
       auto entry = reader->GetModel()->GetDefaultEntry();
@@ -347,7 +347,7 @@ TEST(RNTuple, SmallClusters)
    {
       auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
       auto desc = reader->GetDescriptor();
-      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
+      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0, 0);
       EXPECT_EQ(EColumnType::kSplitIndex32, desc->GetColumnDescriptor(colId).GetModel().GetType());
       reader->LoadEntry(0);
       auto entry = reader->GetModel()->GetDefaultEntry();
