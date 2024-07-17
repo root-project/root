@@ -105,6 +105,8 @@ public:
    static void SetUseConnectionKey(bool on = true);
 
    static void AddServerLocation(const std::string &server_prefix, const std::string &files_path);
+   static std::map<std::string, std::string> GetServerLocations();
+   static void ClearServerLocations();
 };
 
 } // namespace ROOT
