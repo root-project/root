@@ -717,20 +717,39 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescripto
    if (!validName) {
       return R__FORWARD_ERROR(validName);
    }
-   // open-ended list of invariant checks
-   for (const auto& key_val: fDescriptor.fFieldDescriptors) {
-      const auto& id = key_val.first;
-      const auto& desc = key_val.second;
-      // parent not properly set
-      if (id != DescriptorId_t(0) && desc.GetParentId() == kInvalidDescriptorId) {
-         return R__FAIL("field with id '" + std::to_string(id) + "' has an invalid parent id");
+
+   for (const auto &[fieldId, fieldDesc] : fDescriptor.fFieldDescriptors) {
+      // parent not properly set?
+      if (fieldId != fDescriptor.GetFieldZeroId() && fieldDesc.GetParentId() == kInvalidDescriptorId) {
+         return R__FAIL("field with id '" + std::to_string(fieldId) + "' has an invalid parent id");
+      }
+
+      // Same number of columns in every column representation?
+      const auto columnCardinality = fieldDesc.GetColumnCardinality();
+      if (columnCardinality == 0)
+         continue;
+
+      // We already know (from AddColumn()) that the column indexes and representation indexes are consecutive
+      const auto &logicalColumnIds = fieldDesc.GetLogicalColumnIds();
+      const auto nColumns = logicalColumnIds.size();
+      if ((nColumns == 0) || ((nColumns % columnCardinality) != 0)) {
+         return R__FAIL("field with id '" + std::to_string(fieldId) + "' has an invalid number of columns");
+      }
+
+      for (auto firstColumnIdx = 0u; firstColumnIdx < nColumns; firstColumnIdx += columnCardinality) {
+         const auto &columnDesc = fDescriptor.GetColumnDescriptor(logicalColumnIds[firstColumnIdx]);
+         if (columnDesc.GetRepresentationIndex() != firstColumnIdx / columnCardinality) {
+            return R__FAIL("field with id '" + std::to_string(fieldId) + "' has irregular column representations");
+         }
       }
    }
+
    return RResult<void>::Success();
 }
 
 ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Internal::RNTupleDescriptorBuilder::MoveDescriptor()
 {
+   EnsureValidDescriptor().ThrowOnError();
    RNTupleDescriptor result;
    std::swap(result, fDescriptor);
    return result;
