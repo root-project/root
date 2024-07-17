@@ -223,7 +223,7 @@ class TF2Painter extends TH2Painter {
       }
    }
 
-   /** @summary retrurn tooltips for TF2 */
+   /** @summary return tooltips for TF2 */
    getTF2Tooltips(pnt) {
       const lines = [this.getObjectHint()],
             funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
@@ -287,7 +287,7 @@ class TF2Painter extends TH2Painter {
    }
 
    /** @summary fill information for TWebCanvas
-    * @desc Used to inform webcanvas when evaluation failed
+    * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
       opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';

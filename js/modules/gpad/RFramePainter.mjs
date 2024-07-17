@@ -18,9 +18,9 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
-     * @param {object} tframe - RFrame object */
-   constructor(dom, tframe) {
-      super(dom, tframe, '', 'frame');
+     * @param {object} frame - RFrame object */
+   constructor(dom, frame) {
+      super(dom, frame, '', 'frame');
       this.mode3d = false;
       this.xmin = this.xmax = 0; // no scale specified, wait for objects drawing
       this.ymin = this.ymax = 0; // no scale specified, wait for objects drawing
@@ -75,7 +75,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Returns coordinates transformation func */
    getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
 
-   /** @summary Rcalculate frame ranges using specified projection functions
+   /** @summary Recalculate frame ranges using specified projection functions
      * @desc Not yet used in v7 */
    recalculateRange(Proj) {
       this.projection = Proj || 0;
@@ -184,7 +184,7 @@ class RFramePainter extends RObjectPainter {
       return handle ? handle.axisAsText(value, settings[axis.toUpperCase() + 'ValuesFormat']) : value.toPrecision(4);
    }
 
-   /** @summary Set axix range */
+   /** @summary Set axis range */
    _setAxisRange(prefix, vmin, vmax) {
       const nmin = `${prefix}min`, nmax = `${prefix}max`;
       if (this[nmin] !== this[nmax]) return;
@@ -446,7 +446,7 @@ class RFramePainter extends RObjectPainter {
       });
    }
 
-   /** @summary Draw secondary configuread axes */
+   /** @summary Draw secondary configured axes */
    drawAxes2(second_x, second_y) {
       const w = this.getFrameWidth(), h = this.getFrameHeight(),
             pp = this.getPadPainter(),
@@ -621,7 +621,7 @@ class RFramePainter extends RObjectPainter {
       delete this.x2axis;
       delete this.y2axis;
 
-      delete this.draw_g; // frame <g> element managet by the pad
+      delete this.draw_g; // frame <g> element managed by the pad
 
       delete this._click_handler;
       delete this._dblclick_handler;
@@ -756,7 +756,7 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Configure user-defined click handler
-     * @desc Function will be called every time when frame click was perfromed
+     * @desc Function will be called every time when frame click was performed
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of click will be disabled */
    configureUserClickHandler(handler) {
@@ -808,7 +808,6 @@ class RFramePainter extends RObjectPainter {
 
       if (zoom_z) {
          let cnt = 0;
-         // if (this.logz && this.ymin_nz && this.getDimension()===2) main_zmin = 0.3*this.ymin_nz;
          if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
          if (cnt === 2) { zoom_z = false; unzoom_z = true; }
@@ -903,7 +902,7 @@ class RFramePainter extends RObjectPainter {
      * @param {String} name - axis name like x/y/z but also second axis x2 or y2
      * @param {Number} vmin - axis minimal value, 0 for unzoom
      * @param {Number} vmax - axis maximal value, 0 for unzoom
-     * @param {Boolean} [interactive] - if change was perfromed interactively
+     * @param {Boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
       const names = ['x', 'y', 'z', 'x2', 'y2'], indx = names.indexOf(name);
@@ -1042,9 +1041,6 @@ class RFramePainter extends RObjectPainter {
       if ((kind !== 'x') && (kind !== 'y')) return;
 
       menu.add('Unzoom', () => this.unzoom(kind));
-
-      // if (this[kind+'_kind'] === kAxisNormal)
-      //   menu.addchk(this['log'+kind], 'SetLog'+kind, this.toggleAxisLog.bind(this, kind));
 
       // here should be all axes attributes in offline
    }

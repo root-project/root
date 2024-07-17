@@ -50,7 +50,7 @@ class THistDrawOptions {
 
    is3d() { return this.Lego || this.Surf; }
 
-   /** @summary Base on sumw2 values (re)set some bacis draw options, only for 1dim hist */
+   /** @summary Base on sumw2 values (re)set some basic draw options, only for 1dim hist */
    decodeSumw2(histo, force) {
       const len = histo.fSumw2?.length ?? 0;
       let isany = false;
@@ -113,7 +113,7 @@ class THistDrawOptions {
 
       if (d.check('PAL', true))
          this.Palette = d.partAsInt();
-      // this is zooming of histo content
+      // this is zooming of histogram content
       if (d.check('MINIMUM:', true)) {
          this.ominimum = true;
          this.minimum = parseFloat(d.part);
@@ -192,7 +192,7 @@ class THistDrawOptions {
       if (ly && pad) { pad.fLogy = ly; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
       if (d.check('LOG2Z') && pad) pad.fLogz = 2;
       if (d.check('LOGZ') && pad) pad.fLogz = 1;
-      if (d.check('LOGV') && pad) pad.fLogv = 1; // ficitional member, can be introduced in ROOT
+      if (d.check('LOGV') && pad) pad.fLogv = 1; // fictional member, can be introduced in ROOT
       if (d.check('GRIDXY') && pad) pad.fGridx = pad.fGridy = 1;
       if (d.check('GRIDX') && pad) pad.fGridx = 1;
       if (d.check('GRIDY') && pad) pad.fGridy = 1;
@@ -679,7 +679,7 @@ class HistContour {
          this.arr.push(this.colzmax);
    }
 
-   /** @summary Configure indicies */
+   /** @summary Configure indices */
    configIndicies(below_min, exact_min) {
       this.below_min_indx = below_min;
       this.exact_min_indx = exact_min;
@@ -723,7 +723,7 @@ class HistContour {
 } // class HistContour
 
 /**
- * @summary Handle for updateing of secondary functions
+ * @summary Handle for updating of secondary functions
  *
  * @private
  */
@@ -859,7 +859,6 @@ class THistPainter extends ObjectPainter {
       super(dom, histo);
       this.draw_content = true;
       this.nbinsx = this.nbinsy = 0;
-      this.accept_drops = true; // indicate that one can drop other objects like doing Draw('same')
       this.mode3d = false;
    }
 
@@ -947,7 +946,7 @@ class THistPainter extends ObjectPainter {
 
       this.options.decode(opt || histo.fOption, hdim, histo, pp, pad, this);
 
-      this.storeDrawOpt(opt); // opt will be return as default draw option, used in webcanvas
+      this.storeDrawOpt(opt); // opt will be return as default draw option, used in web canvas
    }
 
    /** @summary Copy draw options from other painter */
@@ -979,7 +978,7 @@ class THistPainter extends ObjectPainter {
    scanContent(/* when_axis_changed */) {
       // function will be called once new histogram or
       // new histogram content is assigned
-      // one should find min,max,nbins, maxcontent values
+      // one should find min, max, bins number, content min/max values
       // if when_axis_changed === true specified, content will be scanned after axis zoom changed
    }
 
@@ -1061,7 +1060,7 @@ class THistPainter extends ObjectPainter {
          if (!this.matchObjectType(obj)) return false;
 
          // simple replace of object does not help - one can have different
-         // complex relations between histo and stat box, histo and colz axis,
+         // complex relations between histogram and stat box, histogram and colz axis,
          // one could have THStack or TMultiGraph object
          // The only that could be done is update of content
 
@@ -1077,7 +1076,7 @@ class THistPainter extends ObjectPainter {
          if (histo.TestBit(kIsZoomed) !== obj.TestBit(kIsZoomed))
             histo.InvertBit(kIsZoomed);
 
-         // special treatment for webcanvas - also name can be changed
+         // special treatment for web canvas - also name can be changed
          if (this.snapid !== undefined) {
             histo.fName = obj.fName;
             o._pfc = o._plc = o._pmc = 0; // auto colors should be processed in web canvas
@@ -1435,7 +1434,7 @@ class THistPainter extends ObjectPainter {
       return this.findFunction(clTPaveStats, 'stats');
    }
 
-   /** @summary Toggle statbox drawing
+   /** @summary Toggle stat box drawing
      * @private */
    toggleStat(arg) {
       const pp = this.getPadPainter();
@@ -1445,7 +1444,7 @@ class THistPainter extends ObjectPainter {
 
       if (!stat) {
          if (arg.indexOf('-check') > 0) return false;
-         // when statbox created first time, one need to draw it
+         // when stat box created first time, one need to draw it
          stat = this.createStat(true);
       } else
          statpainter = pp.findPainterFor(stat);
@@ -1483,7 +1482,7 @@ class THistPainter extends ObjectPainter {
       return has_stats;
    }
 
-   /** @summary Returns true if stats box fill can be ingored */
+   /** @summary Returns true if stats box fill can be ignored */
    isIgnoreStatsFill() {
       return !this.getObject() || (!this.draw_content && !this.create_stats && !this.snapid); // || (this.options.Axis > 0);
    }
@@ -1838,7 +1837,7 @@ class THistPainter extends ObjectPainter {
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
    }
 
-   /** @summary Returns snap id for object or subelement
+   /** @summary Returns snap id for object or sub-element
      * @private */
    getSnapId(subelem) {
       if (!this.snapid)
@@ -1969,7 +1968,7 @@ class THistPainter extends ObjectPainter {
 
       // if not initialized, first create contour array
       // difference from ROOT - fContour includes also last element with maxbin, which makes easier to build logz
-      // when no same0 draw option specified, use main painter for creating contour, also ignore scatter drawing for main painer
+      // when no same0 draw option specified, use main painter for creating contour, also ignore scatter drawing for main painter
       const histo = this.getObject(),
             src = (this !== main) && (main?.minbin !== undefined) && !this.options.IgnoreMainScale && !main?.tt_handle?.ScatterPlot ? main : this;
       let nlevels = 0, apply_min,
@@ -2302,7 +2301,7 @@ class THistPainter extends ObjectPainter {
             };
 
       if (args.cutg) {
-         // if using cutg - define rectengular region
+         // if using cutg - define rectangular region
          let i1 = res.i2, i2 = res.i1, j1 = res.j2, j2 = res.j1;
          for (let ii = res.i1; ii < res.i2; ++ii) {
             for (let jj = res.j1; jj < res.j2; ++jj) {

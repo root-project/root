@@ -1681,7 +1681,7 @@ function ZIP_inflate(arr, tgt) {
 
    function zip_inflate_fixed(buff, off, size) {
       /* decompress an inflated type 1 (fixed Huffman codes) block.  We should
-         either replace this with a custom decoder, or at least precompute the
+         either replace this with a custom decoder, or at least pre-compute the
          Huffman tables. */
 
       // if first time, set up tables for fixed blocks
@@ -1922,7 +1922,7 @@ function ZIP_inflate(arr, tgt) {
  * Decode a block. Assumptions: input contains all sequences of a
  * chunk, output is large enough to receive the decoded data.
  * If the output buffer is too small, an error will be thrown.
- * If the returned value is negative, an error occured at the returned offset.
+ * If the returned value is negative, an error occurred at the returned offset.
  *
  * @param input {Buffer} input data
  * @param output {Buffer} output data
@@ -3043,7 +3043,7 @@ class TFile {
 
       // one uses Promises while in some cases we need to
       // read sub-directory to get list of keys
-      // in such situation calls are asynchrone
+      // in such situation calls are asynchronous
       return this.getKey(obj_name, cycle).then(key => {
          if ((obj_name === nameStreamerInfo) && (key.fClassName === clTList))
             return this.fStreamerInfos;
@@ -3280,7 +3280,7 @@ class TFile {
                return si;
             }
          }
-         cache[checksum] = null; // checksum didnot found, do not try again
+         cache[checksum] = null; // checksum did not found, do not try again
       } else {
          for (let i = 0; i < len; ++i) {
             const si = arr[i];
@@ -3394,7 +3394,7 @@ class TFile {
       return tgt;
    }
 
-   /** @summary Fully clenaup TFile data
+   /** @summary Fully cleanup TFile data
      * @private */
    delete() {
       this.fDirectories = null;
@@ -3690,7 +3690,7 @@ class TNodejsFile extends TFile {
 } // class TNodejsFile
 
 /**
-  * @summary Proxy to read file contenxt
+  * @summary Proxy to read file content
   *
   * @desc Should implement following methods:
   *

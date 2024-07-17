@@ -100,7 +100,7 @@ class TMultiGraphPainter extends ObjectPainter {
          // rw.first = false;
       }
 
-      // ignore existing histo in 3d case
+      // ignore existing histogram in 3d case
       if (this._3d && histo && !histo.fXaxis.fLabels)
          histo = null;
 
@@ -229,7 +229,7 @@ class TMultiGraphPainter extends ObjectPainter {
       return histo;
    }
 
-   /** @summary draw speical histogram for axis
+   /** @summary draw special histogram for axis
      * @return {Promise} when ready */
    async drawAxisHist(histo, hopt) {
       return TH1Painter.draw(this.getDrawDom(), histo, hopt);

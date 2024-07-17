@@ -581,7 +581,7 @@ class TDrawVariable {
    is_dummy() { return (this.branches.length === 0) && !this.func; }
 
    /** @summary Produce variable
-     * @desc after reading tree braches into the object, calculate variable value */
+     * @desc after reading tree branches into the object, calculate variable value */
    produce(obj) {
       this.length = 1;
       this.isarray = false;
@@ -1111,7 +1111,7 @@ class TDrawSelector extends TSelector {
       if (this.hist || !this.vars[0].buf) return;
 
       if (this.dump_values) {
-         // just create array where dumped valus will be collected
+         // just create array where dumped values will be collected
          this.hist = [];
 
          // reassign fill method
@@ -1282,7 +1282,7 @@ class TDrawSelector extends TSelector {
    }
 
     /** @summary function used when all branches can be read as array
-      * @desc most typical usage - histogramming of single branch */
+      * @desc most typical usage - histogram filling of single branch */
    ProcessArraysFunc(/* entry */) {
       if (this.arr_limit || this.graph) {
          const var0 = this.vars[0],

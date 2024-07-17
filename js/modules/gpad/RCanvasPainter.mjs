@@ -157,7 +157,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary Draw projection for specified histogram
      * @private */
-   async drawProjection(/* kind,hist,hopt */) {
+   async drawProjection(/* kind, hist, hopt */) {
       // dummy for the moment
       return false;
    }
@@ -174,9 +174,7 @@ class RCanvasPainter extends RPadPainter {
      * @desc Function should be used only from the func which supposed to be replaced by ui5
      * @private */
    testUI5() {
-      if (!this.use_openui) return false;
-      console.warn('full ui5 should be used - not loaded yet? Please check!!');
-      return true;
+      return this.use_openui ?? false;
    }
 
    /** @summary Show message
@@ -250,19 +248,19 @@ class RCanvasPainter extends RPadPainter {
          this._websocket._tmouts[name] = setTimeout(() => { delete this._websocket._tmouts[name]; }, tm);
    }
 
-   /** @summary Hanler for websocket open event
+   /** @summary Handler for websocket open event
      * @private */
    onWebsocketOpened(/* handle */) {
    }
 
-   /** @summary Hanler for websocket close event
+   /** @summary Handler for websocket close event
      * @private */
    onWebsocketClosed(/* handle */) {
       if (!this.embed_canvas)
          closeCurrentWindow();
    }
 
-   /** @summary Hanler for websocket message
+   /** @summary Handler for websocket message
      * @private */
    onWebsocketMsg(handle, msg) {
       // console.log('GET_MSG ' + msg.slice(0,30));

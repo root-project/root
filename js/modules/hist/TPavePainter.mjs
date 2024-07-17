@@ -40,7 +40,7 @@ class TPavePainter extends ObjectPainter {
       this.UseContextMenu = true;
    }
 
-   /** @summary Autoplace legend on the frame
+   /** @summary Auto place legend on the frame
      * @return {Promise} with boolean flag if position was changed  */
    async autoPlaceLegend(pt, pad, keep_origin) {
       const main_svg = this.getFrameSvg().selectChild('.main_layer');
@@ -209,7 +209,7 @@ class TPavePainter extends ObjectPainter {
                   // adjust the size of the stats box with the number of lines
                   let nlines = pt.fLines?.arr.length || 0;
                   if ((nlines > 0) && !this.moved_interactive && isDefaultStatPosition(pt)) {
-                     // in ROOT TH2 and TH3 always add full statsh for fit parameters
+                     // in ROOT TH2 and TH3 always add full stats for fit parameters
                      const extrah = this._has_fit && (this._fit_dim > 1) ? gStyle.fStatH : 0;
                      // but fit parameters not used in full size calculations
                      if (extrah) nlines -= this._fit_cnt;
@@ -662,7 +662,7 @@ class TPavePainter extends ObjectPainter {
             text_promises = [],
             pp = this.getPadPainter();
       let font_size = 0.9*step_y,
-          max_font_size = 0, // not limited in the beggining
+          max_font_size = 0, // not limited in the beginning
           any_opt = false;
 
       this.createAttText({ attr: legend, can_rotate: false });
@@ -743,7 +743,7 @@ class TPavePainter extends ObjectPainter {
                   if (isFunc(painter?.getHisto) && painter.options?.ErrorKind === 1)
                      endcaps = 1; // draw bars for e1 option in histogram
                   else if (isFunc(painter?.getGraph) && mo?.fLineWidth !== undefined && mo?.fMarkerSize !== undefined) {
-                     endcaps = painter.options?.Ends ?? 1; // deafult is 1
+                     endcaps = painter.options?.Ends ?? 1; // default is 1
                      edx = mo.fLineWidth + gStyle.fEndErrorSize;
                      if (endcaps > 1) edx = Math.max(edx, mo.fMarkerSize*8*0.66);
                   }
@@ -768,7 +768,7 @@ class TPavePainter extends ObjectPainter {
             }
          }
 
-         // Draw Polymarker
+         // Draw Poly marker
          if (draw_marker) {
             const marker = painter?.markeratt?.used ? painter.markeratt : this.createAttMarker(o_marker);
             if (!marker.empty()) {
@@ -875,8 +875,6 @@ class TPavePainter extends ObjectPainter {
             zmin = levels[0];
             zmax = levels[levels.length-1];
          }
-         // zmin = Math.min(levels[0], framep.zmin);
-         // zmax = Math.max(levels[levels.length-1], framep.zmax);
       } else if ((main.gmaxbin !== undefined) && (main.gminbin !== undefined)) {
          // this is case of TH2 (needs only for size adjustment)
          zmin = main.gminbin; zmax = main.gmaxbin;
