@@ -1334,8 +1334,6 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
-   // Called by AddColumn() to populate the fLogicalFieldIds member of the field descriptor
-   RResult<void> AttachColumn(DescriptorId_t fieldId, const RColumnDescriptor &columnDesc);
 
 public:
    /// Checks whether invariants hold:
