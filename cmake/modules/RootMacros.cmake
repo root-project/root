@@ -1028,7 +1028,7 @@ function(ROOT_LINKER_LIBRARY library)
                                  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries
                                  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries)
     endif()
-    if(WIN32 AND ARG_TYPE STREQUAL SHARED)
+    if(WIN32)
       install(FILES ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/lib${library}.pdb
                     CONFIGURATIONS Debug RelWithDebInfo
                     DESTINATION ${CMAKE_INSTALL_BINDIR}
@@ -1846,8 +1846,7 @@ function(ROOT_ADD_GTEST test_suite)
   endif(ARG_INCLUDE_DIRS)
 
   if(MSVC)
-    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch
-        /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
+    set(test_exports "/EXPORT:_Init_thread_abort /EXPORT:_Init_thread_epoch /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index")
     set_property(TARGET ${test_suite} APPEND_STRING PROPERTY LINK_FLAGS ${test_exports})
   endif()
 

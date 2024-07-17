@@ -9,7 +9,7 @@ ROOT_GENERATE_DICTIONARY(ElementStructDict ElementStruct.h LINKDEF ElementStruct
 ROOT_ADD_GTEST(testTOffsetGeneration TOffsetGeneration.cxx ElementStruct.cxx ElementStructDict.cxx
   LIBRARIES RIO Tree MathCore
 )
-if(MSVC)
+if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
   add_custom_command(TARGET testTOffsetGeneration POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/libElementStructDict_rdict.pcm
                                      ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libElementStructDict_rdict.pcm)
