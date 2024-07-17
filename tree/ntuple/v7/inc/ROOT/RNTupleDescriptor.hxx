@@ -603,7 +603,7 @@ public:
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor &fNTuple;
-      /// The descriptor ids of the columns ordered by index id
+      /// The descriptor ids of the columns ordered by field, representation, and column index
       std::vector<DescriptorId_t> fColumns = {};
 
    public:
