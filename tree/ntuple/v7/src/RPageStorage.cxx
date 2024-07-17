@@ -160,7 +160,8 @@ ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    R__ASSERT(fieldId != kInvalidDescriptorId);
-   auto physicalId = GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex());
+   auto physicalId =
+      GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
    R__ASSERT(physicalId != kInvalidDescriptorId);
    fActivePhysicalColumns.Insert(physicalId);
    return ColumnHandle_t{physicalId, &column};

@@ -233,8 +233,8 @@ TEST_F(RPageStorageDaos, DisabledSamePageMerging)
    EXPECT_EQ(1u, reader->GetNEntries());
 
    const auto &desc = reader->GetDescriptor();
-   const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0);
-   const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0);
+   const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
+   const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
    const auto clusterId = desc.FindClusterId(pxColId, 0);
    const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
    EXPECT_FALSE(clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==
@@ -308,7 +308,7 @@ TEST_F(RPageStorageDaos, CagedPages)
       auto pageSource = RPageSource::Create(ntupleName, daosUri, options);
       pageSource->Attach();
       const auto &desc = pageSource->GetSharedDescriptorGuard()->Clone();
-      const auto colId = desc->FindPhysicalColumnId(desc->FindFieldId("cnt"), 0);
+      const auto colId = desc->FindPhysicalColumnId(desc->FindFieldId("cnt"), 0, 0);
       const auto clusterId = desc->FindClusterId(colId, 0);
 
       RPageStorage::RSealedPage sealedPage;
@@ -363,8 +363,8 @@ TEST_F(RPageStorageDaos, Checksum)
    pageSource->Attach();
    {
       auto descGuard = pageSource->GetSharedDescriptorGuard();
-      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0);
-      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0);
+      pxColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("px"), 0, 0);
+      pyColId = descGuard->FindPhysicalColumnId(descGuard->FindFieldId("py"), 0, 0);
       clusterId = descGuard->FindClusterId(pxColId, 0);
    }
    RClusterIndex index{clusterId, 0};
