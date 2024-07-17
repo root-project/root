@@ -773,7 +773,8 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
       }
 
       std::string key, ntry;
-      key = url.GetValueFromOptions("key");
+      if (url.HasOption("key"))
+         key = url.GetValueFromOptions("key");
       if(url.HasOption("ntry"))
          ntry = url.GetValueFromOptions("ntry");
 
