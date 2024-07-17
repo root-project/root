@@ -898,35 +898,17 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
       if (columnDesc.GetType() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetType())
          return R__FAIL("alias column type mismatch");
    }
-   auto res = AttachColumn(fieldId, columnDesc);
-   if (!res)
-      R__FORWARD_ERROR(res);
 
-   auto logicalId = columnDesc.GetLogicalId();
+   const auto logicalId = columnDesc.GetLogicalId();
+   auto &fieldDesc = fDescriptor.fFieldDescriptors.find(fieldId)->second;
+   fieldDesc.fLogicalColumnIds.emplace_back(logicalId);
+   fieldDesc.fColumnCardinality = std::max(fieldDesc.fColumnCardinality, columnIndex + 1);
+
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
       fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/columnDesc.IsAliasColumn());
-
-   return RResult<void>::Success();
-}
-
-ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AttachColumn(DescriptorId_t fieldId,
-                                                                     const RColumnDescriptor &columnDesc)
-{
-   auto itrFieldDesc = fDescriptor.fFieldDescriptors.find(fieldId);
-   if (itrFieldDesc == fDescriptor.fFieldDescriptors.end()) {
-      return R__FAIL("AttachColumn: invalid field ID");
-   }
-   auto &logicalColumnIds = itrFieldDesc->second.fLogicalColumnIds;
-   for (std::size_t i = logicalColumnIds.size(); i <= columnDesc.GetIndex(); ++i) {
-      logicalColumnIds.emplace_back(kInvalidDescriptorId);
-   }
-   logicalColumnIds.at(columnDesc.GetIndex()) = columnDesc.GetLogicalId();
-   itrFieldDesc->second.fColumnCardinality =
-      std::max(itrFieldDesc->second.fColumnCardinality, columnDesc.GetIndex() + 1);
 
    return RResult<void>::Success();
 }
