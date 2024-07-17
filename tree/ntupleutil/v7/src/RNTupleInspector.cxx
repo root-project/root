@@ -145,13 +145,9 @@ ROOT::Experimental::RNTupleInspector::GetColumnsByFieldId(DescriptorId_t fieldId
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
-ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
+ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple &sourceNTuple)
 {
-   if (!sourceNTuple) {
-      throw RException(R__FAIL("provided RNTuple is null"));
-   }
-
-   auto pageSource = Internal::RPageSourceFile::CreateFromAnchor(*sourceNTuple);
+   auto pageSource = Internal::RPageSourceFile::CreateFromAnchor(sourceNTuple);
    return std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 }
 

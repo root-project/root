@@ -187,7 +187,7 @@ public:
    /// \note When this factory method is called, all required static information is collected from the RNTuple's fields
    /// and underlying columns are collected at ones. This means that when any inconsistencies are encountered (e.g.
    /// inconsistent compression across clusters), it will throw an error here.
-   static std::unique_ptr<RNTupleInspector> Create(RNTuple *sourceNTuple);
+   static std::unique_ptr<RNTupleInspector> Create(RNTuple &sourceNTuple);
 
    /////////////////////////////////////////////////////////////////////////////
    /// \brief Create a new RNTupleInspector.
