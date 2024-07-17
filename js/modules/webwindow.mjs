@@ -271,9 +271,9 @@ class WebWindowHandle {
    constructor(socket_kind, credits) {
       this.kind = socket_kind;
       this.state = 0;
-      this.credits = credits || 10;
+      this.credits = Math.max(3, credits || 10);
       this.cansend = this.credits;
-      this.ackn = this.credits;
+      this.ackn = this.credits; // this number will be send to server with first message
       this.send_seq = 1; // sequence counter of send messages
       this.recv_seq = 0; // sequence counter of received messages
    }
@@ -705,6 +705,7 @@ class WebWindowHandle {
                   this.invokeReceiver(true, 'onWebsocketClosed');
                } else if (msg.indexOf('NEW_KEY=') === 0) {
                   this.new_key = msg.slice(8);
+                  console.log('get new key', this.new_key);
                   this.storeKeyInUrl();
                   if (this._ask_reload)
                      this.askReload(true);
@@ -717,7 +718,7 @@ class WebWindowHandle {
             else
                this.provideData(chid, msg);
 
-            if (this.ackn > 7)
+            if (this.ackn > Math.max(2, this.credits*0.7))
                this.send('READY', 0); // send dummy message to server
          };
 
@@ -787,11 +788,9 @@ class WebWindowHandle {
    /** @summary Replace widget URL with new key
      * @private */
    storeKeyInUrl() {
-      if (!this._handling_reload)
-         return;
-
       let href = (typeof document !== 'undefined') ? document.URL : null;
-      if (isStr(href) && (typeof window !== 'undefined') && window?.history) {
+
+      if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
          let prefix = '&key=', p = href.indexOf(prefix);
          if (p < 0) {
             prefix = '?key=';
@@ -801,9 +800,10 @@ class WebWindowHandle {
             const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
                   pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
             href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
-            window.history.replaceState(window.history.state, undefined, href);
+            window.history?.replaceState(window.history.state, undefined, href);
          }
       }
+
       if (typeof sessionStorage !== 'undefined') {
          sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
          sessionStorage.setItem('RWebWindow_Key', this.new_key);
@@ -833,16 +833,23 @@ async function connectWebWindow(arg) {
    let d_key, d_token, new_key;
 
    if (!arg.href) {
-      let href = (typeof document !== 'undefined') ? document.URL : '';
+      let href = (typeof document !== 'undefined') ? document.URL : '', s_key;
       const p = href.indexOf('#');
       if (p > 0) {
-         sessionKey = href.slice(p+1);
+         s_key = href.slice(p + 1);
          href = href.slice(0, p);
       }
 
       const d = decodeUrl(href);
       d_key = d.get('key');
       d_token = d.get('token');
+
+      if (d_key && s_key && (s_key.length > 20)) {
+         sessionKey = s_key;
+
+         if (typeof window !== 'undefined')
+            window.history?.replaceState(window.history.state, undefined, href);
+      }
 
       if (typeof sessionStorage !== 'undefined') {
          new_key = sessionStorage.getItem('RWebWindow_Key');
@@ -898,6 +905,7 @@ async function connectWebWindow(arg) {
    const main = new Promise(resolveFunc => {
       const handle = new WebWindowHandle(arg.socket_kind, arg.credits);
       handle.setUserArgs(arg.user_args);
+      handle._can_modify_url = !!d_key; // if key appears in URL, we can put there new key
       if (arg.href)
          handle.setHRef(arg.href); // apply href now  while connect can be called from other place
       else {
