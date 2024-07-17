@@ -176,28 +176,68 @@ void RWebWindowsManager::SetUseConnectionKey(bool on)
 
 void RWebWindowsManager::AddServerLocation(const std::string &server_prefix, const std::string &files_path)
 {
-   TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
-   TString arg = server_prefix.c_str();
-   arg.Append(":");
-   auto p = cfg.Index(arg);
-   if (p != kNPOS) {
-      auto p2 = cfg.Index(";", p + arg.Length());
-      if (p2 == kNPOS) p2 = cfg.Length() - 1;
-      cfg.Remove(p, p2 - p + 1);
+   if (server_prefix.empty() || files_path.empty())
+      return;
+   auto loc = GetServerLocations();
+   std::string prefix = server_prefix;
+   if (prefix.back() != '/')
+      prefix.append("/");
+   loc[prefix] = files_path;
+
+   // now convert back to plain string
+   TString cfg;
+   for (auto &entry : loc) {
+      if (cfg.Length() > 0)
+         cfg.Append(";");
+      cfg.Append(entry.first.c_str());
+      cfg.Append(":");
+      cfg.Append(entry.second.c_str());
    }
-   if (cfg.Length() > 0)
-      cfg.Append(";");
-   cfg.Append(arg);
-   cfg.Append(files_path.c_str());
+
    gEnv->SetValue("WebGui.ServerLocations", cfg);
 
    auto serv = Instance()->GetServer();
-   if (serv) {
-      arg = server_prefix.c_str();
-      if (!arg.EndsWith("/"))
-         arg.Append("/");
-      serv->AddLocation(arg.Data(), files_path.c_str());
+   if (serv)
+      serv->AddLocation(prefix.c_str(), files_path.c_str());
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns server locations as <std::string, std::string>
+/// Key is location name (with slash at the end) and value is file path
+
+std::map<std::string, std::string> RWebWindowsManager::GetServerLocations()
+{
+   std::map<std::string, std::string> res;
+
+   TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
+   auto arr = cfg.Tokenize(";");
+   if (arr) {
+      TIter next(arr);
+      while(auto obj = next()) {
+         TString arg = obj->GetName();
+
+         auto p = arg.First(":");
+         if (p == kNPOS) continue;
+
+         TString prefix = arg(0, p);
+         if (!prefix.EndsWith("/"))
+            prefix.Append("/");
+         TString path = arg(p+1, arg.Length() - p);
+
+         res[prefix.Data()] = path.Data();
+      }
+      delete arr;
    }
+   return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Clear all server locations
+/// Does not change configuration of already running HTTP server
+
+void RWebWindowsManager::ClearServerLocations()
+{
+   gEnv->SetValue("WebGui.ServerLocations", "");
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -434,25 +474,9 @@ bool RWebWindowsManager::CreateServer(bool with_http)
 
       fServer->AddLocation("rootui5sys/", ui5dir.Data());
 
-      TString cfg = gEnv->GetValue("WebGui.ServerLocations","");
-      auto arr = cfg.Tokenize(";");
-      if (arr) {
-         TIter next(arr);
-         while(auto obj = next()) {
-            TString arg = obj->GetName();
-
-            auto p = arg.First(":");
-            if (p == kNPOS) continue;
-
-            TString prefix = arg(0, p);
-            if (!prefix.EndsWith("/"))
-               prefix.Append("/");
-            TString path = arg(p+1, arg.Length() - p);
-            fServer->AddLocation(prefix.Data(), path.Data());
-         }
-         delete arr;
-      }
-
+      auto loc = GetServerLocations();
+      for (auto &entry : loc)
+         fServer->AddLocation(entry.first.c_str(), entry.second.c_str());
    }
 
    if (!with_http || fServer->IsAnyEngine())
