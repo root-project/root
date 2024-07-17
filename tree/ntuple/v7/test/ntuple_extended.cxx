@@ -167,7 +167,7 @@ TEST(RNTuple, LargeFile1)
    {
       auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "READ"));
       EXPECT_TRUE(f);
-      auto reader = RNTupleReader::Open(f->Get<RNTuple>("myNTuple"));
+      auto reader = RNTupleReader::Open(*f->Get<RNTuple>("myNTuple"));
       auto rdEnergy  = reader->GetView<double>("energy");
 
       double chksumRead = 0.0;
@@ -257,11 +257,11 @@ TEST(RNTuple, LargeFile2)
       auto s2 = f->Get<std::string>("s2");
       EXPECT_EQ("two", *s2);
 
-      auto reader = RNTupleReader::Open(f->Get<RNTuple>("small"));
+      auto reader = RNTupleReader::Open(*f->Get<RNTuple>("small"));
       reader->LoadEntry(0);
       EXPECT_EQ(42.0f, *reader->GetModel().GetDefaultEntry().GetPtr<float>("pt"));
 
-      reader = RNTupleReader::Open(f->Get<RNTuple>("large"));
+      reader = RNTupleReader::Open(*f->Get<RNTuple>("large"));
       auto viewE = reader->GetView<double>("E");
       double chksumRead = 0.0;
       for (auto i : reader->GetEntryRange()) {

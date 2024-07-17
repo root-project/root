@@ -28,11 +28,11 @@ TEST(RNTupleInspector, CreateFromPointer)
 
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    auto ntuple = file->Get<RNTuple>("ntuple");
-   auto inspector = RNTupleInspector::Create(ntuple);
+   auto inspector = RNTupleInspector::Create(*ntuple);
    EXPECT_EQ(inspector->GetDescriptor()->GetName(), "ntuple");
 
    auto nullNTuple = file->Get<RNTuple>("null");
-   EXPECT_THROW(RNTupleInspector::Create(nullNTuple), ROOT::Experimental::RException);
+   EXPECT_THROW(RNTupleInspector::Create(*nullNTuple), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, CreateFromString)
