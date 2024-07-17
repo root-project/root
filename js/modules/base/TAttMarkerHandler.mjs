@@ -171,7 +171,7 @@ class TAttMarkerHandler {
             s1 = (parseFloat(s2) * 2).toFixed(this.ndig);
             this.marker = `a${s2},${s2},0,1,0,${s1},0a${s2},${s2},0,1,0,-${s1},0z`;
             break;
-         case 5: // mult
+         case 5: // multiply
             this.x0 = this.y0 = -size / 2;
             this.marker = `l${s1},${s1}m0,-${s1}l-${s1},${s1}`;
             break;
@@ -191,7 +191,7 @@ class TAttMarkerHandler {
             this.y0 = -size / 2;
             this.marker = `l-${s2},${s1}h${s1}z`;
             break;
-         case 27: // diamand
+         case 27: // diamond
             this.y0 = -size / 2;
             this.marker = `l${s3},${s2}l-${s3},${s2}l-${s3},-${s2}z`;
             break;
@@ -249,7 +249,7 @@ class TAttMarkerHandler {
             this.x0 = -size/6; this.y0 = -size/2;
             this.marker = `h${s3}v${s3}h-${s3}zm${s3},${s3}h${s3}v${s3}h-${s3}zm-${s3},${s3}h${s3}v${s3}h-${s3}zm-${s3},-${s3}h${s3}v${s3}h-${s3}z`;
             break;
-         default: // diamand
+         default: // diamond
             this.y0 = -size / 2;
             this.marker = `l${s3},${s2}l-${s3},${s2}l-${s3},-${s2}z`;
             break;

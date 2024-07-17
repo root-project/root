@@ -401,7 +401,7 @@ class TAxisPainter extends ObjectPainter {
       Object.assign(this, AxisPainterMethods);
       this.initAxisPainter();
 
-      this.embedded = embedded; // indicate that painter embedded into the histo painter
+      this.embedded = embedded; // indicate that painter embedded into the histogram painter
       this.invert_side = false;
       this.lbls_both_sides = false; // draw labels on both sides
    }
@@ -417,7 +417,7 @@ class TAxisPainter extends ObjectPainter {
 
    /** @summary Configure axis painter
      * @desc Axis can be drawn inside frame <g> group with offset to 0 point for the frame
-     * Therefore one should distinguish when caclulated coordinates used for axis drawing itself or for calculation of frame coordinates
+     * Therefore one should distinguish when calculated coordinates used for axis drawing itself or for calculation of frame coordinates
      * @private */
    configureAxis(name, min, max, smin, smax, vertical, range, opts) {
       this.name = name;
@@ -1344,13 +1344,6 @@ class TAxisPainter extends ObjectPainter {
             title_offest_k *= -1.6;
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
-
-            // if ((this.name === 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
-            //    // special handling for color palette labels - draw them always on right side
-            //   const rect = axis_g.node().getBoundingClientRect();
-            //   if (title_shift_x < rect.width - this.ticksSize)
-            //      title_shift_x = Math.round(rect.width - this.ticksSize);
-            // }
 
             title_shift_y = Math.round(this.titleCenter ? h/2 : (xor_reverse ? h : 0));
 

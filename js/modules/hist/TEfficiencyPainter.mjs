@@ -23,7 +23,7 @@ const kIsBayesian = BIT(14),  // Bayesian statistics are used
 
 class TEfficiencyPainter extends ObjectPainter {
 
-   /** @summary Caluclate efficiency */
+   /** @summary Calculate efficiency */
    getEfficiency(obj, bin) {
       const BetaMean = (a, b) => (a <= 0 || b <= 0) ? 0 : a / (a + b),
             BetaMode = (a, b) => {
@@ -51,7 +51,7 @@ class TEfficiencyPainter extends ObjectPainter {
 
             if (tw2 <= 0) return pw/tw;
 
-            // tw/tw2 renormalize the weights
+            // tw/tw2 re-normalize the weights
             const norm = tw/tw2;
             aa = pw * norm + alpha;
             bb = (tw - pw) * norm + beta;
@@ -69,7 +69,7 @@ class TEfficiencyPainter extends ObjectPainter {
       return total ? passed/total : 0;
    }
 
-   /** @summary Caluclate efficiency error low */
+   /** @summary Calculate efficiency error low */
    getEfficiencyErrorLow(obj, bin, value) {
       const total = obj.fTotalHistogram.fArray[bin],
             passed = obj.fPassedHistogram.fArray[bin];
@@ -82,7 +82,7 @@ class TEfficiencyPainter extends ObjectPainter {
       return value - this.fBoundary(total, passed, obj.fConfLevel, false, alpha, beta);
    }
 
-   /** @summary Caluclate efficiency error low up */
+   /** @summary Calculate efficiency error low up */
    getEfficiencyErrorUp(obj, bin, value) {
       const total = obj.fTotalHistogram.fArray[bin],
             passed = obj.fPassedHistogram.fArray[bin];
@@ -95,7 +95,7 @@ class TEfficiencyPainter extends ObjectPainter {
       return this.fBoundary(total, passed, obj.fConfLevel, true, alpha, beta) - value;
    }
 
-   /** @summary Copy drawning attributes */
+   /** @summary Copy drawing attributes */
    copyAttributes(obj, eff) {
       ['fLineColor', 'fLineStyle', 'fLineWidth', 'fFillColor', 'fFillStyle', 'fMarkerColor', 'fMarkerStyle', 'fMarkerSize'].forEach(name => { obj[name] = eff[name]; });
    }

@@ -109,7 +109,7 @@ function addDragHandler(_painter, arg) {
 
    const painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing || pp?.isBatchMode()) return;
-   // cleanup all drag elements when canvas is not ediatable
+   // cleanup all drag elements when canvas is not editable
    if (pp?.isEditable() === false)
       arg.cleanup = true;
 
@@ -872,9 +872,11 @@ const TooltipHandler = {
       }
 
       if (zoom.dleft || zoom.dright) {
-         if (!settings.Zooming) return false;
-         // in 3dmode with orbit control ignore simple arrows
-         if (this.mode3d && (key.indexOf('Ctrl') !== 0)) return false;
+         if (!settings.Zooming)
+            return false;
+         // in 3d mode with orbit control ignore simple arrows
+         if (this.mode3d && (key.indexOf('Ctrl') !== 0))
+            return false;
          this.analyzeMouseWheelEvent(null, zoom, 0.5);
          if (zoom.changed)
             this.zoomSingle(zoom.name, zoom.min, zoom.max, true);
@@ -1603,7 +1605,7 @@ const TooltipHandler = {
       Object.assign(painter, this);
    }
 
-}; // FrameInterative
+}; // FrameInteractive
 
 
 /**
@@ -1615,9 +1617,9 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary constructor
      * @param {object|string} dom - DOM element for drawing or element id
-     * @param {object} tframe - TFrame object */
-   constructor(dom, tframe) {
-      super(dom, (tframe && tframe.$dummy) ? null : tframe);
+     * @param {object} frame - TFrame object */
+   constructor(dom, frame) {
+      super(dom, frame?.$dummy ? null : frame);
       this.zoom_kind = 0;
       this.mode3d = false;
       this.shrink_frame_left = 0.0;
@@ -1671,7 +1673,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary Returns coordinates transformation func */
    getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
 
-   /** @summary Rcalculate frame ranges using specified projection functions */
+   /** @summary Recalculate frame ranges using specified projection functions */
    recalculateRange(Proj, change_x, change_y) {
       this.projection = Proj || 0;
 
@@ -1772,7 +1774,7 @@ class TFramePainter extends ObjectPainter {
       }
    }
 
-   /** @summary Retuns associated axis object */
+   /** @summary Returns associated axis object */
    getAxis(name) {
       switch (name) {
          case 'x': return this.xaxis;
@@ -1789,7 +1791,7 @@ class TFramePainter extends ObjectPainter {
    applyPadUserRange(pad, name) {
       if (!pad) return;
 
-      // seems to be, not allways user range calculated
+      // seems to be, not always user range calculated
       let umin = pad[`fU${name}min`],
           umax = pad[`fU${name}max`],
           eps = 1e-7;
@@ -2070,7 +2072,6 @@ class TFramePainter extends ObjectPainter {
 
       if (is3d) {
          // this is fake values, algorithm should be copied from TView3D class of ROOT
-         // pad.fLogx = pad.fLogy = 0;
          pad.fUxmin = pad.fUymin = -0.9;
          pad.fUxmax = pad.fUymax = 0.9;
       } else {
@@ -2418,7 +2419,7 @@ class TFramePainter extends ObjectPainter {
          this.draw_g.remove();
       }
 
-      delete this.draw_g; // frame <g> element managet by the pad
+      delete this.draw_g; // frame <g> element managed by the pad
 
       if (this.keys_handler) {
          window.removeEventListener('keydown', this.keys_handler, false);
@@ -2732,7 +2733,7 @@ class TFramePainter extends ObjectPainter {
    }
 
    /** @summary Configure user-defined click handler
-     * @desc Function will be called every time when frame click was perfromed
+     * @desc Function will be called every time when frame click was performed
      * As argument, tooltip object with selected bins will be provided
      * If handler function returns true, default handling of click will be disabled */
    configureUserClickHandler(handler) {
@@ -2877,7 +2878,7 @@ class TFramePainter extends ObjectPainter {
      * @param {String} name - axis name like x/y/z but also second axis x2 or y2
      * @param {Number} vmin - axis minimal value, 0 for unzoom
      * @param {Number} vmax - axis maximal value, 0 for unzoom
-     * @param {Boolean} [interactive] - if change was perfromed interactively
+     * @param {Boolean} [interactive] - if change was performed interactively
      * @protected */
    async zoomSingle(name, vmin, vmax, interactive) {
       if (!this[`${name}_handle`] && (name !== 'z'))
@@ -2937,7 +2938,7 @@ class TFramePainter extends ObjectPainter {
       return this[`zoom_${axis}min`] !== this[`zoom_${axis}max`];
    }
 
-   /** @summary Unzoom speicified axes
+   /** @summary Unzoom specified axes
      * @return {Promise} with boolean flag if zooming changed */
    async unzoom(dox, doy, doz) {
       if (dox === 'all')

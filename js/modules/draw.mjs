@@ -1,5 +1,5 @@
 import { select as d3_select } from './d3.mjs';
-import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
+import { loadScript, loadModules, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          prROOT,
          clTObject, clTNamed, clTString, clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTObjString, clTFile, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
@@ -106,12 +106,12 @@ drawFuncs = { lst: [
    { name: 'TExec', icon: 'img_graph', dummy: true },
    { name: clTLine, icon: 'img_graph', class: () => import('./draw/TLinePainter.mjs').then(h => h.TLinePainter) },
    { name: 'TArrow', icon: 'img_graph', class: () => import('./draw/TArrowPainter.mjs').then(h => h.TArrowPainter) },
-   { name: clTPolyLine, icon: 'img_graph', draw: () => import_more().then(h => h.drawPolyLine), direct: true },
+   { name: clTPolyLine, icon: 'img_graph', class: () => import('./draw/TPolyLinePainter.mjs').then(h => h.TPolyLinePainter), opt: ';F' },
    { name: 'TCurlyLine', sameas: clTPolyLine },
    { name: 'TCurlyArc', sameas: clTPolyLine },
    { name: 'TParallelCoord', icon: 'img_graph', dummy: true },
    { name: clTGaxis, icon: 'img_graph', class: () => import('./draw/TGaxisPainter.mjs').then(h => h.TGaxisPainter) },
-   { name: clTBox, icon: 'img_graph', draw: () => import_more().then(h => h.drawBox), direct: true },
+   { name: clTBox, icon: 'img_graph', class: () => import('./draw/TBoxPainter.mjs').then(h => h.TBoxPainter), opt: ';L' },
    { name: 'TWbox', sameas: clTBox },
    { name: 'TSliderBox', sameas: clTBox },
    { name: 'TMarker', icon: 'img_graph', draw: () => import_more().then(h => h.drawMarker), direct: true },
@@ -225,19 +225,21 @@ function getDrawHandle(kind, selector) {
 
       if ((selector === null) || (selector === undefined)) {
          // store found handle in cache, can reuse later
-         if (!(kind in drawFuncs.cache)) drawFuncs.cache[kind] = h;
+         if (!(kind in drawFuncs.cache))
+            drawFuncs.cache[kind] = h;
          return h;
       } else if (isStr(selector)) {
          if (!first) first = h;
-         // if drawoption specified, check it present in the list
+         // if draw option specified, check it present in the list
 
          if (selector === '::expand') {
             if (('expand' in h) || ('expand_item' in h)) return h;
          } else if ('opt' in h) {
             const opts = h.opt.split(';');
-            for (let j = 0; j < opts.length; ++j)
-               opts[j] = opts[j].toLowerCase();
-            if (opts.indexOf(selector.toLowerCase()) >= 0) return h;
+            for (let j = 0; j < opts.length; ++j) {
+               if (opts[j].toLowerCase() === selector.toLowerCase())
+                  return h;
+            }
          }
       } else if (selector === counter)
          return h;
@@ -412,21 +414,38 @@ async function draw(dom, obj, opt) {
       promise = handle.draw().then(h => { handle.func = h; });
    } else if (!handle.func || !isStr(handle.func))
       return Promise.reject(Error(`Draw function or class not specified to draw ${type_info}`));
-   else if (!handle.prereq && !handle.script)
-      return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
    else {
-      const init_promise = internals.ignore_v6
-         ? Promise.resolve(true)
-         : _ensureJSROOT().then(v6 => {
-         const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
-         return pr.then(() => {
-            if (handle.script)
-               return loadScript(handle.script);
-         }).then(() => v6._complete_loading());
-      });
+      let func = findFunction(handle.func);
+      if (isFunc(func)) {
+         handle.func = func;
+         return performDraw();
+      }
+      let modules = null;
+      if (isStr(handle.script)) {
+         if (handle.script.indexOf('modules:') === 0)
+            modules = handle.script.slice(8);
+         else if (handle.script.indexOf('.mjs') > 0)
+            modules = handle.script;
+      }
+
+      if (!modules && !handle.prereq && !handle.script)
+         return Promise.reject(Error(`Prerequicities to load ${handle.func} are not specified`));
+
+      let init_promise = Promise.resolve(true);
+      if (modules)
+         init_promise = loadModules(modules);
+      else if (!internals.ignore_v6) {
+         init_promise = _ensureJSROOT().then(v6 => {
+            const pr = handle.prereq ? v6.require(handle.prereq) : Promise.resolve(true);
+            return pr.then(() => {
+               if (handle.script)
+                  return loadScript(handle.script);
+            }).then(() => v6._complete_loading());
+         });
+      }
 
       promise = init_promise.then(() => {
-         const func = findFunction(handle.func);
+         func = findFunction(handle.func);
          if (!isFunc(func))
             return Promise.reject(Error(`Fail to find function ${handle.func} after loading ${handle.prereq || handle.script}`));
 
@@ -697,7 +716,7 @@ async function init_v7(arg) {
 }
 
 
-// to avoid cross-dependnecy between io.mjs and draw.mjs
+// to avoid cross-dependency between io.mjs and draw.mjs
 internals.addStreamerInfosForPainter = addStreamerInfosForPainter;
 
 /** @summary Draw TRooPlot

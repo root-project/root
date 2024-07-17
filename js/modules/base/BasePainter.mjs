@@ -102,7 +102,7 @@ function floatToString(value, fmt, ret_fmt) {
    }
 
    if (isexp) {
-      // for exponential representation only one significant digit befor point
+      // for exponential representation only one significant digit before point
       if (significance) prec--;
       if (prec < 0) prec = 0;
 
@@ -147,7 +147,7 @@ class DrawOptions {
       this.part = '';
    }
 
-   /** @summary Returns true if remaining options are empty or contain only seperators symbols. */
+   /** @summary Returns true if remaining options are empty or contain only separators symbols. */
    empty() {
       if (this.opt.length === 0) return true;
       return this.opt.replace(/[ ;_,]/g, '').length === 0;
@@ -242,7 +242,7 @@ class TRandom {
 } // class TRandom
 
 
-/** @summary Build smooth SVG curve uzing Bezier
+/** @summary Build smooth SVG curve using Bezier
   * @desc Reuse code from https://stackoverflow.com/questions/62855310
   * @private */
 function buildSvgCurve(p, args) {
@@ -410,7 +410,7 @@ function compressSVG(svg) {
             .replace(/<g transform="translate\(\d+,\d+\)" style="display: none;"><\/g>/g, '') // remove hidden title
             .replace(/<g><\/g>/g, '');                                 // remove all empty groups
 
-   // remove all empty frame svgs, typically appears in 3D drawings, maybe should be improved in frame painter itself
+   // remove all empty frame svg, typically appears in 3D drawings, maybe should be improved in frame painter itself
    svg = svg.replace(/<svg x="0" y="0" overflow="hidden" width="\d+" height="\d+" viewBox="0 0 \d+ \d+"><\/svg>/g, '');
 
    return svg;
@@ -448,7 +448,7 @@ class BasePainter {
    }
 
    /** @summary Selects main HTML element assigned for drawing
-     * @desc if main element was layouted, returns main element inside layout
+     * @desc if main element was layout, returns main element inside layout
      * @param {string} [is_direct] - if 'origin' specified, returns original element even if actual drawing moved to some other place
      * @return {object} d3.select object for main element for drawing */
    selectDom(is_direct) {
@@ -671,7 +671,7 @@ class BasePainter {
          this._hitemname = name;
       else
          delete this._hitemname;
-      // only upate draw option, never delete.
+      // only update draw option, never delete.
       if (isStr(opt))
          this._hdrawopt = opt;
 
@@ -761,7 +761,7 @@ async function svgToPDF(args, as_buffer) {
             this.removeAttribute('dominant-baseline');
             if (!args.can_modify) restore_dominant.push(this); // keep to restore it
          } else if (args.can_modify && nodejs && this.getAttribute('dy') === '.4em')
-            this.setAttribute('dy', '.2em'); // better allignment in PDF
+            this.setAttribute('dy', '.2em'); // better alignment in PDF
 
          if (replaceSymbolsInTextNode(this)) {
             need_symbols = true;
@@ -937,7 +937,7 @@ function getTDatime(dt) {
    return new Date(Date.UTC(y, m, d, h, min, s));
 }
 
-/** @summary Convert Date object into string used preconfigured time zone
+/** @summary Convert Date object into string used configured time zone
  * @desc Time zone stored in settings.TimeZone */
 function convertDate(dt) {
    let res = '';
