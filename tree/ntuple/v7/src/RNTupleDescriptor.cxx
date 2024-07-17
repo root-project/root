@@ -591,9 +591,39 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRan
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RNTupleDescriptor &)
+ROOT::Experimental::Internal::RClusterDescriptorBuilder::CommitSuppressedColumnRanges(const RNTupleDescriptor &desc)
 {
-   // TODO(jblomer): implement
+   for (auto &[_, columnRange] : fCluster.fColumnRanges) {
+      if (!columnRange.fIsSuppressed)
+         continue;
+      R__ASSERT(columnRange.fFirstElementIndex == kInvalidNTupleIndex);
+
+      const auto &columnDesc = desc.GetColumnDescriptor(columnRange.fPhysicalColumnId);
+      const auto &fieldDesc = desc.GetFieldDescriptor(columnDesc.GetFieldId());
+      // We expect only few columns and column representations per field, so we do a linear search
+      for (const auto otherColumnLogicalId : fieldDesc.GetLogicalColumnIds()) {
+         const auto &otherColumnDesc = desc.GetColumnDescriptor(otherColumnLogicalId);
+         if (otherColumnDesc.GetRepresentationIndex() == columnDesc.GetRepresentationIndex())
+            continue;
+         if (otherColumnDesc.GetIndex() != columnDesc.GetIndex())
+            continue;
+
+         // Found corresponding column of a different column representation
+         const auto &otherColumnRange = fCluster.GetColumnRange(otherColumnDesc.GetPhysicalId());
+         if (otherColumnRange.fIsSuppressed)
+            continue;
+
+         columnRange.fFirstElementIndex = otherColumnRange.fFirstElementIndex;
+         columnRange.fNElements = otherColumnRange.fNElements;
+         break;
+      }
+
+      if (columnRange.fFirstElementIndex == kInvalidNTupleIndex) {
+         return R__FAIL(std::string("cannot find non-suppressed column for column ID ") +
+                        std::to_string(columnRange.fPhysicalColumnId) +
+                        ", cluster ID: " + std::to_string(fCluster.GetId()));
+      }
+   }
    return RResult<void>::Success();
 }
 
