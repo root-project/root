@@ -717,14 +717,10 @@ class TPavePainter extends ObjectPainter {
                isany = true;
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
-               const rect = this.draw_g.append('svg:path')
-                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`);
-               if (!fillatt.empty())
-                  rect.call(fillatt.func);
-               else
-                  rect.style('fill', 'none');
-               if (lineatt)
-                  rect.call(lineatt.func);
+               this.draw_g.append('svg:path')
+                          .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
+                          .call(fillatt.func)
+                          .call(lineatt ? lineatt.func : () => {});
             }
          }
 

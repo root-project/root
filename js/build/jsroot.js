@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '17/07/2024',
+version_date = '18/07/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -2433,7 +2433,7 @@ const radians = Math.PI / 180;
 const degrees$1 = 180 / Math.PI;
 
 // https://observablehq.com/@mbostock/lab-and-rgb
-const K$1 = 18,
+const K = 18,
     Xn = 0.96422,
     Yn = 1,
     Zn = 0.82521,
@@ -2470,10 +2470,10 @@ function Lab(l, a, b, opacity) {
 
 define(Lab, lab, extend(Color$1, {
   brighter(k) {
-    return new Lab(this.l + K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l + K * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   darker(k) {
-    return new Lab(this.l - K$1 * (k == null ? 1 : k), this.a, this.b, this.opacity);
+    return new Lab(this.l - K * (k == null ? 1 : k), this.a, this.b, this.opacity);
   },
   rgb() {
     var y = (this.l + 16) / 116,
@@ -2534,10 +2534,10 @@ function hcl2lab(o) {
 
 define(Hcl, hcl, extend(Color$1, {
   brighter(k) {
-    return new Hcl(this.h, this.c, this.l + K$1 * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l + K * (k == null ? 1 : k), this.opacity);
   },
   darker(k) {
-    return new Hcl(this.h, this.c, this.l - K$1 * (k == null ? 1 : k), this.opacity);
+    return new Hcl(this.h, this.c, this.l - K * (k == null ? 1 : k), this.opacity);
   },
   rgb() {
     return hcl2lab(this).rgb();
@@ -11346,6 +11346,9 @@ class TAttFillHandler {
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
 
+      if (args.enable !== undefined)
+         this.enable(args.enable);
+
       const was_changed = this.changed; // preserve changed state
       this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
       this.changed = was_changed;
@@ -11353,8 +11356,10 @@ class TAttFillHandler {
 
    /** @summary Apply fill style to selection */
    apply(selection) {
-      if (this._disable)
-         return selection.style('fill', 'none');
+      if (this._disable) {
+         selection.style('fill', 'none');
+         return;
+      }
 
       this.used = true;
 
@@ -72317,14 +72322,10 @@ class TPavePainter extends ObjectPainter {
                isany = true;
                // box total height is yspace*0.7
                // define x,y as the center of the symbol for this entry
-               const rect = this.draw_g.append('svg:path')
-                              .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`);
-               if (!fillatt.empty())
-                  rect.call(fillatt.func);
-               else
-                  rect.style('fill', 'none');
-               if (lineatt)
-                  rect.call(lineatt.func);
+               this.draw_g.append('svg:path')
+                          .attr('d', `M${x0 + padding_x},${Math.round(pos_y+step_y*0.1)}v${Math.round(step_y*0.8)}h${tpos_x-2*padding_x-x0}v${-Math.round(step_y*0.8)}z`)
+                          .call(fillatt.func)
+                          .call(lineatt ? lineatt.func : () => {});
             }
          }
 
@@ -76793,8 +76794,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
       entries.forEach((entry, colindx) => {
          if (entry) {
-            this.draw_g
-                .append('svg:path')
+            this.draw_g.append('svg:path')
                 .attr('fill', palette.getColor(colindx))
                 .attr('d', entry.path);
          }
@@ -76975,13 +76975,10 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          const dd = buildPath(xp, yp, iminus, iplus, fillcolor !== 'none', true);
          if (!dd) return;
 
-         const elem = this.draw_g
-                        .append('svg:path')
-                        .attr('d', dd)
-                        .style('fill', fillcolor);
-
-         if (lineatt)
-            elem.call(lineatt.func);
+         this.draw_g.append('svg:path')
+             .attr('d', dd)
+             .style('fill', fillcolor)
+             .call(lineatt ? lineatt.func : () => {});
       });
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
@@ -77111,7 +77108,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       }
 
       // do not try color draw optimization as with plain th2 while
-      // bins are not rectangular and drawings artefacts are nasty
+      // bins are not rectangular and drawings artifacts are nasty
       // therefore draw each bin separately when doing color draw
       const lineatt0 = lineatt_match && gr0 ? this.createAttLine(gr0) : null,
             fillatt0 = fillatt_match && gr0 ? this.createAttFill(gr0) : null,
@@ -77148,7 +77145,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
                if (draw_colors && (colindx !== null))
                   item.style('fill', this._color_palette.getColor(colindx));
                else if (draw_fill)
-                  item.call('fill', this.createAttFill(gr).func);
+                  item.call(this.createAttFill(gr).func);
                else
                   item.style('fill', 'none');
                if (draw_lines)
@@ -81982,23 +81979,23 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
 
          if (path_err) {
-             this.draw_g.append('svg:path')
-                   .attr('d', path_err)
-                   .call(this.lineatt.func);
+            this.draw_g.append('svg:path')
+                .attr('d', path_err)
+                .call(this.lineatt.func);
          }
 
          if (hints_err) {
-               this.draw_g.append('svg:path')
-                   .attr('d', hints_err)
-                   .style('fill', 'none')
-                   .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+            this.draw_g.append('svg:path')
+                .attr('d', hints_err)
+                .style('fill', 'none')
+                .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
          }
 
          if (path_line) {
             this.draw_g.append('svg:path')
-                   .attr('d', path_line)
-                   .style('fill', 'none')
-                   .call(this.lineatt.func);
+                .attr('d', path_line)
+                .style('fill', 'none')
+                .call(this.lineatt.func);
          }
 
          if (path_marker) {
@@ -113930,8 +113927,9 @@ class TF1Painter extends TH1Painter$2 {
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
-               .call(this.lineatt?.func);
+               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y);
+         if (this.lineatt)
+            ttrect.call(this.lineatt.func);
       }
 
       return res;
@@ -115549,15 +115547,16 @@ class TF2Painter extends TH2Painter {
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', pnt.y)
-               .call(this.lineatt?.func);
+               .attr('cy', pnt.y);
+         if (this.lineatt)
+            ttrect.call(this.lineatt.func);
       }
 
       return res;
    }
 
    /** @summary fill information for TWebCanvas
-    * @desc Used to inform web canvas when evaluation failed
+     * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
       opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';
@@ -116293,15 +116292,12 @@ class TArrowPainter extends TLinePainter {
       if ((p1 >= 0) && (p1 === len-1))
          this.end = ((p2 >= 0) && (p2 === len-2)) ? 11 : 1;
 
-      this.createAttFill({ attr: arrow });
-   }
+      this.createAttFill({ attr: arrow, enable: (this.beg > 10) || (this.end > 10) });
+  }
 
    /** @summary Add extras to path for TArrow */
    addExtras(elem) {
-      if ((this.beg > 10) || (this.end > 10))
-         elem.call(this.fillatt.func);
-      else
-         elem.style('fill', 'none');
+      elem.call(this.fillatt.func);
    }
 
    /** @summary Draw TArrow object */
@@ -116377,21 +116373,16 @@ class TPolyLinePainter extends ObjectPainter {
             func = this.getAxisToSvgFunc(isndc);
 
       this.createAttLine({ attr: polyline });
-      this.createAttFill({ attr: polyline });
+      this.createAttFill({ attr: polyline, enable: dofill });
 
       let cmd = '';
       for (let n = 0; n <= polyline.fLastPoint; ++n)
-         cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
+         cmd += `${n > 0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-      if (dofill)
-         cmd += 'Z';
-
-      const elem = this.draw_g.append('svg:path').attr('d', cmd);
-
-      if (dofill)
-         elem.call(this.fillatt.func);
-      else
-         elem.call(this.lineatt.func).style('fill', 'none');
+      this.draw_g.append('svg:path')
+                 .attr('d', cmd + (dofill ? 'Z' : ''))
+                 .call(dofill ? () => {} : this.lineatt.func)
+                 .call(this.fillatt.func);
 
       assignContextMenu(this, kToFront);
 
@@ -121462,1078 +121453,6 @@ class RPadPainter extends RObjectPainter {
 } // class RPadPainter
 
 /**
- * [js-sha256]{@link https://github.com/emn178/js-sha256}
- *
- * @version 0.10.1
- * @author Chen, Yi-Cyuan [emn178@gmail.com]
- * @copyright Chen, Yi-Cyuan 2014-2023
- * @license MIT
- */
-
-const HEX_CHARS = '0123456789abcdef'.split(''),
-      EXTRA = [-2147483648, 8388608, 32768, 128],
-      SHIFT = [24, 16, 8, 0],
-      K = [0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-           0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-           0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-           0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-           0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-           0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-           0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-           0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2];
-
-
-class Sha256 {
-
-  constructor(is224) {
-    this.blocks = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-
-    if (is224) {
-      this.h0 = 0xc1059ed8;
-      this.h1 = 0x367cd507;
-      this.h2 = 0x3070dd17;
-      this.h3 = 0xf70e5939;
-      this.h4 = 0xffc00b31;
-      this.h5 = 0x68581511;
-      this.h6 = 0x64f98fa7;
-      this.h7 = 0xbefa4fa4;
-    } else { // 256
-      this.h0 = 0x6a09e667;
-      this.h1 = 0xbb67ae85;
-      this.h2 = 0x3c6ef372;
-      this.h3 = 0xa54ff53a;
-      this.h4 = 0x510e527f;
-      this.h5 = 0x9b05688c;
-      this.h6 = 0x1f83d9ab;
-      this.h7 = 0x5be0cd19;
-    }
-
-    this.block = this.start = this.bytes = this.hBytes = 0;
-    this.finalized = this.hashed = false;
-    this.first = true;
-    this.is224 = is224;
-  }
-
-  /** One can use only string or Uint8Array */
-  update(message) {
-    if (this.finalized)
-      return;
-
-    const notString = (typeof message !== 'string'),
-          length = message.length, blocks = this.blocks;
-
-    let code, index = 0, i;
-
-    while (index < length) {
-      if (this.hashed) {
-        this.hashed = false;
-        blocks[0] = this.block;
-        blocks[16] = blocks[1] = blocks[2] = blocks[3] =
-          blocks[4] = blocks[5] = blocks[6] = blocks[7] =
-          blocks[8] = blocks[9] = blocks[10] = blocks[11] =
-          blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
-      }
-
-      if (notString) {
-        for (i = this.start; index < length && i < 64; ++index)
-          blocks[i >> 2] |= message[index] << SHIFT[i++ & 3];
-      } else {
-        for (i = this.start; index < length && i < 64; ++index) {
-          code = message.charCodeAt(index);
-          if (code < 0x80)
-            blocks[i >> 2] |= code << SHIFT[i++ & 3];
-          else if (code < 0x800) {
-            blocks[i >> 2] |= (0xc0 | (code >> 6)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          } else if (code < 0xd800 || code >= 0xe000) {
-            blocks[i >> 2] |= (0xe0 | (code >> 12)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          } else {
-            code = 0x10000 + (((code & 0x3ff) << 10) | (message.charCodeAt(++index) & 0x3ff));
-            blocks[i >> 2] |= (0xf0 | (code >> 18)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 12) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | ((code >> 6) & 0x3f)) << SHIFT[i++ & 3];
-            blocks[i >> 2] |= (0x80 | (code & 0x3f)) << SHIFT[i++ & 3];
-          }
-        }
-      }
-
-      this.lastByteIndex = i;
-      this.bytes += i - this.start;
-      if (i >= 64) {
-        this.block = blocks[16];
-        this.start = i - 64;
-        this.hash();
-        this.hashed = true;
-      } else
-        this.start = i;
-    }
-    if (this.bytes > 4294967295) {
-      this.hBytes += this.bytes / 4294967296 << 0;
-      this.bytes = this.bytes % 4294967296;
-    }
-    return this;
-  }
-
-  finalize() {
-    if (this.finalized)
-      return;
-    this.finalized = true;
-    const blocks = this.blocks,
-          i = this.lastByteIndex;
-    blocks[16] = this.block;
-    blocks[i >> 2] |= EXTRA[i & 3];
-    this.block = blocks[16];
-    if (i >= 56) {
-      if (!this.hashed)
-        this.hash();
-      blocks[0] = this.block;
-      blocks[16] = blocks[1] = blocks[2] = blocks[3] =
-      blocks[4] = blocks[5] = blocks[6] = blocks[7] =
-      blocks[8] = blocks[9] = blocks[10] = blocks[11] =
-      blocks[12] = blocks[13] = blocks[14] = blocks[15] = 0;
-    }
-    blocks[14] = this.hBytes << 3 | this.bytes >>> 29;
-    blocks[15] = this.bytes << 3;
-    this.hash();
-  }
-
-  hash() {
-    const blocks = this.blocks;
-    let a = this.h0, b = this.h1, c = this.h2, d = this.h3, e = this.h4, f = this.h5, g = this.h6,
-        h = this.h7, j, s0, s1, maj, t1, t2, ch, ab, da, cd, bc;
-
-    for (j = 16; j < 64; ++j) {
-      // right rotate
-      t1 = blocks[j - 15];
-      s0 = ((t1 >>> 7) | (t1 << 25)) ^ ((t1 >>> 18) | (t1 << 14)) ^ (t1 >>> 3);
-      t1 = blocks[j - 2];
-      s1 = ((t1 >>> 17) | (t1 << 15)) ^ ((t1 >>> 19) | (t1 << 13)) ^ (t1 >>> 10);
-      blocks[j] = blocks[j - 16] + s0 + blocks[j - 7] + s1 << 0;
-    }
-
-    bc = b & c;
-    for (j = 0; j < 64; j += 4) {
-      if (this.first) {
-        if (this.is224) {
-          ab = 300032;
-          t1 = blocks[0] - 1413257819;
-          h = t1 - 150054599 << 0;
-          d = t1 + 24177077 << 0;
-        } else {
-          ab = 704751109;
-          t1 = blocks[0] - 210244248;
-          h = t1 - 1521486534 << 0;
-          d = t1 + 143694565 << 0;
-        }
-        this.first = false;
-      } else {
-        s0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
-        s1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
-        ab = a & b;
-        maj = ab ^ (a & c) ^ bc;
-        ch = (e & f) ^ (~e & g);
-        t1 = h + s1 + ch + K[j] + blocks[j];
-        t2 = s0 + maj;
-        h = d + t1 << 0;
-        d = t1 + t2 << 0;
-      }
-      s0 = ((d >>> 2) | (d << 30)) ^ ((d >>> 13) | (d << 19)) ^ ((d >>> 22) | (d << 10));
-      s1 = ((h >>> 6) | (h << 26)) ^ ((h >>> 11) | (h << 21)) ^ ((h >>> 25) | (h << 7));
-      da = d & a;
-      maj = da ^ (d & b) ^ ab;
-      ch = (h & e) ^ (~h & f);
-      t1 = g + s1 + ch + K[j + 1] + blocks[j + 1];
-      t2 = s0 + maj;
-      g = c + t1 << 0;
-      c = t1 + t2 << 0;
-      s0 = ((c >>> 2) | (c << 30)) ^ ((c >>> 13) | (c << 19)) ^ ((c >>> 22) | (c << 10));
-      s1 = ((g >>> 6) | (g << 26)) ^ ((g >>> 11) | (g << 21)) ^ ((g >>> 25) | (g << 7));
-      cd = c & d;
-      maj = cd ^ (c & a) ^ da;
-      ch = (g & h) ^ (~g & e);
-      t1 = f + s1 + ch + K[j + 2] + blocks[j + 2];
-      t2 = s0 + maj;
-      f = b + t1 << 0;
-      b = t1 + t2 << 0;
-      s0 = ((b >>> 2) | (b << 30)) ^ ((b >>> 13) | (b << 19)) ^ ((b >>> 22) | (b << 10));
-      s1 = ((f >>> 6) | (f << 26)) ^ ((f >>> 11) | (f << 21)) ^ ((f >>> 25) | (f << 7));
-      bc = b & c;
-      maj = bc ^ (b & d) ^ cd;
-      ch = (f & g) ^ (~f & h);
-      t1 = e + s1 + ch + K[j + 3] + blocks[j + 3];
-      t2 = s0 + maj;
-      e = a + t1 << 0;
-      a = t1 + t2 << 0;
-      this.chromeBugWorkAround = true;
-    }
-
-    this.h0 = this.h0 + a << 0;
-    this.h1 = this.h1 + b << 0;
-    this.h2 = this.h2 + c << 0;
-    this.h3 = this.h3 + d << 0;
-    this.h4 = this.h4 + e << 0;
-    this.h5 = this.h5 + f << 0;
-    this.h6 = this.h6 + g << 0;
-    this.h7 = this.h7 + h << 0;
-  }
-
-  digest() {
-    this.finalize();
-
-    const h0 = this.h0, h1 = this.h1, h2 = this.h2, h3 = this.h3, h4 = this.h4, h5 = this.h5,
-          h6 = this.h6, h7 = this.h7,
-    arr = [
-      (h0 >> 24) & 0xFF, (h0 >> 16) & 0xFF, (h0 >> 8) & 0xFF, h0 & 0xFF,
-      (h1 >> 24) & 0xFF, (h1 >> 16) & 0xFF, (h1 >> 8) & 0xFF, h1 & 0xFF,
-      (h2 >> 24) & 0xFF, (h2 >> 16) & 0xFF, (h2 >> 8) & 0xFF, h2 & 0xFF,
-      (h3 >> 24) & 0xFF, (h3 >> 16) & 0xFF, (h3 >> 8) & 0xFF, h3 & 0xFF,
-      (h4 >> 24) & 0xFF, (h4 >> 16) & 0xFF, (h4 >> 8) & 0xFF, h4 & 0xFF,
-      (h5 >> 24) & 0xFF, (h5 >> 16) & 0xFF, (h5 >> 8) & 0xFF, h5 & 0xFF,
-      (h6 >> 24) & 0xFF, (h6 >> 16) & 0xFF, (h6 >> 8) & 0xFF, h6 & 0xFF
-    ];
-    if (!this.is224)
-      arr.push((h7 >> 24) & 0xFF, (h7 >> 16) & 0xFF, (h7 >> 8) & 0xFF, h7 & 0xFF);
-    return arr;
-  }
-
-  hex() {
-    const d = this.digest();
-    let res = '';
-    for (let i = 0; i < d.length; ++i)
-       res += HEX_CHARS[(d[i] >> 4) & 0xF] + HEX_CHARS[d[i] & 0xF];
-    return res;
-  }
-
-  toString() {
-    return this.hex();
-  }
-
-} // class Sha256
-
-function sha256(message, as_hex) {
-  const m = new Sha256(false);
-  m.update(message);
-  return as_hex ? m.hex() : m.digest();
-}
-
-function sha256_2(message, arr, as_hex) {
-  const m = new Sha256(false);
-  m.update(message);
-  m.update(arr);
-  return as_hex ? m.hex() : m.digest();
-}
-
-// secret session key used for hashing connections keys
-// only if set, all messages from and to server signed with HMAC hash
-let sessionKey = '';
-
-/** @summary HMAC implementation
- * @desc see https://en.wikipedia.org/wiki/HMAC for more details
- * @private */
-function HMAC(key, m, o) {
-   const kbis = sha256(sessionKey + key),
-         block_size = 64,
-         opad = 0x5c, ipad = 0x36,
-         ko = [], ki = [];
-   while (kbis.length < block_size)
-      kbis.push(0);
-   for (let i = 0; i < kbis.length; ++i) {
-      const code = kbis[i];
-      ko.push(code ^ opad);
-      ki.push(code ^ ipad);
-   }
-
-   const hash = sha256_2(ki, (o === undefined) ? m : new Uint8Array(m, o));
-
-   return sha256_2(ko, hash, true);
-}
-
-/**
- * @summary Class emulating web socket with long-poll http requests
- *
- * @private
- */
-
-class LongPollSocket {
-
-   constructor(addr, _raw, _handle, _counter) {
-      this.path = addr;
-      this.connid = null;
-      this.req = null;
-      this.raw = _raw;
-      this.handle = _handle;
-      this.counter = _counter;
-
-      this.nextRequest('', 'connect');
-   }
-
-   /** @summary Submit next request */
-   nextRequest(data, kind) {
-      let url = this.path, reqmode = 'buf', post = null;
-      if (kind === 'connect') {
-         url += this.raw ? '?raw_connect' : '?txt_connect';
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         this.connid = 'connect';
-      } else if (kind === 'close') {
-         if ((this.connid === null) || (this.connid === 'close')) return;
-         url += `?connection=${this.connid}&close`;
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         this.connid = 'close';
-         reqmode = 'text;sync'; // use sync mode to close connection before browser window closed
-      } else if ((this.connid === null) || (typeof this.connid !== 'number')) {
-         if (!browser.qt5 && !browser.qt6) console.error('No connection');
-      } else {
-         url += '?connection=' + this.connid;
-         if (this.handle) url += '&' + this.handle.getConnArgs(this.counter++);
-         if (kind === 'dummy') url += '&dummy';
-      }
-
-      if (data) {
-         if (this.raw) {
-            // special workaround to avoid POST request, use base64 coding
-            url += '&post=' + btoa_func(data);
-         } else {
-            // send data with post request - most efficient way
-            reqmode = 'postbuf';
-            post = data;
-         }
-      }
-
-      createHttpRequest(url, reqmode, function(res) {
-         // this set to the request itself, res is response
-
-         if (this.handle.req === this)
-            this.handle.req = null; // get response for existing dummy request
-
-         if (res === null)
-            return this.handle.processRequest(null);
-
-         if (this.handle.raw) {
-            // raw mode - all kind of reply data packed into binary buffer
-            // first 4 bytes header 'txt:' or 'bin:'
-            // after the 'bin:' there is length of optional text argument like 'bin:14  :optional_text'
-            // and immediately after text binary data. Server sends binary data so, that offset should be multiple of 8
-
-            const u8Arr = new Uint8Array(res);
-            let str = '', i = 0, offset = u8Arr.length;
-            if (offset < 4) {
-               if (!browser.qt5 && !browser.qt6) console.error(`longpoll got short message in raw mode ${offset}`);
-               return this.handle.processRequest(null);
-            }
-
-            while (i < 4) str += String.fromCharCode(u8Arr[i++]);
-            if (str !== 'txt:') {
-               str = '';
-               while ((i < offset) && (String.fromCharCode(u8Arr[i]) !== ':'))
-                  str += String.fromCharCode(u8Arr[i++]);
-               ++i;
-               offset = i + parseInt(str.trim());
-            }
-
-            str = '';
-            while (i < offset) str += String.fromCharCode(u8Arr[i++]);
-
-            if (str) {
-               if (str === '<<nope>>')
-                  this.handle.processRequest(-1111);
-               else
-                   this.handle.processRequest(str);
-            }
-            if (offset < u8Arr.length)
-               this.handle.processRequest(res, offset);
-         } else if (this.getResponseHeader('Content-Type') === 'application/x-binary') {
-            // binary reply with optional header
-            const extra_hdr = this.getResponseHeader('LongpollHeader');
-            if (extra_hdr) this.handle.processRequest(extra_hdr);
-            this.handle.processRequest(res, 0);
-         } else {
-            // text reply
-            if (res && !isStr(res)) {
-               let str = '';
-               const u8Arr = new Uint8Array(res);
-               for (let i = 0; i < u8Arr.length; ++i)
-                  str += String.fromCharCode(u8Arr[i]);
-               res = str;
-            }
-            if (res === '<<nope>>')
-               this.handle.processRequest(-1111);
-            else
-               this.handle.processRequest(res);
-         }
-      }, function(/* err, status */) {
-         this.handle.processRequest(null, 'error');
-      }, true).then(req => {
-         req.handle = this;
-         if (!this.req)
-            this.req = req; // any request can be used for response, do not submit dummy until req is there
-         req.send(post);
-      });
-   }
-
-   /** @summary Process request */
-   processRequest(res, _offset) {
-      if (res === null) {
-         if (isFunc(this.onerror))
-            this.onerror('receive data with connid ' + (this.connid || '---'));
-         if ((_offset === 'error') && isFunc(this.onclose))
-            this.onclose('force_close');
-         this.connid = null;
-         return;
-      } else if (res === -1111)
-         res = '';
-
-      let dummy_tmout = 5;
-
-      if (this.connid === 'connect') {
-         if (!res) {
-            this.connid = null;
-            if (isFunc(this.onerror))
-               this.onerror('connection rejected');
-            return;
-         }
-
-         this.connid = parseInt(res);
-         dummy_tmout = 100; // when establishing connection, wait a bit longer to submit dummy package
-         console.log(`Get new longpoll connection with id ${this.connid}`);
-         if (isFunc(this.onopen))
-            this.onopen();
-      } else if (this.connid === 'close') {
-         if (isFunc(this.onclose))
-            this.onclose();
-         return;
-      } else {
-         if (isFunc(this.onmessage) && res)
-            this.onmessage({ data: res, offset: _offset });
-      }
-
-      // minimal timeout to reduce load, generate dummy only if client not submit new request immediately
-      if (!this.req)
-         setTimeout(() => { if (!this.req) this.nextRequest('', 'dummy'); }, dummy_tmout);
-   }
-
-   /** @summary Send data */
-   send(str) { this.nextRequest(str); }
-
-   /** @summary Close connection */
-   close() { this.nextRequest('', 'close'); }
-
-} // class LongPollSocket
-
-// ========================================================================================
-
-/**
- * @summary Class re-playing socket data from stored protocol
- *
- * @private
- */
-
-class FileDumpSocket {
-
-   constructor(receiver) {
-      this.receiver = receiver;
-      this.protocol = [];
-      this.cnt = 0;
-      httpRequest('protocol.json', 'text').then(res => this.getProtocol(res));
-   }
-
-   /** @summary Get stored protocol */
-   getProtocol(res) {
-      if (!res) return;
-      this.protocol = JSON.parse(res);
-      if (isFunc(this.onopen)) this.onopen();
-      this.nextOperation();
-   }
-
-   /** @summary Emulate send - just count operation */
-   send(/* str */) {
-      if (this.protocol[this.cnt] === 'send') {
-         this.cnt++;
-         setTimeout(() => this.nextOperation(), 10);
-      }
-   }
-
-   /** @summary Emulate close */
-   close() {}
-
-   /** @summary Read data for next operation */
-   nextOperation() {
-      // when file request running - just ignore
-      if (this.wait_for_file) return;
-      const fname = this.protocol[this.cnt];
-
-      if (!fname) return;
-      if (fname === 'send') return; // waiting for send
-      this.wait_for_file = true;
-      this.cnt++;
-      httpRequest(fname, (fname.indexOf('.bin') > 0 ? 'buf' : 'text')).then(res => {
-         this.wait_for_file = false;
-         if (!res) return;
-         const p = fname.indexOf('_ch'),
-               chid = (p > 0) ? Number.parseInt(fname.slice(p+3, fname.indexOf('.', p))) : 1;
-         if (isFunc(this.receiver.provideData))
-            this.receiver.provideData(chid, res, 0);
-         setTimeout(() => this.nextOperation(), 10);
-      });
-   }
-
-} // class FileDumpSocket
-
-
-/**
- * @summary Client communication handle for RWebWindow.
- *
- * @desc Should be created with {@link connectWebWindow} function
- */
-
-class WebWindowHandle {
-
-   constructor(socket_kind, credits) {
-      this.kind = socket_kind;
-      this.state = 0;
-      this.credits = Math.max(3, credits || 10);
-      this.cansend = this.credits;
-      this.ackn = this.credits; // this number will be send to server with first message
-      this.send_seq = 1; // sequence counter of send messages
-      this.recv_seq = 0; // sequence counter of received messages
-   }
-
-   /** @summary Returns arguments specified in the RWebWindow::SetUserArgs() method
-     * @desc Can be any valid JSON expression. Undefined by default.
-     * @param {string} [field] - if specified and user args is object, returns correspondent object member
-     * @return user arguments object */
-   getUserArgs(field) {
-      if (field && isStr(field))
-         return isObject(this.user_args) ? this.user_args[field] : undefined;
-
-      return this.user_args;
-   }
-
-   /** @summary Set user args
-     * @desc Normally set via RWebWindow::SetUserArgs() method */
-   setUserArgs(args) { this.user_args = args; }
-
-   /** @summary Set callbacks receiver.
-     * @param {object} obj - object with receiver functions
-     * @param {function} obj.onWebsocketMsg - called when new data received from RWebWindow
-     * @param {function} obj.onWebsocketOpened - called when connection established
-     * @param {function} obj.onWebsocketClosed - called when connection closed
-     * @param {function} obj.onWebsocketError - called when get error via the connection */
-   setReceiver(obj) { this.receiver = obj; }
-
-   /** @summary Cleanup and close connection. */
-   cleanup() {
-      delete this.receiver;
-      this.close(true);
-   }
-
-   /** @summary Invoke method in the receiver.
-    * @private */
-   invokeReceiver(brdcst, method, arg, arg2) {
-      if (this.receiver && isFunc(this.receiver[method]))
-         this.receiver[method](this, arg, arg2);
-
-      if (brdcst && this.channels) {
-         const ks = Object.keys(this.channels);
-         for (let n = 0; n < ks.length; ++n)
-            this.channels[ks[n]].invokeReceiver(false, method, arg, arg2);
-      }
-   }
-
-   /** @summary Provide data for receiver. When no queue - do it directly.
-    * @private */
-   provideData(chid, msg, len) {
-      if (this.wait_first_recv) {
-         // here dummy first recv like EMBED_DONE is handled
-         delete this.wait_first_recv;
-         this.state = 1;
-         return this.invokeReceiver(false, 'onWebsocketOpened');
-      }
-
-      if ((chid > 1) && this.channels) {
-         const channel = this.channels[chid];
-         if (channel)
-            return channel.provideData(1, msg, len);
-      }
-
-      const force_queue = len && (len < 0);
-      if (!force_queue && (!this.msgqueue || !this.msgqueue.length))
-         return this.invokeReceiver(false, 'onWebsocketMsg', msg, len);
-
-      if (!this.msgqueue) this.msgqueue = [];
-      if (force_queue) len = undefined;
-
-      this.msgqueue.push({ ready: true, msg, len });
-   }
-
-   /** @summary Reserve entry in queue for data, which is not yet decoded.
-    * @private */
-   reserveQueueItem() {
-      if (!this.msgqueue) this.msgqueue = [];
-      const item = { ready: false, msg: null, len: 0 };
-      this.msgqueue.push(item);
-      return item;
-   }
-
-   /** @summary Provide data for item which was reserved before.
-    * @private */
-   markQueueItemDone(item, _msg, _len) {
-      item.ready = true;
-      item.msg = _msg;
-      item.len = _len;
-      this.processQueue();
-   }
-
-   /** @summary Process completed messages in the queue
-     * @private */
-   processQueue() {
-      if (this._loop_msgqueue || !this.msgqueue) return;
-      this._loop_msgqueue = true;
-      while ((this.msgqueue.length > 0) && this.msgqueue[0].ready) {
-         const front = this.msgqueue.shift();
-         this.invokeReceiver(false, 'onWebsocketMsg', front.msg, front.len);
-      }
-      if (this.msgqueue.length === 0)
-         delete this.msgqueue;
-      delete this._loop_msgqueue;
-   }
-
-   /** @summary Close connection */
-   close(force) {
-      if (this.master) {
-         this.master.send(`CLOSECH=${this.channelid}`, 0);
-         delete this.master.channels[this.channelid];
-         delete this.master;
-         return;
-      }
-
-      if (this.timerid) {
-         clearTimeout(this.timerid);
-         delete this.timerid;
-      }
-
-      if (this._websocket && (this.state > 0)) {
-         this.state = force ? -1 : 0; // -1 prevent socket from reopening
-         this._websocket.onclose = null; // hide normal handler
-         this._websocket.close();
-         delete this._websocket;
-      }
-   }
-
-   /** @summary Checks number of credits for send operation
-     * @param {number} [numsend = 1] - number of required send operations
-     * @return true if one allow to send specified number of text message to server */
-   canSend(numsend) { return this.cansend >= (numsend || 1); }
-
-   /** @summary Returns number of possible send operations relative to number of credits */
-   getRelCanSend() { return !this.credits ? 1 : this.cansend / this.credits; }
-
-   /** @summary Send text message via the connection.
-     * @param {string} msg - text message to send
-     * @param {number} [chid] - channel id, 1 by default, 0 used only for internal communication */
-   send(msg, chid) {
-      if (this.master)
-         return this.master.send(msg, this.channelid);
-
-      if (!this._websocket || (this.state <= 0)) return false;
-
-      if (!Number.isInteger(chid)) chid = 1; // when not configured, channel 1 is used - main widget
-
-      if (this.cansend <= 0) console.error(`should be queued before sending cansend: ${this.cansend}`);
-
-      const prefix = `${this.send_seq++}:${this.ackn}:${this.cansend}:${chid}:`;
-      this.ackn = 0;
-      this.cansend--; // decrease number of allowed send packets
-
-      let hash = 'none';
-      if (this.key && sessionKey)
-         hash = HMAC(this.key, `${prefix}${msg}`);
-
-      this._websocket.send(`${hash}:${prefix}${msg}`);
-
-      if ((this.kind === 'websocket') || (this.kind === 'longpoll')) {
-         if (this.timerid) clearTimeout(this.timerid);
-         this.timerid = setTimeout(() => this.keepAlive(), 10000);
-      }
-
-      return true;
-   }
-
-   /** @summary Send only last message of specified kind during defined time interval.
-     * @desc Idea is to prevent sending multiple messages of similar kind and overload connection
-     * Instead timeout is started after which only last specified message will be send
-     * @private */
-   sendLast(kind, tmout, msg) {
-      let d = this._delayed;
-      if (!d) d = this._delayed = {};
-      d[kind] = msg;
-      if (!d[`${kind}_handler`])
-         d[`${kind}_handler`] = setTimeout(() => { delete d[`${kind}_handler`]; this.send(d[kind]); }, tmout);
-   }
-
-   /** @summary Inject message(s) into input queue, for debug purposes only
-     * @private */
-   inject(msg, chid, immediate) {
-      // use timeout to avoid too deep call stack
-      if (!immediate)
-         return setTimeout(this.inject.bind(this, msg, chid, true), 0);
-
-      if (chid === undefined) chid = 1;
-
-      if (Array.isArray(msg)) {
-         for (let k = 0; k < msg.length; ++k)
-            this.provideData(chid, isStr(msg[k]) ? msg[k] : JSON.stringify(msg[k]), -1);
-         this.processQueue();
-      } else if (msg)
-         this.provideData(chid, isStr(msg) ? msg : JSON.stringify(msg));
-   }
-
-   /** @summary Send keep-alive message.
-     * @desc Only for internal use, only when used with web sockets
-     * @private */
-   keepAlive() {
-      delete this.timerid;
-      this.send('KEEPALIVE', 0);
-   }
-
-   /** @summary Request server to resize window
-     * @desc For local displays like CEF or qt5 only server can do this */
-   resizeWindow(w, h) {
-      if (browser.qt5 || browser.qt6 || browser.cef3)
-         this.send(`RESIZE=${w},${h}`, 0);
-      else if ((typeof window !== 'undefined') && isFunc(window?.resizeTo))
-         window.resizeTo(w, h);
-   }
-
-   /** @summary Method open channel, which will share same connection, but can be used independently from main
-     * @private */
-   createChannel() {
-      if (this.master)
-         return this.master.createChannel();
-
-      const channel = new WebWindowHandle('channel', this.credits);
-      channel.wait_first_recv = true; // first received message via the channel is confirmation of established connection
-
-      if (!this.channels) {
-         this.channels = {};
-         this.freechannelid = 2;
-      }
-
-      channel.master = this;
-      channel.channelid = this.freechannelid++;
-
-      // register
-      this.channels[channel.channelid] = channel;
-
-      // now server-side entity should be initialized and init message send from server side!
-      return channel;
-   }
-
-   /** @summary Returns true if socket connected */
-   isConnected() { return this.state > 0; }
-
-   /** @summary Returns used channel ID, 1 by default */
-   getChannelId() { return this.channelid && this.master ? this.channelid : 1; }
-
-   /** @summary Assign href parameter
-     * @param {string} [path] - absolute path, when not specified window.location.url will be used
-     * @private */
-   setHRef(path) {
-      if (isStr(path) && (path.indexOf('?') > 0)) {
-         this.href = path.slice(0, path.indexOf('?'));
-         const d = decodeUrl(path);
-         this.key = d.get('key');
-         this.token = d.get('token');
-      } else {
-         this.href = path;
-         delete this.key;
-         delete this.token;
-      }
-   }
-
-   /** @summary Return href part
-     * @param {string} [relative_path] - relative path to the handle
-     * @private */
-   getHRef(relative_path) {
-      if (!relative_path || !this.kind || !this.href)
-         return this.href;
-      let addr = this.href;
-      if (relative_path.indexOf('../') === 0) {
-         const ddd = addr.lastIndexOf('/', addr.length-2);
-         addr = addr.slice(0, ddd) + relative_path.slice(2);
-      } else
-         addr += relative_path;
-
-      return addr;
-   }
-
-   /** @summary provide connection args for the web socket
-    * @private */
-   getConnArgs(ntry) {
-      let args = '';
-      if (this.key) {
-         const k = HMAC(this.key, `attempt_${ntry}`);
-         args += `key=${k}&ntry=${ntry}`;
-      }
-      if (this.token) {
-         if (args) args += '&';
-         args += `token=${this.token}`;
-      }
-      return args;
-   }
-
-   /** @summary Create configured socket for current object.
-     * @private */
-   connect(href) {
-      this.close();
-      if (!href && this.href)
-         href = this.href;
-
-      let ntry = 0;
-
-      const retry_open = first_time => {
-         if (this.state !== 0) return;
-
-         if (!first_time)
-            console.log(`try connect window again ${new Date().toString()}`);
-
-         if (this._websocket) {
-            this._websocket.close();
-            delete this._websocket;
-         }
-
-         if (!href) {
-            href = window.location.href;
-            if (href && href.indexOf('#') > 0)
-               href = href.slice(0, href.indexOf('#'));
-            if (href && href.lastIndexOf('/') > 0)
-               href = href.slice(0, href.lastIndexOf('/') + 1);
-         }
-         this.href = href;
-         ntry++;
-
-         if (first_time) console.log(`Opening web socket at ${href}`);
-
-         if (ntry > 2) showProgress(`Trying to connect ${href}`);
-
-         let path = href;
-
-         if (this.kind === 'file') {
-            path += 'root.filedump';
-            this._websocket = new FileDumpSocket(this);
-            console.log(`configure protocol log ${path}`);
-         } else if ((this.kind === 'websocket') && first_time) {
-            path = path.replace('http://', 'ws://').replace('https://', 'wss://') + 'root.websocket';
-            console.log(`configure websocket ${path}`);
-            path += '?' + this.getConnArgs(ntry);
-            this._websocket = new WebSocket(path);
-         } else {
-            path += 'root.longpoll';
-            console.log(`configure longpoll ${path}`);
-            this._websocket = new LongPollSocket(path, (this.kind === 'rawlongpoll'), this, ntry);
-         }
-
-         if (!this._websocket) return;
-
-         this._websocket.onopen = () => {
-            if (ntry > 2) showProgress();
-            this.state = 1;
-
-            const key = this.key || '';
-            this.send(`READY=${key}`, 0); // need to confirm connection
-            this.invokeReceiver(false, 'onWebsocketOpened');
-         };
-
-         this._websocket.onmessage = e => {
-            let msg = e.data;
-
-            if (this.next_binary) {
-               const binchid = this.next_binary,
-                     server_hash = this.next_binary_hash;
-               delete this.next_binary;
-               delete this.next_binary_hash;
-
-               if (msg instanceof Blob) {
-                  // convert Blob object to BufferArray
-                  const reader = new FileReader(), qitem = this.reserveQueueItem();
-                  // The file's text will be printed here
-                  reader.onload = event => {
-                     let result = event.target.result;
-                     if (this.key && sessionKey) {
-                        const hash = HMAC(this.key, result, 0);
-                        if (hash !== server_hash) {
-                           console.log('Discard binary buffer because of HMAC mismatch');
-                           result = new ArrayBuffer(0);
-                        }
-                     }
-
-                     this.markQueueItemDone(qitem, result, 0);
-                  };
-                  reader.readAsArrayBuffer(msg, e.offset || 0);
-               } else {
-                  // this is from CEF or LongPoll handler
-                  let result = msg;
-                  if (this.key && sessionKey) {
-                     const hash = HMAC(this.key, result, e.offset || 0);
-                     if (hash !== server_hash) {
-                        console.log('Discard binary buffer because of HMAC mismatch');
-                        result = new ArrayBuffer(0);
-                     }
-                  }
-                  this.provideData(binchid, result, e.offset || 0);
-               }
-
-               return;
-            }
-
-            if (!isStr(msg))
-               return console.log(`unsupported message kind: ${typeof msg}`);
-
-            const i0 = msg.indexOf(':'),
-                  server_hash = msg.slice(0, i0),
-                  i1 = msg.indexOf(':', i0 + 1),
-                  seq_id = Number.parseInt(msg.slice(i0 + 1, i1)),
-                  i2 = msg.indexOf(':', i1 + 1),
-                  credit = Number.parseInt(msg.slice(i1 + 1, i2)),
-                  i3 = msg.indexOf(':', i2 + 1),
-                  // cansend = parseInt(msg.slice(i2 + 1, i3)),  // TODO: take into account when sending messages
-                  i4 = msg.indexOf(':', i3 + 1),
-                  chid = Number.parseInt(msg.slice(i3 + 1, i4));
-
-            // for authentication HMAC checksum and sequence id is important
-            // HMAC used to authenticate server
-            // sequence id is necessary to exclude submission of same packet again
-            if (this.key && sessionKey) {
-               const client_hash = HMAC(this.key, msg.slice(i0+1));
-               if (server_hash !== client_hash)
-                  return console.log(`Failure checking server HMAC sum ${server_hash}`);
-            }
-
-            if (seq_id <= this.recv_seq)
-               return console.log(`Failure with packet sequence ${seq_id} <= ${this.recv_seq}`);
-
-            this.recv_seq = seq_id; // sequence id of received packet
-            this.ackn++;            // count number of received packets,
-            this.cansend += credit; // how many packets client can send
-
-            msg = msg.slice(i4 + 1);
-
-            if (chid === 0) {
-               // console.log(`GET chid=0 message ${msg}`);
-               if (msg === 'CLOSE') {
-                  this.close(true); // force closing of socket
-                  this.invokeReceiver(true, 'onWebsocketClosed');
-               } else if (msg.indexOf('NEW_KEY=') === 0) {
-                  this.new_key = msg.slice(8);
-                  console.log('get new key', this.new_key);
-                  this.storeKeyInUrl();
-                  if (this._ask_reload)
-                     this.askReload(true);
-               }
-            } else if (msg.slice(0, 10) === '$$binary$$') {
-               this.next_binary = chid;
-               this.next_binary_hash = msg.slice(10);
-            } else if (msg === '$$nullbinary$$')
-               this.provideData(chid, new ArrayBuffer(0), 0);
-            else
-               this.provideData(chid, msg);
-
-            if (this.ackn > Math.max(2, this.credits*0.7))
-               this.send('READY', 0); // send dummy message to server
-         };
-
-         this._websocket.onclose = arg => {
-            delete this._websocket;
-            if ((this.state > 0) || (arg === 'force_close')) {
-               console.log('websocket closed');
-               this.state = 0;
-               this.invokeReceiver(true, 'onWebsocketClosed');
-            }
-         };
-
-         this._websocket.onerror = err => {
-            console.log(`websocket error ${err} state ${this.state}`);
-            if (this.state > 0) {
-               this.invokeReceiver(true, 'onWebsocketError', err);
-               this.state = 0;
-            }
-         };
-
-         // only in interactive mode try to reconnect
-         if (!isBatchMode())
-            setTimeout(retry_open, 3000); // after 3 seconds try again
-      }; // retry_open
-
-      retry_open(true); // call for the first time
-   }
-
-   /** @summary Ask to reload web widget
-     * @desc If new key already exists - reload immediately
-     * Otherwise request server to generate new key - and then reload page
-     * WARNING - call only when knowing that you are doing
-     * @private */
-   askReload(force) {
-      if (this.new_key || force) {
-         this.close(true);
-         if (typeof location !== 'undefined')
-            location.reload(true);
-      } else {
-         this._ask_reload = true;
-         this.send('GENERATE_KEY', 0);
-      }
-   }
-
-   /** @summary Instal Ctrl-R handler to reload web window
-     * @desc Instead of default window reload invokes {@link askReload} method
-     * WARNING - only call when you know that you are doing
-     * @private */
-   addReloadKeyHandler() {
-      if ((this.kind === 'file') || this._handling_reload)
-         return;
-
-      // this websocket will handle reload
-      // embed widgets should not call this method
-      this._handling_reload = true;
-
-      window.addEventListener('keydown', evnt => {
-         if (((evnt.key === 'R') || (evnt.key === 'r')) && evnt.ctrlKey) {
-            evnt.stopPropagation();
-            evnt.preventDefault();
-            console.log('Prevent Ctrl-R propogation - ask reload RWebWindow!');
-            this.askReload();
-          }
-      });
-   }
-
-   /** @summary Replace widget URL with new key
-     * @private */
-   storeKeyInUrl() {
-      let href = (typeof document !== 'undefined') ? document.URL : null;
-
-      if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
-         let prefix = '&key=', p = href.indexOf(prefix);
-         if (p < 0) {
-            prefix = '?key=';
-            p = href.indexOf(prefix);
-         }
-         if ((p > 0) && this.new_key) {
-            const p1 = href.indexOf('#', p+1), p2 = href.indexOf('&', p+1),
-                  pp = (p1 < 0) ? p2 : (p2 < 0 ? p1 : Math.min(p1, p2));
-            href = href.slice(0, p) + prefix + this.new_key + (pp < 0 ? '' : href.slice(pp));
-            window.history?.replaceState(window.history.state, undefined, href);
-         }
-      }
-
-      if (typeof sessionStorage !== 'undefined') {
-         sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
-         sessionStorage.setItem('RWebWindow_Key', this.new_key);
-      }
-   }
-
-} // class WebWindowHandle
-
-/**
  * @summary Painter class for RCanvas
  *
  * @private
@@ -122820,11 +121739,11 @@ class RCanvasPainter extends RPadPainter {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
          } else if (cmd.indexOf('ADDPANEL:') === 0) {
-            const relative_path = cmd.slice(9);
             if (!isFunc(this.showUI5Panel))
                handle.send(reply + 'false');
              else {
-               const conn = new WebWindowHandle(handle.kind);
+               const window_path = cmd.slice(9),
+                     conn = handle.createNewInstance(window_path);
 
                // set interim receiver until first message arrives
                conn.setReceiver({
@@ -122851,15 +121770,8 @@ class RCanvasPainter extends RPadPainter {
 
                });
 
-               let addr = handle.href;
-               if (relative_path.indexOf('../') === 0) {
-                  const ddd = addr.lastIndexOf('/', addr.length-2);
-                  addr = addr.slice(0, ddd) + relative_path.slice(2);
-               } else
-                  addr += relative_path;
-
                // only when connection established, panel will be activated
-               conn.connect(addr);
+               conn.connect();
             }
          } else {
             console.log('Unrecognized command ' + cmd);

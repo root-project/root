@@ -1270,8 +1270,7 @@ class TH2Painter extends THistPainter {
 
       entries.forEach((entry, colindx) => {
          if (entry) {
-            this.draw_g
-                .append('svg:path')
+            this.draw_g.append('svg:path')
                 .attr('fill', palette.getColor(colindx))
                 .attr('d', entry.path);
          }
@@ -1453,13 +1452,10 @@ class TH2Painter extends THistPainter {
          const dd = buildPath(xp, yp, iminus, iplus, fillcolor !== 'none', true);
          if (!dd) return;
 
-         const elem = this.draw_g
-                        .append('svg:path')
-                        .attr('d', dd)
-                        .style('fill', fillcolor);
-
-         if (lineatt)
-            elem.call(lineatt.func);
+         this.draw_g.append('svg:path')
+             .attr('d', dd)
+             .style('fill', fillcolor)
+             .call(lineatt ? lineatt.func : () => {});
       });
 
       handle.hide_only_zeros = true; // text drawing suppress only zeros
@@ -1589,7 +1585,7 @@ class TH2Painter extends THistPainter {
       }
 
       // do not try color draw optimization as with plain th2 while
-      // bins are not rectangular and drawings artefacts are nasty
+      // bins are not rectangular and drawings artifacts are nasty
       // therefore draw each bin separately when doing color draw
       const lineatt0 = lineatt_match && gr0 ? this.createAttLine(gr0) : null,
             fillatt0 = fillatt_match && gr0 ? this.createAttFill(gr0) : null,
@@ -1626,7 +1622,7 @@ class TH2Painter extends THistPainter {
                if (draw_colors && (colindx !== null))
                   item.style('fill', this._color_palette.getColor(colindx));
                else if (draw_fill)
-                  item.call('fill', this.createAttFill(gr).func);
+                  item.call(this.createAttFill(gr).func);
                else
                   item.style('fill', 'none');
                if (draw_lines)

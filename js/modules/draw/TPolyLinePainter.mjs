@@ -66,21 +66,16 @@ class TPolyLinePainter extends ObjectPainter {
             func = this.getAxisToSvgFunc(isndc);
 
       this.createAttLine({ attr: polyline });
-      this.createAttFill({ attr: polyline });
+      this.createAttFill({ attr: polyline, enable: dofill });
 
       let cmd = '';
       for (let n = 0; n <= polyline.fLastPoint; ++n)
-         cmd += `${n>0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
+         cmd += `${n > 0?'L':'M'}${func.x(polyline.fX[n])},${func.y(polyline.fY[n])}`;
 
-      if (dofill)
-         cmd += 'Z';
-
-      const elem = this.draw_g.append('svg:path').attr('d', cmd);
-
-      if (dofill)
-         elem.call(this.fillatt.func);
-      else
-         elem.call(this.lineatt.func).style('fill', 'none');
+      this.draw_g.append('svg:path')
+                 .attr('d', cmd + (dofill ? 'Z' : ''))
+                 .call(dofill ? () => {} : this.lineatt.func)
+                 .call(this.fillatt.func);
 
       assignContextMenu(this, kToFront);
 

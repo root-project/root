@@ -312,8 +312,9 @@ class TF1Painter extends TH1Painter {
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
-               .call(this.lineatt?.func);
+               .attr('cy', this.$tmp_tooltip.gry ?? pnt.y);
+         if (this.lineatt)
+            ttrect.call(this.lineatt.func);
       }
 
       return res;
