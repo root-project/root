@@ -1,4 +1,4 @@
-# RNTuple Reference Specifications 0.2.5.0
+# RNTuple Reference Specifications 0.2.6.0
 
 **Note:** This is work in progress. The RNTuple specification is not yet finalized.
 
@@ -384,6 +384,7 @@ The flags field can have one of the following bits set:
 |----------|----------------------------------------------------------------------------|
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
+| 0x04     | Has ROOT streamer checksum                                                 |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
@@ -394,6 +395,9 @@ If `flag==0x02` (_projected field_) is set,
 the field has been created as a virtual field from another, non-projected source field.
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
+
+If `flag==0x04` (ROOT streamer checksum) is set, the field metadata contain the checksum of the ROOT streamer.
+This checksum is only used for I/O rules in order to find types that are identified by checksum.
 
 Depending on the flags, the following optional values follow:
 
@@ -406,6 +410,8 @@ Depending on the flags, the following optional values follow:
 |                                                               |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 +             Source Field ID (if flag 0x02 is set)             +
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
++          ROOT Streamer Checksum (if flag 0x04 is set)         +
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
