@@ -1929,6 +1929,8 @@ TEST(RNTuple, TClassReadRules)
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
+             ntuple->GetModel().GetField("klass").GetOnDiskStreamerChecksum());
    EXPECT_EQ(20U, ntuple->GetNEntries());
    auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
    for (auto i : ntuple->GetEntryRange()) {
@@ -1940,6 +1942,11 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
       EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
       EXPECT_EQ("ROOT", viewKlass(i).s.str);
+
+      // The following member is set by a checksum based rule
+      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
+      // The following member is not touched by a rule due to a checksum mismatch
+      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
 }
 

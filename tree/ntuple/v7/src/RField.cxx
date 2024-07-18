@@ -1807,7 +1807,8 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
       return false;
    };
 
-   auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()));
+   auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()),
+                                   static_cast<UInt_t>(GetOnDiskStreamerChecksum()));
    rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
    AddReadCallbacksFromIORules(rules, fClass);
 }
