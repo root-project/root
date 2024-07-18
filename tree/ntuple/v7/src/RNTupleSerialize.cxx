@@ -61,6 +61,8 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
       flags |= RNTupleSerializer::kFlagRepetitiveField;
    if (fieldDesc.IsProjectedField())
       flags |= RNTupleSerializer::kFlagProjectedField;
+   if (fieldDesc.GetStreamerChecksum().has_value())
+      flags |= RNTupleSerializer::kFlagHasStreamerChecksum;
    pos += RNTupleSerializer::SerializeUInt16(flags, *where);
 
    if (flags & RNTupleSerializer::kFlagRepetitiveField) {
@@ -68,6 +70,9 @@ std::uint32_t SerializeField(const ROOT::Experimental::RFieldDescriptor &fieldDe
    }
    if (flags & RNTupleSerializer::kFlagProjectedField) {
       pos += RNTupleSerializer::SerializeUInt32(onDiskProjectionSourceId, *where);
+   }
+   if (flags & RNTupleSerializer::kFlagHasStreamerChecksum) {
+      pos += RNTupleSerializer::SerializeUInt32(fieldDesc.GetStreamerChecksum().value(), *where);
    }
 
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
@@ -164,6 +169,14 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
       std::uint32_t projectionSourceId;
       bytes += RNTupleSerializer::DeserializeUInt32(bytes, projectionSourceId);
       fieldDesc.ProjectionSourceId(projectionSourceId);
+   }
+
+   if (flags & RNTupleSerializer::kFlagHasStreamerChecksum) {
+      if (fnFrameSizeLeft() < sizeof(std::uint32_t))
+         return R__FAIL("field record frame too short");
+      std::uint32_t streamerChecksum;
+      bytes += RNTupleSerializer::DeserializeUInt32(bytes, streamerChecksum);
+      fieldDesc.StreamerChecksum(streamerChecksum);
    }
 
    std::string fieldName;
