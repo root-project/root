@@ -455,6 +455,12 @@ TEST(VecOps, MathFuncs)
    CheckEqual(pow(v,1), v, " error checking math function pow");
    CheckEqual(pow(v,v), w, " error checking math function pow");
 
+   // #16031
+   RVec<double> vv{3.4};
+   RVec<double> vv_ref{11.56};
+   CheckEqual(pow(vv,2), vv_ref, " error checking math function pow");
+   CheckEqual(pow(vv,2.), vv_ref, " error checking math function pow");
+
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
    CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
