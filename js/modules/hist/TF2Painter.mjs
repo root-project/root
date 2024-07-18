@@ -279,15 +279,16 @@ class TF2Painter extends TH2Painter {
          }
 
          ttrect.attr('cx', pnt.x)
-               .attr('cy', pnt.y)
-               .call(this.lineatt?.func);
+               .attr('cy', pnt.y);
+         if (this.lineatt)
+            ttrect.call(this.lineatt.func);
       }
 
       return res;
    }
 
    /** @summary fill information for TWebCanvas
-    * @desc Used to inform web canvas when evaluation failed
+     * @desc Used to inform web canvas when evaluation failed
      * @private */
    fillWebObjectOptions(opt) {
       opt.fcust = this._fail_eval && !this.use_saved ? 'func_fail' : '';

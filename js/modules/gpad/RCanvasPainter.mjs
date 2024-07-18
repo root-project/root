@@ -9,7 +9,6 @@ import { RAxisPainter } from './RAxisPainter.mjs';
 import { RFramePainter } from './RFramePainter.mjs';
 import { RPadPainter } from './RPadPainter.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
-import { WebWindowHandle } from '../webwindow.mjs';
 
 
 /**
@@ -299,11 +298,11 @@ class RCanvasPainter extends RPadPainter {
             this.createImage(cmd.toLowerCase())
                 .then(res => handle.send(reply + res));
          } else if (cmd.indexOf('ADDPANEL:') === 0) {
-            const relative_path = cmd.slice(9);
             if (!isFunc(this.showUI5Panel))
                handle.send(reply + 'false');
              else {
-               const conn = new WebWindowHandle(handle.kind);
+               const window_path = cmd.slice(9),
+                     conn = handle.createNewInstance(window_path);
 
                // set interim receiver until first message arrives
                conn.setReceiver({
@@ -330,15 +329,8 @@ class RCanvasPainter extends RPadPainter {
 
                });
 
-               let addr = handle.href;
-               if (relative_path.indexOf('../') === 0) {
-                  const ddd = addr.lastIndexOf('/', addr.length-2);
-                  addr = addr.slice(0, ddd) + relative_path.slice(2);
-               } else
-                  addr += relative_path;
-
                // only when connection established, panel will be activated
-               conn.connect(addr);
+               conn.connect();
             }
          } else {
             console.log('Unrecognized command ' + cmd);

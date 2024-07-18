@@ -38,6 +38,9 @@ class TAttFillHandler {
          if ((args.color === undefined) && (args.attr.fFillColor !== undefined)) args.color = args.attr.fFillColor;
       }
 
+      if (args.enable !== undefined)
+         this.enable(args.enable);
+
       const was_changed = this.changed; // preserve changed state
       this.change(args.color, args.pattern, args.svg, args.color_as_svg, args.painter);
       this.changed = was_changed;
@@ -45,8 +48,10 @@ class TAttFillHandler {
 
    /** @summary Apply fill style to selection */
    apply(selection) {
-      if (this._disable)
-         return selection.style('fill', 'none');
+      if (this._disable) {
+         selection.style('fill', 'none');
+         return;
+      }
 
       this.used = true;
 

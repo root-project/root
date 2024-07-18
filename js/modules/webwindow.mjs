@@ -562,12 +562,18 @@ class WebWindowHandle {
       return args;
    }
 
-   /** @summary Create configured socket for current object.
+   /** @summary Connect to the server
+     * @param [href] - optional URL to widget, use document URL instead
      * @private */
    connect(href) {
       this.close();
-      if (!href && this.href)
-         href = this.href;
+
+      if (href) {
+         this._secondary = true;
+         this.setHRef(href);
+      }
+
+      href = this.href;
 
       let ntry = 0;
 
@@ -619,8 +625,8 @@ class WebWindowHandle {
             if (ntry > 2) showProgress();
             this.state = 1;
 
-            const key = this.key || '';
-            this.send(`READY=${key}`, 0); // need to confirm connection
+            const reply = (this._secondary ? '' : 'generate_key;') + (this.key || '');
+            this.send(`READY=${reply}`, 0); // need to confirm connection and request new key
             this.invokeReceiver(false, 'onWebsocketOpened');
          };
 
@@ -788,6 +794,10 @@ class WebWindowHandle {
    /** @summary Replace widget URL with new key
      * @private */
    storeKeyInUrl() {
+      // do not modify document URLs by secondary widgets
+      if (this._secondary)
+         return;
+
       let href = (typeof document !== 'undefined') ? document.URL : null;
 
       if (this._can_modify_url && isStr(href) && (typeof window !== 'undefined')) {
@@ -808,6 +818,15 @@ class WebWindowHandle {
          sessionStorage.setItem('RWebWindow_SessionKey', sessionKey);
          sessionStorage.setItem('RWebWindow_Key', this.new_key);
       }
+   }
+
+   /** @summary Create new instance of same kind
+    * @private */
+   createNewInstance(url) {
+      const handle = new WebWindowHandle(this.kind);
+      handle._secondary = true;
+      handle.setHRef(this.getHRef(url));
+      return handle;
    }
 
 } // class WebWindowHandle
