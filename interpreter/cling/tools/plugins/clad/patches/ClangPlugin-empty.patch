@@ -1,0 +1,28 @@
+From 5359f2aed67ff638f1878624e79075e169333a6c Mon Sep 17 00:00:00 2001
+From: Jonas Hahnfeld <jonas.hahnfeld@cern.ch>
+Date: Thu, 16 May 2024 16:36:29 +0200
+Subject: [PATCH] Only register ClangPlugin if clad is found
+
+---
+ tools/ClangPlugin.cpp | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/tools/ClangPlugin.cpp b/tools/ClangPlugin.cpp
+index 4bd485524..2f4a06fd5 100644
+--- a/tools/ClangPlugin.cpp
++++ b/tools/ClangPlugin.cpp
+@@ -84,9 +84,11 @@ namespace clad {
+           break;
+         }
+ 
+-      // Register clad as a backend pass.
+-      CodeGenOptions& CGOpts = CI.getCodeGenOpts();
+-      CGOpts.PassPlugins.push_back(CladSoPath.str());
++      if (!CladSoPath.empty()) {
++        // Register clad as a backend pass.
++        CodeGenOptions& CGOpts = CI.getCodeGenOpts();
++        CGOpts.PassPlugins.push_back(CladSoPath.str());
++      }
+ #endif // CLANG_VERSION_MAJOR > 8
+     }
+ 
