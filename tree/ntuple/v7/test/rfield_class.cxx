@@ -209,3 +209,22 @@ TEST(RTNuple, TObjectDerived)
    EXPECT_FLOAT_EQ(1.0, ptrMultiple->x);
    EXPECT_EQ(137u, ptrMultiple->GetUniqueID());
 }
+
+TEST(RNTuple, TClassStreamerChecksum)
+{
+   auto f0 = RFieldBase::Create("f0", "std::vector<int>").Unwrap();
+   EXPECT_FALSE(f0->GetTraits() & RFieldBase::kTraitStreamerChecksum);
+   EXPECT_EQ(0u, f0->GetStreamerChecksum());
+
+   auto f1 = RFieldBase::Create("f1", "CustomStruct").Unwrap();
+   EXPECT_TRUE(f1->GetTraits() & RFieldBase::kTraitStreamerChecksum);
+   EXPECT_EQ(TClass::GetClass("CustomStruct")->GetCheckSum(), f1->GetStreamerChecksum());
+
+   auto f2 = std::make_unique<ROOT::Experimental::RUnsplitField>("f2", "TRotation");
+   EXPECT_TRUE(f2->GetTraits() & RFieldBase::kTraitStreamerChecksum);
+   EXPECT_EQ(TClass::GetClass("TRotation")->GetCheckSum(), f2->GetStreamerChecksum());
+
+   auto f3 = RFieldBase::Create("f1", "TObject").Unwrap();
+   EXPECT_TRUE(f3->GetTraits() & RFieldBase::kTraitStreamerChecksum);
+   EXPECT_EQ(TClass::GetClass("TObject")->GetCheckSum(), f3->GetStreamerChecksum());
+}

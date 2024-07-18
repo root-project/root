@@ -148,6 +148,8 @@ public:
    /// A field of a fundamental type that can be directly mapped via `RField<T>::Map()`, i.e. maps as-is to a single
    /// column
    static constexpr int kTraitMappable = 0x04;
+   /// The streamer checksum is set and valid
+   static constexpr int kTraitStreamerChecksum = 0x08;
    /// Shorthand for types that are both trivially constructible and destructible
    static constexpr int kTraitTrivialType = kTraitTriviallyConstructible | kTraitTriviallyDestructible;
 
@@ -707,6 +709,8 @@ public:
    virtual std::uint32_t GetFieldVersion() const { return 0; }
    /// Indicates an evolution of the C++ type itself
    virtual std::uint32_t GetTypeVersion() const { return 0; }
+   /// Return the current streamer checksum of this class. Only valid if kTraitStreamerChecksum is set.
+   virtual std::uint32_t GetStreamerChecksum() const { return 0; }
    /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
 
@@ -820,6 +824,7 @@ public:
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
+   std::uint32_t GetStreamerChecksum() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
 };
 
@@ -872,6 +877,7 @@ public:
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
+   std::uint32_t GetStreamerChecksum() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -2554,6 +2560,7 @@ public:
    size_t GetValueSize() const final;
    size_t GetAlignment() const final;
    std::uint32_t GetTypeVersion() const final;
+   std::uint32_t GetStreamerChecksum() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
