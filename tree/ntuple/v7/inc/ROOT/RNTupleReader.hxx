@@ -162,13 +162,13 @@ public:
    static std::unique_ptr<RNTupleReader> Open(std::string_view ntupleName, std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
    static std::unique_ptr<RNTupleReader>
-   Open(RNTuple &ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   Open(const RNTuple &ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
    /// The caller imposes a model, which must be compatible with the model found in the data on storage.
    static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, std::string_view ntupleName,
                                               std::string_view storage,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
-   static std::unique_ptr<RNTupleReader>
-   Open(std::unique_ptr<RNTupleModel> model, RNTuple &ntuple, const RNTupleReadOptions &options = RNTupleReadOptions());
+   static std::unique_ptr<RNTupleReader> Open(std::unique_ptr<RNTupleModel> model, const RNTuple &ntuple,
+                                              const RNTupleReadOptions &options = RNTupleReadOptions());
    /// Open RNTuples as one virtual, horizontally combined ntuple.  The underlying RNTuples must
    /// have an identical number of entries.  Fields in the combined RNTuple are named with the ntuple name
    /// as a prefix, e.g. myNTuple1.px and myNTuple2.pt (see tutorial ntpl006_friends)
