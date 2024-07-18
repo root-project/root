@@ -313,16 +313,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oTabContainer.addItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.tree.view.TreeViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
+         const handle = this.websocket.createNewInstance(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
+
+         XMLView.create({
+            viewName: "rootui5.tree.view.TreeViewer",
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
          }).then(oView => item.addContent(oView));
 
          return item;
@@ -1353,16 +1350,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          oTabContainer.addItem(item);
          // oTabContainer.setSelectedItem(item);
 
-         this.jsroot.connectWebWindow({
-            kind: this.websocket.kind,
-            href: this.websocket.getHRef(url),
-            user_args: { nobrowser: true }
-         }).then(handle => {
-            item._jsroot_conn = handle;
-            return XMLView.create({
-               viewName: "rootui5.geom.view.GeomViewer",
-               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-            });
+         const handle = this.websocket.createNewInstance(url);
+         handle.setUserArgs({ nobrowser: true });
+         item._jsroot_conn = handle; // keep to be able disconnect
+
+         XMLView.create({
+            viewName: 'rootui5.geom.view.GeomViewer',
+            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
          }).then(oView => item.addContent(oView));
 
          return item;
@@ -1381,19 +1375,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("tabContainer").addItem(item);
 
-         let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
-         conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
+         // argument for connect, makes relative path
+         const conn = this.websocket.createNewInstance(url);
+         item._jsroot_conn = conn; // keep to be able disconnect
 
-         item._jsroot_conn = conn;
-
-         import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
+         import('jsroot/draw').then(draw => {
             if (kind == "rcanvas")
-               return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
+               return import('jsrootsys/modules/gpad/RCanvasPainter.mjs').then(h => {
                    draw.assignPadPainterDraw(h.RPadPainter);
                    return new h.RCanvasPainter(null, null);
                 });
 
-            return import(this.jsroot.source_dir + 'modules/gpad/TCanvasPainter.mjs').then(h => {
+            return import('jsrootsys/modules/gpad/TCanvasPainter.mjs').then(h => {
                draw.assignPadPainterDraw(h.TPadPainter);
                return new h.TCanvasPainter(null, null);
             });
