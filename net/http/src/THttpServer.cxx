@@ -945,16 +945,17 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg, const s
       } else {
 
          bool first = true;
-         TString importmap = "<script type=\"importmap\">\n{\n\"imports\": ";
+         TString importmap = "<script type=\"importmap\">\n{\n   \"imports\": ";
          for (auto &entry : modules) {
-            importmap.Append(TString::Format("%s\n\"%s\": \"%smodules/%s\"", first ? "{" : ",", entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
+            importmap.Append(TString::Format("%s\n      \"%s\": \"%smodules/%s\"", first ? "{" : ",", entry.first.c_str(), jsroot_prefix.c_str(), entry.second.c_str()));
             first = false;
          }
-         importmap.Append(TString::Format(",\n    \"jsrootsys/\": \"%s\"", jsroot_prefix.c_str()));
+         importmap.Append(TString::Format(",\n      \"jsrootsys/\": \"%s\"", jsroot_prefix.c_str()));
 
          for (auto &entry : fLocations)
-            importmap.Append(TString::Format(",\n        \"%s\": \"%s%s\"", entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
-         importmap.Append("\n     }\n   }\n </script>\n");
+            if (entry.first != "jsrootsys/")
+               importmap.Append(TString::Format(",\n      \"%s\": \"%s%s\"", entry.first.c_str(), path_prefix.c_str(), entry.first.c_str()));
+         importmap.Append("\n   }\n}\n</script>\n");
 
          arg->fContent.erase(p, place_holder.length());
 
