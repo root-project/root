@@ -822,23 +822,23 @@ class TH1Painter extends THistPainter {
          }
 
          if (path_err) {
-             this.draw_g.append('svg:path')
-                   .attr('d', path_err)
-                   .call(this.lineatt.func);
+            this.draw_g.append('svg:path')
+                .attr('d', path_err)
+                .call(this.lineatt.func);
          }
 
          if (hints_err) {
-               this.draw_g.append('svg:path')
-                   .attr('d', hints_err)
-                   .style('fill', 'none')
-                   .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
+            this.draw_g.append('svg:path')
+                .attr('d', hints_err)
+                .style('fill', 'none')
+                .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
          }
 
          if (path_line) {
             this.draw_g.append('svg:path')
-                   .attr('d', path_line)
-                   .style('fill', 'none')
-                   .call(this.lineatt.func);
+                .attr('d', path_line)
+                .style('fill', 'none')
+                .call(this.lineatt.func);
          }
 
          if (path_marker) {
