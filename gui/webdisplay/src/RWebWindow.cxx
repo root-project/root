@@ -1286,17 +1286,26 @@ std::string RWebWindow::GetAddr() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// DEPRECATED. Use GetUrl method instead while more arguments are required to connect with the widget
 /// Returns relative URL address for the specified window
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
 std::string RWebWindow::GetRelativeAddr(const std::shared_ptr<RWebWindow> &win) const
 {
-   return GetRelativeAddr(*win);
+   if (fMgr != win->fMgr) {
+      R__LOG_ERROR(WebGUILog()) << "Same web window manager should be used";
+      return "";
+   }
+
+   std::string res("../");
+   res.append(win->GetAddr());
+   res.append("/");
+   return res;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
-/// Returns relative URL address for the specified window
+/// DEPRECATED. Use GetUrl method instead while more arguments are required to connect with the widget
 /// Address can be required if one needs to access data from one window into another window
 /// Used for instance when inserting panel into canvas
 
