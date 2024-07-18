@@ -29,6 +29,7 @@
 #include <iterator>
 #include <map>
 #include <memory>
+#include <optional>
 #include <ostream>
 #include <vector>
 #include <set>
@@ -95,6 +96,9 @@ private:
    std::vector<DescriptorId_t> fLinkIds;
    /// The ordered list of columns attached to this field
    std::vector<DescriptorId_t> fLogicalColumnIds;
+   /// For custom classes, we store the ROOT streamer checksum to facilitate the use of I/O rules that
+   /// identify types by their streamer checksum
+   std::optional<std::uint32_t> fStreamerChecksum;
 
 public:
    RFieldDescriptor() = default;
@@ -123,6 +127,7 @@ public:
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
+   const std::optional<std::uint32_t> &GetStreamerChecksum() const { return fStreamerChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
 
@@ -1121,6 +1126,11 @@ public:
    RFieldDescriptorBuilder &Structure(const ENTupleStructure &structure)
    {
       fField.fStructure = structure;
+      return *this;
+   }
+   RFieldDescriptorBuilder &StreamerChecksum(const std::optional<std::uint32_t> streamerChecksum)
+   {
+      fField.fStreamerChecksum = streamerChecksum;
       return *this;
    }
    DescriptorId_t GetParentId() const { return fField.fParentId; }
