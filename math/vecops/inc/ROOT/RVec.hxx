@@ -1809,7 +1809,7 @@ using PromoteTypes = decltype(PromoteType<U>() + PromoteType<V>());
    RVec<PromoteTypes<T0, T1>> NAME(const RVec<T0> &v, const T1 &y)             \
    {                                                                           \
       RVec<PromoteTypes<T0, T1>> ret(v.size());                                \
-      auto f = [&y](const T1 &x) { return FUNC(x, y); };                       \
+      auto f = [&y](const T0 &x) { return FUNC(x, y); };                       \
       std::transform(v.begin(), v.end(), ret.begin(), f);                      \
       return ret;                                                              \
    }                                                                           \
