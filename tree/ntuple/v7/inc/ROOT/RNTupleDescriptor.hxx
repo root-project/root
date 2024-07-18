@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <map>
@@ -154,9 +155,10 @@ private:
    DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
-   /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
-   /// than 0
-   std::uint64_t fFirstElementIndex = 0U;
+   /// The absolute value specifies the index for the first stored element for this column.
+   /// For deferred columns the absolute value is larger than zero.
+   /// Negative values specify a suppressed and deferred column.
+   std::int64_t fFirstElementIndex = 0U;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex = 0;
    /// A field may use multiple column representations, which are numbered from zero to $m$.
@@ -181,10 +183,11 @@ public:
    DescriptorId_t GetFieldId() const { return fFieldId; }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
-   std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
+   std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
    EColumnType GetType() const { return fType; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
-   bool IsDeferredColumn() const { return fFirstElementIndex > 0; }
+   bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
+   bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
 };
 
 // clang-format off
@@ -1048,6 +1051,12 @@ public:
       fColumn.fFirstElementIndex = firstElementIdx;
       return *this;
    }
+   RColumnDescriptorBuilder &SetSuppressedDeferred()
+   {
+      if (fColumn.fFirstElementIndex > 0)
+         fColumn.fFirstElementIndex = -fColumn.fFirstElementIndex;
+      return *this;
+   }
    RColumnDescriptorBuilder &RepresentationIndex(std::uint16_t representationIndex)
    {
       fColumn.fRepresentationIndex = representationIndex;
@@ -1207,7 +1216,8 @@ public:
 
    /// Add column and page ranges for columns created during late model extension missing in this cluster.  The locator
    /// type for the synthesized page ranges is `kTypePageZero`.  All the page sources must be able to populate the
-   /// 'zero' page from such locator. Any call to `CommitColumnRange()` should happen before calling this function.
+   /// 'zero' page from such locator. Any call to `CommitColumnRange()` and `CommitSuppressedColumnRanges()`
+   /// should happen before calling this function.
    RClusterDescriptorBuilder &AddExtendedColumnRanges(const RNTupleDescriptor &desc);
 
    /// Move out the full cluster descriptor including page locations

@@ -655,7 +655,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
             for (const auto &c : desc.GetColumnIterable(fieldId)) {
                const DescriptorId_t physicalId = c.GetPhysicalId();
                auto &columnRange = fCluster.fColumnRanges[physicalId];
-               auto &pageRange = fCluster.fPageRanges[physicalId];
+
                // Initialize a RColumnRange for `physicalId` if it was not there. Columns that were created during model
                // extension won't have on-disk metadata for the clusters that were already committed before the model
                // was extended. Therefore, these need to be synthetically initialized upon reading.
@@ -663,8 +663,7 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                   columnRange.fPhysicalColumnId = physicalId;
                   columnRange.fFirstElementIndex = 0;
                   columnRange.fNElements = 0;
-
-                  pageRange.fPhysicalColumnId = physicalId;
+                  columnRange.fIsSuppressed = c.IsSuppressedDeferredColumn();
                }
                // Fixup the RColumnRange and RPageRange in deferred columns. We know what the first element index and
                // number of elements should have been if the column was not deferred; fix those and let
@@ -675,8 +674,15 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
                if (c.IsDeferredColumn()) {
                   columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
                   columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
-                  const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
-                  pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
+                  if (!columnRange.fIsSuppressed) {
+                     auto &pageRange = fCluster.fPageRanges[physicalId];
+                     pageRange.fPhysicalColumnId = physicalId;
+                     const auto element = Internal::RColumnElementBase::Generate<void>(c.GetType());
+                     pageRange.ExtendToFitColumnRange(columnRange, *element, Internal::RPage::kPageZeroSize);
+                  }
+               } else {
+                  auto &pageRange = fCluster.fPageRanges[physicalId];
+                  pageRange.fPhysicalColumnId = physicalId;
                }
             }
          },
