@@ -1136,8 +1136,12 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
             fColumnRepresentative = &t;
       }
       R__ASSERT(fColumnRepresentative);
-      if (fOnDiskId != kInvalidDescriptorId)
-         fOnDiskTypeVersion = desc.GetFieldDescriptor(fOnDiskId).GetTypeVersion();
+      if (fOnDiskId != kInvalidDescriptorId) {
+         const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
+         fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
+         if (fieldDesc.GetStreamerChecksum().has_value())
+            fOnDiskStreamerChecksum = fieldDesc.GetStreamerChecksum().value();
+      }
    }
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();

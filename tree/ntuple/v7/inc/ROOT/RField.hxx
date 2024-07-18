@@ -412,6 +412,9 @@ protected:
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
    std::uint32_t fOnDiskTypeVersion = kInvalidTypeVersion;
+   /// Streamer checksum cached from the descriptor after a call to `ConnectPageSource()`. Only set
+   /// for classes with dictionaries.
+   std::uint32_t fOnDiskStreamerChecksum = 0;
    /// Points into the static vector GetColumnRepresentations().GetSerializationTypes() when SetColumnRepresentative
    /// is called.  Otherwise GetColumnRepresentative returns the default representation.
    const ColumnRepresentation_t *fColumnRepresentative = nullptr;
@@ -713,6 +716,9 @@ public:
    virtual std::uint32_t GetStreamerChecksum() const { return 0; }
    /// Return the C++ type version stored in the field descriptor; only valid after a call to `ConnectPageSource()`
    std::uint32_t GetOnDiskTypeVersion() const { return fOnDiskTypeVersion; }
+   /// Return streamer checksum stored in the field descriptor; only valid after a call to `ConnectPageSource()`,
+   /// if the field stored a streamer checksum
+   std::uint32_t GetOnDiskStreamerChecksum() const { return fOnDiskStreamerChecksum; }
 
    RSchemaIterator begin()
    {
