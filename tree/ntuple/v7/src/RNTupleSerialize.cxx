@@ -28,6 +28,7 @@
 #include <xxhash.h>
 
 #include <cassert>
+#include <cmath>
 #include <cstring> // for memcpy
 #include <deque>
 #include <set>
@@ -227,13 +228,15 @@ std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &d
          pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(c.GetType()), *where);
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
          std::uint16_t flags = 0;
-         const std::uint64_t firstElementIdx = c.GetFirstElementIndex();
-         if (firstElementIdx > 0)
+         if (c.IsDeferredColumn())
             flags |= RNTupleSerializer::kFlagDeferredColumn;
+         std::int64_t firstElementIdx = c.GetFirstElementIndex();
+         if (c.IsSuppressedDeferredColumn())
+            firstElementIdx = -firstElementIdx;
          pos += RNTupleSerializer::SerializeUInt16(flags, *where);
          pos += RNTupleSerializer::SerializeUInt16(c.GetRepresentationIndex(), *where);
          if (flags & RNTupleSerializer::kFlagDeferredColumn)
-            pos += RNTupleSerializer::SerializeUInt64(firstElementIdx, *where);
+            pos += RNTupleSerializer::SerializeInt64(firstElementIdx, *where);
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
       }
@@ -262,7 +265,7 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    std::uint32_t fieldId;
    std::uint16_t flags;
    std::uint16_t representationIndex;
-   std::uint64_t firstElementIdx = 0;
+   std::int64_t firstElementIdx = 0;
    if (fnFrameSizeLeft() < RNTupleSerializer::SerializeColumnType(type, nullptr) +
                            sizeof(std::uint16_t) + 2 * sizeof(std::uint32_t))
    {
@@ -279,13 +282,16 @@ RResult<std::uint32_t> DeserializeColumn(const void *buffer, std::uint64_t bufSi
    if (flags & RNTupleSerializer::kFlagDeferredColumn) {
       if (fnFrameSizeLeft() < sizeof(std::uint64_t))
          return R__FAIL("column record frame too short");
-      bytes += RNTupleSerializer::DeserializeUInt64(bytes, firstElementIdx);
+      bytes += RNTupleSerializer::DeserializeInt64(bytes, firstElementIdx);
    }
 
    if (ROOT::Experimental::Internal::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
 
-   columnDesc.FieldId(fieldId).Type(type).FirstElementIndex(firstElementIdx).RepresentationIndex(representationIndex);
+   columnDesc.FieldId(fieldId).Type(type).RepresentationIndex(representationIndex);
+   columnDesc.FirstElementIndex(std::abs(firstElementIdx));
+   if (firstElementIdx < 0)
+      columnDesc.SetSuppressedDeferred();
 
    return frameSize;
 }
