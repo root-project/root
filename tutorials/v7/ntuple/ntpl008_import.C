@@ -54,7 +54,7 @@ void ntpl008_import()
       return;
    }
    auto ntpl = file->Get<RNTuple>("Events");
-   auto reader = RNTupleReader::Open(ntpl);
+   auto reader = RNTupleReader::Open(*ntpl);
    reader->PrintInfo();
 
    ROOT::RDataFrame df("Events", kNTupleFileName);
