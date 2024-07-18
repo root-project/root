@@ -65,11 +65,17 @@ public:
    virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
    virtual void VisitInt32Field(const RField<std::int32_t> &field) { VisitField(field); }
    virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
+#if !kIsSameInt64LongLongInt
+   virtual void VisitInt64Field(const RField<long long int> &field) { VisitField(field); }
+#endif
    virtual void VisitNullableField(const RNullableField &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
    virtual void VisitUInt16Field(const RField<std::uint16_t> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
    virtual void VisitUInt64Field(const RField<std::uint64_t> &field) { VisitField(field); }
+#if !kIsSameInt64LongLongInt
+   virtual void VisitUInt64Field(const RField<unsigned long long int> &field) { VisitField(field); }
+#endif
    virtual void VisitUInt8Field(const RField<std::uint8_t> &field) { VisitField(field); }
    virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
@@ -211,11 +217,17 @@ public:
    void VisitInt16Field(const RField<std::int16_t> &field) final;
    void VisitInt32Field(const RField<std::int32_t> &field) final;
    void VisitInt64Field(const RField<std::int64_t> &field) final;
+#if !kIsSameInt64LongLongInt
+   void VisitInt64Field(const RField<long long int> &field) final;
+#endif
    void VisitStringField(const RField<std::string> &field) final;
    void VisitUInt8Field(const RField<std::uint8_t> &field) final;
    void VisitUInt16Field(const RField<std::uint16_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
+#if !kIsSameInt64LongLongInt
+   void VisitUInt64Field(const RField<unsigned long long int> &field) final;
+#endif
 
    void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;

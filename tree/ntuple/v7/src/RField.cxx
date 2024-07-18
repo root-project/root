@@ -59,44 +59,47 @@
 namespace {
 
 const std::unordered_map<std::string_view, std::string_view> typeTranslationMap{
-   {"Bool_t",   "bool"},
-   {"Float_t",  "float"},
+   {"Bool_t", "bool"},
+   {"Float_t", "float"},
    {"Double_t", "double"},
-   {"string",   "std::string"},
+   {"string", "std::string"},
 
-   {"byte",          "std::byte"},
-   {"Char_t",        "char"},
-   {"int8_t",        "std::int8_t"},
-   {"signed char",   "char"},
-   {"UChar_t",       "std::uint8_t"},
+   {"byte", "std::byte"},
+   {"Char_t", "char"},
+   {"int8_t", "std::int8_t"},
+   {"signed char", "char"},
+   {"UChar_t", "std::uint8_t"},
    {"unsigned char", "std::uint8_t"},
-   {"uint8_t",       "std::uint8_t"},
+   {"uint8_t", "std::uint8_t"},
 
-   {"Short_t",        "std::int16_t"},
-   {"int16_t",        "std::int16_t"},
-   {"short",          "std::int16_t"},
-   {"UShort_t",       "std::uint16_t"},
+   {"Short_t", "std::int16_t"},
+   {"int16_t", "std::int16_t"},
+   {"short", "std::int16_t"},
+   {"UShort_t", "std::uint16_t"},
    {"unsigned short", "std::uint16_t"},
-   {"uint16_t",       "std::uint16_t"},
+   {"uint16_t", "std::uint16_t"},
 
-   {"Int_t",        "std::int32_t"},
-   {"int32_t",      "std::int32_t"},
-   {"int",          "std::int32_t"},
-   {"UInt_t",       "std::uint32_t"},
-   {"unsigned",     "std::uint32_t"},
+   {"Int_t", "std::int32_t"},
+   {"int32_t", "std::int32_t"},
+   {"int", "std::int32_t"},
+   {"UInt_t", "std::uint32_t"},
+   {"unsigned", "std::uint32_t"},
    {"unsigned int", "std::uint32_t"},
-   {"uint32_t",     "std::uint32_t"},
+   {"uint32_t", "std::uint32_t"},
 
    // FIXME: Long_t and ULong_t are 32-bit on 64-bit Windows.
-   {"Long_t",        "std::int64_t"},
-   {"Long64_t",      "std::int64_t"},
-   {"int64_t",       "std::int64_t"},
-   {"long",          "std::int64_t"},
-   {"ULong_t",       "std::uint64_t"},
-   {"ULong64_t",     "std::uint64_t"},
+   {"Long_t", "std::int64_t"},
+   {"Long64_t", "std::int64_t"},
+   {"int64_t", "std::int64_t"},
+   {"long", "std::int64_t"},
+   {"long long", "std::int64_t"},
+   {"long long int", "std::int64_t"},
+   {"ULong_t", "std::uint64_t"},
+   {"ULong64_t", "std::uint64_t"},
    {"unsigned long", "std::uint64_t"},
-   {"uint64_t",      "std::uint64_t"}
-};
+   {"unsigned long long", "std::uint64_t"},
+   {"unsigned long long int", "std::uint64_t"},
+   {"uint64_t", "std::uint64_t"}};
 
 /// Used in CreateField() in order to get the comma-separated list of template types
 /// E.g., gets {"int", "std::variant<double,int>"} from "int,std::variant<double,int>"
@@ -1583,6 +1586,65 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 {
    visitor.VisitInt64Field(*this);
 }
+
+//------------------------------------------------------------------------------
+
+#if !kIsSameInt64LongLongInt
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<unsigned long long int>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt64}, {EColumnType::kUInt64}},
+                                                 {{EColumnType::kSplitInt64}, {EColumnType::kInt64}});
+   return representations;
+}
+
+void ROOT::Experimental::RField<unsigned long long int>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<std::uint64_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RField<unsigned long long int>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<std::uint64_t>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+void ROOT::Experimental::RField<unsigned long long int>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitUInt64Field(*this);
+}
+
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RField<long long int>::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}},
+                                                 {{EColumnType::kSplitUInt64},
+                                                  {EColumnType::kUInt64},
+                                                  {EColumnType::kInt32},
+                                                  {EColumnType::kSplitInt32},
+                                                  {EColumnType::kUInt32},
+                                                  {EColumnType::kSplitUInt32}});
+   return representations;
+}
+
+void ROOT::Experimental::RField<long long int>::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Internal::RColumn::Create<std::int64_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RField<long long int>::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Internal::RColumn::Create<std::int64_t>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+void ROOT::Experimental::RField<long long int>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitInt64Field(*this);
+}
+#endif
 
 //------------------------------------------------------------------------------
 
