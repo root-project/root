@@ -1,4 +1,4 @@
-## \file
+# \file
 ## \ingroup tutorial_roofit
 ## \notebook
 ## Use Simulation Based Inference (SBI) in RooFit
@@ -52,7 +52,6 @@ public:
    Double_t evaluate() const override { return 1; }
    // getter for varlist
    const RooArgList &varlist() const { return m_varlist; }
-
 protected:
    RooListProxy m_varlist; // all variables as list of variables
 };
@@ -104,7 +103,7 @@ class SBI:
             data_test_model.extend([samples_gaussian.get(i).getRealValue("x") for i in range(samples_gaussian.numEntries())])
         ws[mu].setVal(old_val)
         self.data_model = np.array(data_test_model).reshape(-1, 1)
-        
+
     # generating samples for the reference distribution 
     def reference_data(self, model, x, n_samples):
         ws = self.workspace
