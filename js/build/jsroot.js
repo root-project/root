@@ -11,7 +11,7 @@ const version_id = 'dev',
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-version_date = '18/07/2024',
+version_date = '19/07/2024',
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -73081,7 +73081,7 @@ class THistDrawOptions {
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false, ShowEmpty: false,
               Optimize: settings.OptimizeDraw, adjustFrame: false,
-              Mode3D: false, x3dscale: 1, y3dscale: 1,
+              Mode3D: false, x3dscale: 1, y3dscale: 1, SwapXY: false,
               Render3D: constants$1.Render3D.Default,
               FrontBox: true, BackBox: true,
               need_fillcol: false,
@@ -73370,6 +73370,10 @@ class THistDrawOptions {
       if (d.check('CHAR')) this.Char = 1;
       if (d.check('ALLFUNC')) this.AllFunc = true;
       if (d.check('FUNC')) { this.Func = true; this.Hist = false; }
+      if (d.check('HAXISG')) { this.Axis = 3; this.SwapXY = 1; }
+      if (d.check('HAXIS')) { this.Axis = 1; this.SwapXY = 1; }
+      if (d.check('HAXIG')) { this.Axis = 2; this.SwapXY = 1; }
+      if (d.check('AXISG')) this.Axis = 3;
       if (d.check('AXIS')) this.Axis = 1;
       if (d.check('AXIG')) this.Axis = 2;
 
@@ -73535,6 +73539,11 @@ class THistDrawOptions {
 
       if ((this.Surf === 15) && (this.System === kPOLAR || this.System === kCARTESIAN))
          this.Surf = 13;
+   }
+
+   /** @summary Is X/Y swap is configured */
+   swap_xy() {
+      return this.BarStyle >= 20 || this.SwapXY;
    }
 
    /** @summary Tries to reconstruct string with hist draw options */
@@ -74345,7 +74354,7 @@ class THistPainter extends ObjectPainter {
                     zoom_ymin: this.zoom_ymin,
                     zoom_ymax: this.zoom_ymax,
                     ymin_nz: this.ymin_nz,
-                    swap_xy: (this.options.BarStyle >= 20),
+                    swap_xy: this.options.swap_xy(),
                     reverse_x: this.options.RevX,
                     reverse_y: this.options.RevY,
                     symlog_x: this.options.SymlogX,
@@ -81220,7 +81229,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
 
       const left = this.getSelectIndex('x', 'left'),
             right = this.getSelectIndex('x', 'right'),
-            pad_logy = this.getPadPainter()?.getPadLog(this.options.BarStyle >= 20 ? 'x' : 'y'),
+            pad_logy = this.getPadPainter()?.getPadLog(this.options.swap_xy() ? 'x' : 'y'),
             f1 = this.options.Func ? this.findFunction(clTF1) : null;
 
       if (when_axis_changed && (left === this.scan_xleft) && (right === this.scan_xright))
@@ -81797,23 +81806,40 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             const he1 = Math.max(yerr1, 5), he2 = Math.max(yerr2, 5);
             hints_err += `M${midx-edx},${my-he1}h${2*edx}v${he1+he2}h${-2*edx}z`;
          }
+      }, draw_marker = () => {
+         if (funcs.swap_xy) {
+            path_marker += this.markeratt.create(my, midx);
+            if (hints_marker !== null)
+               hints_marker += `M${my-hsz},${midx-hsz}v${2*hsz}h${2*hsz}v${-2*hsz}z`;
+         } else {
+            path_marker += this.markeratt.create(midx, my);
+            if (hints_marker !== null)
+               hints_marker += `M${midx-hsz},${my-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
+         }
       }, draw_bin = bin => {
          if (extract_bin(bin)) {
             if (show_text) {
                const cont = text_profile ? histo.fBinEntries[bin+1] : bincont;
 
                if (cont !== 0) {
-                  const lbl = (cont === Math.round(cont)) ? cont.toString() : floatToString(cont, gStyle.fPaintTextFormat);
-
-                  if (text_angle)
-                     this.drawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
-                  else
-                     this.drawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+                  const arg = text_angle
+                     ? { align: 12, x: midx, y: Math.round(my - 2 - text_size / 5), width: 0, height: 0, rotate: text_angle }
+                     : { align: 22, x: Math.round(mx1 + (mx2 - mx1) * 0.1), y: Math.round(my - 2 - text_size), width: Math.round((mx2 - mx1) * 0.8), height: text_size };
+                  arg.text = (cont === Math.round(cont)) ? cont.toString() : floatToString(cont, gStyle.fPaintTextFormat);
+                  arg.color = text_col;
+                  arg.latex = 0;
+                  if (funcs.swap_xy) {
+                     arg.x = my;
+                     arg.y = Math.round(midx - text_size/2);
+                  }
+                  this.drawText(arg);
                }
             }
 
             if (show_line) {
-               if (path_line.length === 0)
+               if (funcs.swap_xy)
+                  path_line += (path_line ? 'L' : 'M') + `${my},${midx}`; // no optimization
+               else if (path_line.length === 0)
                   path_line = `M${midx},${my}`;
                else if (lx === midx)
                   path_line += `v${my-ly}`;
@@ -81829,12 +81855,8 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
                   if (path_fill !== null)
                      path_fill += `M${mx1},${my-yerr1}h${mx2-mx1}v${yerr1+yerr2+1}h${mx1-mx2}z`;
-                  if ((path_marker !== null) && do_marker) {
-                     path_marker += this.markeratt.create(midx, my);
-                     if (hints_marker !== null)
-                        hints_marker += `M${midx-hsz},${my-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
-                  }
-
+                  if ((path_marker !== null) && do_marker)
+                     draw_marker();
                   if ((path_err !== null) && do_err)
                      draw_errbin();
                }
@@ -81848,9 +81870,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             for (i = left; i < right; ++i) {
                if (extract_bin(i)) {
                   if (path_marker !== null)
-                     path_marker += this.markeratt.create(midx, my);
-                  if (hints_marker !== null)
-                     hints_marker += `M${midx-hsz},${my-hsz}h${2*hsz}v${2*hsz}h${-2*hsz}z`;
+                     draw_marker();
                   if (path_err !== null)
                      draw_errbin();
                }
@@ -81858,7 +81878,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             do_err = do_marker = false;
          }
       }
-
 
       for (i = left; i <= right; ++i) {
          x = xaxis.GetBinLowEdge(i+1);
@@ -81965,8 +81984,11 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       if (draw_markers || show_line || show_curve) {
-         if (!path_line && grpnts.length)
+         if (!path_line && grpnts.length) {
+            if (funcs.swap_xy)
+               grpnts.forEach(pnt => { const d = pnt.grx; pnt.grx = pnt.gry; pnt.gry = d; });
             path_line = buildSvgCurve(grpnts);
+         }
 
          if (path_fill) {
             this.draw_g.append('svg:path')
