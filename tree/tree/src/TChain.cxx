@@ -1133,7 +1133,9 @@ TObjArray* TChain::GetListOfBranches()
    if (fTree) {
       return fTree->GetListOfBranches();
    }
-   LoadTree(0);
+   TLoadTreeOptions opts;
+   opts.fDisableCache = true;
+   LoadTreeWithOptions(0, opts);
    if (fTree) {
       return fTree->GetListOfBranches();
    }
@@ -1299,29 +1301,8 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
    return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Find the tree which contains entry, and set it as the current tree.
-///
-/// Returns the entry number in that tree.
-///
-/// The input argument entry is the entry serial number in the whole chain.
-///
-/// In case of error, LoadTree returns a negative number:
-///   * -1: The chain is empty.
-///   * -2: The requested entry number is less than zero or too large for the chain.
-///   * -3: The file corresponding to the entry could not be correctly open
-///   * -4: The TChainElement corresponding to the entry is missing or
-///       the TTree is missing from the file.
-///   * -5: Internal error, please report the circumstance when this happen
-///       as a ROOT issue.
-///   * -6: An error occurred within the notify callback.
-///
-/// Calls fNotify->Notify() (if fNotify is not null) when starting the processing of a new sub-tree.
-/// See TNotifyLink for more information on the notification mechanism.
-///
-/// \note This is the only routine which sets the value of fTree to a non-zero pointer.
-///
-Long64_t TChain::LoadTree(Long64_t entry)
+/// see TChain::LoadTree()
+Long64_t TChain::LoadTreeWithOptions(Long64_t entry, const TLoadTreeOptions &options) 
 {
    // We already have been visited while recursively looking
    // through the friends tree, let's return.
@@ -1645,6 +1626,11 @@ Long64_t TChain::LoadTree(Long64_t entry)
    // they use the correct read entry number).
 
    // Change the new current tree to the new entry.
+   Long64_t cacheSize = fTree->GetCacheSize();
+   // Sometimes we want to call this function without having the tree allocate its cache on LoadTree
+   // (for example from GetListOfBranches).
+   if (options.fDisableCache)
+      fTree->SetCacheSize(0);
    Long64_t loadResult = fTree->LoadTree(treeReadEntry);
    if (loadResult == treeReadEntry) {
       element->SetLoadResult(0);
@@ -1654,6 +1640,8 @@ Long64_t TChain::LoadTree(Long64_t entry)
       // that is very odd/surprising.
       element->SetLoadResult(-5);
    }
+   if (options.fDisableCache)
+      fTree->SetCacheSize(cacheSize);
 
 
    // Change the chain friends to the new entry.
@@ -1750,6 +1738,33 @@ Long64_t TChain::LoadTree(Long64_t entry)
 
    // Return the new local entry number.
    return treeReadEntry;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find the tree which contains entry, and set it as the current tree.
+///
+/// Returns the entry number in that tree.
+///
+/// The input argument entry is the entry serial number in the whole chain.
+///
+/// In case of error, LoadTree returns a negative number:
+///   * -1: The chain is empty.
+///   * -2: The requested entry number is less than zero or too large for the chain.
+///   * -3: The file corresponding to the entry could not be correctly open
+///   * -4: The TChainElement corresponding to the entry is missing or
+///       the TTree is missing from the file.
+///   * -5: Internal error, please report the circumstance when this happen
+///       as a ROOT issue.
+///   * -6: An error occurred within the notify callback.
+///
+/// Calls fNotify->Notify() (if fNotify is not null) when starting the processing of a new sub-tree.
+/// See TNotifyLink for more information on the notification mechanism.
+///
+/// \note This is the only routine which sets the value of fTree to a non-zero pointer.
+///
+Long64_t TChain::LoadTree(Long64_t entry)
+{
+   return LoadTreeWithOptions(entry, TLoadTreeOptions());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
