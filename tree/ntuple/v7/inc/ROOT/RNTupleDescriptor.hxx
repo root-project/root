@@ -127,7 +127,7 @@ public:
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
-   const std::optional<std::uint32_t> &GetStreamerChecksum() const { return fStreamerChecksum; }
+   std::optional<std::uint32_t> GetStreamerChecksum() const { return fStreamerChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
 
