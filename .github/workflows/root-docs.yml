@@ -1,0 +1,228 @@
+name: 'ROOT Docs'
+
+on:
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  # Allows nightly builds to trigger one run for each branch easily, by
+  # providing the relevant branch as "default" value here:
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        default: master
+      base_ref:
+        type: string
+        default: master
+      ref_name:
+        type: string
+        default: master
+
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+      binaries:
+        description: Create binary packages and upload them as artifacts
+        type: boolean
+        required: true
+        default: false
+      buildtype:
+        description: The CMAKE_BUILD_TYPE to use for non-Windows.
+        type: choice
+        options:
+        - Debug
+        - RelWithDebInfo
+        - Release
+        - MinSizeRel
+        default: Debug
+        required: true
+      docu_input: # TODO: overwrite makeinput.sh with these args
+        description: Folders to build documentation for. All folders are built if empty.
+        type: string
+        default: ""
+        required: false
+
+jobs:
+  build-docs:
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
+    # TODO: it would be nice to use some global var for the platform, this doesn't work though :(
+    env:
+      PLATFORM: alma9
+      DOC_DIR: rootdoc
+      DOC_LOCATION: /github/home
+
+    permissions:
+      contents: read
+
+    container:
+      image: registry.cern.ch/root-ci/alma9:buildready # ALSO UPDATE BELOW!
+      options: '--security-opt label=disable --rm' # ALSO UPDATE BELOW!
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python Virtual Env
+      # if the `if` expr is false, `if` still has exit code 0.
+      # if the `if` block is entered, the block's exit code becomes the exit
+      # code of the `if`.
+      run: 'if [ -d /py-venv/ROOT-CI/bin/ ]; then . /py-venv/ROOT-CI/bin/activate && echo PATH=$PATH >> $GITHUB_ENV; fi'
+
+    # TODO: install latest versions in image on root-ci-images
+    - name: Install Doxygen 1.10.0
+      run : |
+        mkdir -p ${{ github.workspace }}/doxygen
+        curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
+        echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
+    - name: Install qhelpgenerator
+      run : |
+        dnf update -y && dnf install -y sudo
+        sudo dnf update -y
+        sudo dnf upgrade -y
+        sudo dnf install -y qt5-qhelpgenerator
+
+    - name: Apply option overrides
+      if: ${{ github.event_name != 'schedule' }}
+      env:
+        OVERRIDES: "testing=off roottest=off minimal=on" # can be removed if this workflow is merged with root-ci.yml
+        CONFIGFILE: '.github/workflows/root-ci-config/buildconfig/alma9.txt'
+      shell: bash
+      run: |
+        set -x
+        echo '' >> "$CONFIGFILE"
+        for ENTRY in $OVERRIDES; do
+            KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+            # Add entry to file if not exists, otherwise replace
+            if grep -q "$KEY=" "$CONFIGFILE"; then
+                sed -i "s/$KEY=.*\$/$ENTRY/" "$CONFIGFILE"
+            else
+                echo "$ENTRY" >> "$CONFIGFILE"
+            fi
+        done
+        cat "$CONFIGFILE" || true
+
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJSON(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
+
+    - name: Print debug info
+      run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+              ls -la
+            '
+
+    - name: Pull Request Build
+      if: github.event_name == 'pull_request'
+      env:
+        INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype       Release
+                  --platform        alma9
+                  --image           registry.cern.ch/root-ci/alma9:buildready
+                  --dockeropts      '--security-opt label=disable --rm'
+                  --incremental     $INCREMENTAL
+                  --base_ref        ${{ github.base_ref }}
+                  --sha             ${{ github.sha }}
+                  --pull_repository ${{ github.event.pull_request.head.repo.clone_url }}
+                  --head_ref        refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
+                  --head_sha        ${{ github.event.pull_request.head.sha }}
+                  --repository      ${{ github.server_url }}/${{ github.repository }}
+            "
+
+    # - name: Nightly build
+    #   if:   github.event_name == 'schedule'
+    #   run: ".github/workflows/root-ci-config/build_root.py
+    #               --buildtype      Release
+    #               --platform       alma9
+    #               --incremental    false
+    #               --binaries       false
+    #               --base_ref       ${{ inputs.ref_name }}
+    #               --repository     ${{ github.server_url }}/${{ github.repository }}
+    #         "
+
+    - name: Workflow dispatch
+      if:   github.event_name == 'workflow_dispatch'
+      run: ".github/workflows/root-ci-config/build_root.py
+                  --buildtype      Release
+                  --platform       alma9
+                  --incremental    ${{ inputs.incremental }}
+                  --base_ref       ${{ inputs.base_ref }}
+                  --head_ref       ${{ inputs.head_ref }}
+                  --binaries       ${{ inputs.binaries }}
+                  --repository     ${{ github.server_url }}/${{ github.repository }}
+           "
+
+    - name: Run Doxygen
+      shell: bash
+      run: |
+        source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+        export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
+
+        cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+        make -j$(nproc)
+        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
+        if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+        fi
+
+    # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
+    - name: Create documentation archives
+      working-directory: ${{ env.DOC_LOCATION }}
+      shell: bash
+      run: |
+        tarnamegz=${DOC_DIR}.tar.gz
+        tar zcf $tarnamegz ${DOC_DIR}
+        tarnamexz1=${DOC_DIR}.tar
+        tar cf $tarnamexz1 ${DOC_DIR}
+        xz -T5 -f $tarnamexz1
+
+    # TODO: upload to website instead
+    - name: Upload tar.gz
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
+        path: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
+
+    - name: Upload tar.xz
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
+        path: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
