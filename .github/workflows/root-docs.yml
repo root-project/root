@@ -221,12 +221,12 @@ jobs:
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_LOCATION}.tar.gz
-        path: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
+        name: ${DOC_DIR}.tar.gz
+        path: ${{env.DOC_LOCATION}}/${DOC_DIR}.tar.gz
 
     - name: Upload tar.xz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_LOCATION}.tar.xz
-        path: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
+        name: ${DOC_DIR}.tar.xz
+        path: ${{env.DOC_LOCATION}}/${DOC_DIR}.tar.xz
