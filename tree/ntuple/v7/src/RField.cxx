@@ -1140,7 +1140,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
          if (fieldDesc.GetStreamerChecksum().has_value())
-            fOnDiskStreamerChecksum = fieldDesc.GetStreamerChecksum().value();
+            fOnDiskStreamerChecksum = *fieldDesc.GetStreamerChecksum();
       }
    }
    if (!fColumns.empty())
