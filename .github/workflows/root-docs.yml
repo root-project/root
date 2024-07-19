@@ -73,6 +73,9 @@ jobs:
       PLATFORM: alma9
       DOC_DIR: rootdoc
       DOC_LOCATION: /github/home
+      S3_BUCKET_NAME: root
+      AWS_REGION: "eu-west-1"
+      SHOULD_DEPLOY: 'true'
 
     permissions:
       contents: read
@@ -230,3 +233,24 @@ jobs:
       with:
         name: rootdoc.tar.xz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+    
+    # Upload to Amazon S3
+    - name: Upload tar.gz to S3
+      if: ${{ env.SHOULD_DEPLOY == 'true' }}
+      run: |
+        DEST="s3://${S3_BUCKET_NAME}/${{ github.event.pull_request.number || 'main' }}" # Use PR number or 'main' for non-PR events
+        aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.gz ${DEST}/${DOC_DIR}.tar.gz
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ env.AWS_REGION }}
+
+    - name: Upload tar.xz to S3
+      if: ${{ env.SHOULD_DEPLOY == 'true' }}
+      run: |
+        DEST="s3://${S3_BUCKET_NAME}/${{ github.event.pull_request.number || 'main' }}" # Use PR number or 'main' for non-PR events
+        aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.xz ${DEST}/${DOC_DIR}.tar.xz
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: ${{ env.AWS_REGION }}
