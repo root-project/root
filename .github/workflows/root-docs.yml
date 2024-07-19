@@ -196,7 +196,9 @@ jobs:
 
         cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        ls
+        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
+            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
+        fi
         mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
@@ -212,18 +214,19 @@ jobs:
         tarnamexz1=${DOC_DIR}.tar
         tar cf $tarnamexz1 ${DOC_DIR}
         xz -T5 -f $tarnamexz1
+        ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
 
     # TODO: upload to website instead
     - name: Upload tar.gz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
+        name: ${DOC_LOCATION}.tar.gz
         path: ${DOC_LOCATION}/${DOC_DIR}.tar.gz
 
     - name: Upload tar.xz
       if:   ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
-        name: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
+        name: ${DOC_LOCATION}.tar.xz
         path: ${DOC_LOCATION}/${DOC_DIR}.tar.xz
