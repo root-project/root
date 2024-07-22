@@ -19,6 +19,8 @@
 #include "RooPrintable.h"
 #include "TNamed.h"
 
+#include <ROOT/RConfig.hxx> // for the R__DEPRECATED macro
+
 #include <memory>
 #include <cfloat>
 
@@ -45,7 +47,8 @@ public:
   using Items = std::vector<std::pair<TObject*,std::string>>;
 
   RooPlot() ;
-  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins) ;
+  RooPlot(const char* name, const char* title, const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins)
+     R__DEPRECATED(6,36, "Use the constructor that doesn't take the name and title, and then call SetName() and SetTitle() on the RooPlot.");
   RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nBins);
   RooPlot(double xmin, double xmax);
   RooPlot(double xmin, double xmax, double ymin, double ymax);
