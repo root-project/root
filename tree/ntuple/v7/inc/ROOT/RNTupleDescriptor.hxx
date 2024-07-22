@@ -139,7 +139,6 @@ public:
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
    /// Tells if the field describes a user-defined class with a dictionary.
    /// The dictionary does not need to be available for this method.
-   /// For unsplit fields, the method returns false independent of their content.
    bool IsCustomClass() const;
 };
 
