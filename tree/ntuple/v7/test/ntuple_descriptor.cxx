@@ -560,12 +560,18 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
       descBuilder.AddField(fieldBuilder.FieldId(1).MakeDescriptor().Unwrap());
       descBuilder.AddFieldLink(0, 1);
       int i = 2;
-      // In this test, we only support leaf fields or fields with only direct sub fields
-      for (const auto &subField : field.GetSubFields()) {
-         fieldBuilder = RFieldDescriptorBuilder::FromField(*subField);
+      // In this test, we only support field hierarchies up to 2 levels
+      for (const auto &child : field.GetSubFields()) {
+         fieldBuilder = RFieldDescriptorBuilder::FromField(*child);
          descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
          descBuilder.AddFieldLink(1, i);
          i++;
+         for (const auto &grandChild : child->GetSubFields()) {
+            fieldBuilder = RFieldDescriptorBuilder::FromField(*grandChild);
+            descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
+            descBuilder.AddFieldLink(1, i);
+            i++;
+         }
       }
       return descBuilder.BuildStreamerInfos();
    };
@@ -598,9 +604,23 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
    EXPECT_EQ(1u, streamerInfoMap.size());
    EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
 
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::map<int, CustomStruct>").Unwrap());
+   EXPECT_EQ(1u, streamerInfoMap.size());
+   EXPECT_STREQ("CustomStruct", streamerInfoMap.begin()->second->GetName());
+
    streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "DerivedA").Unwrap());
    EXPECT_EQ(2u, streamerInfoMap.size());
    std::vector<std::string> typeNames;
+   for (const auto &[_, si] : streamerInfoMap) {
+      typeNames.emplace_back(si->GetName());
+   }
+   std::sort(typeNames.begin(), typeNames.end());
+   EXPECT_STREQ("CustomStruct", typeNames[0].c_str());
+   EXPECT_STREQ("DerivedA", typeNames[1].c_str());
+
+   streamerInfoMap = fnBuildStreamerInfosOf(*RFieldBase::Create("f", "std::pair<CustomStruct, DerivedA>").Unwrap());
+   EXPECT_EQ(2u, streamerInfoMap.size());
+   typeNames.clear();
    for (const auto &[_, si] : streamerInfoMap) {
       typeNames.emplace_back(si->GetName());
    }
