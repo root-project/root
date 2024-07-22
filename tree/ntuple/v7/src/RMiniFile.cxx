@@ -1364,10 +1364,8 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    // This would prepend the streamed TList with self-decription information.
    // The streamer info record is just the streamed TList.
 
-   // For classes with read rules, we additionally need to store the read rules. We only need to store them once
-   // per class.
+   // For classes with read rules, we additionally need to store the read rules.
 
-   std::unordered_set<TClass *> classesWithRules;
    TList streamerInfoList;
    TList rulesList;
    rulesList.SetOwner(kTRUE);
@@ -1375,14 +1373,13 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    for (auto [_, info] : fStreamerInfoMap) {
       streamerInfoList.Add(info);
       TClass *clinfo = info->GetClass();
-      if (clinfo && clinfo->GetSchemaRules() && (classesWithRules.count(clinfo) == 0)) {
+      if (clinfo && clinfo->GetSchemaRules()) {
          auto rules = reinterpret_cast<const TCollection *>(clinfo->GetSchemaRules()->GetRules());
          for (auto rule : TRangeDynCast<ROOT::TSchemaRule>(rules)) {
             TObjString *obj = new TObjString();
             rule->AsString(obj->String());
             rulesList.Add(obj);
          }
-         classesWithRules.insert(clinfo);
       }
    }
    if (rulesList.GetEntries() > 0) {
