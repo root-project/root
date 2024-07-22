@@ -384,7 +384,7 @@ The flags field can have one of the following bits set:
 |----------|----------------------------------------------------------------------------|
 | 0x01     | Repetitive field, i.e. for every entry $n$ copies of the field are stored  |
 | 0x02     | Projected field                                                            |
-| 0x04     | Has ROOT streamer checksum                                                 |
+| 0x04     | Has ROOT type checksum as reported by TClass                               |
 
 If `flag==0x01` (_repetitive field_) is set, the field represents a fixed-size array.
 Typically, another (sub) field with `Parent Field ID` equal to the ID of this field
@@ -396,7 +396,7 @@ the field has been created as a virtual field from another, non-projected source
 If a projected field has attached columns,
 these columns are alias columns to physical columns attached to the source field.
 
-If `flag==0x04` (ROOT streamer checksum) is set, the field metadata contain the checksum of the ROOT streamer.
+If `flag==0x04` (type checksum) is set, the field metadata contain the checksum of the ROOT streamer info.
 This checksum is only used for I/O rules in order to find types that are identified by checksum.
 
 Depending on the flags, the following optional values follow:

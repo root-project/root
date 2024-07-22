@@ -1139,8 +1139,8 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
       if (fOnDiskId != kInvalidDescriptorId) {
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
-         if (fieldDesc.GetStreamerChecksum().has_value())
-            fOnDiskStreamerChecksum = *fieldDesc.GetStreamerChecksum();
+         if (fieldDesc.GetTypeChecksum().has_value())
+            fOnDiskTypeChecksum = *fieldDesc.GetTypeChecksum();
       }
    }
    if (!fColumns.empty())
@@ -1725,7 +1725,7 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
    }
-   fTraits |= kTraitStreamerChecksum;
+   fTraits |= kTraitTypeChecksum;
 }
 
 void ROOT::Experimental::RClassField::Attach(std::unique_ptr<RFieldBase> child, RSubFieldInfo info)
@@ -1808,7 +1808,7 @@ void ROOT::Experimental::RClassField::OnConnectPageSource()
    };
 
    auto rules = ruleset->FindRules(fClass->GetName(), static_cast<Int_t>(GetOnDiskTypeVersion()),
-                                   static_cast<UInt_t>(GetOnDiskStreamerChecksum()));
+                                   static_cast<UInt_t>(GetOnDiskTypeChecksum()));
    rules.erase(std::remove_if(rules.begin(), rules.end(), referencesNonTransientMembers), rules.end());
    AddReadCallbacksFromIORules(rules, fClass);
 }
@@ -1848,7 +1848,7 @@ std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
    return fClass->GetClassVersion();
 }
 
-std::uint32_t ROOT::Experimental::RClassField::GetStreamerChecksum() const
+std::uint32_t ROOT::Experimental::RClassField::GetTypeChecksum() const
 {
    return fClass->GetCheckSum();
 }
@@ -1873,7 +1873,7 @@ ROOT::Experimental::RField<TObject>::RField(std::string_view fieldName)
 {
    assert(TObject::Class()->GetClassVersion() == 1);
 
-   fTraits |= kTraitStreamerChecksum;
+   fTraits |= kTraitTypeChecksum;
    Attach(std::make_unique<RField<UInt_t>>("fUniqueID"));
    Attach(std::make_unique<RField<UInt_t>>("fBits"));
 }
@@ -1935,7 +1935,7 @@ std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeVersion() const
    return TObject::Class()->GetClassVersion();
 }
 
-std::uint32_t ROOT::Experimental::RField<TObject>::GetStreamerChecksum() const
+std::uint32_t ROOT::Experimental::RField<TObject>::GetTypeChecksum() const
 {
    return TObject::Class()->GetCheckSum();
 }
@@ -1990,7 +1990,7 @@ ROOT::Experimental::RUnsplitField::RUnsplitField(std::string_view fieldName, std
       throw RException(R__FAIL("RUnsplitField: no I/O support for type " + std::string(className)));
    }
 
-   fTraits |= kTraitStreamerChecksum;
+   fTraits |= kTraitTypeChecksum;
    if (!(fClass->ClassProperty() & kClassHasExplicitCtor))
       fTraits |= kTraitTriviallyConstructible;
    if (!(fClass->ClassProperty() & kClassHasExplicitDtor))
@@ -2088,7 +2088,7 @@ std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeVersion() const
    return fClass->GetClassVersion();
 }
 
-std::uint32_t ROOT::Experimental::RUnsplitField::GetStreamerChecksum() const
+std::uint32_t ROOT::Experimental::RUnsplitField::GetTypeChecksum() const
 {
    return fClass->GetCheckSum();
 }
