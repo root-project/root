@@ -93,9 +93,10 @@ RooPlot::RooPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of RooPlot with range [xmin,xmax]
 
-RooPlot::RooPlot(double xmin, double xmax)
+RooPlot::RooPlot(double xmin, double xmax, int nBins)
+  : _normBinWidth((xmax - xmin) / nBins)
 {
-  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist = new TH1D(histName(),"A RooPlot",nBins,xmin,xmax) ;
   _hist->Sumw2(false) ;
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
