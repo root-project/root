@@ -738,7 +738,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -831,7 +831,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -981,7 +981,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1045,7 +1045,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -1061,7 +1061,7 @@ public:
       RooRealVar a1("a1", "a1", -0.2, -1., 1.);
       RooChebychev bkg1("bkg1", "Background 1", x, RooArgSet(a0, a1));
 
-      // Build expontential pdf
+      // Build exponential pdf
       RooRealVar alpha("alpha", "alpha", 1);
       RooExponential bkg2("bkg2", "Background 2", x, alpha, true);
 
@@ -3207,7 +3207,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
@@ -3473,7 +3473,7 @@ public:
       // Declare observable x
       RooRealVar x("x", "x", 0, 10);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, -10, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5, 0.1, 10);
       RooRealVar sigma2("sigma2", "width of gaussians", 1, 0.1, 10);
@@ -4115,7 +4115,7 @@ public:
       // C r e a t e   l o w   s t a t s   2 - D   d a t a s e t
       // -------------------------------------------------------
 
-      // Construct a 2D toy pdf for sampleing
+      // Construct a 2D toy pdf for sampling
       RooRealVar y("y", "y", 0, 20);
       RooPolynomial py("py", "py", y, RooArgList(0.01, 0.01, -0.0004));
       RooProdPdf pxy("pxy", "pxy", RooArgSet(p, py));
@@ -4338,7 +4338,7 @@ public:
       RooRealVar x("x", "x", 0, 10);
       x.setBins(40);
 
-      // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+      // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
       RooRealVar mean("mean", "mean of gaussians", 5, 0, 10);
       RooRealVar sigma1("sigma1", "width of gaussians", 0.5);
       RooRealVar sigma2("sigma2", "width of gaussians", 1);
