@@ -660,10 +660,10 @@ TEST(MiniFile, DifferentTKeys)
    EXPECT_EQ(1, ntuple->GetNEntries());
 }
 
-TEST(MiniFile, SchemaInfo)
+TEST(MiniFile, StreamerInfo)
 {
-   FileRaii fileGuardProper("test_ntuple_minifile_schema_info_proper.root");
-   FileRaii fileGuardSimple("test_ntuple_minifile_schema_info_simple.root");
+   FileRaii fileGuardProper("test_ntuple_minifile_streamer_info_proper.root");
+   FileRaii fileGuardSimple("test_ntuple_minifile_streamer_info_simple.root");
 
    RNTupleSerializer::StreamerInfoMap_t streamerInfos;
    auto infoTVector2 = TClass::GetClass("TVector2")->GetStreamerInfo();
@@ -671,21 +671,23 @@ TEST(MiniFile, SchemaInfo)
    streamerInfos[infoTVector2->GetNumber()] = infoTVector2;
    streamerInfos[infoTVector3->GetNumber()] = infoTVector3;
 
-   auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
-   auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
-   writerProper->UpdateStreamerInfos(streamerInfos);
-   writerProper->Commit();
-   file->Close();
+   {
+      auto file = std::unique_ptr<TFile>(TFile::Open(fileGuardProper.GetPath().c_str(), "RECREATE"));
+      auto writerProper = RNTupleFileWriter::Append("MyNTuple", *file, RNTupleWriteOptions::kDefaultMaxKeySize);
+      writerProper->UpdateStreamerInfos(streamerInfos);
+      writerProper->Commit();
+   }
 
-   auto writerSimple =
-      RNTupleFileWriter::Recreate("ntpl", fileGuardSimple.GetPath(), 0, RNTupleFileWriter::EContainerFormat::kTFile,
-                                  RNTupleWriteOptions::kDefaultMaxKeySize);
-   writerSimple->UpdateStreamerInfos(streamerInfos);
-   writerSimple->Commit();
+   {
+      auto writerSimple = RNTupleFileWriter::Recreate(
+         "ntpl", fileGuardSimple.GetPath(), RNTupleFileWriter::EContainerFormat::kTFile, RNTupleWriteOptions());
+      writerSimple->UpdateStreamerInfos(streamerInfos);
+      writerSimple->Commit();
+   }
 
    std::vector<TVirtualStreamerInfo *> vecInfos;
    for (const auto &path : {fileGuardProper.GetPath(), fileGuardSimple.GetPath()}) {
-      file = std::make_unique<TFile>(path.c_str());
+      auto file = std::make_unique<TFile>(path.c_str());
 
       vecInfos.clear();
       for (auto info : TRangeDynCast<TVirtualStreamerInfo>(*file->GetStreamerInfoList())) {
