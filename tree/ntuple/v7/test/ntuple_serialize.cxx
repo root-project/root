@@ -1380,3 +1380,116 @@ TEST(RNTuple, SerializeMultiColumnRepresentationDeferred)
    EXPECT_EQ(expect2_0, columnRange2_0);
    EXPECT_EQ(expect2_1, columnRange2_1);
 }
+
+TEST(RNTuple, SerializeMultiColumnRepresentationIncremental)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "");
+
+   // Construct an RNTuple with a single float field "pt". The field has a single representation for the
+   // first cluster and then gets extended by another representation that is active in the second cluster.
+
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(5)
+                       .FieldName("pt")
+                       .TypeName("float")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 5);
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(0)
+                        .PhysicalColumnId(0)
+                        .FieldId(5)
+                        .Type(EColumnType::kReal16)
+                        .MakeDescriptor()
+                        .Unwrap());
+
+   auto context = RNTupleSerializer::SerializeHeader(nullptr, builder.GetDescriptor());
+   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeader(bufHeader.get(), builder.GetDescriptor());
+
+   // First cluster
+   RClusterDescriptorBuilder clusterBuilder;
+   ROOT::Experimental::RClusterDescriptor::RPageRange pageRange;
+   ROOT::Experimental::RClusterDescriptor::RPageRange::RPageInfo pageInfo;
+   clusterBuilder.ClusterId(13).FirstEntryIndex(0).NEntries(1);
+   pageRange.fPhysicalColumnId = 0;
+   pageInfo.fNElements = 1;
+   pageRange.fPageInfos.emplace_back(pageInfo);
+   clusterBuilder.CommitColumnRange(0, 0, 505, pageRange);
+   clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
+   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+
+   builder.BeginHeaderExtension();
+   builder.AddColumn(RColumnDescriptorBuilder()
+                        .LogicalColumnId(1)
+                        .PhysicalColumnId(1)
+                        .FieldId(5)
+                        .Type(EColumnType::kReal32)
+                        .RepresentationIndex(1)
+                        .FirstElementIndex(1)
+                        .SetSuppressedDeferred()
+                        .MakeDescriptor()
+                        .Unwrap());
+
+   context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
+
+   // Second cluster
+   clusterBuilder.ClusterId(17).FirstEntryIndex(1).NEntries(1);
+   clusterBuilder.MarkSuppressedColumnRange(0);
+   pageRange.fPhysicalColumnId = 1;
+   clusterBuilder.CommitColumnRange(1, 1, 505, pageRange);
+   clusterBuilder.CommitSuppressedColumnRanges(builder.GetDescriptor()).ThrowOnError();
+   builder.AddCluster(clusterBuilder.MoveDescriptor().Unwrap());
+
+   RClusterGroupDescriptorBuilder cgBuilder;
+   cgBuilder.ClusterGroupId(137).NClusters(2).EntrySpan(2);
+   cgBuilder.AddClusters({13, 17});
+   builder.AddClusterGroup(cgBuilder.MoveDescriptor().Unwrap());
+
+   auto desc = builder.MoveDescriptor();
+   std::vector<DescriptorId_t> physClusterIDs{context.MapClusterId(13), context.MapClusterId(17)};
+   context.MapClusterGroupId(137);
+   auto sizePageList = RNTupleSerializer::SerializePageList(nullptr, desc, physClusterIDs, context);
+   auto bufPageList = std::make_unique<unsigned char[]>(sizePageList);
+   RNTupleSerializer::SerializePageList(bufPageList.get(), desc, physClusterIDs, context);
+
+   auto sizeFooter = RNTupleSerializer::SerializeFooter(nullptr, desc, context);
+   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   RNTupleSerializer::SerializeFooter(bufFooter.get(), desc, context);
+
+   RNTupleSerializer::DeserializeHeader(bufHeader.get(), context.GetHeaderSize(), builder);
+   RNTupleSerializer::DeserializeFooter(bufFooter.get(), sizeFooter, builder);
+   desc = builder.MoveDescriptor();
+   RNTupleSerializer::DeserializePageList(bufPageList.get(), sizePageList, 0, desc);
+
+   EXPECT_EQ(2u, desc.GetNClusters());
+   const auto &fieldDesc = desc.GetFieldDescriptor(desc.FindFieldId("pt"));
+   const auto &columnIds = fieldDesc.GetLogicalColumnIds();
+   EXPECT_EQ(2u, columnIds.size());
+
+   auto &clusterDesc0 = desc.GetClusterDescriptor(0);
+   EXPECT_EQ(0u, clusterDesc0.GetFirstEntryIndex());
+   const auto columnRange0_0 = clusterDesc0.GetColumnRange(columnIds[0]);
+   const auto columnRange0_1 = clusterDesc0.GetColumnRange(columnIds[1]);
+   RClusterDescriptor::RColumnRange expect0_0{0, 0, ClusterSize_t(1), 505, false};
+   RClusterDescriptor::RColumnRange expect0_1{1, 0, ClusterSize_t(1), -1, true};
+   EXPECT_EQ(expect0_0, columnRange0_0);
+   EXPECT_EQ(expect0_1, columnRange0_1);
+
+   auto &clusterDesc1 = desc.GetClusterDescriptor(1);
+   EXPECT_EQ(1u, clusterDesc1.GetFirstEntryIndex());
+   const auto columnRange1_0 = clusterDesc1.GetColumnRange(columnIds[0]);
+   const auto columnRange1_1 = clusterDesc1.GetColumnRange(columnIds[1]);
+   RClusterDescriptor::RColumnRange expect1_0{0, 1, ClusterSize_t(1), -1, true};
+   RClusterDescriptor::RColumnRange expect1_1{1, 1, ClusterSize_t(1), 505, false};
+   EXPECT_EQ(expect1_0, columnRange1_0);
+   EXPECT_EQ(expect1_1, columnRange1_1);
+}

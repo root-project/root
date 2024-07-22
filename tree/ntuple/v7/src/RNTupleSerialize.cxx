@@ -31,6 +31,7 @@
 #include <cmath>
 #include <cstring> // for memcpy
 #include <deque>
+#include <functional>
 #include <set>
 #include <unordered_map>
 
@@ -205,40 +206,53 @@ RResult<std::uint32_t> DeserializeField(const void *buffer, std::uint64_t bufSiz
    return frameSize;
 }
 
-std::uint32_t SerializeColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                  std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                  const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
-                                  void *buffer)
+std::uint32_t SerializePhysicalColumn(const ROOT::Experimental::RColumnDescriptor &columnDesc,
+                                      const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                      void *buffer)
 {
    using RColumnElementBase = ROOT::Experimental::Internal::RColumnElementBase;
+   R__ASSERT(!columnDesc.IsAliasColumn());
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+
+   pos += RNTupleSerializer::SerializeColumnType(columnDesc.GetType(), *where);
+   pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(columnDesc.GetType()), *where);
+   pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(columnDesc.GetFieldId()), *where);
+   std::uint16_t flags = 0;
+   if (columnDesc.IsDeferredColumn())
+      flags |= RNTupleSerializer::kFlagDeferredColumn;
+   std::int64_t firstElementIdx = columnDesc.GetFirstElementIndex();
+   if (columnDesc.IsSuppressedDeferredColumn())
+      firstElementIdx = -firstElementIdx;
+   pos += RNTupleSerializer::SerializeUInt16(flags, *where);
+   pos += RNTupleSerializer::SerializeUInt16(columnDesc.GetRepresentationIndex(), *where);
+   if (flags & RNTupleSerializer::kFlagDeferredColumn)
+      pos += RNTupleSerializer::SerializeInt64(firstElementIdx, *where);
+
+   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base);
+
+   return pos - base;
+}
+
+std::uint32_t SerializeColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                       std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                       const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                       void *buffer)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    for (auto parentId : fieldList) {
       for (const auto &c : desc.GetColumnIterable(parentId)) {
          if (c.IsAliasColumn())
             continue;
 
-         auto frame = pos;
-         pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
-
-         pos += RNTupleSerializer::SerializeColumnType(c.GetType(), *where);
-         pos += RNTupleSerializer::SerializeUInt16(RColumnElementBase::GetBitsOnStorage(c.GetType()), *where);
-         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
-         std::uint16_t flags = 0;
-         if (c.IsDeferredColumn())
-            flags |= RNTupleSerializer::kFlagDeferredColumn;
-         std::int64_t firstElementIdx = c.GetFirstElementIndex();
-         if (c.IsSuppressedDeferredColumn())
-            firstElementIdx = -firstElementIdx;
-         pos += RNTupleSerializer::SerializeUInt16(flags, *where);
-         pos += RNTupleSerializer::SerializeUInt16(c.GetRepresentationIndex(), *where);
-         if (flags & RNTupleSerializer::kFlagDeferredColumn)
-            pos += RNTupleSerializer::SerializeInt64(firstElementIdx, *where);
-
-         pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+         pos += SerializePhysicalColumn(c, context, *where);
       }
    }
 
@@ -412,10 +426,30 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experi
    RNTupleSerializer::DeserializeUInt64(buffer + sizeof(std::uint32_t), data.fLocation);
 }
 
-std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                       std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                       const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
-                                       void *buffer)
+std::uint32_t SerializeAliasColumn(const ROOT::Experimental::RColumnDescriptor &columnDesc,
+                                   const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                   void *buffer)
+{
+   R__ASSERT(columnDesc.IsAliasColumn());
+
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
+
+   pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
+
+   pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskColumnId(columnDesc.GetPhysicalId()), *where);
+   pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(columnDesc.GetFieldId()), *where);
+
+   pos += RNTupleSerializer::SerializeFramePostscript(buffer ? base : nullptr, pos - base);
+
+   return pos - base;
+}
+
+std::uint32_t SerializeAliasColumnsOfFields(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                            std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                            const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                            void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -426,13 +460,7 @@ std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescript
          if (!c.IsAliasColumn())
             continue;
 
-         auto frame = pos;
-         pos += RNTupleSerializer::SerializeRecordFramePreamble(*where);
-
-         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskColumnId(c.GetPhysicalId()), *where);
-         pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
-
-         pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+         pos += SerializeAliasColumn(c, context, *where);
       }
    }
 
@@ -1186,9 +1214,25 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
             MapColumnId(c.GetLogicalId());
    });
 
-   // Anything added after this point is accounted for the header extension
-   if (!forHeaderExtension)
+   if (forHeaderExtension) {
+      // Create physical IDs for column representations that extend fields of the regular header.
+      // First the physical columns than the alias columns
+      for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
+         const auto &columnDesc = desc.GetColumnDescriptor(memId);
+         if (!columnDesc.IsAliasColumn()) {
+            MapColumnId(columnDesc.GetLogicalId());
+         }
+      }
+      for (auto memId : desc.GetHeaderExtension()->GetExtendedColumnRepresentations()) {
+         const auto &columnDesc = desc.GetColumnDescriptor(memId);
+         if (columnDesc.IsAliasColumn()) {
+            MapColumnId(columnDesc.GetLogicalId());
+         }
+      }
+   } else {
+      // Anything added after this point is accounted for the header extension
       BeginHeaderExtension();
+   }
 }
 
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer,
@@ -1201,6 +1245,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0, fieldListOffset = 0;
+   // Columns in the extension header that are attached to a field of the regular header
+   std::vector<std::reference_wrapper<const RColumnDescriptor>> extraColumns;
    if (forHeaderExtension) {
       // A call to `RNTupleDescriptorBuilder::BeginHeaderExtension()` is not strictly required after serializing the
       // header, which may happen, e.g., in unit tests.  Ensure an empty schema extension is serialized in this case
@@ -1209,6 +1255,11 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
          nColumns = xHeader->GetNPhysicalColumns();
          nAliasColumns = xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns();
          fieldListOffset = context.GetHeaderExtensionOffset();
+
+         extraColumns.reserve(xHeader->GetExtendedColumnRepresentations().size());
+         for (auto columnId : xHeader->GetExtendedColumnRepresentations()) {
+            extraColumns.emplace_back(desc.GetColumnDescriptor(columnId));
+         }
       }
    } else {
       nFields = desc.GetNFields() - 1;
@@ -1228,12 +1279,22 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 
    frame = pos;
    pos += SerializeListFramePreamble(nColumns, *where);
-   pos += SerializeColumnList(desc, fieldList, context, *where);
+   pos += SerializeColumnsOfFields(desc, fieldList, context, *where);
+   for (const auto &c : extraColumns) {
+      if (!c.get().IsAliasColumn()) {
+         pos += SerializePhysicalColumn(c.get(), context, *where);
+      }
+   }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
    pos += SerializeListFramePreamble(nAliasColumns, *where);
-   pos += SerializeAliasColumnList(desc, fieldList, context, *where);
+   pos += SerializeAliasColumnsOfFields(desc, fieldList, context, *where);
+   for (const auto &c : extraColumns) {
+      if (c.get().IsAliasColumn()) {
+         pos += SerializeAliasColumn(c.get(), context, *where);
+      }
+   }
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
