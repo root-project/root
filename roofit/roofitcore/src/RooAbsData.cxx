@@ -717,30 +717,28 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
 
   if (yvar) {
-    RooCmdArg* autoRDY = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().find("AutoRangeData")) ;
+    std::unique_ptr<RooCmdArg> autoRDY{static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("YVar")))->subArgs().find("AutoRangeData"))};
     if (autoRDY) {
        double ymin;
        double ymax;
        if (!getRange(static_cast<RooRealVar &>(*yvar), ymin, ymax, autoRDY->getDouble(0), autoRDY->getInt(0))) {
         RooCmdArg *bincmd = static_cast<RooCmdArg *>(RooFit::Binning(autoRDY->getInt(1), ymin, ymax).Clone());
         // ownedCmds.Add(bincmd) ;
-        (static_cast<RooCmdArg *>(argList.find("YVar")))->subArgs().Replace(autoRDY, bincmd);
+        (static_cast<RooCmdArg *>(argList.find("YVar")))->subArgs().Replace(autoRDY.get(), bincmd);
       }
-      delete autoRDY ;
     }
   }
 
   if (zvar) {
-    RooCmdArg* autoRDZ = static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().find("AutoRangeData")) ;
+    std::unique_ptr<RooCmdArg> autoRDZ{static_cast<RooCmdArg*>((static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().find("AutoRangeData"))};
     if (autoRDZ) {
       double zmin;
       double zmax;
       if (!getRange(static_cast<RooRealVar&>(*zvar),zmin,zmax,autoRDZ->getDouble(0),autoRDZ->getInt(0))) {
          RooCmdArg* bincmd = static_cast<RooCmdArg*>(RooFit::Binning(autoRDZ->getInt(1),zmin,zmax).Clone()) ;
          //ownedCmds.Add(bincmd) ;
-         (static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().Replace(autoRDZ,bincmd) ;
+         (static_cast<RooCmdArg*>(argList.find("ZVar")))->subArgs().Replace(autoRDZ.get(),bincmd) ;
       }
-      delete autoRDZ ;
     }
   }
 
