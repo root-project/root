@@ -588,26 +588,49 @@ public:
       friend class Internal::RNTupleDescriptorBuilder;
 
    private:
-      /// Contains the list of field IDs that are part of the header extension; the corresponding columns are
-      /// available via `GetColumnIterable()`.
-      std::vector<DescriptorId_t> fFields;
+      /// All field IDs of late model extensions, in the order of field addition. This is necessary to serialize the
+      /// the fields in that order.
+      std::vector<DescriptorId_t> fFieldIdsOrder;
+      /// All field IDs of late model extensions for efficient lookup. When a column gets added to the extension
+      /// header, this enables us to determine if the column belongs to a field of the header extension of if it
+      /// belongs to a field of the regular header that gets extended by additional column representations.
+      std::unordered_set<DescriptorId_t> fFieldIdsLookup;
+      /// All logical column IDs of columns that extend, with additional column representations, fields of the regular
+      /// header. During serialization, these columns are not picked up as columns of `fFieldIdsOrder`. But instead
+      /// these columns need to be serialized in the extension header without re-serializing the field.
+      std::vector<DescriptorId_t> fExtendedColumnRepresentations;
       /// Number of logical and physical columns; updated by the descriptor builder when columns are added
-      std::uint64_t fNLogicalColumns = 0;
-      std::uint64_t fNPhysicalColumns = 0;
+      std::uint32_t fNLogicalColumns = 0;
+      std::uint32_t fNPhysicalColumns = 0;
 
-      void AddFieldId(DescriptorId_t id) { fFields.push_back(id); }
-      void AddColumn(bool isAliasColumn)
+      void AddExtendedField(const RFieldDescriptor &fieldDesc)
+      {
+         fFieldIdsOrder.emplace_back(fieldDesc.GetId());
+         fFieldIdsLookup.insert(fieldDesc.GetId());
+      }
+
+      void AddExtendedColumn(const RColumnDescriptor &columnDesc)
       {
          fNLogicalColumns++;
-         if (!isAliasColumn)
+         if (!columnDesc.IsAliasColumn())
             fNPhysicalColumns++;
+         if (fFieldIdsLookup.count(columnDesc.GetFieldId()) == 0) {
+            fExtendedColumnRepresentations.emplace_back(columnDesc.GetLogicalId());
+         }
       }
 
    public:
-      std::size_t GetNFields() const { return fFields.size(); }
+      std::size_t GetNFields() const { return fFieldIdsOrder.size(); }
       std::size_t GetNLogicalColumns() const { return fNLogicalColumns; }
       std::size_t GetNPhysicalColumns() const { return fNPhysicalColumns; }
-      /// Return a vector containing the IDs of the top-level fields defined in the extension header
+      const std::vector<DescriptorId_t> &GetExtendedColumnRepresentations() const
+      {
+         return fExtendedColumnRepresentations;
+      }
+      /// Return a vector containing the IDs of the top-level fields defined in the extension header, in the order
+      /// of their addition.
+      /// We cannot create this vector when building the fFields because at the time when AddExtendedField is called,
+      /// the field is not yet linked into the schema tree.
       std::vector<DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
    };
 
