@@ -4568,3 +4568,4 @@ void RooAbsReal::enableOffsetting(bool flag)
 
 
 RooAbsReal::Ref::Ref(double val) : _ref{RooFit::RooConst(val)} {}
+
