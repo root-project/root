@@ -106,17 +106,19 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
 
 bool ROOT::Experimental::RFieldDescriptor::IsCustomClass() const
 {
-   if (fStructure != ENTupleStructure::kRecord)
+   if (fStructure != ENTupleStructure::kRecord && fStructure != ENTupleStructure::kUnsplit)
       return false;
 
    // Skip untyped structs
    if (fTypeName.empty())
       return false;
 
-   if (fTypeName.compare(0, 10, "std::pair<") == 0)
-      return false;
-   if (fTypeName.compare(0, 11, "std::tuple<") == 0)
-      return false;
+   if (fStructure == ENTupleStructure::kRecord) {
+      if (fTypeName.compare(0, 10, "std::pair<") == 0)
+         return false;
+      if (fTypeName.compare(0, 11, "std::tuple<") == 0)
+         return false;
+   }
 
    return true;
 }
@@ -1094,7 +1096,8 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::BuildStreamerInfos() con
 
    fnWalkFieldTree(desc.GetFieldZero());
 
-   // Add the streamer info records from unsplit fields
+   // Add the streamer info records from unsplit fields: because of runtime polymorphism we may need to add additional
+   // types not covered by the type names stored in the field headers
    for (const auto &extraTypeInfo : desc.GetExtraTypeInfoIterable()) {
       if (extraTypeInfo.GetContentId() != EExtraTypeInfoIds::kStreamerInfo)
          continue;
