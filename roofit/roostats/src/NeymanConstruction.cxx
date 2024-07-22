@@ -287,12 +287,11 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       samplingDist->Write();
       string tmpName = "hist_";
       tmpName+=samplingDist->GetName();
-      TH1F* h = new TH1F(tmpName.c_str(),"",500,0.,5.);
+      TH1F h{tmpName.c_str(),"",500,0.,5.};
       for(int ii=0; ii<samplingDist->GetSize(); ++ii){
-   h->Fill(samplingDist->GetSamplingDistribution().at(ii) );
+        h.Fill(samplingDist->GetSamplingDistribution().at(ii) );
       }
-      h->Write();
-      delete h;
+      h.Write();
     }
 
     delete samplingDist;

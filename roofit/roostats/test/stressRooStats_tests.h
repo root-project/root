@@ -419,7 +419,7 @@ public:
 
             // build workspace and model
             RooWorkspace ws{"w"};
-            buildOnOffModel(&ws);
+            buildOnOffModel(ws);
             auto sbModel = dynamic_cast<ModelConfig *>(ws.obj("S+B"));
             auto bModel = dynamic_cast<ModelConfig *>(ws.obj("B"));
 
@@ -709,29 +709,22 @@ public:
          RooAbsReal::defaultIntegratorConfig()->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D");
 #endif
          // Uniform prior on mean
-         auto *bc = new BayesianCalculator(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("prior"), nullptr);
+         auto bc = std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("prior"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
-         SimpleInterval *interval = bc->GetInterval();
+         std::unique_ptr<SimpleInterval> interval{bc->GetInterval()};
          regValue(interval->LowerLimit(), lowerLimitString);
          regValue(interval->UpperLimit(), upperLimitString);
 
-         delete bc;
-         delete interval;
-
          // Inverse of mean prior
-         bc = new BayesianCalculator(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("priorInv"), nullptr);
+         bc = std::make_unique<BayesianCalculator>(data, *ws.pdf("poiss"), *ws.set("poi"), *ws.pdf("priorInv"), nullptr);
          bc->SetConfidenceLevel(confidenceLevel);
          bc->SetShortestInterval();
          bc->SetScanOfPosterior(numberScans);
-         interval = bc->GetInterval();
+         interval = std::unique_ptr<SimpleInterval>{bc->GetInterval()};
          regValue(interval->LowerLimit(), lowerLimitInvString);
          regValue(interval->UpperLimit(), upperLimitInvString);
-
-         // Cleanup branch objects
-         delete bc;
-         delete interval;
       }
 
       return true;
@@ -800,9 +793,9 @@ public:
       const Int_t numberScans = 10; // sufficient number of scans
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w");
-      buildPoissonProductModel(w);
-      ModelConfig *model = (ModelConfig *)w->obj("S+B");
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildPoissonProductModel(w.get());
+      ModelConfig *model = static_cast<ModelConfig *>(w->obj("S+B"));
 
       // add observed values to data set
       w->var("x")->setVal(fObsValueX);
@@ -818,21 +811,16 @@ public:
 #endif
 
       // Create BayesianCalculator and
-      BayesianCalculator *bc = new BayesianCalculator(*w->data("data"), *model);
+      auto bc = std::make_unique<BayesianCalculator>(*w->data("data"), *model);
       bc->SetConfidenceLevel(fConfidenceLevel);
       bc->SetScanOfPosterior(numberScans);
 
       // Obtain confidence interval by scanning the posterior function in the given number of points
-      SimpleInterval *interval = bc->GetInterval();
+      std::unique_ptr<SimpleInterval> interval{bc->GetInterval()};
       regValue(interval->LowerLimit(),
                TString::Format("tbc3_lower_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel));
       regValue(interval->UpperLimit(),
                TString::Format("tbc3_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel));
-
-      // Cleanup
-      delete bc;
-      delete interval;
-      delete w;
 
       return true;
    }
@@ -912,9 +900,9 @@ public:
    {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w");
-      buildPoissonProductModel(w);
-      ModelConfig *model = (ModelConfig *)w->obj("S+B");
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildPoissonProductModel(w.get());
+      ModelConfig *model = static_cast<ModelConfig *>(w->obj("S+B"));
 
       // add observed values to data set
       w->var("x")->setVal(fObsValueX);
@@ -930,25 +918,19 @@ public:
 #endif
 
       // create and configure MCMC calculator
-      SequentialProposal *sp = new SequentialProposal(0.1);
-      MCMCCalculator *mcmcc = new MCMCCalculator(*w->data("data"), *model);
+      auto sp = std::make_unique<SequentialProposal>(0.1);
+      auto mcmcc = std::make_unique<MCMCCalculator>(*w->data("data"), *model);
       mcmcc->SetProposalFunction(*sp);
       mcmcc->SetNumIters(100000);   // Metropolis-Hastings algorithm iterations
       mcmcc->SetNumBurnInSteps(50); // first 50 steps to be ignored as burn-in
       mcmcc->SetConfidenceLevel(fConfidenceLevel);
 
       // calculate the confidence interval
-      MCMCInterval *interval = mcmcc->GetInterval();
+      std::unique_ptr<MCMCInterval> interval{mcmcc->GetInterval()};
       regValue(interval->LowerLimit(*w->var("sig")),
                TString::Format("mcmcc_lower_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel));
       regValue(interval->UpperLimit(*w->var("sig")),
                TString::Format("mcmcc_upper_limit_sig_%d_%d_%lf", fObsValueX, fObsValueY, fConfidenceLevel));
-
-      // cleanup
-      delete interval;
-      delete mcmcc;
-      delete sp;
-      delete w;
 
       return true;
    }
@@ -1099,10 +1081,10 @@ public:
       TString significanceString = TString::Format("thtc1_significance_%d_%d_%lf", fObsValueOn, fObsValueOff, fTau);
 
       // build workspace and model
-      RooWorkspace *w = new RooWorkspace("w");
-      buildOnOffModel(w);
-      ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
-      ModelConfig *bModel = (ModelConfig *)w->obj("B");
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildOnOffModel(*w);
+      ModelConfig *sbModel = static_cast<ModelConfig *>(w->obj("S+B"));
+      ModelConfig *bModel = static_cast<ModelConfig *>(w->obj("B"));
 
       // add observable values to data set and fix other parameters
       w->var("n_on")->setVal(fObsValueOn);
@@ -1121,27 +1103,18 @@ public:
       // Do hypothesis test with ProfileLikelihoodCalculator
       if (_write == true) {
 
-         ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *sbModel);
+         auto plc = std::make_unique<ProfileLikelihoodCalculator>(*w->data("data"), *sbModel);
          plc->SetNullParameters(*bModel->GetSnapshot());
          plc->SetAlternateParameters(*sbModel->GetSnapshot());
          regValue(plc->GetHypoTest()->Significance(), significanceString);
 
-         // cleanup branch
-         delete plc;
-
       } else { // Do hypothesis test with AsymptoticCalculator
 
          AsymptoticCalculator::SetPrintLevel(_verb); // disable superfluous messaging
-         AsymptoticCalculator *atc = new AsymptoticCalculator(*w->data("data"), *sbModel, *bModel);
+         auto atc = std::make_unique<AsymptoticCalculator>(*w->data("data"), *sbModel, *bModel);
          atc->SetOneSidedDiscovery(true);
          regValue(atc->GetHypoTest()->Significance(), significanceString);
-
-         // cleanup branch
-         delete atc;
       }
-
-      // cleanup
-      delete w;
 
       return true;
    }
@@ -1187,8 +1160,8 @@ public:
    {
 
       // Build workspace and models
-      RooWorkspace *w = new RooWorkspace("w");
-      buildSimultaneousModel(w);
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildSimultaneousModel(w.get());
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
 
@@ -1199,10 +1172,9 @@ public:
 
       AsymptoticCalculator::SetPrintLevel(_verb); // is static (don;t care if we don't use it)
 
-      HypoTestCalculatorGeneric *calc =
-         buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50);
+      std::unique_ptr<HypoTestCalculatorGeneric> calc{buildHypoTestCalculator(fCalculatorType, *w->data("data"), *bModel, *sbModel, 500, 50)};
       if (fCalculatorType == kAsymptotic) {
-         ((AsymptoticCalculator *)calc)->SetOneSidedDiscovery(true);
+         ((AsymptoticCalculator *)calc.get())->SetOneSidedDiscovery(true);
       }
 
       // ToyMCSampler configuration
@@ -1211,7 +1183,7 @@ public:
       tmcs->SetUseMultiGen(true); // speedup
 
       // Register result (test significance)
-      HypoTestResult *htr = calc->GetHypoTest();
+      std::unique_ptr<HypoTestResult> htr{calc->GetHypoTest()};
       regValue(htr->Significance(), TString::Format("thtc2_significance_%s_%s", kECalculatorTypeString[fCalculatorType],
                                                     kETestStatTypeString[fTestStatType]));
 
@@ -1227,7 +1199,7 @@ public:
 
             SamplingDistribution *altDist = htr->GetAltDistribution();
             HypoTestResult htExp("Expected result");
-            htExp.Append(htr);
+            htExp.Append(htr.get());
             // find quantiles in alt (S+B) distribution
             double p[5];
             double q[5];
@@ -1256,10 +1228,6 @@ public:
             }
          }
       }
-
-      delete calc;
-      delete htr;
-      delete w;
 
       return true;
    }
@@ -1353,8 +1321,8 @@ public:
    {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w");
-      buildPoissonProductModel(w);
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildPoissonProductModel(w.get());
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
 
@@ -1376,7 +1344,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 1);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
+      auto hti = std::make_unique<HypoTestInverter>(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1394,7 +1362,7 @@ public:
       tmcs->SetNEventsPerToy(1);  // needed because we don't have an extended pdf
       tmcs->SetUseMultiGen(true); // speedup
 
-      HypoTestInverterResult *interval = hti->GetInterval();
+      std::unique_ptr<HypoTestInverterResult> interval{hti->GetInterval()};
       regValue(interval->LowerLimit(),
                TString::Format("thti1_lower_limit_sig_%s_%s_%d_%d_%lf", kECalculatorTypeString[fCalculatorType],
                                kETestStatTypeString[fTestStatType], fObsValueX, fObsValueY, fConfidenceLevel));
@@ -1403,7 +1371,7 @@ public:
                                kETestStatTypeString[fTestStatType], fObsValueX, fObsValueY, fConfidenceLevel));
 
       if (_verb >= 1) {
-         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti1_scan", "Two-Sided Scan", interval);
+         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti1_scan", "Two-Sided Scan", interval.get());
          TCanvas *c1 = new TCanvas("thti1_canvas", "THTI Canvas");
          c1->SetLogy(false);
          plot->Draw("2CL CLB");
@@ -1440,11 +1408,6 @@ public:
          w->loadSnapshot("initialVariables");
          w->writeToFile(TString::Format("stressRooStats_PoissonProductModel_%d_%d.root", fObsValueX, fObsValueY));
       }
-
-      // cleanup
-      delete interval;
-      delete hti;
-      delete w;
 
       return true;
    }
@@ -1515,8 +1478,8 @@ public:
    {
 
       // Create workspace and model
-      RooWorkspace *w = new RooWorkspace("w");
-      buildPoissonEfficiencyModel(w);
+      auto w = std::make_unique<RooWorkspace>("w");
+      buildPoissonEfficiencyModel(*w);
       ModelConfig *sbModel = (ModelConfig *)w->obj("S+B");
       ModelConfig *bModel = (ModelConfig *)w->obj("B");
 
@@ -1536,7 +1499,7 @@ public:
       AsymptoticCalculator::SetPrintLevel(_verb);
       HypoTestCalculatorGeneric *calc =
          buildHypoTestCalculator(fCalculatorType, *w->data("data"), *sbModel, *bModel, 100, 100);
-      HypoTestInverter *hti = new HypoTestInverter(*calc, nullptr, 1.0 - fConfidenceLevel);
+      auto hti = std::make_unique<HypoTestInverter>(*calc, nullptr, 1.0 - fConfidenceLevel);
       hti->SetTestStatistic(*buildTestStatistic(fTestStatType, *sbModel, *bModel));
       hti->SetVerbose(_verb);
 
@@ -1555,7 +1518,7 @@ public:
       tmcs->SetUseMultiGen(true); // make ToyMCSampler faster
 
       // calculate interval and extract observed upper limit and expected upper limit (+- sigma)
-      HypoTestInverterResult *interval = hti->GetInterval();
+      std::unique_ptr<HypoTestInverterResult> interval{hti->GetInterval()};
       regValue(interval->UpperLimit(),
                TString::Format("thti2_upper_limit_sig_%s_%s_%d_%lf", kECalculatorTypeString[fCalculatorType],
                                kETestStatTypeString[fTestStatType], fObsValueX, fConfidenceLevel));
@@ -1576,7 +1539,7 @@ public:
                                kETestStatTypeString[fTestStatType], fObsValueX, fConfidenceLevel));
 
       if (_verb >= 1) {
-         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti2_scan", "HTI Upper Limit Scan", interval);
+         HypoTestInverterPlot *plot = new HypoTestInverterPlot("thti2_scan", "HTI Upper Limit Scan", interval.get());
          TCanvas *c1 = new TCanvas("HypoTestInverter Scan");
          c1->SetLogy(false);
          plot->Draw("2CL CLB");
@@ -1613,11 +1576,6 @@ public:
          w->writeToFile("stressRooStats_PoissonEfficiencyModel.root");
       }
 
-      // cleanup
-      delete interval;
-      delete hti;
-      delete w;
-
       return true;
    }
 };
@@ -1653,7 +1611,7 @@ public:
 
          // Make model for prototype on/off problem
          // Pois(x | s+b) * Pois(y | tau b )
-         RooWorkspace *w = new RooWorkspace("w");
+         auto w = std::make_unique<RooWorkspace>("w");
          w->factory(
             TString::Format("Poisson::on_pdf(x[%d,0,500],sum::splusb(sig[0,0,100],bkg[100,0,300]))", xValue).Data());
          w->factory(TString::Format("Poisson::off_pdf(y[%d,0,500],prod::taub(tau[%lf],bkg))", yValue, tauValue).Data());
@@ -1676,18 +1634,18 @@ public:
          w->defineSet("poi", "sig");
 
          // Add observable value to a data set
-         RooDataSet *data = new RooDataSet("data", "data", *w->set("obs"));
-         data->add(*w->set("obs"));
+         RooDataSet data{"data", "data", *w->set("obs")};
+         data.add(*w->set("obs"));
 
          // Build S+B and B models
-         ModelConfig *sbModel = new ModelConfig("SB_ModelConfig", w);
+         ModelConfig *sbModel = new ModelConfig("SB_ModelConfig", w.get());
          sbModel->SetPdf(*w->pdf("prod_pdf"));
          sbModel->SetObservables(*w->set("obs"));
          sbModel->SetParametersOfInterest(*w->set("poi"));
          w->var("sig")->setVal(xValue - yValue / tauValue); // important !
          sbModel->SetSnapshot(*w->set("poi"));
 
-         ModelConfig *bModel = new ModelConfig("B_ModelConfig", w);
+         ModelConfig *bModel = new ModelConfig("B_ModelConfig", w.get());
          bModel->SetPdf(*w->pdf("prod_pdf"));
          bModel->SetObservables(*w->set("obs"));
          bModel->SetParametersOfInterest(*w->set("poi"));
@@ -1717,7 +1675,7 @@ public:
 
          NumEventsTestStat *nevts = new NumEventsTestStat(*sbModel->GetPdf());
 
-         HybridCalculator *htc = new HybridCalculator(*data, *sbModel, *bModel);
+         auto htc = std::make_unique<HybridCalculator>(data, *sbModel, *bModel);
          ToyMCSampler *tmcs = (ToyMCSampler *)htc->GetTestStatSampler();
          tmcs->SetNEventsPerToy(1);
          htc->SetToys(5000, 1000);
@@ -1725,23 +1683,23 @@ public:
          htc->ForcePriorNuisanceNull(*w->pdf("off_pdf"));
 
          tmcs->SetTestStatistic(pllts);
-         HypoTestResult *htr = htc->GetHypoTest();
+         std::unique_ptr<HypoTestResult> htr{htc->GetHypoTest()};
          htr->Print();
          std::cout << "PLLTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(mlets);
-         htr = htc->GetHypoTest();
+         htr = std::unique_ptr<HypoTestResult>{htc->GetHypoTest()};
          htr->Print();
          std::cout << "MLETS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(nevts);
-         htr = htc->GetHypoTest();
+         htr = std::unique_ptr<HypoTestResult>{htc->GetHypoTest()};
          htr->Print();
          std::cout << "NEVTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(slrts);
-         htr = htc->GetHypoTest();
+         htr = std::unique_ptr<HypoTestResult>{htc->GetHypoTest()};
          htr->Print();
          std::cout << "SLRTS " << htr->Significance() << std::endl;
          tmcs->SetTestStatistic(roplts);
-         htr = htc->GetHypoTest();
+         htr = std::unique_ptr<HypoTestResult>{htc->GetHypoTest()};
          htr->Print();
          std::cout << "ROPLTS " << htr->Significance() << std::endl;
 
@@ -1749,11 +1707,6 @@ public:
 
          if (_verb > 1)
             w->writeToFile("stressRooStats_OnOffModel.root");
-
-         delete htc;
-         delete htr;
-         delete w;
-         delete data;
       }
 
       return true;
