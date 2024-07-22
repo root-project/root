@@ -483,7 +483,7 @@ int main( int argc, char **argv )
       } else {
          if (!keepCompressionAsIs && merger.HasCompressionChange()) {
             // Don't warn if the user any request re-optimization.
-            std::cout << "hadd Sources and Target have different compression levels" << std::endl;
+            std::cout << "hadd Sources and Target have different compression settings\n";
             std::cout << "hadd merging will be slower" << std::endl;
          }
       }
