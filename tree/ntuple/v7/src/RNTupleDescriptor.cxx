@@ -380,7 +380,7 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
    auto fieldZeroId = desc.GetFieldZeroId();
 
    std::vector<DescriptorId_t> fields;
-   for (const DescriptorId_t fieldId : fFields) {
+   for (const DescriptorId_t fieldId : fFieldIdsOrder) {
       if (desc.GetFieldDescriptor(fieldId).GetParentId() == fieldZeroId)
          fields.emplace_back(fieldId);
    }
@@ -887,7 +887,7 @@ void ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddField(const RFie
 {
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddFieldId(fieldDesc.GetId());
+      fDescriptor.fHeaderExtension->AddExtendedField(fieldDesc);
    if (fieldDesc.GetFieldName().empty() && fieldDesc.GetParentId() == kInvalidDescriptorId) {
       fDescriptor.fFieldZeroId = fieldDesc.GetId();
    }
@@ -998,7 +998,7 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
       fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/columnDesc.IsAliasColumn());
+      fDescriptor.fHeaderExtension->AddExtendedColumn(columnDesc);
 
    return RResult<void>::Success();
 }
