@@ -76,7 +76,8 @@ jobs:
       S3_BUCKET_NAME: root
       AWS_REGION: "eu-west-1"
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+      SHOULD_DEPLOY: 'true'
+      # SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
     permissions:
       contents: read
@@ -235,6 +236,7 @@ jobs:
         name: rootdoc.tar.xz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
     
+    # Do I need this step?
     - name: Install AWS CLI
       run: |
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
