@@ -278,30 +278,29 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
 
             // Loop over the pages
             for (const auto &pageInfo : pages.fPageInfos) {
-               auto taskFunc = [ // values in
-                                  columnId, pageIdx, cluster, needsCompressionChange, colRangeCompressionSettings,
-                                  pageBufferBaseIdx,
-                                  // const refs in
-                                  &colElement, &pageInfo, &options,
-                                  // refs out
-                                  &sealedPages, &sealedPageBuffers]() {
-                  assert(pageIdx < sealedPages.size());
-                  assert(sealedPageBuffers.size() == 0 || pageIdx < sealedPageBuffers.size());
+               assert(pageIdx < sealedPages.size());
+               assert(sealedPageBuffers.size() == 0 || pageIdx < sealedPageBuffers.size());
 
-                  ROnDiskPage::Key key{columnId, pageIdx};
-                  auto onDiskPage = cluster->GetOnDiskPage(key);
+               ROnDiskPage::Key key{columnId, pageIdx};
+               auto onDiskPage = cluster->GetOnDiskPage(key);
 
-                  const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
-                  RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
-                  sealedPage.SetNElements(pageInfo.fNElements);
-                  sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
-                  sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
-                  sealedPage.SetBuffer(onDiskPage->GetAddress());
-                  sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
-                  R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
+               const auto checksumSize = pageInfo.fHasChecksum * RPageStorage::kNBytesPageChecksum;
+               RPageStorage::RSealedPage &sealedPage = sealedPages[pageIdx];
+               sealedPage.SetNElements(pageInfo.fNElements);
+               sealedPage.SetHasChecksum(pageInfo.fHasChecksum);
+               sealedPage.SetBufferSize(pageInfo.fLocator.fBytesOnStorage + checksumSize);
+               sealedPage.SetBuffer(onDiskPage->GetAddress());
+               sealedPage.VerifyChecksumIfEnabled().ThrowOnError();
+               R__ASSERT(onDiskPage && (onDiskPage->GetSize() == sealedPage.GetBufferSize()));
 
-                  // Change compression if needed
-                  if (needsCompressionChange) {
+               // Change compression if needed
+               if (needsCompressionChange) {
+                  auto taskFunc = [ // values in
+                                     pageIdx, colRangeCompressionSettings, pageBufferBaseIdx, checksumSize,
+                                     // const refs in
+                                     &colElement, &pageInfo, &options,
+                                     // refs in-out
+                                     &sealedPage, &sealedPageBuffers]() {
                      // Step 1: prepare the source data.
                      // Unzip the source buffer into the zip staging buffer. This is a memcpy if the source was
                      // already uncompressed.
@@ -341,13 +340,13 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
                         // Calculate new checksum (this must happen after setting the new buffer size!)
                         sealedPage.ChecksumIfEnabled();
                      }
-                  }
-               };
+                  };
 
-               if (taskGroup)
-                  taskGroup->Run(taskFunc);
-               else
-                  taskFunc();
+                  if (taskGroup)
+                     taskGroup->Run(taskFunc);
+                  else
+                     taskFunc();
+               }
 
                ++pageIdx;
 
