@@ -139,7 +139,7 @@ FIT_TEST_BATCH(TestGaussPlusGaussPlusExp, DISABLED_Batch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusGaussPlusExp, CompareBatchScalar)
 
 
-
+#if !defined(_MSC_VER) // RooFit multiprocessing doesn't work on Windows
 
 class TestGaussPlusGaussPlusExp_MP : public TestGaussPlusGaussPlusExp {
 public:
@@ -157,3 +157,4 @@ FIT_TEST_SCALAR(TestGaussPlusGaussPlusExp_MP, DISABLED_Scalar) // Save time
 FIT_TEST_BATCH(TestGaussPlusGaussPlusExp_MP, DISABLED_Batch)   // Save time
 FIT_TEST_BATCH_VS_SCALAR(TestGaussPlusGaussPlusExp_MP, CompareBatchScalar)
 
+#endif // !defined(_MSC_VER)
