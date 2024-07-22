@@ -2,14 +2,12 @@
 ## \ingroup tutorial_graphs
 ## \notebook
 ##
-## This script shows how to divide a canvas
-## into adjacent subpads and put on axis labels on the top and right side
-## of their pads.
+## Draws a scatter plot.
 ##
 ## \macro_image
 ## \macro_code
 ##
-## \author Rene Brun
+## \author Olivier Couet
 ## \translator P. P.
 
 
@@ -17,7 +15,9 @@ import ROOT
 import ctypes
 
 #classes
-TH2F = ROOT.TH2F
+TRandom = ROOT.TRandom
+TScatter = ROOT.TScatter
+
 TCanvas = ROOT.TCanvas
 TH1F = ROOT.TH1F
 TGraph = ROOT.TGraph
@@ -55,6 +55,8 @@ def sprintf(buffer, string, *args):
    return buffer
 
 #constants
+kBird = ROOT.kBird
+ 
 kBlue = ROOT.kBlue
 kRed = ROOT.kRed
 kGreen = ROOT.kGreen
@@ -69,38 +71,38 @@ gROOT = ROOT.gROOT
 
 
 # void
-def zones() :
+def scatter() :
 
-   gStyle.SetOptStat(0)
+   gStyle.SetPalette(kBird, 0, 0.6); # define a transparent palette
 
-   global c1
-   c1 = TCanvas("c1", "multipads", 900, 700)
-   c1.Divide(2, 2, 0, 0)
-
-   global h1, h2, h3, h4
-   h1 = TH2F("h1", "test1", 10, 0, 1, 20, 0, 20)
-   h2 = TH2F("h2", "test2", 10, 0, 1, 20, 0, 100)
-   h3 = TH2F("h3", "test3", 10, 0, 1, 20, -1, 1)
-   h4 = TH2F("h4", "test4", 10, 0, 1, 20, 0, 1000)
+   global canvas
+   canvas = TCanvas()
    
-   c1.cd(1)
-   gPad.SetTickx(2)
-   h1.Draw()
+   n = 100
+   x = to_c( [ Double_t() for _ in range(n) ] )
+   y = to_c( [ Double_t() for _ in range(n) ] )
+   c = to_c( [ Double_t() for _ in range(n) ] )
+   s = to_c( [ Double_t() for _ in range(n) ] )
    
-   c1.cd(2)
-   gPad.SetTickx(2)
-   gPad.SetTicky(2)
-   h2.GetYaxis().SetLabelOffset(0.01)
-   h2.Draw()
+   # Define four random data set
+   global r
+   r = TRandom()
+   #   for (int i = 0; i < n; i++) {
+   for i in range(0, n, 1):
+      x[i] = 100 * r.Rndm(i)
+      y[i] = 200 * r.Rndm(i)
+      c[i] = 300 * r.Rndm(i)
+      s[i] = 400 * r.Rndm(i)
+      
    
-   c1.cd(3)
-   h3.Draw()
-   
-   c1.cd(4)
-   gPad.SetTicky(2)
-   h4.Draw()
+   global scatter
+   scatter = TScatter(n, x, y, c, s)
+   scatter.SetMarkerStyle(20)
+   scatter.SetMarkerColor(kRed)
+   scatter.SetTitle("Scatter plot;X;Y")
+   scatter.Draw("A")
    
 
 
 if __name__ == "__main__":
-   zones()
+   scatter()
