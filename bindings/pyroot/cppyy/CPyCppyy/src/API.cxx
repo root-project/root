@@ -267,22 +267,26 @@ bool CPyCppyy::Import(const std::string& mod_name)
         PyObject* value = PyList_GET_ITEM(values, i);
         Py_INCREF(value);
 
-    // collect classes
-        if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
-        // get full class name (including module)
-            PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
-            if (PyErr_Occurred())
-                PyErr_Clear();
+        {
+        // collect classes
+            if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
+            // get full class name (including module)
+                PyObject* pyClName = PyObject_GetAttr(value, PyStrings::gName);
+                if (PyErr_Occurred())
+                    PyErr_Clear();
 
-        // build full, qualified name
-            std::string fullname = mod_name;
-            fullname += ".";
-            fullname += CPyCppyy_PyText_AsString(pyClName);
+                {
+                // build full, qualified name
+                    std::string fullname = mod_name;
+                    fullname += '.';
+                    fullname += CPyCppyy_PyText_AsString(pyClName);
 
-      // force class creation (this will eventually call TPyClassGenerator)
-            TClass::GetClass(fullname.c_str(), true);
+              // force class creation (this will eventually call TPyClassGenerator)
+                    TClass::GetClass(fullname.c_str(), true);
+                }
 
-            Py_XDECREF(pyClName);
+                Py_XDECREF(pyClName);
+            }
         }
 
         Py_DECREF(value);
@@ -301,11 +305,11 @@ bool CPyCppyy::Import(const std::string& mod_name)
 /// execfile in __main__), and create Cling equivalents for any newly available
 /// python classes.
 
-void CPyCppyy::LoadMacro(const char *name)
+bool CPyCppyy::LoadMacro(const std::string& name)
 {
-   // setup
+// Import the named python module and create Cling equivalents for its classes.
    if (!Initialize())
-      return;
+      return false;
 
    InitializeClassGenerator();
 
@@ -313,25 +317,23 @@ void CPyCppyy::LoadMacro(const char *name)
    PyObject *old = PyDict_Values(gMainDict);
 
 // actual execution
-   Exec((std::string("__pyroot_f = open(\"") + name + "\"); "
-                                                      "exec(__pyroot_f.read()); "
-                                                      "__pyroot_f.close(); del __pyroot_f")
-           .c_str());
+   Exec("__pyroot_f = open(\"" + name + "\"); exec(__pyroot_f.read()); __pyroot_f.close(); del __pyroot_f");
 
-   // obtain new __main__ contents
-   PyObject *current = PyDict_Values(gMainDict);
+   PyObject *dct = gMainDict;
 
    // create Cling classes for all new python classes
-   for (int i = 0; i < PyList_GET_SIZE(current); ++i) {
-      PyObject *value = PyList_GET_ITEM(current, i);
+   PyObject *values = PyDict_Values(dct);
+   for (int i = 0; i < PyList_GET_SIZE(values); ++i) {
+      PyObject *value = PyList_GET_ITEM(values, i);
       Py_INCREF(value);
 
       if (!PySequence_Contains(old, value)) {
          // collect classes
-         if (PyType_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
+         if (PyClass_Check(value) || PyObject_HasAttr(value, PyStrings::gBases)) {
             // get full class name (including module)
             PyObject *pyModName = PyObject_GetAttr(value, PyStrings::gModule);
             PyObject *pyClName = PyObject_GetAttr(value, PyStrings::gName);
+            std::string mod_name = CPyCppyy_PyText_AsString(pyModName);
 
             if (PyErr_Occurred())
                PyErr_Clear();
@@ -342,12 +344,12 @@ void CPyCppyy::LoadMacro(const char *name)
                 ((PyUnicode_CheckExact(pyModName) && PyUnicode_CheckExact(pyClName)) ||
                  (PyUnicode_Check(pyModName) && PyUnicode_Check(pyClName)))) {
                // build full, qualified name
-               std::string fullname = PyUnicode_AsUTF8(pyModName);
+               std::string fullname = mod_name;
                fullname += '.';
-               fullname += PyUnicode_AsUTF8(pyClName);
+               fullname += CPyCppyy_PyText_AsString(pyClName);
 
                // force class creation (this will eventually call TPyClassGenerator)
-               TClass::GetClass(fullname.c_str(), kTRUE);
+               TClass::GetClass(fullname.c_str(), true);
             }
 
             Py_XDECREF(pyClName);
@@ -358,8 +360,13 @@ void CPyCppyy::LoadMacro(const char *name)
       Py_DECREF(value);
    }
 
-   Py_DECREF(current);
+   Py_DECREF(values);
    Py_DECREF(old);
+
+    if (PyErr_Occurred())
+        return false;
+
+    return true;
 }
 
 //-----------------------------------------------------------------------------

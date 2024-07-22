@@ -102,14 +102,15 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
 
          // figure out number of variables required
             PyObject* func_code = PyObject_GetAttrString( attr, (char*)"func_code" );
-            PyObject* var_names = func_code ? PyObject_GetAttrString(func_code, (char *)"co_varnames") : NULL;
-            int nVars = var_names ? PyTuple_GET_SIZE(var_names) : 0 /* TODO: probably large number, all default? */;
+            PyObject* var_names =
+               func_code ? PyObject_GetAttrString( func_code, (char*)"co_varnames" ) : NULL;
+            int nVars = var_names ? PyTuple_GET_SIZE( var_names ) : 0 /* TODO: probably large number, all default? */;
             if ( nVars < 0 ) nVars = 0;
             Py_XDECREF( var_names );
             Py_XDECREF( func_code );
 
             nsCode << " CPyCppyy::PyResult " << func_name << "(";
-            for (int ivar = 0; ivar < nVars; ++ivar) {
+            for ( int ivar = 0; ivar < nVars; ++ivar ) {
                 nsCode << "const TPyArg& a" << ivar;
                 if ( ivar != nVars-1 ) nsCode << ", ";
             }
@@ -238,10 +239,9 @@ TClass* TPyClassGenerator::GetClass( const char* name, bool load, bool silent )
             proxyCode << " " << clName << "(";
          } else // normal method
             proxyCode << " CPyCppyy::PyResult " << mtName << "(";
-         for (int ivar = 0; ivar < nVars; ++ivar) {
-            proxyCode << "const TPyArg& a" << ivar;
-            if (ivar != nVars - 1)
-               proxyCode << ", ";
+         for ( int ivar = 0; ivar < nVars; ++ivar ) {
+             proxyCode << "const TPyArg& a" << ivar;
+             if ( ivar != nVars-1 ) proxyCode << ", ";
          }
          proxyCode << ") {\n";
          proxyCode << "  std::vector<TPyArg> v; v.reserve(" << nVars+(isConstructor ? 0 : 1) << ");\n";
