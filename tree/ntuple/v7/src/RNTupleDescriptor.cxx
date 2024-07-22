@@ -643,14 +643,14 @@ ROOT::Experimental::Internal::RClusterDescriptorBuilder::AddExtendedColumnRanges
    };
 
    // Extended columns can only be part of the header extension
-   auto xHeader = desc.GetHeaderExtension();
-   if (!xHeader)
+   if (!desc.GetHeaderExtension())
       return *this;
 
    // Ensure that all columns in the header extension have their associated `R(Column|Page)Range`
-   for (const auto &topLevelFieldId : xHeader->GetTopLevelFields(desc)) {
+   // Extended columns can be attached both to fields of the regular header and to fields of the extension header
+   for (const auto &topLevelField : desc.GetTopLevelFields()) {
       fnTraverseSubtree(
-         topLevelFieldId, std::max(desc.GetFieldDescriptor(topLevelFieldId).GetNRepetitions(), std::uint64_t{1U}),
+         topLevelField.GetId(), std::max(topLevelField.GetNRepetitions(), std::uint64_t{1U}),
          [&](DescriptorId_t fieldId, std::uint64_t nRepetitions) {
             for (const auto &c : desc.GetColumnIterable(fieldId)) {
                const DescriptorId_t physicalId = c.GetPhysicalId();
