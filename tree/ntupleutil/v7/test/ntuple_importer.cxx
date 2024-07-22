@@ -237,19 +237,15 @@ TEST(RNTupleImporter, FieldModifier)
       tree->Write();
    }
 
-   class RLowPrecisionFloatModifier : public RNTupleImporter::RFieldModifier {
-   public:
-      void EditField(RFieldBase &field) final
-      {
-         if (field.GetFieldName() == "a")
-            return field.SetColumnRepresentative({EColumnType::kReal16});
-      }
+   auto fnLowPrecisionFloatModifier = [](RFieldBase &field) {
+      if (field.GetFieldName() == "a")
+         field.SetColumnRepresentative({EColumnType::kReal16});
    };
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
-   importer->SetFieldModifier(std::make_unique<RLowPrecisionFloatModifier>());
+   importer->SetFieldModifier(fnLowPrecisionFloatModifier);
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());

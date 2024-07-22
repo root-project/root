@@ -29,6 +29,7 @@
 #include <TTree.h>
 
 #include <cstdlib>
+#include <functional>
 #include <map>
 #include <memory>
 #include <vector>
@@ -102,6 +103,9 @@ Current limitations of the importer:
 // clang-format on
 class RNTupleImporter {
 public:
+   /// Used to make adjustments to the fields of the output model.
+   using FieldModifier_t = std::function<void(RFieldBase &)>;
+
    /// Used to report every ~50MB (compressed), and at the end about the status of the import.
    class RProgressCallback {
    public:
@@ -112,14 +116,6 @@ public:
       }
       virtual void Call(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
       virtual void Finish(std::uint64_t nbytesWritten, std::uint64_t neventsWritten) = 0;
-   };
-
-   /// Used to make adjustments to the fields of the output model
-   class RFieldModifier {
-   public:
-      virtual ~RFieldModifier() = default;
-      /// Will be called for every field of the frozen model before it is attached to the page sink
-      virtual void EditField(RFieldBase &field) = 0;
    };
 
 private:
@@ -236,7 +232,7 @@ private:
    /// No standard output, conversely if set to false, schema information and progress is printed.
    bool fIsQuiet = false;
    std::unique_ptr<RProgressCallback> fProgressCallback;
-   std::unique_ptr<RFieldModifier> fFieldModifier;
+   FieldModifier_t fFieldModifier;
 
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
@@ -281,8 +277,9 @@ public:
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }
 
-   /// Add custom method to adjust column representations
-   void SetFieldModifier(std::unique_ptr<RFieldModifier> modifier) { fFieldModifier = std::move(modifier); }
+   /// Add custom method to adjust column representations.  Will be called for every field of the frozen model
+   /// before it is attached to the page sink
+   void SetFieldModifier(FieldModifier_t modifier) { fFieldModifier = modifier; }
 
    /// Import works in two steps:
    /// 1. PrepareSchema() calls SetBranchAddress() on all the TTree branches and creates the corresponding RNTuple
