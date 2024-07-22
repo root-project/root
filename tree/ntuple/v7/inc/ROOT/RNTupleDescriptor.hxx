@@ -749,6 +749,7 @@ public:
       }
       RIterator begin() { return RIterator(fNTuple, fFieldChildren, 0); }
       RIterator end() { return RIterator(fNTuple, fFieldChildren, fFieldChildren.size()); }
+      size_t count() const { return fFieldChildren.size(); }
    };
 
    // clang-format off
@@ -924,6 +925,13 @@ public:
    std::uint64_t GetOnDiskFooterSize() const { return fOnDiskFooterSize; }
 
    const RFieldDescriptor &GetFieldDescriptor(DescriptorId_t fieldId) const { return fFieldDescriptors.at(fieldId); }
+   const RFieldDescriptor *FindFieldDescriptor(const std::string &fieldName) const 
+   {
+      for (const auto &[_, desc] : fFieldDescriptors)
+         if (desc.GetFieldName() == fieldName)
+            return &desc;
+      return nullptr;
+   }
    const RColumnDescriptor &GetColumnDescriptor(DescriptorId_t columnId) const
    {
       return fColumnDescriptors.at(columnId);
