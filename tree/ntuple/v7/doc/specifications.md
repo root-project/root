@@ -450,6 +450,8 @@ A field can have multiple alternative column representations.
 The representation index distinguishes the different representations.
 For any given cluster, only one of the representations is the primary representation.
 All the other, secondary representations are _suppressed_ in the cluster.
+All column representations of a cluster need to have the same number of columns,
+and the number of elements in each of the corresponding columns must be the same.
 The page list (see Section Page List Envelope) indicates suppressed columns through a negative element index.
 Columns need to be stored in order from smaller to larger representation indexes.
 The representation index is consecutive starting at zero.
@@ -773,9 +775,8 @@ Suppressed columns omit the compression settings in the inner list frame.
 
 Suppressed columns belong to a secondary column representation (see Section "Column Description")
 that is inactive in the current cluster.
-All secondary column representations have the same column cardinality than the primary column representation.
-That means that the number of columns and the absolute values of the element offsets
-of primary and secondary representations are identical.
+The number of columns
+and the absolute values of the element offsets of primary and secondary representations are identical.
 When reading a field of a certain entry, this assertion allows for searching the corresponding
 cluster and column element indexes using any of the column representations.
 It also means that readers need to get the element index offset and the number of elements of suppressed columns
