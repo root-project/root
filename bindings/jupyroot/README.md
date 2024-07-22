@@ -3,26 +3,20 @@ A software layer to integrate Jupyter notebooks and ROOT.
 
 ## Installation
 1. [Install ROOT6](https://root.cern.ch/building-root) (> 6.05)
-2. Install dependencies: pip install jupyter metakernel
+2. Install dependencies: `pip install jupyter metakernel`
 
 ## Start using ROOTbooks
 Set up the ROOT environment (`. $ROOTSYS/bin/thisroot.[c]sh`) and type in your
 shell:
-```
+```shell
 root --notebook
 ```
 This will start a ROOT-flavoured notebook server in your computer.
 
 Alternatively, if you would like to use the Jupyter command directly, you
-can do on Linux:
-```
-cp -r $ROOTSYS/etc/notebook/kernels/root ~/.local/share/jupyter/kernels
-jupyter notebook
-```
-and on OSx:
-```
-cp -r $ROOTSYS/etc/notebook/kernels/root /Users/$USER/Library/Jupyter/kernels/
-jupyter notebook
+can do:
+```shell
+jupyter kernelspec install $ROOTSYS/etc/root/notebook/kernels/root --user
 ```
 
 Once the server is up, you can use ROOT with two kernels:
