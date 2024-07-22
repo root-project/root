@@ -96,9 +96,9 @@ private:
    std::vector<DescriptorId_t> fLinkIds;
    /// The ordered list of columns attached to this field
    std::vector<DescriptorId_t> fLogicalColumnIds;
-   /// For custom classes, we store the ROOT streamer checksum to facilitate the use of I/O rules that
-   /// identify types by their streamer checksum
-   std::optional<std::uint32_t> fStreamerChecksum;
+   /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
+   /// identify types by their checksum
+   std::optional<std::uint32_t> fTypeChecksum;
 
 public:
    RFieldDescriptor() = default;
@@ -127,7 +127,7 @@ public:
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
-   std::optional<std::uint32_t> GetStreamerChecksum() const { return fStreamerChecksum; }
+   std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
 
@@ -1128,9 +1128,9 @@ public:
       fField.fStructure = structure;
       return *this;
    }
-   RFieldDescriptorBuilder &StreamerChecksum(const std::optional<std::uint32_t> streamerChecksum)
+   RFieldDescriptorBuilder &TypeChecksum(const std::optional<std::uint32_t> typeChecksum)
    {
-      fField.fStreamerChecksum = streamerChecksum;
+      fField.fTypeChecksum = typeChecksum;
       return *this;
    }
    DescriptorId_t GetParentId() const { return fField.fParentId; }

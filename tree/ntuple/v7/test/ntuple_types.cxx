@@ -1899,7 +1899,7 @@ TEST(RNTuple, Traits)
    auto f9 = RField<std::array<std::string, 3>>("f");
    EXPECT_EQ(0, f9.GetTraits());
 
-   int baseTraits = RFieldBase::kTraitStreamerChecksum;
+   int baseTraits = RFieldBase::kTraitTypeChecksum;
    EXPECT_EQ(baseTraits | RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
    EXPECT_EQ(baseTraits, RField<TransientTraits>("f").GetTraits());
    EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
@@ -1930,7 +1930,7 @@ TEST(RNTuple, TClassReadRules)
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
    EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
-             ntuple->GetModel().GetField("klass").GetOnDiskStreamerChecksum());
+             ntuple->GetModel().GetField("klass").GetOnDiskTypeChecksum());
    EXPECT_EQ(20U, ntuple->GetNEntries());
    auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
    for (auto i : ntuple->GetEntryRange()) {
