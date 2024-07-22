@@ -25,7 +25,7 @@
 
 #include "TPSocket.h"
 
-int authclient(const char *host = "up://localhost:3000", int sz = 0)
+void authclient(const char *host = "up://localhost:3000", int sz = 0)
 {
    Int_t par = (sz > 1) ? 1 : 0;
 
