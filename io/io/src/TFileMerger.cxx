@@ -175,7 +175,8 @@ Bool_t TFileMerger::AddFile(const char *url, Bool_t cpProgress)
          Error("AddFile", "cannot open file %s", url);
       return kFALSE;
    } else {
-      if (fOutputFile && fOutputFile->GetCompressionLevel() != newfile->GetCompressionLevel()) fCompressionChange = kTRUE;
+      if (fOutputFile && fOutputFile->GetCompressionSettings() != newfile->GetCompressionSettings())
+         fCompressionChange = kTRUE;
 
       newfile->SetBit(kCanDelete);
       fFileList.Add(newfile);
