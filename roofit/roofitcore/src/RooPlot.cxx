@@ -91,6 +91,22 @@ RooPlot::RooPlot()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Constructor of RooPlot with range [xmin,xmax]
+
+RooPlot::RooPlot(double xmin, double xmax)
+{
+  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist->Sumw2(false) ;
+  _hist->GetSumw2()->Set(0) ;
+  _hist->SetDirectory(nullptr);
+
+  // Create an empty frame with the specified x-axis limits.
+  initialize();
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Construct of a two-dimensional RooPlot with ranges [xmin,xmax] x [ymin,ymax]
 
 RooPlot::RooPlot(double xmin, double xmax, double ymin, double ymax) :
@@ -143,8 +159,10 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2)
 
 RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2, double xmin, double xmax, double ymin,
                  double ymax)
-   : RooPlot{xmin, xmax, ymin, ymax}
+   : RooPlot{xmin, xmax}
 {
+   SetMinimum(ymin);
+   SetMaximum(ymax);
    SetXTitle(var1.getTitle(true));
    SetYTitle(var2.getTitle(true));
 }
