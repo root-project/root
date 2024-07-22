@@ -769,7 +769,7 @@ the page list envelope can be extended by additional list and record frames.
 #### Suppressed Columns
 
 If the element offset in the inner list frame is negative (sign bit set), the column is suppressed.
-Writers should write the value `uint64_t(-1)`, readers should check for a negative value.
+Writers should write the lowest int64_t value, readers should check for a negative value.
 Suppressed columns always have an empty list of pages.
 Suppressed columns omit the compression settings in the inner list frame.
 
