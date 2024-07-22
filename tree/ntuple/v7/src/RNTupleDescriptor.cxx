@@ -564,7 +564,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescript
 {
    if (physicalId != pageRange.fPhysicalColumnId)
       return R__FAIL("column ID mismatch");
-   if (fCluster.fPageRanges.count(physicalId) > 0)
+   if (fCluster.fColumnRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
    RClusterDescriptor::RColumnRange columnRange{physicalId, firstElementIndex, ClusterSize_t{0}};
    columnRange.fCompressionSettings = compressionSettings;
@@ -579,7 +579,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RClusterDescript
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::Internal::RClusterDescriptorBuilder::MarkSuppressedColumnRange(DescriptorId_t physicalId)
 {
-   if (fCluster.fPageRanges.count(physicalId) > 0)
+   if (fCluster.fColumnRanges.count(physicalId) > 0)
       return R__FAIL("column ID conflict");
 
    RClusterDescriptor::RColumnRange columnRange;
