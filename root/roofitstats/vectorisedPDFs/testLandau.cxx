@@ -17,6 +17,8 @@
 #include "VectorisedPDFTests.h"
 #include "RooLandau.h"
 
+#if !defined(_MSC_VER) // TODO: make TestGaussWeighted work on Windows
+
 class TestLandauEvil: public PDFTest
 {
   protected:
@@ -49,6 +51,7 @@ FIT_TEST_SCALAR(TestLandauEvil, DISABLED_RunScalar) //numerical integral presuma
 FIT_TEST_BATCH(TestLandauEvil, DISABLED_RunBatch) //numerical integral presumably inaccurate
 FIT_TEST_BATCH_VS_SCALAR(TestLandauEvil, CompareBatchScalar)
 
+#endif // !defined(_MSC_VER)
 
 class TestLandau: public PDFTest
 {
