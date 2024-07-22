@@ -110,6 +110,7 @@
 #include <cstdlib>
 #include <climits>
 #include <sstream>
+#include <optional>
 #include "haddCommandLineOptionsHelp.h"
 
 #include "TFileMerger.h"
@@ -119,6 +120,265 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+struct HaddArgs {
+  bool fNoTrees;
+  bool fAppend;
+  bool fForce;
+  bool fSkipErrors; 
+  bool fReoptimize;
+  bool fDebug;
+  bool fKeepCompressionAsIs;
+  bool fUseFirstInputCompression;
+
+  std::optional<std::string>       fWorkingDir;
+  std::optional<int>               fNProcesses;
+  std::optional<TString>           fCacheSize;
+  std::optional<ROOT::TIOFeatures> fFeatures;
+  std::optional<int>               fMaxOpenedFiles;
+  std::optional<int>               fVerbosity;
+  std::optional<int>               fCompressionSettings;
+
+  int fOutputPlace;
+  int fNArgsEaten;
+};
+
+static bool FlagToggle(const char *arg, const char *flagStr, bool &flagOut) {
+   if (strncmp(arg, flagStr, strlen(flagStr)) == 0) {
+      if (flagOut)
+         std::cerr << "[warn] Duplicate flag: " << flagStr << "\n";
+      flagOut = true;
+   }
+   return flagOut;
+}
+
+// NOTE: not using std::stoi or similar because they have bad error checking.
+// std::stoi will happily parse "120notvalid" as 120.
+static std::optional<int> StrToInt(const char *str) {
+   if (!str) return {};
+   
+   int res = 0;
+   do {
+      if (!isdigit(*str)) return {};
+      res *= 10;
+      res += *str - '0' ;
+   } while (++str);
+
+   return res;
+}
+
+template <typename T>
+static std::optional<T> ConvertArg(const char *);
+
+template <>
+std::optional<std::string> ConvertArg<std::string>(const char *arg) { return arg; }
+
+template <>
+std::optional<int> ConvertArg<int>(const char *arg)
+{ 
+   try {
+      return StrToInt(arg);
+   } catch (const std::exception &e) {
+      std::cerr << "[err] Failed to parse int flag '" << arg << "': " << e.what() << "\n";
+      return {};
+   }
+}
+
+template <>
+std::optional<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
+{
+   ROOT::TIOFeatures features;
+   std::stringstream ss;
+   ss.str(arg);
+   std::string item;
+   while (std::getline(ss, item, ',')) {
+      if (!features.Set(item))
+         std::cerr << "Ignoring unknown feature request: " << item << std::endl;
+   }
+   return features;
+}
+
+static std::optional<int> ConvertNProcesses(const char *arg)
+{
+   auto np = ConvertArg<int>(arg);
+   if (np) return np;
+   else {
+      std::cerr << "Error: could not parse the number of processes to run in parallel passed after -j: "
+          << arg << ". We will use the system maximum.\n";
+      // By returning a non-nullopt, we enable multiprocessing.
+      // Since 0 is not a valid number of processes, hadd will default to the number of cpus.
+      return 0;
+   }
+}
+
+static std::optional<TString> ConvertCacheSize(const char *arg)
+{
+   TString cacheSize;
+   int size;
+   auto parseResult = ROOT::FromHumanReadableSize(arg, size);
+   if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
+      std::cerr << "Error: could not parse the cache size passed after -cachesize: "
+                << arg << ". We will use the default value.\n";
+      return {};
+   } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
+      double m;
+      const char *munit = nullptr;
+      ROOT::ToHumanReadableSize(INT_MAX, false, &m, &munit);
+      std::cerr << "Error: the cache size passed after -cachesize is too large: "
+                << arg << " is greater than " << m << munit
+                << ". We will use the default value.\n";
+      return {};
+   } else {
+      cacheSize = "cachesize=";
+      cacheSize.Append(arg);
+   }
+   return cacheSize;
+}
+
+template <typename T>
+static bool FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, 
+                    std::optional<T> &flagOut,
+                    std::optional<T> (*conv)(const char *) = ConvertArg<T>)
+{
+   int argIdx = argIdxInOut;
+   const char *arg = argv[argIdx] + 1;
+   int argLen = strlen(arg);
+   int flagLen = strlen(flagStr);
+   const char *nxtArg = nullptr;
+
+   if (strncmp(arg, flagStr, flagLen) != 0)
+      return false;
+   
+   if (argLen > flagLen) {
+      // interpret anything after the flag as the argument.
+      nxtArg = arg + flagLen;
+      // Ignore one '=', if present
+      if (nxtArg[0] && nxtArg[0] == '=')
+         ++nxtArg;
+   } else if (argLen == flagLen) {
+      if (argIdx + 1 < argc) {
+         nxtArg = argv[argIdx + 1];
+      } else {
+         std::cerr << "[err] Expected argument after '-" << flagStr << "' flag.\n";
+         return false;
+      }
+   } else {
+      return false;
+   }
+
+   flagOut = conv(nxtArg);
+   ++argIdxInOut;
+   return true;
+}
+
+static bool ValidateCompressionSettings(int compSettings)
+{
+   for (int alg = 0; alg <= 5; ++alg) {
+      for (int j=0; j<=9; ++j) {
+         int comp = (alg*100)+j;
+         if (compSettings == comp)
+            return true;
+      }
+   }
+   std::cerr << "[err] " << compSettings << " is not a supported compression settings.\n";
+   return false;
+}
+
+static bool FlagF(int argc, char **argv, int &argIdxInOut, HaddArgs &args)
+{
+   int argIdx = argIdxInOut;
+   const char *arg = argv[argIdx] + 1;
+   if (arg[0] != 'f')
+      return false;
+
+   int argLen = strlen(arg);
+   if (argLen > 1) {
+      // Check if this is a -ff flag.
+      if (argLen == 2 && arg[1] == 'f') {
+         if (args.fUseFirstInputCompression)
+            std::cerr << "[warn] Duplicate flag: -ff\n";
+         args.fUseFirstInputCompression = true;
+         return true;         
+      }
+
+      // Check if this is a -fk flag.
+      if (argLen == 2 && arg[1] == 'k') {
+         if (args.fKeepCompressionAsIs)
+            std::cerr << "[warn] Duplicate flag: -fk\n";
+         args.fKeepCompressionAsIs= true;
+         return true;         
+      }
+
+      // Check if there is a number after -f
+      // for coherence with the other arg flags, allow and ignore up to one '='.
+      if (arg[1] == '=')
+         ++arg;
+      if (auto compLv = StrToInt(arg + 1)) {
+         if (args.fCompressionSettings)
+            std::cerr << "[warn] Duplicate flag: -f[0-9]\n";
+         if (ValidateCompressionSettings(*compLv))
+            args.fCompressionSettings = *compLv;
+         return true;
+      } else {
+         std::cerr << "[err] Failed to parse compression settings '" << arg + 1 << "' as an integer.\n";
+         return true;
+      }
+   } else if (argIdx + 1 < argc && isdigit(argv[argIdx + 1][0])) {
+      // check if next argument is compatible with -f
+      if (auto compLv = StrToInt(argv[argIdx + 1])) {
+         if (args.fCompressionSettings)
+            std::cerr << "[warn] Duplicate flag: -f[0-9]\n";
+         ++argIdxInOut;
+         if (ValidateCompressionSettings(*compLv))
+            args.fCompressionSettings = *compLv;
+         return true;
+      } else {
+         std::cerr << "[err] Failed to parse compression settings '" << argv[argIdx + 1] << "' as an integer\n";
+         return true;
+      }
+   }
+
+   if (args.fForce)
+      std::cerr << "[warn] Duplicate flag: -f\n";
+   args.fForce = true;
+   return true;
+}
+
+static HaddArgs ParseArgs(int argc, char **argv)
+{
+   HaddArgs args {};
+
+   for (int argIdx = 1; argIdx < argc; ++argIdx) {
+      const char *argRaw = argv[argIdx];
+      if (argRaw[0] == '-' && argRaw[1] != '\0') {
+         // parse flag
+         const char *arg = argRaw + 1;
+         int argIdxInOut = argIdx;
+         bool validFlag = FlagToggle(arg, "T", args.fNoTrees) ||
+                          FlagToggle(arg, "a", args.fAppend) ||
+                          FlagToggle(arg, "k", args.fSkipErrors) ||
+                          FlagToggle(arg, "O", args.fReoptimize) ||
+                          FlagToggle(arg, "dbg", args.fDebug) ||
+                          FlagArg(argc, argv, argIdxInOut, "d", args.fWorkingDir) ||
+                          FlagArg(argc, argv, argIdxInOut, "j", args.fNProcesses, ConvertNProcesses) ||
+                          FlagArg(argc, argv, argIdxInOut, "cachesize", args.fCacheSize, ConvertCacheSize) ||
+                          FlagArg(argc, argv, argIdxInOut, "experimental-io-features", args.fFeatures) ||
+                          FlagArg(argc, argv, argIdxInOut, "n", args.fMaxOpenedFiles) ||
+                          FlagArg(argc, argv, argIdxInOut, "v", args.fVerbosity) ||
+                          // Sigh.
+                          FlagF(argc, argv, argIdxInOut, args);
+         if (!validFlag)
+            std::cerr << "[warn] Invalid flag: " << argRaw << "\n";
+
+         assert(argIdxInOut >= argIdx);
+         args.fNArgsEaten += 1 + (argIdxInOut - argIdx);
+      } else if (args.fOutputPlace == 0) {
+         args.fOutputPlace = argIdx;
+      }
+   }
+
+   return args;
+}
+
 int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
@@ -126,237 +386,39 @@ int main( int argc, char **argv )
          return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
    }
 
-   ROOT::TIOFeatures features;
-   Bool_t append = kFALSE;
-   Bool_t force = kFALSE;
-   Bool_t skip_errors = kFALSE;
-   Bool_t reoptimize = kFALSE;
-   Bool_t noTrees = kFALSE;
-   Bool_t keepCompressionAsIs = kFALSE;
-   Bool_t useFirstInputCompression = kFALSE;
-   Bool_t multiproc = kFALSE;
-   Bool_t debug = kFALSE;
-   Int_t maxopenedfiles = 0;
-   Int_t verbosity = 99;
-   TString cacheSize;
-   SysInfo_t s;
-   gSystem->GetSysInfo(&s);
-   auto nProcesses = s.fCpus;
-   auto workingDir = gSystem->TempDirectory();
-   int outputPlace = 0;
-   int ffirst = 2;
-   Int_t newcomp = -1;
-   for( int a = 1; a < argc; ++a ) {
-      if ( strcmp(argv[a],"-T") == 0 ) {
-         noTrees = kTRUE;
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-a") == 0 ) {
-         append = kTRUE;
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-f") == 0 ) {
-         force = kTRUE;
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-k") == 0 ) {
-         skip_errors = kTRUE;
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-O") == 0 ) {
-         reoptimize = kTRUE;
-         ++ffirst;
-      } else if (strcmp(argv[a], "-dbg") == 0) {
-         debug = kTRUE;
-         verbosity = kTRUE;
-         ++ffirst;
-      } else if (strcmp(argv[a], "-d") == 0) {
-         if (a + 1 != argc && argv[a + 1][0] != '-') {
-            if (gSystem->AccessPathName(argv[a + 1])) {
-               std::cerr << "Error: could not access the directory specified: " << argv[a + 1]
-                         << ". We will use the system's temporal directory.\n";
-            } else {
-               workingDir = argv[a + 1];
-            }
-            ++a;
-            ++ffirst;
-         } else {
-            std::cout << "-d: no directory specified.  We will use the system's temporal directory.\n";
-         }
-         ++ffirst;
-      } else if (strcmp(argv[a], "-j") == 0) {
-         // If the number of processes is not specified, use the default.
-         if (a + 1 != argc && argv[a + 1][0] != '-') {
-            // number of processes specified
-            Long_t request = 1;
-            for (char *c = argv[a + 1]; *c != '\0'; ++c) {
-               if (!isdigit(*c)) {
-                  // Wrong number of Processes. Use the default:
-                  std::cerr << "Error: could not parse the number of processes to run in parallel passed after -j: "
-                            << argv[a + 1] << ". We will use the system maximum.\n";
-                  request = 0;
-                  break;
-               }
-            }
-            if (request == 1) {
-               request = strtol(argv[a + 1], 0, 10);
-               if (request < kMaxLong && request >= 0) {
-                  nProcesses = (Int_t)request;
-                  ++a;
-                  ++ffirst;
-                  std::cout << "Parallelizing  with " << nProcesses << " processes.\n";
-               } else {
-                  std::cerr << "Error: could not parse the number of processes to use passed after -j: " << argv[a + 1]
-                            << ". We will use the default value (number of logical cores).\n";
-               }
-            }
-         }
-         multiproc = kTRUE;
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-cachesize=") == 0 ) {
-         int size;
-         static const size_t arglen = strlen("-cachesize=");
-         auto parseResult = ROOT::FromHumanReadableSize(argv[a]+arglen,size);
-         if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
-            std::cerr << "Error: could not parse the cache size passed after -cachesize: "
-                      << argv[a + 1] << ". We will use the default value.\n";
-         } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
-            double m;
-            const char *munit = nullptr;
-            ROOT::ToHumanReadableSize(INT_MAX,false,&m,&munit);
-            std::cerr << "Error: the cache size passed after -cachesize is too large: "
-                      << argv[a + 1] << " is greater than " << m << munit
-                      << ". We will use the default value.\n";
-         } else {
-            cacheSize = "cachesize=";
-            cacheSize.Append(argv[a]+1);
-         }
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-cachesize") == 0 ) {
-         if (a+1 >= argc) {
-            std::cerr << "Error: no cache size number was provided after -cachesize.\n";
-         } else {
-            int size;
-            auto parseResult = ROOT::FromHumanReadableSize(argv[a+1],size);
-            if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
-               std::cerr << "Error: could not parse the cache size passed after -cachesize: "
-                         << argv[a + 1] << ". We will use the default value.\n";
-            } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
-               double m;
-               const char *munit = nullptr;
-               ROOT::ToHumanReadableSize(INT_MAX,false,&m,&munit);
-               std::cerr << "Error: the cache size passed after -cachesize is too large: "
-                         << argv[a + 1] << " is greater than " << m << munit
-                         << ". We will use the default value.\n";
-               ++a;
-               ++ffirst;
-            } else {
-               cacheSize = "cachesize=";
-               cacheSize.Append(argv[a+1]);
-               ++a;
-               ++ffirst;
-            }
-         }
-         ++ffirst;
-      } else if (!strcmp(argv[a], "-experimental-io-features")) {
-         if (a+1 >= argc) {
-            std::cerr << "Error: no IO feature was specified after -experimental-io-features; ignoring\n";
-         } else {
-            std::stringstream ss;
-            ss.str(argv[++a]);
-            ++ffirst;
-            std::string item;
-            while (std::getline(ss, item, ',')) {
-               if (!features.Set(item)) {
-                  std::cerr << "Ignoring unknown feature request: " << item << std::endl;
-               }
-            }
-         }
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-n") == 0 ) {
-         if (a+1 >= argc) {
-            std::cerr << "Error: no maximum number of opened was provided after -n.\n";
-         } else {
-            Long_t request = strtol(argv[a+1], 0, 10);
-            if (request < kMaxLong && request >= 0) {
-               maxopenedfiles = (Int_t)request;
-               ++a;
-               ++ffirst;
-            } else {
-               std::cerr << "Error: could not parse the max number of opened file passed after -n: " << argv[a+1] << ". We will use the system maximum.\n";
-            }
-         }
-         ++ffirst;
-      } else if ( strcmp(argv[a],"-v") == 0 ) {
-         if (a+1 == argc || argv[a+1][0] == '-') {
-            // Verbosity level was not specified use the default:
-            verbosity = 99;
-//         if (a+1 >= argc) {
-//            std::cerr << "Error: no verbosity level was provided after -v.\n";
-         } else {
-            Bool_t hasFollowupNumber = kTRUE;
-            for (char *c = argv[a+1]; *c != '\0'; ++c) {
-               if (!isdigit(*c)) {
-                  // Verbosity level was not specified use the default:
-                  hasFollowupNumber = kFALSE;
-                  break;
-               }
-            }
-            if (hasFollowupNumber) {
-               Long_t request = strtol(argv[a+1], 0, 10);
-               if (request < kMaxLong && request >= 0) {
-                  verbosity = (Int_t)request;
-                  ++a;
-                  ++ffirst;
-               } else {
-                  verbosity = 99;
-                  std::cerr << "Error: could not parse the verbosity level passed after -v: " << argv[a+1] << ". We will use the default value (99).\n";
-               }
-            }
-         }
-         ++ffirst;
-      } else if ( argv[a][0] == '-' ) {
-         bool farg = false;
-         if (force && argv[a][1] == 'f') {
-            // Bad argument
-            std::cerr << "Error: Using option " << argv[a] << " more than once is not supported.\n";
-            ++ffirst;
-            farg = true;
-         }
-         const char *prefix = "";
-         if (argv[a][1] == 'f' && argv[a][2] == 'k') {
-            farg = true;
-            force = kTRUE;
-            keepCompressionAsIs = kTRUE;
-            prefix = "k";
-         }
-         if (argv[a][1] == 'f' && argv[a][2] == 'f') {
-            farg = true;
-            force = kTRUE;
-            useFirstInputCompression = kTRUE;
-            if (argv[a][3] != '\0') {
-               std::cerr << "Error: option -ff should not have any suffix: " << argv[a] << " (suffix has been ignored)\n";
-            }
-         }
-         char ft[7];
-         for (int alg = 0; !useFirstInputCompression && alg <= 5; ++alg) {
-            for( int j=0; j<=9; ++j ) {
-               const int comp = (alg*100)+j;
-               snprintf(ft,7,"-f%s%d",prefix,comp);
-               if (!strcmp(argv[a],ft)) {
-                  farg = true;
-                  force = kTRUE;
-                  newcomp = comp;
-                  break;
-               }
-            }
-         }
-         if (!farg) {
-            // Bad argument
-            std::cerr << "Error: option " << argv[a] << " is not a supported option.\n";
-         }
-         ++ffirst;
-      } else if (!outputPlace) {
-         outputPlace = a;
-      }
-   }
+   const HaddArgs args = ParseArgs(argc, argv);
 
+   ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
+   Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
+   Int_t verbosity = args.fVerbosity.value_or(99);
+   TString cacheSize = args.fCacheSize.value_or("");
+   if (args.fCacheSize)
+      std::cerr << "Using " << cacheSize << "\n";
+   Bool_t multiproc = args.fNProcesses.has_value();
+   int nProcesses;
+   if (args.fNProcesses && *args.fNProcesses > 0) {
+      nProcesses = *args.fNProcesses;
+   } else {
+      SysInfo_t s;
+      gSystem->GetSysInfo(&s);
+      nProcesses = s.fCpus;
+   }
+   if (multiproc)
+      std::cout << "Parallelizing  with " << nProcesses << " processes.\n";
+   std::string workingDir;
+   if (!args.fWorkingDir) {
+      workingDir = gSystem->TempDirectory();
+   } else if (args.fWorkingDir && gSystem->AccessPathName(args.fWorkingDir->c_str())) {
+      std::cerr << "Error: could not access the directory specified: " << *args.fWorkingDir
+          << ". We will use the system's temporary directory.\n";
+      workingDir = gSystem->TempDirectory();
+   } else {
+      workingDir = *args.fWorkingDir;
+   }
+   int outputPlace = args.fOutputPlace;
+   int ffirst = 2 + args.fNArgsEaten;
+   Int_t newcomp = args.fCompressionSettings.value_or(-1);
+   
    gSystem->Load("libTreePlayer");
 
    const char *targetname = 0;
@@ -378,7 +440,7 @@ int main( int argc, char **argv )
    }
    // The following section will collect all input filenames into a vector,
    // including those listed within an indirect file.
-   // If any file can not be accessed, it will error out, unless skip_errors is true
+   // If any file can not be accessed, it will error out, unless args.fSkipErrors is true
    std::vector<std::string> allSubfiles;
    for (int a = ffirst; a < argc; ++a) {
       if (a == outputPlace)
@@ -387,7 +449,7 @@ int main( int argc, char **argv )
          std::ifstream indirect_file(argv[a] + 1);
          if (!indirect_file.is_open()) {
             std::cerr << "hadd could not open indirect file " << (argv[a] + 1) << std::endl;
-            if (!skip_errors)
+            if (!args.fSkipErrors)
                return 1;
          } else {
             std::string line;
@@ -396,7 +458,7 @@ int main( int argc, char **argv )
                   if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
                      std::cerr << "hadd could not validate the file name \"" << line << "\" within indirect file "
                                << (argv[a] + 1) << std::endl;
-                     if (!skip_errors)
+                     if (!args.fSkipErrors)
                         return 1;
                   } else
                      allSubfiles.emplace_back(line);
@@ -407,7 +469,7 @@ int main( int argc, char **argv )
          const std::string line = argv[a];
          if (gSystem->AccessPathName(line.c_str(), kReadPermission) == kTRUE) {
             std::cerr << "hadd could not validate argument \"" << line << "\" as input file " << std::endl;
-            if (!skip_errors)
+            if (!args.fSkipErrors)
                return 1;
          } else
             allSubfiles.emplace_back(line);
@@ -419,7 +481,7 @@ int main( int argc, char **argv )
    }
    // The next snippet determines the output compression if unset
    if (newcomp == -1) {
-      if (useFirstInputCompression || keepCompressionAsIs) {
+      if (args.fUseFirstInputCompression || args.fKeepCompressionAsIs) {
          // grab from the first file.
          TFile *firstInput = TFile::Open(allSubfiles.front().c_str());
          if (firstInput && !firstInput->IsZombie())
@@ -432,19 +494,19 @@ int main( int argc, char **argv )
       }
    }
    if (verbosity > 1) {
-      if (keepCompressionAsIs && !reoptimize)
+      if (args.fKeepCompressionAsIs && !args.fReoptimize)
          std::cout << "hadd compression setting for meta data: " << newcomp << '\n';
       else
          std::cout << "hadd compression setting for all output: " << newcomp << '\n';
    }
-   if (append) {
+   if (args.fAppend) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
          std::cerr << "hadd error opening target file for update :" << argv[ffirst-1] << "." << std::endl;
          exit(2);
       }
-   } else if (!fileMerger.OutputFile(targetname, force, newcomp)) {
+   } else if (!fileMerger.OutputFile(targetname, args.fForce, newcomp)) {
       std::cerr << "hadd error opening target file (does " << argv[ffirst-1] << " exist?)." << std::endl;
-      if (!force) std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
+      if (!args.fForce) std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
       exit(1);
    }
 
@@ -477,20 +539,20 @@ int main( int argc, char **argv )
 #endif
 
    auto mergeFiles = [&](TFileMerger &merger) {
-      if (reoptimize) {
+      if (args.fReoptimize) {
          merger.SetFastMethod(kFALSE);
       } else {
-         if (!keepCompressionAsIs && merger.HasCompressionChange()) {
-            // Don't warn if the user explicitly requested re-optimization.
-            std::cout << "hadd Sources and Target have different compression settings\n";
-            std::cout << "hadd merging will be slower" << std::endl;
+         if (!args.fKeepCompressionAsIs && merger.HasCompressionChange()) {
+            // Don't warn if the user has requested any re-optimization.
+            Warn() << "Sources and Target have different compression settings\n"
+               "hadd merging will be slower\n";
          }
       }
-      merger.SetNotrees(noTrees);
+      merger.SetNotrees(args.fNoTrees);
       merger.SetMergeOptions(cacheSize);
       merger.SetIOFeatures(features);
       Bool_t status;
-      if (append)
+      if (args.fAppend)
          status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
       else
          status = merger.Merge();
@@ -500,7 +562,7 @@ int main( int argc, char **argv )
    auto sequentialMerge = [&](TFileMerger &merger, int start, int nFiles) {
       for (auto i = start; i < (start + nFiles) && i < static_cast<int>(allSubfiles.size()); i++) {
          if (!merger.AddFile(allSubfiles[i].c_str())) {
-            if (skip_errors) {
+            if (args.fSkipErrors) {
                std::cerr << "hadd skipping file with error: " << allSubfiles[i] << std::endl;
             } else {
                std::cerr << "hadd exiting due to error in " << allSubfiles[i] << std::endl;
@@ -544,7 +606,7 @@ int main( int argc, char **argv )
       } else {
          std::cout << "hadd failed at the parallel stage" << std::endl;
       }
-      if (!debug) {
+      if (!args.fDebug) {
          for (const auto &pf : partialFiles) {
             gSystem->Unlink(pf.c_str());
          }
