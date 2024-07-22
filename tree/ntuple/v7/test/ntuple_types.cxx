@@ -1899,12 +1899,13 @@ TEST(RNTuple, Traits)
    auto f9 = RField<std::array<std::string, 3>>("f");
    EXPECT_EQ(0, f9.GetTraits());
 
-   EXPECT_EQ(RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
-   EXPECT_EQ(0, RField<TransientTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
-   EXPECT_EQ(0, RField<StringTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
-   EXPECT_EQ(RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
+   int baseTraits = RFieldBase::kTraitStreamerChecksum;
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTrivialType, RField<TrivialTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits, RField<TransientTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<VariantTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits, RField<StringTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyDestructible, RField<ConstructorTraits>("f").GetTraits());
+   EXPECT_EQ(baseTraits | RFieldBase::kTraitTriviallyConstructible, RField<DestructorTraits>("f").GetTraits());
 }
 
 TEST(RNTuple, TClassReadRules)
@@ -1928,6 +1929,8 @@ TEST(RNTuple, TClassReadRules)
    }
 
    auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(TClass::GetClass("StructWithIORules")->GetCheckSum(),
+             ntuple->GetModel().GetField("klass").GetOnDiskStreamerChecksum());
    EXPECT_EQ(20U, ntuple->GetNEntries());
    auto viewKlass = ntuple->GetView<StructWithIORules>("klass");
    for (auto i : ntuple->GetEntryRange()) {
@@ -1939,6 +1942,11 @@ TEST(RNTuple, TClassReadRules)
       EXPECT_EQ(fi + 1.0f, viewKlass(i).b);
       EXPECT_EQ(viewKlass(i).a + viewKlass(i).b, viewKlass(i).c);
       EXPECT_EQ("ROOT", viewKlass(i).s.str);
+
+      // The following member is set by a checksum based rule
+      EXPECT_FLOAT_EQ(42.0, viewKlass(i).checksumA);
+      // The following member is not touched by a rule due to a checksum mismatch
+      EXPECT_FLOAT_EQ(137.0, viewKlass(i).checksumB);
    }
 }
 

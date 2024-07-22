@@ -40,7 +40,7 @@ bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &ot
           fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
           fStructure == other.fStructure && fParentId == other.fParentId &&
           fProjectionSourceId == other.fProjectionSourceId && fLinkIds == other.fLinkIds &&
-          fLogicalColumnIds == other.fLogicalColumnIds;
+          fLogicalColumnIds == other.fLogicalColumnIds && other.fStreamerChecksum == other.fStreamerChecksum;
 }
 
 ROOT::Experimental::RFieldDescriptor
@@ -60,6 +60,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    clone.fProjectionSourceId = fProjectionSourceId;
    clone.fLinkIds = fLinkIds;
    clone.fLogicalColumnIds = fLogicalColumnIds;
+   clone.fStreamerChecksum = fStreamerChecksum;
    return clone;
 }
 
@@ -784,6 +785,8 @@ ROOT::Experimental::Internal::RFieldDescriptorBuilder::FromField(const RFieldBas
       .TypeAlias(field.GetTypeAlias())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
+   if (field.GetTraits() & RFieldBase::kTraitStreamerChecksum)
+      fieldDesc.StreamerChecksum(field.GetStreamerChecksum());
    return fieldDesc;
 }
 

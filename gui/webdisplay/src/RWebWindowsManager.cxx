@@ -31,6 +31,7 @@
 #include "TExec.h"
 #include "TSocket.h"
 #include "TThread.h"
+#include "TObjArray.h"
 
 #include <thread>
 #include <chrono>

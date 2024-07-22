@@ -274,8 +274,6 @@ void ROOT::Experimental::Internal::RNTupleMerger::Merge(std::span<RPageSource *>
             if (colRangeCompressionSettings != 0)
                sealedPageBuffers.resize(sealedPageBuffers.size() + pages.fPageInfos.size());
 
-            sealedPageGroups.reserve(sealedPageGroups.size() + pages.fPageInfos.size());
-
             std::uint64_t pageIdx = 0;
 
             // Loop over the pages

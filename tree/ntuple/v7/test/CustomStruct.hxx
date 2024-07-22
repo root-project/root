@@ -204,6 +204,8 @@ struct StructWithTransientString {
 struct StructWithIORules : StructWithIORulesBase {
    StructWithTransientString s;
    float c = 0.0f; //! transient member
+   float checksumA = 0.0f;   //! transient member, edited by checksum based rule
+   float checksumB = 137.0f; //! transient member, skipped by checksum based rule due to checksum mismatch
 
    StructWithIORules() = default;
    StructWithIORules(float _a, char _c[4]) : StructWithIORulesBase{_a, 0.0f}, s{{_c[0], _c[1], _c[2], _c[3]}, {}} {}
