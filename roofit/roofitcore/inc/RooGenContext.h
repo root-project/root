@@ -47,8 +47,8 @@ protected:
   Int_t _code;                                   ///< Internal generation code
   double _maxProb{0.}, _area{0.}, _norm{0.};   ///< Maximum probability, p.d.f area and normalization
   std::unique_ptr<RooAbsReal> _acceptRejectFunc; ///< Projection function to be passed to accept/reject sampler
-  RooAbsNumGenerator *_generator = nullptr;     ///< MC sampling generation engine
-  RooRealVar *_maxVar ;               ///< Variable holding maximum value of p.d.f
+  std::unique_ptr<RooAbsNumGenerator> _generator; ///< MC sampling generation engine
+  std::unique_ptr<RooRealVar> _maxVar;            ///< Variable holding maximum value of p.d.f
   Int_t _updateFMaxPerEvent ;         ///< If true, maximum p.d.f value needs to be recalculated for each event
 
   ClassDefOverride(RooGenContext,0) // Universal context for generating toy MC data from any p.d.f
