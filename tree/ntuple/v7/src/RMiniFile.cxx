@@ -1419,7 +1419,7 @@ void ROOT::Experimental::Internal::RNTupleFileWriter::WriteTFileStreamerInfo()
    fFileSimple.WriteKey(zipStreamerInfos.get(), szZipStreamerInfos, lenPayload,
                         fFileSimple.fControlBlock->fHeader.GetSeekInfo(), 100, "TList", "StreamerInfo",
                         "Doubly linked list");
-   fFileSimple.fControlBlock->fHeader.SetNbytesInfo(fFileSimple.fKeyOffset -
+   fFileSimple.fControlBlock->fHeader.SetNbytesInfo(fFileSimple.fFilePos -
                                                     fFileSimple.fControlBlock->fHeader.GetSeekInfo());
 }
 
