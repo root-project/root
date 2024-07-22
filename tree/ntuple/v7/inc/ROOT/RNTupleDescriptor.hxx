@@ -21,7 +21,8 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
-#include <string_view>
+
+#include <TError.h>
 
 #include <algorithm>
 #include <chrono>
@@ -35,6 +36,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -1053,6 +1055,7 @@ public:
    }
    RColumnDescriptorBuilder &SetSuppressedDeferred()
    {
+      R__ASSERT(fColumn.fFirstElementIndex != 0);
       if (fColumn.fFirstElementIndex > 0)
          fColumn.fFirstElementIndex = -fColumn.fFirstElementIndex;
       return *this;
