@@ -31,6 +31,7 @@
 /// - Book the helper as an RDataFrame action. Here, the RDataFrame column types have to be passed as template
 /// parameters.
 /// - Pass the column names to the Book action. These are matched by position to the variables of the dataset.
+///   If there is one more column name than variables in the dataset, the last columns values will be used as weights.
 ///
 /// All arguments passed to  are forwarded to RooDataSet::RooDataSet() / RooDataHist::RooDataHist().
 ///
@@ -42,7 +43,8 @@
 ///      RooDataSetHelper{"dataset",          // Name   (directly forwarded to RooDataSet::RooDataSet())
 ///                      "Title of dataset",  // Title  (                   ~ " ~                      )
 ///                      RooArgSet(x, y) },   // Variables to create in dataset
-///      {"x", "y"}                           // Column names from RDataFrame
+///      {"x", "y", "weight"}                 // Column names from RDataFrame
+///                                           // (this example uses an additional column for the weight)
 ///    );
 ///
 /// ```
