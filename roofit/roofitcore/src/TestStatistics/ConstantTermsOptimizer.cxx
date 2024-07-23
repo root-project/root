@@ -74,9 +74,8 @@ void ConstantTermsOptimizer::enableConstantTermsOptimization(RooAbsReal *functio
          arg->setCacheAndTrackHints(trackNodes);
       }
       // Do not set CacheAndTrack on constant expressions
-      auto constNodes = static_cast<RooArgSet *>(trackNodes.selectByAttrib("Constant", true));
+      std::unique_ptr<RooArgSet> constNodes{static_cast<RooArgSet *>(trackNodes.selectByAttrib("Constant", true))};
       trackNodes.remove(*constNodes);
-      delete constNodes;
 
       // Set CacheAndTrack flag on all remaining nodes
       trackNodes.setAttribAll("CacheAndTrack", true);
