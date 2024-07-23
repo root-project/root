@@ -6,15 +6,31 @@
 
   Syntax:
   ```{.cpp}
-       hadd targetfile source1 source2 ...
+       hadd [flags] targetfile source1 source2 ...
   ```
-  or
-  ```{.cpp}
-       hadd -f targetfile source1 source2 ...
-  ```
-  (targetfile is overwritten if it exists)
+
+  Flags can be passed before or after the positional arguments.
+  The first positional (non-flag) argument will be interpreted as the targetfile.
+  After that, the first sequence of positional arguments will be interpreted as the input files.
+  If two sequences of positional arguments are separated by flags, all sequences but the first
+  will be ignored.
+  If a flag requires an argument, the argument can be specified in any of these ways:
+
+     # All equally valid:
+     -j 16
+     -j16
+     -j=16
+   
+   The first syntax is the preferred one since it's backward-compatible with previous versions of hadd.
+   Note that merging multiple flags is NOT supported: `-jfa` will be interpreted as -j=fa, which is invalid!
+
+   The flags are as follows:
 
   \param -a   Append to the output
+  \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
+  \param -d   Carry out the partial multiprocess execution in the specified directory
+  \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
+  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
   \param -f   Force overwriting of output file.
   \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 1 (kDefaultZLIB).
                  You can also specify the full compresion algorithm, e.g. -f206
@@ -23,16 +39,12 @@
               using the compression level specified in the first input or the
               compression setting after fk (for example 206 when using -fk206)
   \param -ff  The compression level used is the one specified in the first input
+  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
   \param -k   Skip corrupt or non-existent files, do not exit
+  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
   \param -O   Re-optimize basket size when merging TTree
   \param -T   Do not merge Trees
   \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
-  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
-  \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
-  \param -d   Carry out the partial multiprocess execution in the specified directory
-  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
-  \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
-  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
   \return hadd returns a status code: 0 if OK, -1 otherwise
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
@@ -138,8 +150,8 @@ struct HaddArgs {
   std::optional<int>               fVerbosity;
   std::optional<int>               fCompressionSettings;
 
-  int fOutputPlace;
-  int fNArgsEaten;
+  int fOutputArgIdx;
+  int fFirstInputIdx;
 };
 
 static bool FlagToggle(const char *arg, const char *flagStr, bool &flagOut) {
@@ -161,7 +173,7 @@ static std::optional<int> StrToInt(const char *str) {
       if (!isdigit(*str)) return {};
       res *= 10;
       res += *str - '0' ;
-   } while (++str);
+   } while (*++str);
 
    return res;
 }
@@ -352,27 +364,26 @@ static HaddArgs ParseArgs(int argc, char **argv)
       if (argRaw[0] == '-' && argRaw[1] != '\0') {
          // parse flag
          const char *arg = argRaw + 1;
-         int argIdxInOut = argIdx;
          bool validFlag = FlagToggle(arg, "T", args.fNoTrees) ||
                           FlagToggle(arg, "a", args.fAppend) ||
                           FlagToggle(arg, "k", args.fSkipErrors) ||
                           FlagToggle(arg, "O", args.fReoptimize) ||
                           FlagToggle(arg, "dbg", args.fDebug) ||
-                          FlagArg(argc, argv, argIdxInOut, "d", args.fWorkingDir) ||
-                          FlagArg(argc, argv, argIdxInOut, "j", args.fNProcesses, ConvertNProcesses) ||
-                          FlagArg(argc, argv, argIdxInOut, "cachesize", args.fCacheSize, ConvertCacheSize) ||
-                          FlagArg(argc, argv, argIdxInOut, "experimental-io-features", args.fFeatures) ||
-                          FlagArg(argc, argv, argIdxInOut, "n", args.fMaxOpenedFiles) ||
-                          FlagArg(argc, argv, argIdxInOut, "v", args.fVerbosity) ||
+                          FlagArg(argc, argv, argIdx, "d", args.fWorkingDir) ||
+                          FlagArg(argc, argv, argIdx, "j", args.fNProcesses, ConvertNProcesses) ||
+                          FlagArg(argc, argv, argIdx, "cachesize", args.fCacheSize, ConvertCacheSize) ||
+                          FlagArg(argc, argv, argIdx, "experimental-io-features", args.fFeatures) ||
+                          FlagArg(argc, argv, argIdx, "n", args.fMaxOpenedFiles) ||
+                          FlagArg(argc, argv, argIdx, "v", args.fVerbosity) ||
                           // Sigh.
-                          FlagF(argc, argv, argIdxInOut, args);
+                          FlagF(argc, argv, argIdx, args);
          if (!validFlag)
             std::cerr << "[warn] Invalid flag: " << argRaw << "\n";
 
-         assert(argIdxInOut >= argIdx);
-         args.fNArgsEaten += 1 + (argIdxInOut - argIdx);
-      } else if (args.fOutputPlace == 0) {
-         args.fOutputPlace = argIdx;
+      } else if (!args.fOutputArgIdx) {
+         args.fOutputArgIdx = argIdx;
+      } else if (!args.fFirstInputIdx) {
+         args.fFirstInputIdx = argIdx;
       }
    }
 
@@ -415,18 +426,16 @@ int main( int argc, char **argv )
    } else {
       workingDir = *args.fWorkingDir;
    }
-   int outputPlace = args.fOutputPlace;
-   int ffirst = 2 + args.fNArgsEaten;
    Int_t newcomp = args.fCompressionSettings.value_or(-1);
    
    gSystem->Load("libTreePlayer");
 
    const char *targetname = 0;
-   if (outputPlace) {
-      targetname = argv[outputPlace];
-   } else {
-      targetname = argv[ffirst-1];
+   if (!args.fOutputArgIdx) {
+      std::cerr << "Missing output file.\n";
+      return 1;
    }
+   targetname = argv[args.fOutputArgIdx];
 
    if (verbosity > 1) {
       std::cout << "hadd Target file: " << targetname << std::endl;
@@ -442,9 +451,10 @@ int main( int argc, char **argv )
    // including those listed within an indirect file.
    // If any file can not be accessed, it will error out, unless args.fSkipErrors is true
    std::vector<std::string> allSubfiles;
-   for (int a = ffirst; a < argc; ++a) {
-      if (a == outputPlace)
-         continue;
+   for (int a = args.fFirstInputIdx; a < argc; ++a) {
+      if (argv[a] && argv[a][0] == '-') {
+         break;
+      }
       if (argv[a] && argv[a][0] == '@') {
          std::ifstream indirect_file(argv[a] + 1);
          if (!indirect_file.is_open()) {
@@ -501,11 +511,11 @@ int main( int argc, char **argv )
    }
    if (args.fAppend) {
       if (!fileMerger.OutputFile(targetname, "UPDATE", newcomp)) {
-         std::cerr << "hadd error opening target file for update :" << argv[ffirst-1] << "." << std::endl;
+         std::cerr << "hadd error opening target file for update :" << targetname << "." << std::endl;
          exit(2);
       }
    } else if (!fileMerger.OutputFile(targetname, args.fForce, newcomp)) {
-      std::cerr << "hadd error opening target file (does " << argv[ffirst-1] << " exist?)." << std::endl;
+      std::cerr << "hadd error opening target file (does " << targetname << " exist?)." << std::endl;
       if (!args.fForce) std::cerr << "Pass \"-f\" argument to force re-creation of output file." << std::endl;
       exit(1);
    }
