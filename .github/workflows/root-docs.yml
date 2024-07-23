@@ -76,8 +76,7 @@ jobs:
       S3_BUCKET_NAME: root
       AWS_REGION: "eu-west-1"
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      SHOULD_DEPLOY: 'true'
-      # SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+      SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
     permissions:
       contents: read
@@ -201,6 +200,9 @@ jobs:
 
         cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
+        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
+            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
+        fi
         mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
