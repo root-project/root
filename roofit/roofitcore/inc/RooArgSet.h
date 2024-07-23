@@ -174,14 +174,22 @@ public:
 
   bool isInRange(const char* rangeSpec) ;
 
-  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
-  RooArgSet * snapshot(bool deepCopy = true) const {
-    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
+  using RooAbsCollection::selectCommon;
+  using RooAbsCollection::snapshot;
+
+  /// Use RooAbsCollection::selectByName(), but return as RooArgSet.
+  inline RooArgSet* selectByName(const char* nameList, bool verbose=false) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::selectByName(nameList, verbose));
   }
 
-  /// \copydoc RooAbsCollection::snapshot()
-  bool snapshot(RooAbsCollection& output, bool deepCopy=true) const {
-    return RooAbsCollection::snapshot(output, deepCopy);
+  /// Use RooAbsCollection::selecCommon(), but return as RooArgSet.
+  inline RooArgSet* selectCommon(const RooAbsCollection& refColl) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::selectCommon(refColl));
+  }
+
+  /// Use RooAbsCollection::snapshot(), but return as RooArgSet.
+  inline RooArgSet * snapshot(bool deepCopy = true) const {
+    return static_cast<RooArgSet*>(RooAbsCollection::snapshot(deepCopy));
   }
 
 protected:

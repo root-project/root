@@ -1321,7 +1321,7 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
   }
 
   outerIntDeps.removeAll() ;
-  outerIntDeps.add(*std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(allIntDeps.selectCommon(allImpDeps))});
+  outerIntDeps.add(*std::unique_ptr<RooArgSet>{allIntDeps.selectCommon(allImpDeps)});
 
   // Now iteratively merge groups that should be (partially) integrated together
   for(RooAbsArg * outerIntDep : outerIntDeps) {
