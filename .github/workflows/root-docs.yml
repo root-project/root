@@ -76,7 +76,8 @@ jobs:
       S3_BUCKET_NAME: root
       AWS_REGION: "eu-west-1"
       PR_NUMBER: ${{ github.event.pull_request.number }}
-      SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+      SHOULD_DEPLOY: "true"
+     #SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
     permissions:
       contents: read
@@ -193,42 +194,24 @@ jobs:
                   --repository     ${{ github.server_url }}/${{ github.repository }}
            "
 
-    # - name: Run Doxygen
-    #   shell: bash
-    #   run: |
-    #     source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-    #     export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
-
-    #     cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
-    #     make -j$(nproc)
-
-    #     if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
-    #         rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
-    #     fi
-
-    #     mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
-    #     if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-    #       mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
-    #     fi
-
     - name: Run Doxygen
       shell: bash
       run: |
         source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-        rm -rf ${DOC_LOCATION}/${DOC_DIR} ${DOC_LOCATION}/${DOC_DIR}_TMP
-
         export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
-  
+
         cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        cd $GITHUB_WORKSPACE
+
+        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
+            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
+        fi
 
         mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
         fi
-        
-    # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
+
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
       shell: bash
@@ -254,31 +237,17 @@ jobs:
       with:
         name: rootdoc.tar.xz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
-    
+  
     # Do I need this step?
-    #- name: Install AWS CLI
-    #  run: |
-    #    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-    #    unzip awscliv2.zip
-    #    sudo ./aws/install
+    - name: Install AWS CLI
+      run: |
+       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+       unzip awscliv2.zip
+       sudo ./aws/install
     
     # Upload to Amazon S3
-    #- name: Upload tar.gz to S3
-    #  if: ${{ env.SHOULD_DEPLOY == 'true' }}
-    #  run: |
-    #    DEST="s3://${S3_BUCKET_NAME}/${PR_NUMBER:-main}" # Use PR number or 'main' for non-PR events
-    #    aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.gz ${DEST}/${DOC_DIR}.tar.gz
-    #  env:
-    #    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #    AWS_REGION: ${{ env.AWS_REGION }}
-
-    #- name: Upload tar.xz to S3
-    #  if: ${{ env.SHOULD_DEPLOY == 'true' }}
-    #  run: |
-    #    DEST="s3://${S3_BUCKET_NAME}/${PR_NUMBER:-main}" # Use PR number or 'main' for non-PR events
-    #    aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.xz ${DEST}/${DOC_DIR}.tar.xz
-    #  env:
-    #    AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    #    AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    #    AWS_REGION: ${{ env.AWS_REGION }}
+    - name: Upload tar.gz to S3
+      if: ${{ env.SHOULD_DEPLOY == 'true' }}
+      run: |
+        DEST="s3://${S3_BUCKET_NAME}/${PR_NUMBER:-main}" # Use PR number or 'main' for non-PR events
+        aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.gz ${DEST}/${DOC_DIR}.tar.gz
