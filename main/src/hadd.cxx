@@ -22,6 +22,8 @@
      -j=16
    
    The first syntax is the preferred one since it's backward-compatible with previous versions of hadd.
+   The -f flag is an exception to this rule: it only supports the `-f[0-9]` syntax.
+
    Note that merging multiple flags is NOT supported: `-jfa` will be interpreted as -j=fa, which is invalid!
 
    The flags are as follows:
@@ -154,13 +156,19 @@ struct HaddArgs {
   int fFirstInputIdx;
 };
 
-static bool FlagToggle(const char *arg, const char *flagStr, bool &flagOut) {
+enum class EFlagResult {
+   Ignored,
+   Parsed,
+   Error
+};
+
+static EFlagResult FlagToggle(const char *arg, const char *flagStr, bool &flagOut) {
    if (strncmp(arg, flagStr, strlen(flagStr)) == 0) {
       if (flagOut)
          std::cerr << "[warn] Duplicate flag: " << flagStr << "\n";
       flagOut = true;
    }
-   return flagOut;
+   return flagOut ? EFlagResult::Parsed : EFlagResult::Ignored;
 }
 
 // NOTE: not using std::stoi or similar because they have bad error checking.
@@ -247,9 +255,9 @@ static std::optional<TString> ConvertCacheSize(const char *arg)
 }
 
 template <typename T>
-static bool FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, 
-                    std::optional<T> &flagOut,
-                    std::optional<T> (*conv)(const char *) = ConvertArg<T>)
+static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, 
+                           std::optional<T> &flagOut,
+                           std::optional<T> (*conv)(const char *) = ConvertArg<T>)
 {
    int argIdx = argIdxInOut;
    const char *arg = argv[argIdx] + 1;
@@ -258,7 +266,7 @@ static bool FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr
    const char *nxtArg = nullptr;
 
    if (strncmp(arg, flagStr, flagLen) != 0)
-      return false;
+      return EFlagResult::Ignored;
    
    if (argLen > flagLen) {
       // interpret anything after the flag as the argument.
@@ -271,18 +279,18 @@ static bool FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr
          nxtArg = argv[argIdx + 1];
       } else {
          std::cerr << "[err] Expected argument after '-" << flagStr << "' flag.\n";
-         return false;
+         return EFlagResult::Error;
       }
    } else {
-      return false;
+      return EFlagResult::Ignored;
    }
 
    flagOut = conv(nxtArg);
    ++argIdxInOut;
-   return true;
+   return EFlagResult::Parsed;
 }
 
-static bool ValidateCompressionSettings(int compSettings)
+static bool ValidCompressionSettings(int compSettings)
 {
    for (int alg = 0; alg <= 5; ++alg) {
       for (int j=0; j<=9; ++j) {
@@ -291,71 +299,83 @@ static bool ValidateCompressionSettings(int compSettings)
             return true;
       }
    }
-   std::cerr << "[err] " << compSettings << " is not a supported compression settings.\n";
    return false;
 }
 
-static bool FlagF(int argc, char **argv, int &argIdxInOut, HaddArgs &args)
+// The -f flag has a somewhat complicated logic.
+// We have 4 cases:
+//   1. -f
+//   2. -ff
+//   3. -fk
+//   4. -f[0-509]
+//
+// and a combination thereof (e.g. -fk101, -ff202, -ffk, -fk209)
+// -ff and -f[0-509] are incompatible.
+//
+// ALL these flags imply '-f' ("force overwrite"), but only if they parse successfully.
+// This means that if we see a -f[something] and that "something" doesn't parse to a valid
+// number between 0 and 509, or f or k, we consider the flag invalid and skip it without
+// setting any state.
+//
+// Note that we don't allow `-f [0-9]` because that would be a backwards-incompatible
+// change with the previous arg parsing semantic, changing the meaning of a cmdline like:
+//
+// $ hadd -f 200 f.root g.root  # <- '200' is the output file, not an argument to -f!
+static EFlagResult FlagF(const char *arg, HaddArgs &args)
 {
-   int argIdx = argIdxInOut;
-   const char *arg = argv[argIdx] + 1;
    if (arg[0] != 'f')
-      return false;
+      return EFlagResult::Ignored;
 
-   int argLen = strlen(arg);
-   if (argLen > 1) {
-      // Check if this is a -ff flag.
-      if (argLen == 2 && arg[1] == 'f') {
+   args.fForce = true;
+   const char *cur = arg + 1;
+   while (*cur) {
+      switch (cur[0]) {
+      case 'f':
          if (args.fUseFirstInputCompression)
             std::cerr << "[warn] Duplicate flag: -ff\n";
-         args.fUseFirstInputCompression = true;
-         return true;         
-      }
-
-      // Check if this is a -fk flag.
-      if (argLen == 2 && arg[1] == 'k') {
+         if (args.fCompressionSettings) {
+            std::cerr << "[err] Cannot specify both -ff and -f[0-9]. Either use the first input compression or specify it.\n";
+            return EFlagResult::Error;
+         } else
+            args.fUseFirstInputCompression = true;
+         break;
+      case 'k':
          if (args.fKeepCompressionAsIs)
             std::cerr << "[warn] Duplicate flag: -fk\n";
-         args.fKeepCompressionAsIs= true;
-         return true;         
+         args.fKeepCompressionAsIs = true;
+         break;
+      default:
+         if (isdigit(cur[0])) {
+            if (args.fUseFirstInputCompression) {
+               std::cerr << "[err] Cannot specify both -ff and -f[0-9]. Either use the first input compression or specify it.\n";
+               return EFlagResult::Error;
+            } else if (!args.fCompressionSettings) {
+               if (auto compLv = StrToInt(cur)) {
+                  if (ValidCompressionSettings(*compLv)) {
+                     args.fCompressionSettings = *compLv;
+                  } else {
+                     std::cerr << "[err] " << *compLv << " is not a supported compression settings.\n";
+                     return EFlagResult::Error;
+                  }
+               } else {
+                  std::cerr << "[err] Failed to parse compression settings '" << cur << "' as an integer.\n";
+                  return EFlagResult::Error;
+               }
+            }
+         } else {
+            std::cerr << "[err] Invalid flag: " << arg << "\n";
+            return EFlagResult::Error;
+         }
       }
-
-      // Check if there is a number after -f
-      // for coherence with the other arg flags, allow and ignore up to one '='.
-      if (arg[1] == '=')
-         ++arg;
-      if (auto compLv = StrToInt(arg + 1)) {
-         if (args.fCompressionSettings)
-            std::cerr << "[warn] Duplicate flag: -f[0-9]\n";
-         if (ValidateCompressionSettings(*compLv))
-            args.fCompressionSettings = *compLv;
-         return true;
-      } else {
-         std::cerr << "[err] Failed to parse compression settings '" << arg + 1 << "' as an integer.\n";
-         return true;
-      }
-   } else if (argIdx + 1 < argc && isdigit(argv[argIdx + 1][0])) {
-      // check if next argument is compatible with -f
-      if (auto compLv = StrToInt(argv[argIdx + 1])) {
-         if (args.fCompressionSettings)
-            std::cerr << "[warn] Duplicate flag: -f[0-9]\n";
-         ++argIdxInOut;
-         if (ValidateCompressionSettings(*compLv))
-            args.fCompressionSettings = *compLv;
-         return true;
-      } else {
-         std::cerr << "[err] Failed to parse compression settings '" << argv[argIdx + 1] << "' as an integer\n";
-         return true;
-      }
+      ++cur;
    }
-
-   if (args.fForce)
-      std::cerr << "[warn] Duplicate flag: -f\n";
-   args.fForce = true;
-   return true;
+   
+   return EFlagResult::Parsed;
 }
 
-static HaddArgs ParseArgs(int argc, char **argv)
+// Returns nullopt if any of the flags failed to parse.
+// If an unknown flag is encountered, it will print a warning and go on.
+static std::optional<HaddArgs> ParseArgs(int argc, char **argv)
 {
    HaddArgs args {};
 
@@ -364,21 +384,33 @@ static HaddArgs ParseArgs(int argc, char **argv)
       if (argRaw[0] == '-' && argRaw[1] != '\0') {
          // parse flag
          const char *arg = argRaw + 1;
-         bool validFlag = FlagToggle(arg, "T", args.fNoTrees) ||
-                          FlagToggle(arg, "a", args.fAppend) ||
-                          FlagToggle(arg, "k", args.fSkipErrors) ||
-                          FlagToggle(arg, "O", args.fReoptimize) ||
-                          FlagToggle(arg, "dbg", args.fDebug) ||
-                          FlagArg(argc, argv, argIdx, "d", args.fWorkingDir) ||
-                          FlagArg(argc, argv, argIdx, "j", args.fNProcesses, ConvertNProcesses) ||
-                          FlagArg(argc, argv, argIdx, "cachesize", args.fCacheSize, ConvertCacheSize) ||
-                          FlagArg(argc, argv, argIdx, "experimental-io-features", args.fFeatures) ||
-                          FlagArg(argc, argv, argIdx, "n", args.fMaxOpenedFiles) ||
-                          FlagArg(argc, argv, argIdx, "v", args.fVerbosity) ||
-                          // Sigh.
-                          FlagF(argc, argv, argIdx, args);
+         bool validFlag = false;
+
+#define PARSE_FLAG(func, ...) do {                 \
+      if (!validFlag) {                            \
+         const auto res = func(__VA_ARGS__);       \
+         if (res == EFlagResult::Error) return {}; \
+         validFlag = res == EFlagResult::Parsed;   \
+      }                                            \
+   } while (0)
+
+         PARSE_FLAG(FlagToggle, arg, "T", args.fNoTrees);
+         PARSE_FLAG(FlagToggle, arg, "a", args.fAppend);
+         PARSE_FLAG(FlagToggle, arg, "k", args.fSkipErrors);
+         PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
+         PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, ConvertNProcesses);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, ConvertCacheSize);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity);
+         PARSE_FLAG(FlagF, arg, args);
+
+#undef PARSE_FLAG
+
          if (!validFlag)
-            std::cerr << "[warn] Invalid flag: " << argRaw << "\n";
+            std::cerr << "[warn] Unknown flag: " << argRaw << "\n";
 
       } else if (!args.fOutputArgIdx) {
          args.fOutputArgIdx = argIdx;
@@ -397,7 +429,10 @@ int main( int argc, char **argv )
          return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
    }
 
-   const HaddArgs args = ParseArgs(argc, argv);
+   const auto argsOpt = ParseArgs(argc, argv);
+   if (!argsOpt)
+      return 1;
+   const HaddArgs &args = *argsOpt;
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
