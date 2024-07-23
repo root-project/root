@@ -565,11 +565,12 @@ TEST(RNTupleDescriptor, BuildStreamerInfos)
          fieldBuilder = RFieldDescriptorBuilder::FromField(*child);
          descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
          descBuilder.AddFieldLink(1, i);
+         const auto childId = i;
          i++;
          for (const auto &grandChild : child->GetSubFields()) {
             fieldBuilder = RFieldDescriptorBuilder::FromField(*grandChild);
             descBuilder.AddField(fieldBuilder.FieldId(i).MakeDescriptor().Unwrap());
-            descBuilder.AddFieldLink(1, i);
+            descBuilder.AddFieldLink(childId, i);
             i++;
          }
       }
