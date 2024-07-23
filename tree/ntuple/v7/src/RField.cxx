@@ -877,8 +877,8 @@ std::unique_ptr<ROOT::Experimental::RFieldBase> ROOT::Experimental::RFieldBase::
    clone->fTypeAlias = fTypeAlias;
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
-   // We can just copy the pointer because fColumnRepresentative points into a static structure
-   clone->fColumnRepresentative = fColumnRepresentative;
+   // We can just copy the references because fColumnRepresentatives point into a static structure
+   clone->fColumnRepresentatives = fColumnRepresentatives;
    return clone;
 }
 
@@ -1001,8 +1001,8 @@ void ROOT::Experimental::RFieldBase::SetOnDiskId(DescriptorId_t id)
 const ROOT::Experimental::RFieldBase::ColumnRepresentation_t &
 ROOT::Experimental::RFieldBase::GetColumnRepresentative() const
 {
-   if (fColumnRepresentative)
-      return *fColumnRepresentative;
+   if (!fColumnRepresentatives.empty())
+      return fColumnRepresentatives[0].get();
    return GetColumnRepresentations().GetSerializationDefault();
 }
 
@@ -1014,7 +1014,7 @@ void ROOT::Experimental::RFieldBase::SetColumnRepresentative(const ColumnReprese
    auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), representative);
    if (itRepresentative == std::end(validTypes))
       throw RException(R__FAIL("invalid column representative"));
-   fColumnRepresentative = &(*itRepresentative);
+   fColumnRepresentatives = {*itRepresentative};
 }
 
 const ROOT::Experimental::RFieldBase::ColumnRepresentation_t &
@@ -1122,7 +1122,7 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("invalid attempt to connect an already connected field to a page source"));
 
-   if (fColumnRepresentative)
+   if (!fColumnRepresentatives.empty())
       throw RException(R__FAIL("fixed column representative only valid when connecting to a page sink"));
    if (!fDescription.empty())
       throw RException(R__FAIL("setting description only valid when connecting to a page sink"));
@@ -1144,10 +1144,12 @@ void ROOT::Experimental::RFieldBase::ConnectPageSource(Internal::RPageSource &pa
          onDiskColumnTypes.emplace_back(c->GetType());
       }
       for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
-         if (t == onDiskColumnTypes)
-            fColumnRepresentative = &t;
+         if (t == onDiskColumnTypes) {
+            fColumnRepresentatives = {t};
+            break;
+         }
       }
-      R__ASSERT(fColumnRepresentative);
+      R__ASSERT(!fColumnRepresentatives.empty());
       if (fOnDiskId != kInvalidDescriptorId) {
          const auto &fieldDesc = desc.GetFieldDescriptor(fOnDiskId);
          fOnDiskTypeVersion = fieldDesc.GetTypeVersion();
