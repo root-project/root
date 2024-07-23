@@ -112,6 +112,7 @@ jobs:
         mkdir -p ${{ github.workspace }}/doxygen
         curl -L https://github.com/doxygen/doxygen/releases/download/Release_1_10_0/doxygen-1.10.0.linux.bin.tar.gz | tar -xz -C ${{ github.workspace }}/doxygen/ --strip-components=1
         echo PATH=$PATH:${{ github.workspace }}/doxygen/bin >> $GITHUB_ENV
+
     - name: Install qhelpgenerator
       run : |
         dnf update -y && dnf install -y sudo
@@ -192,20 +193,50 @@ jobs:
                   --repository     ${{ github.server_url }}/${{ github.repository }}
            "
 
+    # - name: Run Doxygen
+    #   shell: bash
+    #   run: |
+    #     source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+    #     export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
+
+    #     cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+    #     make -j$(nproc)
+
+    #     if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
+    #         rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
+    #     fi
+
+    #     mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
+    #     if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
+    #       mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+    #     fi
+
     - name: Run Doxygen
       shell: bash
+      env:
+        GITTAG: ${{ env.gittag }}
+        DOCDIR: ${{ env.DOC_DIR }}
+        DOCDIR_TMP: ${{ env.DOC_LOCATION }}/${{ env.DOC_DIR }}_TMP
+        DOCDIR_FINAL: ${{ env.DOC_LOCATION }}/${{ env.DOC_DIR }}
+        SRCDIR: ${{ env.DOC_LOCATION }}/src/${{ env.gittag }}
+        BUILDDIR: ${{ env.DOC_LOCATION }}/src/${{ env.gittag }}.build
       run: |
-        source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
-
-        cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
-        make -j$(nproc)
-        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
-            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
-        fi
-        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
-        if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+        source $BUILDDIR/bin/thisroot.sh
+        echo "Using $(which root) to generate the doxygen guide..."
+  
+        rm -rf $DOCDIR_FINAL $DOCDIR_TMP
+        export DOXYGEN_OUTPUT_DIRECTORY=$DOCDIR_TMP
+  
+        if [ -d $SRCDIR/documentation/doxygen ]; then
+          cd $SRCDIR/documentation/doxygen
+          make -j$(nproc)
+          cd $GITHUB_WORKSPACE
+          mv $DOCDIR_TMP/html $DOCDIR_FINAL
+          if [ -d $DOCDIR_TMP/notebooks ]; then
+            mv $DOCDIR_TMP/notebooks $DOCDIR_FINAL/notebooks
+          fi
+        else
+          echo "No doxygen documentation for this version"
         fi
 
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
@@ -219,14 +250,6 @@ jobs:
         tar cf $tarnamexz1 ${DOC_DIR}
         xz -T5 -f $tarnamexz1
         ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
-    
-    # Upload to Github
-    - name: Upoad rootdoc
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
 
     # Upload to GitHub as an artifact (optional)
     - name: Upload tar.gz
