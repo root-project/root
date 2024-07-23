@@ -787,19 +787,16 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescripto
       if (columnCardinality == 0)
          continue;
 
-      // We already know (from AddColumn()) that the column indexes and representation indexes are consecutive
+      // In AddColumn, we already checked that all but the last representation are complete.
+      // Check that the last column representation is complete, i.e. has all columns.
       const auto &logicalColumnIds = fieldDesc.GetLogicalColumnIds();
       const auto nColumns = logicalColumnIds.size();
-      if ((nColumns == 0) || ((nColumns % columnCardinality) != 0)) {
-         return R__FAIL("field with id '" + std::to_string(fieldId) + "' has an invalid number of columns");
-      }
+      if (nColumns <= columnCardinality)
+         continue;
 
-      for (auto firstColumnIdx = 0u; firstColumnIdx < nColumns; firstColumnIdx += columnCardinality) {
-         const auto &columnDesc = fDescriptor.GetColumnDescriptor(logicalColumnIds[firstColumnIdx]);
-         if (columnDesc.GetRepresentationIndex() != firstColumnIdx / columnCardinality) {
-            return R__FAIL("field with id '" + std::to_string(fieldId) + "' has irregular column representations");
-         }
-      }
+      const auto &lastColumn = fDescriptor.GetColumnDescriptor(logicalColumnIds.back());
+      if (lastColumn.GetIndex() + 1 != columnCardinality)
+         return R__FAIL("field with id '" + std::to_string(fieldId) + "' has incomplete column representations");
    }
 
    return RResult<void>::Success();
@@ -958,8 +955,15 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
    const auto representationIndex = columnDesc.GetRepresentationIndex();
 
    auto fieldExists = EnsureFieldExists(fieldId);
-   if (!fieldExists)
+   if (!fieldExists) {
       return R__FORWARD_ERROR(fieldExists);
+   }
+   auto &fieldDesc = fDescriptor.fFieldDescriptors.find(fieldId)->second;
+
+   if (columnDesc.IsAliasColumn()) {
+      if (columnDesc.GetType() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetType())
+         return R__FAIL("alias column type mismatch");
+   }
    if (fDescriptor.FindLogicalColumnId(fieldId, columnIndex, representationIndex) != kInvalidDescriptorId) {
       return R__FAIL("column index clash");
    }
@@ -968,18 +972,26 @@ ROOT::Experimental::Internal::RNTupleDescriptorBuilder::AddColumn(RColumnDescrip
          return R__FAIL("out of bounds column index");
    }
    if (representationIndex > 0) {
-      if (fDescriptor.FindLogicalColumnId(fieldId, 0, representationIndex - 1) == kInvalidDescriptorId)
+      if (fDescriptor.FindLogicalColumnId(fieldId, 0, representationIndex - 1) == kInvalidDescriptorId) {
          return R__FAIL("out of bounds representation index");
-   }
-   if (columnDesc.IsAliasColumn()) {
-      if (columnDesc.GetType() != fDescriptor.GetColumnDescriptor(columnDesc.GetPhysicalId()).GetType())
-         return R__FAIL("alias column type mismatch");
+      }
+      if (columnIndex == 0) {
+         assert(fieldDesc.fColumnCardinality > 0);
+         if (fDescriptor.FindLogicalColumnId(fieldId, fieldDesc.fColumnCardinality - 1, representationIndex - 1) ==
+             kInvalidDescriptorId) {
+            return R__FAIL("incomplete column representations");
+         }
+      } else {
+         if (columnIndex >= fieldDesc.fColumnCardinality)
+            return R__FAIL("irregular column representations");
+      }
+   } else {
+      // This will set the column cardinality to the number of columns of the first representation
+      fieldDesc.fColumnCardinality = columnIndex + 1;
    }
 
    const auto logicalId = columnDesc.GetLogicalId();
-   auto &fieldDesc = fDescriptor.fFieldDescriptors.find(fieldId)->second;
    fieldDesc.fLogicalColumnIds.emplace_back(logicalId);
-   fieldDesc.fColumnCardinality = std::max(fieldDesc.fColumnCardinality, columnIndex + 1);
 
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
