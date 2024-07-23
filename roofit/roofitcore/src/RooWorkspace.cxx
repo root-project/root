@@ -212,8 +212,7 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
   // Copy named sets
   for (map<string,RooArgSet>::const_iterator iter3 = other._namedSets.begin() ; iter3 != other._namedSets.end() ; ++iter3) {
     // Make RooArgSet with equivalent content of this workspace
-    std::unique_ptr<RooArgSet> tmp{static_cast<RooArgSet*>(_allOwnedNodes.selectCommon(iter3->second))};
-    _namedSets[iter3->first].add(*tmp) ;
+    _namedSets[iter3->first].add(*std::unique_ptr<RooArgSet>{_allOwnedNodes.selectCommon(iter3->second)});
   }
 
   // Copy generic objects
