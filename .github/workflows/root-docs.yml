@@ -238,21 +238,21 @@ jobs:
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
   
     # Upload to Amazon S3
-    - name: Checkout code
-      uses: actions/checkout@v2
+    # - name: Checkout code
+    #   uses: actions/checkout@v2
 
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-1
+    # - name: Set up AWS credentials
+    #   uses: aws-actions/configure-aws-credentials@v1
+    #   with:
+    #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     aws-region: eu-west-1
 
     - name: Upload tar.gz to S3
       if: ${{ env.SHOULD_DEPLOY == 'true' }}
       run: |
-        DEST="s3://${S3_BUCKET_NAME}/${PR_NUMBER:-main}" # Use PR number or 'main' for non-PR events
-        aws --endpoint-url https://s3.cern.ch s3 cp ${DOC_LOCATION}/${DOC_DIR}.tar.gz ${DEST}/${DOC_DIR}.tar.gz
+        DEST="s3://root/${PR_NUMBER:-}" # Use PR number or 'main' for non-PR events
+        aws --endpoint-url https://s3.cern.ch s3 sync --delete build/${PR_NUMBER:-} ${DEST}
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
