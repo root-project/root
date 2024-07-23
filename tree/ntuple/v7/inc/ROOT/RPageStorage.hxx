@@ -43,7 +43,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class RFieldBase;
 class RNTupleModel;
 
 namespace Internal {

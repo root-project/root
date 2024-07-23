@@ -15,7 +15,6 @@
 
 #include <ROOT/RCluster.hxx>
 #include <ROOT/RClusterPool.hxx>
-#include <ROOT/RField.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
