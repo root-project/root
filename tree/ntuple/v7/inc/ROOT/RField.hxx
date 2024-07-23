@@ -415,9 +415,10 @@ protected:
    /// TClass checksum cached from the descriptor after a call to `ConnectPageSource()`. Only set
    /// for classes with dictionaries.
    std::uint32_t fOnDiskTypeChecksum = 0;
-   /// Points into the static vector GetColumnRepresentations().GetSerializationTypes() when SetColumnRepresentative
-   /// is called.  Otherwise GetColumnRepresentative returns the default representation.
-   const ColumnRepresentation_t *fColumnRepresentative = nullptr;
+   /// Pointers into the static vector GetColumnRepresentations().GetSerializationTypes() when
+   /// SetColumnRepresentative(s) is called.  Otherwise (if empty) GetColumnRepresentative() returns the
+   /// default representation.
+   std::vector<std::reference_wrapper<const ColumnRepresentation_t>> fColumnRepresentatives;
 
    /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
    /// for all their column representations.
@@ -732,7 +733,7 @@ public:
    /// an exception is thrown
    void SetColumnRepresentative(const ColumnRepresentation_t &representative);
    /// Whether or not an explicit column representative was set
-   bool HasDefaultColumnRepresentative() const { return fColumnRepresentative == nullptr; }
+   bool HasDefaultColumnRepresentative() const { return fColumnRepresentatives.empty(); }
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
    virtual std::uint32_t GetFieldVersion() const { return 0; }
