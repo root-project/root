@@ -21,6 +21,7 @@ HEADERS
   ROOT/RColumnElement.hxx
   ROOT/REntry.hxx
   ROOT/RField.hxx
+  ROOT/RFieldBase.hxx
   ROOT/RFieldVisitor.hxx
   ROOT/RMiniFile.hxx
   ROOT/RNTuple.hxx

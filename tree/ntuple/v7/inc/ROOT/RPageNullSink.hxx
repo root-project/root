@@ -17,7 +17,7 @@
 #define ROOT7_RPageNullSink
 
 #include <ROOT/RColumn.hxx>
-#include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RPageStorage.hxx>
 

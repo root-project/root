@@ -16,7 +16,7 @@
 #include <ROOT/RNTupleFillContext.hxx>
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RNTupleMetrics.hxx>
 #include <ROOT/RNTupleModel.hxx>

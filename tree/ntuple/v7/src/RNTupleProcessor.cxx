@@ -15,7 +15,7 @@
 
 #include <ROOT/RNTupleProcessor.hxx>
 
-#include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
 
 ROOT::Experimental::NTupleSize_t
 ROOT::Experimental::Internal::RNTupleProcessor::ConnectNTuple(const RNTupleSourceSpec &ntuple)
