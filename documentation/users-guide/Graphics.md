@@ -262,7 +262,7 @@ of the class. When the mouse is moved or a button pressed/released, the
 in all it's pads and for each object calls some standard methods to make
 the object react to the event (mouse movement, click or whatever).
 
-The second one is `DistanceToPrimitive(px,py)`. This function computes a
+The second one is `DistancetoPrimitive(px,py)`. This function computes a
 "distance" to an object from the mouse position at the pixel position
 (`px`, `py`, see definition at the end of this paragraph) and returns
 this distance in pixel units. The selected object will be the one with
@@ -524,7 +524,7 @@ known ahead of time.
 #### The Pixel Coordinate System
 
 The least common is the pixel coordinate system, used by functions such
-as `DistanceToPrimitive()` and `ExecuteEvent()`. Its primary use is for
+as `DistancetoPrimitive()` and `ExecuteEvent()`. Its primary use is for
 cursor position, which is always given in pixel coordinates. If
 (`px,py`) is the cursor position, `px=0` and `py=0` corresponds to the
 top-left corner of the pad, which is the standard convention in
