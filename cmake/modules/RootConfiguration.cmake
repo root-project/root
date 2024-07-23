@@ -586,8 +586,6 @@ string(REGEX REPLACE "(^|[ ]*)-W[^ ]*" "" __cflags "${CMAKE_C_FLAGS}")
 if(MSVC)
   string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cxxflags "${__cxxflags}")
   string(REPLACE "-I${CMAKE_SOURCE_DIR}/build/win" "" __cflags "${__cflags}")
-  string(REPLACE "-FIw32pragma.h -FIsehmap.h" "" __cxxflags "${__cxxflags}")
-  string(REPLACE "-FIw32pragma.h -FIsehmap.h" "" __cflags "${__cflags}")
 endif()
 
 if (cxxmodules)
