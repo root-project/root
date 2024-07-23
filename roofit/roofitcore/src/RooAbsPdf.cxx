@@ -2174,9 +2174,9 @@ RooPlot* RooAbsPdf::plotOn(RooPlot* frame, RooLinkedList& cmdList) const
     // Obtain direct selection
     std::unique_ptr<RooArgSet> dirSelNodes;
     if (compSet) {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectCommon(*compSet)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectCommon(*compSet)};
     } else {
-      dirSelNodes.reset(static_cast<RooArgSet*>(branchNodeSet.selectByName(compSpec)));
+      dirSelNodes = std::unique_ptr<RooArgSet>{branchNodeSet.selectByName(compSpec)};
     }
     if (!dirSelNodes->empty()) {
       coutI(Plotting) << "RooAbsPdf::plotOn(" << GetName() << ") directly selected PDF components: " << *dirSelNodes << endl ;
@@ -2321,7 +2321,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   // Decode command line arguments
   std::unique_ptr<RooArgSet> params{getParameters(frame->getNormVars())} ;
   if(RooArgSet* requestedParams = pc.getSet("params")) {
-    params = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(params->selectCommon(*requestedParams))};
+    params = std::unique_ptr<RooArgSet>{params->selectCommon(*requestedParams)};
   }
   paramOn(frame,*params,showc,label,xmin,xmax,ymax,formatCmd);
 
