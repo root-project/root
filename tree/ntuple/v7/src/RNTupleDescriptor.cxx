@@ -15,7 +15,7 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RField.hxx>
+#include <ROOT/RFieldBase.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
