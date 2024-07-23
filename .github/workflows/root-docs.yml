@@ -197,14 +197,10 @@ jobs:
       shell: bash
       run: |
         source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-        rm -rf ${DOC_DIR} ${DOC_LOCATION}/${DOC_DIR}_TMP
         export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
 
         cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
         make -j$(nproc)
-        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
-            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
-        fi
         mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
@@ -221,6 +217,14 @@ jobs:
         tar cf $tarnamexz1 ${DOC_DIR}
         xz -T5 -f $tarnamexz1
         ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
+    
+    # Upload to Github
+    - name: Upoad rootdoc
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: rootdoc
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
 
     # Upload to GitHub as an artifact (optional)
     - name: Upload tar.gz
