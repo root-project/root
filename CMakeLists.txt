@@ -40,6 +40,9 @@ include(cmake/modules/CaptureCommandLine.cmake)
 
 project(ROOT)
 
+message(STATUS "Sleeping for 6000 seconds = 100 minutes...")
+execute_process(COMMAND ${CMAKE_COMMAND} -E sleep 6000)
+
 #---Set the locale to default C to prevent issued due to localization of commands---------------
 # This is necessary as we for example call `clang -v` and parse its output. But on a localized
 # program, the output parsing is much more error prone as certrain strings we're looking for
