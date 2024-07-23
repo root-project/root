@@ -193,15 +193,7 @@ template <>
 std::optional<std::string> ConvertArg<std::string>(const char *arg) { return arg; }
 
 template <>
-std::optional<int> ConvertArg<int>(const char *arg)
-{ 
-   try {
-      return StrToInt(arg);
-   } catch (const std::exception &e) {
-      std::cerr << "[err] Failed to parse int flag '" << arg << "': " << e.what() << "\n";
-      return {};
-   }
-}
+std::optional<int> ConvertArg<int>(const char *arg) {  return StrToInt(arg); }
 
 template <>
 std::optional<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
