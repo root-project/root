@@ -213,32 +213,21 @@ jobs:
 
     - name: Run Doxygen
       shell: bash
-      env:
-        GITTAG: ${{ env.gittag }}
-        DOCDIR: ${{ env.DOC_DIR }}
-        DOCDIR_TMP: ${{ env.DOC_LOCATION }}/${{ env.DOC_DIR }}_TMP
-        DOCDIR_FINAL: ${{ env.DOC_LOCATION }}/${{ env.DOC_DIR }}
-        SRCDIR: ${{ env.DOC_LOCATION }}/src/${{ env.gittag }}
-        BUILDDIR: ${{ env.DOC_LOCATION }}/src/${{ env.gittag }}.build
       run: |
-        source $BUILDDIR/bin/thisroot.sh
-        echo "Using $(which root) to generate the doxygen guide..."
-  
-        rm -rf $DOCDIR_FINAL $DOCDIR_TMP
-        export DOXYGEN_OUTPUT_DIRECTORY=$DOCDIR_TMP
-  
-        if [ -d $SRCDIR/documentation/doxygen ]; then
-          cd $SRCDIR/documentation/doxygen
-          make -j$(nproc)
-          cd $GITHUB_WORKSPACE
-          mv $DOCDIR_TMP/html $DOCDIR_FINAL
-          if [ -d $DOCDIR_TMP/notebooks ]; then
-            mv $DOCDIR_TMP/notebooks $DOCDIR_FINAL/notebooks
-          fi
-        else
-          echo "No doxygen documentation for this version"
-        fi
+        source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
+        rm -rf ${DOC_LOCATION}/${DOC_DIR} ${DOC_LOCATION}/${DOC_DIR}_TMP
 
+        export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
+  
+        cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
+        make -j$(nproc)
+        cd $GITHUB_WORKSPACE
+
+        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
+        if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
+          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+        fi
+        
     # The output DOCU_LOCATION set in documentation/doxygen/CMakeLists.txt
     - name: Create documentation archives
       working-directory: ${{ env.DOC_LOCATION }}
