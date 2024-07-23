@@ -395,9 +395,9 @@ void RooCompositeDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarS
 void RooCompositeDataStore::setArgStatus(const RooArgSet& set, bool active)
 {
   for (auto const& item : _dataMap) {
-    RooArgSet* subset = static_cast<RooArgSet*>(set.selectCommon(*item.second->get())) ;
-    item.second->setArgStatus(*subset,active) ;
-    delete subset ;
+    RooArgSet subset;
+    set.selectCommon(*item.second->get(), subset);
+    item.second->setArgStatus(subset,active) ;
   }
   return ;
 }

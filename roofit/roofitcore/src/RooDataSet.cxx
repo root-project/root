@@ -494,14 +494,14 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 
     // process StoreError requests
     if (errorSet) {
-      std::unique_ptr<RooArgSet> intErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*errorSet))};
+      std::unique_ptr<RooArgSet> intErrorSet{_vars.selectCommon(*errorSet)};
       intErrorSet->setAttribAll("StoreError") ;
       for(RooAbsArg* arg : *intErrorSet) {
         arg->attachToStore(*_dstore) ;
       }
     }
     if (asymErrorSet) {
-      std::unique_ptr<RooArgSet> intAsymErrorSet{static_cast<RooArgSet*>(_vars.selectCommon(*asymErrorSet))};
+      std::unique_ptr<RooArgSet> intAsymErrorSet{_vars.selectCommon(*asymErrorSet)};
       intAsymErrorSet->setAttribAll("StoreAsymError") ;
       for(RooAbsArg* arg : *intAsymErrorSet) {
         arg->attachToStore(*_dstore) ;
