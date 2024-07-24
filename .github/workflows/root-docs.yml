@@ -236,7 +236,14 @@ jobs:
       with:
         name: rootdoc.tar.xz
         path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
-  
+
+    - name: Upload root_doc
+      if:   ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: rootdoc
+        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}
+
     # Upload to Amazon S3
     # - name: Checkout code
     #   uses: actions/checkout@v2
@@ -248,6 +255,13 @@ jobs:
     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     #     aws-region: eu-west-1
 
+       # Do I need this step?
+    - name: Install AWS CLI
+      run: |
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+        
     - name: Upload tar.gz to S3
       if: ${{ env.SHOULD_DEPLOY == 'true' }}
       run: |
