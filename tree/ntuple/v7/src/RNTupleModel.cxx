@@ -479,10 +479,12 @@ std::size_t ROOT::Experimental::RNTupleModel::EstimateWriteMemoryUsage(const RNT
    for (auto &&field : *fFieldZero) {
       nColumns += field.GetColumnRepresentative().size();
    }
-   bytes += nColumns * pageBufferPerColumn;
+   const std::size_t pageBuffersPerModel = nColumns * pageBufferPerColumn;
+   bytes += pageBuffersPerModel;
 
-   // If using buffered writing with RPageSinkBuf, we keep at least the compressed pages in memory.
+   // If using buffered writing with RPageSinkBuf, we create a clone of the model and keep at least the compressed pages in memory.
    if (options.GetUseBufferedWrite()) {
+      bytes += pageBuffersPerModel;
       // Use the target cluster size as an estimate for all compressed pages combined.
       bytes += options.GetApproxZippedClusterSize();
       int compression = options.GetCompression();
