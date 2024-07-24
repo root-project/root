@@ -2186,11 +2186,6 @@ class RIntegralField {
 template <>
 class RIntegralField<std::int8_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2227,11 +2222,6 @@ public:
 template <>
 class RIntegralField<std::uint8_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2268,11 +2258,6 @@ public:
 template <>
 class RIntegralField<std::int16_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2309,11 +2294,6 @@ public:
 template <>
 class RIntegralField<std::uint16_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2350,11 +2330,6 @@ public:
 template <>
 class RIntegralField<std::int32_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2391,11 +2366,6 @@ public:
 template <>
 class RIntegralField<std::uint32_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2434,11 +2404,6 @@ public:
 template <>
 class RIntegralField<std::uint64_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2475,11 +2440,6 @@ public:
 template <>
 class RIntegralField<std::int64_t> : public RFieldBase {
 protected:
-   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
-   {
-      return std::make_unique<RIntegralField>(newName);
-   }
-
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
@@ -2575,6 +2535,12 @@ class RField<T, typename std::enable_if<std::is_integral_v<T>>::type> final
    static_assert(sizeof(T) == sizeof(MappedType), "invalid size of mapped type");
    static_assert(std::is_signed_v<T> == std::is_signed_v<MappedType>, "invalid signedness of mapped type");
    using BaseType = RIntegralField<MappedType>;
+
+protected:
+   std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RField>(newName);
+   }
 
 public:
    RField(std::string_view name) : RIntegralField<MappedType>(name) {}
