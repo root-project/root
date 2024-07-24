@@ -34,7 +34,7 @@ class NTupleModel(unittest.TestCase):
         options.SetApproxUnzippedPageSize(PageSize)
         options.SetApproxZippedClusterSize(ClusterSize)
 
-        Expected = 4 * 3 * PageSize + 3 * ClusterSize
+        Expected = 4 * 3 * PageSize * 2 + 3 * ClusterSize
         self.assertEqual(model.EstimateWriteMemoryUsage(options), Expected)
 
 
