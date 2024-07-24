@@ -1,4 +1,4 @@
-#!/usr/bin/env python4
+#!/usr/bin/env python3
 #------------------------------------------------------------------------------
 # CLING - the C++ LLVM-based InterpreterG :)
 # author:  Min RK
