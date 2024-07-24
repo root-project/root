@@ -229,7 +229,7 @@ template <typename PodT, ROOT::Experimental::EColumnType ColumnT>
 static void AddField(RNTupleModel &model, const std::string &fieldName)
 {
    auto fld = std::make_unique<RField<PodT>>(fieldName);
-   fld->SetColumnRepresentative({ColumnT});
+   fld->SetColumnRepresentatives({{ColumnT}});
    model.AddField(std::move(fld));
 }
 
