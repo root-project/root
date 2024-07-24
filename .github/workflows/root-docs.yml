@@ -196,21 +196,30 @@ jobs:
     - name: Run Doxygen
       shell: bash
       run: |
-        source ${DOC_LOCATION}/ROOT-CI/build/bin/thisroot.sh
-        export DOXYGEN_OUTPUT_DIRECTORY=${DOC_LOCATION}/${DOC_DIR}_TMP
+        echo "Sourcing thisroot.sh..."
+        source /github/home/ROOT-CI/build/bin/thisroot.sh
+        DOXYGEN_OUTPUT_DIRECTORY=/github/home/rootdoc_TMP
 
-        cd ${DOC_LOCATION}/ROOT-CI/src/documentation/doxygen
-        make -j$(nproc)
+        echo "Changing directory to /github/home/ROOT-CI/src/documentation/doxygen..."
+        cd /github/home/ROOT-CI/src/documentation/doxygen || { echo "Failed to change directory"; exit 1; }
 
-        if [ -d ${DOC_LOCATION}/${DOC_DIR}/html ]; then
-            rm -rf ${DOC_LOCATION}/${DOC_DIR}/html
+        echo "Running make..."
+        make -j$(nproc) || { echo "Make failed"; exit 1; }
+
+        echo "Checking if /github/home/rootdoc/html exists..."
+        if [ -d /github/home/rootdoc/html ]; then
+            echo "Directory /github/home/rootdoc/html exists. Removing..."
+            rm -rf /github/home/rootdoc/html || { echo "Failed to remove /github/home/rootdoc/html"; exit 1; }
         fi
 
-        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html ${DOC_LOCATION}/${DOC_DIR}
+        echo "Moving generated HTML to /github/home/rootdoc..."
+        mv -f ${DOXYGEN_OUTPUT_DIRECTORY}/html /github/home/rootdoc || { echo "Failed to move HTML"; exit 1; }
+
+        echo "Checking if ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists..."
         if [ -d ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ]; then
-          mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
+            echo "Directory ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks exists. Moving..."
+            mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks /github/home/rootdoc/notebooks || { echo "Failed to move notebooks"; exit 1; }
         fi
-
     # - name: Create documentation archives
     #   working-directory: ${{ env.DOC_LOCATION }}
     #   shell: bash
