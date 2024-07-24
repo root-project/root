@@ -733,7 +733,7 @@ public:
    /// Fixes a column representative. This can only be done _before_ connecting the field to a page sink.
    /// Otherwise, or if the provided representation is not in the list of GetColumnRepresentations,
    /// an exception is thrown
-   void SetColumnRepresentative(const ColumnRepresentation_t &representative);
+   void SetColumnRepresentatives(const RColumnRepresentations::Selection_t &representatives);
    /// Whether or not an explicit column representative was set
    bool HasDefaultColumnRepresentative() const { return fColumnRepresentatives.empty(); }
 
@@ -1538,8 +1538,8 @@ public:
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override = default;
 
-   void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
-   void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex64}); }
+   void SetDense() { SetColumnRepresentatives({{EColumnType::kBit}}); }
+   void SetSparse() { SetColumnRepresentatives({{EColumnType::kSplitIndex64}}); }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };

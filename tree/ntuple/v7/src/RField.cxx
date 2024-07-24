@@ -1006,15 +1006,19 @@ ROOT::Experimental::RFieldBase::GetColumnRepresentative() const
    return GetColumnRepresentations().GetSerializationDefault();
 }
 
-void ROOT::Experimental::RFieldBase::SetColumnRepresentative(const ColumnRepresentation_t &representative)
+void ROOT::Experimental::RFieldBase::SetColumnRepresentatives(
+   const RColumnRepresentations::Selection_t &representatives)
 {
    if (fState != EState::kUnconnected)
       throw RException(R__FAIL("cannot set column representative once field is connected"));
    const auto &validTypes = GetColumnRepresentations().GetSerializationTypes();
-   auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), representative);
-   if (itRepresentative == std::end(validTypes))
-      throw RException(R__FAIL("invalid column representative"));
-   fColumnRepresentatives = {*itRepresentative};
+   fColumnRepresentatives.clear();
+   for (const auto &r : representatives) {
+      auto itRepresentative = std::find(validTypes.begin(), validTypes.end(), r);
+      if (itRepresentative == std::end(validTypes))
+         throw RException(R__FAIL("invalid column representative"));
+      fColumnRepresentatives.emplace_back(*itRepresentative);
+   }
 }
 
 const ROOT::Experimental::RFieldBase::ColumnRepresentation_t &
@@ -1071,7 +1075,7 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
          default: break;
          }
       }
-      SetColumnRepresentative(rep);
+      SetColumnRepresentatives({rep});
    }
 
    if (options.GetHasSmallClusters()) {
@@ -1083,11 +1087,11 @@ void ROOT::Experimental::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOpt
          default: break;
          }
       }
-      SetColumnRepresentative(rep);
+      SetColumnRepresentatives({rep});
    }
 
    if (fTypeAlias == "Double32_t")
-      SetColumnRepresentative({EColumnType::kSplitReal32});
+      SetColumnRepresentatives({{EColumnType::kSplitReal32}});
 }
 
 void ROOT::Experimental::RFieldBase::ConnectPageSink(Internal::RPageSink &pageSink, NTupleSize_t firstEntry)
@@ -1325,7 +1329,7 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
 
 void ROOT::Experimental::RField<float>::SetHalfPrecision()
 {
-   SetColumnRepresentative({EColumnType::kReal16});
+   SetColumnRepresentatives({{EColumnType::kReal16}});
 }
 
 //------------------------------------------------------------------------------

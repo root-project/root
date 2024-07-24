@@ -698,19 +698,19 @@ TEST(RNTuple, Int64)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int64_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt64});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int64_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt64});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt64}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint64_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt64});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt64}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint64_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt64});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt64}});
    model->AddField(std::move(f4));
 
    {
@@ -768,19 +768,19 @@ TEST(RNTuple, Int32)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int32_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt32});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int32_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt32});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt32}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint32_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt32});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt32}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint32_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt32});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt32}});
    model->AddField(std::move(f4));
 
    {
@@ -838,19 +838,19 @@ TEST(RNTuple, Int16)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<std::int16_t>>("i1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt16});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kInt16}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<std::int16_t>>("i2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt16});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitInt16}});
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint16_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt16});
+   f3->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kUInt16}});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint16_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt16});
+   f4->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitUInt16}});
    model->AddField(std::move(f4));
 
    {
@@ -1057,11 +1057,11 @@ TEST(RNTuple, Double)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<double>>("d1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kReal64});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal64}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<double>>("d2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal64});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal64}});
    model->AddField(std::move(f2));
 
    {
@@ -1090,11 +1090,11 @@ TEST(RNTuple, Float)
    auto model = RNTupleModel::Create();
 
    auto f1 = std::make_unique<RField<float>>("f1");
-   f1->SetColumnRepresentative({ROOT::Experimental::EColumnType::kReal32});
+   f1->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kReal32}});
    model->AddField(std::move(f1));
 
    auto f2 = std::make_unique<RField<float>>("f2");
-   f2->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitReal32});
+   f2->SetColumnRepresentatives({{ROOT::Experimental::EColumnType::kSplitReal32}});
    model->AddField(std::move(f2));
 
    {
@@ -1482,13 +1482,13 @@ TEST(RNTuple, Casting)
    FileRaii fileGuard("test_ntuple_casting.root");
 
    auto fldI1 = RFieldBase::Create("i1", "std::int32_t").Unwrap();
-   fldI1->SetColumnRepresentative({EColumnType::kInt32});
+   fldI1->SetColumnRepresentatives({{EColumnType::kInt32}});
    auto fldI2 = RFieldBase::Create("i2", "std::int32_t").Unwrap();
-   fldI2->SetColumnRepresentative({EColumnType::kSplitInt32});
+   fldI2->SetColumnRepresentatives({{EColumnType::kSplitInt32}});
    auto fldF = ROOT::Experimental::RFieldBase::Create("F", "float").Unwrap();
-   fldF->SetColumnRepresentative({EColumnType::kReal32});
+   fldF->SetColumnRepresentatives({{EColumnType::kReal32}});
    try {
-      fldF->SetColumnRepresentative({EColumnType::kBit});
+      fldF->SetColumnRepresentatives({{EColumnType::kBit}});
    } catch (const RException &err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("invalid column representative"));
    }
@@ -1507,7 +1507,7 @@ TEST(RNTuple, Casting)
    try {
       auto model = RNTupleModel::Create();
       auto f = ROOT::Experimental::RFieldBase::Create("i1", "std::int32_t").Unwrap();
-      f->SetColumnRepresentative({EColumnType::kInt32});
+      f->SetColumnRepresentatives({{EColumnType::kInt32}});
       model->AddField(std::move(f));
       auto reader = RNTupleReader::Open(std::move(model), "ntuple", fileGuard.GetPath());
       FAIL() << "should not be able fix column representation when model is connected to a page source";
@@ -1592,7 +1592,7 @@ TEST(RNTuple, Double32)
    FileRaii fileGuard("test_ntuple_double32.root");
 
    auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
-   fldD1->SetColumnRepresentative({EColumnType::kReal32});
+   fldD1->SetColumnRepresentatives({{EColumnType::kReal32}});
    auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
    EXPECT_EQ("Double32_t", fldD2->GetTypeAlias());
 
