@@ -606,8 +606,6 @@ public:
       /// The descriptor ids of the columns ordered by index id
       std::vector<DescriptorId_t> fColumns = {};
 
-      void CollectColumnIds(DescriptorId_t fieldId);
-
    public:
       class RIterator {
       private:

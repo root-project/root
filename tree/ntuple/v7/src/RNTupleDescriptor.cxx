@@ -378,20 +378,12 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
    return fields;
 }
 
-void ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::CollectColumnIds(DescriptorId_t fieldId) {
-   for (unsigned int i = 0; true; ++i) {
-      auto logicalId = fNTuple.FindLogicalColumnId(fieldId, i);
-      if (logicalId == kInvalidDescriptorId)
-         break;
-      fColumns.emplace_back(logicalId);
-   }
-}
-
 ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
    const RNTupleDescriptor &ntuple, const DescriptorId_t fieldId)
    : fNTuple(ntuple)
 {
-   CollectColumnIds(fieldId);
+   const auto &fieldDesc = ntuple.GetFieldDescriptor(fieldId);
+   fColumns = fieldDesc.GetLogicalColumnIds();
 }
 
 ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
@@ -404,7 +396,9 @@ ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescrip
       auto currFieldId = fieldIdQueue.front();
       fieldIdQueue.pop_front();
 
-      CollectColumnIds(currFieldId);
+      const auto &field = ntuple.GetFieldDescriptor(currFieldId);
+      const auto &columns = field.GetLogicalColumnIds();
+      fColumns.insert(fColumns.end(), columns.begin(), columns.end());
 
       for (const auto &field : ntuple.GetFieldIterable(currFieldId)) {
          auto fieldId = field.GetId();
