@@ -56,9 +56,26 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include <deque>
 #include <algorithm>
 
-using std::deque, std::endl, std::ostream, std::list, std::vector, std::cout, std::setw, std::min;
+using std::endl, std::ostream, std::list, std::vector, std::cout, std::min;
 
 ClassImp(RooCurve);
+
+namespace {
+
+// Helpers to manage points
+struct Point {
+   double x;
+   double y;
+};
+
+inline Point getPoint(TGraph const &gr, int i)
+{
+   Point p;
+   gr.GetPoint(i, p.x, p.y);
+   return p;
+}
+
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,28 +200,22 @@ RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, cons
   SetTitle(title) ;
 
   // Make deque of points in X
-  deque<double> pointList ;
-  double x;
-  double y;
+  std::deque<double> pointList ;
 
   // Add X points of C1
-  Int_t i1;
   Int_t n1 = c1.GetN();
-  for (i1=0 ; i1<n1 ; i1++) {
-    c1.GetPoint(i1,x,y) ;
-    pointList.push_back(x) ;
+  for (int i1=0 ; i1<n1 ; i1++) {
+    pointList.push_back(c1.GetPointX(i1));
   }
 
   // Add X points of C2
-  Int_t i2;
   Int_t n2 = c2.GetN();
-  for (i2=0 ; i2<n2 ; i2++) {
-    c2.GetPoint(i2,x,y) ;
-    pointList.push_back(x) ;
+  for (int i2=0 ; i2<n2 ; i2++) {
+    pointList.push_back(c2.GetPointX(i2));
   }
 
   // Sort X points
-  sort(pointList.begin(),pointList.end()) ;
+  std::sort(pointList.begin(),pointList.end()) ;
 
   // Loop over X points
   double last(-RooNumber::infinity()) ;
@@ -248,19 +259,15 @@ void RooCurve::shiftCurveToZero()
 
    // First iteration, find current lowest point
    for (int i = 1; i < GetN() - 1; i++) {
-      double x;
-      double y;
-      GetPoint(i, x, y);
+      double y = GetPointY(i);
       minVal = std::min(y, minVal);
       maxVal = std::max(y, maxVal);
    }
 
    // Second iteration, lower all points by minVal
    for (int i = 1; i < GetN() - 1; i++) {
-      double x;
-      double y;
-      GetPoint(i, x, y);
-      SetPoint(i, x, y - minVal);
+      Point point = getPoint(*this, i);
+      SetPoint(i, point.x, point.y - minVal);
    }
 
    setYAxisLimits(0, maxVal - minVal);
@@ -514,7 +521,7 @@ void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/,
   os << indent << "  Contains " << n << " points" << endl;
   os << indent << "  Graph points:" << endl;
   for(Int_t i= 0; i < n; i++) {
-    os << indent << setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
+    os << indent << std::setw(3) << i << ") x = " << fX[i] << " , y = " << fY[i] << endl;
   }
 }
 
@@ -527,44 +534,34 @@ void RooCurve::printMultiline(ostream& os, Int_t /*contents*/, bool /*verbose*/,
 
 double RooCurve::chiSquare(const RooHist& hist, Int_t nFitParam) const
 {
-  Int_t i;
   Int_t np = hist.GetN();
-  double x;
-  double y;
-  double eyl;
-  double eyh;
-  double exl;
-  double exh;
 
   // Find starting and ending bin of histogram based on range of RooCurve
-  double xstart;
-  double xstop;
-
-  GetPoint(0,xstart,y) ;
-  GetPoint(GetN()-1,xstop,y) ;
+  double xstart = GetPointX(0);
+  double xstop = GetPointX(GetN()-1);
 
   Int_t nbin(0) ;
 
   ROOT::Math::KahanSum<double> chisq;
-  for (i=0 ; i<np ; i++) {
+  for (int i=0 ; i<np ; i++) {
 
     // Retrieve histogram contents
-    hist.GetPoint(i,x,y) ;
+    Point point = getPoint(hist, i);
 
     // Check if point is in range of curve
-    if (x<xstart || x>xstop) continue ;
+    if (point.x<xstart || point.x>xstop) continue ;
 
-    eyl = hist.GetEYlow()[i] ;
-    eyh = hist.GetEYhigh()[i] ;
-    exl = hist.GetEXlow()[i] ;
-    exh = hist.GetEXhigh()[i] ;
+    double eyl = hist.GetEYlow()[i] ;
+    double eyh = hist.GetEYhigh()[i] ;
+    double exl = hist.GetEXlow()[i] ;
+    double exh = hist.GetEXhigh()[i] ;
 
     // Integrate function over this bin
-    double avg = average(x-exl,x+exh) ;
+    double avg = average(point.x-exl,point.x+exh) ;
 
     // Add pull^2 to chisq
-    if (y!=0) {
-      double pull = (y>avg) ? ((y-avg)/eyl) : ((y-avg)/eyh) ;
+    if (point.y!=0) {
+      double pull = (point.y>avg) ? ((point.y-avg)/eyl) : ((point.y-avg)/eyh) ;
       chisq += pull*pull ;
       nbin++ ;
     }
@@ -595,53 +592,42 @@ double RooCurve::average(double xFirst, double xLast) const
   // Find first and last mid points
   Int_t ifirst = findPoint(xFirst,1e10) ;
   Int_t ilast  = findPoint(xLast,1e10) ;
-  double xFirstPt;
-  double yFirstPt;
-  double xLastPt;
-  double yLastPt;
-  GetPoint(ifirst,xFirstPt,yFirstPt) ;
-  GetPoint(ilast,xLastPt,yLastPt) ;
+  Point firstPt = getPoint(*this, ifirst);
+  Point lastPt = getPoint(*this, ilast);
 
   double tolerance=1e-3*(xLast-xFirst) ;
 
   // Handle trivial scenario -- no midway points, point only at or outside given range
-  if (ilast-ifirst==1 &&(xFirstPt-xFirst)<-1*tolerance && (xLastPt-xLast)>tolerance) {
+  if (ilast-ifirst==1 &&(firstPt.x-xFirst)<-1*tolerance && (lastPt.x-xLast)>tolerance) {
     return 0.5*(yFirst+yLast) ;
   }
 
   // If first point closest to xFirst is at xFirst or before xFirst take the next point
   // as the first midway point
-  if ((xFirstPt-xFirst)<-1*tolerance) {
+  if ((firstPt.x-xFirst)<-1*tolerance) {
     ifirst++ ;
-    GetPoint(ifirst,xFirstPt,yFirstPt) ;
+    firstPt = getPoint(*this, ifirst);
   }
 
   // If last point closest to yLast is at yLast or beyond yLast the previous point
   // as the last midway point
-  if ((xLastPt-xLast)>tolerance) {
+  if ((lastPt.x-xLast)>tolerance) {
     ilast-- ;
-    GetPoint(ilast,xLastPt,yLastPt) ;
+    lastPt = getPoint(*this, ilast);
   }
 
-  double sum(0);
-  double x1;
-  double y1;
-  double x2;
-  double y2;
-
   // Trapezoid integration from lower edge to first midpoint
-  sum += (xFirstPt-xFirst)*(yFirst+yFirstPt)/2 ;
+  double sum = 0.5 * (firstPt.x-xFirst)*(yFirst+firstPt.y);
 
   // Trapezoid integration between midpoints
-  Int_t i ;
-  for (i=ifirst ; i<ilast ; i++) {
-    GetPoint(i,x1,y1) ;
-    GetPoint(i+1,x2,y2) ;
-    sum += (x2-x1)*(y1+y2)/2 ;
+  for (int i=ifirst ; i<ilast ; i++) {
+    Point p1 = getPoint(*this, i) ;
+    Point p2 = getPoint(*this, i+1) ;
+    sum += 0.5 * (p2.x-p1.x)*(p1.y+p2.y);
   }
 
   // Trapezoid integration from last midpoint to upper edge
-  sum += (xLast-xLastPt)*(yLastPt+yLast)/2 ;
+  sum += 0.5 * (xLast-lastPt.x)*(lastPt.y+yLast);
   return sum/(xLast-xFirst) ;
 }
 
@@ -654,13 +640,10 @@ double RooCurve::average(double xFirst, double xLast) const
 Int_t RooCurve::findPoint(double xvalue, double tolerance) const
 {
   double delta(std::numeric_limits<double>::max());
-  double x;
-  double y;
-  Int_t i;
   Int_t n = GetN();
   Int_t ibest(-1) ;
-  for (i=0 ; i<n ; i++) {
-    GetPoint(i,x,y);
+  for (int i=0 ; i<n ; i++) {
+    double x = GetPointX(i);
     if (std::abs(xvalue-x)<delta) {
       delta = std::abs(xvalue-x) ;
       ibest = i ;
@@ -683,36 +666,32 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
   int ibest = findPoint(xvalue,1e10) ;
 
   // Get position of best point
-  double xbest;
-  double ybest;
-  GetPoint(ibest,xbest,ybest) ;
+  Point pbest = getPoint(*this, ibest);
 
   // Handle trivial case of being dead on
-  if (std::abs(xbest-xvalue)<tolerance) {
-    return ybest ;
+  if (std::abs(pbest.x-xvalue)<tolerance) {
+    return pbest.y;
   }
 
   // Get nearest point on other side w.r.t. xvalue
-  double xother;
-  double yother;
   double retVal(0);
-  if (xbest<xvalue) {
+  if (pbest.x<xvalue) {
     if (ibest==n-1) {
       // Value beyond end requested -- return value of last point
-      return ybest ;
+      return pbest.y ;
     }
-    GetPoint(ibest+1,xother,yother) ;
-    if (xother==xbest) return ybest ;
-    retVal = ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ;
+    Point pother = getPoint(*this, ibest+1);
+    if (pother.x==pbest.x) return pbest.y ;
+    retVal = pbest.y + (pother.y-pbest.y)*(xvalue-pbest.x)/(pother.x-pbest.x) ;
 
   } else {
     if (ibest==0) {
       // Value before 1st point requested -- return value of 1st point
-      return ybest ;
+      return pbest.y ;
     }
-    GetPoint(ibest-1,xother,yother) ;
-    if (xother==xbest) return ybest ;
-    retVal = yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
+    Point pother = getPoint(*this, ibest-1);
+    if (pother.x==pbest.x) return pbest.y ;
+    retVal = pother.y + (pbest.y-pother.y)*(xvalue-pother.x)/(pbest.x-pother.x) ;
   }
 
   return retVal ;
