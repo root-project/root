@@ -434,13 +434,11 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       node = &RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes").set_map()[arg->GetName()].set_map();
    };
 
-   // We have to remember if the variable was a constant RooRealVar or a
-   // RooConstVar in RooFit to reconstruct the workspace correctly. The HS3
-   // standard does not make this distinction.
-   bool isRooConstVar = dynamic_cast<RooConstVar const *>(arg);
-   if (isRooConstVar) {
-      initializeNode();
-      (*node)["is_const_var"] << 1;
+   // RooConstVars are not a thing in HS3, and also for RooFit they are not
+   // that important: they are just constants. So we don't need to remember
+   // any intormation about them.
+   if (dynamic_cast<RooConstVar const *>(arg)) {
+      return;
    }
 
    // export all string attributes of an object
