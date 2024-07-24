@@ -374,7 +374,7 @@ std::unique_ptr<RooAbsPdf> createSimPdfModel(RooRealVar &x, std::string const &c
 
    RooExponential expo(prefix("expo").c_str(), "expo", x, c);
 
-   // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+   // Create two Gaussian PDFs g1(x,mean1,sigma) and g2(x,mean2,sigma) and their parameters
    RooRealVar mean1(prefix("mean1").c_str(), "mean of gaussians", 3, 0, 5);
    RooRealVar sigma1(prefix("sigma1").c_str(), "width of gaussians", 0.8, .01, 3.0);
    RooRealVar mean2(prefix("mean2").c_str(), "mean of gaussians", 6, 5, 10);

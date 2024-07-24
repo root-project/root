@@ -69,8 +69,6 @@ object onto a one-dimensional plot.
 #include <cstring>
 #include <iostream>
 
-using std::endl, std::ostream;
-
 ClassImp(RooPlot);
 
 
@@ -95,9 +93,10 @@ RooPlot::RooPlot()
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of RooPlot with range [xmin,xmax]
 
-RooPlot::RooPlot(double xmin, double xmax)
+RooPlot::RooPlot(double xmin, double xmax, int nBins)
+  : _normBinWidth((xmax - xmin) / nBins)
 {
-  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
+  _hist = new TH1D(histName(),"A RooPlot",nBins,xmin,xmax) ;
   _hist->Sumw2(false) ;
   _hist->GetSumw2()->Set(0) ;
   _hist->SetDirectory(nullptr);
@@ -106,7 +105,6 @@ RooPlot::RooPlot(double xmin, double xmax)
   initialize();
 
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,34 +123,33 @@ RooPlot::RooPlot(double xmin, double xmax, double ymin, double ymax) :
   initialize();
 }
 
+namespace {
+
+const RooAbsRealLValue& validateFiniteLimits(const RooAbsRealLValue &var)
+{
+   if (!var.hasMin() || !var.hasMax()) {
+      std::stringstream ss;
+      ss << "RooPlot::RooPlot: cannot create plot for variable without finite limits: " << var.GetName();
+      oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
+      throw std::runtime_error(ss.str());
+   }
+   return var;
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct a two-dimensional RooPlot with ranges and properties taken
 /// from variables var1 and var2
 
-RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
-  _defYmax(0)
+RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2)
+   : RooPlot{validateFiniteLimits(var1),
+             validateFiniteLimits(var2),
+             var1.getMin(),
+             var1.getMax(),
+             var2.getMin(),
+             var2.getMax()}
 {
-  _hist = new TH1D(histName(),"A RooPlot",100,var1.getMin(),var1.getMax()) ;
-  _hist->Sumw2(false) ;
-  _hist->GetSumw2()->Set(0) ;
-  _hist->SetDirectory(nullptr);
-
-  if(!var1.hasMin() || !var1.hasMax()) {
-    coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
-    << var1.GetName() << endl;
-    return;
-  }
-  if(!var2.hasMin() || !var2.hasMax()) {
-    coutE(InputArguments) << "RooPlot::RooPlot: cannot create plot for variable without finite limits: "
-    << var1.GetName() << endl;
-    return;
-  }
-  SetMinimum(var2.getMin());
-  SetMaximum(var2.getMax());
-  SetXTitle(var1.getTitle(true));
-  SetYTitle(var2.getTitle(true));
-  initialize();
 }
 
 
@@ -161,20 +158,14 @@ RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2) :
 /// from variables var1 and var2 but with an overriding range definition
 /// of [xmin,xmax] x [ymin,ymax]
 
-RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2,
-       double xmin, double xmax, double ymin, double ymax) :
-  _defYmax(0)
+RooPlot::RooPlot(const RooAbsRealLValue &var1, const RooAbsRealLValue &var2, double xmin, double xmax, double ymin,
+                 double ymax)
+   : RooPlot{xmin, xmax}
 {
-  _hist = new TH1D(histName(),"A RooPlot",100,xmin,xmax) ;
-  _hist->Sumw2(false) ;
-  _hist->GetSumw2()->Set(0) ;
-  _hist->SetDirectory(nullptr);
-
-  SetMinimum(ymin);
-  SetMaximum(ymax);
-  SetXTitle(var1.getTitle(true));
-  SetYTitle(var2.getTitle(true));
-  initialize();
+   SetMinimum(ymin);
+   SetMaximum(ymax);
+   SetXTitle(var1.getTitle(true));
+   SetYTitle(var2.getTitle(true));
 }
 
 
@@ -218,10 +209,7 @@ RooPlot::RooPlot(const RooAbsRealLValue &var, double xmin, double xmax, Int_t nb
   TString xtitle= var.getTitle(true);
   SetXTitle(xtitle.Data());
 
-  TString title("A RooPlot of \"");
-  title.Append(var.getTitle());
-  title.Append("\"");
-  SetTitle(title.Data());
+  SetTitle("A RooPlot of \"" + var.getTitle() + "\"");
   initialize();
 }
 
@@ -378,7 +366,7 @@ void RooPlot::updateNormVars(const RooArgSet &vars)
 void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 {
   if(nullptr == obj) {
-    coutE(InputArguments) << fName << "::addObject: called with a null pointer" << endl;
+    coutE(InputArguments) << fName << "::addObject: called with a null pointer" << std::endl;
     return;
   }
   DrawOpt opt(drawOptions) ;
@@ -397,13 +385,13 @@ void RooPlot::addObject(TObject *obj, Option_t *drawOptions, bool invisible)
 void RooPlot::addTH1(TH1 *hist, Option_t *drawOptions, bool invisible)
 {
   if(nullptr == hist) {
-    coutE(InputArguments) << fName << "::addTH1: called with a null pointer" << endl;
+    coutE(InputArguments) << fName << "::addTH1: called with a null pointer" << std::endl;
     return;
   }
   // check that this histogram is really 1D
   if(1 != hist->GetDimension()) {
     coutE(InputArguments) << fName << "::addTH1: cannot plot histogram with "
-    << hist->GetDimension() << " dimensions" << endl;
+    << hist->GetDimension() << " dimensions" << std::endl;
     return;
   }
 
@@ -536,7 +524,7 @@ void RooPlot::addPlotable(RooPlotable *plotable, Option_t *drawOptions, bool inv
   // add this element to our list and remember its drawing option
   TObject *obj= plotable->crossCast();
   if(nullptr == obj) {
-    coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << endl;
+    coutE(InputArguments) << fName << "::add: cross-cast to TObject failed (nothing added)" << std::endl;
   }
   else {
     // if the frame axis is alphanumeric, the coordinates of the graph need to be translated to this binning
@@ -584,15 +572,15 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
 
     if (std::abs(rp->getFitRangeNEvt()/corFac-_normNumEvts)>1e-6) {
       coutI(Plotting) << "RooPlot::updateFitRangeNorm: New event count of " << rp->getFitRangeNEvt()/corFac
-            << " will supersede previous event count of " << _normNumEvts << " for normalization of PDF projections" << endl ;
+            << " will supersede previous event count of " << _normNumEvts << " for normalization of PDF projections" << std::endl ;
     }
 
     // Nominal bin width (i.e event density) is already locked in by previously drawn histogram
     // scale this histogram to match that density
     _normNumEvts = rp->getFitRangeNEvt()/corFac ;
     _normObj = rp ;
-    // cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << endl ;
-    // cout << "updating numevts to " << _normNumEvts << endl ;
+    // cout << "correction factor = " << _normBinWidth << "/" << rp->getFitRangeBinW() << std::endl ;
+    // cout << "updating numevts to " << _normNumEvts << std::endl ;
 
   } else {
 
@@ -602,7 +590,7 @@ void RooPlot::updateFitRangeNorm(const RooPlotable* rp, bool refreshNorm)
       _normBinWidth = rp->getFitRangeBinW() ;
     }
 
-    // cout << "updating numevts to " << _normNumEvts << endl ;
+    // cout << "updating numevts to " << _normNumEvts << std::endl ;
   }
 
 }
@@ -678,7 +666,7 @@ void RooPlot::Draw(Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Print frame name
 
-void RooPlot::printName(ostream& os) const
+void RooPlot::printName(std::ostream& os) const
 {
   os << GetName() ;
 }
@@ -687,7 +675,7 @@ void RooPlot::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print frame title
 
-void RooPlot::printTitle(ostream& os) const
+void RooPlot::printTitle(std::ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -696,7 +684,7 @@ void RooPlot::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print frame class name
 
-void RooPlot::printClassName(ostream& os) const
+void RooPlot::printClassName(std::ostream& os) const
 {
   os << ClassName() ;
 }
@@ -705,7 +693,7 @@ void RooPlot::printClassName(ostream& os) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooPlot::printArgs(ostream& os) const
+void RooPlot::printArgs(std::ostream& os) const
 {
   if (_plotVar) {
     os << "[" ;
@@ -719,7 +707,7 @@ void RooPlot::printArgs(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print frame arguments
 
-void RooPlot::printValue(ostream& os) const
+void RooPlot::printValue(std::ostream& os) const
 {
   os << "(" ;
   bool first(true) ;
@@ -747,7 +735,7 @@ void RooPlot::printValue(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Frame detailed printing
 
-void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TString indent) const
+void RooPlot::printMultiline(std::ostream& os, Int_t /*content*/, bool verbose, TString indent) const
 {
   TString deeper(indent);
   deeper.Append("    ");
@@ -756,9 +744,9 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TStri
     _plotVar->printStream(os,kName|kTitle,kSingleLine,"");
   }
   else {
-    os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") has no associated plot variable" << endl ;
+    os << indent << "RooPlot " << GetName() << " (" << GetTitle() << ") has no associated plot variable" << std::endl ;
   }
-  os << indent << "  Plot frame contains " << _items.size() << " object(s):" << endl;
+  os << indent << "  Plot frame contains " << _items.size() << " object(s):" << std::endl;
 
   if(verbose) {
     Int_t i=0 ;
@@ -772,7 +760,7 @@ void RooPlot::printMultiline(ostream& os, Int_t /*content*/, bool verbose, TStri
       }
       // is it a TNamed subclass?
       else {
-   os << obj.ClassName() << "::" << obj.GetName() << endl;
+   os << obj.ClassName() << "::" << obj.GetName() << std::endl;
       }
     }
   }
@@ -788,7 +776,7 @@ const char* RooPlot::nameOf(Int_t idx) const
 {
   TObject* obj = _items.at(idx).first;
   if (!obj) {
-    coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << endl ;
+    coutE(InputArguments) << "RooPlot::nameOf(" << GetName() << ") index " << idx << " out of range" << std::endl ;
     return nullptr ;
   }
   return obj->GetName() ;
@@ -804,7 +792,7 @@ TObject* RooPlot::getObject(Int_t idx) const
 {
   TObject* obj = _items.at(idx).first;
   if (!obj) {
-    coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << endl ;
+    coutE(InputArguments) << "RooPlot::getObject(" << GetName() << ") index " << idx << " out of range" << std::endl ;
     return nullptr ;
   }
   return obj ;
@@ -884,12 +872,12 @@ void RooPlot::remove(const char* name, bool deleteToo)
       if(deleteToo) delete _items.back().first;
       _items.pop_back();
     } else {
-      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: plot frame is empty, cannot remove last object" << endl ;
+      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: plot frame is empty, cannot remove last object" << std::endl ;
     }
   } else {
     auto item = findItem(name);
     if(item == _items.end()) {
-      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: no object found with name " << name << endl ;
+      coutE(InputArguments) << "RooPlot::remove(" << GetName() << ") ERROR: no object found with name " << name << std::endl ;
     } else {
       if(deleteToo) delete item->first;
       _items.erase(item);
@@ -964,7 +952,7 @@ TObject *RooPlot::findObject(const char *name, const TClass* tClass) const
   }
 
   if (ret == nullptr) {
-    coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << endl ;
+    coutE(InputArguments) << "RooPlot::findObject(" << GetName() << ") cannot find object " << (name?name:"<last>") << std::endl ;
   }
   return ret ;
 }
@@ -1083,14 +1071,14 @@ double RooPlot::chiSquare(const char* curvename, const char* histname, int nFitP
   // Find curve object
   RooCurve* curve = static_cast<RooCurve*>(findObject(curvename,RooCurve::Class())) ;
   if (!curve) {
-    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << endl ;
+    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find curve" << std::endl ;
     return -1. ;
   }
 
   // Find histogram object
   RooHist* hist = static_cast<RooHist*>(findObject(histname,RooHist::Class())) ;
   if (!hist) {
-    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << endl ;
+    coutE(InputArguments) << "RooPlot::chiSquare(" << GetName() << ") cannot find histogram" << std::endl ;
     return -1. ;
   }
 
@@ -1221,7 +1209,7 @@ double RooPlot::getFitRangeNEvt(double xlo, double xhi) const
     scaleFactor = _normObj->getFitRangeNEvt(xlo,xhi)/_normObj->getFitRangeNEvt() ;
   } else {
     coutW(Plotting) << "RooPlot::getFitRangeNEvt(" << GetName() << ") WARNING: Unable to obtain event count in range "
-          << xlo << " to " << xhi << ", substituting full event count" << endl ;
+          << xlo << " to " << xhi << ", substituting full event count" << std::endl ;
   }
   return getFitRangeNEvt()*scaleFactor ;
 }

@@ -124,26 +124,28 @@ public:
       for (unsigned int j = 0; j < n; ++j) {
 
          std::string xname = "x_" + ROOT::Math::Util::ToString(j);
-         x[j] = new RooRealVar(xname.c_str(), xname.c_str(), -10000, 10000);
+         x[j] = std::make_unique<RooRealVar>(xname.c_str(), xname.c_str(), -10000, 10000);
 
          std::string mname = "m_" + ROOT::Math::Util::ToString(j);
          std::string sname = "s_" + ROOT::Math::Util::ToString(j);
 
          //             m[j] = new RooRealVar(mname.c_str(),mname.c_str(),iniPar[2*j],-10000,10000) ;
          //             s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],-10000,10000) ;
-         m[j] = new RooRealVar(mname.c_str(), mname.c_str(), iniPar[2 * j], -10, 10);
-         s[j] = new RooRealVar(sname.c_str(), sname.c_str(), iniPar[2 * j + 1], -10, 10);
+         m[j] = std::make_unique<RooRealVar>(mname.c_str(), mname.c_str(), iniPar[2 * j], -10, 10);
+         s[j] = std::make_unique<RooRealVar>(sname.c_str(), sname.c_str(), iniPar[2 * j + 1], -10, 10);
 
          std::string gname = "g_" + ROOT::Math::Util::ToString(j);
-         g[j] = new RooGaussian(gname.c_str(), "gauss(x,mean,sigma)", *x[j], *m[j], *s[j]);
+         g[j] = std::make_unique<RooGaussian>(gname.c_str(), "gauss(x,mean,sigma)", *x[j], *m[j], *s[j]);
 
          std::string pname = "prod_" + ROOT::Math::Util::ToString(j);
          if (j == 0)
-            pdf[0] = g[0];
+            pdf[0] = g[0].get();
          else if (j == 1) {
-            pdf[1] = new RooProdPdf(pname.c_str(), pname.c_str(), RooArgSet(*g[1], *g[0]));
+            ownedPdfs.emplace_back(std::make_unique<RooProdPdf>(pname.c_str(), pname.c_str(), RooArgSet(*g[1], *g[0])));
+            pdf[1] = ownedPdfs.back().get();
          } else if (j > 1) {
-            pdf[j] = new RooProdPdf(pname.c_str(), pname.c_str(), RooArgSet(*g[j], *pdf[j - 1]));
+            ownedPdfs.emplace_back(std::make_unique<RooProdPdf>(pname.c_str(), pname.c_str(), RooArgSet(*g[j], *pdf[j - 1])));
+            pdf[j] = ownedPdfs.back().get();
          }
       }
    }
@@ -152,33 +154,22 @@ public:
 
    std::unique_ptr<RooArgSet> getVars()
    {
-      std::unique_ptr<RooArgSet> vars(new RooArgSet());
-      for (unsigned int i = 0; i < x.size(); ++i)
+      auto vars = std::make_unique<RooArgSet>();
+      for (unsigned int i = 0; i < x.size(); ++i) {
          vars->add(*x[i]);
+      }
       return vars;
    }
 
-   ~MultiGaussRooPdf()
-   {
-      // free
-      int n = x.size();
-      for (int j = 0; j < n; ++j) {
-         delete x[j];
-         delete m[j];
-         delete s[j];
-         delete g[j];
-         if (j > 0)
-            delete pdf[j]; // no pdf allocated for j = 0
-      }
-   }
-
 private:
-   std::vector<RooRealVar *> x;
-   std::vector<RooRealVar *> m;
-   std::vector<RooRealVar *> s;
+   std::vector<std::unique_ptr<RooRealVar>> x;
+   std::vector<std::unique_ptr<RooRealVar>> m;
+   std::vector<std::unique_ptr<RooRealVar>> s;
 
-   std::vector<RooAbsPdf *> g;
+   std::vector<std::unique_ptr<RooAbsPdf>> g;
    std::vector<RooAbsPdf *> pdf;
+
+   std::vector<std::unique_ptr<RooAbsPdf>> ownedPdfs;
 };
 
 // unbinned roo fit (large tree)

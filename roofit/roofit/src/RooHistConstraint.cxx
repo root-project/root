@@ -68,13 +68,13 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
         var->setVal(phf->_dh.weight()) ;
         var->setConstant(true);
 
-        auto gam = static_cast<RooRealVar*>(phf->_p.at(i));
+        auto gamma = static_cast<RooRealVar*>(phf->_p.at(i));
         if (var->getVal() > 0.0) {
-          gam->setConstant(false);
+          gamma->setConstant(false);
         }
 
         _nominal.addOwned(std::move(var)) ;
-        _gamma.add(*gam) ;
+        _gamma.add(*gamma) ;
       }
     }
 
@@ -177,18 +177,18 @@ RooHistConstraint::RooHistConstraint(const char *name, const char *title,
    for (unsigned int i=0; i < _nominal.size(); ++i) {
      const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
      const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
-     double gamVal = gamma.getVal();
+     double gammaVal = gamma.getVal();
      const int nomVal = static_cast<int>(nominal.getVal());
 
      if (_relParam) {
-       gamVal *= nomVal;
+       gammaVal *= nomVal;
      }
 
-     if (gamVal>0) {
-       const double pois = ROOT::Math::poisson_pdf(nomVal, gamVal);
+     if (gammaVal>0) {
+       const double pois = ROOT::Math::poisson_pdf(nomVal, gammaVal);
        prod *= pois;
      } else if (nomVal > 0) {
-       coutE(Eval) << "ERROR in RooHistConstraint: gam=0 and nom>0" << std::endl;
+       coutE(Eval) << "ERROR in RooHistConstraint: gamma=0 and nom>0" << std::endl;
      }
    }
 
@@ -203,18 +203,18 @@ double RooHistConstraint::getLogVal(const RooArgSet* /*set*/) const
    for (unsigned int i=0; i < _nominal.size(); ++i) {
      const auto& gamma = static_cast<const RooAbsReal&>(_gamma[i]);
      const auto& nominal = static_cast<const RooAbsReal&>(_nominal[i]);
-     double gamVal = gamma.getVal();
+     double gammaVal = gamma.getVal();
      const int nomVal = static_cast<int>(nominal.getVal());
 
      if (_relParam) {
-       gamVal *= nomVal;
+       gammaVal *= nomVal;
      }
 
-     if (gamVal>0) {
-       const double logPoisson = nomVal * log(gamVal) - gamVal - std::lgamma(nomVal + 1);
+     if (gammaVal>0) {
+       const double logPoisson = nomVal * log(gammaVal) - gammaVal - std::lgamma(nomVal + 1);
        sum += logPoisson ;
      } else if (nomVal > 0) {
-       coutE(Eval) << "ERROR in RooHistConstraint: gam=0 and nom>0" << std::endl;
+       coutE(Eval) << "ERROR in RooHistConstraint: gamma=0 and nom>0" << std::endl;
      }
    }
 

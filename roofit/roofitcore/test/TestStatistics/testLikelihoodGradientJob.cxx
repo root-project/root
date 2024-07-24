@@ -853,7 +853,7 @@ TEST_P(LikelihoodGradientJobBinnedErrorTest, TriggerMuLEZero)
    w.pdf("model_A")->setAttribute("BinnedLikelihood");
    w.pdf("model_B")->setAttribute("BinnedLikelihood");
 
-   // Construct simulatenous pdf
+   // Construct simultaneous pdf
    w.factory("SIMUL::model(index[A,B],A=model_A,B=model_B)");
 
    // Construct dataset

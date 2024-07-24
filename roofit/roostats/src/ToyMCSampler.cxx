@@ -291,22 +291,21 @@ RooDataSet* ToyMCSampler::GetSamplingDistributions(RooArgSet& paramPointIn)
    fNToys = (int)ceil((double)fNToys / (double)fProofConfig->GetNExperiments()); // round up
 
    // create the study instance for parallel processing
-   ToyMCStudy* toymcstudy = new ToyMCStudy ;
-   toymcstudy->SetToyMCSampler(*this);
-   toymcstudy->SetParamPoint(paramPointIn);
-   toymcstudy->SetRandomSeed(RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) );
+   ToyMCStudy toymcstudy{};
+   toymcstudy.SetToyMCSampler(*this);
+   toymcstudy.SetParamPoint(paramPointIn);
+   toymcstudy.SetRandomSeed(RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) );
 
    // temporary workspace for proof to avoid messing with TRef
    RooWorkspace w(fProofConfig->GetWorkspace());
-   RooStudyManager studymanager(w, *toymcstudy);
+   RooStudyManager studymanager(w, toymcstudy);
    studymanager.runProof(fProofConfig->GetNExperiments(), fProofConfig->GetHost(), fProofConfig->GetShowGui());
 
-   RooDataSet* output = toymcstudy->merge();
+   RooDataSet* output = toymcstudy.merge();
 
    // reset the number of toys
    fNToys = totToys;
 
-   delete toymcstudy;
    return output;
 }
 
@@ -335,9 +334,9 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
    // important to cache the paramPoint b/c test statistic might
    // modify it from event to event
-   RooArgSet *paramPoint = (RooArgSet*) paramPointIn.snapshot();
+   std::unique_ptr<RooArgSet> paramPoint{paramPointIn.snapshot()};
    std::unique_ptr<RooArgSet> allVars{fPdf->getVariables()};
-   RooArgSet *saveAll = (RooArgSet*) allVars->snapshot();
+   std::unique_ptr<RooArgSet> saveAll{allVars->snapshot()};
 
 
    DetailedOutputAggregator detOutAgg;
@@ -366,7 +365,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       // set variables to requested parameter point
       allVars->assign(*saveAll); // important for example for SimpleLikelihoodRatioTestStat
 
-      RooAbsData* toydata = GenerateToyData(*paramPoint, weight);
+      std::unique_ptr<RooAbsData> toydata{GenerateToyData(*paramPoint, weight)};
       if (i == 0 && !fPdf->canBeExtended() && dynamic_cast<RooSimultaneous*>(fPdf)) {
         const RooArgSet* toySet = toydata->get();
         if (std::none_of(toySet->begin(), toySet->end(),
@@ -387,8 +386,6 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
       if (RooRealVar* firstTS = dynamic_cast<RooRealVar*>(allTS->first()))
          valueFirst = firstTS->getVal();
 
-      delete toydata;
-
       // check for nan
       if(valueFirst != valueFirst) {
          oocoutW(nullptr, Generation) << "skip: " << valueFirst << ", " << weight << endl;
@@ -406,8 +403,6 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
 
    // clean up
    allVars->assign(*saveAll);
-   delete saveAll;
-   delete paramPoint;
 
    return detOutAgg.GetAsDataSet(fSamplingDistName, fSamplingDistName);
 }
@@ -508,7 +503,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
 
    // save values to restore later.
    // but this must remain after(!) generating global observables
-   const RooArgSet* saveVars = (const RooArgSet*)allVars->snapshot();
+   std::unique_ptr<RooArgSet> saveVars{allVars->snapshot()};
 
    if(fNuisanceParametersSampler) { // use nuisance parameters?
       // Construct a set of nuisance parameters that has the parameters
@@ -535,7 +530,6 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
    // We generated the data with the randomized nuisance parameter (if hybrid)
    // but now we are setting the nuisance parameters back to where they were.
    allVars->assign(*saveVars);
-   delete saveVars;
 
    return data;
 }

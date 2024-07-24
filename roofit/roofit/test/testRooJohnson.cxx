@@ -53,16 +53,16 @@ TEST(RooJohnson, ReferenceImplementation)
   for (double theMass : {-100., -50., -10., -1., 0., 1., 10., 50., 100.}) {
     for (double theMu : {-100., -10., 0., 10., 20., 30., 100., 150.}) {
       for (double theSig : {0.1, 1., 2., 10.}) {
-        for (double theGam : {-10., -1., 0., 1., 2., 10.}) {
+        for (double theGamma : {-10., -1., 0., 1., 2., 10.}) {
           for (double theDelta : {0.1, 1., 2., 10.}) {
             mass = theMass;
             mu = theMu;
             sigma = theSig;
-            gamma = theGam;
+            gamma = theGamma;
             delta = theDelta;
 
             EXPECT_FLOAT_EQ(johnson.getVal(), johnsonRef->getVal())
-            << theMass << " " << theMu << " " << theSig << " " << theGam << " " << theDelta;
+            << theMass << " " << theMu << " " << theSig << " " << theGamma << " " << theDelta;
           }
         }
       }
@@ -123,27 +123,27 @@ TEST(RooJohnson, Integral)
 
   for (double theSig : {5., 10., 20., 50.}) { //Numerical integration poor for narrow peaks
     for (double theMu : {-170., -100., 0., 30., 100., 150., 180.}) {
-      for (double theGam : {-10., -1., 0., 1., 2., 10.}) {
+      for (double theGamma : {-10., -1., 0., 1., 2., 10.}) {
         for (double theDelta : {1., 2., 10.}) {
           mu = theMu;
           sigma = theSig;
-          gamma = theGam;
+          gamma = theGamma;
           delta = theDelta;
 
           const double expDelta = exp(pow(theDelta, -2.));
           const double variance = theSig*theSig/2.
               * (expDelta - 1.)
-              * (expDelta * cosh(2.*theGam / theDelta) + 1.);
+              * (expDelta * cosh(2.*theGamma / theDelta) + 1.);
 
-          const double median = theMu + theSig * sinh(-1. * theGam / theDelta);
+          const double median = theMu + theSig * sinh(-1. * theGamma / theDelta);
 
           if (-100. < median && median < 100. && variance < 50.) {//central and peaked
             EXPECT_GT(integral->getVal(), 0.95) << "Central and peaked for "
-            << theMu << " " << theSig << " " << theGam << " " << theDelta;
+            << theMu << " " << theSig << " " << theGamma << " " << theDelta;
 
             if (variance > 10.) {
               EXPECT_GT(numInt->getVal(), 0.95) << "Central and peaked for "
-                  << theMu << " " << theSig << " " << theGam << " " << theDelta;
+                  << theMu << " " << theSig << " " << theGamma << " " << theDelta;
             }
           }
 
@@ -159,7 +159,7 @@ TEST(RooJohnson, Integral)
               accAnaVsNumCore/100.*numIntRanged->getVal())
               << "Analytical vs numerical integral (core region)"
               << " within " << accAnaVsNumCore << "%. With "
-              << theMu << " " << theSig << " " << theGam << " " << theDelta;
+              << theMu << " " << theSig << " " << theGamma << " " << theDelta;
 
           if (integral->getVal() > 1.E-9 && variance > 10.) { //Numerical integral cannot do this
             constexpr double accAnaVsNum = 3.;
@@ -167,14 +167,14 @@ TEST(RooJohnson, Integral)
                 accAnaVsNum/100.*numIntRanged->getVal())
             << "Analytical vs numerical integral (full range) variance=" << variance
             << " within " << accAnaVsNum << "%. With "
-            << theMu << " " << theSig << " " << theGam << " " << theDelta;
+            << theMu << " " << theSig << " " << theGamma << " " << theDelta;
           }
 
 //          auto frame = mass.frame();
 //          johnson.plotOn(frame, RooFit::LineColor(kBlue));
 //          TCanvas canv;
 //          frame->Draw();
-//          canv.SaveAs(Form("/tmp/Johnson_%f_%f_%f_%f.png", theMu, theSig, theGam, theDelta));
+//          canv.SaveAs(Form("/tmp/Johnson_%f_%f_%f_%f.png", theMu, theSig, theGamma, theDelta));
         }
       }
     }
@@ -191,9 +191,9 @@ TEST(RooJohnson, MeanValue)
   auto literatureMean = [&]() {
     const double theMu = mu.getVal();
     const double sig = sigma.getVal();
-    const double gam = gamma.getVal();
+    const double gammaVal = gamma.getVal();
     const double del = delta.getVal();
-    return theMu - sig * exp(pow(del, -2.) / 2.) * sinh(gam/del);
+    return theMu - sig * exp(pow(del, -2.) / 2.) * sinh(gammaVal/del);
   };
 
   EXPECT_NEAR(firstMoment.getVal(), literatureMean(), 0.02*literatureMean());

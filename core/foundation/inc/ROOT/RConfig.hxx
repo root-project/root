@@ -483,6 +483,14 @@
 # define _R__DEPRECATED_634(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
+/* USE AS `R__DEPRECATED(6,36, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.36 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,35,0)
+# define _R__DEPRECATED_636(REASON) _R__DEPRECATED_LATER(REASON)
+#else
+# define _R__DEPRECATED_636(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+#endif
+
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`
    To be removed by 7.00 */
 #if ROOT_VERSION_CODE < ROOT_VERSION(6,99,0)

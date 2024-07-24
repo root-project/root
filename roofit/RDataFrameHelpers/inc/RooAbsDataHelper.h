@@ -1,41 +1,24 @@
-/*****************************************************************************
- * Project: RooFit                                                           *
- * Package: RooFitCore                                                       *
- * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *                                                                           *
- * Copyright (c) 2000-2021, Regents of the University of California          *
- *                          and Stanford University. All rights reserved.    *
- *                                                                           *
- * Redistribution and use in source and binary forms,                        *
- * with or without modification, are permitted according to the terms        *
- * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
- *****************************************************************************/
-/// Create RooDataSet/RooDataHist from RDataFrame.
-/// \date Mar 2021
-/// \author Stephan Hageboeck (CERN)
+/*
+ * Project: RooFit
+ * Authors:
+ *   Stephan Hageboeck, CERN 2021
+ *
+ * Copyright (c) 2024, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
+
 #ifndef ROOABSDATAHELPER
 #define ROOABSDATAHELPER
 
-#include <RooRealVar.h>
-#include <RooArgSet.h>
-#include <RooDataSet.h>
-#include <RooDataHist.h>
-#include <RooMsgService.h>
+#include <RooAbsDataFiller.h>
 
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/ActionHelpers.hxx>
-#include <TROOT.h>
 
-#include <vector>
-#include <mutex>
 #include <memory>
-#include <cstddef>
-#include <string>
-#include <stdexcept>
-
-class TTreeReader;
 
 /// This is a helper for an RDataFrame action, which fills RooFit data classes.
 ///
@@ -45,8 +28,10 @@ class TTreeReader;
 /// - Construct one of the two action helpers RooDataSetHelper or RooDataHistHelper. Pass constructor arguments
 ///   to RooAbsDataHelper::RooAbsDataHelper() as for the original classes.
 ///   The arguments are forwarded to the actual data classes without any changes.
-/// - Book the helper as an RDataFrame action. Here, the RDataFrame column types have to be passed as template parameters.
+/// - Book the helper as an RDataFrame action. Here, the RDataFrame column types have to be passed as template
+/// parameters.
 /// - Pass the column names to the Book action. These are matched by position to the variables of the dataset.
+///   If there is one more column name than variables in the dataset, the last columns values will be used as weights.
 ///
 /// All arguments passed to  are forwarded to RooDataSet::RooDataSet() / RooDataHist::RooDataHist().
 ///
@@ -58,150 +43,50 @@ class TTreeReader;
 ///      RooDataSetHelper{"dataset",          // Name   (directly forwarded to RooDataSet::RooDataSet())
 ///                      "Title of dataset",  // Title  (                   ~ " ~                      )
 ///                      RooArgSet(x, y) },   // Variables to create in dataset
-///      {"x", "y"}                           // Column names from RDataFrame
+///      {"x", "y", "weight"}                 // Column names from RDataFrame
+///                                           // (this example uses an additional column for the weight)
 ///    );
 ///
 /// ```
 /// \warning Variables in the dataset and columns in RDataFrame are **matched by position, not by name**.
 /// This enables the easy exchanging of columns that should be filled into the dataset.
-template<class DataSet_t>
-class RooAbsDataHelper : public ROOT::Detail::RDF::RActionImpl<RooAbsDataHelper<DataSet_t>> {
+template <class DataSet_t>
+class RooAbsDataHelper : public RooFit::Detail::RooAbsDataFiller,
+                         public ROOT::Detail::RDF::RActionImpl<RooAbsDataHelper<DataSet_t>> {
 public:
-  using Result_t = DataSet_t;
+   using Result_t = DataSet_t;
+
+   /// Construct a helper to create RooDataSet/RooDataHist.
+   /// \tparam Args_t Parameter pack of arguments.
+   /// \param args Constructor arguments for RooDataSet::RooDataSet() or RooDataHist::RooDataHist().
+   /// All arguments will be forwarded as they are.
+   template <typename... Args_t>
+   RooAbsDataHelper(Args_t &&...args) : _dataset{new DataSet_t(std::forward<Args_t>(args)...)}
+   {
+   }
+
+   /// Return internal dataset/hist.
+   std::shared_ptr<DataSet_t> GetResultPtr() const { return _dataset; }
+
+   /// Method that RDataFrame calls to pass a new event.
+   ///
+   /// \param slot When IMT is used, this is a number in the range [0, nSlots) to fill lock free.
+   /// \param values x, y, z, ... coordinates of the event.
+   template <typename... ColumnTypes>
+   void Exec(unsigned int slot, ColumnTypes... values)
+   {
+      auto &vector = _events[slot];
+      for (auto &&val : {values...}) {
+         vector.push_back(val);
+      }
+
+      ExecImpl(sizeof...(values), vector);
+   }
+
+   RooAbsData &GetAbsData() override { return *_dataset; }
 
 private:
-  std::shared_ptr<DataSet_t> _dataset;
-  std::mutex _mutex_dataset;
-  std::size_t _numInvalid = 0;
-
-  std::vector<std::vector<double>> _events; // One vector of values per data-processing slot
-  const std::size_t _eventSize; // Number of variables in dataset
-
-public:
-
-  /// Construct a helper to create RooDataSet/RooDataHist.
-  /// \tparam Args_t Parameter pack of arguments.
-  /// \param args Constructor arguments for RooDataSet::RooDataSet() or RooDataHist::RooDataHist().
-  /// All arguments will be forwarded as they are.
-  template<typename... Args_t>
-  RooAbsDataHelper(Args_t&&... args) :
-  _dataset{ new DataSet_t(std::forward<Args_t>(args)...) },
-  _eventSize{ _dataset->get()->size() }
-  {
-    const auto nSlots = ROOT::IsImplicitMTEnabled() ? ROOT::GetThreadPoolSize() : 1;
-    _events.resize(nSlots);
-  }
-
-
-  /// Move constructor. It transfers ownership of the internal RooAbsData object.
-  RooAbsDataHelper(RooAbsDataHelper&& other) :
-  _dataset{ std::move(other._dataset) },
-  _events{ std::move(other._events) },
-  _eventSize{ other._eventSize }
-  {
-
-  }
-
-  /// Copy is discouraged.
-  /// Use `rdataframe.Book<...>(std::move(absDataHelper), ...)` instead.
-  RooAbsDataHelper(const RooAbsDataHelper&) = delete;
-  /// Return internal dataset/hist.
-  std::shared_ptr<DataSet_t> GetResultPtr() const { return _dataset; }
-  /// RDataFrame interface method. Nothing has to be initialised.
-  void Initialize() {}
-  /// RDataFrame interface method. No tasks.
-  void InitTask(TTreeReader *, unsigned int) {}
-  /// RDataFrame interface method.
-  std::string GetActionName() { return "RooDataSetHelper"; }
-
-  /// Method that RDataFrame calls to pass a new event.
-  ///
-  /// \param slot When IMT is used, this is a number in the range [0, nSlots) to fill lock free.
-  /// \param values x, y, z, ... coordinates of the event.
-  template <typename... ColumnTypes>
-  void Exec(unsigned int slot, ColumnTypes... values)
-  {
-    if (sizeof...(values) != _eventSize) {
-      throw std::invalid_argument(std::string("RooDataSet can hold ")
-      + std::to_string(_eventSize)
-      + " variables per event, but RDataFrame passed "
-      + std::to_string(sizeof...(values))
-      + " columns.");
-    }
-
-    auto& vector = _events[slot];
-    for (auto&& val : {values...}) {
-      vector.push_back(val);
-    }
-
-    if (vector.size() > 1024 && _mutex_dataset.try_lock()) {
-      const std::lock_guard<std::mutex> guard(_mutex_dataset, std::adopt_lock_t());
-      FillDataSet(vector, _eventSize);
-      vector.clear();
-    }
-  }
-
-  /// Empty all buffers into the dataset/hist to finish processing.
-  void Finalize() {
-    for (auto& vector : _events) {
-      FillDataSet(vector, _eventSize);
-      vector.clear();
-    }
-
-    if (_numInvalid>0) {
-      const auto prefix = std::string(_dataset->ClassName()) + "Helper::Finalize(" + _dataset->GetName() + ") ";
-      oocoutW(nullptr, DataHandling) << prefix << "Ignored " << _numInvalid << " out-of-range events\n";
-    }
-  }
-
-
-private:
-  /// Append all `events` to the internal RooDataSet or increment the bins of a RooDataHist at the given locations.
-  ///
-  /// \param events Events to fill into `data`. The layout is assumed to be `(x, y, z, ...) (x, y, z, ...), (...)`.
-  /// \note The order of the variables inside `events` must be consistent with the order given in the constructor.
-  /// No matching by name is performed.
-  /// \param eventSize Size of a single event.
-  void FillDataSet(const std::vector<double>& events, unsigned int eventSize) {
-    if (events.empty())
-      return;
-
-    const RooArgSet& argSet = *_dataset->get();
-
-    for (std::size_t i = 0; i < events.size(); i += eventSize) {
-
-      // Creating a RooDataSet from an RDataFrame should be consistent with the
-      // creation from a TTree. The construction from a TTree discards entries
-      // outside the variable definition range, so we have to do that too (see
-      // also RooTreeDataStore::loadValues).
-
-      bool allOK = true;
-      for (std::size_t j=0; j < eventSize; ++j) {
-        auto * destArg = static_cast<RooAbsRealLValue*>(argSet[j]);
-        double sourceVal = events[i+j];
-
-        if (!destArg->inRange(sourceVal, nullptr)) {
-          _numInvalid++ ;
-          allOK = false;
-          const auto prefix = std::string(_dataset->ClassName()) + "Helper::FillDataSet(" + _dataset->GetName() + ") ";
-          if (_numInvalid < 5) {
-            // Unlike in the TreeVectorStore case, we don't log the event
-            // number here because we don't know it anyway, because of
-            // RDataFrame slots and multithreading.
-            oocoutI(nullptr, DataHandling) << prefix << "Skipping event because " << destArg->GetName()
-                << " cannot accommodate the value " << sourceVal << "\n";
-          } else if (_numInvalid == 5) {
-            oocoutI(nullptr, DataHandling) << prefix << "Skipping ...\n";
-          }
-          break ;
-        }
-        destArg->setVal(sourceVal);
-      }
-      if(allOK) {
-        _dataset->add(argSet);
-      }
-    }
-  }
+   std::shared_ptr<DataSet_t> _dataset;
 };
 
 /// Helper for creating a RooDataSet inside RDataFrame. \see RooAbsDataHelper

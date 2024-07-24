@@ -97,6 +97,42 @@ if ($?old_rootsys) then
                                  -e "s;^$old_rootsys/lib:;;g"   \
                                  -e "s;^$old_rootsys/lib${DOLLAR};;g"`
    endif
+   # Now in case gnuinstall was on
+   if ($?LD_LIBRARY_PATH) then
+      setenv LD_LIBRARY_PATH `set DOLLAR='$'; echo $LD_LIBRARY_PATH | \
+                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
+                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib/root:;;g"   \
+                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
+   endif
+   if ($?DYLD_LIBRARY_PATH) then
+      setenv DYLD_LIBRARY_PATH `set DOLLAR='$'; echo $DYLD_LIBRARY_PATH | \
+                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
+                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib/root:;;g"   \
+                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
+   endif
+   if ($?SHLIB_PATH) then
+      setenv SHLIB_PATH `set DOLLAR='$'; echo $SHLIB_PATH | \
+                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
+                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib/root:;;g"   \
+                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
+   endif
+   if ($?LIBPATH) then
+      setenv LIBPATH `set DOLLAR='$'; echo $LIBPATH | \
+                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
+                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib/root:;;g"   \
+                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
+   endif
+   if ($?PYTHONPATH) then
+      setenv PYTHONPATH `set DOLLAR='$'; echo $PYTHONPATH | \
+                             sed -e "s;:$old_rootsys/lib/root:;:;g" \
+                                 -e "s;:$old_rootsys/lib/root${DOLLAR};;g"   \
+                                 -e "s;^$old_rootsys/lib/root:;;g"   \
+                                 -e "s;^$old_rootsys/lib/root${DOLLAR};;g"`
+   endif
    if ($?MANPATH) then
       setenv MANPATH `set DOLLAR='$'; echo $MANPATH | \
                              sed -e "s;:$old_rootsys/man:;:;g" \
