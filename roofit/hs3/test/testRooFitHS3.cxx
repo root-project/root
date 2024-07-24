@@ -29,7 +29,7 @@
 namespace {
 
 // If the JSON files should be written out for debugging purpose.
-const bool writeJsonFiles = false;
+const bool writeJsonFiles = true;
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
@@ -185,12 +185,11 @@ TEST(RooFitHS3, RooCBShape)
    EXPECT_EQ(status, 0);
 }
 
-/// Test that the IO of pdfs that contain RooConstVars works.
+/// Test that the IO of pdfs that contain literal RooConstVars works.
 TEST(RooFitHS3, RooConstVar)
 {
    RooRealVar x{"x", "x", 100, 0, 1000};
-   RooConstVar mean{"mean", "mean", 100};
-   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, mean});
+   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, RooFit::RooConst(100.)});
    EXPECT_EQ(status, 0);
 }
 
