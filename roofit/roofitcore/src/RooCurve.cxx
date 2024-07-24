@@ -613,14 +613,14 @@ double RooCurve::average(double xFirst, double xLast) const
   // as the first midway point
   if ((xFirstPt-xFirst)<-1*tolerance) {
     ifirst++ ;
-    const_cast<RooCurve&>(*this).GetPoint(ifirst,xFirstPt,yFirstPt) ;
+    GetPoint(ifirst,xFirstPt,yFirstPt) ;
   }
 
   // If last point closest to yLast is at yLast or beyond yLast the previous point
   // as the last midway point
   if ((xLastPt-xLast)>tolerance) {
     ilast-- ;
-    const_cast<RooCurve&>(*this).GetPoint(ilast,xLastPt,yLastPt) ;
+    GetPoint(ilast,xLastPt,yLastPt) ;
   }
 
   double sum(0);
@@ -635,8 +635,8 @@ double RooCurve::average(double xFirst, double xLast) const
   // Trapezoid integration between midpoints
   Int_t i ;
   for (i=ifirst ; i<ilast ; i++) {
-    const_cast<RooCurve&>(*this).GetPoint(i,x1,y1) ;
-    const_cast<RooCurve&>(*this).GetPoint(i+1,x2,y2) ;
+    GetPoint(i,x1,y1) ;
+    GetPoint(i+1,x2,y2) ;
     sum += (x2-x1)*(y1+y2)/2 ;
   }
 
@@ -685,7 +685,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
   // Get position of best point
   double xbest;
   double ybest;
-  const_cast<RooCurve*>(this)->GetPoint(ibest,xbest,ybest) ;
+  GetPoint(ibest,xbest,ybest) ;
 
   // Handle trivial case of being dead on
   if (std::abs(xbest-xvalue)<tolerance) {
@@ -701,7 +701,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
       // Value beyond end requested -- return value of last point
       return ybest ;
     }
-    const_cast<RooCurve*>(this)->GetPoint(ibest+1,xother,yother) ;
+    GetPoint(ibest+1,xother,yother) ;
     if (xother==xbest) return ybest ;
     retVal = ybest + (yother-ybest)*(xvalue-xbest)/(xother-xbest) ;
 
@@ -710,7 +710,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
       // Value before 1st point requested -- return value of 1st point
       return ybest ;
     }
-    const_cast<RooCurve*>(this)->GetPoint(ibest-1,xother,yother) ;
+    GetPoint(ibest-1,xother,yother) ;
     if (xother==xbest) return ybest ;
     retVal = yother + (ybest-yother)*(xvalue-xother)/(xbest-xother) ;
   }
