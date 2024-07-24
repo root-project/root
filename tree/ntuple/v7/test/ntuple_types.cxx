@@ -2112,13 +2112,13 @@ TEST(RNTuple, RColumnRepresentations)
    using RColumnRepresentations = ROOT::Experimental::RFieldBase::RColumnRepresentations;
    RColumnRepresentations colReps1;
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t(), colReps1.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::TypesList_t{RFieldBase::ColumnRepresentation_t()},
+   EXPECT_EQ(RColumnRepresentations::Selection_t{RFieldBase::ColumnRepresentation_t()},
              colReps1.GetDeserializationTypes());
 
    RColumnRepresentations colReps2({{EColumnType::kReal64}, {EColumnType::kSplitReal64}},
                                    {{EColumnType::kReal32}, {EColumnType::kReal16}});
    EXPECT_EQ(RFieldBase::ColumnRepresentation_t({EColumnType::kReal64}), colReps2.GetSerializationDefault());
-   EXPECT_EQ(RColumnRepresentations::TypesList_t(
+   EXPECT_EQ(RColumnRepresentations::Selection_t(
                 {{EColumnType::kReal64}, {EColumnType::kSplitReal64}, {EColumnType::kReal32}, {EColumnType::kReal16}}),
              colReps2.GetDeserializationTypes());
 }

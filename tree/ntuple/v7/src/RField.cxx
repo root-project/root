@@ -427,7 +427,7 @@ ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations()
 }
 
 ROOT::Experimental::RFieldBase::RColumnRepresentations::RColumnRepresentations(
-   const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes)
+   const Selection_t &serializationTypes, const Selection_t &deserializationExtraTypes)
    : fSerializationTypes(serializationTypes), fDeserializationTypes(serializationTypes)
 {
    fDeserializationTypes.insert(fDeserializationTypes.end(),
