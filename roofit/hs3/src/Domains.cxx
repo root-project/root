@@ -84,7 +84,10 @@ void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
 {
    for (auto const &domain : _map) {
-      domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
+      // Avoid writing a domain that was already written
+      if (!RooJSONFactoryWSTool::findNamedChild(node, domain.first)) {
+         domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
+      }
    }
 }
 
