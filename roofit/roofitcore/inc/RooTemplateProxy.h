@@ -162,8 +162,8 @@ public:
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
   template<typename Bool = bool, typename = std::enable_if_t<std::is_same<Bool,bool>::value>>
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner,
-      Bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false)
-  : RooArgProxy(theName, desc, owner, valueServer, shapeServer, proxyOwnsArg) {
+      Bool valueServer=true, bool shapeServer=false)
+  : RooArgProxy(theName, desc, owner, valueServer, shapeServer, false) {
     // Note for developers: the type of the first bool parameter is templated
     // such that implicit conversion from int or pointers to bool is disabled.
     // This is because there is another constructor with the signature
@@ -185,8 +185,14 @@ public:
   /// \param[in] shapeServer Notify the owner if shape (e.g. binning) changes.
   /// \param[in] proxyOwnsArg Proxy will delete the payload if owning.
   RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, T& ref,
-      bool valueServer=true, bool shapeServer=false, bool proxyOwnsArg=false) :
-        RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, proxyOwnsArg) { }
+      bool valueServer=true, bool shapeServer=false) :
+        RooArgProxy(theName, desc, owner, const_cast<typename std::remove_const<T>::type&>(ref), valueServer, shapeServer, false) { }
+
+  RooTemplateProxy(const char* theName, const char* desc, RooAbsArg* owner, std::unique_ptr<RooAbsArg> ref,
+      bool valueServer=true, bool shapeServer=false) :
+        RooArgProxy(theName, desc, owner, *ref, valueServer, shapeServer, true) {
+            ref.release();
+        }
 
 
   ////////////////////////////////////////////////////////////////////////////////
