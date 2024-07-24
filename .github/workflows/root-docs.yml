@@ -223,19 +223,19 @@ jobs:
         ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
 
     # Upload to GitHub as an artifact (optional)
-    - name: Upload tar.gz
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc.tar.gz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
+    # - name: Upload tar.gz
+    #   if:   ${{ !cancelled() }}
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: rootdoc.tar.gz
+    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.gz
 
-    - name: Upload tar.xz
-      if:   ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: rootdoc.tar.xz
-        path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
+    # - name: Upload tar.xz
+    #   if:   ${{ !cancelled() }}
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: rootdoc.tar.xz
+    #     path: ${{env.DOC_LOCATION}}/${{env.DOC_DIR}}.tar.xz
 
     - name: Upload root_doc
       if:   ${{ !cancelled() }}
@@ -261,8 +261,8 @@ jobs:
         curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
         unzip awscliv2.zip
         sudo ./aws/install
-        
-    - name: Upload tar.gz to S3
+
+    - name: Upload root_doc
       if: ${{ env.SHOULD_DEPLOY == 'true' }}
       run: |
         DEST="s3://root/${PR_NUMBER:-}" # Use PR number or 'main' for non-PR events
