@@ -172,20 +172,22 @@ public:
    /// i.e. for the example above, the unpacking of 32bit ints to 64bit pages must be implemented in RColumnElement.hxx
    class RColumnRepresentations {
    public:
-      using TypesList_t = std::vector<ColumnRepresentation_t>;
+      /// A list of column representations
+      using Selection_t = std::vector<ColumnRepresentation_t>;
+
       RColumnRepresentations();
-      RColumnRepresentations(const TypesList_t &serializationTypes, const TypesList_t &deserializationExtraTypes);
+      RColumnRepresentations(const Selection_t &serializationTypes, const Selection_t &deserializationExtraTypes);
 
       /// The first column list from fSerializationTypes is the default for writing.
       const ColumnRepresentation_t &GetSerializationDefault() const { return fSerializationTypes[0]; }
-      const TypesList_t &GetSerializationTypes() const { return fSerializationTypes; }
-      const TypesList_t &GetDeserializationTypes() const { return fDeserializationTypes; }
+      const Selection_t &GetSerializationTypes() const { return fSerializationTypes; }
+      const Selection_t &GetDeserializationTypes() const { return fDeserializationTypes; }
 
    private:
-      TypesList_t fSerializationTypes;
+      Selection_t fSerializationTypes;
       /// The union of the serialization types and the deserialization extra types.  Duplicates the serialization types
       /// list but the benenfit is that GetDeserializationTypes does not need to compile the list.
-      TypesList_t fDeserializationTypes;
+      Selection_t fDeserializationTypes;
    }; // class RColumnRepresentations
 
    /// Points to an object with RNTuple I/O support and keeps a pointer to the corresponding field.
