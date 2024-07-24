@@ -297,11 +297,11 @@ TEST(RNTupleInspector, ColumnInfoUncompressed)
       auto model = RNTupleModel::Create();
 
       auto int32fld = std::make_unique<RField<std::int32_t>>("int32");
-      int32fld->SetColumnRepresentative({EColumnType::kInt32});
+      int32fld->SetColumnRepresentatives({{EColumnType::kInt32}});
       model->AddField(std::move(int32fld));
 
       auto splitReal64fld = std::make_unique<RField<double>>("splitReal64");
-      splitReal64fld->SetColumnRepresentative({EColumnType::kSplitReal64});
+      splitReal64fld->SetColumnRepresentatives({{EColumnType::kSplitReal64}});
       model->AddField(std::move(splitReal64fld));
 
       auto writeOptions = RNTupleWriteOptions();

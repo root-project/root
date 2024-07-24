@@ -239,7 +239,7 @@ TEST(RNTupleImporter, FieldModifier)
 
    auto fnLowPrecisionFloatModifier = [](RFieldBase &field) {
       if (field.GetFieldName() == "a")
-         field.SetColumnRepresentative({EColumnType::kReal16});
+         field.SetColumnRepresentatives({{EColumnType::kReal16}});
    };
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
