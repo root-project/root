@@ -1601,9 +1601,26 @@ void RooAbsCollection::insert(RooAbsArg* item) {
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \param[in] flag Switch hash map on or off.
-void RooAbsCollection::useHashMapForFind(bool flag) const {
-  if (flag && !_hashAssistedFind) _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
-  if (!flag) _hashAssistedFind = nullptr;
+void RooAbsCollection::useHashMapForFind(bool flag) const
+{
+// Use a ROOT version macro for behavior-changing code in ROOT 6.33, so se can
+// keep the same RooFit code base in master and in the 6.32 patch release
+// branch for now.
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6, 33, 00)
+   if (flag && !dynamic_cast<RooArgSet const *>(this)) {
+      // RooArgLists can have duplicate object, so we can't do hash-assisted lookups.
+      std::stringstream msg;
+      msg << "RooAbsCollection::useHashMapForFind() ERROR: this collection is not a RooArgSet but a RooArgList, so "
+             "hash-assisted finding can't be enabled!"
+          << std::endl;
+      oocoutE(nullptr, ObjectHandling) << msg.str() << std::endl;
+      throw std::runtime_error(msg.str());
+   }
+#endif
+   if (flag && !_hashAssistedFind)
+      _hashAssistedFind = std::make_unique<HashAssistedFind>(_list.begin(), _list.end());
+   if (!flag)
+      _hashAssistedFind = nullptr;
 }
 
 

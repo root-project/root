@@ -133,12 +133,7 @@ TEST(RooArgSet, HashAssistedFind) {
   EXPECT_EQ(set.size(), 5);
 
   // Renaming would invalidate the old hash map. Test that it gets regenerated correctly:
-  list.useHashMapForFind(true);
-
   list[0].SetName("a'");
   EXPECT_EQ(set.find("a"), nullptr);
   EXPECT_EQ(set.find("a'"), & list[0]);
-
-  EXPECT_EQ(list.find("a"), nullptr);
-  EXPECT_EQ(list.find("a'"), & list[0]);
 }
