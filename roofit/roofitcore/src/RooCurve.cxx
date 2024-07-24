@@ -590,31 +590,24 @@ double RooCurve::average(double xFirst, double xLast) const
   double yLast = interpolate(xLast,1e-10) ;
 
   // Find first and last mid points
-  Int_t ifirst = findPoint(xFirst,1e10) ;
-  Int_t ilast  = findPoint(xLast,1e10) ;
-  Point firstPt = getPoint(*this, ifirst);
-  Point lastPt = getPoint(*this, ilast);
+  Int_t ifirst = findPoint(xFirst, std::numeric_limits<double>::infinity());
+  Int_t ilast  = findPoint(xLast, std::numeric_limits<double>::infinity());
 
-  double tolerance=1e-3*(xLast-xFirst) ;
+  // Make sure the midpoints are actually in the interval
+  while (GetPointX(ifirst) < xFirst) {
+    ++ifirst;
+  }
+  while (GetPointX(ilast) > xLast) {
+    --ilast;
+  }
 
   // Handle trivial scenario -- no midway points, point only at or outside given range
-  if (ilast-ifirst==1 &&(firstPt.x-xFirst)<-1*tolerance && (lastPt.x-xLast)>tolerance) {
+  if (ilast < ifirst) {
     return 0.5*(yFirst+yLast) ;
   }
 
-  // If first point closest to xFirst is at xFirst or before xFirst take the next point
-  // as the first midway point
-  if ((firstPt.x-xFirst)<-1*tolerance) {
-    ifirst++ ;
-    firstPt = getPoint(*this, ifirst);
-  }
-
-  // If last point closest to yLast is at yLast or beyond yLast the previous point
-  // as the last midway point
-  if ((lastPt.x-xLast)>tolerance) {
-    ilast-- ;
-    lastPt = getPoint(*this, ilast);
-  }
+  Point firstPt = getPoint(*this, ifirst);
+  Point lastPt = getPoint(*this, ilast);
 
   // Trapezoid integration from lower edge to first midpoint
   double sum = 0.5 * (firstPt.x-xFirst)*(yFirst+firstPt.y);
