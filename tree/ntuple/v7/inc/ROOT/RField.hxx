@@ -1846,6 +1846,30 @@ public:
    const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
 };
 
+template <typename T>
+class RSimpleField : public RFieldBase {
+protected:
+   void ConstructValue(void *where) const final { new (where) T{0}; }
+
+public:
+   RSimpleField(std::string_view name, std::string_view type)
+      : RFieldBase(name, type, ENTupleStructure::kLeaf, true /* isSimple */)
+   {
+      fTraits |= kTraitTrivialType;
+   }
+   RSimpleField(RSimpleField &&other) = default;
+   RSimpleField &operator=(RSimpleField &&other) = default;
+   ~RSimpleField() override = default;
+
+   T *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<T>(globalIndex); }
+   T *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<T>(clusterIndex); }
+   T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(globalIndex, nItems); }
+   T *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems) { return fPrincipalColumn->MapV<T>(clusterIndex, nItems); }
+
+   size_t GetValueSize() const final { return sizeof(T); }
+   size_t GetAlignment() const final { return alignof(T); }
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Template specializations for concrete C++ types
 ////////////////////////////////////////////////////////////////////////////////
@@ -1861,7 +1885,7 @@ public:
 };
 
 template <>
-class RField<ClusterSize_t> final : public RFieldBase {
+class RField<ClusterSize_t> final : public RSimpleField<ClusterSize_t> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1871,32 +1895,13 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) ClusterSize_t(0); }
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
-
-   ClusterSize_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<ClusterSize_t>(globalIndex);
-   }
-   ClusterSize_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<ClusterSize_t>(clusterIndex); }
-   ClusterSize_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<ClusterSize_t>(globalIndex, nItems);
-   }
-   ClusterSize_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<ClusterSize_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
-   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
 
    /// Special help for offset fields
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
@@ -1974,7 +1979,7 @@ public:
 };
 
 template <>
-class RField<bool> final : public RFieldBase {
+class RField<bool> final : public RSimpleField<bool> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -1984,37 +1989,19 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) bool(false); }
 
 public:
    static std::string TypeName() { return "bool"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   bool *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<bool>(globalIndex);
-   }
-   bool *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<bool>(clusterIndex); }
-   bool *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<bool>(globalIndex, nItems);
-   }
-   bool *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<bool>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(bool); }
-   size_t GetAlignment() const final { return alignof(bool); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RField<float> final : public RFieldBase {
+class RField<float> final : public RSimpleField<float> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2024,39 +2011,21 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) float(0.0); }
 
 public:
    static std::string TypeName() { return "float"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   float *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<float>(globalIndex);
-   }
-   float *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<float>(clusterIndex); }
-   float *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<float>(globalIndex, nItems);
-   }
-   float *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<float>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(float); }
-   size_t GetAlignment() const final { return alignof(float); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
    void SetHalfPrecision();
 };
 
 template <>
-class RField<double> final : public RFieldBase {
+class RField<double> final : public RSimpleField<double> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2066,32 +2035,14 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) double(0.0); }
 
 public:
    static std::string TypeName() { return "double"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   double *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<double>(globalIndex);
-   }
-   double *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<double>(clusterIndex); }
-   double *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<double>(globalIndex, nItems);
-   }
-   double *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<double>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(double); }
-   size_t GetAlignment() const final { return alignof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
    // Set the column representation to 32 bit floating point and the type alias to Double32_t
@@ -2099,7 +2050,7 @@ public:
 };
 
 template <>
-class RField<std::byte> final : public RFieldBase {
+class RField<std::byte> final : public RSimpleField<std::byte> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2109,36 +2060,19 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) std::byte{0}; }
 
 public:
    static std::string TypeName() { return "std::byte"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
 
-   std::byte *Map(NTupleSize_t globalIndex) { return fPrincipalColumn->Map<std::byte>(globalIndex); }
-   std::byte *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::byte>(clusterIndex); }
-   std::byte *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::byte>(globalIndex, nItems);
-   }
-   std::byte *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::byte>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::byte); }
-   size_t GetAlignment() const final { return alignof(std::byte); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RField<char> final : public RFieldBase {
+class RField<char> final : public RSimpleField<char> {
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final
    {
@@ -2148,32 +2082,14 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) char(0); }
 
 public:
    static std::string TypeName() { return "char"; }
-   explicit RField(std::string_view name) : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   char *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<char>(globalIndex);
-   }
-   char *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<char>(clusterIndex); }
-   char *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<char>(globalIndex, nItems);
-   }
-   char *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<char>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(char); }
-   size_t GetAlignment() const final { return alignof(char); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -2184,292 +2100,138 @@ class RIntegralField {
 };
 
 template <>
-class RIntegralField<std::int8_t> : public RFieldBase {
+class RIntegralField<std::int8_t> : public RSimpleField<std::int8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) int8_t(0); }
 
 public:
    static std::string TypeName() { return "std::int8_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::int8_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int8_t>(globalIndex);
-   }
-   std::int8_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int8_t>(clusterIndex); }
-   std::int8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::int8_t>(globalIndex, nItems);
-   }
-   std::int8_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::int8_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::int8_t); }
-   size_t GetAlignment() const final { return alignof(std::int8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::uint8_t> : public RFieldBase {
+class RIntegralField<std::uint8_t> : public RSimpleField<std::uint8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) uint8_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint8_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::uint8_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint8_t>(globalIndex);
-   }
-   std::uint8_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint8_t>(clusterIndex); }
-   std::uint8_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::uint8_t>(globalIndex, nItems);
-   }
-   std::uint8_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::uint8_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::uint8_t); }
-   size_t GetAlignment() const final { return alignof(std::uint8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::int16_t> : public RFieldBase {
+class RIntegralField<std::int16_t> : public RSimpleField<std::int16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) int16_t(0); }
 
 public:
    static std::string TypeName() { return "std::int16_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::int16_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int16_t>(globalIndex);
-   }
-   std::int16_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int16_t>(clusterIndex); }
-   std::int16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::int16_t>(globalIndex, nItems);
-   }
-   std::int16_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::int16_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::int16_t); }
-   size_t GetAlignment() const final { return alignof(std::int16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::uint16_t> : public RFieldBase {
+class RIntegralField<std::uint16_t> : public RSimpleField<std::uint16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) uint16_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint16_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::uint16_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint16_t>(globalIndex);
-   }
-   std::uint16_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint16_t>(clusterIndex); }
-   std::uint16_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::uint16_t>(globalIndex, nItems);
-   }
-   std::uint16_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::uint16_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::uint16_t); }
-   size_t GetAlignment() const final { return alignof(std::uint16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::int32_t> : public RFieldBase {
+class RIntegralField<std::int32_t> : public RSimpleField<std::int32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) int32_t(0); }
 
 public:
    static std::string TypeName() { return "std::int32_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::int32_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int32_t>(globalIndex);
-   }
-   std::int32_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int32_t>(clusterIndex); }
-   std::int32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::int32_t>(globalIndex, nItems);
-   }
-   std::int32_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::int32_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::int32_t); }
-   size_t GetAlignment() const final { return alignof(std::int32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::uint32_t> : public RFieldBase {
+class RIntegralField<std::uint32_t> : public RSimpleField<std::uint32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) uint32_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint32_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::uint32_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint32_t>(globalIndex);
-   }
-   std::uint32_t *Map(const RClusterIndex clusterIndex) {
-      return fPrincipalColumn->Map<std::uint32_t>(clusterIndex);
-   }
-   std::uint32_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::uint32_t>(globalIndex, nItems);
-   }
-   std::uint32_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::uint32_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::uint32_t); }
-   size_t GetAlignment() const final { return alignof(std::uint32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::uint64_t> : public RFieldBase {
+class RIntegralField<std::uint64_t> : public RSimpleField<std::uint64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) uint64_t(0); }
 
 public:
    static std::string TypeName() { return "std::uint64_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::uint64_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::uint64_t>(globalIndex);
-   }
-   std::uint64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::uint64_t>(clusterIndex); }
-   std::uint64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::uint64_t>(globalIndex, nItems);
-   }
-   std::uint64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::uint64_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::uint64_t); }
-   size_t GetAlignment() const final { return alignof(std::uint64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
-class RIntegralField<std::int64_t> : public RFieldBase {
+class RIntegralField<std::int64_t> : public RSimpleField<std::int64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ConstructValue(void *where) const final { new (where) int64_t(0); }
 
 public:
    static std::string TypeName() { return "std::int64_t"; }
-   explicit RIntegralField(std::string_view name)
-      : RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, true /* isSimple */)
-   {
-      fTraits |= kTraitTrivialType;
-   }
+   explicit RIntegralField(std::string_view name) : RSimpleField(name, TypeName()) {}
    RIntegralField(RIntegralField &&other) = default;
    RIntegralField &operator=(RIntegralField &&other) = default;
    ~RIntegralField() override = default;
 
-   std::int64_t *Map(NTupleSize_t globalIndex) {
-      return fPrincipalColumn->Map<std::int64_t>(globalIndex);
-   }
-   std::int64_t *Map(RClusterIndex clusterIndex) { return fPrincipalColumn->Map<std::int64_t>(clusterIndex); }
-   std::int64_t *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems) {
-      return fPrincipalColumn->MapV<std::int64_t>(globalIndex, nItems);
-   }
-   std::int64_t *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
-   {
-      return fPrincipalColumn->MapV<std::int64_t>(clusterIndex, nItems);
-   }
-
-   size_t GetValueSize() const final { return sizeof(std::int64_t); }
-   size_t GetAlignment() const final { return alignof(std::int64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
