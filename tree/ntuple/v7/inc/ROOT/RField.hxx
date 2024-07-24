@@ -2574,12 +2574,24 @@ class RField<T, typename std::enable_if<std::is_integral_v<T>>::type> final
    using MappedType = typename Internal::RIntegralTypeMap<T>::type;
    static_assert(sizeof(T) == sizeof(MappedType), "invalid size of mapped type");
    static_assert(std::is_signed_v<T> == std::is_signed_v<MappedType>, "invalid signedness of mapped type");
+   using BaseType = RIntegralField<MappedType>;
 
 public:
    RField(std::string_view name) : RIntegralField<MappedType>(name) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
+
+   T *Map(NTupleSize_t globalIndex) { return reinterpret_cast<T *>(this->BaseType::Map(globalIndex)); }
+   T *Map(RClusterIndex clusterIndex) { return reinterpret_cast<T *>(this->BaseType::Map(clusterIndex)); }
+   T *MapV(NTupleSize_t globalIndex, NTupleSize_t &nItems)
+   {
+      return reinterpret_cast<T *>(this->BaseType::MapV(globalIndex, nItems));
+   }
+   T *MapV(RClusterIndex clusterIndex, NTupleSize_t &nItems)
+   {
+      return reinterpret_cast<T *>(this->BaseType::MapV(clusterIndex, nItems));
+   }
 };
 
 template <>
