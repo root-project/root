@@ -61,22 +61,22 @@ on:
         default: ""
         required: false
 
+# TODO: it would be nice to use some global var for the platform, this doesn't work though :(
+env:
+  PLATFORM: alma9
+  DOC_DIR: rootdoc
+  DOC_LOCATION: /github/home
+  S3_BUCKET_NAME: root
+  PR_NUMBER: ${{ github.event.pull_request.number }}
+  SHOULD_DEPLOY: "true"
+  #SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}     
+
 jobs:
   build-docs:
     runs-on:
       - self-hosted
       - linux
       - x64
-
-    # TODO: it would be nice to use some global var for the platform, this doesn't work though :(
-    env:
-      PLATFORM: alma9
-      DOC_DIR: rootdoc
-      DOC_LOCATION: /github/home
-      S3_BUCKET_NAME: root
-      PR_NUMBER: ${{ github.event.pull_request.number }}
-      SHOULD_DEPLOY: "true"
-     #SHOULD_DEPLOY: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
 
     permissions:
       contents: read
@@ -211,16 +211,16 @@ jobs:
           mv ${DOXYGEN_OUTPUT_DIRECTORY}/notebooks ${DOC_LOCATION}/${DOC_DIR}/notebooks
         fi
 
-    - name: Create documentation archives
-      working-directory: ${{ env.DOC_LOCATION }}
-      shell: bash
-      run: |
-        tarnamegz=${DOC_DIR}.tar.gz
-        tar zcf $tarnamegz ${DOC_DIR}
-        tarnamexz1=${DOC_DIR}.tar
-        tar cf $tarnamexz1 ${DOC_DIR}
-        xz -T5 -f $tarnamexz1
-        ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
+    # - name: Create documentation archives
+    #   working-directory: ${{ env.DOC_LOCATION }}
+    #   shell: bash
+    #   run: |
+    #     tarnamegz=${DOC_DIR}.tar.gz
+    #     tar zcf $tarnamegz ${DOC_DIR}
+    #     tarnamexz1=${DOC_DIR}.tar
+    #     tar cf $tarnamexz1 ${DOC_DIR}
+    #     xz -T5 -f $tarnamexz1
+    #     ls -lh ${DOC_LOCATION} # Debug statement to list files and verify tarball creation
 
     # Upload to GitHub as an artifact (optional)
     # - name: Upload tar.gz
@@ -255,32 +255,73 @@ jobs:
     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     #     aws-region: eu-west-1
 
-       # Do I need this step?
-    - name: Install AWS CLI
-      run: |
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-        unzip awscliv2.zip
-        sudo ./aws/install
-  
-    - name: Checkout repo
-      uses: actions/checkout@v4
+    #    # Do I need this step?
+    # - name: Install AWS CLI
+    #   run: |
+    #     curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    #     unzip awscliv2.zip
+    #     sudo ./aws/install
 
-    - name: Setup Hugo
-      run: |
-        sudo apt-get update
-        sudo apt-get install hugo -y
+    # - name: Upload root_doc
+    #   if: ${{ env.SHOULD_DEPLOY == 'true' }}
+    #   run: |
+    #     DEST="s3://root/${PR_NUMBER:-}" # if PR, upload in s3://root/<prnumber>
+    #     aws --endpoint-url https://s3.cern.ch s3 sync --delete build/${PR_NUMBER:-} ${DEST}
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     AWS_REGION: "eu-west-1"
 
-    - name: Build with Hugo
-      run: hugo -d build/${PR_NUMBER:-}
-      env:
-        HUGO_ENV: production
+  upload-docs:
+    name: Jekyll Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Upload root_doc
-      if: ${{ env.SHOULD_DEPLOY == 'true' }}
-      run: |
-        DEST="s3://root/${PR_NUMBER:-}" # if PR, upload in s3://root/<prnumber>
-        aws --endpoint-url https://s3.cern.ch s3 sync --delete build/${PR_NUMBER:-} ${DEST}
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: "eu-west-1"
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@55283cc23133118229fd3f97f9336ee23a179fcf # v1.146.0
+        with:
+          ruby-version: '3.1' # Not needed with a .ruby-version file
+          bundler-cache: true # runs 'bundle install' and caches installed gems automatically
+          cache-version: 0 # Increment this number if you need to re-download cached gems
+
+      - name: Setup Pages
+        id: pages
+        uses: actions/configure-pages@v3
+
+      - name: Build with Jekyll
+        # Outputs to the './build' directory by default
+        run: bundle exec jekyll build "${PR_NUMBER:+--baseurl=${PR_NUMBER}/}" --destination "build/${PR_NUMBER:-}"
+        env:
+          JEKYLL_ENV: production
+
+      - name: Only allow links to root.cern, never root.cern.ch
+        run: |
+          grep -n -R 'root\.cern\.ch' build || exit 0  # grep returns non-zero if no match is found
+          N_WRONG_LINKS=$(grep -R 'root\.cern\.ch' build | wc -l)
+          echo -e "\nFound $N_WRONG_LINKS links to root.cern.ch. Please change them to link to root.cern (no '.ch') instead."
+          exit 1
+      - name: Only allow links to ref guide for master (except in release notes and when linking to release notes)
+        run: |
+          # grep for https://root.cern/doc/(!"master" && !"vXXX/release-notes.html"). If something is found, error out.
+          grep --exclude="index.html" --exclude-dir="releases" --exclude-dir="reference" --exclude-dir="all_releases" --exclude-dir="feed" -n -R -P 'https:\/\/root\.cern\/doc\/(?!(master|v[0-9]{3}\/release-notes\.html))' build \
+             || exit 0 # grep returns non-zero if no match is found
+          echo -e "\nFound links to /doc/NOT_MASTER (see above). Please change them to link to /doc/master."
+          exit 1
+      - name: Wait for other deployments
+        # wait for other workflows that are deploying the website to finish, (not 100% foolproof, see #240)
+        if: ${{ env.SHOULD_DEPLOY == 'true' && github.event_name != 'pull_request' }}
+        uses: softprops/turnstyle@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Sync to S3
+        if: ${{ env.SHOULD_DEPLOY == 'true' }}
+        run: |
+          DEST="s3://root/${PR_NUMBER:-}" # if PR, upload in s3://root/<prnumber>
+          aws --endpoint-url https://s3.cern.ch s3 sync --delete build/${PR_NUMBER:-} ${DEST}
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "eu-west-1"
