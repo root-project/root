@@ -495,6 +495,53 @@ TEST(RNTuple, StdUnorderedSet)
    EXPECT_EQ(pairSet, *mySet2);
 }
 
+TEST(RNTuple, StdMultiSet)
+{
+   auto field = RField<std::multiset<int64_t>>("setField");
+   EXPECT_STREQ("std::multiset<std::int64_t>", field.GetTypeName().c_str());
+   auto otherField = RFieldBase::Create("test", "std::multiset<int64_t>").Unwrap();
+   EXPECT_EQ(field.GetTypeName(), otherField->GetTypeName());
+   EXPECT_EQ((sizeof(std::multiset<int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::multiset<int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::multiset<int64_t>)), field.GetAlignment());
+   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::multiset<int64_t>)), otherField->GetAlignment());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdmultiset.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto set_field = model->MakeField<std::multiset<float>>({"mySet", "multi float set"});
+      auto mySet2 = RFieldBase::Create("mySet2", "std::multiset<CustomStruct>").Unwrap();
+
+      model->AddField(std::move(mySet2));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
+      auto set_field2 = ntuple->GetModel().GetDefaultEntry().GetPtr<std::multiset<CustomStruct>>("mySet2");
+      for (int i = 0; i < 2; i++) {
+         *set_field = {static_cast<float>(i), static_cast<float>(i), 3.14, 0.42};
+         *set_field2 = {CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"},
+                        CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"},
+                        CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("set_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewSet = ntuple->GetView<std::multiset<float>>("mySet");
+   auto viewSet2 = ntuple->GetView<std::multiset<CustomStruct>>("mySet2");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(std::multiset<float>({static_cast<float>(i), static_cast<float>(i), 3.14, 0.42}), viewSet(i));
+
+      auto customStructSet = std::multiset<CustomStruct>({CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"},
+                                                          CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"},
+                                                          CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"}});
+      EXPECT_EQ(customStructSet, viewSet2(i));
+   }
+}
+
 TEST(RNTuple, StdMap)
 {
    auto field = RField<std::map<char, int64_t>>("mapField");
