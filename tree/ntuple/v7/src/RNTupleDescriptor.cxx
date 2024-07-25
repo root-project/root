@@ -379,10 +379,9 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
 }
 
 ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
-   const RNTupleDescriptor &ntuple, const DescriptorId_t fieldId)
+   const RNTupleDescriptor &ntuple, const RFieldDescriptor &fieldDesc)
    : fNTuple(ntuple)
 {
-   const auto &fieldDesc = ntuple.GetFieldDescriptor(fieldId);
    fColumns = fieldDesc.GetLogicalColumnIds();
 }
 
