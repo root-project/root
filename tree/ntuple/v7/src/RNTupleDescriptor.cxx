@@ -388,10 +388,10 @@ void ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::CollectCo
 }
 
 ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
-   const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
+   const RNTupleDescriptor &ntuple, const DescriptorId_t fieldId)
    : fNTuple(ntuple)
 {
-   CollectColumnIds(field.GetId());
+   CollectColumnIds(fieldId);
 }
 
 ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(

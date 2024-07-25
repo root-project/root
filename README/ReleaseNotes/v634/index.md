@@ -95,6 +95,10 @@ The following people have contributed to this new version:
 
 ## RooFit Libraries
 
+### Miscellaneous
+
+* Setting `useHashMapForFind(true)` is not supported for RooArgLists anymore, since hash-assisted finding by name hash can be ambiguous: a RooArgList is allowed to have different elements with the same name. If you want to do fast lookups by name, convert your RooArgList to a RooArgSet.
+
 ## Graphics Backends
 
 ## 2D Graphics Libraries

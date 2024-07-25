@@ -362,3 +362,39 @@ TEST(RNTuple, BindEmplaceVoid)
    EXPECT_FLOAT_EQ(33.f, view.GetValue().GetRef<float>());
    EXPECT_FLOAT_EQ(22.f, value2); // The previous value was not modified
 }
+
+TEST(RNTuple, ViewStandardIntegerTypes)
+{
+   FileRaii fileGuard("test_ntuple_viewstandardintegertypes.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto c = model->MakeField<char>("c", 'a');
+      auto uc = model->MakeField<unsigned char>("uc", 1);
+      auto s = model->MakeField<short>("s", 2);
+      auto us = model->MakeField<unsigned short>("us", 3);
+      auto i = model->MakeField<int>("i", 4);
+      auto ui = model->MakeField<unsigned int>("ui", 5);
+      auto l = model->MakeField<long>("l", 6);
+      auto ul = model->MakeField<unsigned long>("ul", 7);
+      auto ll = model->MakeField<long long>("ll", 8);
+      auto ull = model->MakeField<unsigned long long>("ull", 9);
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   ASSERT_EQ(1, reader->GetNEntries());
+
+   EXPECT_EQ('a', reader->GetView<char>("c")(0));
+   EXPECT_EQ(1, reader->GetView<unsigned char>("uc")(0));
+   EXPECT_EQ(2, reader->GetView<short>("s")(0));
+   EXPECT_EQ(3, reader->GetView<unsigned short>("us")(0));
+   EXPECT_EQ(4, reader->GetView<int>("i")(0));
+   EXPECT_EQ(5, reader->GetView<unsigned int>("ui")(0));
+   EXPECT_EQ(6, reader->GetView<long>("l")(0));
+   EXPECT_EQ(7, reader->GetView<unsigned long>("ul")(0));
+   EXPECT_EQ(8, reader->GetView<long long>("ll")(0));
+   EXPECT_EQ(9, reader->GetView<unsigned long long>("ull")(0));
+}

@@ -155,7 +155,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
 
   // Mark all projected dependents as such
   if (!projDeps.empty()) {
-    std::unique_ptr<RooArgSet> projDataDeps{static_cast<RooArgSet*>(_funcObsSet->selectCommon(projDeps))};
+    std::unique_ptr<RooArgSet> projDataDeps{_funcObsSet->selectCommon(projDeps)};
     projDataDeps->setAttribAll("projectedDependent") ;
   }
 

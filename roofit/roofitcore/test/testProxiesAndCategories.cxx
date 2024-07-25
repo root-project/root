@@ -81,30 +81,25 @@ public:
     TFile file(GetParam(), "READ");
     ASSERT_TRUE(file.IsOpen());
 
-    file.GetObject("catOrig", cat);
+    cat = std::unique_ptr<RooCategory>{file.Get<RooCategory>("catOrig")};
     ASSERT_NE(cat, nullptr);
 
-    file.GetObject("data", data);
+    data = std::unique_ptr<RooDataSet>{file.Get<RooDataSet>("data")};
     ASSERT_NE(data, nullptr);
 
     catFromDataset = dynamic_cast<RooCategory*>(data->get(0)->find("cat"));
     ASSERT_NE(catFromDataset, nullptr);
   }
 
-  void TearDown() override {
-    delete cat;
-    delete data;
-  }
-
 protected:
   enum State_t {one = 0, two = 1, three = 2, four = 3};
-  RooCategory* cat{nullptr};
-  RooDataSet* data{nullptr};
+  std::unique_ptr<RooCategory> cat;
+  std::unique_ptr<RooDataSet> data;
   RooCategory* catFromDataset{nullptr};
 };
 
 TEST_P(RooCategoryIO, ReadWithRanges) {
-  for (RooCategory* theCat : {cat, catFromDataset}) {
+  for (RooCategory* theCat : {cat.get(), catFromDataset}) {
     ASSERT_TRUE(theCat->hasRange("odds"));
     ASSERT_TRUE(theCat->hasRange("evens"));
 

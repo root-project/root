@@ -347,7 +347,6 @@ if(root7)
                  v7/fitpanel6.cxx
       )
   if(NOT davix)
-    list(APPEND root7_veto v7/ntuple/ntpl003_lhcbOpenData.C)
     list(APPEND root7_veto v7/ntuple/ntpl004_dimuon.C)
     list(APPEND root7_veto v7/ntuple/ntpl011_global_temperatures.C)
   endif()

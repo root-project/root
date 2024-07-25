@@ -676,8 +676,22 @@ TEST(RNTuple, StdUnorderedMap)
 
 TEST(RNTuple, Int64)
 {
-   auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint64_t").Unwrap();
+   {
+      RField<std::int64_t> typedField("test");
+      EXPECT_EQ("std::int64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint64_t> typedField("test");
+      EXPECT_EQ("std::uint64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int64.root");
 
@@ -732,8 +746,22 @@ TEST(RNTuple, Int64)
 
 TEST(RNTuple, Int32)
 {
-   auto field = RFieldBase::Create("test", "std::int32_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint32_t").Unwrap();
+   {
+      RField<std::int32_t> typedField("test");
+      EXPECT_EQ("std::int32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int32_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int32_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint32_t> typedField("test");
+      EXPECT_EQ("std::uint32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint32_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint32_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int32.root");
 
@@ -788,10 +816,22 @@ TEST(RNTuple, Int32)
 
 TEST(RNTuple, Int16)
 {
-   auto field = RFieldBase::Create("test", "std::int16_t").Unwrap();
-   auto otherField = RFieldBase::Create("test", "std::uint16_t").Unwrap();
-   ASSERT_EQ("std::int16_t", RFieldBase::Create("myShort", "Short_t").Unwrap()->GetTypeName());
-   ASSERT_EQ("std::uint16_t", RFieldBase::Create("myUShort", "UShort_t").Unwrap()->GetTypeName());
+   {
+      RField<std::int16_t> typedField("test");
+      EXPECT_EQ("std::int16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int16_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int16_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint16_t> typedField("test");
+      EXPECT_EQ("std::uint16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint16_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint16_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+   }
 
    FileRaii fileGuard("test_ntuple_int16.root");
 
@@ -844,23 +884,38 @@ TEST(RNTuple, Int16)
              *reader->GetModel().GetDefaultEntry().GetPtr<std::uint16_t>("i4"));
 }
 
-TEST(RNTuple, Char)
+TEST(RNTuple, Int8_t)
 {
-   auto charField = RField<char>("myChar");
-   auto otherField = RFieldBase::Create("test", "char").Unwrap();
-   ASSERT_EQ("char", otherField->GetTypeName());
-
-   auto charTField = RField<Char_t>("myChar");
-   ASSERT_EQ("char", charTField.GetTypeName());
+   {
+      RField<std::int8_t> typedField("test");
+      EXPECT_EQ("std::int8_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::int8_t").Unwrap();
+      EXPECT_EQ("std::int8_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "int8_t").Unwrap();
+      EXPECT_EQ("std::int8_t", field->GetTypeName());
+   }
+   {
+      RField<std::uint8_t> typedField("test");
+      EXPECT_EQ("std::uint8_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::uint8_t").Unwrap();
+      EXPECT_EQ("std::uint8_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "uint8_t").Unwrap();
+      EXPECT_EQ("std::uint8_t", field->GetTypeName());
+   }
 }
 
 TEST(RNTuple, Byte)
 {
-   FileRaii fileGuard("ntuple_test_byte.root");
+   {
+      RField<std::byte> typedField("test");
+      EXPECT_EQ("std::byte", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "std::byte").Unwrap();
+      EXPECT_EQ("std::byte", field->GetTypeName());
+      field = RFieldBase::Create("test", "byte").Unwrap();
+      EXPECT_EQ("std::byte", field->GetTypeName());
+   }
 
-   auto byteField = RField<std::byte>("myByte");
-   auto otherField = RFieldBase::Create("test", "std::byte").Unwrap();
-   ASSERT_EQ("std::byte", otherField->GetTypeName());
+   FileRaii fileGuard("ntuple_test_byte.root");
 
    {
       auto model = RNTupleModel::Create();
@@ -875,10 +930,116 @@ TEST(RNTuple, Byte)
    EXPECT_EQ(std::byte{137}, *reader->GetModel().GetDefaultEntry().GetPtr<std::byte>("b"));
 }
 
-TEST(RNTuple, Int8_t)
+TEST(RNTuple, Char)
 {
-   auto field = RField<std::int8_t>("myInt8");
-   auto otherField = RFieldBase::Create("test", "std::int8_t").Unwrap();
+   RField<char> typedField("test");
+   EXPECT_EQ("char", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "char").Unwrap();
+   EXPECT_EQ("char", field->GetTypeName());
+   field = RFieldBase::Create("test", "Char_t").Unwrap();
+   EXPECT_EQ("char", field->GetTypeName());
+}
+
+TEST(RNTuple, UnsignedChar)
+{
+   RField<unsigned char> typedField("test");
+   EXPECT_EQ("std::uint8_t", typedField.GetTypeName());
+   auto field = RFieldBase::Create("test", "unsigned char").Unwrap();
+   EXPECT_EQ("std::uint8_t", field->GetTypeName());
+   field = RFieldBase::Create("test", "UChar_t").Unwrap();
+   EXPECT_EQ("std::uint8_t", field->GetTypeName());
+}
+
+TEST(RNTuple, Short)
+{
+   {
+      RField<short> typedField("test");
+      EXPECT_EQ("std::int16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "short").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Short_t").Unwrap();
+      EXPECT_EQ("std::int16_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned short> typedField("test");
+      EXPECT_EQ("std::uint16_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned short").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "UShort_t").Unwrap();
+      EXPECT_EQ("std::uint16_t", field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, Int)
+{
+   {
+      RField<int> typedField("test");
+      EXPECT_EQ("std::int32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "int").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Int_t").Unwrap();
+      EXPECT_EQ("std::int32_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned int> typedField("test");
+      EXPECT_EQ("std::uint32_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned int").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "unsigned").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "UInt_t").Unwrap();
+      EXPECT_EQ("std::uint32_t", field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, Long)
+{
+   {
+      std::string expectedType = "std::int64_t";
+      if (sizeof(long) == 4) {
+         expectedType = "std::int32_t";
+      }
+
+      RField<long> typedField("test");
+      EXPECT_EQ(expectedType, typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "long").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+      field = RFieldBase::Create("test", "Long_t").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+   }
+   {
+      std::string expectedType = "std::uint64_t";
+      if (sizeof(long) == 4) {
+         expectedType = "std::uint32_t";
+      }
+
+      RField<unsigned long> typedField("test");
+      EXPECT_EQ(expectedType, typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned long").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+      field = RFieldBase::Create("test", "ULong_t").Unwrap();
+      EXPECT_EQ(expectedType, field->GetTypeName());
+   }
+}
+
+TEST(RNTuple, LongLong)
+{
+   {
+      RField<long long> typedField("test");
+      EXPECT_EQ("std::int64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "long long").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "Long64_t").Unwrap();
+      EXPECT_EQ("std::int64_t", field->GetTypeName());
+   }
+   {
+      RField<unsigned long long> typedField("test");
+      EXPECT_EQ("std::uint64_t", typedField.GetTypeName());
+      auto field = RFieldBase::Create("test", "unsigned long long").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+      field = RFieldBase::Create("test", "ULong64_t").Unwrap();
+      EXPECT_EQ("std::uint64_t", field->GetTypeName());
+   }
 }
 
 TEST(RNTuple, Double)

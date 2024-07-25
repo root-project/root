@@ -61,12 +61,12 @@ TEST(RNTupleModel, EstimateWriteMemoryUsage)
    options.SetApproxZippedClusterSize(ClusterSize);
 
    // Tail page optimization and buffered writing on, IMT not disabled.
-   static constexpr std::size_t Expected1 = NumColumns * 3 * PageSize + 3 * ClusterSize;
+   static constexpr std::size_t Expected1 = NumColumns * 3 * PageSize * 2 + 3 * ClusterSize;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected1);
 
    // Disable IMT.
    options.SetUseImplicitMT(RNTupleWriteOptions::EImplicitMT::kOff);
-   static constexpr std::size_t Expected2 = NumColumns * 3 * PageSize + ClusterSize;
+   static constexpr std::size_t Expected2 = NumColumns * 3 * PageSize * 2 + ClusterSize;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected2);
 
    // Disable buffered writing.
@@ -81,6 +81,6 @@ TEST(RNTupleModel, EstimateWriteMemoryUsage)
 
    // Enable buffered writing again.
    options.SetUseBufferedWrite(true);
-   static constexpr std::size_t Expected5 = NumColumns * PageSize + ClusterSize;
+   static constexpr std::size_t Expected5 = NumColumns * PageSize * 2 + ClusterSize;
    EXPECT_EQ(model->EstimateWriteMemoryUsage(options), Expected5);
 }

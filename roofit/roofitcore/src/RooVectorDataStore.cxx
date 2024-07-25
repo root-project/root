@@ -847,7 +847,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 //       cout << "RooVectorDataStore::cacheArgs() cached node " << arg->GetName() << " has a normalization set specification CATNormSet = " << catNset << endl ;
 
       RooArgSet anset = RooHelpers::selectFromArgSet(nset ? *nset : RooArgSet{}, catNset);
-      normSet = static_cast<RooArgSet*>(anset.selectCommon(*argObs)) ;
+      normSet = anset.selectCommon(*argObs);
 
     }
     const char* catCset = arg->getStringAttribute("CATCondSet") ;

@@ -671,12 +671,12 @@ bool RooRealIntegral::initNumIntegrator() const
   // Bind the appropriate analytic integral of our RooRealVar object to
   // those of its arguments that will be integrated out numerically.
   if(_mode != 0) {
-    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *funcNormSet(), RooNameReg::str(_rangeName))};
+    std::unique_ptr<RooAbsReal> analyticalPart{_function->createIntegral(_anaList, *actualFuncNormSet(), RooNameReg::str(_rangeName))};
     _numIntegrand = std::make_unique<RooRealBinding>(*analyticalPart,_intList,nullptr,false,_rangeName);
     const_cast<RooRealIntegral*>(this)->addOwnedComponents(std::move(analyticalPart));
   }
   else {
-    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,funcNormSet(),false,_rangeName);
+    _numIntegrand = std::make_unique<RooRealBinding>(*_function,_intList,actualFuncNormSet(),false,_rangeName);
   }
   if(nullptr == _numIntegrand || !_numIntegrand->isValid()) {
     coutE(Integration) << ClassName() << "::" << GetName() << ": failed to create valid integrand." << std::endl;
@@ -879,7 +879,7 @@ double RooRealIntegral::evaluate() const
       assert(servers().size() == _facList.size() + 1);
 
       //setDirtyInhibit(true) ;
-      retVal= _function->getVal(funcNormSet());
+      retVal= _function->getVal(actualFuncNormSet());
       //setDirtyInhibit(false) ;
       break ;
     }
