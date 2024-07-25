@@ -424,11 +424,11 @@ protected:
    virtual const RColumnRepresentations &GetColumnRepresentations() const;
    /// Implementations in derived classes should create the backing columns corresponsing to the field type for
    /// writing. The default implementation does not attach any columns to the field.
-   virtual void GenerateColumnsImpl() {}
+   virtual void GenerateColumns() {}
    /// Implementations in derived classes should create the backing columns corresponsing to the field type for reading.
    /// The default implementation does not attach any columns to the field. The method should check, using the page
    /// source and fOnDiskId, if the column types match and throw if they don't.
-   virtual void GenerateColumnsImpl(const RNTupleDescriptor & /*desc*/) {}
+   virtual void GenerateColumns(const RNTupleDescriptor & /*desc*/) {}
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
    /// don't match any of the deserialization types from GetColumnRepresentations().
    const ColumnRepresentation_t &EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const;
@@ -859,8 +859,8 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &) final;
 
    void ConstructValue(void *where) const final;
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RUnsplitDeleter>(fClass); }
@@ -1033,8 +1033,8 @@ protected:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
@@ -1154,8 +1154,8 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const override { new (where) std::vector<char>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -1212,8 +1212,8 @@ protected:
 
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const override;
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const override;
@@ -1306,8 +1306,8 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
-   void GenerateColumnsImpl() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
-   using RFieldBase::GenerateColumnsImpl;
+   void GenerateColumns() final { R__ASSERT(false && "RArrayAsRVec fields must only be used for reading"); }
+   using RFieldBase::GenerateColumns;
 
    void ConstructValue(void *where) const final;
    /// Returns an RRVecField::RRVecDeleter
@@ -1353,8 +1353,8 @@ protected:
       return std::make_unique<RBitsetField>(newName, fN);
    }
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
    void ConstructValue(void *where) const final { memset(where, 0, GetValueSize()); }
    std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
@@ -1417,8 +1417,8 @@ protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const override;
    std::unique_ptr<RDeleter> GetDeleter() const final;
@@ -1491,8 +1491,8 @@ class RNullableField : public RFieldBase {
 
 protected:
    const RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &) final;
 
    std::size_t AppendNull();
    std::size_t AppendValue(const void *from);
@@ -1735,8 +1735,8 @@ private:
 protected:
    std::unique_ptr<RFieldBase> CloneImpl(std::string_view newName) const final;
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
    void ConstructValue(void *) const final {}
 
    std::size_t AppendImpl(const void *from) final;
@@ -1832,8 +1832,8 @@ protected:
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    // Field is only used for reading
-   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+   void GenerateColumns() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumns(const RNTupleDescriptor &) final;
 
 public:
    RCardinalityField(RCardinalityField &&other) = default;
@@ -1893,8 +1893,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
@@ -1987,8 +1987,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "bool"; }
@@ -2009,8 +2009,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "float"; }
@@ -2033,8 +2033,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "double"; }
@@ -2058,8 +2058,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::byte"; }
@@ -2080,8 +2080,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "char"; }
@@ -2103,8 +2103,8 @@ template <>
 class RIntegralField<std::int8_t> : public RSimpleField<std::int8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int8_t"; }
@@ -2120,8 +2120,8 @@ template <>
 class RIntegralField<std::uint8_t> : public RSimpleField<std::uint8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint8_t"; }
@@ -2137,8 +2137,8 @@ template <>
 class RIntegralField<std::int16_t> : public RSimpleField<std::int16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int16_t"; }
@@ -2154,8 +2154,8 @@ template <>
 class RIntegralField<std::uint16_t> : public RSimpleField<std::uint16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint16_t"; }
@@ -2171,8 +2171,8 @@ template <>
 class RIntegralField<std::int32_t> : public RSimpleField<std::int32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int32_t"; }
@@ -2188,8 +2188,8 @@ template <>
 class RIntegralField<std::uint32_t> : public RSimpleField<std::uint32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint32_t"; }
@@ -2205,8 +2205,8 @@ template <>
 class RIntegralField<std::uint64_t> : public RSimpleField<std::uint64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint64_t"; }
@@ -2222,8 +2222,8 @@ template <>
 class RIntegralField<std::int64_t> : public RSimpleField<std::int64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int64_t"; }
@@ -2333,8 +2333,8 @@ private:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::string(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::string>>(); }
@@ -2580,8 +2580,8 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumns() final;
+   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
    void ConstructValue(void *where) const final { new (where) std::vector<bool>(); }
    std::unique_ptr<RDeleter> GetDeleter() const final { return std::make_unique<RTypedDeleter<std::vector<bool>>>(); }

@@ -85,8 +85,8 @@ public:
       return representations;
    }
    // Field is only used for reading
-   void GenerateColumnsImpl() final { assert(false && "Cardinality fields must only be used for reading"); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final
+   void GenerateColumns() final { assert(false && "Cardinality fields must only be used for reading"); }
+   void GenerateColumns(const RNTupleDescriptor &desc) final
    {
       auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
       fColumns.emplace_back(ROOT::Experimental::Internal::RColumn::Create<ClusterSize_t>(onDiskTypes[0], 0));
@@ -128,8 +128,8 @@ private:
    {
       return std::make_unique<RArraySizeField>(fArrayLength);
    }
-   void GenerateColumnsImpl() final { assert(false && "RArraySizeField fields must only be used for reading"); }
-   void GenerateColumnsImpl(const ROOT::Experimental::RNTupleDescriptor &) final {}
+   void GenerateColumns() final { assert(false && "RArraySizeField fields must only be used for reading"); }
+   void GenerateColumns(const ROOT::Experimental::RNTupleDescriptor &) final {}
    void ReadGlobalImpl(NTupleSize_t /*globalIndex*/, void *to) final { *static_cast<std::size_t *>(to) = fArrayLength; }
    void ReadInClusterImpl(RClusterIndex /*clusterIndex*/, void *to) final
    {
