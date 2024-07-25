@@ -1762,7 +1762,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       std::string npDomainName = analysisName + "_nuisance_parameters";
       domains.append_child() << npDomainName;
       RooFit::JSONIO::Detail::Domains::ProductDomain npDomain;
-      for (const auto &np : static_range_cast<const RooRealVar *>(*mc.GetNuisanceParameters())) {
+      for (auto *np : static_range_cast<const RooRealVar *>(*mc.GetNuisanceParameters())) {
          npDomain.readVariable(*np);
       }
       npDomain.writeJSON(appendNamedChild(domainsNode, npDomainName));
@@ -1772,7 +1772,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       std::string poiDomainName = analysisName + "_parameters_of_interest";
       domains.append_child() << poiDomainName;
       RooFit::JSONIO::Detail::Domains::ProductDomain poiDomain;
-      for (const auto &poi : static_range_cast<const RooRealVar *>(*mc.GetParametersOfInterest())) {
+      for (auto *poi : static_range_cast<const RooRealVar *>(*mc.GetParametersOfInterest())) {
          poiDomain.readVariable(*poi);
       }
       poiDomain.writeJSON(appendNamedChild(domainsNode, poiDomainName));
