@@ -31,6 +31,7 @@ except ImportError:
 if TYPE_CHECKING:
     from dask_jobqueue import JobQueueCluster
     from DistRDF import Ranges
+    from DistRDF._graph_cache import ExecutionIdentifier
 
 
 def get_total_cores_generic(client: Client) -> int:
@@ -368,3 +369,15 @@ class DaskBackend(Base.BaseBackend):
         npartitions = kwargs.pop("npartitions", None)
         headnode = HeadNode.get_headnode(self, npartitions, *args)
         return DataFrame.RDataFrame(headnode)
+
+    def cleanup_cache(self, exec_id: ExecutionIdentifier) -> None:
+        """
+        Remove the computation graph identified by the input argument from the
+        cache.
+        """
+        def remove_from_rdf_cache(exec_id: ExecutionIdentifier) -> None:
+            from DistRDF._graph_cache import _ACTIONS_REGISTER, _RDF_REGISTER
+            _ACTIONS_REGISTER.pop(exec_id, None)
+            _RDF_REGISTER.pop(exec_id, None)
+
+        return self.client.run(remove_from_rdf_cache, exec_id)
