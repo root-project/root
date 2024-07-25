@@ -637,7 +637,7 @@ public:
          bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       };
 
-      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const DescriptorId_t fieldId);
+      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &fieldDesc);
       RColumnDescriptorIterable(const RNTupleDescriptor &ntuple);
 
       RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
@@ -920,11 +920,11 @@ public:
    RColumnDescriptorIterable GetColumnIterable() const { return RColumnDescriptorIterable(*this); }
    RColumnDescriptorIterable GetColumnIterable(const RFieldDescriptor &fieldDesc) const
    {
-      return RColumnDescriptorIterable(*this, fieldDesc.GetId());
+      return RColumnDescriptorIterable(*this, fieldDesc);
    }
    RColumnDescriptorIterable GetColumnIterable(DescriptorId_t fieldId) const
    {
-      return RColumnDescriptorIterable(*this, fieldId);
+      return RColumnDescriptorIterable(*this, GetFieldDescriptor(fieldId));
    }
 
    RClusterGroupDescriptorIterable GetClusterGroupIterable() const { return RClusterGroupDescriptorIterable(*this); }
