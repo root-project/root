@@ -52,7 +52,7 @@ The namespace RooFit contains mostly switches that change the behaviour of funct
 
 These switches are documented with the relevant functions, e.g. RooAbsPdf::fitTo().
 For an introduction to RooFit (not the namespace), check the [user's guides](https://root.cern/root-user-guides-and-manuals),
-[courses](https://root.cern/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
+[courses](https://root.cern/learn/courses) or [the RooFit chapter of the Manual](https://root.cern/manual/roofit/).
 */
 namespace RooFit {
 

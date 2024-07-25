@@ -53,7 +53,7 @@ See more screenshots on our [gallery](https://root.cern/gallery).
 See https://root.cern/install for installation instructions.
 For instructions on how to build ROOT from these source files, see https://root.cern/install/build_from_source.
 
-Our ["Getting started with ROOT"](https://root.cern/get_started) page is then the perfect place to get familiar with ROOT.
+Our ["Getting started with ROOT"](https://root.cern/learn) page is then the perfect place to get familiar with ROOT.
 
 ## Help and Support
 - [Forum](https://root.cern/forum/)
