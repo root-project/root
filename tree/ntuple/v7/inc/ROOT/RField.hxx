@@ -419,6 +419,32 @@ protected:
    /// is called.  Otherwise GetColumnRepresentative returns the default representation.
    const ColumnRepresentation_t *fColumnRepresentative = nullptr;
 
+   /// Helpers for generating columns. We use the fact that most fields have the same C++/memory types
+   /// for all their column representations.
+   /// Where possible, we call the helpers not from the header to reduce compilation time.
+   template <int ColumnIndexT, typename HeadT, typename... TailTs>
+   void GenerateColumnsImpl(const ColumnRepresentation_t &representation)
+   {
+      assert(ColumnIndexT < representation.size());
+      fColumns.emplace_back(Internal::RColumn::Create<HeadT>(representation[ColumnIndexT], ColumnIndexT));
+      if constexpr (sizeof...(TailTs))
+         GenerateColumnsImpl<ColumnIndexT + 1, TailTs...>(representation);
+   }
+
+   /// For writing, use the currently set column representative
+   template <int ColumnIndexT, typename HeadT, typename... TailTs>
+   void GenerateColumnsImpl()
+   {
+      GenerateColumnsImpl<0, HeadT, TailTs...>(GetColumnRepresentative());
+   }
+
+   /// For reading, use the on-disk column list
+   template <int ColumnIndexT, typename HeadT, typename... TailTs>
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc)
+   {
+      GenerateColumnsImpl<0, HeadT, TailTs...>(EnsureCompatibleColumnTypes(desc));
+   }
+
    /// Implementations in derived classes should return a static RColumnRepresentations object. The default
    /// implementation does not attach any columns to the field.
    virtual const RColumnRepresentations &GetColumnRepresentations() const;
@@ -1849,6 +1875,9 @@ public:
 template <typename T>
 class RSimpleField : public RFieldBase {
 protected:
+   void GenerateColumns() final { GenerateColumnsImpl<0, T>(); }
+   void GenerateColumns(const RNTupleDescriptor &desc) final { GenerateColumnsImpl<0, T>(desc); }
+
    void ConstructValue(void *where) const final { new (where) T{0}; }
 
 public:
@@ -1893,8 +1922,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "ROOT::Experimental::ClusterSize_t"; }
@@ -1987,8 +2014,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "bool"; }
@@ -2009,8 +2034,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "float"; }
@@ -2033,8 +2056,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "double"; }
@@ -2058,8 +2079,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::byte"; }
@@ -2080,8 +2099,6 @@ protected:
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "char"; }
@@ -2103,8 +2120,6 @@ template <>
 class RIntegralField<std::int8_t> : public RSimpleField<std::int8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int8_t"; }
@@ -2120,8 +2135,6 @@ template <>
 class RIntegralField<std::uint8_t> : public RSimpleField<std::uint8_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint8_t"; }
@@ -2137,8 +2150,6 @@ template <>
 class RIntegralField<std::int16_t> : public RSimpleField<std::int16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int16_t"; }
@@ -2154,8 +2165,6 @@ template <>
 class RIntegralField<std::uint16_t> : public RSimpleField<std::uint16_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint16_t"; }
@@ -2171,8 +2180,6 @@ template <>
 class RIntegralField<std::int32_t> : public RSimpleField<std::int32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int32_t"; }
@@ -2188,8 +2195,6 @@ template <>
 class RIntegralField<std::uint32_t> : public RSimpleField<std::uint32_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint32_t"; }
@@ -2205,8 +2210,6 @@ template <>
 class RIntegralField<std::uint64_t> : public RSimpleField<std::uint64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::uint64_t"; }
@@ -2222,8 +2225,6 @@ template <>
 class RIntegralField<std::int64_t> : public RSimpleField<std::int64_t> {
 protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumns() final;
-   void GenerateColumns(const RNTupleDescriptor &desc) final;
 
 public:
    static std::string TypeName() { return "std::int64_t"; }
