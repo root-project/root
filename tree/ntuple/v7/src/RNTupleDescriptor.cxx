@@ -791,7 +791,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleDescripto
       // Check that the last column representation is complete, i.e. has all columns.
       const auto &logicalColumnIds = fieldDesc.GetLogicalColumnIds();
       const auto nColumns = logicalColumnIds.size();
-      if (nColumns <= columnCardinality)
+      // If we have only a single column representation, the following condition is true by construction
+      if ((nColumns + 1) == columnCardinality)
          continue;
 
       const auto &lastColumn = fDescriptor.GetColumnDescriptor(logicalColumnIds.back());
