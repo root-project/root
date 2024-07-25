@@ -386,15 +386,13 @@ class EmptySourceHeadNode(HeadNode):
             Builds an RDataFrame instance for a distributed mapper.
             """
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(nentries)
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
-            else:
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(nentries)
 
             ROOT.Internal.RDF.ChangeEmptyEntryRange(
-                ROOT.RDF.AsRNode(rdf_toprocess), (current_range.start, current_range.end))
+                ROOT.RDF.AsRNode(_graph_cache._RDF_REGISTER[current_range.exec_id]),
+                (current_range.start, current_range.end))
 
-            return TaskObjects(rdf_toprocess, None)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], None)
 
         return build_rdf_from_range
 
@@ -581,16 +579,15 @@ class TreeHeadNode(HeadNode):
             attach_friend_info_if_present(clustered_range, ds)
 
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(ds)
                 # Fill the cache with the new RDataFrame
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds)
             else:
-                # Retrieve an already present RDataFrame from the cache
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
                 # Update it to the range of entries for this task
-                ROOT.Internal.RDF.ChangeSpec(ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+                ROOT.Internal.RDF.ChangeSpec(
+                    ROOT.RDF.AsRNode(_graph_cache._RDF_REGISTER[current_range.exec_id]),
+                    ROOT.std.move(ds))
 
-            return TaskObjects(rdf_toprocess, entries_in_trees)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], entries_in_trees)
 
         return build_rdf_from_range
 
@@ -770,17 +767,15 @@ class RDatasetSpecHeadNode(HeadNode):
             attach_friend_info_if_present(clustered_range, ds)
 
             if current_range.exec_id not in _graph_cache._RDF_REGISTER:
-                rdf_toprocess = ROOT.RDataFrame(ds)
                 # Fill the cache with the new RDataFrame
-                _graph_cache._RDF_REGISTER[current_range.exec_id] = rdf_toprocess
+                _graph_cache._RDF_REGISTER[current_range.exec_id] = ROOT.RDataFrame(ds)
             else:
-                # Retrieve an already present RDataFrame from the cache
-                rdf_toprocess = _graph_cache._RDF_REGISTER[current_range.exec_id]
                 # Update it to the range of entries for this task
                 ROOT.Internal.RDF.ChangeSpec(
-                    ROOT.RDF.AsRNode(rdf_toprocess), ROOT.std.move(ds))
+                    ROOT.RDF.AsRNode( _graph_cache._RDF_REGISTER[current_range.exec_id]),
+                    ROOT.std.move(ds))
 
-            return TaskObjects(rdf_toprocess, entries_in_trees)
+            return TaskObjects(_graph_cache._RDF_REGISTER[current_range.exec_id], entries_in_trees)
 
         return build_rdf_from_range
 
@@ -873,8 +868,7 @@ class RNTupleHeadNode(HeadNode):
             if not filenames:
                 return TaskObjects(None, None)
 
-            rdf_toprocess = ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames)
-            return TaskObjects(rdf_toprocess, None)
+            return TaskObjects(ROOT.RDF.Experimental.FromRNTuple(ntuplename, filenames), None)
 
         return build_rdf_from_range
 
