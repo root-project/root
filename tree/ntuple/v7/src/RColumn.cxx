@@ -19,7 +19,10 @@
 
 #include <TError.h>
 
-ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t index) : fType(type), fIndex(index) {}
+ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t index)
+   : fType(type), fIndex(index), fRepresentationIndex(0 /* TODO(jblomer) */)
+{
+}
 
 ROOT::Experimental::Internal::RColumn::~RColumn()
 {

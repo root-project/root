@@ -1111,8 +1111,8 @@ TEST(RPageSink, SamePageMerging)
       EXPECT_EQ(1u, reader->GetNEntries());
 
       const auto &desc = reader->GetDescriptor();
-      const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0);
-      const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0);
+      const auto pxColId = desc.FindPhysicalColumnId(desc.FindFieldId("px"), 0, 0);
+      const auto pyColId = desc.FindPhysicalColumnId(desc.FindFieldId("py"), 0, 0);
       const auto clusterId = desc.FindClusterId(pxColId, 0);
       const auto &clusterDesc = desc.GetClusterDescriptor(clusterId);
       EXPECT_EQ(enable, clusterDesc.GetPageRange(pxColId).Find(0).fLocator.fPosition ==

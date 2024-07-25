@@ -144,7 +144,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPages)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumEntries);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -185,7 +185,7 @@ TEST(RNTuple, DISABLED_Limits_ManyPagesOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -227,7 +227,7 @@ TEST(RNTuple, DISABLED_Limits_LargePage)
    const auto &descriptor = reader->GetDescriptor();
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("id");
-   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(fieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), NumElements);
    EXPECT_EQ(descriptor.GetNClusters(), 1);
@@ -269,7 +269,7 @@ TEST(RNTuple, DISABLED_Limits_LargePageOneEntry)
    const auto &model = reader->GetModel();
    auto fieldId = descriptor.FindFieldId("ids");
    auto subFieldId = descriptor.FindFieldId("_0", fieldId);
-   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0);
+   auto columnId = descriptor.FindPhysicalColumnId(subFieldId, 0, 0);
 
    EXPECT_EQ(reader->GetNEntries(), 1);
    EXPECT_EQ(descriptor.GetNClusters(), 1);

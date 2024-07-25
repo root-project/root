@@ -160,7 +160,8 @@ ROOT::Experimental::Internal::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Internal::RPageSource::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    R__ASSERT(fieldId != kInvalidDescriptorId);
-   auto physicalId = GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex());
+   auto physicalId =
+      GetSharedDescriptorGuard()->FindPhysicalColumnId(fieldId, column.GetIndex(), column.GetRepresentationIndex());
    R__ASSERT(physicalId != kInvalidDescriptorId);
    fActivePhysicalColumns.Insert(physicalId);
    return ColumnHandle_t{physicalId, &column};
@@ -560,6 +561,7 @@ ROOT::Experimental::Internal::RPagePersistentSink::AddColumn(DescriptorId_t fiel
       .FieldId(fieldId)
       .Type(column.GetType())
       .Index(column.GetIndex())
+      .RepresentationIndex(column.GetRepresentationIndex())
       .FirstElementIndex(column.GetFirstElementIndex());
    fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
    return ColumnHandle_t{columnId, &column};
@@ -590,7 +592,8 @@ void ROOT::Experimental::Internal::RPagePersistentSink::UpdateSchema(const RNTup
             .PhysicalColumnId(source.GetLogicalId())
             .FieldId(fieldId)
             .Type(source.GetType())
-            .Index(source.GetIndex());
+            .Index(source.GetIndex())
+            .RepresentationIndex(source.GetRepresentationIndex());
          fDescriptorBuilder.AddColumn(columnBuilder.MakeDescriptor().Unwrap());
       }
    };

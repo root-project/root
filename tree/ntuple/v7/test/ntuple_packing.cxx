@@ -301,7 +301,7 @@ TEST(Packing, OnDiskEncoding)
 
    auto fnGetColumnId = [&source](const std::string &fieldName) {
       auto descGuard = source->GetSharedDescriptorGuard();
-      return descGuard->FindPhysicalColumnId(descGuard->FindFieldId(fieldName), 0);
+      return descGuard->FindPhysicalColumnId(descGuard->FindFieldId(fieldName), 0, 0);
    };
 
    source->LoadSealedPage(fnGetColumnId("int16"), RClusterIndex(0, 0), sealedPage);

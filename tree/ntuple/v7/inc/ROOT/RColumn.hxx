@@ -42,11 +42,11 @@ namespace Internal {
 class RColumn {
 private:
    EColumnType fType;
-   /**
-    * Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
-    * the offset column with index 0 and the character value column with index 1.
-    */
+   /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
+   /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
+   /// Fields can have multiple column representations, distinguished by representation index
+   std::uint16_t fRepresentationIndex;
    RPageSink *fPageSink = nullptr;
    RPageSource *fPageSource = nullptr;
    RPageStorage::ColumnHandle_t fHandleSink;
@@ -335,6 +335,7 @@ public:
    RColumnElementBase *GetElement() const { return fElement.get(); }
    EColumnType GetType() const { return fType; }
    std::uint32_t GetIndex() const { return fIndex; }
+   std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
    NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    RPageSource *GetPageSource() const { return fPageSource; }

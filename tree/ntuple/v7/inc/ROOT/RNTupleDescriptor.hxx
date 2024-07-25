@@ -21,10 +21,12 @@
 #include <ROOT/RNTupleSerialize.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 #include <ROOT/RSpan.hxx>
-#include <string_view>
+
+#include <TError.h>
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <functional>
 #include <iterator>
 #include <map>
@@ -34,6 +36,7 @@
 #include <vector>
 #include <set>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -94,7 +97,11 @@ private:
    /// The pointers in the other direction from parent to children. They are serialized, too, to keep the
    /// order of sub fields.
    std::vector<DescriptorId_t> fLinkIds;
-   /// The ordered list of columns attached to this field
+   /// The number of columns in the column representations of the field. The column cardinality helps to navigate the
+   /// list of logical column ids. For example, the second column of the third column representation is
+   /// fLogicalColumnIds[2 * fColumnCardinality + 1]
+   std::uint32_t fColumnCardinality = 0;
+   /// The ordered list of columns attached to this field: first by representation index then by column index.
    std::vector<DescriptorId_t> fLogicalColumnIds;
    /// For custom classes, we store the ROOT TClass reported checksum to facilitate the use of I/O rules that
    /// identify types by their checksum
@@ -127,6 +134,7 @@ public:
    DescriptorId_t GetProjectionSourceId() const { return fProjectionSourceId; }
    const std::vector<DescriptorId_t> &GetLinkIds() const { return fLinkIds; }
    const std::vector<DescriptorId_t> &GetLogicalColumnIds() const { return fLogicalColumnIds; }
+   std::uint32_t GetColumnCardinality() const { return fColumnCardinality; }
    std::optional<std::uint32_t> GetTypeChecksum() const { return fTypeChecksum; }
    bool IsProjectedField() const { return fProjectionSourceId != kInvalidDescriptorId; }
 };
@@ -147,15 +155,19 @@ private:
    DescriptorId_t fLogicalColumnId = kInvalidDescriptorId;
    /// Usually identical to the logical column ID, except for alias columns where it references the shadowed column
    DescriptorId_t fPhysicalColumnId = kInvalidDescriptorId;
-   /// The on-disk column type
-   EColumnType fType;
    /// Every column belongs to one and only one field
    DescriptorId_t fFieldId = kInvalidDescriptorId;
+   /// The absolute value specifies the index for the first stored element for this column.
+   /// For deferred columns the absolute value is larger than zero.
+   /// Negative values specify a suppressed and deferred column.
+   std::int64_t fFirstElementIndex = 0U;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
-   std::uint32_t fIndex;
-   /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
-   /// than 0
-   std::uint64_t fFirstElementIndex = 0U;
+   std::uint32_t fIndex = 0;
+   /// A field may use multiple column representations, which are numbered from zero to $m$.
+   /// Every representation has the same number of columns.
+   std::uint16_t fRepresentationIndex = 0;
+   /// The on-disk column type
+   EColumnType fType = EColumnType::kUnknown;
 
 public:
    RColumnDescriptor() = default;
@@ -170,12 +182,14 @@ public:
 
    DescriptorId_t GetLogicalId() const { return fLogicalColumnId; }
    DescriptorId_t GetPhysicalId() const { return fPhysicalColumnId; }
-   EColumnType GetType() const { return fType; }
-   std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
+   std::uint32_t GetIndex() const { return fIndex; }
+   std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
+   std::uint64_t GetFirstElementIndex() const { return std::abs(fFirstElementIndex); }
+   EColumnType GetType() const { return fType; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
-   std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
-   bool IsDeferredColumn() const { return fFirstElementIndex > 0; }
+   bool IsDeferredColumn() const { return fFirstElementIndex != 0; }
+   bool IsSuppressedDeferredColumn() const { return fFirstElementIndex < 0; }
 };
 
 // clang-format off
@@ -240,6 +254,10 @@ public:
       /// The usual format for ROOT compression settings (see Compression.h).
       /// The pages of a particular column in a particular cluster are all compressed with the same settings.
       int fCompressionSettings = kUnknownCompressionSettings;
+      /// Suppressed columns have an empty page range and unknown compression settings.
+      /// Their element index range, however, is aligned with the corresponding column of the
+      /// primary column representation (see Section "Suppressed Columns" in the specification)
+      bool fIsSuppressed = false;
 
       // TODO(jblomer): we perhaps want to store summary information, such as average, min/max, etc.
       // Should this be done on the field level?
@@ -247,7 +265,8 @@ public:
       bool operator==(const RColumnRange &other) const
       {
          return fPhysicalColumnId == other.fPhysicalColumnId && fFirstElementIndex == other.fFirstElementIndex &&
-                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings;
+                fNElements == other.fNElements && fCompressionSettings == other.fCompressionSettings &&
+                fIsSuppressed == other.fIsSuppressed;
       }
 
       bool Contains(NTupleSize_t index) const
@@ -603,7 +622,7 @@ public:
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor &fNTuple;
-      /// The descriptor ids of the columns ordered by index id
+      /// The descriptor ids of the columns ordered by field, representation, and column index
       std::vector<DescriptorId_t> fColumns = {};
 
    public:
@@ -954,8 +973,10 @@ public:
    DescriptorId_t FindFieldId(std::string_view fieldName, DescriptorId_t parentId) const;
    /// Searches for a top-level field
    DescriptorId_t FindFieldId(std::string_view fieldName) const;
-   DescriptorId_t FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
-   DescriptorId_t FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex) const;
+   DescriptorId_t
+   FindLogicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex, std::uint16_t representationIndex) const;
+   DescriptorId_t
+   FindPhysicalColumnId(DescriptorId_t fieldId, std::uint32_t columnIndex, std::uint16_t representationIndex) const;
    DescriptorId_t FindClusterId(DescriptorId_t physicalColumnId, NTupleSize_t index) const;
    DescriptorId_t FindNextClusterId(DescriptorId_t clusterId) const;
    DescriptorId_t FindPrevClusterId(DescriptorId_t clusterId) const;
@@ -1032,7 +1053,20 @@ public:
       fColumn.fFirstElementIndex = firstElementIdx;
       return *this;
    }
+   RColumnDescriptorBuilder &SetSuppressedDeferred()
+   {
+      R__ASSERT(fColumn.fFirstElementIndex != 0);
+      if (fColumn.fFirstElementIndex > 0)
+         fColumn.fFirstElementIndex = -fColumn.fFirstElementIndex;
+      return *this;
+   }
+   RColumnDescriptorBuilder &RepresentationIndex(std::uint16_t representationIndex)
+   {
+      fColumn.fRepresentationIndex = representationIndex;
+      return *this;
+   }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
+   DescriptorId_t GetRepresentationIndex() const { return fColumn.fRepresentationIndex; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
    RResult<RColumnDescriptor> MakeDescriptor() const;
@@ -1173,9 +1207,20 @@ public:
    RResult<void> CommitColumnRange(DescriptorId_t physicalId, std::uint64_t firstElementIndex,
                                    std::uint32_t compressionSettings, const RClusterDescriptor::RPageRange &pageRange);
 
+   /// Books the given column ID as being suppressed in this cluster. The correct first element index and number of
+   /// elements need to be set by CommitSuppressedColumnRanges() once all the calls to CommitColumnRange() and
+   /// MarkSuppressedColumnRange() took place.
+   RResult<void> MarkSuppressedColumnRange(DescriptorId_t physicalId);
+
+   /// Sets the first element index and number of elements for all the suppressed column ranges.
+   /// The information is taken from the corresponding columns from the primary representation.
+   /// Needs to be called when all the columns (suppressed and regular) where added.
+   RResult<void> CommitSuppressedColumnRanges(const RNTupleDescriptor &desc);
+
    /// Add column and page ranges for columns created during late model extension missing in this cluster.  The locator
    /// type for the synthesized page ranges is `kTypePageZero`.  All the page sources must be able to populate the
-   /// 'zero' page from such locator. Any call to `CommitColumnRange()` should happen before calling this function.
+   /// 'zero' page from such locator. Any call to `CommitColumnRange()` and `CommitSuppressedColumnRanges()`
+   /// should happen before calling this function.
    RClusterDescriptorBuilder &AddExtendedColumnRanges(const RNTupleDescriptor &desc);
 
    /// Move out the full cluster descriptor including page locations
@@ -1317,13 +1362,12 @@ class RNTupleDescriptorBuilder {
 private:
    RNTupleDescriptor fDescriptor;
    RResult<void> EnsureFieldExists(DescriptorId_t fieldId) const;
-   // Called by AddColumn() to populate the fLogicalFieldIds member of the field descriptor
-   RResult<void> AttachColumn(DescriptorId_t fieldId, const RColumnDescriptor &columnDesc);
 
 public:
    /// Checks whether invariants hold:
    /// * NTuple name is valid
-   /// * Fields have valid parent and child ids
+   /// * Fields have valid parents
+   /// * Number of columns is constant across column representations
    RResult<void> EnsureValidDescriptor() const;
    const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    RNTupleDescriptor MoveDescriptor();

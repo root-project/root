@@ -51,6 +51,7 @@ public:
    RPageSourceMock() : RPageSource("test", ROOT::Experimental::RNTupleReadOptions())
    {
       ROOT::Experimental::Internal::RNTupleDescriptorBuilder descBuilder;
+      descBuilder.SetNTuple("ntpl", "");
       for (unsigned i = 0; i <= 5; ++i) {
          descBuilder.AddCluster(ROOT::Experimental::Internal::RClusterDescriptorBuilder()
                                    .ClusterId(i)
@@ -337,7 +338,7 @@ TEST(PageStorageFile, LoadClusters)
       auto descriptorGuard = source.GetSharedDescriptorGuard();
       ptId = descriptorGuard->FindFieldId("pt");
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, ptId);
-      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0);
+      colId = descriptorGuard->FindPhysicalColumnId(ptId, 0, 0);
       EXPECT_NE(ROOT::Experimental::kInvalidDescriptorId, colId);
    }
 
