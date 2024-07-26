@@ -306,18 +306,18 @@ sap.ui.define([
             case canname + '.png':
             case canname + '.jpeg':
             case canname + '.svg':
-               p.saveCanvasAsFile(name);
+            case canname + '.webp':
+            case canname + '.pdf':
+                  p.saveCanvasAsFile(name);
                break;
             case canname + '.root':
-            case canname + '.pdf':
-            case canname + '.ps':
             case canname + '.C':
                p.sendSaveCommand(name);
                break;
             case 'Save as ...': {
-               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'ROOT files (*.root)' ];
+               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'PDF files (*.pdf)', 'WEBP files (*.webp)', 'ROOT files (*.root)' ];
                if (!p?.v7canvas)
-                  filters.push('PDF files (*.pdf)', 'C++ (*.cxx *.cpp *.c)');
+                  filters.push('C++ (*.cxx *.cpp *.c)');
 
                FileDialogController.SaveAs({
                   websocket: p._websocket,
@@ -327,7 +327,7 @@ sap.ui.define([
                   filters,
                   // working_path: '/Home',
                   onOk: fname => {
-                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
+                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg') || fname.endsWith('.pdf') || fname.endsWith('.webp'))
                          p.saveCanvasAsFile(fname);
                      else
                          p.sendSaveCommand(fname);
