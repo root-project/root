@@ -189,22 +189,37 @@ static std::optional<IntFlag_t> StrToUInt(const char *str)
 }
 
 template <typename T>
-static std::optional<T> ConvertArg(const char *);
+struct FlagConvResult {
+   T fValue;
+   EFlagResult fResult;
+};
+
+template <typename T>
+static FlagConvResult<T> ConvertArg(const char *);
 
 template <>
-std::optional<std::string> ConvertArg<std::string>(const char *arg)
+FlagConvResult<std::string> ConvertArg<std::string>(const char *arg)
 {
-   return arg;
+   return { arg, EFlagResult::kParsed };
 }
 
 template <>
-std::optional<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
+FlagConvResult<IntFlag_t> ConvertArg<IntFlag_t>(const char *arg)
 {
-   return StrToUInt(arg);
+   // Don't even try to parse arg if it doesn't look like a number.
+   if (!isdigit(*arg)) 
+      return { 0, EFlagResult::kIgnored };
+
+   auto intOpt = StrToUInt(arg);
+   if (intOpt)
+      return { *intOpt, EFlagResult::kParsed };
+
+   std::cerr << "[err] Error parsing integer argument '" << arg << "'\n";
+   return { {}, EFlagResult::kError };
 }
 
 template <>
-std::optional<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
+FlagConvResult<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
 {
    ROOT::TIOFeatures features;
    std::stringstream ss;
@@ -214,25 +229,25 @@ std::optional<ROOT::TIOFeatures> ConvertArg<ROOT::TIOFeatures>(const char *arg)
       if (!features.Set(item))
          std::cerr << "Ignoring unknown feature request: " << item << std::endl;
    }
-   return features;
+   return { features, EFlagResult::kParsed };
 }
 
-static std::optional<IntFlag_t> ConvertNProcesses(const char *arg)
+static FlagConvResult<IntFlag_t> ConvertNProcesses(const char *arg)
 {
    auto np = ConvertArg<IntFlag_t>(arg);
-   if (!np) {
+   if (np.fResult != EFlagResult::kParsed) {
       // By returning a non-nullopt, we enable multiprocessing.
       // Since 0 is not a valid number of processes, hadd will default to the number of cpus.
-      np = 0;
+      np = { 0, EFlagResult::kParsed };
    }
-   if (*np == 0) {
+   if (np.fValue == 0) {
       std::cerr << "Error: the number of parallel processes passed after -j is invalid: " << arg
                 << ". We will use the system maximum.\n";
    }
    return np;
 }
 
-static std::optional<TString> ConvertCacheSize(const char *arg)
+static FlagConvResult<TString> ConvertCacheSize(const char *arg)
 {
    TString cacheSize;
    int size;
@@ -240,24 +255,28 @@ static std::optional<TString> ConvertCacheSize(const char *arg)
    if (parseResult == ROOT::EFromHumanReadableSize::kParseFail) {
       std::cerr << "Error: could not parse the cache size passed after -cachesize: " << arg
                 << ". We will use the default value.\n";
-      return {};
+      return { "", EFlagResult::kParsed };
    } else if (parseResult == ROOT::EFromHumanReadableSize::kOverflow) {
       double m;
       const char *munit = nullptr;
       ROOT::ToHumanReadableSize(INT_MAX, false, &m, &munit);
       std::cerr << "Error: the cache size passed after -cachesize is too large: " << arg << " is greater than " << m
                 << munit << ". We will use the default value.\n";
-      return {};
+      return { "", EFlagResult::kParsed };
    } else {
       cacheSize = "cachesize=";
       cacheSize.Append(arg);
    }
-   return cacheSize;
+   return { cacheSize, EFlagResult::kParsed };
 }
 
+// Parses a flag that is followed by an argument of type T.
+// If `defaultVal` is provided, the following argument is optional and will be set to `defaultVal` if missing.
+// `conv` is used to convert the argument from string to its type T.
 template <typename T>
 static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *flagStr, std::optional<T> &flagOut,
-                           std::optional<T> (*conv)(const char *) = ConvertArg<T>)
+                           std::optional<T> defaultVal = std::nullopt,
+                           FlagConvResult<T> (*conv)(const char *) = ConvertArg<T>)
 {
    int argIdx = argIdxInOut;
    const char *arg = argv[argIdx] + 1;
@@ -272,11 +291,12 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
       // interpret anything after the flag as the argument.
       nxtArg = arg + flagLen;
       // Ignore one '=', if present
-      if (nxtArg[0] && nxtArg[0] == '=')
+      if (nxtArg[0] == '=')
          ++nxtArg;
    } else if (argLen == flagLen) {
       if (argIdx + 1 < argc) {
-         nxtArg = argv[argIdx + 1];
+         ++argIdxInOut;
+         nxtArg = argv[argIdxInOut];
       } else {
          std::cerr << "[err] Expected argument after '-" << flagStr << "' flag.\n";
          return EFlagResult::kError;
@@ -285,8 +305,22 @@ static EFlagResult FlagArg(int argc, char **argv, int &argIdxInOut, const char *
       return EFlagResult::kIgnored;
    }
 
-   flagOut = conv(nxtArg);
-   ++argIdxInOut;
+   auto converted = conv(nxtArg);
+   if (converted.fResult == EFlagResult::kParsed) {
+      flagOut = converted.fValue;
+   } else if (converted.fResult == EFlagResult::kIgnored) {
+      if (defaultVal) {
+         flagOut = defaultVal;
+         // If we had tried parsing the next argument, step back one arg idx.
+         argIdxInOut -= (argIdxInOut > argIdx);
+      } else {
+         std::cerr << "[err] The argument after '-" << flagStr << "' flag was not of the expected type.\n";
+         return EFlagResult::kError;
+      }
+   } else {
+      return EFlagResult::kError;
+   }
+
    return EFlagResult::kParsed;
 }
 
@@ -295,7 +329,7 @@ static bool ValidCompressionSettings(int compSettings)
    // Must be a number between 0 and 509 (with a 0 in the middle) 
    if (compSettings == 0)
       return true;
-   return (compSettings >= 100 && compSettings <= 500) && ((compSettings / 10) % 10 == 0);
+   return (compSettings >= 100 && compSettings <= 509) && ((compSettings / 10) % 10 == 0);
 }
 
 // The -f flag has a somewhat complicated logic.
@@ -351,6 +385,9 @@ static EFlagResult FlagF(const char *arg, HAddArgs &args)
                if (auto compLv = StrToUInt(cur)) {
                   if (ValidCompressionSettings(*compLv)) {
                      args.fCompressionSettings = *compLv;
+                     // we can't see any other argument after the number, so we return here to avoid
+                     // incorrectly parsing the rest of the characters in `arg`.
+                     return EFlagResult::kParsed;
                   } else {
                      std::cerr << "[err] " << *compLv << " is not a supported compression settings.\n";
                      return EFlagResult::kError;
@@ -404,11 +441,11 @@ static std::optional<HAddArgs> ParseArgs(int argc, char **argv)
          PARSE_FLAG(FlagToggle, arg, "O", args.fReoptimize);
          PARSE_FLAG(FlagToggle, arg, "dbg", args.fDebug);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "d", args.fWorkingDir);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, ConvertNProcesses);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, ConvertCacheSize);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "j", args.fNProcesses, { 0 }, ConvertNProcesses);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "cachesize", args.fCacheSize, {}, ConvertCacheSize);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "experimental-io-features", args.fFeatures);
          PARSE_FLAG(FlagArg, argc, argv, argIdx, "n", args.fMaxOpenedFiles);
-         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity);
+         PARSE_FLAG(FlagArg, argc, argv, argIdx, "v", args.fVerbosity, { 99 });
          PARSE_FLAG(FlagF, arg, args);
 
 #undef PARSE_FLAG
@@ -440,7 +477,7 @@ int main(int argc, char **argv)
 
    ROOT::TIOFeatures features = args.fFeatures.value_or(ROOT::TIOFeatures{});
    Int_t maxopenedfiles = args.fMaxOpenedFiles.value_or(0);
-   Int_t verbosity = args.fVerbosity.value_or(99);
+   Int_t verbosity = args.fVerbosity.value_or(0);
    TString cacheSize = args.fCacheSize.value_or("");
    if (args.fCacheSize)
       std::cerr << "Using " << cacheSize << "\n";
@@ -472,6 +509,10 @@ int main(int argc, char **argv)
    const char *targetname = 0;
    if (!args.fOutputArgIdx) {
       std::cerr << "Missing output file.\n";
+      return 1;
+   }
+   if (!args.fFirstInputIdx) {
+      std::cerr << "Missing input file.\n";
       return 1;
    }
    targetname = argv[args.fOutputArgIdx];
