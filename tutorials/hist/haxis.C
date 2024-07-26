@@ -23,6 +23,7 @@
 #include "TH1.h"
 #include "TPolyLine.h"
 #include "TLatex.h"
+#include "TBox.h"
 
 void haxis()
 {
@@ -75,7 +76,7 @@ void haxis()
    haxis->GetXaxis()->SetLabelSize(0.07);
    haxis->GetXaxis()->SetLabelOffset(0.02);
 
-   auto c1 = new TCanvas("c1", "title", 1500, 800);
+   auto c1 = new TCanvas("chaxis", "title", 1500, 800);
    c1->SetLeftMargin(frame_left);
    c1->SetRightMargin(1 - frame_right);
    c1->SetTopMargin(1 - frame_top);
@@ -120,4 +121,18 @@ void haxis()
    add_arrow(true, "Reduction");
 
    add_arrow(false, "Increase");
+
+   auto box = new TBox(0.2, 6, 0.8, 14);
+   box->SetFillColor(kCyan);
+   box->SetLineColor(kRed);
+   box->SetLineWidth(3);
+   // use "frame" option to embed box into frame, "l" for line drawing
+   c1->Add(box, "l,frame");
+
+   auto l1 = new TLatex(0.5, 10, "Text inside frame");
+   l1->SetTextAlign(22);
+   l1->SetTextSize(0.04);
+   l1->SetTextColor(kMagenta);
+   // use "frame" option to embed text into frame
+   c1->Add(l1, "frame");
 }
