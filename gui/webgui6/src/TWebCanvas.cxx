@@ -1811,16 +1811,20 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          std::ofstream ofs(filename.Data());
 
+         int filelen = -1;
+
          if (filename.Index(".svg") != kNPOS) {
             // ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
             ofs << img;
+            filelen = strlen(img);
          } else {
             TString binary = TBase64::Decode(img);
             ofs.write(binary.Data(), binary.Length());
+            filelen = binary.Length();
          }
          ofs.close();
 
-         Info("ProcessData", "File %s has been created", filename.Data());
+         Info("ProcessData", "File %s size %d has been created", filename.Data(), filelen);
       }
 
    } else if (arg.compare(0, 8, "PRODUCE:") == 0) {
