@@ -42,6 +42,7 @@ When changed, remember to update
   - RColumnElement::Generate()
   - RColumnElement::GetBitsOnStorage()
   - RColumnElement::GetTypeName()
+  - RColumnElement::GetValidBitRange()
   - RColumnElement template specializations / packing & unpacking
   - If necessary, endianess handling for the packing + unit test in ntuple_endian
   - RNTupleSerializer::[Des|S]erializeColumnType
