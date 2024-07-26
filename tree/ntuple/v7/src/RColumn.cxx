@@ -19,9 +19,15 @@
 
 #include <TError.h>
 
+#include <cassert>
+
 ROOT::Experimental::Internal::RColumn::RColumn(EColumnType type, std::uint32_t index)
    : fType(type), fIndex(index), fRepresentationIndex(0 /* TODO(jblomer) */)
 {
+   // TODO(jblomer): fix for column types with configurable bit length once available
+   const auto [minBits, maxBits] = RColumnElementBase::GetValidBitRange(type);
+   assert(minBits == maxBits);
+   fBitsOnStorage = minBits;
 }
 
 ROOT::Experimental::Internal::RColumn::~RColumn()

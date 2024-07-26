@@ -42,6 +42,7 @@ namespace Internal {
 class RColumn {
 private:
    EColumnType fType;
+   std::uint16_t fBitsOnStorage = 0;
    /// Columns belonging to the same field are distinguished by their order.  E.g. for an std::string field, there is
    /// the offset column with index 0 and the character value column with index 1.
    std::uint32_t fIndex;
@@ -334,6 +335,7 @@ public:
    NTupleSize_t GetNElements() const { return fNElements; }
    RColumnElementBase *GetElement() const { return fElement.get(); }
    EColumnType GetType() const { return fType; }
+   std::uint16_t GetBitsOnStorage() const { return fBitsOnStorage; }
    std::uint32_t GetIndex() const { return fIndex; }
    std::uint16_t GetRepresentationIndex() const { return fRepresentationIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
